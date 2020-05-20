@@ -4,8 +4,8 @@ GO
 DECLARE @IdUser as nvarchar(50) 
 declare @UserName as nvarchar(50)
 
-set @IdUser = '100088'
-set @UserName = 'edwin.ramirez'
+set @IdUser = '100051'
+set @UserName = 'carlos.cano'
 
 
 DECLARE @IdNewSystem as int 
@@ -30,10 +30,10 @@ INSERT INTO DenariusUser_Dev.[dbo].[LGN_RolByUserByRegion]
            ,[RUR_Status])
      VALUES
            (@IdRolAdmin
-           ,100088
+           ,@IdUser
            ,-1
            ,'GT'
-           ,'edwin.ramirez'
+           ,@UserName
            ,'TRUE')
 
 INSERT INTO DenariusUser_Dev.[dbo].[LGN_Restriction]
