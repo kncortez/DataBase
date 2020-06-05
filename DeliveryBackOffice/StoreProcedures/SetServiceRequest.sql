@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 3/06/2020 16:55:50 ******/
+/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 5/06/2020 03:51:31 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -9,8 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
---DROP PROCEDURE [dbo].[SetServiceRequest]
-CREATE PROCEDURE [dbo].[SetServiceRequest]
+ALTER PROCEDURE [dbo].[SetServiceRequest]
 @TblServiceRequest AS TblServiceRequest READONLY,	
 @TblDeliveryOrders AS TblDeliveryOrders READONLY
 AS
@@ -257,7 +256,23 @@ BEGIN
 				NULL -- Dispatched_Token
 			FROM #GuideTable GT
 
+			-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
+			INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
+				[Guide_Serie],
+				[Guide_Number],
+				[StatusOrderId],
+				[UserCreated],
+				[DateCreated])
+			SELECT 
+				GT.Guide_Serie,
+				GT.Guide_Number,
+				GT.StatusOrderId,
+				'SYSTEM',
+				GETDATE()
+			FROM #GuideTable GT
+
 			DROP TABLE #GuideTable
+
 		--END
 	END TRY
 	
