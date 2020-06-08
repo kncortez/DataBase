@@ -1,19 +1,16 @@
 USE [DeliveryBackOffice]
 GO
-
-/****** Object:  StoredProcedure [dbo].[spg_get_RoutePreparation]    Script Date: 3/06/2020 16:58:13 ******/
+/****** Object:  StoredProcedure [dbo].[spg_get_RoutePreparation]    Script Date: 7/06/2020 23:48:16 ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
-
 -- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-05-27>
 -- Description:	<Devuelve información para preparación de ruta>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_RoutePreparation]
+ALTER PROCEDURE [dbo].[spg_get_RoutePreparation]
 		@Token AS VARCHAR(50)    = 'ad1a2328ed27ea99622f68deae5d9976',
 		@Rol AS BIGINT 			 =  1,
 		@Zone AS VARCHAR(100) = '',
@@ -42,11 +39,19 @@ BEGIN
 			serv.Delivery_Max_Date Delivery_Max_Date,
 			serv.Courier_Route Courier_Route,
 			serv.Courier_Name Courier_Name,
-			serv.Dispatched_Date Dispatched_Date  
+			serv.Dispatched_Date Dispatched_Date,
+			serv.Manifest_Serie + CAST(serv.Manifest_Number AS VARCHAR) as Manifest_Number,
+			serv.DateCreated as Date_Created,
+			serv.Sender_FirstName + ' ' + serv.Sender_LastName as Sender_Fullname,
+			serv.Ticket_Number as Ticket_Number,
+			serv.Pieces_Dry as Pieces_Dry,
+			serv.Pieces_Cold as Pieces_Cold,
+			serv.printedStatus as Printed_Status,
+			serv.StatusOrderId as Status_Order_Id
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 		LEFT JOIN DenariusCorporate_Dev.dbo.LGT_Master_Service_Material mat WITH(NOLOCK)
 		on mat.MSM_ValueRegistrationForm = @Manifest
-		and mat.MSM_MaterialCode = Guide_Serie +  CAST(Guide_Number AS VARCHAR)
+		and mat.MSM_MaterialCode = Guide_Serie +  CAST(Guide_Number AS VARCHAR) --COLLATE Modern_Spanish_CI_AS
 		JOIN DeliveryBackOffice.dbo.StatusOrder sta ON sta.StatusOrderId = serv.StatusOrderId
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement BySt WITH(nolock)
 		 ON serv.Guide_Serie = bySt.Guide_Serie
@@ -74,6 +79,3 @@ BEGIN
 	
 
 END
-GO
-
-
