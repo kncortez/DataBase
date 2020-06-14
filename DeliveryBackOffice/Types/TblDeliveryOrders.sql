@@ -1,0 +1,52 @@
+USE [DeliveryBackOffice]
+GO
+
+/****** Object:  UserDefinedTableType [dbo].[TblDeliveryOrders]    Script Date: 3/06/2020 17:02:46 ******/
+CREATE TYPE [dbo].[TblDeliveryOrders] AS TABLE(
+	[RowNumber] [int] NOT NULL,
+	[Ticket_Number] [nvarchar](150) NULL,
+	[Order_Number] [int] NULL,
+	[Preparation_Date] [datetime] NULL,
+	[Shipping_Date] [datetime] NULL,
+	[Pieces_Dry] [int] NULL,
+	[Pieces_Cold] [int] NULL,
+	[Consolidated_Number] [int] NULL,
+	[Recipe_Number] [nvarchar](1000) NULL,
+	[Sender_ID] [int] NULL,
+	[Sender_FirstName] [nvarchar](100) NULL,
+	[Sender_LastName] [nvarchar](100) NULL,
+	[Sender_Address] [nvarchar](200) NULL,
+	[Sender_Zone] [nvarchar](100) NULL,
+	[Sender_Town] [nvarchar](100) NULL,
+	[Sender_Department] [nvarchar](100) NULL,
+	[Sender_Phone] [nvarchar](50) NULL,
+	[Receiver_ID] [int] NULL,
+	[Receiver_FirstName] [nvarchar](100) NULL,
+	[Receiver_LastName] [nvarchar](100) NULL,
+	[Receiver_Address] [nvarchar](200) NULL,
+	[Receiver_Zone] [nvarchar](100) NULL,
+	[Receiver_Town] [nvarchar](100) NULL,
+	[Receiver_Department] [nvarchar](100) NULL,
+	[Receiver_Phone] [nvarchar](100) NULL,
+	[Receiver_Email] [nvarchar](200) NULL,
+	[Receiver_SocialSecurity_ID] [nvarchar](200) NULL,
+	[Receiver_Alternant_ID] [int] NULL,
+	[Receiver_Alternant_FullName] [nvarchar](200) NULL,
+	[Receiver_Alternant_Address] [nvarchar](200) NULL,
+	[Receiver_Alternant_Zone] [nvarchar](100) NULL,
+	[Receiver_Alternant_Town] [nvarchar](100) NULL,
+	[Receiver_Alternant_Department] [nvarchar](100) NULL,
+	[Receiver_Alternant_Phone] [nvarchar](100) NULL,
+	[Receiver_Alternant_Email] [nvarchar](200) NULL,
+	[Receiver_Alternant_SocialSecurity_ID] [nvarchar](200) NULL,
+	[Delivery_Max_Date] [datetime] NULL,
+	[printedStatus] [tinyint] NULL,
+	[StatusOrderId] [tinyint] NOT NULL,
+	[Receiver_CUI] [nvarchar](25) NULL,
+	[Package_Description] [nvarchar](200) NULL,
+	[Sender_Internal_Code] [nvarchar](50) NULL,
+	[Receiver_Alternant_CUI] [nvarchar](25) NULL
+)
+GO
+
+
