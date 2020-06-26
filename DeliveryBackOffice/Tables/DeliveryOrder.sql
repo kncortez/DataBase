@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  Table [dbo].[DeliveryOrder]    Script Date: 3/06/2020 16:52:51 ******/
+/****** Object:  Table [dbo].[DeliveryOrder]    Script Date: 25/06/2020 18:17:54 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -61,6 +61,8 @@ CREATE TABLE [dbo].[DeliveryOrder](
 	[Courier_Vehicle_Plate] [nvarchar](15) NULL,
 	[Dispatched_Date] [datetime] NULL,
 	[Dispatched_Token] [nvarchar](50) NULL,
+	[NameOfReceiver] [nvarchar](200) NULL,
+	[Package_Type] [tinyint] NULL,
  CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED 
 (
 	[Guide_Serie] ASC,
@@ -95,6 +97,13 @@ REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 GO
 
 ALTER TABLE [dbo].[DeliveryOrder] CHECK CONSTRAINT [FK_DeliveryOrder_VisitPointClient1]
+GO
+
+ALTER TABLE [dbo].[DeliveryOrder]  WITH CHECK ADD  CONSTRAINT [FK_PackageType] FOREIGN KEY([Package_Type])
+REFERENCES [dbo].[Package] ([Package_Type])
+GO
+
+ALTER TABLE [dbo].[DeliveryOrder] CHECK CONSTRAINT [FK_PackageType]
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha máximo de servicio' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'DeliveryOrder', @level2type=N'COLUMN',@level2name=N'Delivery_Max_Date'

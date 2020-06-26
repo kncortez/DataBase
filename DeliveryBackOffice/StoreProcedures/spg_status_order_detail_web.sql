@@ -1,53 +1,159 @@
--- ================================================
--- Template generated from Template Explorer using:
--- Create Procedure (New Menu).SQL
---
--- Use the Specify Values for Template Parameters 
--- command (Ctrl-Shift-M) to fill in the parameter 
--- values below.
---
--- This block of comments will not be included in
--- the definition of the procedure.
--- ================================================
+USE [DeliveryBackOffice]
+GO
+
+/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 25/06/2020 18:24:44 ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 -- =============================================
 -- Author:		<Carlos,Cano>
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking para el cliente>
 -- =============================================
-ALTER PROCEDURE spg_status_order_detail_web
+CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
 	@Guide_Serie NVARCHAR(2),
-	@Guide_Number INT
+	@Guide_Number BIGINT
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-    SELECT
-		do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR) as OrderId, -- guide
-		do.Receiver_FirstName + ' ' + do.Receiver_LastName as CustomerFullname, -- receiver fullname
-		do.Sender_Address as OriginAdress, -- sender address
-		'' as OriginLatitude,
-		'' as OriginLongitude,
-		do.Receiver_Address as DestinyAddress, -- receiver address
-		'' as DestintyLatitude,
-		'' as DestinyLongitude,
-		do.Courier_Name as CourierName
-	FROM DeliveryBackOffice.dbo.DeliveryOrder do
-	WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
-
-	SELECT
-		dod.StatusOrderId as 'EventID', -- status order id
-		dod.DateCreated as 'Date', -- date of status id
-		so.OrderDescription as 'Title' -- status order name
-	FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod 
-	JOIN DeliveryBackOffice.dbo.StatusOrder so on so.StatusOrderId = dod.StatusOrderId
-	WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
-	ORDER BY dod.DateCreated ASC
 	
+	SELECT RES.[EventID],
+		   RES.[OrderId],
+		   --RES.[PreparationDate],
+		   --RES.[DifferenceStarted],
+		   RES.[CustomerFullname],
+		   RES.[OriginAdress],
+		   RES.[OriginLatitude],
+		   RES.[OriginLongitude],
+		   RES.[DestinyAddress],
+		   RES.[DestintyLatitude],
+		   RES.[DestinyLongitude],
+		   RES.[EstimatedDeliveryDate],
+		   RES.[CourierName],
+		   RES.[StageId],
+		   RES.[StageDate],
+		   RES.[StageTitle],
+		   RES.[StageSource],
+		   RES.[StageDescription],
+		   RES.[ImagePath]
+	FROM 
+		(SELECT
+			0 [EventID],
+			do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR) as [OrderId], -- guide [Field3]
+			--CONVERT(varchar,do.Preparation_Date ,103) as [PreparationDate],   --[Field6],
+			--'Iniciada hace ' + 
+			--RIGHT(CONVERT(CHAR(5), 10000 + CONVERT(VARCHAR(4), FLOOR(DATEDIFF(ss, do.Preparation_Date, GETDATE()) / (24 * 3600)))), 4) + 'd ' +
+			--RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % (24 * 3600) / 3600)), 2) + 'h ' +
+			--RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % 3600 / 60)), 2) + 'm ' +
+			--RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % 60)), 2) + 's' [DifferenceNowStarted], --[Field1]
+			do.Receiver_FirstName + ' ' + do.Receiver_LastName as [CustomerFullname], -- receiver fullname  [Field2]
+			do.Sender_Address as [OriginAdress], -- sender address   [Field8]
+			'' as [OriginLatitude],
+			'' as [OriginLongitude],
+			do.Receiver_Address as [DestinyAddress], -- receiver address  [Field4]
+			'' as [DestintyLatitude],
+			'' as [DestinyLongitude],
+			 CONVERT(varchar,do.Delivery_Max_Date ,120) as [EstimatedDeliveryDate], --[Field5],
+				--FORMAT(do.Delivery_Max_Date, 'dddd', 'es-es') + ', '  + CONVERT(varchar,do.Delivery_Max_Date,106) as [EstimatedDeliveryDate], 
+				--FORMAT(do.Delivery_Max_Date, 'U', 'es-es')  --[Field5] Otra opcion con hora
+			'' [CourierName], --[Field9]
+			'' [StageId], -- status order id
+			'' [StageDate], -- date of status id
+			'' [StageTitle], -- status order name
+			'web' [StageSource],
+			'' as [StageDescription], --detail description or observations in events
+			'' as [ImagePath]
+		FROM DeliveryBackOffice.dbo.DeliveryOrder do
+		WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
+		UNION
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC)  AS EventID,
+			dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR) as [OrderId], -- guide [Field3]
+			--'' [PreparationDate],   --[Field6],
+			--'' [DifferenceStarted], --[Field1]
+			'' [CustomerFullname], -- receiver fullname  [Field2]
+			'' [OriginAdress], -- sender address   [Field8]
+			'' [OriginLatitude],
+			'' [OriginLongitude],
+			'' [DestinyAddress], -- receiver address  [Field4]
+			'' [DestintyLatitude],
+			'' [DestinyLongitude],
+			'' [EstimatedDeliveryDate], --[Field5],
+			'' [CourierName], --[Field9]
+			Cast(dod.StatusOrderId as nvarchar) as [StageId], -- status order id
+			dod.DateCreated as [StageDate], -- date of status id
+			so.OrderDescription as [StageTitle], -- status order name
+			'web' as [StageSource],
+			'' as [StageDescription],
+			(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
+																		Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + 
+																															  CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300))
+																   ELSE '' END) as [ImagePath]
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
+		   JOIN DeliveryBackOffice.dbo.StatusOrder so on so.StatusOrderId = dod.StatusOrderId
+		WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
+		) RES
+		ORDER BY RES.[EventID], RES.[StageDate] ASC
+	
+ --   SELECT
+	--	do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR) as OrderId, -- guide
+	--	do.Receiver_FirstName + ' ' + do.Receiver_LastName as CustomerFullname, -- receiver fullname
+	--	do.Sender_Address as OriginAdress, -- sender address
+	--	'' as OriginLatitude,
+	--	'' as OriginLongitude,
+	--	do.Receiver_Address as DestinyAddress, -- receiver address
+	--	'' as DestintyLatitude,
+	--	'' as DestinyLongitude,
+	--	do.Courier_Name as CourierName
+	--FROM DeliveryBackOffice.dbo.DeliveryOrder do
+	--WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
+
+	--SELECT
+	--	dod.StatusOrderId as 'EventID', -- status order id
+	--	dod.DateCreated as 'Date', -- date of status id
+	--	so.OrderDescription as 'Title' -- status order name
+	--FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod 
+	--JOIN DeliveryBackOffice.dbo.StatusOrder so on so.StatusOrderId = dod.StatusOrderId
+	--WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
+	--ORDER BY dod.DateCreated ASC
+
+
+
+	--SELECT
+	--	do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR) as [OrderId], -- guide [Field3]
+	--	CONVERT(varchar,do.Preparation_Date ,103) as [PreparationDate],   --[Field6],
+	--	'Iniciada hace ' + 
+	--	RIGHT(CONVERT(CHAR(5), 10000 + CONVERT(VARCHAR(4), FLOOR(DATEDIFF(ss, do.Preparation_Date, GETDATE()) / (24 * 3600)))), 4) + 'd ' +
+	--	RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % (24 * 3600) / 3600)), 2) + 'h ' +
+	--	RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % 3600 / 60)), 2) + 'm ' +
+	--	RIGHT(CONVERT(CHAR(3), 100 + CONVERT(VARCHAR(2), DATEDIFF(ss, do.Preparation_Date, GETDATE()) % 60)), 2) + 's' [DifferenceStarted], --[Field1]
+	--	do.Receiver_FirstName + ' ' + do.Receiver_LastName as [CustomerFullname], -- receiver fullname  [Field2]
+	--	do.Sender_Address as [OriginAdress], -- sender address   [Field8]
+	--	'' as [OriginLatitude],
+	--	'' as [OriginLongitude],
+	--	do.Receiver_Address as [DestinyAddress], -- receiver address  [Field4]
+	--	'' as [DestintyLatitude],
+	--	'' as [DestinyLongitude],
+	--	FORMAT(do.Delivery_Max_Date, 'dddd', 'es-es') + ', '  + CONVERT(varchar,do.Delivery_Max_Date,106) as [EstimatedDeliveryDate], --[Field5],
+	--	--FORMAT(do.Delivery_Max_Date, 'U', 'es-es')  --[Field5] Otra opcion con hora
+	--	do.Courier_Name as [CourierName], --[Field9]
+	--	dod.StatusOrderId as [EventID], -- status order id
+	--	dod.DateCreated as [DateEvent], -- date of status id
+	--	so.OrderDescription as [TitleEvent] -- status order name
+	--FROM DeliveryBackOffice.dbo.DeliveryOrder do
+	--   LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail dod on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
+	--   JOIN DeliveryBackOffice.dbo.StatusOrder so on so.StatusOrderId = dod.StatusOrderId
+	--WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
+	--ORDER BY dod.DateCreated ASC
+
+
 END
 GO
+
+
