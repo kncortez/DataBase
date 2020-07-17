@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  Table [dbo].[DeliveryOrderDetail]    Script Date: 3/06/2020 16:53:46 ******/
+/****** Object:  Table [dbo].[DeliveryOrderDetail]    Script Date: 25/06/2020 18:18:38 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -14,12 +14,7 @@ CREATE TABLE [dbo].[DeliveryOrderDetail](
 	[StatusOrderId] [tinyint] NOT NULL,
 	[UserCreated] [nvarchar](50) NOT NULL,
 	[DateCreated] [datetime] NOT NULL,
- CONSTRAINT [PK_DeliveryOrderDetail] PRIMARY KEY CLUSTERED 
-(
-	[Guide_Serie] ASC,
-	[Guide_Number] ASC,
-	[StatusOrderId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	[DateCreatedInSystem] [datetime] NULL
 ) ON [PRIMARY]
 GO
 
