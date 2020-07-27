@@ -1,5 +1,9 @@
 USE [DeliveryBackOffice]
 GO
+
+declare @IdEpa as int 
+set @IdEpa = (select top 1 cliente.IdCustomer  from Customer cliente where cliente.Name = 'EPA GUATEMALA')
+
 INSERT INTO [dbo].[Ecommerce]
            ([EcomerceName]
            ,[EcommerceDescription]
@@ -40,8 +44,10 @@ INSERT INTO [dbo].[Ecommerce]
            ,getdate()
            ,null
            ,null
-           ,10)
+           ,@IdEpa )
 GO
 
-select * from Ecommerce
+--DBCC CHECKIDENT ('dbo.Ecommerce', RESEED, 0)
+--delete from Ecommerce
+--select * from Ecommerce
 
