@@ -10,11 +10,21 @@ SET ANSI_WARNINGS ON
 COMMIT
 BEGIN TRANSACTION
 GO
-ALTER TABLE dbo.RateEstimate ADD
-	IdCurrency int NULL,
-	IdCountry nvarchar(2) NULL,
-	IdRateCategory int NULL,
-	RatePlanDescription nvarchar(50) NULL
+ALTER TABLE dbo.RateCategory SET (LOCK_ESCALATION = TABLE)
+GO
+COMMIT
+BEGIN TRANSACTION
+GO
+ALTER TABLE dbo.RateEstimate ADD CONSTRAINT
+	FK_RateEstimate_RateCategory FOREIGN KEY
+	(
+	IdRateCategory
+	) REFERENCES dbo.RateCategory
+	(
+	IdRateCategory
+	) ON UPDATE  NO ACTION 
+	 ON DELETE  NO ACTION 
+	
 GO
 ALTER TABLE dbo.RateEstimate SET (LOCK_ESCALATION = TABLE)
 GO
