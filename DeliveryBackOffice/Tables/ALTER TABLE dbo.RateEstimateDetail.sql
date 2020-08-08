@@ -49,6 +49,8 @@ CREATE TABLE dbo.Tmp_RateEstimateDetail
 	IdSettlment bigint NULL,
 	CountValue decimal(18, 2) NULL,
 	IdSurcharge int NULL,
+	SurchargeDescription nvarchar(50) NULL,
+	PriceRate decimal(18, 2) NULL,
 	PercentValue decimal(18, 2) NULL,
 	TotalAmount decimal(18, 2) NULL,
 	IdRateCategory int NULL,
@@ -66,8 +68,8 @@ GO
 SET IDENTITY_INSERT dbo.Tmp_RateEstimateDetail ON
 GO
 IF EXISTS(SELECT * FROM dbo.RateEstimateDetail)
-	 EXEC('INSERT INTO dbo.Tmp_RateEstimateDetail (IdRateEstimateDetail, IdRateEstimate, IdSettlment, IdSurcharge, PercentValue, TotalAmount, IdRateCategory, Selected, DateExpire, EstimateDetailStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
-		SELECT IdRateEstimateDetail, IdRateEstimate, IdSettlment, IdSurcharge, PercentValue, TotalAmount, IdRateCategory, Selected, DateExpire, EstimateDetailStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated FROM dbo.RateEstimateDetail WITH (HOLDLOCK TABLOCKX)')
+	 EXEC('INSERT INTO dbo.Tmp_RateEstimateDetail (IdRateEstimateDetail, IdRateEstimate, IdSettlment, CountValue, IdSurcharge, PercentValue, TotalAmount, IdRateCategory, Selected, DateExpire, EstimateDetailStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+		SELECT IdRateEstimateDetail, IdRateEstimate, IdSettlment, CountValue, IdSurcharge, PercentValue, TotalAmount, IdRateCategory, Selected, DateExpire, EstimateDetailStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated FROM dbo.RateEstimateDetail WITH (HOLDLOCK TABLOCKX)')
 GO
 SET IDENTITY_INSERT dbo.Tmp_RateEstimateDetail OFF
 GO
