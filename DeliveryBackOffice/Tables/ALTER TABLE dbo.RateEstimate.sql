@@ -11,13 +11,10 @@ COMMIT
 BEGIN TRANSACTION
 GO
 ALTER TABLE dbo.RateEstimate ADD
-	DateEcommerceSale datetime NULL,
-	DateEcommercePickUp datetime NULL,
-	DateCarrierDelivery datetime NULL
-GO
-DECLARE @v sql_variant 
-SET @v = N'date when created the estimate rate'
-EXECUTE sp_addextendedproperty N'MS_Description', @v, N'SCHEMA', N'dbo', N'TABLE', N'RateEstimate', N'COLUMN', N'DateService'
+	IdCurrency int NULL,
+	IdCountry nvarchar(2) NULL,
+	IdRateCategory int NULL,
+	RatePlanDescription nvarchar(50) NULL
 GO
 ALTER TABLE dbo.RateEstimate SET (LOCK_ESCALATION = TABLE)
 GO
