@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[spg_get_warehouse]    Script Date: 7/08/2020 13:50:01 ******/
+/****** Object:  StoredProcedure [dbo].[spg_guides_by_courierphone]    Script Date: 14/08/2020 16:06:24 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -9,12 +9,14 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
+
+
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-08-07>
 -- Description:	<Devuelve el nombre del destinatario y todas las piezas asignadas al courierman>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_guides_by_courierphone]
+ALTER PROCEDURE [dbo].[spg_guides_by_courierphone]
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
 	@PhoneNumber NVARCHAR(50)
@@ -23,6 +25,7 @@ BEGIN
   
 	SELECT
 		do.Receiver_FirstName + ' ' + do.Receiver_LastName as Receiver,
+		do.Receiver_Alternant_FullName as Alternant,
 		subq.Guide_Serie + CAST(subq.Guide_Number AS VARCHAR) as Guide,
 		subq.Pieces_Dry,
 		subq.Pieces_Cold
