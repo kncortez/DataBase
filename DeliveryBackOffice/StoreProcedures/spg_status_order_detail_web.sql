@@ -1,12 +1,13 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 30/07/2020 14:07:44 ******/
+/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 19/08/2020 18:31:53 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 -- =============================================
@@ -99,8 +100,16 @@ BEGIN
 			'web' as [StageSource],
 			(CASE WHEN dod.StatusOrderId IN (6,8) THEN ISNULL(dod.Observations,'') END) as [StageDescription],
 			(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
-																		ISNULL(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + 
-																															  CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)),'')
+																	ISNULL(
+																		ISNULL(
+																			   (SELECT TOP 1 
+																					'data:image/jpeg;base64,' + (select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Dry]"))', 'varchar(max)'))
+																				FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp with(nolock)
+																				JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) ON da.Guide_Serie = dp.Guide_Serie AND da.Guide_Number = dp.Guide_Number AND da.Verified = 1
+																				WHERE dp.Guide_Serie = dod.Guide_Serie AND dp.Guide_Number = dod.Guide_Number ORDER BY Date_Photo DESC)
+																			   ,
+																			   (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)))
+																		),'')
 																   ELSE '' END) as [ImagePath],
 			'' as NameOfReceiver,
 			'' as Place,
