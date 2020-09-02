@@ -57,4 +57,5 @@ FROM
 join deliverybackoffice.dbo.deliveryorderdetail dod with(nolock) on dod.Guide_Serie = SUBQ.Guide_Serie and dod.Guide_Number = SUBQ.Guide_Number and dod.StatusOrderId = 11
 join DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = SUBQ.Guide_Serie and do.Guide_Number = SUBQ.Guide_Number
 where dod.DateCreated <=  GETDATE() - 1
+AND (SUBQ.Rack_Position NOT LIKE '%(92)%' AND SUBQ.Rack_Position NOT LIKE '%(93)%')
 order by Days_Overdue
