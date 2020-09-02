@@ -27,14 +27,9 @@ CREATE TABLE [dbo].[LOG_Http_Interceptor](
 	[RS_Datetime] [datetime] NULL,
 	[RS_IdOrder] [nvarchar](4000) NULL,
 	[RS_LauValue] [nvarchar](max) NULL,
-	[RS_Token] [nvarchar](max) NULL,
- CONSTRAINT [PK_LOG_Http_Interceptor] PRIMARY KEY CLUSTERED 
-(
-	[Id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+	[RS_Token] [nvarchar](max) NULL
+)
 GO
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del log (identity)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'LOG_Http_Interceptor', @level2type=N'COLUMN',@level2name=N'Id'
 GO
 
@@ -128,5 +123,10 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token generado
 
 generalmente usando JWT' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'LOG_Http_Interceptor', @level2type=N'COLUMN',@level2name=N'RS_Token'
 GO
-
+CREATE CLUSTERED INDEX [TransactionIDLogAndSystem] ON [dbo].[LOG_Http_Interceptor]
+(
+	[TransactionID] ASC,
+	[IdSystem] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
 
