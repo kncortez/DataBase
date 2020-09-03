@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 30/07/2020 14:07:44 ******/
+/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 2/09/2020 18:32:47 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -9,12 +9,15 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
+
+
+
 -- =============================================
 -- Author:		<Carlos,Cano>
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking para el cliente>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_status_order_detail_web]
+CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
 AS
@@ -45,7 +48,9 @@ BEGIN
 		   RES.[ImagePath],
 		   RES.[NameOfReceiver],
 		   RES.[Place],
-		   RES.[ManifestNumber]
+		   RES.[ManifestNumber],
+		   RES.[Latitude],
+		   RES.[Longitude]
 	FROM 
 		(SELECT
 			0 [EventID],
@@ -75,8 +80,11 @@ BEGIN
 			'' as [ImagePath],
 			ISNULL([NameOfReceiver],'') as NameOfReceiver,
 			ISNULL(Sender_FirstName + ' ' + Sender_LastName, '') as Place ,
-			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) as [ManifestNumber]
-		FROM DeliveryBackOffice.dbo.DeliveryOrder do
+			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) as [ManifestNumber],
+			da.Latitude,
+			da.Longitude
+		FROM DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) on da.Guide_Serie = do.Guide_Serie and da.Guide_Number = do.Guide_Number
 		WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
 		UNION
 		SELECT 
@@ -99,14 +107,24 @@ BEGIN
 			'web' as [StageSource],
 			(CASE WHEN dod.StatusOrderId IN (6,8) THEN ISNULL(dod.Observations,'') END) as [StageDescription],
 			(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
-																		ISNULL(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + 
-																															  CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)),'')
+																	ISNULL(
+																		ISNULL(
+																			   (SELECT TOP 1 
+																					'data:image/jpeg;base64,' + (select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Dry]"))', 'varchar(max)'))
+																				FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp with(nolock)
+																				JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) ON da.Guide_Serie = dp.Guide_Serie AND da.Guide_Number = dp.Guide_Number AND da.Verified = 1 AND da.Accepted = 1
+																				WHERE dp.Guide_Serie = dod.Guide_Serie AND dp.Guide_Number = dod.Guide_Number ORDER BY Date_Photo DESC)
+																			   ,
+																			   (Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)))
+																		),'')
 																   ELSE '' END) as [ImagePath],
 			'' as NameOfReceiver,
 			'' as Place,
-			'' as [ManifestNumber]
-		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
-		   JOIN DeliveryBackOffice.dbo.StatusOrder so on so.StatusOrderId = dod.StatusOrderId
+			'' as [ManifestNumber],
+			'' as Latitude,
+			'' as Longitude
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod with(nolock) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
+		   JOIN DeliveryBackOffice.dbo.StatusOrder so with(nolock) on so.StatusOrderId = dod.StatusOrderId
 		WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
 		) RES
 		ORDER BY RES.[EventID], RES.[StageDate] ASC
@@ -164,6 +182,9 @@ BEGIN
 
 
 END
+  
+
+
 GO
 
 
