@@ -1,15 +1,19 @@
-USE DeliveryBackOffice;
+USE [DeliveryBackOffice]
+GO
 
+/****** Object:  StoredProcedure [dbo].[spg_get_delivery_proof]    Script Date: 7/09/2020 20:08:56 ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 -- =============================================
--- Author:		<Carlos,Cano>
--- Create date: <10 Agosto 2020>
--- Description:	<Obtiene todas las imágenes encontradas para la guía provista>
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
 -- =============================================
-CREATE PROCEDURE spg_get_delivery_proof
+ALTER PROCEDURE [dbo].[spg_get_delivery_proof]
 	-- Add the parameters for the stored procedure here
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT
@@ -26,5 +30,8 @@ BEGIN
 		,(select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Cold]"))', 'varchar(max)')) AS Image_Cold
 	FROM [DeliveryBackOffice].[dbo].[DeliveryProof]
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+	ORDER BY Date_Photo DESC
 END
 GO
+
+
