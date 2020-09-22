@@ -1,10 +1,8 @@
 USE [DeliveryBackOffice]
 GO
-
-/****** Object:  StoredProcedure [dbo].[spg_visitpoint]    Script Date: 13/08/2020 11:39:23 ******/
+/****** Object:  StoredProcedure [dbo].[spg_general_information_waybill]    Script Date: 9/16/2020 8:13:42 AM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
 
@@ -14,7 +12,7 @@ GO
 -- Create date: <13/Agosto/2020>
 -- Description:	<Obtener información relevante de la guía para aceptar o rechazar evidencia>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_general_information_waybill]
+ALTER PROCEDURE [dbo].[spg_general_information_waybill]
 	-- Add the parameters for the stored procedure here
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT
@@ -37,7 +35,8 @@ BEGIN
 		do.Sender_Address,
 		do.Sender_Zone,
 		do.Sender_Town,
-		do.Sender_Department
+		do.Sender_Department,
+		do.Receiver_Alternant_FullName
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber
 
@@ -59,8 +58,3 @@ BEGIN
 	GROUP BY SUBQ.ID_Courier, SUBQ.Courier_Name
 	
 END
-
-
-GO
-
-
