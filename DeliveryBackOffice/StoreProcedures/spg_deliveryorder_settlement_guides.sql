@@ -1,10 +1,8 @@
 USE [DeliveryBackOffice]
 GO
-
-/****** Object:  StoredProcedure [dbo].[spg_deliveryorder_settlement_guides]    Script Date: 20/09/2020 18:59:29 ******/
+/****** Object:  StoredProcedure [dbo].[spg_deliveryorder_settlement_guides]    Script Date: 9/22/2020 10:33:11 AM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
 
@@ -15,7 +13,7 @@ GO
 -- Create date: <2020-09-17>
 -- Description:	<Recupera información para generar manifiesto de despacho>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_deliveryorder_settlement_guides]
+ALTER PROCEDURE [dbo].[spg_deliveryorder_settlement_guides]
 		@IdManifest INT
 AS
 BEGIN
@@ -37,7 +35,9 @@ BEGIN
 		Shipping_Date nvarchar(50),
 		Max_Date nvarchar(50),
 		Receiver_Phone nvarchar(100),
-		Rack_Position nvarchar(MAX)
+		Rack_Position nvarchar(MAX),
+		Collect_on_Delivery decimal(16,2)
+
 	)
 
     -- tablix content
@@ -55,7 +55,8 @@ BEGIN
 	,CONVERT(varchar, do.Shipping_Date, 103) as Shipping_Date
 	,isnull(CONVERT(varchar, do.Delivery_Max_Date, 103),'') as Max_Date
 	,do.Receiver_Phone as Receiver_Phone
-	,(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)) as Rack_Position
+	,(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)) as Rack_Position, 
+	(SELECT Collect_OnDelivery FROM  DeliveryBackOffice.dbo.DeliveryOrder WHERE Guide_Number = do.Guide_Number AND Guide_Serie= do.Guide_Serie)
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do
 	where do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
@@ -64,5 +65,3 @@ BEGIN
 	order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc
 
 END
-GO
-
