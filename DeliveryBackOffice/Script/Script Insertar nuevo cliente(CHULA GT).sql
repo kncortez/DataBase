@@ -7,4 +7,4 @@ INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domai
 VALUES (' CHULA GT', ' CHULA GT.', 'verenamere@gmail.com','^.*solicitud.*$','^verenamere@gmail.com$','^envios_.*\.xls$','CHULA GT')
  
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])
-VALUES (13420,'CHULA GT',1,'GT', 34,'CCANO',GETDATE(),NULL,NULL,33,NULL,NULL,NULL,NULL,NULL,NULL)
+VALUES (13420,'CHULA GT',1,'GT', 34,'CCANO',GETDATE(),NULL,NULL,34,NULL,NULL,NULL,NULL,NULL,NULL)
