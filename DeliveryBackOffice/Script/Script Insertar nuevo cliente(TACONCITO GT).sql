@@ -10,4 +10,4 @@ INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description],
 
  INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ( [CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],
  [VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])
- VALUES (13445,'TACONCITO GT', 1,'GT', NULL,'APAZ', GETDATE(), 43, NULL, NULL,'30 ave C 11-73 Zona 7 Jardines Tikal 1', 7,'Guatemala', 'Guatemala',' 33291166 / 55290028', 'TACONCITO GT');
+ VALUES (13445,'TACONCITO GT', 1,'GT', 138101,'CCANO', GETDATE(), NULL, NULL, 39, NULL, NULL, NULL, NULL,NULL,NULL);
