@@ -1,0 +1,1 @@
+ALTER TABLE DeliveryBackOffice.dbo.SenderReceiver ADD [Status] BIT NULL
