@@ -1,12 +1,13 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[spg_get_delivery_proof]    Script Date: 7/09/2020 20:08:56 ******/
+/****** Object:  StoredProcedure [dbo].[spg_get_delivery_proof]    Script Date: 16/09/2020 11:16:37 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 -- =============================================
 -- Author:		<Author,,Name>
@@ -28,6 +29,7 @@ BEGIN
 		,[Date_Photo]
 		,(select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Dry]"))', 'varchar(max)')) AS Image_Dry
 		,(select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Cold]"))', 'varchar(max)')) AS Image_Cold
+		,(select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Incident]"))', 'varchar(max)')) AS Image_Incident
 	FROM [DeliveryBackOffice].[dbo].[DeliveryProof]
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 	ORDER BY Date_Photo DESC

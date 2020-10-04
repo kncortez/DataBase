@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 2/09/2020 18:32:47 ******/
+/****** Object:  StoredProcedure [dbo].[spg_status_order_detail_web]    Script Date: 9/09/2020 21:36:05 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -17,7 +17,7 @@ GO
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking para el cliente>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
+ALTER PROCEDURE [dbo].[spg_status_order_detail_web]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
 AS
@@ -105,7 +105,17 @@ BEGIN
 			dod.DateCreated as [StageDate], -- date of status id
 			so.OrderDescription as [StageTitle], -- status order name
 			'web' as [StageSource],
-			(CASE WHEN dod.StatusOrderId IN (6,8) THEN ISNULL(dod.Observations,'') END) as [StageDescription],
+			(CASE 
+				WHEN dod.StatusOrderId IN (6,8) THEN ISNULL(dod.Observations,'') 
+				WHEN dod.StatusOrderId IN (12) THEN ISNULL((
+															SELECT TOP 1 
+																I.[Description] 
+															FROM DeliveryBackOffice.dbo.Incident I with(nolock) 
+															JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) ON da.ID_Incident = I.ID
+															WHERE dod.Guide_Serie = da.Guide_Serie AND dod.Guide_Number = da.Guide_Number
+															ORDER BY da.Date_Created DESC)
+														,'')
+			END) as [StageDescription],
 			(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
 																	ISNULL(
 																		ISNULL(
