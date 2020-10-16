@@ -82,6 +82,7 @@
   -- FIN FEATURE 33
   
   -- INICIO FEATURE 34 - ALTA 5 CLIENTES
+  -- v2 - SQL
   
   
     -- CORPORACIÓN DGO, S.A.
