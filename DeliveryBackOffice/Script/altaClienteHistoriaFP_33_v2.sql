@@ -27,7 +27,7 @@
   
     -- ULTRACEM GUATEMALA, S.A.
   INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-  VALUES ('ULTRACEM GUATEMALA, S.A.', 'ULTRACEM GUATEMALA, S.A.', '@ultracem.gt','^.*solicitud.*$','^lmorales@ultracem.gt$','^envios_.*\.xls$','ULTRACEM GT')
+  VALUES ('ULTRACEM GUATEMALA, S.A.', 'ULTRACEM GUATEMALA, S.A.', '@ultracem.gt','^.*solicitud.*$','^([\w\.\-]+)@ultracem.gt$','^envios_.*\.xls$','ULTRACEM GT')
   
   INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
   [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])
@@ -72,28 +72,10 @@
   
   -- DISTRIBUIDORA CKLASS Y MÁS
   INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-  VALUES ('DISTRIBUIDORA CKLASS Y MÁS', 'DISTRIBUIDORA CKLASS Y MÁS', '@gmail.com','^.*solicitud.*$','^	analucia1371@gmail.com$','^envios_.*\.xls$','DISTRIBUIDORA CKLASS')
+  VALUES ('DISTRIBUIDORA CKLASS Y MÁS', 'DISTRIBUIDORA CKLASS Y MÁS', '@gmail.com','^.*solicitud.*$','^alisoncorado1@gmail.com$','^envios_.*\.xls$','DISTRIBUIDORA CKLASS')
   
   INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
   [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])
   VALUES (13612,'DISTRIBUIDORA CKLASS Y MÁS',1,'GT',138225,'ERIVAS',GETDATE(),NULL,NULL,72,''
   ,0,'ATESCATEMPA','JUTIAPA',45386003,'DISTRIBUIDORA CKLASS Y MÁS')
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
