@@ -103,7 +103,7 @@ VALUES (13908,'DIEGO PASTOR',1,'GT',138334,'ERIVAS',GETDATE(),NULL,NULL,135,''
 
 -- CURIO-CITY
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('CURIO-CITY', 'CURIO-CITY', '@hotmail.com','^.*solicitud.*$','^diegopas2011@hotmail.com$','^envios_.*\.xls$','DIEGO')
+VALUES ('CURIO-CITY', 'CURIO-CITY', '@gmail.com','^.*solicitud.*$','^eliani0617@gmail.com$','^envios_.*\.xls$','DIEGO')
   
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])
@@ -123,11 +123,11 @@ VALUES (13918,'LAOS CORPORATIVA, S.A.',1,'GT',138382,'ERIVAS',GETDATE(),NULL,NUL
 
 -- MULTIPROYECTORES
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('MULTIPROYECTORES', 'MULTIPROYECTORES', '@gmail.com','^.*solicitud.*$','^diegoar14@gmail.com$','^envios_.*\.xls$','MULTIPROYECTORES')
+VALUES ('MULTIPROYECTOS', 'MULTIPROYECTORES', '@gmail.com','^.*solicitud.*$','^diegoar14@gmail.com$','^envios_.*\.xls$','MULTIPROYECTORES')
   
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])
-VALUES (13923,'MULTIPROYECTORES',1,'GT',138339,'ERIVAS',GETDATE(),NULL,NULL,138,'Via 5 0-81'
+VALUES (13923,'MULTIPROYECTOS',1,'GT',138339,'ERIVAS',GETDATE(),NULL,NULL,138,'Via 5 0-81'
 ,4,'GUATEMALA','GUATEMALA','59390973','MULTIPROYECTORES')
 
 
