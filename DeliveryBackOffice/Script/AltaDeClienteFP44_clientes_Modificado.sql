@@ -6,7 +6,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14186,'DISTRIBUIDORA M&T',1,'GT',138529,'JHERNANDEZ',GETDATE(),NULL,NULL,186,NULL,4,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('COMERCIALIZACIONES MODERNAS', 'COMERCIALIZACIONES MODERNAS', '@gmail.com','^.*solicitud.*$','^elizabeth.paniagua.gt@gmail.com$','^envios_.*\.xls$','COMERCIALIZACIONES MODERNAS')
+VALUES ('COMERCIALIZACIONES MODERNAS', 'COMERCIALIZACIONES MODERNAS', '@gmail.com','^.*solicitud.*$','^elizabeth.paniagua.gt@gmail.com$','^envios_.*\.xls$','COMERCIALIZACIONES M.')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
@@ -62,7 +62,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14226,'COUCOU BEBE GT',1,'GT',138518,'JHERNANDEZ',GETDATE(),NULL,NULL,194,NULL,17,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('M&M Clothes And Accesories', 'M&M Clothes And Accesories', '@gmail.com','^.*solicitud.*$','^fabiolita.gordillo@gmail.com$','^envios_.*\.xls$','M&M Clothes And Accesories')
+VALUES ('M&M Clothes And Accesories', 'M&M Clothes And Accesories', '@gmail.com','^.*solicitud.*$','^fabiolita.gordillo@gmail.com$','^envios_.*\.xls$','M&M Clothes')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
@@ -76,7 +76,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14236,'GUATE MAYA NATURAL',1,'GT',138516,'JHERNANDEZ',GETDATE(),NULL,NULL,196,NULL,0,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('Enrique Alejandro Marroquín Monterroso', 'Enrique Alejandro Marroquín Monterroso', '@gmail.com','^.*solicitud.*$','^kalemarro78@gmail.com$','^envios_.*\.xls$','Enrique Alejandro Marroquín Monterroso')
+VALUES ('Enrique Alejandro Marroquín Monterroso', 'Enrique Alejandro Marroquín Monterroso', '@gmail.com','^.*solicitud.*$','^kalemarro78@gmail.com$','^envios_.*\.xls$','Enrique Alejandro')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
@@ -104,7 +104,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14256,'DISTRIBUIDORA XILOJ',1,'GT',138504,'JHERNANDEZ',GETDATE(),NULL,NULL,200,NULL,1,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('CLINICA DERMATOLOGICA Y ESTETICA', 'CLINICA DERMATOLOGICA Y ESTETICA', '@hotmail.com','^.*solicitud.*$','^arleth.aap@hotmail.com$','^envios_.*\.xls$','CLINICA DERMATOLOGICA Y ESTETICA')
+VALUES ('CLINICA DERMATOLOGICA Y ESTETICA', 'CLINICA DERMATOLOGICA Y ESTETICA', '@hotmail.com','^.*solicitud.*$','^arleth.aap@hotmail.com$','^envios_.*\.xls$','CLINICA DERMATOLOGICA')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
