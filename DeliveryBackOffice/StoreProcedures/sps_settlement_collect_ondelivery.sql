@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sps_settlement_collect_ondelivery]    Script Date: 17/11/2020 18:11:57 ******/
+/****** Object:  StoredProcedure [dbo].[sps_settlement_collect_ondelivery]    Script Date: 19/11/2020 13:35:52 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -9,12 +9,13 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
+
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-17>
 -- Description:	<Guardar el monto liquidado en bodega>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_settlement_collect_ondelivery]
+ALTER PROCEDURE [dbo].[sps_settlement_collect_ondelivery]
 		@GuideSerie AS VARCHAR(2),
 		@GuideNumber AS INT,
 		@Amount DECIMAL(14,2),
@@ -41,7 +42,8 @@ BEGIN
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID',
-				@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide'
+				@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide',
+				@Amount AS 'Amount'
 			ROLLBACK TRANSACTION
 		END CATCH;
 
@@ -52,13 +54,15 @@ BEGIN
 					1 AS 'StatusCode',
 					'Registro guardado correctamente' AS 'Description', 
 					@@TRANCOUNT AS 'NumTransferID',
-					@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide'
+					@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide',
+					@Amount AS 'Amount'
 			ELSE
 				SELECT			  
 					0 AS 'StatusCode',
 					'Registro no encontrado' AS 'Description', 
 					0 AS 'NumTransferID',
-					@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide'
+					@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide',
+					@Amount AS 'Amount'
 
 			COMMIT TRANSACTION;			
 		END
@@ -67,7 +71,8 @@ BEGIN
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID',
-				@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide'
+				@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide',
+				@Amount AS 'Amount'
 END
 GO
 
