@@ -55,7 +55,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14358,'CHILDRENS SPACE',1,'GT',138605,'JHERNANDEZ',GETDATE(),NULL,NULL,220,NULL,3,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('NORVANDA HEALTHCARE, S.A.', 'NORVANDA HEALTHCARE, S.A.', '@NORVANDA.COM','^.*solicitud.*$','^([\w\.\-]+)@norvanda.com$','^envios_.*\.xls$','NORVANDA HEALTHCARE, S.A.')
+VALUES ('NORVANDA HEALTHCARE, S.A.', 'NORVANDA HEALTHCARE, S.A.', '@NORVANDA.COM','^.*solicitud.*$','^([\w\.\-]+)@norvanda.com$','^envios_.*\.xls$','NORVANDA HEALTHCARE')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
@@ -83,7 +83,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14378,'EMANUEL',1,'GT',138594,'JHERNANDEZ',GETDATE(),NULL,NULL,224,NULL,0,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('Oferta Xela / Curiosidades Angel', 'Oferta Xela / Curiosidades Angel', '@gmail.com','^.*solicitud.*$','^ofertaxela@gmail.com$','^envios_.*\.xls$','Oferta Xela / Curiosidades Angel')
+VALUES ('Oferta Xela / Curiosidades Angel', 'Oferta Xela / Curiosidades Angel', '@gmail.com','^.*solicitud.*$','^ofertaxela@gmail.com$','^envios_.*\.xls$','Oferta Xela')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
@@ -104,7 +104,7 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14393,'SORELLE',1,'GT',138584,'JHERNANDEZ',GETDATE(),NULL,NULL,227,NULL,10,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('TALLER Y REPUESTOS CHARLY', 'TALLER Y REPUESTOS CHARLY', '@gmail.com','^.*solicitud.*$','^charlytaller10@gmail.com','^envios_.*\.xls$','TALLER Y REPUESTOS CHARLY')
+VALUES ('TALLER Y REPUESTOS CHARLY', 'TALLER Y REPUESTOS CHARLY', '@gmail.com','^.*solicitud.*$','^charlytaller10@gmail.com','^envios_.*\.xls$','TALLER REPUESTOS CHARLY')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
@@ -125,28 +125,28 @@ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[De
 VALUES (14108,'FLEX2STORE',1,'GT',138580,'JHERNANDEZ',GETDATE(),NULL,NULL,230,NULL,4,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('Inversiones Saravia, S.A.', 'Inversiones Saravia, S.A.', '@gmail.com','^.*solicitud.*$','^operacioneslabsgt@gmail.com$','^envios_.*\.xls$','Inversiones Saravia, S.A.')
+VALUES ('Inversiones Saravia, S.A.', 'Inversiones Saravia, S.A.', '@gmail.com','^.*solicitud.*$','^operacioneslabsgt@gmail.com$','^envios_.*\.xls$','Inversiones Saravia')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
 VALUES (14413,'Balu Shop',1,'GT',138572,'JHERNANDEZ',GETDATE(),NULL,NULL,231,NULL,2,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('Guatemala Digital, S.A', 'Guatemala Digital, S.A', '@guatemaladigital.com','^.*solicitud.*$','^([\w\.\-]+)@guatemaladigital.com$','^envios_.*\.xls$','Guatemala Digital, S.A')
+VALUES ('Guatemala Digital, S.A', 'Guatemala Digital, S.A', '@guatemaladigital.com','^.*solicitud.*$','^([\w\.\-]+)@guatemaladigital.com$','^envios_.*\.xls$','Guatemala Digital')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
 VALUES (14418,'Guatemala Digital, S.A',1,'GT',138571,'JHERNANDEZ',GETDATE(),NULL,NULL,232,NULL,7,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('SURTIDORA APC S.A.', 'SURTIDORA APC S.A.', '@gmail.com','^.*solicitud.*$','^surtidoraapc@gmail.com$','^envios_.*\.xls$','SURTIDORA APC S.A.')
+VALUES ('SURTIDORA APC S.A.', 'SURTIDORA APC S.A.', '@gmail.com','^.*solicitud.*$','^surtidoraapc@gmail.com$','^envios_.*\.xls$','SURTIDORA APC')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
 VALUES (14423,'SURTIDORA APC S.A.',1,'GT',138462,'JHERNANDEZ',GETDATE(),NULL,NULL,233,NULL,7,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
-VALUES ('Compuglobal de Guatemala, S.A.', 'Compuglobal de Guatemala, S.A.', '@gmail.com','^.*solicitud.*$','^compuglobalsa@gmail.com$','^envios_.*\.xls$','Compuglobal de Guatemala, S.A.')
+VALUES ('Compuglobal de Guatemala, S.A.', 'Compuglobal de Guatemala, S.A.', '@gmail.com','^.*solicitud.*$','^compuglobalsa@gmail.com$','^envios_.*\.xls$','Compuglobal de Guatemala')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
