@@ -122,7 +122,7 @@ VALUES ('FLEX2STORE', 'FLEX2STORE', '@flextostore.com','^.*solicitud.*$','^([\w\
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],
 [DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
-VALUES (14108,'FLEX2STORE',1,'GT',138580,'JHERNANDEZ',GETDATE(),NULL,NULL,230,NULL,4,NULL,NULL,NULL,NULL)
+VALUES (14408,'FLEX2STORE',1,'GT',138580,'JHERNANDEZ',GETDATE(),NULL,NULL,230,NULL,4,NULL,NULL,NULL,NULL)
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation]) 
 VALUES ('Inversiones Saravia, S.A.', 'Inversiones Saravia, S.A.', '@gmail.com','^.*solicitud.*$','^operacioneslabsgt@gmail.com$','^envios_.*\.xls$','Inversiones Saravia')
