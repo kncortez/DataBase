@@ -8,7 +8,7 @@ Declare @VpCodeOfReference as int = 4247,
 @SAPserieNC as varchar(10) = '64',
 @SAPseriePago as varchar(10) = '68',
 @SAPCardCode as varchar(150) = 'CEC0004',
-@SAPCreditCard as varchar(15) = '1'
+@SAPCreditCard as varchar(15) = '3'
 
 INSERT INTO [dbo].[del_ParametrosFactura]
            ([dpf_VpCodeOfReference]
