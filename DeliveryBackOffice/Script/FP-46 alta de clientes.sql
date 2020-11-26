@@ -11,7 +11,7 @@
  VALUES ('SHEIN SAN MARCOS', 'SHEIN SAN MARCOS', '@gmail.com','^.*solicitud.*$','^christinaew23@gmail.com$','^envios_.*\.xls$','SHEIN SAN MARCOS')
 
  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('WYLCO', 'WYLCO', '@gmail.com','^.*solicitud.*$','^bodega1wylco@gmail.com|gerencia@wylcocaraudio.com|recepcion@wylcocaraudio.com|wylco20calle@gmail.com$','^envios_.*\.xls$','WYLCO')
+ VALUES ('WYLCO', 'WYLCO', '@gmail.com','^.*solicitud.*$','^aldocaballeros@gmail.com$','^envios_.*\.xls$','WYLCO')
 
  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
  VALUES ('THE SHUVI', 'THE SHUVI', '@gmail.com','^.*solicitud.*$','^theshuvibusiness@gmail.com$','^envios_.*\.xls$','THE SHUVI')
@@ -33,27 +33,6 @@
  
  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
  VALUES ('RASHEL STORE GT', 'RASHEL STORE GT', '@gmail.com','^.*solicitud.*$','^perezsantizo23@gmail.com$','^envios_.*\.xls$','RASHEL STORE GT')
- 
-  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('INTERNATIONAL DE GUATEMALA S.A.', 'INTERNATIONAL DE GUATEMALA S.A.', '@codaca.com.gt','^.*solicitud.*$','^([\w\.\-]+)@codaca.com.gt$','^envios_.*\.xls$','INTERNATIONAL GT')
- 
-  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('LUXURY STORE', 'LUXURY STORE', '@outlook.com','^.*solicitud.*$','^jakelineyax@outlook.com$','^envios_.*\.xls$','LUXURY STORE')
- 
-  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('CILA BY-LLAMA STORE', 'CILA BY-LLAMA STORE', '@by-llama.com','^.*solicitud.*$','^([\w\.\-]+)@by-llama.com$','^envios_.*\.xls$','CILA BY-LLAMA STORE')
- 
-  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('SKUARE GROUP', 'SKUARE GROUP', '@gmail.com','^.*solicitud.*$','^hefferkitchenn@gmail.com$','^envios_.*\.xls$','SKUARE GROUP')
- 
-  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('SUMINISTROS GENERALES DE IMPRESIÓN', 'SUMINISTROS GENERALES DE IMPRESIÓN', '@gmail.com','^.*solicitud.*$','^importaciondeimpresion2@gmail.com$','^envios_.*\.xls$','SUMINISTROS GENERALES')
- 
-  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('MARIEE', 'MARIEE', '@gmail.com','^.*solicitud.*$','^marielos.fernandez27@gmail.com$','^envios_.*\.xls$','MARIEE')
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
- VALUES ('KINGSKOR.GT', 'KINGSKOR.GT', '@gmail.com','^.*solicitud.*$','^gonzalezjeremy003@gmail.com$','^envios_.*\.xls$','KINGSKOR.GT')
 
  INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
  VALUES (14443,'ANDY STORE502',1,'GT',138609,'JHERNANDEZ',GETDATE(),NULL,NULL,237,NULL,NULL,NULL,NULL,NULL,NULL)
@@ -93,24 +72,3 @@
  
  INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
  VALUES (14498,'RASHEL STORE GT',1,'GT',138647,'JHERNANDEZ',GETDATE(),NULL,NULL,248,NULL,NULL,NULL,NULL,NULL,NULL)
- ------------
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14503,'INTERNATIONAL DE GUATEMALA S.A.',1,'GT',138653,'JHERNANDEZ',GETDATE(),NULL,NULL,249,NULL,NULL,NULL,NULL,NULL,NULL)
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14508,'LUXURY STORE',1,'GT',138652,'JHERNANDEZ',GETDATE(),NULL,NULL,250,NULL,NULL,NULL,NULL,NULL,NULL)
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14513,'CILA BY-LLAMA STORE',1,'GT',138651,'JHERNANDEZ',GETDATE(),NULL,NULL,251,NULL,NULL,NULL,NULL,NULL,NULL)
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14518,'SKUARE GROUP',1,'GT',138650,'JHERNANDEZ',GETDATE(),NULL,NULL,252,NULL,NULL,NULL,NULL,NULL,NULL)
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14523,'SUMINISTROS GENERALES DE IMPRESIÓN',1,'GT',138649,'JHERNANDEZ',GETDATE(),NULL,NULL,253,NULL,NULL,NULL,NULL,NULL,NULL)
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14528,'MARIEE',1,'GT',138648,'JHERNANDEZ',GETDATE(),NULL,NULL,254,NULL,NULL,NULL,NULL,NULL,NULL)
- 
- INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
- VALUES (14533,'KINGSKOR.GT',1,'GT',138646,'JHERNANDEZ',GETDATE(),NULL,NULL,255,NULL,NULL,NULL,NULL,NULL,NULL)
