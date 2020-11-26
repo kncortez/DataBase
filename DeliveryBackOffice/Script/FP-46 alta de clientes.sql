@@ -30,6 +30,9 @@
 
  INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
  VALUES ('DISTRIBUIDORA LOPEZ', 'DISTRIBUIDORA LOPEZ', '@gmail.com','^.*solicitud.*$','^saecheverrial@gmail.com$','^envios_.*\.xls$','DISTRIBUIDORA LOPEZ')
+ 
+ INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject], [RegexEmail], [RegexFilename], [Abbreviation])  
+ VALUES ('RASHEL STORE GT', 'RASHEL STORE GT', '@gmail.com','^.*solicitud.*$','^perezsantizo23@gmail.com$','^envios_.*\.xls$','RASHEL STORE GT')
 
  INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
  VALUES (14443,'ANDY STORE502',1,'GT',138609,'JHERNANDEZ',GETDATE(),NULL,NULL,237,NULL,NULL,NULL,NULL,NULL,NULL)
@@ -66,3 +69,6 @@
 
  INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
  VALUES (14493,'DISTRIBUIDORA LOPEZ',1,'GT',138641,'JHERNANDEZ',GETDATE(),NULL,NULL,247,NULL,NULL,NULL,NULL,NULL,NULL)
+ 
+ INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],[StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[CustomerID],[Address],[Zone],[Town],[Department],[Phone],[ContactName])  
+ VALUES (14498,'RASHEL STORE GT',1,'GT',138647,'JHERNANDEZ',GETDATE(),NULL,NULL,248,NULL,NULL,NULL,NULL,NULL,NULL)
