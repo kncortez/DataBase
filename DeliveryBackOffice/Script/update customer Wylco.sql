@@ -1,0 +1,1 @@
+update [DeliveryBackOffice].[dbo].[Customer] SET RegexEmail = '^bodega1wylco@gmail.com|gerencia@wylcocaraudio.com|recepcion@wylcocaraudio.com|wylco20calle@gmail.com$' WHERE IdCustomer = 241
