@@ -10,6 +10,9 @@ Declare @VpCodeOfReference as int = 4262,--Codigo Visit Point Client
 @SAPCardCode as varchar(150) = 'CEC0007',--Código del cliente SAP del Express Center, proporcionado por Juan Carlos Grijalva
 @SAPCreditCard as varchar(15) = '6'--Código de la tarjeta de credito del Express Center, proporcionado por Juan Carlos Grijalva
 
+delete del_ParametrosFactura
+where dpf_VpCodeOfReference = @VpCodeOfReference
+
 INSERT INTO [dbo].[del_ParametrosFactura]
            ([dpf_VpCodeOfReference]
            ,[dpf_FELRequestor]
@@ -41,11 +44,11 @@ INSERT INTO [dbo].[del_ParametrosFactura]
            ,[dpf_SAPcreditCard])
      VALUES
            (@VpCodeOfReference
-           ,'0D9502F3-144F-4B41-AF42-D6118F3B49FE'
+           ,'301767F2-BA4D-43A2-9131-E13C95857549'
            ,'SYSTEM_REQUEST'
            ,'GT'
            ,'86534599'
-           ,'0D9502F3-144F-4B41-AF42-D6118F3B49FE'
+           ,'301767F2-BA4D-43A2-9131-E13C95857549'
            ,'ADMINISTRADOR'
            ,'POST_DOCUMENTGT'
            ,'XML'
