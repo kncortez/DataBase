@@ -27,7 +27,7 @@ BEGIN
 	--join DeliveryBackOffice.dbo.VisitPointClient vpc with(nolock) on vpc.CodeOfReference = ihd.inv_vpCodeOfReferences
 	where ihd.inv_status in(-1,2)
 	and inv_type in (1,2)
-	and cast(ihd.inv_dateRegister as date) > '2020-12-01'
+	and cast(ihd.inv_dateRegister as date) >= '2020-12-01'
 	and ihd.inv_SAPDocEntry is null
 	and isnull(ihd.inv_certificationFEL,'') != ''
 	order by inv_pk_id
