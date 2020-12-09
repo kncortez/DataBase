@@ -8,7 +8,7 @@ GO
 -- Create date: <2020-08-25>
 -- Description:	<GET PhoneBook>
 -- =============================================
-CREATE PROCEDURE spg_dsms_PhoneBook 
+ALTER PROCEDURE spg_dsms_PhoneBook 
 	@MaxDeliveryDate DATETIME = '2020-06-09'
 AS
 BEGIN
@@ -63,13 +63,58 @@ BEGIN
 	select @TopBatchId=isnull(MAX(st.Sent_Batch_Id),0)+1
 	from DeliveryBackOffice.dbo.SMS_Sent st with(nolock)
 
+	--select 
+	--	 pb._FirstName
+	--	,pb._LastName
+	--	,replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Phone)),'''',';'),'"',';'),' ',';'),'/',';'),',',';'),'-',(case when CHARINDEX('-', LTRIM(RTRIM(pb._Phone)))>8 then';'else ''end))'_Phone'
+	--	--,pb._Phone
+	--	--,pb._Address
+	--	,replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Address)),'  ',' '),' , ',','),', ',','),' ,',','),'zona ','Zona'),'avenida','Ave.')'_Address'
+	--	,pb._Town
+	--	,pb._Department
+	--	,pb._ReceiverID
+	--	,pb._DeliveryDate
+	--	,@TopBatchId'TopBatchId'
+	--	,pb._Series
+	--	,pb._Number
+	--from @PhoneBook pb 
+
+	declare @CleanPhoneBook as table (
+	_FirstName nvarchar(300),
+	_LastName nvarchar(300),
+	_Phone nvarchar(500),
+	_Address nvarchar(500),
+	_Town nvarchar(100),
+	_Department nvarchar(100),
+	_ReceiverID int,
+	_DeliveryDate datetime,
+	_Series nvarchar(25),
+	_Number int
+	)
+	insert into @CleanPhoneBook	
 	select 
 		 pb._FirstName
 		,pb._LastName
 		,replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Phone)),'''',';'),'"',';'),' ',';'),'/',';'),',',';'),'-',(case when CHARINDEX('-', LTRIM(RTRIM(pb._Phone)))>8 then';'else ''end))'_Phone'
 		--,pb._Phone
 		--,pb._Address
-		,replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Address)),'  ',' '),' , ',','),', ',','),' ,',','),'zona ','Zona'),'avenida','Ave.')'_Address'
+		,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Address)),'  ',' '),' , ',','),', ',','),' ,',','),'zona ','z'),'avenida','Ave.'),','+pb._Department,''),'colonia','col.'),'Residencial','Resid.'),'carretera','ctra.'),'manzana','mz.')'_Address'
+		--replace(replace(replace(replace(replace(replace(replace(ltrim(rtrim(pb._Address)),'  ',' '),' , ',','),', ',','),' ,',','),'zona ','z'),'avenida','Ave.'),','+pb._Department,'') '_Address'
+		,pb._Town
+		,pb._Department
+		,pb._ReceiverID
+		,pb._DeliveryDate
+		,pb._Series
+		,pb._Number
+	from @PhoneBook pb 
+
+	select 
+		 pb._FirstName
+		,pb._LastName
+		,pb._Phone
+		,(case when LEN(pb._Address)>45
+		  then substring(pb._Address,1,45)	
+		  else pb._Address end)'_Address'
 		,pb._Town
 		,pb._Department
 		,pb._ReceiverID
@@ -77,7 +122,8 @@ BEGIN
 		,@TopBatchId'TopBatchId'
 		,pb._Series
 		,pb._Number
-	from @PhoneBook pb 
+	from @CleanPhoneBook pb 
+
 
 	INSERT INTO [dbo].[SMS_Sent]
 			   ([Sent_Guide_Series]
