@@ -1,39 +1,39 @@
 		
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('LUIS FERNANDO SOLIS ROMERO', 'LUIS FERNANDO SOLIS ROMERO', '@gmail.com','^.*solicitud.*$','^luis.fer.sol88@gmail.com$','^envios_.*\.xls$','LUIS SOLIS',1)		
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('LUIS FERNANDO SOLIS ROMERO', 'LUIS FERNANDO SOLIS ROMERO', '@gmail.com','^.*solicitud.*$','^luis.fer.sol88@gmail.com$','^envios_.*\.xls$','LUIS SOLIS')		
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('SARI´S BEAUTY SUPPLY SHOP', 'SARI´S BEAUTY SUPPLY SHOP', '@hotmail.com','^.*solicitud.*$','^sarisbs@hotmail.com$','^envios_.*\.xls$','SARI´S BEAUTY',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('SARIS BEAUTY SUPPLY SHOP', 'SARIS BEAUTY SUPPLY SHOP', '@hotmail.com','^.*solicitud.*$','^sarisbs@hotmail.com$','^envios_.*\.xls$','SARI´S BEAUTY')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('PETCLICK GT', 'PETCLICK GT', '@gmail.com','^.*solicitud.*$','^petclick.gt@gmail.com$','^envios_.*\.xls$','PETCLICK GT',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('PETCLICK GT', 'PETCLICK GT', '@gmail.com','^.*solicitud.*$','^petclick.gt@gmail.com$','^envios_.*\.xls$','PETCLICK GT')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('FDE AMIGAS MONTE MARIA SOCIEDAD ANONIMA', 'FDE AMIGAS MONTE MARIA SOCIEDAD ANONIMA', '@colegiomontemaria.edu.gt','^.*solicitud.*$','^([\w\.\-]+)@colegiomontemaria.edu.gt$','^envios_.*\.xls$','AMIGAS MONTE MARIA',0)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('FDE AMIGAS MONTE MARIA SOCIEDAD ANONIMA', 'FDE AMIGAS MONTE MARIA SOCIEDAD ANONIMA', '@colegiomontemaria.edu.gt','^.*solicitud.*$','^([\w\.\-]+)@colegiomontemaria.edu.gt$','^envios_.*\.xls$','AMIGAS MONTE MARIA')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('FDE DISTRIBUIDORA GAMER', 'FDE DISTRIBUIDORA GAMER', '@hotmail.com','^.*solicitud.*$','^Garciaelder227@gmail.com|Yunis111@hotmail.com$','^envios_.*\.xls$','FDE DISTRIBUIDORA GAMER',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('FDE DISTRIBUIDORA GAMER', 'FDE DISTRIBUIDORA GAMER', '@hotmail.com','^.*solicitud.*$','^Garciaelder227@gmail.com|Yunis111@hotmail.com$','^envios_.*\.xls$','FDE DISTRIBUIDORA GAMER')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('TENDENCYS INNOVATIONS GUATEMALA, S.A.', 'TENDENCYS INNOVATIONS GUATEMALA, S.A.', '@hotmail.com','^.*solicitud.*$','^sarisbs@hotmail.com$','^envios_.*\.xls$','TENDENCYS INNOVATIONS',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('TENDENCYS INNOVATIONS GUATEMALA, S.A.', 'TENDENCYS INNOVATIONS GUATEMALA, S.A.', '@hotmail.com','^.*solicitud.*$','^sarisbs@hotmail.com$','^envios_.*\.xls$','TENDENCYS INNOVATIONS')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('LOREM GUATEMALA', 'LOREM GUATEMALA', '@gmail.com','^.*solicitud.*$','^lorenguatemala@gmail.com$','^envios_.*\.xls$','LOREM GUATEMALA',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('LOREM GUATEMALA', 'LOREM GUATEMALA', '@gmail.com','^.*solicitud.*$','^lorenguatemala@gmail.com$','^envios_.*\.xls$','LOREM GUATEMALA')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('HILCIAS ADIEL RUBIO OXLAJ', 'HILCIAS ADIEL RUBIO OXLAJ', '@gmail.com','^.*solicitud.*$','^adielrubio26@gmail.com$','^envios_.*\.xls$','HILCIAS ADIEL RUBIO OXLAJ',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('HILCIAS ADIEL RUBIO OXLAJ', 'HILCIAS ADIEL RUBIO OXLAJ', '@gmail.com','^.*solicitud.*$','^adielrubio26@gmail.com$','^envios_.*\.xls$','HILCIAS ADIEL RUBIO OXLAJ')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
-[RegexEmail], [RegexFilename], [Abbreviation], [COD])
-VALUES ('GRUPO ASPRO S.A', 'GRUPO ASPRO S.A', '@hotmail.com','^.*solicitud.*$','^([\w\.\-]+)@grupoaspro.com$','^envios_.*\.xls$','GRUPO ASPRO S.A',1)
+[RegexEmail], [RegexFilename], [Abbreviation])
+VALUES ('GRUPO ASPRO S.A', 'GRUPO ASPRO S.A', '@hotmail.com','^.*solicitud.*$','^([\w\.\-]+)@grupoaspro.com$','^envios_.*\.xls$','GRUPO ASPRO S.A')
 
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] ([CodeOfReference],[DescriptionOfClient],
 [StatusClient],[CountryId],[VisitPointId],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],
