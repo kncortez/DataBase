@@ -1,0 +1,84 @@
+GO
+/****** Object:  StoredProcedure [dbo].[spg_GetMessageByGuide]    Script Date: 11/2/2020 1:31:40 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author: <Hernandez, Josselyn>/<Borja, Cesar>/<Bidcar,Herrera>
+-- Create date: <2020-09-29>
+-- Description:	<Obtiene mensajes de texto por gúia electrónica>
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_GetMessageByGuide]
+		@Guide AS VARCHAR(50) = '' --Serie y número de guía
+AS
+BEGIN
+
+	declare @Guias as table(Guide nvarchar(150),	
+							Name nvarchar(200),	
+							Receiver_Phone nvarchar(100)
+							)
+		insert into @Guias
+		SELECT  			 
+			serv.Guide_Serie +  CAST(serv.Guide_Number AS VARCHAR) Guide,
+			serv.Receiver_FirstName,
+			serv.Receiver_Phone
+		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
+		WHERE 		
+		  Guide_Serie +  CAST(Guide_Number AS VARCHAR) = @Guide		   		
+
+		declare @CleanData as table(_number nvarchar(50), _name nvarchar(300), _phone nvarchar(50))
+		  insert into @CleanData
+		  select 
+			dc.Guide,
+			dc.Name,
+			ltrim(rtrim(sp.items ))
+		  from @Guias dc outer apply DeliveryBackOffice.dbo.fn_Splits(replace(replace(replace(replace(replace(replace(replace(ltrim(rtrim(dc.Receiver_Phone)),'''','||'),'"','||'),' ','||'),'/','||'),';','||'),',','||'),'-',(case when CHARINDEX('-', LTRIM(RTRIM(dc.Receiver_Phone)))>8 then'||'else ''end)),'||') sp
+
+declare @completed as table(guide_number nvarchar(50), namereceiver nvarchar(300), phonereceiver nvarchar(50), sms_message nvarchar(300))
+		  insert into @completed
+		  select 
+			c._number,
+			c._name,
+			c._phone,
+			r.SMS_Message
+		  from @CleanData c
+		  left join DeliveryBackOffice.dbo.SMS_Received r with(nolock)
+		  --on c._phone=right(r.SMS_MSisdn,8)
+		  on CONCAT('502',c._phone) collate SQL_Latin1_General_CP1_CI_AS = r.SMS_MSisdn collate SQL_Latin1_General_CP1_CI_AS
+		  --where 1=1
+		  GROUP BY c._number,
+				   c._name,
+				   c._phone,
+				   r.SMS_Message
+
+		 
+		 declare @JointTable as table(Guide_Number nvarchar(150), Receiver_Name nvarchar(250), Alter_Address nvarchar(500))
+		 insert into @JointTable
+		 select distinct c.guide_number, 
+				c.namereceiver, 
+				--c.phonereceiver, 
+				--c.sms_message,
+				STUFF(( SELECT  '| ' + CAST(B.sms_message AS VARCHAR(50))  +' '
+							FROM    @completed B
+							WHERE   B.guide_number = c.guide_number
+						  FOR
+							XML PATH('')
+						  ), 1, 1, '') AS 'AltAddress'
+		 from @completed c
+		
+		/*select g.Guide ,	
+			g.Name ,	
+			jt.Alter_Address
+		from @Guias g
+		left join @JointTable jt
+		on g.Guide=jt.Guide_Number
+		*/
+
+		select distinct c.guide_number Guide, 
+				c.namereceiver Name, 
+				c.phonereceiver Phone, 
+				c.sms_message Message
+		 from @completed c
+		 where c.sms_message IS NOT NULL
+END
