@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-
+/****** Object:  StoredProcedure [dbo].[sps_dsms_sms_received]    Script Date: 9/12/2020 18:52:45 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,7 +10,7 @@ GO
 -- Create date: <2020-08-31>
 -- Description:	<SET SMS RECEIVED FROM A PERSON>
 -- =============================================
-CREATE PROCEDURE sps_dsms_sms_received
+ALTER PROCEDURE [dbo].[sps_dsms_sms_received]
 	  @Message_ID	bigint
 	, @Message	nvarchar(500)
 	, @MSisdn	nvarchar(50)
@@ -23,6 +23,9 @@ CREATE PROCEDURE sps_dsms_sms_received
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	BEGIN TRY  
+
 	INSERT INTO [dbo].[SMS_Received]
            ([SMS_Message_ID]
            ,[SMS_Message]
@@ -47,6 +50,21 @@ BEGIN
 		   , GETDATE()
            )
 
-	SELECT SCOPE_IDENTITY() 'IDENTITY'
+		SELECT cast(SCOPE_IDENTITY() as nvarchar) [IDENTITY]
+				,'' AS [ErrorNumber]  
+				,'' AS ErrorState  
+				,'' AS ErrorProcedure  
+				,'' AS ErrorLine  
+				,'' AS ErrorMessage; 
+		     
+	END TRY  
+	BEGIN CATCH  
+		SELECT   '0' [IDENTITY]
+				,Cast(ERROR_NUMBER() as nvarchar) AS [ErrorNumber]  
+				,Cast(ERROR_STATE() as nvarchar) AS ErrorState  
+				,Cast(ERROR_PROCEDURE() as nvarchar) AS ErrorProcedure  
+				,Cast(ERROR_LINE() as nvarchar) AS ErrorLine  
+				,Cast(ERROR_MESSAGE() as nvarchar) AS ErrorMessage; 
+	END CATCH  
+
 END
-GO
