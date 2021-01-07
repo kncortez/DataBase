@@ -16,7 +16,7 @@ GO
 
 
 ALTER PROCEDURE [dbo].[spg_ddeli_deliveryOrders]
-	@_serie nvarchar(2)
+	@_serie nvarchar(2) 
 	,@_number int
 	,@_type tinyint --1 por manifiesto, 2 por orden
 AS
