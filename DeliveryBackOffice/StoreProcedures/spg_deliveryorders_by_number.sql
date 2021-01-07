@@ -20,7 +20,7 @@ GO
 -- =============================================
 
 ALTER PROCEDURE [dbo].[spg_deliveryorders_by_number]
-	@_serie nvarchar(2) = 'FD' --
+	@_serie nvarchar(2) = 'FD' 
 	,@_number nvarchar(max)
 AS
 BEGIN
