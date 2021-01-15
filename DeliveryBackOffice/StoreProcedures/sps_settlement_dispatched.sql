@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sps_deliveryorder_settlement]    Script Date: 20/09/2020 18:45:09 ******/
+/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched]    Script Date: 15/01/2021 08:48:20 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -11,12 +11,13 @@ GO
 
 
 
+
 -- =============================================
 -- Author:		<Carlos, Cano>
 -- Create date: <2020-09-16>
 -- Description:	<Guarda información para generar manifiesto de despacho>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_settlement_dispatched]
+ALTER PROCEDURE [dbo].[sps_settlement_dispatched]
 		@GuideSerie NVARCHAR(2),
 		@GuideNumbers NVARCHAR(MAX),
 		@GuideQuantity INT,
@@ -24,7 +25,8 @@ CREATE PROCEDURE [dbo].[sps_settlement_dispatched]
 		@PiecesDryDispatched INT,
 		@PiecesColdDispatched INT,
 		@RouteDispatched DATETIME,
-		@Token NVARCHAR(50)
+		@Token NVARCHAR(50),
+		@IdHubLogistic INT
 AS
 BEGIN
 	
@@ -55,7 +57,8 @@ BEGIN
 				   ,[Guides_Received]
 				   ,[ID_Courier]
 				   ,[Route_Dispatched]
-				   ,[Route_Received])
+				   ,[Route_Received]
+				   ,[ID_HubLogistic])
 			 VALUES
 				   (NULL
 				   ,@Token
@@ -70,7 +73,8 @@ BEGIN
 				   ,NULL
 				   ,@IdCourier
 				   ,@RouteDispatched
-				   ,NULL)
+				   ,NULL
+				   ,@IdHubLogistic)
 
 			SET @ID_Manifest = SCOPE_IDENTITY()
 
