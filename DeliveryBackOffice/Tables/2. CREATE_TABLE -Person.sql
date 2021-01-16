@@ -11,9 +11,9 @@ CREATE TABLE DeliveryBackOffice.dbo.Person
 	PerNationality varchar(100) NOT NULL,
 	PerRowStatus bit NOT NULL,
 	PerTokenCreated varchar(50)  NOT NULL,
-	PerDateCreated date  NOT NULL,
+	PerDateCreated datetime  NOT NULL,
 	PerTokenUpdated varchar(50)   NULL,
-	PerDateUpdated date   NULL
+	PerDateUpdated datetime   NULL
 	CONSTRAINT Uk_Person UNIQUE (PerIdentification)
 	)
 GO  

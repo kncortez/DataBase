@@ -8,9 +8,9 @@ CREATE TABLE DeliveryBackOffice.dbo.CatSystem
 	SysDescription varchar(50)  NULL,
 	SysRowStatus bit NOT NULL,
 	SysTokenCreated varchar(50)  NOT NULL,
-	SysDateCreated date  NOT NULL,
+	SysDateCreated datetime  NOT NULL,
 	SysTokenUpdated varchar(50)   NULL,
-	SysDateUpdated date   NULL)
+	SysDateUpdated datetime   NULL)
 GO  
 
 insert into DeliveryBackOffice.dbo.CatSystem  

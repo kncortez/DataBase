@@ -10,8 +10,8 @@ CREATE TABLE DeliveryBackOffice.dbo.UserSystemRestriction
 	UstStatus varchar(10) not null,
 	UstRowStatus bit not null,
 	UstTokenCreated varchar(50)  NOT NULL,
-	UstDateCreated date  NOT NULL,
-	UstOperationDate date  NOT NULL,
+	UstDateCreated datetime  NOT NULL,
+	UstOperationDate datetime  NOT NULL,
 	CONSTRAINT FKUserRestriction FOREIGN KEY (UstIdUser) REFERENCES RegisterUser(UsrIdUser),
 	CONSTRAINT FKSystemRestriction FOREIGN KEY (UstIdSystem) REFERENCES CatSystem(SysIdSystem)
 	)

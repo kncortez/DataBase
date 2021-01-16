@@ -6,8 +6,8 @@ CREATE TABLE DeliveryBackOffice.dbo.UserByUser
 	UbuIdUserChild bigint NOT NULL,
 	UbuRowStatus bit NOT NULL,
 	 primary key (UbuIdUserAdmin, UbuIdUserChild) ,
-	CONSTRAINT FKRolAdmin FOREIGN KEY (UbuIdUserAdmin) REFERENCES RegisterUser(UsrIdUser),
-	CONSTRAINT FKRolChild FOREIGN KEY (UbuIdUserChild) REFERENCES RegisterUser(UsrIdUser)
+	CONSTRAINT FKUserAdmin FOREIGN KEY (UbuIdUserAdmin) REFERENCES RegisterUser(UsrIdUser),
+	CONSTRAINT FKUserChild FOREIGN KEY (UbuIdUserChild) REFERENCES RegisterUser(UsrIdUser)
 	)
 GO  
 

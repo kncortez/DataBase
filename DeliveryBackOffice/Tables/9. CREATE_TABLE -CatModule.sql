@@ -31,6 +31,10 @@ insert into DeliveryBackOffice.dbo.CatModule
 	,ModTokenCreated
 	,ModDateCreated
 	)
-Values('Login',null,'www.forzadelivery.com/login', 'Módulo de inicio de sesión', 1,'file.png',0, 1,'SYS-DEVELOP',GETDATE())
+Values('Login',null,'/login', 'Módulo de inicio de sesión', 1,'file.png',0, 1,'SYS-DEVELOP',GETDATE()),
+	('Mi perfil',null,'/perfil', 'Perfil de usuario', 1,'file.png',0, 1,'SYS-CAQUINO',GETDATE()),
+	('Facturación',null,'/facturacion', 'Pefiles de facturación', 1,'file.png',0, 1,'SYS-CAQUINO',GETDATE()),
+	('Direcciónes',null,'/direcciones', 'Perfil de usuario', 1,'file.png',0, 1,'SYS-CAQUINO',GETDATE()),
+	('Métodos de Pago',null,'/pagos', 'Definición de métodos de pago', 1,'file.png',0, 1,'SYS-CAQUINO',GETDATE())
 
 select * from DeliveryBackOffice.dbo.CatModule  

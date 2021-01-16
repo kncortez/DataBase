@@ -12,7 +12,7 @@ CREATE TABLE DeliveryBackOffice.dbo.CatTypeAccount
 	TacTokenUpdated varchar(50)   NULL,
 	TacDateUpdated date   NULL)
 GO  
-/*
+
 insert into DeliveryBackOffice.dbo.CatTypeAccount  
 	(TacShortName
 	,TacName
@@ -26,4 +26,3 @@ Values('IND','Individual', 'Cuentas individuales',1,'SYS-DEVELOP',GETDATE()),
 
 select * from DeliveryBackOffice.dbo.CatTypeAccount  
 
-*/

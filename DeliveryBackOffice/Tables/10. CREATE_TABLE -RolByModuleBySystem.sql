@@ -24,7 +24,16 @@ insert into DeliveryBackOffice.dbo.RolByModuleBySystem
 	,RmsRowStatus
 	,RmsTokenCreated
 	,RmsDateCreated)
-values (1,1,1,1,'SYS-CAQUINO',GETDATE())
+values (1,1,1,1,'SYS-CAQUINO',GETDATE()),
+       (1,1,2,1,'SYS-CAQUINO',GETDATE()),
+       (1,1,3,1,'SYS-CAQUINO',GETDATE()),
+       (1,1,4,1,'SYS-CAQUINO',GETDATE()),
+       (1,1,5,1,'SYS-CAQUINO',GETDATE()),
+       (2,1,1,1,'SYS-CAQUINO',GETDATE()),
+       (2,1,2,1,'SYS-CAQUINO',GETDATE()),
+       (2,1,3,1,'SYS-CAQUINO',GETDATE()),
+       (2,1,4,1,'SYS-CAQUINO',GETDATE()),
+       (2,1,5,1,'SYS-CAQUINO',GETDATE())
 
 SELECT * FROM  DeliveryBackOffice.dbo.RolByModuleBySystem  
 */

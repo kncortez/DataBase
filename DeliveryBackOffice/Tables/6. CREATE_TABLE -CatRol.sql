@@ -11,7 +11,7 @@ CREATE TABLE DeliveryBackOffice.dbo.CatRol
 	RolRowStatus bit NOT NULL,
 	RolTokenCreated varchar(50)  NOT NULL,
 	RolDateCreated datetime  NOT NULL,
-	RolokenUpdated varchar(50)   NULL,
+	RolTokenUpdated varchar(50)   NULL,
 	RolDateUpdated datetime   NULL,
 	FOREIGN KEY (RolIdSystem) REFERENCES CatSystem(SysIdSystem)
 	)
@@ -27,6 +27,7 @@ insert into  DeliveryBackOffice.dbo.CatRol
 	,RolTokenCreated
 	,RolDateCreated
 	)
-Values(1,'Administrador','Administrador de portal web',1,1,1,'SYS-CAQUINO',GETDATE())
+Values(1,'Administrador','Administrador de portal web',1,1,1,'SYS-CAQUINO',GETDATE()),
+      (1,'Estandar','Usuario individual estandar',0,0,1,'SYS-CAQUINO', GETDATE())
 
 select * from DeliveryBackOffice.dbo.CatRol 

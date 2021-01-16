@@ -16,9 +16,9 @@ CREATE TABLE DeliveryBackOffice.dbo.RegisterUser
 	UsrRestrictionAddressIp varchar(200)  NULL,
 	UsrRowStatus bit NOT NULL,
 	UsrTokenCreated varchar(50)  NOT NULL,
-	UsrDateCreated date  NOT NULL,
+	UsrDateCreated datetime  NOT NULL,
 	UsrTokenUpdated varchar(50)   NULL,
-	UsrDateUpdated date   NULL,
+	UsrDateUpdated datetime   NULL,
 	CONSTRAINT Uk_Email UNIQUE (UsrEmail),
 	FOREIGN KEY (UsrIdPerson) REFERENCES Person(PerIdPerson)
 	)
