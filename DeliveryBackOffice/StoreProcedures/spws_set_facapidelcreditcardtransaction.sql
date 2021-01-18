@@ -1,5 +1,10 @@
 use DeliveryBackOffice
 go
+IF OBJECT_ID('CreditCardTransactionByCustomer') IS NOT NULL
+BEGIN
+	Drop PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
+END
+GO
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
 @Type as int = -1
 ,@System							as int			      	
@@ -28,55 +33,93 @@ BEGIN
 	DECLARE @IdTransaction BIGINT= 0
 	IF	(@Type = 1)
 	BEGIN
-	insert into DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-	(
-	[System]					
-	,CardNumber				
-	,TypeCardNumber			
-	,Currency				
-	,Ammount				
-	,OrderNumber			
-	,[Signature]				
-	,CustomerReference		
-	,ReferenceNumber		
-	,ECIIndicator			
-	,Authenticationresult	
-	,TransactionStain		
-	,CAVV					
-	,ReasonCode				
-	,ReasonDescription		
-	,StatusSend				
-	,RowStatus				
-	,TokenCreated			
-	,DateCreated			
-	,TokenUpdated			
-	,DateUpdated	
-	)
-	values
-	(
-	@System					
-	,@CardNumber				
-	,@TypeCardNumber			
-	,@Currency				
-	,@Ammount				
-	,@OrderNumber			
-	,@Signature				
-	,@CustomerReference		
-	,@ReferenceNumber		
-	,@ECIIndicator			
-	,@Authenticationresult	
-	,@TransactionStain		
-	,@CAVV					
-	,@ReasonCode				
-	,@ReasonDescription		
-	,@StatusSend				
-	,@RowStatus				
-	,@TokenCreated			
-	,@DateCreated			
-	,@TokenUpdated			
-	,@DateUpdated			 
-	)
-	SET @IdTransaction = isnull(@@Identity,0)
+	SELECT 
+		@IdTransaction 	= isnull([IdTransaction],0)			
+		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+		WHERE OrderNumber = @OrderNumber
+		and  cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE) 
+		if (@IdTransaction = 0)
+		Begin 
+		insert into DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+		(
+		[System]					
+		,CardNumber				
+		,TypeCardNumber			
+		,Currency				
+		,Ammount				
+		,OrderNumber			
+		,[Signature]				
+		,CustomerReference		
+		,ReferenceNumber		
+		,ECIIndicator			
+		,Authenticationresult	
+		,TransactionStain		
+		,CAVV					
+		,ReasonCode				
+		,ReasonDescription		
+		,StatusSend				
+		,RowStatus				
+		,TokenCreated			
+		,DateCreated			
+		,TokenUpdated			
+		,DateUpdated	
+		)
+		values
+		(
+		@System					
+		,@CardNumber				
+		,@TypeCardNumber			
+		,@Currency				
+		,@Ammount				
+		,@OrderNumber			
+		,@Signature				
+		,@CustomerReference		
+		,@ReferenceNumber		
+		,@ECIIndicator			
+		,@Authenticationresult	
+		,@TransactionStain		
+		,@CAVV					
+		,@ReasonCode				
+		,@ReasonDescription		
+		,@StatusSend				
+		,@RowStatus				
+		,@TokenCreated			
+		,@DateCreated			
+		,@TokenUpdated			
+		,@DateUpdated			 
+		)
+		SET @IdTransaction = isnull(@@Identity,0)
+		end 
+		else if (@IdTransaction > 0 )
+		begin 
+			update DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+			 SET 
+				[System]				= @System					
+		,		CardNumber				= @CardNumber				
+		,		TypeCardNumber			= @TypeCardNumber
+		,		Currency				= @Currency
+		,		Ammount					= @Ammount
+		,		OrderNumber				= @OrderNumber			
+		,		[Signature]				= @Signature				
+		,		CustomerReference		= @CustomerReference		
+		,		ReferenceNumber			= @ReferenceNumber		
+		,		ECIIndicator			= @ECIIndicator			
+		,		Authenticationresult	= @Authenticationresult	
+		,		TransactionStain		= @TransactionStain		
+		,		CAVV					= @CAVV					
+		,		ReasonCode				= @ReasonCode				
+		,		ReasonDescription		= @ReasonDescription		
+		,		StatusSend				= @StatusSend				
+		,		RowStatus				= @RowStatus				
+		,		TokenCreated			= @TokenCreated			
+		,		DateCreated				= @DateCreated			
+		,		TokenUpdated			= @TokenUpdated			
+		,		DateUpdated				= @DateUpdated
+			 where IdTransaction = @IdTransaction
+			 AND OrderNumber = @OrderNumber
+			 AND cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE)
+
+		end 
 	INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor 
 	([TypeOfUse], 
 	[IdSystem], 
