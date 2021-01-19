@@ -1,0 +1,63 @@
+use DeliveryBackOffice
+go
+/*
+-- =============================================
+-- Author:		Luis Fernando Coti Itzep
+-- Create date: 7 Octubre 2020
+-- Description:	Inserta encabezado de factura
+-- =============================================
+*/
+Alter PROCEDURE [dbo].[sps_headerInvoice]
+	-- Add the parameters for the stored procedure here
+	 @VpCodeOfReferences int
+    ,@cmp_nit varchar(100)
+    ,@cli_name varchar(500)
+    ,@cli_adress varchar(1000)
+    ,@cli_nit varchar(100)
+    ,@cli_email varchar(500)
+    ,@IVA money
+    ,@amount money
+    ,@tokenRegister varchar(200)
+	,@type int
+	,@systemOrigen int = 0
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	INSERT INTO [dbo].[invoiceHeader]
+           ([inv_vpCodeOfReferences]
+		   ,[inv_cmp_nit]
+           ,[inv_cli_name]
+           ,[inv_cli_adress]
+           ,[inv_cli_nit]
+           ,[inv_cli_email]
+           ,[inv_date]
+           ,[inv_IVA]
+           ,[inv_amount]
+           ,[inv_status]
+           ,[inv_dateRegister]
+           ,[inv_tokenRegister]
+		   ,inv_type
+           ,systemOperation 
+		   )
+     VALUES
+           (@VpCodeOfReferences
+		   ,@cmp_nit
+           ,@cli_name
+           ,@cli_adress
+           ,@cli_nit
+           ,@cli_email
+           ,GETDATE()
+           ,@IVA
+           ,@amount
+           ,1
+           ,GETDATE()
+           ,@tokenRegister
+		   ,@type
+           ,@systemOrigen
+		   )
+		   select @@IDENTITY 'IDENTITY'
+END
