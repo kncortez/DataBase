@@ -4,6 +4,7 @@
 -- Description:	<spws_set_UpdatePassword>
 -- =============================================
 
+
 ALTER PROCEDURE [dbo].[spws_set_UpdatePassword]
 -- Add the parameters for the stored procedure here	
 @Token        NVARCHAR(MAX), 
@@ -161,4 +162,3 @@ AS
         SELECT @IdResult AS IdResult,('[{' + @jsonResult + ']') jsonResult;
     END;
 
-	--EXEC 
