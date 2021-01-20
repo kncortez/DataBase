@@ -19,7 +19,7 @@ Alter PROCEDURE [dbo].[sps_headerInvoice]
     ,@amount money
     ,@tokenRegister varchar(200)
 	,@type int
-	,@systemOrigen int = 0
+	,@systemOrigen int = 1
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
