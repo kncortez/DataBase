@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-
+/*
 INSERT INTO [dbo].[ConfigParams]
            ([Name]
            ,[Description]
@@ -90,4 +90,26 @@ INSERT INTO [dbo].[ConfigParams]
      VALUES
            ('SetNewPassword','Nombre del archivo html','UpdateNewPassword.html ',1)
 GO
+*/
+
+INSERT INTO [dbo].[ConfigParams]
+           ([Name]
+           ,[Description]
+           ,[Value]
+           ,[Status]
+           )
+     VALUES
+           ('SetConfirmationEmail','Nombre del archivo html','ValidarCorreo.html ',1)
+GO
+
+INSERT INTO [dbo].[ConfigParams]
+           ([Name]
+           ,[Description]
+           ,[Value]
+           ,[Status]
+           )
+     VALUES
+           ('SetConfirmationAccount','Nombre del archivo html','CorreoConfirmado.html ',1)
+GO
+
 

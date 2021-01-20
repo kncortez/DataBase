@@ -30,7 +30,7 @@ AS
         --Obtener info de usuarios
         SELECT @IdUser = rp.UserId, 
                @Email = rp.UserName
-        FROM ResetPasswordVerification rp
+        FROM GeneratedTokens rp
         WHERE GeneratedToken = @Token;
 
         --Validar historia de contraseña
@@ -63,11 +63,10 @@ AS
                         WHERE RegisterUser.UsrIdUser = @IdUser;
 
                         --desactivar token
-                        UPDATE ResetPasswordVerification
+                        UPDATE GeneratedTokens
                           SET 
-                              [Status] = 0, 
-                              [VerificationStatus] = 1, 
-                              [VerificationDate] = GETDATE()
+                              [Status] = 0  ,
+							  DateOfTokenUse = GETDATE()
                         WHERE GeneratedToken = @Token;
 
                         --Almacenar en el log de contraseñas

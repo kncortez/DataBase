@@ -5,9 +5,9 @@
 -- =============================================
 
 
-CREATE PROCEDURE [dbo].[spws_get_PathEnvironment]
+ALTER PROCEDURE [dbo].[spws_get_PathEnvironment]
 	-- Add the parameters for the stored procedure here	
-	@Path VARCHAR(10)
+	@Path VARCHAR(100)
 AS
 BEGIN
 	SET NOCOUNT ON;
