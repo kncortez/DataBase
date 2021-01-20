@@ -117,6 +117,7 @@ BEGIN
 		,		DateUpdated				= @DateUpdated
 			 where IdTransaction = @IdTransaction
 			 AND OrderNumber = @OrderNumber
+			 And StatusSend <> 1
 			 AND cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE)
 
 		end 
@@ -195,6 +196,7 @@ BEGIN
 		  ,StatusSend = @StatusSend
 		 where IdTransaction = @IdTransaction
 		 AND OrderNumber = @OrderNumber
+		 AND StatusSend <> 1
 		 AND cast(@DateUpdated AS DATE)  = CAST(DateCreated AS DATE)
 
 		INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor 
