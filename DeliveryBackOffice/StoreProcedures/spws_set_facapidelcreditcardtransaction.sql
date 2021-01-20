@@ -22,7 +22,7 @@ CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
 ,@CAVV							as nvarchar(50)	  		= ''
 ,@ReasonCode					as nvarchar(50)	  		= NULL
 ,@ReasonDescription				as nvarchar(100)	  	= NULL
-,@StatusSend					as bit				  	= NULL
+,@StatusSend					as int				  	= 0
 ,@RowStatus						as bit				  	= 1
 ,@TokenCreated					as nvarchar(50)	  		= ''
 ,@DateCreated					as datetime		  		
