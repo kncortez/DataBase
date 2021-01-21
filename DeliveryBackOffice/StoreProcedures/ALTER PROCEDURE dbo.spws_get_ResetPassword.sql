@@ -95,7 +95,7 @@ BEGIN
 			 ,0				--VERIFICAR REINICIO  DE CONTRASEÑA (0 - NO VERIFICADA  1- VERIFICADA)
 			 ,NULL			--FECHA VERIFICACION DE USO DE TOKEN
 			 ,'R'			-- R = Reset    /    V
-			 ,(SELECT COUNT(ResetCounter) + 1 FROM ResetPasswordVerification WHERE UserName = @UserName)
+			 ,(SELECT COUNT(ResetCounter) + 1 FROM GeneratedTokens WHERE UserName = @UserName)
 			 ,@IP
 			 ,@IdSystem
 			)
