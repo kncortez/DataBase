@@ -52,10 +52,12 @@ begin
 							'"NameReceiver":"' + isnull(CAST(upper(ord.Receiver_FirstName) AS VARCHAR) +' '+ CAST(upper(ord.Receiver_LastName) AS VARCHAR),'N/A' ) + '",' +
 							'"DateRecoleccion":"' + CAST(convert(varchar, ord.Preparation_Date,20 ) AS varchar)  + '",' +
 							'"DateProgramadaEntrega":"' + CAST(convert( varchar, ord.Shipping_Date,20)as varchar)  + '",' +
+							'"CurrencySymbol":"' +convert( varchar, 'Q.')  +  '",' +
 							--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 							'"PrecioServicio":' + CONVERT(varchar,cast( coalesce(ord.PriceShippment ,'0')as money),1)   + ',' +
 							'"CollectOnDelivery":' + CONVERT(varchar,cast(coalesce(ord.Collect_OnDelivery,'0')as money),1)   + ',' +
-							'"IdStatus":"' +convert( varchar, sto.OrderDescription)  +  '",' +
+							'"IdStatus":' + CONVERT(varchar, coalesce(sto.StatusOrderId ,'0'))   + ',' +
+							'"Status":"' +convert( varchar, sto.OrderDescription)  +  '",' +
 							'"CollectDelivery":"' + coalesce(CONVERT(varchar,CASE WHEN ord.IsCollect = 1 THEN 'SI' ELSE 'NO' END),'0') + --'",' +
 						
 							+ '"}'
@@ -128,10 +130,12 @@ begin
 							'"NameReceiver":"' + isnull(CAST(upper(ord.Receiver_FirstName) AS VARCHAR) +' '+ CAST(upper(ord.Receiver_LastName) AS VARCHAR),'N/A' ) + '",' +
 							'"DateRecoleccion":"' + CAST(convert(varchar, ord.Preparation_Date,20 ) AS varchar)  + '",' +
 							'"DateProgramadaEntrega":"' + CAST(convert( varchar, ord.Shipping_Date,20)as varchar)  + '",' +
+							'"CurrencySymbol":"' +convert( varchar, 'Q.')  +  '",' +
 							--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 							'"PrecioServicio":' + CONVERT(varchar,cast( coalesce(ord.PriceShippment ,'0')as money),1)   + ',' +
 							'"CollectOnDelivery":' + CONVERT(varchar,cast(coalesce(ord.Collect_OnDelivery,'0')as money),1)   + ',' +
-							'"IdStatus":"' +convert( varchar, sto.OrderDescription)  +  '",' +
+							'"IdStatus":' + CONVERT(varchar, coalesce(sto.StatusOrderId ,'0'))   + ',' +
+							'"Status":"' +convert( varchar, sto.OrderDescription)  +  '",' +
 							'"CollectDelivery":"' + coalesce(CONVERT(varchar,CASE WHEN ord.IsCollect = 1 THEN 'SI' ELSE 'NO' END),'0') + --'",' +
 						
 							+ '"}'
@@ -196,10 +200,12 @@ begin
 							'"NameReceiver":"' + isnull(CAST(upper(ord.Receiver_FirstName) AS VARCHAR) +' '+ CAST(upper(ord.Receiver_LastName) AS VARCHAR),'N/A' ) + '",' +
 							'"DateRecoleccion":"' + CAST(convert(varchar, ord.Preparation_Date,20 ) AS varchar)  + '",' +
 							'"DateProgramadaEntrega":"' + CAST(convert( varchar, ord.Shipping_Date,20)as varchar)  + '",' +
+							'"CurrencySymbol":"' +convert( varchar, 'Q.')  +  '",' +
 							--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 							'"PrecioServicio":' + CONVERT(varchar,cast( coalesce(ord.PriceShippment ,'0')as money),1)   + ',' +
 							'"CollectOnDelivery":' + CONVERT(varchar,cast(coalesce(ord.Collect_OnDelivery,'0')as money),1)   + ',' +
-							'"IdStatus":"' +convert( varchar, sto.OrderDescription)  +  '",' +
+							'"IdStatus":' + CONVERT(varchar, coalesce(sto.StatusOrderId ,'0'))   + ',' +
+							'"Status":"' +convert( varchar, sto.OrderDescription)  +  '",' +
 							'"CollectDelivery":"' + coalesce(CONVERT(varchar,CASE WHEN ord.IsCollect = 1 THEN 'SI' ELSE 'NO' END),'0') + --'",' +
 						
 							+ '"}'
@@ -265,10 +271,12 @@ begin
 							'"NameReceiver":"' + isnull(CAST(upper(ord.Receiver_FirstName) AS VARCHAR) +' '+ CAST(upper(ord.Receiver_LastName) AS VARCHAR),'N/A' ) + '",' +
 							'"DateRecoleccion":"' + CAST(convert(varchar, ord.Preparation_Date,20 ) AS varchar)  + '",' +
 							'"DateProgramadaEntrega":"' + CAST(convert( varchar, ord.Shipping_Date,20)as varchar)  + '",' +
+							'"CurrencySymbol":"' +convert( varchar, 'Q.')  +  '",' +
 							--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 							'"PrecioServicio":' + CONVERT(varchar,cast( coalesce(ord.PriceShippment ,'0')as money),1)   + ',' +
 							'"CollectOnDelivery":' + CONVERT(varchar,cast(coalesce(ord.Collect_OnDelivery,'0')as money),1)   + ',' +
-							'"IdStatus":"' +convert( varchar, sto.OrderDescription)  +  '",' +
+							'"IdStatus":' + CONVERT(varchar, coalesce(sto.StatusOrderId ,'0'))   + ',' +
+							'"Status":"' +convert( varchar, sto.OrderDescription)  +  '",' +
 							'"CollectDelivery":"' + coalesce(CONVERT(varchar,CASE WHEN ord.IsCollect = 1 THEN 'SI' ELSE 'NO' END),'0') + --'",' +
 						
 							+ '"}'
