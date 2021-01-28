@@ -1,10 +1,5 @@
 use DeliveryBackOffice 
 go
-IF OBJECT_ID('ServiceNotification') IS not NULL
-BEGIN
- Drop procedure [dbo].[ServiceNotification] 
-END
-go
 CREATE PROCEDURE [dbo].[ServiceNotification] 
   @SystemId int = 1, 
   @Guide_Serie varchar(2) = 'FD',  
@@ -36,7 +31,7 @@ SELECT  distinct
           '""PackageDescription"":""' + COALESCE(dev.Package_Description,'') + '"",'+            
            '""Weight"":' + COALESCE(Convert(varchar,
 		 (
-		 select cONVERT(VARCHAR,sum(piec.Piece_Weight)) Piece_Weight from DeliveryBackOffice.dbo.DeliveryPiece piec with(Nolock) where dev.Guide_Serie = piec.Guide_Serie and dev.Guide_Number = piec.Guide_Number
+		 select CONVERT(VARCHAR,sum(piec.PieceWeight)) PieceWeight from DeliveryBackOffice.dbo.DeliveryOrderPiece piec where dev.Guide_Serie = piec.GuideSerie and dev.Guide_Number = piec.GuideNumber
 		 )
 		 ),'0.00') + ','+         
           '""PiecesAccount"":' + COALESCE(Convert(varchar,(dev.Pieces_Dry+dev.Pieces_Cold)),'0') + ','+             

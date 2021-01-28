@@ -1,10 +1,5 @@
 use DeliveryBackOffice  
 go
-IF OBJECT_ID('sps_getReprintGuie') IS NOT NULL
-BEGIN
- Drop procedure [dbo].[sps_getReprintGuie] 
-END
-go
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
   @Guide_Number int = 137916
   ,@Serie_Number varchar(2) = 'FD'
@@ -18,21 +13,21 @@ BEGIN
   ,@TotalWeight decimal(12,2), @TotalValue decimal(12,2)
   Declare @TMPPICES TABLE ( it int Identity(1,1), myrow int)
   select @i = count(1) 
-  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
   where GuideNumber = @Guide_Number
 
   select @TotalWeight = isnull(sum(PieceWeight),0)
-  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
   where GuideNumber = @Guide_Number
 
   
   select @TotalValue = isnull(sum(Amount),0)
-  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
   where GuideNumber = @Guide_Number
 
   Insert into @TMPPICES (myrow)
 	select GuidePiece
-	from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+	from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
 	where GuideNumber = @Guide_Number
   
   
@@ -47,7 +42,7 @@ BEGIN
 		+'""currency"":""'+ COALESCE(Currency,'')+'"",'+
 		+'""description"":""'+  COALESCE(Detail, '') + '""'
 		+'},',@calcurrency =coalesce(Currency,'')
-		from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+		from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
 		  where GuideNumber = @Guide_Number and GuidePiece = (select myrow from @TMPPICES where it = @identity)
 		   Set @identity  = @identity + 1;
 		   SET @i = @i - 1
