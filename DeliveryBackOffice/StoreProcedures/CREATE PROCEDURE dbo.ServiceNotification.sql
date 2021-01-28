@@ -11,39 +11,38 @@ BEGIN
   DECLARE @jsonOutput NVARCHAR(MAX) 
     SET @jsonOutput =  
   ( 
- 
 SELECT ''+ STUFF(( 
 SELECT  distinct 
-          ',{""ClientName"":""' +  CONVERT(varchar,ctm.[Name]) + '"",'+            
-          '""GuideNumber"":' + CONVERT(varchar,dev.Guide_Number)  + ','+ 
-          '""ForzaEmail"":""' + 'info.gt@forzadelivery.com'  + '"",'+ 
-          '""ForzaPhone"":""' + '23775300'  + '"",'+   
-          '""EmailAccount"":""' + coalesce(rgu.UsrEmail,'')  + '"",'+  
-          '""OriginName"":""' + coalesce(prs.PerFirstName,'') + ' ' + coalesce(prs.PerLastName,'')  + '"",'+   
-          '""OriginAddress"":""' + coalesce(REPLACE(ISNULL(dev.Receiver_Address,''),'"',''),'') + '"",'+  
-          '""OriginTownship"":""' + coalesce(tws.TownshipName,'') + '"",'+              
-          '""OriginPhone"":""' + coalesce(dev.Sender_Phone,'') + '"",'+             
-          '""DestinationName"":""' + COALESCE(dev.Receiver_FirstName,'') + ' ' + COALESCE(dev.Receiver_LastName,'') + '"",'+            
-          '""DestinationAddress"":""' + COALESCE(REPLACE(ISNULL(dev.Receiver_Address,''),'"',''),'') + '"",'+              
-          '""DestinationTownship"":""' + COALESCE(tws2.TownshipName,'') + '"",'+            
-          '""DestinationPhone"":""' + COALESCE(REPLACE(ISNULL(dev.Receiver_Phone,''),';',' '),'') + '"",'+              
-          '""DestinationMail"":""' + COALESCE(dev.Receiver_Email,'') + '"",'+           
-          '""PackageDescription"":""' + COALESCE(dev.Package_Description,'') + '"",'+            
-           '""Weight"":' + COALESCE(Convert(varchar,
+          ',{"ClientName":"' +  CONVERT(varchar,ctm.[Name]) + '",'+            
+          '"GuideNumber":' + CONVERT(varchar,dev.Guide_Number)  + ','+ 
+          '"ForzaEmail":"' + 'info.gt@forzadelivery.com'  + '",'+ 
+          '"ForzaPhone":"' + '23775300'  + '",'+   
+          '"EmailAccount":"' + coalesce(rgu.UsrEmail,'')  + '",'+  
+          '"OriginName":"' + coalesce(prs.PerFirstName,'') + ' ' + coalesce(prs.PerLastName,'')  + '",'+   
+          '"OriginAddress":"' + coalesce(REPLACE(ISNULL(dev.Receiver_Address,''),'"',''),'') + '",'+  
+          '"OriginTownship":"' + coalesce(tws.TownshipName,'') + '",'+              
+          '"OriginPhone":"' + coalesce(dev.Sender_Phone,'') + '",'+             
+          '"DestinationName":"' + COALESCE(dev.Receiver_FirstName,'') + ' ' + COALESCE(dev.Receiver_LastName,'') + '",'+            
+          '"DestinationAddress":"' + COALESCE(REPLACE(ISNULL(dev.Receiver_Address,''),'"',''),'') + '",'+              
+          '"DestinationTownship":"' + COALESCE(tws2.TownshipName,'') + '",'+            
+          '"DestinationPhone":"' + COALESCE(REPLACE(ISNULL(dev.Receiver_Phone,''),';',' '),'') + '",'+              
+          '"DestinationMail":"' + COALESCE(dev.Receiver_Email,'') + '",'+           
+          '"PackageDescription":"' + COALESCE(dev.Package_Description,'') + '",'+            
+           '"Weight":' + COALESCE(Convert(varchar,
 		 (
-		 select CONVERT(VARCHAR,sum(piec.PieceWeight)) PieceWeight from DeliveryBackOffice.dbo.DeliveryOrderPiece piec where dev.Guide_Serie = piec.GuideSerie and dev.Guide_Number = piec.GuideNumber
+		 select cONVERT(VARCHAR,sum(piec.PieceWeight)) PieceWeight from DeliveryBackOffice.dbo.DeliveryOrderPiece piec with(Nolock) where dev.Guide_Serie = piec.GuideSerie and dev.Guide_Number = piec.GuideNumber
 		 )
 		 ),'0.00') + ','+         
-          '""PiecesAccount"":' + COALESCE(Convert(varchar,(dev.Pieces_Dry+dev.Pieces_Cold)),'0') + ','+             
-          '""TypeOfPay"":""' + (
+          '"PiecesAccount":' + COALESCE(Convert(varchar,(dev.Pieces_Dry+dev.Pieces_Cold)),'0') + ','+             
+          '"TypeOfPay":"' + (
 		  case when dev.IsCollect = 1 then 'Collect' else 'Contado' end
 		  ) 
-		  + '"",'+
-          '""TypeService"":""' + COALESCE(dev.TypeService,'') + '"",'+     
-          '""AmmountCOD"":' + COALESCE('0','') + ','+        
-          '""AmmountCollect"":' + COALESCE(convert(varchar,dev.Collect_OnDelivery),'0.00') + ','+     
-            '""GrandTotal"":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,'0.00')) ,'0.00') + ','+   
-          '""EstimationDate"":""' + COALESCE(Convert(varchar,Delivery_Max_Date, 105),'') + '""}'        
+		  + '",'+
+          '"TypeService":"' + COALESCE(dev.TypeService,'') + '",'+     
+          '"AmmountCOD":' + COALESCE('0','') + ','+        
+          '"AmmountCollect":' + COALESCE(convert(varchar,dev.Collect_OnDelivery),'0.00') + ','+     
+            '"GrandTotal":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,'0.00')) ,'0.00') + ','+   
+          '"EstimationDate":"' + COALESCE(Convert(varchar,Delivery_Max_Date, 105),'') + '"}'        
       from DeliveryBackOffice.dbo.DeliveryOrder dev 
       left join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
       left join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
@@ -61,9 +60,7 @@ SELECT  distinct
   .value('.', 'varchar(max)'),1,1,'' 
               ) + '' 
   ) 
- 
   select  
-  @jsonOutput  
+   + @jsonOutput 
   FormatJson 
- 
 END
