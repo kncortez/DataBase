@@ -7,11 +7,57 @@ END
 go
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
   @Guide_Number int = 137916
+  ,@Serie_Number varchar(2) = 'FD'
 AS 
 BEGIN 
   SET NOCOUNT ON; 
   Declare   @jsonOutput NVARCHAR(MAX) = '' 
-    SET @jsonOutput =  
+  ,@parcels NVARCHAR(MAX) = ''
+  /*pieces*/
+  ,@i int = 0, @identity int = 1, @arpieces varchar(max) = '', @calcurrency varchar(50)=  ''
+  ,@TotalWeight decimal(12,2), @TotalValue decimal(12,2)
+  Declare @TMPPICES TABLE ( it int Identity(1,1), myrow int)
+  select @i = count(1) 
+  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+  where GuideNumber = @Guide_Number
+
+  select @TotalWeight = isnull(sum(PieceWeight),0)
+  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+  where GuideNumber = @Guide_Number
+
+  
+  select @TotalValue = isnull(sum(Amount),0)
+  from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+  where GuideNumber = @Guide_Number
+
+  Insert into @TMPPICES (myrow)
+	select GuidePiece
+	from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+	where GuideNumber = @Guide_Number
+  
+  
+		 WHILE @i > 0
+		 BEGIN
+		   select @arpieces = @arpieces+ 
+		 '{""length"":'+ convert(varchar,isnull(PieceLength,0)	)+','+
+		+'""width"":'+  convert(varchar,isnull(PieceWidth	,0))+','+
+		+'""height"":'+ convert(varchar,isnull(PieceHeight	,0))+','+
+		+'""weight"":'+ convert(varchar,isnull(PieceWeight	,0))+','+
+		+'""amount"":'+ convert(varchar,isnull(Amount		,0)	)+', '
+		+'""currency"":""'+ COALESCE(Currency,'')+'"",'+
+		+'""description"":""'+  COALESCE(Detail, '') + '""'
+		+'},',@calcurrency =coalesce(Currency,'')
+		from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] with(nolock)
+		  where GuideNumber = @Guide_Number and GuidePiece = (select myrow from @TMPPICES where it = @identity)
+		   Set @identity  = @identity + 1;
+		   SET @i = @i - 1
+		END
+	SET @arpieces = LEFT(@arpieces, LEN(@arpieces) - 1) 
+
+
+  /*end pieces*/
+  
+  SET @jsonOutput =  
   ( 
  
 SELECT ''+ STUFF(( 
@@ -40,20 +86,14 @@ SELECT  distinct
   '""city"":""'+  ''+'"",'+
   '""contact"":""'+coalesce('Empresa del Cliente que recibe','')+'""'+
    '},'+
-  '""parcels"": [ {'+
-   '""length"":'+'2,'+
-   '""width"":'+'5,'+
-   '""height"":'+'5,'+
-   '""weight"":'+'7,'+
-   '""amount"":'+'10,'+
-   '""currency"":""'+Convert(varchar,coalesce(p.IdCountry ,''))+'"",'+
-   '""description"":""'+COALESCE(dev.Package_Description,'')+'""'+
-  '} ], '+
-  '""TotalWeight"":7, '+ 
-  '""TotalValue"":10,'+
+  '""parcels"": ['
+    + @arpieces+
+  ' ] , '+
+  '""TotalWeight"":'+Convert(varchar,@TotalWeight)+', '+ 
+  '""TotalValue"":'+Convert(varchar,@TotalValue)+','+
   '""Currency"":""'+Convert(varchar,coalesce(p.IdCountry ,''))+'"",'+
   '""ProductInsuranceAmount"":10,'+
-  '""InsuranceCurrency"":""' + Convert(varchar,coalesce(p.IdCountry ,''))+'"",'+
+  '""InsuranceCurrency"":""' +Convert(varchar, @calcurrency)+'"",'+
   '""CodeOfReference"":' +Convert(varchar,coalesce(dev.Order_Number,0))+','+
   '""COD"":  {'+
   '""CashOnDelivery"": true,'+		
@@ -70,7 +110,7 @@ SELECT  distinct
       join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
       join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
       join DeliveryBackOffice.dbo.Account acc on acc.IdCustomer = ctm.IdCustomer 
-      and acc.AccIdAccount = 1 
+      --and acc.AccIdAccount = 1 
       join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount 
       join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser 
       join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
@@ -89,4 +129,4 @@ FOR XML PATH(''), TYPE
   select  
   @jsonOutput
   FormatJson 
-  end 
+  end  
