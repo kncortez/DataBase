@@ -25,43 +25,40 @@ SELECT  distinct
           '""ForzaPhone"":""' + '23775300'  + '"",'+   
           '""EmailAccount"":""' + coalesce(rgu.UsrEmail,'')  + '"",'+  
           '""OriginName"":""' + coalesce(prs.PerFirstName,'') + ' ' + coalesce(prs.PerLastName,'')  + '"",'+   
-          '""OriginAddress"":""' + coalesce(dev.Receiver_Address,'') + '"",'+  
+          '""OriginAddress"":""' + coalesce(REPLACE(ISNULL(dev.Receiver_Address,''),'"',''),'') + '"",'+  
           '""OriginTownship"":""' + coalesce(tws.TownshipName,'') + '"",'+              
           '""OriginPhone"":""' + coalesce(dev.Sender_Phone,'') + '"",'+             
           '""DestinationName"":""' + COALESCE(dev.Receiver_FirstName,'') + ' ' + COALESCE(dev.Receiver_LastName,'') + '"",'+            
-          '""DestinationAddress"":""' + COALESCE(dev.Receiver_Address,'') + '"",'+              
+          '""DestinationAddress"":""' + COALESCE(REPLACE(ISNULL(dev.Receiver_Address,''),'"',''),'') + '"",'+              
           '""DestinationTownship"":""' + COALESCE(tws2.TownshipName,'') + '"",'+            
-          '""DestinationPhone"":""' + COALESCE(dev.Receiver_Phone,'') + '"",'+              
+          '""DestinationPhone"":""' + COALESCE(REPLACE(ISNULL(dev.Receiver_Phone,''),';',' '),'') + '"",'+              
           '""DestinationMail"":""' + COALESCE(dev.Receiver_Email,'') + '"",'+           
           '""PackageDescription"":""' + COALESCE(dev.Package_Description,'') + '"",'+            
            '""Weight"":' + COALESCE(Convert(varchar,
 		 (
-		 select sum(piec.Piece_Weight) Piece_Weight from DeliveryBackOffice.dbo.DeliveryPiece piec where dev.Guide_Serie = piec.Guide_Serie and dev.Guide_Number = piec.Guide_Number
+		 select cONVERT(VARCHAR,sum(piec.Piece_Weight)) Piece_Weight from DeliveryBackOffice.dbo.DeliveryPiece piec with(Nolock) where dev.Guide_Serie = piec.Guide_Serie and dev.Guide_Number = piec.Guide_Number
 		 )
 		 ),'0.00') + ','+         
-          '""PiecesAccount"":' + COALESCE(Convert(varchar,(dev.Pieces_Dry+dev.Pieces_Cold)),'') + ','+             
-          '""TypeOfPay"":' + COALESCE(
-		  (select H.inv_type from DeliveryBackOffice.dbo.invoiceDetail sub 
-		  join DeliveryBackOffice.dbo.invoiceHeader H  on (sub.dti_fk_header = H.inv_pk_id)
-		  where sub.dti_fk_orderSerie  =  dev.Guide_Serie and sub.dti_fk_orderNumber = dev.Guide_Number
-		  )
-		  ,'0') + ','+
-          '""TypeService"":' + COALESCE('0','') + ','+     
+          '""PiecesAccount"":' + COALESCE(Convert(varchar,(dev.Pieces_Dry+dev.Pieces_Cold)),'0') + ','+             
+          '""TypeOfPay"":""' + (
+		  case when dev.IsCollect = 1 then 'Collect' else 'Contado' end
+		  ) 
+		  + '"",'+
+          '""TypeService"":""' + COALESCE(dev.TypeService,'') + '"",'+     
           '""AmmountCOD"":' + COALESCE('0','') + ','+        
           '""AmmountCollect"":' + COALESCE(convert(varchar,dev.Collect_OnDelivery),'0.00') + ','+     
-            '""GrandTotal"":' + COALESCE(
-		(select  convert(varchar,sum(dti_amount)) total from DeliveryBackOffice.dbo.invoiceDetail sub where sub.dti_fk_orderSerie  =  dev.Guide_Serie and sub.dti_fk_orderNumber = dev.Guide_Number) ,'0.00') + ','+   
-          '""EstimationDate"":""' + CONVERT(varchar,'') + '""}'        
+            '""GrandTotal"":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,'0.00')) ,'0.00') + ','+   
+          '""EstimationDate"":""' + COALESCE(Convert(varchar,Delivery_Max_Date, 105),'') + '""}'        
       from DeliveryBackOffice.dbo.DeliveryOrder dev 
-      join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
-      join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
-      join DeliveryBackOffice.dbo.Account acc on acc.IdCustomer = ctm.IdCustomer 
+      left join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
+      left join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
+      left join DeliveryBackOffice.dbo.Account acc on acc.IdCustomer = ctm.IdCustomer 
       and acc.AccIdAccount = @AccountId 
-      join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount 
-      join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser 
-      join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
-      join DeliveryBackOffice.dbo.Township tws on tws.IdTownship = dev.SenderIdTownship 
-      join DeliveryBackOffice.dbo.Township tws2 on tws2.IdTownship = dev.ReceiverIdTownship 
+      left join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount 
+      left join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser 
+      left join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
+      left join DeliveryBackOffice.dbo.Township tws on tws.IdTownship = dev.SenderIdTownship 
+      left join DeliveryBackOffice.dbo.Township tws2 on tws2.IdTownship = dev.ReceiverIdTownship 
 	  where dev.Guide_Number =@Guide_Number
       and dev.Guide_Serie = @Guide_Serie  
   FOR XML PATH(''), TYPE 
