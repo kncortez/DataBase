@@ -1,6 +1,8 @@
-CREATE NONCLUSTERED INDEX [IX_NC_IdCustomerDeliveryOrder] ON [dbo].[DeliveryOrder]
+CREATE NONCLUSTERED INDEX [IX_NC_IdCustomersByGuideDeliveryOrder] ON [dbo].[DeliveryOrder]
 		(
-			[IdCustomer] 
+			[IdCustomer] ,
+			[Guide_Serie] ,
+			[Guide_Number] 
 		)
 		
 go
