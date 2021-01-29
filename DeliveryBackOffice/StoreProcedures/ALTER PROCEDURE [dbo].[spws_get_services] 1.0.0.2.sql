@@ -81,7 +81,7 @@ begin
 						--and (@Filter = '-1' or concat(ord.Guide_Serie,ord.Guide_Number)   like '%'+@Filter+ '%'
 						--	or twn.TownshipName like '%'+@Filter+ '%'
 						--	or twd.TownshipName like '%'+@Filter+ '%' )
-						 and (@Filter  = -1 )
+					
 					
 
 					FOR XML PATH(''), TYPE
@@ -151,12 +151,15 @@ begin
 						join dbo.StatusOrder sto on sto.StatusOrderId =  ord.StatusOrderId
 						 where ord.Sender_ID in(select ua.CodeOfReference from dbo.RolByUserByAccount  rua
 					    inner join dbo.UserAddress ua on ua.UadIdAccount = rua.RuaIdAccount
-						where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser1 and rua.RuaRowStatus = 1 and ua.CodeOfReference is not null) or (ord.Sender_ID = 0 and ord.IdCustomer = (select Top 1 IdCustomer from Account  where AccIdAccount = @IdAccount))
+						where (rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser1 and rua.RuaRowStatus = 1 and ua.CodeOfReference is not null) or (ord.Sender_ID = 0 and ord.IdCustomer = (select Top 1 IdCustomer from Account  where AccIdAccount = @IdAccount)))
+				
+				
 					--	where ord.Sender_ID = 4244
 						--and (ord.DateCreated between @StartDate and @EndDate)
 						--and (@Filter = '-1' or concat(ord.Guide_Serie,ord.Guide_Number)   like '%'+@Filter+ '%'
 						--	or twn.TownshipName like '%'+@Filter+ '%'
 						--	or twd.TownshipName like '%'+@Filter+ '%' )
+
 						and  ord.StatusOrderId = 15
 
 					FOR XML PATH(''), TYPE
@@ -223,7 +226,7 @@ begin
 						join dbo.StatusOrder sto on sto.StatusOrderId =  ord.StatusOrderId
 						 where ord.Sender_ID in(select ua.CodeOfReference from dbo.RolByUserByAccount  rua
 					    inner join dbo.UserAddress ua on ua.UadIdAccount = rua.RuaIdAccount
-						where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser2 and rua.RuaRowStatus = 1 and ua.CodeOfReference is not null) or (ord.Sender_ID = 0 and ord.IdCustomer = (select Top 1 IdCustomer from Account  where AccIdAccount = @IdAccount))
+						where (rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser2 and rua.RuaRowStatus = 1 and ua.CodeOfReference is not null) or (ord.Sender_ID = 0 and ord.IdCustomer = (select Top 1 IdCustomer from Account  where AccIdAccount = @IdAccount)))
 					--	where ord.Sender_ID = 4244
 						--and (ord.DateCreated between @StartDate and @EndDate)
 						--and (@Filter = '-1' or concat(ord.Guide_Serie,ord.Guide_Number)   like '%'+@Filter+ '%'
@@ -296,7 +299,7 @@ begin
 						join dbo.StatusOrder sto on sto.StatusOrderId =  ord.StatusOrderId
 						 where ord.Sender_ID in(select ua.CodeOfReference from dbo.RolByUserByAccount  rua
 					    inner join dbo.UserAddress ua on ua.UadIdAccount = rua.RuaIdAccount
-						where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser3 and rua.RuaRowStatus = 1 and ua.CodeOfReference is not null) or (ord.Sender_ID = 0 and ord.IdCustomer = (select Top 1 IdCustomer from Account  where AccIdAccount = @IdAccount))
+						where (rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser3 and rua.RuaRowStatus = 1 and ua.CodeOfReference is not null) or (ord.Sender_ID = 0 and ord.IdCustomer = (select Top 1 IdCustomer from Account  where AccIdAccount = @IdAccount)))
 					--	where ord.Sender_ID = 4244
 						--and (ord.DateCreated between @StartDate and @EndDate)
 						--and (@Filter = '-1' or concat(ord.Guide_Serie,ord.Guide_Number)   like '%'+@Filter+ '%'
