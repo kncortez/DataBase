@@ -1,7 +1,4 @@
-IF OBJECT_ID('sps_DeliveryOrderDetailIds') IS not NULL
-BEGIN
- Drop procedure [dbo].[sps_DeliveryOrderDetailIds] 
-END
+use DeliveryBackOffice
 go
 CREATE PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
  @GuideSerie						varchar(2) = 'FD'
