@@ -39,9 +39,9 @@ SELECT  distinct
 		  ) 
 		  + '",'+
           '"TypeService":"' + COALESCE(dev.TypeService,'') + '",'+     
-          '"AmmountCOD":' + COALESCE(convert(varchar,dev.Collect_OnDelivery),'0.00')+ ','+        
-          '"AmmountCollect":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,'0.00')) ,'0.00') + ','+     
-            '"GrandTotal":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,0)+isnull(dev.Collect_OnDelivery,0)) ,'0.00') + ','+   
+          '"AmmountCOD":' + COALESCE('0','') + ','+        
+          '"AmmountCollect":' + COALESCE(convert(varchar,dev.Collect_OnDelivery),'0.00') + ','+     
+            '"GrandTotal":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,'0.00')) ,'0.00') + ','+   
           '"EstimationDate":"' + COALESCE(Convert(varchar,Delivery_Max_Date, 105),'') + '"}'        
       from DeliveryBackOffice.dbo.DeliveryOrder dev 
       left join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
