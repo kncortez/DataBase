@@ -13,8 +13,8 @@ BEGIN
   ( 
 SELECT ''+ STUFF(( 
 SELECT  distinct 
-          ',{"ClientName":"' +  CONVERT(varchar,ctm.[Name]) + '",'+            
-          '"GuideNumber":' + CONVERT(varchar,dev.Guide_Number)  + ','+ 
+          ',{"ClientName":"' +  COALESCE(CONVERT(varchar,ctm.[Name]),'') + '",'+            
+          '"GuideNumber":' + COALESCE(CONVERT(varchar,dev.Guide_Number),'')  + ','+ 
           '"ForzaEmail":"' + 'info.gt@forzadelivery.com'  + '",'+ 
           '"ForzaPhone":"' + '23775300'  + '",'+   
           '"EmailAccount":"' + coalesce(rgu.UsrEmail,'')  + '",'+  
