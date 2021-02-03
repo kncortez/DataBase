@@ -42,3 +42,26 @@ GO
 ALTER TABLE dbo.UserAddress SET (LOCK_ESCALATION = TABLE)
 GO
 COMMIT
+Go
+/*Post inserts*/
+alter table DeliveryBackOffice.dbo.CatCityPlace add  OrderCityPlace int;
+go
+update DeliveryBackOffice.dbo.CatCityPlace
+set OrderCityPlace = 1
+where Upper(CityPlace) = 'CASA'
+
+update DeliveryBackOffice.dbo.CatCityPlace
+set OrderCityPlace = 2
+where Upper(CityPlace) = 'TRABAJO'
+
+update DeliveryBackOffice.dbo.CatCityPlace
+set OrderCityPlace = 3
+where Upper(CityPlace) = 'GIMNASIO'
+
+update DeliveryBackOffice.dbo.CatCityPlace
+set OrderCityPlace = 4
+where Upper(CityPlace) = 'IGLESIA'
+
+update DeliveryBackOffice.dbo.CatCityPlace
+set OrderCityPlace = 5
+where Upper(CityPlace) = 'UNIVERSIDAD'
