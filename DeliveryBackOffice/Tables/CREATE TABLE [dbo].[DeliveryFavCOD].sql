@@ -7,7 +7,7 @@ GO
 
 SET QUOTED_IDENTIFIER ON
 GO
-
+drop table [dbo].[DeliveryFavCOD]
 CREATE TABLE [dbo].[DeliveryFavCOD](
 	[IdDeliveryFavCOD] [INT] Identity (1,1) NOT NULL,
 	[AliasFavCOD] [varchar](50) NULL,
