@@ -1,18 +1,18 @@
 -- =============================================
 -- Author:		<Marco Jimenez>
 -- Create date: <2021-01-15>
--- Description:	<spws_get_PathEnvironment>
+-- Description:	<spws_get_TemplateEmail>
 -- =============================================
 
 
-CREATE PROCEDURE [dbo].[spws_get_PathEnvironment]
+ALTER PROCEDURE [dbo].[spws_get_TemplateEmail]
 	-- Add the parameters for the stored procedure here	
-	@Path VARCHAR(10)
+	@TemplateName VARCHAR(100)
 AS
 BEGIN
 	SET NOCOUNT ON;
 	
-	SELECT Value as Path FROM ConfigParams WHERE Name = @Path	
+	SELECT Value AS TemplateName  FROM ConfigParams WHERE Name = @TemplateName
 
 END
 
