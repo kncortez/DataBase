@@ -9,7 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[DeliveryFavCOD](
-	[IdDeliveryFavCOD] [INT] NOT NULL,
+	[IdDeliveryFavCOD] [INT] Identity (1,1) NOT NULL,
 	[AliasFavCOD] [varchar](50) NULL,
 	[NameAccountFavCOD] [varchar](50) NULL,
 	[TypeAccountFavCOD] [varchar](50) NULL,
