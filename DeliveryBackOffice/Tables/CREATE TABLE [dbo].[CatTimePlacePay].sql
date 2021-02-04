@@ -1,14 +1,14 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  Table [dbo].[CatTimePlacePay]    Script Date: 1/23/2021 5:01:05 PM ******/
+/****** Object:  Table [dbo].[CatPaymentTime]    Script Date: 1/23/2021 5:01:05 PM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[CatTimePlacePay](
+CREATE TABLE [dbo].[CatPaymentTime](
 	[TimePlaId] [int] IDENTITY(1,1) NOT NULL,
 	[TimePlaName] [varchar](55) NULL,
 	[TimePlaDescription] [varchar](100) NULL,
