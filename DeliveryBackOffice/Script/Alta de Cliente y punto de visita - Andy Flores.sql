@@ -2,7 +2,7 @@
 --Customer
 INSERT INTO [DeliveryBackOffice].[dbo].[Customer] ([Name], [Description], [Domain], [RegexSubject],
 [RegexEmail], [RegexFilename], [Abbreviation])
-VALUES ('ANDY FLORES', 'ANDY FLORES', '@gmail.com','^.*solicitud.*$','^andyflorestb@gmail.com|loquebuscasgt@gmail.com$','^envios_.*\.xls$','ANDY FLORES')
+VALUES ('ANDY ELIGIO FLORES GRANADOS', 'ANDY FLORES', '@gmail.com','^.*solicitud.*$','^andyflorestb@gmail.com|loquebuscasgt@gmail.com$','^envios_.*\.xls$','ANDY FLORES')
 
 --VisitPoint
 INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointClient] 
