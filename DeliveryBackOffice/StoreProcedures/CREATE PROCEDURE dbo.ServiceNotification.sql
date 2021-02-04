@@ -38,11 +38,10 @@ SELECT  distinct
 		  case when dev.IsCollect = 1 then 'Collect' else 'Contado' end
 		  ) 
 		  + '",'+
-          '"TypeService":"' + COALESCE(dev.TypeService,'') + '",'+     
-          '"AmmountCOD":' + COALESCE('0','') + ','+        
-          '"AmmountCollect":' + COALESCE(convert(varchar,dev.Collect_OnDelivery),'0.00') + ','+     
-            '"GrandTotal":' + COALESCE(Convert(varchar,isnull(dev.PriceShippment,'0.00')) ,'0.00') + ','+   
-          '"EstimationDate":"' + COALESCE(Convert(varchar,Delivery_Max_Date, 105),'') + '"}'        
+          '"TypeService":"' + COALESCE(cts.CtsDescription,'') + '",'+     
+          '"AmmountCOD":' + COALESCE(dev.Collect_OnDelivery,'0.00') + ','+        
+          '"AmmountCollect":' + COALESCE(convert(varchar,dev.PriceShippment),'0.00') + ','+     
+            '"GrandTotal":' + COALESCE(Convert(varchar,(isnull(dev.PriceShippment,0)+isnull(dev.Collect_OnDelivery,0))) ,'0.00') +		'}'
       from DeliveryBackOffice.dbo.DeliveryOrder dev 
       left join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
       left join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
@@ -53,6 +52,7 @@ SELECT  distinct
       left join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
       left join DeliveryBackOffice.dbo.Township tws on tws.IdTownship = dev.SenderIdTownship 
       left join DeliveryBackOffice.dbo.Township tws2 on tws2.IdTownship = dev.ReceiverIdTownship 
+	  left join DeliveryBackOffice.dbo.CatTypeService cts on  cts.CtsShortName = Rtrim(ltrim(dev.TypeService))				
 	  where dev.Guide_Number =@Guide_Number
       and dev.Guide_Serie = @Guide_Serie  
   FOR XML PATH(''), TYPE 
