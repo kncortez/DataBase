@@ -35,13 +35,13 @@ SELECT  distinct
 		 ),'0.00') + ','+         
           '"PiecesAccount":' + COALESCE(Convert(varchar,(dev.Pieces_Dry+dev.Pieces_Cold)),'0') + ','+             
           '"TypeOfPay":"' + (
-		  case when dev.IsCollect = 1 then 'Collect' else 'Contado' end
+		  case when dev.IsCollect = 1 then 'Collect - Pendiente de Pago' else 'Contado' end
 		  ) 
 		  + '",'+
           '"TypeService":"' + COALESCE(cts.CtsDescription,'') + '",'+     
           '"AmmountCOD":' + COALESCE(convert(varchar,isnull(dev.Collect_OnDelivery,'0.00')),'0.00') + ','+        
           '"AmmountCollect":' + COALESCE(convert(varchar,isnull(dev.PriceShippment,'0.00')),'0.00') + ','+     
-            '"GrandTotal":' + COALESCE(Convert(varchar,(isnull(dev.PriceShippment+dev.Collect_OnDelivery,0))) ,'0.00') + '}'
+            '"GrandTotal":' + COALESCE(Convert(varchar,(isnull(dev.PriceShippment+0,0))) ,'0.00') + '}'
       from DeliveryBackOffice.dbo.DeliveryOrder dev 
       left join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
       left join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
