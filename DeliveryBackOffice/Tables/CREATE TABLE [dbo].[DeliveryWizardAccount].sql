@@ -9,7 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[DeliveryWizardAccount](
-	[IdWizAccount] [int]NOT NULL,
+	[IdWizAccount] [int] IDENTITY(1,1) NOT NULL,
 	[AccIdAccount] [int] NULL,
 	[IdWiz] [int] NULL,
 	[StatusAccountWiz] [int] NULL,

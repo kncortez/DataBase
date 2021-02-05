@@ -9,7 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[CatWizard](
-	[IdWiz] [int]NOT NULL,
+	[IdWiz] [int] Identity (1,1) NOT NULL,
 	[NameWiz] [varchar](50) NULL,
 	[DescriptionWiz] [varchar](80) NULL,
 	[StatusWiz] [int] NULL,
