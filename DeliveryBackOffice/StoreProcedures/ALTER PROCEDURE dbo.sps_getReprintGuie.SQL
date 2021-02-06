@@ -10,10 +10,6 @@ alter PROCEDURE [dbo].[sps_getReprintGuie]
   ,@Serie_Number varchar(2) = 'FD'
 AS 
 BEGIN 
-
-
-
-				  
  Declare   @jsonOutput NVARCHAR(MAX) = '' 
   ,@parcels NVARCHAR(MAX) = ''
   /*pieces*/
@@ -41,7 +37,6 @@ BEGIN
 	from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
 	where GuideNumber = @Guide_Number
   
-  
 		 WHILE @i > 0
 		 BEGIN
 		   select @arpieces = @arpieces+ 
@@ -64,7 +59,6 @@ BEGIN
 			SET @arpieces = LEFT(@arpieces, LEN(@arpieces) - 1) 
 	END
 	/*select @arpieces as cicloresult*/
- 
   /*end pieces*/
   
   SET @jsonOutput =  
@@ -77,7 +71,7 @@ SELECT  distinct
    '"IdCountry":"'+ Convert(varchar,coalesce(p.IdCountry,'')) +'",'+
    '"CountPieces":'+Convert(varchar,isnull(dev.Pieces_Dry+dev.Pieces_Cold,0))+','+
   '"Collected":'+case when dev.IsCollect = 1 then 'true' else 'false' end+','+
-  ---Collected
+  '"IdCustomer":'+coalesce(Convert(varchar,ctm.IdCustomer),'0')+','+
   '"from_address": {'+
   '"HeaderCodeTownship":"'+ Convert(varchar,coalesce(tws.HeaderCode,''))+'",'+
   '"name":"'+Convert(varchar,coalesce(prs.PerFirstName,'')) + ' ' + Convert(varchar,coalesce(prs.PerLastName,''))+'",'+
@@ -146,4 +140,4 @@ FOR XML PATH(''), TYPE
   FormatJson 
   
   
-  end 
+  end
