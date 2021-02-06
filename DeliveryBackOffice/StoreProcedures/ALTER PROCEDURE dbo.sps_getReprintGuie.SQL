@@ -10,11 +10,7 @@ alter PROCEDURE [dbo].[sps_getReprintGuie]
   ,@Serie_Number varchar(2) = 'FD'
 AS 
 BEGIN 
-
-
-
-  SET NOCOUNT ON; 
-  Declare   @jsonOutput NVARCHAR(MAX) = '' 
+ Declare   @jsonOutput NVARCHAR(MAX) = '' 
   ,@parcels NVARCHAR(MAX) = ''
   /*pieces*/
   ,@i int = 0, @identity int = 1, @arpieces varchar(max) = '', @calcurrency varchar(50)=  ''
@@ -41,17 +37,16 @@ BEGIN
 	from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
 	where GuideNumber = @Guide_Number
   
-  
 		 WHILE @i > 0
 		 BEGIN
 		   select @arpieces = @arpieces+ 
-		 '{""length"":'+ convert(varchar,isnull(PieceLength,0)	)+','+
-		+'""width"":'+  convert(varchar,isnull(PieceWidth	,0))+','+
-		+'""height"":'+ convert(varchar,isnull(PieceHeight	,0))+','+
-		+'""weight"":'+ convert(varchar,isnull(PieceWeight	,0))+','+
-		+'""amount"":'+ convert(varchar,isnull(Amount		,0)	)+', '
-		+'""currency"":""'+ COALESCE(Currency,'')+'"",'+
-		+'""description"":""'+  COALESCE(Detail, '') + '""'
+		 '{"length":'+ convert(varchar,isnull(PieceLength,0)	)+','+
+		+'"width":'+  convert(varchar,isnull(PieceWidth	,0))+','+
+		+'"height":'+ convert(varchar,isnull(PieceHeight	,0))+','+
+		+'"weight":'+ convert(varchar,isnull(PieceWeight	,0))+','+
+		+'"amount":'+ convert(varchar,isnull(Amount		,0)	)+', '
+		+'"currency":"'+ COALESCE(Currency,'')+'",'+
+		+'"description":"'+  COALESCE(Detail, '') + '"'
 		+'},',@calcurrency =coalesce(Currency,'')
 		from DeliveryBackOffice.[dbo].[DeliveryOrderPiece] 
 		  where GuideNumber = @Guide_Number and GuidePiece = (select myrow from @TMPPICES where it = @identity)
@@ -63,8 +58,7 @@ BEGIN
 	BEGIN	
 			SET @arpieces = LEFT(@arpieces, LEN(@arpieces) - 1) 
 	END
-	
-	
+	/*select @arpieces as cicloresult*/
   /*end pieces*/
   
   SET @jsonOutput =  
@@ -72,62 +66,65 @@ BEGIN
  
 SELECT ''+ STUFF(( 
 SELECT  distinct 
-   ',{""DateOfSale"":""' +  Convert(varchar,isnull(dev.Preparation_Date, getdate())) +'"",'+
-   '""ContentDescription"":""' + Convert(varchar,isnull(dev.Package_Description,''))+'"",'+
-   '""IdCountry"":""'+ Convert(varchar,coalesce(p.IdCountry,'')) +'"",'+
-   '""CountPieces"":'+Convert(varchar,isnull(dev.Pieces_Dry+dev.Pieces_Cold,0))+','+
-  '""from_address"": {'+
-  '""HeaderCodeTownship"":""'+ Convert(varchar,coalesce(tws.HeaderCode,''))+'"",'+
-  '""name"":""'+Convert(varchar,coalesce(prs.PerFirstName,'')) + ' ' + Convert(varchar,coalesce(prs.PerLastName,''))+'"",'+
-   '""phone"":""'+ Convert(varchar,coalesce(dev.Sender_Phone,''))+'"",'+
-   '""email"":""'+ Convert(varchar,coalesce(rgu.UsrEmail,''))+'"",'+
-   '""address1"":""'+ Convert(varchar,coalesce(dev.Receiver_Address,''))+'"",'+
-   '""address2"":""'+  ''+'"",'+
-   '""city"":""'+ ''+'"",'+
-   '""contact"":""'+coalesce('Empresa del Cliente que envia','')+'""'+
+   ',{"DateOfSale":"' +  Convert(varchar,isnull(dev.Preparation_Date, getdate())) +'",'+
+   '"ContentDescription":"' + Convert(varchar,isnull(dev.Package_Description,''))+'",'+
+   '"IdCountry":"'+ Convert(varchar,coalesce(p.IdCountry,'')) +'",'+
+   '"CountPieces":'+Convert(varchar,isnull(dev.Pieces_Dry+dev.Pieces_Cold,0))+','+
+  '"Collected":'+case when dev.IsCollect = 1 then 'true' else 'false' end+','+
+  '"IdCustomer":'+coalesce(Convert(varchar,ctm.IdCustomer),'0')+','+
+  '"from_address": {'+
+  '"HeaderCodeTownship":"'+ Convert(varchar,coalesce(tws.HeaderCode,''))+'",'+
+  '"name":"'+Convert(varchar,coalesce(prs.PerFirstName,'')) + ' ' + Convert(varchar,coalesce(prs.PerLastName,''))+'",'+
+   '"phone":"'+ Convert(varchar,coalesce(dev.Sender_Phone,''))+'",'+
+   '"email":"'+ Convert(varchar,coalesce(rgu.UsrEmail,''))+'",'+
+   '"address1":"'+ Convert(varchar,coalesce(dev.Receiver_Address,''))+'",'+
+   '"address2":"'+  coalesce(dev.TypeService, 'EXP') +'",'+
+   '"city":"'+ COALESCE(ctm.Abbreviation,'')+'",'+
+   '"contact":"'+coalesce('','')+'"'+
    '},'+
-  '""to_address"": {'+
-  '""HeaderCodeTownship"":""'+ Convert(varchar,coalesce(tws2.HeaderCode,''))+'"",'+
-  '""name"":""'+  COALESCE(dev.Receiver_FirstName,'') + ' ' + COALESCE(dev.Receiver_LastName,'')+'"",'+
-  '""phone"":""'+  COALESCE(dev.Receiver_Phone,'')+'"",'+
-  '""email"":""'+ COALESCE(dev.Receiver_Email,'')+'"",'+
-   '""address1"":""'+ COALESCE(dev.Receiver_Address,'')+'"",'+
-  '""address2"":""'+ ''+'"",'+
-  '""city"":""'+  ''+'"",'+
-  '""contact"":""'+coalesce('Empresa del Cliente que recibe','')+'""'+
+  '"to_address": {'+
+  '"HeaderCodeTownship":"'+ Convert(varchar,coalesce(tws2.HeaderCode,''))+'",'+
+  '"name":"'+  COALESCE(dev.Receiver_FirstName,'') + ' ' + COALESCE(dev.Receiver_LastName,'')+'",'+
+  '"phone":"'+  COALESCE(dev.Receiver_Phone,'')+'",'+
+  '"email":"'+ COALESCE(dev.Receiver_Email,'')+'",'+
+   '"address1":"'+ COALESCE(dev.Receiver_Address,'')+'",'+
+  '"address2":"'+ COALESCE(dev.IndicationsToSendDestination,'')+'",'+
+  '"city":"'+''+'",'+
+  '"contact":"'+coalesce(dev.Receiver_Alternant_FullName,'')+'"'+
    '},'+
-  '""parcels"": ['
-    + @arpieces+
+  '"parcels": ['
+    + coalesce(@arpieces,'')+
   ' ] , '+
-  '""TotalWeight"":'+Convert(varchar,@TotalWeight)+', '+ 
-  '""TotalValue"":'+Convert(varchar,@TotalValue)+','+
-  '""Currency"":""'+Convert(varchar,coalesce(p.IdCountry ,''))+'"",'+
-  '""ProductInsuranceAmount"":10,'+
-  '""InsuranceCurrency"":""' +Convert(varchar, @calcurrency)+'"",'+
-  '""CodeOfReference"":' +Convert(varchar,coalesce(dev.Order_Number,0))+','+
-  '""COD"":  {'+
-  '""CashOnDelivery"": true,'+		
-  '""CreditNumber"":""'+Convert(varchar,isnull(dev.Order_Number,0))+'"",'+
-  '""AmmountCashOnDelivery"": 100,'+
-  '""CashOnDeliveryCurrency"":""'+'GTQ'+'"",'+
-  '""BankAccountName"":""AccountName"",',+
-  '""BankId"":""1"",'+	
-  '""BankAccountType"":""Monetaria"",'+
-  '""BankAccountId"":""090-10-639996"",'+	
-  '""Identification"":""1000983780101""'+
+  '"TotalWeight":'+Convert(varchar,@TotalWeight)+', '+ 
+  '"TotalValue":'+Convert(varchar,@TotalValue)+','+
+  '"Currency":"'+Convert(varchar,coalesce(p.IdCountry ,''))+'",'+
+  '"ProductInsuranceAmount":10,'+
+  '"InsuranceCurrency":"' +Convert(varchar, @calcurrency)+'",'+
+  '"CodeOfReference":' +Convert(varchar,coalesce(dev.Order_Number,0))+','+
+  '"COD":  {'+
+  '"CashOnDelivery": '+case when dev.Collect_OnDelivery > 0 then 'true' else 'false' end+','+		
+  '"CreditNumber":"'+Convert(varchar,isnull(dev.Order_Number,0))+'",'+
+  '"AmmountCashOnDelivery": '+coalesce(Convert(varchar,dev.Collect_OnDelivery),'0')+','+
+  '"CashOnDeliveryCurrency":"'+'GTQ'+'",'+
+  '"BankAccountName":"AccountName",',+
+  '"BankId":"'+coalesce(Convert(varchar,dcba.DCBA_Bank_Id),'')+'",'+	
+  '"BankAccountType":"'+coalesce(Convert(varchar,dcba.DCBA_BankAccountType),'')+'",'+
+  '"BankAccountId":"'+coalesce(Convert(varchar,dcba.DCBA_Num_account),'')+'",'+	
+  '"Identification":"'+coalesce(Convert(varchar,dcba.DCBA_Identification),'')+'"'+
   ' } } }'
   from DeliveryBackOffice.dbo.DeliveryOrder dev 
       join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
-      join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
-      join DeliveryBackOffice.dbo.Account acc on acc.IdCustomer = ctm.IdCustomer 
+      left join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
+      left join DeliveryBackOffice.dbo.Account acc on acc.IdCustomer = ctm.IdCustomer 
       --and acc.AccIdAccount = 1 
-      join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount 
-      join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser 
-      join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
-      join DeliveryBackOffice.dbo.Township tws on tws.IdTownship = dev.SenderIdTownship 
-      join DeliveryBackOffice.dbo.Township tws2 on tws2.IdTownship = dev.ReceiverIdTownship 
-      join DeliveryBackOffice.dbo.Province p on p.IdProvince = tws.IdProvince   
-	  join DeliveryBackOffice.dbo.Province p2 on p2.IdProvince = tws2.IdProvince   
+      left join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount 
+      left join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser 
+      left join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
+      left join DeliveryBackOffice.dbo.Township tws on tws.IdTownship = dev.SenderIdTownship 
+      left join DeliveryBackOffice.dbo.Township tws2 on tws2.IdTownship = dev.ReceiverIdTownship 
+      left join DeliveryBackOffice.dbo.Province p on p.IdProvince = tws.IdProvince   
+	  left join DeliveryBackOffice.dbo.Province p2 on p2.IdProvince = tws2.IdProvince   
+      left join DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba on dcba.DCBA_Id = dev.DCBA_ID 
   where dev.Guide_Number = @Guide_Number
 
 FOR XML PATH(''), TYPE 
@@ -143,4 +140,4 @@ FOR XML PATH(''), TYPE
   FormatJson 
   
   
-  end  
+  end
