@@ -17,6 +17,20 @@ CREATE TABLE [dbo].[DeliveryOrderPaymentDetail](
 	[DateCreated] [datetime]  NULL,
 	[TokenUpdated] [varchar](50) NULL,
 	[DateUpdated] [datetime] NULL
+	,[PaymentRecollections] [decimal](18,2) NULL
+	,[PaymentNow] [decimal](18,2) NULL
+	,[PaymentDelivery] [decimal](18,2) NULL
+	,[StartDate] [datetime]  NULL
+	,[EndDate] [datetime]  NULL
+	,[ShipmentCompleted] [bit] NULL
+	,[RecollectionCompleted] [bit] NULL
+	,[PaidGuide] [bit] NULL
+	,[TransaccionFAC] [varchar](50) NULL
+	,[IdHeaderRecolection] [int] NULL
+	
+	
+	
+	
 )
 ALTER TABLE [dbo].[DeliveryOrderPaid]  WITH CHECK ADD  CONSTRAINT [FK_PaidDeliveryOrder] FOREIGN KEY([Guide_Serie], [Guide_Number])
 REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
