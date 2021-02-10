@@ -38,16 +38,16 @@ BEGIN
 		begin 
 			update DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 			 SET 
-		--		[System]				= @System					
+								
 				CardNumber				= @CardNumber				
 		,		TypeCardNumber			= @TypeCardNumber
 		,		Ammount					= @Ammount	
 		,		[Signature]				= @Signature				
 		,		ReferenceNumber			= @ReferenceNumber		
-		--,		ECIIndicator			= @ECIIndicator			
-		--,		Authenticationresult	= @Authenticationresult	
-		--,		TransactionStain		= @TransactionStain		
-		--,		CAVV					= @CAVV					
+										
+													
+											  
+							
 		,		ReasonCode				= @ReasonCode				
 		,		ReasonDescription		= @ReasonDescription		
 		,		StatusSend				= @StatusSend				
@@ -114,7 +114,100 @@ BEGIN
 		,@TokenUpdated														
 		)
 	END
+	else IF (@Type = 2) --V/M NO COMPLETED
+	BEGIN 
+	SELECT 
+		@IdTransaction 	= isnull([IdTransaction],0)			
+		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+		WHERE OrderNumber = @OrderNumber
 	
+		if (@IdTransaction > 0 ) 
+		begin 
+			update DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+			 SET 
+				CardNumber				= @CardNumber				
+		,		TypeCardNumber			= @TypeCardNumber
+		,		Ammount					= @Ammount	
+		,		[Signature]				= @Signature				
+		,		ReferenceNumber			= @ReferenceNumber		
+		,		Authenticationresult	= @Authenticationresult	
+		,		TransactionStain		= @TransactionStain		
+		,		ReasonCode				= @ReasonCode				
+		,		ReasonDescription		= @ReasonDescription		
+		,		StatusSend				= @StatusSend				
+		,		RowStatus				= @RowStatus				
+		,		TokenUpdated			= @TokenUpdated			
+		,		DateUpdated				= @DateUpdated
+			 where IdTransaction = @IdTransaction
+			 AND OrderNumber = @OrderNumber
+			 And (StatusSend <> 1 or StatusSend is null)
+		end 
+		INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor 
+		([TypeOfUse], 
+		[IdSystem], 
+		[EntityObjectName], 
+		[TransactionID], 
+		[RQ_Method], 
+		[RQ_Uri], 
+		[RQ_Service], 
+		[RQ_Header], 
+		[RQ_Body], 
+		[RQ_Object], 
+		[RQ_Datetime], 
+		[RQ_LauValue], 
+		[RQ_Token], 
+		[RQ_IdOrder], 
+		[RS_Service], 
+		[RS_StatusCode], 
+		[RS_ReasonPhrase], 
+		[RS_ReasonCode], 
+		[RS_ReasonCodeMessage], 
+		[RS_Header], 
+		[RS_Body], 
+		[RS_Object], 
+		[RS_Datetime], 
+		[RS_IdOrder], 
+		[RS_LauValue], 
+		[RS_Token])
+		VALUES(
+		'Push'																
+		,@System  																
+		,'DeliveryBackOffice.dbo.CreditCardTransaction' 					
+		,@IdTransaction														
+		,'SOAP'																
+		,'https://ecm.firstatlanticcommerce.com/PGService/Services.svc'		
+		,1 																	
+		,null 																
+		,null 																
+		,null																
+		,@DateCreated														
+		,null																
+		,null 																
+		,@IdTransaction 																	
+		,2 																	
+		,0 																	
+		,null 		 														
+		,@ReasonCode 														
+		,@ReasonDescription													
+		,null 																
+		,null 																
+		, null 																
+		,@DateCreated														
+		,@OrderNumber														
+		,null 																
+		,@TokenUpdated														
+		)
+	END 
+	else IF (@Type = 3) --V/M COMPLETED 
+	BEGIN 
+	SELECT 
+		@IdTransaction 	= isnull([IdTransaction],0)			
+		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+		WHERE OrderNumber = @OrderNumber
+	    
+	END 
 	select 200 Code,'Success' Description
 	
 END
+
+
