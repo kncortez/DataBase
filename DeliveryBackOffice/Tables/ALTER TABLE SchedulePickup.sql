@@ -14,3 +14,8 @@
 
 	ALTER TABLE SchedulePickup 
 	ADD FOREIGN KEY (IdSourcePlataform) REFERENCES CatSystem(SysIdSystem);
+
+	ALTER TABLE SchedulePickup ALTER COLUMN [AccountId] bigint  NULL
+
+	ALTER TABLE SchedulePickup  
+	ADD AddressPickup varchar(500) null

@@ -30,6 +30,6 @@ CREATE TABLE DeliveryBackOffice.dbo.ServiceManagement
 		,(5,5,null,null,null,null,5,5,null,null,1,'SYS-CAQUINO',GETDATE(),NULL,NULL)
 		,(10,10,null,null,null,null,6,6,null,null,1,'SYS-CAQUINO',GETDATE(),NULL,NULL)
 	
-	select * from dbo.ServiceManagement
+	select * from dbo.SenderReceiver
 
 
