@@ -20,7 +20,11 @@ ALTER PROCEDURE [dbo].[SetFinishPickUp]
 	-- Add the parameters for the stored procedure here
 	@InGuides   NVARCHAR(400) = 'FD22221,FD22361,FD22223,FD22359,FD22226',
 	@IdPickup int = 2,
-	@TypeofInOutMoneyId int = 1
+	@TypeofInOutMoneyId int = 1,
+	@IdStatusPickup int = 3,
+	@Token varchar(200) = null,
+	@Observations varchar (200) = null
+
 	
 AS
 BEGIN
@@ -209,6 +213,39 @@ BEGIN
 		update DeliveryOrderPiece set IsPickup = 1
 		from DeliveryOrderPiece
 		where GuideNumber in (select ItemNumber from #listGuides) and GuideSerie in (select ItemSerie from #listGuides)
+		--------------------------------------------- Registra el pago de la recoleccion ---------------------------------
+		
+			--insert into dbo.Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+			--values (2, @IdPickUp, 2, @Amount, GETDATE(), @IdModule, 1, @Token,GETDATE(), null, null ) 
+		
+			--declare @transact int = (select top 1 IdCost from Cost
+			--						order by 1 desc)
+		
+			--insert into dbo.CostDetail (IdCost, IdTypeOfMoney,Amount, Voucher, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+			--values (@transact, @PaymentType, @Amount, @Voucher, 1, @Token, GETDATE(), null, null)
+
+
+				---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
+
+
+				update ServiceManagement set ServiceStatusId = @IdStatusPickup
+					from ServiceManagement
+					where IdSchedulePickup = @IdPickup
+
+					declare @transac int = (select top 1 IdServiceManagement from ServiceManagement where IdSchedulePickup = @IdPickup)
+			
+			   ---------------------------------------------- Inserta en EventService el comportamiento del Pickup  -------------------------------------------------------------------------	
+				
+				insert into EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
+				values( @transac, @IdStatusPickup, 1, @Token, GETDATE(), @Observations )
+
+
+				-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+			--	select * from ServiceManagement
+			--select * from EventService
+			--select * from CatServiceStatus
+
 
 				
 	
