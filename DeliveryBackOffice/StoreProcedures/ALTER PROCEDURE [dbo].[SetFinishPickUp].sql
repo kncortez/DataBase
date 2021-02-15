@@ -155,6 +155,12 @@ BEGIN
 
 	--DROP TABLE #UpdateNow
 	DROP TABLE #NowInsert
+
+
+
+
+
+
 	---------------------------------Obtner los datos a actualizar del encabezado del lote de guias -------------------------------------
 
 		declare @SenderId int  = (select top 1 ord.Sender_ID  from #listGuides ls
@@ -224,8 +230,9 @@ BEGIN
 			--insert into dbo.CostDetail (IdCost, IdTypeOfMoney,Amount, Voucher, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
 			--values (@transact, @PaymentType, @Amount, @Voucher, 1, @Token, GETDATE(), null, null)
 
+			
 
-				---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
+					---------------------------------------------- Actualiza el Status del Pickup  -------------------------------------------------------------------------
 
 
 				update ServiceManagement set ServiceStatusId = @IdStatusPickup
@@ -247,6 +254,12 @@ BEGIN
 			--select * from CatServiceStatus
 
 
+
+
+
+
+
+
 				
 	
 		-- retornar resultado en formato json
@@ -259,7 +272,6 @@ BEGIN
 			set @jsonResult =(
 				SELECT STUFF(( 
 				SELECT '"IdResult":' +  convert(varchar,IdResult)    +',' 
-				+ '"Incidence":"' + convert( nvarchar(max),'Problemas al asignar una guia que ya esta asignada a otro lote de guias') + ','
 				+ '"Message":"' + convert( nvarchar(max),ERROR_MESSAGE()) + '"}' from #responsemessage where Id ='Invalid'
 				FOR XML PATH(''), TYPE
 				).value('.', 'varchar(max)'),1,1,''
