@@ -31,8 +31,8 @@ BEGIN
 	DECLARE @jsonResult NVARCHAR(MAX) 
 
 		-- insertar en tabla temporal posbibles mensajes de respuesta
-			IF OBJECT_ID('tempdb.dbo.#UpdatePayNow', 'U') IS NOT NULL DROP TABLE #UpdatePayNow;
-			IF OBJECT_ID('tempdb.dbo.##NowInsert', 'U') IS NOT NULL DROP TABLE #NowInsert;
+			--IF OBJECT_ID('tempdb.dbo.#UpdateNow', 'U') IS NOT NULL DROP TABLE #UpdateNow;
+			IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL DROP TABLE #NowInsert;
 		IF OBJECT_ID('tempdb.dbo.#responsemessage', 'U') IS NOT NULL DROP TABLE #responsemessage;
 			select * INTO #responsemessage from (SELECT  200 AS IdResult
 					,'Estado  cambiado correctamente' AS Message
@@ -63,35 +63,37 @@ BEGIN
 			[Guide_Serie],
 			[recolect]
 
-		INTO #UpdatePayNow
+		INTO #NowInsert
 		FROM  (select   ord.Guide_Number  , ord.Guide_Serie, ord.PriceShippment , (15.00) as recolect from DeliveryOrder ord 
+																left join DeliveryOrderPaymentDetail dop on (ord.Guide_Number = dop.GuideNumber and ord.Guide_Serie = dop.GuideSerie)
 																inner join #listGuides ls on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
-																where ord.StatusOrderId in (15,1)) as Table1
+																where ord.Guide_Number in (select ItemNumber from #listGuides) and ord.StatusOrderId in (15,1)
+																and dop.GuideNumber is null)  as Table1
 		
 
 
-			SELECT 
+		--	SELECT 
 			
-			[Guide_Number] ,
-			[PriceShippment],
-			[Guide_Serie],
-			[recolect]
+		--	[Guide_Number] ,
+		--	[PriceShippment],
+		--	[Guide_Serie],
+		--	[recolect]
 
-		INTO #NowInsert
-		FROM  (select   ord.Guide_Number  , ord.Guide_Serie, ord.PriceShippment , (15.00) as recolect from DeliveryOrderPaymentDetail dop
-																inner join DeliveryOrder ord on (ord.Guide_Number = dop.GuideNumber and ord.Guide_Serie = dop.GuideSerie ) 
-																inner join #listGuides ls on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
-																where ord.StatusOrderId in (15,1)) as Table1
+		--INTO #UpdateNow
+		--FROM  (select   ord.Guide_Number  , ord.Guide_Serie, ord.PriceShippment , (15.00) as recolect from DeliveryOrder ord
+		--														left join DeliveryOrderPaymentDetail dop on (ord.Guide_Number = dop.GuideNumber and ord.Guide_Serie = dop.GuideSerie ) 
+		--														inner join #listGuides ls on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
+		--														where ord.Guide_Number in (Select ItemNumber from #listGuides) and   ord.StatusOrderId in (15,1)  
+		--														and dop.GuideNumber is not null  ) as Table2
 
 
 
+		
+		declare @AmountPickup decimal (18,2) = (select  Convert(decimal(18,2),Value) from ConfigParams where ConfigParamsId = 15)
 
 
 
 		----------------------------------------------Inserta en la tabla DeliveryOrderPaymentDetail los datos de la tabla temporal ----------------------------------
-
-		declare @verif int = (select COUNT (GuideNumber) from DeliveryOrderPaymentDetail 
-								where GuideNumber in (select ItemNumber from #listGuides) )
 
 	insert into dbo.DeliveryOrderPaymentDetail
 	(  [GuideNumber]
@@ -100,64 +102,67 @@ BEGIN
       ,[TypeofInOutMoneyId]
       ,[TimePlaId]
       ,[amount]
-	  ,[PaymentRecollections]
-	  ,[PaymentNow]
-	  ,[PaymentDelivery]
-	  ,[StartDate]
-	  ,[EndDate]
-	  ,[ShipmentCompleted]
-	  ,[RecollectionCompleted]
-	  ,[PaidGuide]
       ,[TokenCreated]
       ,[DateCreated]
       ,[TokenUpdated]
       ,[DateUpdated]
-	  ,[TransaccionFAC]
-	  ,[IdHeaderRecolection]
+      ,[PaymentRecollections]
+      ,[PaymentNow]
+      ,[PaymentDelivery]
+      ,[StartDate]
+      ,[EndDate]
+      ,[ShipmentCompleted]
+      ,[RecollectionCompleted]
+      ,[PaidGuide]
+      ,[TransaccionFAC]
+      ,[IdHeaderRecolection]
+      ,[RecolectNow]
+      ,[RecolectDelivery]
+      ,[RecolectPayment]
 	  )
 	  select ls.Guide_Number 
 	,ls.Guide_Serie
 	,1
 	,@TypeofInOutMoneyId
-	,3
-	,null
-	,ls.PriceShippment
-	,0.00
-	,0.00
-	,null
-	,null
-	,null
-	,null
+	,2
 	,null
 	,'SYSTEMSYS'
 	,getdate()
 	,null
+	,null
+	,null
 	,0.00
 	,0.00
-	,ls.recolect
-	  from #UpdatePayNow ls
+	,null
+	,null
+	,null
+	,null
+	,null
+	,null
+	,@IdPickup
+	,0.00
+	,0.00
+	,@AmountPickup
+	  from #NowInsert ls
+
+
+
 	  -------------------------- Drop la tabla temporal -------------------------------------------------------------------
 
-	DROP TABLE #UpdatePayNow
+	--DROP TABLE #UpdateNow
 	DROP TABLE #NowInsert
 	---------------------------------Obtner los datos a actualizar del encabezado del lote de guias -------------------------------------
 
-		declare @SenderId int  = (select top 1 Sender_ID  from #listGuides ls
+		declare @SenderId int  = (select top 1 ord.Sender_ID  from #listGuides ls
 							join	DeliveryOrder ord on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
-						inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-						inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
 						where ord.Guide_Number in (select ItemNumber from #listGuides ))
 
-		declare @SenderName varchar (50)  = (select top 1  concat(Sender_FirstName, Sender_LastName) as SenderName  from #listGuides ls
+		declare @SenderName varchar (50)  = (select top 1  concat(ord.Sender_FirstName, ord.Sender_LastName) as SenderName  from #listGuides ls
 							join	DeliveryOrder ord on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
-						inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-						inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
 						where ord.Guide_Number in (select ItemNumber from #listGuides ))
 
-		declare @Sender_Phone varchar (20)  = (select top 1  Sender_Phone from #listGuides ls
+		declare @Sender_Phone varchar (20)  = (select top 1  ord.Sender_Phone from #listGuides ls
 							join	DeliveryOrder ord on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
-						inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-						inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
 						where ord.Guide_Number in (select ItemNumber from #listGuides ))
 
 
@@ -168,8 +173,6 @@ BEGIN
 						where ord.Guide_Number in (select ItemNumber from #listGuides ))
 
 
-		declare @AmountPickup decimal (18,2) = (select  Convert(decimal(18,2),Value) from ConfigParams where ConfigParamsId = 15)
-
 
 		--declare @AmountPickup decimal (18,2)  = (select (sum (dop.PaymentRecollections) + sum (dop.RecolectPayment)) as AmountPickup from #listGuides ls
 		--					join	DeliveryOrder ord on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
@@ -177,10 +180,8 @@ BEGIN
 		--				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
 		--				where ord.Guide_Number in (select ItemNumber from #listGuides ))
 
-	   declare @Sender_Address varchar (200)  = (select top 1  Sender_Address from #listGuides ls
+	   declare @Sender_Address varchar (200)  = (select top 1 ord.Sender_Address from #listGuides ls
 							join	DeliveryOrder ord on (ord.Guide_Number = ls.ItemNumber and ord.Guide_Serie = ls.ItemSerie)
-						inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-						inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
 						where ord.Guide_Number in (select ItemNumber from #listGuides ))
 
 
@@ -221,6 +222,7 @@ BEGIN
 			set @jsonResult =(
 				SELECT STUFF(( 
 				SELECT '"IdResult":' +  convert(varchar,IdResult)    +',' 
+				+ '"Incidence":"' + convert( nvarchar(max),'Problemas al asignar una guia que ya esta asignada a otro lote de guias') + ','
 				+ '"Message":"' + convert( nvarchar(max),ERROR_MESSAGE()) + '"}' from #responsemessage where Id ='Invalid'
 				FOR XML PATH(''), TYPE
 				).value('.', 'varchar(max)'),1,1,''
