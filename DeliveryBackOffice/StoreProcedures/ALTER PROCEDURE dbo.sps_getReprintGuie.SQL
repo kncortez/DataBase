@@ -5,7 +5,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-alter PROCEDURE [dbo].[sps_getReprintGuie]
+ALTER PROCEDURE [dbo].[sps_getReprintGuie]
   @Guide_Number int = 137916
   ,@Serie_Number varchar(2) = 'FD'
 AS 
@@ -101,6 +101,10 @@ SELECT  distinct
   '"ProductInsuranceAmount":10,'+
   '"InsuranceCurrency":"' +Convert(varchar, @calcurrency)+'",'+
   '"CodeOfReference":' +Convert(varchar,coalesce(dev.Order_Number,0))+','+
+  /*nueva seccion del si esta asegurado o no*/
+  '"IsInsuarance":' +CASE WHEN  dev.Collect_OnDelivery > 750 then case when dev.IsInsuarance = 1 then 'true' else 'false' end
+  else 'true' end +','+
+  /**/
   '"COD":  {'+
   '"CashOnDelivery": '+case when dev.Collect_OnDelivery > 0 then 'true' else 'false' end+','+		
   '"CreditNumber":"'+Convert(varchar,isnull(dev.Order_Number,0))+'",'+
@@ -140,4 +144,4 @@ FOR XML PATH(''), TYPE
   FormatJson 
   
   
-  end
+  end 
