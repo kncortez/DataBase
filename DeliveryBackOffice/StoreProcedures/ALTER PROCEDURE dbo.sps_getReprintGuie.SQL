@@ -65,7 +65,7 @@ BEGIN
   ( 
  
 SELECT ''+ STUFF(( 
-SELECT  distinct 
+SELECT distinct top 1 
    ',{"DateOfSale":"' +  Convert(varchar,isnull(dev.Preparation_Date, getdate())) +'",'+
    '"ContentDescription":"' + Convert(varchar,isnull(dev.Package_Description,''))+'",'+
    '"IdCountry":"'+ Convert(varchar,coalesce(p.IdCountry,'')) +'",'+
