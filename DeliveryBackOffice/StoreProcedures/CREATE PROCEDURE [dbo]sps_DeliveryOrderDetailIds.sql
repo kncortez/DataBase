@@ -9,6 +9,7 @@ ALTER PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
 ,@IndicationsDestination			varchar(1500) = ''
 ,@Sender_Mail						varchar(200) = ''
 ,@Ticket_Number						varchar(300) = ''
+,@IsInsuarance						bit = 0
 AS 
 BEGIN
 
@@ -19,6 +20,7 @@ BEGIN
 	, IndicationsToSendDestination = @IndicationsDestination
 	,Ticket_Number = @Ticket_Number
 	,Sender_Mail = @Sender_Mail
+	,IsInsuarance = @IsInsuarance
 	where Guide_Number = @GuideNumber and Guide_Serie = @GuideSerie;
 
 	select 1;
