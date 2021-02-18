@@ -10,6 +10,11 @@ ALTER PROCEDURE [dbo].[sps_getReprintGuie]
   ,@Serie_Number varchar(2) = 'FD'
 AS 
 BEGIN 
+ALTER PROCEDURE [dbo].[sps_getReprintGuie]
+  @Guide_Number int = 137916
+  ,@Serie_Number varchar(2) = 'FD'
+AS 
+BEGIN 
  Declare   @jsonOutput NVARCHAR(MAX) = '' 
   ,@parcels NVARCHAR(MAX) = ''
   /*pieces*/
@@ -65,12 +70,15 @@ BEGIN
   ( 
  
 SELECT ''+ STUFF(( 
-SELECT distinct top 1 
+SELECT distinct top 1 --Price
    ',{"DateOfSale":"' +  Convert(varchar,isnull(dev.Preparation_Date, getdate())) +'",'+
    '"ContentDescription":"' + Convert(varchar,isnull(dev.Package_Description,''))+'",'+
    '"IdCountry":"'+ Convert(varchar,coalesce(p.IdCountry,'')) +'",'+
    '"CountPieces":'+Convert(varchar,isnull(dev.Pieces_Dry+dev.Pieces_Cold,0))+','+
   '"Collected":'+case when dev.IsCollect = 1 then 'true' else 'false' end+','+
+  /*valor del felte para imprimir en la guia casos con collect sin COD*/
+  '"Price":"'+ coalesce(CONVERT(VARCHAR,dev.PriceShippment),'0.00')+'",'+
+  /*valor collect*/
   '"IdCustomer":'+coalesce(Convert(varchar,ctm.IdCustomer),'0')+','+
   '"from_address": {'+
   '"HeaderCodeTownship":"'+ Convert(varchar,coalesce(tws.HeaderCode,''))+'",'+
@@ -144,4 +152,4 @@ FOR XML PATH(''), TYPE
   FormatJson 
   
   
-  end 
+  end
