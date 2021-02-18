@@ -11,3 +11,5 @@ DECLARE @v2 sql_variant
 SET @v2 = N'User editing guide'
 EXECUTE sp_addextendedproperty N'MS_Description', @v2, N'SCHEMA', N'dbo', N'TABLE', N'DeliveryOrder', N'COLUMN', N'TokenUpdated'
 GO
+alter table DeliveryBackOffice.dbo.DeliveryOrder add Sender_Mail NVARCHAR(200)
+go

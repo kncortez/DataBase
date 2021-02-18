@@ -7,5 +7,7 @@ go
 alter table DeliveryBackOffice.[dbo].[DeliveryOrder]
 add IndicationsToSendDestination varchar(1500);
 go
-	
+alter table DeliveryBackOffice.dbo.DeliveryOrder
+add IsInsuarance bit  
+go	
 	
