@@ -1,0 +1,33 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spg_get_RouteServiceAssigment]    Script Date: 2/18/2021 4:44:30 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Abner, Juarez>
+-- Create date: <2020-02-13>
+-- Description:	<Obtiene las rutas con servicios ya asignados>
+-- =============================================
+ALTER PROCEDURE [dbo].[spg_get_RouteServiceAssigment]
+		@idRoute AS int,
+		@dateRoute AS date
+AS
+BEGIN
+  SELECT spu.SchedulePickupId, 
+		spu.SenderName [Name],
+		spu.AddressPickup [Address],
+		spu.SenderPhone [Phone],
+		CONCAT(CONVERT(varchar(10), spu.StartDate, 108), '   ', CONVERT(varchar(10), spu.EndDate, 108)) as rangeHour,
+		spu.QuantityRegularPackages,
+		spu.QuantityOverDimensionedPackage,
+		CONCAT(snr.First_Name,' ',snr.Last_Name) as NameCourrier,
+		css.Name as NameStatus
+  from [DeliveryBackOffice].[dbo].[SchedulePickup] as spu
+  join [DeliveryBackOffice].[dbo].[ServiceManagement] as smt on spu.SchedulePickupId = smt.IdSchedulePickup
+  join [DeliveryBackOffice].[dbo].[RouteAssigment] as rat on smt.IdPuRouteAssigment = rat.IdRouteAssigment
+  left join [DeliveryBackOffice].[dbo].[SenderReceiver] as snr on rat.IdCurrierMan = snr.ID
+  left join [DeliveryBackOffice].[dbo].[CatServiceStatus] as css on css.IdServiceStatus = smt.ServiceStatusId
+  where rat.IdRoute = @idRoute and rat.DateOfRoute = @dateRoute AND spu.AssigmentStatus = '1'
+END
