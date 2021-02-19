@@ -1,0 +1,2 @@
+ insert into dbo.CatModule 
+ values ('Recoleccion','1','cost','Recolecion de guias', '11', null, 0, 0, 'SYS-SYSTEM', GETDATE(), NULL, NULL), ('POD','1','cost','Entrega de guias', '12', null, 0, 0, 'SYS-SYSTEM', GETDATE(), NULL, NULL)
