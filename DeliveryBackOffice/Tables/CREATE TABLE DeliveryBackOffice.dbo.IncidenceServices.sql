@@ -1,8 +1,6 @@
 USE [DeliveryBackOffice]
 GO
 
-drop table dbo.IncidenceServices
-
 CREATE TABLE DeliveryBackOffice.dbo.IncidenceServices
    ( IdIncidence int IDENTITY(1,1) PRIMARY KEY NOT NULL,  
     ServiceManagementId int  NULL,
