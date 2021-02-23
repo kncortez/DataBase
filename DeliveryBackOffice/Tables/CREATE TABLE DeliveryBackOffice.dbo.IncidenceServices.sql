@@ -4,7 +4,7 @@ GO
 drop table dbo.IncidenceServices
 
 CREATE TABLE DeliveryBackOffice.dbo.IncidenceServices
-   (IdIncidence int IDENTITY(1,1) PRIMARY KEY NOT NULL,  
+   ( IdIncidence int IDENTITY(1,1) PRIMARY KEY NOT NULL,  
     ServiceManagementId int  NULL,
     IncidenceTypeId int  NULL,
     DescriptionIncidence varchar (200) NULL,
@@ -17,9 +17,8 @@ CREATE TABLE DeliveryBackOffice.dbo.IncidenceServices
     TokenUpdated varchar(50)   NULL,
     DateUpdated datetime   NULL,
     CONSTRAINT FKIncidentRecolection FOREIGN KEY (ServiceManagementId) REFERENCES ServiceManagement(IdServiceManagement),
-    CONSTRAINT FKIncidenTypProduct FOREIGN KEY (IncidenceTypeId) REFERENCES CatTypeIncidence(IdIncidenceType)
+    CONSTRAINT FKIncidenTypProduct FOREIGN KEY (IncidenceTypeId) REFERENCES CatTypeIncidence(IdIncidenceType))
 GO
 
 
 
---EXECUTE sp_rename 'IncidenceServices.Accurancy', 'Accuracy', 'COLUMN';
