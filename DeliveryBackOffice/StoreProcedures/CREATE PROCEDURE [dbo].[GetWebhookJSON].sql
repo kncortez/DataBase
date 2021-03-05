@@ -9,7 +9,6 @@ CreatedDate: 03/03/2021
 */
 
 
---EXEC [dbo].[GetWebhookJSON] 1,	'FD',	180123,	312,	15,	1
 SET ANSI_NULLS ON
 GO
 
@@ -91,7 +90,7 @@ SELECT
 	 Select @JSONMilestones=(replace(replace(replace([dbo].[toJSON](0,1,(Select * From #Milestones for XML RAW)),'"[','['),']"',']'),'"null"','null'))
 
 		SELECT
-			@fullname       = do.Receiver_FirstName + ' ' + do.Receiver_LastName, 
+			@fullname       = ISNULL(do.Receiver_FirstName + ' ' + do.Receiver_LastName,''), 
 			@OriginAdress   = do.Sender_Address, 	
 			@DestinyAddress = do.Receiver_Address,
 			@EstimatedDeliveryDate = CONVERT(varchar,do.Delivery_Max_Date ,120), 
@@ -106,33 +105,33 @@ SELECT
 
 SET @jsonResult = N'{
 "PayLoad":{ 
-"WebhookType": '+ @WebhookTypeName +',
+"WebhookType": '+ ISNULL(@WebhookTypeName,'') +',
 "StatusCode": 200,
 "Description":"Success",
 	"TrackOrder": {
-		"GuideSerie":  '+ CAST(@Guide_Serie  AS VARCHAR)  + ',
-		"GuideNumber": '+ CAST(@Guide_Number AS VARCHAR) + ',
-		"ManifestNumber": "'+ CAST(@ManifestNumber AS VARCHAR) + '",
+		"GuideSerie":  '+ ISNULL(CAST(@Guide_Serie  AS VARCHAR),'')  + ',
+		"GuideNumber": '+ ISNULL(CAST(@Guide_Number AS VARCHAR),'') + ',
+		"ManifestNumber": "'+ ISNULL(CAST(@ManifestNumber AS VARCHAR),'') + '",
 		"Message": "Success",
-		"Latitude": '+ CAST(@Latitude AS VARCHAR) + ',
-		"Longitude": '+ CAST(@Longitude AS VARCHAR) + ',
+		"Latitude": '+ ISNULL(CAST(@Latitude AS VARCHAR),'') + ',
+		"Longitude": '+ ISNULL(CAST(@Longitude AS VARCHAR),'') + ',
 		"OrderDetail": {
-			"id": '+ CAST(@Guide_Number AS VARCHAR) + ',
+			"id": '+ ISNULL(CAST(@Guide_Number AS VARCHAR),'') + ',
 			"customer": {
-				"id": '+ CAST(@IdCustomer AS VARCHAR) + ',
-				"fullname": '+ CAST(@fullname AS VARCHAR) + '
+				"id": '+ ISNULL(CAST(@IdCustomer AS VARCHAR),'') + ',
+				"fullname": '+ ISNULL(CAST(@fullname AS VARCHAR),'') + '
 			},
 			"origin": {
-				"address":"'+ CAST(@OriginAdress AS VARCHAR) + '",
+				"address":"'+ ISNULL(CAST(@OriginAdress AS VARCHAR),'') + '",
 				"latitude": "",
 				"longitude": "",
-				"place":'+ CAST(@Place AS VARCHAR) + '
+				"place":'+ ISNULL(CAST(@Place AS VARCHAR),'') + '
 			},
 			"destiny": {
-				"address": "'+ CAST(@DestinyAddress AS VARCHAR) + '",
+				"address": "'+ ISNULL(CAST(@DestinyAddress AS VARCHAR),'') + '",
 				"latitude": "",
 				"longitude": "",
-				"receiver": '+ CAST(@receiver AS VARCHAR) +'
+				"receiver": '+ ISNULL(CAST(@receiver AS VARCHAR),'') +'
 			},
 			"milestones":' + @JSONMilestones + '
 		}
