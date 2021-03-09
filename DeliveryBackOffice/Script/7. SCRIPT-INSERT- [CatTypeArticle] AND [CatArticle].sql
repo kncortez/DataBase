@@ -10,5 +10,3 @@ INSERT INTO DeliveryBackOffice.dbo.CatArticle (ArtIdTypeArticle,ArtName,ArtShowD
 VALUES(9,'Caja estándar 30x30x30',0,1,'SYS-AJUAREZ',GETDATE())
 INSERT INTO DeliveryBackOffice.dbo.CatArticle (ArtIdTypeArticle,ArtName,ArtShowDefault,ArtRowStatus,ArtTokenCreated,ArtDateCreated)
 VALUES(10,'Sobre',0,1,'SYS-AJUAREZ',GETDATE())
-
-UPDATE DeliveryBackOffice.dbo.CatArticle SET ArtName = 'Pieza Irregular' WHERE ArtId=4
