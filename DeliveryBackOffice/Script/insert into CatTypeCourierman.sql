@@ -9,3 +9,9 @@ values ('Afiliado Corporate', 1, 'SYS-SYSTEM', getdate(),null, null)
 
 insert into CatTypeCourierman (Name, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
 values ('Afiliado Premium', 1, 'SYS-SYSTEM', getdate(),null, null)
+
+insert into CatTypeCourierman (Name, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+values ('Piloto Guangard', 1, 'SYS-SYSTEM', getdate(),null, null)
+
+insert into CatTypeCourierman (Name, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+values ('Otros', 1, 'SYS-SYSTEM', getdate(),null, null)
