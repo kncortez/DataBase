@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  UserDefinedTableType [dbo].[TblDeliveryOrders]    Script Date: 14/07/2020 13:10:06 ******/
+/****** Object:  UserDefinedTableType [dbo].[TblDeliveryOrders]    Script Date: 5/04/2021 15:41:04 ******/
 CREATE TYPE [dbo].[TblDeliveryOrders] AS TABLE(
 	[RowNumber] [int] NOT NULL,
 	[Ticket_Number] [nvarchar](150) NULL,
@@ -23,7 +23,7 @@ CREATE TYPE [dbo].[TblDeliveryOrders] AS TABLE(
 	[Receiver_ID] [int] NULL,
 	[Receiver_FirstName] [nvarchar](100) NULL,
 	[Receiver_LastName] [nvarchar](100) NULL,
-	[Receiver_Address] [nvarchar](200) NULL,
+	[Receiver_Address] [nvarchar](600) NULL,
 	[Receiver_Zone] [nvarchar](100) NULL,
 	[Receiver_Town] [nvarchar](100) NULL,
 	[Receiver_Department] [nvarchar](100) NULL,
