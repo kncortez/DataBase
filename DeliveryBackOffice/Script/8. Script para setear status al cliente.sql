@@ -8,6 +8,7 @@ AND IdCustomerType IN (1,2) --todos excepto el portal 3
 UPDATE Customer
 SET RowSatus = 'TRUE',
 TokenCreated = 'SYS-ERAMIREZ',
-DateCreated = GETDATE()
+DateCreated = GETDATE(),
+CountryID  = 'GT'
 WHERE IdCustomerType IN (1,2) --todos excepto el portal 3
 and IdCustomerType  not in ( 3,1001)
