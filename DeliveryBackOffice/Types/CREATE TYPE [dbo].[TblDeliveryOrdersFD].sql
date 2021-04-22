@@ -1,8 +1,12 @@
 USE [DeliveryBackOffice]
 GO
+drop procedure [dbo].[SetServiceRequestFD];
+/****** Object:  UserDefinedTableType [dbo].[TblDeliveryOrdersFD]    Script Date: 5/04/2021 12:31:40 ******/
+DROP TYPE [dbo].[TblDeliveryOrdersFD];
+GO
 
-/****** Object:  UserDefinedTableType [dbo].[TblDeliveryOrders]    Script Date: 5/04/2021 15:41:04 ******/
-CREATE TYPE [dbo].[TblDeliveryOrders] AS TABLE(
+/****** Object:  UserDefinedTableType [dbo].[TblDeliveryOrdersFD]    Script Date: 5/04/2021 12:31:40 ******/
+CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE(
 	[RowNumber] [int] NOT NULL,
 	[Ticket_Number] [nvarchar](150) NULL,
 	[Order_Number] [int] NULL,
@@ -46,8 +50,11 @@ CREATE TYPE [dbo].[TblDeliveryOrders] AS TABLE(
 	[Package_Description] [nvarchar](200) NULL,
 	[Sender_Internal_Code] [nvarchar](50) NULL,
 	[Receiver_Alternant_CUI] [nvarchar](25) NULL,
-	[Collect_OnDelivery] [decimal](14,2) NULL
+	[Collect_OnDelivery] [decimal](14, 2) NULL,
+	[IsCollect] [bit] NULL,
+	[PriceShippment] [decimal](14, 2) NULL,
+	[SenderIdTownship] [int] NULL,
+	[ReceiverIdTownship] [int] NULL
 )
 GO
-
 
