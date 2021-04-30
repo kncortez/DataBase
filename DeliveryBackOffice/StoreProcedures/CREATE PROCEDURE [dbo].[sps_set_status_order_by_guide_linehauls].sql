@@ -85,6 +85,9 @@ BEGIN
 		IF @HUB_Destino <> 0
 		BEGIN
 		PRINT 'ingresa hubdestino diferente 0'
+
+
+
 			SET @ExisteRuta = (SELECT
 					COUNT(1)
 				FROM RouteAssigment ra
@@ -198,6 +201,7 @@ PRINT @ExistePiezaPorServicio
 						WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number
 
 				END
+				
 
 
 
@@ -317,7 +321,18 @@ PRINT @ExistePiezaPorServicio
 						ON pci.GuidePiece = pbs.GuidePieceId
 					WHERE CONCAT(pci.GuideSerie, CAST(pci.GuideNumber AS VARCHAR)) = CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR))
 					AND pbs.ServiceManagmentId = @IdServiceManagement) PIEZAS_PROCESADAS
-				   ,serv.Pieces_Dry + serv.Pieces_Cold AS CANT_PIEZAS_TOTAL
+				   ,	CASE WHEN	(CAST((SELECT
+							ISNULL(COUNT(1),0)
+					FROM dbo.PieceByService pbs
+					INNER JOIN DeliveryOrderPiece pci
+						ON pci.GuidePiece = pbs.GuidePieceId
+					WHERE CONCAT(pci.GuideSerie, CAST(pci.GuideNumber AS VARCHAR)) = CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR))
+					AND pbs.ServiceManagmentId = @IdServiceManagement)
+					AS VARCHAR(50)) = CAST(serv.Pieces_Dry + serv.Pieces_Cold AS VARCHAR(50))) THEN
+					1
+					ELSE 
+					0
+					END  AS CANT_PIEZAS_TOTAL
 				   ,CAST((SELECT
 							ISNULL(COUNT(1),0)
 					FROM dbo.PieceByService pbs
@@ -348,6 +363,8 @@ PRINT @ExistePiezaPorServicio
 						cl.IdHubDestination
 					FROM CatLinehaul cl
 					WHERE cl.IdRoute = @IdRoute)
+					--AND @ExistePiezaPorServicio = 0
+				
 
 			END
 
