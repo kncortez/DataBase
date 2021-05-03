@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched_returns]    Script Date: 29/04/2021 18:49:33 ******/
+/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched_returns]    Script Date: 3/05/2021 12:19:31 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -223,10 +223,10 @@ BEGIN
 		SET @ExisteDetail = (SELECT TOP 1
 				ISNULL(COUNT(1), 0)
 			FROM SettlementByPickupDetail sbpd
-			INNER JOIN #listGuides ls
-				ON sbpd.GuideSerie = ls.ItemSerie
-				AND sbpd.GuideNumber = ls.ItemNumber
-				AND sbpd.NoPiece = ls.ItemPiece
+			INNER JOIN #listGuidesPieces_Dispatch ls
+				ON sbpd.GuideSerie = ls.GuideSerie
+				AND sbpd.GuideNumber = ls.GuideNumber
+				AND sbpd.NoPiece = ls.NoPiece
 			WHERE SettlementByPickupId = @Idd
 			AND sbpd.RowStatus = 1)
 		--SET @ExisteDetail = (SELECT COUNT(pbs.IdServiceManagementByPiece) FROM #listGuides ls
@@ -286,11 +286,11 @@ BEGIN
 				   ,0
 				   ,pc.NoPiece
 				   ,1
-				FROM #listGuides ls
+				FROM #listGuidesPieces_Dispatch ls
 				INNER JOIN DeliveryOrderPiece pc
-					ON pc.GuideSerie = ls.ItemSerie
-						AND pc.GuideNumber = ls.ItemNumber
-						AND pc.NoPiece = ls.ItemPiece
+					ON pc.GuideSerie = ls.GuideSerie
+						AND pc.GuideNumber = ls.GuideNumber
+						AND pc.NoPiece = ls.NoPiece
 				INNER JOIN dbo.PieceByService pbs
 					ON pc.GuidePiece = pbs.GuidePieceId
 				JOIN ServiceManagement sm
