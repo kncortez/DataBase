@@ -45,6 +45,7 @@ BEGIN
 	DECLARE @RowUpdated INT
 	DECLARE @ExisteRuta INT
 	DECLARE @HUB_Destino INT
+	DECLARE @HUB_Origen INT
 	DECLARE @IdRouteASG INT
 	DECLARE @ExisteServicio INT
 	DECLARE @IdServiceManagement INT
@@ -82,12 +83,31 @@ BEGIN
 
 		---=============
 
-		IF @HUB_Destino <> 0
+			---===============ALMACENAR ID HUB DESTINO
+		SET @HUB_Origen = (SELECT
+				ISNULL(hl_origen.IdHublogistic, 0) 
+			FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+			JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbh_hl_origen
+				ON serv.ReceiverIdTownship = tbh_hl_origen.IdTownship
+				AND tbh_hl_origen.StatusTownshipHub = 1
+			JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
+				ON tbh_hl_origen.IdHublogistic = hl_origen.IdHublogistic
+			JOIN DeliveryOrderPiece pc
+				ON serv.Guide_Number = pc.GuideNumber
+				AND serv.Guide_Serie = pc.GuideSerie
+			WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number
+			AND hl_origen.IdHublogistic IN (SELECT
+					cl.IdHubOrigin
+				FROM CatLinehaul cl
+				WHERE cl.IdRoute = @IdRoute))
+
+				PRINT @HUB_Origen
+
+		---=============
+
+		IF @HUB_Destino <> 0  AND  @HUB_Origen <> 0
 		BEGIN
-		PRINT 'ingresa hubdestino diferente 0'
-
-
-
+	
 			SET @ExisteRuta = (SELECT
 					COUNT(1)
 				FROM RouteAssigment ra
