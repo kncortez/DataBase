@@ -79,16 +79,16 @@ BEGIN
 				FROM CatLinehaul cl
 				WHERE cl.IdRoute = @IdRoute))
 
-				PRINT @HUB_Destino
+			
 
 		---=============
 
-			---===============ALMACENAR ID HUB DESTINO
+			---===============ALMACENAR ID HUB ORIGEN
 		SET @HUB_Origen = (SELECT
 				ISNULL(hl_origen.IdHublogistic, 0) 
 			FROM DeliveryBackOffice.dbo.DeliveryOrder serv
 			JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbh_hl_origen
-				ON serv.ReceiverIdTownship = tbh_hl_origen.IdTownship
+				ON serv.SenderIdTownship = tbh_hl_origen.IdTownship
 				AND tbh_hl_origen.StatusTownshipHub = 1
 			JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
 				ON tbh_hl_origen.IdHublogistic = hl_origen.IdHublogistic
@@ -101,11 +101,11 @@ BEGIN
 				FROM CatLinehaul cl
 				WHERE cl.IdRoute = @IdRoute))
 
-				PRINT @HUB_Origen
+			
 
 		---=============
 
-		IF @HUB_Destino <> 0  AND  @HUB_Origen <> 0
+		IF ISNULL(@HUB_Destino,0) <> 0  AND  ISNULL(@HUB_Origen,0) <> 0
 		BEGIN
 	
 			SET @ExisteRuta = (SELECT
@@ -113,7 +113,7 @@ BEGIN
 				FROM RouteAssigment ra
 				WHERE ra.IdRoute = @IdRoute
 				AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126))
-PRINT @ExisteRuta
+
 			IF @ExisteRuta = 0
 			BEGIN
 			PRINT 'entra existe ruta = 0'
@@ -129,7 +129,7 @@ PRINT @ExisteRuta
 					FROM RouteAssigment ra
 					WHERE ra.IdRoute = @IdRoute
 					AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126))
-PRINT @IdRouteASG
+
 
 				SET @ExisteServicio = (SELECT
 						COUNT(1)					
@@ -140,8 +140,6 @@ PRINT @IdRouteASG
 					
 
 
-PRINT '@ExisteServicio'
-PRINT @ExisteServicio
 
 
 				IF @ExisteServicio > 0
@@ -156,7 +154,7 @@ PRINT @ExisteServicio
 				END
 				ELSE
 				BEGIN
-				PRINT 'entra en insert de servicio'
+				
 					---========= insert servicio
 					INSERT INTO dbo.ServiceManagement (IdPuCourrier, IdDlCourrier, CiPuDate, CoPuDate,
 					CiDlDate, CoDlDate, IdPuRouteAssigment, IdDlRouteAssigment, IdSchedulePickup,
@@ -188,8 +186,7 @@ PRINT @ExisteServicio
 					SET @IdServiceManagement = SCOPE_IDENTITY();
 				---====================================
 				END
-				PRINT '@IdServiceManagement'
-				PRINT @IdServiceManagement
+			
 				SET @ExistePiezaPorServicio = (SELECT
 						COUNT(1)
 					FROM dbo.PieceByService pbs
@@ -200,8 +197,6 @@ PRINT @ExisteServicio
 
 					
 
-PRINT '@ExistePiezaPorServicio'
-PRINT @ExistePiezaPorServicio
 				IF @ExistePiezaPorServicio = 0
 				BEGIN
 					--========================== Se registra en una tabla de control el id de servicio y de piezas ======
