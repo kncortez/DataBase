@@ -16,3 +16,4 @@ Orden de ejecucion SP
 12. SCRIPT CARGA TARIFARIO TD EXP
 13. CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
 14. ALTER PROCEDURE [dbo].[sps_DeliveryOrderDetailIds]
+15. SCRIPT cargar tarifa collect y designar tarifario default
