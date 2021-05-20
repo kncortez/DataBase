@@ -1,6 +1,13 @@
-use DeliveryBackOffice
-go 
+USE DeliveryBackOffice
+GO
 
 alter table SettlementByPickup ADD
-IdCourier int null
+SequenceCode bigint null,
+SubTypeServiceManagmentId  int null,
+StartingKilometers nvarchar(50) null,
+ArrivalKilometers nvarchar(50) null
 go
+
+
+
+--select * from SettlementByPickup

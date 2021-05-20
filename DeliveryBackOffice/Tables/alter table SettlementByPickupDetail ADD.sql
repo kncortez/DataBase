@@ -1,3 +1,6 @@
+USE DeliveryBackOffice
+GO
+
 alter table SettlementByPickupDetail ADD
-NoPiece int null
+IsReturn bit null
 go
