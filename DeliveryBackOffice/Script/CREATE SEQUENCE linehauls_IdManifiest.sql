@@ -1,0 +1,3 @@
+CREATE SEQUENCE linehauls_IdManifiest
+  START WITH 1
+  INCREMENT BY 1;
