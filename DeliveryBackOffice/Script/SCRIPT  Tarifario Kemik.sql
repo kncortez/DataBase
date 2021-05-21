@@ -120,14 +120,19 @@ where RateId  = @IdRate
 
 
 
-DECLARE @IdCustomer int = 204
+DECLARE @IdCustomer int = 1033
 
 
 
-update dbo.RatebyCustomer
-set RbcIdRate = 7
-where RbcIdCustomer = @IdCustomer
+--update dbo.RatebyCustomer
+--set RbcIdRate = 7
+--where RbcIdCustomer = @IdCustomer
 
+
+insert into RatebyCustomer
+(RbcIdRate,RbcIdCustomer,RbcRowStatus,RbcTokenCreated,RbcDateCreated)
+valueS(@IdRate, @IdCustomer,1,'SYS-CAQUINO',GETDATE())
 
 select * from dbo.RatebyCustomer
 where RbcIdCustomer = @IdCustomer
+
