@@ -4,4 +4,4 @@ ALTER TABLE DeliveryBackOffice.dbo.DeliveryOrder
 ADD  EcommerceId INT NULL
 
 
-
+  
