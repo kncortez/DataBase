@@ -1,0 +1,3 @@
+CREATE SEQUENCE delivery_IdManifiest
+  START WITH 60
+  INCREMENT BY 1;
