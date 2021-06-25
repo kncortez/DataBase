@@ -19,7 +19,7 @@ CREATE TABLE dbo.CatSaleAdvisor
 	(
 	IdSaleAdvisor int NOT NULL IDENTITY (1, 1),
 	SaleAdvisorCode nvarchar(12) NOT NULL,
-	SaleAdvisorDescription nvarchar((50) NOT NULL,
+	SaleAdvisorDescription nvarchar(50) NOT NULL,
 	EmployeID int NOT NULL,
 	SAPSellerID int NULL,
 	CountryID varchar(2) NOT NULL,
