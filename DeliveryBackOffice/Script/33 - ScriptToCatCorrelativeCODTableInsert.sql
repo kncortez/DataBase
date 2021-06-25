@@ -1,0 +1,12 @@
+USE [DeliveryBackOffice]
+
+BEGIN TRAN
+
+--INSERTAR LA PARAMETRIZACION DE LOS CORRELATIVOS (REFERENCIA)
+INSERT INTO [dbo].[CatCorrelativeCOD] 
+			([End],[Last],[BankId],[TokenCreated]) 
+	VALUES  (999999999,4500,31,'AORTIZ')
+
+--COMMIT
+
+
