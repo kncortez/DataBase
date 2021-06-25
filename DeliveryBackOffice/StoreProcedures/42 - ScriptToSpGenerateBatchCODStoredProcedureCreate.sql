@@ -20,6 +20,8 @@ IF OBJECT_ID('tempdb.dbo.#TableCustomerPaymentTemp', 'U') IS NOT NULL DROP TABLE
 IF OBJECT_ID('tempdb.dbo.#TableForzaPaymentTemp', 'U') IS NOT NULL DROP TABLE #TableForzaPaymentTemp;
 IF OBJECT_ID('tempdb.dbo.#TableBACFormatTemp', 'U') IS NOT NULL DROP TABLE #TableBACFormatTemp;
 IF OBJECT_ID('tempdb.dbo.#TableFullFormatTemp', 'U') IS NOT NULL DROP TABLE #TableFullFormatTemp;
+IF OBJECT_ID('tempdb.dbo.#TableDistinctBankTemp', 'U') IS NOT NULL DROP TABLE #TableDistinctBankTemp;
+IF OBJECT_ID('tempdb.dbo.#TableDistinctBankIndexTemp', 'U') IS NOT NULL DROP TABLE #TableDistinctBankIndexTemp;
 
 SELECT DISTINCT SUBSTRING(Item, 1, 2) ItemSerie,
 				SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber 
@@ -386,8 +388,72 @@ SET Last = @Reference
 WHERE BankId = @BankBAC
 AND RowStatus = 1;
 
+DECLARE @Index INT = 1;
+DECLARE @MaxSize INT;
+DECLARE @MaxBatchName INT = ((SELECT ISNULL(MAX(Name), 0)
+							  FROM DeliveryBackOffice.dbo.BatchCOD) + 1);
+
+SELECT DISTINCT PayingBank, NULL IdBatchCOD
+INTO #TableDistinctBankTemp
+FROM DeliveryBackOffice.dbo.DeliveryBank
+WHERE Id_country = @IdCountry
+AND Id_status = 1;
+
+SELECT *, (ROW_NUMBER() OVER(ORDER BY PayingBank)) IndexRow 
+INTO #TableDistinctBankIndexTemp
+FROM #TableDistinctBankTemp;
+
+SELECT @MaxSize = COUNT(1)
+FROM #TableDistinctBankIndexTemp;
+
+WHILE @Index <= @MaxSize
+BEGIN
+	DECLARE @NewIdBatchCOD INT;
+	DECLARE @ActualBankId INT = (SELECT PayingBank
+								 FROM #TableDistinctBankIndexTemp
+								 WHERE IndexRow = @Index);
+
+	INSERT INTO DeliveryBackOffice.dbo.BatchCOD (BankId, Name)
+		   VALUES (@ActualBankId, @MaxBatchName);
+
+	SELECT @NewIdBatchCOD = SCOPE_IDENTITY();
+
+	UPDATE #TableDistinctBankIndexTemp
+	SET IdBatchCOD = @NewIdBatchCOD
+	WHERE IndexRow = @Index;
+
+	IF @ActualBankId = @BankBAC
+		INSERT INTO DeliveryBackOffice.dbo.BatchDetailCOD 
+				(BatchCODId, GuideSerie, GuideNumber, CatDebitAccountCODId, CreditAccountId, 
+				 Amount, Commission, CatTransactionTypeCODId, BankId, CatAccountTypeCODId, 
+				 CatConceptCODId, Reference)
+		SELECT @NewIdBatchCOD, GuideSerie, GuideNumber, CatDebitAccountCODId, CreditAccountId, 
+			   Amount, Commission, CatTransactionTypeCODId, BankId, CatAccountTypeCODId, 
+			   CatConceptCODId, Reference
+		FROM #TableFullFormatTemp
+		WHERE BankId NOT IN (SELECT DISTINCT PayingBank
+							 FROM DeliveryBackOffice.dbo.DeliveryBank
+							 WHERE Id_country = @IdCountry
+							 AND Id_status = 1
+							 AND PayingBank <> @BankBAC);
+	ELSE
+		INSERT INTO DeliveryBackOffice.dbo.BatchDetailCOD 
+				(BatchCODId, GuideSerie, GuideNumber, CatDebitAccountCODId, CreditAccountId, 
+				 Amount, Commission, CatTransactionTypeCODId, BankId, CatAccountTypeCODId, 
+				 CatConceptCODId, Reference)
+		SELECT @NewIdBatchCOD, GuideSerie, GuideNumber, CatDebitAccountCODId, CreditAccountId, 
+			   Amount, Commission, CatTransactionTypeCODId, BankId, CatAccountTypeCODId, 
+			   CatConceptCODId, Reference
+		FROM #TableFullFormatTemp
+		WHERE BankId = @ActualBankId;
+
+	SET @Index = @Index + 1;
+END
+
 --SELECT * FROM #TableAmountCODTemp;
 --SELECT * FROM #TableCustomerPaymentTemp;
 --SELECT * FROM #TableForzaPaymentTemp;
 --SELECT * FROM #TableBACFormatTemp;
-SELECT * FROM #TableFullFormatTemp;
+--SELECT * FROM #TableDistinctBankTemp;
+--SELECT * FROM #TableFullFormatTemp;
+SELECT * FROM #TableDistinctBankIndexTemp;
