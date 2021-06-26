@@ -3,7 +3,7 @@ GO
 
 BEGIN TRAN
 
-/****** Object:  Table [dbo].[BatchCOD]    Script Date: 16/06/2021 15:28:03 ******/
+/****** Object:  Table [dbo].[BatchCOD]    Script Date: 25/06/2021 14:51:30 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -13,17 +13,18 @@ GO
 CREATE TABLE [dbo].[BatchCOD](
 	[IdBatchCOD] [int] IDENTITY(1,1) NOT NULL,
 	[BankId] [int] NOT NULL,
-	[Name] [nvarchar](50) NOT NULL,
+	[BatchNumber] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
 	[Date] [datetime] NOT NULL,
 	[TotalAmountIncluded] [decimal](18, 2) NULL,
  CONSTRAINT [PK_BatchCOD_IdBatchCOD] PRIMARY KEY CLUSTERED 
 (
 	[IdBatchCOD] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [UK_BatchCOD_BankId_Name] UNIQUE NONCLUSTERED 
+ CONSTRAINT [UK_BatchCOD_BankId_BatchNumber] UNIQUE NONCLUSTERED 
 (
 	[BankId] ASC,
-	[Name] ASC
+	[BatchNumber] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO

@@ -34,9 +34,8 @@ CREATE TABLE [dbo].[BatchDetailCOD](
 (
 	[IdBatchDetailCOD] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [UK_BatchDetailCOD_BatchCODId_GuideSerie_GuideNumber_CreditAccountId] UNIQUE NONCLUSTERED 
+ CONSTRAINT [UK_BatchDetailCOD_GuideSerie_GuideNumber_CreditAccountId] UNIQUE NONCLUSTERED 
 (
-	[BatchCODId] ASC,
 	[GuideSerie] ASC,
 	[GuideNumber] ASC,
 	[CreditAccountId] ASC
