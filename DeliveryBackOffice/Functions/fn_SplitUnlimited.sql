@@ -1,0 +1,28 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  UserDefinedFunction [dbo].[SplitUnlimited]    Script Date: 6/17/2021 11:39:05 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE FUNCTION [dbo].[SplitUnlimited]
+(
+  @delimited nvarchar(max),
+  @delimiter nvarchar(100)
+) RETURNS @t TABLE
+(
+-- Id column can be commented out, not required for sql splitting string
+  id int identity(1,1), -- I use this column for numbering splitted parts
+  Item nvarchar(max)
+)
+AS
+BEGIN
+  declare @xml xml
+  set @xml = N'<root><r>' + replace(@delimited,@delimiter,'</r><r>') + '</r></root>'
+  insert into @t(Item)
+  select
+    r.value('.','varchar(max)') as item
+  from @xml.nodes('//root/r') as records(r)
+  RETURN
+END
