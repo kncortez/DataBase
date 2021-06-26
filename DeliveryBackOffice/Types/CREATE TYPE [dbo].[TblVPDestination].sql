@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  UserDefinedTableType [dbo].[TblVPFrequentDestination]    Script Date: 6/4/2021 6:41:31 PM ******/
+/****** Object:  UserDefinedTableType [dbo].[TblVPDestination]    Script Date: 6/25/2021 6:40:26 PM ******/
 CREATE TYPE [dbo].[TblVPDestination] AS TABLE(
 	[IdVPSource] [INT] NOT NULL,
 	[IDVPDestiny] [INT] NOT NULL,

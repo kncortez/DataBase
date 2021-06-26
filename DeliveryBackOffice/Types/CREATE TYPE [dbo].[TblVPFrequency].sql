@@ -1,13 +1,9 @@
--- ================================
--- Create User-defined Table Type
--- ================================
-USE DeliveryBackOffice
+USE [DeliveryBackOffice]
 GO
 
--- Create the data type
-CREATE TYPE [dbo].[TblVPFrequency] AS TABLE 
-(
-	[IdVPFrequency] [BIGINT]  NULL,
+/****** Object:  UserDefinedTableType [dbo].[TblVPFrequency]    Script Date: 6/25/2021 6:41:10 PM ******/
+CREATE TYPE [dbo].[TblVPFrequency] AS TABLE(
+	[IdVPFrequency] [BIGINT] NULL,
 	[VPConfigurationID] [BIGINT] NULL,
 	[SeasonID] [INT] NULL,
 	[VisitsOnSunday] [TINYINT] NULL,
@@ -21,4 +17,5 @@ CREATE TYPE [dbo].[TblVPFrequency] AS TABLE
 	[RowStatus] [BIT] NULL
 )
 GO
+
 

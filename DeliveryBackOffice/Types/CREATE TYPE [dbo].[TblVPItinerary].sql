@@ -1,12 +1,8 @@
--- ================================
--- Create User-defined Table Type
--- ================================
-USE DeliveryBackOffice
+USE [DeliveryBackOffice]
 GO
 
--- Create the data type
-CREATE TYPE TblVPItinerary AS TABLE 
-(
+/****** Object:  UserDefinedTableType [dbo].[TblVPItinerary]    Script Date: 6/25/2021 6:41:50 PM ******/
+CREATE TYPE [dbo].[TblVPItinerary] AS TABLE(
 	[IdVPItinerary] [BIGINT] NULL,
 	[VPFrequencyID] [BIGINT] NULL,
 	[DayOfVisit] [INT] NULL,
@@ -18,3 +14,5 @@ CREATE TYPE TblVPItinerary AS TABLE
 	[RowStatus] [BIT] NULL
 )
 GO
+
+
