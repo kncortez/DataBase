@@ -109,7 +109,7 @@ BEGIN
 						FROM DeliveryBackOffice.dbo.DeliveryOrder
 						WHERE Guide_Serie = @GuideSerie
 						AND Guide_Number = @GuideNumber
-						AND IsCollect = 1
+						AND Collect_OnDelivery > 0
 						AND StatusOrderId = 5
 					end
 			END
