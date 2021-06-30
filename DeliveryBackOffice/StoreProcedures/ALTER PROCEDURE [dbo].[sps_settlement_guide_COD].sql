@@ -72,8 +72,10 @@ BEGIN
 					,0
 					,@Token
 			FROM [dbo].[DeliveryAttempt] AS da
-			WHERE 
-				da.[Guide_Serie] = @GuideSerie 
+			INNER JOIN [dbo].[DeliveryOrder] AS do
+				ON da.[Guide_Serie] = do.[Guide_Serie] 
+			WHERE do.[Collect_OnDelivery] > 0
+				AND da.[Guide_Serie] = @GuideSerie 
 				AND da.[Guide_Number] IN (
 					SELECT Guide_Number FROM @GuidesTable
 				)

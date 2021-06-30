@@ -15,11 +15,11 @@ GO
 
 CREATE PROCEDURE [dbo].[GetDeliveryExecutionReportCOD] 
 -- Add the parameters for the stored procedure here
-	@Date DATE
+
 AS
 BEGIN
 
-	SELECT cu.[IdCustomer], cu.[Name], btd.[GuideSerie], btd.[GuideSerie], btd.[GuideNumber], 
+	SELECT cu.[IdCustomer], cu.[Name], btd.[GuideSerie], btd.[GuideNumber], 
 		(SELECT COUNT(dop.GuideNumber)
 		FROM [dbo].[DeliveryOrderPiece] AS dop
 		WHERE btd.[GuideSerie] = dop.[GuideSerie] AND btd.[GuideNumber] = dop.[GuideNumber]
