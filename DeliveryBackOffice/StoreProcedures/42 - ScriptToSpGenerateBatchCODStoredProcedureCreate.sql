@@ -8,7 +8,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE [dbo].[sp_generate_batch_cod]
+ALTER PROCEDURE [dbo].[sp_generate_batch_cod]
 AS
 BEGIN
 	DECLARE @Token VARCHAR(50) = 'SYS.SERVICECOD';
@@ -225,13 +225,15 @@ BEGIN
 										DCBA_BankAccountType NVARCHAR(50),
 										DCBA_Identification NVARCHAR(50),
 										Deposit_Number INT,
-										CODtoPay DECIMAL(18, 2)
+										CODtoPay DECIMAL(18, 2),
+										Price DECIMAL(18, 2)
 									  );
 
 		INSERT INTO @TableAmountCOD (ItemSerie, ItemNumber, Collect_OnDelivery, IDCUSTOMER, CODRate,
 									 CODExempt, Commission, DeliveryPrice, CODPaid, ReturnRates,
 									 CODIsPaid, Id_bank, [Name], DCBA_Id, DCBA_Num_account,
-									 DCBA_Nom_account, DCBA_BankAccountType, DCBA_Identification, Deposit_Number, CODtoPay)
+									 DCBA_Nom_account, DCBA_BankAccountType, DCBA_Identification, Deposit_Number, CODtoPay,
+									 Price)
 		SELECT tp.ItemSerie, 
 			tp.ItemNumber, 
 			tp.Collect_OnDelivery, 
@@ -251,7 +253,8 @@ BEGIN
 			dc.DCBA_BankAccountType, 
 			dc.DCBA_Identification, 
 			op.Deposit_Number, 
-			IIF(op.Deposit_Number IS NULL, (tp.Collect_OnDelivery - tp.Commission - pp.AmountToPay - pp.ReturnRates), 0) CODtoPay
+			IIF(op.Deposit_Number IS NULL, (tp.Collect_OnDelivery - tp.Commission - pp.AmountToPay - pp.ReturnRates), 0) CODtoPay,
+			pp.Price
 		FROM #CODData tp
 		LEFT JOIN @PendingPaymentTemp pp 
 			ON pp.GuideSerie = tp.ItemSerie 
@@ -269,7 +272,7 @@ BEGIN
 		SELECT ItemSerie, ItemNumber, Collect_OnDelivery, IDCUSTOMER, CODRate,
 			   CODExempt, Commission, SUM(DeliveryPrice) DeliveryPrice, SUM(ISNULL(CODPaid, 0)) CODPaid, ReturnRates,
 			   Id_bank, [Name], DCBA_Id, DCBA_Num_account, DCBA_Nom_account, 
-			   DCBA_BankAccountType, MIN(CODtoPay) CODtoPay
+			   DCBA_BankAccountType, MIN(CODtoPay) CODtoPay, MAX(Price) Price
 		INTO #TableAmountCODTemp
 		FROM @TableAmountCOD
 		GROUP BY ItemSerie, ItemNumber, Collect_OnDelivery, IDCUSTOMER, CODRate,
@@ -348,7 +351,7 @@ BEGIN
 				WHERE BankId = @BankBAC 
 				AND RowStatus = 1) CatDebitAccountCODId,
 			   @CreditAccountId CreditAccountId,
-			   (tact.Commission + tact.DeliveryPrice) Amount,
+			   (tact.Commission + tact.Price) Amount,
 			   tact.Commission,
 			   (SELECT IdCatTransactionTypeCOD
 				FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD 
