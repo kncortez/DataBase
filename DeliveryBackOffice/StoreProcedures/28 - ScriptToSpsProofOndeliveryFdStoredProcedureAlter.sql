@@ -96,14 +96,21 @@ BEGIN
 						FROM DeliveryBackOffice.dbo.CatModule cm
 						WHERE cm.ModName = @ModName
 						
-						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD (GuideSerie, GuideNumber, CourierManId, DataOriginId)
+						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD 
+							(GuideSerie, GuideNumber, CourierManId, DataOriginId, Token)
 						SELECT
-							@GuideSerie AS 'GuideSerie', 
-							@GuideNumber AS 'GuideNumber',
-							ltpod.IdCourierman AS 'CourierManId',
-							@DataOriginId AS 'DataOriginId'
-						FROM DeliveryBackOffice.dbo.LogTokenPOD ltpod
-						WHERE ltpod.LogTokenPOD = @Token
+							Guide_Serie AS 'GuideSerie',
+							Guide_Number AS 'GuideNumber',
+							(SELECT IdCourierman
+							 FROM DeliveryBackOffice.dbo.LogTokenPOD
+							 WHERE LogTokenPOD = @Token) AS 'CourierManId',
+							@DataOriginId AS 'DataOriginId',
+							@Token AS 'Token'
+						FROM DeliveryBackOffice.dbo.DeliveryOrder
+						WHERE Guide_Serie = @GuideSerie
+						AND Guide_Number = @GuideNumber
+						AND IsCollect = 1
+						AND StatusOrderId = 5
 					end
 			END
 

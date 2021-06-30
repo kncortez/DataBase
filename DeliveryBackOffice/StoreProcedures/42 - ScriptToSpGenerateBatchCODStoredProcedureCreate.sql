@@ -572,7 +572,10 @@ BEGIN
 		--SELECT * FROM #TableBACFormatTemp;
 		--SELECT * FROM #TableDistinctBankTemp;
 		--SELECT * FROM #TableFullFormatTemp;
-		SELECT * FROM #TableDistinctBankIndexTemp;
+		
+		-- SOLO PARA BANCO BANRURAL
+		SELECT * FROM #TableDistinctBankIndexTemp
+		WHERE PayingBank = 5;
 	END
 	ELSE
 	BEGIN
