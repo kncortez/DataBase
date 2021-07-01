@@ -43,6 +43,7 @@ BEGIN
 		IF OBJECT_ID('tempdb.dbo.#TableFullFormatTemp', 'U') IS NOT NULL DROP TABLE #TableFullFormatTemp;
 		IF OBJECT_ID('tempdb.dbo.#TableDistinctBankTemp', 'U') IS NOT NULL DROP TABLE #TableDistinctBankTemp;
 		IF OBJECT_ID('tempdb.dbo.#TableDistinctBankIndexTemp', 'U') IS NOT NULL DROP TABLE #TableDistinctBankIndexTemp;
+		IF OBJECT_ID('tempdb.dbo.#TableDistinctBankFinalIndexTemp', 'U') IS NOT NULL DROP TABLE #TableDistinctBankFinalIndexTemp;
 
 		SELECT DISTINCT SUBSTRING(Item, 1, 2) ItemSerie,
 						SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber 
@@ -513,16 +514,20 @@ BEGIN
 			SET @Index = @Index + 1;
 		END
 
+		SELECT PayingBank, IdBatchCOD, (ROW_NUMBER() OVER(ORDER BY PayingBank)) IndexRow 
+		INTO #TableDistinctBankFinalIndexTemp
+		FROM #TableDistinctBankIndexTemp
+
 		DECLARE @Index2 INT = 1;
 		DECLARE @MaxSize2 INT;
 
 		SELECT @MaxSize2 = COUNT(1)
-		FROM #TableDistinctBankIndexTemp;
+		FROM #TableDistinctBankFinalIndexTemp;
 
 		WHILE @Index2 <= @MaxSize2
 		BEGIN
 			DECLARE @ActualBank INT = (SELECT PayingBank
-									   FROM #TableDistinctBankIndexTemp
+									   FROM #TableDistinctBankFinalIndexTemp
 									   WHERE IndexRow = @Index2);
 
 			IF @ActualBank IN (SELECT DISTINCT PayingBank
@@ -533,10 +538,10 @@ BEGIN
 			BEGIN
 				UPDATE DeliveryBackOffice.dbo.ProcessedGuideCOD
 				SET BatchCODId = (SELECT IdBatchCOD
-								  FROM #TableDistinctBankIndexTemp
+								  FROM #TableDistinctBankFinalIndexTemp
 								  WHERE PayingBank = @ActualBank),
 					BatchCODIdCommission = (SELECT IdBatchCOD
-											FROM #TableDistinctBankIndexTemp
+											FROM #TableDistinctBankFinalIndexTemp
 											WHERE PayingBank = @BankBAC)
 				WHERE CONCAT(GuideSerie, CAST(GuideNumber AS nvarchar(50))) 
 						IN (SELECT DISTINCT CONCAT(tfft.GuideSerie, CAST(tfft.GuideNumber AS nvarchar(50)))
@@ -549,10 +554,10 @@ BEGIN
 			BEGIN
 				UPDATE DeliveryBackOffice.dbo.ProcessedGuideCOD
 				SET BatchCODId = (SELECT IdBatchCOD
-								  FROM #TableDistinctBankIndexTemp
+								  FROM #TableDistinctBankFinalIndexTemp
 								  WHERE PayingBank = @BankBAC),
 					BatchCODIdCommission = (SELECT IdBatchCOD
-											FROM #TableDistinctBankIndexTemp
+											FROM #TableDistinctBankFinalIndexTemp
 											WHERE PayingBank = @BankBAC)
 				WHERE CONCAT(GuideSerie, CAST(GuideNumber AS nvarchar(50))) 
 						IN (SELECT DISTINCT CONCAT(tffte.GuideSerie, CAST(tffte.GuideNumber AS nvarchar(50)))
@@ -578,9 +583,10 @@ BEGIN
 		--SELECT * FROM #TableBACFormatTemp;
 		--SELECT * FROM #TableDistinctBankTemp;
 		--SELECT * FROM #TableFullFormatTemp;
+		--SELECT * FROM #TableDistinctBankIndexTemp;
 		
 		-- SOLO PARA BANCO BANRURAL
-		SELECT * FROM #TableDistinctBankIndexTemp
+		SELECT * FROM #TableDistinctBankFinalIndexTemp
 		WHERE PayingBank = 5;
 	END
 	ELSE
