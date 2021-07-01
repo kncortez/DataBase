@@ -8,7 +8,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROCEDURE [dbo].[sp_generate_batch_cod]
+CREATE PROCEDURE [dbo].[sp_generate_batch_cod]
 AS
 BEGIN
 	DECLARE @Token VARCHAR(50) = 'SYS.SERVICECOD';
@@ -351,7 +351,7 @@ BEGIN
 				WHERE BankId = @BankBAC 
 				AND RowStatus = 1) CatDebitAccountCODId,
 			   @CreditAccountId CreditAccountId,
-			   (tact.Commission + tact.Price) Amount,
+			   (tact.Commission + IIF(do.IsCollect = 1, tact.Price, 0)) Amount,
 			   tact.Commission,
 			   (SELECT IdCatTransactionTypeCOD
 				FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD 
@@ -368,7 +368,10 @@ BEGIN
 				WHERE RowStatus = 1
 				AND Concept LIKE (@ConceptForza + '%')) CatConceptCODId
 		INTO #TableForzaPaymentTemp
-		FROM #TableAmountCODTemp tact;
+		FROM #TableAmountCODTemp tact
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+			ON do.Guide_Serie = tact.ItemSerie
+			AND do.Guide_Number = tact.ItemNumber;
 
 		SELECT *
 		INTO #TableBACFormatTemp
