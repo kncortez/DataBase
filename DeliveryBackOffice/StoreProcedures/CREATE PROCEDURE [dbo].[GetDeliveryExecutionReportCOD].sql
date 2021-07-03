@@ -19,16 +19,16 @@ CREATE PROCEDURE [dbo].[GetDeliveryExecutionReportCOD]
 AS
 BEGIN
 
-	SELECT cu.[IdCustomer], cu.[Name], btd.[GuideSerie], btd.[GuideNumber], 
+	SELECT cu.[IdCustomer], cu.[Name], cu.[RegexEmail], btd.[GuideSerie], btd.[GuideNumber], 
 		(SELECT COUNT(dop.GuideNumber)
 		FROM [dbo].[DeliveryOrderPiece] AS dop
 		WHERE btd.[GuideSerie] = dop.[GuideSerie] AND btd.[GuideNumber] = dop.[GuideNumber]
-		GROUP BY dop.[GuideNumber]
+		GROUP BY dop.[GuideNumber], dop.[GuideSerie]
 		HAVING COUNT(*) >= 1) AS Pieces,
 		(SELECT SUM(dop.PieceWeight)
 		FROM [dbo].[DeliveryOrderPiece] AS dop
 		WHERE btd.[GuideSerie] = dop.[GuideSerie] AND btd.[GuideNumber] = dop.[GuideNumber]
-		GROUP BY dop.[GuideNumber], dop.[PieceWeight]
+		GROUP BY dop.[GuideNumber], dop.[GuideSerie]
 		HAVING COUNT(*) >= 1) AS Weight,
 		do.[Receiver_Department] AS Department, do.[Receiver_Town] AS Town, 
 		CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver, 

@@ -1,10 +1,8 @@
 USE [DeliveryBackOffice]
 GO
-
-/****** Object:  StoredProcedure [dbo].[sps_settlement_guide_COD]    Script Date: 29/06/2021 19:02:13 ******/
+/****** Object:  StoredProcedure [dbo].[sps_settlement_guide_COD]    Script Date: 2/07/2021 01:22:49 ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
 
@@ -28,11 +26,17 @@ BEGIN
 	DECLARE @RModified INT
 	-- control de guías a manipular
 	DECLARE @GuidesTable AS TABLE (Guide_Number INT)
+	-- control de guía a iterar
+	DECLARE @GuideNumber INT
+	-- CourierId de la guía a iterar
+	DECLARE @CourierId INT
 
 	BEGIN TRANSACTION
 
 		BEGIN TRY
 			
+			IF OBJECT_ID('tempdb.dbo.#GuidesTemp', 'U') IS NOT NULL DROP TABLE #GuidesTemp;
+
 			-- Convertir la lista de guías separadas por coma en una tabla
 			INSERT @GuidesTable
 			SELECT CAST(Item AS INT) FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@GuideNumbers,',')
@@ -52,7 +56,34 @@ BEGIN
 
 			SET @RModified = @@ROWCOUNT
 
-			INSERT INTO [dbo].[ProcessedGuideCOD]
+
+			-- insertar guía en la tabla de guías procesadas COD
+			-- Se insertar guías en tabla temporal
+			SELECT * 
+			INTO #GuidesTemp
+			FROM @GuidesTable
+
+			-- mientras la tabla no este vacía
+			WHILE EXISTS(SELECT * FROM #GuidesTemp)
+			BEGIN
+				-- se obtiene la guía a iterar
+				SELECT TOP 1 @GuideNumber = Guide_Number FROM #GuidesTemp
+
+				-- se verifica que no exita en las guías procesadas
+				IF NOT EXISTS 
+					(SELECT 1
+					FROM [dbo].[ProcessedGuideCOD]
+					WHERE [GuideNumber] = @GuideNumber
+				)
+				BEGIN
+					-- se obtiene el id del courierman
+					SELECT TOP 1 @CourierId = ID_Courier 
+					FROM [dbo].[DeliveryAttempt] 
+					WHERE [Guide_Serie] = @GuideSerie
+						AND [Guide_Number] = @GuideNumber
+					
+					-- se inserta en las guías procesadas si contine COD 
+					INSERT INTO [dbo].[ProcessedGuideCOD]
 					   ([GuideSerie]
 					   ,[GuideNumber]
 					   ,[CourierManId]
@@ -62,24 +93,23 @@ BEGIN
 					   ,[DataOriginId]
 					   ,[Notificated]
 					   ,[Token])
-			SELECT @GuideSerie
-					,da.[Guide_Number]
-					,da.[ID_Courier]
-					,GETDATE()
-					,NULL
-					,NULL
-					,26
-					,0
-					,@Token
-			FROM [dbo].[DeliveryAttempt] AS da
-			INNER JOIN [dbo].[DeliveryOrder] AS do
-				ON da.[Guide_Serie] = do.[Guide_Serie] 
-			WHERE do.[Collect_OnDelivery] > 0
-				AND da.[Guide_Serie] = @GuideSerie 
-				AND da.[Guide_Number] IN (
-					SELECT Guide_Number FROM @GuidesTable
-				)
-						
+					SELECT do.[Guide_Serie]
+						,do.[Guide_Number]
+						,@CourierId
+						,GETDATE()
+						,NULL
+						,NULL
+						,26
+						,0
+						,@Token
+					FROM [dbo].[DeliveryOrder] do
+					WHERE do.[Guide_Number] = @GuideNumber
+						AND do.[Guide_Serie] = @GuideSerie
+						AND do.[Collect_OnDelivery] > 0
+				END
+				-- se elimina la guía de la tabla temporal
+				DELETE #GuidesTemp WHERE Guide_Number = @GuideNumber
+			END		
 		END TRY
 
 		BEGIN CATCH
