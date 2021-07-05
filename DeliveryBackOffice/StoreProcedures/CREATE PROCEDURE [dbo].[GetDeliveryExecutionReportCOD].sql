@@ -1,48 +1,88 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetDeliveryExecutionReportCOD]     Script Date: 29/06/2021 17:18:39 ******/
+/****** Object:  StoredProcedure [dbo].[GetDeliveryExecutionReportCOD]    Script Date: 5/07/2021 17:01:47 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-
 -- =============================================
 -- Author:		<Oscar,Morales>
 -- Create date: <2021-06-29>
 -- Description:	<Guias por pagar COD>
 -- =============================================
-
-CREATE PROCEDURE [dbo].[GetDeliveryExecutionReportCOD] 
--- Add the parameters for the stored procedure here
-
+CREATE PROCEDURE [dbo].[GetDeliveryExecutionReportCOD]
+    -- Add the parameters for the stored procedure here
+    @IdCustomer INT
 AS
 BEGIN
 
-	SELECT cu.[IdCustomer], cu.[Name], cu.[RegexEmail], btd.[GuideSerie], btd.[GuideNumber], 
-		(SELECT COUNT(dop.GuideNumber)
-		FROM [dbo].[DeliveryOrderPiece] AS dop
-		WHERE btd.[GuideSerie] = dop.[GuideSerie] AND btd.[GuideNumber] = dop.[GuideNumber]
-		GROUP BY dop.[GuideNumber], dop.[GuideSerie]
-		HAVING COUNT(*) >= 1) AS Pieces,
-		(SELECT SUM(dop.PieceWeight)
-		FROM [dbo].[DeliveryOrderPiece] AS dop
-		WHERE btd.[GuideSerie] = dop.[GuideSerie] AND btd.[GuideNumber] = dop.[GuideNumber]
-		GROUP BY dop.[GuideNumber], dop.[GuideSerie]
-		HAVING COUNT(*) >= 1) AS Weight,
-		do.[Receiver_Department] AS Department, do.[Receiver_Town] AS Town, 
-		CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver, 
-		do.[DateCreated], do.[Dispatched_Date], btd.[AuthorizationDate], btd.[AuthorizationNumber],
-		do.[Collect_OnDelivery] AS CODAmount, do.[TypeService], do.[PriceShippment] AS ShippmentAmount, 
-		btd.[Commission] AS CommissionAmount, btd.[Amount]+btd.[Commission] AS ChargedAmount,
-		btd.[Amount] AS TotalAmount 
-	FROM [dbo].[BatchDetailCOD] AS btd
-	INNER JOIN [dbo].[ProcessedGuideCOD] AS pg 
-		ON btd.[GuideSerie] = pg.[GuideSerie] AND btd.[GuideNumber] = pg.[GuideNumber]
-	INNER JOIN [dbo].[DeliveryOrder] AS do 
-		ON btd.[GuideSerie] = do.[Guide_Serie] AND btd.[GuideNumber] = do.[Guide_Number]
-    INNER JOIN [dbo].[Customer] AS cu 
-		ON do.[IdCustomer] = cu.[IdCustomer]
-	WHERE MONTH(pg.[Date]) = MONTH(GETDATE())
 
-END
+    SELECT s1.*,
+           DATEDIFF(DAY, s1.FechaArribo, s1.FechaEntrega) AS DiasEntrega
+    FROM
+    (
+        SELECT cs.Name Cliente,
+               CONCAT(ord.Guide_Serie, ord.Guide_Number) GuideNumber,
+               (ord.Pieces_Dry + ord.Pieces_Cold) Piezas,
+               (
+                   SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
+                   FROM dbo.DeliveryOrderPiece dp
+                   WHERE dp.GuideSerie = ord.Guide_Serie
+                         AND dp.GuideNumber = ord.Guide_Number
+               ) Peso,
+               ISNULL(prv.ProvinceName, pr.ProvinceName) Departamento,
+               ISNULL(twn.TownshipName, tw.TownshipName) Municipio,
+               ISNULL(CONCAT(ord.Receiver_FirstName, ' ', ord.Receiver_LastName), '') Destinatario,
+               (
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = ord.Guide_Serie
+                         AND dt.Guide_Number = ord.Guide_Number
+                         AND dt.StatusOrderId IN ( 11, 2 )
+               ) FechaArribo,
+               (
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = ord.Guide_Serie
+                         AND dt.Guide_Number = ord.Guide_Number
+                         AND dt.StatusOrderId = 5
+               ) FechaEntrega,
+               ord.Collect_OnDelivery COD,
+               ISNULL(ord.TypeService, 'NDD') TipoServicio,
+               IIF(ord.IsCollect = 'true',
+                   'Collect',
+                   (IIF(ISNULL(cs.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago,
+               ISNULL(ord.PriceShippment, 0) ValorEnvio,
+               'En Tiempo' Status -- TODO Verificar algoritmo de  calculo
+        FROM dbo.DeliveryOrder ord
+            LEFT JOIN dbo.Township twn
+                ON twn.IdTownship = ord.ReceiverIdTownship
+            LEFT JOIN dbo.Township tw
+                ON tw.TownshipName = ord.Receiver_Town
+            LEFT JOIN dbo.Province prv
+                ON prv.IdProvince = twn.IdProvince
+            LEFT JOIN dbo.Province pr
+                ON pr.IdProvince = tw.IdProvince
+            LEFT JOIN dbo.VisitPointClient vpc
+                ON vpc.CodeOfReference = ord.Sender_ID
+            LEFT JOIN dbo.Customer cs
+                ON cs.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
+        WHERE MONTH(ord.DateCreated) = MONTH(GETDATE())
+              AND
+              (
+                  ord.IdCustomer = @IdCustomer
+                  OR ord.Sender_ID IN
+                     (
+                         SELECT CodeOfReference
+                         FROM dbo.VisitPointClient
+                         WHERE CustomerID = @IdCustomer
+                     )
+              )
+              AND ord.StatusOrderId NOT IN ( 7, 15 )
+    ) s1
+    ORDER BY s1.GuideNumber;
+
+
+END;
