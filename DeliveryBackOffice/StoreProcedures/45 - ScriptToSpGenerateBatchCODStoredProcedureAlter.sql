@@ -8,7 +8,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROCEDURE [dbo].[sp_generate_batch_cod]
+ALTER PROCEDURE [dbo].[sp_generate_batch_cod]
 AS
 BEGIN
 	DECLARE @Token VARCHAR(50) = 'SYS.SERVICECOD';
@@ -587,7 +587,7 @@ BEGIN
 		
 		-- SOLO PARA BANCO BANRURAL
 		SELECT * FROM #TableDistinctBankFinalIndexTemp
-		WHERE PayingBank IN (5);
+		WHERE PayingBank IN (5, 33);
 	END
 	ELSE
 	BEGIN
