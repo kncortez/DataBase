@@ -1,3 +1,19 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched_linehauls]    Script Date: 12/07/2021 16:31:01 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[sps_settlement_dispatched_linehauls] @Route NVARCHAR(20),
+--@GuideQuantity INT,
+--	@RouteReceived DATETIME,
+@Token NVARCHAR(50),
+@PiecesDry SMALLINT,
+@PiecesCold SMALLINT,
+@GuidesQuantity SMALLINT,
 @InGuides NVARCHAR(400) = 'FD22221-1,FD22361-1,FD22223-2,FD22359-1,FD22226-1',
 @IdCourier INT,
 @DateRoute AS VARCHAR(50),
