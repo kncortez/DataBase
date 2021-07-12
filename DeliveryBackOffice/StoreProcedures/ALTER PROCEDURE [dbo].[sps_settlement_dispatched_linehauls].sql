@@ -1,19 +1,3 @@
-USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched_linehauls]    Script Date: 12/07/2021 12:21:01 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-
-ALTER PROCEDURE [dbo].[sps_settlement_dispatched_linehauls] @Route NVARCHAR(20),
---@GuideQuantity INT,
---	@RouteReceived DATETIME,
-@Token NVARCHAR(50),
-@PiecesDry SMALLINT,
-@PiecesCold SMALLINT,
-@GuidesQuantity SMALLINT,
 @InGuides NVARCHAR(400) = 'FD22221-1,FD22361-1,FD22223-2,FD22359-1,FD22226-1',
 @IdCourier INT,
 @DateRoute AS VARCHAR(50),
@@ -31,8 +15,6 @@ BEGIN
 	DECLARE @IdRouteAssigment INT
 	DECLARE @ExisteDetail INT
 	DECLARE @HUB_Destino INT
-	DECLARE @PiecesDryN SMALLINT
-	DECLARE @PiecesColdN SMALLINT
 
 	BEGIN TRANSACTION
 
@@ -229,42 +211,10 @@ BEGIN
 				PRINT 'Entra a idManifest = 0'
 				SET @IdManifest = NEXT VALUE FOR linehauls_IdManifiest
 
-				SELECT @PiecesDryN = SUM(x.TotalDry),
-						@PiecesColdN = SUM(x.TotalCold)
-				FROM (SELECT
-							COUNT(ISNULL(dop.Pieces_Dry, 0)) AS TotalDry
-						   ,0 AS TotalCold
-						FROM PieceByService pbs
-						INNER JOIN DeliveryOrderPiece dop1
-							ON pbs.GuidePieceId = dop1.GuidePiece
-						INNER JOIN DeliveryOrder dop
-							ON dop.Guide_Serie = dop1.GuideSerie
-							AND dop.Guide_Number = dop1.GuideNumber
-						WHERE pbs.ServiceManagmentId = @ServiceID
-						AND ISNULL(dop1.IsDry, 0) = 1
-						AND CONCAT( dop1.GuideSerie, dop1.GuideNumber, '-',dop1.NoPiece) IN (SELECT CONCAT(GuideSerie,GuideNumber,'-',NoPiece) FROM #listGuidesPieces_Dispatch)
-
-						--GROUP BY dop.Pieces_Dry, dop.Pieces_Cold, g.ItemSerie,g.ItemNumber
-						UNION ALL
-						SELECT
-							0 AS TotalDry
-						   ,COUNT(ISNULL(dop.Pieces_Cold, 0)) AS TotalCold
-						FROM PieceByService pbs
-						INNER JOIN DeliveryOrderPiece dop1
-							ON pbs.GuidePieceId = dop1.GuidePiece
-						INNER JOIN DeliveryOrder dop
-							ON dop.Guide_Serie = dop1.GuideSerie
-							AND dop.Guide_Number = dop1.GuideNumber
-						WHERE pbs.ServiceManagmentId = @ServiceID
-						AND ISNULL(dop1.IsDry, 0) = 0
-						AND CONCAT( dop1.GuideSerie, dop1.GuideNumber, '-',dop1.NoPiece) IN (SELECT CONCAT(GuideSerie,GuideNumber,'-',NoPiece) FROM #listGuidesPieces_Dispatch)
-					--GROUP BY dop.Pieces_Dry, dop.Pieces_Cold, g.ItemSerie,g.ItemNumber
-					) x
-
 				UPDATE SettlementByPickup
 				SET DatePrinted = GETDATE(),
-					PiecesDry = @PiecesDryN,
-					PiecesCold = @PiecesColdN,
+					PiecesDry = @PiecesDry,
+					PiecesCold = @PiecesCold,
 					GuidesQuantity = (SELECT
 											COUNT(A.GuideNumber)
 										FROM (SELECT DISTINCT
