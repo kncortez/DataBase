@@ -36,6 +36,14 @@ BEGIN
 		[CreditDate] = CONVERT(DATE,@AuthorizationDate)
 	WHERE [BatchCODId] = @BatchCODId;
 
+	UPDATE [dbo].[DeliveryOrderPaid]
+	SET [IdStatus] = 0,
+		[TokenUpdate] = @TokenCreated,
+		[DateUpdate] = GETDATE()
+	WHERE CONCAT([Guide_Serie], [Guide_Number]) IN (SELECT CONCAT(GuideSerie, GuideNumber)
+													FROM [dbo].[BatchDetailCOD]
+													WHERE [BatchCODId] = @BatchCODId);
+
 	INSERT INTO [dbo].[DeliveryOrderPaid]
            ([Guide_Serie]
            ,[Guide_Number]
