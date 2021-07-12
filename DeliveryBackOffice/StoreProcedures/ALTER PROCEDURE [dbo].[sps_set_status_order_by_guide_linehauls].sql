@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sps_set_status_order_by_guide_linehauls]    Script Date: 9/07/2021 01:36:00 ******/
+/****** Object:  StoredProcedure [dbo].[sps_set_status_order_by_guide_linehauls]    Script Date: 12/07/2021 02:22:19 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -19,6 +19,9 @@ ALTER PROCEDURE [dbo].[sps_set_status_order_by_guide_linehauls] @Guide_Serie AS 
 @IdRoute AS NVARCHAR(50) = 99999,
 @IdVehicle AS INT = 222,
 @courier AS NVARCHAR(50) = 'SYS-SYSTEM',
+@StartingKilometers NVARCHAR(50) = '',
+@PiecesDry SMALLINT = 0,
+@PiecesCold SMALLINT = 0,
 @OPTION AS INT = 2
 
 
@@ -36,6 +39,7 @@ BEGIN
 	DECLARE @ItemsTable AS TABLE (
 		Guide_Number INT
 	)
+	DECLARE @IdSettlementByPickup INT
 
 BEGIN TRANSACTION
 
@@ -189,6 +193,14 @@ INSERT INTO RouteAssigment (IdRoute, IdCurrierMan, IdVehicle, DateOfRoute, RowSt
 SET @IdRouteASG = SCOPE_IDENTITY();
 			END
 			ELSE
+			PRINT 'entra existe ruta != 0'
+			UPDATE RouteAssigment 
+			SET IdVehicle = @IdVehicle
+				,IdCurrierMan = @courier
+				,TokenUpdated = @TokenId
+				,DateUpdated = GETDATE()
+			WHERE IdRoute = @IdRoute
+				AND DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
 			BEGIN
 
 SET @IdRouteASG = (SELECT
@@ -223,6 +235,13 @@ SET @IdServiceManagement = (SELECT
 		AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
 	WHERE sm.IdPuRouteAssigment = @IdRouteASG
 	AND sm.IdHubDestination = @HUB_Destino)
+
+UPDATE ServiceManagement
+SET IdPuCourrier = @courier,
+	TokenUpdated = @TokenId,
+	DateUpdated = GETDATE()
+WHERE IdServiceManagement = @IdServiceManagement
+
 				END
 				ELSE
 				BEGIN
@@ -290,10 +309,6 @@ TokenCreated, DateCreated, TokenUpdated, DateUpdated)
 END
 
 
-
-
-
-
 -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
 SELECT
 	SUBSTRING(Item, 1, 2) ItemSerie
@@ -304,9 +319,81 @@ SELECT
 --CHARINDEX('-',Item) charinde,  
 --len(Item) len
 INTO #listGuides
-FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@Guide_Number, ',')
+FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
 
 
+--se busca si existe registro en SettlementByPickup
+SET @IdSettlementByPickup = (SELECT Id
+								FROM SettlementByPickup
+								WHERE RouteAssigmentId = @IdRouteASG
+									AND ServiceManagmentId = @IdServiceManagement)
+
+--Si @SettlementByPickupId es NULL lo inserta
+IF @IdSettlementByPickup IS NULL
+BEGIN
+	PRINT 'Ingresa a insertar settlementbypickup'
+	INSERT INTO dbo.SettlementByPickup 
+			(RouteAssigmentId
+			,DatePrinted
+			,TokenCreated
+			,DateCreated
+			,PiecesDry
+			,PiecesCold
+			,GuidesQuantity
+			,PiecesDryReceived
+			,PiecesColdReceived
+			,GuidesQuantityReceived
+			,IdCourier
+			,SequenceCode
+			,SubTypeServiceManagmentId
+			,StartingKilometers
+			,ArrivalKilometers
+			,ServiceManagmentId)
+			SELECT
+					@IdRouteASG
+				   ,NULL
+				   ,@TokenId
+				   ,GETDATE()
+				   ,@PiecesDry
+				   ,@PiecesCold
+				   ,(SELECT
+							COUNT(A.GuideNumber)
+						FROM (SELECT DISTINCT
+								dop2.GuideNumber
+							FROM PieceByService pbs
+							INNER JOIN DeliveryOrderPiece dop2
+								ON dop2.GuidePiece = pbs.GuidePieceId
+							WHERE pbs.ServiceManagmentId = @IdServiceManagement) A)
+				   ,NULL
+				   ,NULL
+				   ,NULL
+				   ,@courier
+				   ,NULL --ID MANIFIESTO
+				   ,4
+				   ,@StartingKilometers
+				   ,NULL
+				   ,@IdServiceManagement
+END
+ELSE
+BEGIN
+	PRINT 'Ingresa a actualizar el manifiesto'
+
+	UPDATE dbo.SettlementByPickup 
+	SET 
+	TokenUpdated = @TokenId,
+	DateUpdated = GETDATE(),
+	PiecesDry = @PiecesDry,
+	PiecesCold = @PiecesCold,
+	GuidesQuantity = (SELECT COUNT(A.GuideNumber)
+						FROM (SELECT DISTINCT dop2.GuideNumber
+							FROM PieceByService pbs
+							INNER JOIN DeliveryOrderPiece dop2
+								ON dop2.GuidePiece = pbs.GuidePieceId
+							WHERE pbs.ServiceManagmentId = @IdServiceManagement) A),
+	IdCourier = @courier,
+	StartingKilometers = @StartingKilometers
+	WHERE Id = @IdSettlementByPickup
+END
 
 
 -- Actualizar registro de guía a último estado 
