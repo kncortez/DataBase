@@ -20,7 +20,7 @@ AS
 BEGIN
 	SET NOCOUNT ON
 	
-	SELECT sr.CUI, ra.IdVehicle, sbpu.StartingKilometers, sbpu.PiecesDry, sbpu.PiecesCold
+	SELECT TOP 1 sr.CUI, ra.IdVehicle, sbpu.StartingKilometers, sbpu.PiecesDry, sbpu.PiecesCold
 	FROM ServiceManagement sm
 	INNER JOIN RouteAssigment ra 
 		ON sm.IdPuRouteAssigment = ra.IdRouteAssigment and ra.RowStatus = 1
@@ -30,6 +30,7 @@ BEGIN
 		ON sbpu.IdCourier = sr.ID
 	WHERE ra.IdRoute = @IdRoute 
 		AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
+	ORDER BY sbpu.DateCreated DESC
 
 	SET NOCOUNT OFF
 END
