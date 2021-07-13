@@ -25,7 +25,18 @@ BEGIN
 			[dbo].[DeliveryOrder] DO
 			INNER JOIN
 			@TblOrderGuides TOG ON TOG.[Guide_Serie] = DO.[Guide_Serie]
-			AND TOG.[Guide_Number] = DO.[Guide_Number]
+			AND TOG.[Guide_Number] = DO.[Guide_Number];
+
+		UPDATE [dbo].SchedulePickup
+		SET
+			[AddressPickup] = @NewSenderAddress
+		FROM
+			[dbo].[SchedulePickup] SP
+			INNER JOIN
+			[dbo].[DeliveryOrderPaymentDetail] DOPD ON SP.[SchedulePickupId] = DOPD.[IdHeaderRecolection]
+			INNER JOIN
+			@TblOrderGuides TOG ON TOG.[Guide_Serie] = DOPD.[GuideSerie]
+			AND TOG.[Guide_Number] = DOPD.[GuideNumber];
 	END TRY
 	BEGIN CATCH
         DECLARE @jsonOutput1 NVARCHAR(MAX);
