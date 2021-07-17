@@ -32,17 +32,53 @@ BEGIN
 --DECLARE @VolumetricWeight DECIMAL(18, 2) = 2.25;
 DECLARE @DateUpdated DATETIME = GETDATE();
 
-UPDATE dbo.ArticleByCustomer
-SET AbcTokenUpdated = @TokenUpdated,
-	AbcDateUpdated = @DateUpdated,
-	Code = @Code,
-	PriceDefault = @PriceDefault,
-	Height = @Height,
-	Width = @Width,
-	Length = @Length,
-	MassWeight = @MassWeight,
-	VolumetricWeight = @VolumetricWeight
-WHERE AbcId = @IdABC;
+BEGIN TRANSACTION;
+
+BEGIN TRY
+	UPDATE dbo.ArticleByCustomer
+	SET AbcTokenUpdated = @TokenUpdated,
+		AbcDateUpdated = @DateUpdated,
+		Code = @Code,
+		PriceDefault = @PriceDefault,
+		Height = @Height,
+		Width = @Width,
+		Length = @Length,
+		MassWeight = @MassWeight,
+		VolumetricWeight = @VolumetricWeight
+	WHERE AbcId = @IdABC;
+END TRY
+BEGIN CATCH
+	SELECT 'RollBackTransaction' AS message,
+			-1 AS AbcId,
+			'FALSE'	blnResult,
+			CAST(-1 AS VARCHAR(5)) IdResult,
+			CAST(500 AS VARCHAR(5)) StatusResult,
+			CAST(ERROR_NUMBER() AS VARCHAR) AS ErrorNumber,
+			CAST(ERROR_SEVERITY() AS VARCHAR) AS ErrorSeverity,
+			CAST(ERROR_STATE() AS VARCHAR) AS ErrorState,
+			CAST(ERROR_PROCEDURE() AS VARCHAR) AS ErrorProcedure,
+			CAST(ERROR_LINE() AS VARCHAR) AS ErrorLine,
+			CAST(ERROR_MESSAGE() AS VARCHAR) AS ResultMessage;
+
+    ROLLBACK TRANSACTION;
+END CATCH;
+
+IF @@TRANCOUNT > 0
+BEGIN
+	SELECT	'Succesfull' AS message,
+			@IdABC AS AbcId,
+			'TRUE' blnResult,
+			CAST(@IdABC AS VARCHAR(50)) IdResult,
+			CAST(200 AS VARCHAR(50)) StatusResult,
+			'' AS ErrorNumber,
+			'' AS ErrorSeverity,
+			'' AS ErrorState,
+			'' AS ErrorProcedure,
+			'' AS ErrorLine,
+			'Success' AS ResultMessage;
+
+    COMMIT TRANSACTION;
+END
 
 END
 GO

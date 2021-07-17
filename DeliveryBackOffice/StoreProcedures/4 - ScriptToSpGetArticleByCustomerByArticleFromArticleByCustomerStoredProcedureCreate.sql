@@ -15,11 +15,21 @@ BEGIN
 
 --DECLARE @IdArticle INT = 8;
 DECLARE @FlagEnabledABC INT = 1;
+DECLARE @FlagEnabledArticle INT = 1;
+DECLARE @FlagEnabledTypeArticle INT = 1;
 
-SELECT AbcId, Code, PriceDefault, 
-	   Height, Width, Length,
-	   MassWeight, VolumetricWeight
-FROM dbo.ArticleByCustomer
+SELECT 
+	   ac.AbcId 'id', CONCAT(ac.Code,'  -  ', ta.TarName,' - ', ca.ArtName) 'name',
+	   ac.Height 'height', ac.Width 'width', ac.Length 'length',
+	   ac.MassWeight 'massWeight', ac.VolumetricWeight 'volumetricWeight',
+	   ac.PriceDefault 'priceDefault', ac.Code 'code'
+FROM dbo.ArticleByCustomer ac
+LEFT JOIN DBO.CatArticle ca 
+	ON ca.ArtId = ac.AbcIdArticle
+	AND ca.ArtRowStatus = @FlagEnabledArticle
+LEFT JOIN dbo.CatTypeArticle ta 
+	ON ta.TarId = ca.ArtIdTypeArticle
+	AND ta.TarRowStatus = @FlagEnabledTypeArticle
 WHERE AbcRowStatus = @FlagEnabledABC
 AND AbcIdArticle = @IdArticle;
 
