@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sps_settlement_guide_COD]    Script Date: 2/07/2021 01:22:49 ******/
+/****** Object:  StoredProcedure [dbo].[sps_settlement_guide_COD]    Script Date: 16/07/2021 16:51:00 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -30,6 +30,8 @@ BEGIN
 	DECLARE @GuideNumber INT
 	-- CourierId de la guía a iterar
 	DECLARE @CourierId INT
+	-- CatModuleId del modulo
+	DECLARE @CatModuleId INT
 
 	BEGIN TRANSACTION
 
@@ -62,6 +64,11 @@ BEGIN
 			SELECT * 
 			INTO #GuidesTemp
 			FROM @GuidesTable
+
+			--Buscar ID modulo liquidación COD
+			SET @CatModuleId = ISNULL((SELECT ModIdModule
+									FROM CatModule
+									WHERE ModName = 'Liquidación COD'),0)
 
 			-- mientras la tabla no este vacía
 			WHILE EXISTS(SELECT * FROM #GuidesTemp)
@@ -99,7 +106,7 @@ BEGIN
 						,GETDATE()
 						,NULL
 						,NULL
-						,26
+						,@CatModuleId
 						,0
 						,@Token
 					FROM [dbo].[DeliveryOrder] do
@@ -141,5 +148,3 @@ BEGIN
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID'
 END
-GO
-
