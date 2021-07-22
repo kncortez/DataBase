@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_settlement_delivered]    Script Date: 20/07/2021 00:01:55 ******/
+/****** Object:  StoredProcedure [dbo].[spg_settlement_returned]    Script Date: 20/07/2021 18:00:00 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,9 +10,9 @@ GO
 -- =============================================
 -- Author:		<Carlos, Cano>
 -- Create date: <2020-11-24>
--- Description:	<Recupera información para generar manifiesto de liquidación (entregas)>
+-- Description:	<Recupera información para generar manifiesto de liquidación (devoluciones)>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_settlement_delivered]
+ALTER PROCEDURE [dbo].[spg_settlement_returned]
 		@IdManifest INT
 AS
 BEGIN
@@ -21,12 +21,25 @@ BEGIN
 
 	SET NOCOUNT ON;
 
+	/*
+	SET @GuideCount = (
+		SELECT 
+			COUNT(dobs.Guides_Received)
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
+		JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
+		WHERE dobs.ID = @IdManifest
+		AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
+		AND dsd.Guide_Returned = 1  -- guía liquidada vía material devuelto
+		AND dsd.Guide_Delivered = 0  -- guía liquidada vía comprobante de entrega
+	)
+	*/
+
 	SET @GuideCount = (
 		SELECT COUNT(DISTINCT dsd.GuideNumber)
 		FROM [DeliveryBackOffice].[dbo].[SettlementByPickup] dobs
 		JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail dsd ON dsd.SettlementByPickupId = dobs.Id
 		WHERE dobs.SequenceCode = @IdManifest
-		AND dsd.IsPieceLiquidaded = 1 -- guía y pieza liquidada
+		AND dsd.IsReturn = 1 -- guía y pieza liquidada
 	)
 
 	/*
@@ -46,7 +59,7 @@ BEGIN
 	*/
 	SELECT 
 			dobs.SequenceCode as ID, 
-			dobs.DatePrinted as DatePrinted, 
+			dobs.DatePrinted as Date_Received, 
 			@GuideCount as Guides_Received,
 			isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,'') as Courier_Name,
 			dobs.DatePrinted as Route_Received,
