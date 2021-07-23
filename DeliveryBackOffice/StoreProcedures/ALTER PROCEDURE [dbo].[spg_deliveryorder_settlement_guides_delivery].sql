@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_deliveryorder_settlement_guides_delivery]    Script Date: 22/07/2021 11:54:08 ******/
+/****** Object:  StoredProcedure [dbo].[spg_deliveryorder_settlement_guides_delivery]    Script Date: 22/07/2021 11:58:15 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -97,7 +97,7 @@ BEGIN
 	FROM DeliveryBackOffice.dbo.DeliveryOrder dod
 		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop on dop.GuideSerie = dod.Guide_Serie and dop.GuideNumber = dod.Guide_Number
 		JOIN DeliveryBackOffice.dbo.PieceByService pbs on dop.GuidePiece = pbs.GuidePieceId
-		JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd on dod.Guide_Number = sbpd.GuideNumber and sbpd.IsDispatched = 1 and sbpd.IsPieceLiquidaded = 1
+		JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd on dod.Guide_Number = sbpd.GuideNumber and sbpd.IsDispatched = 1
 		JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp on sbpd.SettlementByPickupId = sbp.Id and sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = 2
 		AND sbpd.RowStatus = 1
 		join #tblCOD tc on tc.GuidePieceId = pbs.GuidePieceId

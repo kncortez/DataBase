@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_settlement_returned_guides]    Script Date: 22/07/2021 11:57:10 ******/
+/****** Object:  StoredProcedure [dbo].[spg_settlement_delivered_guides]    Script Date: 22/07/2021 17:41:50 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,13 +10,14 @@ GO
 -- =============================================
 -- Author:		<Carlos, Cano>
 -- Create date: <2020-11-24>
--- Description:	<Recupera detalle para generar manifiesto de liquidación (devoluciones)>
+-- Description:	<Recupera detalle para generar manifiesto de liquidación (entregas)>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_settlement_returned_guides]
+ALTER PROCEDURE [dbo].[spg_settlement_delivered_guides]
 		@IdManifest INT
 AS
 BEGIN
-	declare @manifestsequence int = (select Id from SettlementByPickup where SequenceCode = @IdManifest and SubTypeServiceManagmentId = 2)
+
+	declare @manifestsequence int = (select Id from SettlementByPickup where SequenceCode = @IdManifest and SubTypeServiceManagmentId = 2)	
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
@@ -40,7 +41,6 @@ BEGIN
 		Collect_on_Delivery decimal(16,2)
 	)
 
-   
 	-- llenado tabla valores COD
 	select
 		(case when MAX(dop.NoPiece) = (select MAX(sdop.NoPiece) 
@@ -71,7 +71,7 @@ BEGIN
 		AND sbpd.RowStatus = 1 group by dop.NoPiece, dod.Collect_OnDelivery, 
 		dod.PriceShippment,dod.Guide_Number,dod.Guide_Serie, pbs.GuidePieceId
 
-    -- tablix content
+	-- tablix content
 	INSERT INTO @temp
 	SELECT DISTINCT
 		dop.GuideSerie + cast(dop.GuideNumber as varchar(50)) + '-' + cast(dop.NoPiece as varchar(10)) as Guide_Code,
@@ -94,14 +94,13 @@ BEGIN
 		end
 		)AS  Collect_OnDelivery*/
 		tc.COD	AS  Collect_OnDelivery
-		FROM DeliveryBackOffice.dbo.DeliveryOrder dod
+	FROM DeliveryBackOffice.dbo.DeliveryOrder dod
 		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop on dop.GuideSerie = dod.Guide_Serie and dop.GuideNumber = dod.Guide_Number
 		JOIN DeliveryBackOffice.dbo.PieceByService pbs on dop.GuidePiece = pbs.GuidePieceId
-		JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd on dod.Guide_Number = sbpd.GuideNumber and sbpd.IsDispatched = 1 and sbpd.IsReturn = 1
+		JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd on dod.Guide_Number = sbpd.GuideNumber and sbpd.IsDispatched = 1 and sbpd.IsPieceLiquidaded = 1
 		JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp on sbpd.SettlementByPickupId = sbp.Id and sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = 2
 		AND sbpd.RowStatus = 1
-		join #tblCOD tc on tc.GuidePieceId = pbs.GuidePieceId 
-		 -- Pieza de la guia liquidada
+		join #tblCOD tc on tc.GuidePieceId = pbs.GuidePieceId
 
 	SELECT * FROM @temp
 	order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc
