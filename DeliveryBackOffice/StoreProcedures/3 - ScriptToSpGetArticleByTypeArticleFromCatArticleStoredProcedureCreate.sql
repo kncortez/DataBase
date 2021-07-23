@@ -21,7 +21,7 @@ SELECT ArtId, ArtName
 FROM dbo.CatArticle
 WHERE ArtRowStatus = @FlagEnabledArticle
 AND ArtIdTypeArticle = @IdTypeArticle
-AND ArtShowDefault = @FlagShowDefaultArticle;
+--AND ArtShowDefault = @FlagShowDefaultArticle;
 
 END
 GO

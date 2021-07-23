@@ -17,12 +17,15 @@ BEGIN
 DECLARE @FlagEnabledABC INT = 1;
 DECLARE @FlagEnabledArticle INT = 1;
 DECLARE @FlagEnabledTypeArticle INT = 1;
+DECLARE @FlagShowDefault INT = 1;
 
 SELECT 
 	   ac.AbcId 'id', CONCAT(ac.Code,'  -  ', ta.TarName,' - ', ca.ArtName) 'name',
 	   ac.Height 'height', ac.Width 'width', ac.Length 'length',
 	   ac.MassWeight 'massWeight', ac.VolumetricWeight 'volumetricWeight',
-	   ac.PriceDefault 'priceDefault', ac.Code 'code'
+	   IIF(ac.ShowDefault = 'True', 'Si', 'No') 'showDefaultText',
+	   ac.PriceDefault 'priceDefault', ac.Code 'code',
+	   IIF(ac.ShowDefault = 'True', ac.ShowDefault, 'False') 'showDefault'
 FROM dbo.ArticleByCustomer ac
 LEFT JOIN DBO.CatArticle ca 
 	ON ca.ArtId = ac.AbcIdArticle
@@ -31,6 +34,7 @@ LEFT JOIN dbo.CatTypeArticle ta
 	ON ta.TarId = ca.ArtIdTypeArticle
 	AND ta.TarRowStatus = @FlagEnabledTypeArticle
 WHERE AbcRowStatus = @FlagEnabledABC
+--AND ShowDefault = @FlagShowDefault
 AND AbcIdArticle = @IdArticle;
 
 END

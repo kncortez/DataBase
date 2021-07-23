@@ -17,7 +17,8 @@ CREATE PROCEDURE [dbo].[sp_put_articlebycustomer_in_articlebycustomer]
 	@Width DECIMAL(18, 2),
 	@Length DECIMAL(18, 2),
 	@MassWeight DECIMAL(18, 2),
-	@VolumetricWeight DECIMAL(18, 2)
+	@VolumetricWeight DECIMAL(18, 2),
+	@ShowDefault BIT
 AS
 BEGIN
 
@@ -44,7 +45,8 @@ BEGIN TRY
 		Width = @Width,
 		Length = @Length,
 		MassWeight = @MassWeight,
-		VolumetricWeight = @VolumetricWeight
+		VolumetricWeight = @VolumetricWeight,
+		ShowDefault = @ShowDefault
 	WHERE AbcId = @IdABC;
 END TRY
 BEGIN CATCH

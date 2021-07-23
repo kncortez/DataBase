@@ -17,7 +17,8 @@ CREATE PROCEDURE [dbo].[sp_post_new_articlebycustomer_in_articlebycustomer]
 	@Width DECIMAL(18, 2),
 	@Length DECIMAL(18, 2),
 	@MassWeight DECIMAL(18, 2),
-	@VolumetricWeight DECIMAL(18, 2)
+	@VolumetricWeight DECIMAL(18, 2),
+	@ShowDefault BIT
 AS
 BEGIN
 
@@ -52,7 +53,8 @@ BEGIN TRY
 			Width,
 			Length,
 			MassWeight,
-			VolumetricWeight
+			VolumetricWeight,
+			ShowDefault
 		)
 		VALUES
 		(
@@ -66,7 +68,8 @@ BEGIN TRY
 			@Width,
 			@Length,
 			@MassWeight,
-			@VolumetricWeight
+			@VolumetricWeight,
+			@ShowDefault
 		);
 
 		SET @NewArticleByCustomerId = SCOPE_IDENTITY();
