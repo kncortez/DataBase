@@ -1,0 +1,13 @@
+
+INSERT INTO dbo.tb_StringEncoding
+(
+    StringToReplace,
+    StringReplacement,
+    EncodingType
+)
+VALUES
+(   '\',  -- StringToReplace - nvarchar(10)
+    '', -- StringReplacement - nvarchar(10)
+    'json'   -- EncodingType - nvarchar(25)
+    )
+SELECT * FROM	tb_StringEncoding
