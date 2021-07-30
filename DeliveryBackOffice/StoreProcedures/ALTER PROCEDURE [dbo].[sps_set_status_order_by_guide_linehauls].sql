@@ -305,89 +305,6 @@ TokenCreated, DateCreated, TokenUpdated, DateUpdated)
 	FROM DeliveryOrderPiece pc
 	WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number
 
-	--se busca si existe registro en SettlementByPickup
-	SET @IdSettlementByPickup = (SELECT Id
-									FROM SettlementByPickup
-									WHERE RouteAssigmentId = @IdRouteASG
-										AND ServiceManagmentId = @IdServiceManagement)
-
-	--Si @SettlementByPickupId es NULL lo inserta
-	IF @IdSettlementByPickup IS NULL
-	BEGIN
-		PRINT 'Ingresa a insertar settlementbypickup'
-		INSERT INTO dbo.SettlementByPickup 
-				(RouteAssigmentId
-				,DatePrinted
-				,TokenCreated
-				,DateCreated
-				,PiecesDry
-				,PiecesCold
-				,GuidesQuantity
-				,PiecesDryReceived
-				,PiecesColdReceived
-				,GuidesQuantityReceived
-				,IdCourier
-				,SequenceCode
-				,SubTypeServiceManagmentId
-				,StartingKilometers
-				,ArrivalKilometers
-				,ServiceManagmentId)
-				SELECT
-						@IdRouteASG
-					   ,NULL
-					   ,@TokenId
-					   ,GETDATE()
-					   ,@PiecesDry
-					   ,@PiecesCold
-					   ,(SELECT
-								COUNT(A.GuideNumber)
-							FROM (SELECT DISTINCT
-									dop2.GuideNumber
-								FROM PieceByService pbs
-								INNER JOIN DeliveryOrderPiece dop2
-									ON dop2.GuidePiece = pbs.GuidePieceId
-								WHERE pbs.ServiceManagmentId = @IdServiceManagement) A)
-					   ,NULL
-					   ,NULL
-					   ,NULL
-					   ,NULL
-					   ,NULL --ID MANIFIESTO
-					   ,4
-					   ,NULL
-					   ,NULL
-					   ,@IdServiceManagement
-	END
-	ELSE
-	BEGIN
-		PRINT 'Ingresa a actualizar el manifiesto'
-
-		UPDATE dbo.SettlementByPickup 
-		SET 
-		TokenUpdated = @TokenId,
-		DateUpdated = GETDATE(),
-		PiecesDry = @PiecesDry,
-		PiecesCold = @PiecesCold,
-		GuidesQuantity = (SELECT COUNT(A.GuideNumber)
-							FROM (SELECT DISTINCT dop2.GuideNumber
-								FROM PieceByService pbs
-								INNER JOIN DeliveryOrderPiece dop2
-									ON dop2.GuidePiece = pbs.GuidePieceId
-								WHERE pbs.ServiceManagmentId = @IdServiceManagement) A)
-		WHERE Id = @IdSettlementByPickup
-	END
-
-END
-ELSE
-BEGIN
-	PRINT 'dentro @ExistePiezaPorServicio != 0'
-	IF @IsDry = 1
-	BEGIN
-		SET @PiecesDry = @PiecesDry - 1
-	END
-	ELSE
-	BEGIN
-		SET @PiecesCold = @PiecesCold - 1
-	END
 END
 
 
@@ -402,6 +319,79 @@ SELECT
 --len(Item) len
 INTO #listGuides
 FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
+
+
+--se busca si existe registro en SettlementByPickup
+SET @IdSettlementByPickup = (SELECT Id
+								FROM SettlementByPickup
+								WHERE RouteAssigmentId = @IdRouteASG
+									AND ServiceManagmentId = @IdServiceManagement)
+
+--Si @SettlementByPickupId es NULL lo inserta
+IF @IdSettlementByPickup IS NULL
+BEGIN
+	PRINT 'Ingresa a insertar settlementbypickup'
+	INSERT INTO dbo.SettlementByPickup 
+			(RouteAssigmentId
+			,DatePrinted
+			,TokenCreated
+			,DateCreated
+			,PiecesDry
+			,PiecesCold
+			,GuidesQuantity
+			,PiecesDryReceived
+			,PiecesColdReceived
+			,GuidesQuantityReceived
+			,IdCourier
+			,SequenceCode
+			,SubTypeServiceManagmentId
+			,StartingKilometers
+			,ArrivalKilometers
+			,ServiceManagmentId)
+			SELECT
+					@IdRouteASG
+				   ,NULL
+				   ,@TokenId
+				   ,GETDATE()
+				   ,@PiecesDry
+				   ,@PiecesCold
+				   ,(SELECT
+							COUNT(A.GuideNumber)
+						FROM (SELECT DISTINCT
+								dop2.GuideNumber
+							FROM PieceByService pbs
+							INNER JOIN DeliveryOrderPiece dop2
+								ON dop2.GuidePiece = pbs.GuidePieceId
+							WHERE pbs.ServiceManagmentId = @IdServiceManagement) A)
+				   ,NULL
+				   ,NULL
+				   ,NULL
+				   ,NULL
+				   ,NULL --ID MANIFIESTO
+				   ,4
+				   ,NULL
+				   ,NULL
+				   ,@IdServiceManagement
+END
+ELSE
+BEGIN
+	PRINT 'Ingresa a actualizar el manifiesto'
+
+	UPDATE dbo.SettlementByPickup 
+	SET 
+	TokenUpdated = @TokenId,
+	DateUpdated = GETDATE(),
+	PiecesDry = @PiecesDry,
+	PiecesCold = @PiecesCold,
+	GuidesQuantity = (SELECT COUNT(A.GuideNumber)
+						FROM (SELECT DISTINCT dop2.GuideNumber
+							FROM PieceByService pbs
+							INNER JOIN DeliveryOrderPiece dop2
+								ON dop2.GuidePiece = pbs.GuidePieceId
+							WHERE pbs.ServiceManagmentId = @IdServiceManagement) A)
+	WHERE Id = @IdSettlementByPickup
+END
+
 
 -- Actualizar registro de guía a último estado 
 UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
@@ -541,8 +531,6 @@ SELECT
 		WHERE CONCAT(pci.GuideSerie, CAST(pci.GuideNumber AS VARCHAR)) = CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR))
 		AND pbs.ServiceManagmentId = @IdServiceManagement)
 	AS VARCHAR(50)) + ' de ' + CAST(serv.Pieces_Dry + serv.Pieces_Cold AS VARCHAR(50)) AS PIEZAS_PENDIENTES
-	,@PiecesDry PiecesDry
-	,@PiecesCold PiecesCold
 -- ,1 as RUTA
 -- ,getdate() as FechaRuta
 --,200 as StatusCode
@@ -597,8 +585,6 @@ SELECT
 		WHERE CONCAT(pci.GuideSerie, CAST(pci.GuideNumber AS VARCHAR)) = CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR))
 		AND pbs.ServiceManagmentId = @IdServiceManagement)
 	AS VARCHAR(50)) + ' de ' + CAST(serv.Pieces_Dry + serv.Pieces_Cold AS VARCHAR(50)) AS PIEZAS_PENDIENTES
-   ,@PiecesDry PiecesDry
-   ,@PiecesCold PiecesCold
 -- ,1 as RUTA
 -- ,getdate() as FechaRuta
 --,200 as StatusCode
@@ -643,8 +629,6 @@ SELECT
    ,0 AS PIEZAS_PROCESADAS
    ,0 AS CANT_PIEZAS_TOTAL
    ,0 AS PIEZAS_PENDIENTES
-   ,@PiecesDry PiecesDry
-   ,@PiecesCold PiecesCold
 -- ,1 as RUTA
 -- ,getdate() as FechaRuta
 --,200 as StatusCode
@@ -671,8 +655,6 @@ SELECT
    ,0 AS PIEZAS_PROCESADAS
    ,0 AS CANT_PIEZAS_TOTAL
    ,0 AS PIEZAS_PENDIENTES
-   ,@PiecesDry PiecesDry
-   ,@PiecesCold PiecesCold
 -- ,1 as RUTA
 -- ,getdate() as FechaRuta
 --,200 as StatusCode
