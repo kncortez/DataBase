@@ -40,8 +40,7 @@ SELECT ac.AbcId ArtId,
 	   ISNULL(ac.Width, @DecimalConstantZero) Width, 
 	   ISNULL(ac.Length, @DecimalConstantZero) 'Length', 
 	   ISNULL(ac.MassWeight, @DecimalConstantZero) MassWeight, 
-	   ISNULL(ac.VolumetricWeight, @DecimalConstantZero) VolumetricWeight, 
-	   IIF(ac.ShowDefault = 1, ac.ShowDefault, 0) ShowDefault
+	   ISNULL(ac.VolumetricWeight, @DecimalConstantZero) VolumetricWeight
 INTO #categoriesList
 FROM DeliveryBackOffice.dbo.DeliveryOrder ord
 LEFT JOIN DeliveryBackOffice.dbo.Customer cs 
@@ -89,8 +88,7 @@ BEGIN
 		   ISNULL(ac.Width, @DecimalConstantZero) Width, 
 		   ISNULL(ac.Length, @DecimalConstantZero) 'Length', 
 		   ISNULL(ac.MassWeight, @DecimalConstantZero) MassWeight, 
-		   ISNULL(ac.VolumetricWeight, @DecimalConstantZero) VolumetricWeight, 
-		   IIF(ac.ShowDefault = 1, ac.ShowDefault, 0) ShowDefault
+		   ISNULL(ac.VolumetricWeight, @DecimalConstantZero) VolumetricWeight
 	FROM DeliveryBackOffice.dbo.ArticleByCustomer ac
 	INNER JOIN DeliveryBackOffice.dbo.CatArticle ca
 		ON ca.ArtId = ac.AbcIdArticle
