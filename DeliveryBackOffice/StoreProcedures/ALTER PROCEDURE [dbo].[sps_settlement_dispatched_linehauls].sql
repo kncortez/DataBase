@@ -255,16 +255,12 @@ FROM (
 		BEGIN
 			PRINT 'ingresa en else'
 
-			SET @Idd = (SELECT TOP 1
-					ISNULL(SettlementByPickup.Id, 0)
+			SELECT TOP 1
+				@Idd = ISNULL(Id, 0),
+				@IdManifest = ISNULL(SequenceCode, 0)
 				FROM SettlementByPickup
 				WHERE RouteAssigmentId = @IdRouteAssigment
-				AND ServiceManagmentId = @ServiceID)
-			SET @IdManifest = (SELECT TOP 1
-					ISNULL(SequenceCode, 0)
-				FROM SettlementByPickup
-				WHERE RouteAssigmentId = @IdRouteAssigment
-				AND ServiceManagmentId = @ServiceID)
+				AND ServiceManagmentId = @ServiceID
 
 			IF @IdManifest = 0
 			BEGIN
