@@ -95,6 +95,7 @@ BEGIN
                 ON bk.Id_bank = dc.DCBA_Bank_Id
         WHERE pg.[Notificated] = 0
               AND btd.[AuthorizationNumber] IS NOT NULL
+			  AND pg.BatchCODId IS NOT NULL
               AND cu.IdCustomer = @IdCustomer
               AND btd.BankId = @IdBank
     ) s1
@@ -135,6 +136,7 @@ BEGIN
 		pg.[Notificated] = 0
               AND 
 			  btd.[AuthorizationNumber] IS NOT NULL
+			   AND pg.BatchCODId IS NOT NULL
               AND cu.IdCustomer = @IdCustomer
               AND btd.BankId = @IdBank
 			)x ON  CONCAT(pg.GuideSerie, pg.GuideNumber)      = x.GuideNumber
