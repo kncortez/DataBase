@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sps_set_status_order_by_guide_linehauls]    Script Date: 4/08/2021 04:02:40 ******/
+/****** Object:  StoredProcedure [dbo].[sps_set_status_order_by_guide_linehauls]    Script Date: 5/08/2021 05:34:33 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -9,7 +9,7 @@ GO
 
 
 --DECLARE @FECHA AS DATETIME = GETDATE();
---EXEC [sps_set_status_order_by_guide_linehauls] 'FD',201525,2,'FD201525-1',19,'MTIzMDYyMDIxMjMxOTMzMzg0MTky',@FECHA,'',NULL,'LGUA07','91',1,0,1,1
+--EXEC [sps_set_status_order_by_guide_linehauls] 'FD',504682,1,'FD504682-1',19,'MTIzMDYyMDIxMjMxOTMzMzg0MTky',@FECHA,'',NULL,'LGUA07','91',1,0,1,1
 
 ALTER PROCEDURE [dbo].[sps_set_status_order_by_guide_linehauls]
     @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
@@ -131,7 +131,8 @@ BEGIN
                                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
                                                )
         )
-
+		PRINT 'HUB_Destino'
+		PRINT ISNULL(@HUB_Destino, 0)
         IF ISNULL(@HUB_Destino, 0) <> 0
         BEGIN
 
@@ -574,7 +575,7 @@ BEGIN
             END
 
         END
-        ELSE IF (@HUB_Destino = 0)
+        ELSE IF (ISNULL(@HUB_Destino,0) = 0)
         BEGIN
             PRINT 'NO TIENE HUB _1'
             PRINT 'GUIA'
@@ -604,7 +605,7 @@ BEGIN
         END
         COMMIT TRANSACTION;
     END
-    ELSE IF (@HUB_Destino = 0)
+    ELSE IF (ISNULL(@HUB_Destino,0) = 0)
     BEGIN
         PRINT 'NO TIENE HUB _2'
         SELECT CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR)) AS NUMGUIA,
