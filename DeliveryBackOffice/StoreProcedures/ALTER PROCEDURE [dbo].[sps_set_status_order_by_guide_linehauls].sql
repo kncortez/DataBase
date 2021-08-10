@@ -1,15 +1,13 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sps_set_status_order_by_guide_linehauls]    Script Date: 5/08/2021 05:34:33 ******/
+/****** Object:  StoredProcedure [dbo].[sps_set_status_order_by_guide_linehauls]    Script Date: 9/08/2021 07:58:26 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-
-
 --DECLARE @FECHA AS DATETIME = GETDATE();
---EXEC [sps_set_status_order_by_guide_linehauls] 'FD',504682,1,'FD504682-1',19,'MTIzMDYyMDIxMjMxOTMzMzg0MTky',@FECHA,'',NULL,'LGUA07','91',1,0,1,1
+--EXEC [sps_set_status_order_by_guide_linehauls] 'FD',508081,1,'FD508081-1',19,'MTIzMDYyMDIxMjMxOTMzMzg0MTky',@FECHA,'',NULL,'LGUA01','52',1,0,1,1,'2021-08-09'
 
 ALTER PROCEDURE [dbo].[sps_set_status_order_by_guide_linehauls]
     @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
@@ -26,7 +24,8 @@ ALTER PROCEDURE [dbo].[sps_set_status_order_by_guide_linehauls]
     @PiecesDry SMALLINT = 0,
     @PiecesCold SMALLINT = 0,
     @OPTION AS INT = 2,
-    @IsDry AS TINYINT = 1
+    @IsDry AS TINYINT = 1,
+	@DateOfRoute DATE
 AS
 BEGIN
     DECLARE @ValidateOperation BIGINT = 0
@@ -40,6 +39,7 @@ BEGIN
     DECLARE @SubTypeServiceManagmentId INT = 4
     DECLARE @StatusOrderId INT = 19
     DECLARE @ExistePiezaPorServicio INT = 0
+	DECLARE @ReceiverIdTownship INT = 0
 
     BEGIN TRANSACTION
 
@@ -131,6 +131,20 @@ BEGIN
                                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
                                                )
         )
+
+
+			SET @ReceiverIdTownship = (
+		 SELECT ISNULL(serv.ReceiverIdTownship, 0) 
+            FROM DeliveryBackOffice.dbo.DeliveryOrder serv              
+                INNER JOIN DeliveryOrderPiece pc
+                    ON serv.Guide_Number = pc.GuideNumber
+                       AND serv.Guide_Serie = pc.GuideSerie
+            WHERE pc.GuideSerie = @Guide_Serie
+                  AND pc.GuideNumber = @GuideNumber
+                  AND pc.NoPiece = @GuidePiece
+                 
+		)
+
 		PRINT 'HUB_Destino'
 		PRINT ISNULL(@HUB_Destino, 0)
         IF ISNULL(@HUB_Destino, 0) <> 0
@@ -141,7 +155,7 @@ BEGIN
                 SELECT ra.IdRouteAssigment
                 FROM RouteAssigment ra
                 WHERE ra.IdRoute = @IdRoute
-                      AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
+                      AND ra.DateOfRoute = @DateOfRoute
                 GROUP BY ra.IdRouteAssigment
             )
 
@@ -151,7 +165,7 @@ BEGIN
                 FROM ServiceManagement sm
                     INNER JOIN RouteAssigment ra
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                           AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
+                           AND ra.DateOfRoute = @DateOfRoute
                 WHERE sm.IdPuRouteAssigment = @IdRouteASG
                       AND sm.IdHubDestination = @HUB_Destino
                       AND sm.SubTypeServiceManagmentId = @SubTypeServiceManagmentId
@@ -190,7 +204,7 @@ BEGIN
                     DateCreated
                 )
                 VALUES
-                (@IdRoute, CONVERT(CHAR(10), GETDATE(), 126), 1, @TokenId, GETDATE())
+                (@IdRoute, @DateOfRoute, 1, @TokenId, GETDATE())
 
                 SET @IdRouteASG = SCOPE_IDENTITY();
             END
@@ -266,8 +280,8 @@ BEGIN
                     SELECT @IdRouteASG,
                            @TokenId,
                            GETDATE(),
-                           @PiecesDry,
-                           @PiecesCold,
+                           IIF(@IsDry = 1,1,0),
+                           IIF(@IsDry = 1,0,1),
                            (
                                SELECT COUNT(A.GuideNumber)
                                FROM
@@ -296,8 +310,8 @@ BEGIN
                     UPDATE dbo.SettlementByPickup
                     SET TokenUpdated = @TokenId,
                         DateUpdated = GETDATE(),
-                        PiecesDry = @PiecesDry,
-                        PiecesCold = @PiecesCold,
+                        PiecesDry = IIF(@IsDry = 1,PiecesDry+1,PiecesDry),
+                        PiecesCold = IIF(@IsDry = 1,PiecesCold,PiecesCold+1),
                         GuidesQuantity =
                         (
                             SELECT COUNT(A.GuideNumber)
@@ -474,9 +488,9 @@ BEGIN
                                FROM dbo.PieceByService pbs
                                    INNER JOIN DeliveryOrderPiece pci
                                        ON pci.GuidePiece = pbs.GuidePieceId
-                               WHERE pc.GuideSerie = @Guide_Serie
-                                     AND pc.GuideNumber = @GuideNumber
-                                     AND pc.NoPiece = @GuidePiece
+                               WHERE pci.GuideSerie = @Guide_Serie
+                                     AND pci.GuideNumber = @GuideNumber
+                                     --AND pci.NoPiece = @GuidePiece
                                      AND pbs.ServiceManagmentId = @IdServiceManagement
                            ) AS VARCHAR(50)) + ' de ' + CAST(serv.Pieces_Dry + serv.Pieces_Cold AS VARCHAR(50)) AS PIEZAS_PENDIENTES,
                            @PiecesDry PiecesDry,
@@ -575,7 +589,7 @@ BEGIN
             END
 
         END
-        ELSE IF (ISNULL(@HUB_Destino,0) = 0)
+        ELSE IF (ISNULL(@HUB_Destino,0) = 0) AND @ReceiverIdTownship = 0
         BEGIN
             PRINT 'NO TIENE HUB _1'
             PRINT 'GUIA'
@@ -605,7 +619,7 @@ BEGIN
         END
         COMMIT TRANSACTION;
     END
-    ELSE IF (ISNULL(@HUB_Destino,0) = 0)
+    ELSE IF (ISNULL(@HUB_Destino,0) = 0) AND @ReceiverIdTownship = 0
     BEGIN
         PRINT 'NO TIENE HUB _2'
         SELECT CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR)) AS NUMGUIA,

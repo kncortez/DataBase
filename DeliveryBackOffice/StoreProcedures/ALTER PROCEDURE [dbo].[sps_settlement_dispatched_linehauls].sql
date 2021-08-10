@@ -1,13 +1,13 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched_linehauls]    Script Date: 29/07/2021 09:57:52 ******/
+/****** Object:  StoredProcedure [dbo].[sps_settlement_dispatched_linehauls]    Script Date: 9/08/2021 20:43:45 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
 
-ALTER PROCEDURE [dbo].[sps_settlement_dispatched_linehauls] @Route NVARCHAR(20),
+ALTER PROCEDURE [dbo].[sps_settlement_dispatched_linehauls] @Route INT,
 --@GuideQuantity INT,
 --	@RouteReceived DATETIME,
 @Token NVARCHAR(50),
@@ -19,7 +19,8 @@ ALTER PROCEDURE [dbo].[sps_settlement_dispatched_linehauls] @Route NVARCHAR(20),
 @DateRoute AS VARCHAR(50),
 @StartingKilometers AS VARCHAR(100),
 @ServiceID INT,
-@IdVehicle INT
+@IdVehicle INT,
+@DateOfRoute DATE
 
 
 AS
@@ -85,8 +86,8 @@ BEGIN
 		SET @IdRouteAssigment = (SELECT
 				ra.IdRouteAssigment
 			FROM RouteAssigment ra
-			WHERE ra.IdRoute = CAST(@Route AS INT)
-			AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126))
+			WHERE ra.IdRoute = @Route
+			AND ra.DateOfRoute = @DateOfRoute)
 
 		/*LINEHAULS-27072021.INI*/	
 		UPDATE 
@@ -108,7 +109,7 @@ BEGIN
 			IdPuCourrier IS NULL
 			AND IdPuRouteAssigment = @IdRouteAssigment 
 			AND IdServiceManagement = @ServiceID
-			AND CONVERT(CHAR(10), DateCreated, 126) = CONVERT(CHAR(10), GETDATE(), 126)
+			AND CONVERT(CHAR(10), DateCreated, 126) = @DateOfRoute
 		/*LINEHAULS-27072021.FIN*/	
 
 
@@ -269,16 +270,6 @@ FROM (
 
 				UPDATE SettlementByPickup
 				SET DatePrinted = GETDATE(),
-					PiecesDry = @PiecesDry,
-					PiecesCold = @PiecesCold,
-					GuidesQuantity = (SELECT
-											COUNT(A.GuideNumber)
-										FROM (SELECT DISTINCT
-												dop2.GuideNumber
-											FROM PieceByService pbs
-											INNER JOIN DeliveryOrderPiece dop2
-												ON dop2.GuidePiece = pbs.GuidePieceId
-											WHERE pbs.ServiceManagmentId = @ServiceID) A),
 					IdCourier = @IdCourier,
 					SequenceCode = @IdManifest,
 					StartingKilometers = @StartingKilometers,
@@ -372,7 +363,7 @@ FROM (
 					ON pbs.ServiceManagmentId = sm.IdServiceManagement
 				JOIN RouteAssigment ra
 					ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-						AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
+						AND ra.DateOfRoute = @DateOfRoute
 
 
 

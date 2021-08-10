@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetManifestByRouteLinehauls]    Script Date: 23/07/2021 08:23:31 ******/
+/****** Object:  StoredProcedure [dbo].[GetManifestByRouteLinehauls]    Script Date: 9/08/2021 09:47:52 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -15,20 +15,35 @@ GO
 
 ALTER PROCEDURE [dbo].[GetManifestByRouteLinehauls] 
 -- Add the parameters for the stored procedure here
-	@IdRoute INT
+	@IdRoute INT,
+	@DateofRoute DATE
 AS
 BEGIN
 	SET NOCOUNT ON
 	
-	SELECT TOP 1 sbpu.PiecesDry, sbpu.PiecesCold
+	SELECT SUM(sbpu.PiecesDry) PiecesDry, SUM(sbpu.PiecesCold) PiecesCold, 
+	STUFF(
+         (SELECT ', ' + CAST(sbpu.SequenceCode AS VARCHAR)
+          FROM ServiceManagement sm
+	INNER JOIN RouteAssigment ra 
+		ON sm.IdPuRouteAssigment = ra.IdRouteAssigment and ra.RowStatus = 1
+	INNER JOIN SettlementByPickup sbpu 
+		ON sm.IdServiceManagement = sbpu.ServiceManagmentId
+	WHERE ra.IdRoute = @IdRoute
+		AND ra.DateOfRoute = @DateofRoute
+		AND sm.SubTypeServiceManagmentId = 4
+         
+          FOR XML PATH (''))
+          , 1, 1, '')  AS SequenceCode 
 	FROM ServiceManagement sm
 	INNER JOIN RouteAssigment ra 
 		ON sm.IdPuRouteAssigment = ra.IdRouteAssigment and ra.RowStatus = 1
 	INNER JOIN SettlementByPickup sbpu 
 		ON sm.IdServiceManagement = sbpu.ServiceManagmentId
-	WHERE ra.IdRoute = @IdRoute 
-		AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
-	ORDER BY sbpu.DateCreated DESC
+	WHERE ra.IdRoute = @IdRoute
+		AND ra.DateOfRoute = @DateofRoute
+		AND sm.SubTypeServiceManagmentId = 4
+	GROUP BY ra.DateOfRoute
 
 	SET NOCOUNT OFF
 END

@@ -1,13 +1,14 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_guides_per_route_linehauls]    Script Date: 5/08/2021 04:45:30 ******/
+/****** Object:  StoredProcedure [dbo].[spg_guides_per_route_linehauls]    Script Date: 9/08/2021 09:05:30 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 --EXEC spg_guides_per_route_linehauls 58
 ALTER PROCEDURE [dbo].[spg_guides_per_route_linehauls]
-		@IdRoute INT
+		@IdRoute INT,
+		@DateOfRoute DATE
 AS
 BEGIN
 
@@ -70,7 +71,7 @@ SELECT
 					ON tbh_origen.IdHublogistic = hl_origen.IdHublogistic
 			 LEFT	JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
 					ON tbh_destino.IdHublogistic = hl_destino.IdHublogistic
-	WHERE ra.IdRoute =  @IdRoute and ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
+	WHERE ra.IdRoute =  @IdRoute and ra.DateOfRoute = @DateOfRoute
 	AND serv.HubDestinationId IS NULL AND serv.HubOriginId IS NULL
 	GROUP BY 	dop.GuideSerie,dop.GuideNumber,serv.Ticket_Number,serv.Receiver_FirstName,serv.Receiver_LastName,
 	hl_origen.HubAbbreviation ,hl_destino.HubAbbreviation,serv.Pieces_Dry , serv.Pieces_Cold,
@@ -130,7 +131,7 @@ SELECT
 					ON serv.HubOriginId = hl_origen.IdHublogistic
 			 INNER	JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
 					ON serv.HubDestinationId = hl_destino.IdHublogistic
-	WHERE ra.IdRoute =  @IdRoute and ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
+	WHERE ra.IdRoute =  @IdRoute and ra.DateOfRoute = @DateOfRoute
 	GROUP BY 	dop.GuideSerie,dop.GuideNumber,serv.Ticket_Number,serv.Receiver_FirstName,serv.Receiver_LastName,
 	hl_origen.HubAbbreviation ,hl_destino.HubAbbreviation,serv.Pieces_Dry , serv.Pieces_Cold,
 	sm.IdServiceManagement,serv.HubDestinationId,serv.HubOriginId
