@@ -1,0 +1,1 @@
+ALTER TABLE DeliveryBackOffice.dbo.Customer ADD ExcludePriceShippingCOD bit null;
