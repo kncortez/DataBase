@@ -5,22 +5,25 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 @GuideToken NVARCHAR(50),
 @Latitude DECIMAL(18,15),
 @Longitude DECIMAL(18,15),
-@StartTime NVARCHAR(10),
-@EndTime NVARCHAR(10)
+@StartTime NVARCHAR(20),
+@EndTime NVARCHAR(20)
 AS
 BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 		UPDATE [dbo].[ServiceDataForGuide]
 		SET DateUsed = GETDATE(),
-		Latitude = @Latitude,
-		Longitude = @Longitude,
-		startTime = CAST( @StartTime AS TIME ),
-		endTime = CAST ( @EndTime AS TIME )
-		WHERE Guide_Token = @GuideToken
-		AND Guide_Serie = @GuideSerie
-		AND Guide_Number = @GuideNumber
-		AND endTime IS NULL
+			Latitude = @Latitude,
+			Longitude = @Longitude,
+			StartTime = CAST( @StartTime AS DATETIME ),
+			EndTime= CAST ( @EndTime AS DATETIME )
+		FROM [dbo].[ServiceDataForGuide] SDFG
+		INNER JOIN [dbo].[DeliveryOrder] DO
+		ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
+		WHERE SDFG.GuideToken = @GuideToken
+		AND SDFG.GuideSerie = @GuideSerie
+		AND SDFG.GuideNumber = @GuideNumber
+		AND DO.StatusOrderId IN (1,2,10,11,15) -- Solicitado, Recolectado, En Inventario, Arribó a las instalaciones, Generado
 		IF @@ROWCOUNT = 0
 		BEGIN
 		DECLARE @jsonResult2 NVARCHAR(MAX) 
@@ -39,7 +42,7 @@ BEGIN
 		set @jsonResultErrror =(
 							SELECT STUFF(( 
 							SELECT '{{"IdResult":500,' 
-							+ '"Message":"'+ERROR_MESSAGE()+'"}' 
+							+ '"Error":"'+ERROR_MESSAGE()+'"}' 
 							FOR XML PATH(''), TYPE
 							).value('.', 'varchar(max)'),1,1,'') )
 		select ('[' + @jsonResultErrror +  ']') jsonResultErrror 
@@ -59,5 +62,3 @@ BEGIN
 	END
 END
 GO
-
-

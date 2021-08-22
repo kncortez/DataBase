@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 12/08/2021 8:40:53 ******/
+/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 16/08/2021 13:37:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -261,11 +261,24 @@ BEGIN
 				0 -- Guide_Collected
 			FROM #GuideTable GT
 
-			-- Modificacion 11/08/2021 Jose Andres Ruiz Peer
-			INSERT INTO DeliveryOrderDeliveryDetail (Guide_Serie, Guide_Number, DateCreated, Guide_Token)
-			SELECT GT.Guide_Serie, GT.Guide_Number, GETDATE(), NEWID()
+			-- INSERTAR DATA PARA MANEJO DE LANDING PAGE
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide](
+				[GuideSerie],
+				[GuideNumber],
+				[GuideToken],
+				[IsDelivery],
+				[RowStatus],
+				[TokenCreated],
+				[DateCreated])
+			SELECT 
+				GT.Guide_Serie,
+				GT.Guide_Number,
+				NEWID(),
+				1,
+				1,
+				'SYS-HERMESROUTES',
+				GETDATE()
 			FROM #GuideTable GT;
-			-- Fin Modificacion
 
 			-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
 			INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
