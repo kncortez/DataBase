@@ -32,7 +32,7 @@ BEGIN
 	IF (@NumAccount IS NULL)
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NUMERO DE CUENTA ES NULO.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
 	END
 	ELSE IF (CHARINDEX('-', @NumAccount) > 0)
 	BEGIN
@@ -47,37 +47,42 @@ BEGIN
 	ELSE IF (ISNUMERIC(@NumAccount) <> 1)
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NUMERO DE CUENTA TIENE LETRAS.';
+		SET @ReasonExcluded = 'EL NUMERO DE CUENTA SOLO DEBE DE ESTAR CONFORMADO POR NUMEROS.';
 	END
 	ELSE IF (@BankAccount IS NULL)
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NUMERO DE CUENTA NO ESTA ASIGNADO A UN BANCO.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
 	END
 	ELSE IF (@BankAccount < 1)
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NUMERO DE CUENTA ESTA ASIGNADO A UN BANCO INCORRECTO.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
 	END
 	ELSE IF (@TypeAccount NOT IN (1, 2))
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL TIPO DE CUENTA NO ES MONETARIO NI DE AHORRO.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
 	END
 	ELSE IF (@NameAccount IS NULL)
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NOMBRE DE LA CUENTA ES NULO.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
 	END
 	ELSE IF (@NameAccount = '')
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NUMERO DE CUENTA NO TIENE NOMBRE DE CUENTA.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
 	END
 	ELSE IF (LEN(@NameAccount) < 6)
 	BEGIN
 		SET @FlagIsExcluded = 'TRUE';
-		SET @ReasonExcluded = 'EL NOMBRE DE LA CUENTA NO ES VALIDO.';
+		SET @ReasonExcluded = 'CLIENTE SIN DATOS BANCARIOS, COMUNIQUESE CON EL AREA COMERCIAL.';
+	END
+	ELSE IF (@BankAccount IN (94, 95, 98, 99, 104, 105, 107))
+	BEGIN
+		SET @FlagIsExcluded = 'TRUE';
+		SET @ReasonExcluded = 'SE DESCONOCE EL FORMATO PARA VALIDAR EL NUMERO DE CUENTA.';
 	END
 	ELSE
 	BEGIN
@@ -295,6 +300,24 @@ BEGIN
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
 				SET @ReasonExcluded = 'EL NUMERO DE CUENTA DEBE INICIAR CON CUATRO MIL CIENTO VEINTE Y SIETE (4127).';
+			END
+		END
+		ELSE IF @BankAccount = 106 -- BANCO INV
+		BEGIN
+			IF (LEN(@NumAccount) <> 12)
+			BEGIN
+				SET @FlagIsExcluded = 'TRUE';
+				SET @ReasonExcluded = 'LA LONGITUD DEL NUMERO DE CUENTA NO ES CORRECTA.';
+			END
+			ELSE IF ((@TypeAccount = 1) AND (SUBSTRING(@NumAccount, 1, 1) != '0'))
+			BEGIN
+				SET @FlagIsExcluded = 'TRUE';
+				SET @ReasonExcluded = 'EL NUMERO DE CUENTA DEBE INICIAR CON CERO (0).';
+			END
+			ELSE IF ((@TypeAccount = 2) AND (SUBSTRING(@NumAccount, 1, 1) != '2'))
+			BEGIN
+				SET @FlagIsExcluded = 'TRUE';
+				SET @ReasonExcluded = 'EL NUMERO DE CUENTA DEBE INICIAR CON DOS (2).';
 			END
 		END
 	END
