@@ -12,7 +12,7 @@ GO
 -- Description:	< Recupera datos de manifiestos bajo: fecha especifica, departamento especifico, municipio especifico y zonas especifias >
 -- =============================================
 
-ALTER PROCEDURE [dbo].[GetManifestosForExternalTool]
+CREATE PROCEDURE [dbo].[GetManifestosForExternalTool]
 	@Date DATE,
 	@Department NVARCHAR(50),
 	@Town NVARCHAR(50),

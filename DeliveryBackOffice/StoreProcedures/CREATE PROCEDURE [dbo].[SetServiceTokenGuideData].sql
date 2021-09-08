@@ -1,5 +1,11 @@
-
-CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[SetServiceTokenGuideData]    Script Date: 08/09/2021 14:20:52 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[SetServiceTokenGuideData]
 @GuideSerie NVARCHAR(2),
 @GuideNumber INT,
 @GuideToken NVARCHAR(50),
@@ -15,6 +21,7 @@ BEGIN
 		SET DateUsed = GETDATE(),
 			Latitude = @Latitude,
 			Longitude = @Longitude,
+			ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
 			StartTime = CAST( @StartTime AS DATETIME ),
 			EndTime= CAST ( @EndTime AS DATETIME )
 		FROM [dbo].[ServiceDataForGuide] SDFG
@@ -61,4 +68,3 @@ BEGIN
 		select ('[' + @jsonResult +  ']') jsonResult 
 	END
 END
-GO

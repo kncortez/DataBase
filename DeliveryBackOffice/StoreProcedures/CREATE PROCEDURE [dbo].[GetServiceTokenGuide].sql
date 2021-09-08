@@ -1,11 +1,14 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetServiceTokenGuide]    Script Date: 16/08/2021 15:19:50 ******/
+
+/****** Object:  StoredProcedure [dbo].[GetServiceTokenGuide]    Script Date: 08/09/2021 14:20:05 ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
-ALTER PROCEDURE [dbo].[GetServiceTokenGuide]
+
+CREATE PROCEDURE [dbo].[GetServiceTokenGuide]
 @GuideSerie NVARCHAR(2),
 @GuideNumber INT,
 @GuideToken NVARCHAR(50)
@@ -24,8 +27,9 @@ BEGIN
 		DECLARE @jsonResult NVARCHAR(MAX) 
 		set @jsonResult = (SELECT STUFF(( 
 							SELECT  
-							',{"receiverAddress":"' +  DO.Receiver_Address + '",' +
-							'"serviceType":"Delivery"'
+							',{"IdResult":200,"receiverAddress":"' +  DO.Receiver_Address + '",' +
+							'"serviceType":"Delivery"' + ',' +
+							'"deliveryType":"'+ ISNULL(DO.TypeService,'TDA') + '"' +
 							+ '}'
 
 							FROM [dbo].[DeliveryOrder] DO
@@ -68,7 +72,7 @@ BEGIN
 		DECLARE @jsonResult2 NVARCHAR(MAX) 
 		set @jsonResult2 = (SELECT STUFF(( 
 							SELECT  
-							',{"receiverAddress":"' +  DO.Receiver_Address + '",' +
+							',{"IdResult":200,"receiverAddress":"' +  DO.Receiver_Address + '",' +
 							'"serviceType":"Recollection"'
 							+ '}'
 
@@ -107,3 +111,6 @@ BEGIN
 	END CATCH
 END
 END
+GO
+
+

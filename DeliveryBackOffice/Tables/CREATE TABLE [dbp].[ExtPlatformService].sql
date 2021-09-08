@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  Table [dbo].[ExtPlatformService]    Script Date: 16/08/2021 17:37:57 ******/
+/****** Object:  Table [dbo].[ExtPlatformService]    Script Date: 25/08/2021 8:55:12 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -21,7 +21,8 @@ CREATE TABLE [dbo].[ExtPlatformService](
 	[Latitude] [decimal](18, 15) NOT NULL,
 	[Longitude] [decimal](18, 15) NOT NULL,
 	[Driver] [nvarchar](50) NULL,
-	[Vehícle] [nvarchar](50) NULL,
+	[Vehicle] [nvarchar](50) NULL,
+	[Observation] [nvarchar](200) NULL,
 	[IsIncluded] [bit] NOT NULL,
 	[IsDelivery] [bit] NOT NULL,
 	[ServiceStatus] [nvarchar](30) NULL,
@@ -83,7 +84,10 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre identificador del usuario o courierman dentro de la plataforma externa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'Driver'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre identificador del vehículo dentro de la plataforma externa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'Vehícle'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre identificador del vehículo dentro de la plataforma externa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'Vehicle'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Observacion respecto al servicio generado' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'Observation'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Referente a si el servicio fue incluido dentro de la ruta/plan (1 representando su inclusión)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'IsIncluded'
@@ -98,7 +102,7 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha y hora en la que se genera el servicio del lado de la plataforma externa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'StartServiceDateTime'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha y hora en la que se completa el servicio del lado de la plataforma externa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'EndServiceDatetime'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha y hora en la que se completa el servicio del lado de la plataforma externa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'EndServiceDateTime'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado lógico' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ExtPlatformService', @level2type=N'COLUMN',@level2name=N'RowStatus'

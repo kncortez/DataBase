@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  Table [dbo].[ExtPlatServiceRelationshipWithGuide]    Script Date: 16/08/2021 17:38:22 ******/
+/****** Object:  Table [dbo].[ExtPlatServiceRelationshipWithGuide]    Script Date: 25/08/2021 8:46:00 ******/
 SET ANSI_NULLS ON
 GO
 

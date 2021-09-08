@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  Table [dbo].[ServiceDataForGuide]    Script Date: 16/08/2021 13:56:11 ******/
+/****** Object:  Table [dbo].[ServiceDataForGuide]    Script Date: 08/09/2021 14:23:32 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -18,6 +18,7 @@ CREATE TABLE [dbo].[ServiceDataForGuide](
 	[StartTime] [datetime] NULL,
 	[EndTime] [datetime] NULL,
 	[DateUsed] [datetime] NULL,
+	[ProviderModule] [int] NULL,
 	[IsDelivery] [bit] NOT NULL,
 	[RowStatus] [bit] NOT NULL,
 	[TokenCreated] [nvarchar](50) NOT NULL,
@@ -36,6 +37,13 @@ REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 GO
 
 ALTER TABLE [dbo].[ServiceDataForGuide] CHECK CONSTRAINT [ServiceDataForGuide_Guide_FK]
+GO
+
+ALTER TABLE [dbo].[ServiceDataForGuide]  WITH CHECK ADD  CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY([ProviderModule])
+REFERENCES [dbo].[CatModule] ([ModIdModule])
+GO
+
+ALTER TABLE [dbo].[ServiceDataForGuide] CHECK CONSTRAINT [ServiceDataForGuide_Module_FK]
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ServiceDataForGuide', @level2type=N'COLUMN',@level2name=N'IdServiceDataForGuide'
@@ -63,6 +71,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fin de ventana
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha y hora en el que se registro la ultima asignacion de datos' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ServiceDataForGuide', @level2type=N'COLUMN',@level2name=N'DateUsed'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del modulo de donde proviene la informacion adicional, de ser ingresada' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ServiceDataForGuide', @level2type=N'COLUMN',@level2name=N'ProviderModule'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Referente a si es un servicio de entrega o de recoleccion (1 siendo entrega)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ServiceDataForGuide', @level2type=N'COLUMN',@level2name=N'IsDelivery'
