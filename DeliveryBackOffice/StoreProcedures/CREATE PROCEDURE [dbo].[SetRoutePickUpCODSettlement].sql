@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-
+/****** Object:  StoredProcedure [dbo].[SetRoutePickUpCODSettlement]    Script Date: 16/09/2021 12:00:49 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -38,8 +38,8 @@ BEGIN
 			-- Actualizar guía en liquidación COD
 			UPDATE sbpd
 			SET 
-				TokenUpdated = @Token, 
-				DateUpdated = GETDATE(), 
+				CODSettlement_TokenCreated = @Token, 
+				CODSettlement_DateCreated = GETDATE(), 
 				IsCODSettlement = 1 -- guía liquidada en COD
 			FROM SettlementByPickupDetail sbpd
 			INNER JOIN @GuidesTable t 
