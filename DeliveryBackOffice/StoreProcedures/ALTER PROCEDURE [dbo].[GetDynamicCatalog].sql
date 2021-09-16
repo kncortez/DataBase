@@ -446,6 +446,8 @@ BEGIN
                                 SELECT ',{"Id":"' + CONVERT(NVARCHAR, ISNULL(IdCustomer, 0)) + '",' + '"Name":"'
 								               + REPLACE(ISNULL(cu.[Name], 'N/A'), '"','')  + '",' +'"Phone":"'+ISNULL([CustomerPhone],'')+ '",'
 								               +'"Email":"'+ISNULL([ContactEmail],'') + '",'
+                               +'"CodeOfReference":"'+ CONVERT(NVARCHAR,ISNULL(vpc.[CodeOfReference],'')) + '",'
+                               +'"Description":"'+ ISNULL(REPLACE(vpc.[DescriptionOfClient],'"',''),'') + '",'
 								               +'"HasRate":"'+ CONVERT(NVARCHAR,ISNULL(rc.[RbcRowStatus],'')) + '",'
 								               +'"HasCredit":"'+ CONVERT(NVARCHAR,ISNULL(IIF(ISNULL(ccp.ConditionOfPayment,'Contado')='Contado','0','1'),'')) +
 								               '",' +'"Billing":'+'[{'
@@ -472,6 +474,7 @@ BEGIN
 								              LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer rc ON cu.IdCustomer = rc.RbcIdCustomer
 								              AND rc.RbcRowStatus=1
 								              LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
+                              JOIN DeliveryBackOffice.dbo.VisitPointClient vpc ON vpc.CustomerID = cu.IdCustomer AND vpc.StatusClient=1
 								              WHERE IdCustomerType = 1
 								              AND cu.RowSatus = 1
                                       /*AND ConditionOfPaymentID !=
