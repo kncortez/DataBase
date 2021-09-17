@@ -268,8 +268,8 @@ BEGIN
 	
 	SET @Output = 
 			'[ { ' + 
-			'"Total": Q.' + (SELECT CAST(CAST(ISNULL(SUM(ppt.AmountToPay), 0) AS DECIMAL(18, 2)) AS VARCHAR)
-							FROM #PendingPaymentTempId ppt) + ', ' + 
+			'"Total": "Q.' + (SELECT CAST(CAST(ISNULL(SUM(ppt.AmountToPay), 0) AS DECIMAL(18, 2)) AS VARCHAR)
+							FROM #PendingPaymentTempId ppt) + '", ' + 
 			'"Guides": [ ';
 
 	WHILE @Index <= @RowsNumber
@@ -290,9 +290,9 @@ BEGIN
 										'"ReceiverName": "' + pg.ReceiverName + '", ' + 
 										'"ReceiverAddress": "' + pg.ReceiverAddress + '", ' + 
 										'"Indications": "' + pg.Indications + '", ' + 
-										'"AmountToCollect": Q.' + CAST(CAST((ISNULL(pg.AmountToPay, 0) + ISNULL(pg.CODAmount, 0)) AS DECIMAL(18, 2)) AS VARCHAR) + ', ' + 
-										'"ServicePrice": Q.' + CAST(CAST(ISNULL(pg.AmountToPay, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ', ' + 
-										'"CODAmount": Q.' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ', ' + 
+										'"AmountToCollect": "Q.' + CAST(CAST((ISNULL(pg.AmountToPay, 0) + ISNULL(pg.CODAmount, 0)) AS DECIMAL(18, 2)) AS VARCHAR) + '", ' + 
+										'"ServicePrice": "Q.' + CAST(CAST(ISNULL(pg.AmountToPay, 0) AS DECIMAL(18, 2)) AS VARCHAR) + '", ' + 
+										'"CODAmount": "Q.' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + '", ' + 
 										'"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + 
 										'"Pieces": ' + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + 
 										'"ServiceType": "' + pg.ServiceType + '", ' + 
@@ -305,7 +305,7 @@ BEGIN
 			(SELECT STUFF(
 			(
 				SELECT ' { "Description": "' + ISNULL(br.Description, '') + '", ' + 
-						'"Amount": Q.' + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ' }, '
+						'"Amount": "Q.' + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + '" }, '
 				FROM Cost c 
 				INNER JOIN BreakdownOfPayment br 
 					ON c.IdCost = br.IdCost 
