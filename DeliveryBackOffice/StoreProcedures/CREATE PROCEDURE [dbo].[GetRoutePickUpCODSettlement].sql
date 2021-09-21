@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetRoutePickUpCODSettlement]    Script Date: 2/09/2021 00:37:02 ******/
+/****** Object:  StoredProcedure [dbo].[GetRoutePickUpCODSettlement]    Script Date: 17/09/2021 16:11:36 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -37,6 +37,7 @@ BEGIN
 		, CONCAT(do.Guide_Serie, do.Guide_Number) Guide
 		, do.PriceShippment Amount
 		, cu.Name Customer
+		, CASE WHEN ih.inv_pk_id IS NULL THEN NULL ELSE CONCAT(ih.inv_serieFEL, '-', ih.inv_numberFEL) END  FEL
 	FROM DeliveryOrder do
 	INNER JOIN (
 		SELECT GuideSerie, GuideNumber 
@@ -51,6 +52,10 @@ BEGIN
 		ON do.Guide_Serie = dopd.GuideSerie AND do.Guide_Number = dopd.GuideNumber
 	LEFT JOIN Customer cu
 		ON do.IdCustomer = cu.IdCustomer 
+	LEFT JOIN invoiceDetail id
+		ON do.Guide_Serie = id.dti_fk_orderSerie AND do.Guide_Number = id.dti_fk_orderNumber
+	LEFT JOIN invoiceHeader ih
+		ON id.dti_fk_header = ih.inv_pk_id
 	WHERE dopd.PayTypeId = 1 -- Contado
 		AND dopd.TypeofInOutMoneyId IN (1,2) -- Efectivo o tarjeta
 		AND dopd.TimePlaId = 2 -- Recolección
