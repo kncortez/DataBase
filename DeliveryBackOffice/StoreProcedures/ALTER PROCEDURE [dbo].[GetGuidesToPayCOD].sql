@@ -1,0 +1,82 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[GetGuidesToPayCOD]    Script Date: 22/09/2021 17:55:14 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- =============================================
+-- Author:		<Oscar,Morales>
+-- Create date: <2021-06-22>
+-- Description:	<Guias por pagar COD>
+-- =============================================
+
+ALTER PROCEDURE [dbo].[GetGuidesToPayCOD]
+    -- Add the parameters for the stored procedure here
+    @Date DATE
+AS
+BEGIN
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON
+    SELECT 
+	bt.IdBatchCOD,
+           bt.Name,
+           bt.BatchNumber,
+		   bt.BankId,
+           db.[Acronym] AS Bank,
+           bt.TotalAmountIncluded,
+		   bt.BatchTimeRange,
+		   bt.Date,
+           btd.AuthorizationNumber,
+           btd.AuthorizationDate,
+           btd.IdBatchDetailCOD,
+           btd.GuideSerie,
+           btd.GuideNumber,
+           CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) AS Receiver,
+           IIF(cu.Name = 'FD EXPRESS CENTER',  do.Sender_FirstName, cu.Name) AS Client,
+           (
+               SELECT TOP 1
+                      dsc.[Hub]
+               FROM [dbo].[DumpServiceCoverage] AS dsc
+               WHERE twn.[HeaderCode] = dsc.[HeaderCode]
+           ) AS Hub,
+           btd.[Commission],
+           do.[Collect_OnDelivery],
+           btd.[Amount],
+           ISNULL(dcb.DCBA_Num_account, cu.CODAccountNumber) AS NumAccount,
+           ISNULL(dcb.DCBA_Nom_account, cu.CODAccountName) AS AccountName,
+           ISNULL(vp.DescriptionOfClient, '') AS Source,
+           do.Sender_FirstName AS Sender,
+           btd.[Excluded]
+		   ,CatConceptCODId,
+		   btd.Comments
+    FROM [dbo].[BatchDetailCOD] btd
+        LEFT JOIN [dbo].[BatchCOD] bt
+            ON btd.[BatchCODId] = bt.[IdBatchCOD]
+        LEFT JOIN [dbo].[DeliveryBank] db
+            ON db.Id_bank = bt.BankId
+        LEFT JOIN [dbo].[DeliveryOrder] do
+            ON btd.[GuideSerie] = do.[Guide_Serie]
+               AND btd.[GuideNumber] = do.[Guide_Number]
+        LEFT JOIN [dbo].[Customer] cu
+            ON do.[IdCustomer] = cu.[IdCustomer]
+        LEFT JOIN [dbo].[Township] twn
+            ON do.[ReceiverIdTownship] = twn.[IdTownship]
+        LEFT JOIN [dbo].[ProcessedGuideCOD] pg
+            ON btd.[GuideSerie] = pg.[GuideSerie]
+               AND btd.[GuideNumber] = pg.[GuideNumber]
+        LEFT JOIN [dbo].[DeliveryCustomerBankAccount] dcb
+            ON do.DCBA_ID = dcb.DCBA_Id
+        LEFT JOIN [dbo].VisitPointClient vp
+            ON vp.CodeOfReference = do.Sender_ID
+    WHERE 1=1
+		--AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI
+          AND CONVERT(DATE, bt.[Date]) =  @Date
+		  AND btd.CatConceptCODId = 2
+	ORDER BY bt.IdBatchCOD, bt.Date
+
+    SET NOCOUNT OFF
+END
