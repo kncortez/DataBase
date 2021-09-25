@@ -188,6 +188,11 @@ BEGIN
 	END
 	-----------------------------------------------------------------------------------------------------
 
+	SET @InGuidesP = '';
+	SELECT @InGuidesP = (SELECT STUFF((SELECT ',' + CONCAT(lgi.Guide_Serie, lgi.Guide_Number) 
+										FROM #listGuidesIncluded lgi
+										FOR XML PATH ('')), 1, 1, ''));
+	
 	CREATE TABLE #PendingPaymentTemp (
 										GuideSerie NVARCHAR(25) NULL,
 										GuideNumber INT,
@@ -226,6 +231,7 @@ BEGIN
 																@Token = @TokenP;
 	
 	SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
+			CONCAT(ppt.GuideSerie, CAST(ppt.GuideNumber AS VARCHAR)) Guide,
 			ppt.GuideSerie, 
 			ppt.GuideNumber, 
 			ppt.IsCollect, 
@@ -246,12 +252,12 @@ BEGIN
 			ppt.AmountToPay, 
 			ppt.CODAmount, 
 			ppt.ReturnRates,
+			(ISNULL(ppt.AmountToPay, 0) + ISNULL(ppt.CODAmount, 0)) AmountToCollect,
 			CONCAT(do.Sender_Department, ', ', do.Sender_Town, ', ', 'Zona ', do.Sender_Zone, ', ', do.Sender_Address) SenderAddress,
 			CONCAT(do.Receiver_Department, ', ', do.Receiver_Town, ', ', 'Zona ', do.Receiver_Zone, ', ', do.Receiver_Address) ReceiverAddress,
-
 			IIF(LTRIM(RTRIM(ISNULL(do.Sender_FirstName, ''))) = '', LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))), IIF(LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))) = '', LTRIM(RTRIM(do.Sender_FirstName)), CONCAT(LTRIM(RTRIM(do.Sender_FirstName)), ' ', LTRIM(RTRIM(do.Sender_LastName))))) SenderName,
 			CONCAT(IIF(LTRIM(RTRIM(ISNULL(do.Receiver_FirstName, ''))) = '', LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))), IIF(LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))) = '', LTRIM(RTRIM(do.Receiver_FirstName)), CONCAT(LTRIM(RTRIM(do.Receiver_FirstName)), ' ', LTRIM(RTRIM(do.Receiver_LastName))))), IIF(LTRIM(RTRIM(ISNULL(do.Receiver_Alternant_FullName, ''))) = '', '', CONCAT(' / ', LTRIM(RTRIM(do.Sender_FirstName))))) ReceiverName,
-			IIF(@IdModuleP = 35, LTRIM(RTRIM(ISNULL(do.IndicationsToSendDestination, ''))), LTRIM(RTRIM(ISNULL(do.IndicationsToSendOrigin, '')))) Indications,
+			IIF(@ServiceType = 'DELIVERY', LTRIM(RTRIM(ISNULL(do.IndicationsToSendDestination, ''))), LTRIM(RTRIM(ISNULL(do.IndicationsToSendOrigin, '')))) Indications,
 			(ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
 			IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
 	INTO #PendingPaymentTempId
@@ -268,8 +274,8 @@ BEGIN
 	
 	SET @Output = 
 			'[ { ' + 
-			'"Total": "Q.' + (SELECT CAST(CAST(ISNULL(SUM(ppt.AmountToPay), 0) AS DECIMAL(18, 2)) AS VARCHAR)
-							FROM #PendingPaymentTempId ppt) + '", ' + 
+			'"Total": ' + (SELECT CAST(CAST(ISNULL(SUM(ppt.AmountToPay), 0) AS DECIMAL(18, 2)) AS VARCHAR)
+							FROM #PendingPaymentTempId ppt) + ', ' + 
 			'"Guides": [ ';
 
 	WHILE @Index <= @RowsNumber
@@ -282,7 +288,7 @@ BEGIN
 		FROM #PendingPaymentTempId
 		WHERE Id = @Index;
 
-		SET @Output = @Output + (SELECT ' { "Guide": "' + CONCAT(pg.GuideSerie, CAST(pg.GuideNumber AS VARCHAR)) + '", ' + 
+		SET @Output = @Output + (SELECT ' { "Guide": "' + pg.Guide + '", ' + 
 										--'"GuideSerie": "' + pg.GuideSerie + '", ' + 
 										--'"GuideNumber": "' + CAST(pg.GuideNumber AS VARCHAR) + '", ' + 
 										'"SenderName": "' + pg.SenderName + '", ' + 
@@ -290,9 +296,10 @@ BEGIN
 										'"ReceiverName": "' + pg.ReceiverName + '", ' + 
 										'"ReceiverAddress": "' + pg.ReceiverAddress + '", ' + 
 										'"Indications": "' + pg.Indications + '", ' + 
-										'"AmountToCollect": "Q.' + CAST(CAST((ISNULL(pg.AmountToPay, 0) + ISNULL(pg.CODAmount, 0)) AS DECIMAL(18, 2)) AS VARCHAR) + '", ' + 
-										'"ServicePrice": "Q.' + CAST(CAST(ISNULL(pg.AmountToPay, 0) AS DECIMAL(18, 2)) AS VARCHAR) + '", ' + 
-										'"CODAmount": "Q.' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + '", ' + 
+										'"CurrencySymbol": "Q.",' + 
+										'"AmountToCollect": ' + CAST(CAST(pg.AmountToCollect AS DECIMAL(18, 2)) AS VARCHAR) + ', ' + 
+										'"ServicePrice": ' + CAST(CAST(ISNULL(pg.AmountToPay, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ', ' + 
+										'"CODAmount": ' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ', ' + 
 										'"IsCollect": ' + CAST(ISNULL(pg.IsCollect, 0) AS VARCHAR) + ', ' + 
 										'"Pieces": ' + CAST(ISNULL(pg.Pieces, 0) AS VARCHAR) + ', ' + 
 										'"ServiceType": "' + pg.ServiceType + '", ' + 
@@ -305,7 +312,7 @@ BEGIN
 			(SELECT STUFF(
 			(
 				SELECT ' { "Description": "' + ISNULL(br.Description, '') + '", ' + 
-						'"Amount": "Q.' + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + '" }, '
+						'"Amount": ' + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ' }, '
 				FROM Cost c 
 				INNER JOIN BreakdownOfPayment br 
 					ON c.IdCost = br.IdCost 
@@ -323,7 +330,11 @@ BEGIN
 		SET @Index = @Index + 1;
 	END
 
-	SET @Output = SUBSTRING(@Output, 1, (len(@Output) - 1));
+	IF (@RowsNumber > 0)
+	BEGIN
+		SET @Output = SUBSTRING(@Output, 1, (len(@Output) - 1));
+	END
+	
 	SET @Output = @Output + '], ';
 	SET @Output = @Output + 
 				'"Rejects": [ ';
