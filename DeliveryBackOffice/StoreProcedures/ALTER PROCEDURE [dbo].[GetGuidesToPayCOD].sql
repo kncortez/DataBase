@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetGuidesToPayCOD]    Script Date: 22/09/2021 17:55:14 ******/
+/****** Object:  StoredProcedure [dbo].[GetGuidesToPayCOD]    Script Date: 25/09/2021 14:29:52 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -46,8 +46,8 @@ BEGIN
            btd.[Commission],
            do.[Collect_OnDelivery],
            btd.[Amount],
-           ISNULL(dcb.DCBA_Num_account, cu.CODAccountNumber) AS NumAccount,
-           ISNULL(dcb.DCBA_Nom_account, cu.CODAccountName) AS AccountName,
+           btd.AccountNumber AS NumAccount,
+           btd.AccountName AS AccountName,
            ISNULL(vp.DescriptionOfClient, '') AS Source,
            do.Sender_FirstName AS Sender,
            btd.[Excluded]
@@ -68,8 +68,6 @@ BEGIN
         LEFT JOIN [dbo].[ProcessedGuideCOD] pg
             ON btd.[GuideSerie] = pg.[GuideSerie]
                AND btd.[GuideNumber] = pg.[GuideNumber]
-        LEFT JOIN [dbo].[DeliveryCustomerBankAccount] dcb
-            ON do.DCBA_ID = dcb.DCBA_Id
         LEFT JOIN [dbo].VisitPointClient vp
             ON vp.CodeOfReference = do.Sender_ID
     WHERE 1=1
