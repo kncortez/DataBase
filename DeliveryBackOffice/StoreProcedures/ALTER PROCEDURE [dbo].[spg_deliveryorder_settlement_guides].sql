@@ -37,7 +37,6 @@ BEGIN
 		Receiver_Phone nvarchar(100),
 		Rack_Position nvarchar(MAX),
 		Price decimal(14,2),
-		IsCollect varchar(2),
 		Collect_on_Delivery decimal(14,2),
 		Total decimal(16,2)
 
@@ -61,8 +60,7 @@ BEGIN
 	,do.Receiver_Phone as Receiver_Phone
 	,(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)) as Rack_Position
 	--,Collect_OnDelivery
-	,ISNULL(do.PriceShippment, 0) Price
-	, (CASE WHEN do.IsCollect = 'TRUE' THEN 'Si' ELSE 'No' END) IsCollect
+	,ISNULL((CASE WHEN do.IsCollect = 'TRUE' THEN do.PriceShippment ELSE 0 END), 0) Price
 	,ISNULL(do.Collect_OnDelivery, 0) Collect_on_Delivery
 	,(CASE WHEN do.IsCollect = 'TRUE' THEN 
 	ISNULL(do.Collect_OnDelivery, 0) + ISNULL(do.PriceShippment,0)
