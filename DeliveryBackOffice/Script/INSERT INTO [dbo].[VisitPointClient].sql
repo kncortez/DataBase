@@ -1,8 +1,13 @@
 USE [DeliveryBackOffice]
 
-BEGIN TRAN
-
 --INSERTAR LA PARAMETRIZACION DE LA COURIERAPP COMO NUEVO VISITPOINT
+DECLARE @CodeOfReference INT = 3000;
+DECLARE @DescriptionOfClient NVARCHAR(100) = 'COURIERAPP';
+DECLARE @StatusClient BIT = 'TRUE';
+DECLARE @CountryId NVARCHAR(2) = 'GT';
+DECLARE @TokenCreated NVARCHAR(50) = 'SYS-AORTIZ';
+DECLARE @DateCreated DATETIME = GETDATE();
+
 INSERT INTO [dbo].[VisitPointClient]
             ([CodeOfReference],
 		     [DescriptionOfClient],
@@ -10,15 +15,9 @@ INSERT INTO [dbo].[VisitPointClient]
 			 [CountryId],
 			 [TokenCreated],
 			 [DateCreated])
-     VALUES (222825,
-			 'COURIERAPP',
-			 1,
-			 'GT',
-			 'SYS-AORTIZ',
-			 GETDATE())
-
---COMMIT
-
-
-SELECT *
-FROM [dbo].[VisitPointClient]
+     VALUES (@CodeOfReference,
+			 @DescriptionOfClient,
+			 @StatusClient,
+			 @CountryId,
+			 @TokenCreated,
+			 @DateCreated)
