@@ -26,3 +26,12 @@ GO
 
 ALTER TABLE [dbo].[CatArticleCategorySAP] ADD  CONSTRAINT [DF_CatArticleCategorySAP_RowStatus]  DEFAULT ('TRUE') FOR [RowSatus]
 GO
+
+EXECUTE sp_addextendedproperty N'MS_Description', N'Id CatArticleCategorySAP', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'IdCatCategoryArticleSAP'
+EXECUTE sp_addextendedproperty N'MS_Description', N'Nombre categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'Name'
+EXECUTE sp_addextendedproperty N'MS_Description', N'Descripción categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'Description'
+EXECUTE sp_addextendedproperty N'MS_Description', N'RowSatus categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'RowSatus'
+EXECUTE sp_addextendedproperty N'MS_Description', N'TokenCreated categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'TokenCreated'
+EXECUTE sp_addextendedproperty N'MS_Description', N'DateCreated categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'DateCreated'
+EXECUTE sp_addextendedproperty N'MS_Description', N'TokenUpdated categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'TokenUpdated'
+EXECUTE sp_addextendedproperty N'MS_Description', N'DateUpdated categoría', N'SCHEMA', N'dbo', N'TABLE', N'CatArticleCategorySAP', N'COLUMN', N'DateUpdated'

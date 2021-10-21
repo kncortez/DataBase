@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetBillingData]    Script Date: 13/10/2021 15:58:20 ******/
+/****** Object:  StoredProcedure [dbo].[GetBillingData]    Script Date: 21/10/2021 13:34:45 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -23,6 +23,9 @@ BEGIN
 	DECLARE @Amount DECIMAL(14,2)
 	DECLARE @IdFEL BIGINT
 	DECLARE @TypeService VARCHAR(100)
+	DECLARE @CardPercent DECIMAL(3,2)
+	DECLARE @CardAmount DECIMAL(14,2)
+	DECLARE @Category VARCHAR(50)
 
 	SET NOCOUNT ON;
 
@@ -32,6 +35,9 @@ BEGIN
 		,@Email = cu.RegexEmail
 		,@Amount = do.PriceShippment
 		,@TypeService = cas.SAPCode
+		,@CardPercent = cas.CardPercent
+		,@CardAmount = cas.CardAmount
+		,@Category = cas.Category
 	FROM DeliveryOrder do
 	LEFT JOIN VisitPointClient vpc
 		ON do.Sender_ID = vpc.CodeOfReference
@@ -45,6 +51,7 @@ BEGIN
 	WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber
 
 	SELECT @IdCustomer Customer, @Email Email, @Amount Amount
+		, @CardPercent CardPercent, @CardAmount CardAmount, @Category Category
 		,CASE WHEN @TypeService IS NOT NULL THEN @TypeService
 		ELSE (SELECT SAPCode FROM CatArticleSAP WHERE Name = 'NDD') END Code
 
@@ -67,12 +74,15 @@ BEGIN
 		AND id.dti_fk_orderNumber = @GuideNumber
 
 	-- Table 2
-	SELECT ih.inv_cli_nit Nit
+	SELECT TOP 1 ih.inv_cli_nit Nit
 		, ih.inv_cli_name Name
 		, CONCAT(ih.inv_serieFEL, '-', ih.inv_numberFEL) FEL
 		, ih.inv_certificationFEL Certification
 	FROM invoiceHeader ih
 	WHERE ih.inv_pk_id = @IdFEL
+		AND ih.inv_certificationFEL IS NOT NULL
+		AND ih.inv_certificationFEL != ''
+	ORDER BY ih.inv_date DESC
 
 	-- Table 3
 	SELECT CONCAT(id.dti_fk_orderSerie, id.dti_fk_orderNumber) Guide
@@ -81,4 +91,4 @@ BEGIN
 	WHERE id.dti_fk_header = @IdFEL
 
 	SET NOCOUNT OFF;
-END
+END	
