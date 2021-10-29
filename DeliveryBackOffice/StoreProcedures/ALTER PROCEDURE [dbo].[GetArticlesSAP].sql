@@ -38,7 +38,7 @@ BEGIN
 		,Price
 		,CardPercent
 		,CardAmount
-		,IsSubcharge
+		,IsSurcharge
 	FROM CatArticleSAP
 	WHERE RowSatus = 1
 	ORDER BY Id ASC
