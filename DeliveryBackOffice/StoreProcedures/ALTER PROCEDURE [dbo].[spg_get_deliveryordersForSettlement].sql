@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_get_deliveryordersForSettlement]    Script Date: 28/10/2021 07:30:34 ******/
+/****** Object:  StoredProcedure [dbo].[spg_get_deliveryordersForSettlement]    Script Date: 2/11/2021 18:02:14 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -60,7 +60,7 @@ BEGIN
 			SELECT TOP 1 
 			1 
 			FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod 
-			WHERE dod.Guide_Serie = gf.Guide_Serie AND dod.Guide_Number = gf.Guide_Number AND dod.StatusOrderId IN (5, 22) -- Entregado y entregado en express center
+			WHERE dod.Guide_Serie = gf.Guide_Serie AND dod.Guide_Number = gf.Guide_Number AND dod.StatusOrderId IN (5, 20, 25) -- Entregado y entregado en express center
 		),0)) AS Delivered,
 		--ISNULL(do.Collect_OnDelivery,0) as Collect_OnDelivery
 		(case when do.IsCollect = 'TRUE' then 
