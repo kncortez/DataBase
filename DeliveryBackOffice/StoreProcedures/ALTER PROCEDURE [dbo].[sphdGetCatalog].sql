@@ -353,13 +353,14 @@ BEGIN
 			IF (@NameOfCatalog = 'BatchTypeCOD')
 			BEGIN
 				SELECT cbt.CatBatchTypeCODId		[IdValue],
-						cbt.Name [NameValue],
+						UPPER(cbt.Name) [NameValue],
 						'BatchTypeCOD'		[Catalog]
 				FROM DeliveryBackOffice.dbo.CatBatchTypeCOD cbt
         LEFT JOIN DeliveryBackOffice.dbo.Customer cu ON cu.CatBatchTypeCODId = cbt.CatBatchTypeCODId
         AND cbt.RowStatus = 1
 				WHERE cbt.RowStatus = 'TRUE'
 				AND (@IdCorrelative = -1 OR cu.IdCustomer = @IdCorrelative)
+        GROUP BY cbt.CatBatchTypeCODId, cbt.Name
 				ORDER BY cbt.Name
 
 			END 
@@ -367,14 +368,15 @@ BEGIN
 			IF (@NameOfCatalog = 'BatchFrequencyCOD')
 			BEGIN
 				SELECT cbf.CatBatchFrequencyCODId		[IdValue],
-						cbf.Name [NameValue],
+						UPPER(cbf.Name) [NameValue],
 						'BatchFrequencyCOD'		[Catalog]
 				FROM DeliveryBackOffice.dbo.CatBatchFrequencyCOD cbf
         LEFT JOIN DeliveryBackOffice.dbo.Customer cu ON cu.CatBatchFrequencyCODId = cbf.CatBatchFrequencyCODId
         AND cbf.RowStatus = 1
 				WHERE cbf.RowStatus= 'TRUE'
         AND (@IdCorrelative = -1 OR cu.IdCustomer = @IdCorrelative)
-				ORDER BY cbf.Name
+        GROUP BY cbf.CatBatchFrequencyCODId, cbf.Name
+				ORDER BY cbf.Name 
 			END 
 			---------------------------------------------------------------------------
 
