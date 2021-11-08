@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetBillingGuideDetail]    Script Date: 3/11/2021 10:30:07 ******/
+/****** Object:  StoredProcedure [dbo].[GetBillingGuideDetail]    Script Date: 8/11/2021 16:36:26 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,10 +12,6 @@ GO
 -- Description:	<Recupera información detallada de la guía a facturar>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetBillingGuideDetail]
-		@GuideSerie NVARCHAR(2),
-		@GuideNumber INT
-AS
-BEGIN
 		@GuideSerie NVARCHAR(2),
 		@GuideNumber INT
 AS
@@ -141,6 +137,18 @@ BEGIN
 				FROM CatArticleSAP ca
 				WHERE ca.Name = @NameArticleSecure
 
+		END
+		ELSE
+		BEGIN
+			INSERT INTO @GuideDetail
+			SELECT ca.SAPCode
+				, ca.Name
+				, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
+				, @Amount
+				, ca.Category
+				, 1
+			FROM CatArticleSAP ca
+			WHERE ca.Name = @NameArticle
 		END
 
 	END
