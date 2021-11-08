@@ -111,7 +111,7 @@ BEGIN
 			INSERT INTO @GuideDetail
 			SELECT ca.SAPCode
 				, ca.Name
-				, ca.Description
+				, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
 				, @Amount
 				, ca.Category
 				, 1
@@ -123,7 +123,7 @@ BEGIN
 				INSERT INTO @GuideDetail
 				SELECT ca.SAPCode
 					, ca.Name
-					, ca.Description
+					, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
 					, @AmountWeight
 					, ca.Category
 					, 0
@@ -134,7 +134,7 @@ BEGIN
 				INSERT INTO @GuideDetail
 				SELECT ca.SAPCode
 					, ca.Name
-					, ca.Description
+					, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
 					, @AmountSecure
 					, ca.Category
 					, 0

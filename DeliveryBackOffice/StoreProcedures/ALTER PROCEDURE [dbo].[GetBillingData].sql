@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetBillingData]    Script Date: 5/11/2021 12:39:33 ******/
+/****** Object:  StoredProcedure [dbo].[GetBillingData]    Script Date: 5/11/2021 11:08:43 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -70,7 +70,7 @@ BEGIN
 		,@CardPercent = CardPercent
 		,@CardAmount = CardAmount
 		,@Category = Category
-		,@Description = Description
+		,@Description = CONCAT(Description, '. ', @GuideSerie, @GuideNumber)
 	FROM CatArticleSAP
 	WHERE Name = @NameArticle
 
