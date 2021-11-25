@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spws_get_codDeliveryOrderData]    Script Date: 8/11/2021 16:30:08 ******/
+/****** Object:  StoredProcedure [dbo].[spws_get_codDeliveryOrderData]    Script Date: 25/11/2021 11:44:10 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,7 +10,7 @@ GO
 -- Create date: <2021-11-02>
 -- Description:	<Devuelve los datos de COD de una guía>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_codDeliveryOrderData]
+ALTER PROCEDURE [dbo].[spws_get_codDeliveryOrderData]
     @GuideSerie AS NVARCHAR(50),
     @GuideNumber AS BIGINT
 AS
@@ -39,7 +39,7 @@ BEGIN
                                 FROM DeliveryBackOffice.dbo.BatchDetailCOD BDC
 								JOIN DeliveryBackOffice.dbo.DeliveryOrder BDC2 ON BDC2.Guide_Number = BDC.GuideNumber AND BDC2.Guide_Serie = BDC.GuideSerie
 								WHERE BDC.CatConceptCODId = 2 --filtrar solo depósitos a clientes
-								AND BDC.GuideNumber = @GuideNumber
+								AND BDC.GuideNumber = @GuideNumber AND BDC.GuideSerie = @GuideSerie
 
 
                                 FOR XML PATH(''), TYPE
