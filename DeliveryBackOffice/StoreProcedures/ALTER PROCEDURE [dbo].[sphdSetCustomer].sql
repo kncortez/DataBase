@@ -68,7 +68,6 @@ GO
 	@ExcludeCommissionCOD bit = 'FALSE',
 	@CatBatchTypeCODId BIGINT,
 	@CatBatchFrequencyCODId BIGINT
-	,@IdUser BIGINT=NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -201,7 +200,7 @@ BEGIN
 				   ,NULL
 				   ,@Token
 				   ,GETDATE()
-				   ,NULL
+				   ,NULL			
 				   ,@ExcludePriceShippingCOD
 				   ,@ExcludeCommissionCOD
 				   ,@CatBatchTypeCODId
@@ -233,20 +232,6 @@ BEGIN
 		ELSE IF (@Option = 2)
 		BEGIN
 				print 'update record'
-				DECLARE @UserSaleAdvisorID int = ((SELECT SaleAdvisorId FROM DBO.InternalUser WHERE IdUser=@IdUser));
-				DECLARE @CurrentSaleAdvisorID int=(SELECT SaleAdvisorID from DBO.Customer WHERE IdCustomer=@IdCustomer);		
-				IF ((NULL in (@UserSaleAdvisorID,@CurrentSaleAdvisorID)) OR (@CurrentSaleAdvisorID<> @UserSaleAdvisorID))
-				BEGIN
-					 SELECT	'FALSE'	[blnResult]
-							,'-1' [IdResult]
-							,'' AS [ErrorNumber]
-							,'' AS [ErrorSeverity]  
-							,'' AS [ErrorState]
-							,'' AS [ErrorProcedure]  
-							,'' AS [ErrorLine]
-							,CONCAT('No tiene permiso para modificar este socio de negocio','') AS [Message];
-				END
-				ELSE
 				UPDATE [DeliveryBackOffice].[dbo].[Customer]
 				   SET [Name] = @NameCustomer
 					  ,[Description] = @Description

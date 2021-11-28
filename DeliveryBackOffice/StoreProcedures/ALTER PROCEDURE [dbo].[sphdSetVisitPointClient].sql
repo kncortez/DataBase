@@ -51,7 +51,7 @@ ALTER PROCEDURE [dbo].[sphdSetVisitPointClient]
     @TblVPDestination AS TblVPDestination READONLY,
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT --1 Insert Into , 2 Update
-	,@IdUser BIGINT=NULL
+
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -68,28 +68,6 @@ BEGIN
         BEGIN TRY
 				PRINT 'Begin Transaction'
 				PRINT 'Begin Try'
-				DECLARE @UserSaleAdvisorID int = ((SELECT SaleAdvisorId FROM DBO.InternalUser WHERE IdUser=@IdUser));
-				DECLARE @CurrentSaleAdvisorID int=(SELECT SaleAdvisorID from DBO.Customer WHERE IdCustomer=@CustomerID);
-				
-				--SELECT * from DBO.InternalUser, DBO.Customer;
-
-				IF (@UserSaleAdvisorID IS NULL OR @CurrentSaleAdvisorID IS NULL OR (@CurrentSaleAdvisorID<>@UserSaleAdvisorID))
-				BEGIN
-					 SELECT	'FALSE'	[blnResult]
-							,'-1' [IdResult]
-							,'' AS [ErrorNumber]
-							,'' AS [ErrorSeverity]  
-							,'' AS [ErrorState]
-							,'' AS [ErrorProcedure]  
-							,'' AS [ErrorLine]
-							,CONCAT('No tiene permiso para modificar o crear puntos de visita para este socio de negocio','') AS [Message];
-				END
-				ELSE
-
-				
-
-
-
 		    IF (@Option = 1)
             BEGIN
                 PRINT 'Insert visitpoint @Option 1'
@@ -369,7 +347,7 @@ BEGIN
                 END
             END
 
-            ELSE IF (@Option = 2)
+            IF (@Option = 2)
             BEGIN
 				PRINT 'Update visitpoint @Option 2'
                 IF ((@IdVisitPoint > 0) AND EXISTS (SELECT vpc.IdVisitPointClient FROM dbo.VisitPointClient vpc WHERE vpc.CodeOfReference = @IdVisitPoint)) 
