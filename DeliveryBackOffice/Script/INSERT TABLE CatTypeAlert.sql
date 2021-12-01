@@ -1,0 +1,1 @@
+INSERT INTO DBO.CatTypeAlert VALUES ('Prioritario',1,'SYS-AIXCHOP',GETDATE(),NULL,NULL);
