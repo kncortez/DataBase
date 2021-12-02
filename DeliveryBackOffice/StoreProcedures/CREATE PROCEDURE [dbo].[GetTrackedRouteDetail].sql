@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[GetTrackedRouteDetail]    Script Date: 02/12/2021 10:41:48 ******/
+/****** Object:  StoredProcedure [dbo].[GetTrackedRouteDetail]    Script Date: 02/12/2021 13:25:00 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -23,7 +23,7 @@ BEGIN
 	SELECT
 		CONCAT(DO.Guide_Serie,DO.Guide_Number) 'Guide'
 		,COUNT(DISTINCT DOP.NoPiece) 'TotalPieces'
-		,SUM(
+		,MAX(
 			CASE
 				WHEN DO.IsCollect = 1 THEN DO.PriceShippment
 				ELSE 0
