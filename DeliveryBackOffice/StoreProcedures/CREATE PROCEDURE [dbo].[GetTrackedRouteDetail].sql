@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[GetTrackedRouteDetail]    Script Date: 02/12/2021 13:25:00 ******/
+/****** Object:  StoredProcedure [dbo].[GetTrackedRouteDetail]    Script Date: 10/12/2021 15:42:57 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -22,15 +22,31 @@ BEGIN
 
 	SELECT
 		CONCAT(DO.Guide_Serie,DO.Guide_Number) 'Guide'
-		,COUNT(DISTINCT DOP.NoPiece) 'TotalPieces'
-		,MAX(
+		,( DOP.TotalCount ) 'TotalPieces'
+		,(
 			CASE
 				WHEN DO.IsCollect = 1 THEN DO.PriceShippment
 				ELSE 0
 			END
 		) 'ServiceCharge'
-		,MAX(DO.Collect_OnDelivery) 'CoDCharge'
-		,COUNT( DISTINCT DOA.IdDeliveryOrderAlert ) 'TotalAlerts'
+		,(DO.Collect_OnDelivery) 'CoDCharge'
+		,ISNULL( DOAC.TotalCount, 0 ) 'TotalAlerts'
+		,ISNULL((
+			SELECT TOP 1
+				DOA.AlertDescription
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA
+			WHERE
+				DOA.GuideSerie = DO.Guide_Serie
+				AND
+				DOA.GuideNumber = DO.Guide_Number
+				AND
+				DOA.ServiceTypeId = @ServiceType
+				AND
+				DOA.RowStatus = 1
+			ORDER BY
+				DOA.DateCreated DESC
+		),'') 'AlertDescription'
 		,SO.OrderDescription 'Status'
 	FROM
 	[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS
@@ -45,21 +61,41 @@ BEGIN
 	AND
 	DSD.Guide_Number = DO.Guide_Number
 	JOIN
-	[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP
+	(
+		SELECT
+			DOPA.GuideSerie
+			,DOPA.GuideNumber
+			,COUNT(DISTINCT DOPA.NoPiece) 'TotalCount'
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOPA
+		GROUP BY
+			DOPA.GuideSerie
+			,DOPA.GuideNumber
+	) DOP
 	ON
 	DO.Guide_Serie = DOP.GuideSerie
 	AND
 	DO.Guide_Number = DOP.GuideNumber
 	LEFT JOIN
-	[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA
+	(
+		SELECT
+			DOAA.GuideSerie
+			,DOAA.GuideNumber
+			,COUNT(DISTINCT DOAA.IdDeliveryOrderAlert) 'TotalCount'
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOAA
+		WHERE
+			DOAA.ServiceTypeId = 2 -- Entrega
+			AND
+			DOAA.RowStatus = 1
+		GROUP BY
+			DOAA.GuideSerie
+			,DOAA.GuideNumber
+	) DOAC
 	ON
-	DO.Guide_Serie = DOA.GuideSerie
+	DSD.Guide_Serie = DOAC.GuideSerie
 	AND
-	DO.Guide_Number = DOA.GuideNumber
-	AND
-	DOA.ServiceTypeId = @ServiceType
-	AND
-	DOA.RowStatus = 1
+	DSD.Guide_Number = DOAC.GuideNumber
 	JOIN
 	[DeliveryBackOffice].[dbo].[StatusOrder] SO
 	ON
@@ -68,10 +104,6 @@ BEGIN
 	DOBS.ID = @Manifest
 	AND
 	REPLACE(ISNULL(DO.Courier_Route,'N/A'),' ','') = REPLACE(@RouteName,' ','')
-	GROUP BY
-	DO.Guide_Serie
-	,DO.Guide_Number
-	,SO.OrderDescription
 
 END
 GO

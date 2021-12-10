@@ -1,7 +1,7 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[GetRoutesToTrack]    Script Date: 02/12/2021 13:24:13 ******/
+/****** Object:  StoredProcedure [dbo].[GetRoutesToTrack]    Script Date: 10/12/2021 15:42:30 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -26,7 +26,7 @@ BEGIN
 	,ISNULL(DO.Courier_Route,'N/A') 'Route'
 	,DOBS.ID 'Manifest'
 	,COUNT( DISTINCT DO.Guide_Number) 'TotalServices'
-	,SUM( DOA.TotalCount) 'TotalAlerts'
+	,ISNULL(SUM( DOA.TotalCount),0) 'TotalAlerts'
 	,COUNT( DISTINCT DO2.Guide_Number) 'TotalSuccessfulDeliveries'
 	,SUM( 
 		CASE 
@@ -86,13 +86,9 @@ BEGIN
 		ON
 		VPC.IdSettlement = S.IdSettlement
 		JOIN
-		[DeliveryBackOffice].[dbo].[Township] T
-		ON
-		S.IdTownship = T.IdTownship
-		JOIN
 		[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC
 		ON
-		T.HeaderCode = DSC.HeaderCode
+		S.IdSettlement = DSC.IdSettlement
 	) SH -- Station Hub
 	ON 
 	DOBS.DispatchedStationId = SH.IdStation
