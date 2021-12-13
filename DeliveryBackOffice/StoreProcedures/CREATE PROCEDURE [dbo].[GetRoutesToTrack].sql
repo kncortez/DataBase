@@ -22,7 +22,7 @@ BEGIN
 
 	SELECT 
 	CONCAT(SR.First_Name,' ',SR.Last_Name) 'Courier'
-	,ISNULL(SH.HubAbbreviation,'N/A') 'Hub'
+	,ISNULL(HL.HubAbbreviation,'N/A') 'Hub'
 	,ISNULL(DO.Courier_Route,'N/A') 'Route'
 	,DOBS.ID 'Manifest'
 	,COUNT( DISTINCT DO.Guide_Number) 'TotalServices'
@@ -30,9 +30,8 @@ BEGIN
 	,COUNT( DISTINCT DO2.Guide_Number) 'TotalSuccessfulDeliveries'
 	,SUM( 
 		CASE 
-			WHEN DO2.StatusOrderId IN (5,24,25) AND DO2.IsCollect = 1 THEN ISNULL(DO2.PriceShippment,0) + ISNULL(DO2.Collect_OnDelivery,0)
-			WHEN DO2.StatusOrderId IN (5,24,25) THEN ISNULL(DO2.Collect_OnDelivery,0)
-			ELSE 0
+			WHEN DO2.IsCollect = 1 THEN ISNULL(DO2.PriceShippment,0) + ISNULL(DO2.Collect_OnDelivery,0)
+			ELSE ISNULL(DO2.Collect_OnDelivery,0)
 		END 
 	) 'TotalConfirmedCharge'
 	,SUM( 
@@ -58,40 +57,13 @@ BEGIN
 	AND
 	DSD.Guide_Number = DO.Guide_Number
 	LEFT JOIN
-	(
-		SELECT
-		DISTINCT
-		CS.IdStation
-		,CS.StationName
-		,HL.HubAbbreviation
-		FROM
-		[DeliveryBackOffice].[dbo].[CatStation] CS
-		JOIN
-		[DeliveryBackOffice].[dbo].[HubLogistics] HL
-		ON
-		CS.HubLogisticId = HL.IdHubLogistic
-		UNION
-		SELECT
-		DISTINCT
-		CS.IdStation
-		,CS.StationName
-		,DSC.Hub
-		FROM
-		[DeliveryBackOffice].[dbo].[CatStation] CS
-		JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC
-		ON
-		CS.CodeOfReference = VPC.CodeOfReference
-		JOIN
-		[DeliveryBackOffice].[dbo].[Settlement] S
-		ON
-		VPC.IdSettlement = S.IdSettlement
-		JOIN
-		[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC
-		ON
-		S.IdSettlement = DSC.IdSettlement
-	) SH -- Station Hub
+	[DeliveryBackOffice].[dbo].[CatStation] CS
 	ON 
-	DOBS.DispatchedStationId = SH.IdStation
+	DOBS.DispatchedStationId = CS.IdStation
+	LEFT JOIN
+	[DeliveryBackOffice].[dbo].[HubLogistics] HL
+	ON
+	CS.HubLogisticId = HL.IdHubLogistic
 	LEFT JOIN
 	(
 		SELECT
@@ -123,7 +95,7 @@ BEGIN
 	WHERE
 	CAST(DOBS.Date_Dispatched AS DATE) = @Date
 	AND
-	REPLACE(ISNULL(SH.HubAbbreviation,'N/A'),' ','') IN (SELECT REPLACE(TextParameter,' ','') FROM @Hub)/*
+	REPLACE(ISNULL(HL.HubAbbreviation,'N/A'),' ','') IN (SELECT REPLACE(TextParameter,' ','') FROM @Hub)/*
 	AND
 	(
 		REPLACE(ISNULL(DO.Courier_Route,'N/A'),' ','') = 'N/A'
@@ -133,7 +105,7 @@ BEGIN
 	GROUP BY
 	SR.First_Name
 	,SR.Last_Name
-	,SH.HubAbbreviation
+	,HL.HubAbbreviation
 	,DO.Courier_Route
 	,DOBS.ID;
 
