@@ -1,0 +1,66 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[sphd_LastMileSettlementsReportContingency]    Script Date: 15/12/2021 15:46:00 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- =============================================
+-- Author:      <Oscar,Morales>
+-- Create date: <2021-12-15>
+-- Description: <Obtener informacion de contingencias para el Reporte Liquidaciones Última Milla>
+-- =============================================
+
+ALTER PROCEDURE [dbo].[sphd_LastMileSettlementsReportContingency] 
+	@fromDate AS DATE,
+	@toDate AS DATE,
+	@hubsIds AS NVARCHAR(MAX)
+AS
+BEGIN
+	DECLARE @Faltante DECIMAL(10,2);
+	DECLARE @Sobrante DECIMAL(10,2);
+
+	SELECT
+	   @Faltante =SUM(CASE WHEN cn.TYPE = 'FALTANTE' THEN cn.Value ELSE 0 END)
+	   ,@Sobrante = SUM(CASE WHEN cn.TYPE = 'SOBRANTE' THEN cn.Value ELSE 0 END)
+	FROM dbo.DeliveryOrderBySettlement dst
+	JOIN dbo.Contingency cn
+		ON dst.ID = cn.DeliveryOrderBySettlementId
+	WHERE CONVERT(DATE, dst.Date_Received)
+	BETWEEN @fromDate AND @toDate
+	AND dst.DispatchedStationId IN (SELECT
+			Name
+		FROM splitstring(@hubsIds, ','))
+	
+	IF @Faltante > 0 OR @Sobrante > 0
+	BEGIN
+		SELECT
+			dst.id Manifiesto
+		   ,cn.Type
+		   ,cn.Value
+		   ,cn.Description
+		   ,@Faltante Faltante
+		   ,@Sobrante Sobrante
+		FROM dbo.DeliveryOrderBySettlement dst
+		JOIN dbo.Contingency cn
+			ON dst.ID = cn.DeliveryOrderBySettlementId
+		WHERE CONVERT(DATE, dst.Date_Received)
+		BETWEEN @fromDate AND @toDate
+		AND dst.DispatchedStationId IN (SELECT
+				Name
+			FROM splitstring(@hubsIds, ','))
+		ORDER BY dst.ID
+	END
+	ELSE
+	BEGIN
+		SELECT
+			'' Manifiesto
+			,'' Type
+			,'' Value
+			,'No se encontraron contingencias.' Description
+			,0 Faltante
+			,0 Sobrante
+	END
+	
+END
