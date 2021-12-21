@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GenerateDynamicJSON]    Script Date: 2/21/2021 2:00:16 AM ******/
+/****** Object:  StoredProcedure [dbo].[GenerateDynamicJSON]    Script Date: 20/12/2021 14:24:36 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -31,7 +31,7 @@ CREATE TABLE #GuidesDelivered  (
 	  )
 
  
---Guías entregadas
+--GuÃ­as entregadas
 INSERT INTO #GuidesDelivered
 SELECT
 Det.Guide_Serie,
@@ -43,17 +43,18 @@ and Det.Guide_Number = serv.Guide_Number
 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] SettDet
 on serv.Guide_Serie = SettDet.Guide_Serie
 and serv.Guide_Number = SettDet.Guide_Number
+and SettDet.RowStatus = 1
 and SettDet.Guide_Delivered = 1
 and SettDet.Guide_Discharged = 1
 JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
         on   SettDet.ID_DeliveryOrderBySettlement = Head.ID
 where Det.StatusOrderId = 5
 and CONVERT(DATE, Head.Route_Received) 
-   BETWEEN  CONVERT(DATE, @Parameter1) AND CONVERT(DATE, @Parameter2) --Filtrar por fecha de liquidación		
-AND serv.StatusOrderId <> 7 --No esté anulada la guía
-AND serv.StatusOrderId <> 15 -- No guías generadas
+   BETWEEN  CONVERT(DATE, @Parameter1) AND CONVERT(DATE, @Parameter2) --Filtrar por fecha de liquidaciÃ³n		
+AND serv.StatusOrderId <> 7 --No estÃ© anulada la guÃ­a
+AND serv.StatusOrderId <> 15 -- No guÃ­as generadas
 AND serv.Collect_OnDelivery > 0 --El collect sea mayor a 0
---AND serv.Dispatched_Date is not null --La guía debe haber sido despachada
+--AND serv.Dispatched_Date is not null --La guÃ­a debe haber sido despachada
 group by Det.Guide_Serie,Det.Guide_Number
 
 DECLARE @jsonOutput NVARCHAR(MAX)
@@ -86,6 +87,7 @@ SELECT distinct
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
+		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -104,7 +106,7 @@ SELECT distinct
 		(
 		 @Parameter3 = '-1'
 		 or (
-		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidación
+		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidaciÃ³n
 		     BETWEEN  CONVERT(DATE, @Parameter1) 
 		     AND CONVERT(DATE, @Parameter2)
 			)
@@ -114,8 +116,8 @@ SELECT distinct
 		     AND CONVERT(DATE, @Parameter2)
 		    )
 		)		
-		AND serv.StatusOrderId <> 7 --No esté anulada la guía
-		AND serv.StatusOrderId <> 15 -- No guías generadas
+		AND serv.StatusOrderId <> 7 --No estÃ© anulada la guÃ­a
+		AND serv.StatusOrderId <> 15 -- No guÃ­as generadas
 		AND serv.Collect_OnDelivery > 0 --El collect sea mayor a 0	
 		AND 
 		 (@Parameter3 = '-1' 
@@ -188,6 +190,7 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
+		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -212,7 +215,7 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 		(
 		 @Parameter3 = '-1'
 		 or (
-		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidación
+		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidaciÃ³n
 		     BETWEEN  CONVERT(DATE, @Parameter1) 
 		     AND CONVERT(DATE, @Parameter2)
 			)
@@ -222,10 +225,10 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 		     AND CONVERT(DATE, @Parameter2)
 		    )
 		)		
-		AND serv.StatusOrderId <> 7 --No esté anulada la guía
-		AND serv.StatusOrderId <> 15 -- No guías generadas
+		AND serv.StatusOrderId <> 7 --No estÃ© anulada la guÃ­a
+		AND serv.StatusOrderId <> 15 -- No guÃ­as generadas
 		AND serv.Collect_OnDelivery > 0 --El collect sea mayor a 0
-		--AND serv.Dispatched_Date is not null --La guía debe haber sido despachada		
+		--AND serv.Dispatched_Date is not null --La guÃ­a debe haber sido despachada		
 		AND Ctm.IdCustomer = @CustomerItem
 		AND 
 		 (@Parameter3 = '-1' 
@@ -236,7 +239,7 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 		 (@Hub = -1 
 		 or (@Hub = tbl.IdHublogistic ) --Filtrar por hub destino
 		 )
-		AND Det.Guide_Discharged = 1 --Guía fue liquidada
+		AND Det.Guide_Discharged = 1 --GuÃ­a fue liquidada
 		FOR XML PATH(''), TYPE
 	)
 	.value('.', 'varchar(max)'),1,1,''
@@ -284,6 +287,7 @@ SELECT  distinct
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
+		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -311,7 +315,7 @@ SELECT  distinct
 		(
 		 @Parameter3 = '-1'
 		 or (
-		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidación
+		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidaciÃ³n
 		     BETWEEN  CONVERT(DATE, @Parameter1) 
 		     AND CONVERT(DATE, @Parameter2)
 			)
@@ -321,12 +325,12 @@ SELECT  distinct
 		     AND CONVERT(DATE, @Parameter2)
 		    )
 		)		
-		   --Filtrar por fecha de liquidación		
-		AND serv.StatusOrderId <> 7 --No esté anulada la guía
-		AND serv.StatusOrderId <> 15 -- No guías generadas
+		   --Filtrar por fecha de liquidaciÃ³n		
+		AND serv.StatusOrderId <> 7 --No estÃ© anulada la guÃ­a
+		AND serv.StatusOrderId <> 15 -- No guÃ­as generadas
 		AND serv.Collect_OnDelivery > 0 --El collect sea mayor a 0
-		--AND serv.Dispatched_Date is not null --La guía debe haber sido despachada		
-		AND Det.Guide_Discharged = 1 --Guía fue liquidada
+		--AND serv.Dispatched_Date is not null --La guÃ­a debe haber sido despachada		
+		AND Det.Guide_Discharged = 1 --GuÃ­a fue liquidada
 		AND 
 		 (@Parameter3 = '-1' 
 		 or (@Parameter3 = 1 and paidguide.Guide_Number IS NULL) --solo cobrado
@@ -377,6 +381,7 @@ STUFF((
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
+		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -398,7 +403,7 @@ STUFF((
 		(
 		 @Parameter3 = '-1'
 		 or (
-		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidación
+		     @Parameter3 = 1 and CONVERT(DATE, Head.Route_Received)  --Fecha de liquidaciÃ³n
 		     BETWEEN  CONVERT(DATE, @Parameter1) 
 		     AND CONVERT(DATE, @Parameter2)
 			)
@@ -408,12 +413,12 @@ STUFF((
 		     AND CONVERT(DATE, @Parameter2)
 		    )
 		)		
-		   --Filtrar por fecha de liquidación		
-		AND serv.StatusOrderId <> 7 --No esté anulada la guía
-		AND serv.StatusOrderId <> 15 -- No guías generadas
+		   --Filtrar por fecha de liquidaciÃ³n		
+		AND serv.StatusOrderId <> 7 --No estÃ© anulada la guÃ­a
+		AND serv.StatusOrderId <> 15 -- No guÃ­as generadas
 		AND serv.Collect_OnDelivery > 0 --El collect sea mayor a 0
-		--AND serv.Dispatched_Date is not null --La guía debe haber sido despachada		
-		AND Det.Guide_Discharged = 1 --Guía fue liquidada
+		--AND serv.Dispatched_Date is not null --La guÃ­a debe haber sido despachada		
+		AND Det.Guide_Discharged = 1 --GuÃ­a fue liquidada
 		AND 
 		 (@Parameter3 = '-1' 
 		 or (@Parameter3 = 1 and paidguide.Guide_Number IS NULL) --solo cobrado
