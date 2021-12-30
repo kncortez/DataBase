@@ -37,6 +37,8 @@ BEGIN
 		, do.Receiver_Address Address
 		, do.Pieces_Dry Pieces_Dry
 		, do.Pieces_Cold Pieces_Cold
+		, do.Collect_OnDelivery COD
+		, do.IsCollect IsCollect
 	FROM RoutePreparationDetail rpd
 	JOIN RoutePreparation rp
 		ON rpd.RoutePreparationId = rp.IdRoutePreparation
