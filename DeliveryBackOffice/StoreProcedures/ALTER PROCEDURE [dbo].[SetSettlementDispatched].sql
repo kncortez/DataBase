@@ -13,7 +13,7 @@ GO
 -- Description:	<Guarda información del despacho de entregas.>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SetSettlementDispatched]
+ALTER PROCEDURE [dbo].[SetSettlementDispatched]
     -- Add the parameters for the stored procedure here
 	@IdRoute INT,
 	@IdRoutePreparation INT,
@@ -176,6 +176,20 @@ BEGIN
 			--operation 4
 			IF COALESCE(@@ROWCOUNT,0) > 0
 				SET @ValidateOperation = @ValidateOperation + 1
+
+			-- Deshabilitar filas si ya existieran en otro Manifiesto
+			UPDATE dsd
+			SET dsd.RowStatus = 0,
+				dsd.TokenUpdated = @Token,
+				dsd.DateUpdated = GETDATE()
+			FROM  DeliverySettlementDetail dsd
+			JOIN DeliveryOrderBySettlement dobs 
+				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
+			WHERE dsd.RowStatus = 1
+				AND Guide_Serie = Guide_Serie AND Guide_Number IN (
+					SELECT Guide_Number FROM @ListGuides
+				)
+				AND CONVERT(date,dobs.Route_Dispatched) = @Date
 
 			-- Insertar información histórica (para propósito de bitácora)
 			INSERT INTO DeliverySettlementDetail (
