@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SetSettlementDispatched]    Script Date: 3/01/2022 12:38:46 ******/
+/****** Object:  StoredProcedure [dbo].[SetSettlementDispatched]    Script Date: 3/01/2022 15:45:02 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -185,19 +185,22 @@ BEGIN
 			FROM  DeliverySettlementDetail dsd
 			JOIN DeliveryOrderBySettlement dobs 
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
+			JOIN @ListGuides lg
+				ON dsd.Guide_Serie = lg.Guide_Serie AND dsd.Guide_Number = lg.Guide_Number
 			WHERE dsd.RowStatus = 1
-				AND Guide_Serie = Guide_Serie AND Guide_Number IN (
-					SELECT Guide_Number FROM @ListGuides
-				)
 				AND CONVERT(date,dobs.Route_Dispatched) = @Date
 
 			-- Insertar información histórica (para propósito de bitácora)
 			INSERT INTO DeliverySettlementDetail (
 				[ID_DeliveryOrderBySettlement]
 				,[Guide_Serie]
-				,[Guide_Number])
-			SELECT @ID_Manifest,Guide_Serie,Guide_Number
-			FROM @ListGuides
+				,[Guide_Number]
+				,[GuideOrder])
+			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,rpd.GuideOrder
+			FROM @ListGuides lg
+			JOIN RoutePreparationDetail rpd
+				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
+				AND rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
 
 			--operation 5
 			IF COALESCE(@@ROWCOUNT,0) > 0

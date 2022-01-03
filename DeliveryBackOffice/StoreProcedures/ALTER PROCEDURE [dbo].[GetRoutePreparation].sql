@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetRoutePreparation]    Script Date: 29/12/2021 09:28:21 ******/
+/****** Object:  StoredProcedure [dbo].[GetRoutePreparation]    Script Date: 3/01/2022 14:30:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -39,6 +39,7 @@ BEGIN
 		, do.Pieces_Cold Pieces_Cold
 		, do.Collect_OnDelivery COD
 		, do.IsCollect IsCollect
+		, rpd.GuideOrder GuideOrder
 	FROM RoutePreparationDetail rpd
 	JOIN RoutePreparation rp
 		ON rpd.RoutePreparationId = rp.IdRoutePreparation
@@ -47,4 +48,5 @@ BEGIN
 		ON do.Guide_Serie = rpd.Guide_Serie AND do.Guide_Number = rpd.Guide_Number
 	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
 		AND rpd.RowStatus = 1
+	ORDER BY COALESCE(rpd.GuideOrder, 999999)
 END
