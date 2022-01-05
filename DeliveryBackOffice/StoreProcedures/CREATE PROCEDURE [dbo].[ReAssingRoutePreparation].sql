@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[ReAssingRoutePreparation]    Script Date: 29/12/2021 23:49:33 ******/
+/****** Object:  StoredProcedure [dbo].[ReAssingRoutePreparation]    Script Date: 04/01/2022 17:14:48 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,12 +13,13 @@ GO
 -- Description:	<Reasigna una guía en despacho de entregas.>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[ReAssingRoutePreparation]
+ALTER PROCEDURE [dbo].[ReAssingRoutePreparation]
     -- Add the parameters for the stored procedure here
 	@IdRoute INT,
 	@Date DATE,
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
+	@IdRoutePreparationOld INT,
 	@Token NVARCHAR(50)
 AS
 BEGIN
@@ -106,7 +107,7 @@ BEGIN
 						SET @RModified = @RModified + 1
 				END
 
-				-- Deshabilitar filas si ya existieran en otra ruta
+				-- Deshabilitar filas
 				UPDATE rpd
 				SET rpd.RowStatus = 0,
 					rpd.TokenUpdated = @Token,
@@ -115,7 +116,19 @@ BEGIN
 				JOIN RoutePreparation rp 
 					ON rpd.RoutePreparationId = rp.IdRoutePreparation
 				WHERE rpd.Guide_Serie = @GuideSerie AND rpd.Guide_Number = @GuideNumber
-					AND rp.DateRoutePreparation = @Date AND rp.IdRoutePreparation <> @IdRoutePreparation
+					AND rp.IdRoutePreparation = @IdRoutePreparationOld
+
+				UPDATE rp
+				SET
+					rp.GuidesQuantity = rp.GuidesQuantity-1,
+					rp.PiecesDry = rp.PiecesDry - COALESCE(do.Pieces_Dry,0),
+					rp.PiecesCold = rp.PiecesCold - COALESCE(do.Pieces_Cold,0),
+					rp.TokenUpdated = @Token,
+					rp.DateUpdated = GETDATE()
+				FROM RoutePreparation rp
+				JOIN DeliveryOrder do
+					ON do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber
+				WHERE rp.IdRoutePreparation = @IdRoutePreparationOld
 			END
 		END TRY
 		BEGIN CATCH
