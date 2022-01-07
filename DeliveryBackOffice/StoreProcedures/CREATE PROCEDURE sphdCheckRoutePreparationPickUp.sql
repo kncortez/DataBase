@@ -16,14 +16,14 @@ BEGIN
 	----------------------------------------------------------------------------------------------------
 	DECLARE @CURRENTDATE DATETIME=GETDATE();
 	set @CURRENTDATE=@CURRENTDATE-cast(cast(@CURRENTDATE as time) as datetime);
+	DECLARE @YESTERDAY DATETIME=@CURRENTDATE -1;	
 	UPDATE SchedulePickup SET 
 		StartDate=cast(@CURRENTDATE as datetime) + cast(cast(StartDate as time) as datetime),
 		EndDate=cast(@CURRENTDATE as datetime) + cast(cast(EndDate as time) as datetime),
 		TokenUpdated=@tokenuser,
 		DateUpdated=GETDATE()		
-		where	(startDate<@CURRENTDATE) AND ((AssigmentStatus = 0) OR (AssigmentStatus IS NULL)) AND RowStatus = 'true'
+		where	(StartDate-(cast(cast(StartDate as time) as datetime)))=@YESTERDAY AND ((AssigmentStatus = 0) OR (AssigmentStatus IS NULL)) AND RowStatus = 'true'
 	----------------------------------------------------------------------------------------------------	
-
 
 END
 GO
