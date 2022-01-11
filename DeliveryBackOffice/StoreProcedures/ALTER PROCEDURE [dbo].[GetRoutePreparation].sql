@@ -38,7 +38,7 @@ BEGIN
 		, do.Pieces_Dry Pieces_Dry
 		, do.Pieces_Cold Pieces_Cold
 		, do.Collect_OnDelivery COD
-		, do.IsCollect IsCollect
+		, IFF(do.IsCollect = 1, 'TRUE','FALSE') IsCollect
 		, rpd.GuideOrder GuideOrder
 	FROM RoutePreparationDetail rpd
 	JOIN RoutePreparation rp
