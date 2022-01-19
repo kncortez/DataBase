@@ -321,8 +321,12 @@ BEGIN
 	--Retornado a Forza
 	ELSE
 	IF @GuideStatusOrderId = 8
-		--Puede pasar a Devuelto en Express center
+		--Puede pasar a Devuelto en Express center, Progamado para Entrega, Programado para Devolución
+			--En Inventario
 		IF @StatusOrderId = 23
+			OR @StatusOrderId = 3
+			OR @StatusOrderId = 17
+			OR @StatusOrderId = 10
 			SELECT
 				1 StatusCode
 			   ,'Estado válido.' Description
