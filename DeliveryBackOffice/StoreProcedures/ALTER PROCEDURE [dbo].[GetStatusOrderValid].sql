@@ -1,0 +1,88 @@
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[GetStatusOrderValid]    Script Date: 24/01/2022 11:15:03 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- =============================================
+-- Author:		<Oscar, Morales>
+-- Create date: <2022-01-18>
+-- Description:	<Válida si el estado que se le asignará a una guía es correcto.>
+-- =============================================
+ALTER PROCEDURE [dbo].[GetStatusOrderValid] @GuideSerie NVARCHAR(2),
+@GuideNumber INT,
+@StatusOrderId TINYINT
+AS
+BEGIN
+
+	DECLARE @GuideStatusOrderId TINYINT = (SELECT TOP 1
+			dod.StatusOrderId
+		FROM DeliveryOrderDetail dod
+		WHERE dod.Guide_Serie = @GuideSerie
+		AND dod.Guide_Number = @GuideNumber
+		ORDER BY dod.DateCreated DESC)
+
+	--Estados de finalización (Entregado, Entregado en Express center)
+	IF @GuideStatusOrderId = 5
+		OR @GuideStatusOrderId = 22
+		--Solo pueden pasar a COD Liquidado o COD PAGADO
+		IF @StatusOrderId = 24
+			OR @StatusOrderId = 25
+			SELECT
+				1 StatusCode
+			   ,'Estado válido.' Description
+		ELSE
+			SELECT
+				0 StatusCode
+			   ,'La guía se encuentra en estado Entregada.' Description
+	--COD Liquidado
+	ELSE
+	IF @GuideStatusOrderId = 24
+		--Solo puede pasar a COD pagado
+		IF @StatusOrderId = 25
+			SELECT
+				1 StatusCode
+			   ,'Estado válido.' Description
+		ELSE
+			SELECT
+				0 StatusCode
+			   ,'La guía se encuentra en estado COD Liquidado.' Description
+	--COD Pagado
+	ELSE
+	IF @GuideStatusOrderId = 25
+		--Solo puede pasar a COD Liquidado
+		IF @StatusOrderId = 24
+			SELECT
+				1 StatusCode
+			   ,'Estado válido.' Description
+		ELSE
+			SELECT
+				0 StatusCode
+			   ,'La guía se encuentra en estado COD Pagado.' Description
+	--ANULADO
+	ELSE
+	IF @GuideStatusOrderId = 7
+		SELECT
+			0 StatusCode
+		   ,'La guía se encuentra en estado Anulado.' Description
+	--Devuelto en Express Center
+	ELSE
+	IF @GuideStatusOrderId = 23
+		SELECT
+			0 StatusCode
+		   ,'La guía se encuentra en estado Devuelto en Express Center.' Description
+	--Devuelto
+	ELSE
+	IF @GuideStatusOrderId = 14
+		SELECT
+			0 StatusCode
+		   ,'La guía se encuentra en estado Devuelto.' Description
+
+	ELSE --De momento no se valida nada más
+		SELECT
+			1 StatusCode
+		   ,'Estado válido.' Description
+
+END
