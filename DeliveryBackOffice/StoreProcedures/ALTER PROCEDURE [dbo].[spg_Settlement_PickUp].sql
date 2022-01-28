@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_Settlement_PickUp]    Script Date: 27/01/2022 13:03:14 ******/
+/****** Object:  StoredProcedure [dbo].[spg_Settlement_PickUp]    Script Date: 28/01/2022 08:41:15 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -86,6 +86,7 @@ BEGIN
 	   ,CONCAT(ord.Manifest_Serie, '-', ord.Manifest_Number) MANIFIESTO
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) NAMECOURIER
 	   ,sm.IdServiceManagement
+	   ,sm.ServiceStatusId
 	FROM DeliveryOrder ord
 	--left join DeliveryOrderDetail ordd on (ord.Guide_Number = ordd.Guide_Number and ord.Guide_Serie = ordd.Guide_Serie)
 	LEFT JOIN DeliveryOrderPiece ordp
