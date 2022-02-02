@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spws_get_validate_guides_pickup]    Script Date: 31/01/2022 14:53:52 ******/
+/****** Object:  StoredProcedure [dbo].[spws_get_validate_guides_pickup]    Script Date: 2/02/2022 10:07:24 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -41,36 +41,43 @@ BEGIN
 
 				--Se inserta log de cambio de recolección a un servicio
 				INSERT INTO ServicePickupLog (GuideSerie, GuideNumber, OldIdHeaderRecolection, NewIdHeaderRecolection, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
-				SELECT DISTINCT
-					g.ItemSerie
-					,g.ItemNumber
-					,dopd.IdHeaderRecolection
-					,@IdPickup
-					,1
-					,@token
-					,GETDATE()
-					,NULL
-					,NULL
-				FROM #listGuides g
-				LEFT JOIN DeliveryOrderPaymentDetail dopd
-					ON dopd.GuideSerie = g.ItemSerie
-						AND dopd.GuideNumber = g.ItemNumber
-				WHERE dopd.IdHeaderRecolection IS NOT NULL AND
-					dopd.IdHeaderRecolection <> @IdPickup
+					SELECT DISTINCT
+						g.ItemSerie
+					   ,g.ItemNumber
+					   ,COALESCE(dopd.IdHeaderRecolection,-1)
+					   ,@IdPickup
+					   ,1
+					   ,@Token
+					   ,GETDATE()
+					   ,NULL
+					   ,NULL
+					FROM #listGuides g
+					JOIN DeliveryOrderPaymentDetail dopd
+						ON dopd.GuideSerie = g.ItemSerie
+							AND dopd.GuideNumber = g.ItemNumber
+					JOIN DeliveryOrder do
+						ON do.Guide_Serie = g.ItemSerie
+							AND do.Guide_Number = g.ItemNumber
+					WHERE COALESCE(dopd.IdHeaderRecolection,0) <> @IdPickup
+					AND do.StatusOrderId IN (16, 15, 1)
 
 				--Se asignan los servicios a la nueva recolección
 				UPDATE dopd
-					SET dopd.IdHeaderRecolection = @IdPickup
+				SET dopd.IdHeaderRecolection = @IdPickup
 				FROM DeliveryOrderPaymentDetail dopd
 				JOIN #listGuides g
 					ON g.ItemSerie = dopd.GuideSerie
 					AND g.ItemNumber = dopd.GuideNumber
-				WHERE dopd.IdHeaderRecolection <> @IdPickup
+				JOIN DeliveryOrder do
+					ON do.Guide_Serie = g.ItemSerie
+					AND do.Guide_Number = g.ItemNumber
+				WHERE COALESCE(dopd.IdHeaderRecolection,0) <> @IdPickup
+				AND do.StatusOrderId IN (16, 15, 1)
 
 				select distinct lst.ItemSerie , lst.ItemNumber , isnull( dr.Guide_Number,0) exist, 
 
 				iif(ISNULL(pyt.IdHeaderRecolection,0) = @IdPickup , 1, iif(ISNULL(pyt.IdHeaderRecolection,0) =0,1 ,0)) pik, 
-				iif ( dr.StatusOrderId = 1, 1, (iif(dr.StatusOrderId = 16,15,1))   )  status, st.OrderDescription
+				IIF(dr.StatusOrderId IN (16, 15, 1),1,0) status, st.OrderDescription
 				--, pyt.IdHeaderRecolection
 				Into #ErrorGuides
 				from #listGuides lst  
@@ -81,8 +88,8 @@ BEGIN
 				--select * from #ErrorGuides
 
 				select concat(er.ItemSerie , er.ItemNumber) Guide, 
-				iif(er.exist =0, 'Servicio no existe',  iif( er.pik =0,  'Servicio asignado a otra recolección ', concat('Servicio ', er.OrderDescription) ) ) Mensaje
-				from #ErrorGuides er where er.exist =0 -- or er.pik =0 or er.status =0 Se eliminan estas validaciones por la reasignación
+				iif(er.exist =0, 'Servicio no existe',  concat('Servicio ', er.OrderDescription) ) Mensaje
+				from #ErrorGuides er where er.exist =0 or er.status =0 --  or er.pik =0  Se elimina esta validacione por la reasignación
 
 	END TRY  
 	BEGIN CATCH  
