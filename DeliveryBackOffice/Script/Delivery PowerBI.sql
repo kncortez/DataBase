@@ -459,8 +459,18 @@ END
 		AND DO.Guide_Serie = IND.dti_fk_orderSerie
 		ORDER BY INH.inv_date
 
-) as InvoiceDate
-FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK) -- 140,885
+) as InvoiceDate,
+(
+	SELECT CASE WHEN (CTMR.RowSatus = 1) THEN
+            'ACTIVO'
+
+        ELSE
+            'INACTIVO'
+    END
+	FROM dbo.Customer CTMR WITH (NOLOCK) 
+	WHERE CTMR.IdCustomer = vpc.customerId
+) as CustomerStatus
+FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK) -- 1,197,011
     JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
         ON so.StatusOrderId = do.StatusOrderId    
 	
