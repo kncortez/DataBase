@@ -447,7 +447,19 @@ END
 (SELECT TOP 1 KindOfVPNameBussiness FROM DeliveryBackOffice.dbo.KindOfVPBusiness kob where kob.IdKindOfVPBusiness = vpc.IdKindOfVPBusiness
 )KindOfVPNameBussiness,
 (SELECT TOP 1 CommercialSegmentName FROM dbo.CatCommercialSegment CCS WHERE CCS.IdCommercialSegment = ISNULL(C.CommercialSegmentID,CTM2.CommercialSegmentID)
-)CommercialSegmentName
+)CommercialSegmentName,
+(
+		SELECT TOP 1 INH.inv_date FROM DeliveryBackOffice.dbo.invoiceDetail IND  WITH(NOLOCK)
+		JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH(NOLOCK) ON IND.dti_fk_header = INH.inv_pk_id
+		AND INH.inv_certificationFEL IS NOT NULL
+		AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'
+		AND INH.inv_creditNote IS NULL
+		AND INH.inv_motiveCreditNote IS NULL
+		WHERE DO.Guide_Number = IND.dti_fk_orderNumber
+		AND DO.Guide_Serie = IND.dti_fk_orderSerie
+		ORDER BY INH.inv_date
+
+) as InvoiceDate
 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] do WITH (NOLOCK) -- 140,885
     JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
         ON so.StatusOrderId = do.StatusOrderId    
