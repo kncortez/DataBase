@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_settlement_not_arrived_guides_PickUp]    Script Date: 4/02/2022 08:44:16 ******/
+/****** Object:  StoredProcedure [dbo].[spg_settlement_not_arrived_guides_PickUp]    Script Date: 11/02/2022 10:09:04 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -96,6 +96,7 @@ BEGIN
 			AND do.Guide_Number = dopd.GuideNumber
 	WHERE sbp.Id = @IdManifest
 		AND sm.ServiceStatusId <> 3
+		AND sp.SenderId > 0
 
 
 	
