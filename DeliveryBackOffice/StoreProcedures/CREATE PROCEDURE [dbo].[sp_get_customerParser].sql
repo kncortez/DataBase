@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_get_customerParser]    Script Date: 18/02/2022 09:05:46 ******/
+/****** Object:  StoredProcedure [dbo].[sp_get_customerParser]    Script Date: 20/02/2022 22:42:02 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -15,11 +15,11 @@ DECLARE @Cantidad INT
 DECLARE @expresion VARCHAR(50)
 DECLARE @expresion2 VARCHAR(50)
 
-SET @Cantidad = (SELECT count(IdCustomer) FROM Customer_Parser WHERE RegexEmail Like '%' + @Email + '%')
+SET @Cantidad = (SELECT count(IdCustomer) FROM Customer WHERE RegexEmail Like '%' + @Email + '%')
 
 	IF (@Cantidad > 0)
 		BEGIN
-			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename FROM Customer_Parser
+			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename FROM Customer
 				 WHERE RegexEmail Like '%' + @Email + '%'
 		END
 
@@ -30,7 +30,7 @@ SET @Cantidad = (SELECT count(IdCustomer) FROM Customer_Parser WHERE RegexEmail 
 
 			SET @expresion2 = ('^([\w\.\-]+)@'+@expresion+'$')
 
-			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename FROM Customer_Parser
+			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename FROM Customer
 					WHERE RegexEmail = @expresion2
 		END
 END
