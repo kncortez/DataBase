@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 16/02/2022 08:03:54 ******/
+/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 21/02/2022 14:54:32 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -107,9 +107,9 @@ BEGIN
 			NULL 'HubOriginId',
 			NULL 'HubDestinationId',
 			NULL 'SourceSystemId',
-			NULL 'SystemSource',
+			NULL 'CatSystemId',
 			NULL 'Segment',
-			NULL 'ModuleSource',
+			NULL 'CatModuleId',
 			NULL 'IdCustomer',
 			NULL 'OrderUserCreated',
 			NULL 'SalePipeLineId'
@@ -185,8 +185,8 @@ BEGIN
 		
 		SET HubOriginId = (SELECT [DeliveryBackOffice].[dbo].[FnGetHub](t.SenderIdTownship)),
 			HubDestinationId = (SELECT [DeliveryBackOffice].[dbo].[FnGetHub](t.ReceiverIdTownship)),
-			SystemSource = (SELECT t.SourceSystemId),
-			ModuleSource = (SELECT ModIdModule FROM DeliveryBackOffice.dbo.CatModule
+			CatSystemId = (SELECT t.SourceSystemId),
+			CatModuleId = (SELECT ModIdModule FROM DeliveryBackOffice.dbo.CatModule
 							WHERE ModName = 'Parser'),
 			IdCustomer = (SELECT CustomerID FROM DeliveryBackOffice.dbo.VisitPointClient
 						  WHERE CodeOfReference = t.Sender_ID),
@@ -271,8 +271,8 @@ BEGIN
 				[HubOriginId],
 				[HubDestinationId],
 				[SourceSystemId],
-				[SystemSource],
-				[ModuleSource],
+				[CatSystemId],
+				[CatModuleId],
 				[IdCustomer],
 				[Segment],
 				[OrderUserCreated],
@@ -345,8 +345,8 @@ BEGIN
 				,GT.HubOriginId
 				,GT.HubDestinationId
 				,GT.SourceSystemId
-				,GT.SystemSource
-				,GT.ModuleSource
+				,GT.CatSystemId
+				,GT.CatModuleId
 				,GT.IdCustomer
 				,GT.Segment
 				,GT.OrderUserCreated
