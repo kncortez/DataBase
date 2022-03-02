@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spg_get_deliveryordersForCOD]    Script Date: 20/01/2022 14:28:17 ******/
+/****** Object:  StoredProcedure [dbo].[spg_get_deliveryordersForCOD]    Script Date: 2/03/2022 08:36:56 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -99,15 +99,8 @@ BEGIN
 					invh.inv_serieFEL = '' THEN NULL
 				ELSE CONCAT(invh.inv_serieFEL, '-', invh.inv_numberFEL)
 			END FEL
-		   ,(SELECT TOP 1
-					dod.StatusOrderId
-				FROM DeliveryOrderDetail dod
-				WHERE dod.Guide_Serie = gf.Guide_Serie
-				AND dod.Guide_Number = gf.Guide_Number
-				ORDER BY dod.DateCreated DESC)
-			StatusOrderId
-		   ,NULL
-			OrderDescription
+		   ,do.StatusOrderId StatusOrderId
+		   ,NULL OrderDescription
 		   ,0 StatusOrderValid
 		   ,'' DescriptionStatusOrderValid
 		FROM @GuidesFound gf
@@ -141,7 +134,7 @@ BEGIN
 		vp.IdKindOfVPClient <> 1
 		OR vp.IdKindOfVPClient IS NULL
 		)
-		AND do.StatusOrderId IN (4, 5, 25)
+		--AND do.StatusOrderId IN (4, 5, 25)
 	;
 
 

@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetStatusOrderValid]    Script Date: 24/01/2022 11:15:03 ******/
+/****** Object:  StoredProcedure [dbo].[GetStatusOrderValid]    Script Date: 2/03/2022 09:13:39 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,12 +17,12 @@ ALTER PROCEDURE [dbo].[GetStatusOrderValid] @GuideSerie NVARCHAR(2),
 AS
 BEGIN
 
-	DECLARE @GuideStatusOrderId TINYINT = (SELECT TOP 1
-			dod.StatusOrderId
-		FROM DeliveryOrderDetail dod
-		WHERE dod.Guide_Serie = @GuideSerie
-		AND dod.Guide_Number = @GuideNumber
-		ORDER BY dod.DateCreated DESC)
+	--Obtener el estado de la DeliveryOrder
+	DECLARE @GuideStatusOrderId TINYINT = (SELECT
+			do.StatusOrderId
+		FROM DeliveryOrder do
+		WHERE do.Guide_Serie = @GuideSerie
+		AND do.Guide_Number = @GuideNumber)
 
 	--Estados de finalización (Entregado, Entregado en Express center)
 	IF @GuideStatusOrderId = 5
