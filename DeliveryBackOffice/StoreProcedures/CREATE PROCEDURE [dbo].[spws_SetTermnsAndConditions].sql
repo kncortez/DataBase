@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spws_SetTermnsAndConditions]    Script Date: 1/03/2022 11:24:10 ******/
+/****** Object:  StoredProcedure [dbo].[spws_SetTermnsAndConditions]    Script Date: 3/03/2022 09:21:57 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -30,50 +30,69 @@ BEGIN
 	-- No existe				
 	IF (@IdTAC IS NULL)
 	BEGIN
-		INSERT INTO [dbo].[TermsAndConditionsByUser]
-           ([TACId]
-		   ,[IdAccount]
-		   ,[TAC]
-		   ,[RowStatus]
-		   ,[TokenCreated]
-		   ,[DateCreated]
-		   ,[TokenUpdated]
-		   ,[DateUpdated])
-		VALUES
-           ((SELECT IdTAC FROM [dbo].[TermsAndConditions] 
-			WHERE RowStatus = 1)
-           ,@IdAccount
-           ,1
-           ,1
-           ,@Token
-           ,GETDATE()
-           ,NULL
-		   ,NULL)
+		BEGIN TRANSACTION
+			BEGIN TRY
+				INSERT INTO [dbo].[TermsAndConditionsByUser]
+					([TACId]
+					,[IdAccount]
+					,[TAC]
+					,[RowStatus]
+					,[TokenCreated]
+					,[DateCreated]
+					,[TokenUpdated]
+					,[DateUpdated])
+				VALUES
+					((SELECT IdTAC FROM [dbo].[TermsAndConditions] 
+					WHERE RowStatus = 1)
+					,@IdAccount
+					,1
+					,1
+					,@Token
+					,GETDATE()
+					,NULL
+					,NULL)
 
-		   -- Devuelve estado correcto al momento de insertar el registro
-		   SET @IdResult = 200;
-		   SET @jsonResult =
-           (
-				SELECT STUFF(
+			END TRY
+
+			BEGIN CATCH
+				SET @jsonResult =
 				(
-					SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Registro de términos y condiciones éxitoso."}' FOR XML PATH(''), TYPE
-				).value('.', 'varchar(max)'), 1, 1, '')
-		   );
-	END
+					SELECT STUFF(
+					(
+						SELECT ',{"IdResult":500,' + '"Message":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
+					).value('.', 'varchar(max)'), 1, 1, '')
+				);
+
+				ROLLBACK TRANSACTION;
+			END CATCH
+
+			IF @@TRANCOUNT > 0
+			BEGIN
+				COMMIT TRANSACTION;
+
+				SET @jsonResult =
+				(
+					SELECT STUFF(
+					(
+						SELECT ',{"IdResult":200, "Message":"Registro almacenado correctamente."}' FOR XML PATH(''), TYPE
+					).value('.', 'varchar(max)'), 1, 1, '')
+				);
+			END
+		END
 
 	ELSE
 	BEGIN
-		SET @IdResult = 500;
 		   SET @jsonResult =
            (
 				SELECT STUFF(
 				(
-					SELECT '{"IdResult":' + CAST(@IdResult AS VARCHAR(3)) + ',' + '"Message":"Ya existe el registro"}' FOR XML PATH(''), TYPE
+					SELECT ',{"IdResult": 200,"Message":"Ya existe el registro."}' FOR XML PATH(''), TYPE
 				).value('.', 'varchar(max)'), 1, 1, '')
 		   );
 	END
 
-	SELECT @IdResult AS IdResult, 
-               ('[{' + @jsonResult + ']') jsonResult;
+	SELECT  
+               ('[' + @jsonResult + ']') jsonResult;
 
 END;
+
