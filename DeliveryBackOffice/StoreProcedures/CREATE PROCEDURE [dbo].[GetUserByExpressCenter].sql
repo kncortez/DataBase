@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-
+/****** Object:  StoredProcedure [dbo].[GetUserByExpressCenter]    Script Date: 4/03/2022 16:23:48 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -19,7 +19,7 @@ SET NOCOUNT ON;
 
     -- Insert statements for procedure here
 	SELECT
-		IdVisitPointClient
+		CodeOfReference IdVisitPointClient
 		,DescriptionOfClient 
 	FROM VisitPointClient
 	WHERE IdKindOfVPClient = 1
@@ -27,7 +27,7 @@ SET NOCOUNT ON;
 	ORDER BY DescriptionOfClient
 
 	SELECT
-		vpu.IdVisitPointClient
+		vpc.CodeOfReference IdVisitPointClient
 	   ,rua.RuaIdAccount
 	   ,CONCAT(vpc.DescriptionOfClient, ' - ', rus.UsrEmail) Usuario
 	FROM dbo.VisitPointByUser vpu
@@ -44,4 +44,3 @@ SET NOCOUNT ON;
 	WHERE vpu.RowStatus = 1
 	ORDER BY vpc.DescriptionOfClient
 END
-GO
