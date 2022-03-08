@@ -17,47 +17,30 @@ GO
 -- Modificado:   <López, Marcos>
 -- Modified:     <14/Sepiembre/2020>
 -- Description:  <Se agregó la columna del total de guías por usuario>
+-- Modificado:   <Ixchop,Alberto>
+-- Modified:     <25/Enero/2022>
+-- Description:  <Se optimizó el sp>
 -- =============================================
 ALTER PROCEDURE [dbo].[spg_courier_dispatched_status]
 	@DispatchedDate DATETIME
 AS
 BEGIN
 	SET NOCOUNT ON;
-	
-	SELECT
-		SUBQ.ID_Courier,
-		SUBQ.Courier_Name,
-		SUBQ.Cantidad_Guias,
-		COUNT(SUBQ.Courier_Name) AS Dispatched,
-		SUM(CAST(SUBQ.Delivered AS INT)) AS Delivered,
-		SUM(CAST(SUBQ.Verified AS INT)) AS Verified,
-		(SUM(CAST(SUBQ.Verified AS INT))- SUM(CAST(SUBQ.Accepted AS INT))) AS Failed
-	FROM
-	(
-		SELECT
-			da.ID_Courier
-			,sr.First_Name + ' ' + sr.Last_Name AS Courier_Name
-			,cg.Cantidad_Guias
-			,da.Delivered
-			,ISNULL(da.Verified,0) AS Verified
-			,ISNULL(da.Accepted,0) AS Accepted
-			,CONVERT(VARCHAR,da.Date_Created,103) AS Date_Created
-		FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] da
-		JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] sr ON sr.ID = da.ID_Courier
-		JOIN (
-			SELECT ID_Courier, SUM(contador) Cantidad_Guias FROM (
-				SELECT dv.ID_Courier, CONCAT(dv.Guide_Serie, dv.Guide_Number) guia, 1 contador
-				FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] dv
-				WHERE CONVERT(VARCHAR, dv.Date_Created, 23) = CONVERT(VARCHAR, @DispatchedDate, 23)
-				GROUP BY dv.ID_Courier, CONCAT(dv.Guide_Serie, dv.Guide_Number)
-			) temporal
-			GROUP BY ID_Courier
-		) cg ON da.ID_Courier = cg.ID_Courier
-		WHERE CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, @DispatchedDate, 23)
-	) AS SUBQ
-	GROUP BY SUBQ.ID_Courier, SUBQ.Courier_Name, SUBQ.Cantidad_Guias
-	ORDER BY SUBQ.Courier_Name
-
+	SELECT  
+		SR.ID AS ID_Courier,
+		SR.First_Name + ' ' + SR.Last_Name AS Courier_Name,
+		ISNULL(HL.HubAbbreviation,' ') AS HUB,
+		COUNT(DISTINCT Guide_Serie+CONVERT(NVARCHAR,(Guide_Number)))AS Cantidad_Guias ,
+		COUNT(SR.ID) AS Dispatched,
+		COUNT(CASE WHEN DATT.Delivered=1 THEN DATT.Delivered ELSE NULL END) AS Delivered,
+		COUNT(DATT.Verified) AS Verified,
+		(SUM(CAST(ISNULL(DATT.Verified,0) AS INT))- SUM(CAST(ISNULL(DATT.Accepted,0) AS INT))) AS Failed
+		FROM DBO.DeliveryAttempt DATT
+		LEFT JOIN  DBO.SenderReceiver SR ON DATT.ID_Courier=SR.ID
+		LEFT JOIN DBO.HubLogistics HL ON SR.HubLogisticId=HL.IdHubLogistic
+		WHERE
+		CONVERT(DATE,DATT.Date_Created)=@DispatchedDate
+		GROUP BY SR.ID,HL.HubAbbreviation,SR.First_Name,SR.Last_Name,HL.IdHubLogistic;
 END
 GO
 
