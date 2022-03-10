@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[spws_GetCorporateLogIn]    Script Date: 1/03/2022 16:13:48 ******/
+/****** Object:  StoredProcedure [dbo].[spws_GetCorporateLogIn]    Script Date: 9/03/2022 21:41:23 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -342,28 +342,9 @@ AS
                                         );
                                         -- obtener los datos del perfil asociado al usuario 
 
-										-- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+										-- MODIFICACIÓN 09/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 										-- Determinar si ya ha aceptado los terminos y condiciones
-										DECLARE @ValTAC INT = (SELECT TAC FROM [dbo].[TermsAndConditionsByUser]
-																WHERE IdAccount = (SELECT ac.AccIdAccount FROM DeliveryBackOffice.dbo.RegisterUser us
-																					 INNER JOIN DeliveryBackOffice.dbo.Person pe 
-																							ON pe.PerIdPerson = us.UsrIdPerson
-																							AND pe.PerRowStatus = 1
-																					 INNER JOIN DeliveryBackOffice.dbo.[RolByUserByAccount] rua 
-																							ON rua.RuaIdUser = us.UsrIdUser
-																							AND rua.RuaRowStatus = 1
-																					 INNER JOIN DeliveryBackOffice.dbo.CatRol ro 
-																							ON ro.RolIdRol = rua.RuaIdRol
-																					 INNER JOIN DeliveryBackOffice.dbo.Account ac 
-																							ON ac.AccIdAccount = rua.RuaIdAccount
-																							AND ac.AccRowStatus = 1
-																					 INNER JOIN DeliveryBackOffice.dbo.CatTypeAccount ta 
-																							ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
-																					 INNER JOIN DeliveryBackOffice.dbo.InternalUser iu 
-																							ON iu.RegisterUserID = UsrIdUser
-																					WHERE iu.UserName = @UserName 
-																							AND iu.IdUser=@UserCode 
-																							AND iu.RowStatus = 1))
+										DECLARE @ValTAC INT = (SELECT [dbo].[FnValidateTermsAndConditions](@Username,@UserCode,2))
 
 										-- Valida el valor en la tabla; 1 = TRUE, si fuera 0 o NULL devuelve FALSE
 										DECLARE @TAC VARCHAR(5) = CASE WHEN @ValTAC = 1 THEN 'TRUE' ELSE 'FALSE' END
