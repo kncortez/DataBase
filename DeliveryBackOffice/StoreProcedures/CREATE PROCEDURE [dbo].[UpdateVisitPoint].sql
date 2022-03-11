@@ -47,6 +47,32 @@ SET NOCOUNT ON;
 		   ,IdTownship = @IdTownship
 		WHERE IdVisitPointClient = @IdVisitPointClient
 
+		DECLARE @regexPhoneNumber varchar(max)='[(][0-9][0-9][0-9][)]%';			
+		SET @Phone	=REPLACE(@Phone,'-','');
+		SET @Phone	=REPLACE(@Phone,' ','');
+		UPDATE UA SET 
+			UA.UadIdTownship=VPC.IdTownship
+			,UadIdCountry=CC.IdCountry
+			,UadAddress1=VPC.Address,
+			--UadNirPhone=(CASE WHEN CHARINDEX('(',@Phone) >0 THEN SUBSTRING(@Phone,2,3) ELSE '' END),
+			UadNirPhone=(CASE WHEN @Phone like @regexPhoneNumber THEN SUBSTRING(@Phone,2,3) ELSE '' END),
+			UadPhone=(CASE WHEN @Phone like @regexPhoneNumber THEN SUBSTRING(@Phone,6,LEN(@Phone)-5) ELSE @Phone END),
+			UadAdditionalInstructions='',
+			UadTokenUpdated=@Token,
+			UadDateUpdated=GETDATE(),
+			UadIdSettlement=@IdSettlement,			
+			UadFullName=@DescriptionOfClient
+			
+		FROM DBO.UserAddress UA 
+			JOIN DBO.VisitPointClient VPC ON UA.CodeOfReference=VPC.CodeOfReference
+			LEFT JOIN DBO.Township TS ON TS.IdTownship=VPC.IdTownship
+			LEFT JOIN DBO.Province PRV ON PRV.IdProvince=TS.IdProvince
+			LEFT JOIN DBO.CatCountry CC ON CC.IdCountry=PRV.IdCountry
+			WHERE IdVisitPointClient = @IdVisitPointClient
+		
+
+
+
 		IF(@@TRANCOUNT > 0)
 		BEGIN
 			COMMIT TRANSACTION
