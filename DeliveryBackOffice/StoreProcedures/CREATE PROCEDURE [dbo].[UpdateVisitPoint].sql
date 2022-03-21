@@ -31,7 +31,8 @@ SET NOCOUNT ON;
     -- Insert statements for procedure here
 	BEGIN TRANSACTION
 	BEGIN TRY
-		
+		IF (@IdSettlement = 0)
+			SET @IdSettlement = NULL		
 		UPDATE VisitPointClient
 		SET DescriptionOfClient = @DescriptionOfClient
 		   ,CountryId = COALESCE((SELECT IdCountry FROM Province WHERE IdProvince = @IdProvince),'GT')

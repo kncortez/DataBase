@@ -53,8 +53,8 @@ BEGIN
 		 and vpc.CountryId = @country 
 	left join DeliveryBackOffice.dbo.TownshipByHubLogistic tbl on vpc.IdTownship = tbl.IdTownshipHub and tbl.StatusTownshipHub = 'true'
 	left join DeliveryBackOffice.dbo.HubLogistics hub on tbl.IdHublogistic = hub.IdHubLogistic and hub.HubStatus='true'
-	LEFT JOIN Settlement sm
-		ON sm.IdSettlement = vpc.IdSettlement
+	LEFT JOIN Township sm
+		ON sm.IdTownship = vpc.IdTownship
 	WHERE 
 	vpc.StatusClient=1 and (cli.RowSatus =1 or cli.RowSatus is null)
 	order by [Client]
