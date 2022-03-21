@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetSettlementArrivedPickUpGuidesRabbit]    Script Date: 21/03/2022 09:43:09 ******/
+/****** Object:  StoredProcedure [dbo].[GetSettlementArrivedPickUpGuidesRabbit]    Script Date: 17/03/2022 16:51:42 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,8 +10,9 @@ GO
 -- Create date: <2022-03-17>
 -- Description:	<Obtiene detalle para manifiesto de recolección Rabbit>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetSettlementArrivedPickUpGuidesRabbit]
+CREATE PROCEDURE [dbo].[GetSettlementArrivedPickUpGuidesRabbit]
 	-- Add the parameters for the stored procedure here
+	@Phone NVARCHAR(50),
 	@SettlementSequence BIGINT
 AS
 BEGIN
@@ -20,12 +21,13 @@ BEGIN
 	SET NOCOUNT ON;
 	DECLARE @SettlementPickupStationId INT
 
-	SELECT TOP 1
+	SELECT
 	   @SettlementPickupStationId = IdSettlementPickupStation
-	FROM SettlementPickupStation sps WITH(NOLOCK)
-	JOIN SettlementPickupStationDetail spsd WITH(NOLOCK)
-		ON spsd.SettlementPickupStationId = sps.IdSettlementPickupStation
-	WHERE spsd.SettlementSequence = @SettlementSequence
+	FROM SenderReceiver sr
+	JOIN SettlementPickupStation sps
+		ON sps.CouriermanId = sr.ID
+	WHERE sr.Phone LIKE '%'+@Phone+'%'
+		AND sps.TransactionDate = CAST(GETDATE() AS DATE)
 		AND sps.RowStatus = 'TRUE'
 
 	IF @SettlementPickupStationId IS NOT NULL
@@ -48,19 +50,20 @@ BEGIN
 			,do.Sender_Town SenderTown
 			,do.Sender_Department SenderDepartament
 			,do.Sender_Phone SenderPhone
-		FROM SettlementPickupStationDetail spsd WITH(NOLOCK)
-		JOIN ServiceManagement sm WITH(NOLOCK)
+		FROM SettlementPickupStationDetail spsd
+		JOIN ServiceManagement sm
 			ON sm.IdServiceManagement = spsd.ServiceManagementId
-		JOIN SchedulePickup sp WITH(NOLOCK)
+		JOIN SchedulePickup sp
 			ON sp.SchedulePickupId = sm.IdSchedulePickup
-		JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+		JOIN DeliveryOrderPaymentDetail dopd
 			ON dopd.IdHeaderRecolection = sp.SchedulePickupId
-		JOIN DeliveryOrder do WITH(NOLOCK)
+		JOIN DeliveryOrder do
 			ON do.Guide_Serie = dopd.GuideSerie
 			AND do.Guide_Number = dopd.GuideNumber
 		WHERE spsd.SettlementPickupStationId = @SettlementPickupStationId
-		AND spsd.SettlementSequence = @SettlementSequence --Liquidado
+		AND spsd.SettlementSequence = @SettlementSequence
 		AND spsd.RowStatus = 'TRUE'
+		AND spsd.TokenSettlement IS NOT NULL --Liquidado
 
 		SELECT 
 			ServiceManagementId
@@ -72,10 +75,11 @@ BEGIN
 			,(SELECT TOP 1 SenderPhone FROM @Services s WHERE s.ServiceManagementId = spsd.ServiceManagementId) SenderPhone
 			,(SELECT COUNT(1) FROM @Services s WHERE s.ServiceManagementId = spsd.ServiceManagementId) Guides
 			,spsd.Price Amount
-		FROM SettlementPickupStationDetail spsd WITH(NOLOCK)
+		FROM SettlementPickupStationDetail spsd
 		WHERE spsd.SettlementPickupStationId = @SettlementPickupStationId
-		AND spsd.SettlementSequence = @SettlementSequence --Liquidado
+		AND spsd.SettlementSequence = @SettlementSequence
 		AND spsd.RowStatus = 'TRUE'
+		AND spsd.TokenSettlement IS NOT NULL --Liquidado
 		AND EXISTS(SELECT TOP 1 1 FROM @Services WHERE ServiceManagementId = spsd.ServiceManagementId) --Validar que tenga guías el servicio
 
 	END

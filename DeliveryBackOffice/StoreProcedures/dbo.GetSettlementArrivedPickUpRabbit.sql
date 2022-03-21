@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetSettlementArrivedPickUpRabbit]    Script Date: 21/03/2022 09:27:07 ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,8 +10,9 @@ GO
 -- Create date: <2022-03-17>
 -- Description:	<Obtiene encabezado para manifiesto de recolección Rabbit>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetSettlementArrivedPickUpRabbit]
+CREATE PROCEDURE [dbo].[GetSettlementArrivedPickUpRabbit]
 	-- Add the parameters for the stored procedure here
+	@Phone NVARCHAR(50),
 	@SettlementSequence BIGINT
 AS
 BEGIN
@@ -22,21 +23,15 @@ BEGIN
 	DECLARE @SettlementPickupStationId INT
 	DECLARE @Guides INT
 	DECLARE @Station NVARCHAR(100)
-	DECLARE @TokenSettlement VARCHAR(50)
 
-	SELECT TOP 1
+	SELECT
 		@CourierName = ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '')
 	   ,@SettlementPickupStationId = IdSettlementPickupStation
-	   ,@Station = ISNULL(vp.DescriptionOfClient,'')
-	   ,@TokenSettlement = spsd.TokenSettlement
-	FROM SettlementPickupStation sps WITH(NOLOCK)
-	JOIN SenderReceiver sr WITH(NOLOCK)
-		ON sr.ID = sps.CouriermanId
-	JOIN SettlementPickupStationDetail spsd WITH(NOLOCK)
-		ON spsd.SettlementPickupStationId = sps.IdSettlementPickupStation
-	LEFT JOIN VisitPointClient vp WITH(NOLOCK)
-		ON vp.CodeOfReference = spsd.SettlementStationId
-	WHERE spsd.SettlementSequence = @SettlementSequence
+	FROM SenderReceiver sr
+	JOIN SettlementPickupStation sps
+		ON sps.CouriermanId = sr.ID
+	WHERE sr.Phone LIKE '%'+@Phone+'%'
+		AND sps.TransactionDate = CAST(GETDATE() AS DATE)
 		AND sps.RowStatus = 'TRUE'
 
 	IF @SettlementPickupStationId IS NOT NULL
@@ -44,34 +39,39 @@ BEGIN
 	
 		SET @Guides = (SELECT
 				COUNT(1)
-			FROM SettlementPickupStationDetail spsd WITH(NOLOCK)
-			JOIN ServiceManagement sm WITH(NOLOCK)
+			FROM SettlementPickupStationDetail spsd
+			JOIN ServiceManagement sm
 				ON sm.IdServiceManagement = spsd.ServiceManagementId
-			JOIN SchedulePickup sp WITH(NOLOCK)
+			JOIN SchedulePickup sp
 				ON sp.SchedulePickupId = sm.IdSchedulePickup
-			JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+			JOIN DeliveryOrderPaymentDetail dopd
 				ON dopd.IdHeaderRecolection = sp.SchedulePickupId
 			WHERE spsd.SettlementPickupStationId = @SettlementPickupStationId
 				AND spsd.RowStatus = 'TRUE'
-				AND spsd.SettlementSequence = @SettlementSequence) --Liquidado
+				AND spsd.SettlementSequence = @SettlementSequence
+				AND spsd.TokenSettlement IS NOT NULL) --Liquidado
+		
+		SET @Station = (SELECT TOP 1
+				vp.DescriptionOfClient
+			FROM SettlementPickupStationDetail spsd
+			JOIN VisitPointClient vp
+				ON vp.CodeOfReference = spsd.SettlementStationId
+			WHERE spsd.SettlementSequence = @SettlementSequence)
 
-		SELECT
+		SELECT 
 			@SettlementSequence Id
-		   ,sps.TransactionDate DateRoute
-		   ,@CourierName CourierName
-		   ,cr.CodeRoute CodeRoute
-		   ,(SELECT
-					CONVERT(NVARCHAR, lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username
-				FROM DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK)
-				WHERE lbt.SSN_IdToken = @TokenSettlement)
-			IdUser_Username_Received
-		   ,GETDATE() DatePrinted
-		   ,ISNULL(@Guides, 0) Guides
-		   ,ISNULL(@Station, '') Station
-		FROM SettlementPickupStation sps WITH (NOLOCK)
-		JOIN CatRoute cr WITH (NOLOCK)
-			ON cr.IdRoute = sps.RouteId
+			,sps.TransactionDate DateRoute
+			,@CourierName CourierName
+			,cr.CodeRoute CodeRoute
+			,CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username as IdUser_Username_Received
+			,GETDATE() DatePrinted
+			,ISNULL(@Guides,0) Guides
+			,ISNULL(@Station,'') Station
+		FROM SettlementPickupStation sps
+		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = sps.TokenCreated
+		JOIN CatRoute cr ON cr.IdRoute = sps.RouteId
 		WHERE sps.IdSettlementPickupStation = @SettlementPickupStationId
 
 	END
 END
+GO
