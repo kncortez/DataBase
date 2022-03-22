@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 21/02/2022 14:54:32 ******/
+/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 14/03/2022 12:55:29 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -270,7 +270,6 @@ BEGIN
 				[ReceiverIdTownship],
 				[HubOriginId],
 				[HubDestinationId],
-				[SourceSystemId],
 				[CatSystemId],
 				[CatModuleId],
 				[IdCustomer],
@@ -344,7 +343,6 @@ BEGIN
 				,GT.ReceiverIdTownship
 				,GT.HubOriginId
 				,GT.HubDestinationId
-				,GT.SourceSystemId
 				,GT.CatSystemId
 				,GT.CatModuleId
 				,GT.IdCustomer
