@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GenerateClosureOperador]    Script Date: 22/03/2022 09:17:41 ******/
+/****** Object:  StoredProcedure [dbo].[GenerateClosureOperador]    Script Date: 28/03/2022 14:26:57 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -167,9 +167,9 @@ BEGIN
            @Countcard = ISNULL(SUM(S1.CountCard), 0),
 		   -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		   @TotalFacturaCash = ISNULL(SUM(S1.TotalFacturaCash),0),
-		   @CountFacturaCash = ISNULL(SUM(S1.TotalFacturaCash), 0),
+		   @CountFacturaCash = ISNULL(SUM(S1.CountFacturaCash), 0),
 		   @TotalFacturaCard = ISNULL(SUM(S1.TotalFacturaCard),0),
-		   @CountFacturaCard = ISNULL(SUM(S1.TotalFacturaCard), 0)
+		   @CountFacturaCard = ISNULL(SUM(S1.CountFacturaCard), 0)
 		   -- FIN MODIFICACIÓN
     FROM
     (
