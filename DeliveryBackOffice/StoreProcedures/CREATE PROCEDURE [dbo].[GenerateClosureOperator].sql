@@ -13,7 +13,7 @@ GO
 -- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GenerateClosureOperador]
+CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
