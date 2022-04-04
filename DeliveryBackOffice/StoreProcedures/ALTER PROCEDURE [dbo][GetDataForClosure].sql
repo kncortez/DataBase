@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetDataForClosure]    Script Date: 22/03/2022 08:36:12 ******/
+/****** Object:  StoredProcedure [dbo].[GetDataForClosure]    Script Date: 1/04/2022 10:30:46 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -55,7 +55,8 @@ INSERT INTO @TEMPLATEDETAIL  (
     GROUP BY IND.dti_fk_orderSerie,
              IND.dti_fk_orderNumber;
 
-    SELECT DOPD.DateCreated 'DateCreatedTransaction', DOR.DateCreated 'DateCreated',
+    SELECT 
+	       DOPD.DateCreated 'DateCreatedTransaction', DOR.DateCreated 'DateCreated',
            DOR.Sender_FirstName + ' ' + DOR.Sender_LastName 'Client',
            INH.inv_certificationFEL 'CertificationFEL',
            INH.inv_serieFEL 'SerieFel',
@@ -125,7 +126,13 @@ INSERT INTO @TEMPLATEDETAIL  (
         FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
+
+			  -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			  AND ACD.DopId = DOPD.DopId
+			  -- FIN MODIFICACIÓN
+
               AND ACD.RowStatus = 1
+	
     )
    -- ORDER BY DOPD.DateCreated DESC;
 	---------------------------------------------------------------------------------------------
@@ -172,13 +179,13 @@ INSERT INTO @TEMPLATEDETAIL  (
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @IdAccount
           AND DOPD.GuideSerie is null
-	AND NOT EXISTS
-    (
-        SELECT 1
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-        WHERE ACD.Fel =(SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-              AND ACD.RowStatus = 1
-    )
+		  AND NOT EXISTS
+		  (
+			  SELECT 1
+			  FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			  WHERE ACD.Fel =(SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+				    AND ACD.RowStatus = 1
+		  )
     ORDER BY DOPD.DateCreated DESC;
     DECLARE @TOTALAMOUNTCOD DECIMAL(18,2);
     DECLARE @TOTALCOD INT;
@@ -194,13 +201,18 @@ INSERT INTO @TEMPLATEDETAIL  (
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @IdAccount
           AND NOT EXISTS
-    (
-        SELECT 1
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-        WHERE ACD.GuideSerie = DOR.Guide_Serie
-              AND ACD.GuideNumber = DOR.Guide_Number
-              AND ACD.RowStatus = 1
-    );
+		(
+			SELECT 1
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			WHERE ACD.GuideSerie = DOR.Guide_Serie
+					AND ACD.GuideNumber = DOR.Guide_Number
+
+					-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+					AND ACD.DopId = dpd.DopId
+					-- FIN MODIFICACIÓN
+
+					AND ACD.RowStatus = 1
+		);
     WITH ROWCTE (TotalCash, CountCash, TotalCard, CountCard, TotalCredit, CountCredit, TotalFacturaCash, CountFacturaCash, TotalFacturaCard, CountFacturaCard, IdAccount)
     AS (SELECT ISNULL(SUM(S1.TotalCash), 0) 'TotalCash',
                ISNULL(SUM(S1.CountCash), 0) 'CountCash',
@@ -224,13 +236,14 @@ INSERT INTO @TEMPLATEDETAIL  (
                        WHEN DOPD.TypeofInOutMoneyId = 1 
 							AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
 						THEN
-                           SUM(   CASE
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalCash',
@@ -247,14 +260,16 @@ INSERT INTO @TEMPLATEDETAIL  (
                    END 'CountCash',
                    CASE
                        WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)  
-							AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) THEN
-                           SUM(   CASE
+							AND DOPD.TypeServiceId IN (@Estandar,@Devolucion) 
+							THEN
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalCard',
@@ -271,13 +286,14 @@ INSERT INTO @TEMPLATEDETAIL  (
                    END 'CountCard',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
-                           SUM(   CASE
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalCredit',
@@ -293,13 +309,14 @@ INSERT INTO @TEMPLATEDETAIL  (
                        WHEN DOPD.TypeofInOutMoneyId = 1  
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado)
 						THEN
-                           SUM(   CASE
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalFacturaCash',
@@ -318,13 +335,14 @@ INSERT INTO @TEMPLATEDETAIL  (
                        WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)  
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado) 
 						THEN
-                           SUM(   CASE
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalFacturaCard',
@@ -358,13 +376,19 @@ INSERT INTO @TEMPLATEDETAIL  (
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
                   AND NOT EXISTS
-            (
-                SELECT 1
-                FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-                WHERE ACD.GuideSerie = DOR.Guide_Serie
-                      AND ACD.GuideNumber = DOR.Guide_Number
-                      AND ACD.RowStatus = 1
-            )
+				(
+					SELECT 1
+					FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+					WHERE ACD.GuideSerie = DOR.Guide_Serie
+						  AND ACD.GuideNumber = DOR.Guide_Number
+
+						  -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+						  AND ACD.DopId = DOPD.DopId
+						  -- FIN MODIFICACIÓN
+
+						  AND ACD.RowStatus = 1
+				
+				)
             GROUP BY DOPD.TypeofInOutMoneyId,
 					DOPD.TypeServiceId,
                      DOPD.amount,

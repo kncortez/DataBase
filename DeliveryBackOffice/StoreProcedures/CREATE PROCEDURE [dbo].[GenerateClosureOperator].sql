@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GenerateClosureOperador]    Script Date: 28/03/2022 14:26:57 ******/
+/****** Object:  StoredProcedure [dbo].[GenerateClosureOperator]    Script Date: 1/04/2022 14:49:17 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,7 +13,7 @@ GO
 -- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GenerateClosureOperator]
+ALTER PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
@@ -93,6 +93,11 @@ BEGIN
     SELECT DOR.Guide_Serie,
            DOR.Guide_Number,
 		   DOPD.Fel
+
+		   -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		   ,DOPD.DopId
+		   -- FIN MODIFICACIÓN
+
     INTO #TempClosureDetail
     FROM dbo.DeliveryOrder DOR
         JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
@@ -117,10 +122,19 @@ BEGIN
         FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
+
+			  -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			  AND ACD.DopId = DOPD.DopId
+			  -- FIN MODIFICACIÓN
               AND ACD.RowStatus = 1
     )
 	UNION ALL
 	SELECT DOPD.GuideSerie, DOPD.GuideNumber, DOPD.Fel
+
+			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		   ,DOPD.DopId
+			-- FIN MODIFICACIÓN
+
     FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
          
         JOIN CatTypeServiceClosure CTS
@@ -208,13 +222,14 @@ BEGIN
                        WHEN DOPD.TypeofInOutMoneyId = 1  
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado) 
 						THEN
-                           SUM(   CASE
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalFacturaCash',
@@ -233,13 +248,14 @@ BEGIN
                        WHEN (DOPD.TypeofInOutMoneyId = 6 OR DOPD.TypeofInOutMoneyId = 2)  
 							AND DOPD.TypeServiceId IN (@Entrega,@Recepcion,@Traslado)  
 						THEN
-                           SUM(   CASE
+                           /*SUM(   CASE
                                       WHEN DOR.IsCollect = 1 THEN
                                           DOR.PriceShippment
                                       ELSE
                                           DOPD.amount
                                   END
-                              )
+                              )*/
+							SUM(DOPD.amount)
                        ELSE
                            0
                    END 'TotalFacturaCard',
@@ -399,6 +415,11 @@ BEGIN
                 TokenUpdated,
                 DateUpdated,
 				Fel
+
+				-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+				,DopId
+				-- FIN MODIFICACIÓN
+
             )
             SELECT @HeaderClosures,
                    Guide_Serie,
@@ -409,6 +430,11 @@ BEGIN
                    NULL,
                    NULL,
 				   (SELECT item FROM dbo.SplitUnlimited(Fel, '-') WHERE id = 2)
+
+				   -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+				   ,DopId
+				   -- FIN MODIFICACIÓN
+
             FROM #TempClosureDetail;
 
             SELECT 200 IdResult,
