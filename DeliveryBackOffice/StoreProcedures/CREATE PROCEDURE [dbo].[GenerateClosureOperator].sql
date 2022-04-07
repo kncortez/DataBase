@@ -13,7 +13,7 @@ GO
 -- Nota: Es una copia de GenerateClosure pero se agregaron validaciones
 -- =============================================
 
-ALTER PROCEDURE [dbo].[GenerateClosureOperator]
+CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
@@ -80,8 +80,8 @@ BEGIN
     SELECT IND.dti_fk_orderSerie,
            IND.dti_fk_orderNumber,
            MAX(IND.dti_fk_header) 'dti_fk_header'
-    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT
-        LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND
+    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
     WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -99,17 +99,17 @@ BEGIN
 		   -- FIN MODIFICACIÓN
 
     INTO #TempClosureDetail
-    FROM dbo.DeliveryOrder DOR
+    FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
         JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN @TEMPLATEDETAIL IND
             ON IND.guideserie = DOR.Guide_Serie
                AND IND.guidenumber = DOR.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH
+        LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
             ON INH.inv_pk_id = IND.header
         JOIN DeliveryBackOffice.dbo.StatusOrder STO
             ON STO.StatusOrderId = DOR.StatusOrderId
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.guideserie = DOR.Guide_Serie
                AND DOPD.guidenumber = DOR.Guide_Number
                AND DOPD.ShipmentCompleted = 1
@@ -141,7 +141,8 @@ BEGIN
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		JOIN invoiceHeader INH  ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+		JOIN invoiceHeader INH WITH (NOLOCK)
+			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @UserId
@@ -270,17 +271,17 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard'
-        FROM dbo.DeliveryOrder DOR
+        FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
                 ON DOR.Sender_ID = VPC.CodeOfReference
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
                    AND IND.guidenumber = DOR.Guide_Number
-            LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH
+            LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
                 ON INH.inv_pk_id = IND.header
             JOIN DeliveryBackOffice.dbo.StatusOrder STO
                 ON STO.StatusOrderId = DOR.StatusOrderId
-            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                 ON DOPD.guideserie = DOR.Guide_Serie
                    AND DOPD.guidenumber = DOR.Guide_Number
                    AND DOPD.ShipmentCompleted = 1
