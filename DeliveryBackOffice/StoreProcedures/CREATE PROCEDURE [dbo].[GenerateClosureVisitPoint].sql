@@ -70,6 +70,7 @@ BEGIN
 	FROM AccountingClosuresHeader ACH
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
+		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NULL
 
 	-- Variable para guardar el ID del cierre que se generó
 	DECLARE @IdClosure INT = 0;
