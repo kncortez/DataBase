@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[ReportClosureVisitPoint]    Script Date: 6/04/2022 14:56:33 ******/
+/****** Object:  StoredProcedure [dbo].[ReportClosureVisitPoint]    Script Date: 11/04/2022 08:06:13 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -131,6 +131,7 @@ begin
 			--OR DOPD.AccountId = @IdAccount 
 			OR DOPD.VisitPoint = @VisitPointId)
 		AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre 
+		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
 	-- ORDER BY DOPD.DateCreated ASC
 	UNION ALL
 		SELECT ACD.AccountingClosuresHeaderId ClosuresHeaderId
@@ -196,6 +197,7 @@ begin
 					) 
 				and ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
 				AND (CTS.IdTypeService NOT IN (5,23))
+				AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
 			ORDER BY DOPD.DateCreated ASC
 end
 
@@ -285,6 +287,7 @@ begin
 		AND (DOR.Sender_ID = @VisitPointId 
 			--OR DOPD.AccountId = @IdAccount 
 			OR DOPD.VisitPoint = @VisitPointId)
+		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
@@ -349,6 +352,7 @@ begin
 				--OR DOPD.AccountId = @IdAccount
 				)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -438,6 +442,7 @@ begin
 
 	WHERE CONVERT(DATE, DOPD.DateCreated) 
 		BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
 
 --ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
@@ -500,6 +505,7 @@ begin
 		WHERE CONVERT(DATE, DOPD.DateCreated) 
 			BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END
