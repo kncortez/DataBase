@@ -70,7 +70,7 @@ GO
 ALTER TABLE [dbo].[AccountingClosuresHeaderVisitPoint] CHECK CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_User]
 GO
 ALTER TABLE [dbo].[AccountingClosuresHeaderVisitPoint]  WITH CHECK ADD  CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_VisitPointClient] FOREIGN KEY([VisitPoint])
-REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference])
+REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 GO
 ALTER TABLE [dbo].[AccountingClosuresHeaderVisitPoint] CHECK CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_VisitPointClient]
 GO
