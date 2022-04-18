@@ -24,6 +24,8 @@ CREATE TYPE [dbo].[TblDeliveryOrdersFD] AS TABLE(
 	[Sender_Town] [nvarchar](100) NULL,
 	[Sender_Department] [nvarchar](100) NULL,
 	[Sender_Phone] [nvarchar](50) NULL,
+	[Sender_Lat] [varchar](50) NULL,
+	[Sender_Lng] [varchar](50) NULL,
 	[Receiver_ID] [int] NULL,
 	[Receiver_FirstName] [nvarchar](100) NULL,
 	[Receiver_LastName] [nvarchar](100) NULL,
