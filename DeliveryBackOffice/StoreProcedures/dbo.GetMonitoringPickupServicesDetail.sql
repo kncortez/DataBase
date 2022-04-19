@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-
+/****** Object:  StoredProcedure [dbo].[GetMonitoringPickupServicesDetail]    Script Date: 19/04/2022 17:26:27 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,7 +10,7 @@ GO
 -- Create date: <2022-04-08>
 -- Description:	<Obtiene información para el detalle del Form Monitoreo de Servicios de Recolección>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
+ALTER PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
 	-- Add the parameters for the stored procedure here
 	@ServiceManagementId INT
 AS
@@ -19,14 +19,14 @@ BEGIN
 -- interfering with SELECT statements.
 SET NOCOUNT ON;
 
-	--Table 0 información del servicioi
+	--Table 0 información del servicio
 	SELECT DISTINCT
 		sm.IdServiceManagement IdServiceManagement
 	   ,cu.Name Customer
 	   ,vpc.DescriptionOfClient VisitPoint
-	   ,do.Sender_Department Department
-	   ,do.Sender_Town Town
-	   ,do.Sender_Address Address
+	   ,vpc.Department Department
+	   ,vpc.Town Town
+	   ,vpc.Address Address
 	   ,css.Name Status
 	   ,IIF(css.Name = 'Incidencia', (SELECT TOP 1
 				DescriptionIncidence
@@ -37,25 +37,20 @@ SET NOCOUNT ON;
 	   ,cr.CodeRoute Route
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) Courier
 	   ,sm.Amount Amount
-	FROM ServiceManagement sm WITH (NOLOCK)
-	JOIN SchedulePickup sp WITH (NOLOCK)
+	FROM ServiceManagement sm
+	JOIN SchedulePickup sp
 		ON sp.SchedulePickupId = sm.IdSchedulePickup
-	LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+	JOIN VisitPointClient vpc
 		ON vpc.CodeOfReference = sp.SenderId
-	JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-		ON dopd.IdHeaderRecolection = sp.SchedulePickupId
-	JOIN DeliveryOrder do WITH (NOLOCK)
-		ON do.Guide_Serie = dopd.GuideSerie
-			AND do.Guide_Number = dopd.GuideNumber
-	JOIN CatServiceStatus css WITH (NOLOCK)
+	JOIN CatServiceStatus css
 		ON css.IdServiceStatus = sm.ServiceStatusId
-	JOIN Customer cu WITH (NOLOCK)
-		ON cu.IdCustomer = do.IdCustomer
-	LEFT JOIN RouteAssigment ra WITH (NOLOCK)
+	JOIN Customer cu
+		ON cu.IdCustomer = vpc.CustomerID
+	LEFT JOIN RouteAssigment ra
 		ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-	LEFT JOIN CatRoute cr WITH (NOLOCK)
+	LEFT JOIN CatRoute cr
 		ON cr.IdRoute = ra.IdRoute
-	LEFT JOIN SenderReceiver sr WITH (NOLOCK)
+	LEFT JOIN SenderReceiver sr
 		ON sr.ID = ra.IdCurrierMan
 	WHERE sm.IdServiceManagement = @ServiceManagementId
 
@@ -97,4 +92,3 @@ SET NOCOUNT ON;
 		ON so.StatusOrderId = do.StatusOrderId
 	WHERE sm.IdServiceManagement = @ServiceManagementId
 END
-GO

@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-
+/****** Object:  StoredProcedure [dbo].[GetMonitoringPickupServices]    Script Date: 19/04/2022 16:12:38 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,7 +10,7 @@ GO
 -- Create date: <2022-04-07>
 -- Description:	<Obtiene información para Form Monitoreo de Servicios de Recolección>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetMonitoringPickupServices]
+ALTER PROCEDURE [dbo].[GetMonitoringPickupServices]
 	-- Add the parameters for the stored procedure here
 	@CustomerId INT = -1,
 	@DateStart DATE = '2022-01-07',
@@ -26,30 +26,31 @@ SET NOCOUNT ON;
 
 	SELECT DISTINCT
 		IdServiceManagement ServiceId
+	   ,sp.SenderName Customer  
 	   ,vpc.DescriptionOfClient VisitPoint
-	   ,do.Sender_Department Department
-	   ,do.Sender_Town Town
-	   ,do.Sender_Address Address
+	   ,vpc.Department Department
+	   ,vpc.Town Town
+	   ,vpc.Address Address
 	   ,css.Name Status
-	FROM ServiceManagement sm WITH (NOLOCK)
-	JOIN SchedulePickup sp WITH (NOLOCK)
+	   ,IIF(sp.IsScheduled IS NULL OR sp.IsScheduled = 0, 'A demanda', 'Programada') TypeService
+	   ,FORMAT(sm.DateCreated,'dd/MM/yyyy HH:mm:ss') DateCreated
+	   ,FORMAT(sp.EndDate,'dd/MM/yyyy HH:mm:ss') EndDate
+	FROM ServiceManagement sm
+	JOIN SchedulePickup sp
 		ON sp.SchedulePickupId = sm.IdSchedulePickup
-	LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+	JOIN VisitPointClient vpc
 		ON vpc.CodeOfReference = sp.SenderId
-	JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-		ON dopd.IdHeaderRecolection = sp.SchedulePickupId
-	JOIN DeliveryOrder do WITH (NOLOCK)
-		ON do.Guide_Serie = dopd.GuideSerie
-			AND do.Guide_Number = dopd.GuideNumber
-	JOIN CatServiceStatus css WITH (NOLOCK)
+	JOIN CatServiceStatus css
 		ON css.IdServiceStatus = sm.ServiceStatusId
-	JOIN Customer cu WITH (NOLOCK)
-		ON cu.IdCustomer = do.IdCustomer
-	WHERE (do.IdCustomer = @CustomerId
+	JOIN Customer cu
+		ON cu.IdCustomer = vpc.CustomerID
+	LEFT JOIN CatSystem cs
+		ON cs.SysIdSystem = sp.IdSourcePlataform
+	WHERE (cu.IdCustomer = @CustomerId
 	OR @CustomerId = -1)
-	AND (REPLACE(do.Sender_Phone, '-', '') LIKE @PhoneNew
+	AND (REPLACE(sp.SenderPhone, '-', '') LIKE @PhoneNew
+	OR REPLACE(vpc.Phone, '-', '') LIKE @PhoneNew
 	OR REPLACE(cu.CustomerPhone, '-', '') LIKE @PhoneNew
 	OR @PhoneNew = '-1')
 	AND CAST(sm.DateCreated AS DATE) BETWEEN @DateStart AND @DateEnd
 END
-GO
