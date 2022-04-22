@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[ReportClosure]    Script Date: 22/04/2022 09:07:01 ******/
+/****** Object:  StoredProcedure [dbo].[ReportClosure]    Script Date: 22/04/2022 14:50:20 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -87,7 +87,7 @@ begin
 			 AND DOR.StatusOrderId != 7
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
@@ -117,7 +117,7 @@ begin
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) 
 		AND CONVERT(DATE, @EndDate)
 		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
-		AND ACD.AccountingClosuresHeaderId = @IdCierre 
+		AND ACD.AccountingClosuresHeaderId = @IdCierre
 	-- ORDER BY DOPD.DateCreated ASC
 	UNION ALL
 		SELECT ACD.AccountingClosuresHeaderId ClosuresHeaderId
@@ -218,7 +218,7 @@ begin
 			AND DOR.StatusOrderId != 7
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
@@ -350,7 +350,7 @@ begin
 			AND DOR.StatusOrderId != 7
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
