@@ -39,7 +39,7 @@ BEGIN
 			WHEN spu.TownshipId IS NOT NULL THEN twnT.TownshipName
 			ELSE ''
 		END) AS Town
-		,ISNULL(spu.SenderPhone,'0') Phone		
+		,ISNULL(IIF(spu.SenderPhone='NULL','',spu.SenderPhone),'') Phone		
 		,ISNULL(smt.Amount,'0') total
 		,ISNULL(PT.TimePlaDescription,'') TimePay
 
