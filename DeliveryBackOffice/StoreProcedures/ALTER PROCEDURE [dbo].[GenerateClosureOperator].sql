@@ -116,7 +116,7 @@ BEGIN
 			   AND DOR.StatusOrderId != 7
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @UserId
-		  AND (DOPD.amount > 0 OR (DOPD.CODAmountProcess > 0 OR DOPD.CODAmountProcess IS NOT NULL))
+		  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
           AND NOT EXISTS
     (
         SELECT 1
@@ -289,7 +289,7 @@ BEGIN
 				   AND DOR.StatusOrderId != 7
         WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
               AND DOPD.AccountId = @UserId
-			  AND (DOPD.amount > 0 OR (DOPD.CODAmountProcess > 0 OR DOPD.CODAmountProcess IS NOT NULL))
+			  AND (ISNULL(DOPD.amount,0) > 0 OR ISNULL(DOPD.CODAmountProcess,0) > 0)
               AND NOT EXISTS
         (
             SELECT 1
