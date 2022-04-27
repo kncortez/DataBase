@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GenerateClosureOperator]    Script Date: 22/04/2022 16:53:45 ******/
+/****** Object:  StoredProcedure [dbo].[GenerateClosureOperator]    Script Date: 27/04/2022 08:56:04 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -116,7 +116,7 @@ BEGIN
 			   AND DOR.StatusOrderId != 7
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @UserId
-		  AND (DOPD.TimePlaId != 3 AND DOPD.amount > 0)
+		  AND (DOPD.amount > 0 OR (DOPD.CODAmountProcess > 0 OR DOPD.CODAmountProcess IS NOT NULL))
           AND NOT EXISTS
     (
         SELECT 1
@@ -289,6 +289,7 @@ BEGIN
 				   AND DOR.StatusOrderId != 7
         WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
               AND DOPD.AccountId = @UserId
+			  AND (DOPD.amount > 0 OR (DOPD.CODAmountProcess > 0 OR DOPD.CODAmountProcess IS NOT NULL))
               AND NOT EXISTS
         (
             SELECT 1
