@@ -173,11 +173,11 @@ BEGIN
 	--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 
-	JOIN CatTypeServiceClosure CTS
+	JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
 		ON CTS.IdTypeService = DOPD.TypeServiceId
 	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
 		ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-	JOIN invoiceHeader INH
+	JOIN invoiceHeader INH WITH(NOLOCK)
 		ON INH.inv_numberFEL = (SELECT
 					item
 				FROM dbo.SplitUnlimited(DOPD.Fel, '-')
