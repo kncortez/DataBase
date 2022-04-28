@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[ReportClosureDesktop]    Script Date: 27/04/2022 14:48:47 ******/
+/****** Object:  StoredProcedure [dbo].[ReportClosureDesktop]    Script Date: 28/04/2022 09:14:55 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -68,7 +68,7 @@ BEGIN
 		SUBSTRING(Item, 1, LEN(Item)) ItemNumber
 	FROM DeliveryBackOffice.dbo.SplitUnlimited(@IdAccount, ',')
 	
-	SELECT DISTINCT
+	SELECT DISTINCT DOPD.AccountId,
 		ACD.AccountingClosuresHeaderId ClosuresHeaderId
 	   ,VPC.VisitPointId
 	   ,VPC.DescriptionOfClient VisitPointDescription
@@ -96,8 +96,6 @@ BEGIN
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
 	FROM dbo.DeliveryOrder DOR
-	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
-		ON DOR.Sender_ID = VPC.CodeOfReference
 	LEFT JOIN @TEMPLATEDETAIL IND
 		ON IND.guideserie = DOR.Guide_Serie
 			AND IND.guidenumber = DOR.Guide_Number
@@ -111,6 +109,12 @@ BEGIN
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
+
+	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+		ON DOPD.VisitPoint = VPC.CodeOfReference
+	-- FIN MODIFICACIÓN
+
 	JOIN CatTypeServiceClosure CTS
 		ON CTS.IdTypeService = DOPD.TypeServiceId
 	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
@@ -132,13 +136,12 @@ BEGIN
 			AND (DOPD.TypeofInOutMoneyId = 6
 				AND costd.Voucher != '')
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-	AND ((DOR.Sender_ID IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1')
-	OR (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
-	OR DOPD.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId))
+	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
+	AND (DOPD.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	-- ORDER BY DOPD.DateCreated ASC
 	UNION ALL
-	SELECT DISTINCT
+	SELECT DISTINCT DOPD.AccountId,
 		ACD.AccountingClosuresHeaderId ClosuresHeaderId
 	   ,VPC.VisitPointId
 	   ,VPC.DescriptionOfClient VisitPointDescription
@@ -184,14 +187,19 @@ BEGIN
 			AND ACD.RowStatus = 1
 	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+
+	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
-		ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
-		OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
+		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
+		ON DOPD.VisitPoint = VPC.CodeOfReference
+			OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
+	-- FIN MODIFICACIÓN
+
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
 		ON REU.UsrIdUser = ACH.UserId
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-	AND ((VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1')
-	OR (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1'))
+	AND (VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1')
+	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService NOT IN (5, 23))
 	ORDER BY DOPD.DateCreated ASC
