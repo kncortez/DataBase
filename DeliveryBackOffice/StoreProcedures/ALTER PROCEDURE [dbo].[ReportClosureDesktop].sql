@@ -33,8 +33,8 @@ BEGIN
 			IND.dti_fk_orderSerie
 		   ,IND.dti_fk_orderNumber
 		   ,MAX(IND.dti_fk_header) 'dti_fk_header'
-		FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT
-		LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND
+		FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH(NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH(NOLOCK)
 			ON IND.dti_fk_orderSerie = DOPT.GuideSerie
 				AND IND.dti_fk_orderNumber = DOPT.GuideNumber
 		WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -95,15 +95,15 @@ BEGIN
 			ELSE ''
 		END 'PaymentType'
 	   ,CTS.NameTypeService AS 'ServiceType'
-	FROM dbo.DeliveryOrder DOR
+	FROM dbo.DeliveryOrder DOR WITH(NOLOCK)
 	LEFT JOIN @TEMPLATEDETAIL IND
 		ON IND.guideserie = DOR.Guide_Serie
 			AND IND.guidenumber = DOR.Guide_Number
-	LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH
+	LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH(NOLOCK)
 		ON INH.inv_pk_id = IND.header
-	JOIN DeliveryBackOffice.dbo.StatusOrder STO
+	JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
 		ON STO.StatusOrderId = DOR.StatusOrderId
-	LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+	LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 		ON DOPD.GuideSerie = DOR.Guide_Serie
 			AND DOPD.GuideNumber = DOR.Guide_Number
 			AND dopd.ShipmentCompleted = 1
@@ -111,26 +111,26 @@ BEGIN
 			AND DOR.StatusOrderId != 7
 
 	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 		ON DOPD.VisitPoint = VPC.CodeOfReference
 	-- FIN MODIFICACIÓN
 
-	JOIN CatTypeServiceClosure CTS
+	JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
 		ON CTS.IdTypeService = DOPD.TypeServiceId
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 		ON ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 			AND ACD.DopId = DOPD.DopId
 			AND ACD.RowStatus = 1
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
-	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
 		ON REU.UsrIdUser = ACH.UserId
-	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
 		ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-	LEFT JOIN DeliveryBackOffice.dbo.Cost cost
+	LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH(NOLOCK)
 		ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
-	LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd
+	LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH(NOLOCK)
 		ON costd.IdCost = cost.IdCost
 			AND costd.Amount > 0
 			AND (DOPD.TypeofInOutMoneyId = 6
@@ -171,31 +171,31 @@ BEGIN
 
 	--,DOPD.*
 	--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
-	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 
 	JOIN CatTypeServiceClosure CTS
 		ON CTS.IdTypeService = DOPD.TypeServiceId
-	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
 		ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 	JOIN invoiceHeader INH
 		ON INH.inv_numberFEL = (SELECT
 					item
 				FROM dbo.SplitUnlimited(DOPD.Fel, '-')
 				WHERE id = 2)
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 		ON INH.inv_numberFEL = ACD.Fel
 			AND ACD.RowStatus = 1
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
 	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
 		ON DOPD.VisitPoint = VPC.CodeOfReference
 			OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
 	-- FIN MODIFICACIÓN
 
-	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
 		ON REU.UsrIdUser = ACH.UserId
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 	AND (VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1')
