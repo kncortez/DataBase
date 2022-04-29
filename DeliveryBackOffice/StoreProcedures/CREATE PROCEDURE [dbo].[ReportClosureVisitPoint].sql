@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[ReportClosureVisitPoint]    Script Date: 11/04/2022 08:06:13 ******/
+/****** Object:  StoredProcedure [dbo].[ReportClosureVisitPoint]    Script Date: 28/04/2022 17:39:14 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -11,7 +11,7 @@ GO
 -- Description:	<SP para consulta de cierres generales en reporte de reporting services>
 -- Nota: Es una copia de ReportClosure
 -- =============================================
-CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
+ALTER PROCEDURE [dbo].[ReportClosureVisitPoint]
 @StartDate datetime = null,
 @EndDate datetime = null,
 @VisitPointId INT = null,
@@ -116,7 +116,7 @@ begin
 			AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 		LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
-			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -131,7 +131,7 @@ begin
 			--OR DOPD.AccountId = @IdAccount 
 			OR DOPD.VisitPoint = @VisitPointId)
 		AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre 
-		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 	-- ORDER BY DOPD.DateCreated ASC
 	UNION ALL
 		SELECT ACD.AccountingClosuresHeaderId ClosuresHeaderId
@@ -181,7 +181,7 @@ begin
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
 			LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
-				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -197,7 +197,7 @@ begin
 					) 
 				and ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
 				AND (CTS.IdTypeService NOT IN (5,23))
-				AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
+				AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 			ORDER BY DOPD.DateCreated ASC
 end
 
@@ -273,7 +273,7 @@ begin
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 		LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
-			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -287,7 +287,7 @@ begin
 		AND (DOR.Sender_ID = @VisitPointId 
 			--OR DOPD.AccountId = @IdAccount 
 			OR DOPD.VisitPoint = @VisitPointId)
-		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
@@ -338,7 +338,7 @@ begin
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
 			LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
-				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -352,7 +352,7 @@ begin
 				--OR DOPD.AccountId = @IdAccount
 				)
 			AND (CTS.IdTypeService NOT IN (5,23))
-			AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
+			AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -431,7 +431,7 @@ begin
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 		LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
-			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -442,7 +442,7 @@ begin
 
 	WHERE CONVERT(DATE, DOPD.DateCreated) 
 		BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 
 --ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
@@ -494,7 +494,7 @@ begin
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
 			LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
-				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.IdAccountingClosuresHeaderVisitPoint
+				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -505,7 +505,7 @@ begin
 		WHERE CONVERT(DATE, DOPD.DateCreated) 
 			BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService NOT IN (5,23))
-			AND ACH.IdAccountingClosuresHeaderVisitPoint IS NOT NULL
+			AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END

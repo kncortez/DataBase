@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetDataForClosureVisitPoint]    Script Date: 1/04/2022 11:28:14 ******/
+/****** Object:  StoredProcedure [dbo].[GetDataForClosureVisitPoint]    Script Date: 28/04/2022 17:33:00 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,7 +12,7 @@ GO
 -- Description:	<SP para obtener la lista de guías que se procesaron en un express center>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GetDataForClosureVisitPoint]
+ALTER PROCEDURE [dbo].[GetDataForClosureVisitPoint]
 @VisitPointId int = 4246,
 @IdAccount int = 0
 AS
@@ -42,7 +42,7 @@ BEGIN
 			ON ACH.UserId = RU.UsrIdUser
 		WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 			AND ACH.VisitPoint = @VisitPointId
-			AND ACH.IdAccountingClosuresHeaderVisitPoint IS NULL
+			AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 	) S1
 	GROUP BY UsrIdUser, UsrNickName, DateCreated, IdAccountingClosuresHeader
 
@@ -65,5 +65,5 @@ BEGIN
 	FROM AccountingClosuresHeader ACH
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
-		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NULL
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 END;

@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GenerateClosureVisitPoint]    Script Date: 29/03/2022 16:23:27 ******/
+/****** Object:  StoredProcedure [dbo].[GenerateClosureVisitPoint]    Script Date: 28/04/2022 17:31:13 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,7 +12,7 @@ GO
 -- Description:	<SP para generar el cierre de los express center por punto de visita>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
+ALTER PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @VisitPointId INT = 4246,
     @UserId INT,
     @TokenCreated NVARCHAR(50),
@@ -70,7 +70,7 @@ BEGIN
 	FROM AccountingClosuresHeader ACH
 	WHERE CAST(ACH.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 		AND ACH.VisitPoint = @VisitPointId
-		AND ACH.IdAccountingClosuresHeaderVisitPoint IS NULL
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NULL
 
 	-- Variable para guardar el ID del cierre que se generó
 	DECLARE @IdClosure INT = 0;
@@ -113,10 +113,10 @@ BEGIN
 
 		-- Inserta el ID del cierre de VisitPoint en los cierres que se hicieron durante el día
 		UPDATE [dbo].[AccountingClosuresHeader]
-		SET IdAccountingClosuresHeaderVisitPoint = @IdClosure
+		SET AccountingClosuresHeaderVisitPointId = @IdClosure
 		WHERE CAST(DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 			AND VisitPoint = @VisitPointId
-			AND IdAccountingClosuresHeaderVisitPoint IS NULL;
+			AND AccountingClosuresHeaderVisitPointId IS NULL;
 
 
 
