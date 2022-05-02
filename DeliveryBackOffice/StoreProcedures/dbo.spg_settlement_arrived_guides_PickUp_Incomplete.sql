@@ -45,9 +45,9 @@ BEGIN
 	   ,ISNULL((SELECT
 				COUNT(1)
 			FROM SettlementByPickup sbp
-			JOIN SettlementByPickupDetail sbpd
+			INNER JOIN SettlementByPickupDetail sbpd
 				ON (sbp.Id = sbpd.SettlementByPickupId)
-			JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop
 				ON dop.GuideSerie = sbpd.GuideSerie
 				AND dop.GuideNumber = sbpd.GuideNumber
 				AND dop.NoPiece = sbpd.NoPiece
@@ -60,9 +60,9 @@ BEGIN
 	   ,ISNULL((SELECT
 				COUNT(1)
 			FROM SettlementByPickup sbp
-			JOIN SettlementByPickupDetail sbpd
+			INNER JOIN SettlementByPickupDetail sbpd
 				ON (sbp.Id = sbpd.SettlementByPickupId)
-			JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop
 				ON dop.GuideSerie = sbpd.GuideSerie
 				AND dop.GuideNumber = sbpd.GuideNumber
 				AND dop.NoPiece = sbpd.NoPiece
@@ -95,9 +95,9 @@ BEGIN
 		   ,COUNT(1) Pieces
 		   ,(ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Total
 		FROM SettlementByPickup sp
-		JOIN SettlementByPickupDetail spd
+		INNER JOIN SettlementByPickupDetail spd
 			ON spd.SettlementByPickupId = sp.Id
-		JOIN DeliveryOrder do WITH (NOLOCK)
+		INNER JOIN DeliveryOrder do WITH (NOLOCK)
 			ON do.Guide_Serie = spd.GuideSerie
 			AND do.Guide_Number = spd.GuideNumber
 		WHERE sp.Id = @IdManifest
@@ -106,7 +106,7 @@ BEGIN
 				,spd.GuideNumber
 				,do.Pieces_Dry
 				,do.Pieces_Cold) X
-	JOIN DeliveryOrder do WITH (NOLOCK)
+	INNER JOIN DeliveryOrder do WITH (NOLOCK)
 		ON do.Guide_Serie = X.GuideSerie
 			AND do.Guide_Number = X.GuideNumber
 	WHERE X.Pieces <> X.Total --Piezas incompletas
