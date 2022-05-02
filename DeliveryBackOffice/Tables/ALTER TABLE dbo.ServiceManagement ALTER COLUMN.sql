@@ -1,0 +1,5 @@
+USE [DeliveryBackOffice]
+GO
+
+ALTER TABLE ServiceManagement ALTER COLUMN CiPuDate DATETIME
+ALTER TABLE ServiceManagement ALTER COLUMN CoPuDate DATETIME
