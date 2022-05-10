@@ -1,59 +1,22 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SetServiceRequestFD]    Script Date: 16/02/2022 08:20:54 ******/
+/****** Object:  StoredProcedure [dbo].[SetServiceRequest]    Script Date: 14/03/2022 12:55:29 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-
-ALTER PROCEDURE [dbo].[SetServiceRequestFD]
-@TblServiceRequestFD AS TblServiceRequest READONLY,	
-@TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
-@VisitPointByClientPortfolioId BIGINT = 0,
-@UserAddressId BIGINT = 0,
-@SystemModule NVARCHAR(200) = NULL
+--DROP procedure [dbo].[SetServiceRequest]
+ALTER PROCEDURE [dbo].[SetServiceRequest]
+@TblServiceRequest AS TblServiceRequest READONLY,	
+@TblDeliveryOrders AS TblDeliveryOrders READONLY
 AS
 BEGIN
+
 	DECLARE @IdTransaction bigint = NULL
 	DECLARE @ManifestNumber int = 0
 	DECLARE @ManifestSerie varchar(2) = 'FM'
 	DECLARE @GuideSerie varchar(2) = 'FD'
-
-	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
-	--FIN MODIFICACIÓN
-
-  IF(@VisitPointByClientPortfolioId = 0)
-  BEGIN
-  SET @VisitPointByClientPortfolioId = NULL;
-  END
-
-  IF(@UserAddressId = 0)
-  BEGIN
-  SET @UserAddressId = NULL;
-  END
-  
-  DECLARE @system INT = NULL;
-  DECLARE @module INT = NULL;
-
-  IF (@SystemModule != '') 
-  BEGIN
-  --Se almacena el sistema y modulo desde donde se crea una guía
-		SET @system = (
-						SELECT SysIdSystem from CatSystem ca
-						WHERE ca.SysNameSystem = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/') 
-						WHERE id = 1)
-					   );
-
-		-- Se deja la sentencia TOP 1 ya que existe dos modulos con el mismo nombre para la creación de guías en porta Web
-		-- Crear guías para usuarios individuales/Express y Crear Guías para corporativos en el flujo normal
-		SET @module = (
-						SELECT TOP 1 mo.ModIdModule from CatModule mo
-						WHERE mo.ModName = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/')
-						WHERE id = 2)
-					   );
-  END
 
 	/*********************************************************************************************/
 	/******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -62,14 +25,16 @@ BEGIN
 		[Row_Number][int] IDENTITY(1,1), -- no de fila
 		[Guide_Number] [int] NULL -- correlativo autogenerado
 	)
+
 	BEGIN TRANSACTION
 	BEGIN TRY
 		/*********************************************************************************************/
 		/******** AUTO GENERACIÓN DE CORRELATIVOS BASADOS EN LA CANTIDAD DE REGISTOS RECIBIDOS *******/
 		/*********************************************************************************************/
-		DECLARE @noRecords INT = (SELECT COUNT(RowNumber) FROM @TblDeliveryOrdersFD)
+		DECLARE @noRecords INT = (SELECT COUNT(RowNumber) FROM @TblDeliveryOrders)
 		DECLARE @startnum INT = (SELECT MAX([Guide_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder])
 		DECLARE @endnum INT = (@startnum - 1) + @noRecords
+
 		;WITH gen AS (
 			SELECT @startnum AS num
 			UNION ALL
@@ -78,6 +43,7 @@ BEGIN
 		INSERT INTO @CorrelativeTable (Guide_Number)
 		SELECT * FROM gen
 		option (maxrecursion 10000)
+
 		/*****************************************************************************************************************************/
 		/******** TABLA TEMPORAL #GUIDETABLE PARA UNIR REGISTROS RECIBIDOS DE DELIVERYORDERS Y CORRELATIVOS AUTOGENERADOS ************/
 		/*****************************************************************************************************************************/
@@ -120,23 +86,39 @@ BEGIN
 			[Receiver_Alternant_SocialSecurity_ID],
 			[Delivery_Max_Date],
 			[printedStatus],
+
 			@GuideSerie AS 'Guide_Serie',
 			C.Guide_Number AS 'Guide_Number',
 			@ManifestSerie AS Manifest_Serie, 
 			@ManifestNumber AS Manifest_Number,
+
 			[StatusOrderId],
 			[Receiver_CUI],
 			[Package_Description],
 			[Sender_Internal_Code],
 			[Receiver_Alternant_CUI],
+
 			[Collect_OnDelivery],
-			[IsCollect],
-			[PriceShippment] ,
-			[SenderIdTownship],
-			[ReceiverIdTownship]
+
+			-- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			--[Collect],
+			NULL 'SenderIdTownship',
+			NULL 'ReceiverIdTownship',
+			NULL 'HubOriginId',
+			NULL 'HubDestinationId',
+			NULL 'SourceSystemId',
+			NULL 'CatSystemId',
+			NULL 'Segment',
+			NULL 'CatModuleId',
+			NULL 'IdCustomer',
+			NULL 'OrderUserCreated',
+			NULL 'SalePipeLineId'
+			-- FIN MODIFICACION
+
 		INTO #GuideTable
-		FROM @TblDeliveryOrdersFD
+		FROM @TblDeliveryOrders
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
+
 		/**********************************************************************/
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
 		/**********************************************************************/
@@ -166,13 +148,61 @@ BEGIN
 			@ManifestSerie,
 			@ManifestNumber,
 			[CustomerID]
-		FROM @TblServiceRequestFD
+		FROM @TblServiceRequest
+
 		--SET @IdTransaction = SCOPE_IDENTITY();
+
 		--IF (@IdTransaction IS NOT NULL)
 		--BEGIN
+
+		-- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
+		ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
+
+		--Modifica el tipo de los campos que recibirán una cadena
+
+		/*****************************************************************************/
+		/* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
+		/*****************************************************************************/
+		UPDATE #GuideTable
+		SET SenderIdTownship = (SELECT IdTownship FROM [DeliveryBackOffice].[dbo].[Township]
+								WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
+								AND IdProvince = (SELECT IdProvince FROM [DeliveryBackOffice].[dbo].[Province] 
+												  WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department))),
+			ReceiverIdTownship = (SELECT IdTownship FROM [DeliveryBackOffice].[dbo].[Township]
+								  WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Town)
+								  AND IdProvince = (SELECT IdProvince FROM [DeliveryBackOffice].[dbo].[Province] 
+												    WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department))),
+			SourceSystemId = (SELECT SysIdSystem FROM DeliveryBackOffice.dbo.CatSystem 
+							  WHERE SysNameSystem = 'Parser')
+		FROM #GuideTable t
+
+		/*****************************************************************************/
+		/**** REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS HUBS Y LOS AGREGA A LA TABLA ****/
+		/*****************************************************************************/
+
+		UPDATE #GuideTable
+		
+		SET HubOriginId = (SELECT [DeliveryBackOffice].[dbo].[FnGetHub](t.SenderIdTownship)),
+			HubDestinationId = (SELECT [DeliveryBackOffice].[dbo].[FnGetHub](t.ReceiverIdTownship)),
+			CatSystemId = (SELECT t.SourceSystemId),
+			CatModuleId = (SELECT ModIdModule FROM DeliveryBackOffice.dbo.CatModule
+							WHERE ModName = 'Parser'),
+			IdCustomer = (SELECT CustomerID FROM DeliveryBackOffice.dbo.VisitPointClient
+						  WHERE CodeOfReference = t.Sender_ID),
+			SalePipeLineId = (SELECT IdSalePipeLine FROM DeliveryBackOffice.dbo.CatSalePipelines 
+							  WHERE Name = 'Parser'),
+			OrderUserCreated = (SELECT t.Receiver_Email),
+			Segment = (SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie ,t.Guide_Number))
+		FROM #GuideTable t
+
+		-- FIN MODIFICACION
+
+
 			/**********************************************************************/
 			/*********** GUARDAR ÓRDENES ASOCIADAS (GUÍAS ELECTRÓNICAS) ***********/
 			/**********************************************************************/
+			--PRINT 'Guardar órdenes asociadas'
 
 			INSERT DeliveryBackOffice.dbo.DeliveryOrder (
 				[Ticket_Number],
@@ -212,11 +242,13 @@ BEGIN
 				[Receiver_Alternant_SocialSecurity_ID],
 				[Delivery_Max_Date],
 				[printedStatus],
+
 				[Guide_Serie],
 				[Guide_Number],
 				[Manifest_Serie],
 				[Manifest_Number],
 				[DateCreated],
+
 				[StatusOrderId],
 				[Receiver_CUI],
 				[Package_Description],
@@ -227,16 +259,24 @@ BEGIN
 				[Courier_Vehicle_Plate],
 				[Dispatched_Date],
 				[Dispatched_Token],
+
 				[Collect_OnDelivery],
 				[Guide_Collected],
-				[IsCollect],
-				[PriceShippment],
+				[TypeService],
+				-- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+				--[IsCollect],
+
 				[SenderIdTownship],
 				[ReceiverIdTownship],
-				[VisitpointClientPortfolioId],
-				[UserAddressId],
+				[HubOriginId],
+				[HubDestinationId],
 				[CatSystemId],
-				[CatModuleId]
+				[CatModuleId],
+				[IdCustomer],
+				[Segment],
+				[OrderUserCreated],
+				[SalePipeLineId]
+				-- FIN MODIFICACION
 			)
 			SELECT 
 				GT.[Ticket_Number],
@@ -276,11 +316,13 @@ BEGIN
 				GT.[Receiver_Alternant_SocialSecurity_ID],
 				GT.[Delivery_Max_Date],
 				GT.[printedStatus],
+
 				GT.Guide_Serie,
 				GT.Guide_Number,
 				@ManifestSerie, 
 				@ManifestNumber,
 				GETDATE(),
+
 				GT.StatusOrderId,
 				GT.Receiver_CUI,
 				GT.Package_Description,
@@ -292,16 +334,22 @@ BEGIN
 				NULL, -- Dispatched_Date,
 				NULL, -- Dispatched_Token,
 				GT.Collect_OnDelivery, -- Collect_OnDelivery
-				0, -- Guide_Collected,
-				GT.IsCollect,
-				GT.PriceShippment,
-				GT.SenderIdTownship,
-				GT.ReceiverIdTownship,
-				
-				@VisitPointByClientPortfolioId,
-				@UserAddressId,
-				@system,
-				@module
+				0 -- Guide_Collected
+				,'NDD'
+				-- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+				--,GT.Collect
+
+				,GT.SenderIdTownship
+				,GT.ReceiverIdTownship
+				,GT.HubOriginId
+				,GT.HubDestinationId
+				,GT.CatSystemId
+				,GT.CatModuleId
+				,GT.IdCustomer
+				,GT.Segment
+				,GT.OrderUserCreated
+				,GT.SalePipeLineId
+				-- FIN MODIFICACION
 			FROM #GuideTable GT
 			
 			-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
@@ -349,26 +397,78 @@ BEGIN
 				GETDATE()
 			FROM #GuideTable GT
 
-			DECLARE @Route nvarchar(20) = (select  top 1 cov.RouteCode 
-			from #GuideTable g
-				inner join dbo.Township twn on twn.IdTownship = g.ReceiverIdTownship
-				left join dbo.DumpServiceCoverage cov on cov.HeaderCode = twn.HeaderCode
-				and cov.RowStatus=1
-					)
 
-		--Actualizar registro de guía agregando registro en columna Segment
-		         UPDATE do
-                   SET do.Segment = (dbo.fn_get_segment(GT.Guide_Serie,GT.Guide_Number))
-                   FROM DeliveryOrder do
-                   INNER JOIN #GuideTable GT
-                   ON GT.Guide_Number = do.Guide_Number
-                      AND GT.Guide_Serie = do.Guide_Serie;
-		-------------------------------------------------------------------
+	DECLARE @Guides AS TABLE(
+		[RowNumber][int] IDENTITY(1,1),
+		[Guide_Serie] nvarchar(2) NULL, 		
+		[Guide_Number] [int] NULL, 
+		[CountDry] int,
+		[CountCold] int
+	)
 
+	DECLARE @Pieces AS TABLE(
+		[Guide_Serie] nvarchar(2) NULL,
+		[Guide_Number] [int] NULL,
+		[PartNumber] int,
+		[IsDry] bit
+	)
+
+	insert into @Guides
+	select Guide_Serie,Guide_Number,Pieces_Dry,Pieces_Cold 
+	from #GuideTable
+
+			DECLARE @i int = 0
+			DECLARE @elements int = (select count(1) from @Guides ) 
+			if (@elements > 0) --insertar piezas
+			BEGIN
+			 WHILE @i < @elements 
+			 BEGIN	
+			   --piezas secas
+			 	DECLARE @j int = 0
+				DECLARE @PiecesCount int = (select CountDry from @Guides where RowNumber = @i+1) 				
+			 	WHILE @j < @PiecesCount 
+			 		BEGIN
+			 		 insert into @Pieces
+					 select Guide_Serie,Guide_Number,@j+1,1 from @Guides where RowNumber = @i+1
+					 SET @j = @j + 1
+			 		END
+				
+				--piezas frías
+				DECLARE @k int = 0
+				SET @PiecesCount = (select CountCold from @Guides where RowNumber = @i+1) 				
+			 	WHILE @k < @PiecesCount 
+			 		BEGIN
+			 		 insert into @Pieces
+					 select Guide_Serie,Guide_Number,@k+1+@j,0 from @Guides where RowNumber = @i+1
+					 SET @k = @k + 1
+			 		END
+								
+			 SET @i = @i + 1
+			 END
+			END
+
+			insert into DeliveryBackOffice.dbo.DeliveryOrderPiece
+			([GuideSerie], [GuideNumber], [PiecePhysicalWeight], [PieceHeight], [PieceWidth]
+			, [PieceLength], [PieceWeight], [Detail], [Currency], [Amount], [DateCreated]
+			, [PieceUpdated], [DateUpdated], [fragile], [IsPickup], [NoPiece], [PieceHeightCheck]
+			, [PieceWidthCheck], [PieceLengthCheck], [MassWeight], [volumetricWeight]
+			, [CategoryCheck], [StatusOrderId], [IsDry]
+			)
+			select PIC.Guide_Serie,PIC.Guide_Number,0,0,0
+			,0,0,NULL,'GTQ',0,getdate()
+			,null,null,null,null,PIC.PartNumber,null
+			,null,null,null,null
+			,null,1,PIC.IsDry			
+			from @Pieces PIC
+			join #GuideTable GTB
+			ON PIC.Guide_Serie = GTB.Guide_Serie
+			and PIC.Guide_Number = GTB.Guide_Number
 
 			DROP TABLE #GuideTable
+
 		--END
 	END TRY
+	
 	BEGIN CATCH
 		SELECT 
 			0 AS 'StatusCode', 
@@ -376,6 +476,7 @@ BEGIN
 			CONVERT(BIGINT, 0) AS 'NumTransferID'
 		ROLLBACK TRANSACTION
 	END CATCH;
+
 	IF @@TRANCOUNT > 0
 	BEGIN
 		COMMIT TRANSACTION;
@@ -383,24 +484,27 @@ BEGIN
 			1 AS 'StatusCode',
 			'Registros guardados correctamente' AS 'Description', 
 			--@IdTransaction AS 'NumTransferID'
-			@ManifestNumber AS 'NumTransferID',
-			(Select Segment from DeliveryOrder where Manifest_Number = @ManifestNumber) AS 'Segment'
+			@ManifestNumber AS 'NumTransferID'
 		SELECT 
 			Manifest_Serie AS 'ManifestSerie',
 			Manifest_Number AS 'ManifestNumber'
 		FROM ServiceRequest 
 		WHERE Manifest_Serie = @ManifestSerie AND Manifest_Number = @ManifestNumber
+		
 		SELECT 
 			C.[Row_Number] AS 'RowNumber',
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
-			isnull(@Route,'')  as 'Route'
-			,D.PriceShippment AS 'Price',
-			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts'
-			--FIN MODIFICACIÓN
+			(SELECT HubAbbreviation FROM [DeliveryBackOffice].[dbo].[HubLogistics] 
+			 WHERE IdHubLogistic = D.HubOriginId) AS 'HubOrigin',
+			 (SELECT HubAbbreviation FROM [DeliveryBackOffice].[dbo].[HubLogistics] 
+			 WHERE IdHubLogistic = D.HubDestinationId) AS 'HubDestination',
+			 -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			 (SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)) AS 'Attempts'
+			 --FIN MODIFICACIÓN
 		FROM DeliveryOrder D
 		JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END
+
