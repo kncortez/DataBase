@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GenerateClosureOperator]    Script Date: 6/05/2022 11:08:17 ******/
+/****** Object:  StoredProcedure [dbo].[GenerateClosureOperator]    Script Date: 10/05/2022 17:45:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -323,6 +323,11 @@ BEGIN
             FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
             WHERE ACD.GuideSerie = DOR.Guide_Serie
                   AND ACD.GuideNumber = DOR.Guide_Number
+
+				  -- MODIFICACIÓN 09/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+				  AND ACD.DopId = DOPD.DopId
+				  -- FIN MODIFICACIÓN
+
                   AND ACD.RowStatus = 1
         )
         GROUP BY DOPD.TypeofInOutMoneyId,
