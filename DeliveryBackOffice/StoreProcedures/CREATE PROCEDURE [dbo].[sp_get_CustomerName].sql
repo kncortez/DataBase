@@ -1,14 +1,14 @@
 USE [DeliveryBackOffice]
 GO
 
-/****** Object:  StoredProcedure [dbo].[sp_get_tipoCustomer]    Script Date: 9/05/2022 17:02:46 ******/
+/****** Object:  StoredProcedure [dbo].[sp_get_tipoCustomer]    Script Date: 11/05/2022 09:25:16 ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE procedure [dbo].[sp_get_tipoCustomer]
+CREATE PROCEDURE [dbo].[sp_get_CustomerName]
 
 @IdCustomer int
 AS
