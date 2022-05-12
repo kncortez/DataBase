@@ -32,6 +32,7 @@ BEGIN
 			) 'Name',
 			Cu.IdCustomerType,
 			Cu.IdCustomer,
+			VPC.IdVisitPointClient,
 			ISNULL(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ',''),'') 'Phone'
 	FROM
 		[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
@@ -71,6 +72,7 @@ BEGIN
 			) 'Name',
 			Cu.IdCustomerType,
 			Cu.IdCustomer,
+			VPC.IdVisitPointClient,
 			ISNULL(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ',''),'') 'Phone'
 	FROM
 		[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
