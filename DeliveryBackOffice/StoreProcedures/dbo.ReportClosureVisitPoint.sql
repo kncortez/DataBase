@@ -1,16 +1,17 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[ReportClosure]    Script Date: 23/05/2022 11:00:53 ******/
+/****** Object:  StoredProcedure [dbo].[ReportClosureVisitPoint]    Script Date: 23/05/2022 10:59:59 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 -- =============================================
--- Author:		<Freddy Monterroso>
--- Create date: <19/01/2022>
--- Description:	<SP para consulta de cierres en reporte de reporting services>
+-- Author:		<Alejandro Rodríguez>
+-- Create date: <30/03/2022>
+-- Description:	<SP para consulta de cierres generales en reporte de reporting services>
+-- Nota: Es una copia de ReportClosure
 -- =============================================
-ALTER PROCEDURE [dbo].[ReportClosure]
+ALTER PROCEDURE [dbo].[ReportClosureVisitPoint]
 @StartDate datetime = null,
 @EndDate datetime = null,
 @VisitPointId INT = null,
@@ -39,7 +40,7 @@ DECLARE @TEMPLATEDETAIL TABLE
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    
+
 	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
     WHERE CONVERT(DATE, DOPT.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 	-- FIN MODIFICACIÓN
@@ -75,6 +76,18 @@ begin
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
+		
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+		,REU1.UsrNickName 'Encargado'
+		-- FIN MODIFICACIÓN
+
+		-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+		,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+		,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+		-- FIN MODIFICACIÓN
+
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
 		LEFT JOIN @TEMPLATEDETAIL IND
 			ON IND.guideserie = DOR.Guide_Serie
@@ -89,19 +102,13 @@ begin
 			 AND dopd.ShipmentCompleted = 1
 			 AND DOPD.AccountId > 0
 			 AND DOR.StatusOrderId != 7
-
-		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
-			ON DOPD.VisitPoint = VPC.CodeOfReference
-		-- FIN MODIFICACIÓN
-
 		JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 
-			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			-- MODIFICACIÓN 01/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			AND ACD.DopId = DOPD.DopId
 			-- FIN MODIFICACIÓN
 
@@ -118,10 +125,23 @@ begin
 			on costd.IdCost = cost.IdCost 
 			AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
+		LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+			ON REU1.UsrIdUser = ACHVP.UserId
+		-- FIN MODIFICACIÓN
+
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) 
 		AND CONVERT(DATE, @EndDate)
-		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
-		AND ACD.AccountingClosuresHeaderId = @IdCierre
+		AND (DOR.Sender_ID = @VisitPointId 
+			--OR DOPD.AccountId = @IdAccount 
+			OR DOPD.VisitPoint = @VisitPointId)
+		AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre 
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 	-- ORDER BY DOPD.DateCreated ASC
 	UNION ALL
 		SELECT ACD.AccountingClosuresHeaderId ClosuresHeaderId
@@ -150,31 +170,51 @@ begin
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
-    --,DOPD.*
-    --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
-    FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+			,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+			,REU1.UsrNickName 'Encargado'
+			-- FIN MODIFICACIÓN
 
-		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
-			ON DOPD.VisitPoint = VPC.CodeOfReference
-		-- FIN MODIFICACIÓN
+			-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+			,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+			,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+			,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+			-- FIN MODIFICACIÓN
 
-        JOIN CatTypeServiceClosure CTS
-            ON CTS.IdTypeService = DOPD.TypeServiceId
-        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
-            ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		JOIN invoiceHeader INH WITH (NOLOCK)
-			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-        JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-			ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
-			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
-		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
-			ON REU.UsrIdUser = ACH.UserId
-	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
-		AND (CTS.IdTypeService NOT IN (5,23))
-	ORDER BY DOPD.DateCreated ASC
+		--,DOPD.*
+		--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
+		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+			JOIN CatTypeServiceClosure CTS
+				ON CTS.IdTypeService = DOPD.TypeServiceId
+			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+			JOIN invoiceHeader INH WITH (NOLOCK)
+				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+			JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+			JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
+				ON REU.UsrIdUser = ACH.UserId
+			LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
+
+			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+				ON DOPD.VisitPoint = VPC.CodeOfReference
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+				ON REU1.UsrIdUser = ACHVP.UserId
+			-- FIN MODIFICACIÓN
+
+			WHERE CONVERT(DATE, DOPD.DateCreated) 
+				BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+				AND (VPC.CodeOfReference = @VisitPointId 
+					--OR DOPD.AccountId = @IdAccount
+					) 
+				and ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
+				AND (CTS.IdTypeService NOT IN (5,23))
+				AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
+			ORDER BY DOPD.DateCreated ASC
 end
 
 
@@ -206,6 +246,18 @@ begin
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+		,REU1.UsrNickName 'Encargado'
+		-- FIN MODIFICACIÓN
+
+		-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+		,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+		,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+		-- FIN MODIFICACIÓN
+
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
 		LEFT JOIN @TEMPLATEDETAIL IND
 			ON IND.guideserie = DOR.Guide_Serie
@@ -220,19 +272,13 @@ begin
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
-
-		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
-			ON DOPD.VisitPoint = VPC.CodeOfReference
-		-- FIN MODIFICACIÓN
-
 		JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 
-			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			-- MODIFICACIÓN 01/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			AND ACD.DopId = DOPD.DopId
 			-- FIN MODIFICACIÓN
 
@@ -243,13 +289,27 @@ begin
 			ON REU.UsrIdUser = ACH.UserId
 		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
 			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK) 
+		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
 			on cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
-		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)  
+		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
-	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
+		LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+			ON REU1.UsrIdUser = ACHVP.UserId
+		-- FIN MODIFICACIÓN
+
+	WHERE CONVERT(DATE, DOPD.DateCreated) 
+		BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND (DOR.Sender_ID = @VisitPointId 
+			--OR DOPD.AccountId = @IdAccount 
+			OR DOPD.VisitPoint = @VisitPointId)
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
@@ -278,21 +338,26 @@ begin
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
+
+			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+			,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+			,REU1.UsrNickName 'Encargado'
+			-- FIN MODIFICACIÓN
+
+			-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+			,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+			,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+			,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+			-- FIN MODIFICACIÓN
 		
 		--,DOPD.*
 		--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-
-		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
-				ON DOPD.VisitPoint = VPC.CodeOfReference
-			-- FIN MODIFICACIÓN
-
 			JOIN CatTypeServiceClosure CTS
 				ON CTS.IdTypeService = DOPD.TypeServiceId
 			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
 				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-			JOIN invoiceHeader INH WITH (NOLOCK)  
+			JOIN invoiceHeader INH WITH (NOLOCK)
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
 			JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
@@ -300,9 +365,22 @@ begin
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
+			LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
+
+			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+				ON DOPD.VisitPoint = VPC.CodeOfReference
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+				ON REU1.UsrIdUser = ACHVP.UserId
+			-- FIN MODIFICACIÓN
+
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
+			AND (VPC.CodeOfReference = @VisitPointId 
+				--OR DOPD.AccountId = @IdAccount
+				)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -336,6 +414,18 @@ begin
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+		,REU1.UsrNickName 'Encargado'
+		-- FIN MODIFICACIÓN
+
+		-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+		,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+		,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+		,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+		-- FIN MODIFICACIÓN
+
 --,DOPD.*
 --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -346,25 +436,19 @@ begin
 			ON INH.inv_pk_id = IND.header
 		JOIN DeliveryBackOffice.dbo.StatusOrder STO 
 			ON STO.StatusOrderId = DOR.StatusOrderId
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK) 
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 			ON DOPD.GuideSerie = DOR.Guide_Serie 
 			AND DOPD.GuideNumber = DOR.Guide_Number
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
-
-		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
-			ON DOPD.VisitPoint = VPC.CodeOfReference
-		-- FIN MODIFICACIÓN
-
 		JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 
-			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			-- MODIFICACIÓN 01/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			AND ACD.DopId = DOPD.DopId
 			-- FIN MODIFICACIÓN
 
@@ -375,12 +459,24 @@ begin
 			ON REU.UsrIdUser = ACH.UserId
 		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
 			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK) 
+		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
 			on cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
-		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)  
+		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK) 
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
-	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+			ON REU1.UsrIdUser = ACHVP.UserId
+		-- FIN MODIFICACIÓN
+
+	WHERE CONVERT(DATE, DOPD.DateCreated) 
+		BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 
 --ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
@@ -411,6 +507,17 @@ begin
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
+			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+			,ACHVP.IdAccountingClosuresHeaderVisitPoint 'CierreGeneral'
+			,REU1.UsrNickName 'Encargado'
+			-- FIN MODIFICACIÓN
+
+			-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
+			,ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral'
+			,ISNULL(ACHVP.Bag1, '') 'Bolsa'
+			,ISNULL(ACHVP.ClosurerPOS,'') 'CierrePOS'
+			-- FIN MODIFICACIÓN
+
     --,DOPD.*
     --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
@@ -424,16 +531,21 @@ begin
 				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
 			JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
+				ON REU.UsrIdUser = ACH.UserId
+			LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+				ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 				ON DOPD.VisitPoint = VPC.CodeOfReference
+			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+				ON REU1.UsrIdUser = ACHVP.UserId
 			-- FIN MODIFICACIÓN
-
-			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
-				ON REU.UsrIdUser = ACH.UserId
-		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		WHERE CONVERT(DATE, DOPD.DateCreated) 
+			BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END
