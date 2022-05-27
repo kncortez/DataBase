@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[sphd_deliveryorder_settlement_guides_pickup_header]    Script Date: 11/05/2022 19:41:34 ******/
+/****** Object:  StoredProcedure [dbo].[sphd_deliveryorder_settlement_guides_pickup_header]    Script Date: 27/05/2022 10:53:52 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -30,7 +30,8 @@ BEGIN
 		sum(smt.cold_count) cold_count,
 		--sum(ISNULL(dor.Pieces_Dry,0)) dry_count,
 		sum(smt.dry_count) dry_count,
-		sum(smt.Amount) total
+		sum(smt.Amount) total,
+		COUNT(1) TotalServices
 		--,smt.IdServiceManagement
 		--,smt.IdPuRouteAssigment
 		--,smt.IdSchedulePickup
