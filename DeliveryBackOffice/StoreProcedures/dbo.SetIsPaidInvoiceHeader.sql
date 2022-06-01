@@ -24,25 +24,21 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 		
-		SET @Status = (SELECT inv_status FROM invoiceHeader WHERE inv_pk_id = @invoiceHeaderId)
+		SET @Status = (SELECT
+				ISNULL(inv_SAPDocEntryPaymentDetail, -1)
+			FROM InOutOfMoneyDetail
+			WHERE io_invoice = @invoiceHeaderId) --si ya se ha pagado
 
-		IF(@Status IS NOT NULL)
+		IF (@Status = -1)
 		BEGIN
-			IF (@Status <> 3)
-			BEGIN
-				UPDATE invoiceHeader
-				SET IsPaid = @IsPaid
-				WHERE inv_pk_id = @invoiceHeaderId
-				SET @RModified = @@ROWCOUNT
-			END
-			ELSE
-			BEGIN
-				SET @ErrorMessage = 'La factura ya ha sido enviada a SAP.'
-			END
+			UPDATE invoiceHeader
+			SET IsPaid = @IsPaid
+			WHERE inv_pk_id = @invoiceHeaderId
+			SET @RModified = @@ROWCOUNT
 		END
 		ELSE
 		BEGIN
-			SET @ErrorMessage = 'No se ha encontrado el estado de la factura.'
+			SET @ErrorMessage = 'La factura ya ha sido enviada a SAP.'
 		END
 
 

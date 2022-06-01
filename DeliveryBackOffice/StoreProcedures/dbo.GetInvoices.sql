@@ -35,10 +35,12 @@ BEGIN
 	   ,ih.inv_dateRegister InvoiceDate
 	   ,ih.inv_amount InvoiceAmount
 	   ,ISNULL(ih.IsPaid, 'TRUE') IsPaid
-	   ,ih.inv_status [Status]
+	   ,ISNULL(ioomd.inv_SAPDocEntryPaymentDetail, -1) [Status]
 	FROM invoiceHeader ih
 	INNER JOIN invoiceDetail id
 		ON id.dti_fk_header = ih.inv_pk_id
+	INNER JOIN InOutOfMoneyDetail ioomd
+		ON ioomd.io_invoice = ih.inv_pk_id
 	INNER JOIN DeliveryOrder do WITH (NOLOCK)
 		ON do.Guide_Serie = id.dti_fk_orderSerie
 			AND do.Guide_Number = id.dti_fk_orderNumber
@@ -67,7 +69,7 @@ BEGIN
 			,ih.inv_dateRegister
 			,ih.inv_amount
 			,ih.IsPaid
-			,ih.inv_status
+			,ioomd.inv_SAPDocEntryPaymentDetail
 	ORDER BY InvoiceId
 END
 GO
