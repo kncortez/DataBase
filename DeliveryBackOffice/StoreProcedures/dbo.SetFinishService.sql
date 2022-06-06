@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SetFinishService]    Script Date: 31/05/2022 10:29:47 ******/
+/****** Object:  StoredProcedure [dbo].[SetFinishService]    Script Date: 6/06/2022 09:25:00 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -58,24 +58,7 @@ BEGIN
 	DECLARE @Output VARCHAR(MAX);
 	DECLARE @statuscode INT = 200;
 
-	DECLARE @TranCounter INT;  
-    SET @TranCounter = @@TRANCOUNT;  
-    IF @TranCounter > 0  
-	BEGIN
-        -- Procedure called when there is  
-        -- an active transaction.  
-        -- Create a savepoint to be able  
-        -- to roll back only the work done  
-        -- in the procedure if there is an  
-        -- error.  
-        SAVE TRANSACTION FinishService;  
-	END
-    ELSE  
-	BEGIN
-        -- Procedure must start its own  
-        -- transaction.  
-        BEGIN TRANSACTION;  
-	END
+    BEGIN TRANSACTION; 
 
 	BEGIN
 		-- Insert statements for procedure here
@@ -391,35 +374,184 @@ BEGIN
 			IF(@TotalAmount > 0)
 			BEGIN
 
-				DECLARE @storevalue INT;
-
-				EXEC @storevalue = DeliveryBackOffice.dbo.SetServiceRecolect @TblDeliveryOrdersList = @TblDeliveryOrdersList,
-																	@Iscollected = @Iscollected,
-																	@status = @status,
-																	@ShipmentCompleted = @ShipmentCompleted,
-																	@IdStatus =  @IdStatus,
-																	@Token = @TokenP,
-																	@IdAccount = @IdAccount,
-																	@InstructionsCurrier = @InstructionsCurrier,
-																	@PartDimensions = @PartDimensions,
-																	@Regularpiezer = @Regularpiezer,
-																	@StartDate = @StartDate,
-																	@EndDate = @EndDate,
-																	@WeightEstimated = @WeightEstimated,
-																	@BigPackages = @BigPackages,
-																	@ValidateFilter = @ValidateFilter,
-																	@RecollectionLatitude = @RecollectionLatitude,
-																	@RecollectionLongitude = @RecollectionLongitude,
-																	@DeliveryLatitude = @DeliveryLatitude,
-																	@DeliveryLongitude = @DeliveryLongitude,
-																	@IdUser = @IdUser;
-
-				PRINT 'Valor de storevalue = ' + CAST(@storevalue AS VARCHAR);
-
-				IF(@storevalue = 0)
+				IF(@ValidateFilter = 2)
 				BEGIN
-					SET @statuscode = 409;
-					RAISERROR('Error en la transacción', 16, 1);
+
+					UPDATE dbo.DeliveryOrder 
+					SET PriceShippment = t.PriceShippment, StatusOrderId = @IdStatus, IsCollect = t.IsCollect
+					FROM dbo.DeliveryOrder ord
+					INNER JOIN @TblDeliveryOrdersList t on t.Guide_Number = ord.Guide_Number and t.Guide_Serie = ord.Guide_Serie
+					UPDATE  dbo.DeliveryOrderPaymentDetail 
+					SET ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
+					FROM dbo.DeliveryOrderPaymentDetail pay
+					INNER JOIN @TblDeliveryOrdersList t 
+						ON (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+
+					IF (@IdAccount != 0)
+					BEGIN
+
+						DECLARE @VistitPointUser INT = (SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+													JOIN VisitPointByUser VPU
+														ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+															AND VPU.RowStatus = 1
+													JOIN RegisterUser ru
+														ON VPU.RegisterUserID = ru.UsrIdUser
+															AND ru.UsrRowStatus = 1
+															JOIN [dbo].[RolByUserByAccount] rua
+													ON rua.RuaIdUser = ru.UsrIdUser
+													WHERE rua.RuaIdAccount = @IdAccount)
+
+						INSERT INTO dbo.DeliveryOrderPaymentTransaction
+						(  [GuideNumber]
+							,[GuideSerie]
+							,[PayTypeId]
+							,[TypeofInOutMoneyId]
+							,[TimePlaId]
+							,[amount]
+							,[PaymentRecollections]
+							,[PaymentNow]
+							,[PaymentDelivery]
+							,[StartDate]
+							,[EndDate]
+							,[ShipmentCompleted]
+							,[RecollectionCompleted]
+							,[PaidGuide]
+							,[TokenCreated]
+							,[DateCreated]
+							,[TokenUpdated]
+							,[DateUpdated]
+							,[TransaccionFAC]
+							,[IdHeaderRecolection]
+							,[TypeServiceId]
+							,[AccountId]
+							,[CODAmountProcess]
+							,[Fel]
+							,[VisitPoint]
+							)
+						SELECT Guide_Number 
+							,Guide_Serie
+							,IdTypePayment
+							,IdWayToPayment
+							,IdTimePayment
+							,tdop.PriceShippment
+							,tdop.PaymentRecollections
+							,tdop.PaymentNow
+							,tdop.PaymentDelivery
+							,null
+							,null
+							,tdop.ShipmentCompleted
+							,tdop.RecollectionCompleted
+							,tdop.PaidGuide
+							,@TokenP
+							,getdate()
+							,null
+							,null
+							,null
+							,null
+							,tdop.IdTypeService
+							,IIF(@IdAccount=0,null, @IdAccount)
+							,tdop.CODAmountProccess
+							,null
+							,IIF(@VistitPointUser=0,null, @VistitPointUser)
+							FROM @TblDeliveryOrdersList tdop
+							WHERE tdop.PriceShippment != 0 or tdop.CODAmountProccess != 0
+					END
+
+				END
+
+				IF(@ValidateFilter = 5)
+				BEGIN
+
+					UPDATE dbo.DeliveryOrder 
+					SET StatusOrderId = @IdStatus, IsCollect = t.IsCollect
+					FROM dbo.DeliveryOrder ord
+					INNER JOIN @TblDeliveryOrdersList t 
+						ON t.Guide_Number = ord.Guide_Number 
+						AND t.Guide_Serie = ord.Guide_Serie
+
+					DECLARE @IdAcc INT = @IdAccount;
+					IF (@IdUser != 0)
+					BEGIN
+						SET @IdAcc = (
+										SELECT AccIdAccount FROM dbo.InternalUser IU
+										JOIN RegisterUser RU ON RU.UsrIdUser = IU.RegisterUserID
+										JOIN RolByUserByAccount RB  ON RB.RuaIdUser = RU.UsrIdUser
+										JOIN Account ACC ON RB.RuaIdAccount = ACC.AccIdAccount
+										WHERE IdUser = @IdUser
+						)
+					END
+
+					-- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+					DECLARE @VistitPointUser1 INT = (SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+													JOIN VisitPointByUser VPU
+														ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+															AND VPU.RowStatus = 1
+													JOIN RegisterUser ru
+														ON VPU.RegisterUserID = ru.UsrIdUser
+															AND ru.UsrRowStatus = 1
+															JOIN [dbo].[RolByUserByAccount] rua
+													ON rua.RuaIdUser = ru.UsrIdUser
+													WHERE rua.RuaIdAccount = @IdAccount)
+					-- FIN MODIFICACIÓN
+
+					INSERT INTO dbo.DeliveryOrderPaymentTransaction
+						(  [GuideNumber]
+						,[GuideSerie]
+						,[PayTypeId]
+						,[TypeofInOutMoneyId]
+						,[TimePlaId]
+						,[amount]
+						,[PaymentRecollections]
+						,[PaymentNow]
+						,[PaymentDelivery]
+						,[StartDate]
+						,[EndDate]
+						,[ShipmentCompleted]
+						,[RecollectionCompleted]
+						,[PaidGuide]
+						,[TokenCreated]
+						,[DateCreated]
+						,[TokenUpdated]
+						,[DateUpdated]
+						,[TransaccionFAC]
+						,[IdHeaderRecolection]
+						,[TypeServiceId]
+						,[AccountId]
+						,[CODAmountProcess]
+						-- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+						,[VisitPoint]
+						-- FIN MODIFICACIÓN
+						)
+					SELECT Guide_Number 
+						,Guide_Serie
+						,IdTypePayment
+						,IdWayToPayment
+						,IdTimePayment
+						,tdop.PriceShippment
+						,tdop.PaymentRecollections
+						,tdop.PaymentNow
+						,tdop.PaymentDelivery
+						,null
+						,null
+						,tdop.ShipmentCompleted
+						,tdop.RecollectionCompleted
+						,tdop.PaidGuide
+						,@TokenP
+						,getdate()
+						,null
+						,null
+						,null
+						,null
+						,tdop.IdTypeService
+						,@IdAcc
+						,tdop.CODAmountProccess
+						-- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+						,IIF(@VistitPointUser1=0,null, @VistitPointUser1)
+						-- FIN MODIFICACIÓN
+					FROM @TblDeliveryOrdersList tdop
+					WHERE tdop.PriceShippment != 0 
+						OR tdop.CODAmountProccess != 0
+
 				END
 
 			END
@@ -1151,18 +1283,6 @@ BEGIN
 
 			END;
 
-			IF @TranCounter = 0  
-			BEGIN
-				-- @TranCounter = 0 means no transaction was  
-				-- started before the procedure was called.  
-				-- The procedure must commit the transaction  
-				-- it started.  
-				COMMIT TRANSACTION;
-			END
-
-			--Valor para validar la transacción si es llamado por otro SP
-			RETURN 1;
-
 		END TRY
 		BEGIN CATCH
 
@@ -1177,73 +1297,42 @@ BEGIN
 			   ,CAST(ERROR_LINE() AS VARCHAR) AS ErrorLine
 			   ,CAST(ERROR_MESSAGE() AS VARCHAR(100)) AS ResultMessage;
 
-
-			-- Error si alguna guía no existe
-			IF OBJECT_ID('tempdb.dbo.#listGuidesNotExist') IS NOT NULL
-			BEGIN
-				SET @Output
-				= '[ { ' + '"Rejects": [ '
-				+ (SELECT
-						STUFF((SELECT
-								' { "Guide": "' + CONCAT(lge.Guide_Serie, CAST(lge.Guide_Number AS VARCHAR))
-								+ '", ' +
-								--'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
-								--'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
-								'"StatusOrderId": ' + ('-1') + ', ' + '"Description": "' + (lge.Description)
-								+ '" }, '
-							FROM #listGuidesNotExist lge
-							FOR XML PATH (''))
-						,
-						1,
-						1,
-						''
-						))
-				+ '] } ]';
-
-				SET @Output
-				= SUBSTRING(@Output, 1, (LEN(@Output) - 7)) + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
-				SELECT
-					@Output FormatJson;
-			END
-
-			-- Error si la transacción en la tabla DeliveryOrderPaymentTransaction falla
-			ELSE
-			BEGIN
-				SET @Output
-				= '{"Status":"Error en la transacción"}';
-
-				SELECT
-					@Output FormatJson;
-			END
-
-
-			IF @TranCounter = 0  
-			BEGIN
-				PRINT '=====> ROLLBACK ';
-				-- Transaction started in procedure.  
-				-- Roll back complete transaction.  
-				ROLLBACK TRANSACTION;  
-			END
-			ELSE  
-			BEGIN
-				-- Transaction started before procedure  
-				-- called, do not roll back modifications  
-				-- made before the procedure was called.  
-				IF XACT_STATE() <> -1  
-				BEGIN
-				PRINT '=====> ROLLBACK FinishService';
-				-- If the transaction is still valid, just  
-				-- roll back to the savepoint set at the  
-				-- start of the stored procedure.  
-					ROLLBACK TRANSACTION FinishService;  
-				-- If the transaction is uncommitable,			
-				END
-			END
-
-			--Valor para validar la transacción si es llamado por otro SP
-			RETURN 0;
+			ROLLBACK TRANSACTION;
 
 		END CATCH;
+
+		IF @@trancount > 0
+		BEGIN
+
+			COMMIT TRANSACTION;
+
+		END;
+		ELSE
+		BEGIN
+			SET @Output
+			= '[ { ' + '"Rejects": [ '
+			+ (SELECT
+					STUFF((SELECT
+							' { "Guide": "' + CONCAT(lge.Guide_Serie, CAST(lge.Guide_Number AS VARCHAR))
+							+ '", ' +
+							--'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
+							--'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
+							'"StatusOrderId": ' + ('-1') + ', ' + '"Description": "' + (lge.Description)
+							+ '" }, '
+						FROM #listGuidesNotExist lge
+						FOR XML PATH (''))
+					,
+					1,
+					1,
+					''
+					))
+			+ '] } ]';
+
+			SET @Output
+			= SUBSTRING(@Output, 1, (LEN(@Output) - 7)) + SUBSTRING(@Output, (LEN(@Output) - 5), LEN(@Output));
+			SELECT
+				@Output FormatJson;
+		END;
 
 	END;
 END;
