@@ -1,0 +1,5 @@
+﻿CREATE SEQUENCE [dbo].[COD_CollectId]
+    AS BIGINT
+    START WITH 1
+    INCREMENT BY 1;
+

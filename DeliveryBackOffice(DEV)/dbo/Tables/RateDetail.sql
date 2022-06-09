@@ -1,0 +1,25 @@
+﻿CREATE TABLE [dbo].[RateDetail] (
+    [RdtId]                   BIGINT          IDENTITY (1, 1) NOT NULL,
+    [RdtIdRate]               INT             NOT NULL,
+    [RdtIdCatService]         INT             NOT NULL,
+    [RdtIdRateSegment]        INT             NULL,
+    [RdtRate]                 DECIMAL (14, 2) NOT NULL,
+    [RdtFragileRate]          DECIMAL (14, 2) NULL,
+    [RdtInsuranceRate]        DECIMAL (14, 2) NULL,
+    [RdtCollectedRate]        DECIMAL (14, 2) NULL,
+    [RdtWeightAdditionalRate] DECIMAL (14, 2) NULL,
+    [RdtWeightLimit]          INT             NULL,
+    [RdtWeightMeasure]        NVARCHAR (3)    NULL,
+    [RdtDeliveryAttempts]     INT             NULL,
+    [RdtCurrency]             NVARCHAR (3)    NOT NULL,
+    [RdtRowStatus]            BIT             NOT NULL,
+    [RdtTokenCreated]         VARCHAR (50)    NOT NULL,
+    [RdtDateCreated]          DATETIME        NOT NULL,
+    [RdtTokenUpdated]         VARCHAR (50)    NULL,
+    [RdtDateUpdated]          DATETIME        NULL,
+    PRIMARY KEY CLUSTERED ([RdtId] ASC),
+    CONSTRAINT [FKRdtCatSerivice] FOREIGN KEY ([RdtIdCatService]) REFERENCES [dbo].[CatTypeService] ([CtsId]),
+    CONSTRAINT [FKRdtRate] FOREIGN KEY ([RdtIdRate]) REFERENCES [dbo].[RateHeader] ([RheId]),
+    CONSTRAINT [FKRdtRateSegment] FOREIGN KEY ([RdtIdRateSegment]) REFERENCES [dbo].[CatRateSegment] ([CrsId])
+);
+

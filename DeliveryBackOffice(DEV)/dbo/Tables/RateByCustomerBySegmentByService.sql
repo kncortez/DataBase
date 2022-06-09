@@ -1,0 +1,25 @@
+﻿CREATE TABLE [dbo].[RateByCustomerBySegmentByService] (
+    [RcdId]                   BIGINT          IDENTITY (1, 1) NOT NULL,
+    [RcdIdCustomer]           INT             NOT NULL,
+    [RcdIdCatService]         INT             NOT NULL,
+    [RcdIdRateSegment]        INT             NULL,
+    [RcdRate]                 DECIMAL (14, 2) NOT NULL,
+    [RcdFragileRate]          DECIMAL (14, 2) NULL,
+    [RcdInsuranceRate]        DECIMAL (14, 2) NULL,
+    [RcdCollectedRate]        DECIMAL (14, 2) NULL,
+    [RcdWeightAdditionalRate] DECIMAL (14, 2) NULL,
+    [RcdWeightLimit]          INT             NULL,
+    [RcdWeightMeasure]        NVARCHAR (3)    NULL,
+    [RcdDeliveryAttempts]     INT             NULL,
+    [RcdCurrency]             NVARCHAR (3)    NOT NULL,
+    [RcdRowStatus]            BIT             NOT NULL,
+    [RcdTokenCreated]         VARCHAR (50)    NOT NULL,
+    [RcdDateCreated]          DATETIME        NOT NULL,
+    [RcdTokenUpdated]         VARCHAR (50)    NULL,
+    [RcdDateUpdated]          DATETIME        NULL,
+    PRIMARY KEY CLUSTERED ([RcdId] ASC),
+    CONSTRAINT [FKRcdCatSerivice] FOREIGN KEY ([RcdIdCatService]) REFERENCES [dbo].[CatTypeService] ([CtsId]),
+    CONSTRAINT [FKRcdCustomer] FOREIGN KEY ([RcdIdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FKRcdRateSegment] FOREIGN KEY ([RcdIdRateSegment]) REFERENCES [dbo].[CatRateSegment] ([CrsId])
+);
+

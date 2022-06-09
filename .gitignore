@@ -1,0 +1,7 @@
+DeliveryBackOffice(QA)/Security/
+DeliveryBackOffice(DEV)/Security/
+DeliveryBackOffice(PRO)/Security/
+.vs/
+DeliveryBackOffice(QA)/Import Schema Logs/
+DeliveryBackOffice(DEV)/Import Schema Logs/
+DeliveryBackOffice(PRO)/Import Schema Logs/

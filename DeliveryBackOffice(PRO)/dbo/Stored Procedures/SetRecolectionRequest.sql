@@ -1,0 +1,865 @@
+﻿-- =============================================
+-- Author:		<Hugo,Gomez>
+-- Create date: <2021-02-06>
+-- Description:	<Recoleccion de guias, su funcion es insertar y actualizar informacion de las tablas DeliveryOrder, DeliveryOrderPaymentDetail y SchedulePickup >
+-- =============================================
+CREATE PROCEDURE [dbo].[SetRecolectionRequest]
+    @TblDeliveryOrdersList AS [TblDeliveryOrdersList2] READONLY,
+    @Iscollected BIT = true,
+    @status INT = 15,
+    @ShipmentCompleted BIT = true,
+    @IdStatus AS INT = 15,
+    @Token AS NVARCHAR(100),
+    @IdAccount AS INT = NULL,
+    @InstructionsCurrier AS NVARCHAR(300) = NULL,
+    @PartDimensions AS INT = 1,
+    @Regularpiezer AS INT = 1,
+    @StartDate AS DATETIME = NULL,
+    @EndDate AS DATETIME = NULL,
+    @WeightEstimated AS DECIMAL(18, 2) = NULL,
+    @BigPackages AS BIT = false,
+    @ValidateFilter AS INT = 0,
+    @RecollectionLatitude AS DECIMAL(18, 15) = 0,
+    @RecollectionLongitude AS DECIMAL(18, 15) = 0,
+    @DeliveryLatitude AS DECIMAL(18, 15) = 0,
+    @DeliveryLongitude AS DECIMAL(18, 15) = 0,
+    @IdUser INT = 0
+AS
+BEGIN
+    IF (@ValidateFilter = 1)
+    BEGIN
+        BEGIN TRANSACTION;
+        BEGIN TRY
+
+            DECLARE @jsonResult2 NVARCHAR(MAX);
+
+            UPDATE dbo.DeliveryOrder
+            SET PriceShippment = t.PriceShippment,
+                StatusOrderId = @IdStatus,
+                IsCollect = t.IsCollect
+            FROM dbo.DeliveryOrder ord
+                INNER JOIN @TblDeliveryOrdersList t
+                    ON t.Guide_Number = ord.Guide_Number
+                       AND t.Guide_Serie = ord.Guide_Serie;
+
+            -- insertar checkpoint de generado.	
+            --insert into dbo.DeliveryOrderDetail
+            --( [Guide_Serie]
+            --,[Guide_Number]
+            --     ,[StatusOrderId]
+            --     ,[UserCreated]
+            --     ,[DateCreated]
+            --     ,[DateCreatedInSystem]
+            --     ,[Observations]
+            --     ,[Temperature_Celsius])
+            --select Guide_Serie
+            --,Guide_Number
+            --,@IdStatus
+            --,@Token
+            --,GETDATE()
+            --,null
+            --,null
+            --,null
+            --from @TblDeliveryOrdersList
+
+            INSERT INTO dbo.DeliveryOrderPaymentDetail
+            (
+                [GuideNumber],
+                [GuideSerie],
+                [PayTypeId],
+                [TypeofInOutMoneyId],
+                [TimePlaId],
+                [amount],
+                [PaymentRecollections],
+                [PaymentNow],
+                [PaymentDelivery],
+                [StartDate],
+                [EndDate],
+                [ShipmentCompleted],
+                [RecollectionCompleted],
+                [PaidGuide],
+                [TokenCreated],
+                [DateCreated],
+                [TokenUpdated],
+                [DateUpdated],
+                [TransaccionFAC],
+                [IdHeaderRecolection]
+            )
+            SELECT Guide_Number,
+                   Guide_Serie,
+                   IdTypePayment,
+                   IdWayToPayment,
+                   IdTimePayment,
+                   AmmountToPay,
+                   tdop.PaymentRecollections,
+                   tdop.PaymentNow,
+                   tdop.PaymentDelivery,
+                   NULL,
+                   NULL,
+                   tdop.ShipmentCompleted,
+                   tdop.RecollectionCompleted,
+                   tdop.PaidGuide,
+                   @Token,
+                   GETDATE(),
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL
+            FROM @TblDeliveryOrdersList tdop;
+        END TRY
+        BEGIN CATCH
+            DECLARE @jsonOutput NVARCHAR(MAX);
+            SET @jsonOutput =
+            (
+                SELECT ''
+                       + STUFF(
+                                  (
+                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
+                                  ).value('.', 'varchar(max)'),
+                                  1,
+                                  1,
+                                  ''
+                              ) + ''
+            );
+
+            SELECT ('[' + @jsonOutput + ']') jsonOutput;
+            ROLLBACK TRANSACTION;
+
+        END CATCH;
+
+        IF @@TRANCOUNT > 0
+        BEGIN
+            COMMIT TRANSACTION;
+
+            DECLARE @jsonOutput1 NVARCHAR(MAX);
+            SET @jsonOutput1 =
+            (
+                SELECT '' + STUFF(
+                                     (
+                                         SELECT ',{"Status":"Cambios realizados exitosamente"}'
+                                         FOR XML PATH(''), TYPE
+                                     ).value('.', 'varchar(max)'),
+                                     1,
+                                     1,
+                                     ''
+                                 ) + ''
+            );
+
+            SELECT ('[' + @jsonOutput1 + ']') jsonOutput1;
+        END;
+
+    END;
+
+    IF (@ValidateFilter = 2)
+    BEGIN
+
+        -- MODIFICACIÓN 04/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+        -- Variable que indicará si ya existe una transacción con la guía actual
+        DECLARE @ValidateTransaction INT =
+                (
+                    SELECT DopId
+                    FROM dbo.DeliveryOrderPaymentTransaction do
+                        INNER JOIN @TblDeliveryOrdersList tpo
+                            ON do.GuideNumber = tpo.Guide_Number
+                               AND do.GuideSerie = tpo.Guide_Serie
+                               AND do.TypeServiceId = tpo.IdTypeService
+                );
+
+        IF (@ValidateTransaction IS NULL)
+        BEGIN
+            BEGIN TRANSACTION;
+            BEGIN TRY
+                /*fecha inicio cambio 18/02/2020*/
+                UPDATE dbo.DeliveryOrder
+                SET PriceShippment = t.PriceShippment,
+                    StatusOrderId = @IdStatus,
+                    IsCollect = t.IsCollect
+                FROM dbo.DeliveryOrder ord
+                    INNER JOIN @TblDeliveryOrdersList t
+                        ON t.Guide_Number = ord.Guide_Number
+                           AND t.Guide_Serie = ord.Guide_Serie;
+                /*fecha fin 18/02/2020*/
+                UPDATE dbo.DeliveryOrderPaymentDetail
+                SET ShipmentCompleted = t.ShipmentCompleted,
+                    PayTypeId = t.IdTypePayment,
+                    TypeofInOutMoneyId = t.IdWayToPayment,
+                    TimePlaId = t.IdTimePayment
+                FROM dbo.DeliveryOrderPaymentDetail pay
+                    INNER JOIN @TblDeliveryOrdersList t
+                        ON (
+                               t.Guide_Number = pay.GuideNumber
+                               AND t.Guide_Serie = pay.GuideSerie
+                           );
+
+
+                IF (@IdAccount != 0)
+                BEGIN
+
+                    DECLARE @VistitPointUser INT =
+                            (
+                                SELECT CodeOfReference
+                                FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+                                    JOIN VisitPointByUser VPU WITH (NOLOCK)
+                                        ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+                                           AND VPU.RowStatus = 1
+                                    JOIN RegisterUser ru WITH (NOLOCK)
+                                        ON VPU.RegisterUserID = ru.UsrIdUser
+                                           AND ru.UsrRowStatus = 1
+                                    JOIN [dbo].[RolByUserByAccount] rua
+                                        ON rua.RuaIdUser = ru.UsrIdUser
+                                WHERE rua.RuaIdAccount = @IdAccount
+                            );
+
+                    INSERT INTO dbo.DeliveryOrderPaymentTransaction
+                    (
+                        [GuideNumber],
+                        [GuideSerie],
+                        [PayTypeId],
+                        [TypeofInOutMoneyId],
+                        [TimePlaId],
+                        [amount],
+                        [PaymentRecollections],
+                        [PaymentNow],
+                        [PaymentDelivery],
+                        [StartDate],
+                        [EndDate],
+                        [ShipmentCompleted],
+                        [RecollectionCompleted],
+                        [PaidGuide],
+                        [TokenCreated],
+                        [DateCreated],
+                        [TokenUpdated],
+                        [DateUpdated],
+                        [TransaccionFAC],
+                        [IdHeaderRecolection],
+                        [TypeServiceId],
+                        [AccountId],
+                        [CODAmountProcess],
+                        [Fel],
+                        [VisitPoint]
+                    )
+                    SELECT Guide_Number,
+                           Guide_Serie,
+                           IdTypePayment,
+                           IdWayToPayment,
+                           IdTimePayment,
+                           tdop.PriceShippment,
+                           tdop.PaymentRecollections,
+                           tdop.PaymentNow,
+                           tdop.PaymentDelivery,
+                           NULL,
+                           NULL,
+                           tdop.ShipmentCompleted,
+                           tdop.RecollectionCompleted,
+                           tdop.PaidGuide,
+                           @Token,
+                           GETDATE(),
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           tdop.IdTypeService,
+                           IIF(@IdAccount = 0, NULL, @IdAccount),
+                           tdop.CODAmountProccess,
+                           NULL,
+                           IIF(@VistitPointUser = 0, NULL, @VistitPointUser)
+                    FROM @TblDeliveryOrdersList tdop
+                    WHERE tdop.PriceShippment != 0
+                          OR tdop.CODAmountProccess != 0;
+                END;
+            END TRY
+            BEGIN CATCH
+                DECLARE @jsonOutput2 NVARCHAR(MAX);
+                SET @jsonOutput2 =
+                (
+                    SELECT ''
+                           + STUFF(
+                                      (
+                                          SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
+                                      ).value('.', 'varchar(max)'),
+                                      1,
+                                      1,
+                                      ''
+                                  ) + ''
+                );
+
+                SELECT ('[' + @jsonOutput2 + ']') jsonOutput2;
+                ROLLBACK TRANSACTION;
+
+            END CATCH;
+
+            IF @@TRANCOUNT > 0
+            BEGIN
+                COMMIT TRANSACTION;
+
+                DECLARE @jsonOutput3 NVARCHAR(MAX);
+                SET @jsonOutput3 =
+                (
+                    SELECT '' + STUFF(
+                                         (
+                                             SELECT ',{"Status":"Cambios actualizados exitosamente"}'
+                                             FOR XML PATH(''), TYPE
+                                         ).value('.', 'varchar(max)'),
+                                         1,
+                                         1,
+                                         ''
+                                     ) + ''
+                );
+
+                SELECT ('[' + @jsonOutput3 + ']') jsonOutput3;
+            END;
+        END;
+        ELSE
+        BEGIN
+            DECLARE @jsonOutM NVARCHAR(MAX);
+            SET @jsonOutM =
+            (
+                SELECT '' + STUFF(
+                                     (
+                                         SELECT ',{"Status":"La guía ya ha sido transaccionada"}'
+                                         FOR XML PATH(''), TYPE
+                                     ).value('.', 'varchar(max)'),
+                                     1,
+                                     1,
+                                     ''
+                                 ) + ''
+            );
+
+            SELECT ('[' + @jsonOutM + ']') jsonOutM;
+        END;
+    -- FIN MODIFICACIÓN
+    END;
+
+    IF (@ValidateFilter = 3)
+    BEGIN
+        BEGIN TRANSACTION;
+        BEGIN TRY
+
+            IF OBJECT_ID('tempdb.dbo.#Sender', 'U') IS NOT NULL
+                DROP TABLE #Sender;
+
+
+
+        SELECT 
+			[Sender_ID] ,
+			sub_do.[SenderName],
+			[Sender_Phone],
+			[Hub],
+			sub_do.AmountPickup,
+			sub_do.AddressPickup,
+			Number,
+			Serie
+			--,IIF(SM.IdServiceManagement IS NULL, SP.SchedulePickupId, IIF(SM.ServiceStatusId IN (select IdServiceStatus from dbo.CatServiceStatus WHERE Name IN ('Creado','Asignado a Ruta')), SP.SchedulePickupId, NULL)) SchedulePickupId
+			,sub_sp.SchedulePickupId
+			,sub_sp.AssigmentStatus
+			,sub_sp.IdServiceManagement
+		INTO #Sender
+		FROM (select Sender_ID ,  concat(Sender_FirstName, Sender_LastName) 
+		as SenderName, ord.Guide_Number as Number , ord.Guide_Serie 
+		as Serie , Sender_Phone ,thb.IdHublogistic as Hub, 
+		(sum (dop.PaymentRecollections) + sum (dop.RecolectPayment)) 
+		as AmountPickup , Sender_Address as AddressPickup,TypeService
+		from DeliveryOrder ord
+						inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship) and StatusTownshipHub=1
+						inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+						inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+						where ord.Guide_Number in (t.Guide_Number)
+						group by Sender_ID ,  Sender_Phone,ord.Guide_Number, ord.Guide_Serie  ,thb.IdHublogistic,  Sender_Address, Sender_FirstName, Sender_LastName,TypeService) as sub_do
+			LEFT JOIN (
+					--SELECT  SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,IdServiceManagement,ServiceStatusId FROM DBO.SchedulePickup SP				
+					SELECT SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,SP.AssigmentStatus,SM.IdServiceManagement,DOR.TypeService FROM DBO.SchedulePickup SP				
+					LEFT JOIN DBO.ServiceManagement SM ON SM.IdSchedulePickup=SP.SchedulePickupId
+					LEFT JOIN DBO.DeliveryOrderPaymentDetail dop on dop.IdHeaderRecolection=sp.SchedulePickupId
+					LEFT JOIN DBO.DeliveryOrder DOR WITH (NOLOCK) ON DOR.Guide_Number=DOP.GuideNumber AND DOR.Guide_Serie=DOP.GuideSerie 
+					--WHERE (SP.AssigmentStatus =0 OR (SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) --THIS LINE IS EQUIVALENT TO LINE BELOW
+					WHERE NOT( (SP.AssigmentStatus <>0 AND SP.AssigmentStatus IS NOT NULL) AND NOT(SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) 
+					AND (CONVERT(DATE,GETDATE()) >= CONVERT(DATE, SP.startDate))
+					AND (CONVERT(DATE, SP.EndDate) >= CONVERT(DATE,GETDATE()))
+					GROUP BY SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,SP.AssigmentStatus,SM.IdServiceManagement,DOR.TypeService
+			) sub_sp
+			ON 
+				sub_sp.SenderPhone=sub_do.Sender_Phone
+				AND sub_sp.IdHubLogistics=sub_do.Hub
+				AND sub_sp.AddressPickup=sub_do.AddressPickup
+				AND sub_sp.SenderName=sub_do.SenderName
+				and sub_sp.TypeService=sub_do.TypeService
+
+
+
+            --declare @SenderId int  = (select top 1 Sender_ID  from DeliveryOrder ord
+            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
+            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+            --				 inner join @TblDeliveryOrdersList t  on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+            --				where ord.Guide_Number in (t.Guide_Number))
+
+            --declare @SenderName varchar (50)  = (select top 1  concat(Sender_FirstName, Sender_LastName) as SenderName  from DeliveryOrder ord
+            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
+            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+            --				 inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+            --				where ord.Guide_Number in (t.Guide_Number))
+
+            --declare @Sender_Phone varchar (20)  = (select top 1  Sender_Phone from DeliveryOrder ord
+            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
+            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+            --				 inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+            --				where ord.Guide_Number in (t.Guide_Number))
+
+
+            --declare @IdHublogistic int  = (select top 1  thb.IdHublogistic from DeliveryOrder ord
+            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
+            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+            --				 inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+            --				where ord.Guide_Number in (t.Guide_Number))
+
+
+            --declare @AmountPickup decimal (18,2)  = (select top 1  (sum (dop.PaymentRecollections) + sum (dop.RecolectPayment)) as AmountPickup from DeliveryOrder ord
+            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
+            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+            --				 inner join @TblDeliveryOrdersList t  on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+            --				where ord.Guide_Number in (t.Guide_Number))
+
+            --declare @Sender_Address varchar (200)  = (select top 1  Sender_Address from DeliveryOrder ord
+            --			inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
+            --			inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
+            --			 inner join @TblDeliveryOrdersList t  on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
+            --			where ord.Guide_Number in (t.Guide_Number))
+
+
+
+            INSERT INTO dbo.SchedulePickup
+            (
+                AccountId,
+                StartDate,
+                EndDate,
+                EstimatedWeight,
+                IsLargePackage,
+                QuantityRegularPackages,
+                QuantityOverDimensionedPackage,
+                SpecialInstructions,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                TokenUpdated,
+                DateUpdated,
+                SenderId,
+                SenderName,
+                SenderPhone,
+                IdHubLogistics,
+                AmountPickup,
+                IdSourcePlataform,
+                AddressPickup
+            )
+            SELECT @IdAccount,
+                   @StartDate,
+                   @EndDate,
+                   @WeightEstimated,
+                   @BigPackages,
+                   @Regularpiezer,
+                   @PartDimensions,
+                   @InstructionsCurrier,
+                   1,
+                   @Token,
+                   GETDATE(),
+                   NULL,
+                   NULL,
+                   sd.Sender_ID,
+                   sd.SenderName,
+                   sd.Sender_Phone,
+                   sd.Hub,
+                   NULL,
+                   NULL,
+                   sd.AddressPickup
+            FROM #Sender sd;
+
+            DECLARE @transaction INT = SCOPE_IDENTITY();
+
+
+
+
+            UPDATE dbo.DeliveryOrderPaymentDetail
+            SET IdHeaderRecolection = @transaction,
+                StartDate = @StartDate,
+                EndDate = @EndDate
+            FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
+                INNER JOIN @TblDeliveryOrdersList t
+                    ON (
+                           t.Guide_Number = pay.GuideNumber
+                           AND t.Guide_Serie = pay.GuideSerie
+                       );
+
+            --ACTUALIZANDO MONTO DE SERVICIOS QUE YA ESTABAN ASIGNADOS A RUTA(SE SUMA EL NUEVO MONTO DE LA NUEVA GUÍA PROGRAMADO)
+            DECLARE @TempPrice TABLE
+            (
+                GuideSerie NVARCHAR(25) NULL,
+                GuideNumber NVARCHAR(25) NULL,
+                IsCollect NVARCHAR(25) NULL,
+                Price DECIMAL(14, 2) NULL,
+                COD DECIMAL(14, 2) NULL,
+                AmountPaid DECIMAL(14, 2) NULL,
+                CODPaid DECIMAL(14, 2) NULL,
+                CODIsPaid DECIMAL(14, 2) NULL,
+                PaymentTime INT NULL,
+                TimeSequence INT NULL,
+                FelNumber NVARCHAR(50) NULL,
+                IsPaid INT NULL,
+                IsCustomer INT NULL,
+                ConditionPayment NVARCHAR(200) NULL,
+                HaveCredit NVARCHAR(50) NULL,
+                CollectCOD NVARCHAR(50) NULL,
+                ReturnRate DECIMAL(14, 2) NULL,
+                AmountToPay DECIMAL(14, 2) NULL,
+                CODAmount DECIMAL(14, 2) NULL,
+                ReturnRates DECIMAL(14, 2) NULL
+            );
+            DECLARE @guides NVARCHAR(MAX) =
+                    (
+                        SELECT STUFF(
+                               (
+                                   SELECT DISTINCT
+                                          ',' + CONCAT(Serie, Number)
+                                   FROM #Sender
+                                   GROUP BY Serie,
+                                            Number
+                                   FOR XML PATH('')
+                               ),
+                               1,
+                               1,
+                               ''
+                                    )
+                    );
+            INSERT INTO @TempPrice
+            (
+                GuideSerie,
+                GuideNumber,
+                IsCollect,
+                Price,
+                COD,
+                AmountPaid,
+                CODPaid,
+                CODIsPaid,
+                PaymentTime,
+                TimeSequence,
+                FelNumber,
+                IsPaid,
+                IsCustomer,
+                ConditionPayment,
+                HaveCredit,
+                CollectCOD,
+                ReturnRate,
+                AmountToPay,
+                CODAmount,
+                ReturnRates
+            )
+            EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @guides,
+                                                        @InTime = 2,
+                                                        @IsReturn = 'FALSE',
+                                                        @CodeApp = 'SIFDCECOM300720201459',
+                                                        @IdModule = 1,
+                                                        @Token = 'SYSTEM';
+
+            UPDATE SMT
+            SET Amount = SUB.NewTotal
+            FROM dbo.ServiceManagement SMT
+                INNER JOIN
+                (
+                    SELECT SM.IdServiceManagement,
+                           SM.Amount + SUM(TP.AmountToPay) AS NewTotal
+                    FROM dbo.ServiceManagement SM
+                        INNER JOIN dbo.#Sender SD
+                            ON SM.IdServiceManagement = SD.IdServiceManagement
+                        INNER JOIN @TempPrice TP
+                            ON TP.GuideSerie = SD.Serie
+                               AND TP.GuideNumber = SD.Number
+                    GROUP BY SM.IdServiceManagement,
+                             SM.Amount
+                ) SUB
+                    ON SMT.IdServiceManagement = SUB.IdServiceManagement;
+            --WHERE IdServiceManagement=SUB.IdServiceManagement
+
+            DROP TABLE #Sender;
+
+        END TRY
+        BEGIN CATCH
+            DECLARE @jsonOutput4 NVARCHAR(MAX);
+            SET @jsonOutput4 =
+            (
+                SELECT ''
+                       + STUFF(
+                                  (
+                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
+                                  ).value('.', 'varchar(max)'),
+                                  1,
+                                  1,
+                                  ''
+                              ) + ''
+            );
+
+            SELECT ('[' + @jsonOutput4 + ']') jsonOutput4;
+            ROLLBACK TRANSACTION;
+
+        END CATCH;
+
+        IF @@TRANCOUNT > 0
+        BEGIN
+            COMMIT TRANSACTION;
+
+            DECLARE @jsonOutput5 NVARCHAR(MAX);
+            SET @jsonOutput5 =
+            (
+                SELECT '' + STUFF(
+                                     (
+                                         SELECT ',{"Status":"Agrupación realizada exitosamente"}'
+                                         FOR XML PATH(''), TYPE
+                                     ).value('.', 'varchar(max)'),
+                                     1,
+                                     1,
+                                     ''
+                                 ) + ''
+            );
+
+            SELECT ('[' + @jsonOutput5 + ']') jsonOutput5;
+        END;
+
+    END;
+
+    IF (@ValidateFilter = 4)
+    BEGIN
+        BEGIN TRANSACTION;
+        BEGIN TRY
+
+            UPDATE dbo.DeliveryOrderPaymentDetail
+            SET ShipmentCompleted = t.ShipmentCompleted,
+                RecollectionCompleted = t.RecollectionCompleted,
+                PaidGuide = t.PaidGuide
+            FROM dbo.DeliveryOrderPaymentDetail pay
+                INNER JOIN @TblDeliveryOrdersList t
+                    ON (
+                           t.Guide_Number = pay.GuideNumber
+                           AND t.Guide_Serie = pay.GuideSerie
+                       );
+
+
+        --update dbo.DeliveryOrder 
+        --set  StatusOrderId = @IdStatus   
+        --from dbo.DeliveryOrder ord
+        --inner join @TblDeliveryOrdersList t on t.Guide_Number = ord.Guide_Number and t.Guide_Serie = ord.Guide_Serie
+
+
+        --		---	 insertar checkpoint de generado.	
+        --insert into dbo.DeliveryOrderDetail
+        --( [Guide_Serie]
+        --,[Guide_Number]
+        --  ,[StatusOrderId]
+        --  ,[UserCreated]
+        --  ,[DateCreated]
+        --  ,[DateCreatedInSystem]
+        --  ,[Observations]
+        --  ,[Temperature_Celsius])
+        --select Guide_Serie
+        --,Guide_Number
+        --,@IdStatus
+        --,@Token
+        --,GETDATE()
+        --,null
+        --,null
+        --,null
+        --from @TblDeliveryOrdersList
+
+
+
+        END TRY
+        BEGIN CATCH
+            DECLARE @jsonOutput6 NVARCHAR(MAX);
+            SET @jsonOutput =
+            (
+                SELECT ''
+                       + STUFF(
+                                  (
+                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
+                                  ).value('.', 'varchar(max)'),
+                                  1,
+                                  1,
+                                  ''
+                              ) + ''
+            );
+
+            SELECT ('[' + @jsonOutput2 + ']') jsonOutput2;
+            ROLLBACK TRANSACTION;
+
+        END CATCH;
+
+        IF @@TRANCOUNT > 0
+        BEGIN
+            COMMIT TRANSACTION;
+
+            DECLARE @jsonOutput7 NVARCHAR(MAX);
+            SET @jsonOutput7 =
+            (
+                SELECT '' + STUFF(
+                                     (
+                                         SELECT ',{"Status":"Cambios actualizados exitosamente"}'
+                                         FOR XML PATH(''), TYPE
+                                     ).value('.', 'varchar(max)'),
+                                     1,
+                                     1,
+                                     ''
+                                 ) + ''
+            );
+
+            SELECT ('[' + @jsonOutput5 + ']') jsonOutput5;
+        END;
+
+    END;
+
+    IF (@ValidateFilter = 5)
+    BEGIN
+        BEGIN TRANSACTION;
+        BEGIN TRY
+
+            DECLARE @jsonResult NVARCHAR(MAX);
+
+            UPDATE dbo.DeliveryOrder
+            SET StatusOrderId = @IdStatus,
+                IsCollect = t.IsCollect
+            FROM dbo.DeliveryOrder ord
+                INNER JOIN @TblDeliveryOrdersList t
+                    ON t.Guide_Number = ord.Guide_Number
+                       AND t.Guide_Serie = ord.Guide_Serie;
+
+            DECLARE @IdAcc INT = @IdAccount;
+            IF (@IdUser != 0)
+            BEGIN
+                SET @IdAcc =
+                (
+                    SELECT AccIdAccount
+                    FROM dbo.InternalUser IU
+                        JOIN RegisterUser RU
+                            ON RU.UsrIdUser = IU.RegisterUserID
+                        JOIN RolByUserByAccount RB
+                            ON RB.RuaIdUser = RU.UsrIdUser
+                        JOIN Account ACC
+                            ON RB.RuaIdAccount = ACC.AccIdAccount
+                    WHERE IdUser = @IdUser
+                );
+            END;
+
+            -- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+            DECLARE @VistitPointUser1 INT =
+                    (
+                        SELECT CodeOfReference
+                        FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+                            JOIN VisitPointByUser VPU
+                                ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+                                   AND VPU.RowStatus = 1
+                            JOIN RegisterUser ru
+                                ON VPU.RegisterUserID = ru.UsrIdUser
+                                   AND ru.UsrRowStatus = 1
+                            JOIN [dbo].[RolByUserByAccount] rua
+                                ON rua.RuaIdUser = ru.UsrIdUser
+                        WHERE rua.RuaIdAccount = @IdAccount
+                    );
+            -- FIN MODIFICACIÓN
+
+            INSERT INTO dbo.DeliveryOrderPaymentTransaction
+            (
+                [GuideNumber],
+                [GuideSerie],
+                [PayTypeId],
+                [TypeofInOutMoneyId],
+                [TimePlaId],
+                [amount],
+                [PaymentRecollections],
+                [PaymentNow],
+                [PaymentDelivery],
+                [StartDate],
+                [EndDate],
+                [ShipmentCompleted],
+                [RecollectionCompleted],
+                [PaidGuide],
+                [TokenCreated],
+                [DateCreated],
+                [TokenUpdated],
+                [DateUpdated],
+                [TransaccionFAC],
+                [IdHeaderRecolection],
+                [TypeServiceId],
+                [AccountId],
+                [CODAmountProcess],
+                -- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+                [VisitPoint]
+            -- FIN MODIFICACIÓN
+            )
+            SELECT Guide_Number,
+                   Guide_Serie,
+                   IdTypePayment,
+                   IdWayToPayment,
+                   IdTimePayment,
+                   tdop.PriceShippment,
+                   tdop.PaymentRecollections,
+                   tdop.PaymentNow,
+                   tdop.PaymentDelivery,
+                   NULL,
+                   NULL,
+                   tdop.ShipmentCompleted,
+                   tdop.RecollectionCompleted,
+                   tdop.PaidGuide,
+                   @Token,
+                   GETDATE(),
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL,
+                   tdop.IdTypeService,
+                   @IdAcc,
+                   tdop.CODAmountProccess,
+                   -- MODIFICACIÓN 07/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+                   IIF(@VistitPointUser1 = 0, NULL, @VistitPointUser1)
+            -- FIN MODIFICACIÓN
+            FROM @TblDeliveryOrdersList tdop
+            WHERE tdop.PriceShippment != 0
+                  OR tdop.CODAmountProccess != 0;
+
+        END TRY
+        BEGIN CATCH
+            DECLARE @jsonOut NVARCHAR(MAX);
+            SET @jsonOut =
+            (
+                SELECT ''
+                       + STUFF(
+                                  (
+                                      SELECT ',{"Status":"' + ERROR_MESSAGE() + '"}' FOR XML PATH(''), TYPE
+                                  ).value('.', 'varchar(max)'),
+                                  1,
+                                  1,
+                                  ''
+                              ) + ''
+            );
+
+            SELECT ('[' + @jsonOut + ']') jsonOut;
+            ROLLBACK TRANSACTION;
+
+        END CATCH;
+
+        IF @@TRANCOUNT > 0
+        BEGIN
+            COMMIT TRANSACTION;
+
+            DECLARE @jsonOut1 NVARCHAR(MAX);
+            SET @jsonOut1 =
+            (
+                SELECT '' + STUFF(
+                                     (
+                                         SELECT ',{"Status":"Cambios realizados exitosamente"}'
+                                         FOR XML PATH(''), TYPE
+                                     ).value('.', 'varchar(max)'),
+                                     1,
+                                     1,
+                                     ''
+                                 ) + ''
+            );
+
+            SELECT ('[' + @jsonOut1 + ']') jsonOut1;
+        END;
+
+    END;
+END;

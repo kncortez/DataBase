@@ -1,0 +1,294 @@
+﻿--EXEC GetDepositReportCOD_Generic 163,33,'2021-10-01','2021-11-01',-1
+-- =============================================
+-- Author:		<Marco Jiménez>
+-- Create date: <2021-10-19>
+-- Description:	<Guias por pagar COD>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetDepositReportCOD_Generic_EXP]
+    -- Add the parameters for the stored procedure here
+    @IdCustomer INT = -1 ,
+    @IdBank     INT = -1 ,
+	@StarDate   DATETIME,
+	@EndDate    DATETIME,
+	@Option     INT = -1,
+	@Name		NVARCHAR(50) = ''
+AS
+BEGIN
+
+IF @Option = -1 and LEN(@Name) <= 0
+BEGIN
+    SELECT s1.*,
+           ISNULL(DATEDIFF(DAY, convert(date, s1.FechaArribo, 103), convert(date, s1.FechaEntrega, 103)),0) AS DiasEntrega
+		   , ISNULL(DATEDIFF(DAY, convert(date, s1.FechaEntrega, 103), convert(date, s1.FechaPago, 103) ),0) AS DiasPago
+    FROM
+    (
+        SELECT cu.[IdCustomer] IdCliente,
+               cu.[Name] Cliente,
+               cu.[RegexEmail] Correo,
+               btd.BankName Banco,
+               btd.AccountNumber Cuenta,
+               CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber,
+               (do.Pieces_Dry + do.Pieces_Cold) Piezas,
+               (
+                   SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
+                   FROM dbo.DeliveryOrderPiece dp
+                   WHERE dp.GuideSerie = do.Guide_Serie 
+                         AND dp.GuideNumber = do.Guide_Number
+               ) Peso,
+               ISNULL(prv.ProvinceName, pr.ProvinceName) Departamento,
+               ISNULL(twn.TownshipName, tw.TownshipName) Municipio,
+               CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver,
+               ISNULL(FORMAT((
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = do.Guide_Serie
+                         AND dt.Guide_Number = do.Guide_Number
+                         AND dt.StatusOrderId IN ( 11, 2 )
+               ), 'dd/MM/yyyy hh:mm:ss tt') ,'') FechaArribo,
+              ISNULL( FORMAT((
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = do.Guide_Serie
+                         AND dt.Guide_Number = do.Guide_Number
+                         AND dt.StatusOrderId = 5
+               ), 'dd/MM/yyyy hh:mm:ss tt'),'') FechaEntrega,
+               FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
+               btd.[AuthorizationNumber] NoDeposito,
+               do.[Collect_OnDelivery] AS CODAmount,
+               IIF(do.[TypeService] = 'EXP','NDD',do.[TypeService]) TypeService,
+               IIF(do.IsCollect = 'true',
+                   'Collect',
+                   (IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago,
+               do.[PriceShippment] AS ShippmentAmount,
+               btd.[Commission] AS CommissionAmount,
+               btd.CODCommissionPercentage AS PorcentajeComision,
+               btd.[Amount] + btd.[Commission] AS ChargedAmount,
+               btd.[Amount] AS TotalAmount,
+			   IIF(bk.Id_bank IN (3,5,31,33), 1, 0) FlagImmediateOrAch,
+			   btd.[AuthorizationDate]
+        FROM [dbo].[BatchDetailCOD] AS btd
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+                ON btd.[GuideSerie] = pg.[GuideSerie]
+                   AND btd.[GuideNumber] = pg.[GuideNumber]
+            INNER JOIN [dbo].[DeliveryOrder] AS do
+                ON btd.[GuideSerie] = do.[Guide_Serie]
+                   AND btd.[GuideNumber] = do.[Guide_Number]
+            LEFT JOIN dbo.Township twn
+                ON twn.IdTownship = do.ReceiverIdTownship
+            LEFT JOIN dbo.Township tw
+                ON tw.TownshipName = do.Receiver_Town
+            LEFT JOIN dbo.Province prv
+                ON prv.IdProvince = twn.IdProvince
+            LEFT JOIN dbo.Province pr
+                ON pr.IdProvince = tw.IdProvince
+            LEFT JOIN dbo.VisitPointClient vpc
+                ON vpc.CodeOfReference = do.Sender_ID
+            LEFT JOIN dbo.Customer cu
+                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
+            LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                ON dc.DCBA_Id = do.DCBA_ID
+            LEFT JOIN dbo.DeliveryBank bk
+                ON bk.Id_bank = dc.DCBA_Bank_Id
+       WHERE 
+			 btd.[AuthorizationNumber] IS NOT NULL
+			AND pg.BatchCODId IS NOT NULL
+             AND (cu.IdCustomer = @IdCustomer OR @IdCustomer = -1)
+             AND (btd.BankId = @IdBank OR @IdBank = -1)
+			AND BTD.AuthorizationDate BETWEEN @StarDate AND  @EndDate
+    ) s1
+    ORDER BY s1.[AuthorizationDate] ASC;
+
+END
+ELSE 
+IF LEN(@Name) <= 0
+BEGIN
+ SELECT  s1.*
+ --,
+ --          ISNULL(DATEDIFF(DAY, convert(date, s1.FechaArribo, 103), convert(date, s1.FechaEntrega, 103)),0) AS DiasEntrega
+	--	   , ISNULL(DATEDIFF(DAY, convert(date, s1.FechaEntrega, 103), convert(date, s1.FechaPago, 103) ),0) AS DiasPago
+    FROM
+    (
+        SELECT 
+		--cu.[IdCustomer] IdCliente,
+               cu.[Name] Cliente,
+              REPLACE(REPLACE( cu.[RegexEmail],'^',''),'$','') Correo,
+               btd.BankName Banco,
+               btd.AccountNumber Cuenta,
+               CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber,
+               (do.Pieces_Dry + do.Pieces_Cold) Piezas,
+               (
+                   SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
+                   FROM dbo.DeliveryOrderPiece dp
+                   WHERE dp.GuideSerie = do.Guide_Serie 
+                         AND dp.GuideNumber = do.Guide_Number
+               ) Peso,
+               ISNULL(prv.ProvinceName, pr.ProvinceName) Departamento,
+               ISNULL(twn.TownshipName, tw.TownshipName) Municipio,
+               CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Destinatario,
+               ISNULL(FORMAT((
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = do.Guide_Serie
+                         AND dt.Guide_Number = do.Guide_Number
+                         AND dt.StatusOrderId IN ( 11, 2 )
+               ), 'dd/MM/yyyy hh:mm:ss tt') ,'') FechaArribo,
+              ISNULL( FORMAT((
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = do.Guide_Serie
+                         AND dt.Guide_Number = do.Guide_Number
+                         AND dt.StatusOrderId = 5
+               ), 'dd/MM/yyyy hh:mm:ss tt'),'') FechaEntrega,
+               FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
+               btd.[AuthorizationNumber] NumeroDeposito,
+               do.[Collect_OnDelivery] AS MontoCOD,
+               IIF(do.[TypeService] = 'EXP','NDD',do.[TypeService]) TipoDeServicio,
+               IIF(do.IsCollect = 'true',
+                   'Collect',
+                   (IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago,
+               do.[PriceShippment] AS MontoDeEnvio,
+               btd.[Commission] AS MontoComision,
+               btd.CODCommissionPercentage AS PorcentajeComision,
+               btd.[Amount] + btd.[Commission] AS MontoCobrado,
+               btd.[Amount] AS MontoTotal,
+			  -- IIF(bk.Id_bank IN (3,5,31,33), 1, 0) FlagImmediateOrAch,
+			   btd.[AuthorizationDate]
+        FROM [dbo].[BatchDetailCOD] AS btd
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+                ON btd.[GuideSerie] = pg.[GuideSerie]
+                   AND btd.[GuideNumber] = pg.[GuideNumber]
+            INNER JOIN [dbo].[DeliveryOrder] AS do
+                ON btd.[GuideSerie] = do.[Guide_Serie]
+                   AND btd.[GuideNumber] = do.[Guide_Number]
+            LEFT JOIN dbo.Township twn
+                ON twn.IdTownship = do.ReceiverIdTownship
+            LEFT JOIN dbo.Township tw
+                ON tw.TownshipName = do.Receiver_Town
+            LEFT JOIN dbo.Province prv
+                ON prv.IdProvince = twn.IdProvince
+            LEFT JOIN dbo.Province pr
+                ON pr.IdProvince = tw.IdProvince
+            LEFT JOIN dbo.VisitPointClient vpc
+                ON vpc.CodeOfReference = do.Sender_ID
+            LEFT JOIN dbo.Customer cu
+                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
+            LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                ON dc.DCBA_Id = do.DCBA_ID
+            LEFT JOIN dbo.DeliveryBank bk
+                ON bk.Id_bank = dc.DCBA_Bank_Id
+       WHERE 
+			 btd.[AuthorizationNumber] IS NOT NULL
+			 AND pg.BatchCODId IS NOT NULL
+             AND (cu.IdCustomer = @IdCustomer OR @IdCustomer = -1)
+             AND (btd.BankId = @IdBank OR @IdBank = -1)
+			AND BTD.AuthorizationDate BETWEEN @StarDate AND  @EndDate
+    ) s1
+    ORDER BY s1.[AuthorizationDate] ASC;
+END
+ELSE 
+IF LEN(@Name) >0
+BEGIN
+
+--
+   SELECT s1.*,
+           ISNULL(DATEDIFF(DAY, convert(date, s1.FechaArribo, 103), convert(date, s1.FechaEntrega, 103)),0) AS DiasEntrega
+		   , ISNULL(DATEDIFF(DAY, convert(date, s1.FechaEntrega, 103), convert(date, s1.FechaPago, 103) ),0) AS DiasPago
+    FROM
+    (
+        SELECT cu.[IdCustomer] IdCliente,
+               cu.[Name] Cliente,
+               cu.[RegexEmail] Correo,
+               btd.BankName Banco,
+               btd.AccountNumber Cuenta,
+               CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber,
+               (do.Pieces_Dry + do.Pieces_Cold) Piezas,
+               (
+                   SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
+                   FROM dbo.DeliveryOrderPiece dp
+                   WHERE dp.GuideSerie = do.Guide_Serie 
+                         AND dp.GuideNumber = do.Guide_Number
+               ) Peso,
+               ISNULL(prv.ProvinceName, pr.ProvinceName) Departamento,
+               ISNULL(twn.TownshipName, tw.TownshipName) Municipio,
+               CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver,
+               ISNULL(FORMAT((
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = do.Guide_Serie
+                         AND dt.Guide_Number = do.Guide_Number
+                         AND dt.StatusOrderId IN ( 11, 2 )
+               ), 'dd/MM/yyyy hh:mm:ss tt') ,'') FechaArribo,
+              ISNULL( FORMAT((
+                   SELECT TOP 1
+                          dt.DateCreated
+                   FROM dbo.DeliveryOrderDetail dt
+                   WHERE dt.Guide_Serie = do.Guide_Serie
+                         AND dt.Guide_Number = do.Guide_Number
+                         AND dt.StatusOrderId = 5
+               ), 'dd/MM/yyyy hh:mm:ss tt'),'') FechaEntrega,
+               FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
+               btd.[AuthorizationNumber] NoDeposito,
+               do.[Collect_OnDelivery] AS CODAmount,
+               IIF(do.[TypeService] = 'EXP','NDD',do.[TypeService]) TypeService,
+               IIF(do.IsCollect = 'true',
+                   'Collect',
+                   (IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago,
+               do.[PriceShippment] AS ShippmentAmount,
+               btd.[Commission] AS CommissionAmount,
+               btd.CODCommissionPercentage AS PorcentajeComision,
+               btd.[Amount] + btd.[Commission] AS ChargedAmount,
+               btd.[Amount] AS TotalAmount,
+			   IIF(bk.Id_bank IN (3,5,31,33), 1, 0) FlagImmediateOrAch,
+			   btd.[AuthorizationDate]
+        FROM [dbo].[BatchDetailCOD] AS btd
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+                ON btd.[GuideSerie] = pg.[GuideSerie]
+                   AND btd.[GuideNumber] = pg.[GuideNumber]
+            INNER JOIN [dbo].[DeliveryOrder] AS do
+                ON btd.[GuideSerie] = do.[Guide_Serie]
+                   AND btd.[GuideNumber] = do.[Guide_Number]
+            LEFT JOIN dbo.Township twn
+                ON twn.IdTownship = do.ReceiverIdTownship
+            LEFT JOIN dbo.Township tw
+                ON tw.TownshipName = do.Receiver_Town
+            LEFT JOIN dbo.Province prv
+                ON prv.IdProvince = twn.IdProvince
+            LEFT JOIN dbo.Province pr
+                ON pr.IdProvince = tw.IdProvince
+            LEFT JOIN dbo.VisitPointClient vpc
+                ON vpc.CodeOfReference = do.Sender_ID
+            LEFT JOIN dbo.Customer cu
+                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
+            LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                ON dc.DCBA_Id = do.DCBA_ID
+            LEFT JOIN dbo.DeliveryBank bk
+                ON bk.Id_bank = dc.DCBA_Bank_Id
+       WHERE 
+			     btd.[AuthorizationNumber] IS NOT NULL
+			 AND pg.BatchCODId IS NOT NULL
+             AND (
+			 cu.IdCustomer = @IdCustomer 
+			 OR 
+			 @IdCustomer = -1
+			 )
+             AND (btd.BankId = @IdBank OR @IdBank = -1)
+			 AND BTD.AuthorizationDate BETWEEN @StarDate AND  @EndDate
+			 AND COALESCE(UPPER(do.Sender_FirstName),'') + ' ' + COALESCE(UPPER(do.Sender_LastName),'') LIKE '%' + UPPER(@Name) + '%'
+    ) s1
+    ORDER BY s1.[AuthorizationDate] ASC;
+
+--
+
+END
+
+	
+	
+
+END;
+
+

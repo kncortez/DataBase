@@ -1,0 +1,21 @@
+﻿CREATE TYPE [dbo].[TblDeliveryOrdersList] AS TABLE (
+    [RowNumber]             INT             NOT NULL,
+    [Guide_Serie]           NVARCHAR (2)    NULL,
+    [Guide_Number]          INT             NULL,
+    [PriceShippment]        DECIMAL (14, 2) NULL,
+    [IdWayToPayment]        INT             NULL,
+    [IdTypePayment]         INT             NULL,
+    [IdTimePayment]         INT             NULL,
+    [IsCollect]             BIT             NULL,
+    [AmmountToPay]          DECIMAL (14, 2) NULL,
+    [PaymentRecollections]  DECIMAL (14, 2) NULL,
+    [PaymentNow]            DECIMAL (14, 2) NULL,
+    [PaymentDelivery]       DECIMAL (14, 2) NULL,
+    [StartDate]             DATETIME        NULL,
+    [EndDate]               DATETIME        NULL,
+    [ShipmentCompleted]     BIT             NULL,
+    [RecollectionCompleted] BIT             NULL,
+    [PaidGuide]             BIT             NULL,
+    [TransaccionFAC]        VARCHAR (100)   NULL,
+    [IdHeaderRecolection]   INT             NULL);
+
