@@ -11,8 +11,11 @@
     [Guide_Piece]   SMALLINT      NULL,
     [UserUpdated]   NVARCHAR (50) NULL,
     [DateUpdated]   DATETIME      NULL,
+    [IsReturn]      BIT           NULL,
     CONSTRAINT [FK_Warehouse_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO
@@ -36,4 +39,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de us
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora y fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si pertenece al inventario de devoluciones.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse', @level2type = N'COLUMN', @level2name = N'IsReturn';
 

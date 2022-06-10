@@ -13,11 +13,13 @@ CREATE PROCEDURE [dbo].[sps_set_rackposition]
 		@PiecesCold BIT,
 		@Relocation BIT,
 		@UserCreated nvarchar(50),
-		@GuidePiece SMALLINT
+		@GuidePiece SMALLINT,
+		@IsReturn BIT = 0
 AS
 BEGIN
 	DECLARE @RModified INT
 	DECLARE @RInserted INT
+	DECLARE @StatusOrderId INT = 10
 
 	BEGIN TRANSACTION
 
@@ -27,20 +29,30 @@ BEGIN
 				DECLARE @Id BIGINT
 
 				-- devolver el registro activo mas antiguo para la pieza seca o fría que deseamos reubicar
-				SET @Id = (
-					SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] 
-					WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND Active = 1 AND Dry = @PiecesDry AND Cold = @PiecesCold --AND Guide_Piece = @GuidePiece
-					ORDER BY DateCreated ASC)
+				IF @IsReturn = 1
+				BEGIN 
+					SET @Id = (
+						SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] WITH(NOLOCK)
+						WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND Active = 1 AND Dry = @PiecesDry AND Cold = @PiecesCold AND IsReturn = 1 --AND Guide_Piece = @GuidePiece
+						ORDER BY DateCreated ASC)
+				END
+				ELSE
+				BEGIN
+					SET @Id = (
+						SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] WITH(NOLOCK) 
+						WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND Active = 1 AND Dry = @PiecesDry AND Cold = @PiecesCold AND (IsReturn IS NULL OR IsReturn = 0) --AND Guide_Piece = @GuidePiece
+						ORDER BY DateCreated ASC)
+				END
 
-				UPDATE [DeliveryBackOffice].[dbo].[Warehouse] SET Active = 0, UserCreated = @UserCreated, DateCreated = GETDATE() WHERE Id = @Id
+				UPDATE [DeliveryBackOffice].[dbo].[Warehouse] SET Active = 0, UserUpdated = @UserCreated, DateUpdated = GETDATE() WHERE Id = @Id
 
 				SET @RModified = @@ROWCOUNT
 
 				IF (@RModified > 0)
 				BEGIN
 					-- registrar nueva ubicación
-					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece) VALUES 
-					(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece)
+					INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn) VALUES 
+					(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn)
 
 					SET @RInserted = @@ROWCOUNT
 				END
@@ -50,18 +62,28 @@ BEGIN
 			BEGIN
 				
 				-- registrar nueva ubicación
-				INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece) VALUES 
-				(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece)
+				INSERT INTO [DeliveryBackOffice].[dbo].[Warehouse] (Rack_Position, Guide_Serie, Guide_Number, Dry, Cold, Active, UserCreated, DateCreated, Guide_Piece, IsReturn) VALUES 
+				(@RackPosition, @GuideSerie, @GuideNumber, @PiecesDry, @PiecesCold, 1, @UserCreated, GETDATE(), @GuidePiece, @IsReturn)
+
+				--Si es una devolución, cambiar estado
+				IF @IsReturn = 1
+				BEGIN
+					SET @StatusOrderId = 31
+				END
+
+				--Actualizar En Invetario estado de las piezas
+				UPDATE DeliveryOrderPiece
+				SET StatusOrderId = @StatusOrderId
+				WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber
 
 				-- Actualizar En Inventario al último estado de la guía
 				UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-				SET StatusOrderId = 10
+				SET StatusOrderId = @StatusOrderId
 				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 			
 				-- Insertar En Inventario nuevo estado de guía en tabla histórica
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail ([Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [DateCreatedInSystem],[Observations])
-				VALUES (@GuideSerie, @GuideNumber, 10, @UserCreated, GETDATE(), GETDATE(),'') 
-
+				VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, @UserCreated, GETDATE(), GETDATE(),'') 
 				SET @RInserted = @@ROWCOUNT
 
 			END				

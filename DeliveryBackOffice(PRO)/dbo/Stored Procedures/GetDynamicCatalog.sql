@@ -301,8 +301,10 @@ BEGIN
                                        + ISNULL(TWS.TownshipDescription, '') + '",' + '"IdProvince":"'
                                        + ISNULL(CONVERT(VARCHAR, PRV.IdProvince), '') + '",' + '"ProvinceName":"'
                                        + ISNULL(PRV.ProvinceDescription, '') + '",' + '"Address":"'
-                                       + ISNULL(VPC.Address, '') + '",' + '"HeaderCode":"' + ISNULL(TWS.HeaderCode, '')
-                                       + '"' + '}'
+                                       + ISNULL(VPC.Address, '') + '",' + '"HeaderCode":"' + ISNULL(TWS.HeaderCode, '') + '",'
+                                       + '"SettlementDescription":"'+ ISNULL( STL.Settlement, '') + '",'
+										                   + '"IdSettlement":"'+ ISNULL(CONVERT(NVARCHAR, STL.IdSettlement), '') + '"'
+                                       + '}'
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
                                     JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)
                                         ON VPC.IdSettlement = STL.IdSettlement 
