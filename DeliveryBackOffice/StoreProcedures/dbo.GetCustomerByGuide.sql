@@ -23,7 +23,7 @@ BEGIN
 	SELECT
 		cu.IdCustomer Customer
 	   ,vpc.IdVisitPointClient VisitPoint
-	FROM DeliveryOrder do
+	FROM DeliveryOrder do WITH (NOLOCK)
 	LEFT JOIN VisitPointClient vpc
 		ON vpc.CodeOfReference = do.Sender_ID
 	INNER JOIN Customer cu
