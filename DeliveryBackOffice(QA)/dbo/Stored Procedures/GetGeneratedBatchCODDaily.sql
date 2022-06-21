@@ -203,7 +203,6 @@ BEGIN
 					LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 						ON PC.GuideSerieDestination = ord.Guide_Serie
 						AND PC.GuideNumberDestination = ord.Guide_Number
-						AND PC.FinalActiveDate >= GETDATE()
 						AND PC.RowStatus = 1 
 				WHERE ISNULL(ord.PriceShippment,0)=0
 					AND PC.IdPromoCoupon IS NULL

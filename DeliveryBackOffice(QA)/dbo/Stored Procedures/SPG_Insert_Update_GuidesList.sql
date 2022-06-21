@@ -52,3 +52,4 @@ END
 
 --SELECT * FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
 --WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+GO

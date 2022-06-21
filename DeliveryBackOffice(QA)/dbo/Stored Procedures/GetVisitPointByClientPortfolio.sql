@@ -9,6 +9,7 @@ CREATE PROCEDURE [dbo].[GetVisitPointByClientPortfolio]
 AS
 BEGIN
     SET NOCOUNT ON;
+	SET ARITHABORT ON
 
     DECLARE @jsonResult NVARCHAR(MAX) = NULL;
     DECLARE @jsonResult2 NVARCHAR(MAX) = NULL;

@@ -37,27 +37,27 @@ BEGIN
            COUNT(ordp.NoPiece) piece,
            ra.IdRouteAssigment,
            sr.ID
-    FROM DeliveryOrder ord
+    FROM DeliveryOrder ord WITH(NOLOCK)
         --left join DeliveryOrderDetail ordd on (ord.Guide_Number = ordd.Guide_Number and ord.Guide_Serie = ordd.Guide_Serie)
-        LEFT JOIN DeliveryOrderPiece ordp
+        LEFT JOIN DeliveryOrderPiece ordp WITH(NOLOCK)
             ON (
                    ord.Guide_Number = ordp.GuideNumber
                    AND ord.Guide_Serie = ordp.GuideSerie
                )
-        LEFT JOIN DeliveryOrderPaymentDetail dop
+        LEFT JOIN DeliveryOrderPaymentDetail dop WITH(NOLOCK)
             ON (
                    dop.GuideNumber = ord.Guide_Number
                    AND dop.GuideSerie = ord.Guide_Serie
                )
-        LEFT JOIN SchedulePickup sp
+        LEFT JOIN SchedulePickup sp WITH(NOLOCK)
             ON (sp.SchedulePickupId = dop.IdHeaderRecolection)
-        LEFT JOIN ServiceManagement sm
+        LEFT JOIN ServiceManagement sm WITH(NOLOCK)
             ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-        INNER JOIN RouteAssigment ra
+        INNER JOIN RouteAssigment ra WITH(NOLOCK)
             ON (ra.IdRouteAssigment = sm.IdPuRouteAssigment)
-        INNER JOIN CatRoute cr
+        INNER JOIN CatRoute cr WITH(NOLOCK)
             ON (cr.IdRoute = ra.IdRoute)
-        INNER JOIN SenderReceiver sr
+        INNER JOIN SenderReceiver sr WITH(NOLOCK)
             ON (sr.ID = ra.IdCurrierMan)
     WHERE cr.CodeRoute = @Route
           AND
@@ -88,27 +88,27 @@ BEGIN
            CONCAT(sr.First_Name, ' ', sr.Last_Name) NAMECOURIER,
            sm.IdServiceManagement,
            sm.ServiceStatusId
-    FROM DeliveryOrder ord
+    FROM DeliveryOrder ord WITH(NOLOCK)
         --left join DeliveryOrderDetail ordd on (ord.Guide_Number = ordd.Guide_Number and ord.Guide_Serie = ordd.Guide_Serie)
-        LEFT JOIN DeliveryOrderPiece ordp
+        LEFT JOIN DeliveryOrderPiece ordp WITH(NOLOCK)
             ON (
                    ord.Guide_Number = ordp.GuideNumber
                    AND ord.Guide_Serie = ordp.GuideSerie
                )
-        LEFT JOIN DeliveryOrderPaymentDetail dop
+        LEFT JOIN DeliveryOrderPaymentDetail dop WITH(NOLOCK)
             ON (
                    dop.GuideNumber = ord.Guide_Number
                    AND dop.GuideSerie = ord.Guide_Serie
                )
-        LEFT JOIN SchedulePickup sp
+        LEFT JOIN SchedulePickup sp WITH(NOLOCK)
             ON (sp.SchedulePickupId = dop.IdHeaderRecolection)
-        LEFT JOIN ServiceManagement sm
+        LEFT JOIN ServiceManagement sm WITH(NOLOCK)
             ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-        INNER JOIN RouteAssigment ra
+        INNER JOIN RouteAssigment ra WITH(NOLOCK)
             ON (ra.IdRouteAssigment = sm.IdPuRouteAssigment)
-        INNER JOIN CatRoute cr
+        INNER JOIN CatRoute cr WITH(NOLOCK)
             ON (cr.IdRoute = ra.IdRoute)
-        INNER JOIN SenderReceiver sr
+        INNER JOIN SenderReceiver sr WITH(NOLOCK)
             ON (sr.ID = ra.IdCurrierMan)
     --inner join  EventService es on (es.ServiceManagementId = sm.IdServiceManagement )
     WHERE cr.CodeRoute = @Route
@@ -129,8 +129,8 @@ BEGIN
         UNION
         SELECT DISTINCT
                tbb.GuideNumber NUMEROGUIA
-        FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb
-            INNER JOIN DeliveryBackOffice.dbo.CatRoute cr
+        FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
                 ON (cr.IdRoute = tbb.RouteId)
         WHERE cr.CodeRoute = @Route
               AND CAST(tbb.DateCreated AS DATE) = @tiempo
@@ -149,21 +149,21 @@ BEGIN
            ISNULL(sp.SenderName, vpc.DescriptionOfClient) REMITENTE,
            ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0) PIECE
     --,vpc.CodeOfReference CodeOfReference
-    FROM RouteAssigment ra
-        INNER JOIN ServiceManagement sm
+    FROM RouteAssigment ra WITH(NOLOCK)
+        INNER JOIN ServiceManagement sm WITH(NOLOCK)
             ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-        INNER JOIN SchedulePickup sp
+        INNER JOIN SchedulePickup sp WITH(NOLOCK)
             ON sp.SchedulePickupId = sm.IdSchedulePickup
-        INNER JOIN VisitPointClient vpc
+        INNER JOIN VisitPointClient vpc WITH(NOLOCK)
             ON vpc.CodeOfReference = sp.SenderId
-        LEFT JOIN DeliveryOrderPaymentDetail dopd
+        LEFT JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
             ON dopd.IdHeaderRecolection = sp.SchedulePickupId
-        LEFT JOIN DeliveryOrder do
+        LEFT JOIN DeliveryOrder do WITH(NOLOCK)
             ON do.Guide_Serie = dopd.GuideSerie
                AND do.Guide_Number = dopd.GuideNumber
     WHERE ra.IdRoute =
     (
-        SELECT cr.IdRoute FROM CatRoute cr WHERE cr.CodeRoute = @Route
+        SELECT cr.IdRoute FROM CatRoute cr WITH(NOLOCK) WHERE cr.CodeRoute = @Route
     )
           AND ra.DateOfRoute = @tiempo
           AND sp.AssigmentStatus = 1;
@@ -172,10 +172,10 @@ BEGIN
 
     /* TABLE 3 */
     SELECT rta.IdRouteAssigment AS IdRoute
-    FROM DeliveryBackOffice.dbo.RouteAssigment rta
-        LEFT JOIN DeliveryBackOffice.dbo.CatRoute ctr
+    FROM DeliveryBackOffice.dbo.RouteAssigment rta WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.CatRoute ctr WITH(NOLOCK)
             ON ctr.IdRoute = rta.IdRoute
-        LEFT JOIN SenderReceiver sr
+        LEFT JOIN SenderReceiver sr WITH(NOLOCK)
             ON sr.ID = rta.IdCurrierMan
     WHERE ctr.CodeRoute = @Route
           AND CAST(rta.DateOfRoute AS DATE) = @tiempo;
@@ -185,10 +185,10 @@ BEGIN
     SELECT sr.ID,
            CONCAT(sr.First_Name, ' ', sr.Last_Name) NAMECOURIER,
            CAST(rta.DateOfRoute AS DATE) AS DATERECOLECT
-    FROM DeliveryBackOffice.dbo.RouteAssigment rta
-        LEFT JOIN DeliveryBackOffice.dbo.CatRoute ctr
+    FROM DeliveryBackOffice.dbo.RouteAssigment rta WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.CatRoute ctr WITH(NOLOCK)
             ON ctr.IdRoute = rta.IdRoute
-        LEFT JOIN SenderReceiver sr
+        LEFT JOIN SenderReceiver sr WITH(NOLOCK)
             ON sr.ID = rta.IdCurrierMan
     WHERE ctr.CodeRoute = @Route
           AND CAST(rta.DateOfRoute AS DATE) = @tiempo;
@@ -201,12 +201,12 @@ BEGIN
            tbb.GuidePiece GuidePiece,
            ISNULL(dop.IsDry, 1) IsDry,
            COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) Pieces
-    FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb
-        INNER JOIN DeliveryOrderPiece dop
+    FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb WITH(NOLOCK)
+        INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
             ON dop.GuideSerie = tbb.GuideSerie
                AND dop.GuideNumber = tbb.GuideNumber
                AND dop.NoPiece = tbb.GuidePiece
-        INNER JOIN DeliveryBackOffice.dbo.CatRoute cr
+        INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
             ON (cr.IdRoute = tbb.RouteId)
         INNER JOIN DeliveryOrder do WITH (NOLOCK)
             ON do.Guide_Serie = dop.GuideSerie
@@ -219,10 +219,10 @@ BEGIN
     /* TABLE 6 */
     SELECT TOP 1
            sbp.Id IdManifest
-    FROM RouteAssigment ra
+    FROM RouteAssigment ra WITH(NOLOCK)
         INNER JOIN CatRoute cr
             ON (cr.IdRoute = ra.IdRoute)
-        INNER JOIN SettlementByPickup sbp
+        INNER JOIN SettlementByPickup sbp WITH(NOLOCK)
             ON (
                    sbp.RouteAssigmentId = ra.IdRouteAssigment
                    AND sbp.IdCourier = ra.IdCurrierMan
@@ -244,10 +244,10 @@ BEGIN
         SELECT tbb.GuideNumber,
                COUNT(1) Pieces,
                (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Total
-        FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb
-            INNER JOIN DeliveryBackOffice.dbo.CatRoute cr
+        FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
                 ON (cr.IdRoute = tbb.RouteId)
-            INNER JOIN DeliveryOrder do
+            INNER JOIN DeliveryOrder do WITH(NOLOCK)
                 ON do.Guide_Serie = tbb.GuideSerie
                    AND do.Guide_Number = tbb.GuideNumber
         WHERE cr.CodeRoute = @Route

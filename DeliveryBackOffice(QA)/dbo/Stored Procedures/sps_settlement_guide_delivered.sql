@@ -28,7 +28,7 @@ BEGIN
 			/*** SIMULAR ENTREGA DE GUÍA COMO CONFIRMACION DE ENTREGA ***/
 	
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
-			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND (StatusOrderId IN (@StatusId,14,20)))
+			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND (StatusOrderId IN (@StatusId,14,20)))
 
 			IF (@Times = 0)
 			BEGIN
@@ -62,7 +62,7 @@ BEGIN
 			/*** FIN SIMULAR ENTREGA DE GUÍA EN FORMULARIO CONFIRMACION DE ENTREGA ***/
 
 
-			SET @Amount = (SELECT Collect_OnDelivery FROM DeliveryBackOffice.dbo.DeliveryOrder WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
+			SET @Amount = (SELECT Collect_OnDelivery FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
 			-- actualizar guía debido al proceso de liquidación
 			UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
@@ -107,12 +107,12 @@ BEGIN
 					1 AS 'SubStatusCode'
 					, COUNT(*)		AS RetriesMade--Numero intentos de entrega fallidas
 					, (case when RH.Attempt is NULL then 2 else RH.Attempt end)		AS RetriesAllowed ---Numero de intentos permitidos
-				FROM DeliveryOrder DOR
-					LEFT JOIN DBO.DeliveryOrderDetail DORD  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
-						AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder where OrderDescription ='Intento de entrega fallida')
-					LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-					LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
-					LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
+				FROM DeliveryOrder DOR WITH(NOLOCK)
+					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK)  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
+						AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder WITH(NOLOCK) WHERE OrderDescription ='Intento de entrega fallida')
+					LEFT JOIN DBO.Customer CU WITH(NOLOCK) ON DOR.IdCustomer=CU.IdCustomer
+					LEFT JOIN DBO.RatebyCustomer RC WITH(NOLOCK) ON CU.IdCustomer=RC.RbcIdCustomer
+					LEFT JOIN RateHeader RH  WITH(NOLOCK) ON RC.RbcIdRate=RH.RheId						
 				WHERE DOR.Guide_Serie=@GuideSerie AND DOR.Guide_Number=@GuideNumber				
 				GROUP BY DOR.Guide_Serie,DOR.Guide_Number,CU.IdCustomer,RH.Attempt,DORD.StatusOrderId
 			ELSE

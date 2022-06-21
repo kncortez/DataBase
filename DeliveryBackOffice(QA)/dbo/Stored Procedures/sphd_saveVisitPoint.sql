@@ -63,7 +63,7 @@ BEGIN
          @Address, @Town, @Department, @Phone, @ContactName, @Email, @IdTownship, @Latitude, @Longitude);
 
 
-        DECLARE @regexPhoneNumber VARCHAR(MAX) = '[(][0-9][0-9][0-9][)]%';
+        --DECLARE @regexPhoneNumber varchar(max)='[(][0-9][0-9][0-9][)]%';			
         SET @Phone = REPLACE(@Phone, '-', '');
         SET @Phone = REPLACE(@Phone, ' ', '');
 
@@ -108,20 +108,8 @@ BEGIN
             UadRowStatus
         )
         VALUES
-        (   @IdTownship, @IdCountry, @Address, (CASE
-                                                    WHEN @Phone LIKE @regexPhoneNumber THEN
-                                                        SUBSTRING(@Phone, 2, 3)
-                                                    ELSE
-                                                        ''
-                                                END
-                                               ), (CASE
-                                                       WHEN @Phone LIKE @regexPhoneNumber THEN
-                                                           SUBSTRING(@Phone, 6, LEN(@Phone) - 5)
-                                                       ELSE
-                                                           @Phone
-                                                   END
-                                                  ), '', @TokenCreated, GETDATE(), @CodeOfReference, @IdSettlement,
-            @DescriptionOfClient, @Idplace, @IdAccount, 1);
+        (@IdTownship, @IdCountry, @Address, '502', @Phone, '', @TokenCreated, GETDATE(), @CodeOfReference,
+         @IdSettlement, @DescriptionOfClient, @Idplace, @IdAccount, 1);
 
         IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 

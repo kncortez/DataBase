@@ -74,7 +74,7 @@ BEGIN
                               (
                                   SELECT TOP 1
                                          dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
                                         AND dod.StatusOrderId = 5
                               ),
@@ -93,7 +93,7 @@ BEGIN
                            (
                                SELECT TOP (1)
                                       ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
                                ORDER BY ACC.AccDateCreated DESC
@@ -108,7 +108,7 @@ BEGIN
                            WHEN
                            (
                                SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = serv.IdCustomer
                            ) >= 1 THEN
                                'Portal Web'
@@ -137,14 +137,14 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
                     LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                         ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc
+                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                         ON serv.Sender_ID = vpc.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
                         ON cs.IdCustomer = vpc.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
                         ON dti_fk_orderNumber = serv.Guide_Number
                            AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
                         ON invHead.inv_pk_id = invDet.dti_fk_header
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
@@ -167,7 +167,7 @@ BEGIN
                               (
                                   SELECT TOP 1
                                          dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
                                         AND dod.StatusOrderId = 5
                               ),
@@ -186,7 +186,7 @@ BEGIN
                            (
                                SELECT TOP (1)
                                       ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
                                ORDER BY ACC.AccDateCreated DESC
@@ -201,7 +201,7 @@ BEGIN
                            WHEN
                            (
                                SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = serv.IdCustomer
                            ) >= 1 THEN
                                'Portal Web'
@@ -230,14 +230,14 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
                     LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                         ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc
+                    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                         ON serv.Sender_ID = vpc.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
                         ON cs.IdCustomer = vpc.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
                         ON dti_fk_orderNumber = serv.Guide_Number
                            AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
                         ON invHead.inv_pk_id = invDet.dti_fk_header
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
@@ -263,7 +263,7 @@ BEGIN
                               (
                                   SELECT TOP 1
                                          dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
                                         AND dod.StatusOrderId = 5
                               ),
@@ -282,7 +282,7 @@ BEGIN
                            (
                                SELECT TOP (1)
                                       ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
                                ORDER BY ACC.AccDateCreated DESC
@@ -297,7 +297,7 @@ BEGIN
                            WHEN
                            (
                                SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = serv.IdCustomer
                            ) >= 1 THEN
                                'Portal Web'
@@ -324,16 +324,16 @@ BEGIN
                        ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
                        ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
                 FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient
+                    JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
                         ON serv.Sender_ID = vpclient.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                         ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
                         ON cs.IdCustomer = vpclient.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
                         ON dti_fk_orderNumber = serv.Guide_Number
                            AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
                         ON invHead.inv_pk_id = invDet.dti_fk_header
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
@@ -368,7 +368,7 @@ BEGIN
                               (
                                   SELECT TOP 1
                                          dod.DateCreated
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                                  FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
                                         AND dod.StatusOrderId = 5
                               ),
@@ -387,7 +387,7 @@ BEGIN
                            (
                                SELECT TOP (1)
                                       ACC.IdCustomer
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
                                ORDER BY ACC.AccDateCreated DESC
@@ -402,7 +402,7 @@ BEGIN
                            WHEN
                            (
                                SELECT COUNT(1)
-                               FROM DeliveryBackOffice.dbo.Account ACC
+                               FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = serv.IdCustomer
                            ) >= 1 THEN
                                'Portal Web'
@@ -429,16 +429,16 @@ BEGIN
                        ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
                        ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
                 FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
-                        ON serv.Sender_ID = vpclient.CodeOfReference
-                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
+                    inner JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
+                        ON serv.Sender_ID = vpclient.CodeOfReference 
+                    LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                         ON serv.StatusOrderId = so.StatusOrderId
-                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs
+                    LEFT JOIN DeliveryBackOffice.dbo.Customer cs WITH (NOLOCK)
                         ON cs.IdCustomer = vpclient.CustomerID
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail invDet WITH (NOLOCK)
                         ON dti_fk_orderNumber = serv.Guide_Number
                            AND dti_fk_orderSerie = serv.Guide_Serie
-                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead
+                    LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader invHead WITH (NOLOCK)
                         ON invHead.inv_pk_id = invDet.dti_fk_header
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL

@@ -1,4 +1,10 @@
-﻿-- =============================================
+﻿
+
+
+
+
+
+-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
@@ -71,7 +77,7 @@ BEGIN
         --Buscar ID modulo liquidación COD
         SET @CatModuleId = ISNULL(
                            (
-                               SELECT ModIdModule  FROM CatModule WITH (NOLOCK) WHERE ModName = 'Liquidación COD'
+                               SELECT ModIdModule FROM CatModule WHERE ModName = 'Liquidación COD'
                            ),
                            0
                                  );
@@ -88,14 +94,14 @@ BEGIN
             IF NOT EXISTS
             (
                 SELECT 1
-                FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
+                FROM [dbo].[ProcessedGuideCOD]
                 WHERE [GuideNumber] = @GuideNumber
             )
             BEGIN
                 -- se obtiene el id del courierman
                 SELECT TOP 1
                        @CourierId = ID_Courier
-                FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
+                FROM [dbo].[DeliveryAttempt]
                 WHERE [Guide_Serie] = @GuideSerie
                       AND [Guide_Number] = @GuideNumber;
 
@@ -123,10 +129,10 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                FROM [dbo].[DeliveryOrder] do
+                    LEFT JOIN dbo.VisitPointClient vp
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                    LEFT JOIN dbo.Customer cus
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
@@ -142,18 +148,15 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                FROM [dbo].[DeliveryOrder] do
+                    LEFT JOIN dbo.VisitPointClient vp
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                    LEFT JOIN dbo.Customer cus
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
                       AND do.[Collect_OnDelivery] = 0
                       AND do.IsCollect = 'true'
-		      AND NOT EXISTS (SELECT * FROM DeliveryBackOffice.dbo.Cost  C WITH (NOLOCK)
-								 JOIN CostDetail CD WITH (NOLOCK) ON  CD.IdCost = C.IdCost AND CD.IdTypeOfMoney IN (2,6) 
-								 WHERE C.ProductNumber = CONCAT(do.Guide_Serie,CAST(do.Guide_Number AS varchar (50)) ))
                 UNION
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
@@ -165,21 +168,18 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                FROM [dbo].[DeliveryOrder] do
+                    LEFT JOIN dbo.VisitPointClient vp
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                    LEFT JOIN dbo.Customer cus
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP
                         ON do.Guide_Serie = DOP.GuideSerie
                            AND do.Guide_Number = DOP.GuideNumber
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
-                      AND (do.IsCollect = 'false' AND DOP.PayTypeId = 1 AND (DOP.TimePlaId = 1 OR DOP.TimePlaId = 2) AND DOP.TypeofInOutMoneyId = 1 ) 	                                  --AND ( cus.IdCustomerType IN(2,3)
-                      AND do.Collect_OnDelivery = 0
-						AND NOT EXISTS (SELECT * FROM DeliveryBackOffice.dbo.Cost  C WITH (NOLOCK)
-								 JOIN CostDetail CD WITH (NOLOCK) ON  CD.IdCost = C.IdCost AND CD.IdTypeOfMoney IN (2,6) 
-								 WHERE C.ProductNumber = CONCAT(do.Guide_Serie,CAST(do.Guide_Number AS varchar (50)) ))
+                      AND do.IsCollect = 'false'
+                      AND DOP.TimePlaId = 2;
             END;
 
             --- Se agrega nuevo checkpoint
@@ -188,7 +188,7 @@ BEGIN
                              WHEN
                              (
                                  SELECT Collect_OnDelivery
-                                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+                                 FROM DeliveryBackOffice.dbo.DeliveryOrder
                                  WHERE Guide_Number = @GuideNumber
                              ) > 0 THEN
                                  'true'

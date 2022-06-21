@@ -471,7 +471,124 @@ BEGIN
 
 
 
+                            ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD---------
+                            IF (UPPER(@ServiceType) = 'DELIVERY')
+                            BEGIN
 
+                                UPDATE do
+                                SET do.Collect_OnDelivery = 0,
+                                    do.LastCollectOnDelivery = ppt.CODAmount
+                                FROM DeliveryOrder do WITH (NOLOCK)
+                                    INNER JOIN #listGuidesEnabled lge
+                                        ON lge.Guide_Number = do.Guide_Number
+                                           AND lge.Guide_Serie = do.Guide_Serie
+                                    INNER JOIN #PendingPaymentTemp ppt
+                                        ON ppt.GuideNumber = do.Guide_Number
+                                           AND ppt.GuideSerie = do.Guide_Serie
+                                WHERE lge.ExcludeCOD = 1;
+
+
+                                INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                                (
+                                    GuideSerie,
+                                    GuideNumber,
+                                    DataOriginId,
+                                    Token,
+                                    CustomerId
+                                )
+                                SELECT lge.Guide_Serie,
+                                       lge.Guide_Number,
+                                       25,
+                                       @TokenP UserCreated,
+                                       cus.IdCustomer
+                                FROM #listGuidesEnabled lge
+                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                                        ON lge.Guide_Number = dlo.Guide_Number
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = dlo.Sender_ID
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE dlo.Collect_OnDelivery > 0
+                                      AND pcd.IdProcessedGuideCOD IS NULL
+                                UNION
+                                SELECT lge.Guide_Serie,
+                                       lge.Guide_Number,
+                                       25,
+                                       @TokenP UserCreated,
+                                       cus.IdCustomer
+                                FROM #listGuidesEnabled lge
+                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                                        ON lge.Guide_Number = dlo.Guide_Number
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = dlo.Sender_ID
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE (
+                                          dlo.Collect_OnDelivery = 0
+                                          AND dlo.IsCollect = 'true'
+                                      )
+                                      AND pcd.IdProcessedGuideCOD IS NULL
+                                UNION
+                                SELECT lge.Guide_Serie,
+                                       lge.Guide_Number,
+                                       25,
+                                       @TokenP UserCreated,
+                                       cus.IdCustomer
+                                FROM #listGuidesEnabled lge
+                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                                        ON lge.Guide_Number = dlo.Guide_Number
+                                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+                                        ON dlo.Guide_Serie = DOP.GuideSerie
+                                           AND dlo.Guide_Number = DOP.GuideNumber
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = dlo.Sender_ID
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE (
+                                          dlo.IsCollect = 'false'
+                                          AND DOP.TimePlaId = 2
+                                      )
+                                      AND pcd.IdProcessedGuideCOD IS NULL;
+                            END;
+
+                            UPDATE do
+                            SET do.StatusOrderId = (CASE UPPER(@ServiceType)
+                                                        WHEN 'PICKUP' THEN
+                                                            21
+                                                        WHEN 'DELIVERY' THEN
+                                                            22
+                                                        WHEN 'RETURN' THEN
+                                                            23
+                                                    END
+                                                   )
+                            FROM DeliveryOrder do WITH (NOLOCK)
+                                INNER JOIN #listGuidesEnabled lge
+                                    ON lge.Guide_Number = do.Guide_Number
+                                       AND lge.Guide_Serie = do.Guide_Serie;
+
+                            UPDATE dop
+                            SET StatusOrderId = (CASE UPPER(@ServiceType)
+                                                     WHEN 'PICKUP' THEN
+                                                         21
+                                                     WHEN 'DELIVERY' THEN
+                                                         22
+                                                     WHEN 'RETURN' THEN
+                                                         23
+                                                 END
+                                                )
+                            FROM DeliveryOrderPiece dop WITH (NOLOCK)
+                                INNER JOIN #listGuidesEnabled lge WITH (NOLOCK)
+                                    ON lge.Guide_Number = dop.GuideNumber
+                                       AND lge.Guide_Serie = dop.GuideSerie;
 
                             -------GUARDAR COSTO--------------------
                             DECLARE @IdCost INT = 0;
@@ -586,196 +703,9 @@ BEGIN
                             END;
                             -----------------------------------------
 
-                            ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD---------
-                            IF (UPPER(@ServiceType) = 'DELIVERY')
-                            BEGIN
 
-                                UPDATE do
-                                SET do.Collect_OnDelivery = 0,
-                                    do.LastCollectOnDelivery = ppt.CODAmount
-                                FROM DeliveryOrder do
-                                    INNER JOIN #listGuidesEnabled lge
-                                        ON lge.Guide_Number = do.Guide_Number
-                                           AND lge.Guide_Serie = do.Guide_Serie
-                                    INNER JOIN #PendingPaymentTemp ppt
-                                        ON ppt.GuideNumber = do.Guide_Number
-                                           AND ppt.GuideSerie = do.Guide_Serie
-                                WHERE lge.ExcludeCOD = 1;
+                            -----------------------------------------
 
-
-                                INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
-                                (
-                                    GuideSerie,
-                                    GuideNumber,
-                                    DataOriginId,
-                                    Token,
-                                    CustomerId
-                                )
-                                SELECT lge.Guide_Serie,
-                                       lge.Guide_Number,
-                                       25,
-                                       @TokenP UserCreated,
-                                       cus.IdCustomer
-                                FROM #listGuidesEnabled lge
-                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
-                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                                        ON vp.CodeOfReference = dlo.Sender_ID
-                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
-                                        ON pcd.GuideSerie = dlo.Guide_Serie
-                                           AND pcd.GuideNumber = dlo.Guide_Number
-                                WHERE dlo.Collect_OnDelivery > 0
-                                      AND pcd.IdProcessedGuideCOD IS NULL
-                                UNION
-                                SELECT lge.Guide_Serie,
-                                       lge.Guide_Number,
-                                       25,
-                                       @TokenP UserCreated,
-                                       cus.IdCustomer
-                                FROM #listGuidesEnabled lge
-                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Serie = dlo.Guide_Serie
-                                           AND lge.Guide_Number = dlo.Guide_Number
-                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                                        ON vp.CodeOfReference = dlo.Sender_ID
-                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
-                                        ON pcd.GuideSerie = dlo.Guide_Serie
-                                           AND pcd.GuideNumber = dlo.Guide_Number
-                                WHERE dlo.Collect_OnDelivery = 0
-                                      AND dlo.IsCollect = 'true'
-                                      AND NOT EXISTS
-                                (
-                                    SELECT 1
-                                    FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                                        JOIN CostDetail CD WITH (NOLOCK)
-                                            ON CD.IdCost = C.IdCost
-                                               AND CD.IdTypeOfMoney IN ( 2, 6 )
-                                    WHERE C.ProductNumber = CONCAT(
-                                                                      dlo.Guide_Serie,
-                                                                      CAST(dlo.Guide_Number AS VARCHAR(50))
-                                                                  )
-                                )
-                                      AND pcd.IdProcessedGuideCOD IS NULL;
-                            --UNION
-                            --SELECT lge.Guide_Serie,
-                            --	   lge.Guide_Number,
-                            --	   25,
-                            --	   @TokenP UserCreated	 
-                            --	   , cus.IdCustomer
-                            --FROM #listGuidesEnabled lge
-                            --INNER JOIN DeliveryOrder dlo 
-                            --ON lge.Guide_Number = dlo.Guide_Number
-                            --INNER JOIN dbo.DeliveryOrderPaymentDetail DOP 
-                            --ON dlo.Guide_Serie = DOP.GuideSerie AND dlo.Guide_Number = DOP.GuideNumber
-                            --LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = dlo.Sender_ID
-                            --LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                            --LEFT JOIN ProcessedGuideCOD pcd ON pcd.GuideSerie = dlo.Guide_Serie AND pcd.GuideNumber = dlo.Guide_Number
-                            --WHERE ((dlo.IsCollect = 'false' AND DOP.TimePlaId = 2) OR (dlo.IsCollect = 'false' AND DOP.TimePlaId = 1 AND DOP.TypeofInOutMoneyId = 6) ) AND pcd.IdProcessedGuideCOD IS NULL
-                            END;
-
-                            UPDATE do
-                            SET do.StatusOrderId = (CASE UPPER(@ServiceType)
-                                                        WHEN 'PICKUP' THEN
-                                                            21
-                                                        WHEN 'DELIVERY' THEN
-                                                            22
-                                                        WHEN 'RETURN' THEN
-                                                            23
-                                                    END
-                                                   )
-                            FROM DeliveryOrder do
-                                INNER JOIN #listGuidesEnabled lge
-                                    ON lge.Guide_Number = do.Guide_Number
-                                       AND lge.Guide_Serie = do.Guide_Serie;
-
-                            UPDATE dop
-                            SET StatusOrderId = (CASE UPPER(@ServiceType)
-                                                     WHEN 'PICKUP' THEN
-                                                         21
-                                                     WHEN 'DELIVERY' THEN
-                                                         22
-                                                     WHEN 'RETURN' THEN
-                                                         23
-                                                 END
-                                                )
-                            FROM DeliveryOrderPiece dop
-                                INNER JOIN #listGuidesEnabled lge
-                                    ON lge.Guide_Number = dop.GuideNumber
-                                       AND lge.Guide_Serie = dop.GuideSerie;
-
-                            IF (UPPER(@ServiceType) = 'PICKUP')
-                            BEGIN
-
-                                UPDATE do
-                                SET do.Collect_OnDelivery = 0,
-                                    do.LastCollectOnDelivery = ppt.CODAmount
-                                FROM DeliveryOrder do
-                                    INNER JOIN #listGuidesEnabled lge
-                                        ON lge.Guide_Number = do.Guide_Number
-                                           AND lge.Guide_Serie = do.Guide_Serie
-                                    INNER JOIN #PendingPaymentTemp ppt
-                                        ON ppt.GuideNumber = do.Guide_Number
-                                           AND ppt.GuideSerie = do.Guide_Serie
-                                WHERE lge.ExcludeCOD = 1;
-
-
-                                INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
-                                (
-                                    GuideSerie,
-                                    GuideNumber,
-                                    DataOriginId,
-                                    Token,
-                                    CustomerId
-                                )
-                                SELECT lge.Guide_Serie,
-                                       lge.Guide_Number,
-                                       25,
-                                       @TokenP UserCreated,
-                                       cus.IdCustomer
-                                FROM #listGuidesEnabled lge
-                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
-                                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-                                        ON dlo.Guide_Serie = DOP.GuideSerie
-                                           AND dlo.Guide_Number = DOP.GuideNumber
-                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                                        ON vp.CodeOfReference = dlo.Sender_ID
-                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
-                                        ON pcd.GuideSerie = dlo.Guide_Serie
-                                           AND pcd.GuideNumber = dlo.Guide_Number
-                                WHERE (
-                                          dlo.IsCollect = 'false'
-                                          AND DOP.PayTypeId = 1
-                                          AND
-                                          (
-                                              DOP.TimePlaId = 1
-                                              OR DOP.TimePlaId = 2
-                                          )
-                                          AND DOP.TypeofInOutMoneyId = 1
-                                      )
-                                      AND NOT EXISTS
-                                (
-                                    SELECT 1
-                                    FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                                        JOIN CostDetail CD WITH (NOLOCK)
-                                            ON CD.IdCost = C.IdCost
-                                               AND CD.IdTypeOfMoney IN ( 2, 6 )
-                                    WHERE C.ProductNumber = CONCAT(
-                                                                      dlo.Guide_Serie,
-                                                                      CAST(dlo.Guide_Number AS VARCHAR(50))
-                                                                  )
-                                )
-                                      AND pcd.IdProcessedGuideCOD IS NULL;
-
-                            END;
-
-                            ----fin PROCESSEDGUIDECOD---
                             DECLARE @OutSize2 INT;
                             DECLARE @OutPrueba2 VARCHAR(MAX);
                             SET @OutPrueba2

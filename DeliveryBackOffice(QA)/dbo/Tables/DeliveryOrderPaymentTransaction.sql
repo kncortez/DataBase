@@ -26,12 +26,14 @@
     [TypeServiceId]         INT             NULL,
     [AccountId]             BIGINT          NULL,
     [CODAmountProcess]      DECIMAL (18, 2) NULL,
-    [Fel]                   NVARCHAR (100)  NULL,
     [VisitPoint]            INT             NULL,
-    CONSTRAINT [PK__Delivery__4D3E0097D3030D34] PRIMARY KEY CLUSTERED ([DopId] ASC),
+    [Fel]                   NVARCHAR (100)  NULL,
+    PRIMARY KEY CLUSTERED ([DopId] ASC),
     CONSTRAINT [FK_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CatTypeServiceClosure] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeServiceClosure] ([IdTypeService])
 );
+
+
 
 
 GO

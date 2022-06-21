@@ -15,7 +15,7 @@ BEGIN
     DECLARE @GuideStatusOrderId TINYINT =
             (
                 SELECT do.StatusOrderId
-                FROM DeliveryOrder do
+                FROM DeliveryOrder do WITH (NOLOCK)
                 WHERE do.Guide_Serie = @GuideSerie
                       AND do.Guide_Number = @GuideNumber
             );

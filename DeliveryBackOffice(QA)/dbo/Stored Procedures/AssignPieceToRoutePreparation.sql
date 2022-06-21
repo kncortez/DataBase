@@ -60,7 +60,7 @@ BEGIN
 			SELECT 
 				@IdRoutePreparation = ISNULL(RP.IdRoutePreparation,0)
 			FROM 
-				[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
 			WHERE 
 				RP.CatRouteId = @IdRoute
 				AND
@@ -128,9 +128,9 @@ BEGIN
 				SELECT
 					@IdRoutePreparationDetail = ISNULL(RPD.IdRoutePreparationDetail,0)
 				FROM
-					[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
 					JOIN
-						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
 						AND
@@ -191,7 +191,7 @@ BEGIN
 					SELECT
 						@GuidePieceExists = 1
 					FROM
-						[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP
+						[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
 					WHERE
 						DOP.GuideSerie = @GuideSerie
 						AND
@@ -209,13 +209,13 @@ BEGIN
 						SELECT
 							@IdRoutePreparationDetailPiece = RPDP.PieceNumber
 						FROM
-							[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+							[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
 							JOIN
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 								ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
 							JOIN
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
 								ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
 						WHERE
@@ -289,7 +289,7 @@ BEGIN
 								,DO.Receiver_Town
 								,DO.Receiver_Address
 							FROM
-								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO
+								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 							WHERE
 								DO.Guide_Serie = @GuideSerie
 								AND
@@ -376,7 +376,7 @@ BEGIN
 								GETDATE()
 							WHERE NOT EXISTS (
 								SELECT 1
-								FROM RoutePreparationDetail
+								FROM RoutePreparationDetail WITH (NOLOCK)
 								WHERE 
 									RoutePreparationId = @IdRoutePreparation
 									AND 
@@ -470,11 +470,32 @@ BEGIN
 
 		END TRY
 		BEGIN CATCH
+			ROLLBACK TRANSACTION
+			--Insert en tabla de log
+			INSERT INTO [dbo].[RoutePreparationLogError]
+					   ([ErrorDescription]
+					   ,[ErrorNumber]
+					   ,[ErrorProcedure]
+					   ,[ErrorLine]
+					   ,[GuideSerie]
+					   ,[GuideNumber]
+					   ,[TokenCreated]
+					   ,[DateCreated])
+				 VALUES
+					   (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,@GuideSerie
+					   ,@GuideNumber
+					   ,@Token
+					   ,GETDATE())
+
 			SELECT 
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID'
-			ROLLBACK TRANSACTION
+		
 		END CATCH;
 	--- END TRANSACTION
 

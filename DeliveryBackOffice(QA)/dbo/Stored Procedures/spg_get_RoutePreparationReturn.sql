@@ -56,7 +56,7 @@ BEGIN
 			serv.Contact_Instructions
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 		--LEFT JOIN DenariusCorporate_Dev.dbo.LGT_Master_Service_Material mat WITH(NOLOCK) on mat.MSM_ValueRegistrationForm = @Manifest and mat.MSM_MaterialCode = Guide_Serie +  CAST(Guide_Number AS VARCHAR)
-		JOIN DeliveryBackOffice.dbo.StatusOrder sta ON sta.StatusOrderId = serv.StatusOrderId
+		inner JOIN DeliveryBackOffice.dbo.StatusOrder sta ON sta.StatusOrderId = serv.StatusOrderId
 		--LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement BySt WITH(nolock) ON serv.Guide_Serie = bySt.Guide_Serie and serv.Guide_Number = bySt.Guide_Number
 		WHERE 
 		serv.StatusOrderId <> 7 AND -- ocultar los servicios anulados

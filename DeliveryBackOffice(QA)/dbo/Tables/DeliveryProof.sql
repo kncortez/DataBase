@@ -9,9 +9,12 @@
     [PathSignature]  NVARCHAR (300)  NULL,
     [Path_Dry]       NVARCHAR (300)  NULL,
     [Path_Cold]      NVARCHAR (300)  NULL,
+    [Path_Incident]  NVARCHAR (300)  NULL,
     CONSTRAINT [PK_DeliveryProof] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_DeliveryOrder_DeliveryProof] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

@@ -162,7 +162,7 @@ BEGIN
 									WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
 										CASE
 											WHEN @DiscountType = 'TOT' THEN
-												ROUND(@AmountWeight - ((@AmountWeight * @PromoValue) / 100), 1)
+												@AmountWeight - ROUND(((@AmountWeight * @PromoValue) / 100), 1)
 											ELSE 
 												@AmountWeight
 										END
@@ -194,7 +194,7 @@ BEGIN
 									WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
 										CASE
 											WHEN @DiscountType = 'TOT' THEN
-												ROUND(@AmountSecure - ((@AmountSecure * @PromoValue) / 100), 1)
+												@AmountSecure - ROUND(((@AmountSecure * @PromoValue) / 100), 1)
 											ELSE 
 												@AmountSecure
 										END
@@ -216,7 +216,7 @@ BEGIN
 								WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
 									CASE
 										WHEN @DiscountType = 'TOT' THEN
-											ROUND(@Amount - ((@Amount * @PromoValue) / 100), 1)
+											@Amount - ROUND(((@Amount * @PromoValue) / 100), 1)
 										ELSE 
 											@Amount
 									END

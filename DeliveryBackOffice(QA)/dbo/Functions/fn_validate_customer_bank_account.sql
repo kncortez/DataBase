@@ -110,7 +110,7 @@ BEGIN
 		END
 		ELSE IF @BankAccount = 31 -- BANCO DE AMERICA CENTRAL
 		BEGIN
-			IF (((@TypeAccount = 1) AND (LEN(@NumAccount) NOT IN (9, 10))) OR
+			IF (((@TypeAccount = 1) AND (LEN(@NumAccount) NOT IN (9, 11))) OR
 				((@TypeAccount = 2) AND (LEN(@NumAccount) NOT IN (9, 10, 11))))
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
@@ -129,8 +129,8 @@ BEGIN
 		END
 		ELSE IF @BankAccount = 33 -- BANCO INDUSTRIAL
 		BEGIN
-			IF (((@TypeAccount = 2) AND (LEN(@NumAccount) <> 10)) OR 
-				((@TypeAccount = 1) AND (LEN(@NumAccount) <> 7)))
+			IF (((@TypeAccount = 1) AND (LEN(@NumAccount) <> 10)) OR 
+				((@TypeAccount = 2) AND (LEN(@NumAccount) <> 7)))
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
 				SET @ReasonExcluded = 'LA LONGITUD DEL NUMERO DE CUENTA NO ES CORRECTA.';
@@ -173,17 +173,17 @@ BEGIN
 			ELSE IF ((@TypeAccount = 1) AND (SUBSTRING(@NumAccount, 1, 1) IN ('0', '4')))
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
-				SET @ReasonExcluded = 'EL NUMERO DE CUENTA NO DEBE INICIAR CON CERO (0) O CUATRO (4).';
+				SET @ReasonExcluded = 'EL NUMERO DE CUENTA DEBE INICIAR CON CERO (0) O CUATRO (4).';
 			END
 			ELSE IF ((@TypeAccount = 2) AND (SUBSTRING(@NumAccount, 1, 1) = '0'))
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
-				SET @ReasonExcluded = 'EL NUMERO DE CUENTA NO DEBE INICIAR CON CERO (0).';
+				SET @ReasonExcluded = 'EL NUMERO DE CUENTA DEBE INICIAR CON CERO (0).';
 			END
 		END
 		ELSE IF @BankAccount = 97 -- BANCO INMOBILIARIO
-		BEGIN
-			IF (LEN(@NumAccount) NOT IN (11, 12))
+		BEGIN		
+			IF (LEN(@NumAccount) < 11 OR LEN(@NumAccount) > 12)
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
 				SET @ReasonExcluded = 'LA LONGITUD DEL NUMERO DE CUENTA NO ES CORRECTA.';
@@ -256,7 +256,7 @@ BEGIN
 		END
 		ELSE IF @BankAccount = 28 -- BANCO FICOHSA
 		BEGIN
-			IF (LEN(@NumAccount) NOT IN (9, 10, 11))
+			IF (LEN(@NumAccount) < 9 OR LEN(@NumAccount) > 11)
 			BEGIN
 				SET @FlagIsExcluded = 'TRUE';
 				SET @ReasonExcluded = 'LA LONGITUD DEL NUMERO DE CUENTA NO ES CORRECTA.';

@@ -147,7 +147,7 @@ BEGIN
 					  ,VP.CountryId = @IdCountry
 					  ,VP.DescriptionOfClient =@FullName
 					  ,VP.Address = CAST((@Address1 + @Address2) AS NVARCHAR(600))
-					  ,VP.Phone =(CASE WHEN LEN(@Phone)>0 THEN CONCAT('(',@NirPhone,')',@Phone) ELSE '' END)
+					  ,VP.Phone =@Phone
 					  ,VP.TokenUpdated = @Token
 					  ,VP.DateUpdated = GETDATE()
 					  ,VP.Town=@TownshipName
@@ -218,7 +218,7 @@ BEGIN
 		   ,NULL
 		   ,@TownshipName
 		   ,@Department
-		   ,(CASE WHEN LEN(@Phone)>0 THEN CONCAT('(',@NirPhone,')',@Phone) ELSE '' END)
+		   ,@Phone
 		   ,NULL
 		   ,6
 		   ,@IdKindOfVPBusiness

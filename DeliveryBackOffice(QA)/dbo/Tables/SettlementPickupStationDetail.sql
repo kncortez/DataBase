@@ -12,13 +12,15 @@
     [DateCreated]                     DATETIME        NOT NULL,
     [TokenUpdated]                    VARCHAR (50)    NULL,
     [DateUpdated]                     DATETIME        NULL,
-    CONSTRAINT [PK__Settleme__B00337F96E48BBCA] PRIMARY KEY CLUSTERED ([IdSettlementPickupStationDetail] ASC),
-    CONSTRAINT [FK__Settlemen__Settl__799DF262] FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
-    CONSTRAINT [FK__Settlemen__Settl__7B863AD4] FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
-    CONSTRAINT [FK__Settlemen__Settl__7C7A5F0D] FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
-    CONSTRAINT [FK__Settlemen__Settl__7D6E8346] FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
-    CONSTRAINT [FK__Settlemen__Settl__7E62A77F] FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation])
+    PRIMARY KEY CLUSTERED ([IdSettlementPickupStationDetail] ASC),
+    FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
+    FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
+    FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
+    FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
+    FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

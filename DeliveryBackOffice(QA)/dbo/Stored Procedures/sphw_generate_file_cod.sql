@@ -201,7 +201,9 @@ BEGIN
                       -- AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
 					  AND PGD.BatchCODId IS NOT NULL
 					  AND PGD.BatchCODIdCommission IS NOT NULL
-              );
+					  AND bd.CommissionId IS NULL
+              )
+			  AND CommissionId IS NULL
 
 
         SELECT REPLACE(
@@ -593,7 +595,9 @@ BEGIN
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
                           --AND bd.CollectBatch = 'TRUE'
-                  );
+						   AND bd.CollectId IS NULL
+                  )
+				  AND CollectId IS NULL;
         END;
         ELSE IF @CatConceptCODId = 4
         BEGIN
@@ -615,8 +619,10 @@ BEGIN
                           AND bd.CatConceptCODId = @CatConceptCODId
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-                          --AND bd.RecolectionBatch = 'TRUE'
-                  );
+                          AND bd.RecolectionId IS NULL
+						  --AND bd.RecolectionBatch = 'TRUE'
+                  )
+				  AND RecolectionId IS NULL;
         END;
 
         SELECT REPLACE(
@@ -1255,7 +1261,7 @@ BEGIN
         AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
         UNION
         ------ACUMULADO
-        SELECT btd.Reference 'REFERENCIA',
+        SELECT MAX(btd.Reference) 'REFERENCIA',
 		(	SELECT TOP 1 DCBA.DCBA_Id FROM  DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCBA 
 	  WHERE DCBA.DCBA_Num_account = btd.AccountNumber 
 	  AND UPPER(dcba.DCBA_BankAccountType) = UPPER(btd.TypeAccountName)
@@ -1355,9 +1361,7 @@ BEGIN
         GROUP BY pg.CustomerId,
 				 btd.TypeAccountName,
 				 BTD.AccountName,
-				 btd.AccountNumber,
-				 btd.Reference,
-				 btd.Amount
+				 btd.AccountNumber
     END;
 
     -- FORMATO BI
@@ -1768,7 +1772,17 @@ BEGIN
 		   ,cco.Concept
 		   ,CONCAT(cco.Concept, ' ', btd.GuideSerie, btd.GuideNumber, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO'
 		   ,COALESCE(vp.email, cu.CODContactEmail, do.Sender_Mail, '0') 'CORREO ELECTRONICO'
-		   ,COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '0') 'TELEFONO'
+		   ,LEFT(
+			   RTRIM(
+					LTRIM(
+						REPLACE(
+							REPLACE(
+									COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '00000000')
+							,'-','')
+						,'(502)','')
+					)
+				)
+			, 8)'TELEFONO'
 		FROM BatchDetailCOD btd
 		INNER JOIN BatchCOD bt
 			ON bt.IdBatchCOD = btd.BatchCODId
@@ -1841,7 +1855,19 @@ BEGIN
 			cco.Concept,
 			CONCAT(cco.Concept, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300))))) 'CONCEPTO'
 		   ,MAX(COALESCE(vp.Email, cu.CODContactEmail, do.Sender_Mail, '0')) 'CORREO ELECTRONICO'
-		   ,MAX(COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '0')) 'TELEFONO'
+		   ,LEFT(
+				RTRIM(
+					LTRIM(
+						REPLACE(
+							REPLACE(
+								MAX(
+									COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '00000000')
+								)
+							,'-','')
+						,'(502)','')
+					)
+				)
+			,8) 'TELEFONO'
 		FROM BatchDetailCOD btd 
 		INNER JOIN BatchCOD bt
 			ON bt.IdBatchCOD = btd.BatchCODId

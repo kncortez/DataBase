@@ -33,7 +33,8 @@ BEGIN
 		   vpi.OrderSequence,
 		   vpi.RouteCodeID,
 		   vpi.HubLogisticID [ItineraryHubLogisticsID],
-		   vpi.RowStatus [ItineraryRowStatus]
+		   vpi.RowStatus [ItineraryRowStatus],
+		   ROW_NUMBER() OVER(PARTITION BY vpi.dayofvisit order by vpi.DateCreated asc) AS RowNumber
 	FROM dbo.VisitPointConfiguration vcf
 		JOIN dbo.VisitPointFrequency vpf
 			ON vpf.VPConfigurationID = vcf.IdVPConfiguration
@@ -43,6 +44,6 @@ BEGIN
 				AND vpi.RowStatus = 'true'
 	WHERE vcf.VisitPointID = @IdVisitPoint
 		  AND vcf.RowStatus = 'TRUE'
-	ORDER BY vpi.DayOfVisit , vpi.OrderSequence
+	ORDER BY vpi.DayOfVisit 
 
 END

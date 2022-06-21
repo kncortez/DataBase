@@ -32,7 +32,11 @@ DECLARE @TEMPLATEDETAIL TABLE
         LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+    
+	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+    WHERE CONVERT(DATE, DOPT.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+	-- FIN MODIFICACIÓN
+
     GROUP BY IND.dti_fk_orderSerie,
              IND.dti_fk_orderNumber;
 

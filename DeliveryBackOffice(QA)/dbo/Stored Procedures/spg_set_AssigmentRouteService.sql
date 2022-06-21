@@ -139,7 +139,8 @@ BEGIN
                                                         @Token = 'SYSTEM';      
 
         END;
-        SET @Amount=(SELECT  SUM(ISNULL(TP.AmountToPay,0)) FROM @TempPrice TP);
+		SET @Amount=ISNULL((SELECT  SUM(ISNULL(TP.AmountToPay,0)) FROM @TempPrice TP),0);
+        --SET @Amount=(SELECT  SUM(ISNULL(TP.AmountToPay,0)) FROM @TempPrice TP);
         --Fin calculo el monto a cobrar por el servicio (Amount)
         -------------------------------------------------------------------------------
                 
@@ -249,17 +250,17 @@ BEGIN
                    @token,
                    GETDATE(),
                    GETDATE()
-            FROM ServiceManagement sm
-                JOIN SchedulePickup sp
+            FROM ServiceManagement sm WITH (NOLOCK)
+                INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
                        )
-                JOIN DeliveryOrderPiece ordp
+                INNER JOIN DeliveryOrderPiece ordp WITH (NOLOCK)
                     ON (
                            ordp.GuideNumber = ord.Guide_Number
                            AND ordp.GuideSerie = ord.Guide_Serie
@@ -271,12 +272,12 @@ BEGIN
             SET StatusOrderId = @status,
                 TokenUpdated = @token,
                 DateUpdated = GETDATE()
-            FROM ServiceManagement sm
-                JOIN SchedulePickup sp
+            FROM ServiceManagement sm WITH (NOLOCK)
+                INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
@@ -288,17 +289,17 @@ BEGIN
             UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
             SET StatusOrderId = @status,
                 DateUpdated = GETDATE()
-            FROM ServiceManagement sm
-                JOIN SchedulePickup sp
+            FROM ServiceManagement sm WITH (NOLOCK)
+                INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
                        )
-                JOIN DeliveryOrderPiece ordp
+                INNER JOIN DeliveryOrderPiece ordp WITH (NOLOCK)
                     ON (
                            ordp.GuideNumber = ord.Guide_Number
                            AND ordp.GuideSerie = ord.Guide_Serie
@@ -406,16 +407,16 @@ BEGIN
                    GETDATE(),
                    GETDATE()
             FROM ServiceManagement sm
-                JOIN SchedulePickup sp
+                INNER JOIN SchedulePickup sp
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
                        )
-                JOIN DeliveryOrderPiece ordp
+                INNER JOIN DeliveryOrderPiece ordp
                     ON (
                            ordp.GuideNumber = ord.Guide_Number
                            AND ordp.GuideSerie = ord.Guide_Serie
@@ -428,11 +429,11 @@ BEGIN
                 TokenUpdated = @token,
                 DateUpdated = GETDATE()
             FROM ServiceManagement sm
-                JOIN SchedulePickup sp
+                INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
@@ -444,17 +445,17 @@ BEGIN
             UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
             SET StatusOrderId = @status,
                 DateUpdated = GETDATE()
-            FROM ServiceManagement sm
-                JOIN SchedulePickup sp
+            FROM ServiceManagement sm WITH (NOLOCK)
+                INNER JOIN SchedulePickup sp WITH (NOLOCK)
                     ON (sm.IdSchedulePickup = sp.SchedulePickupId)
-                JOIN DeliveryOrderPaymentDetail dopd
+                INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                     ON (dopd.IdHeaderRecolection = sp.SchedulePickupId)
-                JOIN DeliveryOrder ord
+                INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                     ON (
                            ord.Guide_Number = dopd.GuideNumber
                            AND ord.Guide_Serie = dopd.GuideSerie
                        )
-                JOIN DeliveryOrderPiece ordp
+                INNER JOIN DeliveryOrderPiece ordp WITH (NOLOCK)
                     ON (
                            ordp.GuideNumber = ord.Guide_Number
                            AND ordp.GuideSerie = ord.Guide_Serie

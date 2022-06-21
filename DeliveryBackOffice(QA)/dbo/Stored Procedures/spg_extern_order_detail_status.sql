@@ -5,11 +5,6 @@
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking externa para el cliente, sin datos sensibles>
 -- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-05-30>
--- Description:	< Cambios para solo mostrar estados "externos" >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_extern_order_detail_status]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
@@ -18,16 +13,6 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
-	DECLARE @ExternalTypeId INT = (
-		SELECT
-			TOP 1
-				CST.IdCatStatusType
-		FROM
-			[DeliveryBackOffice].[dbo].[CatStatusType] CST
-		WHERE
-			CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
-	)
 
 	
 	SELECT RES.[EventID],
@@ -130,7 +115,7 @@ BEGIN
 			--'' as [ManifestNumber]
 		 FROM dbo.DeliveryOrderDetail dod WITH(NOLOCK)
             JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
-                ON so.StatusOrderId = dod.StatusOrderId AND so.CatStatusTypeId = @ExternalTypeId
+                ON so.StatusOrderId = dod.StatusOrderId
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         --ORDER BY DateCreated

@@ -27,16 +27,16 @@ BEGIN
 		  ,MDL.ModOrder
 		  ,MDL.ModMetadata
 	  FROM [DeliveryBackOffice].[dbo].InternalUser INU 
-	  JOIN [DeliveryBackOffice].[dbo].[RolByUserBySystem] RUS
-									ON INU.RegisterUserID = RUS.RusIdUser AND INU.RowStatus = 'TRUE'
-	  JOIN [DeliveryBackOffice].[dbo].RolByModuleBySystem RMS  ON RMS.RmsIdRol = RUS.RusIdRol 
+	  INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserBySystem] RUS
+									ON INU.RegisterUserID = RUS.RusIdUser AND RUS.RusRowStatus = 'TRUE'
+	  INNER JOIN [DeliveryBackOffice].[dbo].RolByModuleBySystem RMS  ON RMS.RmsIdRol = RUS.RusIdRol 
 									AND RUS.RusIdSystem = RMS.RmsIdSystem 
-								    AND RUS.RusRowStatus  = 'TRUE'
-	  JOIN CatModule MDL			ON RMS.RmsIdModule = MDL.ModIdModule
+								    AND RMS.RmsRowStatus  = 'TRUE'
+	  INNER JOIN CatModule MDL			ON RMS.RmsIdModule = MDL.ModIdModule
 									AND MDL.ModRowStatus = 'TRUE'
 	  WHERE INU.IdUser = @CodeUser
 	  AND INU.Username = @UserName
 	  AND RUS.RusIdSystem = @IdSystem  
-
+	  AND INU.RowStatus = 'TRUE'
 	  	   
 END

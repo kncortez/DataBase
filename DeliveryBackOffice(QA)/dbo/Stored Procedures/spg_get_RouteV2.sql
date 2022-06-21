@@ -1,7 +1,7 @@
 ﻿
 -- =============================================
 -- Author:		<Cesar, Sazo>
--- Create date: <2021-12-30>
+-- Update date: <2021-12-30>
 -- Description:	<Devuelve información sobre las rutas, piloto y unidad >
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteV2] @dateRoute AS DATE
@@ -31,14 +31,15 @@ BEGIN
 	   ,(SELECT TOP 1
 				cv.UnitNumber
 			FROM [DeliveryBackOffice].[dbo].[RouteAssigment] rta
-			JOIN [DeliveryBackOffice].[dbo].[CatVehicle] cv
+			INNER JOIN [DeliveryBackOffice].[dbo].[CatVehicle] cv
 				ON cv.IdVehicle = rta.IdVehicle
 			WHERE rta.DateOfRoute = @dateRoute
 			AND rta.IdRoute = ctr.IdRoute)
 		UnitNumber
 	FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr
-	JOIN [DeliveryBackOffice].[dbo].[Township] ts
+	INNER JOIN [DeliveryBackOffice].[dbo].[Township] ts
 		ON ts.IdTownship = ctr.IdTownship
 	WHERE ctr.RowStatus = 1
+		AND ctr.IdTypeRoute = (SELECT ctr.IdTypeRoute FROM CatTypeRoute ctr WHERE [Name] = 'Recolección')
 	ORDER BY ctr.CodeRoute
 END

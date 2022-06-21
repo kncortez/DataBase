@@ -9,10 +9,12 @@
     [RbcDateUpdated]     DATETIME     NULL,
     [RbcCodeOfReference] INT          NULL,
     PRIMARY KEY CLUSTERED ([RbcId] ASC),
-    CONSTRAINT [FK__RatebyCus__RbcCo__5D01B3B4] FOREIGN KEY ([RbcCodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
+    FOREIGN KEY ([RbcCodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FKRbcCustomer] FOREIGN KEY ([RbcIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKRbcRate] FOREIGN KEY ([RbcIdRate]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 GO

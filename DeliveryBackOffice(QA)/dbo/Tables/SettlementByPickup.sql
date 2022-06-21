@@ -21,3 +21,10 @@
     PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_SequenceCode]
+    ON [dbo].[SettlementByPickup]([SequenceCode] ASC);
+

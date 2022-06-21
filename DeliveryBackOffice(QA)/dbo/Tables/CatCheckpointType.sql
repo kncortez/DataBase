@@ -1,8 +1,10 @@
 ﻿CREATE TABLE [dbo].[CatCheckpointType] (
     [IdCatCheckpointType]       TINYINT        NOT NULL,
     [CheckpointTypeDescription] NVARCHAR (200) NOT NULL,
-    CONSTRAINT [PK__CatCheck__47588DAC038F3CDE] PRIMARY KEY CLUSTERED ([IdCatCheckpointType] ASC)
+    PRIMARY KEY CLUSTERED ([IdCatCheckpointType] ASC)
 );
+
+
 
 
 GO

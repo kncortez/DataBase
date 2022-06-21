@@ -19,17 +19,19 @@
     [EstimatedTimeArrival] DATETIME         NULL,
     [StartServiceDateTime] DATETIME         NULL,
     [EndServiceDateTime]   DATETIME         NULL,
+    [CheckoutLatitude]     DECIMAL (18, 15) NULL,
+    [CheckoutLongitude]    DECIMAL (18, 15) NULL,
     [RowStatus]            BIT              NOT NULL,
     [TokenCreated]         NVARCHAR (50)    NOT NULL,
     [DateCreated]          DATETIME         NOT NULL,
     [TokenUpdated]         NVARCHAR (50)    NULL,
     [DateUpdated]          DATETIME         NULL,
-    [CheckoutLatitude]     DECIMAL (18, 15) NULL,
-    [CheckoutLongitude]    DECIMAL (18, 15) NULL,
     [IsPreLocated]         BIT              NULL,
     PRIMARY KEY CLUSTERED ([IdExtPlatformService] ASC),
     CONSTRAINT [ExtPlatformService_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 GO

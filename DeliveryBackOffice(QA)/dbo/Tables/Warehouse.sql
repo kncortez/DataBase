@@ -16,6 +16,8 @@
 );
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [GuideRackClusteredIndex]
     ON [dbo].[Warehouse]([Rack_Position] ASC, [Guide_Serie] ASC, [Guide_Number] ASC);
@@ -36,4 +38,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora y fech
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si pertenece al inventario de devoluciones.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse', @level2type = N'COLUMN', @level2name = N'IsReturn';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Id]
+    ON [dbo].[Warehouse]([Id] ASC);
 

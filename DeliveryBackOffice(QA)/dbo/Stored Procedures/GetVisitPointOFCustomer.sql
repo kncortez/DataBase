@@ -76,6 +76,8 @@ BEGIN
 		Cu.IdCustomer = @CustomerId
 		AND 
 		(Cu.RowSatus =1 or Cu.RowSatus is null)
+		AND
+		VPC.StatusClient=1
 	ORDER BY
 		ISNULL(OrdersByVPC.OrdersByVisitpoint, -1) DESC
 		,VPC.CodeOfReference ASC

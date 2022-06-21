@@ -102,9 +102,9 @@ BEGIN
 		ON
 			TMun.IdTownship = STC.TownshipId
 			AND
-			STC.RowStatus = 0
+			STC.RowStatus = 0 -- Municipios anulados de configuración
 	LEFT JOIN
-		[DeliveryBackOffice].[dbo].[ServiceTownshipConfiguration] STCAllowed WITH(NOLOCK)
+		[DeliveryBackOffice].[dbo].[ServiceTownshipConfiguration] STCAllowed WITH(NOLOCK) 
 		ON
 			TMun.IdTownship = STC.TownshipId
 			AND
@@ -116,9 +116,19 @@ BEGIN
 			AND
 			do.Receiver_Zone = SZC.Zone
 			AND
-			SZC.RowStatus = 0
+			SZC.RowStatus = 0 -- Zonas anuladas de configuración
+	LEFT JOIN
+		[DeliveryBackOffice].[dbo].[ServiceZoneConfiguration] SZCZero WITH(NOLOCK) -- Zona 0 = cualquier zona de municipio
+		ON
+			STC.TownshipId = SZCZero.TownshipId
+			AND
+			SZCZero.Zone = 0
+			AND
+			SZCZero.RowStatus = 1
 	WHERE CAST(eps.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 	AND esrw.RowStatus = 1
+	AND
+	SPC.IdServiceProvinceConfiguration IS NOT NULL
 	AND
 	(
 		(
@@ -134,7 +144,7 @@ BEGIN
 			AND
 			SZC.IdServiceZoneConfiguration IS NOT NULL
 			AND
-			SZC.IdServiceZoneConfiguration IS NULL
+			SZCZero.IdServiceZoneConfiguration IS NULL
 		)
 	)
 	GROUP BY eps.GuideSerie

@@ -16,7 +16,7 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	SELECT Top 1 [ID] 
+	SELECT Top 100 [ID] 
 		,[Date_Photo]
 		,(select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Dry]"))', 'varchar(max)')) AS Image_Dry
 		,(select cast('' as xml).value('xs:base64Binary(sql:column("[Proof_Cold]"))', 'varchar(max)')) AS Image_Cold
@@ -27,3 +27,6 @@ BEGIN
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 	ORDER BY Date_Photo DESC
 END
+
+
+--exec spg_get_delivery_proof

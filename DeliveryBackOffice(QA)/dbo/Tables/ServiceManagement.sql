@@ -2,8 +2,8 @@
     [IdServiceManagement]       INT             IDENTITY (1, 1) NOT NULL,
     [IdPuCourrier]              INT             NULL,
     [IdDlCourrier]              INT             NULL,
-    [CiPuDate]                  DATE            NULL,
-    [CoPuDate]                  DATE            NULL,
+    [CiPuDate]                  DATETIME        NULL,
+    [CoPuDate]                  DATETIME        NULL,
     [CiDlDate]                  DATE            NULL,
     [CoDlDate]                  DATE            NULL,
     [IdPuRouteAssigment]        INT             NULL,
@@ -20,7 +20,7 @@
     [DiSignaturePath]           NVARCHAR (150)  NULL,
     [SubTypeServiceManagmentId] INT             NULL,
     [IdHubDestination]          INT             NULL,
-    [Order]                     SMALLINT        CONSTRAINT [DF__ServiceMa__Order__28C2F59F] DEFAULT ((1)) NOT NULL,
+    [Order]                     SMALLINT        DEFAULT ((1)) NOT NULL,
     [Amount]                    DECIMAL (16, 2) NULL,
     [CatPaymentTimeId]          INT             NULL,
     PRIMARY KEY CLUSTERED ([IdServiceManagement] ASC),
@@ -33,6 +33,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 GO
@@ -51,4 +53,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Monto total
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de pago del servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'CatPaymentTimeId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_idpurrouteassigment]
+    ON [dbo].[ServiceManagement]([IdPuRouteAssigment] ASC);
 

@@ -517,19 +517,6 @@ BEGIN
             JOIN @AllServiceManagementToUpdate ASMTU
                 ON SM.IdServiceManagement = ASMTU.IdServiceManagement;
 
-		INSERT INTO
-			[DeliveryBackOffice].[dbo].[EventService]
-			(ServiceManagementId, ServiceStatusId, RowStauts, DateCreated, TokenCreated)
-		SELECT
-			DISTINCT
-				SM.IdServiceManagement, 3, 1, GETDATE(), @Token
-		FROM
-			[DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH(NOLOCK)
-			JOIN
-				@AllServiceManagementToUpdate ASMTU
-				ON
-					SM.IdServiceManagement = ASMTU.IdServiceManagement
-
         -- Actualizar estado de guía a traslado a express center
         UPDATE DO
         SET StatusOrderId = @NewStatus
@@ -599,34 +586,6 @@ BEGIN
                    AND GTSM.GuideNumber = DOPD.GuideNumber
         WHERE SPS.IdSettlementPickupStation = @IdSettlementPickupStation
               AND SPS.RowStatus = 1;
-			  
-        INSERT INTO 
-			[DeliveryBackOffice].[dbo].[EventService]
-			(ServiceManagementId, ServiceStatusId, RowStauts, DateCreated, TokenCreated)
-		SELECT
-			DISTINCT
-				SM.IdServiceManagement, 3, 1, GETDATE(), @Token
-        FROM [DeliveryBackOffice].[dbo].[SettlementPickupStation] SPS WITH (NOLOCK)
-            JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
-                ON SPS.IdSettlementPickupStation = SPSD.SettlementPickupStationId
-                   AND SPSD.RowStatus = 1
-            JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH (NOLOCK)
-                ON SPSD.ServiceManagementId = SM.IdServiceManagement
-            JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
-                ON SM.IdSchedulePickup = SP.SchedulePickupId
-            JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
-                ON SP.SchedulePickupId = DOPD.IdHeaderRecolection
-            JOIN @GuidesToServiceManagement GTSM
-                ON GTSM.GuideSerie = DOPD.GuideSerie
-                   AND GTSM.GuideNumber = DOPD.GuideNumber
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK)
-				ON ES.ServiceManagementId = SM.IdServiceManagement
-					AND ES.ServiceStatusId = 3
-					AND ES.DateCreated >= DATEADD(MINUTE,-30, GETDATE())
-        WHERE SPS.IdSettlementPickupStation = @IdSettlementPickupStation
-              AND SPS.RowStatus = 1
-			  AND ES.IdEventService IS NULL;
 
         -- Actualizar registros de servicios liquidados 
         UPDATE SPSD

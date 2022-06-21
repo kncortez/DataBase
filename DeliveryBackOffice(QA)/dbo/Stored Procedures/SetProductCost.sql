@@ -46,10 +46,6 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#TblExist', 'U') IS NOT NULL
         DROP TABLE #TblExist;
 
-    PRINT 'SETPRODUCTCOST';
-    PRINT @ReturnAmount;
-    PRINT 'SETPRODUCTCOST';
-
     DECLARE @jsonResult NVARCHAR(MAX);
     SELECT TOP 1
            cst.IdCost,
@@ -69,10 +65,8 @@ BEGIN
             (
                 SELECT ISNULL(xd.TotalAmountPaid, 0)FROM #TblExist xd
             );
-    DECLARE @IdCost INT = 0;
 
-    PRINT @Exist;
-    PRINT @IsPaid;
+    DECLARE @IdCost INT = 0;
 
     DECLARE @CostCount INT;
 
@@ -98,14 +92,12 @@ BEGIN
 
     DECLARE @CostDetailExists INT = 0;
 
-
     IF @PaymentType = 6 -- Datafono / Pago con tarjeta
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
             IF (@Exist > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
             BEGIN
-                PRINT 'el registro existe pero no esta pagado';
                 -- actualizar registro
 
                 UPDATE dbo.Cost
@@ -215,86 +207,105 @@ BEGIN
             END;
             ELSE IF (@Exist IS NULL OR @Exist = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
             BEGIN
-                PRINT 'registro no existe , hay que crearlo';
+				
+				IF( 
+					NOT EXISTS
+					(
+						SELECT
+							TOP 1
+								1
+						FROM
+							[DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
+						WHERE
+							C.IdProduct = @IdProduct
+							AND
+							C.IdTypeCharge = @IdTypeCharge
+							AND
+							C.ProductNumber = @ProductNumber
+					)
+				)
+				BEGIN
 
-                INSERT INTO dbo.Cost
-                (
-                    IdProduct,
-                    ProductNumber,
-                    IdTypeCharge,
-                    TotalAmount,
-                    PaymentDate,
-                    IdModule,
-                    RowStatus,
-                    TokenCreated,
-                    DateCreated,
-                    TokenUpdated,
-                    DateUpdated,
-                    ReturnAmount
-                )
-                VALUES
-                (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
-                    1, -- guardar los registros como activos 
-                    @Token, GETDATE(), NULL, NULL, @ReturnAmount);
+					INSERT INTO dbo.Cost
+					(
+						IdProduct,
+						ProductNumber,
+						IdTypeCharge,
+						TotalAmount,
+						PaymentDate,
+						IdModule,
+						RowStatus,
+						TokenCreated,
+						DateCreated,
+						TokenUpdated,
+						DateUpdated,
+						ReturnAmount
+					)
+					VALUES
+					(   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
+						1, -- guardar los registros como activos 
+						@Token, GETDATE(), NULL, NULL, @ReturnAmount);
 
-                SET @IdCost = SCOPE_IDENTITY();
+					SET @IdCost = SCOPE_IDENTITY();
 
-                IF (@Voucher != '' OR @Voucher IS NOT NULL)
-                BEGIN
-                    SELECT @CostCount = COUNT(1)
-                    FROM CostDetail cd WITH(NOLOCK)
-                    WHERE cd.IdCost = @IdCost;
+					IF (@Voucher != '' OR @Voucher IS NOT NULL)
+					BEGIN
+						SELECT @CostCount = COUNT(1)
+						FROM CostDetail cd WITH(NOLOCK)
+						WHERE cd.IdCost = @IdCost;
 
-                    IF (@CostCount > 0)
-                    BEGIN
+						IF (@CostCount > 0)
+						BEGIN
 
-                        UPDATE CostDetail
-                        SET Amount = @Amount,
-                            Voucher = @Voucher,
-                            TokenUpdated = @Token,
-                            DateUpdated = GETDATE()
-                        WHERE IdCost = @IdCost;
+							UPDATE CostDetail
+							SET Amount = @Amount,
+								Voucher = @Voucher,
+								TokenUpdated = @Token,
+								DateUpdated = GETDATE()
+							WHERE IdCost = @IdCost;
 
-                    END;
-                    ELSE IF (@CostCount = 0)
-                    BEGIN
+						END;
+						ELSE IF (@CostCount = 0)
+						BEGIN
 
-                        INSERT INTO CostDetail
-                        (
-                            IdCost,
-                            IdTypeOfMoney,
-                            Amount,
-                            Voucher,
-                            RowStatus,
-                            TokenCreated,
-                            DateCreated,
-                            TokenUpdated,
-                            DateUpdated
-                        )
-                        VALUES
-                        (@IdCost, 6, @Amount, @Voucher, 1, @Token, GETDATE(), NULL, NULL);
+							INSERT INTO CostDetail
+							(
+								IdCost,
+								IdTypeOfMoney,
+								Amount,
+								Voucher,
+								RowStatus,
+								TokenCreated,
+								DateCreated,
+								TokenUpdated,
+								DateUpdated
+							)
+							VALUES
+							(@IdCost, 6, @Amount, @Voucher, 1, @Token, GETDATE(), NULL, NULL);
 
-                    END;
-                END;
+						END;
+					END;
 
-                INSERT INTO [dbo].[BreakdownOfPayment]
-                (
-                    [IdCost],
-                    [Description],
-                    [Amount],
-                    [ModIdModule],
-                    [RowStatus],
-                    [TokenCreated],
-                    [DateCreated]
-                )
-                SELECT @IdCost,
-                       det.Description,
-                       det.Amount,
-                       det.ModIdModule,
-                       1, -- crear registro activo por default
-                       det.TokenCreated,
-                       GETDATE()
-                FROM @TblDetail det;
+					INSERT INTO [dbo].[BreakdownOfPayment]
+					(
+						[IdCost],
+						[Description],
+						[Amount],
+						[ModIdModule],
+						[RowStatus],
+						[TokenCreated],
+						[DateCreated]
+					)
+					SELECT @IdCost,
+						   det.Description,
+						   det.Amount,
+						   det.ModIdModule,
+						   1, -- crear registro activo por default
+						   det.TokenCreated,
+						   GETDATE()
+					FROM @TblDetail det;
+
+				END;
 
             END;
 
@@ -426,7 +437,6 @@ BEGIN
             -- select * from #TblExist
             IF (@Exist > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
             BEGIN
-                PRINT 'el registro existe pero no esta pagado';
                 -- actualizar registro
 
                 UPDATE dbo.Cost
@@ -497,60 +507,76 @@ BEGIN
             END;
             ELSE IF (@Exist IS NULL OR @Exist = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
             BEGIN
-                PRINT 'registro no existe , hay que crearlo';
-                INSERT INTO dbo.Cost
-                (
-                    IdProduct,
-                    ProductNumber,
-                    IdTypeCharge,
-                    TotalAmount,
-                    PaymentDate,
-                    IdModule,
-                    RowStatus,
-                    TokenCreated,
-                    DateCreated,
-                    TokenUpdated,
-                    DateUpdated
-                )
-                VALUES
-                (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
-                    1, -- guardar los registros como activos 
-                    @Token, GETDATE(), NULL, NULL);
 
-                SET @IdCost = SCOPE_IDENTITY();
+				IF( 
+					NOT EXISTS
+					(
+						SELECT
+							TOP 1
+								1
+						FROM
+							[DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
+						WHERE
+							C.IdProduct = @IdProduct
+							AND
+							C.IdTypeCharge = @IdTypeCharge
+							AND
+							C.ProductNumber = @ProductNumber
+					)
+				)
+				BEGIN
 
-                INSERT INTO [dbo].[BreakdownOfPayment]
-                (
-                    [IdCost],
-                    [Description],
-                    [Amount],
-                    [ModIdModule],
-                    [RowStatus],
-                    [TokenCreated],
-                    [DateCreated]
-                )
-                SELECT @IdCost,
-                       det.Description,
-                       det.Amount,
-                       det.ModIdModule,
-                       1, -- crear registro activo por default
-                       det.TokenCreated,
-                       GETDATE()
-                FROM @TblDetail det;
-            --	select * from @TblDetail
+					INSERT INTO dbo.Cost
+					(
+						IdProduct,
+						ProductNumber,
+						IdTypeCharge,
+						TotalAmount,
+						PaymentDate,
+						IdModule,
+						RowStatus,
+						TokenCreated,
+						DateCreated,
+						TokenUpdated,
+						DateUpdated
+					)
+					VALUES
+					(   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
+						1, -- guardar los registros como activos 
+						@Token, GETDATE(), NULL, NULL);
+
+					SET @IdCost = SCOPE_IDENTITY();
+
+					INSERT INTO [dbo].[BreakdownOfPayment]
+					(
+						[IdCost],
+						[Description],
+						[Amount],
+						[ModIdModule],
+						[RowStatus],
+						[TokenCreated],
+						[DateCreated]
+					)
+					SELECT @IdCost,
+						   det.Description,
+						   det.Amount,
+						   det.ModIdModule,
+						   1, -- crear registro activo por default
+						   det.TokenCreated,
+						   GETDATE()
+					FROM @TblDetail det;
+
+				END
             END;
             -- actualizar precios de producto
             IF (@IdTypeCharge = 1) -- consto de envio (flete)
             BEGIN
-                PRINT 'actualizar price';
-                PRINT @Amount;
-                PRINT SUBSTRING(LTRIM(@ProductNumber), 0, 3);
-                PRINT SUBSTRING(LTRIM(@ProductNumber), 3, LEN(@ProductNumber));
 
                 UPDATE dbo.DeliveryOrder
                 SET PriceShippment = @Amount
                 WHERE Guide_Serie = SUBSTRING(LTRIM(@ProductNumber), 0, 3)
                       AND Guide_Number = SUBSTRING(LTRIM(@ProductNumber), 3, LEN(@ProductNumber));
+
             END;
             ELSE -- pickup
             BEGIN

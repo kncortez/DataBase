@@ -45,7 +45,8 @@ BEGIN
 		GuideCustomer INT,
 		GuideDryPieces INT,
 		GuideColdPieces INT,
-		GuideReceiver NVARCHAR(200)
+		GuideReceiver NVARCHAR(200),
+		GuideStatus TINYINT
 	);
 
 	BEGIN TRY
@@ -53,7 +54,7 @@ BEGIN
 		-- Ingresar datos necesarios para no usar DeliveryOrder
 		INSERT INTO
 			@GuideData
-			(GuideSerie, GuideNumber, GuidePiece, GuideSender, GuideCustomer, GuideDryPieces, GuideColdPieces, GuideReceiver)
+			(GuideSerie, GuideNumber, GuidePiece, GuideSender, GuideCustomer, GuideDryPieces, GuideColdPieces, GuideReceiver, GuideStatus)
 		SELECT
 			@GuideSerie
 			,@GuideNumber
@@ -63,6 +64,7 @@ BEGIN
 			,DO.Pieces_Dry
 			,DO.Pieces_Cold
 			,LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName, ' ', DO.Receiver_LastName))) 'ReceiverName'
+			,DO.StatusOrderId
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		WHERE
@@ -83,7 +85,7 @@ BEGIN
 						WHEN CBS.IdCustomerByModuleBySystem IS NULL THEN 0
 						WHEN DOP.GuidePiece IS NULL THEN 0
 						WHEN ABC.AbcId IS NULL THEN 0
-						WHEN DSD.ID IS NULL THEN 0
+						WHEN DO.GuideStatus != 4 THEN 0
 						ELSE 1
 					END
 				)
@@ -92,7 +94,7 @@ BEGIN
 						WHEN CBS.IdCustomerByModuleBySystem IS NULL THEN CONCAT('Guía ',@GuideSerie,@GuideNumber,' no corresponde a cliente permitido en este sistema.')
 						WHEN DOP.GuidePiece IS NULL THEN CONCAT('Pieza ',@GuidePiece,' inexistente para guía ',@GuideSerie,@GuideNumber,'.')
 						WHEN ABC.AbcId IS NULL THEN CONCAT('Tipo de paquete inexistente o no valido.',@GuideSerie,@GuideNumber,'.')
-						WHEN DSD.ID IS NULL THEN CONCAT('Guía ',@GuideSerie,@GuideNumber,' no ha sido despachada a ruta en este día.')
+						WHEN DO.GuideStatus != 4 THEN CONCAT('Guía ',@GuideSerie,@GuideNumber,' no ha sido despachada a ruta en este día.')
 						ELSE NULL
 					END
 				)
@@ -101,7 +103,7 @@ BEGIN
 						WHEN CBS.IdCustomerByModuleBySystem IS NULL THEN NULL
 						WHEN DOP.GuidePiece IS NULL THEN NULL
 						WHEN ABC.AbcId IS NULL THEN NULL
-						WHEN DSD.ID IS NULL THEN NULL
+						WHEN DO.GuideStatus != 4 THEN NULL
 						ELSE (ISNULL(DO.GuideDryPieces, 0) + ISNULL(DO.GuideColdPieces, 0))
 					END
 				) 
@@ -110,7 +112,7 @@ BEGIN
 						WHEN CBS.IdCustomerByModuleBySystem IS NULL THEN NULL
 						WHEN DOP.GuidePiece IS NULL THEN NULL
 						WHEN ABC.AbcId IS NULL THEN NULL
-						WHEN DSD.ID IS NULL THEN NULL
+						WHEN DO.GuideStatus != 4 THEN NULL
 						ELSE CA.ArtName
 					END
 				)
@@ -119,7 +121,7 @@ BEGIN
 						WHEN CBS.IdCustomerByModuleBySystem IS NULL THEN NULL
 						WHEN DOP.GuidePiece IS NULL THEN NULL
 						WHEN ABC.AbcId IS NULL THEN NULL
-						WHEN DSD.ID IS NULL THEN NULL
+						WHEN DO.GuideStatus != 4 THEN NULL
 						ELSE DO.GuideReceiver
 					END
 				)
@@ -157,7 +159,7 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[CatArticle] CA WITH(NOLOCK)
 				ON
 					ABC.AbcIdArticle = CA.ArtId
-			LEFT JOIN
+			/*LEFT JOIN
 				[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH(NOLOCK)
 				ON
 					DO.GuideSerie = DSD.Guide_Serie
@@ -166,7 +168,7 @@ BEGIN
 					AND
 					CAST(DSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
 					AND
-					DSD.RowStatus = 1
+					DSD.RowStatus = 1*/
 
 		INSERT INTO
 			@ImagesOfGuide
@@ -214,17 +216,17 @@ BEGIN
 								',{' + 
 									'"IdResult":200' + ',' + 
 									'"Guide":"' +  CONCAT(GTV.GuideSerie, GTV.GuideNumber) + '",' +
-									'"GuideReceiver":"' +  GTV.GuideReceiver + '",' +
-									'"Article":"' +  GTV.GuideItemType + '",' +
+									'"GuideReceiver":"' +  ISNULL(GTV.GuideReceiver,'') + '",' +
+									'"Article":"' +  ISNULL(GTV.GuideItemType,'') + '",' +
 									'"IsValid":' + CAST(GTV.IsValid AS NVARCHAR) + ',' +
 									'"TotalGuidePieces":' + CAST(ISNULL(GTV.GuideTotalPieces,0) AS NVARCHAR) + ',' +
 									'"ImageData":[' + IIF((SELECT TOP 1 1 FROM @ImagesOfGuide) = 1, (
 										SELECT STUFF(( 
 											SELECT  
 												',{' + 
-													'"ImageName":"' +  IOG.ImageName + '",' +
-													'"ImageDescription":"' + IOG.ImageDescription + '",' +
-													'"IsRequired":' + CAST(IOG.IsRequired AS NVARCHAR) +
+													'"ImageName":"' +  ISNULL(IOG.ImageName,'') + '",' +
+													'"ImageDescription":"' + ISNULL(IOG.ImageDescription,'') + '",' +
+													'"IsRequired":' + CAST(ISNULL(IOG.IsRequired,0) AS NVARCHAR) +
 												+ '}'
 												FROM
 													@ImagesOfGuide IOG

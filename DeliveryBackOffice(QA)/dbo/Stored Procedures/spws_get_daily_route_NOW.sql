@@ -32,7 +32,7 @@ EXEC [dbo].[spws_get_daily_route]
 
 
 
-CREATE PROCEDURE [dbo].[spws_get_daily_route_am]
+CREATE PROCEDURE [dbo].[spws_get_daily_route_NOW]
 	@Token VARCHAR(200)='',
 	@IdCourier bigint,
 	@DateRoute date 
@@ -536,8 +536,3 @@ PRINT 'guias devolucion'
 				   return
 		end
 END
-
-
-
-
-

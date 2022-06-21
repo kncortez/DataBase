@@ -142,7 +142,7 @@ BEGIN
 	IF OBJECT_ID('tempdb.dbo.#ItemAddress', 'U') IS NOT NULL DROP TABLE #ItemAddress;
 	IF OBJECT_ID('tempdb.dbo.#SettlementList', 'U') IS NOT NULL DROP TABLE #SettlementList;
 
-	PRINT 'TEST 1'
+	--PRINT 'TEST 1'
 	-- Quitar Departamento y Municipio de la direccion para tener un mejor resultado en la coincidencia
 	SET @AddressParse = ( SELECT  TOP 1 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
@@ -165,25 +165,25 @@ BEGIN
 						  WHERE twn.HeaderCode = @HeaderCodeDestiny 
 						  AND twn.TownshipStatus ='true')
 
-	PRINT 'TEST 2'
+	--PRINT 'TEST 2'
 
 	DECLARE @IdSettlement BIGINT;
 
-	PRINT '@IdSettlementDestiny'
-	PRINT @IdSettlementDestiny
+	--PRINT '@IdSettlementDestiny'
+	--PRINT @IdSettlementDestiny
 
 	IF @IdSettlementDestiny<=0  --  no se envio el id settlement desde front por lo tanto intenta determinarlo con base a la dirección
 	BEGIN
-		PRINT 'entra @IdSettlementDestiny<=0'
-		PRINT '@AddressParse'
-		PRINT @AddressParse
+		--PRINT 'entra @IdSettlementDestiny<=0'
+		--PRINT '@AddressParse'
+		--PRINT @AddressParse
 
 		-- separar en un arrglo la direccion 
 		SELECT Item
 		INTO #ItemAddress
 		FROM DeliveryBackOffice.dbo.SplitUnlimited(@AddressParse,' ')
 
-		PRINT 'FIN DE PARSERO DE DIRECCEION'
+		--PRINT 'FIN DE PARSERO DE DIRECCEION'
 		IF @Zone =0 -- si no trae zona verificar por direccion
 		BEGIN
 			SELECT TOP 1 ST.IdSettlement  , COUNT(ST.IdSettlement) AS mas_popular, ST.Settlement
@@ -211,7 +211,7 @@ BEGIN
 			ORDER BY IdSettlement )
 
 		end
-		PRINT 'FIN IF DE LA ZONA'
+		--PRINT 'FIN IF DE LA ZONA'
 		if @IdSettlement is null -- si no se puede identificar el settlement trae el primero del municipio proporcionado
 		begin 
 			set @IdSettlement =  (select top 1 st.IdSettlement
@@ -221,20 +221,20 @@ BEGIN
 			order by IdSettlement)
 		END
         
-		PRINT 'FIN DEL IF DEL SETTLEMENT'
+		--PRINT 'FIN DEL IF DEL SETTLEMENT'
 	end
 	else
 	BEGIN
-		PRINT 'ENTRA EN ELSE'
-		PRINT '@IdSettlement'
-		PRINT @IdSettlement
-		PRINT '@IdSettlementDestiny'
-		PRINT @IdSettlementDestiny
+		--PRINT 'ENTRA EN ELSE'
+		--PRINT '@IdSettlement'
+		--PRINT @IdSettlement
+		--PRINT '@IdSettlementDestiny'
+		--PRINT @IdSettlementDestiny
 		set @IdSettlement = @IdSettlementDestiny
 	end
 
 
-	PRINT 'TEST 3'
+	--PRINT 'TEST 3'
 	-- IF OBJECT_ID('tempdb.dbo.#ItemAddress', 'U') IS NOT NULL DROP TABLE #ItemAddress;
 	-- IF OBJECT_ID('tempdb.dbo.#SettlementList', 'U') IS NOT NULL DROP TABLE #SettlementList;
 
@@ -245,7 +245,7 @@ BEGIN
 
 
 	---HOTFIX_SAMEDAY.INI	
-	PRINT 'HOTFIX INI'
+	--PRINT 'HOTFIX INI'
 
 	IF @IdRateGroup = 1
 		BEGIN
@@ -256,7 +256,7 @@ BEGIN
 		end
 
 	
-	PRINT 'HOTFIX FIN'
+	--PRINT 'HOTFIX FIN'
 	---HOTFIX_SAMEDAY.FIN
 		
 --------------- Fin determinar si es TDA   -----------------------.-------------------------------------------------------------------------------------
@@ -278,7 +278,7 @@ BEGIN
 --------------- Fin determinar Hub Origen y Destino ---------------------------------------------------------------------------------------------------
 
 ---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
-PRINT 'determinar segmento LOC/MET/FOR '
+--PRINT 'determinar segmento LOC/MET/FOR '
 		if @CodeOfReferenceSource <=0 -- si no viene el codeOfReference tomar el primero de cada cliente
 		begin
 			select top 1 @CodeOfReferenceSource = vp.CodeOfReference from dbo.VisitPointClient vp WITH(NOLOCK)
@@ -286,31 +286,31 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		end
 	DECLARE @IdSegment int
 
-	PRINT 'CodeOfReference'
-	PRINT @CodeOfReferenceSource
+	--PRINT 'CodeOfReference'
+	--PRINT @CodeOfReferenceSource
 
-	PRINT '@IdHubDestiny'
-	PRINT @IdHubDestiny
+	--PRINT '@IdHubDestiny'
+	--PRINT @IdHubDestiny
 	select  top 1  @IdSegment = cov.SegmentId 
 	from dbo.VisitPointCoverage cov
 	where cov.RowStatus ='true'
 	and cov.HublogisticId = @IdHubDestiny
 	and cov.VisitPointId = @CodeOfReferenceSource
 
-	PRINT 'segmento'
-	PRINT @IdSegment
+	--PRINT 'segmento'
+	--PRINT @IdSegment
 	if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
 		BEGIN
-		PRINT 'segmento nulo'
+		--PRINT 'segmento nulo'
 			IF @IdHubSource = @IdHubDestiny 
 				BEGIN
-				PRINT 'hubs iguales'
+				--PRINT 'hubs iguales'
 					SELECT top 1   @IdSegment = sg.CrsId 
 					FROM dbo.CatRateSegment sg  WITH(NOLOCK) WHERE sg.CrsShortName ='LOC'
 				END
 			ELSE 
 				BEGIN
-				PRINT 'hubs default'
+				--PRINT 'hubs default'
 					select  top 1  @IdSegment = cov.SegmentId  -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
 						from dbo.VisitPointCoverage cov WITH(NOLOCK)
 					where cov.RowStatus ='true'
@@ -382,15 +382,15 @@ PRINT 'determinar segmento LOC/MET/FOR '
 					from  #ParceWeigth w
 					 left join #ParceCode p on p.ID = w.ID
 					where p.Item ='0' or p.Item is null or p.Item ='')
-	PRINT @OverWeightchar
+	--PRINT @OverWeightchar
 
 	set @OverWeight =( select sum(
 					iif((w.Item - @WeigthLimit )<0,0,(w.Item - @WeigthLimit ))) as exeso
 					from  #ParceWeigth w
 					 left join #ParceCode p on p.ID = w.ID
 					where p.Item ='0' or p.Item is null or p.Item ='')
-	print 'exceso de peso'
-	print @OverWeight
+	--print 'exceso de peso'
+	--print @OverWeight
 
 ----------------- Fin Determinar si existe exceso de libras --------------------------------------------------------------------
 	DECLARE @CountPiece int =0 
@@ -420,7 +420,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 
 	if @IdTypeRate =1 -- tarifas estandar
 		begin
-			print 'aqui van las tarifas standar'
+			--print 'aqui van las tarifas standar'
 			DECLARE @CountPiecebyArticle INT = 0
 			DECLARE @ParcelPrice2 decimal(12,2) = 0
 
@@ -521,10 +521,10 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		end
 	else if @IdTypeRate = 2 -- tarifas todo destino
 		begin
-			print 'aqui van las tarifas todo destino'
-			print 'segmento'
-			print  @IdSegment
-			print 'grupo de servicios'
+			--print 'aqui van las tarifas todo destino'
+			--print 'segmento'
+			--print  @IdSegment
+			--print 'grupo de servicios'
 			
 			--IF @IdCustomer = 1  -- el igss se cobra por guia no por pieza
 			--	set @CountPiece = 1
@@ -533,7 +533,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 
 			
 			--
-			print @IdRateGroup
+			--print @IdRateGroup
 			insert into @TempRate
 
 			select isnull(cr.Name,'') TypeRate 
@@ -564,7 +564,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		end
 	else if @IdTypeRate = 3 -- tarifas por articulo
 		begin
-			print 'aqui van las tarifas por articulo'
+			--print 'aqui van las tarifas por articulo'
 			-- cantidad de piezas regulares
 			 set @CountPiece =( select  count(*) 
 							from  #ParceWeigth w
@@ -611,12 +611,12 @@ PRINT 'determinar segmento LOC/MET/FOR '
 				and rd.TypeSegmentId = @IdSegment
 				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService WITH(NOLOCK)  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
 				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
-			print 'rate'
-			print @IdRate
-			print 'segment'
-			print @IdSegment
-			print 'grupo'
-			print @IdRateGroup
+			--print 'rate'
+			--print @IdRate
+			--print 'segment'
+			--print @IdSegment
+			--print 'grupo'
+			--print @IdRateGroup
 		end
 	else if @IdTypeRate = 4 -- tarifas especiales
 		begin
@@ -625,7 +625,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 	-- FDD-671 INI
 	ELSE IF @IdTypeRate = 5 -- tarifas por peso
 	BEGIN
-		PRINT 'tarifas por peso'
+		--PRINT 'tarifas por peso'
 
 		--Cálcular las piezas que no entran en rangos
 		DECLARE @tblNotInRange AS TABLE (
@@ -769,7 +769,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		print 'error no se encontro un tarifario'
 	end
 
-	print 'Respuesta desde tabla temporal'
+	--print 'Respuesta desde tabla temporal'
 
 	If @FormatResponse ='Json'
 		begin
@@ -855,6 +855,6 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		end
 		
 
-	PRINT 'precio'
+	--PRINT 'precio'
 	
 END

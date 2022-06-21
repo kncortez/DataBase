@@ -27,6 +27,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_delivery_order_payment]
     ON [dbo].[DeliveryOrderPaymentDetail]([GuideSerie] ASC, [GuideNumber] ASC);
@@ -40,4 +42,9 @@ CREATE NONCLUSTERED INDEX [IX_NC_GuideSerieGuideNumber_DeliveryOrderPaymentDetai
 GO
 CREATE NONCLUSTERED INDEX [idx_IdHeaderRecolection]
     ON [dbo].[DeliveryOrderPaymentDetail]([IdHeaderRecolection] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideNumber_GuideSerie]
+    ON [dbo].[DeliveryOrderPaymentDetail]([GuideNumber] ASC, [GuideSerie] ASC);
 

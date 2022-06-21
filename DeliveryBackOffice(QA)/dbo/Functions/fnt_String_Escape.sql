@@ -13,3 +13,7 @@ BEGIN
   WHERE EncodingType = @Encoding;
    RETURN @StringToEscape
 END
+
+GO
+
+

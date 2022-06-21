@@ -17,10 +17,12 @@
     [DateUpdated]           DATETIME         NULL,
     [StartTime2]            TIME (7)         NULL,
     [EndTime2]              TIME (7)         NULL,
-    CONSTRAINT [PK__ServiceD__4A754EAB08BFEF8F] PRIMARY KEY CLUSTERED ([IdServiceDataForGuide] ASC),
+    PRIMARY KEY CLUSTERED ([IdServiceDataForGuide] ASC),
     CONSTRAINT [ServiceDataForGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY ([ProviderModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 GO
@@ -99,4 +101,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Inicio de s
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fin de segunda ventana horaria para realizar el servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'EndTime2';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_IsDelivery]
+    ON [dbo].[ServiceDataForGuide]([GuideSerie] ASC, [GuideNumber] ASC, [IsDelivery] ASC)
+    INCLUDE([Latitude], [Longitude]);
 

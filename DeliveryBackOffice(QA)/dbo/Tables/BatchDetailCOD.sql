@@ -24,10 +24,10 @@
     [AccountNumber]           NVARCHAR (50)   NULL,
     [AccountName]             NVARCHAR (2000) NULL,
     [CommissionNotified]      BIT             NULL,
+    [CODCommissionPercentage] DECIMAL (12, 2) NULL,
     [CommissionId]            INT             NULL,
     [CommissionDate]          DATETIME        NULL,
     [DiscountPrice]           DECIMAL (18, 2) NULL,
-    [CODCommissionPercentage] DECIMAL (12, 2) NULL,
     [CollectId]               BIGINT          NULL,
     [RecolectionId]           BIGINT          NULL,
     [RecolectionDate]         DATETIME        NULL,
@@ -46,6 +46,8 @@
     CONSTRAINT [FK_BatchDetailCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO

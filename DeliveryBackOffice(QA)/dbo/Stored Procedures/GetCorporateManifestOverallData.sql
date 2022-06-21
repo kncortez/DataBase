@@ -69,7 +69,7 @@ BEGIN
                                                            1,
                                                            ''
                                                        )
-                                       ) + '],' + '"DocumentURL":"' + cm.ManifestURL + '"' + '}'
+                                       ) + '],' + '"DocumentURL":"' + ISNULL(cm.ManifestURL,'') + '"' + '}'
                                 FROM DeliveryBackOffice.dbo.CorporateManifest cm
                                 WHERE cm.CodeOfReferenceId = @CodeOfReference
                                       AND cm.RowStatus = 1

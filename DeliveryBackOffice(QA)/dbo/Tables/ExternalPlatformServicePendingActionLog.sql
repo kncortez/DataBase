@@ -11,10 +11,12 @@
     [DateCreated]                   DATETIME      NOT NULL,
     [TokenUpdated]                  NVARCHAR (50) NULL,
     [DateUpdated]                   DATETIME      NULL,
-    CONSTRAINT [PK__External__E3C467498A70109F] PRIMARY KEY CLUSTERED ([IdExternalPlatformServiceXLog] ASC),
+    PRIMARY KEY CLUSTERED ([IdExternalPlatformServiceXLog] ASC),
     CONSTRAINT [CHK_ExternalPlatformServicePendingActionLog_Action] CHECK (isnull([IsPendingInsert],(0))>(0) AND isnull([IsPendingUpdate],(0))=(0) AND isnull([IsPendingDelete],(0))=(0) OR isnull([IsPendingInsert],(0))=(0) AND isnull([IsPendingUpdate],(0))>(0) AND isnull([IsPendingDelete],(0))=(0) OR isnull([IsPendingInsert],(0))=(0) AND isnull([IsPendingUpdate],(0))=(0) AND isnull([IsPendingDelete],(0))>(0)),
     CONSTRAINT [FK_ExternalPlatformServicePendingActionLog_CatExternalPlatform] FOREIGN KEY ([ExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 GO

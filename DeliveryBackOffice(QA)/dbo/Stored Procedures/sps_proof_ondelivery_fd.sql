@@ -57,15 +57,15 @@ BEGIN
             (
                 SELECT TOP 1
                        StatusOrderId
-                FROM StatusOrder WITH (NOLOCK)
+                FROM StatusOrder WITH(NOLOCK)
                 WHERE OrderDescription = 'Reenviado a Express Center'
             ); --FDAPI-337
     --Se obtiene el IdDeliveryOption configurado
     DECLARE @IdDeliveryOption AS INT =
             (
                 SELECT TOP 1
-                       IdDeliveryOption
-                FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH (NOLOCK)
+                       IdDeliveryOption 
+                FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH(NOLOCK)
                 WHERE Name = 'Express Center'
             ); --FDAPI-337
     --Se obtiene el IdDeliveryOption que tiene la guía
@@ -75,10 +75,10 @@ BEGIN
     SELECT TOP 1
            @IdDeliveryOptionGuide = IdDeliveryOption,
            @IsExpress = IIF(ISNULL(kvp.KindOfVPName, '') = 'Express Center', 'true', 'false')
-    FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-        LEFT JOIN dbo.VisitPointClient vpr WITH (NOLOCK)
+    FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+        LEFT JOIN dbo.VisitPointClient vpr WITH(NOLOCK)
             ON vpr.CodeOfReference = DeliveryOrder.Receiver_ID
-        LEFT JOIN dbo.KindOfVPClient kvp WITH (NOLOCK)
+        LEFT JOIN dbo.KindOfVPClient kvp WITH(NOLOCK)
             ON kvp.IdKindOfVPClient = vpr.IdKindOfVPClient
     WHERE Guide_Serie = @GuideSerie
           AND Guide_Number = @GuideNumber; --FDAPI-337
@@ -112,11 +112,11 @@ BEGIN
                                                               ' ',
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
-                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
-                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
+                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
+                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
+                                               JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -175,8 +175,8 @@ BEGIN
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
         SELECT da.ID
-        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-            JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
+            JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
                 ON sr.ID = da.ID_Courier
         WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -238,7 +238,7 @@ BEGIN
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true', @StatusEXC, 5)),
-                    LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', NULL, Collect_OnDelivery),
+                    LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', null, Collect_OnDelivery),
                     Collect_OnDelivery = IIF(@ExcludeCODPyament = 'true', 0, Collect_OnDelivery) -- 2021-09-09 si el flag de exlucion de pago COD es true actualizar monto COD a 0
                 WHERE Guide_Serie = @GuideSerie
                       AND Guide_Number = @GuideNumber;
@@ -268,12 +268,86 @@ BEGIN
                  @Token, GETDATE(), GETDATE(), NULL,
                  IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
-                SET @RInserted = @@rowcount;
+                SET @RInserted = @@ROWCOUNT;
 
                 SELECT @DataOriginId = cm.ModIdModule
-                FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
+                FROM DeliveryBackOffice.dbo.CatModule cm
                 WHERE cm.ModName = @ModName;
-
+                -- ********************************** PROCESO DE COD ********************************************************************************
+                INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                (
+                    GuideSerie,
+                    GuideNumber,
+                    CourierManId,
+                    DataOriginId,
+                    Token,
+                    CustomerId
+                )
+                SELECT ord.Guide_Serie AS 'GuideSerie',
+                       ord.Guide_Number AS 'GuideNumber',
+                       (
+                           SELECT IdCourierman
+                           FROM DeliveryBackOffice.dbo.LogTokenPOD
+                           WHERE LogTokenPOD = @Token
+                       ) AS 'CourierManId',
+                       @DataOriginId AS 'DataOriginId',
+                       @Token AS 'Token',
+                       cus.IdCustomer
+                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
+                        ON vp.CodeOfReference = ord.Sender_ID
+                    LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                        ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+                WHERE Guide_Serie = @GuideSerie
+                      AND Guide_Number = @GuideNumber
+                      AND Collect_OnDelivery > 0
+                      AND StatusOrderId = 5
+                UNION
+                SELECT ord.Guide_Serie AS 'GuideSerie',
+                       ord.Guide_Number AS 'GuideNumber',
+                       (
+                           SELECT IdCourierman
+                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH(NOLOCK)
+                           WHERE LogTokenPOD = @Token
+                       ) AS 'CourierManId',
+                       @DataOriginId AS 'DataOriginId',
+                       @Token AS 'Token',
+                       cus.IdCustomer
+                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
+                        ON vp.CodeOfReference = ord.Sender_ID
+                    LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                        ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+                WHERE Guide_Serie = @GuideSerie
+                      AND Guide_Number = @GuideNumber
+                      AND Collect_OnDelivery = 0
+                      AND IsCollect = 'true'
+                      AND StatusOrderId = 5
+                UNION
+                SELECT ord.Guide_Serie AS 'GuideSerie',
+                       ord.Guide_Number AS 'GuideNumber',
+                       (
+                           SELECT IdCourierman
+                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH(NOLOCK)
+                           WHERE LogTokenPOD = @Token
+                       ) AS 'CourierManId',
+                       @DataOriginId AS 'DataOriginId',
+                       @Token AS 'Token',
+                       cus.IdCustomer
+                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
+                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH(NOLOCK)
+                        ON ord.Guide_Serie = DOP.GuideSerie
+                           AND ord.Guide_Number = DOP.GuideNumber
+                    LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
+                        ON vp.CodeOfReference = ord.Sender_ID
+                    LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                        ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
+                WHERE Guide_Serie = @GuideSerie
+                      AND Guide_Number = @GuideNumber
+                      AND IsCollect = 'false'
+                      AND DOP.TimePlaId = 2
+                      AND StatusOrderId = 5;
+            -- ********************************** FIN PROCESO DE COD ********************************************************************************
             END;
         END;
 
@@ -284,98 +358,15 @@ BEGIN
                         SELECT CONCAT(@GuideSerie, @GuideNumber)
                     );
             -- Guardar Costos
-            EXEC [dbo].[SetPaymentCost] @TypeProduct = 1,
-                                        --1 = Guia electronica
+            EXEC [dbo].[SetPaymentCost] @TypeProduct = 1, --1 = Guia electronica
                                         @ProductNumber = @PNumber,
                                         @TblDetail = @TblDetail,
                                         @FullPayment = @FullPayment,
-                                        @TypeCharge = 1,
-                                        -- 1 = costo de envío
+                                        @TypeCharge = 1,  -- 1 = costo de envío
                                         @Token = @Token,
                                         @CODPayment = @CODPayment;
         END;
 
-        -- ********************************** PROCESO DE COD ********************************************************************************
-        INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
-        (
-            GuideSerie,
-            GuideNumber,
-            CourierManId,
-            DataOriginId,
-            Token,
-            CustomerId
-        )
-        SELECT ord.Guide_Serie AS 'GuideSerie',
-               ord.Guide_Number AS 'GuideNumber',
-               (
-                   SELECT IdCourierman
-                   FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
-                   WHERE LogTokenPOD = @Token
-               ) AS 'CourierManId',
-               @DataOriginId AS 'DataOriginId',
-               @Token AS 'Token',
-               cus.IdCustomer
-        FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-            LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                ON vp.CodeOfReference = ord.Sender_ID
-            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
-        WHERE Guide_Serie = @GuideSerie
-              AND Guide_Number = @GuideNumber
-              AND Collect_OnDelivery > 0
-              AND StatusOrderId = 5
-        UNION
-        SELECT ord.Guide_Serie AS 'GuideSerie',
-               ord.Guide_Number AS 'GuideNumber',
-               (
-                   SELECT IdCourierman
-                   FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
-                   WHERE LogTokenPOD = @Token
-               ) AS 'CourierManId',
-               @DataOriginId AS 'DataOriginId',
-               @Token AS 'Token',
-               cus.IdCustomer
-        FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
-            LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                ON vp.CodeOfReference = ord.Sender_ID
-            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
-        WHERE Guide_Serie = @GuideSerie
-              AND Guide_Number = @GuideNumber
-              AND Collect_OnDelivery = 0
-              AND IsCollect = 'true'
-              AND StatusOrderId = 5
-              AND NOT EXISTS
-        (
-            SELECT 1
-            FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                JOIN CostDetail CD WITH (NOLOCK)
-                    ON CD.IdCost = C.IdCost
-                       AND CD.IdTypeOfMoney IN ( 2, 6 )
-            WHERE C.ProductNumber = CONCAT(ord.Guide_Serie, CAST(ord.Guide_Number AS VARCHAR(50)))
-        );
-    --UNION
-    -- SELECT ord.Guide_Serie AS 'GuideSerie',
-    --                   ord.Guide_Number AS 'GuideNumber',
-    --                   (
-    --                       SELECT IdCourierman
-    --                       FROM DeliveryBackOffice.dbo.LogTokenPOD
-    --                       WHERE LogTokenPOD = @Token
-    --                   ) AS 'CourierManId',
-    --                   @DataOriginId AS 'DataOriginId',
-    --                   @Token AS 'Token'
-    --	   , cus.IdCustomer
-    --            FROM DeliveryBackOffice.dbo.DeliveryOrder ord
-    --INNER JOIN dbo.DeliveryOrderPaymentDetail DOP 
-    --	ON ord.Guide_Serie = DOP.GuideSerie AND ord.Guide_Number = DOP.GuideNumber
-    --	LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = ord.Sender_ID
-    --	LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
-    --            WHERE Guide_Serie = @GuideSerie
-    --                  AND Guide_Number = @GuideNumber                      
-    --	  AND IsCollect = 'false'
-    --	  AND DOP.TimePlaId = 2
-    --                  AND StatusOrderId = 5;
-    -- ********************************** FIN PROCESO DE COD ********************************************************************************
     END TRY
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
@@ -385,12 +376,12 @@ BEGIN
         ROLLBACK TRANSACTION;
     END CATCH;
 
-    IF @@trancount > 0
+    IF @@TRANCOUNT > 0
     BEGIN
         IF (@RInserted > 0)
             SELECT 1 AS 'StatusCode',
                    'Registro guardado correctamente' AS 'Description',
-                   CONVERT(BIGINT, @@trancount) AS 'NumTransferID',
+                   CONVERT(BIGINT, @@TRANCOUNT) AS 'NumTransferID',
                    @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide';
         ELSE
             SELECT 1 AS 'StatusCode',

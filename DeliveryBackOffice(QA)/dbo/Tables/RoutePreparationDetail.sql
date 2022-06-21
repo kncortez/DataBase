@@ -15,6 +15,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar el detalle de guías de la preparación de entregas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail';
 
@@ -57,4 +59,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hor
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Orden a realizar el servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'GuideOrder';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_RowStatus]
+    ON [dbo].[RoutePreparationDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX__Guide_Serie_Guide_Number_RowStatus]
+    ON [dbo].[RoutePreparationDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [RowStatus] ASC);
 

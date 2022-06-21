@@ -1256,14 +1256,14 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @SDD
                           AND TypeSegmentId = @LOC
                 )
                 BEGIN
-                    PRINT ' UPDATE RATECOD SDD LOC COD';
+                    --PRINT ' UPDATE RATECOD SDD LOC COD';
                     UPDATE dbo.RateCOD
                     SET CODRate = @SddLocCod,
 						CODExempt = @SddLocCodExempt,
@@ -1276,7 +1276,7 @@ BEGIN
                 END;
                 ELSE
                 BEGIN
-                    PRINT ' INSERT RATECOD SDD LOC COD';
+                    --PRINT ' INSERT RATECOD SDD LOC COD';
                     INSERT INTO dbo.RateCOD
                     (
                         RateId,
@@ -1305,7 +1305,7 @@ BEGIN
             END;
             ELSE
             BEGIN
-                PRINT ' UPDATE RATECOD SDD LOC COD MONTO CERO';
+                --PRINT ' UPDATE RATECOD SDD LOC COD MONTO CERO';
                 UPDATE dbo.RateCOD
                 SET CODRate = 0,
                     RowStatus = 0,
@@ -1319,14 +1319,14 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @SDD
                           AND TypeSegmentId = @MET
                 )
                 BEGIN
-                    PRINT ' UPDATE RATECOD SDD MET COD';
+                    --PRINT ' UPDATE RATECOD SDD MET COD';
                     UPDATE dbo.RateCOD
                     SET CODRate = @SddMetCod,
 						CODExempt = @SddMetCodExempt,
@@ -1339,7 +1339,7 @@ BEGIN
                 END;
                 ELSE
                 BEGIN
-                    PRINT ' INSERT RATECOD SDD MET COD';
+                    --PRINT ' INSERT RATECOD SDD MET COD';
                     INSERT INTO dbo.RateCOD
                     (
                         RateId,
@@ -1370,7 +1370,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @NDD
@@ -1430,7 +1430,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @NDD
@@ -1490,7 +1490,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @NDD
@@ -1550,7 +1550,7 @@ BEGIN
             END;
             ELSE
             BEGIN
-                PRINT ' UPDATE RATECOD SDD MET COD ANULADO';
+                --PRINT ' UPDATE RATECOD SDD MET COD ANULADO';
                 UPDATE dbo.RateCOD
                 SET CODRate = 0,
                     RowStatus = 0,
@@ -1564,7 +1564,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @SDD
@@ -1626,7 +1626,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @TDA
@@ -1686,7 +1686,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @TDA
@@ -1746,7 +1746,7 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT *
+                    SELECT 1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @TDA
@@ -1804,7 +1804,7 @@ BEGIN
             END;
 
 			--rango de pesos
-			PRINT 'RANGO DE PESOS'
+			--PRINT 'RANGO DE PESOS'
 
 			--Eliminar rango de pesos SDD
 			UPDATE rd

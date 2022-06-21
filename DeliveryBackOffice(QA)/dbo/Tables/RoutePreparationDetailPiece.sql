@@ -8,9 +8,11 @@
     [DateCreated]                   DATETIME      NOT NULL,
     [TokenUpdated]                  NVARCHAR (50) NULL,
     [DateUpdated]                   DATETIME      NULL,
-    CONSTRAINT [PK__RoutePre__504D05A0C7D4F264] PRIMARY KEY CLUSTERED ([IdRoutePreparationDetailPiece] ASC),
+    PRIMARY KEY CLUSTERED ([IdRoutePreparationDetailPiece] ASC),
     CONSTRAINT [FK_RoutePreparationDetailPiece_RoutePreparationDetail] FOREIGN KEY ([RoutePreparationDetailId]) REFERENCES [dbo].[RoutePreparationDetail] ([IdRoutePreparationDetail])
 );
+
+
 
 
 GO
@@ -51,4 +53,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que m
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetailPiece', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus]
+    ON [dbo].[RoutePreparationDetailPiece]([RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_PieceNumber_RowStatus]
+    ON [dbo].[RoutePreparationDetailPiece]([PieceNumber] ASC, [RowStatus] ASC)
+    INCLUDE([RoutePreparationDetailId]);
 

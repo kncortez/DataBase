@@ -73,6 +73,7 @@ BEGIN
 		ON tl.TknIdUser = bya.RuaIdUser
 	WHERE tl.TknIdToken = @Token
 
+	print (@TypeUser)
     DECLARE @jsonResult NVARCHAR(MAX);
     IF (@Pagina > -1)
     BEGIN
@@ -106,7 +107,7 @@ BEGIN
 								)
 						);
 
-						
+					
 				SET @jsonResult =
 				(
 					SELECT STUFF(
@@ -327,7 +328,7 @@ BEGIN
 									''
 								)
 				);
-
+				
 			END
 			ELSE
 			BEGIN
@@ -608,6 +609,7 @@ BEGIN
 									''
 								)
 				);
+				
 			END
 
             -- retornar resultado en formato json
@@ -838,6 +840,7 @@ BEGIN
 									''
 								)
 				);
+				
 			END
 			ELSE
 			BEGIN
@@ -2243,6 +2246,8 @@ BEGIN
 									''
 								)
 				);
+
+		
 			END
 			ELSE
 			BEGIN
@@ -2457,7 +2462,6 @@ BEGIN
 									''
 								)
 				);
-
 			END
             
             IF @jsonResult IS NULL
@@ -2485,6 +2489,7 @@ BEGIN
 		
 			IF(@TypeUser = 'CORPORATIVO')
 			BEGIN
+			print('aqui si')
 				SET @jsonResult =
 				(
 					SELECT STUFF(

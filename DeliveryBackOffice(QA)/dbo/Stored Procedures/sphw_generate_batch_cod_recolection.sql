@@ -124,8 +124,7 @@ BEGIN
         (
             SELECT STUFF(
                    (
-                       SELECT /*TOP 50*/
-                           ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
+                       SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
                            JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                ON do.Guide_Serie = pg.GuideSerie
@@ -148,17 +147,6 @@ BEGIN
                              AND pg.RowStatus = 1
                              AND
                              (
-                                 do.IsCollect = 'false'
-                                 AND DOPD.PayTypeId = 1
-                                 AND
-                                 (
-                                     DOPD.TimePlaId = 1
-                                     OR DOPD.TimePlaId = 2
-                                 )
-                                 AND DOPD.TypeofInOutMoneyId = 1
-                             )
-                             AND
-                             (
                                  ISNULL(dcba.DCBA_Bank_Id, cus.CODAccountBankID) NOT IN
         (
             SELECT PayingBank
@@ -174,16 +162,8 @@ BEGIN
                              --OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))						
 
                              AND pg.Date > '2022-03-14 22:00:00.000'
+                             --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
-                             AND NOT EXISTS
-        (
-            SELECT 1
-            FROM DeliveryBackOffice.dbo.Cost C
-                JOIN CostDetail CD
-                    ON CD.IdCost = C.IdCost
-                       AND CD.IdTypeOfMoney IN ( 2, 6 )
-            WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50)))
-        )
                        FOR XML PATH('')
                    ),
                    1,
@@ -293,7 +273,6 @@ BEGIN
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
                     ON PC.GuideSerieDestination = ord.Guide_Serie
                        AND PC.GuideNumberDestination = ord.Guide_Number
-                       AND PC.FinalActiveDate >= GETDATE()
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL;
@@ -744,11 +723,7 @@ BEGIN
                            CODRate,
                            DiscountPrice
                     FROM #TableForzaPaymentTemp tfpt
-                        INNER JOIN ProcessedGuideCOD PGD
-                            ON PGD.GuideSerie = tfpt.GuideSerie
-                               AND PGD.GuideNumber = tfpt.GuideNumber
-                    WHERE PGD.RowStatus = 1
-                          AND NOT EXISTS
+                    WHERE NOT EXISTS
                     (
                         SELECT 1
                         FROM DeliveryBackOffice.dbo.BatchDetailCOD bdcod

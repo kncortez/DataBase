@@ -115,18 +115,16 @@ SET NOCOUNT ON;
 					and StatusOrderId = 7;*/
 					SET @TOTAL = @TOTAL + 1;
 				END 
-				--While for pieces
+				--Pieces
 					DECLARE @TempGuide NVARCHAR(MAX) = (select T.GuideNumber from @TBGUIDES T where T.ITERATOR = @IDENTYGUIDES);
 					DECLARE @TempSerie NVARCHAR(MAX) = (select T.SerieGuide from @TBGUIDES T where T.ITERATOR = @IDENTYGUIDES);
-					DECLARE @Pieces BIGINT = (SELECT COUNT(*) FROM DeliveryBackOffice.dbo.DeliveryOrderPiece WHERE GuideNumber=@TempGuide AND GuideSerie = @TempSerie);
+					
 
-					WHILE (@Pieces>0)
-					BEGIN
+					
 					UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
 					SET StatusOrderId=7
 					WHERE GuideNumber=@TempGuide AND GuideSerie = @TempSerie
-					SET @Pieces = @Pieces  - 1;
-					END
+					
 
           IF EXISTS (SELECT * FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK) WHERE  GuideNumber=@TempGuide AND RowStatus=1)
 
@@ -134,7 +132,7 @@ SET NOCOUNT ON;
 
           UPDATE DeliveryBackOffice.dbo.GuideBatch
 					SET RowStatus=0, Status=0
-					WHERE GuideNumber=@TempGuide
+					WHERE GuideNumber=@TempGuide and GuideSeries = @TempSerie
 
           END
 

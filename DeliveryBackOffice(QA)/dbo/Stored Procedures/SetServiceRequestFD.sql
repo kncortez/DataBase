@@ -4,18 +4,14 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
 @VisitPointByClientPortfolioId BIGINT = 0,
-@UserAddressId BIGINT = 0,
-@SystemModule NVARCHAR(200) = NULL
+@UserAddressId BIGINT = 01
+
 AS
 BEGIN
 	DECLARE @IdTransaction bigint = NULL
 	DECLARE @ManifestNumber int = 0
 	DECLARE @ManifestSerie varchar(2) = 'FM'
 	DECLARE @GuideSerie varchar(2) = 'FD'
-
-	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
-	--FIN MODIFICACIÓN
 
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
@@ -27,27 +23,7 @@ BEGIN
   SET @UserAddressId = NULL;
   END
   
-  DECLARE @system INT = NULL;
-  DECLARE @module INT = NULL;
-
-  IF (@SystemModule != '') 
-  BEGIN
-  --Se almacena el sistema y modulo desde donde se crea una guía
-		SET @system = (
-						SELECT SysIdSystem from CatSystem ca
-						WHERE ca.SysNameSystem = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/') 
-						WHERE id = 1)
-					   );
-
-		-- Se deja la sentencia TOP 1 ya que existe dos modulos con el mismo nombre para la creación de guías en porta Web
-		-- Crear guías para usuarios individuales/Express y Crear Guías para corporativos en el flujo normal
-		SET @module = (
-						SELECT TOP 1 mo.ModIdModule from CatModule mo
-						WHERE mo.ModName = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/')
-						WHERE id = 2)
-					   );
-  END
-
+  
 	/*********************************************************************************************/
 	/******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
 	/*********************************************************************************************/
@@ -232,12 +208,10 @@ BEGIN
 				[PriceShippment],
 				[SenderIdTownship],
 				[ReceiverIdTownship],
-				[VisitpointClientPortfolioId],
-				[UserAddressId],
+        		[VisitpointClientPortfolioId],
+        		[UserAddressId],
 				[Sender_Lat],
-				[Sender_Lng],
-				[CatSystemId],
-				[CatModuleId]
+				[Sender_Lng]
 			)
 			SELECT 
 				GT.[Ticket_Number],
@@ -298,13 +272,10 @@ BEGIN
 				GT.PriceShippment,
 				GT.SenderIdTownship,
 				GT.ReceiverIdTownship,
-				
-				@VisitPointByClientPortfolioId,
-				@UserAddressId,
+        		@VisitPointByClientPortfolioId,
+        		@UserAddressId,
 				GT.Sender_Lat,
-				GT.Sender_Lng,
-				@system,
-				@module
+				GT.Sender_Lng
 			FROM #GuideTable GT
 			
 			-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
@@ -398,10 +369,6 @@ BEGIN
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
 			isnull(@Route,'')  as 'Route'
-			,D.PriceShippment AS 'Price',
-			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts'
-			--FIN MODIFICACIÓN
 		FROM DeliveryOrder D WITH(NOLOCK)
 		JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)

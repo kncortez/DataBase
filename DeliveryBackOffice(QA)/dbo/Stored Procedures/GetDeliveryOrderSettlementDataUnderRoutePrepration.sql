@@ -41,89 +41,10 @@ BEGIN
 	SELECT
 		dsd.GuideOrder
 		, do.Guide_Serie + isnull(convert(nvarchar,do.Guide_Number),'') as Guide_Code
-		,(
-			SELECT 
-				SUM(CAST(DA.[Cold] AS INT))
-			FROM 
-				[DeliveryBackOffice].[dbo].[RoutePreparation] RP
-			JOIN
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-				ON
-					RP.IdRoutePreparation = RPD.RoutePreparationId
-					AND
-					RPD.RowStatus = 1
-			JOIN
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
-				ON
-					RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
-					AND
-					RPDP.RowStatus = 1
-			JOIN
-				[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA
-				ON
-					RPD.Guide_Serie = DA.Guide_Serie
-					AND
-					RPD.Guide_Number = DA.Guide_Number
-					AND
-					RPDP.PieceNumber = DA.Guide_Piece
-			WHERE 
-				DA.Guide_Serie = do.Guide_Serie
-				AND 
-				DA.Guide_Number = do.Guide_Number 
-				AND
-				ID_DeliveryOrderBySettlement = @IdManifest
-				AND
-				RP.DeliveryOrderBySettlementId = @IdManifest
-				AND
-				RP.RowStatus = 1
-			GROUP BY 
-				DA.Guide_Serie
-				,DA.Guide_Number
-				,ID_DeliveryOrderBySettlement
-				,RP.IdRoutePreparation
-				,RPD.IdRoutePreparationDetail
+		,(DO.Pieces_Cold
 		) AS Pieces_Cold
-		,(
-			SELECT 
-				SUM(CAST(DA.[Dry] AS INT))
-			FROM 
-				[DeliveryBackOffice].[dbo].[RoutePreparation] RP
-			JOIN
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-				ON
-					RP.IdRoutePreparation = RPD.RoutePreparationId
-					AND
-					RPD.RowStatus = 1
-			JOIN
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
-				ON
-					RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
-					AND
-					RPDP.RowStatus = 1
-			JOIN
-				[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA
-				ON
-					RPD.Guide_Serie = DA.Guide_Serie
-					AND
-					RPD.Guide_Number = DA.Guide_Number
-					AND
-					RPDP.PieceNumber = DA.Guide_Piece
-			WHERE 
-				DA.Guide_Serie = do.Guide_Serie
-				AND 
-				DA.Guide_Number = do.Guide_Number 
-				AND
-				ID_DeliveryOrderBySettlement = @IdManifest
-				AND
-				RP.DeliveryOrderBySettlementId = @IdManifest
-				AND
-				RP.RowStatus = 1
-			GROUP BY 
-				DA.Guide_Serie
-				,DA.Guide_Number
-				,ID_DeliveryOrderBySettlement
-				,RP.IdRoutePreparation
-				,RPD.IdRoutePreparationDetail
+		,( DO.Pieces_Dry
+			
 		) as Pieces_Dry
 		,isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as Receiver_Fullname
 		,do.Receiver_Address AS Receiver_Address
@@ -146,9 +67,9 @@ BEGIN
 		END
 		) AS  Total
 	from 
-		[DeliveryBackOffice].[dbo].DeliveryOrder do
+		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH (NOLOCK)
 	JOIN 
-		DeliverySettlementDetail dsd
+		DeliverySettlementDetail dsd WITH (NOLOCK)
 		ON 
 			do.Guide_Serie = dsd.Guide_Serie 
 			AND 

@@ -62,11 +62,26 @@ BEGIN
 		SPS.RowStatus = 1
 
 	-- Si existen datos para rescatar
-	IF ( ((SELECT COUNT(*) FROM #ServicesToRestore) > 0) AND (@FromDate <= @ToDate)) -- La fecha de donde se va a rescatar debe ser menor a la de transferencia
+	IF ( ((SELECT COUNT(*) FROM #ServicesToRestore) > 0) AND (@FromDate < @ToDate)) -- La fecha de donde se va a rescatar debe ser menor a la de transferencia
 	BEGIN
 		BEGIN TRY
 	
 			-- Con los datos recopilados entonces actualizamos los registros para anularlos y cambiarles la fecha y datos de la asignación del servicio
+			-- ACTUALIZAR [RouteAssigment]
+			-- Se anula la asignación de la ruta de los servicios
+			UPDATE
+				RA
+			SET
+				RA.RowStatus = 0
+				,RA.TokenUpdated = @Token
+				,RA.DateUpdated = GETDATE()
+			FROM	
+				[DeliveryBackOffice].[dbo].[RouteAssigment] RA
+				JOIN
+					#ServicesToRestore PSTR
+					ON
+						RA.IdRouteAssigment = PSTR.IdRouteAssigment
+
 			-- ACTUALIZAR [SchedulePickup]
 			-- Se actualiza el servicio de recolección para la fecha indicada y se marca como 'No asignada'
 			UPDATE

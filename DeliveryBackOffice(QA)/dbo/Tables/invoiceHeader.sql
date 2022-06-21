@@ -52,6 +52,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_invoiceHeaderRDL]
     ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_certificationFEL] ASC, [inv_creditNote] ASC, [inv_motiveCreditNote] ASC);
@@ -74,4 +76,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si factura 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la cual FEL finalizo y se actualizo el registro con la respuesta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'inv_dateFEL';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_type_inv_creditNote_inv_date]
+    ON [dbo].[invoiceHeader]([inv_type] ASC, [inv_creditNote] ASC, [inv_date] ASC)
+    INCLUDE([inv_pk_id], [inv_vpCodeOfReferences]);
 

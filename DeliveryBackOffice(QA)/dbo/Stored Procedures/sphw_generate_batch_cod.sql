@@ -272,7 +272,6 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 					ON lst.Guide_Serie = PC.GuideSerieDestination
 						AND lst.Guide_Number = PC.GuideNumberDestination
-						AND PC.FinalActiveDate >= GETDATE()
 						AND PC.RowStatus = 1
 				WHERE ISNULL(ord.PriceShippment, 0) = 0
 					AND PC.IdPromoCoupon IS NULL;
@@ -422,8 +421,8 @@ BEGIN
                 LEFT JOIN dbo.VisitPointClient vpc
                     ON vpc.CodeOfReference = ord.Sender_ID
                 LEFT JOIN dbo.RatebyCustomer rc
-                    ON rc.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
-                       AND rc.RbcRowStatus = 'true'
+					ON rc.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID) AND rc.RbcRowStatus = 1 AND rc.RbcCodeOfReference  IS NULL
+					LEFT JOIN dbo.RatebyCustomer rcv ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID) AND rcv.RbcRowStatus = 1 AND rcv.RbcCodeOfReference  = ord.Sender_ID
                 LEFT JOIN dbo.Township twn
                     ON twn.IdTownship = ord.ReceiverIdTownship
                 LEFT JOIN dbo.Township twnm
@@ -452,7 +451,7 @@ BEGIN
                 --	   AND cv.HubLogisticId  = hbl.IdHubLogistic
                 --	   AND cv.RowStatus = 'true'
                 LEFT JOIN dbo.RateCOD rco
-                    ON rco.RateId = rc.RbcIdRate
+                    ON rco.RateId = ISNULL(rcv.RbcIdRate, rc.RbcIdRate)
                        AND rco.TypeServiceId = csv.CtsId
                        AND rco.TypeSegmentId = ISNULL(csg.CrsId, @IdSegmentDefault)
                        AND rco.RowStatus = 1
