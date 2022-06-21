@@ -11,3 +11,5 @@ DeliveryBackOffice(PRO)/bin/
 DeliveryBackOffice(QA)/obj/
 DeliveryBackOffice(DEV)/obj/
 DeliveryBackOffice(PRO)/obj/
+DeliveryBackOffice(DEV)/dbo/Views/
+DeliveryBackOffice(QA)/dbo/Views/

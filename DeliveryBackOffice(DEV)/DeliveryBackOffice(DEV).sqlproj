@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectVersion>4.1</ProjectVersion>
     <ProjectGuid>{abaceda8-98d3-4308-bf3e-c44954732d1c}</ProjectGuid>
-    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql130DatabaseSchemaProvider</DSP>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
     <RootPath>
     </RootPath>
@@ -60,7 +60,6 @@
     <Folder Include="Properties" />
     <Folder Include="dbo\" />
     <Folder Include="dbo\Tables\" />
-    <Folder Include="dbo\Views\" />
     <Folder Include="dbo\Functions\" />
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="dbo\User Defined Types\" />
@@ -380,7 +379,6 @@
     <Build Include="dbo\Tables\SenderReceiver.sql" />
     <Build Include="dbo\Tables\RateData.sql" />
     <Build Include="dbo\Tables\HubLogistics.sql" />
-    <Build Include="dbo\Views\TESTVIEW.sql" />
     <Build Include="dbo\Functions\fn_get_diff_minutes_without_sundays.sql" />
     <Build Include="dbo\Functions\fn_get_courier.sql" />
     <Build Include="dbo\Functions\fnt_Iva_Calculator.sql" />
@@ -1130,5 +1128,12 @@
     <Build Include="dbo\Sequences\COD_RecolectionId.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
     <Build Include="dbo\Sequences\COD_CommissionId.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac">
+      <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\130\SqlSchemas\master.dacpac</HintPath>
+      <SuppressMissingDependenciesErrors>True</SuppressMissingDependenciesErrors>
+      <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
+    </ArtifactReference>
   </ItemGroup>
 </Project>
