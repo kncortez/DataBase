@@ -224,7 +224,7 @@ BEGIN
                    (
                        SELECT TOP 1
                               ue.UpdateStatus
-                       FROM [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue
+                       FROM [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue WITH (NOLOCK)
                        WHERE ue.RowStatus = 1
                              AND ue.ElementId = 1001
                    ) = 0
@@ -255,23 +255,30 @@ BEGIN
                 (
                     SELECT CAST(GETDATE() AS DATE)
                 );
-        DECLARE @hasIdHeaderRecolection BIT;
         DECLARE @Sender_ID INT;
-        DECLARE @SchedulePickupId INT;
-        DECLARE @dopdId INT;
-        DECLARE @CreateSchedulePickup BIT = 0;
+        DECLARE @SchedulePickupId BIGINT;
+        DECLARE @dopdId BIGINT;
+        DECLARE @ServiceManagementId INT;
+        DECLARE @ServiceManagementIdFind INT;
+        DECLARE @SchedulePickupIdFind BIGINT;
+        DECLARE @RouteAssigment INT;
+        DECLARE @RouteAssigmentFind INT;
+        DECLARE @FindServiceManagement BIT = 0;
+        DECLARE @CreateServiceManagement BIT = 0;
+        DECLARE @ServiceStatus INT =
+                (
+                    SELECT IdServiceStatus FROM CatServiceStatus WHERE [Name] = 'Recolectado'
+                );
 
         --Validar que tenga registro en la DeliveryOrderPaymentDetail sino lo crea
         SELECT @dopdId = dopd.DopId,
-               @hasIdHeaderRecolection = IIF(dopd.IdHeaderRecolection IS NULL, 0, 1)
+               @SchedulePickupId = dopd.IdHeaderRecolection
         FROM DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
         WHERE dopd.GuideSerie = @GuideSerie
               AND dopd.GuideNumber = @GuideNumber;
 
         IF @dopdId IS NULL
         BEGIN
-            SET @hasIdHeaderRecolection = 0;
-
             INSERT INTO [dbo].[DeliveryOrderPaymentDetail]
             (
                 [GuideNumber],
@@ -382,177 +389,364 @@ BEGIN
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber;
 
-
+            SET @dopdId = SCOPE_IDENTITY();
         END;
 
-
-        --Validar si pertenece a un punto de visita
+        --Validar si pertenece a un punto de visita para buscar si ya existe el servicio
         SELECT @Sender_ID = do.Sender_ID
         FROM DeliveryOrder do WITH (NOLOCK)
         WHERE do.Guide_Serie = @GuideSerie
               AND do.Guide_Number = @GuideNumber;
 
-        --Si no tiene asociado un servicio y si el Sender_ID no es 0
-        IF @hasIdHeaderRecolection = 0
+        --Si tine vp asignado 
+        IF @Sender_ID IS NOT NULL
            AND @Sender_ID <> 0
         BEGIN
-            SELECT @SchedulePickupId = sm.IdSchedulePickup
-            FROM RouteAssigment ra WITH (NOLOCK)
-                INNER JOIN ServiceManagement sm WITH (NOLOCK)
-                    ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                INNER JOIN SchedulePickup sp WITH (NOLOCK)
-                    ON sp.SchedulePickupId = sm.IdSchedulePickup
-            WHERE ra.IdRoute = @IdRoute
-                  AND ra.DateOfRoute = @tiempo
-                  AND sp.SenderId = @Sender_ID;
-
-            --Si se encuentra el visit point entre los servicios de recolección se asigna
+            --Si tiene un SchedulePickup buscar si ya está asignado a un servicio y si es el correcto
             IF @SchedulePickupId IS NOT NULL
             BEGIN
-                UPDATE DeliveryOrderPaymentDetail
-                SET IdHeaderRecolection = @SchedulePickupId
-                WHERE GuideSerie = @GuideSerie
-                      AND GuideNumber = @GuideNumber;
 
-                UPDATE sm
-                SET ServiceStatusId = 3
-                FROM ServiceManagement sm WITH (NOLOCK)
+                UPDATE SchedulePickup
+                SET AssigmentStatus = 1
+                WHERE SchedulePickupId = @SchedulePickupId;
+
+                --Buscar si tiene asignado un servicio
+                SELECT @ServiceManagementId = sm.IdServiceManagement
+                FROM ServiceManagement sm
                 WHERE sm.IdSchedulePickup = @SchedulePickupId;
+
+                --Si encontró el servicio
+                IF @ServiceManagementId IS NOT NULL
+                BEGIN
+
+                    --Válidar que este asignado a la ruta
+                    IF EXISTS
+                    (
+                        SELECT 1
+                        FROM RouteAssigment ra
+                            INNER JOIN ServiceManagement sm
+                                ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                                   AND sm.IdServiceManagement = @ServiceManagementId
+                        WHERE ra.IdRoute = @IdRoute
+                              AND ra.DateOfRoute = @tiempo
+                    )
+                    BEGIN
+                        --Se marca como recolectado
+                        UPDATE sm
+                        SET ServiceStatusId = 3
+                        FROM ServiceManagement sm
+                        WHERE sm.IdServiceManagement = @ServiceManagementId;
+
+                        --Insertar EventService si no existe
+                        IF NOT EXISTS
+                        (
+                            SELECT 1
+                            FROM EventService es
+                            WHERE es.ServiceManagementId = @ServiceManagementId
+                                  AND es.ServiceStatusId = @ServiceStatus
+                                  AND es.RowStauts = 1
+                        )
+                        BEGIN
+                            INSERT INTO EventService
+                            (
+                                ServiceManagementId,
+                                ServiceStatusId,
+                                RowStauts,
+                                TokenCreated,
+                                DateCreated,
+                                Observations
+                            )
+                            VALUES
+                            (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+                        END;
+
+                    END;
+                    ELSE
+                    BEGIN
+                        SET @FindServiceManagement = 1;
+                    END;
+                END;
+                ELSE
+                BEGIN
+                    SET @FindServiceManagement = 1;
+                END;
             END;
             ELSE
-                SET @CreateSchedulePickup = 1;
-        END;
-        ELSE IF @hasIdHeaderRecolection = 0
-            SET @CreateSchedulePickup = 1;
+            BEGIN
+                SET @FindServiceManagement = 1;
+            END;
 
+            --Si se tiene que buscar si un servicio si coincide con el vp
+            IF @FindServiceManagement = 1
+            BEGIN
 
-        --Si no tiene registro en SchedulePickup, crea uno y lo asocia al servicio
-        IF @CreateSchedulePickup = 1
-        BEGIN
+                SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
+                       @ServiceManagementIdFind = sm.IdServiceManagement
+                FROM RouteAssigment ra
+                    INNER JOIN ServiceManagement sm
+                        ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                    INNER JOIN SchedulePickup sp
+                        ON sp.SchedulePickupId = sm.IdSchedulePickup
+                WHERE ra.IdRoute = @IdRoute
+                      AND ra.DateOfRoute = @tiempo
+                      AND sp.SenderId = @Sender_ID;
 
-            INSERT INTO [dbo].[SchedulePickup]
-            (
-                [AccountId],
-                [StartDate],
-                [EndDate],
-                [EstimatedWeight],
-                [IsLargePackage],
-                [QuantityRegularPackages],
-                [QuantityOverDimensionedPackage],
-                [SpecialInstructions],
-                [RowStatus],
-                [TokenCreated],
-                [DateCreated],
-                [TokenUpdated],
-                [DateUpdated],
-                [SenderId],
-                [SenderName],
-                [SenderPhone],
-                [IdHubLogistics],
-                [AmountPickup],
-                [IdSourcePlataform],
-                [AddressPickup],
-                [AssigmentStatus],
-                [TransaccionFAC],
-                [TownshipId]
-            )
-            SELECT TOP 1
-                   acc.AccIdAccount,
-                   CONCAT(CAST(GETDATE() AS DATE), ' 08:00:00'),
-                   CONCAT(CAST(GETDATE() AS DATE), ' 17:00:00'),
-                   0,
-                   0,
-                   0,
-                   0,
-                   '',
-                   1,
-                   @Token,
-                   GETDATE(),
-                   NULL,
-                   NULL,
-                   do.Sender_ID,
-                   CONCAT(
-                             ISNULL(do.Sender_FirstName, ''),
-                             IIF(do.Sender_FirstName IS NULL, '', IIF(do.Sender_LastName IS NULL, '', ' ')),
-                             ISNULL(do.Sender_LastName, '')
-                         ),
-                   do.Sender_Phone,
-                   NULL, -- [IdHubLogistics]
-                   NULL, -- [AmountPickup]
-                   2,    -- [IdSourcePlataform]
-                   do.Sender_Address,
-                   1,
-                   NULL, --TransaccionFAC
-                   NULL  --TownshipId
-            FROM DeliveryOrder do WITH (NOLOCK)
-                LEFT JOIN Account acc WITH (NOLOCK)
-                    ON acc.IdCustomer =
+                --Si se encuentra el vp entre los servicios de recolección, se asigna
+                IF @SchedulePickupIdFind IS NOT NULL
+                BEGIN
+                    UPDATE DeliveryOrderPaymentDetail
+                    SET IdHeaderRecolection = @SchedulePickupIdFind
+                    WHERE GuideSerie = @GuideSerie
+                          AND GuideNumber = @GuideNumber;
+
+                    --Se marca como recolectado
+                    UPDATE sm
+                    SET ServiceStatusId = 3
+                    FROM ServiceManagement sm
+                    WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
+
+                    UPDATE SchedulePickup
+                    SET AssigmentStatus = 1
+                    WHERE SchedulePickupId = @SchedulePickupIdFind;
+
+                    --Insertar EventService si no existe
+                    IF NOT EXISTS
                     (
-                        SELECT TOP 1
-                               ISNULL(do.IdCustomer, vpc.CustomerID)
-                        FROM dbo.VisitPointClient vpc WITH (NOLOCK)
-                        WHERE vpc.CodeOfReference = do.Sender_ID
+                        SELECT 1
+                        FROM EventService es
+                        WHERE es.ServiceManagementId = @ServiceManagementIdFind
+                              AND es.ServiceStatusId = @ServiceStatus
+                              AND es.RowStauts = 1
                     )
-            WHERE do.Guide_Serie = @GuideSerie
-                  AND do.Guide_Number = @GuideNumber;
+                    BEGIN
+                        INSERT INTO EventService
+                        (
+                            ServiceManagementId,
+                            ServiceStatusId,
+                            RowStauts,
+                            TokenCreated,
+                            DateCreated,
+                            Observations
+                        )
+                        VALUES
+                        (@ServiceManagementIdFind, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+                    END;
+                END;
+                ELSE
+                BEGIN
+                    SET @CreateServiceManagement = 1;
+                END;
+            END;
+        END;
+        ELSE
+        BEGIN
+            SET @CreateServiceManagement = 1;
+        END;
 
-            SET @SchedulePickupId = SCOPE_IDENTITY();
+        --Si se tiene que crear el servicio
+        IF @CreateServiceManagement = 1
+        BEGIN
+            -- Si no tiene un SchedulePicku, lo crea y lo asigna
+            IF @SchedulePickupId IS NULL
+            BEGIN
 
-            UPDATE DeliveryOrderPaymentDetail
-            SET IdHeaderRecolection = @SchedulePickupId
-            WHERE GuideSerie = @GuideSerie
-                  AND GuideNumber = @GuideNumber;
+                INSERT INTO [dbo].[SchedulePickup]
+                (
+                    [AccountId],
+                    [StartDate],
+                    [EndDate],
+                    [EstimatedWeight],
+                    [IsLargePackage],
+                    [QuantityRegularPackages],
+                    [QuantityOverDimensionedPackage],
+                    [SpecialInstructions],
+                    [RowStatus],
+                    [TokenCreated],
+                    [DateCreated],
+                    [TokenUpdated],
+                    [DateUpdated],
+                    [SenderId],
+                    [SenderName],
+                    [SenderPhone],
+                    [IdHubLogistics],
+                    [AmountPickup],
+                    [IdSourcePlataform],
+                    [AddressPickup],
+                    [AssigmentStatus],
+                    [TransaccionFAC],
+                    [TownshipId]
+                )
+                SELECT TOP 1
+                       acc.AccIdAccount,
+                       CONCAT(CAST(GETDATE() AS DATE), ' 08:00:00'),
+                       CONCAT(CAST(GETDATE() AS DATE), ' 17:00:00'),
+                       0,
+                       0,
+                       0,
+                       0,
+                       '',
+                       1,
+                       @Token,
+                       GETDATE(),
+                       NULL,
+                       NULL,
+                       do.Sender_ID,
+                       CONCAT(
+                                 ISNULL(do.Sender_FirstName, ''),
+                                 IIF(do.Sender_FirstName IS NULL, '', IIF(do.Sender_LastName IS NULL, '', ' ')),
+                                 ISNULL(do.Sender_LastName, '')
+                             ),
+                       do.Sender_Phone,
+                       NULL, -- [IdHubLogistics]
+                       NULL, -- [AmountPickup]
+                       2,    -- [IdSourcePlataform]
+                       do.Sender_Address,
+                       1,
+                       NULL, --TransaccionFAC
+                       NULL  --TownshipId
+                FROM DeliveryOrder do WITH (NOLOCK)
+                    LEFT JOIN Account acc
+                        ON acc.IdCustomer =
+                        (
+                            SELECT TOP 1
+                                   ISNULL(do.IdCustomer, vpc.CustomerID)
+                            FROM dbo.VisitPointClient vpc WITH (NOLOCK)
+                            WHERE vpc.CodeOfReference = do.Sender_ID
+                        )
+                WHERE do.Guide_Serie = @GuideSerie
+                      AND do.Guide_Number = @GuideNumber;
 
+                SET @SchedulePickupId = SCOPE_IDENTITY();
 
-            INSERT INTO [dbo].[ServiceManagement]
-            (
-                [IdPuCourrier],
-                [IdDlCourrier],
-                [CiPuDate],
-                [CoPuDate],
-                [CiDlDate],
-                [CoDlDate],
-                [IdPuRouteAssigment],
-                [IdDlRouteAssigment],
-                [IdSchedulePickup],
-                [IdProofOnDelivery],
-                [RowStatus],
-                [TokenCreated],
-                [DateCreated],
-                [TokenUpdated],
-                [DateUpdated],
-                [ServiceStatusId],
-                [PuSignaturePath],
-                [DiSignaturePath],
-                [SubTypeServiceManagmentId],
-                [IdHubDestination],
-                [Order]
-            )
-            SELECT ra.IdCurrierMan,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   ra.IdRouteAssigment,
-                   NULL,
-                   @SchedulePickupId,
-                   NULL,
-                   1,
-                   @Token,
-                   GETDATE(),
-                   NULL,
-                   NULL,
-                   3,
-                   NULL,
-                   NULL,
-                   1,
-                   NULL,
-                   1
-            FROM RouteAssigment ra WITH (NOLOCK)
-            WHERE ra.IdRoute = @IdRoute
-                  AND ra.DateOfRoute = @tiempo;
+                UPDATE DeliveryOrderPaymentDetail
+                SET IdHeaderRecolection = @SchedulePickupId
+                WHERE DopId = @dopdId;
+            END;
+            ELSE
+            BEGIN
+                UPDATE SchedulePickup
+                SET AssigmentStatus = 1
+                WHERE SchedulePickupId = @SchedulePickupId;
+            END;
 
+            --si ya tiene un servicio, solo lo reasigna
+            IF @ServiceManagementId IS NOT NULL
+            BEGIN
+                UPDATE sm
+                SET sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                FROM ServiceManagement sm
+                    INNER JOIN RouteAssigment ra
+                        ON ra.IdRoute = @IdRoute
+                           AND ra.DateOfRoute = @tiempo
+                WHERE sm.IdServiceManagement = @ServiceManagementId;
+
+                --Se marca como recolectado
+                UPDATE sm
+                SET ServiceStatusId = 3
+                FROM ServiceManagement sm
+                WHERE sm.IdServiceManagement = @ServiceManagementId;
+
+                --Insertar EventService si no existe
+                IF NOT EXISTS
+                (
+                    SELECT 1
+                    FROM EventService es
+                    WHERE es.ServiceManagementId = @ServiceManagementId
+                          AND es.ServiceStatusId = @ServiceStatus
+                          AND es.RowStauts = 1
+                )
+                BEGIN
+                    INSERT INTO EventService
+                    (
+                        ServiceManagementId,
+                        ServiceStatusId,
+                        RowStauts,
+                        TokenCreated,
+                        DateCreated,
+                        Observations
+                    )
+                    VALUES
+                    (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+                END;
+
+            END;
+            ELSE
+            BEGIN
+                --Crea el servicio y lo asigna
+                INSERT INTO [dbo].[ServiceManagement]
+                (
+                    [IdPuCourrier],
+                    [IdDlCourrier],
+                    [CiPuDate],
+                    [CoPuDate],
+                    [CiDlDate],
+                    [CoDlDate],
+                    [IdPuRouteAssigment],
+                    [IdDlRouteAssigment],
+                    [IdSchedulePickup],
+                    [IdProofOnDelivery],
+                    [RowStatus],
+                    [TokenCreated],
+                    [DateCreated],
+                    [TokenUpdated],
+                    [DateUpdated],
+                    [ServiceStatusId],
+                    [PuSignaturePath],
+                    [DiSignaturePath],
+                    [SubTypeServiceManagmentId],
+                    [IdHubDestination],
+                    [Order]
+                )
+                SELECT ra.IdCurrierMan,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       ra.IdRouteAssigment,
+                       NULL,
+                       @SchedulePickupId,
+                       NULL,
+                       1,
+                       @Token,
+                       GETDATE(),
+                       NULL,
+                       NULL,
+                       3,
+                       NULL,
+                       NULL,
+                       1,
+                       NULL,
+                       1
+                FROM RouteAssigment ra WITH (NOLOCK)
+                WHERE ra.IdRoute = @IdRoute
+                      AND ra.DateOfRoute = @tiempo;
+
+                SET @ServiceManagementId = SCOPE_IDENTITY();
+
+                --Insertar EventService si no existe
+                IF NOT EXISTS
+                (
+                    SELECT 1
+                    FROM EventService es
+                    WHERE es.ServiceManagementId = @ServiceManagementId
+                          AND es.ServiceStatusId = @ServiceStatus
+                          AND es.RowStauts = 1
+                )
+                BEGIN
+                    INSERT INTO EventService
+                    (
+                        ServiceManagementId,
+                        ServiceStatusId,
+                        RowStauts,
+                        TokenCreated,
+                        DateCreated,
+                        Observations
+                    )
+                    VALUES
+                    (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+                END;
+            END;
         END;
 
     END TRY

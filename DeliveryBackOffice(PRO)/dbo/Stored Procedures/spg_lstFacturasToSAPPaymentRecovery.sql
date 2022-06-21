@@ -11,8 +11,9 @@ DECLARE @hour AS INT =
                 SELECT (DATEPART(HOUR, GETDATE()))
             )	
     --IF (@hour IN (3, 4, 5, 6, 7, 8,10,11,14,17,18,19,20,21,22,23))	
-	IF (@hour IN (3, 4, 5, 6, 7,17,18,19,20,21,22,23))	--Nuevos horarios
-    BEGIN
+	--IF (@hour IN (3, 4, 5, 6, 7,17,18,19,20,21,22,23))	--Nuevos horarios
+	--IF (@hour IN (23))
+    --BEGIN
 		SELECT ihd.inv_pk_id,
 		   ihd.inv_vpCodeOfReferences,
 		   ihd.inv_type,
@@ -27,8 +28,8 @@ DECLARE @hour AS INT =
 	(IOMD.io_SAPDocEntryPaymentDetail = -1 OR IOMD.io_SAPDocEntryPaymentDetail IS NULL)
 	AND ihd.inv_SAPDocEntry <> -1
 	AND ihd.inv_SAPDocEntry IS NOT NULL
-		  AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2022-05-01' AS DATE)           	
-	END
+		  AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2022-06-01' AS DATE)           	
+	--END
 END
 
 

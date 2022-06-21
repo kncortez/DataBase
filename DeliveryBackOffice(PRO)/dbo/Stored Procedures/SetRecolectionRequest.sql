@@ -340,51 +340,103 @@ BEGIN
 
 
 
-        SELECT 
-			[Sender_ID] ,
-			sub_do.[SenderName],
-			[Sender_Phone],
-			[Hub],
-			sub_do.AmountPickup,
-			sub_do.AddressPickup,
-			Number,
-			Serie
-			--,IIF(SM.IdServiceManagement IS NULL, SP.SchedulePickupId, IIF(SM.ServiceStatusId IN (select IdServiceStatus from dbo.CatServiceStatus WHERE Name IN ('Creado','Asignado a Ruta')), SP.SchedulePickupId, NULL)) SchedulePickupId
-			,sub_sp.SchedulePickupId
-			,sub_sp.AssigmentStatus
-			,sub_sp.IdServiceManagement
-		INTO #Sender
-		FROM (select Sender_ID ,  concat(Sender_FirstName, Sender_LastName) 
-		as SenderName, ord.Guide_Number as Number , ord.Guide_Serie 
-		as Serie , Sender_Phone ,thb.IdHublogistic as Hub, 
-		(sum (dop.PaymentRecollections) + sum (dop.RecolectPayment)) 
-		as AmountPickup , Sender_Address as AddressPickup,TypeService
-		from DeliveryOrder ord
-						inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship) and StatusTownshipHub=1
-						inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-						inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-						where ord.Guide_Number in (t.Guide_Number)
-						group by Sender_ID ,  Sender_Phone,ord.Guide_Number, ord.Guide_Serie  ,thb.IdHublogistic,  Sender_Address, Sender_FirstName, Sender_LastName,TypeService) as sub_do
-			LEFT JOIN (
-					--SELECT  SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,IdServiceManagement,ServiceStatusId FROM DBO.SchedulePickup SP				
-					SELECT SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,SP.AssigmentStatus,SM.IdServiceManagement,DOR.TypeService FROM DBO.SchedulePickup SP				
-					LEFT JOIN DBO.ServiceManagement SM ON SM.IdSchedulePickup=SP.SchedulePickupId
-					LEFT JOIN DBO.DeliveryOrderPaymentDetail dop on dop.IdHeaderRecolection=sp.SchedulePickupId
-					LEFT JOIN DBO.DeliveryOrder DOR WITH (NOLOCK) ON DOR.Guide_Number=DOP.GuideNumber AND DOR.Guide_Serie=DOP.GuideSerie 
-					--WHERE (SP.AssigmentStatus =0 OR (SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) --THIS LINE IS EQUIVALENT TO LINE BELOW
-					WHERE NOT( (SP.AssigmentStatus <>0 AND SP.AssigmentStatus IS NOT NULL) AND NOT(SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) 
-					AND (CONVERT(DATE,GETDATE()) >= CONVERT(DATE, SP.startDate))
-					AND (CONVERT(DATE, SP.EndDate) >= CONVERT(DATE,GETDATE()))
-					GROUP BY SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,SP.AssigmentStatus,SM.IdServiceManagement,DOR.TypeService
-			) sub_sp
-			ON 
-				sub_sp.SenderPhone=sub_do.Sender_Phone
-				AND sub_sp.IdHubLogistics=sub_do.Hub
-				AND sub_sp.AddressPickup=sub_do.AddressPickup
-				AND sub_sp.SenderName=sub_do.SenderName
-				and sub_sp.TypeService=sub_do.TypeService
-
-
+            SELECT [Sender_ID],
+                   sub_do.[SenderName],
+                   [Sender_Phone],
+                   [Hub],
+                   sub_do.AmountPickup,
+                   sub_do.AddressPickup,
+                   Number,
+                   Serie,
+                   --,IIF(SM.IdServiceManagement IS NULL, SP.SchedulePickupId, IIF(SM.ServiceStatusId IN (select IdServiceStatus from dbo.CatServiceStatus WHERE Name IN ('Creado','Asignado a Ruta')), SP.SchedulePickupId, NULL)) SchedulePickupId
+                   sub_sp.SchedulePickupId,
+                   sub_sp.AssigmentStatus,
+                   sub_sp.IdServiceManagement
+            INTO #Sender
+            FROM
+            (
+                SELECT Sender_ID,
+                       CONCAT(Sender_FirstName, Sender_LastName) AS SenderName,
+                       ord.Guide_Number AS Number,
+                       ord.Guide_Serie AS Serie,
+                       Sender_Phone,
+                       thb.IdHublogistic AS Hub,
+                       (SUM(dop.PaymentRecollections) + SUM(dop.RecolectPayment)) AS AmountPickup,
+                       Sender_Address AS AddressPickup,
+                       TypeService
+                FROM DeliveryOrder ord
+                    INNER JOIN TownshipByHubLogistic thb
+                        ON (ord.SenderIdTownship = thb.IdTownship)
+                           AND StatusTownshipHub = 1
+                    INNER JOIN DeliveryOrderPaymentDetail dop
+                        ON (
+                               dop.GuideNumber = ord.Guide_Number
+                               AND dop.GuideSerie = ord.Guide_Serie
+                           )
+                    INNER JOIN @TblDeliveryOrdersList t
+                        ON (
+                               t.Guide_Number = dop.GuideNumber
+                               AND t.Guide_Serie = dop.GuideSerie
+                           )
+                WHERE ord.Guide_Number IN ( t.Guide_Number )
+                GROUP BY Sender_ID,
+                         Sender_Phone,
+                         ord.Guide_Number,
+                         ord.Guide_Serie,
+                         thb.IdHublogistic,
+                         Sender_Address,
+                         Sender_FirstName,
+                         Sender_LastName,
+                         TypeService
+            ) AS sub_do
+                LEFT JOIN
+                (
+                    --SELECT  SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,IdServiceManagement,ServiceStatusId FROM DBO.SchedulePickup SP				
+                    SELECT SenderPhone,
+                           IdHubLogistics,
+                           AddressPickup,
+                           SenderName,
+                           SchedulePickupId,
+                           SP.AssigmentStatus,
+                           SM.IdServiceManagement,
+                           DOR.TypeService
+                    FROM DBO.SchedulePickup SP
+                        LEFT JOIN DBO.ServiceManagement SM
+                            ON SM.IdSchedulePickup = SP.SchedulePickupId
+                        LEFT JOIN DBO.DeliveryOrderPaymentDetail dop
+                            ON dop.IdHeaderRecolection = SP.SchedulePickupId
+                        LEFT JOIN DBO.DeliveryOrder DOR WITH (NOLOCK)
+                            ON DOR.Guide_Number = dop.GuideNumber
+                               AND DOR.Guide_Serie = dop.GuideSerie
+                    --WHERE (SP.AssigmentStatus =0 OR (SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) --THIS LINE IS EQUIVALENT TO LINE BELOW
+                    WHERE NOT (
+                                  (
+                                      SP.AssigmentStatus <> 0
+                                      AND SP.AssigmentStatus IS NOT NULL
+                                  )
+                                  AND NOT (
+                                              SM.RowStatus = 1
+                                              AND SP.RowStatus = 1
+                                              AND SP.AssigmentStatus = 1
+                                              AND SM.ServiceStatusId IN ( 1, 2 )
+                                          )
+                              )
+                          AND (CONVERT(DATE, GETDATE()) >= CONVERT(DATE, SP.startDate))
+                          AND (CONVERT(DATE, SP.EndDate) >= CONVERT(DATE, GETDATE()))
+                    GROUP BY SenderPhone,
+                             IdHubLogistics,
+                             AddressPickup,
+                             SenderName,
+                             SchedulePickupId,
+                             SP.AssigmentStatus,
+                             SM.IdServiceManagement,
+                             DOR.TypeService
+                ) sub_sp
+                    ON sub_sp.SenderPhone = sub_do.Sender_Phone
+                       AND sub_sp.IdHubLogistics = sub_do.Hub
+                       AND sub_sp.AddressPickup = sub_do.AddressPickup
+                       AND sub_sp.SenderName = sub_do.SenderName
+                       AND sub_sp.TypeService = sub_do.TypeService;
 
             --declare @SenderId int  = (select top 1 Sender_ID  from DeliveryOrder ord
             --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
@@ -469,23 +521,67 @@ BEGIN
                    NULL,
                    NULL,
                    sd.AddressPickup
-            FROM #Sender sd;
+            FROM #Sender sd
+            WHERE sd.SchedulePickupId IS NULL
+            GROUP BY sd.Sender_ID,
+                     sd.SenderName,
+                     sd.Sender_Phone,
+                     sd.Hub,
+                     sd.AddressPickup;
 
             DECLARE @transaction INT = SCOPE_IDENTITY();
 
 
 
-
+            --ACTUALIZANDO GUIAS SIN SCHEDULE PICKUP 
             UPDATE dbo.DeliveryOrderPaymentDetail
             SET IdHeaderRecolection = @transaction,
                 StartDate = @StartDate,
-                EndDate = @EndDate
+                EndDate = @EndDate,
+                DateUpdated = GETDATE(),
+                TokenUpdated = @Token
             FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
                            t.Guide_Number = pay.GuideNumber
                            AND t.Guide_Serie = pay.GuideSerie
-                       );
+                       )
+                LEFT JOIN #Sender sd
+                    ON sd.Serie = pay.GuideSerie
+                       AND sd.Number = pay.GuideNumber
+            WHERE sd.SchedulePickupId IS NULL;
+
+            --ACTUALIZANDO GUIAS CONSCHEDULEPICKUP
+            UPDATE dbo.DeliveryOrderPaymentDetail
+            SET IdHeaderRecolection = sd.SchedulePickupId,
+                StartDate = @StartDate,
+                EndDate = @EndDate,
+                DateUpdated = GETDATE(),
+                TokenUpdated = @Token
+            FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
+                INNER JOIN @TblDeliveryOrdersList t
+                    ON (
+                           t.Guide_Number = pay.GuideNumber
+                           AND t.Guide_Serie = pay.GuideSerie
+                       )
+                LEFT JOIN #Sender sd
+                    ON sd.Serie = pay.GuideSerie
+                       AND sd.Number = pay.GuideNumber
+            WHERE sd.SchedulePickupId IS NOT NULL;
+
+            --ACTUALIZANDO ESTADO DE LAS GUÍAS (A PROGRAMADO PARA RECOLECCIÓN)PARA LOS SERVICIOS QUE YA ESTAN ASIGNADOS
+            -- DECLARE @IdStatusSh tinyint= (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription='Programado para recolección');
+            -- UPDATE DBO.DeliveryOrder
+            --	SET StatusOrderId=@IdStatusSh 
+            --FROM DBO.DeliveryOrder DO WITH (NOLOCK)
+            --INNER JOIN #Sender SD 
+            --	ON  DO.Guide_Serie=SD.Serie AND DO.Guide_Number=SD.Number AND SD.AssigmentStatus=1
+
+            -- UPDATE DBO.DeliveryOrderPiece
+            --	SET StatusOrderId=@IdStatusSh 
+            --FROM DBO.DeliveryOrderPiece DO WITH (NOLOCK)
+            --INNER JOIN #Sender SD 
+            --	ON  DO.GuideSerie=SD.Serie AND DO.GuideNumber=SD.Number AND SD.AssigmentStatus=1
 
             --ACTUALIZANDO MONTO DE SERVICIOS QUE YA ESTABAN ASIGNADOS A RUTA(SE SUMA EL NUEVO MONTO DE LA NUEVA GUÍA PROGRAMADO)
             DECLARE @TempPrice TABLE
@@ -556,16 +652,15 @@ BEGIN
                                                         @CodeApp = 'SIFDCECOM300720201459',
                                                         @IdModule = 1,
                                                         @Token = 'SYSTEM';
-
             UPDATE SMT
             SET Amount = SUB.NewTotal
-            FROM dbo.ServiceManagement SMT
+            FROM DBO.ServiceManagement SMT
                 INNER JOIN
                 (
                     SELECT SM.IdServiceManagement,
                            SM.Amount + SUM(TP.AmountToPay) AS NewTotal
-                    FROM dbo.ServiceManagement SM
-                        INNER JOIN dbo.#Sender SD
+                    FROM DBO.ServiceManagement SM
+                        INNER JOIN DBO.#Sender SD
                             ON SM.IdServiceManagement = SD.IdServiceManagement
                         INNER JOIN @TempPrice TP
                             ON TP.GuideSerie = SD.Serie
@@ -575,6 +670,9 @@ BEGIN
                 ) SUB
                     ON SMT.IdServiceManagement = SUB.IdServiceManagement;
             --WHERE IdServiceManagement=SUB.IdServiceManagement
+
+            --@TempPrice TP ON  SD.Serie=
+
 
             DROP TABLE #Sender;
 
@@ -637,7 +735,6 @@ BEGIN
                            t.Guide_Number = pay.GuideNumber
                            AND t.Guide_Serie = pay.GuideSerie
                        );
-
 
         --update dbo.DeliveryOrder 
         --set  StatusOrderId = @IdStatus   

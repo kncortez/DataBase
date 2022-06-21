@@ -1019,6 +1019,12 @@
     <Build Include="dbo\Stored Procedures\AdvancedGetCustomers.sql" />
     <Build Include="dbo\User Defined Types\TblLstDetail.sql" />
     <Build Include="dbo\User Defined Types\TblInOutOfMoneyDetail.sql" />
+    <Build Include="dbo\Tables\CatStatusType.sql" />
+    <Build Include="dbo\Stored Procedures\SPRequestCouponData_CRAS.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWPCouponData.sql" />
+    <Build Include="dbo\Stored Procedures\spg_ddeli_deliveryOrders_esp.sql" />
+    <Build Include="dbo\Stored Procedures\GetTypeVoucherDelivery.sql" />
+    <Build Include="dbo\Stored Procedures\GetDeliveryOrderSettlementDataUnderRoutePrepration_CRAS.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\120\SqlSchemas\master.dacpac">

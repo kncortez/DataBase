@@ -37,7 +37,7 @@ BEGIN
 		/******** AUTO GENERACIÓN DE CORRELATIVOS BASADOS EN LA CANTIDAD DE REGISTOS RECIBIDOS *******/
 		/*********************************************************************************************/
 		DECLARE @noRecords INT = (SELECT COUNT(RowNumber) FROM @TblDeliveryOrdersFD)
-		DECLARE @startnum INT = (SELECT MAX([Guide_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH(NOLOCK))
+		DECLARE @startnum INT = (SELECT MAX([Guide_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] )
 		DECLARE @endnum INT = (@startnum - 1) + @noRecords
 		;WITH gen AS (
 			SELECT @startnum AS num
@@ -115,7 +115,7 @@ BEGIN
 		/**********************************************************************/
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
 		/**********************************************************************/
-		SET @ManifestNumber = (SELECT MAX([Manifest_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[ServiceRequest] WITH(NOLOCK))
+		SET @ManifestNumber = (SELECT MAX([Manifest_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[ServiceRequest] )
 		INSERT INTO DeliveryBackOffice.dbo.ServiceRequest (
 			[Messageid], 
 			[Receiver_Name], 
@@ -333,7 +333,7 @@ BEGIN
 		--Actualizar registro de guía agregando registro en columna Segment
 		         UPDATE do
                    SET do.Segment = (dbo.fn_get_segment(GT.Guide_Serie,GT.Guide_Number))
-                   FROM DeliveryOrder do WITH(NOLOCK)
+                   FROM DeliveryOrder do 
                    INNER JOIN #GuideTable GT
                    ON GT.Guide_Number = do.Guide_Number
                       AND GT.Guide_Serie = do.Guide_Serie;
@@ -348,7 +348,30 @@ BEGIN
 			0 AS 'StatusCode', 
 			ERROR_MESSAGE() AS 'Description', 
 			CONVERT(BIGINT, 0) AS 'NumTransferID'
+
+
 		ROLLBACK TRANSACTION
+			INSERT INTO dbo.RoutePreparationLogError
+			(
+				ErrorDescription,
+				ErrorNumber,
+				ErrorProcedure,
+				ErrorLine,
+				GuideSerie,
+				GuideNumber,
+				TokenCreated,
+				DateCreated
+			)
+			VALUES
+			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,0
+					   ,0
+					   ,'Error en guía'
+					   ,GETDATE())
+
 	END CATCH;
 	IF @@TRANCOUNT > 0
 	BEGIN
@@ -358,7 +381,7 @@ BEGIN
 			'Registros guardados correctamente' AS 'Description', 
 			--@IdTransaction AS 'NumTransferID'
 			@ManifestNumber AS 'NumTransferID',
-			(Select Segment from DeliveryOrder WITH(NOLOCK) where Manifest_Number = @ManifestNumber) AS 'Segment'
+			(Select Segment from DeliveryOrder  where Manifest_Number = @ManifestNumber) AS 'Segment'
 		SELECT 
 			Manifest_Serie AS 'ManifestSerie',
 			Manifest_Number AS 'ManifestNumber'
@@ -369,7 +392,7 @@ BEGIN
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
 			isnull(@Route,'')  as 'Route'
-		FROM DeliveryOrder D WITH(NOLOCK)
+		FROM DeliveryOrder D
 		JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END

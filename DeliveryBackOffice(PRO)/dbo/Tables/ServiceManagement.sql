@@ -2,8 +2,8 @@
     [IdServiceManagement]       INT             IDENTITY (1, 1) NOT NULL,
     [IdPuCourrier]              INT             NULL,
     [IdDlCourrier]              INT             NULL,
-    [CiPuDate]                  DATE            NULL,
-    [CoPuDate]                  DATE            NULL,
+    [CiPuDate]                  DATETIME        NULL,
+    [CoPuDate]                  DATETIME        NULL,
     [CiDlDate]                  DATE            NULL,
     [CoDlDate]                  DATE            NULL,
     [IdPuRouteAssigment]        INT             NULL,
@@ -33,6 +33,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 GO

@@ -6,7 +6,7 @@
 --drop  PROCEDURE Sps_RegisterInvoiceForza
 --CREATE PROCEDURE Sps_RegisterInvoiceForza
 
-CREATE PROCEDURE sps_RegisterInvoiceForza
+CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
     ,@cmp_nit varchar(100)
     ,@cli_name varchar(500)
@@ -126,7 +126,7 @@ BEGIN
 			,MD.ticket
 			,MD.amount
 			,MD.status
-			,MD.invoice
+			,@invoiceHeaderId
 			,@tokenRegister
 			,GETDATE()
 	FROM @TblInOutOfMoneyDetail MD

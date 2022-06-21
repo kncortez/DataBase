@@ -29,7 +29,9 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @Observations VARCHAR(200) = NULL,
     @Amount DECIMAL(12, 2) = 0,
     @Voucher NVARCHAR(200) = ' ',
-    @PuSignaturePath NVARCHAR(250) = ' '
+    @PuSignaturePath NVARCHAR(250) = ' ',
+    @StartDate DATETIME = NULL,
+    @EndDate DATETIME = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -42,7 +44,7 @@ BEGIN
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
     DECLARE @ManifestSerie VARCHAR(10) = 'FM';
-	  DECLARE @ManifestNumber BIGINT;
+    DECLARE @ManifestNumber BIGINT;
     DECLARE @CodeOfReference INT;
     DECLARE @CourierID INT;
 
@@ -136,16 +138,17 @@ BEGIN
                     DROP TABLE #listGuides;
 
                 SELECT SUBSTRING(Item, 1, 2) ItemSerie,
-                       SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber ,
-                       CASE WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item))) > 1 THEN 
-					             1 ELSE 
-					             SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item))
-					             END
-                       ItemPiece
+                       SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
+                       CASE
+                           WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+                               1
+                           ELSE
+                               SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+                       END ItemPiece
                 INTO #listGuides
                 FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
 
-				---SELECT * FROM #listGuides
+                ---SELECT * FROM #listGuides
 
 
                 ---declare @IdCustomer int = (select IdCustomer from Account where AccIdAccount = @IdAccount)
@@ -521,7 +524,11 @@ BEGIN
 
                 UPDATE ServiceManagement
                 SET ServiceStatusId = @Status,
-                    PuSignaturePath = @PuSignaturePath
+                    PuSignaturePath = @PuSignaturePath,
+                    CiPuDate = @StartDate,
+                    CoPuDate = @EndDate,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
                 FROM ServiceManagement
                 WHERE IdSchedulePickup = @IdPickup;
 
@@ -548,7 +555,7 @@ BEGIN
                 (@transac, @Status, 1, @Token, GETDATE(), @Observations);
 
                 -----------------------------------------Registrar pago ---------------------------------------------------------------------------
-				
+
 
                 -- Revisar la existencia de un service management para ruta de Rabbit
                 IF (EXISTS
@@ -557,20 +564,20 @@ BEGIN
                            1
                     FROM [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                     WHERE SPSD.ServiceManagementId = @transac
-                            AND SPSD.RowStatus = 1
-                            AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-                            AND SPSD.SettlementDate IS NULL
+                          AND SPSD.RowStatus = 1
+                          AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+                          AND SPSD.SettlementDate IS NULL
                 )
-                    )
+                   )
                 BEGIN
 
                     UPDATE SPSD
                     SET SPSD.Price = @Amount
                     FROM [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                     WHERE SPSD.ServiceManagementId = @transac
-                            AND SPSD.RowStatus = 1
-                            AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-                            AND SPSD.SettlementDate IS NULL;
+                          AND SPSD.RowStatus = 1
+                          AND CAST(SPSD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+                          AND SPSD.SettlementDate IS NULL;
 
                 END;
 
@@ -623,7 +630,7 @@ BEGIN
                     SELECT C.IdCost,
                            @TypeofInOutMoneyId,
                            C.TotalAmountPaid,
-						   IIF(@TypeofInOutMoneyId = 6,@Voucher, ''),
+                           IIF(@TypeofInOutMoneyId = 6, @Voucher, ''),
                            1,
                            @Token,
                            GETDATE()
@@ -654,69 +661,67 @@ BEGIN
 
 
                 -----------------------------------------Registrar Manifiesto ---------------------------------------------------------------------------
-                SET @CourierID  =  (
-                                          SELECT TOP 1 sr.id FROM DeliveryBackOffice.dbo.SenderReceiver sr
-                                          INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp
-                                          ON ltp.LogTokenPOD = @Token AND ltp.RowStatus=1 AND ltp.IdCourierman = sr.ID
-                                          )
+                SET @CourierID =
+                (
+                    SELECT TOP 1
+                           sr.ID
+                    FROM DeliveryBackOffice.dbo.SenderReceiver sr
+                        INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp
+                            ON ltp.LogTokenPOD = @Token
+                               AND ltp.RowStatus = 1
+                               AND ltp.IdCourierman = sr.ID
+                );
 
                 INSERT INTO [dbo].[CourierPickupManifest]
-                               (
-	                              [ManifestSerie],
-	                              [SenderReceiverId],
-	                              [ManifestURL],
-	                              [RowStatus],
-	                              [TokenCreated],
-	                              [DateCreated],
-	                              [TokenUpdated],
-	                              [DateUpdated]
-                                )
-                         VALUES
-                               (
-		                            @ManifestSerie,
-				                        @CourierID,
-				                        NULL,
-				                        1,
-		                            @Token,
-		                            GETDATE(),
-		                            NULL,
-		                            NULL
-		                            )
+                (
+                    [ManifestSerie],
+                    [SenderReceiverId],
+                    [ManifestURL],
+                    [RowStatus],
+                    [TokenCreated],
+                    [DateCreated],
+                    [TokenUpdated],
+                    [DateUpdated]
+                )
+                VALUES
+                (@ManifestSerie, @CourierID, NULL, 1, @Token, GETDATE(), NULL, NULL);
 
-	                    DECLARE @IdManifest AS BIGINT =  SCOPE_IDENTITY();
+                DECLARE @IdManifest AS BIGINT = SCOPE_IDENTITY();
 
-	                    SET @ManifestNumber = @IdManifest;
+                SET @ManifestNumber = @IdManifest;
 
                 INSERT INTO [dbo].[CourierPickupManifestDetail]
-                                (
-                                [ManifestId],
-	                              [GuideSerie],
-	                              [GuideNumber],
-                                [PieceNumber],
-	                              [TokenCreated],
-	                              [DateCreated],
-                                [TokenUpdated],
-	                              [DateUpdated],
-	                              [RowStatus]
-                                )
-                      SELECT 
-			                @IdManifest, 
-			                lg.ItemSerie,
-			                lg.ItemNumber,
-                      lg.ItemPiece,
-			                @Token,
-			                GETDATE(),
-			                NULL,
-			                NULL,
-			                1
-	              FROM #listGuides lg
-
-                SET @CodeOfReference  =
                 (
-                SELECT TOP 1  schp.SenderId  FROM DeliveryBackOffice.dbo.SchedulePickup schp
-                WHERE schp.SchedulePickupId = @IdPickup AND schp.RowStatus = 1 
-                ORDER BY schp.DateCreated ASC
+                    [ManifestId],
+                    [GuideSerie],
+                    [GuideNumber],
+                    [PieceNumber],
+                    [TokenCreated],
+                    [DateCreated],
+                    [TokenUpdated],
+                    [DateUpdated],
+                    [RowStatus]
                 )
+                SELECT @IdManifest,
+                       lg.ItemSerie,
+                       lg.ItemNumber,
+                       lg.ItemPiece,
+                       @Token,
+                       GETDATE(),
+                       NULL,
+                       NULL,
+                       1
+                FROM #listGuides lg;
+
+                SET @CodeOfReference =
+                (
+                    SELECT TOP 1
+                           schp.SenderId
+                    FROM DeliveryBackOffice.dbo.SchedulePickup schp
+                    WHERE schp.SchedulePickupId = @IdPickup
+                          AND schp.RowStatus = 1
+                    ORDER BY schp.DateCreated ASC
+                );
 
                 --------------PROCESSGUIDECOD.INI
                 --HW-67
@@ -829,61 +834,62 @@ BEGIN
             PRINT @jsonResult;
             SELECT @mail;
 
-            SELECT
-            @ManifestNumber AS 'IdManifest',
-            @ManifestSerie AS 'Manifest_Serie',
-            @ManifestNumber AS 'Manifest_Number',
-            slp.SenderName AS 'Sender_FirstName',
-            slp.AddressPickup AS 'Sender_Address',
-            ISNULL(vpc.Zone,'') AS 'Sender_Zone',
-            ISNULL(vpc.Town, '') AS 'Sender_Town',
-            ISNULL(vpc.Department,'') AS 'Sender_Department',
-            0 AS 'Consolidated_Number',
-            ISNULL(vpc.Email, '') AS 'Sender_Email'
+            SELECT @ManifestNumber AS 'IdManifest',
+                   @ManifestSerie AS 'Manifest_Serie',
+                   @ManifestNumber AS 'Manifest_Number',
+                   slp.SenderName AS 'Sender_FirstName',
+                   slp.AddressPickup AS 'Sender_Address',
+                   ISNULL(vpc.Zone, '') AS 'Sender_Zone',
+                   ISNULL(vpc.Town, '') AS 'Sender_Town',
+                   ISNULL(vpc.Department, '') AS 'Sender_Department',
+                   0 AS 'Consolidated_Number',
+                   ISNULL(vpc.Email, '') AS 'Sender_Email'
             FROM DeliveryBackOffice.dbo.SchedulePickup slp
-			      RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc 
-			      ON vpc.CodeOfReference = slp.SenderId
-            WHERE slp.SchedulePickupId = @IdPickup
+                RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc
+                    ON vpc.CodeOfReference = slp.SenderId
+            WHERE slp.SchedulePickupId = @IdPickup;
+            WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
+            AS (SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
+                       COUNT(dop.GuideNumber) 'PiecesColdCounter',
+                       COUNT(dop2.GuideNumber) 'PiecesDryCounter',
+                       COUNT(dop.NoPiece) + COUNT(dop2.NoPiece) 'TotalPieces'
+                FROM #listGuides lp
+                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+                        ON lp.ItemSerie = dop.GuideSerie
+                           AND lp.ItemNumber = dop.GuideNumber
+                           AND lp.ItemPiece = dop.NoPiece
+                           AND dop.IsDry = 0
+                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop2 WITH (NOLOCK)
+                        ON lp.ItemSerie = dop2.GuideSerie
+                           AND lp.ItemNumber = dop2.GuideNumber
+                           AND lp.ItemPiece = dop2.NoPiece
+                           AND dop2.IsDry = 1
+                GROUP BY dop.GuideNumber,
+                         dop2.GuideNumber)
+            SELECT COUNT(GM.GuideNumber) 'GuidesCounter',
+                   SUM(GM.PiecesColdCounter) 'PiecesColdCounter',
+                   SUM(GM.PiecesDryCounter) 'PiecesDryCounter',
+                   SUM(GM.TotalPieces) 'TotalPieces'
+            FROM GUIDEMONITOR GM;
 
-            ;WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
-            AS
-            (SELECT
-		          COALESCE(DOP.GuideNumber, DOP2.GuideNumber) GuideNumber
-	            ,COUNT(dop.GuideNumber) 'PiecesColdCounter'
-	            ,COUNT(dop2.GuideNumber) 'PiecesDryCounter'
-	            ,COUNT(dop.NoPiece) + COUNT(dop2.NoPiece) 'TotalPieces'
-	            FROM #listGuides lp
-	            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
-		            ON lp.ItemSerie = dop.GuideSerie
-		            AND lp.ItemNumber = dop.GuideNumber
-		            AND lp.ItemPiece = dop.NoPiece
-		            AND dop.IsDry = 0
-	            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop2 WITH (NOLOCK)
-		            ON lp.ItemSerie = dop2.GuideSerie
-		            AND lp.ItemNumber = dop2.GuideNumber
-		            AND lp.ItemPiece = dop2.NoPiece
-		            AND dop2.IsDry = 1
-	            GROUP BY DOP.GuideNumber
-			            ,DOP2.GuideNumber)
-
-            SELECT
-	          COUNT(GM.GuideNumber) 'GuidesCounter'
-            ,SUM(GM.PiecesColdCounter) 'PiecesColdCounter'
-            ,SUM(GM.PiecesDryCounter) 'PiecesDryCounter'
-            ,SUM(GM.TotalPieces) 'TotalPieces'
-            FROM GUIDEMONITOR GM
-
-            SELECT
-            CONCAT(dop.GuideSerie,dop.GuideNumber,'-',dop.NoPiece) AS 'Piece',
-            CONCAT(do.Receiver_FirstName,' ', do.Receiver_LastName) AS 'ReceiverName',
-            LEFT(do.Receiver_Address,200) AS 'ReceiverAddress'
+            SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) AS 'Piece',
+                   CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) AS 'ReceiverName',
+                   LEFT(do.Receiver_Address, 200) AS 'ReceiverAddress'
             FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
-            INNER JOIN #listGuides lp ON lp.ItemSerie = dop.GuideSerie AND lp.ItemNumber = dop.GuideNumber
-            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = dop.GuideSerie AND do.Guide_Number = dop.GuideNumber
-            GROUP BY dop.GuideNumber,dop.GuideSerie ,dop.NoPiece,
-            do.Receiver_FirstName,do.Receiver_LastName,do.Receiver_Address
-            ORDER BY dop.GuideNumber  ASC
-            
+                INNER JOIN #listGuides lp
+                    ON lp.ItemSerie = dop.GuideSerie
+                       AND lp.ItemNumber = dop.GuideNumber
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                    ON do.Guide_Serie = dop.GuideSerie
+                       AND do.Guide_Number = dop.GuideNumber
+            GROUP BY dop.GuideNumber,
+                     dop.GuideSerie,
+                     dop.NoPiece,
+                     do.Receiver_FirstName,
+                     do.Receiver_LastName,
+                     do.Receiver_Address
+            ORDER BY dop.GuideNumber ASC;
+
         --print @mail
         END;
 

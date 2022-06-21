@@ -46,7 +46,7 @@ SET NOCOUNT ON;
 		   ,Longitude = @Longitude
 		WHERE IdVisitPointClient = @IdVisitPointClient
 
-		DECLARE @regexPhoneNumber varchar(max)='[(][0-9][0-9][0-9][)]%';			
+		--DECLARE @regexPhoneNumber varchar(max)='[(][0-9][0-9][0-9][)]%';			
 		SET @Phone	=REPLACE(@Phone,'-','');
 		SET @Phone	=REPLACE(@Phone,' ','');
 		UPDATE UA SET 
@@ -54,8 +54,8 @@ SET NOCOUNT ON;
 			,UadIdCountry=CC.IdCountry
 			,UadAddress1=VPC.Address,
 			--UadNirPhone=(CASE WHEN CHARINDEX('(',@Phone) >0 THEN SUBSTRING(@Phone,2,3) ELSE '' END),
-			UadNirPhone=(CASE WHEN @Phone like @regexPhoneNumber THEN SUBSTRING(@Phone,2,3) ELSE '' END),
-			UadPhone=(CASE WHEN @Phone like @regexPhoneNumber THEN SUBSTRING(@Phone,6,LEN(@Phone)-5) ELSE @Phone END),
+			UadNirPhone='502',
+			UadPhone=@Phone,
 			UadAdditionalInstructions='',
 			UadTokenUpdated=@Token,
 			UadDateUpdated=GETDATE(),

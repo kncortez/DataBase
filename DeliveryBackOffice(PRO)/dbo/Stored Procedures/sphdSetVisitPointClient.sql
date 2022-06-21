@@ -246,7 +246,7 @@ BEGIN
                                         vpi.[DayOfVisit],
                                         vpi.[InitializationTimeOfVisit],
                                         vpi.[FinalizationTimeOfVisit],
-                                        vpi.[OrderSequence],
+                                        1,--vpi.[OrderSequence],
                                         --vpi.[RouteCodeID],
                                         vpi.[HubLogisticID],
                                         'TRUE',
@@ -565,7 +565,7 @@ BEGIN
                             SET VPIti.[DayOfVisit] = tblIti.DayOfVisit,
                                 VPIti.[InitializationTimeOfVisit] = CASE WHEN tblIti.InitializationTimeOfVisit = '__:__' THEN  VPIti.[InitializationTimeOfVisit]  ELSE tblIti.InitializationTimeOfVisit END,
                                 VPIti.[FinalizationTimeOfVisit] = CASE WHEN tblIti.FinalizationTimeOfVisit =  '__:__' THEN VPIti.[FinalizationTimeOfVisit] ELSE tblIti.FinalizationTimeOfVisit END,
-                                VPIti.[OrderSequence] = tblIti.OrderSequence,
+                                --VPIti.[OrderSequence] = tblIti.OrderSequence,
 								--Edicion de la ruta inhabilitada
                                 --VPIti.[RouteCodeID] = CASE WHEN tblIti.RouteCodeID <= 0 THEN VPIti.[RouteCodeID] ELSE tblIti.RouteCodeID END ,
                                 VPIti.[HubLogisticID] = tblIti.HubLogisticID,
@@ -605,7 +605,7 @@ BEGIN
 										tblIti.DayOfVisit,
 										tblIti.InitializationTimeOfVisit,
 										tblIti.FinalizationTimeOfVisit,
-										tblIti.OrderSequence,
+										1,--tblIti.OrderSequence,
 										--Edicion de la ruta inhabilitada
 										--tblIti.RouteCodeID,
 										tblIti.HubLogisticID,

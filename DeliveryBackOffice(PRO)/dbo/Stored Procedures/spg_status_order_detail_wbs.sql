@@ -68,7 +68,7 @@ BEGIN
 			'web' [StageSource],
 			'' as [StageDescription], --detail description or observations in events
 			'' as [ImagePath],
-			ISNULL([NameOfReceiver],'') as NameOfReceiver,
+			ISNULL([NameOfReceiver],do.Receiver_FirstName) as NameOfReceiver,
 			ISNULL(Sender_FirstName,'') + ' ' + isnull(Sender_LastName,'') as Place ,
 			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) as [ManifestNumber],
 			da.Latitude,
@@ -97,7 +97,7 @@ BEGIN
 			so.OrderDescription as [StageTitle], -- status order name
 			'web' as [StageSource],
 			(CASE
-                 WHEN dod.StatusOrderId IN ( 6, 8 ) THEN
+                 WHEN dod.StatusOrderId IN ( 6, 8) THEN
                      ISNULL(dod.Observations, '')
                  WHEN dod.StatusOrderId IN ( 12 ) THEN
                      ISNULL(
