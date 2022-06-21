@@ -5,3 +5,9 @@ DeliveryBackOffice(PRO)/Security/
 DeliveryBackOffice(QA)/Import Schema Logs/
 DeliveryBackOffice(DEV)/Import Schema Logs/
 DeliveryBackOffice(PRO)/Import Schema Logs/
+DeliveryBackOffice(QA)/bin/
+DeliveryBackOffice(DEV)/bin/
+DeliveryBackOffice(PRO)/bin/
+DeliveryBackOffice(QA)/obj/
+DeliveryBackOffice(DEV)/obj/
+DeliveryBackOffice(PRO)/obj/
