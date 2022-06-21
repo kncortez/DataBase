@@ -3,7 +3,7 @@
 AS
 BEGIN
 
-	SELECT CodeOfReference, CustomerID, Address, Zone, Town, Department, Phone, FirstName, LastName FROM VisitPointClient
+	SELECT CodeOfReference, CustomerID, Address, Zone, Town, Department, Phone/*, FirstName, LastName*/ FROM VisitPointClient
 	WHERE CodeOfReference = @IdCliente
 
 END

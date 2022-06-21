@@ -32,7 +32,7 @@ BEGIN
 			ON ord.Guide_Serie = dsd.Guide_Serie
 				AND ord.Guide_Number = dsd.Guide_Number
         WHERE dsd.ID_DeliveryOrderBySettlement = dst.ID
-		AND (IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery) > 0
+		AND IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery > 0
         AND dsd.Guide_Delivered = 'true'
         AND dsd.Guide_Discharged IS NOT NULL
 	)
@@ -61,7 +61,7 @@ BEGIN
 				ON ord.Guide_Serie = dsd.Guide_Serie
 					AND ord.Guide_Number = dsd.Guide_Number
 			WHERE dsd.ID_DeliveryOrderBySettlement = dst.ID
-			AND (IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery) > 0
+			AND IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery > 0
 			AND dsd.Guide_Delivered = 'true'
 			AND dsd.Guide_Discharged IS NOT NULL
 		)

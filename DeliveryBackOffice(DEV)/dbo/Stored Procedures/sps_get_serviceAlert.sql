@@ -15,7 +15,7 @@ BEGIN
 				'[ { ' +  
 				'"Results": [ ' + 
 				(SELECT STUFF((SELECT ' { "Guide": "' +CONCAT(doa.GuideSerie, CAST(doa.GuideNumber AS VARCHAR))+ '", ' + 
-										 '"ServiceType": "' +(doa.ServiceType)+ '", ' + 
+										 --'"ServiceType": "' +(doa.ServiceType)+ '", ' + 
 										 '"Description": "' +(doa.AlertDescription)+ '" }, '
 									 FROM DeliveryOrderAlert doa
 										INNER JOIN DeliveryAttempt dat ON doa.GuideNumber = dat.Guide_Number

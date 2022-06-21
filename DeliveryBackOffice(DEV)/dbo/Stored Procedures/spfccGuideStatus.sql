@@ -23,7 +23,7 @@ select Top 1
   '"GuideNumber":"' +  Convert(varchar,isnull(a.Guide_Number, 0)) +'",'+ 
   '"StatusOrderId":"' +  Convert(varchar,isnull( a.StatusOrderId,0)) +'",'+ 
   '"Description":"' +  b.OrderDescription,  +'",'+ 
-  '"Status":"' + c.status,  +'",'+ 
+  --'"Status":"' + c.status,  +'",'+ 
   '"DataCreated":"' +  Convert(varchar,isnull(  a.DateCreated,  getdate()),121) +'"'+ 
    
    ' }}' +
