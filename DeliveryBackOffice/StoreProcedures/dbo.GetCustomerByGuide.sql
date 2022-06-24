@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[GetCustomerByGuide]    Script Date: 21/06/2022 16:35:03 ******/
+/****** Object:  StoredProcedure [dbo].[GetCustomerByGuide]    Script Date: 23/06/2022 18:10:01 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -67,6 +67,7 @@ BEGIN
 	   ,do.Sender_Phone SenderPhone
 	   ,@Hub SenderHub
 	   ,@HubId SenderHubId
+	   ,do.SenderIdTownship SenderTownship
 	   ,do.Sender_Lat SenderLatitude
 	   ,do.Sender_Lng SenderLongitude
 
