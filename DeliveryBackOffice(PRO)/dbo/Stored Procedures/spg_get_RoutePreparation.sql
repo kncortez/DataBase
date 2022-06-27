@@ -76,11 +76,12 @@ BEGIN
 		INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH(NOLOCK) ON sta.StatusOrderId = serv.StatusOrderId
 		--LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement BySt WITH(nolock) ON serv.Guide_Serie = bySt.Guide_Serie and serv.Guide_Number = bySt.Guide_Number
 		WHERE 
-		serv.StatusOrderId <> 7 AND -- ocultar los servicios anulados
-		serv.StatusOrderId <> 15 AND -- ocultar guías generadas
-		serv.StatusOrderId <> 5 AND -- ocultar los servicios entregados
-		serv.StatusOrderId <> 22 AND -- ocultar los servicios entregados en Express Center
-		serv.Manifest_Number <> 999 AND -- ocultar primer servicio (semilla)
+		CONVERT(DATE, serv.DateCreated) BETWEEN CONVERT(DATE, GETDATE()-90) AND CONVERT( DATE, GETDATE()) AND 
+		serv.StatusOrderId NOT IN( 7,15,5,22) AND -- ocultar los servicios anulados
+		--serv.StatusOrderId <> 15 AND -- ocultar guías generadas
+		--serv.StatusOrderId <> 5 AND -- ocultar los servicios entregados
+		--serv.StatusOrderId <> 22 AND -- ocultar los servicios entregados en Express Center
+		--serv.Manifest_Number <> 999 AND -- ocultar primer servicio (semilla)
 		( -- ocultar las guías que tengan en su historia retornado al origen
 			@HideOrigin = 0
 			OR

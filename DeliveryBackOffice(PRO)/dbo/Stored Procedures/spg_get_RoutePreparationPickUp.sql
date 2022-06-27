@@ -175,7 +175,8 @@ BEGIN
                      AND NOT (AssigmentStatus IS NULL)
                  )
             )
-        AND shp.RowStatus = 1;
+        AND shp.RowStatus = 1
+        AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)); -- Si tiene guía y no está anulada
 
     --DECLARE @guides NVARCHAR(MAX) =
     --        (

@@ -45,8 +45,6 @@ BEGIN
 				AND
 				CR.IdTypeRoute = 1
 				AND
-				CR.CodeRoute LIKE 'R%'
-				AND
 				CR.RowStatus = 1
 	WHERE
 		RA.DateOfRoute = CAST(GETDATE() AS DATE)
@@ -86,7 +84,7 @@ BEGIN
 		(
 			@DateSchedulePickups >= CONVERT(DATE, SP.startDate)
 			AND 
-			CONVERT(DATE, SP.EndDate) >= @DateSchedulePickups
+			SP.EndDate >= @DateSchedulePickups
 		)
 		OR 
 			(@DateSchedulePickups = '')
@@ -156,8 +154,6 @@ BEGIN
 				RA.IdRoute = CR.IdRoute
 				AND
 				CR.IdTypeRoute = 1
-				AND
-				CR.CodeRoute LIKE 'R%'
 				AND
 				CR.RowStatus = 1
 	WHERE

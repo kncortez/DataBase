@@ -1025,6 +1025,12 @@
     <Build Include="dbo\Stored Procedures\spg_ddeli_deliveryOrders_esp.sql" />
     <Build Include="dbo\Stored Procedures\GetTypeVoucherDelivery.sql" />
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderSettlementDataUnderRoutePrepration_CRAS.sql" />
+    <Build Include="dbo\Tables\SchedulePickupDuplicateLog.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_CouponReportHeader.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_CouponReportDetail.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerByGuide.sql" />
+    <Build Include="dbo\Sequences\NewGuideNumberSequence.sql" />
+    <Build Include="dbo\Sequences\NewGuideManifestSequence.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\120\SqlSchemas\master.dacpac">

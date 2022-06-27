@@ -125,6 +125,21 @@ BEGIN
             SELECT ('[' + @jsonOutput + ']') jsonOutput;
             ROLLBACK TRANSACTION;
 
+            INSERT INTO dbo.RoutePreparationLogError
+            (
+                ErrorDescription,
+                ErrorNumber,
+                ErrorProcedure,
+                ErrorLine,
+                GuideSerie,
+                GuideNumber,
+                TokenCreated,
+                DateCreated
+            )
+            VALUES
+            (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
+             ERROR_LINE(), 0, 0, CONCAT('Token: ', @Token, ' Account: ', @IdAccount, ' User: ', @IdUser), GETDATE());
+
         END CATCH;
 
         IF @@TRANCOUNT > 0
@@ -286,6 +301,21 @@ BEGIN
                 SELECT ('[' + @jsonOutput2 + ']') jsonOutput2;
                 ROLLBACK TRANSACTION;
 
+                INSERT INTO dbo.RoutePreparationLogError
+                (
+                    ErrorDescription,
+                    ErrorNumber,
+                    ErrorProcedure,
+                    ErrorLine,
+                    GuideSerie,
+                    GuideNumber,
+                    TokenCreated,
+                    DateCreated
+                )
+                VALUES
+                (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
+                 ERROR_LINE(), 0, 0, CONCAT('Token: ', @Token, ' Account: ', @IdAccount, ' User: ', @IdUser), GETDATE());
+
             END CATCH;
 
             IF @@TRANCOUNT > 0
@@ -400,12 +430,12 @@ BEGIN
                            SP.AssigmentStatus,
                            SM.IdServiceManagement,
                            DOR.TypeService
-                    FROM DBO.SchedulePickup SP
-                        LEFT JOIN DBO.ServiceManagement SM
+                    FROM dbo.SchedulePickup SP
+                        LEFT JOIN dbo.ServiceManagement SM
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
-                        LEFT JOIN DBO.DeliveryOrderPaymentDetail dop
+                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop
                             ON dop.IdHeaderRecolection = SP.SchedulePickupId
-                        LEFT JOIN DBO.DeliveryOrder DOR WITH (NOLOCK)
+                        LEFT JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
                             ON DOR.Guide_Number = dop.GuideNumber
                                AND DOR.Guide_Serie = dop.GuideSerie
                     --WHERE (SP.AssigmentStatus =0 OR (SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) --THIS LINE IS EQUIVALENT TO LINE BELOW
@@ -421,7 +451,7 @@ BEGIN
                                               AND SM.ServiceStatusId IN ( 1, 2 )
                                           )
                               )
-                          AND (CONVERT(DATE, GETDATE()) >= CONVERT(DATE, SP.startDate))
+                          AND (CONVERT(DATE, GETDATE()) >= CONVERT(DATE, SP.StartDate))
                           AND (CONVERT(DATE, SP.EndDate) >= CONVERT(DATE, GETDATE()))
                     GROUP BY SenderPhone,
                              IdHubLogistics,
@@ -654,13 +684,13 @@ BEGIN
                                                         @Token = 'SYSTEM';
             UPDATE SMT
             SET Amount = SUB.NewTotal
-            FROM DBO.ServiceManagement SMT
+            FROM dbo.ServiceManagement SMT
                 INNER JOIN
                 (
                     SELECT SM.IdServiceManagement,
                            SM.Amount + SUM(TP.AmountToPay) AS NewTotal
-                    FROM DBO.ServiceManagement SM
-                        INNER JOIN DBO.#Sender SD
+                    FROM dbo.ServiceManagement SM
+                        INNER JOIN dbo.#Sender SD
                             ON SM.IdServiceManagement = SD.IdServiceManagement
                         INNER JOIN @TempPrice TP
                             ON TP.GuideSerie = SD.Serie

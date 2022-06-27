@@ -44,8 +44,13 @@ BEGIN
 			UNION ALL
 			SELECT num+1 FROM gen WHERE num+1<=@endnum
 		)
-		INSERT INTO @CorrelativeTable (Guide_Number)
-		SELECT * FROM gen
+		INSERT INTO @CorrelativeTable 
+		(
+			Guide_Number
+		)
+		SELECT 
+			NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
+		FROM gen
 		option (maxrecursion 10000)
 		/*****************************************************************************************************************************/
 		/******** TABLA TEMPORAL #GUIDETABLE PARA UNIR REGISTROS RECIBIDOS DE DELIVERYORDERS Y CORRELATIVOS AUTOGENERADOS ************/
@@ -115,7 +120,11 @@ BEGIN
 		/**********************************************************************/
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
 		/**********************************************************************/
-		SET @ManifestNumber = (SELECT MAX([Manifest_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[ServiceRequest] )
+		SET @ManifestNumber = NEXT VALUE FOR [dbo].[NewGuideManifestSequence]; 
+		--(
+		--	SELECT MAX([Manifest_Number]) + 1 
+		--	FROM [DeliveryBackOffice].[dbo].[ServiceRequest] 
+		--)
 		INSERT INTO DeliveryBackOffice.dbo.ServiceRequest (
 			[Messageid], 
 			[Receiver_Name], 

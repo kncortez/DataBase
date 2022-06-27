@@ -45,7 +45,8 @@ BEGIN
         (
             Guide_Number
         )
-        SELECT *
+        SELECT 
+			NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
         FROM gen
         OPTION (MAXRECURSION 10000);
 
@@ -108,11 +109,12 @@ BEGIN
         /**********************************************************************/
         /******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
         /**********************************************************************/
-        SET @ManifestNumber =
-        (
-            SELECT MAX([Manifest_Number]) + 1
-            FROM [DeliveryBackOffice].[dbo].[ServiceRequest] WITH (NOLOCK)
-        );
+        SET @ManifestNumber = NEXT VALUE FOR [dbo].[NewGuideManifestSequence];
+        --(
+        --    SELECT MAX([Manifest_Number]) + 1
+        --    FROM [DeliveryBackOffice].[dbo].[ServiceRequest] WITH (NOLOCK)
+        --);
+
         INSERT INTO DeliveryBackOffice.dbo.ServiceRequest
         (
             [Messageid],

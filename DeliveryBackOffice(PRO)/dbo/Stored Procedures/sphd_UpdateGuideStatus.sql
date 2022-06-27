@@ -9,6 +9,11 @@
 -- Update date: <01/06/2022>
 -- Description:	< liberación de cupones y anulación de los mismos >
 -- =============================================
+-- Author:		<Edelman Vásquez>
+-- Update date: <07/06/2022>
+-- Description:	<Control de mensajes de errores, indicando por que una anulación no procede>
+-- =============================================
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_UpdateGuideStatus]
     @Guide_Serie VARCHAR(2),
     @Guide_Number INT,
@@ -28,6 +33,22 @@ BEGIN
 
     DECLARE @IsCouponOrigin BIT = 0;
     DECLARE @IsCouponRedeemer BIT = 0;
+    DECLARE @RowStatus1 BIT = 0;
+
+    DECLARE @ResultOperation VARCHAR(200);
+    DECLARE @ResultCode INT;
+    SET @RowStatus1 = ISNULL(
+                      (
+                          SELECT TOP 1
+                                 1
+                          FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK)
+                          WHERE Guide_Serie = @Guide_Serie
+                                AND Guide_Number = @Guide_Number
+                                AND StatusOrderId <> 7
+                      ),
+                      0
+                            );
+
 
     SET @IsCouponOrigin = ISNULL(
                           (
@@ -55,7 +76,7 @@ BEGIN
 
     BEGIN TRANSACTION;
     BEGIN TRY
-
+        --- Valida que sea Guía que genera cupon y que el estado es anular id= 7
         IF (@IsCouponOrigin = 1 AND @newStatus = @VoidStatus)
         BEGIN
 
@@ -74,10 +95,11 @@ BEGIN
                                     ),
                                     0
                                           );
-
+            --Validar que no tenga cupón redimido
             IF (@IsCouponRedeemed = 0)
             BEGIN
                 -- Cupon no ha sido redimido
+                SET @ResultOperation = 'Guía y Cupón Anulado Exitosamente!!';
                 UPDATE [DeliveryBackOffice].[dbo].[PromoCoupon]
                 SET RowStatus = 0,
                     SystemDestination = NULL,
@@ -114,13 +136,24 @@ BEGIN
                 VALUES
                 (@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations);
 
+
+
                 IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
+
+            END;
+            ELSE
+            BEGIN
+
+                SET @ResultOperation = 'No es Posible anular la guía, contiene un cupón Canjeado!!';
+                IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
+
             END;
 
         END;
+        --Valida si guía tiene cupón redimido
         ELSE IF (@IsCouponRedeemer = 1 AND @newStatus = @VoidStatus)
         BEGIN
-
+            SET @ResultOperation = 'Guía  Anulada Exitosamente!!';
             UPDATE [DeliveryBackOffice].[dbo].[PromoCoupon]
             SET SystemDestination = NULL,
                 CustomerDestination = NULL,
@@ -156,12 +189,24 @@ BEGIN
             VALUES
             (@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations);
 
+
             IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 
-        END;
-        ELSE
-        BEGIN
 
+        END;
+        --Valida si guía esta anulada
+        ELSE IF (@IsCouponRedeemer = 0 AND @IsCouponOrigin = 0 AND @RowStatus1 = 0)
+        BEGIN
+            SET @ResultOperation = 'Guía  ya fue anulada!!';
+
+
+            IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
+
+
+        END;
+        ELSE IF (@RowStatus1 = 1 AND @IsCouponRedeemer = 0 AND @IsCouponOrigin = 0)
+        BEGIN
+            SET @ResultOperation = 'Guía Anulada Exitosamente!!';
             UPDATE DeliveryBackOffice.dbo.DeliveryOrder
             SET StatusOrderId = @newStatus
             WHERE Guide_Serie = @Guide_Serie
@@ -182,13 +227,25 @@ BEGIN
 
             IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
         END;
+        ELSE
+        BEGIN
+            SET @ResultOperation = 'Guía No Existe!!';
+        END;
+
+
+        SELECT 1 [blnResult],
+               @Guide_Serie + CONVERT(VARCHAR, @Guide_Number) + ': ' + @ResultOperation [ResultDescription];
+
 
     END TRY
     BEGIN CATCH
 
         ROLLBACK TRANSACTION;
 
-        SELECT 0 [blnResult];
+        SELECT 0 [blnResult],
+               @ResultOperation [ResultDescription];
 
     END CATCH;
+
+
 END;
