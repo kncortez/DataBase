@@ -40,13 +40,13 @@ BEGIN
 		 [DeliveryBackOffice].[dbo].CatPromo CP	   WITH (NOLOCK)
 	ON   PC.CatPromoId = CP.IdPromo
 	INNER JOIN 
-		 [DeliveryBackOffice].[dbo].Customer C
+		 [DeliveryBackOffice].[dbo].Customer C    WITH (NOLOCK)
 	ON PC.CustomerOrigin = C.IdCustomer
-	LEFT JOIN [DeliveryBackOffice].[dbo].Customer C2
+	LEFT JOIN [DeliveryBackOffice].[dbo].Customer C2 WITH (NOLOCK)
 	ON PC.CustomerDestination = C2.IdCustomer
 	WHERE	
 	     PC.DateCreated BETWEEN FORMAT(@DateOf, 'yyyy-MM-dd 00:00:00') 
 		                    AND Format(@DateTo, 'yyyy-MM-dd 23:59:59')
-	ORDER BY  STATUSCOUPON DESC 
+	ORDER BY  PC.DateCreated DESC 
 
 END
