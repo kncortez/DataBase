@@ -10,6 +10,8 @@
     [TokenUpdated]          NVARCHAR (50)   NULL,
     [DateUpdated]           DATETIME        NULL,
     CONSTRAINT [PK_SpecialDiscount] PRIMARY KEY CLUSTERED ([IdSpecialDiscount] ASC),
-    CONSTRAINT [FK_SpecialDiscount_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer])
+    CONSTRAINT [FK_SpecialDiscount_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 

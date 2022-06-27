@@ -5,8 +5,10 @@
     [CatStatusTypeId]     INT            NULL,
     CONSTRAINT [PK_Table_1] PRIMARY KEY CLUSTERED ([StatusOrderId] ASC),
     CONSTRAINT [FK_StatusOrder_CatCheckpointType] FOREIGN KEY ([CatCheckpointTypeId]) REFERENCES [dbo].[CatCheckpointType] ([IdCatCheckpointType]),
-    CONSTRAINT [FK_StatusOrder_CatStatusType] FOREIGN KEY ([CatStatusTypeId]) REFERENCES [dbo].[CatStatusType] ([IdCatStatusType])
+    CONSTRAINT [FK_StatusOrder_StatusType] FOREIGN KEY ([CatStatusTypeId]) REFERENCES [dbo].[CatStatusType] ([IdCatStatusType])
 );
+
+
 
 
 GO

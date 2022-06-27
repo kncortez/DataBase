@@ -1,4 +1,11 @@
-﻿CREATE PROCEDURE [dbo].[sphdSetRateLog]
+﻿
+-- =============================================
+-- Author:      <Sazo,Cesar>
+-- Create date: <29/01/2022>
+-- Description: <Almacenamos los log de cambios en tarifarios.>
+-- =============================================
+
+CREATE PROCEDURE [dbo].[sphdSetRateLog]
       @IdCustomer INT = 0
       ,@CodeOfReference INT = 0 
       ,@TokenCreated NVARCHAR(50) = ''

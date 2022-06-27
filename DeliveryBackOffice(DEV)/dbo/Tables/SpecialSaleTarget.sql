@@ -12,11 +12,13 @@
     [TokenUpdated]        VARCHAR (50) NULL,
     [DateUpdated]         DATETIME     NULL,
     PRIMARY KEY CLUSTERED ([IdSpecialSaleTarget] ASC),
-    CONSTRAINT [FKTargetCustomer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FKTargetCustomer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKTargetCustomerType] FOREIGN KEY ([CustomerTypeid]) REFERENCES [dbo].[CustomerType] ([IdCustomerType]),
     CONSTRAINT [FKTargetPipe] FOREIGN KEY ([SalesPipeLineId]) REFERENCES [dbo].[CatSalePipelines] ([IdSalePipeLine]),
     CONSTRAINT [FKTargetProduct] FOREIGN KEY ([TypeProductId]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct]),
     CONSTRAINT [FKTargetSale] FOREIGN KEY ([SpecialSaleId]) REFERENCES [dbo].[SpecialSale] ([IdSpecialSale]),
     CONSTRAINT [FKTargetTypeService] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeService] ([CtsId])
 );
+
+
 

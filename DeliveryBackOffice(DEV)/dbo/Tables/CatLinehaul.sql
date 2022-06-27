@@ -15,3 +15,11 @@
     CONSTRAINT [FK_IdHubOrigin_IdHubLogistic] FOREIGN KEY ([IdHubOrigin]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdRoute_IdHubDestination]
+    ON [dbo].[CatLinehaul]([IdRoute] ASC, [IdHubDestination] ASC)
+    INCLUDE([Emails]);
+

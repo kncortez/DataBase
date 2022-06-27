@@ -180,7 +180,6 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 			ON lst.Guide_Serie = PC.GuideSerieDestination
 				AND lst.Guide_Number = PC.GuideNumberDestination
-				AND PC.FinalActiveDate >= GETDATE()
 				AND PC.RowStatus = 1
     WHERE ISNULL(ord.PriceShippment, 0) = 0
 		AND PC.IdPromoCoupon IS NULL;

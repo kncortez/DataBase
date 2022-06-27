@@ -32,14 +32,14 @@ BEGIN
 				IF @IsReturn = 1
 				BEGIN 
 					SET @Id = (
-						SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] 
+						SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] WITH(NOLOCK)
 						WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND Active = 1 AND Dry = @PiecesDry AND Cold = @PiecesCold AND IsReturn = 1 --AND Guide_Piece = @GuidePiece
 						ORDER BY DateCreated ASC)
 				END
 				ELSE
 				BEGIN
 					SET @Id = (
-						SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] 
+						SELECT TOP 1 Id FROM [DeliveryBackOffice].[dbo].[Warehouse] WITH(NOLOCK) 
 						WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND Active = 1 AND Dry = @PiecesDry AND Cold = @PiecesCold AND (IsReturn IS NULL OR IsReturn = 0) --AND Guide_Piece = @GuidePiece
 						ORDER BY DateCreated ASC)
 				END

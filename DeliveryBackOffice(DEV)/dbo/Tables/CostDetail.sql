@@ -15,3 +15,10 @@
     CONSTRAINT [FKCostDetTypeMoney] FOREIGN KEY ([IdTypeOfMoney]) REFERENCES [dbo].[ctgTypeOfInOutOfMoney] ([tio_pk_id])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdCost]
+    ON [dbo].[CostDetail]([IdCost] ASC);
+

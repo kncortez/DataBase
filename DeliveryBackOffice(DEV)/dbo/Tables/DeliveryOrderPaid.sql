@@ -12,9 +12,10 @@
     [IdDeliveryOrderPaidHeader] BIGINT        NULL,
     [DocumentType]              INT           NULL,
     CONSTRAINT [PK_DeliveryOrderPaid] PRIMARY KEY CLUSTERED ([IdDeliveryOrderPaid] ASC),
-    CONSTRAINT [FK_DeliveryOrderPaid_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_PaidDeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
+    CONSTRAINT [FK_DeliveryOrderPaid_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 GO
@@ -32,4 +33,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'1 Paid 0 Un
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'0 Depósito, 1 Autorización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderPaid', @level2type = N'COLUMN', @level2name = N'DocumentType';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Serie_Numero_guia]
+    ON [dbo].[DeliveryOrderPaid]([Guide_Serie] ASC, [Guide_Number] ASC);
 

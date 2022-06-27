@@ -37,9 +37,9 @@ BEGIN
 			@PieceExists = 1,
 			@PieceType = IIF(DOP.IsDry = 1, 1, 0)
 		FROM
-		[DeliveryBackOffice].[dbo].[DeliveryOrder] DO
+		[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		JOIN
-			[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP
+			[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 		ON
 			DO.Guide_Serie = DOP.GuideSerie
 			AND
@@ -62,9 +62,9 @@ BEGIN
 				@IsAssigned = 1,
 				@LastAssignment = RP.DateRoutePreparation 
 			FROM
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 				JOIN
-					[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 				ON
 					RPD.RoutePreparationId = RP.IdRoutePreparation
 					AND
@@ -84,15 +84,15 @@ BEGIN
 					@DateAssigned = RP.DateRoutePreparation,
 					@IdRoutePreparationDetail = RPD.IdRoutePreparationDetail
 				FROM
-					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 					JOIN
-						[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+						[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					ON
 						RPD.RoutePreparationId = RP.IdRoutePreparation
 						AND
 						RP.RowStatus = 1
 					JOIN
-						[DeliveryBackOffice].[dbo].[CatRoute] CR
+						[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
 					ON
 						RP.CatRouteId = CR.IdRoute
 					WHERE
@@ -109,13 +109,13 @@ BEGIN
 					SELECT
 						@IdRoutePreparationDetailPiece = RPDP.PieceNumber
 					FROM
-						[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+						[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 						JOIN
-							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 							RP.IdRoutePreparation = RPD.RoutePreparationId
 						JOIN
-							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
 							ON
 							RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
 					WHERE
@@ -185,7 +185,7 @@ BEGIN
 							GETDATE()
 						WHERE NOT EXISTS (
 							SELECT 1
-							FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+							FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] WITH(NOLOCK)
 							WHERE 
 								StatusOrderId = 3
 								AND

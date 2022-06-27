@@ -11,8 +11,10 @@
     [TokenUpdated]           NVARCHAR (50)   NULL,
     [DateUpdated]            DATETIME        NULL,
     CONSTRAINT [PK_CodProfile] PRIMARY KEY CLUSTERED ([CustomerId] ASC),
-    CONSTRAINT [FK_CodProfile_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[CustomerParser] ([IdCustomer])
+    CONSTRAINT [FK_CodProfile_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 
 
 GO

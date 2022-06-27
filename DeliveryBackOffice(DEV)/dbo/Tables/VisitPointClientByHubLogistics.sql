@@ -9,7 +9,8 @@
     [DateUpdated]        DATETIME     NULL,
     CONSTRAINT [PK_VpcByHubLogistic] PRIMARY KEY CLUSTERED ([IdVpcHub] ASC),
     CONSTRAINT [FK_VpcByHubLogistics_HubLogistics] FOREIGN KEY ([IdHublogistic]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
-    CONSTRAINT [FK_VpcByHubLogistics_Vpc] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference]),
-    CONSTRAINT [FK_VpcByHubLogistics_Vpc2] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
+    CONSTRAINT [FK_VpcByHubLogistics_Vpc] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 

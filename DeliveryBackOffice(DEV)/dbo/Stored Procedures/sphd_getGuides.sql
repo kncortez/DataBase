@@ -1,11 +1,17 @@
 ﻿
-CREATE PROCEDURE sphd_getGuides
-	@Guide_Serie VARCHAR(2),
-	@Guide_Number INT
+-- =============================================
+-- Author:      <Sazo,Cesar>
+-- Create date: <2021-10-19>
+-- Description: <Obtener informacion de las guias para mostrar al momento de actualizar los checkpoints>
+-- =============================================
+
+CREATE PROCEDURE [dbo].[sphd_getGuides]
+    @Guide_Serie VARCHAR(2),
+    @Guide_Number INT
 AS
 BEGIN
-	
-	SELECT Guide_Serie, Guide_Number, Pieces_Dry+Pieces_Cold, c.Name, Receiver_Address, so.OrderDescription
+    
+    SELECT Guide_Serie, Guide_Number, Pieces_Dry+Pieces_Cold, c.Name, Receiver_Address, so.OrderDescription
     FROM DeliveryBackOffice.dbo.DeliveryOrder AS do
     LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient AS vpc
     ON do.Sender_ID = vpc.CodeOfReference

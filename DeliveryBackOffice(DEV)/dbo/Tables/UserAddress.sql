@@ -27,6 +27,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_UserAddress_LoadList]
     ON [dbo].[UserAddress]([VisitPointByClientPortfolioId] ASC, [UadRowStatus] ASC);
@@ -45,4 +47,12 @@ CREATE NONCLUSTERED INDEX [IX_UserAddress_SettlementList]
 GO
 CREATE NONCLUSTERED INDEX [IX_UserAddress_DeliveryOptionList]
     ON [dbo].[UserAddress]([UadIdDeliveryOption] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'UserAddress', @level2type = N'COLUMN', @level2name = N'UadIdSettlement';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'UserAddress', @level2type = N'COLUMN', @level2name = N'UadIdDeliveryOption';
 

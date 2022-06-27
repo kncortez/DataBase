@@ -18,7 +18,9 @@ BEGIN
            cli.CODAccountName,
            cli.CODAccountTypeID,
            cli.CODCurrencyID,
-           cli.IdCustomer
+           cli.IdCustomer,
+		   cli.ExcludePriceShippingCOD CODExcludedPriceShipping,
+		   cli.ExcludeCommissionCOD CODExcludedCommission
     FROM dbo.Customer cli
     WHERE cli.IdCustomer = @IdCustomer;
 

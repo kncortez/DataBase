@@ -23,20 +23,20 @@ SET NOCOUNT ON;
 	   ,cr.CodeRoute Route
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) Courier
 	   ,sm.Amount Amount
-	FROM ServiceManagement sm
-	JOIN SchedulePickup sp
+	FROM ServiceManagement sm WITH(NOLOCK)
+	inner JOIN SchedulePickup sp WITH(NOLOCK)
 		ON sp.SchedulePickupId = sm.IdSchedulePickup
-	JOIN VisitPointClient vpc
+	inner JOIN VisitPointClient vpc WITH(NOLOCK)
 		ON vpc.CodeOfReference = sp.SenderId
-	JOIN CatServiceStatus css
+	inner JOIN CatServiceStatus css WITH(NOLOCK)
 		ON css.IdServiceStatus = sm.ServiceStatusId
-	JOIN Customer cu
+	inner JOIN Customer cu WITH(NOLOCK)
 		ON cu.IdCustomer = vpc.CustomerID
-	LEFT JOIN RouteAssigment ra
+	LEFT JOIN RouteAssigment ra WITH(NOLOCK)
 		ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-	LEFT JOIN CatRoute cr
+	LEFT JOIN CatRoute cr WITH(NOLOCK)
 		ON cr.IdRoute = ra.IdRoute
-	LEFT JOIN SenderReceiver sr
+	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON sr.ID = ra.IdCurrierMan
 	WHERE sm.IdServiceManagement = @ServiceManagementId
 
@@ -53,14 +53,15 @@ SET NOCOUNT ON;
 		ON ltp.LogTokenPOD = es.TokenCreated
 	LEFT JOIN SenderReceiver sr WITH (NOLOCK)
 		ON sr.ID = ltp.IdCourierman
-	JOIN CatServiceStatus css
+	inner JOIN CatServiceStatus css WITH(NOLOCK)
 		ON css.IdServiceStatus = es.ServiceStatusId
 	WHERE es.ServiceManagementId = @ServiceManagementId
-	ORDER BY es.DateCreated
+	ORDER BY es.DateCreated 
 
 	--Table 3 Guías del servicio
 	SELECT
 		CONCAT(do.Guide_Serie, do.Guide_Number) Guide
+	   ,do.Sender_Address Address
 	   ,so.OrderDescription Status
 	   ,IIF(EXISTS (SELECT TOP 1
 				1
@@ -69,12 +70,12 @@ SET NOCOUNT ON;
 			AND doa.GuideNumber = do.Guide_Number)
 		, 'Si', 'No') Alert
 	FROM ServiceManagement sm WITH (NOLOCK)
-	JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+	inner JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 		ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
-	JOIN DeliveryOrder do WITH (NOLOCK)
+	inner JOIN DeliveryOrder do WITH (NOLOCK)
 		ON do.Guide_Serie = dopd.GuideSerie
 			AND do.Guide_Number = dopd.GuideNumber
-	JOIN StatusOrder so WITH (NOLOCK)
+	inner JOIN StatusOrder so WITH (NOLOCK)
 		ON so.StatusOrderId = do.StatusOrderId
 	WHERE sm.IdServiceManagement = @ServiceManagementId
 END

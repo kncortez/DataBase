@@ -22,7 +22,7 @@ BEGIN
 			parsename(CONVERT(varchar,CAST(COUNT(distinct inv_pk_id) as money),1),2) 'Cantidad de Facturas',
 			convert(varchar,isnull(SUM(ihd.inv_amount),0),1) 'Total Facturado'
 		from DeliveryBackOffice.dbo.DeliveryOrder ord with(nolock)
-		join DeliveryBackOffice.dbo.VisitPointClient vpc with(nolock) on ord.Sender_ID = vpc.CodeOfReference
+		inner join DeliveryBackOffice.dbo.VisitPointClient vpc with(nolock) on ord.Sender_ID = vpc.CodeOfReference
 		left join DeliveryBackOffice.dbo.invoiceDetail ide with(nolock) on ide.dti_fk_orderSerie = ord.Guide_Serie
 																	and ide.dti_fk_orderNumber = ord.Guide_Number
 		left join DeliveryBackOffice.dbo.invoiceHeader ihd with(nolock) on ihd.inv_pk_id = ide.dti_fk_header
@@ -46,14 +46,14 @@ BEGIN
 			isnull(csi.ist_nombre,'') 'Estado Factura',
 			isnull(csi.ist_descripcion,'') 'dscEstdFac'
 		from DeliveryBackOffice.dbo.DeliveryOrder ord with(nolock)
-		join DeliveryBackOffice.dbo.VisitPointClient vpc with(nolock) on ord.Sender_ID = vpc.CodeOfReference
+		Inner join DeliveryBackOffice.dbo.VisitPointClient vpc with(nolock) on ord.Sender_ID = vpc.CodeOfReference
 		left join DeliveryBackOffice.dbo.invoiceDetail ide with(nolock) on ide.dti_fk_orderSerie = ord.Guide_Serie
 																	and ide.dti_fk_orderNumber = ord.Guide_Number
 		left join DeliveryBackOffice.dbo.invoiceHeader ihd with(nolock) on ihd.inv_pk_id = ide.dti_fk_header
 		and ihd.inv_type = 1
-		left join InOutOfMoneyDetail io on io.io_invoice = ihd.inv_pk_id
-		left join ctgTypeOfInOutOfMoney cio on cio.tio_pk_id = io.io_type
-		left join ctg_statusInvoice csi on csi.ist_pk_id = ihd.inv_status
+		left join InOutOfMoneyDetail io with(nolock) ON io.io_invoice = ihd.inv_pk_id
+		left join ctgTypeOfInOutOfMoney cio with(nolock) ON cio.tio_pk_id = io.io_type
+		left join ctg_statusInvoice csi with(nolock) ON  csi.ist_pk_id = ihd.inv_status
 		where ord.DateCreated between @fechaInicio and @fechaFin
 		and vpc.CodeOfReference = ISNULL(@vpCodeOfReferences,vpc.CodeOfReference)
 		and vpc.IdKindOfVPClient = ISNULL(@IdKindOfVPClient,vpc.IdKindOfVPClient)
@@ -64,13 +64,13 @@ BEGIN
 			tio_pk_name 'Tipo de Pago',
 			convert(varchar,sum(io.io_amount),1) 'Monto'
 		from
-			invoiceHeader ih 
-			join invoiceDetail id on id.dti_fk_header = inv_pk_id
-			join DeliveryOrder do on do.Guide_Serie = id.dti_fk_orderSerie
+			invoiceHeader ih with(nolock)
+			inner join invoiceDetail id with(nolock) ON id.dti_fk_header = inv_pk_id
+			inner join DeliveryOrder do with(nolock) ON do.Guide_Serie = id.dti_fk_orderSerie
 						and do.Guide_Number = id.dti_fk_orderNumber
-			left join InOutOfMoneyDetail io on io.io_invoice = ih.inv_pk_id
-			left join ctgTypeOfInOutOfMoney cio on cio.tio_pk_id = io.io_type
-			join VisitPointClient vp on vp.CodeOfReference = ih.inv_vpCodeOfReferences
+			left join InOutOfMoneyDetail io with(nolock) ON io.io_invoice = ih.inv_pk_id
+			left join ctgTypeOfInOutOfMoney cio with(nolock) ON cio.tio_pk_id = io.io_type
+			join VisitPointClient vp with(nolock) ON vp.CodeOfReference = ih.inv_vpCodeOfReferences
 		where inv_vpCodeOfReferences = ISNULL(@vpCodeOfReferences,inv_vpCodeOfReferences)
 		and inv_date between @fechaInicio and @fechaFin
 		and vp.IdKindOfVPClient = ISNULL(@IdKindOfVPClient,vp.IdKindOfVPClient)

@@ -22,7 +22,7 @@ BEGIN
 	  ',{"HeaderCode":"' + depto.LocalCode + '",' +
 	  '"ProvinceName":"' + depto.ProvinceName  + '",' +
 	  '"IdCountry":"' + depto.IdCountry + '"}' 
-	  	from DeliveryBackOffice.dbo.Province depto 
+	  	from DeliveryBackOffice.dbo.Province depto WITH (NOLOCK) 
 		where depto.ProvinceStatus = 'TRUE'
 		and  (@IdHeaderCode = '-1' or depto.LocalCode = @IdHeaderCode)
 		and depto.IdCountry = @IdCountry

@@ -63,7 +63,7 @@ BEGIN
                 ON vpc.CodeOfReference = ord.Sender_ID
             LEFT JOIN dbo.Customer cs
                 ON cs.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
-        WHERE MONTH(ord.DateCreated) = MONTH(GETDATE())
+         WHERE ord.DateCreated BETWEEN DATEADD(MONTH, -1, DATEADD(day , 1 , EOMONTH(GETDATE()))) AND GETDATE() -- Cambio para poder filtrar por mes, con base al día de ejecución del reporte      
               AND
               (
                   ord.IdCustomer = @IdCustomer

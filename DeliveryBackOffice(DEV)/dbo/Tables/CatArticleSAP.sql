@@ -19,6 +19,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id CatArticleSAP', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'IdCatArticleSAP';
 
@@ -40,23 +42,33 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código SAP
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'RowSatus categoría', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'RowSatus';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'RowSatus artículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'RowSatus';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'TokenCreated categoría', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'TokenCreated artículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'DateCreated categoría', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'DateCreated artículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'TokenUpdated categoría', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'TokenUpdated artículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'DateUpdated categoría', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'DateUpdated artículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
 
 
 GO

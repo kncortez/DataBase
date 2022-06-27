@@ -26,7 +26,7 @@ SET NOCOUNT ON;
 	FROM dbo.VisitPointByUser vpu
 	JOIN dbo.RegisterUser rus
 		ON rus.UsrIdUser = vpu.RegisterUserID
-			AND vpu.RowStatus = 1
+			AND RUS.UsrRowStatus = 1
 	JOIN dbo.RolByUserByAccount rua
 		ON rua.RuaIdUser = rus.UsrIdUser
 			AND vpu.RowStatus = 1
@@ -37,3 +37,12 @@ SET NOCOUNT ON;
 	WHERE vpu.RowStatus = 1
 	ORDER BY vpc.DescriptionOfClient
 END
+
+
+
+SELECT * FROM dbo.RolByUserByAccount
+WHERE RuaIdAccount = 21512
+
+UPDATE dbo.RegisterUser
+SET	 UsrRowStatus = 0
+WHERE UsrIdUser = 22036

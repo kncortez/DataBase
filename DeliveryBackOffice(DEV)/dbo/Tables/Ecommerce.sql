@@ -20,6 +20,8 @@
     [DateUpdated]          DATETIME       NULL,
     [IdCustomer]           INT            NULL,
     CONSTRAINT [PK_Ecommerce] PRIMARY KEY CLUSTERED ([IdEcommerce] ASC),
-    CONSTRAINT [FK_Ecommerce_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer])
+    CONSTRAINT [FK_Ecommerce_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 

@@ -20,11 +20,11 @@ BEGIN
 	
 	BEGIN TRY  
 			  select count(*) as result
-				  from DeliveryBackOffice.dbo.Township mun
-					inner join DeliveryBackOffice.dbo.TownshipByHubLogistic muh on muh.IdTownship =  mun.IdTownship
-					inner join DeliveryBackOffice.dbo.HubLogistics hub on hub.IdHubLogistic =  muh.IdHublogistic
-					inner join DeliveryBackOffice.dbo.VisitPointClientByHubLogistics vph on vph.IdHublogistic = hub.IdHubLogistic
-					inner join DeliveryBackOffice.dbo.VisitPointClient vpc on vpc.CodeOfReference = vph.IdVisitPointClient
+				  from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
+					inner join DeliveryBackOffice.dbo.TownshipByHubLogistic muh WITH(NOLOCK) ON muh.IdTownship =  mun.IdTownship
+					inner join DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK) on hub.IdHubLogistic =  muh.IdHublogistic
+					inner join DeliveryBackOffice.dbo.VisitPointClientByHubLogistics vph WITH(NOLOCK) on vph.IdHublogistic = hub.IdHubLogistic
+					inner join DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference = vph.IdVisitPointClient
 				  where mun.HeaderCode = @HeaderCode
 
 			

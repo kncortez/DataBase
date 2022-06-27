@@ -9,27 +9,33 @@
 -- Description:	< Adición de WITH(NOLOCK) para evitar bloqueos >
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteServiceAssigment]
-		@idRoute AS int,
-		@dateRoute AS date
+		@idRoute AS INT,
+		@dateRoute AS DATE
 AS
 BEGIN
-  SELECT spu.SchedulePickupId, 
-		spu.SenderName [Name],
-		spu.AddressPickup [Address],
-		spu.SenderPhone [Phone],
-		CONCAT(CONVERT(varchar(10), spu.StartDate, 108), '   ', CONVERT(varchar(10), spu.EndDate, 108)) as rangeHour,
-		spu.QuantityRegularPackages,
-		spu.QuantityOverDimensionedPackage,
-		CONCAT(snr.First_Name,' ',snr.Last_Name) as NameCourrier,
-		css.Name as NameStatus,
-		ISNULL(smt.Amount,0) Amount,
-		smt.IdServiceManagement IdServiceManagement,
-		smt.[Order] [Order],
-		spu.IsScheduled IsScheduled
-  from [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK)
-  inner join [DeliveryBackOffice].[dbo].[ServiceManagement] as smt WITH(NOLOCK) on spu.SchedulePickupId = smt.IdSchedulePickup
-  inner join [DeliveryBackOffice].[dbo].[RouteAssigment] as rat WITH(NOLOCK) on smt.IdPuRouteAssigment = rat.IdRouteAssigment
-  left join [DeliveryBackOffice].[dbo].[SenderReceiver] as snr WITH(NOLOCK) on rat.IdCurrierMan = snr.ID
-  left join [DeliveryBackOffice].[dbo].[CatServiceStatus] as css WITH(NOLOCK) on css.IdServiceStatus = smt.ServiceStatusId
-  where rat.IdRoute = @idRoute and rat.DateOfRoute = @dateRoute AND spu.AssigmentStatus = '1'
-END
+    SELECT spu.SchedulePickupId,
+           spu.SenderName [Name],
+           spu.AddressPickup [Address],
+           spu.SenderPhone [Phone],
+           CONCAT(CONVERT(VARCHAR(10), spu.StartDate, 108), '   ', CONVERT(VARCHAR(10), spu.EndDate, 108)) AS rangeHour,
+           spu.QuantityRegularPackages,
+           spu.QuantityOverDimensionedPackage,
+           CONCAT(snr.First_Name, ' ', snr.Last_Name) AS NameCourrier,
+           css.Name AS NameStatus,
+           ISNULL(smt.Amount, 0) Amount,
+           smt.IdServiceManagement IdServiceManagement,
+		   smt.[Order] [Order],
+		   spu.IsScheduled IsScheduled
+    FROM [DeliveryBackOffice].[dbo].[SchedulePickup] AS spu WITH (NOLOCK)
+        JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] AS smt WITH (NOLOCK)
+            ON spu.SchedulePickupId = smt.IdSchedulePickup
+        JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] AS rat WITH (NOLOCK)
+            ON smt.IdPuRouteAssigment = rat.IdRouteAssigment
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] AS snr WITH (NOLOCK)
+            ON rat.IdCurrierMan = snr.ID
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
+            ON css.IdServiceStatus = smt.ServiceStatusId
+    WHERE rat.IdRoute = @idRoute
+          AND rat.DateOfRoute = @dateRoute
+          AND spu.AssigmentStatus = '1';
+END;

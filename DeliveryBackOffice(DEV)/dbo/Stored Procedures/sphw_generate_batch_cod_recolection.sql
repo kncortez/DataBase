@@ -2,29 +2,9 @@
 --EXEC  [dbo].[sphw_generate_batch_cod_recolection] 31,'8_00'
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_recolection]
     @IdBankParam INT,
-    @BatchTimeRange VARCHAR(300) = '',
-    @CoDProcessID INT
+    @BatchTimeRange VARCHAR(300) = ''
 AS
 BEGIN
-
-    -- Micro transacción para indicar inicio de proceso de CoD ejecutado
-    BEGIN TRANSACTION Started_CoD_Execution_Process;
-    BEGIN TRY
-
-        UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
-        SET ProcessStarted = 1,
-            TokenUpdated = 'SYS-HERMESWIRETRANSFER',
-            DateUpdated = GETDATE()
-        WHERE IdCoDDailyExecution = @CoDProcessID;
-
-        COMMIT TRANSACTION Started_CoD_Execution_Process;
-
-    END TRY
-    BEGIN CATCH
-
-        ROLLBACK TRANSACTION Started_CoD_Execution_Process;
-
-    END CATCH;
 
     DECLARE @TranCounter INT;
     SET @TranCounter = @@trancount;
@@ -158,7 +138,7 @@ BEGIN
                            LEFT JOIN dbo.VisitPointClient vpc
                                ON vpc.CodeOfReference = do.Sender_ID
                            LEFT JOIN dbo.Customer cus
-                               ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)
+                               ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
                        WHERE pg.BatchCODId IS NULL
                              AND do.Collect_OnDelivery = 0
                              AND do.IsCollect = 'false'
@@ -807,26 +787,6 @@ BEGIN
         END;
         ELSE
         BEGIN
-
-            -- Micro transacción para indicar inicio de proceso de CoD ejecutado
-            BEGIN TRANSACTION Completed_CoD_Execution_Process;
-            BEGIN TRY
-
-                UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
-                SET ProcessFinished = 1,
-                    TokenUpdated = 'SYS-HERMESWIRETRANSFER',
-                    DateUpdated = GETDATE()
-                WHERE IdCoDDailyExecution = @CoDProcessID;
-
-                COMMIT TRANSACTION Completed_CoD_Execution_Process;
-
-            END TRY
-            BEGIN CATCH
-
-                ROLLBACK TRANSACTION Completed_CoD_Execution_Process;
-
-            END CATCH;
-
             SELECT 0 PayingBank,
                    0 IdBatchCOD,
                    0 AS BATCHNUMBER,
@@ -844,27 +804,6 @@ BEGIN
         END;
     END TRY
     BEGIN CATCH
-
-        -- Micro transacción para indicar inicio de proceso de CoD ejecutado
-        BEGIN TRANSACTION Retry_CoD_Execution_Process;
-        BEGIN TRY
-
-            UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
-            SET ProcessRetries = ISNULL(ProcessRetries, 0) + 1,
-                ProcessError = ERROR_MESSAGE(),
-                TokenUpdated = 'SYS-HERMESWIRETRANSFER',
-                DateUpdated = GETDATE()
-            WHERE IdCoDDailyExecution = @CoDProcessID;
-
-            COMMIT TRANSACTION Retry_CoD_Execution_Process;
-
-        END TRY
-        BEGIN CATCH
-
-            ROLLBACK TRANSACTION Retry_CoD_Execution_Process;
-
-        END CATCH;
-
         SELECT 'RollBackTransaction' AS message,
                'FALSE' blnResult,
                CAST(-1 AS VARCHAR(5)) IdResult,
@@ -909,25 +848,6 @@ BEGIN
         --SELECT * FROM #TableAmountCODTemp;
         --SELECT * FROM #TableCustomerPaymentTemp;
         --SELECT * FROM #TableForzaPaymentTemp;
-
-        -- Micro transacción para indicar inicio de proceso de CoD ejecutado
-        BEGIN TRANSACTION Completed_CoD_Execution_Process;
-        BEGIN TRY
-
-            UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
-            SET ProcessFinished = 1,
-                TokenUpdated = 'SYS-HERMESWIRETRANSFER',
-                DateUpdated = GETDATE()
-            WHERE IdCoDDailyExecution = @CoDProcessID;
-
-            COMMIT TRANSACTION Completed_CoD_Execution_Process;
-
-        END TRY
-        BEGIN CATCH
-
-            ROLLBACK TRANSACTION Completed_CoD_Execution_Process;
-
-        END CATCH;
 
         IF ((@NewIdBatchCODForza IS NULL))
         BEGIN

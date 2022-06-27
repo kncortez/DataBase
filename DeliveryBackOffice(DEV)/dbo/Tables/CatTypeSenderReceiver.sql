@@ -10,8 +10,12 @@
 );
 
 
+
+
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Catalogo de tipos de piloto.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeSenderReceiver';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Catálogo de tipos de piloto.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeSenderReceiver';
+
+
 
 
 GO

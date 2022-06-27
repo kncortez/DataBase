@@ -12,6 +12,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar las contingencias relacionadas a un manifiesto liquidación última milla COD.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency';
 
@@ -37,9 +39,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripció
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 

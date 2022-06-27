@@ -41,17 +41,17 @@ SELECT  distinct
           '"AmmountCOD":' + COALESCE(convert(varchar,isnull(dev.Collect_OnDelivery,'0.00')),'0.00') + ','+        
           '"AmmountCollect":' + COALESCE(convert(varchar,isnull(dev.PriceShippment,'0.00')),'0.00') + ','+     
             '"GrandTotal":' + COALESCE(Convert(varchar,(isnull(dev.PriceShippment,0))) ,'0.00') + '}'
-      from DeliveryBackOffice.dbo.DeliveryOrder dev 
-      left join DeliveryBackOffice.dbo.VisitPointClient vp on vp.CodeOfReference = dev.Sender_ID 
-      left join DeliveryBackOffice.dbo.Customer ctm on ctm.IdCustomer = vp.CustomerID 
-      left join DeliveryBackOffice.dbo.Account acc on acc.IdCustomer = ctm.IdCustomer 
+      from DeliveryBackOffice.dbo.DeliveryOrder dev WITH(NOLOCK)
+      left join DeliveryBackOffice.dbo.VisitPointClient vp WITH(NOLOCK) ON vp.CodeOfReference = dev.Sender_ID 
+      left join DeliveryBackOffice.dbo.Customer ctm WITH(NOLOCK) ON ctm.IdCustomer = vp.CustomerID 
+      left join DeliveryBackOffice.dbo.Account acc WITH(NOLOCK) ON acc.IdCustomer = ctm.IdCustomer 
       and acc.AccIdAccount = @AccountId 
-      left join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount 
-      left join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser 
-      left join DeliveryBackOffice.dbo.Person prs on prs.PerIdPerson = rgu.UsrIdPerson 
-      left join DeliveryBackOffice.dbo.Township tws on tws.IdTownship = dev.SenderIdTownship 
-      left join DeliveryBackOffice.dbo.Township tws2 on tws2.IdTownship = dev.ReceiverIdTownship 
-	  left join DeliveryBackOffice.dbo.CatTypeService cts on  cts.CtsShortName = Rtrim(ltrim(dev.TypeService)) 
+      left join DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH(NOLOCK) ON rbu.RuaIdAccount = acc.AccIdAccount 
+      left join DeliveryBackOffice.dbo.RegisterUser rgu WITH(NOLOCK) ON rgu.UsrIdUser = rbu.RuaIdUser 
+      left join DeliveryBackOffice.dbo.Person prs WITH(NOLOCK) ON prs.PerIdPerson = rgu.UsrIdPerson 
+      left join DeliveryBackOffice.dbo.Township tws WITH(NOLOCK) ON tws.IdTownship = dev.SenderIdTownship 
+      left join DeliveryBackOffice.dbo.Township tws2 WITH(NOLOCK) ON tws2.IdTownship = dev.ReceiverIdTownship 
+	  left join DeliveryBackOffice.dbo.CatTypeService cts WITH(NOLOCK) ON  cts.CtsShortName = Rtrim(ltrim(dev.TypeService)) 
 	  where dev.Guide_Number =@Guide_Number
       and dev.Guide_Serie = @Guide_Serie  
   FOR XML PATH(''), TYPE 

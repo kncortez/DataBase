@@ -11,7 +11,6 @@
 -- Description:	<Modificación para uso de id de vehiculo sobre id de ruta y mejora para cambios en orden.>
 -- =============================================
 
-
 CREATE PROCEDURE [dbo].[SetRoutePreparation]
     -- Add the parameters for the stored procedure here
 	@IdVehicle INT,
@@ -25,7 +24,6 @@ AS
 BEGIN
 	DECLARE @RModified INT = 0
 	DECLARE @IdRoutePreparation INT
-	DECLARE @GuideNumber INT
 
 	BEGIN TRANSACTION
 
@@ -71,7 +69,7 @@ BEGIN
 						   ,[TokenUpdated]
 						   ,[DateUpdated]
 						   ,[GuideOrder])
-					SELECT @IdRoutePreparation, lg.Guide_Serie,  lg.Guide_Number, 1, @Token, GETDATE(), NULL, NULL, lg.Guide_Order
+					SELECT @IdRoutePreparation, lg.Guide_Serie, lg.Guide_Number, 1, @Token, GETDATE(), NULL, NULL, lg.Guide_Order
 					FROM @ListGuides lg
 
 				IF COALESCE(@@ROWCOUNT,0) > 0
@@ -107,8 +105,7 @@ BEGIN
 				UPDATE rpd
 				SET rpd.RowStatus = 0,
 					rpd.TokenUpdated = @Token,
-					rpd.DateUpdated = GETDATE(),
-					@GuideNumber=rpd.Guide_Number
+					rpd.DateUpdated = GETDATE()
 				FROM  RoutePreparationDetail rpd
 				JOIN RoutePreparation rp 
 					ON rpd.RoutePreparationId = rp.IdRoutePreparation
@@ -134,12 +131,7 @@ BEGIN
 					1 AS 'StatusCode',
 					'Registros guardados correctamente' AS 'Description', 
 					@@TRANCOUNT AS 'NumTransferID'
-			
 				COMMIT TRANSACTION;
-
-				
-				      
-
 			END
 			ELSE
 			BEGIN

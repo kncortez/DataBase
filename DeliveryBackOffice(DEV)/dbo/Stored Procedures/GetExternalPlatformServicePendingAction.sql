@@ -26,7 +26,7 @@ BEGIN
 			,@PendingAction 'PendingAction'
 			,'INSERT' 'PendingActionText'
 		FROM
-			[DeliveryBackOffice].[dbo].[ExternalPlatformServicePendingActionLog] EPSPAL
+			[DeliveryBackOffice].[dbo].[ExternalPlatformServicePendingActionLog] EPSPAL WITH(NOLOCK)
 		WHERE
 			EPSPAL.RowStatus = 1
 			AND
@@ -44,7 +44,7 @@ BEGIN
 			,@PendingAction 'PendingAction'
 			,'UPDATE' 'PendingActionText'
 		FROM
-			[DeliveryBackOffice].[dbo].[ExternalPlatformServicePendingActionLog] EPSPAL
+			[DeliveryBackOffice].[dbo].[ExternalPlatformServicePendingActionLog] EPSPAL WITH(NOLOCK)
 		WHERE
 			EPSPAL.RowStatus = 1
 			AND
@@ -62,7 +62,7 @@ BEGIN
 			,@PendingAction 'PendingAction'
 			,'DELETE' 'PendingActionText'
 		FROM
-			[DeliveryBackOffice].[dbo].[ExternalPlatformServicePendingActionLog] EPSPAL
+			[DeliveryBackOffice].[dbo].[ExternalPlatformServicePendingActionLog] EPSPAL WITH(NOLOCK)
 		WHERE
 			EPSPAL.RowStatus = 1
 			AND

@@ -14,6 +14,8 @@
 );
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [ClusteredIndex-GuideSerie-Number-Status]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC);
@@ -54,4 +56,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripció
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Reason for failure for checkpoints: 6. Return to the origin and 8. Return to forza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderDetail', @level2type = N'COLUMN', @level2name = N'Observations';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderDetailRLDReport]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreated] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar el estado del registro 1 para activo 0 inactivo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderDetail', @level2type = N'COLUMN', @level2name = N'RowStatus';
 

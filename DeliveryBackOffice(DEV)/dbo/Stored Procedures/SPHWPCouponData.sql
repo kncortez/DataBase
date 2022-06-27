@@ -20,30 +20,28 @@ BEGIN
 	DECLARE @JsonBreakdown NVARCHAR(MAX) = '';
     -- Insert statements for procedure here 
 
+	
 	SET @JsonResponse =  
 		( 
 	SELECT STUFF((
-	SELECT ',{' + 
-	     '"IdResult":200,'      +
-	     '"Coupon":"'           + ISNULL( PC.PromoCouponSerie,'--'), +'"'+  ',' +
-		 '"Date":"'             + ISNULL( FORMAT( PC.DateCreated,'yyyy-MM-dd 11:59:59'),'--')+'"'+ ',' +
-		 '"DateFinal":"'        + ISNULL( FORMAT( PC.FinalActiveDate,'yyyy-MM-dd 11:59:59'),'--')+'"'+ ',' +
-		 '"PromoDescription":"' + ISNULL( CP.PromoDescription,'--'), + ',' +
-		 '"DateUpdated":"'      + ISNULL( FORMAT(PC.DateUpdated,'yyyy-MM-dd 11:59:59'),'--')+'"'+ ',' +
-		 '"RedeemedDate":"'     + ISNULL( FORMAT(PC.RedeemedDate,'yyyy-MM-dd 11:59:59'),'--')+'"'+ ',' +
-		 '"GuideNumberDestination":"'+ PC.GuideSerieDestination + Convert(Varchar,PC.GuideNumberDestination) As GuideDestination, +'"'+ ',' +
-		 '"Status":"' +
+	SELECT ',{'+ 
+	     '"IdResult":200,'+
+	     '"Coupon":"' + PC.PromoCouponSerie +'"'+  ',' +
+		 '"Date":"' + FORMAT( PC.DateCreated,'dd-MM-yyyy')+'"'+ ',' +
+		 '"DateFinal":"' + FORMAT( PC.FinalActiveDate,'dd-MM-yyyy')+'"'+ ',' +
+		 '"PromoDescription":"' + CP.PromoDescription + '",' +
+		 '"DateUpdated":"' + ISNULL(FORMAT(PC.DateUpdated,'dd-MM-yyyy'),'')+'"'+ ',' +
+		'"RedeemedDate":"' + ISNULL(FORMAT(PC.RedeemedDate,'dd-MM-yyyy'),'')+'"'+ ',' +
+		'"GuideNumberDestination":"'+ ISNULL(PC.GuideSerieDestination + Convert(Varchar,PC.GuideNumberDestination),'') As GuideDestination, +'"'+ ',' +
+		 '"Status":"'+
 		 CASE
 	            WHEN  PC.RedeemedDate IS NOT  NULL      THEN  'CANJEADO'
-				WHEN  PC.RedeemedDate IS NULL AND 
-				      PC.DateCreated <= PC.FinalActiveDate AND 
-					  FORMAT(GETDATE(),'yyyy-MM-dd 11:59:59') <= PC.FinalActiveDate  
-					  AND PC.RowStatus=1                                                     
-					                                     THEN  'VALIDO'
-                WHEN  PC.RowStatus=0                     THEN  'ANULADO'
-	            WHEN  PC.FinalActiveDate < FORMAT(GETDATE(),   'yyyy-MM-dd 11:59:59')           
-				                                         THEN  'NO VIGENTE'
-				ELSE 'SIN CUPON'
+				WHEN  PC.RedeemedDate IS NULL AND PC.DateCreated <= PC.FinalActiveDate AND FORMAT(GETDATE(),'yyyy-MM-dd 23:59:59') <= PC.FinalActiveDate  
+					  AND PC.RowStatus=1                THEN  'VALIDO'
+                WHEN  PC.RowStatus=0                    THEN  'ANULADO'
+	            WHEN  PC.FinalActiveDate < FORMAT(GETDATE(),'yyyy-MM-dd 23:59:59') 
+				      AND  PC.RedeemedDate IS NULL AND PC.GuideNumberDestination IS NULL THEN  'NO VIGENTE'
+				ELSE 'NO DEFINIDO'
 		   END + '"' +
 		   '}'
 			
@@ -53,7 +51,7 @@ BEGIN
 		 [DeliveryBackOffice].[dbo].CatPromo CP	   WITH (NOLOCK)
 	ON   PC.CatPromoId = CP.IdPromo
 	WHERE	
-	     PC.GuideNumberOrigin  = convert(Int,@GuideNumber)
+	     PC.GuideNumberOrigin =convert(Int,@GuideNumber)
 	ORDER BY PC.DateCreated Desc
 	FOR XML PATH(''), TYPE 
 	) 
@@ -67,7 +65,7 @@ BEGIN
             (
                 SELECT STUFF(
                                 (
-                                    SELECT '{{"IdResult":500,' + '"Message":" No se econtraron registros"}'
+                                    SELECT '{{"IdResult":500,' + '"Message":"No se encontraron registros"}'
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,

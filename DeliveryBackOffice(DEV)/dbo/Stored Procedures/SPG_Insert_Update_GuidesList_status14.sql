@@ -1,6 +1,7 @@
-﻿create procedure [dbo].[SPG_Insert_Update_GuidesList_status14]
+﻿CREATE procedure [dbo].[SPG_Insert_Update_GuidesList_status14]
 @GuideSerie NVARCHAR(2), 
-@GuideNumber NVARCHAR(MAX)
+@GuideNumber NVARCHAR(MAX),
+@token nvarchar(100)
 as 
 begin
 
@@ -32,7 +33,7 @@ WHILE (select top 1 guia from @guias) > 0
 begin 
 	--set @vision = (select top 1 guia from @guias)
 	--print @vision
-	INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] VALUES (@GuideSerie,(select top 1 guia  from @guias),@StatusOrderId,'CIXTETELA',GETDATE(),GETDATE(),NULL,NULL,NULL)
+	INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] VALUES (@GuideSerie,(select top 1 guia  from @guias),@StatusOrderId,@Token,GETDATE(),GETDATE(),NULL,NULL,NULL,1)
 	delete from @guias where guia = (select top 1 guia from @guias)
 	--set @vision = (select top 1 guia from @guias)
 	--print @vision

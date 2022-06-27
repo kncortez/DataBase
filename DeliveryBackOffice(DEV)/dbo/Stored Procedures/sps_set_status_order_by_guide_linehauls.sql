@@ -110,7 +110,7 @@ BEGIN
 					ON serv.ReceiverIdTownship = tw.IdTownship AND tw.TownshipStatus = 1
                 INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino
                     ON tw.HeaderCode = dsc_destino.HeaderCode 
-					AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
+					--AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
 					AND dsc_destino.RowStatus=1				
                 LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
                     ON RTRIM(LTRIM(dsc_destino.Hub)) = RTRIM(LTRIM(hl_destino.HubAbbreviation))
@@ -151,7 +151,7 @@ BEGIN
                   AND pc.NoPiece = @GuidePiece
                  
 		)
-		set @HUB_Destino = 8
+
 		PRINT 'HUB_Destino'
 		PRINT ISNULL(@HUB_Destino, 0)
         IF ISNULL(@HUB_Destino, 0) <> 0
@@ -453,7 +453,6 @@ BEGIN
 
             IF (@RouteValidator > 0)
             BEGIN
-			 PRINT CONCAT('@HUB DESTINATION NOT NULL.INI ', @RouteValidator)
                 --===========HUB DESTINATION NOT NULL.INI ===========
                 IF (
                    (
@@ -533,7 +532,7 @@ BEGIN
                 ELSE
                 BEGIN
                     --===========HUB DESTINATION NOT NULL.FIN ===========
- PRINT CONCAT('@cambio21021.INI ', @RouteValidator)
+
                     SELECT TOP 1 CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR)) AS NUMGUIA,
                            CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) GUIA,
                            ISNULL(serv.Ticket_Number, '') AS Ticket_Number,
@@ -593,7 +592,7 @@ BEGIN
 					ON serv.ReceiverIdTownship = tw_destino.IdTownship AND tw_destino.TownshipStatus = 1
 						LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino
                     ON tw_destino.HeaderCode = dsc_destino.HeaderCode 
-					AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
+					--AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
 					AND dsc_destino.RowStatus=1				
                         JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
                             ON RTRIM(LTRIM(dsc_origen.Hub)) = RTRIM(LTRIM(hl_origen.HubAbbreviation))

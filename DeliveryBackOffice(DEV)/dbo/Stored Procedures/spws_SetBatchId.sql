@@ -25,15 +25,16 @@ DECLARE @length INT = (SELECT LEN(@GuideNumber));
 DECLARE @Series NVARCHAR(MAX) = (SELECT SUBSTRING(@GuideNumber, 1, 2) AS ExtractString);
 DECLARE @Guide NVARCHAR(MAX) = (SELECT SUBSTRING(@GuideNumber, 3, @length) AS ExtractString);
 
+--SELECT TOP 1 * FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK) WHERE  IdUser=@IdUser
 -- Main IF
 IF EXISTS (SELECT TOP 1 * FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK) WHERE  IdUser=@IdUser AND RowStatus=1)
 
 BEGIN
-
+    
     DECLARE @IdBatch BIGINT;
     DECLARE @Status  INT;
-    SELECT TOP 1 @IdBatch = IdBatch,  @Status = Status FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK) WHERE IdUser = @IdUser AND RowStatus=1 ORDER BY GuideNumber DESC;
-
+    SELECT TOP 1 @IdBatch = ISNULL(IdBatch,0),  @Status = Status FROM DeliveryBackOffice.dbo.GuideBatch WITH (NOLOCK) WHERE IdUser = @IdUser AND RowStatus=1 ORDER BY GuideNumber DESC;
+	PRINT @IdBatch
     -- Checks if the guide already has an IdBatch associated
     IF EXISTS (SELECT * FROM DeliveryBackOffice.dbo.GuideBatch WHERE GuideNumber=@GuideNumber)
 
@@ -117,12 +118,14 @@ BEGIN
         ELSE
 
           BEGIN
-
+		  PRINT @IdBatch
             SET @IdBatch = @IdBatch + 1;
 
             BEGIN TRANSACTION
 
             BEGIN TRY
+			
+			PRINT 'entro'
 
                 INSERT INTO DeliveryBackOffice.dbo.GuideBatch
                 (IdUser,
@@ -146,9 +149,22 @@ BEGIN
                     SELECT STUFF(
                 (
                     SELECT '{"Message":"Error al Asignar lote"}'
+
                     FOR XML PATH(''), TYPE
                 ).value('.', 'varchar(max)'), 1, 1, '')
                 );
+
+	   --    SELECT '{"Message":"Error al Asignar lote"}'  AS MESSAGE,
+
+				--	'FALSE'	blnResult,
+				--CAST(-1 AS VARCHAR(5)) IdResult,
+				--CAST(500 AS VARCHAR(5)) StatusResult,
+				--CAST(ERROR_NUMBER() AS VARCHAR) AS ErrorNumber,
+				--CAST(ERROR_SEVERITY() AS VARCHAR) AS ErrorSeverity,
+				--CAST(ERROR_STATE() AS VARCHAR) AS ErrorState,
+				--CAST(ERROR_PROCEDURE() AS VARCHAR) AS ErrorProcedure,
+				--CAST(ERROR_LINE() AS VARCHAR) AS ErrorLine,
+				--CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage;
 
             ROLLBACK TRANSACTION
 

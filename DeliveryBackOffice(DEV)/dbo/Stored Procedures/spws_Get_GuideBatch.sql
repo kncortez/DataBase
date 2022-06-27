@@ -38,14 +38,14 @@ DECLARE @IdUser BIGINT = (SELECT RuaIdUser FROM DeliveryBackOffice.dbo.RolByUser
                                   +'"BankAccountNumber":"'+ ISNULL(cu.CODAccountNumber,'') +'",'
                                   +'"Amount":"'+ ISNULL(CAST(do.Collect_OnDelivery AS VARCHAR (200)),'') +'"'
 								                +'}]}'
-                                FROM DeliveryBackOffice.dbo.GuideBatch gb
-                                JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio vcp ON vcp.IdVisitPointByClientPortfolio = gb.IdVisitPointByClientPortfolio
-                                JOIN DeliveryBackOffice.dbo.UserAddress ua ON ua.UadIdAddress = gb.IdAddress
-                                JOIN DeliveryBackOffice.dbo.RolByUserByAccount rba ON rba.RuaIdUser = gb.IdUser
-                                JOIN DeliveryBackOffice.dbo.Account ac ON ac.AccIdAccount = rba.RuaIdAccount
-                                JOIN DeliveryBackOffice.dbo.DeliveryOrder do ON do.Guide_Number = gb.GuideNumber
-                                LEFT JOIN DeliveryBackOffice.dbo.Customer cu ON cu.IdCustomer = ac.IdCustomer
-                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk ON dbk.Id_bank = cu.CODAccountBankID
+                                FROM DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
+                                JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio  vcp WITH(NOLOCK) ON vcp.IdVisitPointByClientPortfolio = gb.IdVisitPointByClientPortfolio
+                                JOIN DeliveryBackOffice.dbo.UserAddress ua WITH(NOLOCK) ON  ua.UadIdAddress = gb.IdAddress
+                                JOIN DeliveryBackOffice.dbo.RolByUserByAccount rba  WITH(NOLOCK)ON rba.RuaIdUser = gb.IdUser
+                                JOIN DeliveryBackOffice.dbo.Account ac WITH(NOLOCK) ON ac.AccIdAccount = rba.RuaIdAccount
+                                JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK) ON do.Guide_Number = gb.GuideNumber
+                                LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK) ON cu.IdCustomer = ac.IdCustomer
+                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk WITH(NOLOCK) ON dbk.Id_bank = cu.CODAccountBankID
                                 WHERE gb.IdUser = @IdUser AND gb.RowStatus=1 AND gb.Status=1
 								                ORDER BY gb.GuideNumber
                                 FOR XML PATH(''), TYPE
@@ -67,8 +67,8 @@ DECLARE @IdUser BIGINT = (SELECT RuaIdUser FROM DeliveryBackOffice.dbo.RolByUser
 					(SELECT STUFF(
                             (
                                 SELECT ', "FD' +gb.GuideNumber+'"'
-                                FROM DeliveryBackOffice.dbo.GuideBatch gb
-								LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rba ON rba.RuaIdAccount=@IdAccount
+                                FROM DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
+								LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rba WITH(NOLOCK) ON rba.RuaIdAccount=@IdAccount
                                 WHERE gb.IdBatch = @IdBatch AND gb.IdUser= rba.RuaIdUser AND gb.RowStatus=1 AND gb.Status=2
 								                ORDER BY gb.GuideNumber
                                 FOR XML PATH(''), TYPE

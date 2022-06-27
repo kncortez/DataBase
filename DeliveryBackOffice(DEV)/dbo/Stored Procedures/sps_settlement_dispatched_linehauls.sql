@@ -1,4 +1,5 @@
 ﻿
+
 CREATE PROCEDURE [dbo].[sps_settlement_dispatched_linehauls] @Route INT,
 --@GuideQuantity INT,
 --	@RouteReceived DATETIME,
@@ -74,8 +75,6 @@ BEGIN
 		--len(Item) len
 		INTO #listGuides
 		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',')
-
-
 
 		SET @IdRouteAssigment = (SELECT
 				ra.IdRouteAssigment
@@ -452,39 +451,7 @@ FROM (
 			INNER JOIN #listGuidesPieces_Dispatch gp ON gp.GuideSerie = dop.GuideSerie AND gp.GuideNumber = dop.GuideNumber AND gp.NoPiece = dop.NoPiece
 			/*LINEHAULS-27072021.FIN*/
 		
-		PRINT '@IdManifest'
-		PRINT @IdManifest		
 
-		IF(@IdManifest > 0 )
-		BEGIN
-		IF NOT EXISTS (SELECT StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD 
-		INNER JOIN #listGuides GPD ON DOD.Guide_Serie = GPD.ItemSerie AND DOD.Guide_Number = GPD.ItemNumber 
-		WHERE DOD.StatusOrderId = 11)
-		BEGIN 
-		PRINT 'INGRESA AL INSERT'
-		INSERT INTO [dbo].[DeliveryOrderDetail]
-           ([Guide_Serie]
-           ,[Guide_Number]
-           ,[StatusOrderId]
-           ,[UserCreated]
-           ,[DateCreated]
-           ,[DateCreatedInSystem]
-           ,[Observations]
-           ,[Temperature_Celsius]
-           ,[PieceId])		   
-		   SELECT
-		    GPD.ItemSerie AS Guide_Serie
-           ,GPD.ItemNumber AS Guide_Number
-           ,11
-           ,'SYSTEM'
-           ,GETDATE()
-           ,GETDATE()
-           ,NULL
-           ,NULL
-           ,NULL
-		   FROM #listGuides GPD	
-		END
-		END
 
 		END
 	END TRY

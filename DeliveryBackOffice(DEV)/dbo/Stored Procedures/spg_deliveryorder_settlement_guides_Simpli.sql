@@ -28,7 +28,7 @@ BEGIN
 		Pieces_Dry int,
 		Receiver_Fullname nvarchar(201),
 		Receiver_Address nvarchar(600),
-		Receiver_Zone NVARCHAR(50),
+		Receiver_Zone int,
 		Receiver_Town nvarchar(100),
 		Receiver_Departament nvarchar(100),
 		Preparation_Date nvarchar(50),
@@ -36,10 +36,8 @@ BEGIN
 		Max_Date nvarchar(50),
 		Receiver_Phone nvarchar(100),
 		Rack_Position nvarchar(MAX),
-		Price decimal(16,2),
-		Collect_on_Delivery decimal(16,2),
-		Total decimal(16,2),
-		GuideOrder INT
+		Collect_on_Delivery decimal(16,2)
+		,GuideOrder INT
 	)
 
     -- tablix content
@@ -51,7 +49,7 @@ BEGIN
 	,isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as Receiver_Fullname
 	,do.Receiver_Address AS Receiver_Address
 	--,CONVERT(INT, ISNULL(do.Receiver_Zone,0)) AS Receiver_Zone
-	,ISNULL(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(do.Receiver_Zone)),CHAR(160),''),'.',''),',',''),'0') AS Receiver_Zone
+	,CONVERT(INT,ISNULL(REPLACE(RTRIM(REPLACE(do.Receiver_Zone,'.','')),CHAR(160),''),0)) AS Receiver_Zone
 	,do.Receiver_Town AS Receiver_Town
 	,do.Receiver_Department AS  Receiver_Departament
 	,CONVERT(varchar, do.Preparation_Date, 103) + ' ' + CONVERT(varchar(5), do.Preparation_Date, 108) as Preparation_Date
@@ -60,19 +58,17 @@ BEGIN
 	,do.Receiver_Phone as Receiver_Phone
 	,(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)) as Rack_Position
 	--,Collect_OnDelivery
-	,ISNULL((CASE WHEN do.IsCollect = 'TRUE' THEN do.PriceShippment ELSE 0 END), 0) Price
-	,ISNULL(do.Collect_OnDelivery, 0) Collect_on_Delivery
-	,(CASE WHEN do.IsCollect = 'TRUE' THEN 
-	ISNULL(do.Collect_OnDelivery, 0) + ISNULL(do.PriceShippment,0)
-	ELSE 
-	ISNULL(do.Collect_OnDelivery, 0)
-	END
-	) AS  Total
+	,(case when do.IsCollect = 'TRUE' then 
+	CONVERT(VARCHAR, CAST((isnull(do.Collect_OnDelivery,0) + isnull(do.PriceShippment,0)) AS DECIMAL), 1) 
+	else 
+	CONVERT(VARCHAR, CAST((isnull(do.Collect_OnDelivery,0)) AS DECIMAL), 1) 
+	end
+	) AS  Collect_OnDelivery
 	,IIF(ISNULL(DSD.GuideOrder,0) > 0, DSD.GuideOrder, 999)
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do
 	left join DeliveryBackOffice.dbo.DeliverySettlementDetail dsd on do.Guide_Serie = dsd.Guide_Serie and do.Guide_Number = dsd.Guide_Number and dsd.ID_DeliveryOrderBySettlement = @IdManifest and dsd.RowStatus = 1
 	where do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
-	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest  AND RowStatus = 1)
+	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest and RowStatus = 1)
 
 	SELECT * FROM @temp
 	order by

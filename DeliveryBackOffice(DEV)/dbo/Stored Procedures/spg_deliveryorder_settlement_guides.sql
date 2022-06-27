@@ -46,7 +46,7 @@ BEGIN
 	,isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as Receiver_Fullname
 	,do.Receiver_Address AS Receiver_Address
 	--,CONVERT(INT, ISNULL(do.Receiver_Zone,0)) AS Receiver_Zone
-	,CONVERT(NVARCHAR,ISNULL(REPLACE(RTRIM(do.Receiver_Zone),CHAR(160),''),0)) AS Receiver_Zone
+	,CONVERT(NVARCHAR(50),ISNULL(REPLACE(RTRIM(do.Receiver_Zone),CHAR(160),''),0)) AS Receiver_Zone
 	,do.Receiver_Town AS Receiver_Town
 	,do.Receiver_Department AS  Receiver_Departament
 	,CONVERT(varchar, do.Preparation_Date, 103) + ' ' + CONVERT(varchar(5), do.Preparation_Date, 108) as Preparation_Date

@@ -12,12 +12,14 @@
     [TokenUpdated]                NVARCHAR (50) NULL,
     [DateUpdated]                 DATETIME      NULL,
     [CatVehicleId]                INT           NULL,
-    [IsSimpliRoute]               INT           NULL,
+    [IsSimpliRoute]               BIT           NULL,
     CONSTRAINT [PK_RoutePreparation_IdRoutePreparation] PRIMARY KEY CLUSTERED ([IdRoutePreparation] ASC),
     CONSTRAINT [FK_RoutePreparation_CatRouteId] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FK_RoutePreparation_CatVehicleId] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle]),
     CONSTRAINT [FK_RoutePreparation_DeliveryOrderBySettlementId] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID])
 );
+
+
 
 
 GO
@@ -49,7 +51,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla DeliveryOrderBySettlement.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparation', @level2type = N'COLUMN', @level2name = N'DeliveryOrderBySettlementId';
+
 
 
 GO

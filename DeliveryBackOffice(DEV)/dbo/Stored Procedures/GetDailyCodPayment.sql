@@ -21,7 +21,7 @@ CREATE PROCEDURE [dbo].[GetDailyCodPayment]
 AS
 BEGIN
     DECLARE @Debug BIT = 'false';
-    SELECT TOP 100
+    SELECT TOP 500
            CDATA.IdCustomer,
            CASE
                WHEN SUBSTRING(CDATA.RegexEmail, 1, 1) = ',' THEN

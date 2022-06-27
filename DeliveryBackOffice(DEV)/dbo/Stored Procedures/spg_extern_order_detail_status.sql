@@ -5,11 +5,6 @@
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking externa para el cliente, sin datos sensibles>
 -- =============================================
--- =============================================
--- Author:		<Andres,Ruiz>
--- Create date: <2022-05-30>
--- Description:	< Cambios para solo mostrar estados "externos" >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_extern_order_detail_status]
 	@Guide_Serie NVARCHAR(2),
 	@Guide_Number BIGINT
@@ -18,16 +13,6 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
-	DECLARE @ExternalTypeId INT = (
-		SELECT
-			TOP 1
-				CST.IdCatStatusType
-		FROM
-			[DeliveryBackOffice].[dbo].[CatStatusType] CST
-		WHERE
-			CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
-	)
 
 	
 	SELECT RES.[EventID],
@@ -76,7 +61,7 @@ BEGIN
 			ISNULL([NameOfReceiver],'') as NameOfReceiver,
 			ISNULL(Sender_FirstName + ' ' + Sender_LastName, '') as Place -- ,
 			--do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) as [ManifestNumber]
-		FROM DeliveryBackOffice.dbo.DeliveryOrder do
+		FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 		WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
 		UNION
 		SELECT DISTINCT
@@ -95,11 +80,32 @@ BEGIN
 			'' [EstimatedDeliveryDate], --[Field5],
 			'' [CourierName], --[Field9]
 			Cast(dod.StatusOrderId as nvarchar) as [StageId], -- status order id
-			(SELECT MAX(DT.DateCreated) FROM dbo.DeliveryOrderDetail DT WHERE DT.Guide_Serie = dod.Guide_Serie AND DT.Guide_Number = DOD.Guide_Number AND DT.StatusOrderId = DOD.StatusOrderId ) as [StageDate], -- date of status id
-			so.OrderDescription +', '+ CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) as [StageTitle], -- status order name
-			--so.OrderDescription as [StageTitle], -- status order name
+			(MAX(dod.DateCreated)) as [StageDate], -- date of status id
+			so.OrderDescription as [StageTitle], -- status order name
 			'web' as [StageSource],
-			'' as [StageDescription],
+			 (CASE
+                 WHEN dod.StatusOrderId IN ( 6, 8 ) THEN
+                     ISNULL(dod.Observations, '')
+                 WHEN dod.StatusOrderId IN ( 12 ) THEN
+                     ISNULL(
+                     (
+                         SELECT TOP 1
+								   I.DescriptionIncidence
+							FROM DeliveryBackOffice.dbo.CatTypeIncidence  I  WITH(NOLOCK)
+								JOIN DeliveryBackOffice.dbo.DeliveryAttempt da  WITH(NOLOCK)
+									ON da.ID_Incident = I.IdIncidenceType
+                         WHERE dod.Guide_Serie = da.Guide_Serie
+                               AND dod.Guide_Number = da.Guide_Number
+                         ORDER BY da.Date_Created DESC
+                     ),
+                     ''
+                           )
+                 WHEN dod.StatusOrderId IN ( 15 ) THEN
+                     ''
+				ELSE
+					''
+             END
+            ) AS [StageDescription],
 			--(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
 			--															ISNULL(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + 
 			--																												  CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)),'')
@@ -107,9 +113,19 @@ BEGIN
 			'' as NameOfReceiver,
 			'' as Place--,
 			--'' as [ManifestNumber]
-		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
-		   JOIN DeliveryBackOffice.dbo.StatusOrder so on so.StatusOrderId = dod.StatusOrderId AND so.CatStatusTypeId = @ExternalTypeId
-		WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
+		 FROM dbo.DeliveryOrderDetail dod WITH(NOLOCK)
+            JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
+                ON so.StatusOrderId = dod.StatusOrderId
+        WHERE dod.Guide_Serie = @Guide_Serie
+              AND dod.Guide_Number = @Guide_Number
+        --ORDER BY DateCreated
+        GROUP BY CONVERT(DATE, dod.DateCreated),
+                 dod.Guide_Serie,
+                 dod.Guide_Number,
+                 dod.StatusOrderId,
+                 dod.UserCreated,
+                 dod.Observations,
+                 so.OrderDescription
 		) RES
 		ORDER BY RES.[StageDate] ASC, RES.[EventID]
 	

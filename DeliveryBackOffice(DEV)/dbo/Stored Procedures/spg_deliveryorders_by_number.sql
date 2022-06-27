@@ -49,6 +49,8 @@ BEGIN
 	where 
 	do.Guide_Serie = @_serie
 	and do.Guide_Number IN (SELECT Item FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@_number,','))
-	and do.Guide_Number is not null
+	and do.Guide_Number is not NULL
+    and CAST(IIF(do.IsCollect = 'TRUE', isnull(do.PriceShippment,0), 0) AS MONEY) <= 0
+	and CAST(isnull(do.Collect_OnDelivery,0) AS MONEY) <= 0
 	order by do.Guide_Number asc
 END

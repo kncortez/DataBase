@@ -36,8 +36,8 @@ BEGIN
 
 			--select DeliveryBackOffice.dbo.fn_Splits('4-5','|')
 			STUFF(( SELECT  '| ' + CONVERT(VARCHAR(200),SMR.SMS_Message)  +' '
-			FROM [DeliveryBackOffice].[dbo].[GuidesBySMS] B
-			join DeliveryBackOffice.dbo.SMS_Received SMR
+			FROM [DeliveryBackOffice].[dbo].[GuidesBySMS] B WITH(NOLOCK)
+			join DeliveryBackOffice.dbo.SMS_Received SMR WITH(NOLOCK)
 			 on B.SmsId = SMR.SMS_ID
 			WHERE   
 				B.GuideSerie = serv.Guide_Serie
@@ -62,9 +62,9 @@ BEGIN
 			serv.Pieces_Dry as Pieces_Dry,
 			serv.Pieces_Cold as Pieces_Cold,
 			--(CASE serv.printedStatus WHEN 0 THEN 'Pendiente' WHEN 1 THEN 'Impreso' WHEN 2 THEN 'Reimpreso' END) as Printed_Status,
-			(SELECT so.OrderDescription FROM StatusOrder so WHERE so.StatusOrderId = serv.StatusOrderId) as Status_Order_Id,
+			(SELECT so.OrderDescription FROM StatusOrder so WITH(NOLOCK) WHERE so.StatusOrderId = serv.StatusOrderId) as Status_Order_Id,
 			serv.Receiver_Phone as Receiver_Phone,
-			(SELECT p.Package_Name FROM Package p WHERE p.Package_Type = serv.Package_Type) as Package_Type,
+			(SELECT p.Package_Name FROM Package p WITH(NOLOCK) WHERE p.Package_Type = serv.Package_Type) as Package_Type,
 			--serv.Rack_Position as Rack_Position
 			(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(serv.Guide_Serie, serv.Guide_Number)) as Rack_Position,
 			ISNULL(serv.Contact_Confirmed, 0) as Contact_Confirmed,
@@ -73,25 +73,27 @@ BEGIN
 			ISNULL(serv.Receiver_SocialSecurity_ID, '') as SocialSecurityID
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
 		--LEFT JOIN DenariusCorporate_Dev.dbo.LGT_Master_Service_Material mat WITH(NOLOCK) on mat.MSM_ValueRegistrationForm = @Manifest and mat.MSM_MaterialCode = Guide_Serie +  CAST(Guide_Number AS VARCHAR)
-		JOIN DeliveryBackOffice.dbo.StatusOrder sta ON sta.StatusOrderId = serv.StatusOrderId
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder sta WITH(NOLOCK) ON sta.StatusOrderId = serv.StatusOrderId
 		--LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement BySt WITH(nolock) ON serv.Guide_Serie = bySt.Guide_Serie and serv.Guide_Number = bySt.Guide_Number
 		WHERE 
-		serv.StatusOrderId <> 7 AND -- ocultar los servicios anulados
-		serv.StatusOrderId <> 15 AND -- ocultar guías generadas
-		serv.StatusOrderId <> 5 AND -- ocultar los servicios entregados
-		serv.Manifest_Number <> 999 AND -- ocultar primer servicio (semilla)
+		CONVERT(DATE, serv.DateCreated) BETWEEN CONVERT(DATE, GETDATE()-90) AND CONVERT( DATE, GETDATE()) AND 
+		serv.StatusOrderId NOT IN( 7,15,5,22) AND -- ocultar los servicios anulados
+		--serv.StatusOrderId <> 15 AND -- ocultar guías generadas
+		--serv.StatusOrderId <> 5 AND -- ocultar los servicios entregados
+		--serv.StatusOrderId <> 22 AND -- ocultar los servicios entregados en Express Center
+		--serv.Manifest_Number <> 999 AND -- ocultar primer servicio (semilla)
 		( -- ocultar las guías que tengan en su historia retornado al origen
 			@HideOrigin = 0
 			OR
 			serv.Guide_Number NOT IN (
-				SELECT distinct [Guide_Number] FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] where StatusOrderId = 6
+				SELECT distinct [Guide_Number] FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] WITH(NOLOCK) where StatusOrderId = 6
 			)
 		) AND
 		( -- ocultar las guías que tengan en su historia retornado a Forza
 			@HideForza = 0
 			OR
 			serv.Guide_Number NOT IN (
-				SELECT distinct [Guide_Number] FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] where StatusOrderId = 8
+				SELECT distinct [Guide_Number] FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] WITH(NOLOCK) where StatusOrderId = 8
 			)
 		) AND
 		--serv.StatusOrderId IN (1,8,10) AND -- mostrar solo servicios Solicitados, Retornados a Forza y En Inventario

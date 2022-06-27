@@ -10,10 +10,9 @@ BEGIN
 
 	DECLARE @Debug BIT	 = 'false'
 
-SELECT * FROM (
-    SELECT   
+    SELECT DISTINCT
            ISNULL(ord.IdCustomer, vpc.CustomerID) idcustomer,
-           IIF(@Debug ='true', 'envios.parser4@gmail.com', COALESCE(cs.CODContactEmail,cs.RegexEmail)) RegexEmail
+           IIF(@Debug ='true', 'envios.parser4@gmail.com', COALESCE(ord.Sender_Mail, cs.CODContactEmail,cs.RegexEmail)) RegexEmail
     FROM dbo.DeliveryOrderDetail dt
         LEFT JOIN dbo.DeliveryOrder ord
             ON ord.Guide_Serie = dt.Guide_Serie
@@ -23,17 +22,11 @@ SELECT * FROM (
         LEFT JOIN dbo.Customer cs
             ON cs.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
 		LEFT JOIN ProcessedGuideCOD PC ON dt.Guide_Number = pc.GuideNumber and dt.Guide_Serie = pc.GuideSerie and pc.Notificated = 0
-    WHERE dt.StatusOrderId = 5
+    WHERE dt.StatusOrderId IN (5,22)
 	      AND ord.StatusOrderId NOT IN (7,15)
-       AND CONVERT(DATE, dt.DateCreated) = CONVERT(DATE, GETDATE())
-		--and dt.DateCreated = '2021-09-23 00:42:29.280'
+          AND CONVERT(DATE, dt.DateCreated) = CONVERT(DATE, GETDATE())
 		  AND PC.Notificated = 0
 		  AND PC.BatchCODId IS NOT NULL
-		  GROUP BY ord.IdCustomer, vpc.CustomerID,cs.CODContactEmail,cs.RegexEmail
-		  ) X
-		  WHERE  X.RegexEmail != ''
-		  GROUP BY X.RegexEmail, X.idcustomer
-		  
 		 
 END;
 

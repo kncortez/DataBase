@@ -9,10 +9,12 @@
     [TokenUpdated]        NVARCHAR (50) NULL,
     [DateUpdated]         DATETIME      NULL,
     CONSTRAINT [PK_SaleAdvisorbyUser] PRIMARY KEY CLUSTERED ([idSaleAdvisorbyUser] ASC),
-    CONSTRAINT [FK_InternalUserSaleAdvisorId] FOREIGN KEY ([SaleAdvisorId]) REFERENCES [dbo].[CatSaleAdvisor] ([IdSaleAdvisor]),
+    CONSTRAINT [FK_InternalUserSaleAdvisroId] FOREIGN KEY ([SaleAdvisorId]) REFERENCES [dbo].[CatSaleAdvisor] ([IdSaleAdvisor]),
     CONSTRAINT [FK_SaleAdvisorbyUserUserId] FOREIGN KEY ([UserId], [UserName]) REFERENCES [dbo].[InternalUser] ([IdUser], [Username]),
     CONSTRAINT [UK_SaleAdvisorbyUser] UNIQUE NONCLUSTERED ([UserId] ASC, [SaleAdvisorId] ASC)
 );
+
+
 
 
 GO

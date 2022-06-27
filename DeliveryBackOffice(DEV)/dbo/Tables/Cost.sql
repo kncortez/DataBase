@@ -22,6 +22,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_number_cost]
     ON [dbo].[Cost]([IdProduct] ASC, [ProductNumber] ASC);
@@ -33,4 +35,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valor que s
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valor que se debe pagar por devolución', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'ReturnPaid';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus]
+    ON [dbo].[Cost]([RowStatus] ASC)
+    INCLUDE([ProductNumber], [TotalAmountPaid], [CODAmount]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ProductNumber]
+    ON [dbo].[Cost]([ProductNumber] ASC)
+    INCLUDE([TotalAmountPaid], [CODAmount]);
 

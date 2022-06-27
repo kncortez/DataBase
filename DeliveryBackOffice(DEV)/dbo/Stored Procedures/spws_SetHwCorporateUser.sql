@@ -11,9 +11,9 @@ CREATE PROCEDURE [dbo].[spws_SetHwCorporateUser]
 @denariusUserName VARCHAR(50),
 @gender VARCHAR(1),-- M Male / F Female
 @Cui VARCHAR(50) = '',
-@email NVARCHAR(MAX)='',
 @IdRol BIGINT = 6,
-@IdVisitPointClient BIGINT
+@IdVisitPointClient BIGINT,
+@email VARCHAR(MAX) = ''
 
 AS
 
@@ -38,11 +38,9 @@ WHERE vpc.IdVisitPointClient=@IdVisitPointClient)
 END
 
 
-
-
 SELECT @denariusPassword = du.USR_Password, @firstName = dwd.USR_FirstName, @lastName = dwd.USR_LastName, @idCustomer= vc.CustomerID, @nationality = dwd.USR_ClientCardCodeCountry FROM DeliveryBackOffice.dbo.VisitPointClient vc WITH (NOLOCK)
-					JOIN DenariusWeb_Dev.dbo.[User] dwd ON dwd.USR_VisitPoint = vc.VisitPointId
-					JOIN DenariusUser_Dev.dbo.LGN_User du ON du.USR_IdWebClient = dwd.USR_WebClientId
+					JOIN DenariusWeb_Dev.dbo.[User] dwd WITH (NOLOCK) ON dwd.USR_VisitPoint = vc.VisitPointId
+					JOIN DenariusUser_Dev.dbo.LGN_User du WITH (NOLOCK) ON du.USR_IdWebClient = dwd.USR_WebClientId
 					Where du.USR_IdUser=@denariusUserId AND du.USR_Username = @denariusUserName;
 
 BEGIN TRANSACTION
@@ -50,7 +48,6 @@ BEGIN TRANSACTION
 BEGIN TRY
 
 -- Makes an insert into table person once the user was found on Denarius
-PRINT 'entro'
 INSERT INTO DeliveryBackOffice.dbo.Person  
 					(PerFirstName
 					,PerLastName

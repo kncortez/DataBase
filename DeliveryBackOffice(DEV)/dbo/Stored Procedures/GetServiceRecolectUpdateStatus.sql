@@ -88,8 +88,8 @@ BEGIN
 			 '"Status":"' + isnull(convert( varchar, StatusOrderId), 'N/A')  +  '",' +
 			 '"ShipmentCompleted":"' + isnull(CONVERT(varchar, ShipmentCompleted ), 'N/A') + --'",' +
 							+ '"}'
-			from DeliveryOrder ord
-			inner join DeliveryOrderPaymentDetail dopd on (dopd.GuideNumber = ord.Guide_Number and dopd.GuideSerie  = ord.Guide_Serie)
+			from DeliveryOrder ord WITH(NOLOCK)
+			inner join DeliveryOrderPaymentDetail dopd WITH(NOLOCK) ON (dopd.GuideNumber = ord.Guide_Number and dopd.GuideSerie  = ord.Guide_Serie)
 			where ord.Guide_Number IN (select ItemNumber from #listGuides) 	
 	
 			FOR XML PATH(''), TYPE

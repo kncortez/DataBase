@@ -10,7 +10,9 @@
     [TokenUpdated] NVARCHAR (50) NULL,
     [DateUpdated]  DATETIME      NULL,
     CONSTRAINT [PK_VisitPointDestination] PRIMARY KEY CLUSTERED ([IdVPSource] ASC, [IDVPDestiny] ASC),
-    CONSTRAINT [FK_VisitPointDestination_VisitPointClientDestiny] FOREIGN KEY ([IDVPDestiny]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference]),
-    CONSTRAINT [FK_VisitPointDestination_VisitPointClientSource] FOREIGN KEY ([IdVPSource]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference])
+    CONSTRAINT [FK_VisitPointDestination_VisitPointClientDestiny] FOREIGN KEY ([IDVPDestiny]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
+    CONSTRAINT [FK_VisitPointDestination_VisitPointClientSource] FOREIGN KEY ([IdVPSource]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 

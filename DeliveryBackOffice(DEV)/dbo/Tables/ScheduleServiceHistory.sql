@@ -10,9 +10,10 @@
     [TimeSchedule]             VARCHAR (250) NULL,
     [ServicesConfigId]         BIGINT        NULL,
     [LogType]                  INT           NULL,
-    PRIMARY KEY CLUSTERED ([ScheduleServiceHistoryId] ASC),
-    FOREIGN KEY ([ServicesConfigId]) REFERENCES [dbo].[ServicesConfig] ([IdServicesConfig])
+    PRIMARY KEY CLUSTERED ([ScheduleServiceHistoryId] ASC)
 );
+
+
 
 
 GO

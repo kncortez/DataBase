@@ -201,9 +201,7 @@ BEGIN
            ,[Email]
            ,[IdTownship]
 		   ,[Latitude]
-		   ,[Longitude]
-		   ,[VisitPointToken]
-		   ,[VisitPointTokenExpiration])
+		   ,[Longitude])
      VALUES
            (
 		    @CodeOfReference
@@ -229,8 +227,6 @@ BEGIN
 		   ,@IdTownship
 		   ,@Latitude
 		   ,@Longitude
-		   ,CONCAT( 'VPC',@CodeOfReference, RIGHT ('00000'+CAST( (FLOOR(RAND()*(99999-0+1))+0) AS NVARCHAR),5))
-		   ,DATEADD(DAY,15,GETDATE())
 		   )
 
 		   set @IdVisitPointClient = SCOPE_IDENTITY()

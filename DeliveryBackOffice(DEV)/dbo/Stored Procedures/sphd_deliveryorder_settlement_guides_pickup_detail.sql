@@ -6,7 +6,7 @@
 CREATE PROCEDURE [dbo].[sphd_deliveryorder_settlement_guides_pickup_detail]
 	-- Add the parameters for the stored procedure here
 		@idRoute AS int,
-		@dateRoute AS date
+		@dateRoute AS date = ''	
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

@@ -12,107 +12,114 @@
 
 
 CREATE PROCEDURE [dbo].[SetPaymentCost]
-
- @TypeProduct int -- = 1
- ,@ProductNumber varchar(20) -- = 'FD1990760'
- ,@TblDetail AS TblPaymentList 	readonly
- ,@FullPayment decimal(12,2)-- =100
- ,@TypeCharge int -- = 1
- ,@Token varchar(50) -- = 'SYS-CAQUINO'
- ,@CODPayment  decimal(12,2) =0
- ,@Responsible varchar(100)  = ''
-
+    @TypeProduct INT,            -- = 1
+    @ProductNumber VARCHAR(20),  -- = 'FD1990760'
+    @TblDetail AS TblPaymentList READONLY,
+    @FullPayment DECIMAL(12, 2), -- =100
+    @TypeCharge INT,             -- = 1
+    @Token VARCHAR(50),          -- = 'SYS-CAQUINO'
+    @CODPayment DECIMAL(12, 2) = 0,
+    @Responsible VARCHAR(100) = ''
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
 
-declare @IdCost int =0
-declare @TotalAmountPaid decimal(12,2) =0
-	
-IF OBJECT_ID('tempdb.dbo.#TempCost', 'U') IS NOT NULL DROP TABLE #TempCost;
+    DECLARE @IdCost INT = 0;
+    DECLARE @TotalAmountPaid DECIMAL(12, 2) = 0;
 
-IF not EXISTS (SELECT * FROM dbo.Cost WHERE IdProduct =@TypeProduct and ProductNumber =@ProductNumber) 
-BEGIN
+    IF OBJECT_ID('tempdb.dbo.#TempCost', 'U') IS NOT NULL
+        DROP TABLE #TempCost;
 
- -- si no existe insertar registro en tabla cost
+    IF NOT EXISTS
+    (
+        SELECT *
+        FROM dbo.Cost
+        WHERE IdProduct = @TypeProduct
+              AND ProductNumber = @ProductNumber
+    )
+    BEGIN
 
-	INSERT INTO [dbo].[Cost]
-			   ([IdProduct]
-			   ,[ProductNumber]
-			   ,[IdTypeCharge]
-			   ,[TotalAmount]
-			   ,[PaymentDate]
-			   ,[IdModule]
-			   ,[RowStatus]
-			   ,[TokenCreated]
-			   ,[DateCreated]
-			   ,[TotalAmountPaid]
-			   ,[CODAmount])
-		 VALUES
-			   (@TypeProduct
-			   ,@ProductNumber
-			   ,@TypeCharge
-			   ,@FullPayment
-			   ,GETDATE()
-			   ,NULL
-			   ,1
-			   ,@Token
-			   ,GETDATE()
-			   ,@FullPayment
-			   ,@CODPayment)
+        -- si no existe insertar registro en tabla cost
 
-	set @IdCost   = SCOPE_IDENTITY()  
-   
-END
-ELSE
-BEGIN
+        INSERT INTO [dbo].[Cost]
+        (
+            [IdProduct],
+            [ProductNumber],
+            [IdTypeCharge],
+            [TotalAmount],
+            [PaymentDate],
+            [IdModule],
+            [RowStatus],
+            [TokenCreated],
+            [DateCreated],
+            [TotalAmountPaid],
+            [CODAmount]
+        )
+        VALUES
+        (@TypeProduct, @ProductNumber, @TypeCharge, @FullPayment, GETDATE(), NULL, 1, @Token, GETDATE(), @FullPayment,
+         @CODPayment);
 
-   SELECT c.IdCost, isnull(c.TotalAmountPaid,0) TotalAmountPaid, isnull(CODAmount ,0) CODAmount
-   into #TempCost
-   FROM dbo.Cost c
-   WHERE c.IdProduct =@TypeProduct and c.ProductNumber =@ProductNumber
+        SET @IdCost = SCOPE_IDENTITY();
 
-   set @IdCost = (Select top 1 IdCost from #TempCost)
-   set @TotalAmountPaid = (Select top 1 TotalAmountPaid from #TempCost)
-  -- set @CODPayment = (Select top 1 CODAmount from #TempCost)
-END
+    END;
+    ELSE
+    BEGIN
 
-If (@TotalAmountPaid =0) -- El producto no esta pagado
-	begin
+        SELECT c.IdCost,
+               ISNULL(c.TotalAmountPaid, 0) TotalAmountPaid,
+               ISNULL(CODAmount, 0) CODAmount
+        INTO #TempCost
+        FROM dbo.Cost c WITH (NOLOCK)
+        WHERE c.IdProduct = @TypeProduct
+              AND c.ProductNumber = @ProductNumber;
 
-		UPDATE [dbo].[Cost]
-		   SET 
-			  [PaymentDate] = GETDATE()
-			  ,[TokenUpdated] = @Token
-			  ,[DateUpdated] = GETDATE()
-			  ,[TotalAmountPaid] = @FullPayment
-			  ,[CODAmount] = @CODPayment
-		 WHERE IdCost = @IdCost
+        SET @IdCost =
+        (
+            SELECT TOP 1 IdCost FROM #TempCost
+        );
+        SET @TotalAmountPaid =
+        (
+            SELECT TOP 1 TotalAmountPaid FROM #TempCost
+        );
+    -- set @CODPayment = (Select top 1 CODAmount from #TempCost)
+    END;
 
-		 INSERT INTO [dbo].[CostDetail]
-           ([IdCost]
-           ,[IdTypeOfMoney]
-           ,[Amount]
-           ,[Voucher]
-           ,[RowStatus]
-           ,[TokenCreated]
-           ,[DateCreated]
-		   ,[Responsible])
-		select 
-			@IdCost
-			,det.IdTypeOfMoney
-			,det.Amount
-			,IIF(det.IdTypeOfMoney = 6, det.Voucher,'')
-			,1 -- crear registro activo por default
-			,@Token
-			,getdate()
-			,det.Responsible
-		from @TblDetail det
+    IF (@TotalAmountPaid = 0) -- El producto no esta pagado
+    BEGIN
 
-	end
-END
+        UPDATE [dbo].[Cost]
+        SET [PaymentDate] = GETDATE(),
+            [TokenUpdated] = @Token,
+            [DateUpdated] = GETDATE(),
+            [TotalAmountPaid] = @FullPayment,
+            [CODAmount] = @CODPayment
+        WHERE IdCost = @IdCost;
+
+        INSERT INTO [dbo].[CostDetail]
+        (
+            [IdCost],
+            [IdTypeOfMoney],
+            [Amount],
+            [Voucher],
+            [RowStatus],
+            [TokenCreated],
+            [DateCreated],
+            [Responsible]
+        )
+        SELECT @IdCost,
+               det.IdTypeOfMoney,
+               det.Amount,
+               IIF(det.IdTypeOfMoney = 6, det.Voucher, ''),
+               1, -- crear registro activo por default
+               @Token,
+               GETDATE(),
+               det.Responsible
+        FROM @TblDetail det;
+
+    END;
+END;
 
 
 

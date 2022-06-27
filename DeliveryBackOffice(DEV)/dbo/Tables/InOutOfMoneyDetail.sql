@@ -18,3 +18,10 @@
     CONSTRAINT [pk_InOutOfMoneyDetail] PRIMARY KEY CLUSTERED ([io_pk_id] ASC)
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_InOutOfMoneyDetail]
+    ON [dbo].[InOutOfMoneyDetail]([io_invoice] ASC);
+

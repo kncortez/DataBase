@@ -10,7 +10,7 @@ CREATE PROCEDURE [dbo].[sphd_SetVisitPointItinerary]
 	@RouteCodeID	int=NULL,
 	@TokeUser nvarchar(50),
 	@IdVPItinerary bigint,
-	@OrderSequence int
+	@OrderSequence int=NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

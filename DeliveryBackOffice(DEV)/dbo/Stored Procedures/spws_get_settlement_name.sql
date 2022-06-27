@@ -28,7 +28,7 @@ BEGIN
 	join DeliveryBackOffice.dbo.Township mun with(nolock) on pob.IdTownship = mun.IdTownship
 	join DeliveryBackOffice.dbo.Province depto with (nolock) on depto.IdProvince = mun.IdProvince
 	left join DenariusDesktop_Dev.dbo.PRM_Country ct with(nolock) on ct.CNT_IdCountry = depto.IdCountry
-	left join DeliveryBackOffice.dbo.DumpServiceCoverage cov on cov.IdSettlement = pob.IdSettlement
+	left join DeliveryBackOffice.dbo.DumpServiceCoverage  cov WITH(NOLOCK) on cov.IdSettlement = pob.IdSettlement
 	and COV.RowStatus = 1
 	where pob.SettlementSatus = 'TRUE'
 	and pob.Settlement like '%' + @ValName + '%'

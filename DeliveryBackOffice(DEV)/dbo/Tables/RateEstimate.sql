@@ -31,13 +31,15 @@
     [IdTownshipSource]      INT             NULL,
     [IdTownshipDestiny]     INT             NULL,
     CONSTRAINT [PK_RateEstimate] PRIMARY KEY CLUSTERED ([IdRateEstimated] ASC),
-    CONSTRAINT [FK_RateEstimate_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FK_RateEstimate_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_RateEstimate_Ecommerce] FOREIGN KEY ([IdEcommerce]) REFERENCES [dbo].[Ecommerce] ([IdEcommerce]),
     CONSTRAINT [FK_RateEstimate_RateCategory] FOREIGN KEY ([IdRateCategory]) REFERENCES [dbo].[RateCategory] ([IdRateCategory]),
     CONSTRAINT [FK_RateEstimate_Settlement] FOREIGN KEY ([IdDestiny]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     CONSTRAINT [FKRateTwonshipDestiny] FOREIGN KEY ([IdTownshipDestiny]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FKRateTwonshipSource] FOREIGN KEY ([IdTownshipSource]) REFERENCES [dbo].[Township] ([IdTownship])
 );
+
+
 
 
 GO

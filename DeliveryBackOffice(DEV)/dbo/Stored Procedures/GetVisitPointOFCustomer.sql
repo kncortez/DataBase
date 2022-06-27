@@ -21,7 +21,7 @@ BEGIN
 		VPC.CodeOfReference			, 
 		VPC.Address [Address],
 		VPC.IdSettlement 'IdSettlement',
-		REPLACE(REPLACE(REPLACE(ISNULL(VPC.Phone, ''),'(502)',''),'-',''),' ','') 'Phone',
+		ISNULL(VPC.Phone, '') 'Phone',
 		ISNULL(VPC.IdTownship, Twn.IdTownship) 'IdTownship',
 		DSC.Hub 'HubAbbreviation',
 		HL.IdHubLogistic 'IdHubLogistic',

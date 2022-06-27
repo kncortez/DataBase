@@ -16,8 +16,8 @@ CREATE PROCEDURE [dbo].[ExpressCenterConfiguration]
 @USR_IdUser as NVARCHAR(50) = '0',
 @UserName as VARCHAR(100),
 @IdVisitPoint as INT,
-@Token AS NVARCHAR(100),
-@EmployeeRol AS NVARCHAR(200)	
+@Token AS NVARCHAR(100)
+	
 AS 
 BEGIN
 	
@@ -39,7 +39,8 @@ BEGIN
 			@IdUser       = USR_IdUser,
 			@USR_Username = USR_Username,
 			@IdEmployee   = USR_IdEmployee
-			FROM DenariusUser_Dev.dbo.LGN_User WHERE USR_IdUser = @USR_IdEmployee  AND USR_Username = @USR_IdUser
+			FROM DenariusUser_Dev.dbo.LGN_User WITH (NOLOCK)
+			WHERE USR_IdUser = @USR_IdEmployee  AND USR_Username = @USR_IdUser
 		 END		
 		 ELSE
 		 BEGIN
@@ -63,7 +64,7 @@ BEGIN
 		    END
 
 		--SE ASIGNA EL ROL DE EXPRESS CENTER
-		UPDATE DeliveryBackOffice.dbo.RolByUserByAccount  SET RuaIdRol = (SELECT RolIdRol FROM CatRol WHERE RolName = @EmployeeRol AND RolIdSystem = 1) WHERE RuaIdUser = @IdUser_Portal
+		UPDATE DeliveryBackOffice.dbo.RolByUserByAccount  SET RuaIdRol = (SELECT RolIdRol FROM CatRol WHERE RolName = 'ENCARGADO EXPRESS CENTER FD HERMES' AND RolIdSystem = 1) WHERE RuaIdUser = @IdUser_Portal
 		
 		--SE ASOCIA EL USUARIO A UN EXPRESS CENTER
 		--De existir una asociación, se NO se inserta.

@@ -6,7 +6,7 @@ BEGIN
   DECLARE @Output NVARCHAR(MAX);
 
   SET @Output = 
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
 		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
@@ -20,7 +20,7 @@ BEGIN
 		'[', ''), '\', ''), ']', ''), '^', ''), '_', ''),
 		'`', ''), '{', ''), '|', ''), '}', ''), '~', ''),
 		'¡', ''), '¿', ''), '°', ''), '¬', ''), '´', ''),
-		'¨', ''), '&Quot;', ''), CHAR(255), '');
+		'¨', ''), '&Quot;', ''), CHAR(255), ''),CHAR(31),'');
   
   RETURN @Output;
 

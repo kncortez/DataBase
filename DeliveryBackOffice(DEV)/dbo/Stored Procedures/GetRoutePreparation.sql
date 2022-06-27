@@ -29,7 +29,7 @@ BEGIN
 
 	SET @RouteAssignmentExists = (
 										SELECT 1
-										FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+										FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 										WHERE
 										RP.CatRouteId = @IdRoute
 										AND
@@ -47,21 +47,21 @@ BEGIN
 			UPDATE RPDP
 			SET RPDP.PieceType = (CASE WHEN DOP.IsDry = 1 THEN 1 ELSE 0 END)
 			FROM
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
-				JOIN
-					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+				[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
+				inner JOIN
+					[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 					ON
 						RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
 						AND
 						RPD.RowStatus = 1
-				JOIN
-					[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				inner JOIN
+					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					ON
 						RPD.RoutePreparationId = RP.IdRoutePreparation
 						AND
 						RP.RowStatus = 1
-				JOIN 
-					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP
+				inner JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 					ON
 						RPD.Guide_Serie = DOP.GuideSerie
 						AND
@@ -82,7 +82,7 @@ BEGIN
 				RP.PiecesDry = ISNULL(RPA.RealPiecesDry,0),
 				RP.PiecesCold = ISNULL(RealPiecesCold,0)
 			FROM 
-				[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 				LEFT JOIN
 				(
 					SELECT
@@ -91,15 +91,15 @@ BEGIN
 						SUM (CASE WHEN RPDP.PieceType = 1 THEN 1 ELSE 0 END) 'RealPiecesDry',
 						SUM (CASE WHEN RPDP.PieceType = 0 THEN 1 ELSE 0 END) 'RealPiecesCold'
 					FROM
-						[DeliveryBackOffice].[dbo].[RoutePreparation] RPA
-						JOIN
-							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+						[DeliveryBackOffice].[dbo].[RoutePreparation] RPA WITH(NOLOCK)
+						inner JOIN
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
 							ON
 								RPA.IdRoutePreparation = RPD.RoutePreparationId
 								AND
 								RPD.RowStatus = 1
-						JOIN
-							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
+						inner JOIN
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
 							ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
 								AND
@@ -132,10 +132,10 @@ BEGIN
 	--TABLE 0 Información de la preparación de la ruta
 	SELECT rp.IdRoutePreparation, rp.GuidesQuantity, rp.PiecesDry, rp.PiecesCold, rp.DeliveryOrderBySettlementId,
 		dobs.CatRouteId, dobs.StartingKilometers, sr.CUI, dobs.CatRouteId, rp.IsSimpliRoute, rp.CatVehicleId VehicleId
-	FROM RoutePreparation rp
-	LEFT JOIN DeliveryOrderBySettlement dobs
+	FROM RoutePreparation rp WITH(NOLOCK)
+	LEFT JOIN DeliveryOrderBySettlement dobs WITH(NOLOCK)
 		ON rp.DeliveryOrderBySettlementId = dobs.ID
-	LEFT JOIN SenderReceiver sr
+	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON dobs.ID_Courier = sr.ID
 	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
 		AND rp.RowStatus = 1
@@ -156,21 +156,21 @@ BEGIN
 		, RPDP.PieceType 'Piece_Type'
 		, CAST(IIF(DOP.StatusOrderId = 3, 1 ,0) AS BIT) 'IsProgrammed'
 		, cu.Abbreviation 'CustomerAbbreviation' 
-	FROM RoutePreparation RP
-	LEFT JOIN RoutePreparationDetail RPD
+	FROM RoutePreparation RP WITH(NOLOCK)
+	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON
 			RPD.RoutePreparationId = RP.IdRoutePreparation
 			AND
 			RPD.RowStatus = 1
-	LEFT JOIN RoutePreparationDetailPiece RPDP
+	LEFT JOIN RoutePreparationDetailPiece RPDP WITH(NOLOCK)
 		ON 
 			RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
 			AND 
 			RPDP.RowStatus = 1
-	JOIN DeliveryOrder do
+	inner JOIN DeliveryOrder do WITH(NOLOCK)
 		ON do.Guide_Serie = rpd.Guide_Serie AND do.Guide_Number = rpd.Guide_Number
 	LEFT JOIN
-		DeliveryOrderPiece DOP
+		DeliveryOrderPiece DOP WITH(NOLOCK)
 		ON
 			do.Guide_Serie = DOP.GuideSerie
 			AND

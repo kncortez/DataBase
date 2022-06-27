@@ -3,6 +3,11 @@
 -- Create date: <Create Date,18-03-2022,>
 -- Description:	<Description, Lista de Guías trasladadas a Exc Por Rabbit de Cierres>
 -- =============================================
+-- =============================================
+-- Author:		<Author,Edelman Vásquez>
+-- Create date: <Create Date,18-03-2022,>
+-- Description:	<Description, Modificación para valdiar tiempo de pago de guias>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetTransferClosing] 
 	-- Add the parameters for the stored procedure here
 	@TblDeliveryOrdersList dbo.TblDeliveryOrdersTransferList READONLY,
@@ -25,22 +30,6 @@ BEGIN
 						where IdUser = CAST(@IdUser AS INT)
 		              )
 	END
-
-	DECLARE @visitpoint int
-
-				SET @visitpoint=(
-					
-						Select VPC.CodeOfReference
-						      From dbo.InternalUser IU 
-							                           INNER JOIN  dbo.VisitPointByUser VP
-									ON IU.RegisterUserID=VP.RegisterUserID
-									                   INNER JOIN dbo.VisitPointClient VPC
-								    ON 		VP.IdVisitPointClient=VPC.IdVisitPointClient			   
-									
-							  WHERE  IU.IdUser = @IdUser
-						      
-								)
-	
 		
 	IF ( @IdAcc IS NOT NULL )
 	BEGIN
@@ -50,26 +39,26 @@ BEGIN
 				  ,[GuideNumber]
 				  ,[PayTypeId]
 				  ,[TypeofInOutMoneyId]
-				  ,[TimePlaId]--quemado en 1
+				  ,[TimePlaId]--validar DeliveryOrderPaymentDetail
 				  ,[amount]
 				  ,[ShipmentCompleted]--en 1
 				  ,[TokenCreated]
 				  ,[DateCreated]--Getdate()
 				  ,[TypeServiceId]
 				  ,[AccountId]
+				  ,[CODAmountProcess]
 				  ,[FEL]
-				  ,[VisitPoint]
 				  )
 			Select 
 			         tdop.Guide_Serie
 					,tdop.Guide_Number
 					,1
-					,(
-						SELECT Top 1 B.IdTypeOfMoney 
-							 FROM dbo.Cost A
-									Left Join dbo.CostDetail B On A.IdCost=B.IdCost
+					,ISNULL(
+						(SELECT Top 1 B.IdTypeOfMoney
+							 FROM dbo.Cost A WITH (NOLOCK)
+									Left Join dbo.CostDetail B WITH (NOLOCK) ON A.IdCost=B.IdCost
 							 WHERE A.ProductNumber = CONCAT(tdop.Guide_Serie,tdop.Guide_Number)
-							 Order by B.DateCreated desc
+							 Order by B.DateCreated desc),1
 					 )
 					,ISNULL((Select Top 1 TimePlaId from dbo.DeliveryOrderPaymentDetail where GuideNumber=tdop.Guide_Number),1)
 					,tdop.amount
@@ -80,11 +69,12 @@ BEGIN
 						(SELECT TOP 1 IdTypeService FROM dbo.CatTypeServiceClosure WHERE NameTypeService = 'Traslado')
 		              
 					,@IdAcc--convert(Int,tdop.AccountId) as AccountId
+					,0.00
 					,@FEL
-		            ,@visitpoint
+		
 			from @TblDeliveryOrdersList tdop
 
-
+ 
 
 	END
 

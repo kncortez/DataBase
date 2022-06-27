@@ -44,7 +44,7 @@ BEGIN
 				,rpdp.TokenUpdated = @Token
 				,rpdp.DateUpdated = GETDATE()
 			FROM RoutePreparationDetailPiece rpdp
-			JOIN RoutePreparationDetail rpd
+			inner JOIN RoutePreparationDetail rpd
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				and rpd.RowStatus = 1
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation
@@ -75,7 +75,7 @@ BEGIN
 				,wh.UserCreated = @Token
 				,wh.DateCreated = GETDATE()
 			FROM Warehouse wh
-			JOIN @ListGuides lg
+			INNER JOIN @ListGuides lg
 				ON wh.Guide_Serie = lg.Guide_Serie AND wh.Guide_Number = lg.Guide_Number
 			WHERE wh.Active = 1  
 
@@ -95,7 +95,7 @@ BEGIN
 				,TokenUpdated = @Token
 				,DateUpdated = GETDATE()
 			FROM DeliveryOrder do
-			JOIN @ListGuides lg
+			INNER JOIN @ListGuides lg
 				ON do.Guide_Serie = lg.Guide_Serie AND do.Guide_Number = lg.Guide_Number
 			
 			--operation 1
@@ -282,7 +282,7 @@ BEGIN
 				COALESCE(dop.IsDry,1), CASE WHEN dop.IsDry IS NULL THEN 0 ELSE 1-dop.IsDry END,
 				'','',0, @IdCourier, @ID_Manifest, @Token, GETDATE(), dop.NoPiece
 			FROM @ListGuides lg
-			JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop
 				ON lg.Guide_Serie = dop.GuideSerie AND lg.Guide_Number = dop.GuideNumber
 
 			--operation 4
@@ -295,9 +295,9 @@ BEGIN
 				dsd.TokenUpdated = @Token,
 				dsd.DateUpdated = GETDATE()
 			FROM  DeliverySettlementDetail dsd
-			JOIN DeliveryOrderBySettlement dobs 
+			INNER JOIN DeliveryOrderBySettlement dobs 
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
-			JOIN @ListGuides lg
+			INNER JOIN @ListGuides lg
 				ON dsd.Guide_Serie = lg.Guide_Serie AND dsd.Guide_Number = lg.Guide_Number
 			WHERE dsd.RowStatus = 1
 				AND CONVERT(date,dobs.Route_Dispatched) = @Date
@@ -306,7 +306,7 @@ BEGIN
 			UPDATE rpd
 			SET rpd.GuideOrder = lg.Guide_Order, rpd.DateCreated = GETDATE(), rpd.TokenCreated = @Token
 			FROM RoutePreparationDetail rpd
-			JOIN @ListGuides lg
+			INNER JOIN @ListGuides lg
 			ON rpd.Guide_Serie = lg.Guide_Serie AND rpd.Guide_Number = lg.Guide_Number
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
 
@@ -320,7 +320,7 @@ BEGIN
 				,[TokenCreated])
 			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order,GETDATE(),@Token
 			FROM @ListGuides lg
-			JOIN RoutePreparationDetail rpd
+			INNER JOIN RoutePreparationDetail rpd
 				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
 				AND rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
 

@@ -29,10 +29,12 @@
     CONSTRAINT [PK_SchedulePickup] PRIMARY KEY CLUSTERED ([SchedulePickupId] ASC),
     FOREIGN KEY ([IdHubLogistics]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     FOREIGN KEY ([IdSourcePlataform]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
-    CONSTRAINT [FK__ScheduleP__Sende__04459E07] FOREIGN KEY ([SenderId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
+    FOREIGN KEY ([SenderId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_SchedulePickup_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_SchedulePickup_CatTypeVehicle] FOREIGN KEY ([TypeVehicleId]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle])
 );
+
+
 
 
 GO
@@ -101,4 +103,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la ta
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica si el servicio de recolección es considerado "A demanda" (0) o "Programada" (1)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SchedulePickup', @level2type = N'COLUMN', @level2name = N'IsScheduled';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_TransaccionFAC]
+    ON [dbo].[SchedulePickup]([TransaccionFAC] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_start_end_dates]
+    ON [dbo].[SchedulePickup]([StartDate] ASC, [EndDate] ASC);
 

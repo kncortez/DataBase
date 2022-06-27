@@ -32,6 +32,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la estación donde se realizo el despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderBySettlement', @level2type = N'COLUMN', @level2name = N'DispatchedStationId';
 
@@ -50,4 +52,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la ru
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Kilómetros que tiene el Vehículo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderBySettlement', @level2type = N'COLUMN', @level2name = N'StartingKilometers';
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-20211209-170157]
+    ON [dbo].[DeliveryOrderBySettlement]([Date_Received] ASC, [SettlementStationId] ASC);
 

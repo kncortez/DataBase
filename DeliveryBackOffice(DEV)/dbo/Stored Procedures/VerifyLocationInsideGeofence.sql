@@ -1,4 +1,5 @@
 ﻿
+
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-05-11>
@@ -37,10 +38,10 @@ BEGIN
 							)
 						FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
 						INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
-							ON G.IdGeofence = GP.GeofenceId
+							ON G.IdGeofence = GP.IdGeofence
 							AND GP.RowStatus = 1
 						INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
-							ON GP.PointId = P.IdPoint
+							ON GP.IdPoint = P.IdPoint
 							AND P.RowStatus = 1
 						WHERE G.RowStatus = 1
 						AND G.IdGeofence = @Geofence 

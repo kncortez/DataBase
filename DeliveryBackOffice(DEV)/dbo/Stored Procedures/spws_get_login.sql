@@ -269,31 +269,6 @@ BEGIN
                                   WHERE TMP.ITERATOR = @ITERATORSUBMODULES
                               );
 
-                        --END
-                        --	ELSE 
-                        --	BEGIN
-                        --	PRINT 'VERIFYUSER  = 0 [USUARIO INDIVIDUAL]';
-                        --INSERT INTO @TBSUBMODULES2 (ModIdModuleDAD, ModIdModuleCHILD)											
-                        --   SELECT (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES) AS ModIdModuleDAD , cmo.ModIdModule AS ModIdModuleCHILD  
-                        --   FROM /*RegisterUser us
-                        --                                       INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                        --                                                                                    AND rua.RuaRowStatus = 1
-                        --                                       INNER JOIN dbo.RolByModuleBySystem rms ON rms.RmsIdRol = rua.RuaIdRol
-                        --                                                AND rms.RmsRowStatus = 1
-                        --                                       INNER JOIN */[dbo].CatModule cmo /*ON cmo.ModIdModule = rms.RmsIdModule
-                        --                                                                         AND cmo.ModRowStatus = 1
-                        --                                                                         AND cmo.ModVisible = 1
-                        --										   AND */
-                        --                                       --INNER JOIN [dbo].CatRol rol ON rol.RolIdRol = rms.RmsIdRol
-                        --                                  WHERE /*us.UsrEmail = @UserName
-                        --                                        AND us.UsrRowStatus = 1 order by cmo.ModOrder*/
-                        --		  cmo.ModIdModuleParent = (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES)
-
-                        --		  ;
-
-
-                        --	END
-
                         SELECT @CHILDSMENU = COUNT(1)
                         FROM @TBSUBMODULES2;
                         PRINT @CHILDSMENU;

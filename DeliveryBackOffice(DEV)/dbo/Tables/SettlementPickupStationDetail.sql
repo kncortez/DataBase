@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[SettlementPickupStationDetail] (
     [IdSettlementPickupStationDetail] BIGINT          IDENTITY (1, 1) NOT NULL,
     [SettlementPickupStationId]       BIGINT          NOT NULL,
-    [ServiceManagementId]             INT             NOT NULL,
+    [ServiceManagementId]             BIGINT          NOT NULL,
     [Price]                           DECIMAL (12, 2) NOT NULL,
     [SettlementSequence]              BIGINT          NULL,
     [SettlementStationId]             INT             NULL,
@@ -13,10 +13,14 @@
     [TokenUpdated]                    VARCHAR (50)    NULL,
     [DateUpdated]                     DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([IdSettlementPickupStationDetail] ASC),
-    FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
+    FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
+    FOREIGN KEY ([SettlementPickupStationId]) REFERENCES [dbo].[SettlementPickupStation] ([IdSettlementPickupStation]),
+    FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     FOREIGN KEY ([SettlementStationId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

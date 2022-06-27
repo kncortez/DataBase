@@ -15,8 +15,6 @@ AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
-	
-
     SET NOCOUNT ON;
 
 	IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL DROP TABLE #OrdChkpnt;
@@ -147,7 +145,9 @@ BEGIN
                                           )
                                    FROM
                                    (
-                                       SELECT IIF([dp].[Proof_Dry] = 0x, dp.Proof_Cold,ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
+                                       SELECT IIF([dp].[Proof_Dry] = 0x,
+                                                  dp.Proof_Cold,
+                                                  ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
                                               Date_Photo
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
                                            JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
@@ -205,8 +205,8 @@ BEGIN
             '' AS Latitude,
             '' AS Longitude,
 			dod.UserCreated Token
-        FROM dbo.DeliveryOrderDetail dod
-            JOIN DeliveryBackOffice.dbo.StatusOrder so
+        FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+            JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
@@ -242,7 +242,7 @@ BEGIN
 		   			'[ ' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](ISNULL(epl.FirstName,'') + ' ' + ISNULL(epl.LastName1,'')) + ' ]' + --[who],
 					' ' +
 					'[ ' + (SELECT TOP (1) hub.HubAbbreviation 
-							FROM DeliveryBackOffice.dbo.HubLogistics hub 
+							FROM DeliveryBackOffice.dbo.HubLogistics hub  WITH (NOLOCK)
 							WHERE hub.IdStation = epl.IdStation AND hub.HubStatus ='TRUE'
 							ORDER BY hub.IdStation 
 							) + ' ]' +--[Where]
@@ -260,9 +260,9 @@ BEGIN
 			   OrdChkPnt.[Longitude]--,
 			   --OrdChkPnt.Token
 	FROM #OrdChkpnt OrdChkPnt
-	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token ON OrdChkPnt.Token = token.SSN_IdToken
-	LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username
-	LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl ON epl.IdEmployee = duser.USR_IdEmployee 
+	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
+	LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser  WITH (NOLOCK) ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username
+	LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl  WITH (NOLOCK) ON epl.IdEmployee = duser.USR_IdEmployee 
 	ORDER BY OrdChkPnt.[StageDate] ASC,
 			 OrdChkPnt.[EventID];
 

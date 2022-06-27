@@ -7,9 +7,11 @@
     [Status]          BIT            NOT NULL,
     [DateCreated]     DATETIME       NOT NULL,
     CONSTRAINT [PK_Seller] PRIMARY KEY CLUSTERED ([IdSeller] ASC),
-    CONSTRAINT [FK_Seller_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FK_Seller_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [Seller_UK] UNIQUE NONCLUSTERED ([CodeOfReference] ASC)
 );
+
+
 
 
 GO

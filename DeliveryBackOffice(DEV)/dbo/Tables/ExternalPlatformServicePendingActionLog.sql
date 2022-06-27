@@ -13,9 +13,10 @@
     [DateUpdated]                   DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdExternalPlatformServiceXLog] ASC),
     CONSTRAINT [CHK_ExternalPlatformServicePendingActionLog_Action] CHECK (isnull([IsPendingInsert],(0))>(0) AND isnull([IsPendingUpdate],(0))=(0) AND isnull([IsPendingDelete],(0))=(0) OR isnull([IsPendingInsert],(0))=(0) AND isnull([IsPendingUpdate],(0))>(0) AND isnull([IsPendingDelete],(0))=(0) OR isnull([IsPendingInsert],(0))=(0) AND isnull([IsPendingUpdate],(0))=(0) AND isnull([IsPendingDelete],(0))>(0)),
-    CONSTRAINT [FK_ExternalPlatformServicePendingActionLog_CatExternalPlatform] FOREIGN KEY ([ExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform]),
-    CONSTRAINT [FK_ExternalPlatformServicePendingActionLog_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
+    CONSTRAINT [FK_ExternalPlatformServicePendingActionLog_CatExternalPlatform] FOREIGN KEY ([ExternalPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 GO

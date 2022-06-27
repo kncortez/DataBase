@@ -8,23 +8,24 @@
     [TokenUpdated]          NVARCHAR (50) NULL,
     [DateUpdated]           DATETIME      NULL,
     CONSTRAINT [PK_FinalStatusByModule] PRIMARY KEY CLUSTERED ([IdFinalStatusByModule] ASC),
-    CONSTRAINT [FK_FinalStatusByModule_CatModule] FOREIGN KEY ([ModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
-    CONSTRAINT [FK_FinalStatusByModule_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
+    CONSTRAINT [FK_FinalStatusByModule_CatModule] FOREIGN KEY ([ModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
 
 
-GO
-CREATE NONCLUSTERED INDEX [IX_FinalStatusByModule_StatusOrder]
-    ON [dbo].[FinalStatusByModule]([StatusOrderId] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_FinalStatusByModule_CatModule]
-    ON [dbo].[FinalStatusByModule]([ModuleId] ASC);
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de estados finales de guías por módulo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'FinalStatusByModule';
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de estados finales de guías por modulo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'FinalStatusByModule';
+
+
 
 
 GO

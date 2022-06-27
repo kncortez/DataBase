@@ -286,11 +286,3 @@ BEGIN
 		SELECT @jsonResult 'JsonError'
 	END CATCH
 END;
-
-
-SELECT
-	*
-FROM
-	[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS
-WHERE
-	DOBS.ID = 32631

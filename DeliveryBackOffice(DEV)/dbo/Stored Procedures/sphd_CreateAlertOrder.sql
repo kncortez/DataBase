@@ -1,4 +1,5 @@
 ﻿
+
 -- =============================================
 -- Author:		<Alberto,Ixchop>
 -- Create date: <2021-11-30>
@@ -88,18 +89,7 @@ BEGIN
                         GETDATE(),
                         NULL,
                         NULL
-                    ),
-                    (
-                        @iduser,
-                        (SELECT Username FROM DBO.InternalUser WHERE IdUser=@iduser),
-                        @alertdescription,
-						IDENT_CURRENT('DeliveryOrderAlert'),
-                        1,
-                        @tokenuser,
-                        GETDATE(),
-                        NULL,
-                        NULL
-                    )                    
+                    )
 					
                 END
 

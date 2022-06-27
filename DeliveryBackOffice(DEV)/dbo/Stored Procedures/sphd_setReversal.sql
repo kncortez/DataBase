@@ -69,7 +69,7 @@ BEGIN
             DeliveryBackOffice.dbo.DeliveryOrderDetail 
         SET 
             RowStatus = 0,
-            Observations = 'Guía revertida desde modulo de reversión de estados.'
+            Observations = 'Guía revertida desde módulo de reversión de estados.'
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number

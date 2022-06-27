@@ -19,7 +19,9 @@
     [RcdDateUpdated]          DATETIME        NULL,
     PRIMARY KEY CLUSTERED ([RcdId] ASC),
     CONSTRAINT [FKRcdCatSerivice] FOREIGN KEY ([RcdIdCatService]) REFERENCES [dbo].[CatTypeService] ([CtsId]),
-    CONSTRAINT [FKRcdCustomer] FOREIGN KEY ([RcdIdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FKRcdCustomer] FOREIGN KEY ([RcdIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FKRcdRateSegment] FOREIGN KEY ([RcdIdRateSegment]) REFERENCES [dbo].[CatRateSegment] ([CrsId])
 );
+
+
 

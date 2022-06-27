@@ -5,8 +5,8 @@
 -- =============================================
 -- =============================================
 -- Author:		<Andres, Ruiz>
--- Create date: <2022-04-21>
--- Description:	< Actualiza información de un punto de visita de cliente. >
+-- Create date: <2022-01-03>
+-- Description:	< Se remueve el poder modificar departamento y municipio ya que puede causar revalorizaciones. >
 -- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
@@ -91,8 +91,7 @@ BEGIN
 				COMMIT TRANSACTION;
 				set @jsonResult =(
 									SELECT STUFF(( 
-									SELECT ',{"IdResult":200,' +
-									'"serviceType":"Delivery"' + ',' +
+									SELECT ',{"IdResult":200,' 
 									+ '"Success":"Exito ingresando datos de entrega."}' 
 									FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),1,1,'') )
@@ -102,8 +101,7 @@ BEGIN
 			BEGIN
 				set @jsonResult =(
 									SELECT STUFF(( 
-									SELECT '{{"IdResult":500,' +
-									'"serviceType":"Delivery"' + ',' +
+									SELECT '{{"IdResult":500,' 
 									+ '"Error":"No se actualizaron los datos"}' 
 									FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),1,1,'') )
@@ -126,80 +124,14 @@ BEGIN
 	ELSE
 	BEGIN
 
-		/* FLUJO PARA RECOLECCIONES - POR IMPLEMENTAR */
-
-		-- Si se esta modificando un punto de visita
-
-		DECLARE @VisitPointID INT = -1;
-
-		SELECT
-			@VisitPointExists = 1
-			,@IsVisitPoint = 1
-			,@VisitPointID = VPC.CodeOfReference
-		FROM
-			[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
-		WHERE
-			VPC.VisitPointToken = @GuideToken COLLATE Latin1_General_CI_AI
-
-		IF(@IsVisitPoint = 1 AND @VisitPointExists = 1)
-		BEGIN
-
-			BEGIN TRANSACTION
-			BEGIN TRY
-
-				UPDATE
-					[DeliveryBackOffice].[dbo].[VisitPointClient]
-				SET
-					Latitude = @Latitude
-					,Longitude = @Longitude
-				WHERE
-					CodeOfReference = @VisitPointID
-					AND
-					GETDATE() <= VisitPointTokenExpiration
-
-				IF @@ROWCOUNT > 0
-				BEGIN
-					SET @UpdatedVPC = 1
-				END
-
-				IF (@@TRANCOUNT > 0 AND @UpdatedVPC = 1)
-				BEGIN
-					COMMIT TRANSACTION;
-					set @jsonResult =(
-										SELECT STUFF(( 
-										SELECT ',{"IdResult":200,' +
-										'"serviceType":"Visitpoint"' + ',' +
-										+ '"Success":"Exito ingresando datos de entrega."}' 
-										FOR XML PATH(''), TYPE
-										).value('.', 'varchar(max)'),1,1,'') )
-					select ('[' + @jsonResult +  ']') jsonResult 
-				END
-				ELSE
-				BEGIN
-					set @jsonResult =(
-										SELECT STUFF(( 
-										SELECT '{{"IdResult":500,' +
-										'"serviceType":"Visitpoint"' + ',' +
-										+ '"Error":"No se actualizaron los datos"}' 
-										FOR XML PATH(''), TYPE
-										).value('.', 'varchar(max)'),1,1,'') )
-					select ('[' + @jsonResult +  ']') jsonResultError 
-					ROLLBACK TRANSACTION;
-				END
-				
-			END TRY
-			BEGIN CATCH
-				set @jsonResult =(
-									SELECT STUFF(( 
-									SELECT '{{"IdResult":500,' 
-									+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				select ('[' + @jsonResult +  ']') jsonResultError 
-				ROLLBACK TRANSACTION;
-			END CATCH
-
-		END
+		/* OTROS FLUJOS - POR IMPLEMENTAR */
+		set @jsonResult =(
+							SELECT STUFF(( 
+							SELECT '{{"IdResult":500,' 
+							+ '"Error":"No se actualizaron los datos"}' 
+							FOR XML PATH(''), TYPE
+							).value('.', 'varchar(max)'),1,1,'') )
+		select ('[' + @jsonResult +  ']') jsonResultError 
 
 	END
 END

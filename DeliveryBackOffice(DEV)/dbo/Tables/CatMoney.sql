@@ -13,6 +13,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Catálogo para almacenar las denominaciones por divisa.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMoney';
 
@@ -38,11 +40,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de l
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMoney', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMoney', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMoney', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMoney', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 
 
 GO

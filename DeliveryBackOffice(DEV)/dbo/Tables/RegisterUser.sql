@@ -2,7 +2,7 @@
     [UsrIdUser]               BIGINT        IDENTITY (1, 1) NOT NULL,
     [UsrIdPerson]             BIGINT        NOT NULL,
     [UsrNickName]             VARCHAR (100) NOT NULL,
-    [UsrEmail]                VARCHAR (200) NULL,
+    [UsrEmail]                VARCHAR (200) NOT NULL,
     [UsrAvatar]               VARCHAR (200) NULL,
     [UsrLastPassword]         VARCHAR (200) NOT NULL,
     [UsrPasswordExpiration]   DATE          NOT NULL,
@@ -21,4 +21,6 @@
     PRIMARY KEY CLUSTERED ([UsrIdUser] ASC),
     FOREIGN KEY ([UsrIdPerson]) REFERENCES [dbo].[Person] ([PerIdPerson])
 );
+
+
 

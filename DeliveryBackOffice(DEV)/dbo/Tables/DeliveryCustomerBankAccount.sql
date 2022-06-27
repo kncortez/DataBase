@@ -15,9 +15,10 @@
     [DCBA_LegalIDN]        NVARCHAR (50)  NULL,
     [DCBA_BankAccountType] VARCHAR (40)   NULL,
     [DCBA_Identification]  VARCHAR (40)   NULL,
-    [DCBA_TaxId]           VARCHAR (50)   NULL,
     CONSTRAINT [PK_SP_DEPOSITOS_CUENTAS] PRIMARY KEY CLUSTERED ([DCBA_Id] ASC)
 );
+
+
 
 
 GO
@@ -26,5 +27,5 @@ CREATE NONCLUSTERED INDEX [IDX_DCBA_ID_DCBA_ID_ESTADO]
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de NIT requerido para datos de COD G&T', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryCustomerBankAccount', @level2type = N'COLUMN', @level2name = N'DCBA_TaxId';
+
 

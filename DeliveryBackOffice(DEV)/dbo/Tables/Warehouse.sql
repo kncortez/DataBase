@@ -16,6 +16,8 @@
 );
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [GuideRackClusteredIndex]
     ON [dbo].[Warehouse]([Rack_Position] ASC, [Guide_Serie] ASC, [Guide_Number] ASC);
@@ -28,4 +30,17 @@ CREATE NONCLUSTERED INDEX [idx_warehouse_active]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si pertenece al inventario de devoluciones.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse', @level2type = N'COLUMN', @level2name = N'IsReturn';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Id]
+    ON [dbo].[Warehouse]([Id] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de usuario de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse', @level2type = N'COLUMN', @level2name = N'UserUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora y fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 

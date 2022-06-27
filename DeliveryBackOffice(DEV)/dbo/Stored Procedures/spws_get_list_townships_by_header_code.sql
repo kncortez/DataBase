@@ -34,7 +34,7 @@ BEGIN
 						order by TDA desc),'false'))  + '",' +
 	  	  '"IdTownship":"' + convert( varchar, isnull(mun.IdTownship,0))  
 	  + '"}' 
-	  	from DeliveryBackOffice.dbo.Township mun
+	  	from DeliveryBackOffice.dbo.Township mun WITH (NOLOCK)
 			join DeliveryBackOffice.dbo.Province depto  on mun.IdProvince = depto.IdProvince AND depto.ProvinceStatus=1
 		where  mun.TownshipStatus = 'TRUE'
 	and depto.IdCountry = @IdCountry

@@ -19,14 +19,6 @@ BEGIN
 
 	BEGIN TRANSACTION
 		BEGIN TRY
-
-		DECLARE @CurrentStatus int 
-
-		SELECT @CurrentStatus = dr.StatusOrderId FROM dbo.DeliveryOrder dr
-		WHERE dr.Guide_Serie = @Guide_Serie AND dr.Guide_Number = @Guide_Number
-
-		IF (@CurrentStatus IN(17,16))
-			BEGIN
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId OR StatusOrderId = 5))
 
@@ -67,9 +59,6 @@ BEGIN
 			-- registro existente
 			ELSE
 				SET @ValidateOperation = -1
-			END
-			ELSE
-				SET @ValidateOperation = -3
 
 		END TRY
 
@@ -108,13 +97,6 @@ BEGIN
 				SELECT			  
 					-2 AS 'StatusCode',
 					'Fecha y hora incorrecta' AS 'Description', 
-					@ValidateOperation AS 'NumTransferID'
-			END
-			ELSE IF (@ValidateOperation = -3)
-			BEGIN
-				SELECT			  
-					-3 AS 'StatusCode',
-					'Para operar una guia en este mópdulo debe estar en estado [Programado para recolección] o [Programado para devolución]' AS 'Description', 
 					@ValidateOperation AS 'NumTransferID'
 			END
 			ELSE

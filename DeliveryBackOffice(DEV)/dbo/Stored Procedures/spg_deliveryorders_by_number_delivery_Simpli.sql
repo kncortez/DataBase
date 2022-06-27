@@ -88,10 +88,10 @@ BEGIN
 	) eps
 	on epsrwg.ExtPlatServiceId = eps.IdExtPlatformService
 	and CAST(eps.DateCreated AS DATE) = CAST(do.Dispatched_Date AS DATE)
-	and eps.rn = 1
 	where 
 	do.Guide_Serie = @_serie
 	and do.Guide_Number IN (SELECT ItemNumber FROM #listGuides)
 	and do.Guide_Number is not null
+	and eps.rn = 1
 	order by ISNULL(eps.[Order],999) asc, do.Guide_Number asc
 END

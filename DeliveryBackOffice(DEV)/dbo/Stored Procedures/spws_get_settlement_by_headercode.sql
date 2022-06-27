@@ -23,7 +23,7 @@ BEGIN
 							'"SettlementName":"' +  dbo.fnt_String_Escape(  isnull(st.Settlement,''),'json') + 
 							+ '"}'
 
-					from dbo.Township twn
+					from dbo.Township twn WITH (NOLOCK)
 						inner join dbo.Settlement st on st.IdTownship = twn.IdTownship AND st.SettlementSatus=1
 					where twn.TownshipStatus=1 AND twn.HeaderCode = @HeaderCode OR @HeaderCode = '-1' 
 					ORDER BY TWN.HeaderCode

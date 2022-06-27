@@ -17,7 +17,9 @@
     [ShowDefault]      BIT             NULL,
     PRIMARY KEY CLUSTERED ([AbcId] ASC),
     CONSTRAINT [FKArticleCustom] FOREIGN KEY ([AbcIdArticle]) REFERENCES [dbo].[CatArticle] ([ArtId]),
-    CONSTRAINT [FKCustomArticle] FOREIGN KEY ([AbcIdCustomer]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FKCustomArticle] FOREIGN KEY ([AbcIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [AK_Password] UNIQUE NONCLUSTERED ([Code] ASC)
 );
+
+
 

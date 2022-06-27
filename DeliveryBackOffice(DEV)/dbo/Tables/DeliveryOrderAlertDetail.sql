@@ -15,14 +15,14 @@
 );
 
 
-GO
-CREATE NONCLUSTERED INDEX [IX_DeliveryOrderAlertDetail_DeliveryOrderAlert]
-    ON [dbo].[DeliveryOrderAlertDetail]([DeliveryOrderAlertId] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_DeliveryOrderAlertDetail_InternalUser]
-    ON [dbo].[DeliveryOrderAlertDetail]([author] ASC);
+
+
+
+GO
+
 
 
 GO

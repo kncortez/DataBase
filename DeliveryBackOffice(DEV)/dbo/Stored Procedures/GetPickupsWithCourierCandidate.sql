@@ -26,26 +26,24 @@ BEGIN
 	INTO #PickupCouriers
 	FROM
 		@CourierLocations CL
-		JOIN
+		INNER JOIN
 			[DeliveryBackOffice].[dbo].[SenderReceiver] SR
 			ON
 				SR.Phone LIKE CONCAT('%', CL.CourierPhone, '%')
 				AND 
 				SR.Estatus = 1
-		JOIN
+		INNER JOIN
 			[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
 			ON
 				RA.IdCurrierMan = SR.ID
 				AND
 				RA.RowStatus = 1
-		JOIN
+		INNER JOIN
 			[DeliveryBackOffice].[dbo].[CatRoute] CR
 			ON
 				RA.IdRoute = CR.IdRoute
 				AND
 				CR.IdTypeRoute = 1
-				AND
-				CR.CodeRoute LIKE 'R%'
 				AND
 				CR.RowStatus = 1
 	WHERE
@@ -86,7 +84,7 @@ BEGIN
 		(
 			@DateSchedulePickups >= CONVERT(DATE, SP.startDate)
 			AND 
-			CONVERT(DATE, SP.EndDate) >= @DateSchedulePickups
+			SP.EndDate >= @DateSchedulePickups
 		)
 		OR 
 			(@DateSchedulePickups = '')
@@ -97,6 +95,8 @@ BEGIN
 		OR 
 			(SP.AssigmentStatus IS NULL)
 	)
+	AND
+	SP.SchedulePickupStatus = 1
 	AND 
 	SP.RowStatus = 1
 	-- Revisar condiciones para poder ser asignado de forma automatizada
@@ -138,15 +138,27 @@ BEGIN
 	INTO #ServiceByCourierCandidate
 	FROM
 		#ServiceByCourierDistance SBCD
-		JOIN
+		INNER JOIN
 			[DeliveryBackOffice].[dbo].[SenderReceiver] SR
 			ON
 				SR.Phone LIKE CONCAT('%', SBCD.CourierPhone, '%')
-		JOIN
+		INNER JOIN
 			[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
 			ON
 				RA.IdCurrierMan = SR.ID
+				AND
+				RA.RowStatus = 1
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[CatRoute] CR
+			ON
+				RA.IdRoute = CR.IdRoute
+				AND
+				CR.IdTypeRoute = 1
+				AND
+				CR.RowStatus = 1
 	WHERE
+		RA.DateOfRoute = CAST(GETDATE() AS DATE)
+		AND
 		SBCD.CourierPhone IS NOT NULL
 		AND
 		SBCD.Distance <= @MaxDistance

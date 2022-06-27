@@ -15,258 +15,238 @@
 -- =============================================
 -- =============================================
 CREATE PROCEDURE [dbo].[sphd_UpdateGuideStatus]
-	--@Guide_Serie VARCHAR(2),
-	--@Guide_Number INT,
-    @GuidesToUpdate  TblGuideStatus READONLY,
-	@newStatus INT,
-	@UserToken VARCHAR(50),
-	@Observations VARCHAR(200)
+    @Guide_Serie VARCHAR(2),
+    @Guide_Number INT,
+    @newStatus INT,
+    @UserToken VARCHAR(50),
+    @Observations VARCHAR(200)
 AS
 BEGIN
 
-	DECLARE @VoidStatus INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI)
+    DECLARE @VoidStatus INT =
+            (
+                SELECT TOP 1
+                       SO.StatusOrderId
+                FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
+                WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI
+            );
 
-	DECLARE @IsCouponOrigin   BIT = 0;
-	DECLARE @IsCouponRedeemer BIT = 0;
-	
-DECLARE @guides AS TABLE
-        (
-            Guide_Serie NVARCHAR(2),
-            Guide_Number INT
-        );
-        INSERT INTO @guides
-        SELECT Guide_Serie,
-               Guide_Number
-        FROM @GuidesToUpdate;
+    DECLARE @IsCouponOrigin BIT = 0;
+    DECLARE @IsCouponRedeemer BIT = 0;
+    DECLARE @RowStatus1 BIT = 0;
 
-WHILE EXISTS (SELECT 1 FROM @guides)
-BEGIN
-            DECLARE @Guide_Serie NVARCHAR(2);
-            DECLARE @Guide_Number INT;
-            SELECT TOP 1
-                   @Guide_Serie  = Guide_Serie,
-                   @Guide_Number = Guide_Number
-            FROM @guides;
-
-            DELETE FROM @guides
-            WHERE Guide_Serie = @Guide_Serie AND
-                  Guide_Number = @Guide_Number;
+    DECLARE @ResultOperation VARCHAR(200);
+    DECLARE @ResultCode INT;
+    SET @RowStatus1 = ISNULL(
+                      (
+                          SELECT TOP 1
+                                 1
+                          FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK)
+                          WHERE Guide_Serie = @Guide_Serie
+                                AND Guide_Number = @Guide_Number
+                                AND StatusOrderId <> 7
+                      ),
+                      0
+                            );
 
 
+    SET @IsCouponOrigin = ISNULL(
+                          (
+                              SELECT TOP 1
+                                     1
+                              FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH (NOLOCK)
+                              WHERE PromoC.GuideSerieOrigin = @Guide_Serie
+                                    AND PromoC.GuideNumberOrigin = @Guide_Number
+                                    AND PromoC.RowStatus = 1
+                          ),
+                          0
+                                );
+
+    SET @IsCouponRedeemer = ISNULL(
+                            (
+                                SELECT TOP 1
+                                       1
+                                FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH (NOLOCK)
+                                WHERE PromoC.GuideSerieDestination = @Guide_Serie
+                                      AND PromoC.GuideNumberDestination = @Guide_Number
+                                      AND PromoC.RowStatus = 1
+                            ),
+                            0
+                                  );
+
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        --- Valida que sea Guía que genera cupon y que el estado es anular id= 7
+        IF (@IsCouponOrigin = 1 AND @newStatus = @VoidStatus)
+        BEGIN
+
+            DECLARE @IsCouponRedeemed BIT = 0;
+            SET @IsCouponRedeemed = ISNULL(
+                                    (
+                                        SELECT TOP 1
+                                               1
+                                        FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH (NOLOCK)
+                                        WHERE PromoC.GuideSerieOrigin = @Guide_Serie
+                                              AND PromoC.GuideNumberOrigin = @Guide_Number
+                                              AND PromoC.GuideSerieDestination IS NOT NULL
+                                              AND PromoC.GuideNumberDestination IS NOT NULL
+                                              AND PromoC.RedeemedDate IS NOT NULL
+                                              AND PromoC.RowStatus = 1
+                                    ),
+                                    0
+                                          );
+            --Validar que no tenga cupón redimido
+            IF (@IsCouponRedeemed = 0)
+            BEGIN
+                -- Cupon no ha sido redimido
+                SET @ResultOperation = 'Guía y Cupón Anulado Exitosamente!!';
+                UPDATE [DeliveryBackOffice].[dbo].[PromoCoupon]
+                SET RowStatus = 0,
+                    SystemDestination = NULL,
+                    CustomerDestination = NULL,
+                    VisitPointClientDestination = NULL,
+                    VisitPointClientPortfolioDestination = NULL,
+                    GuideSerieDestination = NULL,
+                    GuideNumberDestination = NULL,
+                    ServiceManagementDestination = NULL,
+                    RedeemedDate = NULL,
+                    OriginalAmount = NULL,
+                    DiscountAmount = NULL,
+                    FinalAmount = NULL,
+                    DateUpdated = GETDATE(),
+                    TokenUpdated = @UserToken
+                WHERE GuideSerieOrigin = @Guide_Serie
+                      AND GuideNumberOrigin = @Guide_Number;
+
+                UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+                SET StatusOrderId = @newStatus
+                WHERE Guide_Serie = @Guide_Serie
+                      AND Guide_Number = @Guide_Number;
+
+                INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+                (
+                    Guide_Serie,
+                    Guide_Number,
+                    StatusOrderId,
+                    UserCreated,
+                    DateCreated,
+                    DateCreatedInSystem,
+                    Observations
+                )
+                VALUES
+                (@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations);
 
 
 
-	DECLARE @ResultOperation VARCHAR(200);
-	DECLARE @ResultCode INT;
+                IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 
-	SET @IsCouponOrigin = ISNULL((
-		SELECT	
-			TOP 1
-				1
-		FROM
-			[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK)
-		WHERE
-			PromoC.GuideSerieOrigin = @Guide_Serie
-			AND
-			PromoC.GuideNumberOrigin = @Guide_Number
-			AND
-			PromoC.RowStatus = 1
-	),0);
+            END;
+            ELSE
+            BEGIN
 
-	SET @IsCouponRedeemer = ISNULL((
-		SELECT	
-			TOP 1
-				1
-		FROM
-			[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK)
-		WHERE
-			PromoC.GuideSerieDestination = @Guide_Serie
-			AND
-			PromoC.GuideNumberDestination = @Guide_Number
-			AND
-			PromoC.RowStatus = 1
-	),0);
-	
-	BEGIN TRANSACTION
-	BEGIN TRY	
-	--- Valida que sea Guía que genera cupon y que el estado es anular id= 7
-		IF(@IsCouponOrigin = 1 AND @newStatus = @VoidStatus)
-		BEGIN
+                SET @ResultOperation = 'No es Posible anular la guía, contiene un cupón Canjeado!!';
+                IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 
-			DECLARE @IsCouponRedeemed BIT = 0;
-			SET @IsCouponRedeemed = ISNULL((
-				SELECT	
-					TOP 1
-						1
-				FROM
-					[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK)
-				WHERE
-					PromoC.GuideSerieOrigin = @Guide_Serie
-					AND
-					PromoC.GuideNumberOrigin = @Guide_Number
-					AND
-					PromoC.GuideSerieDestination IS NOT NULL
-					AND
-					PromoC.GuideNumberDestination IS NOT NULL
-					AND
-					PromoC.RedeemedDate IS NOT NULL
-					AND
-					PromoC.RowStatus = 1
-			),0);
-			--Validar que no tenga cupón redimido
-			IF(@IsCouponRedeemed = 0)
-			BEGIN
-				-- Cupon no ha sido redimido
-				SET @ResultOperation  ='Guía y Cupón Anulado Exitosamente!!'
-				UPDATE
-					[DeliveryBackOffice].[dbo].[PromoCoupon]
-				SET
-					RowStatus = 0
-					,SystemDestination = NULL
-					,CustomerDestination = NULL
-					,VisitPointClientDestination = NULL
-					,VisitPointClientPortfolioDestination = NULL
-					,GuideSerieDestination = NULL
-					,GuideNumberDestination = NULL
-					,ServiceManagementDestination = NULL
-					,RedeemedDate = NULL
-					,OriginalAmount = NULL
-					,DiscountAmount = NULL
-					,FinalAmount = NULL
-					,DateUpdated = GETDATE()
-					,TokenUpdated = @UserToken
-				WHERE
-					GuideSerieOrigin = @Guide_Serie
-					AND
-					GuideNumberOrigin = @Guide_Number
-				
-				UPDATE 
-					DeliveryBackOffice.dbo.DeliveryOrder	
-				SET 
-					StatusOrderId = @newStatus
-				WHERE 
-					Guide_Serie =  @Guide_Serie
-					AND 
-					Guide_Number = @Guide_Number
+            END;
 
-				INSERT INTO 
-					DeliveryBackOffice.dbo.DeliveryOrderDetail
-					(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
-				VALUES 
-					(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
-					
-					
+        END;
+        --Valida si guía tiene cupón redimido
+        ELSE IF (@IsCouponRedeemer = 1 AND @newStatus = @VoidStatus)
+        BEGIN
+            SET @ResultOperation = 'Guía  Anulada Exitosamente!!';
+            UPDATE [DeliveryBackOffice].[dbo].[PromoCoupon]
+            SET SystemDestination = NULL,
+                CustomerDestination = NULL,
+                VisitPointClientDestination = NULL,
+                VisitPointClientPortfolioDestination = NULL,
+                GuideSerieDestination = NULL,
+                GuideNumberDestination = NULL,
+                ServiceManagementDestination = NULL,
+                RedeemedDate = NULL,
+                OriginalAmount = NULL,
+                DiscountAmount = NULL,
+                FinalAmount = NULL,
+                DateUpdated = GETDATE(),
+                TokenUpdated = @UserToken
+            WHERE GuideSerieDestination = @Guide_Serie
+                  AND GuideNumberDestination = @Guide_Number;
 
-				IF(@@TRANCOUNT > 0)
-					COMMIT TRANSACTION;
-					
-			END
-			  ELSE
-				BEGIN
+            UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+            SET StatusOrderId = @newStatus
+            WHERE Guide_Serie = @Guide_Serie
+                  AND Guide_Number = @Guide_Number;
 
-				SET @ResultOperation  ='No es Posible anular la guía, contiene cupón redimido!!'
-				IF(@@TRANCOUNT > 0)
-						COMMIT TRANSACTION;
+            INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+            (
+                Guide_Serie,
+                Guide_Number,
+                StatusOrderId,
+                UserCreated,
+                DateCreated,
+                DateCreatedInSystem,
+                Observations
+            )
+            VALUES
+            (@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations);
 
-				END
 
-		END
-		--Valida si guía tiene cupón redimido
-		ELSE IF(@IsCouponRedeemer = 1 AND @newStatus = @VoidStatus )
-		BEGIN
-		SET @ResultOperation  = 'Guía y Cupón  Anulados!!'
-			UPDATE
-				[DeliveryBackOffice].[dbo].[PromoCoupon]
-			SET
-				SystemDestination = NULL
-				,CustomerDestination = NULL
-				,VisitPointClientDestination = NULL
-				,VisitPointClientPortfolioDestination = NULL
-				,GuideSerieDestination = NULL
-				,GuideNumberDestination = NULL
-				,ServiceManagementDestination = NULL
-				,RedeemedDate = NULL
-				,OriginalAmount = NULL
-				,DiscountAmount = NULL
-				,FinalAmount = NULL
-				,DateUpdated = GETDATE()
-				,TokenUpdated = @UserToken
-			WHERE
-				GuideSerieDestination = @Guide_Serie
-				AND
-				GuideNumberDestination = @Guide_Number
-				
-			UPDATE 
-				DeliveryBackOffice.dbo.DeliveryOrder	
-			SET 
-				StatusOrderId = @newStatus
-			WHERE 
-				Guide_Serie =  @Guide_Serie
-				AND 
-				Guide_Number = @Guide_Number
+            IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 
-			INSERT INTO 
-				DeliveryBackOffice.dbo.DeliveryOrderDetail
-				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
-			VALUES 
-				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
-				
-					
-			IF(@@TRANCOUNT > 0)
-				COMMIT TRANSACTION;
-				
-				
-		END
-		--Valida si guía esta anulada
-		ELSE IF((@IsCouponRedeemer = 0 OR @IsCouponOrigin = 0)) --AND @RowStatus = 0 )
-		BEGIN
-		SET @ResultOperation  = 'Guía  ya fue anulada!!'
-			
-					
-			IF(@@TRANCOUNT > 0)
-				COMMIT TRANSACTION;
-				
-				
-		END
-		ELSE
-		BEGIN
-				SET @ResultOperation  ='Guía Anulada!!'
-			UPDATE 
-				DeliveryBackOffice.dbo.DeliveryOrder	
-			SET 
-				StatusOrderId = @newStatus
-			WHERE 
-				Guide_Serie =  @Guide_Serie
-				AND 
-				Guide_Number = @Guide_Number
 
-			INSERT INTO 
-				DeliveryBackOffice.dbo.DeliveryOrderDetail
-				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations)
-			VALUES 
-				(@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations) 
-				
-					
-					
-			IF(@@TRANCOUNT > 0)
-				COMMIT TRANSACTION;
-		    END
-			
-    
-	END TRY
-	
-		BEGIN CATCH
+        END;
+        --Valida si guía esta anulada
+        ELSE IF (@IsCouponRedeemer = 0 AND @IsCouponOrigin = 0 AND @RowStatus1 = 0)
+        BEGIN
+            SET @ResultOperation = 'Guía  ya fue anulada!!';
 
-			ROLLBACK TRANSACTION;
 
-				SELECT
-					 0  [blnResult], @ResultOperation [ResultDescription]
+            IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 
-		 END CATCH
-   END
-   SELECT 1  [blnResult],
-			          Guide_Serie + Convert(varchar,Guide_Number) + ': ' +
-			          @ResultOperation [ResultDescription]
-			 FROM  @GuidesToUpdate 
-END
+
+        END;
+        ELSE IF (@RowStatus1 = 1 AND @IsCouponRedeemer = 0 AND @IsCouponOrigin = 0)
+        BEGIN
+            SET @ResultOperation = 'Guía Anulada Exitosamente!!';
+            UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+            SET StatusOrderId = @newStatus
+            WHERE Guide_Serie = @Guide_Serie
+                  AND Guide_Number = @Guide_Number;
+
+            INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
+            (
+                Guide_Serie,
+                Guide_Number,
+                StatusOrderId,
+                UserCreated,
+                DateCreated,
+                DateCreatedInSystem,
+                Observations
+            )
+            VALUES
+            (@Guide_Serie, @Guide_Number, @newStatus, @UserToken, GETDATE(), GETDATE(), @Observations);
+
+            IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
+        END;
+        ELSE
+        BEGIN
+            SET @ResultOperation = 'Guía No Existe!!';
+        END;
+
+
+        SELECT 1 [blnResult],
+               @Guide_Serie + CONVERT(VARCHAR, @Guide_Number) + ': ' + @ResultOperation [ResultDescription];
+
+
+    END TRY
+    BEGIN CATCH
+
+        ROLLBACK TRANSACTION;
+
+        SELECT 0 [blnResult],
+               @ResultOperation [ResultDescription];
+
+    END CATCH;
+
+
+END;
 

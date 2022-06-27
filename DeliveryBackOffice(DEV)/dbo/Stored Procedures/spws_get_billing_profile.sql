@@ -19,7 +19,7 @@ BEGIN
 
 	DECLARE @jsonResult NVARCHAR(MAX) 
 
-	declare @IdUser bigint  = (select top 1 RuaIdUser FROM dbo.RolByUserByAccount WHERE RuaIdAccount = @IdAccount)
+	declare @IdUser bigint  = (select top 1 RuaIdUser FROM dbo.RolByUserByAccount WITH(NOLOCK) WHERE RuaIdAccount = @IdAccount)
 
 
 	set @jsonResult = (SELECT STUFF(( 
@@ -31,8 +31,8 @@ BEGIN
 							'"TaxId":"' + bp.BlpTaxId   +
 							+ '"}'
 
-					from dbo.RolByUserByAccount  rua
-						inner join dbo.BillingProfile bp on bp.BlpIdAccount= rua.RuaIdAccount
+					from dbo.RolByUserByAccount  rua WITH(NOLOCK)
+						inner join dbo.BillingProfile bp WITH(NOLOCK) on bp.BlpIdAccount= rua.RuaIdAccount
 					where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser and bp.BlpRowStatus = 1
 						and (bp.BlpIdBilling = @IdBilling or @IdBilling = -1)
 					FOR XML PATH(''), TYPE

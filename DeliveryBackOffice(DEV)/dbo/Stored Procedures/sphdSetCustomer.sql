@@ -104,83 +104,12 @@ BEGIN
 		ELSE 
 		-----------
 
-		DECLARE @DCBAID INT
-
-		--SI SE GUARDA UNA CUENTA DE BANCO PARA COD
-		IF @CODAccountNumber <> ''
-		BEGIN
-			
-			IF @IdCustomer IS NOT NULL
-				--Buscar si tiene asignada una cuenta
-				SELECT @DCBAID = DCBAID
-				FROM Customer
-				WHERE IdCustomer = @IdCustomer
-			
-			--Si no tiene asiganda se busca
-			IF @DCBAID IS NULL
-			BEGIN
-				SELECT TOP 1 @DCBAID = dcba.DCBA_Id
-				FROM DeliveryCustomerBankAccount dcba
-				WHERE dcba.DCBA_Bank_Id = @CODAccountBankID
-				AND dcba.DCBA_Num_account = @CODAccountNumber
-				AND dcba.DCBA_Id_currency = @CODCurrencyID
-				AND UPPER(dcba.DCBA_BankAccountType) = UPPER((SELECT BankAccountType FROM CatBankAccountType WHERE IdBankAccountType = @CODAccountTypeID))
-			END
-			
-			IF @DCBAID IS NULL
-			BEGIN
-				--Crear registro
-				SET @DCBAID = (SELECT ISNULL(MAX(dcba.DCBA_Id)+1,1) FROM DeliveryCustomerBankAccount dcba)
-				INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount]
-					([DCBA_Id]
-					,[DCBA_Bank_Id]
-					,[DCBA_Customer_Id]
-					,[DCBA_Num_account]
-					,[DCBA_Nom_account]
-					,[DCBA_Id_currency]
-					,[DCBA_TokenCreated]
-					,[DCBA_DateCreated]
-					,[DCBA_Id_estado]
-					,[DCBA_BankAccountType]
-					)
-				VALUES
-					(@DCBAID
-					,@CODAccountBankID
-					,-1
-					,@CODAccountNumber
-					,@CODAccountName
-					,@CODCurrencyID
-					,@Token
-					,GETDATE()
-					,1
-					,(SELECT BankAccountType FROM CatBankAccountType WHERE IdBankAccountType = @CODAccountTypeID)
-					)
-				IF @@ROWCOUNT = 0 
-					SET @DCBAID = NULL
-			END
-			ELSE
-			BEGIN
-				--actualizar registro
-				UPDATE [DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount]
-				SET	
-					DCBA_Bank_Id = @CODAccountBankID
-					,DCBA_Num_account = @CODAccountNumber
-					,DCBA_Nom_account = @CODAccountName
-					,DCBA_Id_currency = @CODCurrencyID
-					,DCBA_TokenUpdate = @Token
-					,ACN_DateUpdate = GETDATE()
-					,DCBA_BankAccountType = (SELECT BankAccountType FROM CatBankAccountType WHERE IdBankAccountType = @CODAccountTypeID)
-				WHERE DCBA_Id = @DCBAID
-			END
-		END
-
-
+		
 		IF (@Option = 1)
 		BEGIN 
 			print 'insert record'
 			IF NOT EXISTS ( SELECT cli.IdCustomer FROM Customer cli where cli.Name = @NameCustomer ) 
 			BEGIN
-
 			INSERT INTO [DeliveryBackOffice].[dbo].[Customer]
 				   ([Name]
 				   ,[Description]
@@ -240,7 +169,7 @@ BEGIN
 				   ,[ExcludeCommissionCOD]
 				   ,[CatBatchTypeCODId]
 				   ,[CatBatchFrequencyCODId]
-				   ,[DCBAID]
+
 				   )
 			 VALUES
 				   (@NameCustomer
@@ -303,8 +232,7 @@ BEGIN
 				   ,@ExcludePriceShippingCOD
 				   ,@ExcludeCommissionCOD
 				   ,@CatBatchTypeCODId
-				   ,@CatBatchFrequencyCODId
-				   ,@DCBAID
+				   ,@CatBatchFrequencyCODId				   		
 				   )
 
 				   SELECT	'TRUE'	[blnResult]
@@ -332,7 +260,8 @@ BEGIN
 		ELSE IF (@Option = 2)
 		BEGIN
 				print 'update record'
-				
+				 
+
 				UPDATE [DeliveryBackOffice].[dbo].[Customer]
 				   SET [Name] = @NameCustomer
 					  ,[Description] = @Description
@@ -393,7 +322,6 @@ BEGIN
 					  -------------------------
 					  ,[SAPCardCode]=@CardCode
 					  -------------------------
-					  ,[DCBAID] = @DCBAID
 				 WHERE IdCustomer = @IdCustomer
 
 				  SELECT	'TRUE'	[blnResult]

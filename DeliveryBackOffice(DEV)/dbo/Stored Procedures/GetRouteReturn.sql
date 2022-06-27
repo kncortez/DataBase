@@ -17,11 +17,11 @@ BEGIN
 	   ,(SELECT
 				COUNT(1)
 			FROM RouteAssigment ra
-			JOIN ServiceManagement sm
+			INNER JOIN ServiceManagement sm WITH(NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-			JOIN PieceByService pbs
+			INNER JOIN PieceByService pbs WITH(NOLOCK)
 				ON pbs.ServiceManagmentId = sm.IdServiceManagement
-			JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 				ON dop.GuidePiece = pbs.GuidePieceId
 			WHERE ra.IdRoute = @IdRoute
 			AND ra.DateOfRoute = @Date
@@ -31,11 +31,11 @@ BEGIN
 	   ,(SELECT
 				COUNT(1)
 			FROM RouteAssigment ra
-			JOIN ServiceManagement sm
+			INNER JOIN ServiceManagement sm WITH(NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-			JOIN PieceByService pbs
+			INNER JOIN PieceByService pbs WITH(NOLOCK)
 				ON pbs.ServiceManagmentId = sm.IdServiceManagement
-			JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 				ON dop.GuidePiece = pbs.GuidePieceId
 			WHERE ra.IdRoute = @IdRoute
 			AND ra.DateOfRoute = @Date
@@ -44,10 +44,10 @@ BEGIN
 	   ,sr.CUI
 	   ,ra.IdVehicle VehicleId
 	   ,sbp.SequenceCode IdManifest
-	FROM RouteAssigment ra
-	LEFT JOIN SenderReceiver sr
+	FROM RouteAssigment ra WITH(NOLOCK)
+	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON ra.IdCurrierMan = sr.ID
-	LEFT JOIN SettlementByPickup sbp
+	LEFT JOIN SettlementByPickup sbp WITH(NOLOCK)
 		ON sbp.RouteAssigmentId = ra.IdRouteAssigment
 	WHERE ra.IdRoute = @IdRoute
 	AND ra.DateOfRoute = @Date
@@ -74,16 +74,16 @@ BEGIN
 		END CANT_PIEZAS_TOTAL
 	   ,CONCAT(X.Pieces, ' de ', ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) PIEZAS_PENDIENTES
 	FROM DeliveryOrder do WITH (NOLOCK)
-	JOIN (SELECT
+	INNER JOIN (SELECT
 			dop.GuideSerie
 		   ,dop.GuideNumber
 		   ,COUNT(1) Pieces
-		FROM RouteAssigment ra
-		JOIN ServiceManagement sm
+		FROM RouteAssigment ra WITH(NOLOCK)
+		INNER JOIN ServiceManagement sm WITH(NOLOCK)
 			ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-		JOIN PieceByService pbs
+		INNER JOIN PieceByService pbs WITH(NOLOCK)
 			ON pbs.ServiceManagmentId = sm.IdServiceManagement
-		JOIN DeliveryOrderPiece dop
+		INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 			ON dop.GuidePiece = pbs.GuidePieceId
 		WHERE ra.IdRoute = @IdRoute
 		AND ra.DateOfRoute = @date

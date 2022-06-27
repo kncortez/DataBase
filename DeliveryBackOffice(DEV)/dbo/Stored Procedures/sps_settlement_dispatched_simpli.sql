@@ -1,4 +1,5 @@
 ﻿
+
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2021-09-23>
@@ -12,8 +13,7 @@ CREATE PROCEDURE [dbo].[sps_settlement_dispatched_simpli]
 		@PiecesDryDispatched INT,
 		@PiecesColdDispatched INT,
 		@RouteDispatched DATETIME,
-		@Token NVARCHAR(50),
-		@StationId INT = NULL
+		@Token NVARCHAR(50)
 AS
 BEGIN
 	
@@ -42,8 +42,7 @@ BEGIN
 				   ,[Guides_Received]
 				   ,[ID_Courier]
 				   ,[Route_Dispatched]
-				   ,[Route_Received]
-				   ,[DispatchedStationId])
+				   ,[Route_Received])
 			 VALUES
 				   (NULL
 				   ,@Token
@@ -58,8 +57,7 @@ BEGIN
 				   ,NULL
 				   ,@IdCourier
 				   ,@RouteDispatched
-				   ,NULL
-				   ,IIF( ISNULL(@StationId,0) > 0, @StationId, NULL))
+				   ,NULL)
 
 			SET @ID_Manifest = SCOPE_IDENTITY()
 

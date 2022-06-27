@@ -4,12 +4,6 @@
 -- Create date: <2020-02-11>
 -- Description:	<Devuelve información sobre las rutas>
 -- =============================================
-
--- =============================================
--- Author:		<Cesar, Sazo>
--- Update date: <2021-12-30>
--- Description:	<Devuelve información sobre las rutas, piloto y unidad >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_Route]
 AS
 BEGIN

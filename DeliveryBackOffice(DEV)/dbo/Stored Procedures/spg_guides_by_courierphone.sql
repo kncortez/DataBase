@@ -27,14 +27,14 @@ BEGIN
 			,da.Guide_Number
 			,SUM(CAST(da.[Dry] AS INT)) AS Pieces_Dry
 			,SUM(CAST(da.[Cold]AS INT)) AS Pieces_Cold
-		FROM DeliveryBackOffice.dbo.DeliveryAttempt da
-			JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = da.ID_Courier
+		FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
+			JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK) ON sr.ID = da.ID_Courier
 		WHERE sr.Phone like '%' + @PhoneNumber + '%'
 			AND da.Guide_Serie = @GuideSerie
 			AND da.Guide_Number = @GuideNumber
 			AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
 			GROUP BY da.Guide_Serie, da.Guide_Number, da.ID_Courier
 	) AS subq
-	JOIN DeliveryBackOffice.dbo.DeliveryOrder do ON do.Guide_Serie = subq.Guide_Serie AND subq.Guide_Number = do.Guide_Number
+	JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK) ON do.Guide_Serie = subq.Guide_Serie AND subq.Guide_Number = do.Guide_Number
 
 END

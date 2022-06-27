@@ -6,7 +6,7 @@
 -- Description:	< Obtiene listado de guias estado solicitado recoleccion Hermes Web Corporativo >
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GetGuidesFromCorporateVisitPoint]
+CREATE  PROCEDURE [dbo].[GetGuidesFromCorporateVisitPoint]
 	@StartDate DATE, -- fecha de inicio de busqueda.
 	@EndDate DATE, -- fecha de finalizacion de busqueda.
 	@IdAccount BIGINT, -- ID de cuenta de usuario que consulta.
@@ -38,7 +38,7 @@ BEGIN
 			'"ColdPieces":'+CONVERT(NVARCHAR(MAX), ISNULL(do.Pieces_Cold,0)) +','+
 			'"DryPieces":'+CONVERT(NVARCHAR(MAX), ISNULL(do.Pieces_Dry,0)) +''+
 			'}'
-			FROM DeliveryBackOffice.dbo.DeliveryOrder do
+			FROM DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
 			LEFT JOIN DeliveryBackOffice.dbo.CorporateManifestDetail cmd
 			ON cmd.GuideNumber= do.Guide_Number AND cmd.GuideSerie= do.Guide_Serie
 			AND cmd.RowStatus = 1

@@ -12,12 +12,14 @@ CREATE PROCEDURE [dbo].[spws_SetHwNewCorporateUser]
 @UserPassword VARCHAR(200),
 @gender VARCHAR(1)='',-- M Male / F Female
 @Cui VARCHAR(50) = '',
-@IdRol BIGINT = 6,
+@IdRol BIGINT,
 @IdVisitPointClient BIGINT
 
 AS
 
 BEGIN
+
+
 
 
 DECLARE @firstName VARCHAR(50)='';
@@ -159,17 +161,7 @@ END TRY
 
 BEGIN CATCH	
 
-
-SELECT 'Error al Crear usuario' AS message,
-				'FALSE'	blnResult,
-				CAST(-1 AS VARCHAR(5)) IdResult,
-				CAST(500 AS VARCHAR(5)) StatusResult,
-				CAST(ERROR_NUMBER() AS VARCHAR) AS ErrorNumber,
-				CAST(ERROR_SEVERITY() AS VARCHAR) AS ErrorSeverity,
-				CAST(ERROR_STATE() AS VARCHAR) AS ErrorState,
-				CAST(ERROR_PROCEDURE() AS VARCHAR) AS ErrorProcedure,
-				CAST(ERROR_LINE() AS VARCHAR) AS ErrorLine,
-				CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage;
+SELECT 'Error al Crear usuario'
 
 ROLLBACK TRANSACTION
 

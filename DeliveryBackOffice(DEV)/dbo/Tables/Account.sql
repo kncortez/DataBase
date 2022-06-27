@@ -14,3 +14,10 @@
     CONSTRAINT [FKIdCustumer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCustomer]
+    ON [dbo].[Account]([IdCustomer] ASC);
+

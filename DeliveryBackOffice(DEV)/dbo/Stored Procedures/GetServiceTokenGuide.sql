@@ -5,9 +5,10 @@
 -- =============================================
 -- =============================================
 -- Author:		<Andres, Ruiz>
--- Create date: <2022-04-21>
--- Description:	< Obtiene datos de un punto de visita de cliente para landing page. >
+-- Create date: <2022-01-03>
+-- Description:	< Cambio de flujo para retornar enlace de tracking y mejora de mensaje cuando guía esta en estado no actualizable.>
 -- =============================================
+
 CREATE PROCEDURE [dbo].[GetServiceTokenGuide]
 	@GuideSerie NVARCHAR(2) = '',
 	@GuideNumber INT = -1,
@@ -79,8 +80,7 @@ BEGIN
 
 				set @jsonResult =(
 								SELECT STUFF(( 
-								SELECT '{{"IdResult":204,' +
-								'"serviceType":"Delivery"' + ',' +
+								SELECT '{{"IdResult":204,' 
 								+ '"Message":" No se encontraron registros validos."}' 
 								FOR XML PATH(''), TYPE
 								).value('.', 'varchar(max)'),1,1,'') )
@@ -99,72 +99,14 @@ BEGIN
 	END
 	ELSE -- Otro tipo de token
 	BEGIN
-		/* FLUJO PARA RECOLECCIONES - POR IMPLEMENTAR */
+		/* OTROS FLUJOS - POR IMPLEMENTAR */
 
-		DECLARE @VisitPointID INT = -1;
-
-		SELECT
-			@VisitPointExists = 1
-			,@IsVisitPoint = 1
-			,@VisitPointID = VPC.CodeOfReference
-		FROM
-			[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
-		WHERE
-			VPC.VisitPointToken = @GuideToken COLLATE Latin1_General_CI_AI
-
-		IF(@IsVisitPoint = 1 AND @VisitPointExists = 1)
-		BEGIN
-			BEGIN TRY
-				SET @jsonResult = (SELECT STUFF(( 
-									SELECT  
-										',{"IdResult":200,"receiverAddress":"' +  VPC.Address + '",' +
-										'"serviceType":"Visitpoint"' + ',' +
-										'"Province":"'+ VPC.Department + '",' +
-										'"Township":"'+ VPC.Town + '"' +
-										+ '}'
-
-										FROM 
-											[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
-										WHERE
-											VPC.CodeOfReference = @VisitPointID
-											AND
-											GETDATE() <= VPC.VisitPointTokenExpiration
-											AND
-											VPC.StatusClient = 1
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,''
-									) )
-				IF @jsonResult IS NULL
-				BEGIN
-					SET @jsonResult =(
-									SELECT STUFF(( 
-									SELECT '{{"IdResult":206,'  +
-									'"serviceType":"Visitpoint"' + ',' +
-									+ '"Message":" No se encontraron registros validos."}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				END
-				SELECT ('[' + @jsonResult +  ']') jsonResult 
-			END TRY
-			BEGIN CATCH
-				SET @jsonResult =(
-									SELECT STUFF(( 
-									SELECT '{{"IdResult":500,' 
-									+ '"Error":"'+ERROR_MESSAGE()+'"}' 
-									FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,'') )
-				SELECT ('[' + @jsonResult +  ']') jsonResultError 
-			END CATCH
-		END
-		ELSE
-		BEGIN
-			SET @jsonResult =(
-								SELECT STUFF(( 
-								SELECT '{{"IdResult":404,' 
-								+ '"Error":"Sin datos que mostrar"}' 
-								FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),1,1,'') )
-			SELECT ('[' + @jsonResult +  ']') jsonResultError 
-		END
+		SET @jsonResult =(
+						SELECT STUFF(( 
+						SELECT '{{"IdResult":204,' 
+						+ '"Message":" No se encontraron registros validos."}' 
+						FOR XML PATH(''), TYPE
+						).value('.', 'varchar(max)'),1,1,'') )
+		SELECT ('[' + @jsonResult +  ']') jsonResult 
 	END
 END

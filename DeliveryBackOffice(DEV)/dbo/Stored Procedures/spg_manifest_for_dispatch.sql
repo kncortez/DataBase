@@ -20,7 +20,7 @@ BEGIN
 		Pieces_Dry int,
 		Receiver_Fullname nvarchar(201),
 		Receiver_Address nvarchar(600),
-		Receiver_Zone nvarchar(100),
+		Receiver_Zone int,
 		Receiver_Town nvarchar(100),
 		Receiver_Departament nvarchar(100),
 		Preparation_Date nvarchar(50),
@@ -38,7 +38,7 @@ BEGIN
 	,do.Pieces_Dry as Pieces_Dry
 	,isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as Receiver_Fullname
 	,do.Receiver_Address AS Receiver_Address
-	,CONVERT(nvarchar, ISNULL(do.Receiver_Zone,0)) AS Receiver_Zone
+	,CONVERT(INT, ISNULL(do.Receiver_Zone,0)) AS Receiver_Zone
 	,do.Receiver_Town AS Receiver_Town
 	,do.Receiver_Department AS  Receiver_Departament
 	,CONVERT(varchar, do.Preparation_Date, 103) + ' ' + CONVERT(varchar(5), do.Preparation_Date, 108) as Preparation_Date

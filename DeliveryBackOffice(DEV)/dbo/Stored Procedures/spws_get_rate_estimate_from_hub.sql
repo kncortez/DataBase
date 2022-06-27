@@ -5,7 +5,7 @@
 -- Create date: <2020-08-05>
 -- Description:	<Devuelve la opcion y precio shipping>
 -- =============================================
-create PROCEDURE [dbo].[spws_get_rate_estimate_from_hub]
+CREATE PROCEDURE [dbo].[spws_get_rate_estimate_from_hub]
 	-- Add the parameters for the stored procedure here
 			@CodApp as nvarchar(50) = 'SIFDCECOM300720201459',
 			@IdDestiny as bigint  = 2000,
@@ -98,8 +98,8 @@ BEGIN
 				deskcurr.CUR_Symbol		  [CurrencySymbol],
 				deskcurr.CUR_Country	  [CurrencyCountry]
 		into #MonCurrency
-		from DenariusWeb_Dev.dbo.currency webcurr
-		join DenariusDesktop_Dev.dbo.PRM_Currency deskcurr
+		from DenariusWeb_Dev.dbo.currency webcurr WITH (NOLOCK)
+		join DenariusDesktop_Dev.dbo.PRM_Currency deskcurr WITH (NOLOCK)
 				on webcurr.CUR_IdCurrency = deskcurr.CUR_IdCurrency
 		where webcurr.CUR_ISO4217Code = @Currency
 		and deskcurr.CUR_Country = @Country

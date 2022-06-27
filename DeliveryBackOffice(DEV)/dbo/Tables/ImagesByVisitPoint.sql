@@ -8,6 +8,8 @@
     [TokenUpdated]    VARCHAR (150) NULL,
     [DateUpdated]     DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdImage] ASC),
-    CONSTRAINT [FKCodeOfReference] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference])
+    CONSTRAINT [FKCodeOfReference] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 

@@ -1,8 +1,8 @@
 ﻿
 -- =============================================
 -- Author:      <Sazo,Cesar>
--- Create date: <2021-12-21>
--- Description: <Obtiene las rutas por tipo, si se envia ALL retorna todas las rutas>
+-- Create date: <2021-12-22>
+-- Description: <Obtiene las rutas por tipo, si se envia ALL se retornan todas>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[sphd_getRoutesByType]

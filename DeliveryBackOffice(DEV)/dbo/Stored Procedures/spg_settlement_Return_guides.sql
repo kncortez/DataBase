@@ -22,7 +22,7 @@ BEGIN
 		Pieces_Dry int,
 		Receiver_Fullname nvarchar(600),
 		Receiver_Address nvarchar(600),
-		Receiver_Zone nvarchar(100),
+		Receiver_Zone int,
 		Receiver_Town nvarchar(100),
 		Receiver_Departament nvarchar(100),
 		Preparation_Date nvarchar(50),
@@ -45,7 +45,7 @@ BEGIN
 				 where Id = @manifestsequence ) >= 1 then 1 else 0 end  as Pieces_Dry
 	,isnull(do.Sender_FirstName,'') + ' ' + isnull(do.Sender_LastName,'') as Receiver_Fullname
 	,do.Sender_Address AS Receiver_Address
-	,CONVERT(nvarchar, ISNULL(do.Sender_Zone,0)) AS Receiver_Zone
+	,CONVERT(INT, ISNULL(do.Sender_Zone,0)) AS Receiver_Zone
 	,do.Sender_Town AS Receiver_Town
 	,do.Sender_Department AS  Receiver_Departament
 	,CONVERT(varchar, do.Preparation_Date, 103) + ' ' + CONVERT(varchar(5), do.Preparation_Date, 108) as Preparation_Date

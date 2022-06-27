@@ -26,9 +26,10 @@
 );
 
 
+
+
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [idx_RateData_hubsource_hubdestiny]
-    ON [dbo].[RateData]([RateId] ASC, [TypeServiceId] ASC, [HubSourceId] ASC, [HubDestinyId] ASC, [RowStatus] ASC) WHERE ([HubDestinyId] IS NOT NULL AND [HubSourceId] IS NOT NULL AND [RowStatus]=(1));
+
 
 
 GO

@@ -11,8 +11,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetBillingGuideDetail]
 		@GuideSerie NVARCHAR(2),
-		@GuideNumber INT,
-		@CatInvoiceTypeId INT
+		@GuideNumber INT
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -26,24 +25,12 @@ BEGIN
 	DECLARE @Amount DECIMAL(18,2)
 	DECLARE @AmountWeight DECIMAL (18,2)
 	DECLARE @AmountSecure DECIMAL (18,2)
-	DECLARE @EnvioTypeInvoice INT
-	DECLARE @ComisionTypeInvoice INT
 
 	-- Valores si cupon fue aplicado
 	DECLARE @AppliedCoupon INT = 0;
 	DECLARE @DiscountType NVARCHAR(10) = '';
 	DECLARE @ValueType NVARCHAR(50) = '';
 	DECLARE @PromoValue DECIMAL(5,2) = 0;
-
-	SELECT 
-		@EnvioTypeInvoice = IdCatInvoiceType
-	FROM CatInvoiceType 
-	WHERE [Name] = 'Envío'
-
-	SELECT 
-		@ComisionTypeInvoice = IdCatInvoiceType
-	FROM CatInvoiceType 
-	WHERE [Name] = 'Comisión COD'
 
 	DECLARE @BreakdownOfPayment AS TABLE(
 		Description VARCHAR(100) NULL
@@ -59,265 +46,234 @@ BEGIN
 		,SendToInvoice BIT NULL
 	)
 
-	IF @CatInvoiceTypeId = @EnvioTypeInvoice
+
+	SET @TypeService = COALESCE((SELECT do.TypeService 
+							FROM DeliveryOrder do WITH(NOLOCK)
+							WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber), 'NDD')
+
+	SET @Segment = (SELECT [dbo].[fn_get_segment] (@GuideSerie,@GuideNumber))
+	
+	IF @Segment IS NULL
+		SET @Segment = 'LOC'
+	
+	IF @TypeService = 'SDD'
+	BEGIN
+		SET @NameArticleWeight = 'SAME DAY EXCEDENTE DE PESO'
+		SET @NameArticleSecure = 'SAME DAY SEGURO'
+
+		IF @Segment = 'FOR'
+			SET @NameArticle = 'SAME DAY DELIVERY FORANEO'
+		ELSE
+			SET @NameArticle = 'SAME DAY DELIVERY LOCAL'
+	END
+	ELSE
+	BEGIN
+		SET @NameArticleWeight = 'NEXT DAY EXCEDENTE DE PESO'
+		SET @NameArticleSecure = 'NEXT DAY SEGURO'
+
+		IF @Segment = 'FOR'
+			SET @NameArticle = 'NEXT DAY DELIVERY FORANEO'
+		ELSE
+			SET @NameArticle = 'NEXT DAY DELIVERY LOCAL'
+	END
+
+	INSERT INTO @BreakdownOfPayment
+	SELECT Description, Amount
+	FROM [DeliveryBackOffice].[dbo].[BreakdownOfPayment] bdp WITH(NOLOCK)
+	WHERE bdp.IdCost = (
+		SELECT TOP 1 IdCost FROM Cost WHERE ProductNumber = @ProductNumber ORDER BY IdCost DESC
+	)
+
+	SELECT
+		TOP 1
+			@AppliedCoupon = ISNULL(BOP.PromoCouponId,0)
+	FROM
+		[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP WITH(NOLOCK)
+	WHERE 
+		BOP.IdCost = (
+			SELECT TOP 1 Co.IdCost FROM [DeliveryBackOffice].[dbo].[Cost] Co WHERE Co.ProductNumber = @ProductNumber ORDER BY IdCost DESC
+		)
+		AND
+		BOP.PromoCouponId IS NOT NULL
+
+	IF(@AppliedCoupon > 0)
 	BEGIN
 
-		SET @TypeService = COALESCE((SELECT do.TypeService 
-								FROM DeliveryOrder do WITH(NOLOCK)
-								WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber), 'NDD')
-
-		SET @Segment = (SELECT [dbo].[fn_get_segment] (@GuideSerie,@GuideNumber))
-	
-		IF @Segment IS NULL
-			SET @Segment = 'LOC'
-	
-		IF @TypeService = 'SDD'
-		BEGIN
-			SET @NameArticleWeight = 'SAME DAY EXCEDENTE DE PESO'
-			SET @NameArticleSecure = 'SAME DAY SEGURO'
-
-			IF @Segment = 'FOR'
-				SET @NameArticle = 'SAME DAY DELIVERY FORANEO'
-			ELSE
-				SET @NameArticle = 'SAME DAY DELIVERY LOCAL'
-		END
-		ELSE
-		BEGIN
-			SET @NameArticleWeight = 'NEXT DAY EXCEDENTE DE PESO'
-			SET @NameArticleSecure = 'NEXT DAY SEGURO'
-
-			IF @Segment = 'FOR'
-				SET @NameArticle = 'NEXT DAY DELIVERY FORANEO'
-			ELSE
-				SET @NameArticle = 'NEXT DAY DELIVERY LOCAL'
-		END
-
-		INSERT INTO @BreakdownOfPayment
-		SELECT Description, Amount
-		FROM [DeliveryBackOffice].[dbo].[BreakdownOfPayment] bdp WITH(NOLOCK)
-		WHERE bdp.IdCost = (
-			SELECT TOP 1 IdCost FROM Cost WHERE ProductNumber = @ProductNumber ORDER BY IdCost DESC
-		)
-
-		SELECT
-			TOP 1
-				@AppliedCoupon = ISNULL(BOP.PromoCouponId,0)
-		FROM
-			[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP WITH(NOLOCK)
+		SELECT 
+			TOP 1 
+				@Amount = PromoC.OriginalAmount
+				,@DiscountType = CTD.ShortName
+				,@ValueType = CVT.ValueTypeName
+				,@PromoValue = PromoC.CouponValue
+		FROM 
+			[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK) 
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD WITH(NOLOCK)
+				ON
+					PromoC.CatDiscountTypeId = CTD.IdCatTypeDiscount
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[CatValueType] CVT WITH(NOLOCK)
+				ON
+					PromoC.CatValueTypeId = CVT.IdCatValueType
 		WHERE 
-			BOP.IdCost = (
-				SELECT TOP 1 Co.IdCost FROM [DeliveryBackOffice].[dbo].[Cost] Co WHERE Co.ProductNumber = @ProductNumber ORDER BY IdCost DESC
-			)
-			AND
-			BOP.PromoCouponId IS NOT NULL
+			PromoC.GuideSerieDestination = @GuideSerie 
+			AND 
+			PromoC.GuideNumberDestination = @GuideNumber
 
-		IF(@AppliedCoupon > 0)
-		BEGIN
+	END
+	ELSE
+	BEGIN
 
+		SET @Amount = (
 			SELECT 
 				TOP 1 
-					@Amount = PromoC.OriginalAmount
-					,@DiscountType = CTD.ShortName
-					,@ValueType = CVT.ValueTypeName
-					,@PromoValue = PromoC.CouponValue
+					DO.PriceShippment 
 			FROM 
-				[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK) 
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD WITH(NOLOCK)
-					ON
-						PromoC.CatDiscountTypeId = CTD.IdCatTypeDiscount
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[CatValueType] CVT WITH(NOLOCK)
-					ON
-						PromoC.CatValueTypeId = CVT.IdCatValueType
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) 
 			WHERE 
-				PromoC.GuideSerieDestination = @GuideSerie 
+				DO.Guide_Serie = @GuideSerie 
 				AND 
-				PromoC.GuideNumberDestination = @GuideNumber
+				DO.Guide_Number = @GuideNumber);
 
-		END
-		ELSE
+	END
+
+	IF @Amount IS NOT NULL AND @Amount > 0
+	BEGIN
+
+		IF (SELECT COUNT(*) FROM @BreakdownOfPayment) > 0
 		BEGIN
-
-			SET @Amount = (
-				SELECT 
-					TOP 1 
-						DO.PriceShippment 
-				FROM 
-					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) 
-				WHERE 
-					DO.Guide_Serie = @GuideSerie 
-					AND 
-					DO.Guide_Number = @GuideNumber);
-
-		END
-
-		IF @Amount IS NOT NULL AND @Amount > 0
-		BEGIN
-
-			IF (SELECT COUNT(*) FROM @BreakdownOfPayment) > 0
-			BEGIN
 			
-				-- Excendente de peso
-				SET @AmountWeight = (SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%PESO%')
+			-- Excendente de peso
+			SET @AmountWeight = (SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%PESO%')
 
-				IF @AmountWeight IS NOT NULL AND @AmountWeight > 0
-				BEGIN
-					SET @AmountWeight = @AmountWeight * 1.12
+			IF @AmountWeight IS NOT NULL AND @AmountWeight > 0
+			BEGIN
+				SET @AmountWeight = @AmountWeight * 1.12
 					
-					SET @Amount = @Amount - @AmountWeight
+				SET @Amount = @Amount - @AmountWeight
 					
-					IF(@AmountWeight IS NOT NULL AND @AmountWeight > 0 AND @AppliedCoupon > 0)
-					BEGIN
-
-						SET @AmountWeight = (
-							SELECT
-								(
-									CASE
-										WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-											CASE
-												WHEN @DiscountType = 'TOT' THEN
-													ROUND(@AmountWeight - ((@AmountWeight * @PromoValue) / 100), 1)
-												ELSE 
-													@AmountWeight
-											END
-										ELSE @AmountWeight
-									END
-								)
-						)
-
-					END
-
-				END
-
-				-- Seguro
-				SET @AmountSecure = (SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%SEGURO%')
-				
-				IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
-				BEGIN
-					SET @AmountSecure = @AmountSecure * 1.12
-
-					SET @Amount = @Amount - @AmountSecure
-
-					IF(@AmountSecure IS NOT NULL AND @AmountSecure > 0 AND @AppliedCoupon > 0)
-					BEGIN
-
-						SET @AmountSecure = (
-							SELECT
-								(
-									CASE
-										WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-											CASE
-												WHEN @DiscountType = 'TOT' THEN
-													ROUND(@AmountSecure - ((@AmountSecure * @PromoValue) / 100), 1)
-												ELSE 
-													@AmountSecure
-											END
-										ELSE @AmountSecure
-									END
-								)
-						)
-
-					END
-				END
-
-				IF(@Amount IS NOT NULL AND @Amount > 0 AND @AppliedCoupon > 0)
+				IF(@AmountWeight IS NOT NULL AND @AmountWeight > 0 AND @AppliedCoupon > 0)
 				BEGIN
 
-					SET @Amount = (
+					SET @AmountWeight = (
 						SELECT
 							(
 								CASE
 									WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
 										CASE
 											WHEN @DiscountType = 'TOT' THEN
-												ROUND(@Amount - ((@Amount * @PromoValue) / 100), 1)
+												@AmountWeight - ROUND(((@AmountWeight * @PromoValue) / 100), 1)
 											ELSE 
-												@Amount
+												@AmountWeight
 										END
-									ELSE @Amount
+									ELSE @AmountWeight
 								END
 							)
 					)
 
 				END
 
-				INSERT INTO @GuideDetail
-				SELECT ca.SAPCode
-					, ca.Name
-					, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
-					, @Amount
-					, ca.Category
-					, 1
-				FROM CatArticleSAP ca
-				WHERE ca.Name = @NameArticle
-
-
-				IF @AmountWeight IS NOT NULL AND @AmountWeight > 0
-					INSERT INTO @GuideDetail
-					SELECT ca.SAPCode
-						, ca.Name
-						, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
-						, @AmountWeight
-						, ca.Category
-						, 0
-					FROM CatArticleSAP ca
-					WHERE ca.Name = @NameArticleWeight
-
-				IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
-					INSERT INTO @GuideDetail
-					SELECT ca.SAPCode
-						, ca.Name
-						, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
-						, @AmountSecure
-						, ca.Category
-						, 0
-					FROM CatArticleSAP ca
-					WHERE ca.Name = @NameArticleSecure
-
 			END
-			ELSE
+
+			-- Seguro
+			SET @AmountSecure = (SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%SEGURO%')
+				
+			IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
 			BEGIN
+				SET @AmountSecure = @AmountSecure * 1.12
+
+				SET @Amount = @Amount - @AmountSecure
+
+				IF(@AmountSecure IS NOT NULL AND @AmountSecure > 0 AND @AppliedCoupon > 0)
+				BEGIN
+
+					SET @AmountSecure = (
+						SELECT
+							(
+								CASE
+									WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+										CASE
+											WHEN @DiscountType = 'TOT' THEN
+												@AmountSecure - ROUND(((@AmountSecure * @PromoValue) / 100), 1)
+											ELSE 
+												@AmountSecure
+										END
+									ELSE @AmountSecure
+								END
+							)
+					)
+
+				END
+			END
+
+			IF(@Amount IS NOT NULL AND @Amount > 0 AND @AppliedCoupon > 0)
+			BEGIN
+
+				SET @Amount = (
+					SELECT
+						(
+							CASE
+								WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+									CASE
+										WHEN @DiscountType = 'TOT' THEN
+											@Amount - ROUND(((@Amount * @PromoValue) / 100), 1)
+										ELSE 
+											@Amount
+									END
+								ELSE @Amount
+							END
+						)
+				)
+
+			END
+
+			INSERT INTO @GuideDetail
+			SELECT ca.SAPCode
+				, ca.Name
+				, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
+				, @Amount
+				, ca.Category
+				, 1
+			FROM CatArticleSAP ca
+			WHERE ca.Name = @NameArticle
+
+
+			IF @AmountWeight IS NOT NULL AND @AmountWeight > 0
 				INSERT INTO @GuideDetail
 				SELECT ca.SAPCode
 					, ca.Name
 					, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
-					, @Amount
+					, @AmountWeight
 					, ca.Category
-					, 1
+					, 0
 				FROM CatArticleSAP ca
-				WHERE ca.Name = @NameArticle
-			END
+				WHERE ca.Name = @NameArticleWeight
+
+			IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
+				INSERT INTO @GuideDetail
+				SELECT ca.SAPCode
+					, ca.Name
+					, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
+					, @AmountSecure
+					, ca.Category
+					, 0
+				FROM CatArticleSAP ca
+				WHERE ca.Name = @NameArticleSecure
 
 		END
-	END
-	ELSE 
-	BEGIN
+		ELSE
+		BEGIN
+			INSERT INTO @GuideDetail
+			SELECT ca.SAPCode
+				, ca.Name
+				, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
+				, @Amount
+				, ca.Category
+				, 1
+			FROM CatArticleSAP ca
+			WHERE ca.Name = @NameArticle
+		END
 
-		SET @NameArticle = 'COMISION COD'
-
-		SET @Amount =
-		ISNULL((SELECT
-				Commission
-			FROM BatchDetailCOD
-			WHERE GuideSerie = @GuideSerie
-			AND GuideNumber = @GuideNumber
-			AND CatConceptCODId = (SELECT
-					IdCatConceptCOD
-				FROM CatConceptCOD
-				WHERE Concept = 'COMISION Y ENVIO')
-			AND RowStatus = 1)
-		, 0)
-
-		INSERT INTO @GuideDetail
-		SELECT ca.SAPCode
-			, ca.Name
-			, CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber)
-			, @Amount
-			, ca.Category
-			, 1
-		FROM CatArticleSAP ca
-		WHERE ca.Name = @NameArticle
 	END
 
 	SELECT * FROM @GuideDetail

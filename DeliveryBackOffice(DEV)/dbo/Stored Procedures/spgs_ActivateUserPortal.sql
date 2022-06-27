@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE spgs_ActivateUserPortal
+﻿CREATE PROCEDURE [dbo].[spgs_ActivateUserPortal]
 @UstIdUser bigint,
 @Type int = 1,
 @TokenCreated nvarchar(50),

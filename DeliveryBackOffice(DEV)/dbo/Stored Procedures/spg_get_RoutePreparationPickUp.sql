@@ -88,7 +88,7 @@ BEGIN
            shp.EndDate,
            CONVERT(VARCHAR(10), shp.StartDate, 105) AS datePickUp,
            CONVERT(VARCHAR(10), shp.StartDate, 108) AS hourPickUp,
-           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
+           CONCAT(FORMAT(shp.StartDate, 'HH:mm'), ' - ', FORMAT(shp.EndDate, 'HH:mm')) AS rangeHour,
            QuantityRegularPackages,
            QuantityOverDimensionedPackage,
            EstimatedWeight,
@@ -128,8 +128,8 @@ BEGIN
            --,css.[Name] StatusName
            srv.IdServiceManagement
     FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
-        LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hub WITH (NOLOCK)
-            ON IdHubLogistics = hub.IdHubLogistic
+        --LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hub WITH (NOLOCK)
+        --    ON shp.IdHubLogistics = hub.IdHubLogistic
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnT WITH (NOLOCK)
             ON shp.TownshipId = twnT.IdTownship
         LEFT JOIN [DeliveryBackOffice].[dbo].[Province] prv WITH (NOLOCK)
@@ -139,34 +139,45 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder AS dro WITH (NOLOCK)
             ON dro.Guide_Number = dop.GuideNumber
                AND dro.Guide_Serie = dop.GuideSerie
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnTdro WITH (NOLOCK)
+            ON dro.SenderIdTownship = twnTdro.IdTownship
+        LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
+            ON shp.SenderId = vpc.CodeOfReference
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
+            ON vpc.IdTownship = TwnTvpc.IdTownship
+        LEFT JOIN
+        (
+            SELECT DSCAux.HeaderCode,
+                   MAX(DSCAux.Hub) 'HubAbbreviation'
+            FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSCAux WITH (NOLOCK)
+            GROUP BY DSCAux.HeaderCode
+        ) hub
+            ON ISNULL(ISNULL(twnT.HeaderCode, twnTdro.HeaderCode), TwnTvpc.HeaderCode) = hub.HeaderCode
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
             ON shp.TypeVehicleId = ctv.IdTypeVehicle
         LEFT JOIN dbo.ServiceManagement srv
             ON srv.IdSchedulePickup = shp.SchedulePickupId
-        LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] as css WITH(NOLOCK) 
-            on css.IdServiceStatus = srv.ServiceStatusId
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
+            ON css.IdServiceStatus = srv.ServiceStatusId
     WHERE
         --@datePickUp BETWEEN CONVERT(DATE, shp.StartDate) AND CONVERT( DATE, shp.EndDate)
         --AND shp.AssigmentStatus IS NULL
-        (
-            NOT(NOT(
-                  @datePickUp_Internal >= CONVERT(DATE, shp.StartDate)
-                  AND CONVERT(DATE, shp.EndDate) >= @datePickUp_Internal
-              )
-            AND NOT(@datePickUp_Internal = ''))
+        (NOT (
+                 NOT (
+                         @datePickUp_Internal >= CONVERT(DATE, shp.StartDate)
+                         AND CONVERT(DATE, shp.EndDate) >= @datePickUp_Internal
+                     )
+                 AND NOT (@datePickUp_Internal = '')
+             )
         )
-        AND
-        (
-            NOT(NOT(AssigmentStatus = 0)
-            AND NOT(AssigmentStatus IS NULL))
-        )
-        AND shp.RowStatus = 1;
+        AND (NOT (
+                     NOT (AssigmentStatus = 0)
+                     AND NOT (AssigmentStatus IS NULL)
+                 )
+            )
+        AND shp.RowStatus = 1
+        AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)); -- Si tiene guía y no está anulada
 
-    PRINT 'FIn insert en tabla temporal';
-    PRINT CONVERT(VARCHAR, GETDATE(), 9);
-
-    --PRINT 'Inicia stuff';
-    --PRINT CONVERT(VARCHAR, GETDATE(), 9);
     --DECLARE @guides NVARCHAR(MAX) =
     --        (
     --            SELECT STUFF(
@@ -220,8 +231,6 @@ BEGIN
 
 
 
-
-
     PRINT 'termina brain';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
     SELECT tb.Periodicy,
@@ -237,7 +246,7 @@ BEGIN
            tb.rangeHour,
            SUM(tb.QuantityRegularPackages) QuantityRegularPackages,
            SUM(tb.QuantityOverDimensionedPackage) QuantityOverDimensionedPackage,
-           AVG(tb.EstimatedWeight) EstimatedWeight,
+           CAST(ROUND(AVG(tb.EstimatedWeight), 2) AS NUMERIC(18, 2)) EstimatedWeight,
            tb.IdHubLogistics,
            tb.HubAbbreviation,
            tb.NameTownship,

@@ -31,7 +31,7 @@ BEGIN
 		left join SettlementByPickupDetail sbpd on (sbpd.GuideNumber = dop.GuideNumber and sbpd.GuideSerie = dop.GuideSerie and sbpd.NoPiece = dop.NoPiece)
 		left join SettlementByPickup sbp on (sbpd.SettlementByPickupId = sbp.Id)
 		left join SenderReceiver sr on (sr.ID = sbp.IdCourier)
-			JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = sbp.TokenCreated
+			JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = sbp.TokenCreated
 				join RouteAssigment rs on (rs.IdRouteAssigment = sbp.RouteAssigmentId)
 			join CatRoute cr on (cr.IdRoute = rs.IdRoute )
 		where  sbp.Id = @IdManifest -- and dop.IsPickup is null or dop.IsPickup = 0

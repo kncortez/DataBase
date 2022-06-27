@@ -75,8 +75,6 @@ BEGIN
 		AND
 		PC.GuideNumberDestination = @GuideNumber
 		AND
-		PC.FinalActiveDate >= GETDATE()
-		AND
 		PC.RowStatus = 1), 0)
 
 

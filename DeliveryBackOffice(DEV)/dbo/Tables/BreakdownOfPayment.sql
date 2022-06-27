@@ -17,11 +17,15 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_description]
     ON [dbo].[BreakdownOfPayment]([IdCost] ASC, [Description] ASC);
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del cupon, si el registro estuviese relacionado a un descuento por cupon.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BreakdownOfPayment', @level2type = N'COLUMN', @level2name = N'PromoCouponId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del cupón, si el registro estuviese relacionado a un descuento por cupón.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BreakdownOfPayment', @level2type = N'COLUMN', @level2name = N'PromoCouponId';
+
+
 

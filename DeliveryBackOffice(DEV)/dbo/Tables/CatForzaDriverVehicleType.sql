@@ -13,6 +13,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para mapear los tipos de vehículo existentes en la plataforma de ForzaDriver con los tipos de vehículo existentes en DeliveryBackOffice.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatForzaDriverVehicleType';
 
@@ -47,4 +49,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatForzaDriverVehicleType', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del tipo de vehículo en la plataforma de ForzaDriver', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatForzaDriverVehicleType', @level2type = N'COLUMN', @level2name = N'ForzaDriverVehicleDescription';
 

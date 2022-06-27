@@ -29,11 +29,12 @@
     [TotalAmountFacturaCashDeclared]       DECIMAL (18, 5) CONSTRAINT [ACHVP_TotalAmountFacturaCashDeclared] DEFAULT ((0)) NOT NULL,
     [TotalAmountFacturaCardDeclared]       DECIMAL (18, 5) CONSTRAINT [ACHVP_TotalAmountFacturaCardDeclared] DEFAULT ((0)) NOT NULL,
     [InvoiceAmountCOD]                     INT             CONSTRAINT [ACHVP_InvoiceAmountCOD] DEFAULT ((0)) NOT NULL,
-    [Observations]                         VARCHAR (MAX)   CONSTRAINT [ACHVP_Observations] DEFAULT (NULL) NULL,
     CONSTRAINT [PK_AccountingClosuresHeaderVisitPoint] PRIMARY KEY CLUSTERED ([IdAccountingClosuresHeaderVisitPoint] ASC),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_VisitPointClient] FOREIGN KEY ([VisitPoint]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO
@@ -161,5 +162,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observaciones hechas por el operador de Express Center al momento de generar el cierre', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresHeaderVisitPoint', @level2type = N'COLUMN', @level2name = N'Observations';
+
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[RateLog] (
-    [IdRate_Log]           INT            IDENTITY (1, 1) NOT NULL,
+    [IdRateLog]            INT            IDENTITY (1, 1) NOT NULL,
     [IdCustomer]           INT            NULL,
     [CodeOfReference]      INT            NULL,
     [TokenCreated]         NVARCHAR (50)  NOT NULL,
@@ -7,10 +7,12 @@
     [DateCreated]          DATETIME       NOT NULL,
     [OriginalRateHeaderId] INT            NULL,
     [NewRateHeaderId]      INT            NOT NULL,
-    PRIMARY KEY CLUSTERED ([IdRate_Log] ASC),
+    PRIMARY KEY CLUSTERED ([IdRateLog] ASC),
     FOREIGN KEY ([NewRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     FOREIGN KEY ([OriginalRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 GO
@@ -18,7 +20,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para identificar de manera unica cada log.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateLog', @level2type = N'COLUMN', @level2name = N'IdRate_Log';
+
 
 
 GO
@@ -47,4 +49,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar el identificador del tarifario nuevo que se crea ó que se le asigna a determinado cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateLog', @level2type = N'COLUMN', @level2name = N'NewRateHeaderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para identificar de manera unica cada log.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateLog', @level2type = N'COLUMN', @level2name = N'IdRateLog';
 

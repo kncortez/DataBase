@@ -55,11 +55,11 @@ SET @jsonResult =
 													select  
 													 ',{' +
 													'"FullName":"' + ua.UadFullName  + '",' +
-													'"Address1":"' + ua.UadAddress1 + '",' +
-													'"Address2":"' + ua.UadAddress2  + '",' +
+													'"Address1":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAddress1,''),'json'),'\',' '),'"','') + '",' +
+													'"Address2":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAddress2,''),'json'),'\',' '),'"','') + '",' +
 													'"NirPhone":"' + ua.UadNirPhone  + '",' +
 													'"Phone":"' + ua.UadPhone   + '",' +
-													'"AdditionalInstructions":"' + ua.UadAdditionalInstructions  + '",' +
+													'"AdditionalInstructions":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAdditionalInstructions,''),'json'),'\',' '),'"','') + '",' +
 													'"IdCountry":"' + ua.UadIdCountry  + '",' +
 													'"Province":"' + prv.ProvinceName  + '",' +
 													'"Township":"' + twn.TownshipName  + '",' +

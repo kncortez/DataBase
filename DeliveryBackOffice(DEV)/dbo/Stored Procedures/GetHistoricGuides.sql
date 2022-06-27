@@ -26,26 +26,20 @@ BEGIN
                                    + '"PackageCountGlobal":"'
                                    + CAST(
                                      (
-                                         SELECT ISNULL(COUNT(X.TotalPaquetes), 0)
-										 FROM (
-										 SELECT DOP1.NoPiece as TotalPaquetes
+                                         SELECT COUNT(1)
                                          FROM GuideBatch GB1
                                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO1
                                                  ON GB1.GuideNumber = DO1.Guide_Number
-											 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP1
-                                    ON DOP1.GuideSerie = DO1.Guide_Serie
-                                       AND DOP1.GuideNumber = DO1.Guide_Number
                                              LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT1
                                                  ON DT1.Guide_Serie = DO1.Guide_Serie
                                                     AND DT1.Guide_Number = DO1.Guide_Number
                                          WHERE GB1.IdUser = @IdUser
                                                AND GB1.RowStatus = 1
-                                               AND DT1.StatusOrderId IN ( 5)
+                                               AND DT1.StatusOrderId IN ( 5,12)
                                                AND (
                                                        @IdVisitPointByClientPortfolio = 0
                                                        OR GB1.IdVisitPointByClientPortfolio = @IdVisitPointByClientPortfolio
                                                    )
-												)X
                                      ) AS VARCHAR(5)) + '",' + '"GuideNumber":"' + ISNULL(GB.GuideNumber, '') + '",'
                                    + '"PackageCount":"' + CAST(ISNULL(COUNT(DOP.GuideNumber), 0) AS VARCHAR) + '",'
                                    + '"DeliveryTime":"'
@@ -84,7 +78,7 @@ BEGIN
                                 LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT_ENTREGA
                                     ON DT_ENTREGA.Guide_Serie = DO.Guide_Serie
                                        AND DT_ENTREGA.Guide_Number = DO.Guide_Number
-                                       AND DT_ENTREGA.StatusOrderId IN (5)
+                                       AND DT_ENTREGA.StatusOrderId IN (5,12)
                                 LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT
                                     ON DT.Guide_Serie = DO.Guide_Serie
                                        AND DT.Guide_Number = DO.Guide_Number
@@ -97,7 +91,7 @@ BEGIN
                                     ON DA.ID_Incident = I.ID
                             WHERE GB.IdUser = @IdUser
                                   AND GB.RowStatus = 1
-                                  AND DT.StatusOrderId IN(5)
+                                  AND DT.StatusOrderId IN(5,12)
                                   AND (
                                           @IdVisitPointByClientPortfolio = 0
                                           OR GB.IdVisitPointByClientPortfolio = @IdVisitPointByClientPortfolio

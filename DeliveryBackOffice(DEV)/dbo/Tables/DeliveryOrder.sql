@@ -84,16 +84,13 @@
     [SalePipeLineId]                       INT             NULL,
     [HubOriginId]                          INT             NULL,
     [HubDestinationId]                     INT             NULL,
-    [SourceSystemId]                       INT             NULL,
     [LastCollectOnDelivery]                DECIMAL (14, 2) NULL,
     [OriginSenderId]                       INT             NULL,
     [IsReturn]                             BIT             NULL,
+    [OrderUserCreated]                     VARCHAR (100)   NULL,
     [VisitpointClientPortfolioId]          BIGINT          NULL,
     [UserAddressId]                        BIGINT          NULL,
-    [OrderUserCreated]                     VARCHAR (100)   NULL,
     [Segment]                              NVARCHAR (10)   NULL,
-    [CatSystemId]                          INT             NULL,
-    [CatModuleId]                          INT             NULL,
     [Sender_Lat]                           VARCHAR (50)    NULL,
     [Sender_Lng]                           VARCHAR (50)    NULL,
     [Receiver_Lat]                         VARCHAR (50)    NULL,
@@ -102,8 +99,6 @@
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     FOREIGN KEY ([SalePipeLineId]) REFERENCES [dbo].[CatSalePipelines] ([IdSalePipeLine]),
-    CONSTRAINT [FK_Deliveryorder_CatModuleId] FOREIGN KEY ([CatModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
-    CONSTRAINT [FK_Deliveryorder_CatSystemId] FOREIGN KEY ([CatSystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FK_DeliveryOrder_ContactIncident] FOREIGN KEY ([ID_ContactIncident]) REFERENCES [dbo].[ContactIncident] ([ID]),
     CONSTRAINT [FK_DeliveryOrder_ReceiverTownship] FOREIGN KEY ([ReceiverIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_DeliveryOrder_SenderTownship] FOREIGN KEY ([SenderIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
@@ -112,9 +107,10 @@
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient] FOREIGN KEY ([Sender_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient1] FOREIGN KEY ([Receiver_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type]),
-    CONSTRAINT [FKOrderSystem] FOREIGN KEY ([SourceSystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
+    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 GO
@@ -190,35 +186,10 @@ CREATE NONCLUSTERED INDEX [idx_sendertown]
 
 
 GO
--- =============================================
--- Author:		<Author,Edelman Vásquez,Name>
--- Create date: <Create Date,17/01/2022,>
--- Description:	<Description,Actualzia el campo de estado Active de la Tabla Wherehouse para indicar que la posición fue liberada, al momento de cambiar la courie_route>
--- =============================================
-CREATE TRIGGER [dbo].[Trg_UpdateStatusPositionRack] 
-   ON  [dbo].[DeliveryOrder]
-   AFTER  UPDATE
-AS 
-DECLARE @number_guide int
 
-BEGIN
-    
-	SET NOCOUNT ON;
-	IF UPDATE (Courier_Route)
-	BEGIN
-		SELECT @number_guide=Guide_Number FROM inserted
-	
-		--IF (Exists(SELECT Guide_Number FROM dbo.Warehouse Where Guide_Number=@number_guide And  Active=1) )
-		--BEGIN
-		   --UPDATE dbo.Warehouse SET Active=0 Where Guide_Number=@number_guide And Active=1
-		
-		--END 
-	END
-END
 
 GO
-DISABLE TRIGGER [dbo].[Trg_UpdateStatusPositionRack]
-    ON [dbo].[DeliveryOrder];
+
 
 
 GO
@@ -230,7 +201,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'1 Impreso, 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Sistema desde donde se creó la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SourceSystemId';
+
 
 
 GO
@@ -246,11 +217,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la ta
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatSystem, el cual indica en que sistema se creo la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'CatSystemId';
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatModule, el cual indica en que módulo del sistema se creo la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'CatModuleId';
+
 
 
 GO
@@ -267,4 +238,39 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Latitud de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Longitud de la dirección del destinatario', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'Receiver_Lng';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Guide_Number]
+    ON [dbo].[DeliveryOrder]([Guide_Number] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_Guide_Number_DateCreated]
+    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC, [Guide_Number] ASC, [DateCreated] ASC)
+    INCLUDE([Ticket_Number], [Order_Number], [Preparation_Date], [Shipping_Date], [Pieces_Dry], [Pieces_Cold], [Consolidated_Number], [Recipe_Number], [Sender_ID], [Sender_FirstName], [Sender_LastName], [Sender_Address], [Sender_Zone], [Sender_Town], [Sender_Department], [Sender_Phone], [Receiver_ID], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Zone], [Receiver_Town], [Receiver_Department], [Receiver_Phone], [Receiver_Email], [Receiver_SocialSecurity_ID], [Receiver_Alternant_ID], [Receiver_Alternant_FullName], [Receiver_Alternant_Address], [Receiver_Alternant_Zone], [Receiver_Alternant_Town], [Receiver_Alternant_Department], [Receiver_Alternant_Phone], [Receiver_Alternant_Email], [Receiver_Alternant_SocialSecurity_ID], [Delivery_Max_Date], [printedStatus], [Manifest_Serie], [Manifest_Number], [Receiver_CUI], [Package_Description], [Sender_Internal_Code], [Receiver_Alternant_CUI], [Courier_Route], [Courier_Name], [Courier_Vehicle_Plate], [Dispatched_Date], [Dispatched_Token], [NameOfReceiver], [Package_Type], [Collect_OnDelivery], [Guide_Collected]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_OriginSenderId]
+    ON [dbo].[DeliveryOrder]([OriginSenderId] ASC)
+    INCLUDE([Preparation_Date], [Shipping_Date], [Sender_ID], [Sender_FirstName], [Sender_LastName], [Sender_Address], [Receiver_FirstName], [Receiver_LastName], [DateCreated], [StatusOrderId], [Collect_OnDelivery], [IsCollect], [PriceShippment], [SenderIdTownship], [ReceiverIdTownship], [TypeService]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateCreated]
+    ON [dbo].[DeliveryOrder]([DateCreated] ASC)
+    INCLUDE([Sender_ID], [Guide_Serie], [Guide_Number]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento del servicio LOC, MET, FOR ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'Segment';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador para el VisitPoint del Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'OriginSenderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si es una devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'IsReturn';
 

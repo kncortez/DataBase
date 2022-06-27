@@ -14,11 +14,17 @@ BEGIN
 
 	SELECT @location = COALESCE(@location + ', ','') + Rack_Position
 	FROM   (SELECT DISTINCT Rack_Position 
-			FROM   Warehouse 
+			FROM   Warehouse WITH(NOLOCK)
 			WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND Active = 1) wh
 	
 RETURN @location
 END
 
 
+
+
+GO
+GRANT EXECUTE
+    ON OBJECT::[dbo].[fn_get_rackposition] TO [ECS-DB-DENARIUS\deliveryreport]
+    AS [dbo];
 

@@ -38,7 +38,7 @@ BEGIN
     @_CodeApp VARCHAR(100),
     @_IdModule INT,
     @_Token VARCHAR(100)
-	PRINT '***************************** SETS'
+	PRINT '************************************************************************************* SETS'
 	SET @_InGuides= @InGuides
 	SET @_InTime = @InTime 
 	SET @_IsReturn= @IsReturn
@@ -46,7 +46,7 @@ BEGIN
 	SET @_IdModule= @IdModule
 	SET @_Token = @Token 
 
-	PRINT '***************************** SELECT 1'
+	PRINT '************************************************************************************* SELECT 1'
 
 	IF OBJECT_ID('tempdb.dbo.#listGuidesBrain', 'U') IS NOT NULL DROP TABLE #listGuidesBrain;
 	IF OBJECT_ID('tempdb.dbo.#TempPrice', 'U') IS NOT NULL DROP TABLE #TempPrice;
@@ -57,7 +57,7 @@ BEGIN
     FROM dbo.CatPaymentTime cpt WITH (NOLOCK)
     WHERE cpt.TimePlaId = @_InTime;
 
-	PRINT '***************************** SELECT 2'
+	PRINT '************************************************************************************* SELECT 2'
 	
     SELECT @MaxTime = ISNULL(cpt.TimePlaId, 1),
            @MaxSequenceTime = ISNULL(cpt.TimeSequence, 0)
@@ -67,7 +67,7 @@ BEGIN
         SELECT MAX(cpt.TimeSequence)FROM dbo.CatPaymentTime cpt WITH (NOLOCK)
     );
 
-	PRINT '***************************** SELECT 3'
+	PRINT '************************************************************************************* SELECT 3'
 	
     SELECT @MinTime = ISNULL(cpt.TimePlaId, 1),
            @MinSequenceTime = ISNULL(cpt.TimeSequence, 0)
@@ -77,7 +77,7 @@ BEGIN
         SELECT MIN(cpt.TimeSequence)FROM dbo.CatPaymentTime cpt WITH (NOLOCK)
     );
 
-	PRINT '***************************** SELECT 4'
+	PRINT '************************************************************************************* SELECT 4'
 	
     SELECT @CollectTime = ISNULL(cpt.TimePlaId, 1),
            @CollectSequence = ISNULL(cpt.TimeSequence, 0)
@@ -97,7 +97,7 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#RevalueGuides', 'U') IS NOT NULL
         DROP TABLE #RevalueGuides; */
 
-PRINT '***************************** INSERT SPLIT'
+PRINT '************************************************************************************* INSERT SPLIT'
 	
     --INSERT INTO @listGuidesBrain
     --(
@@ -184,17 +184,19 @@ PRINT '***************************** INSERT SPLIT'
         LEFT JOIN dbo.RatebyCustomer rc WITH (NOLOCK)
             ON rc.RbcIdCustomer = cus.IdCustomer
                AND rc.RbcRowStatus = 'TRUE'
+		LEFT JOIN dbo.RatebyCustomer rcv WITH (NOLOCK)
+			ON rcv.RbcIdCustomer = cus.IdCustomer AND rcv.RbcRowStatus = 'true' AND rcv.RbcCodeOfReference = ord.Sender_ID
         LEFT JOIN dbo.RateHeader rh WITH (NOLOCK)
-            ON rh.RheId = rc.RbcIdRate
+            ON rh.RheId = ISNULL( rcv.RbcIdRate, rc.RbcIdRate)
         LEFT JOIN dbo.RateHeader rhd WITH (NOLOCK)
             ON rhd.RheDefault = 'true'
                AND cdp.RowStatus = 1
-    WHERE rc.RbcCodeOfReference IS NULL
-          AND rc.RbcRowStatus = 1
+    WHERE --rc.RbcCodeOfReference IS NULL
+         ISNULL(rcv.RbcRowStatus,rc.RbcRowStatus) = 1
     ORDER BY lg.ItemSerie,
              lg.ItemNumber;
 
-			 PRINT '***************************** SELECT DISTINCT'
+			 PRINT '************************************************************************************* SELECT DISTINCT'
 	
     SELECT DISTINCT
            tp.*,

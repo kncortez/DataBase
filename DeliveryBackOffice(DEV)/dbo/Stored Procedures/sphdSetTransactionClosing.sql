@@ -30,6 +30,19 @@ BEGIN
 		
 	IF ( @IdAcc IS NOT NULL )
 	BEGIN
+
+	DECLARE @VistitPointUser INT = (SELECT CodeOfReference FROM VisitPointClient VPC
+								JOIN VisitPointByUser VPU
+									ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+										AND VPU.RowStatus = 1
+								JOIN RegisterUser ru
+									ON VPU.RegisterUserID = ru.UsrIdUser
+										AND ru.UsrRowStatus = 1
+										JOIN RolByUserByAccount rua
+								ON rua.RuaIdUser = ru.UsrIdUser
+								WHERE rua.RuaIdAccount = @IdAcc)
+
+
 			Insert into dbo.DeliveryOrderPaymentTransaction
 				(  
 				   [GuideSerie]
@@ -44,6 +57,7 @@ BEGIN
 				  ,[TypeServiceId]
 				  ,[AccountId]
 				  ,[FEL]
+				  ,[VisitPoint]
 				  )
 			Select 
 			         tdop.Guide_Serie
@@ -56,10 +70,11 @@ BEGIN
 					,tdop.TokenCreated
 					,Getdate()
 					,(
-						Select Top 1 IdTypeService From dbo.CatArticleSAPCatTypeServiceClosure Where SAPCode=tdop.IdTypeService
+						Select IdTypeService From dbo.CatArticleSAPCatTypeServiceClosure Where SAPCode=tdop.IdTypeService
 		              )
 					,@IdAcc--convert(Int,tdop.AccountId) as AccountId
 					,@FEL
+					,IIF(@VistitPointUser=0,null, @VistitPointUser)
 		
 			from @TblDeliveryOrdersList tdop
 

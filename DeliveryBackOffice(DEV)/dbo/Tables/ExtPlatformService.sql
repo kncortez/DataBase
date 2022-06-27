@@ -1,37 +1,37 @@
 ﻿CREATE TABLE [dbo].[ExtPlatformService] (
-    [IdExtPlatformService]      INT              IDENTITY (1, 1) NOT NULL,
-    [ExtPlatformId]             INT              NOT NULL,
-    [IdService]                 INT              NOT NULL,
-    [Reference]                 NVARCHAR (10)    NULL,
-    [TrackingData]              NVARCHAR (150)   NULL,
-    [Plan]                      NVARCHAR (50)    NULL,
-    [Route]                     NVARCHAR (50)    NULL,
-    [Order]                     INT              NULL,
-    [Address]                   NVARCHAR (200)   NOT NULL,
-    [Latitude]                  DECIMAL (18, 15) NOT NULL,
-    [Longitude]                 DECIMAL (18, 15) NOT NULL,
-    [Driver]                    NVARCHAR (50)    NULL,
-    [Vehicle]                   NVARCHAR (50)    NULL,
-    [Observation]               NVARCHAR (200)   NULL,
-    [IsIncluded]                BIT              NOT NULL,
-    [IsDelivery]                BIT              NOT NULL,
-    [ServiceStatus]             NVARCHAR (30)    NULL,
-    [EstimatedTimeArrival]      DATETIME         NULL,
-    [StartServiceDateTime]      DATETIME         NULL,
-    [EndServiceDateTime]        DATETIME         NULL,
-    [CheckoutLatitude]          DECIMAL (18, 15) NULL,
-    [CheckoutLongitude]         DECIMAL (18, 15) NULL,
-    [RowStatus]                 BIT              NOT NULL,
-    [TokenCreated]              NVARCHAR (50)    NOT NULL,
-    [DateCreated]               DATETIME         NOT NULL,
-    [TokenUpdated]              NVARCHAR (50)    NULL,
-    [DateUpdated]               DATETIME         NULL,
-    [IsPreLocated]              BIT              NULL,
-    [CatOriginLocationRecordId] INT              NULL,
+    [IdExtPlatformService] INT              IDENTITY (1, 1) NOT NULL,
+    [ExtPlatformId]        INT              NOT NULL,
+    [IdService]            INT              NOT NULL,
+    [Reference]            NVARCHAR (10)    NULL,
+    [TrackingData]         NVARCHAR (150)   NULL,
+    [Plan]                 NVARCHAR (50)    NULL,
+    [Route]                NVARCHAR (50)    NULL,
+    [Order]                INT              NULL,
+    [Address]              NVARCHAR (200)   NOT NULL,
+    [Latitude]             DECIMAL (18, 15) NOT NULL,
+    [Longitude]            DECIMAL (18, 15) NOT NULL,
+    [Driver]               NVARCHAR (50)    NULL,
+    [Vehicle]              NVARCHAR (50)    NULL,
+    [Observation]          NVARCHAR (200)   NULL,
+    [IsIncluded]           BIT              NOT NULL,
+    [IsDelivery]           BIT              NOT NULL,
+    [ServiceStatus]        NVARCHAR (30)    NULL,
+    [EstimatedTimeArrival] DATETIME         NULL,
+    [StartServiceDateTime] DATETIME         NULL,
+    [EndServiceDateTime]   DATETIME         NULL,
+    [CheckoutLatitude]     DECIMAL (18, 15) NULL,
+    [CheckoutLongitude]    DECIMAL (18, 15) NULL,
+    [RowStatus]            BIT              NOT NULL,
+    [TokenCreated]         NVARCHAR (50)    NOT NULL,
+    [DateCreated]          DATETIME         NOT NULL,
+    [TokenUpdated]         NVARCHAR (50)    NULL,
+    [DateUpdated]          DATETIME         NULL,
+    [IsPreLocated]         BIT              NULL,
     PRIMARY KEY CLUSTERED ([IdExtPlatformService] ASC),
-    CONSTRAINT [ExtPlatformService_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform]),
-    CONSTRAINT [FK_ExtPlatformService_CatOriginLocationRecord] FOREIGN KEY ([CatOriginLocationRecordId]) REFERENCES [dbo].[CatOriginLocationRecord] ([IdCatOriginLocationRecord])
+    CONSTRAINT [ExtPlatformService_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 GO
@@ -147,5 +147,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de origen de la tabla CatOriginLocationRecord', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ExtPlatformService', @level2type = N'COLUMN', @level2name = N'CatOriginLocationRecordId';
+
 

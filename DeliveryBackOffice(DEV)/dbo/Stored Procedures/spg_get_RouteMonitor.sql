@@ -45,6 +45,7 @@ BEGIN
 		--JOIN DeliveryBackOffice.dbo.StatusOrder sta ON sta.StatusOrderId = serv.StatusOrderId
 		--LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement BySt WITH(nolock) ON serv.Guide_Serie = bySt.Guide_Serie and serv.Guide_Number = bySt.Guide_Number
 		WHERE 
+		CONVERT(DATE, serv.DateCreated) BETWEEN CONVERT(DATE, GETDATE()-30) AND CONVERT( DATE, GETDATE()) AND 
 		--serv.StatusOrderId <> 7 AND -- ocultar los servicios anulados
 		--serv.StatusOrderId <> 5 AND -- ocultar los servicios entregados
 		serv.Manifest_Number <> 999 AND -- ocultar primer servicio (semilla)

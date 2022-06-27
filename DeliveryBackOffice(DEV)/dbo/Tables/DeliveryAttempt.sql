@@ -29,6 +29,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_deliveryattempt_guide]
     ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -57,4 +59,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora d
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora de longitud relacionada al servicio la cual no entro dentro de una geocerca', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryAttempt', @level2type = N'COLUMN', @level2name = N'LogLongitude';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ID_Courier_Date_Created]
+    ON [dbo].[DeliveryAttempt]([ID_Courier] ASC, [Date_Created] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
 

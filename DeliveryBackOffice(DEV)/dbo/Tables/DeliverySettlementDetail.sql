@@ -23,6 +23,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
     ON [dbo].[DeliverySettlementDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -30,4 +32,29 @@ CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Orden o secuencia a realizar el servicio (si se le es asigando)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'GuideOrder';
+
+
+GO
+CREATE NONCLUSTERED INDEX [ID]
+    ON [dbo].[DeliverySettlementDetail]([ID] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de actualización de la fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de creación de la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de la fila, TRUE o FALSE.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de actualización de la fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de creación de la fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'DateCreated';
 

@@ -22,20 +22,9 @@ BEGIN
 		ON dst.ID = cn.DeliveryOrderBySettlementId
 	WHERE CONVERT(DATE, dst.Date_Received)
 	BETWEEN @fromDate AND @toDate
-	AND dst.SettlementStationId IN (SELECT
+	AND dst.DispatchedStationId IN (SELECT
 			Name
 		FROM splitstring(@hubsIds, ','))
-	AND EXISTS(
-		SELECT 1
-		FROM DeliverySettlementDetail dsd
-		JOIN dbo.DeliveryOrder ord
-			ON ord.Guide_Serie = dsd.Guide_Serie
-				AND ord.Guide_Number = dsd.Guide_Number
-        WHERE dsd.ID_DeliveryOrderBySettlement = dst.ID
-		AND IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery > 0
-        AND dsd.Guide_Delivered = 'true'
-        AND dsd.Guide_Discharged IS NOT NULL
-	)
 	
 	IF @Faltante > 0 OR @Sobrante > 0
 	BEGIN
@@ -51,20 +40,9 @@ BEGIN
 			ON dst.ID = cn.DeliveryOrderBySettlementId
 		WHERE CONVERT(DATE, dst.Date_Received)
 		BETWEEN @fromDate AND @toDate
-		AND dst.SettlementStationId IN (SELECT
+		AND dst.DispatchedStationId IN (SELECT
 				Name
 			FROM splitstring(@hubsIds, ','))
-		AND EXISTS(
-			SELECT 1
-			FROM DeliverySettlementDetail dsd
-			JOIN dbo.DeliveryOrder ord
-				ON ord.Guide_Serie = dsd.Guide_Serie
-					AND ord.Guide_Number = dsd.Guide_Number
-			WHERE dsd.ID_DeliveryOrderBySettlement = dst.ID
-			AND IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery > 0
-			AND dsd.Guide_Delivered = 'true'
-			AND dsd.Guide_Discharged IS NOT NULL
-		)
 		ORDER BY dst.ID
 	END
 	ELSE

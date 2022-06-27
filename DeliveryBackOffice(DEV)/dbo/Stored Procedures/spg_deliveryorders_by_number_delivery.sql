@@ -71,7 +71,7 @@ BEGIN
 	do.Guide_Serie = @_serie
 	and do.Guide_Number IN (SELECT ItemNumber FROM #listGuides)
 	and do.Guide_Number is not null
-	--and CAST(IIF(do.IsCollect = 'TRUE', isnull(do.PriceShippment,0), 0) AS MONEY) <= 0
-	--and CAST(isnull(do.Collect_OnDelivery,0) AS MONEY) <= 0
+	and CAST(IIF(do.IsCollect = 'TRUE', isnull(do.PriceShippment,0), 0) AS MONEY) <= 0
+	and CAST(isnull(do.Collect_OnDelivery,0) AS MONEY) <= 0
 	order by do.Guide_Number asc
 END

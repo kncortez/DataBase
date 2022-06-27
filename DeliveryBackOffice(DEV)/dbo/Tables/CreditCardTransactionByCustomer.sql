@@ -23,9 +23,16 @@
     [DateUpdated]          DATETIME        NULL,
     [Token]                NVARCHAR (50)   NULL,
     CONSTRAINT [PK_CreditCardTransactionByCustomer] PRIMARY KEY CLUSTERED ([IdTransaction] ASC),
-    FOREIGN KEY ([CustomerReference]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
-    FOREIGN KEY ([CustomerReference]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    FOREIGN KEY ([CustomerReference]) REFERENCES [dbo].[Customer] ([IdCustomer]),
+    FOREIGN KEY ([CustomerReference]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     FOREIGN KEY ([System]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     FOREIGN KEY ([System]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_OrderNumber]
+    ON [dbo].[CreditCardTransactionByCustomer]([OrderNumber] ASC);
 

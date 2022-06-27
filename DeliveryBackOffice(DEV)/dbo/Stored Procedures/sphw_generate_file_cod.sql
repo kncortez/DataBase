@@ -1261,7 +1261,7 @@ BEGIN
         AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
         UNION
         ------ACUMULADO
-        SELECT btd.Reference 'REFERENCIA',
+        SELECT MAX(btd.Reference) 'REFERENCIA',
 		(	SELECT TOP 1 DCBA.DCBA_Id FROM  DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCBA 
 	  WHERE DCBA.DCBA_Num_account = btd.AccountNumber 
 	  AND UPPER(dcba.DCBA_BankAccountType) = UPPER(btd.TypeAccountName)
@@ -1361,9 +1361,7 @@ BEGIN
         GROUP BY pg.CustomerId,
 				 btd.TypeAccountName,
 				 BTD.AccountName,
-				 btd.AccountNumber,
-				 btd.Reference,
-				 btd.Amount
+				 btd.AccountNumber
     END;
 
     -- FORMATO BI

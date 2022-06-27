@@ -18,8 +18,6 @@ CREATE PROCEDURE [dbo].[sps_headerInvoice]
     ,@tokenRegister varchar(200)
 	,@type int
 	,@systemOrigen int = 1
-	,@CatTypeInvoiceId INT = NULL
-	,@IsPaid BIT = NULL
 AS
 BEGIN
 
@@ -49,8 +47,6 @@ END
            ,[inv_tokenRegister]
 		   ,[inv_type]
            ,[systemOperation]
-		   ,[CatInvoiceTypeId]
-		   ,[IsPaid]
 		   )
      VALUES
            (@VpCodeOfReferences
@@ -67,8 +63,6 @@ END
            ,@tokenRegister
 		   ,@type
            ,@systemOrigen
-		   ,@CatTypeInvoiceId
-		   ,@IsPaid
 		   )
 		   select @@IDENTITY 'IDENTITY'
 END

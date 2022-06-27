@@ -45,7 +45,7 @@ BEGIN
 			cs.StationName Hub
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
 		JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.ID_Courier
-		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = dobs.User_Received_COD
+		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.User_Received_COD
 		LEFT JOIN CatStation cs ON cs.IdStation = dobs.SettlementStationId  
 		WHERE dobs.ID = @IdManifest
 

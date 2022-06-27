@@ -27,17 +27,17 @@ BEGIN
 							select  
 							 ',{"IdAccount":"' +   convert(varchar,ua.UadIdAccount) + '",' +
 							'"IdAddress":"' +  convert(varchar,ua.UadIdAddress)  + '",' +
-							'"FullName":"' + dbo.fnt_String_Escape(REPLACE(ISNULL(ua.UadFullName,''),'"',''),'json')  + '",' +
-							'"Address1":"' + dbo.fnt_String_Escape(REPLACE(ISNULL(ua.UadAddress1,''),'"',''),'json')  + '",' +
-							'"Address2":"' + dbo.fnt_String_Escape(REPLACE(ISNULL(ua.UadAddress2,''),'"',''),'json')  + '",' +
-							'"NirPhone":"' + ua.UadNirPhone  + '",' +
+							'"FullName":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadFullName,'json') ,'"','')  + '",' +
+							'"Address1":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAddress1,'json') ,'"','') + '",' +
+							'"Address2":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAddress2,'json') ,'"','')  + '",' +
+							'"NirPhone":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadNirPhone,'json') ,'"','')  + '",' +
 							'"Phone":"' + ua.UadPhone   + '",' +
-							'"AdditionalInstructions":"' + dbo.fnt_String_Escape(REPLACE(ISNULL(ua.UadAdditionalInstructions,''),'"',''),'json')  + '",' +
+							'"AdditionalInstructions":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAdditionalInstructions,'json') ,'"','')  + '",' +
 							'"IdCountry":"' + ua.UadIdCountry  + '",' +
 							'"Province":"' + prv.ProvinceName  + '",' +
 							'"Township":"' + twn.TownshipName  + '",' +
 							'"IdTownship":"' +  convert(varchar,ua.UadIdTownship)  + '",' +
-							'"HeaderCode":"' + ISNULL(twn.HeaderCode,'')   + '",' +
+							'"HeaderCode":"' + twn.HeaderCode   + '",' +
 							'"CodeOfReference":"' + convert(varchar, ua.CodeOfReference)  + '",' +
 							'"IdCityPlace":"' + convert(varchar, isnull(ua.IdCityPlace,31))+ '",' +
 							'"CityPlace":"' + convert(varchar, ctp.CityPlace)   + '",' +

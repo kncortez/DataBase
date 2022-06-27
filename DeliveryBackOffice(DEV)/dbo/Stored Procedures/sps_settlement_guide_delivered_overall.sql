@@ -80,7 +80,7 @@ BEGIN
 					LEFT JOIN DBO.DeliveryOrderDetail DORD  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
 						AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder where OrderDescription ='Intento de entrega fallida')
 					LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-					LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer AND RC.rbcrowstatus=1 AND RC.RbcCodeOfReference is NULL
+					LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
 					LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
 				WHERE dsd.ID_DeliveryOrderBySettlement = @IdManifest
 					AND dsd.RowStatus = 1

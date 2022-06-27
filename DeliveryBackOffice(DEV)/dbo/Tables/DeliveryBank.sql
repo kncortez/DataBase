@@ -14,3 +14,10 @@
     CONSTRAINT [FK_DeliveryBank_IdBank_PayingBank] FOREIGN KEY ([PayingBank]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryBankRDL]
+    ON [dbo].[DeliveryBank]([Id_bank] ASC, [Id_country] ASC, [Id_status] ASC);
+

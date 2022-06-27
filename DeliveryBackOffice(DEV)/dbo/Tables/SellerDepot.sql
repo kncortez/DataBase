@@ -14,9 +14,11 @@
     CONSTRAINT [PK_SellerDepot] PRIMARY KEY CLUSTERED ([IdSellerDepot] ASC),
     CONSTRAINT [FK_SellerDepot_Seller] FOREIGN KEY ([IdSeller]) REFERENCES [dbo].[Seller] ([IdSeller]),
     CONSTRAINT [FK_SellerDepot_Settlement] FOREIGN KEY ([IdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
-    CONSTRAINT [FK_SellerDepot_VisitPointClient] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference]),
+    CONSTRAINT [FK_SellerDepot_VisitPointClient] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [SellerDepot_UK] UNIQUE NONCLUSTERED ([IdSeller] ASC, [CodeOfReference] ASC)
 );
+
+
 
 
 GO

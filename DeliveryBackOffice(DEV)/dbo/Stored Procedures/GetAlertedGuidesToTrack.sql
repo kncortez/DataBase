@@ -4,8 +4,9 @@
 -- Description:	< Retorna el guías las cuales han sido alertadas por hub >
 -- =============================================
 CREATE PROCEDURE [dbo].[GetAlertedGuidesToTrack]
+
 	@TargetHub TblExtPlatTextParameterList READONLY,
-	@Finalized BIT = 0
+	@Finalized BIT = 1
 AS
 BEGIN
 
@@ -39,11 +40,11 @@ BEGIN
 			,DO.Receiver_Department 'ReceiverDepartment'
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 			ON
 			DO.StatusOrderId = SO.StatusOrderId
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK)
 			ON
 			DO.Guide_Serie = DOA.GuideSerie
@@ -55,7 +56,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK)
 			ON
 			DOA.ServiceTypeId = STSM.IdSubTypeServiceManagment
-			JOIN
+			inner JOIN
 			[DeliveryBackOffice].[dbo].[FinalStatusByModule] DSBM WITH(NOLOCK)
 			ON
 			DSBM.ModuleId = @ModuleID
@@ -81,7 +82,7 @@ BEGIN
 					DSC.HeaderCode
 			) DSC
 			ON Twn.HeaderCode = DSC.HeaderCode
-			JOIN
+			INNER JOIN
 				@TargetHub TH
 				ON
 					ISNULL(DSC.Hub,'N/A') = TH.TextParameter COLLATE Latin1_General_CI_AI
@@ -110,11 +111,11 @@ BEGIN
 			,DO.Receiver_Department 'ReceiverDepartment'
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 			ON
 			DO.StatusOrderId = SO.StatusOrderId
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK)
 			ON
 			DO.Guide_Serie = DOA.GuideSerie
@@ -126,7 +127,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK)
 			ON
 			DOA.ServiceTypeId = STSM.IdSubTypeServiceManagment
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[FinalStatusByModule] DSBM WITH(NOLOCK)
 			ON
 			DSBM.ModuleId = @ModuleID
@@ -152,7 +153,7 @@ BEGIN
 					DSC.HeaderCode
 			) DSC
 			ON Twn.HeaderCode = DSC.HeaderCode
-			JOIN
+			INNER JOIN
 				@TargetHub TH
 				ON
 					ISNULL(DSC.Hub,'N/A') = TH.TextParameter COLLATE Latin1_General_CI_AI
@@ -186,11 +187,11 @@ BEGIN
 			,DO.Receiver_Department 'ReceiverDepartment'
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 			ON
 			DO.StatusOrderId = SO.StatusOrderId
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK)
 			ON
 			DO.Guide_Serie = DOA.GuideSerie
@@ -228,7 +229,7 @@ BEGIN
 					DSC.HeaderCode
 			) DSC
 			ON Twn.HeaderCode = DSC.HeaderCode
-			JOIN
+			INNER JOIN
 				@TargetHub TH
 				ON
 					ISNULL(DSC.Hub,'N/A') = TH.TextParameter COLLATE Latin1_General_CI_AI
@@ -259,11 +260,11 @@ BEGIN
 			,DO.Receiver_Department 'ReceiverDepartment'
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 			ON
 			DO.StatusOrderId = SO.StatusOrderId
-			JOIN
+			INNER JOIN
 			[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK)
 			ON
 			DO.Guide_Serie = DOA.GuideSerie
@@ -301,7 +302,7 @@ BEGIN
 					DSC.HeaderCode
 			) DSC
 			ON Twn.HeaderCode = DSC.HeaderCode
-			JOIN
+			INNER JOIN
 				@TargetHub TH
 				ON
 					ISNULL(DSC.Hub,'N/A') = TH.TextParameter COLLATE Latin1_General_CI_AI

@@ -55,83 +55,12 @@ BEGIN
 	DECLARE @MessageError AS NVARCHAR(100) = '';
 	DECLARE @IdResultVPConfig AS BIGINT = -1;
 	DECLARE @IdResultVPFrequency AS BIGINT = -1;
-	DECLARE @DCBAID INT
     IF (@Token <> '')
     BEGIN
 	    BEGIN TRANSACTION
         BEGIN TRY
 				PRINT 'Begin Transaction'
 				PRINT 'Begin Try'
-
-			--SI SE GUARDA UNA CUENTA DE BANCO PARA COD
-			IF @CODAccountNumber IS NOT NULL
-			BEGIN 
-				--Guardar cuenta de banco
-
-				IF @IdVisitPoint IS NOT NULL
-					--Buscar si tiene asignada una cuenta
-					SELECT @DCBAID = DCBAID
-					FROM VisitPointClient
-					WHERE CodeOfReference = @IdVisitPoint
-
-				--Si no tiene asiganda se busca
-				IF @DCBAID IS NULL
-				BEGIN
-					SELECT TOP 1 @DCBAID = dcba.DCBA_Id
-					FROM DeliveryCustomerBankAccount dcba
-					WHERE dcba.DCBA_Bank_Id = @CODAccountBankID
-					AND dcba.DCBA_Num_account = @CODAccountNumber
-					AND dcba.DCBA_Id_currency = @CODAccountCurrencyID
-					AND UPPER(dcba.DCBA_BankAccountType) = UPPER((SELECT BankAccountType FROM CatBankAccountType WHERE IdBankAccountType = @CODAccountBankTypeID))
-				END
-
-				IF @DCBAID IS NULL
-				BEGIN
-					--Crear registro
-					SET @DCBAID = (SELECT ISNULL(MAX(dcba.DCBA_Id)+1,1) FROM DeliveryCustomerBankAccount dcba)
-					INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount]
-						([DCBA_Id]
-						,[DCBA_Bank_Id]
-						,[DCBA_Customer_Id]
-						,[DCBA_Num_account]
-						,[DCBA_Nom_account]
-						,[DCBA_Id_currency]
-						,[DCBA_TokenCreated]
-						,[DCBA_DateCreated]
-						,[DCBA_Id_estado]
-						,[DCBA_BankAccountType]
-						)
-					VALUES
-						(@DCBAID
-						,@CODAccountBankID
-						,-1
-						,@CODAccountNumber
-						,@CODAccountName
-						,@CODAccountCurrencyID
-						,@Token
-						,GETDATE()
-						,1
-						,(SELECT BankAccountType FROM CatBankAccountType WHERE IdBankAccountType = @CODAccountBankTypeID)
-						)
-					IF @@ROWCOUNT = 0 
-						SET @DCBAID = NULL
-				END
-				ELSE
-				BEGIN
-					--actualizar registro
-					UPDATE [DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount]
-					SET	
-						DCBA_Bank_Id = @CODAccountBankID
-						,DCBA_Num_account = @CODAccountNumber
-						,DCBA_Nom_account = @CODAccountName
-						,DCBA_Id_currency = @CODAccountCurrencyID
-						,DCBA_TokenUpdate = @Token
-						,ACN_DateUpdate = GETDATE()
-						,DCBA_BankAccountType = (SELECT BankAccountType FROM CatBankAccountType WHERE IdBankAccountType = @CODAccountBankTypeID)
-					WHERE DCBA_Id = @DCBAID
-				END
-			END
-
 		    IF (@Option = 1)
             BEGIN
                 PRINT 'Insert visitpoint @Option 1'
@@ -140,7 +69,6 @@ BEGIN
 									WHERE vpc.DescriptionOfClient =  @DescriptionOfClient 
 									AND (vpc.CustomerID = @CustomerID)))
                 BEGIN
-
 					 DECLARE @CodeOfReference AS INT = -1;
 					 SET @CodeOfReference = (SELECT TOP (1) vpc3.CodeOfReference + 1 FROM dbo.VisitPointClient vpc3 ORDER BY vpc3.CodeOfReference DESC)
 					
@@ -173,10 +101,7 @@ BEGIN
                         BranchCode,
 						SaleChannelId,
 						ExcludePriceShippingCOD,
-						ExcludeCommissionCOD,
-						VisitPointToken,
-						VisitPointTokenExpiration,
-						DCBAID
+						ExcludeCommissionCOD
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -206,10 +131,7 @@ BEGIN
                         @BranchCode           -- BranchCode - nvarchar(50)
 						,@IdKindOfVPClient,
 						@CODExcludedPriceShipping,
-						@CODExcludedCommission,
-						CONCAT( 'VPC',@CodeOfReference, RIGHT ('00000'+CAST( (FLOOR(RAND()*(99999-0+1))+0) AS NVARCHAR),5)),
-						DATEADD(DAY,15,GETDATE()),
-						@DCBAID
+						@CODExcludedCommission
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -311,7 +233,7 @@ BEGIN
                                     DayOfVisit,
                                     InitializationTimeOfVisit,
                                     FinalizationTimeOfVisit,
-                                    --OrderSequence,
+                                    OrderSequence,
                                     --RouteCodeID,
                                     HubLogisticID,
                                     RowStatus,
@@ -324,7 +246,7 @@ BEGIN
                                         vpi.[DayOfVisit],
                                         vpi.[InitializationTimeOfVisit],
                                         vpi.[FinalizationTimeOfVisit],
-                                        --vpi.[OrderSequence],
+                                        1,--vpi.[OrderSequence],
                                         --vpi.[RouteCodeID],
                                         vpi.[HubLogisticID],
                                         'TRUE',
@@ -423,7 +345,6 @@ BEGIN
 				PRINT 'Update visitpoint @Option 2'
                 IF ((@IdVisitPoint > 0) AND EXISTS (SELECT vpc.IdVisitPointClient FROM dbo.VisitPointClient vpc WHERE vpc.CodeOfReference = @IdVisitPoint)) 
                 BEGIN
-
                     UPDATE DeliveryBackOffice.dbo.VisitPointClient
                     SET [DescriptionOfClient] = @DescriptionOfClient,
                         [StatusClient] = @RowStatus,
@@ -448,8 +369,7 @@ BEGIN
                         [BranchCode] = @BranchCode,
 						[SaleChannelId] = @IdKindOfVPClient,
 						[ExcludePriceShippingCOD] = @CODExcludedPriceShipping,
-						[ExcludeCommissionCOD] = @CODExcludedCommission,
-						[DCBAID] = @DCBAID
+						[ExcludeCommissionCOD] = @CODExcludedCommission
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
@@ -670,7 +590,7 @@ BEGIN
                                 DayOfVisit,
                                 InitializationTimeOfVisit,
                                 FinalizationTimeOfVisit,
-                                OrderSequence,								
+                                OrderSequence,
 								--Edicion de la ruta inhabilitada
                                 --RouteCodeID,
                                 HubLogisticID,

@@ -8,8 +8,7 @@
 CREATE PROCEDURE [dbo].[SetNotificatedDepositReportCOD]
     @IdCustomer INT,
     @IdBank INT,
-	@SenderEmail VARCHAR(max),
-	@Status INT = -1
+	@SenderEmail VARCHAR(max)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -22,33 +21,33 @@ BEGIN
 	IF(ISNULL(@IdCustomer,0) <> 0)
 	BEGIN
 		 	UPDATE pg
-			SET pg.[Notificated] = @Status
-			FROM [dbo].[ProcessedGuideCOD] pg
+			SET pg.[Notificated] = 1
+			FROM [dbo].[ProcessedGuideCOD] pg WITH(NOLOCK)
 	INNER JOIN (
 			 SELECT cu.[IdCustomer] IdCliente, 
                CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber               
-        FROM [dbo].[BatchDetailCOD] AS btd
-            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+        FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
                 ON btd.[GuideSerie] = pg.[GuideSerie]
                    AND btd.[GuideNumber] = pg.[GuideNumber]
-            INNER JOIN [dbo].[DeliveryOrder] AS do
+            INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
                 ON btd.[GuideSerie] = do.[Guide_Serie]
                    AND btd.[GuideNumber] = do.[Guide_Number]
-            LEFT JOIN dbo.Township twn
+            LEFT JOIN dbo.Township twn WITH(NOLOCK)
                 ON twn.IdTownship = do.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw
+            LEFT JOIN dbo.Township tw WITH(NOLOCK)
                 ON tw.TownshipName = do.Receiver_Town
-            LEFT JOIN dbo.Province prv
+            LEFT JOIN dbo.Province prv WITH(NOLOCK)
                 ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.Province pr
+            LEFT JOIN dbo.Province pr WITH(NOLOCK)
                 ON pr.IdProvince = tw.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc
+            LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                 ON vpc.CodeOfReference = do.Sender_ID
-            LEFT JOIN dbo.Customer cu
+            LEFT JOIN dbo.Customer cu WITH(NOLOCK)
                 ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-            LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+            LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                 ON dc.DCBA_Id = do.DCBA_ID
-            LEFT JOIN dbo.DeliveryBank bk
+            LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                 ON bk.Id_bank = dc.DCBA_Bank_Id
         WHERE
 		pg.[Notificated] = 0
@@ -66,34 +65,34 @@ BEGIN
 BEGIN
 
 		 	UPDATE pg
-			SET pg.[Notificated] = @Status
+			SET pg.[Notificated] = 1
 			FROM [dbo].[ProcessedGuideCOD] pg
 	INNER JOIN (
 			 SELECT cu.[IdCustomer] IdCliente,   			 
 			 DO.Sender_Mail,
                CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber               
-        FROM [dbo].[BatchDetailCOD] AS btd
-            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+        FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
                 ON btd.[GuideSerie] = pg.[GuideSerie]
                    AND btd.[GuideNumber] = pg.[GuideNumber]
-            INNER JOIN [dbo].[DeliveryOrder] AS do
+            INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
                 ON btd.[GuideSerie] = do.[Guide_Serie]
                    AND btd.[GuideNumber] = do.[Guide_Number]
-            LEFT JOIN dbo.Township twn
+            LEFT JOIN dbo.Township twn WITH(NOLOCK)
                 ON twn.IdTownship = do.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw
+            LEFT JOIN dbo.Township tw WITH(NOLOCK)
                 ON tw.TownshipName = do.Receiver_Town
-            LEFT JOIN dbo.Province prv
+            LEFT JOIN dbo.Province prv WITH(NOLOCK)
                 ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.Province pr
+            LEFT JOIN dbo.Province pr WITH(NOLOCK)
                 ON pr.IdProvince = tw.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc
+            LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                 ON vpc.CodeOfReference = do.Sender_ID
-            LEFT JOIN dbo.Customer cu
+            LEFT JOIN dbo.Customer cu WITH(NOLOCK)
                 ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-            LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+            LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                 ON dc.DCBA_Id = do.DCBA_ID
-            LEFT JOIN dbo.DeliveryBank bk
+            LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                 ON bk.Id_bank = dc.DCBA_Bank_Id
         WHERE
 		pg.[Notificated] = 0

@@ -26,19 +26,18 @@ BEGIN
 
 	 select @TotalWeight = SUM(DOP.PieceWeight)
 	       ,@TotalValue = SUM(DOP.Amount) 
-     from DeliveryBackOffice.dbo.DeliveryOrderPiece DOP
+     from DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
 	 where DOP.GuideSerie = substring(@TrackingNumber,1,2)
 		   and DOP.GuideNumber = substring(@TrackingNumber,3,LEN(@TrackingNumber))
 	 	
 	 select top 1  @ContentDescription = DOP.Detail
-     from DeliveryBackOffice.dbo.DeliveryOrderPiece DOP
+     from DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
 	 where DOP.GuideSerie = substring(@TrackingNumber,1,2)
 		   and DOP.GuideNumber = substring(@TrackingNumber,3,LEN(@TrackingNumber))
-
+		  
 	 IF(@IdAccount > 0)
-
+	 
 	 BEGIN	 				
-		
 	 select
 	 PRV.IdCountry IdCountry,
 	 DOR.Pieces_Cold + DOR.Pieces_Dry CountPieces
@@ -55,7 +54,7 @@ BEGIN
 	 ,'' PriviceVisitPoint -- ????
 	 ,'' CountryVisitPoint
 	 ,'' VPAdress
-	 ,isnull( rgu.UsrEmail, 'N/A') Mail
+	,isnull( rgu.UsrEmail, 'N/A') Mail
 	 ,COALESCE( Receiver_FirstName,'') + ' ' + COALESCE(Receiver_LastName ,'')  FromName 
 	 ,Receiver_Phone FromPhone
 	 ,coalesce( Receiver_Email,'') FromEmail					
@@ -66,20 +65,21 @@ BEGIN
 	 ,coalesce(  rgu.UsrEmail,'') ToEmail					
 	 ,Sender_Address ToAddress
 	 ,PRV.ProvinceDescription  ToCity	 
-	 from DeliveryBackOffice.dbo.DeliveryOrder DOR
-	 JOIN DeliveryBackOffice.dbo.Account ACC on  ACC.IdCustomer = DOR.IdCustomer
-	 left join DeliveryBackOffice.dbo.RolByUserByAccount rbu on rbu.RuaIdAccount = acc.AccIdAccount
-	 left join DeliveryBackOffice.dbo.RegisterUser rgu on rgu.UsrIdUser = rbu.RuaIdUser
-	 join DeliveryBackOffice.dbo.Township TOW ON TOW.IdTownship = DOR.SenderIdTownship
-	 join DeliveryBackOffice.dbo.Province PRV ON PRV.IdProvince = TOW.IdProvince
-	 left join DeliveryBackOffice.dbo.invoiceDetail IVD ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
+	 from DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
+	 JOIN DeliveryBackOffice.dbo.Account ACC WITH(NOLOCK) on  ACC.IdCustomer = DOR.IdCustomer
+	 left join DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH(NOLOCK) on rbu.RuaIdAccount = acc.AccIdAccount
+	 left join DeliveryBackOffice.dbo.RegisterUser rgu WITH(NOLOCK) on rgu.UsrIdUser = rbu.RuaIdUser
+	 join DeliveryBackOffice.dbo.Township TOW WITH(NOLOCK) ON TOW.IdTownship = DOR.SenderIdTownship
+	 join DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK) ON PRV.IdProvince = TOW.IdProvince
+	 left join DeliveryBackOffice.dbo.invoiceDetail IVD WITH(NOLOCK) ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
 	 	 AND IVD.dti_fk_orderNumber = DOR.Guide_Number
-	 left join DeliveryBackOffice.dbo.invoiceHeader IVH ON IVH.inv_pk_id = IVD.dti_fk_header
-	 join DeliveryBackOffice.dbo.Township TOW2 ON TOW2.IdTownship = DOR.ReceiverIdTownship
-	 join DeliveryBackOffice.dbo.Province PRV2 ON PRV2.IdProvince = TOW2.IdProvince
+	 left join DeliveryBackOffice.dbo.invoiceHeader IVH WITH(NOLOCK) ON IVH.inv_pk_id = IVD.dti_fk_header
+	 join DeliveryBackOffice.dbo.Township TOW2 WITH(NOLOCK) ON TOW2.IdTownship = DOR.ReceiverIdTownship
+	 join DeliveryBackOffice.dbo.Province PRV2 WITH(NOLOCK) ON PRV2.IdProvince = TOW2.IdProvince
 	 where DOR.Guide_Serie = substring(@TrackingNumber,1,2)
 	 and DOR.Guide_Number = substring(@TrackingNumber,3,LEN(@TrackingNumber))
-	 and  ACC.AccIdAccount = @IdAccount
+	 --and  ACC.AccIdAccount = @IdAccount
+
 	 
 	 END
 
@@ -87,7 +87,6 @@ BEGIN
 
 	 --Genera informacion para comprobante cuando para flujo impersonar Portal Web Express Center
 	 BEGIN
-	 
 	 select
 	 PRV.IdCountry IdCountry,
 	 DOR.Pieces_Cold + DOR.Pieces_Dry CountPieces
@@ -117,16 +116,16 @@ BEGIN
 	 ,coalesce(  DOR.Sender_Mail,'') ToEmail					
 	 ,Sender_Address ToAddress
 	 ,PRV.ProvinceDescription  ToCity	 
-	 from DeliveryBackOffice.dbo.DeliveryOrder DOR
-	 LEFT join DeliveryBackOffice.dbo.Township TOW ON TOW.IdTownship = DOR.SenderIdTownship
-	 LEFT join DeliveryBackOffice.dbo.Province PRV ON PRV.IdProvince = TOW.IdProvince
-	 LEFT join DeliveryBackOffice.dbo.invoiceDetail IVD ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
+	 from DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
+	 LEFT join DeliveryBackOffice.dbo.Township TOW WITH(NOLOCK) ON TOW.IdTownship = DOR.SenderIdTownship
+	 LEFT join DeliveryBackOffice.dbo.Province PRV  WITH(NOLOCK) ON PRV.IdProvince = TOW.IdProvince
+	 LEFT join DeliveryBackOffice.dbo.invoiceDetail IVD WITH(NOLOCK) ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
 	 	 AND IVD.dti_fk_orderNumber = DOR.Guide_Number
-	 left join DeliveryBackOffice.dbo.invoiceHeader IVH ON IVH.inv_pk_id = IVD.dti_fk_header
-	 LEFT join DeliveryBackOffice.dbo.Township TOW2 ON TOW2.IdTownship = DOR.ReceiverIdTownship
-	 LEFT join DeliveryBackOffice.dbo.Province PRV2 ON PRV2.IdProvince = TOW2.IdProvince
-   JOIN VisitPointClient vpc ON vpc.CodeOfReference = DOR.Sender_ID
-   LEFT JOIN DeliveryBackOffice.dbo.Customer cu ON vpc.CustomerID = cu.IdCustomer
+	 left join DeliveryBackOffice.dbo.invoiceHeader IVH WITH(NOLOCK) ON IVH.inv_pk_id = IVD.dti_fk_header
+	 LEFT join DeliveryBackOffice.dbo.Township TOW2 WITH(NOLOCK) ON TOW2.IdTownship = DOR.ReceiverIdTownship
+	 LEFT join DeliveryBackOffice.dbo.Province PRV2 WITH(NOLOCK) ON PRV2.IdProvince = TOW2.IdProvince
+   JOIN VisitPointClient vpc WITH(NOLOCK) ON vpc.CodeOfReference = DOR.Sender_ID
+   LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK) ON vpc.CustomerID = cu.IdCustomer
 	 where DOR.Guide_Serie = substring(@TrackingNumber,1,2)
 	 and DOR.Guide_Number = substring(@TrackingNumber,3,LEN(@TrackingNumber))
 

@@ -11,8 +11,8 @@
 );
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [NM_CatDeliveryOptions]
-    ON [dbo].[CatDeliveryOptions]([Name] ASC)
-    INCLUDE([IdDeliveryOption]);
+
 

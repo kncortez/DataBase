@@ -37,7 +37,7 @@ BEGIN
 			cr.CodeRoute
 		FROM [DeliveryBackOffice].[dbo].[SettlementByPickup] dobs
 		JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.IdCourier
-		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = dobs.TokenCreated
+		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.TokenCreated
 		JOIN RouteAssigment ra on (ra.IdRouteAssigment = dobs.RouteAssigmentId)
 		JOIN CatRoute cr on (cr.IdRoute = ra.IdRoute)
 		WHERE dobs.SequenceCode = @IdManifest

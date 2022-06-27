@@ -270,7 +270,6 @@ AS
 																				   --AND cmo.ModIdModuleParent IS NOT NULL
                                                  --INNER JOIN [dbo].CatRol rol ON rol.RolIdRol = rms.RmsIdRol
 												  WHERE cmo.ModIdModule = (select TMP.ModIdModuleCHILD from @TBSUBMODULES2 AS TMP where TMP.ITERATOR2 = @CHILDSMENU2)
-												  AND cmo.ModIdModuleParent = (SELECT TMP.ModIdModule FROM @TBSUBMODULES AS TMP WHERE TMP.ITERATOR = @ITERATORSUBMODULES)
 
 												SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
 												SET @CHILDSMENU= @CHILDSMENU - 1
@@ -421,7 +420,7 @@ AS
 							AND rc.RbcRowStatus=1
 							LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
 							LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser vpu ON vpu.RegisterUserID =ru.UsrIdUser
-			         WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode AND (vpu.IdVisitPointClient = vpc.IdVisitPointClient OR vpu.IdVisitPointClient = vpc.CodeOfReference)
+			         WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
 
 		    FOR XML PATH(''), TYPE
 		   ).value('.', 'varchar(max)'),1,1,''

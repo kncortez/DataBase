@@ -10,12 +10,16 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Catalogo de tipos de alertas de servicios/guías', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAlert';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAlert', @level2type = N'COLUMN', @level2name = N'IdCatTypeAlert';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifiacdor de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAlert', @level2type = N'COLUMN', @level2name = N'IdCatTypeAlert';
+
+
 
 
 GO

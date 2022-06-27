@@ -1,15 +1,15 @@
 ﻿
 CREATE PROCEDURE [dbo].[setBatchNotified]
-@BatchCODId AS INT,
-@Status AS INT = -1
+@BatchCODId AS INT
 AS
 BEGIN
 	
+
 	BEGIN TRANSACTION;
 
 	BEGIN TRY
 	UPDATE ProcessedGuideCOD 
-	SET BatchNotified = @Status
+	SET BatchNotified = 1
 	WHERE BatchCODId = @BatchCODId
 
 								

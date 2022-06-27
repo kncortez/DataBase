@@ -6,28 +6,28 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
 
-@CodApp as nvarchar(50) = '' ,
-@IdCustomerParams as int = 0, 
-@HeaderCodeDestiny as varchar(10)  = '',
-@HeaderCodeSource as varchar(10)  = '',
-@Country as nvarchar(2)   = 'GT',
-@CountPiecesParams as int = 1,
-@IsFragile as bit  = 'FALSE',
-@IsCollected as bit  = 'FALSE',
-@IsInsurance as bit  = 'FALSE',
-@WeigthParcels as nvarchar(MAX) ='0',
-@InsuranceAmount as decimal (18,2) =0,
-@IsCreditCardPayment as bit = 'false'
-,@ParcelCode as nvarchar(max) = '0'
-,@Zone as int =0
-,@AddressParse as nvarchar(600)= ''
-,@IdSettlementSource as int =0
-,@IdSettlementDestiny as int =0
-,@CodeOfReferenceSource as int =0
-,@CodeOfReferenceDestiny as int =0
-,@IdSalePipeLine as int=0
-,@FormatResponse as nvarchar(10) ='DataTable'
-,@CalculateTaxes bit = 'false'
+@CodApp AS NVARCHAR(50) = '' ,
+@IdCustomerParams AS INT = 0, 
+@HeaderCodeDestiny AS VARCHAR(10)  = '',
+@HeaderCodeSource AS VARCHAR(10)  = '',
+@Country AS NVARCHAR(2)   = 'GT',
+@CountPiecesParams AS INT = 1,
+@IsFragile AS BIT  = 'FALSE',
+@IsCollected AS BIT  = 'FALSE',
+@IsInsurance AS BIT  = 'FALSE',
+@WeigthParcels AS NVARCHAR(MAX) ='0',
+@InsuranceAmount AS DECIMAL (18,2) =0,
+@IsCreditCardPayment AS BIT = 'false'
+,@ParcelCode AS NVARCHAR(MAX) = '0'
+,@Zone AS INT =0
+,@AddressParse AS NVARCHAR(600)= ''
+,@IdSettlementSource AS INT =0
+,@IdSettlementDestiny AS INT =0
+,@CodeOfReferenceSource AS INT =0
+,@CodeOfReferenceDestiny AS INT =0
+,@IdSalePipeLine AS INT=0
+,@FormatResponse AS NVARCHAR(10) ='DataTable'
+,@CalculateTaxes BIT = 'false'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -43,22 +43,22 @@ BEGIN
 	If @IdCustomerParams <=0 -- si el id de client no viene en los parametros determinar via CODAPP
 		begin
 			set @IdCustomer =	(select  top 1 eco.IdCustomer
-				from DeliveryBackOffice.[dbo].[Ecommerce] eco 
+				from DeliveryBackOffice.[dbo].[Ecommerce] eco WITH(NOLOCK)
 				where eco.UserKey = @CodApp --'SIFDCECOM300720201459'
 				and eco.IdCountry = @Country
 				and eco.EcommerceStatus = 'TRUE')
 		end
-	else
-		begin
-			set @IdCustomer = @IdCustomerParams
-		end
+	ELSE
+		BEGIN
+			SET @IdCustomer = @IdCustomerParams
+		END
 ------- fin determinar cliente ------------------------------------------------------------------------------------------------
 
 ------- determinar el Tarifario y tipo de tarifario que se va a aplicar -------------------------------------------------------
 
 	DECLARE @IdRate as int
 	DECLARE @IdTypeRate as int
-	DECLARE @WeigthLimit as decimal(12,2) = 0
+	DECLARE @WeigthLimit as decimal(12,2) =0
 	DECLARE @Currency AS varchar(10) = ''
 	DECLARE @PiecesIncluded AS DECIMAL(12,2) = 1
 	
@@ -66,7 +66,7 @@ BEGIN
 	(
 	    SELECT
 			rbc.RbcIdRate
-		FROM dbo.RateByCustomer rbc
+		FROM dbo.RateByCustomer rbc WITH(NOLOCK)
 		WHERE rbc.RbcIdCustomer = @IdCustomer
 		AND rbc.RbcRowStatus = 'TRUE'
 		AND rbc.RbcCodeOfReference = @CodeOfReferenceSource
@@ -78,11 +78,11 @@ BEGIN
 			   ,@WeigthLimit = rh.WeightLimit
 			   ,@Currency = dc.Currency_Symbol
 			   ,@PiecesIncluded = rh.PiecesIncluded
-			FROM dbo.RatebyCustomer rc
-			LEFT JOIN dbo.RateHeader rh
+			FROM dbo.RatebyCustomer rc WITH(NOLOCK)
+			LEFT JOIN dbo.RateHeader rh WITH(NOLOCK)
 				ON rh.RheId = rc.RbcIdRate
-					AND rh.RheRowStatus = 'true'
-			LEFT JOIN dbo.DeliveryCurrency dc
+					AND rh.RheRowStatus = 'true' 
+			LEFT JOIN dbo.DeliveryCurrency dc WITH(NOLOCK)
 				ON dc.Currency_Id = rh.CurrencyId
 			WHERE rc.RbcIdCustomer = @IdCustomer
 			AND rc.RbcRowStatus = 'true'
@@ -90,16 +90,16 @@ BEGIN
 		END
 	ELSE
 		BEGIN
-			select @IdRate= RC.RbcIdRate
+			SELECT @IdRate= RC.RbcIdRate
 			,@IdTypeRate= RH.RateTypeId
 			,@WeigthLimit = rh.WeightLimit
 			,@Currency = dc.Currency_Symbol
 			,@PiecesIncluded = rh.PiecesIncluded
-			from dbo.RatebyCustomer rc
-				left join dbo.RateHeader rh on rh.RheId = rc.RbcIdRate and rh.RheRowStatus ='true'
-				left join dbo.DeliveryCurrency dc on dc.Currency_Id = rh.CurrencyId
-			where rc.RbcIdCustomer = @IdCustomer
-			and rc.RbcRowStatus = 'true'
+			FROM dbo.RatebyCustomer rc WITH(NOLOCK)
+				LEFT JOIN dbo.RateHeader rh WITH(NOLOCK) ON rh.RheId = rc.RbcIdRate AND rh.RheRowStatus ='true'
+				LEFT JOIN dbo.DeliveryCurrency dc WITH(NOLOCK) ON dc.Currency_Id = rh.CurrencyId
+			WHERE rc.RbcIdCustomer = @IdCustomer
+			AND rc.RbcRowStatus = 'true'
 			AND rc.RbcCodeOfReference IS NULL
 		END
 
@@ -110,9 +110,9 @@ BEGIN
 		,@WeigthLimit = rh.WeightLimit
 		,@Currency = dc.Currency_Symbol
 		,@PiecesIncluded = rh.PiecesIncluded
-		from dbo.RateBySalePipeLine sp
-			left join dbo.RateHeader rh on rh.RheId = sp.RateId and rh.RheRowStatus ='true'
-			left join dbo.DeliveryCurrency dc on dc.Currency_Id = rh.CurrencyId
+		from dbo.RateBySalePipeLine sp WITH(NOLOCK)
+			left join dbo.RateHeader rh WITH(NOLOCK) on rh.RheId = sp.RateId and rh.RheRowStatus ='true'
+			left join dbo.DeliveryCurrency dc WITH(NOLOCK) on dc.Currency_Id = rh.CurrencyId
 		where sp.RowStatus = 'true'
 		and sp.SalePipeLineId = @IdSalePipeLine
 		
@@ -125,8 +125,8 @@ BEGIN
 			,@WeigthLimit = rh.WeightLimit
 			,@Currency = dc.Currency_Symbol
 			,@PiecesIncluded = rh.PiecesIncluded
-			from dbo.RateHeader rh
-				left join dbo.DeliveryCurrency dc on dc.Currency_Id = rh.CurrencyId
+			from dbo.RateHeader rh WITH(NOLOCK)
+				left join dbo.DeliveryCurrency dc WITH(NOLOCK)  on dc.Currency_Id = rh.CurrencyId
 			where rh.RheRowStatus = 'true' 
 			and rh.RheDefault ='true'
 		end
@@ -142,125 +142,121 @@ BEGIN
 	IF OBJECT_ID('tempdb.dbo.#ItemAddress', 'U') IS NOT NULL DROP TABLE #ItemAddress;
 	IF OBJECT_ID('tempdb.dbo.#SettlementList', 'U') IS NOT NULL DROP TABLE #SettlementList;
 
-	PRINT 'TEST 1'
+	--PRINT 'TEST 1'
 	-- Quitar Departamento y Municipio de la direccion para tener un mejor resultado en la coincidencia
-	DECLARE @IdTownShip INT;
+	SET @AddressParse = ( SELECT  TOP 1 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+								 @AddressParse, 
+								 '!', ''), '"', ''), '#', ''), '$', ''), '%', ''),
+								 '&', 'y'), '''', ''), '*', ''), '+', ''), '/', ''),
+								 '<', ''), '=', ''), '>', ''), '?', ''), '@', ''),
+								 '[', ''), '\', ''), ']', ''), '^', ''), '_', ''),
+								 '`', ''), '{', ''), '|', ''), '}', ''), '~', ''),
+								 '¡', ''), '¿', ''), '°', ''), '¬', ''), '´', ''),
+								 '¨', ''), '&Quot;', ''), CHAR(255), ''), twn.TownshipName, ''), prv.ProvinceName, '') 
+						  FROM  Township twn  WITH(NOLOCK)
+						  LEFT JOIN Province prv  WITH(NOLOCK)
+							ON prv.IdProvince = twn.IdProvince
+						  WHERE twn.HeaderCode = @HeaderCodeDestiny 
+						  AND twn.TownshipStatus ='true')
 
-	select @IdTownShip = MAX(twn.IdTownship)
-	from  Township twn 
-	where twn.HeaderCode = @HeaderCodeDestiny 
-	AND twn.TownshipStatus ='true';
+	--PRINT 'TEST 2'
 
-	print @IdTownShip;
+	DECLARE @IdSettlement BIGINT;
 
-	select @AddressParse = 
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-		@AddressParse, 
-		'!', ''), '"', ''), '#', ''), '$', ''), '%', ''),
-		'&', 'y'), '''', ''), '*', ''), '+', ''), '/', ''),
-		'<', ''), '=', ''), '>', ''), '?', ''), '@', ''),
-		'[', ''), '\', ''), ']', ''), '^', ''), '_', ''),
-		'`', ''), '{', ''), '|', ''), '}', ''), '~', ''),
-		'¡', ''), '¿', ''), '°', ''), '¬', ''), '´', ''),
-		'¨', ''), '&Quot;', ''), CHAR(255), ''), twn.TownshipName, ''), prv.ProvinceName, '')
-	from  Township twn 
-	left join Province prv 
-	on prv.IdProvince = twn.IdProvince
-	where twn.IdTownship = @IdTownShip
-	AND twn.TownshipStatus ='true';
+	--PRINT '@IdSettlementDestiny'
+	--PRINT @IdSettlementDestiny
 
-	PRINT 'TEST 2'
-
-	DECLARE @IdSettlement bigint;
-
-	PRINT '@IdSettlementDestiny'
-	PRINT @IdSettlementDestiny
-
-	if @IdSettlementDestiny<=0  --  no se envio el id settlement desde front por lo tanto intenta determinarlo con base a la dirección
+	IF @IdSettlementDestiny<=0  --  no se envio el id settlement desde front por lo tanto intenta determinarlo con base a la dirección
 	BEGIN
-		PRINT 'entra @IdSettlementDestiny<=0'
-		PRINT '@AddressParse'
-		PRINT @AddressParse
+		--PRINT 'entra @IdSettlementDestiny<=0'
+		--PRINT '@AddressParse'
+		--PRINT @AddressParse
 
 		-- separar en un arrglo la direccion 
-		select Item
-		into #ItemAddress
-		from DeliveryBackOffice.dbo.SplitUnlimited(@AddressParse,' ')
+		SELECT Item
+		INTO #ItemAddress
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(@AddressParse,' ')
 
-		PRINT 'FIN DE PARSERO DE DIRECCEION'
-		if @Zone =0 -- si no trae zona verificar por direccion
-		begin
-			select TOP 1 ST.IdSettlement  , COUNT(ST.IdSettlement) AS mas_popular, ST.Settlement
-			into #SettlementList
-			from #ItemAddress i
-				left join dbo.Township tw on tw.HeaderCode = @HeaderCodeDestiny
-				left join dbo.Settlement st on st.IdTownship = tw.IdTownship and st.Settlement like concat('%', i.Item, '%')
-			where len(i.Item)>3 and st.IdSettlement is not null
+		--PRINT 'FIN DE PARSERO DE DIRECCEION'
+		IF @Zone =0 -- si no trae zona verificar por direccion
+		BEGIN
+			SELECT TOP 1 ST.IdSettlement  , COUNT(ST.IdSettlement) AS mas_popular, ST.Settlement
+			INTO #SettlementList
+			FROM #ItemAddress i
+				LEFT JOIN dbo.Township tw WITH(NOLOCK) ON tw.HeaderCode = @HeaderCodeDestiny
+				LEFT JOIN dbo.Settlement st WITH(NOLOCK) ON st.IdTownship = tw.IdTownship AND st.Settlement LIKE CONCAT('%', i.Item, '%')
+			WHERE LEN(i.Item)>3 AND st.IdSettlement IS NOT NULL
 			GROUP BY ST.IdSettlement, ST.Settlement
 			ORDER BY 2 DESC
 	
 			CREATE NONCLUSTERED INDEX IX_SettlementList_ParcelCode ON #SettlementList(IdSettlement);
 
-			set @IdSettlement =(select top 1 IdSettlement from #SettlementList)
+			SET @IdSettlement =(SELECT TOP 1 IdSettlement FROM #SettlementList)
 
+
+		END
+		ELSE
+		BEGIN  -- si trae zona verificar por zona 
+			SET @IdSettlement = (SELECT TOP 1 st.IdSettlement
+			FROM dbo.Township tw WITH(NOLOCK)
+				LEFT JOIN dbo.Settlement st WITH(NOLOCK) ON st.IdTownship = tw.IdTownship
+			WHERE tw.HeaderCode = @HeaderCodeDestiny 
+			AND st.Settlement LIKE CONCAT('%Zona ', @Zone ,'%')
+			ORDER BY IdSettlement )
 
 		end
-		else
-		begin  -- si trae zona verificar por zona 
-			set @IdSettlement = (select top 1 st.IdSettlement
-			from dbo.Township tw
-				left join dbo.Settlement st on st.IdTownship = tw.IdTownship
-			where tw.HeaderCode = @HeaderCodeDestiny 
-			and st.Settlement like concat('%Zona ', @Zone ,'%')
-			order by IdSettlement )
-
-		end
-		PRINT 'FIN IF DE LA ZONA'
+		--PRINT 'FIN IF DE LA ZONA'
 		if @IdSettlement is null -- si no se puede identificar el settlement trae el primero del municipio proporcionado
 		begin 
 			set @IdSettlement =  (select top 1 st.IdSettlement
-			from dbo.Township tw
-			left join dbo.Settlement st on st.IdTownship = tw.IdTownship
+			from dbo.Township tw WITH(NOLOCK)
+			left join dbo.Settlement st  WITH(NOLOCK) ON st.IdTownship = tw.IdTownship
 			where tw.HeaderCode = @HeaderCodeDestiny 
 			order by IdSettlement)
 		END
         
-		PRINT 'FIN DEL IF DEL SETTLEMENT'
+		--PRINT 'FIN DEL IF DEL SETTLEMENT'
 	end
 	else
 	BEGIN
-		PRINT 'ENTRA EN ELSE'
-		PRINT '@IdSettlement'
-		PRINT @IdSettlement
-		PRINT '@IdSettlementDestiny'
-		PRINT @IdSettlementDestiny
+		--PRINT 'ENTRA EN ELSE'
+		--PRINT '@IdSettlement'
+		--PRINT @IdSettlement
+		--PRINT '@IdSettlementDestiny'
+		--PRINT @IdSettlementDestiny
 		set @IdSettlement = @IdSettlementDestiny
 	end
 
 
-	PRINT 'TEST 3'
-	--IF OBJECT_ID('tempdb.dbo.#ItemAddress', 'U') IS NOT NULL DROP TABLE #ItemAddress;
-	--IF OBJECT_ID('tempdb.dbo.#SettlementList', 'U') IS NOT NULL DROP TABLE #SettlementList;
+	--PRINT 'TEST 3'
+	-- IF OBJECT_ID('tempdb.dbo.#ItemAddress', 'U') IS NOT NULL DROP TABLE #ItemAddress;
+	-- IF OBJECT_ID('tempdb.dbo.#SettlementList', 'U') IS NOT NULL DROP TABLE #SettlementList;
 
-	set @IsTDA = isnull( ( select top 1 iif(cov.TDA =0,'false','true') from dbo.DumpServiceCoverage cov
+	set @IsTDA = isnull( ( select top 1 iif(cov.TDA =0,'false','true') from dbo.DumpServiceCoverage cov WITH(NOLOCK)
 	where cov.IdSettlement =  @IdSettlement and cov.RowStatus = 1),'false')
 
-	declare @IdRateGroup int = ( iif(@IsTDA ='false',1,(select top 1 RateGroup from dbo.CatTypeService  where CtsShortName = 'TDA' and CtsRowStatus = 1 )))
+	declare @IdRateGroup int = ( iif(@IsTDA ='false',1,(select top 1 RateGroup from dbo.CatTypeService  WITH(NOLOCK) where CtsShortName = 'TDA' and CtsRowStatus = 1 )))
 
 
 	---HOTFIX_SAMEDAY.INI	
-	PRINT 'HOTFIX INI'
-	set @IsSDD = isnull( ( select top 1 iif(cov.SDD =0,'false','true') from dbo.DumpServiceCoverage cov
-	where cov.IdSettlement =  @IdSettlement and cov.RowStatus = 1),'false')
+	--PRINT 'HOTFIX INI'
 
-	declare @IdRateGroupSDD int = ( iif(@IsSDD ='false',1,(select top 1 RateGroup from dbo.CatTypeService  where CtsShortName = 'SDD' and CtsRowStatus = 1 )))
-	PRINT 'HOTFIX FIN'
+	IF @IdRateGroup = 1
+		BEGIN
+			set @IsSDD = isnull( ( select top 1 iif(cov.SDD =0,'false','true') from dbo.DumpServiceCoverage cov WITH(NOLOCK)
+			where cov.IdSettlement =  @IdSettlement and cov.RowStatus = 1),'false')
+
+			declare @IdRateGroupSDD int = ( iif(@IsSDD ='false',1,(select top 1 RateGroup from dbo.CatTypeService WITH(NOLOCK) where CtsShortName = 'SDD' and CtsRowStatus = 1 )))
+		end
+
+	
+	--PRINT 'HOTFIX FIN'
 	---HOTFIX_SAMEDAY.FIN
 		
 --------------- Fin determinar si es TDA   -----------------------.-------------------------------------------------------------------------------------
@@ -270,53 +266,53 @@ BEGIN
 	DECLARE @IdHubDestiny int
 
 	select top 1 @IdHubSource=hb.IdHubLogistic 
-	from dbo.DumpServiceCoverage cov 
-		left join dbo.HubLogistics hb on hb.HubAbbreviation = cov.Hub
+	from dbo.DumpServiceCoverage cov  WITH(NOLOCK)
+		left join dbo.HubLogistics hb WITH(NOLOCK) on hb.HubAbbreviation = cov.Hub
 	where cov.HeaderCode = @HeaderCodeSource ORDER BY cov.Hub 
 
 	select top 1 @IdHubDestiny=hb.IdHubLogistic 
-	from dbo.DumpServiceCoverage cov 
-		left join dbo.HubLogistics hb on hb.HubAbbreviation = cov.Hub
+	from dbo.DumpServiceCoverage cov WITH(NOLOCK)
+		left join dbo.HubLogistics hb WITH(NOLOCK) ON hb.HubAbbreviation = cov.Hub
 	where cov.HeaderCode = @HeaderCodeDestiny ORDER BY cov.Hub  DESC
 
 --------------- Fin determinar Hub Origen y Destino ---------------------------------------------------------------------------------------------------
 
 ---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
-PRINT 'determinar segmento LOC/MET/FOR '
+--PRINT 'determinar segmento LOC/MET/FOR '
 		if @CodeOfReferenceSource <=0 -- si no viene el codeOfReference tomar el primero de cada cliente
 		begin
-			select top 1 @CodeOfReferenceSource = vp.CodeOfReference from dbo.VisitPointClient vp
+			select top 1 @CodeOfReferenceSource = vp.CodeOfReference from dbo.VisitPointClient vp WITH(NOLOCK)
 			where vp.CustomerID = @IdCustomer
 		end
 	DECLARE @IdSegment int
 
-	PRINT 'CodeOfReference'
-	PRINT @CodeOfReferenceSource
+	--PRINT 'CodeOfReference'
+	--PRINT @CodeOfReferenceSource
 
-	PRINT '@IdHubDestiny'
-	PRINT @IdHubDestiny
+	--PRINT '@IdHubDestiny'
+	--PRINT @IdHubDestiny
 	select  top 1  @IdSegment = cov.SegmentId 
 	from dbo.VisitPointCoverage cov
 	where cov.RowStatus ='true'
 	and cov.HublogisticId = @IdHubDestiny
 	and cov.VisitPointId = @CodeOfReferenceSource
 
-	PRINT 'segmento'
-	PRINT @IdSegment
+	--PRINT 'segmento'
+	--PRINT @IdSegment
 	if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
 		BEGIN
-		PRINT 'segmento nulo'
+		--PRINT 'segmento nulo'
 			IF @IdHubSource = @IdHubDestiny 
 				BEGIN
-				PRINT 'hubs iguales'
+				--PRINT 'hubs iguales'
 					SELECT top 1   @IdSegment = sg.CrsId 
-					FROM dbo.CatRateSegment sg where sg.CrsShortName ='LOC'
+					FROM dbo.CatRateSegment sg  WITH(NOLOCK) WHERE sg.CrsShortName ='LOC'
 				END
 			ELSE 
 				BEGIN
-				PRINT 'hubs default'
+				--PRINT 'hubs default'
 					select  top 1  @IdSegment = cov.SegmentId  -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
-						from dbo.VisitPointCoverage cov
+						from dbo.VisitPointCoverage cov WITH(NOLOCK)
 					where cov.RowStatus ='true'
 						and cov.HublogisticId = @IdHubDestiny
 						and @IdHubSource IN(1,22)
@@ -327,13 +323,13 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		BEGIN
 			
 					SELECT top 1   @IdSegment = sg.CrsId 
-			from dbo.CatRateSegment sg where sg.CrsShortName ='FOR'
+			from dbo.CatRateSegment sg WITH(NOLOCK) where sg.CrsShortName ='FOR'
 		END
 
 --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
 -------------------------------Obtener descuento --------------------------------------------------------------------------
 
-		declare @IdTypeCustomer int  =(select top 1 cus.IdCustomerType from dbo.Customer cus where cus.IdCustomer = @IdCustomer)
+		declare @IdTypeCustomer int  =(select top 1 cus.IdCustomerType from dbo.Customer cus  WITH(NOLOCK) WHERE cus.IdCustomer = @IdCustomer)
 
 		select Top 1
 		ss.Name as DicountName
@@ -344,11 +340,11 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		, sd.TypeDiscountId  as idTypeDiscount
 		,tyd.ShortName as TypeDiscount
 		into #Dicounts
-		from dbo.SpecialSale ss
-			inner join dbo.SpecialSaleDetail sd on sd.SpecialSaleId = ss.IdSpecialSale and sd.RowStatus =1
-			left join dbo.Unit unt on unt.IdUnit = sd.UnitId
-			left join dbo.CatTypeDiscount tyd on tyd.IdCatTypeDiscount = sd.TypeDiscountId
-			left join dbo.SpecialSaleTarget tgt on tgt.SpecialSaleId = ss.IdSpecialSale
+		from dbo.SpecialSale ss WITH(NOLOCK)
+			inner join dbo.SpecialSaleDetail sd  WITH(NOLOCK) ON sd.SpecialSaleId = ss.IdSpecialSale and sd.RowStatus =1
+			left join dbo.Unit unt WITH(NOLOCK)  on unt.IdUnit = sd.UnitId
+			left join dbo.CatTypeDiscount tyd  WITH(NOLOCK) ON tyd.IdCatTypeDiscount = sd.TypeDiscountId
+			left join dbo.SpecialSaleTarget tgt WITH(NOLOCK) ON tgt.SpecialSaleId = ss.IdSpecialSale
 		where 
 		ss.RowStatus = 1  
 		and getdate() between ss.StartDate and ss.FinishDate 
@@ -376,17 +372,25 @@ PRINT 'determinar segmento LOC/MET/FOR '
 	 SELECT Item,
        ROW_NUMBER() OVER(ORDER BY item) ID
 	    into #ParceWeigth
-	from DeliveryBackOffice.dbo.SplitUnlimited(@WeigthParcels,',')
+	from DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@WeigthParcels)),',')
 
 	declare @OverWeight decimal(12,2) =0
+	declare @OverWeightchar NVARCHAR(100)
+	
+	set @OverWeightchar =( select sum(
+					iif((w.Item - @WeigthLimit )<0,0,(w.Item - @WeigthLimit ))) as exeso
+					from  #ParceWeigth w
+					 left join #ParceCode p on p.ID = w.ID
+					where p.Item ='0' or p.Item is null or p.Item ='')
+	--PRINT @OverWeightchar
 
 	set @OverWeight =( select sum(
 					iif((w.Item - @WeigthLimit )<0,0,(w.Item - @WeigthLimit ))) as exeso
 					from  #ParceWeigth w
 					 left join #ParceCode p on p.ID = w.ID
 					where p.Item ='0' or p.Item is null or p.Item ='')
-	print 'exceso de peso'
-	print @OverWeight
+	--print 'exceso de peso'
+	--print @OverWeight
 
 ----------------- Fin Determinar si existe exceso de libras --------------------------------------------------------------------
 	DECLARE @CountPiece int =0 
@@ -413,9 +417,10 @@ PRINT 'determinar segmento LOC/MET/FOR '
 
 ----------------- Fin Variable tipo tabla para almacenar tarifas --------------------------------------------------------------------
 
+
 	if @IdTypeRate =1 -- tarifas estandar
 		begin
-			print 'aqui van las tarifas standar'
+			--print 'aqui van las tarifas standar'
 			DECLARE @CountPiecebyArticle INT = 0
 			DECLARE @ParcelPrice2 decimal(12,2) = 0
 
@@ -444,10 +449,9 @@ PRINT 'determinar segmento LOC/MET/FOR '
 					AND ra.TypeSegmentId = @IdSegment
 					AND ra.RateId = @IdRate)
 
-			if(@IsSDD = 'true' AND @CountPiecebyArticle = 0) -----HOTFIX_SAMEDAY.INI	
+			if(@IsSDD = 'true'  AND @CountPiecebyArticle = 0) -----HOTFIX_SAMEDAY.INI	
 			BEGIN
-			PRINT('Prueba444')
-			print @InsuranceAmount
+			
 			insert into @TempRate
 			select  isnull(cr.Name,'') TypeRate
 			,isnull(sg.CrsShortName,'') Segment
@@ -457,41 +461,6 @@ PRINT 'determinar segmento LOC/MET/FOR '
 			, cast(( (isnull(rd.RateValue,0) * @CountPiece) * isnull(@Value,0)/ 100) as decimal(12,2)) DiscountValue
 			, iif(@IsFragile ='true', isnull(rh.FragilRate,0),0) as fragilRate
 			, iif(@IsCollected ='true', isnull(rh.CollectRate,0),0) as CollectedRate
-			, iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast((@InsuranceAmount * isnull(rh.InsuranceRate,0) /100) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
-			, iif(@IsCreditCardPayment ='true',isnull(rh.CreditCardRate,0) ,0 ) as CreditCardRate
-			, iif(isnull(@OverWeight,0) > 0, isnull(@OverWeight,0) * isnull(rh.AdditionalWeightRate,0),0) OverWeightRate
-			, isnull(@ParcelPrice2,0) IrregularParcelRate
-			, isnull(sv.CtsName ,'') as CstName
-			, isnull(sv.CtsDescription,'') as CtsDescription
-			, isnull(rh.ReturnRate,0) as ReturnRate
-			from dbo.RateHeader rh
-				 join dbo.RateData rd on rd.RateId = rh.RheId and rd.RowStatus ='true'
-				 left join dbo.CatRateSegment sg on sg.CrsId = rd.TypeSegmentId
-				 left join dbo.CatTypeService sv on sv.CtsId = rd.TypeServiceId
-				 left join dbo.CatTypeRate cr on cr.IdTypeRate = rh.RateTypeId
-			where rh.RheRowStatus = 'true'
-				and rh.RheId = @IdRate
-				and rd.ArticleId is null
-				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
-				and rd.HubSourceId = @IdHubSource
-				and rd.HubDestinyId = @IdHubDestiny
-				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
-				print('prueba5555')
-				print @IsInsurance
-				END
-				ELSE
-				BEGIN
-				
-			insert into @TempRate
-			select  isnull(cr.Name,'') TypeRate
-			,isnull(sg.CrsShortName,'') Segment
-			, isnull(sv.CtsShortName,'') Service
-			,  (isnull(rd.RateValue,0) * @CountPiece )   BaseRate
-			, isnull(@DiscountName,'') DiscountName
-			, cast(( (isnull(rd.RateValue,0) * @CountPiece) * isnull(@Value,0)/ 100) as decimal(12,2)) DiscountValue
-			, iif(@IsFragile ='true', isnull(rh.FragilRate,0),0) as fragilRate
-			, iif(@IsCollected ='true', isnull(rh.CollectRate,0),0) as CollectedRate
-			--, iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast((@InsuranceAmount * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
 			, iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast((@InsuranceAmount * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
 			, iif(@IsCreditCardPayment ='true',isnull(rh.CreditCardRate,0) ,0 ) as CreditCardRate
 			, iif(isnull(@OverWeight,0) > 0, isnull(@OverWeight,0) * isnull(rh.AdditionalWeightRate,0),0) OverWeightRate
@@ -499,39 +468,72 @@ PRINT 'determinar segmento LOC/MET/FOR '
 			, isnull(sv.CtsName ,'') as CstName
 			, isnull(sv.CtsDescription,'') as CtsDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
-			from dbo.RateHeader rh
-				 join dbo.RateData rd on rd.RateId = rh.RheId and rd.RowStatus ='true'
-				 left join dbo.CatRateSegment sg on sg.CrsId = rd.TypeSegmentId
-				 left join dbo.CatTypeService sv on sv.CtsId = rd.TypeServiceId
-				 left join dbo.CatTypeRate cr on cr.IdTypeRate = rh.RateTypeId
+			from dbo.RateHeader rh WITH(NOLOCK)
+				 join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
+				 left join dbo.CatTypeService sv WITH(NOLOCK) ON sv.CtsId = rd.TypeServiceId
+				 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
 			where rh.RheRowStatus = 'true'
 				and rh.RheId = @IdRate
 				and rd.ArticleId is null
-				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroupSDD and CtsRowStatus = 1) )
+				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
+				and rd.HubSourceId = @IdHubSource
+				and rd.HubDestinyId = @IdHubDestiny
+				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
+
+				END
+				ELSE
+				BEGIN
+				
+				insert into @TempRate
+			select  isnull(cr.Name,'') TypeRate
+			,isnull(sg.CrsShortName,'') Segment
+			, isnull(sv.CtsShortName,'') Service
+			,  (isnull(rd.RateValue,0) * @CountPiece )   BaseRate
+			, isnull(@DiscountName,'') DiscountName
+			, cast(( (isnull(rd.RateValue,0) * @CountPiece) * isnull(@Value,0)/ 100) as decimal(12,2)) DiscountValue
+			, iif(@IsFragile ='true', isnull(rh.FragilRate,0),0) as fragilRate
+			, iif(@IsCollected ='true', isnull(rh.CollectRate,0),0) as CollectedRate
+			, iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast((@InsuranceAmount * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
+			, iif(@IsCreditCardPayment ='true',isnull(rh.CreditCardRate,0) ,0 ) as CreditCardRate
+			, iif(isnull(@OverWeight,0) > 0, isnull(@OverWeight,0) * isnull(rh.AdditionalWeightRate,0),0) OverWeightRate
+			, isnull(@ParcelPrice2,0) IrregularParcelRate
+			, isnull(sv.CtsName ,'') as CstName
+			, isnull(sv.CtsDescription,'') as CtsDescription
+			, isnull(rh.ReturnRate,0) as ReturnRate
+			from dbo.RateHeader rh WITH(NOLOCK)
+				 join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 left join dbo.CatRateSegment sg WITH(NOLOCK) ON sg.CrsId = rd.TypeSegmentId
+				 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
+				 left join dbo.CatTypeRate cr WITH(NOLOCK) on cr.IdTypeRate = rh.RateTypeId
+			where rh.RheRowStatus = 'true'
+				and rh.RheId = @IdRate
+				and rd.ArticleId is null
+				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
 				and rd.HubSourceId = @IdHubSource
 				and rd.HubDestinyId = @IdHubDestiny
 				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
 				and sv.CtsShortName not in ( 'SDD')
 
 				END -----HOTFIX_SAMEDAY.FIN
-				print('preba5214')
-				Print(@InsuranceAmount)
-				print(@IsInsurance)
-				print @IdRate
-				print @IdHubSource
-				print @IdHubDestiny
+
 
 		end
 	else if @IdTypeRate = 2 -- tarifas todo destino
 		begin
-			print 'aqui van las tarifas todo destino'
-			print 'segmento'
-			print  @IdSegment
-			print 'grupo de servicios'
+			--print 'aqui van las tarifas todo destino'
+			--print 'segmento'
+			--print  @IdSegment
+			--print 'grupo de servicios'
 			
-			set @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams,@PiecesIncluded)
-			--set @CountPiece = 1
-			print @IdRateGroup
+			--IF @IdCustomer = 1  -- el igss se cobra por guia no por pieza
+			--	set @CountPiece = 1
+			--ELSE
+				set @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams,@PiecesIncluded) -- todos los demas clientes se les cobra por pieza
+
+			
+			--
+			--print @IdRateGroup
 			insert into @TempRate
 
 			select isnull(cr.Name,'') TypeRate 
@@ -549,11 +551,11 @@ PRINT 'determinar segmento LOC/MET/FOR '
 			, isnull(sv.CtsName,'') as CstName 
 			, isnull(sv.CtsDescription,'') as CstDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
-			from dbo.RateHeader rh
-				 join dbo.RateData rd on rd.RateId = rh.RheId and rd.RowStatus ='true'
-				 left join dbo.CatRateSegment sg on sg.CrsId = rd.TypeSegmentId
-				 left join dbo.CatTypeService sv on sv.CtsId = rd.TypeServiceId
-				 left join dbo.CatTypeRate cr on cr.IdTypeRate = rh.RateTypeId
+			from dbo.RateHeader rh WITH(NOLOCK)
+				 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 left join dbo.CatRateSegment sg WITH(NOLOCK) ON sg.CrsId = rd.TypeSegmentId
+				 left join dbo.CatTypeService sv WITH(NOLOCK) ON sv.CtsId = rd.TypeServiceId
+				 left join dbo.CatTypeRate cr WITH(NOLOCK) on cr.IdTypeRate = rh.RateTypeId
 			where rh.RheId = @IdRate
 				and rd.ArticleId is null
 				and rd.TypeSegmentId = @IdSegment
@@ -562,7 +564,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		end
 	else if @IdTypeRate = 3 -- tarifas por articulo
 		begin
-			print 'aqui van las tarifas por articulo'
+			--print 'aqui van las tarifas por articulo'
 			-- cantidad de piezas regulares
 			 set @CountPiece =( select  count(*) 
 							from  #ParceWeigth w
@@ -578,8 +580,8 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		declare @ParcelPrice decimal(12,2) =(
 		select sum( isnull( ra.RateValue , isnull(ar.PriceDefault ,0) )) 
 		from #ListCode ls
-			join dbo.ArticleByCustomer ar ON  ar.Code = ls.Item
-			join dbo.RateData ra on ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
+			join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
+			join dbo.RateData ra WITH(NOLOCK) ON ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
 			)
 		--select @ParcelPrice as price
 -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
@@ -599,22 +601,22 @@ PRINT 'determinar segmento LOC/MET/FOR '
 			, isnull(sv.CtsName,'') as CtsName 
 			, isnull(sv.CtsDescription,'') as CtsDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
-			from dbo.RateHeader rh
-				 join dbo.RateData rd on rd.RateId = rh.RheId and rd.RowStatus ='true'
-				 left join dbo.CatRateSegment sg on sg.CrsId = rd.TypeSegmentId
-				 left join dbo.CatTypeService sv on sv.CtsId = rd.TypeServiceId
-				 left join dbo.CatTypeRate cr on cr.IdTypeRate = rh.RateTypeId
+			from dbo.RateHeader rh WITH(NOLOCK)
+				 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
+				 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
+				 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
 			where rh.RheId = @IdRate
 				and rd.ArticleId is null
 				and rd.TypeSegmentId = @IdSegment
-				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
+				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService WITH(NOLOCK)  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
 				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
-			print 'rate'
-			print @IdRate
-			print 'segment'
-			print @IdSegment
-			print 'grupo'
-			print @IdRateGroup
+			--print 'rate'
+			--print @IdRate
+			--print 'segment'
+			--print @IdSegment
+			--print 'grupo'
+			--print @IdRateGroup
 		end
 	else if @IdTypeRate = 4 -- tarifas especiales
 		begin
@@ -623,7 +625,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 	-- FDD-671 INI
 	ELSE IF @IdTypeRate = 5 -- tarifas por peso
 	BEGIN
-		PRINT 'tarifas por peso'
+		--PRINT 'tarifas por peso'
 
 		--Cálcular las piezas que no entran en rangos
 		DECLARE @tblNotInRange AS TABLE (
@@ -767,7 +769,7 @@ PRINT 'determinar segmento LOC/MET/FOR '
 		print 'error no se encontro un tarifario'
 	end
 
-	print 'Respuesta desde tabla temporal'
+	--print 'Respuesta desde tabla temporal'
 
 	If @FormatResponse ='Json'
 		begin
@@ -835,24 +837,24 @@ PRINT 'determinar segmento LOC/MET/FOR '
 				tr.TypeRate
 				,tr.Segment
 				,tr.Service
-				, CONVERT(DECIMAL(10,2),(tr.BaseRate -  tr.Discount  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate )) as Price
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,CONVERT(DECIMAL(10,2),tr.BaseRate), 'false') as BaseRate
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,(CONVERT(DECIMAL(10,2),tr.Discount) * -1),'false') as DiscountValue
+				, (tr.BaseRate -  tr.Discount  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.BaseRate, 'false') as BaseRate
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,(tr.Discount * -1),'false') as DiscountValue
 				, tr.DiscountName
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,(CONVERT(DECIMAL(10,2),tr.FragilRate)),'false')as FragilRate
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,(CONVERT(DECIMAL(10,2),tr.CollectedRate)), 'false')  as CollectedRate
-				,dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,CONVERT(DECIMAL(10,2),tr.InsuranceRate) , 'false') as InsuranceRate
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,CONVERT(DECIMAL(10,2),tr.OverWeightRate), 'false') as OverWeightRate
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,CONVERT(DECIMAL(10,2),tr.IrregularPieceRate), 'false') as IrregularPieceRate
-				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,CONVERT(DECIMAL(10,2),tr.CreditCardRate), 'false') as CreditCardRate
-				 ,dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' , CONVERT(DECIMAL(10,2),(tr.BaseRate -  tr.Discount  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate )), 'true') as Iva
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.FragilRate,'false')as FragilRate
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CollectedRate, 'false')  as CollectedRate
+				,dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.InsuranceRate , 'false') as InsuranceRate
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.OverWeightRate, 'false') as OverWeightRate
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.IrregularPieceRate, 'false') as IrregularPieceRate
+				, dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CreditCardRate, 'false') as CreditCardRate
+				 ,dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' , (tr.BaseRate -  tr.Discount  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ), 'true') as Iva
 				 ,@FechaCompra [FechaCompra]
 				 ,@Currency [Currency]
-				 ,CONVERT(DECIMAL(10,2),tr.ReturnRate) [ReturnRate]
+				 ,tr.ReturnRate [ReturnRate]
 			from  @TempRate tr
 		end
+		
 
-
-	PRINT 'precio'
+	--PRINT 'precio'
 	
 END

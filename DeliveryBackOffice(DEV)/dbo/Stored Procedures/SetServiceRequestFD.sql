@@ -4,18 +4,14 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
 @VisitPointByClientPortfolioId BIGINT = 0,
-@UserAddressId BIGINT = 0,
-@SystemModule NVARCHAR(200) = NULL
+@UserAddressId BIGINT = 0
+
 AS
 BEGIN
 	DECLARE @IdTransaction bigint = NULL
 	DECLARE @ManifestNumber int = 0
 	DECLARE @ManifestSerie varchar(2) = 'FM'
 	DECLARE @GuideSerie varchar(2) = 'FD'
-
-	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
-	--FIN MODIFICACIÓN
 
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
@@ -27,27 +23,7 @@ BEGIN
   SET @UserAddressId = NULL;
   END
   
-  DECLARE @system INT = NULL;
-  DECLARE @module INT = NULL;
-
-  IF (@SystemModule != '') 
-  BEGIN
-  --Se almacena el sistema y modulo desde donde se crea una guía
-		SET @system = (
-						SELECT SysIdSystem from CatSystem ca
-						WHERE ca.SysNameSystem = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/') 
-						WHERE id = 1)
-					   );
-
-		-- Se deja la sentencia TOP 1 ya que existe dos modulos con el mismo nombre para la creación de guías en porta Web
-		-- Crear guías para usuarios individuales/Express y Crear Guías para corporativos en el flujo normal
-		SET @module = (
-						SELECT TOP 1 mo.ModIdModule from CatModule mo
-						WHERE mo.ModName = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/')
-						WHERE id = 2)
-					   );
-  END
-
+  
 	/*********************************************************************************************/
 	/******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
 	/*********************************************************************************************/
@@ -61,15 +37,20 @@ BEGIN
 		/******** AUTO GENERACIÓN DE CORRELATIVOS BASADOS EN LA CANTIDAD DE REGISTOS RECIBIDOS *******/
 		/*********************************************************************************************/
 		DECLARE @noRecords INT = (SELECT COUNT(RowNumber) FROM @TblDeliveryOrdersFD)
-		DECLARE @startnum INT = (SELECT MAX([Guide_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder])
+		DECLARE @startnum INT = (SELECT MAX([Guide_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] )
 		DECLARE @endnum INT = (@startnum - 1) + @noRecords
 		;WITH gen AS (
 			SELECT @startnum AS num
 			UNION ALL
 			SELECT num+1 FROM gen WHERE num+1<=@endnum
 		)
-		INSERT INTO @CorrelativeTable (Guide_Number)
-		SELECT * FROM gen
+		INSERT INTO @CorrelativeTable 
+		(
+			Guide_Number
+		)
+		SELECT 
+			NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
+		FROM gen
 		option (maxrecursion 10000)
 		/*****************************************************************************************************************************/
 		/******** TABLA TEMPORAL #GUIDETABLE PARA UNIR REGISTROS RECIBIDOS DE DELIVERYORDERS Y CORRELATIVOS AUTOGENERADOS ************/
@@ -126,15 +107,24 @@ BEGIN
 			[IsCollect],
 			[PriceShippment] ,
 			[SenderIdTownship],
-			[ReceiverIdTownship]
+			[ReceiverIdTownship],
+			[Sender_Lat],
+			[Sender_Lng]
 		INTO #GuideTable
 		FROM @TblDeliveryOrdersFD
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
 
+		CREATE NONCLUSTERED INDEX IX_TempTest_SerieNumber ON #GuideTable(Guide_Serie, Guide_Number);
+		CREATE NONCLUSTERED INDEX IX_TempTest_ReceiverIdTownship ON #GuideTable(ReceiverIdTownship);
+
 		/**********************************************************************/
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
 		/**********************************************************************/
-		SET @ManifestNumber = (SELECT MAX([Manifest_Number]) + 1 FROM [DeliveryBackOffice].[dbo].[ServiceRequest])
+		SET @ManifestNumber = NEXT VALUE FOR [dbo].[NewGuideManifestSequence]; 
+		--(
+		--	SELECT MAX([Manifest_Number]) + 1 
+		--	FROM [DeliveryBackOffice].[dbo].[ServiceRequest] 
+		--)
 		INSERT INTO DeliveryBackOffice.dbo.ServiceRequest (
 			[Messageid], 
 			[Receiver_Name], 
@@ -227,10 +217,10 @@ BEGIN
 				[PriceShippment],
 				[SenderIdTownship],
 				[ReceiverIdTownship],
-				[VisitpointClientPortfolioId],
-				[UserAddressId],
-				[CatSystemId],
-				[CatModuleId]
+        		[VisitpointClientPortfolioId],
+        		[UserAddressId],
+				[Sender_Lat],
+				[Sender_Lng]
 			)
 			SELECT 
 				GT.[Ticket_Number],
@@ -291,11 +281,10 @@ BEGIN
 				GT.PriceShippment,
 				GT.SenderIdTownship,
 				GT.ReceiverIdTownship,
-				
-				@VisitPointByClientPortfolioId,
-				@UserAddressId,
-				@system,
-				@module
+        		@VisitPointByClientPortfolioId,
+        		@UserAddressId,
+				GT.Sender_Lat,
+				GT.Sender_Lng
 			FROM #GuideTable GT
 			
 			-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
@@ -319,7 +308,7 @@ BEGIN
 			FROM #GuideTable GT
 			WHERE NOT EXISTS (
 				SELECT 1
-				FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG
+				FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
 				WHERE GT.Guide_Serie = SDFG.GuideSerie
 				AND GT.Guide_Number = SDFG.GuideNumber
 				AND SDFG.IsDelivery = 1
@@ -353,7 +342,7 @@ BEGIN
 		--Actualizar registro de guía agregando registro en columna Segment
 		         UPDATE do
                    SET do.Segment = (dbo.fn_get_segment(GT.Guide_Serie,GT.Guide_Number))
-                   FROM DeliveryOrder do
+                   FROM DeliveryOrder do 
                    INNER JOIN #GuideTable GT
                    ON GT.Guide_Number = do.Guide_Number
                       AND GT.Guide_Serie = do.Guide_Serie;
@@ -368,7 +357,30 @@ BEGIN
 			0 AS 'StatusCode', 
 			ERROR_MESSAGE() AS 'Description', 
 			CONVERT(BIGINT, 0) AS 'NumTransferID'
+
+
 		ROLLBACK TRANSACTION
+			INSERT INTO dbo.RoutePreparationLogError
+			(
+				ErrorDescription,
+				ErrorNumber,
+				ErrorProcedure,
+				ErrorLine,
+				GuideSerie,
+				GuideNumber,
+				TokenCreated,
+				DateCreated
+			)
+			VALUES
+			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,0
+					   ,0
+					   ,'Error en guía'
+					   ,GETDATE())
+
 	END CATCH;
 	IF @@TRANCOUNT > 0
 	BEGIN
@@ -378,21 +390,17 @@ BEGIN
 			'Registros guardados correctamente' AS 'Description', 
 			--@IdTransaction AS 'NumTransferID'
 			@ManifestNumber AS 'NumTransferID',
-			(Select Segment from DeliveryOrder where Manifest_Number = @ManifestNumber) AS 'Segment'
+			(Select Segment from DeliveryOrder  where Manifest_Number = @ManifestNumber) AS 'Segment'
 		SELECT 
 			Manifest_Serie AS 'ManifestSerie',
 			Manifest_Number AS 'ManifestNumber'
-		FROM ServiceRequest 
+		FROM ServiceRequest WITH(NOLOCK)
 		WHERE Manifest_Serie = @ManifestSerie AND Manifest_Number = @ManifestNumber
 		SELECT 
 			C.[Row_Number] AS 'RowNumber',
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
 			isnull(@Route,'')  as 'Route'
-			,D.PriceShippment AS 'Price',
-			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts'
-			--FIN MODIFICACIÓN
 		FROM DeliveryOrder D
 		JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)

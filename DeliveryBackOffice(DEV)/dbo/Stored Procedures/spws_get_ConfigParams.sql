@@ -1,5 +1,5 @@
 ﻿-- =============================================
--- Author:		<Fredd, Monterroso>
+-- Author:		<Freddy, Monterroso>
 -- Create date: <2021-11-03>
 -- Description:	<Devuelve el valor de la configuracion de un parámetros de configuración>
 -- =============================================

@@ -36,7 +36,7 @@ BEGIN
 			CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username as IdUser_Username_Received
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
 		JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.ID_Courier
-		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = dobs.User_Received
+		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.User_Received
 		WHERE dobs.ID = @IdManifest
 
 END

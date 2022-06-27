@@ -17,3 +17,57 @@
     CONSTRAINT [FKUserAddressBatch] FOREIGN KEY ([IdAddress]) REFERENCES [dbo].[UserAddress] ([UadIdAddress])
 );
 
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'Status';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'IdVisitPointByClientPortfolio';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'IdUser';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'IdRow';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'IdBatch';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'IdAddress';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'GuideSeries';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'GuideNumber';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'GuideBatch', @level2type = N'COLUMN', @level2name = N'DateCreated';
+

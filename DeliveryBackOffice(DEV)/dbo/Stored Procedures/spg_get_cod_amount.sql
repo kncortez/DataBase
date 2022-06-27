@@ -43,7 +43,6 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 					ON lst.ItemSerie = PC.GuideSerieDestination
 						AND lst.ItemNumber = PC.GuideNumberDestination
-						AND PC.FinalActiveDate >= GETDATE()
 						AND PC.RowStatus = 1
 			where (ord.PriceShippment is null -- precion nulo
 				or ord.PriceShippment  <=0  -- precio 0
@@ -84,9 +83,7 @@ BEGIN
 
 		select lst.* 
 			, ord.Sender_ID 
-			--, ord.Collect_OnDelivery
-			   -- si la guia se creo desde parser en el monto cod ya tiene incluido el precio del envio por lo tando se debe descontar antes de calcular la comision
-		   ,IIF(ord.SourceSystemId = 6, ord.Collect_OnDelivery-ord.PriceShippment, ord.Collect_OnDelivery) Collect_OnDelivery
+			, ord.Collect_OnDelivery
 			, isnull(ord.IdCustomer, vpc.CustomerID) IDCUSTOMER
 			, isnull(rc.RbcIdRate ,@idRateDefault) IdRate
 			, iif( ord.TypeService ='EXP' ,'NDD', isnull(ord.TypeService,'NDD')) Serv
@@ -123,7 +120,7 @@ BEGIN
 		--select * from dbo.RateCOD
 
 
-			DECLARe @MaxPaymentTIme int = (select top 1 pt.TimePlaId from dbo.CatPaymentTime pt where pt.TimePlaStatus =1  and pt.TimeSequence = (select max(ps.TimeSequence) from dbo.CatPaymentTime ps where ps.TimePlaStatus = 1) )
+			DECLARe @MaxPaymentTIme int = (select top 1 (pt.TimePlaId -1) from dbo.CatPaymentTime pt where pt.TimePlaStatus =1  and pt.TimeSequence = (select max(ps.TimeSequence) from dbo.CatPaymentTime ps where ps.TimePlaStatus = 1) )
 
 			declare @PendingPaymentTemp as table
 				(	GuideSerie			nvarchar (25) null,
@@ -159,9 +156,9 @@ BEGIN
 
 
 
-			SELECT tp.ItemSerie
+			SELECT  DISTINCT tp.ItemSerie
 				, tp.ItemNumber
-				, pp.COD
+				, tp.Collect_OnDelivery
 				, tp.IDCUSTOMER 
 				, tp.CODRate
 				, tp.CODExempt

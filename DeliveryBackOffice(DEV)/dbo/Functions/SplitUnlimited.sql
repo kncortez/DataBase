@@ -1,13 +1,13 @@
 ﻿
 CREATE FUNCTION [dbo].[SplitUnlimited]
 (
-  @delimited nvarchar(max),
+  @delimited varchar(max),
   @delimiter nvarchar(100)
 ) RETURNS @t TABLE
 (
 -- Id column can be commented out, not required for sql splitting string
   id int identity(1,1), -- I use this column for numbering splitted parts
-  Item nvarchar(max)
+  Item varchar(max)
 )
 AS
 BEGIN

@@ -89,7 +89,7 @@ BEGIN
 					dsd.TokenUpdated = @Token,
 					dsd.DateUpdated = GETDATE()
 				FROM  DeliverySettlementDetail dsd
-				JOIN DeliveryOrderBySettlement dobs 
+				INNER JOIN DeliveryOrderBySettlement dobs 
 					ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 				WHERE dsd.RowStatus = 1
 					AND Guide_Serie = @GuideSerie AND Guide_Number IN (

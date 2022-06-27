@@ -8,3 +8,15 @@
     CONSTRAINT [PK_IdLogToken] PRIMARY KEY CLUSTERED ([IdLogToken] ASC)
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_LogTokenPOD]
+    ON [dbo].[LogTokenPOD]([LogTokenPOD] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCourierman]
+    ON [dbo].[LogTokenPOD]([IdCourierman] ASC);
+

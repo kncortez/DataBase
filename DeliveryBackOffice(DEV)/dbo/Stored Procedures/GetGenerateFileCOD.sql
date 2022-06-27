@@ -1,8 +1,5 @@
-﻿-----
--- Historia: HW-31
--- Se modifica para poder enviar como referencia para el archivo 
--- de BAC el número de guía en lugar del correlativo que se tenía
-----
+﻿--exec [dbo].[GetGenerateFileCOD] 33,17
+
 CREATE PROCEDURE [dbo].[GetGenerateFileCOD]
 	@IdBank INT,
 	@BatchCODId INT
@@ -43,7 +40,7 @@ BEGIN
 					 ) 'CUENTA CREDITO',
 			   FORMAT(bd.CreditDate, 'dd/MM/yyyy') 'FECHA',
 			   Amount 'MONTO',
-			   bd.BatchCODId 'REFERENCIA',
+			   Reference 'REFERENCIA',
 			   REPLACE(ISNULL((SELECT dcba.DCBA_Nom_account
 							   FROM DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
 							   WHERE dcba.DCBA_Id = bd.CreditAccountId
@@ -90,8 +87,7 @@ BEGIN
 
 	IF @IdBank = 5
 	BEGIN
-		SELECT 
-				CAST(bd.BatchCODId AS VARCHAR(200)) 'REFERENCIA',
+		SELECT (ROW_NUMBER() OVER(ORDER BY bd.CreditAccountId)) 'REFERENCIA',
 			    REPLACE(REPLACE(ISNULL((SELECT dcba.DCBA_Num_account
 									 FROM DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
 									 WHERE dcba.DCBA_Id = bd.CreditAccountId
@@ -110,7 +106,7 @@ BEGIN
 					   ) 'CUENTA CREDITO',
 			   Amount 'MONTO'
 		INTO #TableResultBANRURALTemp
-	    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
+		FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
 		WHERE bd.BatchCODId = @BatchCODId;
 
 		SELECT * FROM #TableResultBANRURALTemp;
@@ -150,10 +146,10 @@ BEGIN
 						',', ''
 					  ) 'BENEFICIARIO',
 			   Amount 'MONTO',
-			   CONCAT( (SELECT cco.Concept
+			   (SELECT cco.Concept
 				FROM DeliveryBackOffice.dbo.CatConceptCOD cco
 				WHERE cco.IdCatConceptCOD = bd.CatConceptCODId
-				AND cco.RowStatus = 1),' Ref ', CAST(bd.BatchCODId AS VARCHAR(200)) ,  ' Guía ', bd.GuideSerie , CAST(bd.GuideNumber AS VARCHAR(200))) 'CONCEPTO'
+				AND cco.RowStatus = 1) 'CONCEPTO'
 		INTO #TableResultBITemp
 		FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
 		WHERE bd.BatchCODId = @BatchCODId;

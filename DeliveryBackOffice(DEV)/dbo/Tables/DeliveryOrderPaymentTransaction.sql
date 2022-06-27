@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[DeliveryOrderPaymentTransaction] (
+CREATE TABLE [dbo].[DeliveryOrderPaymentTransaction] (
     [DopId]                 BIGINT          IDENTITY (1, 1) NOT NULL,
     [GuideNumber]           INT             NULL,
     [GuideSerie]            NVARCHAR (2)    NULL,
@@ -26,13 +26,14 @@
     [TypeServiceId]         INT             NULL,
     [AccountId]             BIGINT          NULL,
     [CODAmountProcess]      DECIMAL (18, 2) NULL,
-    [Fel]                   NVARCHAR (MAX)  NULL,
     [VisitPoint]            INT             NULL,
+    [Fel]                   NVARCHAR (100)  NULL,
     PRIMARY KEY CLUSTERED ([DopId] ASC),
     CONSTRAINT [FK_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
-    CONSTRAINT [FK_CatTypeServiceClosure] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeServiceClosure] ([IdTypeService]),
-    CONSTRAINT [FK_DeliveryOrderPaymentTransaction_VisitPointClient] FOREIGN KEY ([VisitPoint]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference])
+    CONSTRAINT [FK_CatTypeServiceClosure] FOREIGN KEY ([TypeServiceId]) REFERENCES [dbo].[CatTypeServiceClosure] ([IdTypeService])
 );
+
+
 
 
 GO
@@ -44,5 +45,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la cu
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de factura de la transacción para los servicios sin guías', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderPaymentTransaction', @level2type = N'COLUMN', @level2name = N'Fel';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Express center que hizo la transaccion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderPaymentTransaction', @level2type = N'COLUMN', @level2name = N'VisitPoint';
 

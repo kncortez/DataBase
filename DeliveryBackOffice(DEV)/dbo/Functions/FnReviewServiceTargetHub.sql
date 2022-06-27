@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2021-12-10>
 -- Description:	< Retorna la abreviación de Hub de origen o destino de una guía >
@@ -18,52 +19,65 @@ BEGIN
 	BEGIN
 		SET @ReviewedHub = (
 			SELECT TOP 1
-				RTRIM(LTRIM(ISNULL(DSC1.Hub,'N/A'))) Hub
+				RTRIM(LTRIM(ISNULL(CAST(IIF(DSC1.Hub IS NOT NULL, DSC1.Hub, /*IIF(DSC2.Hub IS NOT NULL, DSC2.Hub + 'TBHL',*/ IIF(DSC3.Hub IS NOT NULL, DSC3.Hub, DSC4.Hub))/*)*/ AS NVARCHAR),'N/A'))) Hub
 			FROM
-				DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
-				LEFT JOIN DeliveryBackOffice.dbo.Township TS WITH(NOLOCK)
-					ON
-					DOR.ReceiverIdTownship = TS.IdTownship
-					OR DOR.Receiver_Town = TS.TownshipName
-				LEFT JOIN (
-					SELECT
-						DSC.HeaderCode
-						,MAX(DSC.Hub) 'Hub'
-					FROM
-						[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
-					GROUP BY
-						DSC.HeaderCode
-				) DSC1
-					ON
-					TS.HeaderCode = DSC1.HeaderCode
+				DeliveryBackOffice.dbo.DeliveryOrder DOR
+				LEFT JOIN DeliveryBackOffice.dbo.Township TS
+				ON
+				DOR.ReceiverIdTownship = TS.IdTownship
+				OR DOR.Receiver_Town = TS.TownshipName
+				LEFT JOIN DeliveryBackOffice.dbo.Settlement S
+				ON
+				TS.IdTownship = S.IdTownship
+				AND
+				TS.IdProvince = S.IdProvince
+				/* -- TownshipByHubLogistic se considera desactualizado
+				LEFT JOIN (SELECT DISTINCT TBHL.IdTownship IdTownship, HL.HubAbbreviation Hub FROM DeliveryBackOffice.dbo.TownshipByHubLogistic TBHL LEFT JOIN DeliveryBackOffice.dbo.HubLogistics HL ON TBHL.IdHublogistic = HL.IdHubLogistic ) DSC2
+				ON
+				TS.IdTownship = DSC2.IdTownship
+				*/
+				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage) DSC1
+				ON
+				DOR.ReceiverIdSettlement = DSC1.IdSettlement
+				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage) DSC3
+				ON
+				S.IdSettlement = DSC3.IdSettlement
+				LEFT JOIN (SELECT DISTINCT HeaderCode, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage) DSC4
+				ON
+				TS.HeaderCode = DSC4.HeaderCode
 				WHERE
-					DOR.Guide_Serie = @GuideSerie
-					AND
-					DOR.Guide_Number = @GuideNumber
+				DOR.Guide_Serie = @GuideSerie
+				AND
+				DOR.Guide_Number = @GuideNumber
 		)
 	END
 	IF (@Target = 2)
 	BEGIN
 		SET @ReviewedHub = (
 			SELECT TOP 1
-				RTRIM(LTRIM(ISNULL(DSC1.Hub,'N/A'))) Hub
+				RTRIM(LTRIM(ISNULL(CAST(/*IIF(DSC2.Hub IS NOT NULL, DSC2.Hub + 'TBHL',*/ IIF(DSC3.Hub IS NOT NULL, DSC3.Hub, DSC4.Hub)/*)*/ AS NVARCHAR),'N/A'))) Hub
 			FROM
-				DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
-				LEFT JOIN DeliveryBackOffice.dbo.Township TS WITH(NOLOCK)
-					ON
-					DOR.SenderIdTownship = TS.IdTownship
-					OR DOR.Sender_Town = TS.TownshipName
-				LEFT JOIN (
-					SELECT
-						DSC.HeaderCode
-						,MAX(DSC.Hub) 'Hub'
-					FROM
-						[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
-					GROUP BY
-						DSC.HeaderCode
-				) DSC1
-					ON
-					TS.HeaderCode = DSC1.HeaderCode
+				DeliveryBackOffice.dbo.DeliveryOrder DOR
+				LEFT JOIN DeliveryBackOffice.dbo.Township TS
+				ON
+				DOR.SenderIdTownship = TS.IdTownship
+				OR DOR.Sender_Town = TS.TownshipName
+				LEFT JOIN DeliveryBackOffice.dbo.Settlement S
+				ON
+				TS.IdTownship = S.IdTownship
+				AND
+				TS.IdProvince = S.IdProvince
+				/* -- TownshipByHubLogistic se considera desactualizado
+				LEFT JOIN (SELECT DISTINCT TBHL.IdTownship IdTownship, HL.HubAbbreviation Hub FROM DeliveryBackOffice.dbo.TownshipByHubLogistic TBHL LEFT JOIN DeliveryBackOffice.dbo.HubLogistics HL ON TBHL.IdHublogistic = HL.IdHubLogistic ) DSC2
+				ON
+				TS.IdTownship = DSC2.IdTownship
+				*/
+				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage) DSC3
+				ON
+				S.IdSettlement = DSC3.IdSettlement
+				LEFT JOIN (SELECT DISTINCT HeaderCode, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage) DSC4
+				ON
+				TS.HeaderCode = DSC4.HeaderCode
 				WHERE
 				DOR.Guide_Serie = @GuideSerie
 				AND

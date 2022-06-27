@@ -41,7 +41,7 @@ BEGIN
 	BEGIN
 		SET @Username_Received = COALESCE((
 			SELECT CONVERT(NVARCHAR,SSN_IdUser) + ' - ' + SSN_Username as IdUser_Username_Received
-			FROM DenariusUser_Dev.dbo.LGN_LogByToken
+			FROM DenariusUser_Dev.dbo.LGN_LogByToken WITH (NOLOCK)
 			WHERE SSN_IdToken = @Token
 		), '')
 	END

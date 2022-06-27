@@ -8,7 +8,8 @@
     [SysDateCreated]  DATETIME      NOT NULL,
     [SysTokenUpdated] VARCHAR (50)  NULL,
     [SysDateUpdated]  DATETIME      NULL,
-    [SysShow]         BIT           NULL,
     PRIMARY KEY CLUSTERED ([SysIdSystem] ASC)
 );
+
+
 

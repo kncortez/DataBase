@@ -17,26 +17,24 @@
     [DateUpdated]           DATETIME         NULL,
     [StartTime2]            TIME (7)         NULL,
     [EndTime2]              TIME (7)         NULL,
-    [HasPriority]           BIT              NULL,
     PRIMARY KEY CLUSTERED ([IdServiceDataForGuide] ASC),
     CONSTRAINT [ServiceDataForGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY ([ProviderModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
 
 
-GO
-CREATE NONCLUSTERED INDEX [IX_ServiceDataForGuide_Location]
-    ON [dbo].[ServiceDataForGuide]([Latitude] ASC, [Longitude] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_ServiceDataForGuide_DeliveryGuides]
-    ON [dbo].[ServiceDataForGuide]([GuideSerie] ASC, [GuideNumber] ASC, [IsDelivery] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_ServiceDataForGuide_DeliveryGuidesLocation]
-    ON [dbo].[ServiceDataForGuide]([GuideSerie] ASC, [GuideNumber] ASC, [IsDelivery] ASC, [Latitude] ASC, [Longitude] ASC);
+
+
+
+GO
+
 
 
 GO
@@ -101,4 +99,24 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsDelivery]
+    ON [dbo].[ServiceDataForGuide]([IsDelivery] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [Latitude], [Longitude]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_IsDelivery]
+    ON [dbo].[ServiceDataForGuide]([GuideSerie] ASC, [GuideNumber] ASC, [IsDelivery] ASC)
+    INCLUDE([Latitude], [Longitude]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Inicio de segunda ventana horaria para realizar el servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'StartTime2';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fin de segunda ventana horaria para realizar el servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'EndTime2';
 

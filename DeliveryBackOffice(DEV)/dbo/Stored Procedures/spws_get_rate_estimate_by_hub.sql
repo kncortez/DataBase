@@ -64,8 +64,8 @@ BEGIN
 				deskcurr.CUR_Symbol		  [CurrencySymbol],
 				deskcurr.CUR_Country	  [CurrencyCountry]
 		into #MonCurrency
-		from DenariusWeb_Dev.dbo.currency webcurr
-		join DenariusDesktop_Dev.dbo.PRM_Currency deskcurr
+		from DenariusWeb_Dev.dbo.currency webcurr WITH (NOLOCK)
+		join DenariusDesktop_Dev.dbo.PRM_Currency deskcurr WITH (NOLOCK)
 				on webcurr.CUR_IdCurrency = deskcurr.CUR_IdCurrency
 		where webcurr.CUR_ISO4217Code = @Currency
 		and deskcurr.CUR_Country = @Country

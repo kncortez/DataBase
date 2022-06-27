@@ -12,10 +12,12 @@
     [TokenUpdated]     NVARCHAR (50)  NULL,
     [DateUpdated]      DATETIME       NULL,
     CONSTRAINT [PK_CodBankAccount] PRIMARY KEY CLUSTERED ([CodBankAccountId] ASC),
-    CONSTRAINT [FK_CodBankAccount_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[CustomerParser] ([IdCustomer]),
+    CONSTRAINT [FK_CodBankAccount_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_CodBankAccount_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_CodBankAccount_DeliveryCurrency] FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
 
 
 GO

@@ -16,6 +16,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora de peticiones web realizadas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog';
 
@@ -29,11 +31,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Metodo de l
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'URL a la que se realizo la petición', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog', @level2type = N'COLUMN', @level2name = N'PetitionUrl';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'URL a la que se realizó la petición', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog', @level2type = N'COLUMN', @level2name = N'PetitionUrl';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha en la que se realizo la petición', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog', @level2type = N'COLUMN', @level2name = N'PetitionDate';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha en la que se realizó la petición', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog', @level2type = N'COLUMN', @level2name = N'PetitionDate';
+
+
 
 
 GO
@@ -57,7 +63,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Encabezados
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo de estado de la respuesta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog', @level2type = N'COLUMN', @level2name = N'ResponseStatusCode';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de estado de la respuesta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HttpInterceptorLog', @level2type = N'COLUMN', @level2name = N'ResponseStatusCode';
+
+
 
 
 GO

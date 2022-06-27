@@ -43,7 +43,7 @@ BEGIN
                        (do.Pieces_Dry + do.Pieces_Cold) Piezas,
                        (
                            SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-                           FROM dbo.DeliveryOrderPiece dp
+                           FROM dbo.DeliveryOrderPiece dp WITH(NOLOCK)
                            WHERE dp.GuideSerie = do.Guide_Serie
                                  AND dp.GuideNumber = do.Guide_Number
                        ) Peso,
@@ -54,7 +54,7 @@ BEGIN
                        (
                            SELECT TOP 1
                                dt.DateCreated
-                           FROM dbo.DeliveryOrderDetail dt
+                           FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
                            WHERE dt.Guide_Serie = do.Guide_Serie
                                  AND dt.Guide_Number = do.Guide_Number
                                  AND dt.StatusOrderId IN ( 11, 2 )
@@ -65,7 +65,7 @@ BEGIN
                        (
                            SELECT TOP 1
                                dt.DateCreated
-                           FROM dbo.DeliveryOrderDetail dt
+                           FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
                            WHERE dt.Guide_Serie = do.Guide_Serie
                                  AND dt.Guide_Number = do.Guide_Number
                                  AND dt.StatusOrderId = 5
@@ -84,30 +84,30 @@ BEGIN
                        btd.CODCommissionPercentage AS PorcentajeComision,
                        btd.[Amount] + btd.[Commission] AS ChargedAmount,
                        btd.[Amount] AS TotalAmount,
-                       IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0) FlagImmediateOrAch,
+                       IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
                        btd.[AuthorizationDate]
-                FROM [dbo].[BatchDetailCOD] AS btd
-                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+                FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
+                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]
                            AND btd.[GuideNumber] = pg.[GuideNumber]
-                    INNER JOIN [dbo].[DeliveryOrder] AS do
+                    INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
                         ON btd.[GuideSerie] = do.[Guide_Serie]
                            AND btd.[GuideNumber] = do.[Guide_Number]
-                    LEFT JOIN dbo.Township twn
+                    LEFT JOIN dbo.Township twn WITH(NOLOCK)
                         ON twn.IdTownship = do.ReceiverIdTownship
-                    LEFT JOIN dbo.Township tw
+                    LEFT JOIN dbo.Township tw WITH(NOLOCK)
                         ON tw.TownshipName = do.Receiver_Town
-                    LEFT JOIN dbo.Province prv
+                    LEFT JOIN dbo.Province prv WITH(NOLOCK)
                         ON prv.IdProvince = twn.IdProvince
-                    LEFT JOIN dbo.Province pr
+                    LEFT JOIN dbo.Province pr WITH(NOLOCK)
                         ON pr.IdProvince = tw.IdProvince
-                    LEFT JOIN dbo.VisitPointClient vpc
+                    LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cu
+                    LEFT JOIN dbo.Customer cu WITH(NOLOCK)
                         ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                         ON dc.DCBA_Id = do.DCBA_ID
-                    LEFT JOIN dbo.DeliveryBank bk
+                    LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                         ON bk.Id_bank = dc.DCBA_Bank_Id
                 WHERE btd.[AuthorizationNumber] IS NOT NULL
                       AND pg.BatchCODId IS NOT NULL
@@ -139,7 +139,7 @@ BEGIN
                        (do.Pieces_Dry + do.Pieces_Cold) Piezas,
                        (
                            SELECT SUM(ISNULL(dp.MassWeight, dp.PieceWeight))
-                           FROM dbo.DeliveryOrderPiece dp
+                           FROM dbo.DeliveryOrderPiece dp WITH(NOLOCK)
                            WHERE dp.GuideSerie = do.Guide_Serie
                                  AND dp.GuideNumber = do.Guide_Number
                        ) Peso,
@@ -150,7 +150,7 @@ BEGIN
                        (
                            SELECT TOP 1
                                dt.DateCreated
-                           FROM dbo.DeliveryOrderDetail dt
+                           FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
                            WHERE dt.Guide_Serie = do.Guide_Serie
                                  AND dt.Guide_Number = do.Guide_Number
                                  AND dt.StatusOrderId IN ( 11, 2 )
@@ -161,7 +161,7 @@ BEGIN
                        (
                            SELECT TOP 1
                                dt.DateCreated
-                           FROM dbo.DeliveryOrderDetail dt
+                           FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
                            WHERE dt.Guide_Serie = do.Guide_Serie
                                  AND dt.Guide_Number = do.Guide_Number
                                  AND dt.StatusOrderId = 5
@@ -180,30 +180,30 @@ BEGIN
                        btd.CODCommissionPercentage AS PorcentajeComision,
                        btd.[Amount] + btd.[Commission] AS ChargedAmount,
                        btd.[Amount] AS TotalAmount,
-                       IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0) FlagImmediateOrAch,
+                       IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
                        btd.[AuthorizationDate]
-                FROM [dbo].[BatchDetailCOD] AS btd
-                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+                FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
+                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]
                            AND btd.[GuideNumber] = pg.[GuideNumber]
-                    INNER JOIN [dbo].[DeliveryOrder] AS do
+                    INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
                         ON btd.[GuideSerie] = do.[Guide_Serie]
                            AND btd.[GuideNumber] = do.[Guide_Number]
-                    LEFT JOIN dbo.Township twn
+                    LEFT JOIN dbo.Township twn WITH(NOLOCK)
                         ON twn.IdTownship = do.ReceiverIdTownship
-                    LEFT JOIN dbo.Township tw
+                    LEFT JOIN dbo.Township tw WITH(NOLOCK)
                         ON tw.TownshipName = do.Receiver_Town
-                    LEFT JOIN dbo.Province prv
+                    LEFT JOIN dbo.Province prv WITH(NOLOCK)
                         ON prv.IdProvince = twn.IdProvince
-                    LEFT JOIN dbo.Province pr
+                    LEFT JOIN dbo.Province pr WITH(NOLOCK)
                         ON pr.IdProvince = tw.IdProvince
-                    LEFT JOIN dbo.VisitPointClient vpc
+                    LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cu
+                    LEFT JOIN dbo.Customer cu WITH(NOLOCK)
                         ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                         ON dc.DCBA_Id = do.DCBA_ID
-                    LEFT JOIN dbo.DeliveryBank bk
+                    LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                         ON bk.Id_bank = dc.DCBA_Bank_Id
                 WHERE btd.[AuthorizationNumber] IS NOT NULL
                       AND pg.BatchCODId IS NOT NULL

@@ -20,6 +20,8 @@
     CONSTRAINT [PK_ScheduledVisitSettlement] PRIMARY KEY CLUSTERED ([IdSettScheduleVisit] ASC),
     CONSTRAINT [FK_ScheduledVisitSettlement_SegmentArea] FOREIGN KEY ([IdSegmentArea]) REFERENCES [dbo].[SegmentArea] ([IdSegmentArea]),
     CONSTRAINT [FK_ScheduledVisitSettlement_Settlement] FOREIGN KEY ([IdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
-    CONSTRAINT [FK_ScheduledVisitSettlement_VisitPointClient] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClientParser] ([CodeOfReference])
+    CONSTRAINT [FK_ScheduledVisitSettlement_VisitPointClient] FOREIGN KEY ([IdVisitPointClient]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 

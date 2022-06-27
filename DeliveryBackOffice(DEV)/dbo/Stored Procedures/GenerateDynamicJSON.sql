@@ -36,7 +36,6 @@ and Det.Guide_Number = serv.Guide_Number
 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] SettDet
 on serv.Guide_Serie = SettDet.Guide_Serie
 and serv.Guide_Number = SettDet.Guide_Number
-and SettDet.RowStatus = 1
 and SettDet.Guide_Delivered = 1
 and SettDet.Guide_Discharged = 1
 JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -80,7 +79,6 @@ SELECT distinct
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
-		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -183,7 +181,6 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
-		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -280,7 +277,6 @@ SELECT  distinct
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
-		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
@@ -374,7 +370,6 @@ STUFF((
 		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
-		and Det.RowStatus = 1
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
 		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head

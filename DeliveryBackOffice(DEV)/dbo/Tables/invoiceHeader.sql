@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[invoiceHeader] (
+CREATE TABLE [dbo].[invoiceHeader] (
     [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
     [inv_vpCodeOfReferences]  INT            NOT NULL,
     [inv_cmp_name]            VARCHAR (500)  NULL,
@@ -47,12 +47,11 @@
     [systemOperation]         INT            NULL,
     [IsManualInvoice]         BIT            NULL,
     [inv_dateFEL]             DATETIME       NULL,
-    [CatInvoiceTypeId]        INT            NULL,
-    [IsPaid]                  BIT            NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
-    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
-    CONSTRAINT [FK_InvoiceHeader_CatInvoiceTypeId] FOREIGN KEY ([CatInvoiceTypeId]) REFERENCES [dbo].[CatInvoiceType] ([IdCatInvoiceType])
+    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 GO
@@ -64,9 +63,27 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hor
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el tipo de factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'CatInvoiceTypeId';
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar si la factura debe ser pagada en el servicio de SAP.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IsPaid';
+CREATE NONCLUSTERED INDEX [IX_invoiceHeaderRDL]
+    ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_certificationFEL] ASC, [inv_creditNote] ASC, [inv_motiveCreditNote] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_type_inv_creditNote_inv_date]
+    ON [dbo].[invoiceHeader]([inv_type] ASC, [inv_creditNote] ASC, [inv_date] ASC)
+    INCLUDE([inv_pk_id], [inv_vpCodeOfReferences]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_status_inv_dateRegister_inv_type_inv_SAPDocEntry]
+    ON [dbo].[invoiceHeader]([inv_status] ASC, [inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_certificationFEL], [inv_invoiceOfCreditNote]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_id_status_certification_seriefel_]
+    ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_certificationFEL] ASC, [inv_serieFEL] ASC, [inv_status] ASC);
 

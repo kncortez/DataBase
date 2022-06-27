@@ -1,8 +1,8 @@
 ﻿
 -- =============================================
 -- Author:      <Sazo,Cesar>
--- Create date: <2021-11-02>
--- Description: <Obtener informacion de los clientes individuales>
+-- Create date: <2021-11-19>
+-- Description: <Validar si el cliente es individual>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[sphd_isIndividual]

@@ -13,3 +13,15 @@
     CONSTRAINT [FKUserRUA] FOREIGN KEY ([RuaIdUser]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RuaIdUser]
+    ON [dbo].[RolByUserByAccount]([RuaIdUser] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RuaIdAccount_RuaRowStatus]
+    ON [dbo].[RolByUserByAccount]([RuaIdAccount] ASC, [RuaRowStatus] ASC);
+

@@ -8,16 +8,11 @@ CREATE PROCEDURE [dbo].[spg_dsms_CheckForUpdates]
 AS
 BEGIN
 	SET NOCOUNT ON;
+	select top 1 ue.Id, ue.UpdateStatus, ue.UpdateDateTime
+	from [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue with(nolock)
+	where ue.RowStatus=1
+	and ue.ElementId=@ElementId
 
-	SELECT 
-		TOP 1 
-			SMSUE.Id
-			,SMSUE.UpdateStatus
-			,SMSUE.UpdateDateTime
-	FROM 
-		[DeliveryBackOffice].[dbo].[SMS_UpdatedElements] SMSUE WITH(NOLOCK)
-	WHERE
-		SMSUE.RowStatus=1
-		AND
-		SMSUE.ElementId=@ElementId
+	--insert into DeliveryBackOffice.dbo.testBN
+	--values ('prueba')
 END

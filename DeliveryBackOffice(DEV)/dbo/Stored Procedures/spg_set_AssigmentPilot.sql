@@ -9,11 +9,6 @@
 -- Create date: <2022-01-27>
 -- Description:	<Asigna una Piloto a un ruta>
 -- =============================================
--- =============================================
--- Author:	<Andres, Ruiz>
--- Update date: <2022-01-27>
--- Description:	< Adición de WITH(NOLOCK) para evitar posibles bloqueos >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_set_AssigmentPilot]
 		@idRoute AS int,
 		@idCourrieMan as int,
@@ -39,7 +34,7 @@ BEGIN
 
 	INSERT INTO @filterRoutes
 		SELECT RA.IdRoute
-			FROM DBO.RouteAssigment RA  WITH(NOLOCK)
+			FROM DBO.RouteAssigment RA 
 			LEFT JOIN DBO.CatRoute CR ON  RA.IdRoute=CR.IdRoute 
 			WHERE RA.DateOfRoute=@dateRoute 
 			AND (@IDRUTETYPE IS NULL OR CR.IdTypeRoute=@IDRUTETYPE )AND RA.DateOfRoute=@dateRoute
@@ -49,12 +44,12 @@ BEGIN
 	DECLARE @IdsRouteAssigmentCourrier AS TABLE (id int,idcourier int);--Lista de courriers asignados en la fecha
 	DECLARE @IdsRouteAssigmentVehicle AS TABLE (id int,idvehicle int);--lista de vehiculos asignados en la fecha
 	INSERT INTO  @IdsRouteAssigmentCourrier 
-		SELECT IdRouteAssigment,IdCurrierMan FROM dbo.RouteAssigment  RA WITH(NOLOCK)
+		SELECT IdRouteAssigment,IdCurrierMan FROM dbo.RouteAssigment  RA
 		WHERE RA.DateOfRoute = @dateRoute  --AND RA.IdCurrierMan =@idCourrieMan
 		AND (RA.IdRoute IN (SELECT ID FROM @filterRoutes));--FILTRANDO POR RUTAS 
 			
 	INSERT INTO  @IdsRouteAssigmentVehicle
-		SELECT IdRouteAssigment,IdVehicle FROM dbo.RouteAssigment RA WITH(NOLOCK)
+		SELECT IdRouteAssigment,IdVehicle FROM dbo.RouteAssigment RA
 		WHERE RA.DateOfRoute = @dateRoute -- AND IdVehicle =@idVehicle
 		AND (RA.IdRoute IN (SELECT ID FROM @filterRoutes))--FILTRANDO POR RUTAS;
 
@@ -68,7 +63,7 @@ BEGIN
 		IF @countRoutes >0 --SI LA RUTA YA HA SIDO ASIGNADO DURANTE EL DIA, ASIGNARLE UN PILOTO Y UN VEHICULO
 			BEGIN
 				SET @idRouteAssigment=(SELECT IdRouteAssigment
-					FROM DBO.RouteAssigment RA WITH(NOLOCK)
+					FROM DBO.RouteAssigment RA
 					WHERE RA.IdRoute=@idRoute AND RA.DateOfRoute = @dateRoute
 					AND ( RA.IdRoute IN (SELECT ID FROM @filterRoutes)));
 				UPDATE [DeliveryBackOffice].[dbo].[RouteAssigment] Set IdCurrierMan=@idCourrieMan, IdVehicle=@idVehicle WHERE IdRouteAssigment=@idRouteAssigment
@@ -105,8 +100,8 @@ BEGIN
 			SET CouriermanId = NULL
 				,TokenUpdated = @token
 				,DateUpdated = GETDATE()
-			FROM SettlementPickupStation sps WITH(NOLOCK)
-			JOIN RouteAssigment ra WITH(NOLOCK)
+			FROM SettlementPickupStation sps
+			JOIN RouteAssigment ra
 				ON ra.IdRoute = sps.RouteId
 			JOIN @IdsRouteAssigmentCourrier rac
 				ON rac.id = ra.IdRouteAssigment

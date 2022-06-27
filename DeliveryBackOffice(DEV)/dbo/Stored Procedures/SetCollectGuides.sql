@@ -49,21 +49,21 @@ BEGIN
 				GuideNumber,
 				GuideSerie
 				into #UpdateNow 
-				From (select dop.GuideNumber, dop.GuideSerie from DeliveryOrderPaymentDetail dop
+				From (select dop.GuideNumber, dop.GuideSerie from DeliveryOrderPaymentDetail dop WITH(NOLOCK)
 				left join #listGuides ls on (dop.GuideNumber = ls.ItemNumber and dop.GuideSerie  = ls.ItemSerie)
 				 where GuideNumber in (select ItemNumber from #listGuides) 
 						and GuideSerie in (select ItemSerie from #listGuides) and  ShipmentCompleted = 'false') as table1
 
 
-			declare @IdCustomer int = (select IdCustomer from Account where AccIdAccount = @IdAccount)
+			declare @IdCustomer int = (select IdCustomer  from Account WITH(NOLOCK) where AccIdAccount = @IdAccount)
 
-			declare @Recot decimal (18,2) = (select top 1 rbh.RbhCollectedRate from RatebyCustomer rbc
+			declare @Recot decimal (18,2) = (select top 1 rbh.RbhCollectedRate from RatebyCustomer  rbc WITH(NOLOCK)
 			inner join RateByHub rbh on (rbc.RbcIdRate = rbh.RbhIdRate)
 			where rbc.RbcIdCustomer = @IdCustomer)
 
 			update DeliveryOrder set PriceShippment = isnull(PriceShippment,0) + isnull(@Recot,0), IsCollect = 1
 			from #UpdateNow un
-			inner join dbo.DeliveryOrder od on od.Guide_Serie =  un.GuideSerie and od.Guide_Number = un.GuideNumber
+			inner join dbo.DeliveryOrder od WITH(NOLOCK) ON od.Guide_Serie =  un.GuideSerie and od.Guide_Number = un.GuideNumber
 
 
 				
@@ -77,7 +77,7 @@ BEGIN
 			 '"IsCollect":"' + isnull(convert( varchar, IsCollect), 'N/A')  +  '",' +
 			 '"PrecioServicio":"' + CONVERT(varchar,cast( coalesce(PriceShippment ,'0')as money),1)  + --'",' +
 							+ '"}'
-			from DeliveryOrder 
+			from DeliveryOrder  WITH(NOLOCK)
 			where  Guide_Number IN (select ItemNumber from #listGuides)  and   IsCollect = 1	
 	
 			FOR XML PATH(''), TYPE

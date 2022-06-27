@@ -19,7 +19,7 @@ BEGIN
 				WHERE spd2.GuideSerie = do.Guide_Serie  AND spd2.GuideNumber = do.Guide_Number
 					AND spd2.SettlementByPickupId = @IdManifest 
 					AND spd2.IsPieceLiquidaded = 1 -- Pieza de la guia liquidada en recolección
-					AND spd2.IsCODSettlement = 1 -- Pieza no liquidada en COD
+					AND spd2.IsCODSettlement = 1 -- Pieza liquidada en COD
 					AND dop.IsDry = 0) Pieces_Cold
 		,	(SELECT COUNT(1)
 			FROM SettlementByPickupDetail spd2
@@ -30,7 +30,7 @@ BEGIN
 			WHERE spd2.GuideSerie = do.Guide_Serie  AND spd2.GuideNumber = do.Guide_Number
 				AND spd2.SettlementByPickupId = @IdManifest 
 				AND spd2.IsPieceLiquidaded = 1 -- Pieza de la guia liquidada en recolección
-				AND spd2.IsCODSettlement = 1 -- Pieza no liquidada en COD
+				AND spd2.IsCODSettlement = 1 -- Pieza liquidada en COD
 				AND (dop.IsDry IS NULL OR dop.IsDry = 1)) Pieces_Dry
 		, CONCAT(do.Receiver_FirstName,' ', do.Receiver_LastName) Receiver_Fullname
 		, do.Receiver_Address Receiver_Address
@@ -45,7 +45,7 @@ BEGIN
 			FROM SettlementByPickupDetail
 			WHERE SettlementByPickupId = @IdManifest 
 				AND IsPieceLiquidaded = 1 -- Pieza de la guia liquidada en recolección
-				AND IsCODSettlement = 1 -- Pieza no liquidada en COD
+				AND IsCODSettlement = 1 -- Pieza liquidada en COD
 			GROUP BY GuideSerie, GuideNumber
 		) spd ON do.Guide_Serie = spd.GuideSerie AND do.Guide_Number = spd.GuideNumber
     

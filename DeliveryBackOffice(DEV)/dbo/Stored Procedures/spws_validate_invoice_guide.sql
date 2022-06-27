@@ -15,12 +15,13 @@ BEGIN
 	select distinct SUBSTRING(Item, 1,2) ItemSerie,
 		SUBSTRING(Item,3, iif(CHARINDEX('-',Item)=0, (len(item)) , (CHARINDEX('-',Item)- 3))) ItemNumber 
 	into #listGuides
-	from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
+	from DeliveryBackOffice.dbo.SplitUnlimited(@InGuides,',')
 
 	SELECT COUNT(1) AS result
 	FROM #listGuides ls
-		left join dbo.invoiceDetail id on id.dti_fk_orderSerie = ls.ItemSerie and id.dti_fk_orderNumber = ls.ItemNumber
-		LEFT JOIN dbo.invoiceHeader ih ON ih.inv_pk_id = id.dti_fk_header
-	where id.dti_fk_header is NOT NULL AND LEN(ISNULL(ih.inv_certificationFEL,''))>0 
+		left join dbo.invoiceDetail id WITH(NOLOCK) on id.dti_fk_orderSerie = ls.ItemSerie and id.dti_fk_orderNumber = ls.ItemNumber
+		LEFT JOIN dbo.invoiceHeader ih WITH(NOLOCK) ON ih.inv_pk_id = id.dti_fk_header
+	where id.dti_fk_header is NOT NULL AND LEN(ISNULL(ih.inv_certificationFEL,''))>0 AND IH.inv_creditNote IS NULL AND IH.inv_motiveCreditNote IS NULL
+		AND IH.inv_descriptionFEL ='PROCESO REALIZADO'
 
 end

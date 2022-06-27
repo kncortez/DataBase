@@ -48,6 +48,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena el motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'Comments';
 
@@ -114,4 +116,56 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para indicar el status del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideSerie_GuideNumber_CreditAccountId_BankId]
+    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CreditAccountId] ASC, [BankId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CommissionDate]
+    ON [dbo].[BatchDetailCOD]([CommissionDate] ASC)
+    INCLUDE([CommissionId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CatTransactionTypeCODId]
+    ON [dbo].[BatchDetailCOD]([CatTransactionTypeCODId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CatDebitAccountCODId]
+    ON [dbo].[BatchDetailCOD]([CatDebitAccountCODId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_Excluded]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [Excluded] ASC)
+    INCLUDE([CatDebitAccountCODId], [CreditDate], [Amount], [Reference], [CatTransactionTypeCODId], [CatCurrencyCODId], [BankId], [CatAccountTypeCODId], [Password], [AccountNumber], [AccountName], [CommissionNotified]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CatConceptCODId]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_BatchCODId_CatConceptCODId_Excluded]
+    ON [dbo].[BatchDetailCOD]([BatchCODId] ASC, [CatConceptCODId] ASC, [Excluded] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [CatDebitAccountCODId], [CreditDate], [Amount], [Reference], [CatTransactionTypeCODId], [CatCurrencyCODId], [BankId], [CatAccountTypeCODId], [Password], [AccountNumber], [AccountName]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_BatchCODId]
+    ON [dbo].[BatchDetailCOD]([BatchCODId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber]
+    ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar la fecha en la que se genera la comisión.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CommissionDate';
 

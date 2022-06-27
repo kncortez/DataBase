@@ -15,12 +15,13 @@ CREATE PROCEDURE [dbo].[GenerateClosureOperator]
     @Bag1 NVARCHAR(50) = NULL,
     @Voucher2 NVARCHAR(50) = NULL,
     @Bag2 NVARCHAR(50) = NULL,
+    @TotalAmountCODCash DECIMAL(18, 5),
     @TotalAmountCashDeclared DECIMAL(18, 5),
     @TotalAmountCreditDeclared DECIMAL(18, 5),
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
 	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
-	@Observations NVARCHAR(500)
+	@TotalCOD INT
 AS
 BEGIN
 
@@ -155,8 +156,6 @@ BEGIN
 	DECLARE @Recepcion INT;
 	DECLARE @Devolucion INT;
 	DECLARE @Traslado INT;
-	DECLARE @TotalAmountCODCash DECIMAL(18,5);
-	DECLARE @TotalCOD INT;
 
 	SET @Estandar = (SELECT IdTypeService FROM CatTypeServiceClosure 
 					WHERE NameTypeService = 'Estándar');
@@ -171,6 +170,8 @@ BEGIN
 	-- FIN MODIFICACIÓN
 
 	-- MODIFICACIÓN 06/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+	-- Estos campos se reciben en la llamada al SP, pero ha causado problemas 
+	-- y se optó por asignarlos aquí al igual que en el SP GetDataForClosure
     SELECT @TotalAmountCODCash = ISNULL(SUM(dpd.CODAmountProcess), 0),
            @TotalCOD = COUNT(dpd.CODAmountProcess)
     FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction dpd WITH (NOLOCK)
@@ -419,15 +420,14 @@ BEGIN
 				InvoiceAmountFacturaCash,
 				TotalAmountFacturaCard,
 				InvoiceAmountFacturaCard,
-				InvoiceAmountCOD,
-				Observations
+				InvoiceAmountCOD
             )
             VALUES
             (@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
              @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(),
              NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
 			 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
-			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD, @Observations);
+			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD);
             PRINT 'INSERTA ENCABEZADO';
             SET @HeaderClosures = SCOPE_IDENTITY();
             PRINT @HeaderClosures;
@@ -468,8 +468,7 @@ BEGIN
             SELECT 200 IdResult,
                    'Cierre generado exitosamente' Message,
                    Value 'URL',
-                   @HeaderClosures 'IdCierre',
-				   @Observations
+                   @HeaderClosures 'IdCierre'
             FROM ConfigParams
             WHERE Name = 'ClosureExpressCenter';
 

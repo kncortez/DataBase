@@ -4,6 +4,7 @@
     [PromoWeight]       INT            NOT NULL,
     [StartPromoDate]    DATETIME       NOT NULL,
     [FinishPromoDate]   DATETIME       NOT NULL,
+    [LimitPromoTime]    DECIMAL (6, 2) NULL,
     [Monday]            BIT            NOT NULL,
     [Tuesday]           BIT            NOT NULL,
     [Wednesday]         BIT            NOT NULL,
@@ -19,11 +20,12 @@
     [TokenCreated]      NVARCHAR (50)  NOT NULL,
     [DateUpdated]       DATETIME       NULL,
     [TokenUpdated]      NVARCHAR (50)  NULL,
-    [LimitPromoTime]    DECIMAL (6, 2) NULL,
     PRIMARY KEY CLUSTERED ([IdPromo] ASC),
     CONSTRAINT [FK_CatPromo_CatDiscountType] FOREIGN KEY ([CatDiscountTypeId]) REFERENCES [dbo].[CatTypeDiscount] ([IdCatTypeDiscount]),
     CONSTRAINT [FK_CatPromo_CatValueType] FOREIGN KEY ([CatValueTypeId]) REFERENCES [dbo].[CatValueType] ([IdCatValueType])
 );
+
+
 
 
 GO
