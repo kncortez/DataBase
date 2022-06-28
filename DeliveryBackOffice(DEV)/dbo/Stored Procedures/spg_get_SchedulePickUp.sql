@@ -23,8 +23,8 @@ CREATE PROCEDURE [dbo].[spg_get_SchedulePickUp]
     @TypeVehicle INT = 2,          -- 2 Panel
     @IsScheduled BIT = 1,
     @SchedulePickupId BIGINT = -1, --Si existe duplicado y se acepto > Id de la solicitud
-    @IsCanceledPar BIT = 0         --Si está cancelado el duplicado
-
+    @IsCanceledPar BIT = 0,        --Si está cancelado el duplicado
+	@IsReturn BIT = 0
 AS
 BEGIN
     DECLARE @amountPickUp AS INT;
@@ -59,13 +59,16 @@ BEGIN
     BEGIN
         --Verificar si ya existe la solicitud
         SELECT TOP 1
-               @SchedulePickupFinded = SchedulePickupId,
-               @SchedulePickupStatusFinded = SchedulePickupStatus
-        FROM SchedulePickup
-        WHERE SenderId = @idSender
-              AND CAST(StartDate AS DATE) = CAST(@startDate AS DATE)
-              AND RowStatus = 1
-        ORDER BY SchedulePickupId DESC;
+			@SchedulePickupFinded = SchedulePickupId
+		   ,@SchedulePickupStatusFinded = SchedulePickupStatus
+		FROM SchedulePickup
+		WHERE CAST(StartDate AS DATE) = CAST(@startDate AS DATE)
+		AND ((@IsReturn = 0
+		AND SenderId = @idSender)
+		OR (@IsReturn = 1
+		AND AddressPickup = @addressPickUp))
+		AND RowStatus = 1
+		ORDER BY SchedulePickupId DESC;
 
         IF @SchedulePickupFinded IS NOT NULL
         BEGIN
