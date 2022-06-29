@@ -1,0 +1,87 @@
+﻿CREATE TABLE [dbo].[LinehaulRoutePreparation] (
+    [IdLinehaulRoutePreparation]   INT           IDENTITY (1, 1) NOT NULL,
+    [StationDispatchedId]          INT           NULL,
+    [CatLinehaulStatusId]          INT           NOT NULL,
+    [CatRouteId]                   INT           NOT NULL,
+    [SenderReceiverId]             INT           NULL,
+    [DateLinehaulRoutePreparation] DATE          NOT NULL,
+    [ContainerQuantity]            INT           NOT NULL,
+    [GuideQuantity]                INT           NOT NULL,
+    [DryPieceQuantity]             INT           NOT NULL,
+    [ColdPieceQuantity]            INT           NOT NULL,
+    [RowStatus]                    BIT           DEFAULT ((1)) NOT NULL,
+    [TokenCreated]                 NVARCHAR (50) NOT NULL,
+    [DateCreated]                  DATETIME      NOT NULL,
+    [TokenUpdated]                 NVARCHAR (50) NULL,
+    [DateUpdated]                  DATETIME      NULL,
+    PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparation] ASC),
+    CONSTRAINT [FK_LinehaulRoutePreparation_Courier] FOREIGN KEY ([SenderReceiverId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
+    CONSTRAINT [FK_LinehaulRoutePreparation_Route] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
+    CONSTRAINT [FK_LinehaulRoutePreparation_Station] FOREIGN KEY ([StationDispatchedId]) REFERENCES [dbo].[CatStation] ([IdStation]),
+    CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdLinehaulStatus])
+);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lógico', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de piezas frías asignadas a la preparación de ruta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'ColdPieceQuantity';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de piezas secas asignadas a la preparación de ruta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DryPieceQuantity';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de guías asignadas a la preparación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'GuideQuantity';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de contenedores asignados a la preparación de ruta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'ContainerQuantity';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de la preparación de ruta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DateLinehaulRoutePreparation';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del responsable de la preparación de ruta | Tabla SenderReceiver', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'SenderReceiverId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la ruta asignada | Tabla CatRoute.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'CatRouteId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del estado de la preparación de ruta | Tabla CatLinehaulStatus.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'CatLinehaulStatusId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la estación de despacho | Tabla CatStation.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'StationDispatchedId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'IdLinehaulRoutePreparation';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de preparación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation';
+
