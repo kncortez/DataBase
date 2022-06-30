@@ -40,14 +40,12 @@ BEGIN
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
 
         -- Actualizar registro de guía a último estado 
-        UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-        SET StatusOrderId = @StatusId
-        WHERE Guide_Serie = @Guide_Serie
-              AND Guide_Number IN
-                  (
-                      SELECT Item
-                      FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
-                  );
+		UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+		SET StatusOrderId = @StatusId
+		WHERE Guide_Serie = @Guide_Serie
+		AND Guide_Number IN (SELECT
+				Guide_Number
+			FROM @ItemsTable);
 
         SET @RowUpdated = @@ROWCOUNT;
 
@@ -246,15 +244,13 @@ BEGIN
 
         IF @StatusId = 4
         BEGIN
-            UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-            SET Courier_Name = @courierName,
-                Dispatched_Date = GETDATE()
-            WHERE Guide_Serie = @Guide_Serie
-                  AND Guide_Number IN
-                      (
-                          SELECT Item
-                          FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
-                      );
+			UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+			SET Courier_Name = @courierName
+			   ,Dispatched_Date = GETDATE()
+			WHERE Guide_Serie = @Guide_Serie
+			AND Guide_Number IN (SELECT
+					Guide_Number
+				FROM @ItemsTable);
         END;
 
         --Se marca como recolectado el servicio
@@ -379,7 +375,13 @@ BEGIN
         END;
     ----------------------- PROCESSGUIDECOD- SE REGISTRA RECOLECCIÓN . FIN ----------------------		
 
-
+	--Actualizar estado de las piezas
+	UPDATE DeliveryOrderPiece
+	SET StatusOrderId = @StatusId
+	WHERE GuideSerie = @Guide_Serie
+	AND GuideNumber IN (SELECT
+			Guide_Number
+		FROM @ItemsTable);
 
     END TRY
     BEGIN CATCH
@@ -397,18 +399,17 @@ BEGIN
                    'Registros guardados correctamente' AS 'Description',
                    @ValidateOperation AS 'NumTransferID';
 
-            SELECT Guide_Serie + CAST(Guide_Number AS VARCHAR) Guide,
-                   Ticket_Number Ticket,
-                   Receiver_FirstName + ' ' + Receiver_LastName Name,
-                   Courier_Route Route,
-                   CONVERT(VARCHAR, Dispatched_Date, 103) RouteDate
-            FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-            WHERE Guide_Serie = @Guide_Serie
-                  AND Guide_Number IN
-                      (
-                          SELECT Item
-                          FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@Guide_Number, ',')
-                      );
+			SELECT
+				Guide_Serie + CAST(Guide_Number AS VARCHAR) Guide
+			   ,Ticket_Number Ticket
+			   ,Receiver_FirstName + ' ' + Receiver_LastName Name
+			   ,Courier_Route Route
+			   ,CONVERT(VARCHAR, Dispatched_Date, 103) RouteDate
+			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+			WHERE Guide_Serie = @Guide_Serie
+			AND Guide_Number IN (SELECT
+					Guide_Number
+				FROM @ItemsTable);
         END;
         ELSE
         BEGIN

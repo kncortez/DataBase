@@ -270,6 +270,16 @@ BEGIN
                     SELECT IdServiceStatus FROM CatServiceStatus WHERE [Name] = 'Recolectado'
                 );
 
+        DECLARE @VehicleTypeId INT =
+                (
+                    SELECT cv.IdTypeVehicle
+                    FROM RouteAssigment ra
+                        INNER JOIN CatVehicle cv
+                            ON cv.IdVehicle = ra.IdVehicle
+                    WHERE ra.IdRoute = @IdRoute
+                          AND ra.DateOfRoute = @tiempo
+                );
+
         --Validar que tenga registro en la DeliveryOrderPaymentDetail sino lo crea
         SELECT @dopdId = dopd.DopId,
                @SchedulePickupId = dopd.IdHeaderRecolection
@@ -398,123 +408,51 @@ BEGIN
         WHERE do.Guide_Serie = @GuideSerie
               AND do.Guide_Number = @GuideNumber;
 
-        --Si tine vp asignado 
-        IF @Sender_ID IS NOT NULL
-           AND @Sender_ID <> 0
+        --Si tiene un SchedulePickup buscar si ya está asignado a un servicio y si es el correcto
+        IF @SchedulePickupId IS NOT NULL
         BEGIN
-            --Si tiene un SchedulePickup buscar si ya está asignado a un servicio y si es el correcto
-            IF @SchedulePickupId IS NOT NULL
+
+            UPDATE SchedulePickup
+            SET AssigmentStatus = 1,
+                TokenUpdated = @Token,
+                DateUpdated = GETDATE()
+            WHERE SchedulePickupId = @SchedulePickupId;
+
+            --Buscar si tiene asignado un servicio
+            SELECT @ServiceManagementId = sm.IdServiceManagement
+            FROM ServiceManagement sm
+            WHERE sm.IdSchedulePickup = @SchedulePickupId;
+
+            --Si encontró el servicio
+            IF @ServiceManagementId IS NOT NULL
             BEGIN
 
-                UPDATE SchedulePickup
-                SET AssigmentStatus = 1
-                WHERE SchedulePickupId = @SchedulePickupId;
-
-                --Buscar si tiene asignado un servicio
-                SELECT @ServiceManagementId = sm.IdServiceManagement
-                FROM ServiceManagement sm
-                WHERE sm.IdSchedulePickup = @SchedulePickupId;
-
-                --Si encontró el servicio
-                IF @ServiceManagementId IS NOT NULL
+                --Válidar que este asignado a la ruta
+                IF EXISTS
+                (
+                    SELECT 1
+                    FROM RouteAssigment ra
+                        INNER JOIN ServiceManagement sm
+                            ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                               AND sm.IdServiceManagement = @ServiceManagementId
+                    WHERE ra.IdRoute = @IdRoute
+                          AND ra.DateOfRoute = @tiempo
+                )
                 BEGIN
-
-                    --Válidar que este asignado a la ruta
-                    IF EXISTS
-                    (
-                        SELECT 1
-                        FROM RouteAssigment ra
-                            INNER JOIN ServiceManagement sm
-                                ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                                   AND sm.IdServiceManagement = @ServiceManagementId
-                        WHERE ra.IdRoute = @IdRoute
-                              AND ra.DateOfRoute = @tiempo
-                    )
-                    BEGIN
-                        --Se marca como recolectado
-                        UPDATE sm
-                        SET ServiceStatusId = 3
-                        FROM ServiceManagement sm
-                        WHERE sm.IdServiceManagement = @ServiceManagementId;
-
-                        --Insertar EventService si no existe
-                        IF NOT EXISTS
-                        (
-                            SELECT 1
-                            FROM EventService es
-                            WHERE es.ServiceManagementId = @ServiceManagementId
-                                  AND es.ServiceStatusId = @ServiceStatus
-                                  AND es.RowStauts = 1
-                        )
-                        BEGIN
-                            INSERT INTO EventService
-                            (
-                                ServiceManagementId,
-                                ServiceStatusId,
-                                RowStauts,
-                                TokenCreated,
-                                DateCreated,
-                                Observations
-                            )
-                            VALUES
-                            (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
-                        END;
-
-                    END;
-                    ELSE
-                    BEGIN
-                        SET @FindServiceManagement = 1;
-                    END;
-                END;
-                ELSE
-                BEGIN
-                    SET @FindServiceManagement = 1;
-                END;
-            END;
-            ELSE
-            BEGIN
-                SET @FindServiceManagement = 1;
-            END;
-
-            --Si se tiene que buscar si un servicio si coincide con el vp
-            IF @FindServiceManagement = 1
-            BEGIN
-
-                SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
-                       @ServiceManagementIdFind = sm.IdServiceManagement
-                FROM RouteAssigment ra
-                    INNER JOIN ServiceManagement sm
-                        ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                    INNER JOIN SchedulePickup sp
-                        ON sp.SchedulePickupId = sm.IdSchedulePickup
-                WHERE ra.IdRoute = @IdRoute
-                      AND ra.DateOfRoute = @tiempo
-                      AND sp.SenderId = @Sender_ID;
-
-                --Si se encuentra el vp entre los servicios de recolección, se asigna
-                IF @SchedulePickupIdFind IS NOT NULL
-                BEGIN
-                    UPDATE DeliveryOrderPaymentDetail
-                    SET IdHeaderRecolection = @SchedulePickupIdFind
-                    WHERE GuideSerie = @GuideSerie
-                          AND GuideNumber = @GuideNumber;
-
                     --Se marca como recolectado
                     UPDATE sm
-                    SET ServiceStatusId = 3
+                    SET ServiceStatusId = 3,
+                        TokenUpdated = @Token,
+                        DateUpdated = GETDATE()
                     FROM ServiceManagement sm
-                    WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
-
-                    UPDATE SchedulePickup
-                    SET AssigmentStatus = 1
-                    WHERE SchedulePickupId = @SchedulePickupIdFind;
+                    WHERE sm.IdServiceManagement = @ServiceManagementId;
 
                     --Insertar EventService si no existe
                     IF NOT EXISTS
                     (
                         SELECT 1
                         FROM EventService es
-                        WHERE es.ServiceManagementId = @ServiceManagementIdFind
+                        WHERE es.ServiceManagementId = @ServiceManagementId
                               AND es.ServiceStatusId = @ServiceStatus
                               AND es.RowStauts = 1
                     )
@@ -529,18 +467,113 @@ BEGIN
                             Observations
                         )
                         VALUES
-                        (@ServiceManagementIdFind, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+                        (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
                     END;
+
                 END;
                 ELSE
                 BEGIN
-                    SET @CreateServiceManagement = 1;
+                    SET @FindServiceManagement = 1;
                 END;
+            END;
+            ELSE
+            BEGIN
+                SET @FindServiceManagement = 1;
             END;
         END;
         ELSE
         BEGIN
-            SET @CreateServiceManagement = 1;
+            SET @FindServiceManagement = 1;
+        END;
+
+        --Si se tiene que buscar si un servicio si coincide con el vp
+        IF @FindServiceManagement = 1
+        BEGIN
+
+            IF @Sender_ID IS NOT NULL
+               AND @Sender_ID <> 0
+            BEGIN
+                SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
+                       @ServiceManagementIdFind = sm.IdServiceManagement
+                FROM RouteAssigment ra
+                    INNER JOIN ServiceManagement sm
+                        ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                    INNER JOIN SchedulePickup sp
+                        ON sp.SchedulePickupId = sm.IdSchedulePickup
+                WHERE ra.IdRoute = @IdRoute
+                      AND ra.DateOfRoute = @tiempo
+                      AND sp.SenderId = @Sender_ID;
+            END;
+            ELSE
+            BEGIN
+                --Buscar por Dirección
+                SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
+                       @ServiceManagementIdFind = sm.IdServiceManagement
+                FROM RouteAssigment ra
+                    INNER JOIN ServiceManagement sm
+                        ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                    INNER JOIN SchedulePickup sp
+                        ON sp.SchedulePickupId = sm.IdSchedulePickup
+                    INNER JOIN DeliveryOrder do WITH (NOLOCK)
+                        ON do.Guide_Serie = @GuideSerie
+                           AND do.Guide_Number = @GuideNumber
+                           AND sp.AddressPickup = do.Sender_Address
+                WHERE ra.IdRoute = @IdRoute
+                      AND ra.DateOfRoute = @tiempo
+                      AND sp.AddressPickup = do.Sender_Address;
+            END;
+
+            --Si se encuentra el vp entre los servicios de recolección, se asigna
+            IF @SchedulePickupIdFind IS NOT NULL
+            BEGIN
+                UPDATE DeliveryOrderPaymentDetail
+                SET IdHeaderRecolection = @SchedulePickupIdFind,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
+                WHERE GuideSerie = @GuideSerie
+                      AND GuideNumber = @GuideNumber;
+
+                --Se marca como recolectado
+                UPDATE sm
+                SET ServiceStatusId = 3,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
+                FROM ServiceManagement sm
+                WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
+
+                UPDATE SchedulePickup
+                SET AssigmentStatus = 1,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
+                WHERE SchedulePickupId = @SchedulePickupIdFind;
+
+                --Insertar EventService si no existe
+                IF NOT EXISTS
+                (
+                    SELECT 1
+                    FROM EventService es
+                    WHERE es.ServiceManagementId = @ServiceManagementIdFind
+                          AND es.ServiceStatusId = @ServiceStatus
+                          AND es.RowStauts = 1
+                )
+                BEGIN
+                    INSERT INTO EventService
+                    (
+                        ServiceManagementId,
+                        ServiceStatusId,
+                        RowStauts,
+                        TokenCreated,
+                        DateCreated,
+                        Observations
+                    )
+                    VALUES
+                    (@ServiceManagementIdFind, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+                END;
+            END;
+            ELSE
+            BEGIN
+                SET @CreateServiceManagement = 1;
+            END;
         END;
 
         --Si se tiene que crear el servicio
@@ -574,7 +607,10 @@ BEGIN
                     [AddressPickup],
                     [AssigmentStatus],
                     [TransaccionFAC],
-                    [TownshipId]
+                    [TownshipId],
+                    [SchedulePickupStatus],
+                    [TypeVehicleId],
+                    [IsScheduled]
                 )
                 SELECT TOP 1
                        acc.AccIdAccount,
@@ -603,8 +639,11 @@ BEGIN
                        do.Sender_Address,
                        1,
                        NULL, --TransaccionFAC
-                       NULL  --TownshipId
-                FROM DeliveryOrder do WITH (NOLOCK)
+                       NULL, --TownshipId
+                       1,
+                       @VehicleTypeId,
+                       0
+                FROM DeliveryOrder do  WITH (NOLOCK)
                     LEFT JOIN Account acc
                         ON acc.IdCustomer =
                         (
@@ -619,13 +658,18 @@ BEGIN
                 SET @SchedulePickupId = SCOPE_IDENTITY();
 
                 UPDATE DeliveryOrderPaymentDetail
-                SET IdHeaderRecolection = @SchedulePickupId
+                SET IdHeaderRecolection = @SchedulePickupId,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
                 WHERE DopId = @dopdId;
             END;
             ELSE
             BEGIN
                 UPDATE SchedulePickup
-                SET AssigmentStatus = 1
+                SET AssigmentStatus = 1,
+                    TypeVehicleId = @VehicleTypeId,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
                 WHERE SchedulePickupId = @SchedulePickupId;
             END;
 
@@ -633,7 +677,9 @@ BEGIN
             IF @ServiceManagementId IS NOT NULL
             BEGIN
                 UPDATE sm
-                SET sm.IdPuRouteAssigment = ra.IdRouteAssigment
+                SET sm.IdPuRouteAssigment = ra.IdRouteAssigment,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
                 FROM ServiceManagement sm
                     INNER JOIN RouteAssigment ra
                         ON ra.IdRoute = @IdRoute
@@ -642,7 +688,9 @@ BEGIN
 
                 --Se marca como recolectado
                 UPDATE sm
-                SET ServiceStatusId = 3
+                SET ServiceStatusId = 3,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE()
                 FROM ServiceManagement sm
                 WHERE sm.IdServiceManagement = @ServiceManagementId;
 
@@ -836,10 +884,11 @@ BEGIN
                         ON so.StatusOrderId = do.StatusOrderId
                 WHERE do.GuideSerie = @GuideSerie
                       AND do.GuideNumber = @GuideNumber
-                      AND do.NoPiece = @GuidePiece
-                      AND do.StatusOrderId IN ( 7, 11, 5, 4, 12, 18 );
+                      AND do.NoPiece = @GuidePiece;
+                --AND do.StatusOrderId IN ( 7, 11, 5, 4, 12, 18);
 
                 IF @Status IS NOT NULL
+                BEGIN
                     SET @Description
                         = CONCAT(
                                     'La pieza ',
@@ -851,6 +900,10 @@ BEGIN
                                     @Status,
                                     '.'
                                 );
+
+                    IF @Status IN ( 'En ruta', 'Entregado' )
+                        SET @Description = CONCAT(@Description, ' Debe liquidarla en la liquidación de entregas.');
+                END;
                 ELSE IF EXISTS
                 (
                     SELECT 1
@@ -859,7 +912,34 @@ BEGIN
                           AND GuideNumber = @GuideNumber
                           AND NoPiece = @GuidePiece
                 )
-                    SET @Description = N'Error: INSERT INTO TransactionalBackbone.';
+                BEGIN
+                    SELECT @Status = so.OrderDescription
+                    FROM DeliveryOrder do WITH (NOLOCK)
+                        INNER JOIN StatusOrder so
+                            ON so.StatusOrderId = do.StatusOrderId
+                    WHERE do.Guide_Serie = @GuideSerie
+                          AND do.Guide_Number = @GuideNumber;
+
+                    IF @Status IS NOT NULL
+                    BEGIN
+                        SET @Description
+                            = CONCAT(
+                                        'La pieza ',
+                                        @GuideSerie,
+                                        @GuideNumber,
+                                        '-',
+                                        @GuidePiece,
+                                        ' se encuentra en estado: ',
+                                        @Status,
+                                        '.'
+                                    );
+
+                        IF @Status IN ( 'En ruta', 'Entregado' )
+                            SET @Description = CONCAT(@Description, ' Debe liquidarla en la liquidación de entregas.');
+                    END;
+                    ELSE
+                        SET @Description = N'Error: INSERT INTO TransactionalBackbone.';
+                END;
                 ELSE
                     SET @Description = CONCAT('La pieza ', @GuideSerie, @GuideNumber, '-', @GuidePiece, ' no existe.');
 
