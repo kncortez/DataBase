@@ -1728,28 +1728,7 @@ BEGIN
     BEGIN
         --------DETALLADO
 		SELECT
-			REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(
-										REPLACE(cda.AccountNumber,' ',''),
-									'-',''),
-								CHAR(1),''),
-							CHAR(2),''),
-						CHAR(3),''),
-					CHAR(9),''),
-				CHAR(10),''),
-			CHAR(13),'') 'CUENTA DEBITO'
-		   ,CASE
-				WHEN cda.CatAccountTypeCODId = 1 THEN 3
-				WHEN cda.CatAccountTypeCODId = 2 THEN 4
-				ELSE cda.CatAccountTypeCODId
-			END 'TIPO DE CUENTA DEBITO'
-		   ,btd.Amount 'MONTO'
-		   ,RTRIM(LTRIM(REPLACE(
+		   RTRIM(LTRIM(REPLACE(
 				REPLACE(
 					REPLACE(
 						REPLACE(
@@ -1761,28 +1740,15 @@ BEGIN
 						CHAR(3),''),
 					CHAR(9),''),
 				CHAR(10),''),
-			CHAR(13),''))) 'CUENTA CREDITO'
+			CHAR(13),''))) 'CUENTA DESTINO'
 		   ,CASE
 				WHEN btd.CatAccountTypeCODId = 1 THEN 3
 				WHEN btd.CatAccountTypeCODId = 2 THEN 4
 				ELSE btd.CatAccountTypeCODId
-			END 'TIPO DE CUENTA CREDITO'
-		   ,btd.Reference 'REFERENCIA'
-		   ,IIF(cco.IdCatConceptCOD = 1
-		   ,cco.Concept
-		   ,CONCAT(cco.Concept, ' ', btd.GuideSerie, btd.GuideNumber, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO'
-		   ,COALESCE(vp.email, cu.CODContactEmail, do.Sender_Mail, '0') 'CORREO ELECTRONICO'
-		   ,LEFT(
-			   RTRIM(
-					LTRIM(
-						REPLACE(
-							REPLACE(
-									COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '00000000')
-							,'-','')
-						,'(502)','')
-					)
-				)
-			, 8)'TELEFONO'
+			END 'TIPO DE CUENTA DESTINO'
+		   ,btd.Amount 'MONTO A PAGAR'
+
+		   ,CONCAT(btd.GuideSerie, btd.GuideNumber) 'GUIA'
 		FROM BatchDetailCOD btd
 		INNER JOIN BatchCOD bt
 			ON bt.IdBatchCOD = btd.BatchCODId
@@ -1811,28 +1777,7 @@ BEGIN
 		UNION
 		----------ACUMULADO
 		SELECT
-			REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(
-										REPLACE(cda.AccountNumber,' ',''),
-									'-',''),
-								CHAR(1),''),
-							CHAR(2),''),
-						CHAR(3),''),
-					CHAR(9),''),
-				CHAR(10),''),
-			CHAR(13),'') 'CUENTA DEBITO'
-		   ,CASE
-				WHEN cda.CatAccountTypeCODId = 1 THEN 3
-				WHEN cda.CatAccountTypeCODId = 2 THEN 4
-				ELSE cda.CatAccountTypeCODId
-			END 'TIPO DE CUENTA DEBITO'
-		   ,SUM(btd.Amount) 'MONTO'
-		   ,RTRIM(LTRIM(REPLACE(
+		   RTRIM(LTRIM(REPLACE(
 				REPLACE(
 					REPLACE(
 						REPLACE(
@@ -1844,30 +1789,15 @@ BEGIN
 						CHAR(3),''),
 					CHAR(9),''),
 				CHAR(10),''),
-			CHAR(13),''))) 'CUENTA CREDITO'
+			CHAR(13),''))) 'CUENTA DESTINO'
 		   ,CASE
 				WHEN btd.CatAccountTypeCODId = 1 THEN 3
 				WHEN btd.CatAccountTypeCODId = 2 THEN 4
 				ELSE btd.CatAccountTypeCODId
-			END 'TIPO DE CUENTA CREDITO'
-		   ,MAX(btd.Reference) 'REFERENCIA'
-		   ,MAX(IIF(cco.IdCatConceptCOD = 1,
-			cco.Concept,
-			CONCAT(cco.Concept, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300))))) 'CONCEPTO'
-		   ,MAX(COALESCE(vp.Email, cu.CODContactEmail, do.Sender_Mail, '0')) 'CORREO ELECTRONICO'
-		   ,LEFT(
-				RTRIM(
-					LTRIM(
-						REPLACE(
-							REPLACE(
-								MAX(
-									COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '00000000')
-								)
-							,'-','')
-						,'(502)','')
-					)
-				)
-			,8) 'TELEFONO'
+			END 'TIPO DE CUENTA DESTINO'
+		   ,SUM(btd.Amount) 'MONTO A PAGAR'
+
+		   ,MAX(CONCAT(do.Guide_Serie, do.Guide_Number)) 'GUIA'
 		FROM BatchDetailCOD btd 
 		INNER JOIN BatchCOD bt
 			ON bt.IdBatchCOD = btd.BatchCODId
@@ -1899,7 +1829,7 @@ BEGIN
 				,btd.AccountNumber
 				,cda.AccountNumber
 		
-		ORDER BY btd.Reference
+		--ORDER BY btd.Reference
 				;
     END;
 END;
