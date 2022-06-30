@@ -6,6 +6,11 @@
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-06-28>
+-- Description:	<Agregar Filtro para saber si tiene pago con tarjeta o datafono en CostDetail>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
 		@Guide_Serie AS VARCHAR(2), --guide serie
 		@Guide_Number AS INT, --guide number
@@ -87,7 +92,16 @@ BEGIN
 							(SELECT 1
 							FROM DeliveryBackOffice.dbo.ProcessedGuideCOD
 							WHERE GuideSerie = @Guide_Serie AND GuideNumber = @Guide_Number
-						)
+						)  AND NOT EXISTS
+                    (
+                        SELECT 1
+                        FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+                            JOIN CostDetail CD WITH (NOLOCK)
+                                ON CD.IdCost = C.IdCost
+                                   AND CD.IdTypeOfMoney IN ( 2, 6 )
+                        WHERE C.ProductNumber = CONCAT(@Guide_Serie, CAST(@Guide_Number AS VARCHAR(50)))
+                    )
+
 					BEGIN
 						--Buscar ID modulo liquidación COD
 						SET @CatModuleId = ISNULL((SELECT ModIdModule

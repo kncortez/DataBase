@@ -1,13 +1,13 @@
 ﻿
 
-
-
-
-
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-06-28>
+-- Description:	<Validación para saber si se tiene pogo con tarjeta o datafono>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_COD]
     @GuideSerie NVARCHAR(2),
@@ -157,6 +157,13 @@ BEGIN
                       AND do.[Guide_Serie] = @GuideSerie
                       AND do.[Collect_OnDelivery] = 0
                       AND do.IsCollect = 'true'
+					  AND NOT EXISTS (SELECT
+							Top 1 1
+						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+							ON CD.IdCost = C.IdCost
+						AND CD.IdTypeOfMoney IN (2, 6)
+						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
                 UNION
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
@@ -179,7 +186,14 @@ BEGIN
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
                       AND do.IsCollect = 'false'
-                      AND DOP.TimePlaId = 2;
+                      AND DOP.TimePlaId = 2
+					  AND NOT EXISTS (SELECT
+							Top 1 1
+						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+					    JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+							ON CD.IdCost = C.IdCost
+					 AND CD.IdTypeOfMoney IN (2, 6)
+				WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
             END;
 
             --- Se agrega nuevo checkpoint

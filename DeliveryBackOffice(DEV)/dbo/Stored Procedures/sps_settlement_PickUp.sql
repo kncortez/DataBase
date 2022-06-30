@@ -5,6 +5,11 @@
 -- Create date: <2021-03-11>
 -- Description:	<Inserta el manifiesto de recoleccion>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-06-28>
+-- Description:	<Validación sobre pago con Tarjeta o Datafono en CostDetail>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_PickUp]
 		@Route NVARCHAR(100),
 		--@GuideQuantity INT,
@@ -15,7 +20,7 @@ CREATE PROCEDURE [dbo].[sps_settlement_PickUp]
 		@GuidesQuantity SMALLINT,
 		@InGuides   NVARCHAR(MAX) = 'FD22221-1,FD22361-1,FD22223-2,FD22359-1,FD22226-1',
 		@NotGuides  NVARCHAR(MAX) = 'FD22221-1,FD22361-1,FD22223-2,FD22359-1,FD22226-1',
-		@IdCourier int
+		@IdCourier  int
 
 AS
 BEGIN
@@ -28,7 +33,7 @@ BEGIN
 	-- CatModuleId del modulo
 	DECLARE @CatModuleId INT
   -- Detecta si una guia tiene COD
-  DECLARE @IsCOD BIT
+    DECLARE @IsCOD BIT
 	-- control de actualizaciones para transacción
 	DECLARE @RUpdated INT
 
@@ -39,9 +44,8 @@ BEGIN
 						IF OBJECT_ID('tempdb.dbo.#listNotGuides', 'U') IS NOT NULL DROP TABLE listNotGuides;
 						IF OBJECT_ID('tempdb.dbo.#UpdOrd', 'U') IS NOT NULL DROP TABLE #UpdOrd;
 								--select SUBSTRING(Item, 1,2) ItemSerie,SUBSTRING(Item,3,len(Item)) ItemNumber 
-								--	into #listGuides
-								--	from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
-
+								--into #listGuides
+								--from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
 								--declare @InGuides   NVARCHAR(400) = 'FD198907-3,FD198910-1,FD198910-2,FD198941-1'
 
 								select SUBSTRING(Item, 1,2) ItemSerie,
@@ -141,9 +145,6 @@ BEGIN
 
 	----------------------- PROCESSGUIDECOD- SE REGISTRA RECOLECCIÓN . INI ----------------------	
 
-	
-
-
 	--Buscar ID modulo liquidación Recolecciones
 			SET @CatModuleId = ISNULL((SELECT ModIdModule
 									FROM CatModule
@@ -202,9 +203,17 @@ BEGIN
 						AND do.[Guide_Serie] = @GuideSerie				
 						AND do.IsCollect = 'false'
 						AND DOP.TimePlaId = 2
+						
 					--	AND LG.ItemNumber NOT IN (SELECT GuideNumber
 					--FROM [dbo].[ProcessedGuideCOD]
 					--WHERE [GuideNumber] = DO.Guide_Number AND GuideSerie = DO.Guide_Serie)
+					    AND NOT EXISTS (SELECT
+							Top 1 1
+						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+							ON CD.IdCost = C.IdCost
+						AND CD.IdTypeOfMoney IN (2, 6)
+						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
 				END
 
 				DELETE  #listGuidesTemp WHERE ItemNumber = @GuideNumber AND ItemSerie = @GuideSerie

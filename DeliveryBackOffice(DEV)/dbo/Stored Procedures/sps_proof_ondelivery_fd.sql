@@ -1,6 +1,4 @@
 ﻿
-
-
 -- =============================================
 -- Author:		<Aquino, César>
 -- Create date: <2021-03-23>
@@ -14,6 +12,10 @@
 --               en cambio se debe insertar el checkpoint Reenviado a Express Center>
 -- Hotfix: FDAPI-337
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-06-28>
+-- Description:	< Agregar validación para saber si se tiene pagos con TC o Datafono en dbo.CostDetail>
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -323,6 +325,13 @@ BEGIN
                       AND Collect_OnDelivery = 0
                       AND IsCollect = 'true'
                       AND StatusOrderId = 5
+					   AND NOT EXISTS (SELECT
+							Top 1 1
+						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+							ON CD.IdCost = C.IdCost
+						AND CD.IdTypeOfMoney IN (2, 6)
+						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
                 UNION
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
@@ -346,7 +355,14 @@ BEGIN
                       AND Guide_Number = @GuideNumber
                       AND IsCollect = 'false'
                       AND DOP.TimePlaId = 2
-                      AND StatusOrderId = 5;
+                      AND StatusOrderId = 5
+					  AND NOT EXISTS (SELECT
+							Top 1 1
+						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+							ON CD.IdCost = C.IdCost
+						AND CD.IdTypeOfMoney IN (2, 6)
+						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))));
             -- ********************************** FIN PROCESO DE COD ********************************************************************************
             END;
         END;

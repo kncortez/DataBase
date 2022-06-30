@@ -1,4 +1,9 @@
 ﻿--exec sphw_generate_file_cod 31,0,1
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2022-06-20>
+-- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sphw_generate_file_cod]
     @IdBank INT,
@@ -1261,7 +1266,7 @@ BEGIN
         AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
         UNION
         ------ACUMULADO
-        SELECT MAX(btd.Reference) 'REFERENCIA',
+        SELECT btd.Reference 'REFERENCIA',
 		(	SELECT TOP 1 DCBA.DCBA_Id FROM  DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCBA 
 	  WHERE DCBA.DCBA_Num_account = btd.AccountNumber 
 	  AND UPPER(dcba.DCBA_BankAccountType) = UPPER(btd.TypeAccountName)
@@ -1361,7 +1366,9 @@ BEGIN
         GROUP BY pg.CustomerId,
 				 btd.TypeAccountName,
 				 BTD.AccountName,
-				 btd.AccountNumber
+				 btd.AccountNumber,
+				 btd.Reference,
+				 btd.Amount
     END;
 
     -- FORMATO BI
