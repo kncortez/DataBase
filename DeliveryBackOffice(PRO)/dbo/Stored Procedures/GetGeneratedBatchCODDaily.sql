@@ -1,9 +1,32 @@
 ﻿--EXEC  [dbo].[GetGeneratedBatchCODDaily] 33,'8'
 CREATE PROCEDURE [dbo].[GetGeneratedBatchCODDaily]
 	@IdBankParam INT,
-	@BatchTimeRange VARCHAR(300) = ''
+	@BatchTimeRange VARCHAR(300) = '',
+	@CoDProcessID INT
 AS
 BEGIN
+
+	-- Micro transacción para indicar inicio de proceso de CoD ejecutado
+	BEGIN TRANSACTION Started_CoD_Execution_Process
+	BEGIN TRY
+
+		UPDATE
+			[DeliveryBackOffice].[dbo].[CoDDailyExecution]
+		SET
+			ProcessStarted = 1
+			,TokenUpdated = 'SYS-HERMESWIRETRANSFER'
+			,DateUpdated = GETDATE()
+		WHERE
+			IdCoDDailyExecution = @CoDProcessID
+
+		COMMIT TRANSACTION Started_CoD_Execution_Process;
+
+	END TRY
+	BEGIN CATCH
+
+		ROLLBACK TRANSACTION Started_CoD_Execution_Process;
+
+	END CATCH
 	
 	DECLARE @TranCounter INT;  
     SET @TranCounter = @@TRANCOUNT; 
@@ -383,7 +406,7 @@ BEGIN
 				ON dc.DCBA_Id = ord.DCBA_ID
 				   AND dc.DCBA_Id_estado = 1
 			LEFT JOIN dbo.DeliveryBank bk
-				ON bk.Id_bank = ISNULL( ISNULL(VPO.CODAccountBankID, cus.CODAccountBankID),dc.DCBA_Bank_Id)
+				ON bk.Id_bank = ISNULL(ISNULL(VPO.CODAccountBankID, cus.CODAccountBankID), dc.DCBA_Bank_Id)
 			LEFT JOIN dbo.CatBankAccountType btp
 				ON btp.IdBankAccountType = ISNULL(VPO.CODAccountBankTypeID, cus.CODAccountTypeID)
 			LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt
@@ -737,6 +760,29 @@ WHERE tact.CODtoPay > 0;
 		END
 		ELSE
 		BEGIN
+
+			-- Micro transacción para indicar inicio de proceso de CoD ejecutado
+			BEGIN TRANSACTION Completed_CoD_Execution_Process
+			BEGIN TRY
+
+				UPDATE
+					[DeliveryBackOffice].[dbo].[CoDDailyExecution]
+				SET
+					ProcessFinished = 1
+					,TokenUpdated = 'SYS-HERMESWIRETRANSFER'
+					,DateUpdated = GETDATE()
+				WHERE
+					IdCoDDailyExecution = @CoDProcessID
+
+				COMMIT TRANSACTION Completed_CoD_Execution_Process;
+
+			END TRY
+			BEGIN CATCH
+
+				ROLLBACK TRANSACTION Completed_CoD_Execution_Process;
+
+			END CATCH
+
 			SELECT 0 PayingBank, 0 IdBatchCOD, 0 as BATCHNUMBER, 'TRUE' AS blnResult, 'NO HAY GUIAS PARA PROCESAR' Comment;
 
 			--IF @TranCounter = 0 
@@ -750,6 +796,30 @@ WHERE tact.CODtoPay > 0;
 		END
 	END TRY
 	BEGIN CATCH
+
+		-- Micro transacción para indicar inicio de proceso de CoD ejecutado
+		BEGIN TRANSACTION Retry_CoD_Execution_Process
+		BEGIN TRY
+
+			UPDATE
+				[DeliveryBackOffice].[dbo].[CoDDailyExecution]
+			SET
+				ProcessRetries = ISNULL(ProcessRetries,0) + 1
+				,ProcessError = ERROR_MESSAGE()
+				,TokenUpdated = 'SYS-HERMESWIRETRANSFER'
+				,DateUpdated = GETDATE()
+			WHERE
+				IdCoDDailyExecution = @CoDProcessID
+
+			COMMIT TRANSACTION Retry_CoD_Execution_Process;
+
+		END TRY
+		BEGIN CATCH
+
+			ROLLBACK TRANSACTION Retry_CoD_Execution_Process;
+
+		END CATCH
+
 		SELECT 'RollBackTransaction' AS message,
 				'FALSE'	blnResult,
 				CAST(-1 AS VARCHAR(5)) IdResult,
@@ -794,6 +864,28 @@ WHERE tact.CODtoPay > 0;
 		--SELECT * FROM #TableAmountCODDailyTemp;
 		--SELECT * FROM #TableCustomerPaymentTempDaily;
 		--SELECT * FROM #TableForzaPaymentTempDaily;
+
+		-- Micro transacción para indicar inicio de proceso de CoD ejecutado
+		BEGIN TRANSACTION Completed_CoD_Execution_Process
+		BEGIN TRY
+
+			UPDATE
+				[DeliveryBackOffice].[dbo].[CoDDailyExecution]
+			SET
+				ProcessFinished = 1
+				,TokenUpdated = 'SYS-HERMESWIRETRANSFER'
+				,DateUpdated = GETDATE()
+			WHERE
+				IdCoDDailyExecution = @CoDProcessID
+
+			COMMIT TRANSACTION Completed_CoD_Execution_Process;
+
+		END TRY
+		BEGIN CATCH
+
+			ROLLBACK TRANSACTION Completed_CoD_Execution_Process;
+
+		END CATCH
 		
 		IF ((@NewIdBatchCODCustomer IS NULL) AND (@NewIdBatchCODForza IS NULL))
 		BEGIN
