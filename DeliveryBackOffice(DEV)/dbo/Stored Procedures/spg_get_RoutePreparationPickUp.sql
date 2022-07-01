@@ -9,7 +9,8 @@
 -- Update date: <2020-03-21>
 -- Description:	< Adición de WITH(NOLOCK) para evitar bloqueos >
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp] @datePickUp AS DATE = ''
+CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp] @datePickUp AS DATE = '',
+	@hubId INT = -1
 AS
 BEGIN
     SET ARITHABORT ON;
@@ -88,7 +89,7 @@ BEGIN
            shp.EndDate,
            CONVERT(VARCHAR(10), shp.StartDate, 105) AS datePickUp,
            CONVERT(VARCHAR(10), shp.StartDate, 108) AS hourPickUp,
-           CONCAT(FORMAT(shp.StartDate, 'HH:mm'), ' - ', FORMAT(shp.EndDate, 'HH:mm')) AS rangeHour,
+           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
            QuantityRegularPackages,
            QuantityOverDimensionedPackage,
            EstimatedWeight,
@@ -176,8 +177,8 @@ BEGIN
                  )
             )
         AND shp.RowStatus = 1
-        AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)); -- Si tiene guía y no está anulada
-
+        AND (@hubId = -1 OR shp.IdHubLogistics = @hubId);
+    --PRINT CONVERT(VARCHAR, GETDATE(), 9);
     --DECLARE @guides NVARCHAR(MAX) =
     --        (
     --            SELECT STUFF(
@@ -228,6 +229,8 @@ BEGIN
     --                                            @CodeApp = 'SIFDCECOM300720201459',
     --                                            @IdModule = 1,
     --                                            @Token = 'SYSTEM';
+
+
 
 
 

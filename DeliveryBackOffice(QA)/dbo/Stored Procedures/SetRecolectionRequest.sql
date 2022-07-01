@@ -369,8 +369,7 @@ BEGIN
                 DROP TABLE #Sender;
 
 
-
-            SELECT [Sender_ID],
+            SELECT sub_do.[Sender_ID],
                    sub_do.[SenderName],
                    [Sender_Phone],
                    [Hub],
@@ -390,14 +389,19 @@ BEGIN
                        ord.Guide_Number AS Number,
                        ord.Guide_Serie AS Serie,
                        Sender_Phone,
-                       thb.IdHublogistic AS Hub,
+                       hl.IdHubLogistic AS Hub,
                        (SUM(dop.PaymentRecollections) + SUM(dop.RecolectPayment)) AS AmountPickup,
                        Sender_Address AS AddressPickup,
                        TypeService
                 FROM DeliveryOrder ord
-                    INNER JOIN TownshipByHubLogistic thb
-                        ON (ord.SenderIdTownship = thb.IdTownship)
-                           AND StatusTownshipHub = 1
+                    INNER JOIN Township twn
+                        ON twn.IdTownship = ord.SenderIdTownship
+                    INNER JOIN DumpServiceCoverage dsc
+                        ON dsc.HeaderCode = twn.HeaderCode
+                           AND dsc.RowStatus = 1
+                    INNER JOIN HubLogistics hl
+                        ON hl.HubAbbreviation = dsc.Hub
+                           AND hl.HubStatus = 1
                     INNER JOIN DeliveryOrderPaymentDetail dop
                         ON (
                                dop.GuideNumber = ord.Guide_Number
@@ -413,7 +417,7 @@ BEGIN
                          Sender_Phone,
                          ord.Guide_Number,
                          ord.Guide_Serie,
-                         thb.IdHublogistic,
+                         hl.IdHubLogistic,
                          Sender_Address,
                          Sender_FirstName,
                          Sender_LastName,
@@ -422,14 +426,11 @@ BEGIN
                 LEFT JOIN
                 (
                     --SELECT  SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,IdServiceManagement,ServiceStatusId FROM DBO.SchedulePickup SP				
-                    SELECT SenderPhone,
-                           IdHubLogistics,
+                    SELECT DOR.Sender_ID,
                            AddressPickup,
-                           SenderName,
                            SchedulePickupId,
                            SP.AssigmentStatus,
-                           SM.IdServiceManagement,
-                           DOR.TypeService
+                           SM.IdServiceManagement
                     FROM dbo.SchedulePickup SP
                         LEFT JOIN dbo.ServiceManagement SM
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
@@ -439,34 +440,40 @@ BEGIN
                             ON DOR.Guide_Number = dop.GuideNumber
                                AND DOR.Guide_Serie = dop.GuideSerie
                     --WHERE (SP.AssigmentStatus =0 OR (SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) --THIS LINE IS EQUIVALENT TO LINE BELOW
-                    WHERE NOT (
-                                  (
-                                      SP.AssigmentStatus <> 0
-                                      AND SP.AssigmentStatus IS NOT NULL
-                                  )
-                                  AND NOT (
-                                              SM.RowStatus = 1
-                                              AND SP.RowStatus = 1
-                                              AND SP.AssigmentStatus = 1
-                                              AND SM.ServiceStatusId IN ( 1, 2 )
-                                          )
+                    WHERE (
+                              SM.IdServiceManagement IS NULL
+                              OR
+                              (
+                                  SM.ServiceStatusId IN ( 1, 2 )
+                                  AND SM.RowStatus = 1
                               )
-                          AND (CONVERT(DATE, GETDATE()) >= CONVERT(DATE, SP.StartDate))
-                          AND (CONVERT(DATE, SP.EndDate) >= CONVERT(DATE, GETDATE()))
-                    GROUP BY SenderPhone,
-                             IdHubLogistics,
+                          )
+                          AND
+                          (
+                              SP.SchedulePickupStatus IS NULL
+                              OR SP.SchedulePickupStatus = 1
+                          )
+                          AND SP.RowStatus = 1
+                          AND CONVERT(DATE, SP.StartDate) = CONVERT(DATE, @StartDate)
+                    GROUP BY DOR.Sender_ID,
                              AddressPickup,
-                             SenderName,
                              SchedulePickupId,
                              SP.AssigmentStatus,
-                             SM.IdServiceManagement,
-                             DOR.TypeService
+                             SM.IdServiceManagement
                 ) sub_sp
-                    ON sub_sp.SenderPhone = sub_do.Sender_Phone
-                       AND sub_sp.IdHubLogistics = sub_do.Hub
-                       AND sub_sp.AddressPickup = sub_do.AddressPickup
-                       AND sub_sp.SenderName = sub_do.SenderName
-                       AND sub_sp.TypeService = sub_do.TypeService;
+                    ON (
+                           sub_do.Sender_ID = sub_sp.Sender_ID
+                           AND sub_do.Sender_ID > 0
+                       )
+                       OR
+                       (
+                           sub_do.AddressPickup = sub_sp.AddressPickup
+                           AND
+                           (
+                               sub_do.Sender_ID <= 0
+                               OR sub_do.Sender_ID IS NULL
+                           )
+                       );
 
             --declare @SenderId int  = (select top 1 Sender_ID  from DeliveryOrder ord
             --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)

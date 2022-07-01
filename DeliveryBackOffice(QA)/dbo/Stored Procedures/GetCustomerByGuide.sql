@@ -63,6 +63,7 @@ BEGIN
 	   ,do.SenderIdTownship SenderTownship
 	   ,do.Sender_Lat SenderLatitude
 	   ,do.Sender_Lng SenderLongitude
+	   ,ISNULL(do.IsReturn, 0) IsReturn
 
 	FROM DeliveryOrder do WITH (NOLOCK)
 	WHERE do.Guide_Serie = @GuideSerie
