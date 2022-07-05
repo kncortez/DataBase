@@ -1,7 +1,26 @@
 -- RolByUserBySystem
--- Editar el parámetro RusIdRol por el valor generado en la tabla CatRol para el sistema Hermes Mobile
--- Editar el parámetro RusIdSystem por el valor generado en la tabla CatSystem para el sistema Hermes Mobile
--- Editar el parámetro RusIdUser por el valor generado en la tabla RegisteredUser para el usuario al cual se le asignarán los permisos de rol
+-- Editar el parámetro 'Username' en la consulta de la tabla 'InternalUser' especificado como 'my.username.here' por el usuario deseado para asignarle los roles de Administrador
 
-INSERT INTO RolByUserBySystem(RusIdRol, RusIdSystem, RusIdUser, RusRowStatus, RusTokenCreated, RusDateCreated, StationId)
-VALUES (25, 10, 28535, 1, 'SYS-ADMIN', SYSDATETIME(), 1); 
+INSERT INTO [dbo].[RolByUserBySystem]
+			([RusIdRol],
+			 [RusIdSystem],
+			 [RusIdUser],
+			 [RusRowStatus],
+			 [RusTokenCreated],
+			 [RusDateCreated],
+			 [StationId])
+		VALUES ((SELECT [dbo].[CatRol].[RolIdRol]
+				 FROM [CatRol]
+				 WHERE [dbo].[CatRol].[RolName] = 'Admin Hermes Mobile'),
+				 (SELECT [dbo].[CatSystem].[SysIdSystem]
+				  FROM [CatSystem]
+				  WHERE [dbo].[CatSystem].[SysNameSystem] = 'Hermes Mobile'),
+				 (SELECT [dbo].[InternalUser].[RegisterUserID]
+				  FROM [InternalUser]
+				  WHERE [dbo].[InternalUser].[Username] = 'my.username.here'),
+				 1,
+				 'SYS-ADMIN', 
+				 SYSDATETIME(), 
+				 (SELECT [dbo].[CatStation].[IdStation]
+				  FROM [CatStation]
+				  WHERE [dbo].[CatStation].[StationName] = 'GUATEMALA'));
