@@ -21,16 +21,24 @@
 );
 
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 
 
 GO
@@ -46,7 +54,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'GuidePiecesMissing';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de piezas faltantes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'GuidePiecesMissing';
+
+
 
 
 GO
@@ -86,5 +96,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de liquidación de ruta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de liquidación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement';
+
+
 

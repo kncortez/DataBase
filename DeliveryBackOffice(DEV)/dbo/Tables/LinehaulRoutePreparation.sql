@@ -4,6 +4,7 @@
     [CatLinehaulStatusId]          INT           NOT NULL,
     [CatRouteId]                   INT           NOT NULL,
     [SenderReceiverId]             INT           NULL,
+    [CatVehicleId]                 INT           NOT NULL,
     [DateLinehaulRoutePreparation] DATE          NOT NULL,
     [ContainerQuantity]            INT           NOT NULL,
     [GuideQuantity]                INT           NOT NULL,
@@ -18,8 +19,11 @@
     CONSTRAINT [FK_LinehaulRoutePreparation_Courier] FOREIGN KEY ([SenderReceiverId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Route] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Station] FOREIGN KEY ([StationDispatchedId]) REFERENCES [dbo].[CatStation] ([IdStation]),
-    CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdLinehaulStatus])
+    CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
+    CONSTRAINT [FK_LinehaulRoutePreparation_Vehicle] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 GO
@@ -63,7 +67,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de la
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del responsable de la preparación de ruta | Tabla SenderReceiver', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'SenderReceiverId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del piloto asignado a la preparación de ruta | Tabla SenderReceiver', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'SenderReceiverId';
+
+
 
 
 GO
@@ -84,4 +90,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de preparación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vehículo asignado a la preparación de ruta | Tabla CatVehicleId', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'CatVehicleId';
 
