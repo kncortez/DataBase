@@ -1,14 +1,16 @@
 ﻿CREATE TABLE [dbo].[CatLinehaulStatus] (
-    [IdLinehaulStatus]  INT            IDENTITY (1, 1) NOT NULL,
-    [StatusName]        NVARCHAR (50)  NOT NULL,
-    [StatusDescription] NVARCHAR (200) NULL,
-    [RowStatus]         BIT            DEFAULT ((1)) NOT NULL,
-    [TokenCreated]      NVARCHAR (50)  NOT NULL,
-    [DateCreated]       DATETIME       NOT NULL,
-    [TokenUpdated]      NVARCHAR (50)  NULL,
-    [DateUpdated]       DATETIME       NULL,
-    PRIMARY KEY CLUSTERED ([IdLinehaulStatus] ASC)
+    [IdCatLinehaulStatus] INT            IDENTITY (1, 1) NOT NULL,
+    [StatusName]          NVARCHAR (50)  NOT NULL,
+    [StatusDescription]   NVARCHAR (200) NULL,
+    [RowStatus]           BIT            DEFAULT ((1)) NOT NULL,
+    [TokenCreated]        NVARCHAR (50)  NOT NULL,
+    [DateCreated]         DATETIME       NOT NULL,
+    [TokenUpdated]        NVARCHAR (50)  NULL,
+    [DateUpdated]         DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([IdCatLinehaulStatus] ASC)
 );
+
+
 
 
 GO
@@ -40,9 +42,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatLinehaulStatus', @level2type = N'COLUMN', @level2name = N'IdLinehaulStatus';
+
 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de estados para rutas de linehaul.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatLinehaulStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatLinehaulStatus', @level2type = N'COLUMN', @level2name = N'IdCatLinehaulStatus';
 

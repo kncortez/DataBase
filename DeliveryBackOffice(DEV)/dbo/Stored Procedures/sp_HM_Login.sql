@@ -15,7 +15,7 @@ BEGIN
 	SET NOCOUNT ON;
 	SELECT IU.IdUser, IU.Username, IU.IdEmployee, IU.RegisterUserID, IU.RowStatus,
 		RU.UsrIdUser, RU.UsrIdPerson, RU.UsrNickName, RU.UsrEmail, RU.UsrLastPassword,
-		RUS.RusIdUser, RUS.RusIdRol, RUS.RusIdSystem, RUS.RusRowStatus
+		RUS.RusIdUser, RUS.RusIdRol, RUS.RusIdSystem, RUS.RusRowStatus, RUS.StationId
 	FROM InternalUser IU
 		INNER JOIN RegisterUser RU
 			ON IU.RegisterUserID = RU.UsrIdUser
