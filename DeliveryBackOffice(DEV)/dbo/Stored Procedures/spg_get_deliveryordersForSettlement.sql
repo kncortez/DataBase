@@ -22,7 +22,8 @@ BEGIN
     (
         Guide NVARCHAR(16),
         Delivered BIT,
-        COD DECIMAL(14, 2)
+        COD DECIMAL(14, 2),
+		IsCollect BIT
     );
 
     INSERT INTO @GuidesFound
@@ -30,7 +31,7 @@ BEGIN
            dsd.Guide_Serie,
            dsd.Guide_Number
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
+        INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
                AND dsd.RowStatus = 1
     WHERE dbs.ID = @IdManifest
@@ -49,7 +50,7 @@ BEGIN
         dbs.ID_Courier,
         ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
             ON sr.ID = dbs.ID_Courier
     WHERE dbs.ID = @IdManifest;
 
@@ -77,18 +78,23 @@ BEGIN
                 ELSE
                     CONVERT(VARCHAR, CAST((ISNULL(do.Collect_OnDelivery, 0)) AS DECIMAL), 1)
             END
-           ) AS Collect_OnDelivery
+           ) AS Collect_OnDelivery,
+		   do.IsCollect
     FROM @GuidesFound gf
         --JOIN DeliveryBackOffice.dbo.DeliveryAttempt da ON gf.Guide_Serie = da.Guide_Serie AND gf.Guide_Number = da.Guide_Number
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON do.Guide_Serie = gf.Guide_Serie
                AND do.Guide_Number = gf.Guide_Number;
 
     SELECT SUM(COD) AS COD_Manifest
     FROM @GuidesDetail;
 
-    SELECT *
-    FROM @GuidesDetail gd
-    ORDER BY gd.Guide ASC;
+    SELECT
+		Guide
+	   ,Delivered
+	   ,COD
+	   ,IsCollect
+	FROM @GuidesDetail gd
+	ORDER BY gd.Guide ASC
 
 END;

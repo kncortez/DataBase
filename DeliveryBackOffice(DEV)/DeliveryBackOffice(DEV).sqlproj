@@ -1029,6 +1029,8 @@
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Sequences\NewGuideNumberSequence.sql" />
     <Build Include="dbo\Sequences\NewGuideManifestSequence.sql" />
+    <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
+    <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
