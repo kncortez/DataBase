@@ -1,0 +1,5 @@
+APO-38
+Instrucciones: 
+
+Ejecutar los inserts en el orden que se encuentran escritos en el archivo .sql en 
+este directorio, se debe realizar previo a ejecutar las pruebas.
