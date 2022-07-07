@@ -1029,6 +1029,17 @@
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Sequences\NewGuideNumberSequence.sql" />
     <Build Include="dbo\Sequences\NewGuideManifestSequence.sql" />
+    <Build Include="dbo\Tables\RutasMarco.sql" />
+    <Build Include="dbo\Tables\RateTownshipCoverage.sql" />
+    <Build Include="dbo\Tables\CoDDailyExecution_1.sql" />
+    <Build Include="dbo\Tables\CierreEnero2022.sql" />
+    <Build Include="dbo\Tables\CatCoDDailySchedule_1.sql" />
+    <Build Include="dbo\Tables\AlternativeRateByCustomer.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateWireTransferExecutionQueue_1.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny_by_hub_cras.sql" />
+    <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetHubs_1.sql" />
+    <Build Include="dbo\User Defined Types\TblCoDExecutionProcess_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

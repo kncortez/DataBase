@@ -113,6 +113,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -273,4 +275,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si es una devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'IsReturn';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Sender_ID_DateCreated]
+    ON [dbo].[DeliveryOrder]([Sender_ID] ASC, [DateCreated] ASC)
+    INCLUDE([Ticket_Number], [Order_Number], [Shipping_Date], [Pieces_Dry], [Pieces_Cold], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Department], [Receiver_Alternant_FullName], [Receiver_Alternant_Phone], [Receiver_Alternant_SocialSecurity_ID], [Guide_Serie], [Guide_Number], [Manifest_Serie], [Manifest_Number], [StatusOrderId], [Receiver_CUI], [Receiver_Alternant_CUI], [NameOfReceiver], [Collect_OnDelivery], [IsCollect], [PriceShippment], [IdCustomer]);
 

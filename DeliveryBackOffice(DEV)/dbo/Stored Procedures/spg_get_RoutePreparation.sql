@@ -37,7 +37,7 @@ BEGIN
 			--select DeliveryBackOffice.dbo.fn_Splits('4-5','|')
 			STUFF(( SELECT  '| ' + CONVERT(VARCHAR(200),SMR.SMS_Message)  +' '
 			FROM [DeliveryBackOffice].[dbo].[GuidesBySMS] B WITH(NOLOCK)
-			join DeliveryBackOffice.dbo.SMS_Received SMR WITH(NOLOCK)
+			inner join DeliveryBackOffice.dbo.SMS_Received SMR WITH(NOLOCK)
 			 on B.SmsId = SMR.SMS_ID
 			WHERE   
 				B.GuideSerie = serv.Guide_Serie

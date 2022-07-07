@@ -4,6 +4,11 @@
 -- Create date: <2021-04-28>
 -- Description:	<Revaloriza una guia de transporte>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vasquez>
+-- Create date: <2022-06-16>
+-- Description:	< Adicionar lógica para tarifarios alternos cuando destino es EXC >
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD',
@@ -31,6 +36,7 @@ BEGIN
     DECLARE @HeaderCodeSource VARCHAR(5);
     DECLARE @HeaderCodeDestiny VARCHAR(5);
     DECLARE @VisitPointClient INT;
+    DECLARE @VisitPointClientDestiny INT;
     DECLARE @IsCollect BIT;
     DECLARE @IsInsurance BIT;
     DECLARE @InsuranceAmount DECIMAL(12, 2);
@@ -46,6 +52,7 @@ BEGIN
     ------ Carga inicial de datos ----------------------------------------------------------------------------
     SELECT @IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID),
            @VisitPointClient = ord.Sender_ID,
+           @VisitPointClientDestiny = ISNULL(ord.Receiver_ID, 0),
            @IdSettlement = ISNULL(ord.ReceiverIdSettlement, 0),
            @HeaderCodeSource = stwn.HeaderCode,
            @HeaderCodeDestiny = rtwn.HeaderCode,
@@ -324,7 +331,7 @@ BEGIN
                                            @IdSettlementSource = @IdSettlement,
                                            @IdSettlementDestiny = 0,
                                            @CodeOfReferenceSource = @VisitPointClient,
-                                           @CodeOfReferenceDestiny = 0,
+                                           @CodeOfReferenceDestiny = @VisitPointClientDestiny,
                                            @IdSalePipeLine = @IdSalePipeLine,
                                            @FormatResponse = 'DataTable',
                                            @CalculateTaxes = @CalculateTaxes;

@@ -4,6 +4,11 @@
 -- Update date: <2021-08-24>
 -- Description:	<Login Portal Web Corporativo>
 -- =============================================
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-06-28>
+-- Description:	< Devolver datos de COD de punto de visita sobre datos de cliente, si hubiese >
+-- =============================================
 
 
 CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
@@ -390,12 +395,12 @@ AS
 			        '"CodeOfReference":"' + isnull(convert (nvarchar(20) ,VPC.CodeOfReference), '') + '",' +
               '"ListCod":'+
                 '[{'
-								               +'"IdBank":"'+ ISNULL(CONVERT(varchar,cu.[CODAccountBankID]), '')+ '",'
-										           +'"BankDescription":"'+ CONVERT(NVARCHAR,  ISNULL(dbk.[Name],''))+ '",'
-								               +'"Acronym":"'+ CONVERT(NVARCHAR,  ISNULL(dbk.[Acronym],''))+ '",'
-								               +'"NameAccount":"'+ ISNULL(cu.[CODAccountName],'')+ '",'
-								               +'"TypeAccount":"'+ CONVERT(NVARCHAR, ISNULL(cba.[BankAccountType],''))+ '",'
-								               +'"NumberAcc":"'+ ISNULL([CODAccountNumber],'')+ '",',
+								               +'"IdBank":"'+ ISNULL(CONVERT(varchar,ISNULL(vpconf.[CODAccountBankID], cu.[CODAccountBankID])), '')+ '",'
+										           +'"BankDescription":"'+ CONVERT(NVARCHAR,  ISNULL(ISNULL(dbkconf.[Name], dbk.[Name]),''))+ '",'
+								               +'"Acronym":"'+ CONVERT(NVARCHAR,  ISNULL(ISNULL(dbkconf.[Acronym], dbk.[Acronym]),''))+ '",'
+								               +'"NameAccount":"'+ ISNULL(ISNULL(vpconf.CODAccountName,cu.[CODAccountName]),'')+ '",'
+								               +'"TypeAccount":"'+ CONVERT(NVARCHAR, ISNULL(ISNULL(cbaconf.[BankAccountType], cba.[BankAccountType]),''))+ '",'
+								               +'"NumberAcc":"'+ ISNULL(ISNULL(vpconf.CODAccountNumber,cu.[CODAccountNumber]),'')+ '",',
                                +'"DPI":"'+ISNULL(cu.[LegalSponsorDPI],'')+'"'
 								               +'}]'
               +
@@ -420,6 +425,10 @@ AS
 							AND rc.RbcRowStatus=1
 							LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
 							LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser vpu ON vpu.RegisterUserID =ru.UsrIdUser
+							-- Configuración del punto de visita
+							LEFT JOIN DeliveryBackOffice.dbo.VisitPointConfiguration vpconf ON vpc.CodeOfReference = vpconf.VisitPointID
+							LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType cbaconf ON vpconf.CODAccountBankTypeID = cbaconf.IdBankAccountType
+							LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbkconf ON vpconf.CODAccountBankID = dbkconf.Id_bank
 			         WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
 
 		    FOR XML PATH(''), TYPE
