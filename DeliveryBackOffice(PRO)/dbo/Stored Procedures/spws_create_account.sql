@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2020-12-30>
 -- Description:	<Login Portal Web>
@@ -32,6 +31,10 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	
+	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
+	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
+
 	DECLARE @IdentificationValue NVARCHAR(200)
 	DECLARE @jsonResult NVARCHAR(MAX) 
 	DECLARE @IdCustomer as INT        --IdCustomer que se inserta en la tabla dbo.Customer
@@ -160,17 +163,40 @@ BEGIN
 				--- ASIGNAR TARIFARIO PARA CLIENTES INDIVIDUALES 
 					
 					INSERT INTO [dbo].[RatebyCustomer]
-							   ([RbcIdRate]
-							   ,[RbcIdCustomer]
-							   ,[RbcRowStatus]
-							   ,[RbcTokenCreated]
-							   ,[RbcDateCreated])
+						(
+							[RbcIdRate]
+							,[RbcIdCustomer]
+							,[RbcRowStatus]
+							,[RbcTokenCreated]
+							,[RbcDateCreated]
+						)
 					VALUES
-						((SELECT top 1 RheId FROM dbo.RateHeader where RheShortName = 'EXP')
-						,@IdCustomer
-						,1
-						,'SYS-ADMIN'
-						,GETDATE())
+						(
+							@NewMainRates
+							,@IdCustomer
+							,1
+							,'SYS-ADMIN'
+							,GETDATE()
+						)
+
+				-- ASIGNAR TARIFARIO ALTERNO PARA CLIENTES INDIVIDUALES
+					INSERT INTO [dbo].[AlternativeRateByCustomer]
+						(
+							[RateId]
+							,[CustomerId]
+							,[RowStatus]
+							,[TokenCreated]
+							,[DateCreated]
+						)
+					VALUES
+						(
+							@NewAlternativeRates
+							,@IdCustomer
+							,1
+							,'SYS-ADMIN'
+							,GETDATE()
+						)
+						
 
 				-- CREAR CUENTA
 					-- Tipo de cuenta individual
