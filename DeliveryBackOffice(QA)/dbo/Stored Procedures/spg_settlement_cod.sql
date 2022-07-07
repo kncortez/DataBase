@@ -19,7 +19,7 @@ BEGIN
 		SELECT 
 			COUNT(dobs.Guides_Received_COD)
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
-		JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd ON dsd.ID_DeliveryOrderBySettlement = dobs.ID AND dsd.RowStatus = 1
+		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd ON dsd.ID_DeliveryOrderBySettlement = dobs.ID AND dsd.RowStatus = 1
 		WHERE dobs.ID = @IdManifest
 		AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		AND dsd.Guide_Discharged = 1  -- guía liquidada vía COD
@@ -44,8 +44,8 @@ BEGIN
 				WHERE DeliveryOrderBySettlementId = @IdManifest) Amount_Difference,
 			cs.StationName Hub
 		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
-		JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.ID_Courier
-		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.User_Received_COD
+		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.ID_Courier
+		INNER JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.User_Received_COD
 		LEFT JOIN CatStation cs ON cs.IdStation = dobs.SettlementStationId  
 		WHERE dobs.ID = @IdManifest
 
