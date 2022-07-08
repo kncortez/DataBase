@@ -93,6 +93,11 @@ BEGIN
     ELSE IF (@TypeMethod = 'GetTypePiece')
     BEGIN
 
+        DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
+		DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
+		DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI);
+
+
         SET @jsonResult =
         (
             SELECT STUFF(
@@ -100,10 +105,17 @@ BEGIN
                                 SELECT
 										',{"Id":"' + CONVERT(NVARCHAR, ISNULL(cd.[AbcId], 0)) + '",'
 										+ '"Code":"' + ISNULL(cd.[Code], '') + '",'
-										+ '"Description":"' + ISNULL(CONCAT(cd.[Code], '  -  ', cd.[TarName], '-', cd.[ArtName]), '') + '",'
+										+ '"Description":"' + (
+											CASE
+												WHEN cd.IsMainPackage IS NOT NULL AND cd.IsMainPackage = 1 THEN cd.ArtName
+												ELSE ISNULL(CONCAT(cd.[Code], '  -  ', cd.[TarName], '-', cd.[ArtName]), '')
+											END
+										) + '",'
 										+ '"Height":' + CONVERT(NVARCHAR, ISNULL(cd.[Height], 30)) + ','
 										+ '"Width":' + CONVERT(NVARCHAR, ISNULL(cd.[Width], 30)) + ','
-										+ '"Length":' + CONVERT(NVARCHAR, ISNULL(cd.[Length], 30)) + ''
+										+ '"Length":' + CONVERT(NVARCHAR, ISNULL(cd.[Length], 30)) + ','
+										+ '"Weight":' + CONVERT(NVARCHAR, ISNULL(cd.MassWeight, 1)) + ''
+										+ IIF(cd.IsMainPackage IS NOT NULL,CONCAT(',"IsMainPackage":',IIF(cd.IsMainPackage = 1,'true','false')),'')
 										+ '}'
 									FROM (SELECT DISTINCT
 											abc.Code
@@ -113,6 +125,8 @@ BEGIN
 										   ,abc.Height
 										   ,abc.Width
 										   ,abc.Length
+										   ,abc.MassWeight
+										   ,IIF(ra.RateId IN (@NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates), IIF(ra.TypeServiceId IS NOT NULL AND ra.TypeSegmentId IS NOT NULL, 1, 0), NULL) 'IsMainPackage'
 										FROM dbo.CatArticle art
 										JOIN dbo.ArticleByCustomer abc
 											ON abc.AbcIdArticle = art.ArtId
@@ -303,7 +317,8 @@ BEGIN
                                        + ISNULL(PRV.ProvinceDescription, '') + '",' + '"Address":"'
                                        + ISNULL(VPC.Address, '') + '",' + '"HeaderCode":"' + ISNULL(TWS.HeaderCode, '') + '",'
                                        + '"SettlementDescription":"'+ ISNULL( STL.Settlement, '') + '",'
-										                   + '"IdSettlement":"'+ ISNULL(CONVERT(NVARCHAR, STL.IdSettlement), '') + '"'
+									   + '"IdSettlement":"'+ ISNULL(CONVERT(NVARCHAR, STL.IdSettlement), '') + '",'
+									   + '"CodeOfReference":"'+ ISNULL(CONVERT(NVARCHAR, VPC.CodeOfReference), '') + '"'
                                        + '}'
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
                                     JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)

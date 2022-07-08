@@ -28,7 +28,7 @@ SELECT isnull(sum(ACH.TotalAmountCash),0) 'TotalCash',
  isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard), 0) 'TotalGeneral'
  -- FIN MODIFICACIÓN
  FROM dbo.AccountingClosuresHeaderVisitPoint ACH
- JOIN dbo.VisitPointClient VPC ON VPC.CodeOfReference = ACH.VisitPoint AND VPC.CodeOfReference = @VisitPointId
+ INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK) ON VPC.CodeOfReference = ACH.VisitPoint AND VPC.CodeOfReference = @VisitPointId
  WHERE  CONVERT(DATE, ACH.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
  AND ACH.IdAccountingClosuresHeaderVisitPoint = @IdCierre 
 end
@@ -49,7 +49,7 @@ SELECT isnull(sum(ACH.TotalAmountCash),0) 'TotalCash',
  isnull(sum(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard), 0) 'TotalGeneral'
  -- FIN MODIFICACIÓN
  FROM dbo.AccountingClosuresHeaderVisitPoint ACH
- JOIN dbo.VisitPointClient VPC ON VPC.CodeOfReference = ACH.VisitPoint AND VPC.CodeOfReference = @VisitPointId
+ INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK) ON VPC.CodeOfReference = ACH.VisitPoint AND VPC.CodeOfReference = @VisitPointId
  WHERE  CONVERT(DATE, ACH.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 GROUP BY VisitPoint
 end

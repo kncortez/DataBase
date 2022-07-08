@@ -23,6 +23,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
     ON [dbo].[DeliverySettlementDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -55,4 +57,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de actualización de la fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ID_DeliveryOrderBySettlement_Guide_Settlement_Guide_Discharged_RowStatus]
+    ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [Guide_Settlement] ASC, [Guide_Discharged] ASC, [RowStatus] ASC);
 
