@@ -40,5 +40,7 @@ BEGIN
 	WHERE TT.DayOfVisit = @DayOfVisit
 	AND TT.RowStatus = 'TRUE'
 	AND RT.IdRoute = @IdRoute
+	AND TT.InitializationTimeOfVisit IS NOT NULL AND TT.InitializationTimeOfVisit NOT IN ('__:__','0','',' ')
+	AND TT.FinalizationTimeOfVisit IS NOT NULL AND TT.FinalizationTimeOfVisit NOT IN ('__:__','0','',' ')
 	ORDER BY TT.InitializationTimeOfVisit, TT.FinalizationTimeOfVisit, CS.IdCustomer, vp.CodeOfReference, RT.IdRoute
 END
