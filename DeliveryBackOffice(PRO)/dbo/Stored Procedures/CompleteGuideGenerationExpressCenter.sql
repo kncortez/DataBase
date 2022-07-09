@@ -942,6 +942,26 @@ BEGIN
 		) 
 			 
 		select ('[' + @JsonResponse +  ']') JsonOutput 
+
+		--Insert en tabla de log
+		INSERT INTO [dbo].[RoutePreparationLogError]
+					([ErrorDescription]
+					,[ErrorNumber]
+					,[ErrorProcedure]
+					,[ErrorLine]
+					,[GuideSerie]
+					,[GuideNumber]
+					,[TokenCreated]
+					,[DateCreated])
+				VALUES
+					(CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					,ERROR_NUMBER()
+					,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					,ERROR_LINE()
+					,''
+					,0
+					,''
+					,GETDATE())
 			
 	END CATCH
 

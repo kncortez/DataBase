@@ -48,6 +48,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_CatConceptCODId]
     ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC);
@@ -166,4 +168,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para indicar el status del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber_include]
+    ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [BankId], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
 

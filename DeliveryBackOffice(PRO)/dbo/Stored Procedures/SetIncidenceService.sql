@@ -126,6 +126,14 @@ BEGIN
 																		insert into EventService (ServiceManagementId, ServiceStatusId, RowStauts, TokenCreated, DateCreated, Observations)
 																		values( @transac, @CanceledStatusId, 1, @Token, GETDATE(), @DescriptionIncidence )
 
+																		--Se cancela la solicitud
+																		UPDATE sp 
+																		SET sp.SchedulePickupStatus = 0
+																		FROM SchedulePickup sp
+																		INNER JOIN ServiceManagement sm
+																			ON sm.IdSchedulePickup = sp.SchedulePickupId
+																		WHERE sm.IdServiceManagement = @ServiceManagementId
+
 																	END
 																
 																END TRY

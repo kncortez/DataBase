@@ -36,12 +36,12 @@ BEGIN
 				dep.IdCountry  IdCountrySource,
 				dep.ProvinceAbbreviation ProvinceAbrreviationSource,
 				DSC3.Hub  HubAbbreviationSource,
-				ISNULL(Cast(vpc.CodeOfReference as varchar), '') SourceCodeOfReferenceID,
-				ISNULL(vpc.ContactName,'')  SourceVPCName,
-				ISNULL(vpc.DescriptionOfClient,'')  SourceEXPCName,
-				ISNULL(Cast(vpc.CustomerID as varchar), '')  SouceVPCustomerID,
-				ISNULL(UPPER(client.Abbreviation), '') AbbrvCustomerName,
-				ISNULL(Cast(vpc.VisitPointId as varchar), '') SourceVPCVisitPointId,
+				'0' SourceCodeOfReferenceID,
+				''  SourceVPCName,
+				''  SourceEXPCName,
+				''  SouceVPCustomerID,
+				'' AbbrvCustomerName,
+				'' SourceVPCVisitPointId,
 				'' DepotAddress
 			from DeliveryBackOffice.dbo.Township mun WITH(NOLOCK)
 				LEFT JOIN DeliveryBackOffice.dbo.Settlement pob WITH(NOLOCK)
@@ -54,9 +54,6 @@ BEGIN
 					pob.IdSettlement = DSC3.IdSettlement 
 				JOIN DeliveryBackOffice.dbo.Province dep  WITH(NOLOCK) ON	mun.IdProvince = dep.IdProvince and dep.ProvinceStatus = 'TRUE'
 				LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hub WITH(NOLOCK)on RTRIM(LTRIM(hub.HubAbbreviation)) = RTRIM(LTRIM(DSC3.Hub))
-				left join DeliveryBackOffice.dbo.VisitPointClientByHubLogistics   vhub  WITH(NOLOCK) ON vhub.IdHublogistic =  hub.IdHubLogistic 
-				LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) on vpc.CodeOfReference =  vhub.IdVisitPointClient and vpc.IdKindOfVPClient = 6
-				LEFT JOIN DeliveryBackOffice.dbo.Customer client WITH(NOLOCK)  on vpc.CustomerID = client.IdCustomer
 			where mun.HeaderCode = @HeaderCodeSource and mun.TownshipStatus = 'TRUE'
 		end
 		else

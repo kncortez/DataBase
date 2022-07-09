@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[DeliveryOrder] (
+﻿CREATE TABLE [dbo].[DeliveryOrder] (
     [Ticket_Number]                        NVARCHAR (150)  NULL,
     [Order_Number]                         INT             NULL,
     [Preparation_Date]                     DATETIME        NULL,
@@ -109,6 +109,8 @@ CREATE TABLE [dbo].[DeliveryOrder] (
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 
@@ -258,4 +260,10 @@ GO
 CREATE NONCLUSTERED INDEX [idx_DateCreated]
     ON [dbo].[DeliveryOrder]([DateCreated] ASC)
     INCLUDE([Sender_ID], [Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Sender_ID_DateCreated]
+    ON [dbo].[DeliveryOrder]([Sender_ID] ASC, [DateCreated] ASC)
+    INCLUDE([Ticket_Number], [Order_Number], [Shipping_Date], [Pieces_Dry], [Pieces_Cold], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Department], [Receiver_Alternant_FullName], [Receiver_Alternant_Phone], [Receiver_Alternant_SocialSecurity_ID], [Guide_Serie], [Guide_Number], [Manifest_Serie], [Manifest_Number], [StatusOrderId], [Receiver_CUI], [Receiver_Alternant_CUI], [NameOfReceiver], [Collect_OnDelivery], [IsCollect], [PriceShippment], [IdCustomer]);
 

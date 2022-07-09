@@ -102,7 +102,7 @@ BEGIN
             SET @ExpressName =
             (
                 SELECT DescriptionOfClient
-                FROM DeliveryOrder do WITH(NOLOCK)
+                FROM DeliveryOrder do WITH (NOLOCK)
                     JOIN VisitPointClient vpc WITH (NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
                 WHERE Guide_Number = @Guide_Number
@@ -150,7 +150,7 @@ BEGIN
     WHERE ProductNumber = CONCAT(@Serie_Number, @Guide_Number);
 
     SELECT TOP 1
-           @identityCost = bdp.IdBreakdownOfPayment 
+           @identityCost = bdp.IdBreakdownOfPayment
     FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
             ON bdp.IdCost = ct.IdCost
@@ -208,7 +208,7 @@ BEGIN
                                                   dbo.fnt_String_Escape(
                                                                            (CASE
                                                                                 WHEN @Impersonate = 'TRUE' THEN
-                                                                                    --IMPERSONADO 
+                                                                                    --IMPERSONADO
                                                                                     CASE
                                                                                         WHEN (dev.IsReturn = 1) THEN
                                                                                             --SI DEVOLUCION
@@ -369,7 +369,7 @@ BEGIN
                                                   103
                                               ) + '",' + '"Route":"' + COALESCE(cov.RouteCode, '') + '",'
                                      + '"TypeService":"' + dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json')
-                                     + '",' +
+                                     + '",' + '"Service_Payment":"' + COALESCE(CPT.TimePlaName, '') + '",' +
                                   /*nueva seccion del si esta asegurado o no*/
                                   '"IsInsuarance":' + (CASE
                                                            WHEN dev.IsInsuarance = 1 THEN
@@ -379,6 +379,22 @@ BEGIN
                                                        END
                                                       ) + ',' +
                                   /**/
+                                  '"IsReturn":' + (CASE
+                                                       WHEN dev.IsReturn = 1 THEN
+                                                           'true'
+                                                       ELSE
+                                                           'false'
+                                                   END
+                                                  ) + ',' + '"VisitPointByClientPortfolioId":'
+                                     + CONVERT(   VARCHAR,
+                                                  (CASE
+                                                       WHEN ISNULL(dev.VisitpointClientPortfolioId, 0) > 0 THEN
+                                                           dev.VisitpointClientPortfolioId
+                                                       ELSE
+                                                           0
+                                                   END
+                                                  )
+                                              ) + ',' +
                                   /*Campos descripcion de entrega*/
                                   '"idDeliveryOption":' + CONVERT(NVARCHAR, COALESCE(cdo.IdDeliveryOption, 0)) + ','
                                      + '"descriptionDelivery":"'
@@ -431,6 +447,10 @@ BEGIN
                                       ON dev.IdDeliveryOption = cdo.IdDeliveryOption
                                   LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage cov WITH (NOLOCK)
                                       ON cov.HeaderCode = tws2.HeaderCode
+                                  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD
+                                      ON DOPD.GuideNumber = dev.Guide_Number
+                                  LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT
+                                      ON DOPD.TimePlaId = CPT.TimePlaId
                                          AND cov.RowStatus = 1
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
