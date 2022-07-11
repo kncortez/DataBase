@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[Container] (
     [IdContainer]          INT            IDENTITY (1, 1) NOT NULL,
     [CatTypeContainerId]   INT            NOT NULL,
-    [ContainerNumber]      INT            NOT NULL,
+    [ContainerNumber]      NVARCHAR (50)  NOT NULL,
     [ContainerDescription] NVARCHAR (200) NULL,
     [RowStatus]            BIT            DEFAULT ((1)) NOT NULL,
     [TokenCreated]         NVARCHAR (50)  NOT NULL,
@@ -9,9 +9,10 @@
     [TokenUpdated]         NVARCHAR (50)  NULL,
     [DateUpdated]          DATETIME       NULL,
     PRIMARY KEY CLUSTERED ([IdContainer] ASC),
-    CONSTRAINT [FK_Container_TypeContainer] FOREIGN KEY ([CatTypeContainerId]) REFERENCES [dbo].[CatTypeContainer] ([IdCatTypeContainer]),
-    CONSTRAINT [UQ_Container_Number] UNIQUE NONCLUSTERED ([ContainerNumber] ASC)
+    CONSTRAINT [FK_Container_TypeContainer] FOREIGN KEY ([CatTypeContainerId]) REFERENCES [dbo].[CatTypeContainer] ([IdCatTypeContainer])
 );
+
+
 
 
 GO

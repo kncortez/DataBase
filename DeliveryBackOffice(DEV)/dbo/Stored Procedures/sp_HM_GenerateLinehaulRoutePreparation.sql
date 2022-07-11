@@ -4,7 +4,7 @@
 -- Description:	<Insert a new Linehaul Route Preparation Document>
 -- =============================================
 
-CREATE PROCEDURE [DBO].[sp_HM_GenerateLinehaulRoutePreparation] 
+CREATE PROCEDURE [dbo].[sp_HM_GenerateLinehaulRoutePreparation] 
 	@StationId AS INT,
 	@RouteId AS INT,
 	@CatVehicleId AS INT,
@@ -25,9 +25,9 @@ BEGIN
 						 WHERE [LRP].[StationDispatchedId] = @StationId
 							AND [LRP].[CatRouteId] = @RouteId
 							AND [LRP].[CatVehicleId] = @CatVehicleId
-							AND DAY([LRP].[DateLinehaulRoutePreparation]) = DAY(SYSDATETIME()) 
-							AND MONTH([LRP].[DateLinehaulRoutePreparation]) = MONTH(SYSDATETIME()) 
-							AND YEAR([LRP].[DateLinehaulRoutePreparation]) = YEAR(SYSDATETIME()));
+							AND DAY([LRP].[DateLinehaulRoutePreparation]) = DAY(@DateSelected) 
+							AND MONTH([LRP].[DateLinehaulRoutePreparation]) = MONTH(@DateSelected) 
+							AND YEAR([LRP].[DateLinehaulRoutePreparation]) = YEAR(@DateSelected));
 
 	IF (@EXISTING_DOC > 0) 
 		-- Return existing doc
