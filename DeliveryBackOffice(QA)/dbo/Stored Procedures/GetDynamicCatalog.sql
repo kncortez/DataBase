@@ -533,6 +533,27 @@ BEGIN
         );
     END;
 
+	ELSE IF (@TypeMethod = 'GetTypeVehicle')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"Id":"' + CONVERT(NVARCHAR, IdTypeVehicle) + '",'
+                                       + '"Name":"' + ISNULL(Name, '') + '",' 
+									   + '"Description":"' + ISNULL(Description, '') + '",' + '}'
+                                FROM CatTypeVehicle
+                                WHERE RowStatus = 1
+									AND Name IN ('Camión','Panel','Motocicleta')
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
+
 
 
     SELECT '[' + @jsonResult + ']' FormatJson;
