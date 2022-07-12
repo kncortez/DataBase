@@ -5,7 +5,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[UpdatePaymentMethod] 
 	-- Add the parameters for the stored procedure here
-	@CustomerId INT,
+	@AccountId BIGINT,
 	@UpdateId INT,
 	@Token NVARCHAR(50)
 AS
@@ -21,14 +21,24 @@ BEGIN
 				1
 			FROM CustomerPaymentValue
 			WHERE IdCustomerPaymentValue = @UpdateId
-			AND CustomerId = @CustomerId
+			AND (AccountId = @AccountId
+			OR CustomerId = (SELECT
+					IdCustomer
+				FROM Account
+				WHERE AccIdAccount = @AccountId)
+			)
 			AND RowStatus = 1)
 		BEGIN
 			UPDATE CustomerPaymentValue
 			SET IsDefault = 0
 			   ,TokenUpdated = @Token
 			   ,DateUpdated = GETDATE()
-			WHERE CustomerId = @CustomerId
+			WHERE (AccountId = @AccountId
+			OR CustomerId = (SELECT
+					IdCustomer
+				FROM Account
+				WHERE AccIdAccount = @AccountId)
+			)
 			AND RowStatus = 1
 
 			UPDATE CustomerPaymentValue
