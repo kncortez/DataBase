@@ -23,7 +23,8 @@ CREATE PROCEDURE [dbo].[SetRecolectionRequest]
     @RecollectionLongitude AS DECIMAL(18, 15) = 0,
     @DeliveryLatitude AS DECIMAL(18, 15) = 0,
     @DeliveryLongitude AS DECIMAL(18, 15) = 0,
-    @IdUser INT = 0
+    @IdUser INT = 0,
+    @TypeVehicleId INT = NULL
 AS
 BEGIN
     IF (@ValidateFilter = 1)
@@ -536,7 +537,8 @@ BEGIN
                 IdHubLogistics,
                 AmountPickup,
                 IdSourcePlataform,
-                AddressPickup
+                AddressPickup,
+                TypeVehicleId
             )
             SELECT @IdAccount,
                    @StartDate,
@@ -557,7 +559,8 @@ BEGIN
                    sd.Hub,
                    NULL,
                    NULL,
-                   sd.AddressPickup
+                   sd.AddressPickup,
+                   @TypeVehicleId
             FROM #Sender sd
             WHERE sd.SchedulePickupId IS NULL
             GROUP BY sd.Sender_ID,
@@ -568,6 +571,17 @@ BEGIN
 
             DECLARE @transaction INT = SCOPE_IDENTITY();
 
+            --ACTUALIZANDO VEHÍCULO
+            UPDATE sp
+            SET sp.TypeVehicleId = @TypeVehicleId
+            FROM SchedulePickup sp
+            WHERE sp.SenderId IN
+                  (
+                      SELECT Sender_ID
+                      FROM #Sender
+                      WHERE SchedulePickupId IS NOT NULL
+                      GROUP BY Sender_ID
+                  );
 
 
             --ACTUALIZANDO GUIAS SIN SCHEDULE PICKUP 
