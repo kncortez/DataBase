@@ -17,6 +17,9 @@ BEGIN
 			[CTC].[TypeContainerSerie],
 			[CNT].[ContainerNumber],
 			[CNT].[ContainerDescription],
+			[LRPC].[HubDestinyId],
+			[HL].[HubName],
+			[HL].[HubAbbreviation],
 			[LRPC].[GuideQuantity],
 			[LRPC].[DryPieceQuantity],
 			[LRPC].[ColdPieceQuantity]
@@ -26,5 +29,7 @@ BEGIN
 		AND	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 	INNER JOIN [dbo].[CatTypeContainer] CTC
 		ON	[CNT].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
+	LEFT JOIN [dbo].[HubLogistics] HL
+		ON [LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 	ORDER BY [CNT].[IdContainer];
 END
