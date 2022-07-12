@@ -3,7 +3,7 @@
 -- Create date: <06-07-2022>
 -- Description:	<Get list of TypeContainer filter by rowstatus = 1>
 -- =============================================
-CREATE PROCEDURE sp_HM_getTypeContainerByStatus
+CREATE PROCEDURE spHM_getTypeContainerByStatus
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

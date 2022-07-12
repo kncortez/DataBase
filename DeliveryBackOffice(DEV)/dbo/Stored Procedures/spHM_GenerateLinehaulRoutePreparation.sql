@@ -4,7 +4,7 @@
 -- Description:	<Insert a new Linehaul Route Preparation Document>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[sp_HM_GenerateLinehaulRoutePreparation] 
+CREATE PROCEDURE [DBO].[spHM_GenerateLinehaulRoutePreparation] 
 	@StationId AS INT,
 	@RouteId AS INT,
 	@CatVehicleId AS INT,
@@ -65,7 +65,9 @@ BEGIN
 							 [TokenCreated],
 							 [DateCreated])
 					VALUES ( @StationId, 
-							 1, 
+							 (SELECT [CLS].[IdCatLinehaulStatus] 
+							  FROM [dbo].[CatLinehaulStatus] CLS
+							  WHERE [CLS].[StatusName] = 'GENERATED'), 
 							 @RouteId, 
 							 @CatVehicleId,
 							 @DateSelected, 

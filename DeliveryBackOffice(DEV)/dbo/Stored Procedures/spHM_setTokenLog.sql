@@ -3,9 +3,9 @@
 -- Create date: <01/07/2022>
 -- Description:	<Save or update Token Log>
 -- =============================================
-CREATE PROCEDURE [dbo].[sp_HM_setTokenLog]
+CREATE PROCEDURE [DBO].[spHM_setTokenLog]
 	@idToken AS NVARCHAR(75),
-	@idUser AS INT,
+	@idUser AS INT,  -- This is from Table Internal User
 	@idSystem AS INT,
 	@idHub AS INT,
 	@idModule AS INT,
