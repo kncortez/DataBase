@@ -5,7 +5,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[DeletePaymentMethod] 
 	-- Add the parameters for the stored procedure here
-	@CustomerId INT,
+	@AccountId INT,
 	@DeleteId INT,
 	@DefaultId INT,
 	@Token NVARCHAR(50)
@@ -22,13 +22,23 @@ BEGIN
 				1
 			FROM CustomerPaymentValue
 			WHERE IdCustomerPaymentValue = @DeleteId
-			AND CustomerId = @CustomerId
+			AND (AccountId = @AccountId
+			OR CustomerId = (SELECT
+					IdCustomer
+				FROM Account
+				WHERE AccIdAccount = @AccountId)
+			)
 			AND RowStatus = 1)
 		AND (@DefaultId IS NULL OR EXISTS (SELECT
 				1
 			FROM CustomerPaymentValue
 			WHERE IdCustomerPaymentValue = @DefaultId
-			AND CustomerId = @CustomerId
+			AND (AccountId = @AccountId
+			OR CustomerId = (SELECT
+					IdCustomer
+				FROM Account
+				WHERE AccIdAccount = @AccountId)
+			)
 			AND RowStatus = 1)
 		)
 		BEGIN
@@ -40,7 +50,12 @@ BEGIN
 			OR NOT EXISTS (SELECT TOP 1
 					1
 				FROM CustomerPaymentValue
-				WHERE CustomerId = @CustomerId
+				WHERE (AccountId = @AccountId
+				OR CustomerId = (SELECT
+						IdCustomer
+					FROM Account
+					WHERE AccIdAccount = @AccountId)
+				)
 				AND IdCustomerPaymentValue <> @DeleteId
 				AND RowStatus = 1)
 			)
