@@ -3,7 +3,7 @@
 -- Create date: <23-06-2022>
 -- Description:	<Login para app de operaciones HERMES MOBILE>
 -- =============================================
-CREATE PROCEDURE [dbo].[sp_HM_Login]
+CREATE PROCEDURE [dbo].[spHM_Login]
 	@Code AS INT,
 	@Username AS VARCHAR(20),
 	@Password AS VARCHAR(50),
