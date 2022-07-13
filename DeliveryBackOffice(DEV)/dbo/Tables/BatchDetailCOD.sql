@@ -50,6 +50,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena el motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'Comments';
 
@@ -168,4 +170,10 @@ CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar la fecha en la que se genera la comisión.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CommissionDate';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber_include]
+    ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [BankId], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
 

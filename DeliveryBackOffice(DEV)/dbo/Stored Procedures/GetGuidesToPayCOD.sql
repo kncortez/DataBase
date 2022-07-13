@@ -4,6 +4,11 @@
 -- Author:		<Oscar,Morales>
 -- Create date: <2021-06-22>
 -- Description:	<Guias por pagar COD>
+-- =============================================​
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-07-01>
+-- Description:	< No considerar comisiones con estado lógico inactivo >
 -- =============================================
 ​
 CREATE PROCEDURE [dbo].[GetGuidesToPayCOD]
@@ -175,6 +180,7 @@ BEGIN
            CommissionDate
     FROM [dbo].[BatchDetailCOD] WITH(NOLOCK)
     WHERE CONVERT(DATE, CommissionDate) = @Date
+	AND RowStatus = 1
     ORDER BY CommissionId;
 ​
 ​

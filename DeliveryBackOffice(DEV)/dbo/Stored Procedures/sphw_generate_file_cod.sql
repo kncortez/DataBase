@@ -1479,6 +1479,7 @@ BEGIN
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
                AND btc.CatConceptCODId = @EnabledRow
+			   AND btc.RowStatus = @EnabledRow
 			     LEFT JOIN DeliveryBackOffice.dbo.Customer cust WITH(NOLOCK)
                 ON pg.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = @EnabledRow
@@ -1493,8 +1494,7 @@ BEGIN
 		--AND btc.RowStatus = @EnabledRow
 	    AND btd.BatchCODId = @BatchCODId
         AND btd.Excluded = @Excluded
-        AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-       
+        AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET        
         UNION
         ----------ACUMULADO
         SELECT btd.CatAccountTypeCODId 'TIPO DE CUENTA',
@@ -1616,6 +1616,7 @@ BEGIN
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
                AND btc.CatConceptCODId = 2
+			   AND btc.RowStatus = @EnabledRow
 			     LEFT JOIN DeliveryBackOffice.dbo.Customer cust WITH(NOLOCK)
                 ON pg.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = @EnabledRow
@@ -1628,7 +1629,7 @@ BEGIN
 		--AND btc.RowStatus = @EnabledRow
 		AND BTD.BatchCODId = @BatchCODId
         AND btd.Excluded = @Excluded
-        AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC        
+        AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC 		
         GROUP BY pg.CustomerId,
                  btd.CatAccountTypeCODId,
                  btd.AccountNumber,
