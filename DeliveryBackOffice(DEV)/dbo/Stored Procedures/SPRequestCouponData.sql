@@ -367,13 +367,14 @@ BEGIN
 				BEGIN
 
 					-- Los datos estan bien pero no existe registro de la guía en la tabla Cost
-
+					
+					DECLARE @ExecResult INT = 0;
 					-- Revalorizar guía para generar registros
-					EXEC [dbo].[spws_revalue_guide]
+					EXEC @ExecResult = [dbo].[spws_revalue_guide]
 						@GuideSerie  = @GuideSerie
 						,@GuideNumber = @GuideNumber
 						,@CodeApp = @CodeAppRevalue -- CodeApp generico de forza
-						,@Format ='Datatable'
+						,@Format ='Non'
 						,@CalculateTaxes = @TaxesRevalue -- Dado a nuevas tarifas, no cálcular impuestos
 						,@IdModule = 1
 						,@SetUpdate = @MustUpdateRevalue -- Actualizar registros
