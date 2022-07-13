@@ -6,6 +6,7 @@
     [TokenizedToken]          NVARCHAR (50) NOT NULL,
     [TokenizedNumber]         NVARCHAR (50) NOT NULL,
     [TokenizedExpirationDate] NVARCHAR (50) NOT NULL,
+    [TokenizedCVV]            NVARCHAR (50) NOT NULL,
     [DisplayText]             NVARCHAR (25) NOT NULL,
     [IsDefault]               BIT           CONSTRAINT [DF_CustomerPaymentValue_IsDefault] DEFAULT ((0)) NOT NULL,
     [Type]                    NVARCHAR (2)  NOT NULL,
@@ -19,6 +20,8 @@
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_CustomerPaymentValue_VisitPointClient] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -81,4 +84,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'El tipo de tarjeta V: Visa; A, American Express, C: Master Card', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'Type';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de CVV de tarjeta de crédito/débito', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'TokenizedCVV';
 
