@@ -12,6 +12,7 @@ CREATE PROCEDURE [dbo].[SetPaymentMethod]
 	@TokenizedNumber NVARCHAR(50),
 	@TokenizedExpirationDate NVARCHAR(50),
 	@DisplayText NVARCHAR(25),
+	@Type NVARCHAR(2),
 	@Token NVARCHAR(50)
 AS
 BEGIN
@@ -35,12 +36,13 @@ BEGIN
 			, [TokenizedExpirationDate]
 			, [DisplayText]
 			, [IsDefault]
+			, [Type]
 			, [RowStatus]
 			, [TokenCreated]
 			, [DateCreated]
 			, [TokenUpdated]
 			, [DateUpdated])
-				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedNumber, @TokenizedExpirationDate, @DisplayText, @IsDefault, 1, @Token, GETDATE(), NULL, NULL)
+				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedNumber, @TokenizedExpirationDate, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL)
 			
 			COMMIT TRANSACTION
 
