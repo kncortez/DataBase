@@ -9,6 +9,11 @@
 -- Update date: <01/06/2022>
 -- Description:	< Prebloqueo de cupones >
 -- =============================================
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-07-05>
+-- Description:	< Generación de registros inexistentes de Cost en guías problematicas >
+-- =============================================
 CREATE PROCEDURE [dbo].[SPRequestCouponData]
   -- Add the parameters for the stored procedure here
   @CouponSerie               NVARCHAR(20),
@@ -63,6 +68,11 @@ BEGIN
 	DECLARE @PhoneDestination NVARCHAR(50) = '';
 
 	DECLARE @GuideIsImpersonated BIT = 0;
+
+	-- Variables de revalorización
+	DECLARE @CodeAppRevalue NVARCHAR(50) = ( SELECT TOP 1 Ec.UserKey FROM [DeliveryBackOffice].[dbo].[Ecommerce] Ec WITH(NOLOCK) WHERE Ec.IdCountry = 'GT' AND Ec.IdCustomer = 6 );
+	DECLARE @MustUpdateRevalue BIT = 1; -- Actualizar DB con revalorización
+	DECLARE @TaxesRevalue BIT = 0; -- Calcular impuestos, por defecto 0 por el cambio de tarifas y que no se aplican cupónes a corporativos
 
 	-- Validar Cliente - Esto se podrá usar cuando sea necesario validar que el cupon no se pueda transferir
 	SELECT 
@@ -277,6 +287,8 @@ BEGIN
 				IF(@OldAmount > 0 AND @DiscountAmount IS NOT NULL AND @CostId > 0 AND @PromoName != '')
 				BEGIN
 
+					-- Existe el registro de la guía en la tabla Cost
+
 					-- Valor nuevo de la guía
 					SET @NewAmount = ROUND(@OldAmount - @DiscountAmount,1);
 
@@ -351,8 +363,145 @@ BEGIN
 					END
 
 				END
+				ELSE IF(@OldAmount > 0 AND @DiscountAmount IS NOT NULL AND ISNULL(@CostId, 0) =  0 AND @PromoName != '')
+				BEGIN
+
+					-- Los datos estan bien pero no existe registro de la guía en la tabla Cost
+					
+					DECLARE @ExecResult INT = 0;
+					-- Revalorizar guía para generar registros
+					EXEC @ExecResult = [dbo].[spws_revalue_guide]
+						@GuideSerie  = @GuideSerie
+						,@GuideNumber = @GuideNumber
+						,@CodeApp = @CodeAppRevalue -- CodeApp generico de forza
+						,@Format ='Non'
+						,@CalculateTaxes = @TaxesRevalue -- Dado a nuevas tarifas, no cálcular impuestos
+						,@IdModule = 1
+						,@SetUpdate = @MustUpdateRevalue -- Actualizar registros
+						,@Token = @Token
+
+					-- Reverificar el registro de la tabla Cost
+					SET @CostId = ISNULL(
+						(
+							SELECT 
+								TOP 1
+									Co.idcost
+							FROM
+								[DeliveryBackOffice].[dbo].[cost] Co WITH(NOLOCK)
+							WHERE 
+								Co.productnumber = Concat(@GuideSerie, @GuideNumber) COLLATE latin1_general_CI_AI
+								AND 
+								Co.idproduct = 1
+								AND 
+								Co.rowstatus = 1
+						)
+					, 0)
+
+					IF(@CostId > 0)
+					BEGIN
+						-- Se pudo recuperar y generar registro en tabla Cost y BreakdownOfPayment
+					
+						-- Valor nuevo de la guía
+						SET @NewAmount = ROUND(@OldAmount - @DiscountAmount,1);
+
+						-- Nuevo BreakdownOfPayment temporal
+						DECLARE @TempBreakdown2 AS TABLE (
+							RowNumber INT,
+							Description NVARCHAR(200),
+							Amount DECIMAL(14,2)
+						);
+
+						INSERT INTO 
+							@TempBreakdown2
+							(RowNumber, Description, Amount)
+						SELECT
+							ROW_NUMBER() OVER(ORDER BY BOP.Description)
+							,BOP.Description
+							,BOP.Amount
+						FROM
+							[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP WITH(NOLOCK)
+						WHERE
+							BOP.Amount > 0
+							AND
+							BOP.IdCost = @CostId
+							AND
+							BOP.RowStatus = 1
+
+						INSERT INTO
+							@TempBreakdown2
+							(RowNumber, Description, Amount)
+						VALUES
+							(0, @PromoName, -@DiscountAmount)
+
+						SET @JsonBreakdown =  
+						( 
+							SELECT STUFF(( 
+									SELECT 
+										',{' + 
+											'"RowNumber":' + CAST(TB.RowNumber AS NVARCHAR) + ',' +
+											'"IdCost":' + CAST(@CostId AS NVARCHAR) + ',' +
+											'"Description":"' + TB.Description + '",' +
+											'"Amount":' + CAST(TB.Amount AS NVARCHAR) + ',' +
+											'"ModIdModule":0' + ',' +
+											'"RowStatus":true' + ',' +
+											'"TokenCreated":null' +
+										'}'
+									FROM
+										@TempBreakdown2 TB
+								FOR XML PATH(''), TYPE 
+							) 
+							.value('.', 'varchar(max)'),1,1,'' 
+							)
+						) 
+
+						IF(@JsonBreakdown IS NOT NULL)
+						BEGIN
+
+							SET @JsonResponse =  
+							( 
+								SELECT STUFF(( 
+									SELECT 
+										',{' + 
+											'"idResult":200' + ',' +
+											'"newAmount":' + CAST(@NewAmount AS NVARCHAR) + ',' +
+											'"UpdateBreackdown":[' + @JsonBreakdown + ']' + 
+										'}'
+									FOR XML PATH(''), TYPE 
+								) 
+								.value('.', 'varchar(max)'),1,1,'' 
+								)
+							) 
+
+						END
+
+					END
+					ELSE
+					BEGIN
+
+						-- No se puede continuar el procesamiento del cupón, falta algun dato importante
+
+						SET @JsonResponse =  
+						( 
+							SELECT STUFF(( 
+								SELECT 
+									',{' + 
+										'"IdResult":407' + ',' +
+										'"Message":"Cupon no es valido, por favor verifique su información"' + ',' +
+										'"Coupon": { } ' +
+									'}'
+								FOR XML PATH(''), TYPE 
+							) 
+							.value('.', 'varchar(max)'),1,1,'' 
+							)
+						) 
+
+					END
+
+				END
 				ELSE
 				BEGIN
+
+					-- No se puede continuar el procesamiento del cupón, falta algun dato importante
 
 					SET @JsonResponse =  
 					( 

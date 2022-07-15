@@ -12,14 +12,15 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_onincident]
-    @GuideSerie NVARCHAR(2),
-    @GuideNumber INT,
-    @PhoneNumber NVARCHAR(50),
-    @IdIssue INT,
-    @PhotoIncidentB64 VARCHAR(MAX),
-    @Latitude NVARCHAR(20),
-    @Longitude NVARCHAR(20),
-    @Accuracy NVARCHAR(20)
+	@GuideSerie NVARCHAR(2),
+	@GuideNumber INT,
+	@PhoneNumber NVARCHAR(50),
+	@IdIssue INT,
+	--@PhotoIncidentB64 VARCHAR(MAX),
+	@ImageIncident VARCHAR(300),
+	@Latitude NVARCHAR(20),
+	@Longitude NVARCHAR(20),
+	@Accuracy NVARCHAR(20)
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -116,8 +117,7 @@ BEGIN
     BEGIN TRY
 
         -- convertir base64 a varbinary
-        SET @PhotoIncidentVB
-            = (CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@PhotoIncidentB64"))', 'varbinary(max)'));
+        --SET @PhotoIncidentVB = (CAST(N'' AS XML).value('xs:base64Binary(sql:variable("@PhotoIncidentB64"))', 'varbinary(max)'));
 
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
@@ -136,10 +136,10 @@ BEGIN
             Guide_Serie,
             Guide_Number,
             Date_Photo,
-            Proof_Incident
+            Path_Incident
         )
         VALUES
-        (@GuideSerie, @GuideNumber, GETDATE(), @PhotoIncidentVB);
+        (@GuideSerie, @GuideNumber, GETDATE(), @ImageIncident);
         SET @ID_Photo = SCOPE_IDENTITY();
 
         IF (@ID_Photo > 0)
