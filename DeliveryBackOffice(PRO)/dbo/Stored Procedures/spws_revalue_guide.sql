@@ -31,6 +31,12 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+	-- Variables "estaticas"
+	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
+	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
+	DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI);
+
+	-- Variables de control
     DECLARE @IdCustomer AS INT;
     DECLARE @IdSettlement AS INT;
     DECLARE @HeaderCodeSource VARCHAR(5);
@@ -310,6 +316,48 @@ BEGIN
 
     PRINT 'pesos';
     PRINT @Pesos;
+	 
+	--- Validar la tarifa del usuario antes de realizar cambios
+	DECLARE @CustomerIdRate INT = 0;
+	SELECT
+		TOP 1
+			@CustomerIdRate = RBC.RbcIdRate
+	FROM
+		[DeliveryBackOffice].[dbo].[RatebyCustomer] RBC WITH(NOLOCK)
+	WHERE
+		RBC.RbcIdCustomer = @IdCustomer
+		AND
+		RBC.RbcRowStatus = 1
+
+	IF(@CustomerIdRate IN (@NewMainRates,@NewAutoSalesMainRates))
+	BEGIN
+	
+		IF( LTRIM(RTRIM(REPLACE(@Parcel,',',''))) = '' )
+		BEGIN
+			
+			DECLARE @DataCounter INT = 1;
+			
+			SET @Parcel = 'EXP076';
+			SET @Pesos = '10';
+			
+			IF(@DataCounter < @PiecesCount)
+			BEGIN
+				WHILE @DataCounter < @PiecesCount
+				BEGIN
+					
+					SET @Parcel = CONCAT(@Parcel,',EXP076');
+					SET @Pesos = CONCAT(@Pesos,',10');
+
+				    SET @DataCounter = @DataCounter + 1;
+
+				END;
+			END;
+
+		END;
+
+	END;
+	--- Fin de validaciónes de tarifa y tipo de pieza vacio
+
 
     --select @Pesos , @Parcel
     INSERT INTO @TempRate

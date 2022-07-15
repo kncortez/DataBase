@@ -151,7 +151,7 @@ BEGIN
 		, do.Pieces_Dry 'Pieces_Dry'
 		, do.Pieces_Cold 'Pieces_Cold'
 		, do.Collect_OnDelivery 'COD'
-		, IIF(do.IsCollect = 1,'TRUE','FALSE') 'IsCollect'
+		, ISNULL(do.IsCollect, 0) 'IsCollect'
 		, rpd.GuideOrder 'GuideOrder'
 		, RPDP.PieceType 'Piece_Type'
 		, CAST(IIF(DOP.StatusOrderId = 3, 1 ,0) AS BIT) 'IsProgrammed'
