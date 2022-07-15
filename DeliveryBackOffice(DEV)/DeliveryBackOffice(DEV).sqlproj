@@ -1043,6 +1043,9 @@
     <Build Include="dbo\Stored Procedures\GetStations.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
+    <Build Include="dbo\Functions\FnGetHub.sql" />
+    <Build Include="dbo\Functions\FnGetCustomerAttempts.sql" />
+    <Build Include="dbo\Functions\FnClearString.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
