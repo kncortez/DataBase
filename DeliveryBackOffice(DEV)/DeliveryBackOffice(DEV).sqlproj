@@ -1046,6 +1046,9 @@
     <Build Include="dbo\Functions\FnGetHub.sql" />
     <Build Include="dbo\Functions\FnGetCustomerAttempts.sql" />
     <Build Include="dbo\Functions\FnClearString.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_visitPointClientParser.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_customerParser.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_CustomerName.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
