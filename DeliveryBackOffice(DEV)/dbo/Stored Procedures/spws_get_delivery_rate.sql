@@ -14,7 +14,6 @@
 -- Create date: <2022-07-06>
 -- Description:	< Corrección de cálculo de sobrepesos de nuevo esquema de tarifas >
 -- =============================================
-
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
 
 @CodApp AS NVARCHAR(50) = '' ,
@@ -175,27 +174,7 @@ BEGIN
 	IF( @IdCustomerParams = 0 AND @IdCustomer = 6)
 	BEGIN
 
-		SET @RateId = @NewMainRates;
-		SET @IdTypeRate = 3;
-
-		DECLARE @cnt INT = 1;
-		
-		SET @ParcelCode = 'EXP076';
-		SET @WeigthParcels = '5';
-
-		IF(@cnt < @CountPiecesParams)
-		BEGIN
-			WHILE @cnt < @CountPiecesParams
-			BEGIN
-		
-				SET @ParcelCode = CONCAT(@ParcelCode,',EXP076');
-				SET @WeigthParcels = CONCAT(@WeigthParcels,',5');
-
-			   SET @cnt = @cnt + 1;
-			END;
-		END;
-
-		SET @CalculateTaxes = 'true'
+		SET @CalculateTaxes = 'false'
 
 	END
 
