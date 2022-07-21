@@ -32,6 +32,7 @@ BEGIN TRY
 	 DECLARE @IdCost AS INT
 	 DECLARE @Serie AS VARCHAR(2) = SUBSTRING(@TrackingNumber,1,2)
 	 DECLARE @NUMBER AS VARCHAR(20) = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
+	 DECLARE @COD AS DECIMAL
 
 	 SELECT @TotalWeight = SUM(DOP.PieceWeight)
 	       ,@TotalValue  = SUM(DOP.Amount) 
@@ -45,30 +46,59 @@ BEGIN TRY
 	 WHERE DOP.GuideSerie = SUBSTRING(@TrackingNumber,1,2)
 		   AND DOP.GuideNumber = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
 
+     SELECT @IdCost = C.IdCost  
+	 FROM  DBO.Cost C 
+	 WHERE C.ProductNumber = @TrackingNumber
 
+     SELECT
+	       @COD = ISNULL(do.Collect_OnDelivery,0) 
+     FROM dbo.DeliveryOrder do 
+	 WHERE do.Collect_OnDelivery > 0 
+	       AND Guide_Serie = @Serie
+		   AND Guide_Number = @NUMBER
 
-	
-	SELECT @IdCost = C.IdCost  FROM  DBO.Cost C WHERE C.ProductNumber = @TrackingNumber
+	 DECLARE @IsCard AS BIT = (SELECT TOP 1 1 FROM dbo.CreditCardTransactionByCustomer WITH (NOLOCK) WHERE OrderNumber = @TrackingNumber AND ReasonCode = 1)
+
+		 
 
 
 	IF (@IdCost IS NULL)
 	BEGIN
 
-		EXEC [dbo].[spws_revalue_guide]
-							@GuideSerie  = @Serie
-							,@GuideNumber =@NUMBER
-							,@CodeApp = ''
-							,@Format =''
-							,@CalculateTaxes = 'true' -- Dado a nuevas tarifas, no cálcular impuestos
-							,@IdModule = 1
-							,@SetUpdate = 'true' -- Actualizar registros
-							,@Token = @Token
-		SELECT @IdCost = C.IdCost  FROM  DBO.Cost C WHERE C.ProductNumber = @TrackingNumber
+	   IF(@IsCard = 1 )
+	   BEGIN
+			EXEC [dbo].[spws_revalue_guide]
+								@GuideSerie  = @Serie
+								,@GuideNumber =@NUMBER
+								,@CodeApp = ''
+								,@Format =''
+								,@CalculateTaxes = 'true' -- Dado a nuevas tarifas, no cálcular impuestos
+								,@IdModule = 1
+								,@SetUpdate = 'true' -- Actualizar registros
+								,@Token = @Token
+								,@ParIsCreditCard =1
+
+			SELECT @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber
+		END
+		ELSE
+			BEGIN
+				EXEC [dbo].[spws_revalue_guide]
+										@GuideSerie  = @Serie
+										,@GuideNumber =@NUMBER
+										,@CodeApp = ''
+										,@Format =''
+										,@CalculateTaxes = 'true' -- Dado a nuevas tarifas, no cálcular impuestos
+										,@IdModule = 1
+										,@SetUpdate = 'true' -- Actualizar registros
+										,@Token = @Token
+								
+
+					SELECT @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber
+			END
 	END
 
 
 	--
-
 
 	 IF(@IdAccount > 0 AND @IdCost > 0)
 
@@ -126,15 +156,35 @@ BEGIN TRY
 	       AND  ACC.AccIdAccount = @IdAccount
 	 
 	 -- SELET BOP IdCOst
-	 SELECT C.ProductNumber, 
-			 bop.Description, 
-			 BOP.Amount 
-		FROM dbo.Cost C WITH (NOLOCK)
-			INNER JOIN 
-			dbo.BreakdownOfPayment BOP WITH (NOLOCK)
-			ON C.IdCost = BOP.IdCost
-		WHERE BOP.RowStatus=1 AND BOP.Amount<>0
-			AND C.ProductNumber = @TrackingNumber
+	 IF (@COD > 0)---- VALIDA QUE TIENE COD PARA AGREGAR A EL DETALLE
+		  BEGIN
+				  SELECT C.ProductNumber, 
+						 BOP.Description, 
+						 BOP.Amount 
+					FROM dbo.Cost C WITH (NOLOCK)
+						INNER JOIN 
+						dbo.BreakdownOfPayment BOP WITH (NOLOCK)
+						ON C.IdCost = BOP.IdCost
+					WHERE BOP.RowStatus=1 AND BOP.Amount<>0
+						AND C.ProductNumber = @TrackingNumber
+						UNION ALL
+					SELECT 
+					@TrackingNumber AS ProductNumber,
+					'Valor de Mercaderia' AS Description,
+					@COD AS Amount
+		  END
+	  ELSE
+		BEGIN
+				SELECT C.ProductNumber, 
+					 BOP.Description, 
+					 BOP.Amount 
+				FROM dbo.Cost C WITH (NOLOCK)
+					INNER JOIN 
+					dbo.BreakdownOfPayment BOP WITH (NOLOCK)
+					ON C.IdCost = BOP.IdCost
+				WHERE BOP.RowStatus=1 AND BOP.Amount<>0
+					AND C.ProductNumber = @TrackingNumber
+		END
 		
 	 END
 
@@ -196,16 +246,41 @@ BEGIN TRY
 		
 		 
 	 --SELET BOP IdCOst
-		SELECT C.ProductNumber, 
-			 bop.Description, 
-			 BOP.Amount 
-		FROM dbo.Cost C WITH (NOLOCK)
-			INNER JOIN 
-			dbo.BreakdownOfPayment BOP WITH (NOLOCK)
-			ON C.IdCost = BOP.IdCost
-		WHERE BOP.RowStatus=1 AND BOP.Amount<>0
-			AND C.ProductNumber = @TrackingNumber
+	  IF (@COD > 0)---- VALIDA QUE TIENE COD PARA AGREGAR A EL DETALLE
+		  BEGIN
+				  SELECT C.ProductNumber, 
+						 BOP.Description, 
+						 BOP.Amount 
+					FROM dbo.Cost C WITH (NOLOCK)
+						INNER JOIN 
+						dbo.BreakdownOfPayment BOP WITH (NOLOCK)
+						ON C.IdCost = BOP.IdCost
+					WHERE BOP.RowStatus=1 AND BOP.Amount<>0
+						AND C.ProductNumber = @TrackingNumber
+						UNION ALL
+					SELECT 
+					@TrackingNumber AS ProductNumber,
+					'Valor de Mercaderia' AS Description,
+					@COD AS Amount
+		  END
+	  ELSE
+		BEGIN
+				SELECT C.ProductNumber, 
+					 BOP.Description, 
+					 BOP.Amount 
+				FROM dbo.Cost C WITH (NOLOCK)
+					INNER JOIN 
+					dbo.BreakdownOfPayment BOP WITH (NOLOCK)
+					ON C.IdCost = BOP.IdCost
+				WHERE BOP.RowStatus=1 AND BOP.Amount<>0
+					AND C.ProductNumber = @TrackingNumber
+		END
+
 	 END
+
+
+	
+	 
 
 
 END TRY
