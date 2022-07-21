@@ -26,13 +26,13 @@ BEGIN TRY
 	  return
 
 	 END*/
-     DECLARE @TotalWeight AS DECIMAL
-	 DECLARE @TotalValue AS DECIMAL
+     DECLARE @TotalWeight AS DECIMAL (18,2)
+	 DECLARE @TotalValue AS DECIMAL (18,2)
 	 DECLARE @ContentDescription AS VARCHAR(200)
 	 DECLARE @IdCost AS INT
 	 DECLARE @Serie AS VARCHAR(2) = SUBSTRING(@TrackingNumber,1,2)
 	 DECLARE @NUMBER AS VARCHAR(20) = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
-	 DECLARE @COD AS DECIMAL
+	 DECLARE @COD AS DECIMAL (18,2)
 
 	 SELECT @TotalWeight = SUM(DOP.PieceWeight)
 	       ,@TotalValue  = SUM(DOP.Amount) 
@@ -64,7 +64,7 @@ BEGIN TRY
 
 	IF (@IdCost IS NULL)
 	BEGIN
-
+	
 	   IF(@IsCard = 1 )
 	   BEGIN
 			EXEC [dbo].[spws_revalue_guide]
