@@ -138,18 +138,18 @@ BEGIN TRY
 		 ON rbu.RuaIdAccount = acc.AccIdAccount
 		 LEFT  JOIN DeliveryBackOffice.dbo.RegisterUser rgu 
 		 ON rgu.UsrIdUser = rbu.RuaIdUser
-		 INNER JOIN DeliveryBackOffice.dbo.Township TOW 
+		 LEFT JOIN DeliveryBackOffice.dbo.Township TOW 
 		 ON TOW.IdTownship = DOR.SenderIdTownship
-		 INNER JOIN DeliveryBackOffice.dbo.Province PRV 
+		 LEFT JOIN DeliveryBackOffice.dbo.Province PRV 
 		 ON PRV.IdProvince = TOW.IdProvince
 		 LEFT  JOIN DeliveryBackOffice.dbo.invoiceDetail IVD WITH (NOLOCK) 
 		 ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
 	 		 AND IVD.dti_fk_orderNumber = DOR.Guide_Number
-		 INNER JOIN DeliveryBackOffice.dbo.invoiceHeader IVH WITH (NOLOCK)
+		 LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader IVH WITH (NOLOCK)
 		 ON IVH.inv_pk_id = IVD.dti_fk_header
-		 INNER JOIN DeliveryBackOffice.dbo.Township TOW2
+		 LEFT JOIN DeliveryBackOffice.dbo.Township TOW2
 		 ON TOW2.IdTownship = DOR.ReceiverIdTownship
-		 INNER JOIN DeliveryBackOffice.dbo.Province PRV2 
+		 LEFT JOIN DeliveryBackOffice.dbo.Province PRV2 
 		 ON PRV2.IdProvince = TOW2.IdProvince
 	 WHERE DOR.Guide_Serie = SUBSTRING(@TrackingNumber,1,2)
 		   AND DOR.Guide_Number = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
@@ -203,7 +203,7 @@ BEGIN TRY
 		 ,DOR.PriceShippment Price
 		 ,DOR.IsCollect Collected
 		 ,@ContentDescription ContentDescription
-		 ,IVH.inv_cli_nit TaxPayerNumber
+		 ,IVH.inv_cli_nit  TaxPayerNumber
 		 ,IVH.inv_pk_id idInvoice
 		 ,'' VPDescriptionOfClient
 		 ,'' PriviceVisitPoint -- ????
@@ -236,7 +236,7 @@ BEGIN TRY
 		 ON TOW2.IdTownship = DOR.ReceiverIdTownship
 			 LEFT JOIN DeliveryBackOffice.dbo.Province PRV2 
 		 ON PRV2.IdProvince = TOW2.IdProvince
-			INNER JOIN VisitPointClient vpc 
+			 LEFT JOIN VisitPointClient vpc 
 		 ON vpc.CodeOfReference = DOR.Sender_ID
 			LEFT JOIN DeliveryBackOffice.dbo.Customer cu 
 		 ON vpc.CustomerID = cu.IdCustomer
@@ -279,8 +279,6 @@ BEGIN TRY
 	 END
 
 
-	
-	 
 
 
 END TRY
