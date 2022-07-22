@@ -1,13 +1,10 @@
-﻿
---DECLARE @FECHA AS DATETIME = GETDATE();
---EXEC [sps_set_status_order_by_guide_linehauls] 'FD',508075,1,'FD508075-1',19,'MTIzMDYyMDIxMjMxOTMzMzg0MTky',@FECHA,'',NULL,'LGUA01','52',1,0,1,1,'2021-08-09'
--- =============================================
+﻿-- =============================================
 -- Author:		<Edelman,Vásquez>
 -- Create date: <2022-01-17>
 -- Description:	<Modificación para liberar posición de Guía en el Rack.>
 -- =============================================
 -- =============================================
--- Author:		<Andres,Ruiz> FD2224628-1
+-- Author:		<Andres,Ruiz>
 -- Create date: <2022-07-21>
 -- Description:	<Modificación para ignorar coberturas de rutas linehaul.>
 -- =============================================
@@ -100,8 +97,8 @@ BEGIN
 
         ---===============ALMACENAR ID HUB DESTINO
         /*
-## Se obtiene el id de HUB, de no encontrarlo con el municipio, se busca en el campo HubDestinationId
-*/
+		## Se obtiene el id de HUB, de no encontrarlo con el municipio, se busca en el campo HubDestinationId
+		*/
         SET @HUB_Destino =
         (
             
@@ -115,7 +112,6 @@ BEGIN
 					ON serv.ReceiverIdTownship = tw.IdTownship AND tw.TownshipStatus = 1
                 INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino
                     ON tw.HeaderCode = dsc_destino.HeaderCode 
-					--AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
 					AND dsc_destino.RowStatus=1				
                 LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
                     ON RTRIM(LTRIM(dsc_destino.Hub)) = RTRIM(LTRIM(hl_destino.HubAbbreviation))
@@ -125,9 +121,6 @@ BEGIN
             WHERE pc.GuideSerie = @Guide_Serie
                   AND pc.GuideNumber = @GuideNumber
                   AND pc.NoPiece = @GuidePiece
-                  --AND hl_destino.IdHublogistic IN (
-                  --                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                  --                                )
 			
             UNION
             SELECT ISNULL(serv.HubDestinationId, 0) AS ID_HUB_DESTINO
@@ -138,9 +131,6 @@ BEGIN
             WHERE pc.GuideSerie = @Guide_Serie
                   AND pc.GuideNumber = @GuideNumber
                   AND pc.NoPiece = @GuidePiece
-                  --AND serv.HubDestinationId IN (
-                  --                                 SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                  --                             )
 		)X	
         )
 
@@ -246,10 +236,6 @@ BEGIN
             ---====================================
             END
 
-
-
-
-
             IF @ExistePiezaPorServicio = 0
             BEGIN
                 INSERT INTO dbo.PieceByService
@@ -340,14 +326,8 @@ BEGIN
                     WHERE Id = @IdSettlementByPickup
                 END
 
-				
+				UPDATE dbo.[Warehouse] SET   Active=0, UserUpdated=@TokenId, DateUpdated = GETDATE()    WHERE  Guide_Number = @GuideNumber And Guide_Serie=@Guide_Serie And Active=1
 	
-						UPDATE dbo.[Warehouse] SET   Active=0, UserUpdated=@TokenId, DateUpdated = GETDATE()    WHERE  Guide_Number = @GuideNumber And Guide_Serie=@Guide_Serie And Active=1
-	
-
-
-
-
             END
             ELSE
             BEGIN
@@ -362,19 +342,6 @@ BEGIN
                 END
             END
 
-
-            -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
-            --SELECT
-            --	SUBSTRING(Item, 1, 2) ItemSerie
-            --   ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber
-            --   ,SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item)) ItemPiece
-            --, 
-            --SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
-            --CHARINDEX('-',Item) charinde,  
-            --len(Item) len
-            --INTO #listGuides
-            --FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
-
             -- Actualizar registro de guía a último estado 
             UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
             SET StatusOrderId = 19,
@@ -388,7 +355,6 @@ BEGIN
             UPDATE DeliveryBackOffice.dbo.DeliveryOrder
             SET StatusOrderId = @StatusOrderId,
                 Courier_Route = @Route
-            --,Courier_Name = @courier
             WHERE Guide_Serie = @Guide_Serie
                   AND Guide_Number = @GuideNumber
 
@@ -450,13 +416,9 @@ BEGIN
         IF (@ValidateOperation > 0)
         BEGIN
 
-            DECLARE @RouteValidator AS INT = (
-                                                 SELECT COUNT(cl.IdHubDestination) AS CANT
-                                                 FROM CatLinehaul cl
-                                                 WHERE cl.IdRoute = @IdRoute
-                                             )
+            DECLARE @RouteValidator AS INT = 1;
 
-            IF (@RouteValidator > 0 OR 1 = 1)
+            IF (@RouteValidator > 0)
             BEGIN
                 --===========HUB DESTINATION NOT NULL.INI ===========
                 IF (
@@ -484,7 +446,6 @@ BEGIN
                                        ON pci.GuidePiece = pbs.GuidePieceId
                                WHERE pci.GuideSerie = @Guide_Serie
                                      AND pci.GuideNumber = @GuideNumber
-                                     --AND pci.NoPiece		=  @GuidePiece
                                      AND pbs.ServiceManagmentId = @IdServiceManagement
                            ) PIEZAS_PROCESADAS,
                            CASE
@@ -511,14 +472,11 @@ BEGIN
                                        ON pci.GuidePiece = pbs.GuidePieceId
                                WHERE pci.GuideSerie = @Guide_Serie
                                      AND pci.GuideNumber = @GuideNumber
-                                     --AND pci.NoPiece = @GuidePiece
                                      AND pbs.ServiceManagmentId = @IdServiceManagement
                            ) AS VARCHAR(50)) + ' de ' + CAST(serv.Pieces_Dry + serv.Pieces_Cold AS VARCHAR(50)) AS PIEZAS_PENDIENTES,
                            @PiecesDry PiecesDry,
                            @PiecesCold PiecesCold
-                    -- ,1 as RUTA
-                    -- ,getdate() as FechaRuta
-                    --,200 as StatusCode
+
                     FROM DeliveryBackOffice.dbo.DeliveryOrder serv
                         JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
                             ON serv.HubOriginId = hl_origen.IdHublogistic
@@ -530,9 +488,7 @@ BEGIN
                     WHERE pc.GuideSerie = @Guide_Serie
                           AND pc.GuideNumber = @GuideNumber
                           AND pc.NoPiece = @GuidePiece
-                          --AND hl_destino.IdHublogistic IN (
-                          --                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                          --                                )
+
                 END
                 ELSE
                 BEGIN
@@ -581,9 +537,7 @@ BEGIN
                            ) AS VARCHAR(50)) + ' de ' + CAST(serv.Pieces_Dry + serv.Pieces_Cold AS VARCHAR(50)) AS PIEZAS_PENDIENTES,
                            @PiecesDry PiecesDry,
                            @PiecesCold PiecesCold
-                    -- ,1 as RUTA
-                    -- ,getdate() as FechaRuta
-                    --,200 as StatusCode
+
                     FROM DeliveryBackOffice.dbo.DeliveryOrder serv
 					    LEFT JOIN DeliveryBackOffice.dbo.Township tw_origen
 					ON serv.SenderIdTownship = tw_origen.IdTownship AND tw_origen.TownshipStatus = 1
@@ -597,7 +551,6 @@ BEGIN
 					ON serv.ReceiverIdTownship = tw_destino.IdTownship AND tw_destino.TownshipStatus = 1
 						LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino
                     ON tw_destino.HeaderCode = dsc_destino.HeaderCode 
-					--AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
 					AND dsc_destino.RowStatus=1				
                         JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
                             ON RTRIM(LTRIM(dsc_origen.Hub)) = RTRIM(LTRIM(hl_origen.HubAbbreviation))
@@ -609,10 +562,7 @@ BEGIN
                     WHERE pc.GuideSerie = @Guide_Serie
                           AND pc.GuideNumber = @GuideNumber
                           AND pc.NoPiece = @GuidePiece
-                          --AND hl_destino.IdHublogistic IN (
-                          --                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                          --                                )
-                --AND @ExistePiezaPorServicio = 0
+
                 END
 
             END
@@ -634,9 +584,7 @@ BEGIN
                    0 AS PIEZAS_PENDIENTES,
                    @PiecesDry PiecesDry,
                    @PiecesCold PiecesCold
-            -- ,1 as RUTA
-            -- ,getdate() as FechaRuta
-            --,200 as StatusCode
+
             FROM DeliveryBackOffice.dbo.DeliveryOrder serv
                 JOIN DeliveryOrderPiece pc
                     ON serv.Guide_Number = pc.GuideNumber
@@ -662,9 +610,7 @@ BEGIN
                0 AS PIEZAS_PENDIENTES,
                @PiecesDry PiecesDry,
                @PiecesCold PiecesCold
-        -- ,1 as RUTA
-        -- ,getdate() as FechaRuta
-        --,200 as StatusCode
+
         FROM DeliveryBackOffice.dbo.DeliveryOrder serv
             JOIN DeliveryOrderPiece pc
                 ON serv.Guide_Number = pc.GuideNumber
