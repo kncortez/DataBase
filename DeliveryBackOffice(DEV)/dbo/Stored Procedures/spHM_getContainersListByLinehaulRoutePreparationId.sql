@@ -17,9 +17,9 @@ BEGIN
 			[CTC].[TypeContainerSerie],
 			[CNT].[ContainerNumber],
 			[CNT].[ContainerDescription],
-			[LRPC].[HubDestinyId],
-			[HL].[HubName],
-			[HL].[HubAbbreviation],
+			COALESCE([LRPC].[HubDestinyId], 0) AS HubDestinyId,
+			COALESCE([HL].[HubName], '') AS HubName,
+			COALESCE([HL].[HubAbbreviation], '') AS HubAbbreviation,
 			[LRPC].[GuideQuantity],
 			[LRPC].[DryPieceQuantity],
 			[LRPC].[ColdPieceQuantity]

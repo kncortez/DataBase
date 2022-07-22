@@ -54,6 +54,9 @@ BEGIN
 					SELECT	[LRPC].[IdLinehaulRoutePreparationContainer],
 							[LRPC].[LinehaulRoutePreparationId],
 							[LRPC].[ContainerId],
+							COALESCE([LRPC].[HubDestinyId], 0) AS HubDestinyId,
+							COALESCE([HL].[HubName], '') AS HubName,
+							COALESCE([HL].[HubAbbreviation], '') AS HubAbbreviation,
 							[LRPC].[GuideQuantity],
 							[LRPC].[DryPieceQuantity],
 							[LRPC].[ColdPieceQuantity],
@@ -61,7 +64,9 @@ BEGIN
 							[LRPC].[TokenCreated],
 							[LRPC].[DateCreated]
 					FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
-					WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+					LEFT JOIN [dbo].[HubLogistics] HL
+						ON	[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
+					WHERE   [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 						AND [LRPC].[ContainerId] = @ContainerId;
 				END
 		
@@ -92,6 +97,9 @@ BEGIN
 						SELECT	[LRPC].[IdLinehaulRoutePreparationContainer],
 								[LRPC].[LinehaulRoutePreparationId],
 								[LRPC].[ContainerId],
+								COALESCE([LRPC].[HubDestinyId], 0) AS HubDestinyId,
+								COALESCE([HL].[HubName], '') AS HubName,
+								COALESCE([HL].[HubAbbreviation], '') AS HubAbbreviation,
 								[LRPC].[GuideQuantity],
 								[LRPC].[DryPieceQuantity],
 								[LRPC].[ColdPieceQuantity],
@@ -99,6 +107,8 @@ BEGIN
 								[LRPC].[TokenCreated],
 								[LRPC].[DateCreated]
 						FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+						LEFT JOIN [dbo].[HubLogistics] HL
+							ON	[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 						WHERE	[LRPC].[IdLinehaulRoutePreparationContainer] = @INSERTED_DOC;
 
 						IF (@@TRANCOUNT > 0)
