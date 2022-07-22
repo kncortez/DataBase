@@ -1,6 +1,13 @@
 ﻿
 
-CREATE PROCEDURE [dbo].[spg_manifest_linehauls_email] @IdManifest INT
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Updated date:<2022-05-26>
+-- Description:	< Se remueve limitante de que la ruta debe estar contenida entre las rutas del hub destino >
+-- =============================================
+
+CREATE PROCEDURE [dbo].[spg_manifest_linehauls_email] 
+	@IdManifest INT
 AS
 BEGIN
 
@@ -15,7 +22,7 @@ SELECT 	  ISNULL(hl_destino.HubAbbreviation, 'HUB') AS ID_HUB_DESTINO	   ,
 	LEFT JOIN DeliveryBackOffice.dbo.SenderReceiver sr
 		ON sr.ID = dobs.IdCourier	
 	LEFT JOIN DeliveryBackOffice.dbo.RouteAssigment ra ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-	WHERE dobs.SequenceCode = @IdManifest AND cl.IdRoute = ra.IdRoute
+	WHERE dobs.SequenceCode = @IdManifest /*AND cl.IdRoute = ra.IdRoute*/
 	GROUP BY hl_destino.HubAbbreviation, cl.Emails
 
 
