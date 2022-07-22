@@ -6,6 +6,11 @@
 -- Create date: <2022-01-17>
 -- Description:	<Modificación para liberar posición de Guía en el Rack.>
 -- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz> FD2224628-1
+-- Create date: <2022-07-21>
+-- Description:	<Modificación para ignorar coberturas de rutas linehaul.>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide_linehauls]
     @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
     @GuideNumber AS BIGINT,
@@ -120,9 +125,9 @@ BEGIN
             WHERE pc.GuideSerie = @Guide_Serie
                   AND pc.GuideNumber = @GuideNumber
                   AND pc.NoPiece = @GuidePiece
-                  AND hl_destino.IdHublogistic IN (
-                                                      SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                                                  )
+                  --AND hl_destino.IdHublogistic IN (
+                  --                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
+                  --                                )
 			
             UNION
             SELECT ISNULL(serv.HubDestinationId, 0) AS ID_HUB_DESTINO
@@ -133,9 +138,9 @@ BEGIN
             WHERE pc.GuideSerie = @Guide_Serie
                   AND pc.GuideNumber = @GuideNumber
                   AND pc.NoPiece = @GuidePiece
-                  AND serv.HubDestinationId IN (
-                                                   SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                                               )
+                  --AND serv.HubDestinationId IN (
+                  --                                 SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
+                  --                             )
 		)X	
         )
 
@@ -451,7 +456,7 @@ BEGIN
                                                  WHERE cl.IdRoute = @IdRoute
                                              )
 
-            IF (@RouteValidator > 0)
+            IF (@RouteValidator > 0 OR 1 = 1)
             BEGIN
                 --===========HUB DESTINATION NOT NULL.INI ===========
                 IF (
@@ -525,9 +530,9 @@ BEGIN
                     WHERE pc.GuideSerie = @Guide_Serie
                           AND pc.GuideNumber = @GuideNumber
                           AND pc.NoPiece = @GuidePiece
-                          AND hl_destino.IdHublogistic IN (
-                                                              SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                                                          )
+                          --AND hl_destino.IdHublogistic IN (
+                          --                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
+                          --                                )
                 END
                 ELSE
                 BEGIN
@@ -604,9 +609,9 @@ BEGIN
                     WHERE pc.GuideSerie = @Guide_Serie
                           AND pc.GuideNumber = @GuideNumber
                           AND pc.NoPiece = @GuidePiece
-                          AND hl_destino.IdHublogistic IN (
-                                                              SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
-                                                          )
+                          --AND hl_destino.IdHublogistic IN (
+                          --                                    SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
+                          --                                )
                 --AND @ExistePiezaPorServicio = 0
                 END
 
