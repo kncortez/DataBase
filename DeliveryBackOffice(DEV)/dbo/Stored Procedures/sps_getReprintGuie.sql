@@ -122,7 +122,9 @@ BEGIN
                                        'true'
                                    ELSE
                                        'false'
-                               END + ',' + +'"description":"' + COALESCE(Detail, '') + '"' + '},',
+                               END + ',' +
+			  +'"ParcelCode":"'+ COALESCE(ParcelCode,'')+'",'+
+			  +'"description":"' + COALESCE(Detail, '') + '"' + '},',
                @calcurrency = COALESCE(Currency, '')
         FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH (NOLOCK)
         WHERE GuideNumber = @Guide_Number
