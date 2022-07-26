@@ -28,9 +28,10 @@ BEGIN
 
 	IF (@EXISTING_DOC > 0)
 		BEGIN
-			-- Document already exists, return data, only update token created
+			-- Document already exists, return data, only update token created AND open process value
 			UPDATE	[LinehaulRoutePreparationContainerDetail]	
-			SET		[TokenCreated] = @TknUser
+			SET		[TokenCreated] = @TknUser, 
+					[IsOpenProcess] = @IsOpenProcess
 			WHERE	[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
 				AND	[GuideSerie] = @GuideSerie
 				AND [GuideNumber] = @GuideNumber;
