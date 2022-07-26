@@ -1875,4 +1875,104 @@ BEGIN
         --ORDER BY btd.Reference
         ;
     END;
+
+	-- FORMATO PROMERICA
+	IF @IdBank = ( SELECT
+		Id_bank
+	FROM DeliveryBank
+	WHERE Name = 'BANCO PROMERICA'
+	AND Id_country = 'GT'
+	AND Id_status = 1)
+    BEGIN
+        --------DETALLADO
+		SELECT
+		   RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''),
+							CHAR(2),''),
+						CHAR(3),''),
+					CHAR(9),''),
+				CHAR(10),''),
+			CHAR(13),''))) 'CUENTA'
+		   ,CONCAT(btd.GuideSerie, btd.GuideNumber, ' L',bt.BatchNumber) 'DESCRIPCIÓN'
+		   ,btd.Amount 'MONTO'
+		FROM BatchDetailCOD btd
+		INNER JOIN BatchCOD bt
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN CatConceptCOD cco
+			ON cco.IdCatConceptCOD = bTd.CatConceptCODId
+				AND cco.RowStatus = 1
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie
+				AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu 
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+		LEFT JOIN CatDebitAccountCOD cda
+			ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
+				AND cda.BankId = @IdBank
+				AND cda.RowStatus = @EnabledRow
+		WHERE
+		btd.CatConceptCODId IN (2)
+		AND bt.RowStatus = @EnabledRow
+		AND BTD.RowStatus = @EnabledRow
+		AND btd.BatchCODId = @BatchCODId
+		AND btd.Excluded = @Excluded
+		AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+
+		UNION
+		----------ACUMULADO
+		SELECT
+		   RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''),
+							CHAR(2),''),
+						CHAR(3),''),
+					CHAR(9),''),
+				CHAR(10),''),
+			CHAR(13),''))) 'CUENTA'
+		   ,MAX(CONCAT(do.Guide_Serie, do.Guide_Number, ' L', bt.BatchNumber)) 'DESCRIPCIÓN'
+		   ,SUM(btd.Amount) 'MONTO'
+		FROM BatchDetailCOD btd 
+		INNER JOIN BatchCOD bt
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN CatConceptCOD cco
+			ON cco.IdCatConceptCOD = bTd.CatConceptCODId
+				AND cco.RowStatus = 1
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.[GuideSerie] = do.[Guide_Serie]
+				AND btd.[GuideNumber] = do.[Guide_Number]
+		LEFT JOIN VisitPointClient vp
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu
+			ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]
+		LEFT JOIN CatDebitAccountCOD cda 
+			ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
+				AND cda.BankId = @IdBank
+				AND cda.RowStatus = @EnabledRow
+		WHERE btd.CatConceptCODId IN (2)
+		AND bt.RowStatus = @EnabledRow
+		AND BTD.RowStatus = @EnabledRow
+		AND BTD.BatchCODId = @BatchCODId
+		AND btd.Excluded = @Excluded
+		AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+
+
+		GROUP BY cu.IdCustomer
+				,btd.CatAccountTypeCODId
+				,cda.CatAccountTypeCODId
+				,btd.AccountNumber
+				,cda.AccountNumber
+	END;
 END;
