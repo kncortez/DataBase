@@ -545,7 +545,6 @@ BEGIN
 					ON tw_origen.IdTownship = st_origen.IdTownship 
 						LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_origen
                     ON tw_origen.HeaderCode = dsc_origen.HeaderCode 
-					AND dsc_origen.IdSettlement = st_origen.IdSettlement
 					AND dsc_origen.RowStatus=1			
                         LEFT JOIN DeliveryBackOffice.dbo.Township tw_destino  
 					ON serv.ReceiverIdTownship = tw_destino.IdTownship AND tw_destino.TownshipStatus = 1
