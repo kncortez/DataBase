@@ -705,24 +705,81 @@ BEGIN
                                                         @Token = 'SYSTEM';
             UPDATE SMT
             SET Amount = SUB.NewTotal
+				,CatPaymentTimeId = SUB.TimePlaId
             FROM dbo.ServiceManagement SMT
                 INNER JOIN
                 (
                     SELECT SM.IdServiceManagement,
-                           SM.Amount + SUM(TP.AmountToPay) AS NewTotal
+                           SM.Amount + SUM(TP.AmountToPay) AS NewTotal,
+						   dopd.TimePlaId
                     FROM dbo.ServiceManagement SM
                         INNER JOIN dbo.#Sender SD
                             ON SM.IdServiceManagement = SD.IdServiceManagement
                         INNER JOIN @TempPrice TP
                             ON TP.GuideSerie = SD.Serie
                                AND TP.GuideNumber = SD.Number
+						INNER JOIN DeliveryOrderPaymentDetail dopd 
+							ON dopd.GuideSerie = SD.Serie 
+								AND dopd.GuideNumber = SD.Number
                     GROUP BY SM.IdServiceManagement,
-                             SM.Amount
+                             SM.Amount,
+						     dopd.TimePlaId
                 ) SUB
                     ON SMT.IdServiceManagement = SUB.IdServiceManagement;
             --WHERE IdServiceManagement=SUB.IdServiceManagement
 
             --@TempPrice TP ON  SD.Serie=
+
+			DECLARE @TblServiceManagement TABLE(
+				IdServiceManagement INT,
+				IdSchedulePickup BIGINT,
+				Amount DECIMAL(16,2),
+				CatPaymentTimeId INT
+			)
+			
+			INSERT INTO @TblServiceManagement
+			SELECT
+				sm.IdServiceManagement,
+				sp.SchedulePickupId,
+				tp.AmountToPay,
+				dopd.TimePlaId
+			FROM #Sender sd
+			INNER JOIN DeliveryOrderPaymentDetail dopd
+				ON dopd.GuideSerie = sd.Serie
+				AND dopd.GuideNumber = sd.Number
+			INNER JOIN SchedulePickup sp
+				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
+			LEFT JOIN ServiceManagement sm
+				ON sm.IdSchedulePickup = sp.SchedulePickupId
+				--OR
+			INNER JOIN @TempPrice tp 
+			ON tp.GuideSerie=sd.Serie 
+			AND tp.GuideNumber=sd.Number
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagement] (IdSchedulePickup, RowStatus, TokenCreated, DateCreated, ServiceStatusId, Amount, CatPaymentTimeId)
+				SELECT
+					IdSchedulePickup
+				   ,1
+				   ,@token
+				   ,GETDATE()
+				   ,1
+				   ,Amount
+				   ,CatPaymentTimeId
+				FROM @TblServiceManagement
+				WHERE IdServiceManagement IS NULL
+
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[EventService] (ServiceManagementId,ServiceStatusId,RowStauts,TokenCreated,DateCreated)
+				SELECT
+					sm.IdServiceManagement
+				   ,1
+				   ,1
+				   ,@token
+				   ,GETDATE()
+				FROM @TblServiceManagement tsm
+				INNER JOIN ServiceManagement sm
+					ON sm.IdSchedulePickup = tsm.IdSchedulePickup
+				WHERE tsm.IdServiceManagement IS NULL
 
 
             DROP TABLE #Sender;
