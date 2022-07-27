@@ -60,11 +60,16 @@ BEGIN
 						SELECT	[LRPC].[IdLinehaulRoutePreparationContainer],
 								[LRPC].[LinehaulRoutePreparationId],
 								[LRPC].[ContainerId],
-								[LRPC].[HubDestinyId],
+								COALESCE([LRPC].[HubDestinyId], 0) as HubDestinyId,
+								[HL].[HubName],
+								[HL].[HubAbbreviation],
 								[LRPC].[GuideQuantity],
 								[LRPC].[DryPieceQuantity],
-								[LRPC].[ColdPieceQuantity]
+								[LRPC].[ColdPieceQuantity],
+								[LRPC].[TokenCreated]
 						FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+						LEFT JOIN [dbo].[HubLogistics] HL
+							ON	[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 						WHERE	[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 							AND	[ContainerId] = @ContainerId;
 
