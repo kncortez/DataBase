@@ -41,16 +41,18 @@ BEGIN
 				SET @DRY_PIECE_QUANTITY_PIECE =		(SELECT	COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
 													FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 													WHERE	[LRPCDP].[IsDryPiece] = 1
-														AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @IdLinehaulRoutePreparationContainerDetail);
+														AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @IdLinehaulRoutePreparationContainerDetail
+														AND [LRPCDP].[RowStatus] = 1);
 
 				SET @COLD_PIECE_QUANTITY_PIECE =	(SELECT	COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
 													FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 													WHERE	[LRPCDP].[IsDryPiece] = 0
-														AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @IdLinehaulRoutePreparationContainerDetail);
+														AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @IdLinehaulRoutePreparationContainerDetail
+														AND [LRPCDP].[RowStatus] = 1);
 
 				UPDATE	[LinehaulRoutePreparationContainerDetail]
 				SET		[DryPieceQuantity] =							@DRY_PIECE_QUANTITY_PIECE,
-						[ColdPieceQuantity]=							@COLD_PIECE_QUANTITY_PIECE
+						[ColdPieceQuantity] =							@COLD_PIECE_QUANTITY_PIECE
 				WHERE	[IdLinehaulRoutePreparationContainerDetail] =	@IdLinehaulRoutePreparationContainerDetail;
 
 				-- UPDATE LinehaulRoutePreparationContainer
@@ -60,15 +62,18 @@ BEGIN
 
 				SET @GUIDE_QUANTITY_DETAIL =	(SELECT COUNT([LRPCD].[IdLinehaulRoutePreparationContainerDetail])
 												FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-												WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @IdLinehaulRoutePreparationContainer);
+												WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @IdLinehaulRoutePreparationContainer
+													AND [LRPCD].[RowStatus] = 1);
 
 				SET @DRY_PIECE_QUANTITY_DETAIL =(SELECT COALESCE(SUM([LRPCD].[DryPieceQuantity]), 0)
 												FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-												WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @IdLinehaulRoutePreparationContainer);
+												WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @IdLinehaulRoutePreparationContainer
+													AND [LRPCD].[RowStatus] = 1);
 
 				SET @COLD_PIECE_QUANTITY_DETAIL=(SELECT COALESCE(SUM([LRPCD].[ColdPieceQuantity]), 0)
 												FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-												WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @IdLinehaulRoutePreparationContainer);
+												WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @IdLinehaulRoutePreparationContainer
+													AND [LRPCD].[RowStatus] = 1);
 
 				UPDATE	[LinehaulRoutePreparationContainer]
 				SET		[GuideQuantity] =						@GUIDE_QUANTITY_DETAIL,
@@ -84,19 +89,23 @@ BEGIN
 
 				SET @CONTAINER_QUANTITY_CONTAINER = (SELECT COUNT([LRPC].[ContainerId])
 													FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
-													WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation);
+													WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+														AND [LRPC].[RowStatus] = 1);
 
 				SET @GUIDE_QUANTITY_CONTAINER = (SELECT COALESCE(SUM([LRPC].[GuideQuantity]), 0)
 												FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
-												WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation);
+												WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+													AND [LRPC].[RowStatus] = 1);
 
 				SET @DRY_QUANTITY_CONTAINER =	(SELECT COALESCE(SUM([LRPC].[DryPieceQuantity]), 0)
 												FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
-												WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation);
+												WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+													AND [LRPC].[RowStatus] = 1);
 
 				SET @COLD_QUANTITY_CONTAINER =	(SELECT COALESCE(SUM([LRPC].[ColdPieceQuantity]), 0)
 												FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
-												WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation);
+												WHERE	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+													AND [LRPC].[RowStatus] = 1);
 
 				UPDATE	[LinehaulRoutePreparation]
 				SET		[ContainerQuantity] =			@CONTAINER_QUANTITY_CONTAINER,

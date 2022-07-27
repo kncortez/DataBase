@@ -39,7 +39,8 @@ BEGIN
 																				FROM [dbo].[CatLinehaulStatus] CLS
 																				WHERE [CLS].[StatusName] = 'LIQUIDATED')
 											AND [LPC].[ContainerId] = @ContainerId
-											AND [LPC].[LinehaulRoutePreparationId] != @LinehaulRoutePreparationId);
+											AND [LPC].[LinehaulRoutePreparationId] != @LinehaulRoutePreparationId
+											AND [LPC].[RowStatus] = 1);
 
 			IF (@EXISTING_LPC_DIF > 0) 
 				BEGIN
@@ -50,6 +51,12 @@ BEGIN
 			
 			IF (@EXISTING_LPC > 0)
 				BEGIN
+					-- Update statusRow -> 1
+					UPDATE	[LinehaulRoutePreparationContainer]
+					SET		[RowStatus] = 1
+					WHERE	[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+						AND [ContainerId] = @ContainerId;
+
 					-- Return existing doc
 					SELECT	[LRPC].[IdLinehaulRoutePreparationContainer],
 							[LRPC].[LinehaulRoutePreparationId],

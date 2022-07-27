@@ -27,6 +27,7 @@ BEGIN
 	INNER JOIN	[dbo].[Container] CNT
 		ON	[LRPC].[ContainerId] = [CNT].[IdContainer]
 		AND	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+		AND [LRPC].[RowStatus] = 1
 	INNER JOIN [dbo].[CatTypeContainer] CTC
 		ON	[CNT].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 	LEFT JOIN [dbo].[HubLogistics] HL
