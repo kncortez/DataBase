@@ -66,16 +66,16 @@ BEGIN
 	 ,Sender_Address ToAddress
 	 ,PRV.ProvinceDescription  ToCity	 
 	 from DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK)
-	 JOIN DeliveryBackOffice.dbo.Account ACC WITH(NOLOCK) on  ACC.IdCustomer = DOR.IdCustomer
+	 INNER JOIN DeliveryBackOffice.dbo.Account ACC WITH(NOLOCK) on  ACC.IdCustomer = DOR.IdCustomer
 	 left join DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH(NOLOCK) on rbu.RuaIdAccount = acc.AccIdAccount
 	 left join DeliveryBackOffice.dbo.RegisterUser rgu WITH(NOLOCK) on rgu.UsrIdUser = rbu.RuaIdUser
-	 join DeliveryBackOffice.dbo.Township TOW WITH(NOLOCK) ON TOW.IdTownship = DOR.SenderIdTownship
-	 join DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK) ON PRV.IdProvince = TOW.IdProvince
+	 INNER join DeliveryBackOffice.dbo.Township TOW WITH(NOLOCK) ON TOW.IdTownship = DOR.SenderIdTownship
+	 INNER join DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK) ON PRV.IdProvince = TOW.IdProvince
 	 left join DeliveryBackOffice.dbo.invoiceDetail IVD WITH(NOLOCK) ON IVD.dti_fk_orderSerie = DOR.Guide_Serie
 	 	 AND IVD.dti_fk_orderNumber = DOR.Guide_Number
 	 left join DeliveryBackOffice.dbo.invoiceHeader IVH WITH(NOLOCK) ON IVH.inv_pk_id = IVD.dti_fk_header
-	 join DeliveryBackOffice.dbo.Township TOW2 WITH(NOLOCK) ON TOW2.IdTownship = DOR.ReceiverIdTownship
-	 join DeliveryBackOffice.dbo.Province PRV2 WITH(NOLOCK) ON PRV2.IdProvince = TOW2.IdProvince
+	 INNER join DeliveryBackOffice.dbo.Township TOW2 WITH(NOLOCK) ON TOW2.IdTownship = DOR.ReceiverIdTownship
+	 INNER join DeliveryBackOffice.dbo.Province PRV2 WITH(NOLOCK) ON PRV2.IdProvince = TOW2.IdProvince
 	 where DOR.Guide_Serie = substring(@TrackingNumber,1,2)
 	 and DOR.Guide_Number = substring(@TrackingNumber,3,LEN(@TrackingNumber))
 	 --and  ACC.AccIdAccount = @IdAccount
@@ -124,7 +124,7 @@ BEGIN
 	 left join DeliveryBackOffice.dbo.invoiceHeader IVH WITH(NOLOCK) ON IVH.inv_pk_id = IVD.dti_fk_header
 	 LEFT join DeliveryBackOffice.dbo.Township TOW2 WITH(NOLOCK) ON TOW2.IdTownship = DOR.ReceiverIdTownship
 	 LEFT join DeliveryBackOffice.dbo.Province PRV2 WITH(NOLOCK) ON PRV2.IdProvince = TOW2.IdProvince
-   JOIN VisitPointClient vpc WITH(NOLOCK) ON vpc.CodeOfReference = DOR.Sender_ID
+   INNER JOIN VisitPointClient vpc WITH(NOLOCK) ON vpc.CodeOfReference = DOR.Sender_ID
    LEFT JOIN DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK) ON vpc.CustomerID = cu.IdCustomer
 	 where DOR.Guide_Serie = substring(@TrackingNumber,1,2)
 	 and DOR.Guide_Number = substring(@TrackingNumber,3,LEN(@TrackingNumber))

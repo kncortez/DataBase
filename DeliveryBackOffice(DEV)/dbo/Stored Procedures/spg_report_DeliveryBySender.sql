@@ -37,9 +37,9 @@ select CONVERT(DATE, lstr.DateCreated, 23) DateCreated
 ,coalesce(case when Accepted = 1 then 1 else 0 end ,0) Accepted
 into #ListAttempt
 from DeliveryBackOffice.dbo.DeliveryAttempt Att
-join #ListRoutes lstr on Att.Guide_Serie = lstr.Guide_Serie
+inner join #ListRoutes lstr on Att.Guide_Serie = lstr.Guide_Serie
 and Att.Guide_Number = lstr.Guide_Number
-join DeliveryBackOffice.dbo.SenderReceiver Sender
+inner join DeliveryBackOffice.dbo.SenderReceiver Sender
 on Att.ID_Courier= Sender.ID
 
 select DateCreated

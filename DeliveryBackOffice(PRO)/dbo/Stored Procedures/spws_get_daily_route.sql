@@ -74,11 +74,29 @@ BEGIN
     --Flujo Recolecciones
     IF OBJECT_ID('tempdb.dbo.#TmpAlertList', 'U') IS NOT NULL
         DROP TABLE #TmpAlertList;
-    SELECT DOA.AlertDescription,
+
+    CREATE TABLE #TmpAlertList
+    (
+        AlertDescription NVARCHAR(500),
+        AlertTypeId INT,
+        DateCreated DATETIME,
+        SchedulePickupId BIGINT
+    );
+    CREATE NONCLUSTERED INDEX tempSCheduledpickupid ON #TmpAlertList (SchedulePickupId);
+
+
+    INSERT INTO #TmpAlertList
+    (
+        AlertDescription,
+        AlertTypeId,
+        DateCreated,
+        SchedulePickupId
+    )
+	SELECT DOA.AlertDescription,
            DOA.AlertTypeId,
            DOA.DateCreated,
            SP.SchedulePickupId --ISNULL(COUNT(DOA.GuideNumber), 0)
-    INTO #TmpAlertList
+   -- INTO #TmpAlertList
     FROM [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.ServiceManagement SMA WITH (NOLOCK)
             ON SMA.IdSchedulePickup = SP.SchedulePickupId
@@ -616,6 +634,8 @@ BEGIN
             DROP TABLE #GuideService;
 
 
+
+
         --SELECT smg.IdServiceManagement,
         --       dpc.GuideSerie,
         --       dpc.GuideNumber,
@@ -638,12 +658,31 @@ BEGIN
         --      AND CONVERT(DATE, stp.DateCreated) = CONVERT(DATE, @DateRoute)
         --      AND SMG.SubTypeServiceManagmentId = 3; --Solo filtro devoluciones
 
-		     SELECT smg.IdServiceManagement,
+
+        CREATE TABLE #GuideService
+        (
+            IdServiceManagement INT,
+            GuideSerie NVARCHAR(2),
+            GuideNumber INT,
+            ServiceStatusId INT,
+            IdPuCourrier INT
+        );
+        CREATE NONCLUSTERED INDEX tempSerie ON #GuideService (GuideSerie, GuideNumber);
+
+        INSERT INTO #GuideService
+        (
+            IdServiceManagement,
+            GuideSerie,
+            GuideNumber,
+            ServiceStatusId,
+            IdPuCourrier
+        )
+		SELECT SMG.IdServiceManagement,
                dpc.GuideSerie,
                dpc.GuideNumber,
-               smg.ServiceStatusId,
+               SMG.ServiceStatusId,
                @IdCourier IdPuCourrier
-        INTO #GuideService
+       -- INTO #GuideService
         FROM dbo.SettlementByPickup stp WITH (NOLOCK)
             INNER JOIN dbo.SettlementByPickupDetail std WITH (NOLOCK)
                 ON std.SettlementByPickupId = stp.Id
@@ -653,12 +692,12 @@ BEGIN
             INNER JOIN dbo.PieceByService pbs WITH (NOLOCK)
                 ON pbs.GuidePieceId = dpc.GuidePiece
             INNER JOIN dbo.ServiceManagement SMG WITH (NOLOCK)
-                ON SMG.IdServiceManagement = pbs.ServiceManagmentId				
-            --LEFT JOIN dbo.RouteAssigment ras WITH (NOLOCK)
-            --    ON ras.IdRouteAssigment = SMG.IdDlRouteAssigment
+                ON SMG.IdServiceManagement = pbs.ServiceManagmentId
+        --LEFT JOIN dbo.RouteAssigment ras WITH (NOLOCK)
+        --    ON ras.IdRouteAssigment = SMG.IdDlRouteAssigment
         WHERE stp.IdCourier = @IdCourier
               AND CONVERT(DATE, stp.DateCreated) = CONVERT(DATE, @DateRoute)
-			  AND SMG.SubTypeServiceManagmentId = 3 --Solo filtro devoluciones
+              AND SMG.SubTypeServiceManagmentId = 3; --Solo filtro devoluciones
 
         DECLARE @guides NVARCHAR(MAX) =
                 (
@@ -795,9 +834,8 @@ BEGIN
                                                                         ),
                                                                   'json'
                                                               ) + '",' + '"Phone":"'
-                                       + ISNULL(ISNULL(do.Sender_Phone, ''), 'N/A') + '",'
-                                       +
-                                    '"ScheduleStart":"' + '' + '",' + '"ScheduleEnd":"' + '' + '",' + '"Photo":"'
+                                       + ISNULL(ISNULL(do.Sender_Phone, ''), 'N/A') + '",' + '"ScheduleStart":"' + ''
+                                       + '",' + '"ScheduleEnd":"' + '' + '",' + '"Photo":"'
                                        + ISNULL(
                                          (
                                              SELECT TOP 1
@@ -812,14 +850,13 @@ BEGIN
                                        + '"Precision":"' + CONVERT(VARCHAR, ISNULL(VPC.Accuracy, 0)) + '",' + '"Status":"'
                                        + CONVERT(VARCHAR, ISNULL(gs.ServiceStatusId, 7)) + '",' + '"CurrencySymbol":"'
                                        + 'Q.' + '",'
-                                       +                                   
-                                    CASE
-                                        WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
-                                            '"TotalServiceAmount":"0",'
-                                        ELSE
-                                            '"TotalServiceAmount":"' + CONVERT(VARCHAR, ISNULL(gt.AmountToPay, 0))
-                                            + '",'
-                                    END
+                                       + CASE
+                                             WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
+                                                 '"TotalServiceAmount":"0",'
+                                             ELSE
+                                                 '"TotalServiceAmount":"' + CONVERT(VARCHAR, ISNULL(gt.AmountToPay, 0))
+                                                 + '",'
+                                         END
                                        + CASE
                                              WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
                                                  '"TotalReturnAmount":"0",'
@@ -849,11 +886,11 @@ BEGIN
                                                                          'N/A'
                                                                      ) + '"'
                                                       FROM dbo.ServiceManagement sm WITH (NOLOCK)
-                                                          JOIN dbo.SenderReceiver sr WITH (NOLOCK)
+                                                          INNER JOIN dbo.SenderReceiver sr WITH (NOLOCK)
                                                               ON (sr.ID = sm.IdPuCourrier)
-                                                          JOIN dbo.PieceByService ps WITH (NOLOCK)
+                                                          INNER JOIN dbo.PieceByService ps WITH (NOLOCK)
                                                               ON (ps.ServiceManagmentId = sm.IdServiceManagement)
-                                                          JOIN dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+                                                          INNER JOIN dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                                                               ON (dop.GuidePiece = ps.GuidePieceId)
                                                       WHERE sm.ServiceStatusId IN ( 1, 4, 7, 8 )
                                                             AND sm.IdPuCourrier = @IdCourier
@@ -870,7 +907,7 @@ BEGIN
                                     LEFT JOIN @Temp gt
                                         ON gt.GuideSerie = gs.GuideSerie
                                            AND gt.GuideNumber = gs.GuideNumber
-                                    JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                         ON do.Guide_Serie = gs.GuideSerie
                                            AND do.Guide_Number = gs.GuideNumber
                                     LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
