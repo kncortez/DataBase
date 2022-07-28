@@ -98,6 +98,7 @@ BEGIN
 						FROM DeliveryBackOffice.dbo.DeliveryAttempt 
 						WHERE Guide_Serie = @Guide_Serie
 							AND Guide_Number = @Guide_Number
+						ORDER BY Date_Created DESC
 
 						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
 						   (GuideSerie

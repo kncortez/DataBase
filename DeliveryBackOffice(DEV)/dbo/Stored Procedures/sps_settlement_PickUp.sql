@@ -163,6 +163,7 @@ BEGIN
 					FROM [dbo].[DeliveryAttempt] 
 					WHERE [Guide_Serie] = @GuideSerie
 						AND [Guide_Number] = @GuideNumber
+					ORDER BY [Date_Created] DESC
 
 				-- se verifica que no exita en las guías procesadas
 				IF NOT EXISTS 

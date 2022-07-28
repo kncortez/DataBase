@@ -75,7 +75,14 @@ BEGIN
 			END) VisitPoint,
 			btd.CatConceptCODId Concept,
 			COALESCE(btd.CollectId,0) CollectId,
-			COALESCE(btd.RecolectionId,0) RecolectionId
+			COALESCE(btd.RecolectionId,0) RecolectionId,
+			vpcr.DescriptionOfClient VisitPointReceiver,
+			CONCAT(p.PerFirstName, ' ', p.PerLastName) UserReceiver,
+			(CASE WHEN cpt.TimePlaName = 'Ahora' THEN 'Contado'
+			WHEN cpt.TimePlaName = 'Post-Venta' THEN 'Crédito'
+			ELSE cpt.TimePlaName
+			END) PaymentType,
+			(IIF(ctiom.tio_pk_name = 'pago con tarjeta' OR ctiom.tio_pk_name = 'Datafono', 'Si','No')) CardPayment
     FROM [dbo].[BatchDetailCOD] btd WITH(NOLOCK)
         LEFT JOIN [dbo].[BatchCOD] bt WITH(NOLOCK)
             ON btd.[BatchCODId] = bt.[IdBatchCOD]
@@ -121,6 +128,26 @@ BEGIN
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
                AND btc.CatConceptCODId = 1
+		LEFT JOIN [dbo].[DeliveryOrderPaymentTransaction] dopt WITH(NOLOCK)
+	        ON btd.GuideSerie = dopt.GuideSerie
+			   AND btd.GuideNumber = dopt.GuideNumber
+			   AND dopt.CODAmountProcess > 0 
+			   AND dopt.ShipmentCompleted = 1
+		LEFT JOIN [dbo].[VisitPointClient] vpcr WITH(NOLOCK)
+			ON vpcr.CodeOfReference = dopt.VisitPoint
+		LEFT JOIN [dbo].[TokenLog] tl WITH(NOLOCK)
+			ON tl.TknIdToken = dopt.TokenCreated
+		LEFT JOIN RegisterUser ru WITH(NOLOCK)
+			ON ru.UsrIdUser = tl.TknIdUser
+		LEFT JOIN Person p WITH(NOLOCK)
+			ON p.PerIdPerson = ru.UsrIdPerson
+		LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] dopd WITH(NOLOCK)
+			ON dopd.GuideSerie = btd.GuideSerie
+				AND dopd.GuideNumber = btd.GuideNumber
+		LEFT JOIN [dbo].[CatPaymentTime] cpt WITH(NOLOCK)
+			ON cpt.TimePlaId = dopd.TimePlaId
+		LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctiom WITH(NOLOCK)
+			ON ctiom.tio_pk_id = dopd.TypeofInOutMoneyId
     WHERE
         --AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI
         CONVERT(DATE, bt.[Date]) = @Date
@@ -171,7 +198,12 @@ BEGIN
 		   vp.IdKindOfVPClient,
 			vp.DescriptionOfClient, 			
 			btd.CollectId,
-			btd.RecolectionId
+			btd.RecolectionId,
+			vpcr.DescriptionOfClient,
+			p.PerFirstName,
+			p.PerLastName,
+			cpt.TimePlaName,
+			ctiom.tio_pk_name
     ORDER BY bt.IdBatchCOD,
              bt.Date, btd.AuthorizationNumber DESC;
 ​

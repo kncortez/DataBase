@@ -299,7 +299,8 @@ BEGIN
                        @CourierId = ID_Courier
                 FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
                 WHERE [Guide_Serie] = @Guide_Serie
-                      AND [Guide_Number] = @GuideNumber;
+                      AND [Guide_Number] = @GuideNumber
+				ORDER BY [Date_Created] DESC;
 
                 -- se verifica que no exita en las guías procesadas
                 IF NOT EXISTS

@@ -103,7 +103,8 @@ BEGIN
                        @CourierId = ID_Courier
                 FROM [dbo].[DeliveryAttempt]
                 WHERE [Guide_Serie] = @GuideSerie
-                      AND [Guide_Number] = @GuideNumber;
+                      AND [Guide_Number] = @GuideNumber
+				ORDER BY Date_Created DESC;
 
                 -- se inserta en las guías procesadas si contine COD 
                 INSERT INTO [dbo].[ProcessedGuideCOD]
