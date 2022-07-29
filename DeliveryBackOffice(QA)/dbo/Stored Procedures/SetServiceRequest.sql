@@ -45,8 +45,7 @@ BEGIN
         (
             Guide_Number
         )
-        SELECT 
-			NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
+        SELECT NEXT VALUE FOR [dbo].[NewGuideNumberSequence]
         FROM gen
         OPTION (MAXRECURSION 10000);
 
@@ -100,7 +99,23 @@ BEGIN
                [Package_Description],
                [Sender_Internal_Code],
                [Receiver_Alternant_CUI],
-               [Collect_OnDelivery]
+               [Collect_OnDelivery],
+
+               -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+               --[Collect],
+               NULL 'SenderIdTownship',
+               NULL 'ReceiverIdTownship',
+               NULL 'HubOriginId',
+               NULL 'HubDestinationId',
+               NULL 'SourceSystemId',
+               NULL 'CatSystemId',
+               NULL 'Segment',
+               NULL 'CatModuleId',
+               NULL 'IdCustomer',
+               NULL 'OrderUserCreated',
+               NULL 'SalePipeLineId'
+        -- FIN MODIFICACION
+
         INTO #GuideTable
         FROM @TblDeliveryOrders
             LEFT JOIN @CorrelativeTable C
@@ -147,10 +162,102 @@ BEGIN
         --IF (@IdTransaction IS NOT NULL)
         --BEGIN
 
+        -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+        ALTER TABLE #GuideTable ALTER COLUMN Segment NVARCHAR(10);
+        ALTER TABLE #GuideTable ALTER COLUMN OrderUserCreated VARCHAR(100);
+
+        --Modifica el tipo de los campos que recibirán una cadena
+
+        /*****************************************************************************/
+        /* REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS MUNICIPIOS Y LOS AGREGA A LA TABLA */
+        /*****************************************************************************/
+        UPDATE #GuideTable
+        SET SenderIdTownship =
+            (
+                SELECT IdTownship
+                FROM [DeliveryBackOffice].[dbo].[Township]
+                WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Town)
+                      AND IdProvince =
+                      (
+                          SELECT IdProvince
+                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
+                      )
+            ),
+            ReceiverIdTownship =
+            (
+                SELECT IdTownship
+                FROM [DeliveryBackOffice].[dbo].[Township]
+                WHERE DeliveryBackOffice.dbo.FnClearString(TownshipName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Town)
+                      AND IdProvince =
+                      (
+                          SELECT IdProvince
+                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
+                      )
+            ),
+            SourceSystemId =
+            (
+                SELECT SysIdSystem
+                FROM DeliveryBackOffice.dbo.CatSystem
+                WHERE SysNameSystem = 'Parser'
+                      AND SysRowStatus = 1
+            )
+        FROM #GuideTable t;
+
+        /*****************************************************************************/
+        /**** REALIZA LA BÚSQUEDA DE LOS ID'S DE LOS HUBS Y LOS AGREGA A LA TABLA ****/
+        /*****************************************************************************/
+
+        UPDATE #GuideTable
+        SET HubOriginId =
+            (
+                SELECT [DeliveryBackOffice].[dbo].[FnGetHub](t.SenderIdTownship)
+            ),
+            HubDestinationId =
+            (
+                SELECT [DeliveryBackOffice].[dbo].[FnGetHub](t.ReceiverIdTownship)
+            ),
+            CatSystemId =
+            (
+                SELECT t.SourceSystemId
+            ),
+            CatModuleId =
+            (
+                SELECT ModIdModule
+                FROM DeliveryBackOffice.dbo.CatModule
+                WHERE ModName = 'Parser'
+            ),
+            IdCustomer =
+            (
+                SELECT CustomerID
+                FROM DeliveryBackOffice.dbo.VisitPointClient
+                WHERE CodeOfReference = t.Sender_ID
+            ),
+            SalePipeLineId =
+            (
+                SELECT IdSalePipeLine
+                FROM DeliveryBackOffice.dbo.CatSalePipelines
+                WHERE Name = 'Parser'
+            ),
+            OrderUserCreated =
+            (
+                SELECT t.Receiver_Email
+            ),
+            Segment =
+            (
+                SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
+            )
+        FROM #GuideTable t;
+
+        -- FIN MODIFICACION
+
+
         /**********************************************************************/
         /*********** GUARDAR ÓRDENES ASOCIADAS (GUÍAS ELECTRÓNICAS) ***********/
         /**********************************************************************/
         --PRINT 'Guardar órdenes asociadas'
+
         INSERT DeliveryBackOffice.dbo.DeliveryOrder
         (
             [Ticket_Number],
@@ -206,7 +313,22 @@ BEGIN
             [Dispatched_Date],
             [Dispatched_Token],
             [Collect_OnDelivery],
-            [Guide_Collected]
+            [Guide_Collected],
+            [TypeService],
+            -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+            --[IsCollect],
+
+            [SenderIdTownship],
+            [ReceiverIdTownship],
+            [HubOriginId],
+            [HubDestinationId],
+            [CatSystemId],
+            [CatModuleId],
+            [IdCustomer],
+            [Segment],
+            [OrderUserCreated],
+            [SalePipeLineId]
+        -- FIN MODIFICACION
         )
         SELECT GT.[Ticket_Number],
                GT.[Order_Number],
@@ -261,7 +383,21 @@ BEGIN
                NULL,                  -- Dispatched_Date,
                NULL,                  -- Dispatched_Token,
                GT.Collect_OnDelivery, -- Collect_OnDelivery
-               0                      -- Guide_Collected
+               0,                     -- Guide_Collected
+               'NDD',
+                                      -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+                                      --,GT.Collect
+               GT.SenderIdTownship,
+               GT.ReceiverIdTownship,
+               GT.HubOriginId,
+               GT.HubDestinationId,
+               GT.CatSystemId,
+               GT.CatModuleId,
+               GT.IdCustomer,
+               GT.Segment,
+               GT.OrderUserCreated,
+               GT.SalePipeLineId
+        -- FIN MODIFICACION
         FROM #GuideTable GT;
 
         -- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
@@ -528,7 +664,8 @@ BEGIN
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
-               CONVERT(BIGINT, 0) AS 'NumTransferID';
+               CONVERT(BIGINT, 0) AS 'NumTransferID',
+               ERROR_LINE() AS [ErrorLine];
         ROLLBACK TRANSACTION;
     END CATCH;
 
@@ -547,7 +684,22 @@ BEGIN
 
         SELECT C.[Row_Number] AS 'RowNumber',
                D.Guide_Serie AS 'GuideSerie',
-               D.Guide_Number AS 'GuideNumber'
+               D.Guide_Number AS 'GuideNumber',
+               (
+                   SELECT HubAbbreviation
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   WHERE IdHubLogistic = D.HubOriginId
+               ) AS 'HubOrigin',
+               (
+                   SELECT HubAbbreviation
+                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
+                   WHERE IdHubLogistic = D.HubDestinationId
+               ) AS 'HubDestination',
+               -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+               (
+                   SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
+               ) AS 'Attempts'
+        --FIN MODIFICACIÓN
         FROM DeliveryOrder D WITH (NOLOCK)
             JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number

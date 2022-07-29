@@ -9,7 +9,13 @@
 -- Update date: <2020-03-21>
 -- Description:	< Adición de WITH(NOLOCK) para evitar bloqueos >
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp] @datePickUp AS DATE = '',
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-07-20>
+-- Description:	< Cambio de agrupaciones para evitar duplicados (Falsos positivos) >
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp] 
+	@datePickUp AS DATE = '',
 	@hubId INT = -1
 AS
 BEGIN
@@ -177,7 +183,8 @@ BEGIN
                  )
             )
         AND shp.RowStatus = 1
-        AND (@hubId = -1 OR shp.IdHubLogistics = @hubId);
+        AND (@hubId = -1 OR shp.IdHubLogistics = @hubId)
+        AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)) -- Si tiene guía y no está anulada
     --PRINT CONVERT(VARCHAR, GETDATE(), 9);
     --DECLARE @guides NVARCHAR(MAX) =
     --        (
@@ -236,28 +243,28 @@ BEGIN
 
     PRINT 'termina brain';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
-    SELECT tb.Periodicy,
+    SELECT MAX(tb.Periodicy) 'Periodicy',
            tb.idSchedulePickUp,
-           tb.Name,
+           MAX(tb.Name) 'Name',
            tb.Address,
-           tb.Zone,
-           tb.Phone,
-           tb.StartDate,
-           tb.EndDate,
-           tb.datePickUp,
-           tb.hourPickUp,
-           tb.rangeHour,
+           MAX(tb.Zone) 'Zone',
+           MAX(tb.Phone) 'Phone',
+           MAX(tb.StartDate) 'StartDate' ,
+           MAX(tb.EndDate) 'EndDate',
+           MAX(tb.datePickUp) 'datePickUp',
+           MAX(tb.hourPickUp) 'hourPickUp',
+           MAX(tb.rangeHour) 'rangeHour',
            SUM(tb.QuantityRegularPackages) QuantityRegularPackages,
            SUM(tb.QuantityOverDimensionedPackage) QuantityOverDimensionedPackage,
            CAST(ROUND(AVG(tb.EstimatedWeight), 2) AS NUMERIC(18, 2)) EstimatedWeight,
-           tb.IdHubLogistics,
-           tb.HubAbbreviation,
-           tb.NameTownship,
-           tb.NameProvince,
-           tb.TypeService,
-           tb.SchedulePickupStatus,
+           MAX(tb.IdHubLogistics) 'IdHubLogistics',
+           MAX(tb.HubAbbreviation) 'HubAbbreviation',
+           MAX(tb.NameTownship) 'NameTownship',
+           MAX(tb.NameProvince) 'NameProvince',
+           MIN(tb.TypeService) 'TypeService',
+           tb.SchedulePickupStatus 'SchedulePickupStatus',
            --SUM(ISNULL(tp.AmountToPay,0)) Amount,
-           tb.ServiceVehicle,
+           MIN(tb.ServiceVehicle) 'ServiceVehicle',
            --ISNULL(tb.StatusName,'') StatusName
            tb.IdServiceManagement
     FROM @tbl tb
@@ -265,26 +272,26 @@ BEGIN
             ON tp.GuideSerie = tb.GuideSerie
                AND tp.GuideNumber = tb.GuideNumber
     GROUP BY idSchedulePickUp,
-             Name,
-             NameProvince,
-             NameTownship,
+             IdServiceManagement,
              Address,
-             Zone,
-             TypeService,
-             SchedulePickupStatus,
-             StartDate,
-             Periodicy,
-             Phone,
-             StartDate,
-             EndDate,
-             datePickUp,
-             hourPickUp,
-             rangeHour,
-             IdHubLogistics,
-             HubAbbreviation,
-             ServiceVehicle,
+             --Name,--
+             --NameProvince,--
+             --NameTownship,--
+             --Zone,
+             --TypeService,
+             SchedulePickupStatus
+             --StartDate,
+             --Periodicy,
+             --Phone,
+             --StartDate,
+             --EndDate,
+             --datePickUp,
+             --hourPickUp,
+             --rangeHour,
+             --IdHubLogistics,
+             --HubAbbreviation,
+             --ServiceVehicle,
              --StatusName
-             IdServiceManagement
     OPTION (OPTIMIZE FOR UNKNOWN);
 
 END;

@@ -65,8 +65,8 @@ BEGIN
                CBC.Signature,
                CBC.ReasonDescription
         FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CBC WITH (NOLOCK)
-            JOIN DeliveryBackOffice.dbo.SchedulePickup SCP WITH (NOLOCK)
-                JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.SchedulePickup SCP WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                     ON DOP.IdHeaderRecolection = SCP.SchedulePickupId
                 ON CBC.OrderNumber = SCP.TransaccionFAC
         WHERE SUBSTRING(CBC.OrderNumber, 0, 3) = 'HR'
@@ -200,7 +200,7 @@ BEGIN
                               GROUP BY DOD.Guide_Number
                           --y sobre esa fecha buscar si hay un retornado a forza
                           ) tbl1
-                              JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3
+                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3
                                   ON DOD3.Guide_Number = tbl1.Guide_Number
                                      AND DOD3.StatusOrderId = 8 --retornado a forza
                                      AND DOD3.DateCreatedInSystem > tbl1.MaxDeliveryDate
@@ -227,7 +227,7 @@ BEGIN
                   SELECT TOP 1
                          DOS.Guides_Received_COD
                   FROM DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
-                      JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS WITH (NOLOCK)
+                      INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS WITH (NOLOCK)
                           ON DSD.ID_DeliveryOrderBySettlement = DOS.ID
                   WHERE DOR.Guide_Number = DOR.Guide_Number
                         AND DOR.Guide_Serie = DOR.Guide_Serie
@@ -262,7 +262,7 @@ BEGIN
            (
                SELECT MAX(DOS2.Date_Received_COD)
                FROM DeliveryBackOffice.dbo.DeliverySettlementDetail DSD2 WITH (NOLOCK)
-                   JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS2 WITH (NOLOCK)
+                   INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS2 WITH (NOLOCK)
                        ON DOS2.ID = DSD2.ID_DeliveryOrderBySettlement
                WHERE DSD2.Guide_Serie = DOR.Guide_Serie
                      AND DSD2.Guide_Number = DOR.Guide_Number
@@ -402,7 +402,7 @@ BEGIN
 				   ,MIN(inh.inv_certificationFEL) inv_certificationFEL
 				   ,MAX(IIF(inh.IsManualInvoice IS NULL,0,IIF(INH.IsManualInvoice=1,1,0))) IsManualInvoice
             FROM DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK) --22TEBNHL
-                JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
                     ON IND.dti_fk_header = INH.inv_pk_id
                        AND INH.inv_certificationFEL IS NOT NULL
                        AND INH.inv_descriptionFEL = 'PROCESO REALIZADO'

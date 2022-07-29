@@ -262,7 +262,7 @@ BEGIN
                                                                       ' '
                                                                   ) + '"}'
                                                    FROM DeliveryBackOffice.dbo.DeliveryFavCOD SUB WITH (NOLOCK)
-                                                        JOIN dbo.DeliveryBank DB WITH (NOLOCK) ON SUB.StatusFavCOD = 1   
+                                                        INNER JOIN dbo.DeliveryBank DB WITH (NOLOCK) ON SUB.StatusFavCOD = 1   
 														 AND DB.Id_bank = SUB.IdBank
                                                    WHERE SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
                                                          

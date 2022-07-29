@@ -19,6 +19,12 @@ CREATE PROCEDURE [dbo].[CompleteGuideGenerationExpressCenter]
 AS
 BEGIN
 
+	-- Variables "globales"
+	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
+	DECLARE @IdDatafonoPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'Datafono' COLLATE Latin1_General_CI_AI);
+	
+	DECLARE @TypeExpressCenter INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'REDISTRIBUIDOR' COLLATE Latin1_General_CI_AI);
+
 	-- Manejo cuando dato viene vacio o es 0
 	IF(@VisitPointClientId = 0)
 		SET @VisitPointClientId = NULL
@@ -45,6 +51,7 @@ BEGIN
 	DECLARE @DOAlreadyUpdated BIT = 0;
 	DECLARE @DOPDAlreadyUpdated BIT = 0;
 	DECLARE @CoUpdated BIT = 0;
+	DECLARE @CostId INT = 0;
 
 	-- Variables adicionales de datos
 	DECLARE @CustomerId INT = 0;
@@ -386,7 +393,6 @@ BEGIN
 				END
 
 				DECLARE @PromoName NVARCHAR(50) = '';
-				DECLARE @CostId INT = 0;
 
 				SET @CostId = ISNULL((
 					SELECT
@@ -418,12 +424,14 @@ BEGIN
 
 				IF(ISNULL(@CostId, 0) > 0)
 				BEGIN
+
 					-- Actuaizar nuevo valor a Cost
 					UPDATE
 						[DeliveryBackOffice].[dbo].[Cost] 
 					SET
 						TotalAmount = @UpdatedValue
 						,TotalAmountPaid = @UpdatedValue
+						,PaymentDate = GETDATE()
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
 					WHERE
@@ -630,6 +638,135 @@ BEGIN
 							tdop.PriceShippment != 0
 							OR
 							tdop.CODAmountProccess != 0
+
+						SET @CostId = ISNULL((
+							SELECT
+								TOP 1
+									Co.IdCost
+							FROM
+								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+							WHERE
+								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+								AND
+								Co.IdProduct = 1
+								AND
+								Co.RowStatus = 1
+						), 0)
+
+						IF(@CostId > 0)
+						BEGIN
+
+							UPDATE
+								[DeliveryBackOffice].[dbo].[Cost] 
+							SET
+								TotalAmount = @UpdatedValue
+								,TotalAmountPaid = @UpdatedValue
+								,PaymentDate = GETDATE()
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								IdCost = @CostId
+
+						END
+						ELSE
+						BEGIN
+
+							DECLARE @PaidWithCreditCard BIT = 0;
+							SET @PaidWithCreditCard = ISNULL((
+								SELECT
+									TOP 1
+										1
+								FROM
+									@TblDeliveryOrdersList TBOL
+								WHERE
+									TBOL.IdWayToPayment IN (@IdCreditCardPayment, @IdDatafonoPayment)
+									AND
+									@CustomerType NOT IN (@TypeExpressCenter)
+							),0);
+
+							DECLARE @ExecResult INT = 0;
+							-- Revalorizar guía para generar registros
+							EXEC @ExecResult =[dbo].[spws_revalue_guide]
+								@GuideSerie  = @GuideSerie
+								,@GuideNumber = @GuideNumber
+								,@CodeApp = '' -- CodeApp generico de forza
+								,@Format ='Non'
+								,@CalculateTaxes = 'false' -- Dado a nuevas tarifas, no cálcular impuestos
+								,@IdModule = 1
+								,@SetUpdate = 'true' -- Actualizar registros
+								,@Token = @Token
+								,@ParIsCreditCard = @PaidWithCreditCard
+								
+							SET @CostId = ISNULL((
+								SELECT
+									TOP 1
+										Co.IdCost
+								FROM
+									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+								WHERE
+									Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+									AND
+									Co.IdProduct = 1
+									AND
+									Co.RowStatus = 1
+							), 0)
+							
+							UPDATE
+								[DeliveryBackOffice].[dbo].[Cost] 
+							SET
+								TotalAmount = @UpdatedValue
+								,TotalAmountPaid = @UpdatedValue
+								,PaymentDate = GETDATE()
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								IdCost = @CostId
+
+						END
+
+						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WHERE CD.IdCost = @CostId ))
+						BEGIN
+
+							-- Nuevo valor en cost detail
+							INSERT INTO
+								[DeliveryBackOffice].[dbo].[CostDetail]
+								(IdCost, Amount, IdTypeOfMoney, Voucher, RowStatus, TokenCreated, DateCreated)
+							SELECT
+								TOP 1
+									@CostId
+									,@UpdatedValue
+									,TDOL.IdWayToPayment
+									,IIF(TDOL.IdWayToPayment = 2 OR TDOL.IdWayToPayment = 6, @Voucher, '')
+									,1
+									,@Token
+									,GETDATE()
+							FROM
+								@TblDeliveryOrdersList TDOL
+
+						END
+						ELSE
+						BEGIN
+
+							DECLARE @TypePayment INT = 0;
+
+							SELECT
+								@TypePayment = TDOL.IdWayToPayment
+							FROM
+								@TblDeliveryOrdersList TDOL
+
+							-- Actuaizar nuevo valor a Cost detail
+							UPDATE
+								[DeliveryBackOffice].[dbo].[CostDetail] 
+							SET
+								Amount = @UpdatedValue
+								,Voucher = IIF(@TypePayment = 2 OR @TypePayment = 6, @Voucher, '')
+								,IdTypeOfMoney = @TypePayment
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								IdCost = @CostId
+
+						END
 
 					 END
 					 --ELSE IF ( (@OldPriceshipment - @UpdatedValue) <= 0 )
