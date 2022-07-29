@@ -971,7 +971,7 @@ BEGIN
                cat.Description 'TIPO DE CUENTA OTRO BANCO',
                IIF(cco.IdCatConceptCOD = 1,
                    cco.Concept,
-                   CONCAT(cco.Concept, ' ', bd.GuideSerie, bd.GuideNumber, ' Ref ', CAST(bd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO',
+                   CONCAT(bd.GuideSerie, bd.GuideNumber, ' Ref ', CAST(bd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO',
                Password 'CONTRASEÑA'
         FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda WITH (NOLOCK)
@@ -1111,8 +1111,6 @@ BEGIN
                MAX(IIF(cco.IdCatConceptCOD = 1,
                        cco.Concept,
                        CONCAT(
-                                 cco.Concept,
-                                 ' ',
                                  bd.GuideSerie,
                                  bd.GuideNumber,
                                  ' Ref ',
@@ -1442,8 +1440,6 @@ BEGIN
                IIF(cco.IdCatConceptCOD = 1,
                    cco.Concept,
                    CONCAT(
-                             cco.Concept,
-                             ' ',
                              btd.GuideSerie,
                              btd.GuideNumber,
                              ' Ref ',
@@ -1578,8 +1574,6 @@ BEGIN
                MAX(IIF(cco.IdCatConceptCOD = 1,
                        cco.Concept,
                        CONCAT(
-                                 cco.Concept,
-                                 ' ',
                                  btd.GuideSerie,
                                  btd.GuideNumber,
                                  ' Ref ',
@@ -1682,8 +1676,6 @@ BEGIN
                                   ' Ref ',
                                   CAST(bd.BatchCODId AS VARCHAR(300)),
                                   ' ',
-                                  cco.Concept,
-                                  ' ',
                                   bd.GuideSerie,
                                   bd.GuideNumber
                               )), 100) 'Concepto',
@@ -1714,7 +1706,7 @@ BEGIN
                      + CAST(LTRIM(RTRIM(SUBSTRING(REPLACE(LTRIM(RTRIM(bd.AccountNumber)), '-', ''), 11, 1))) AS VARCHAR(1)), 1) AS 'Digito',
                LEFT(MAX(IIF(cco.IdCatConceptCOD = 1,
                             cco.Concept,
-                            CONCAT(' Ref ', CAST(bd.BatchCODId AS VARCHAR(300)), cco.Concept))
+                            CONCAT(' Ref ', CAST(bd.BatchCODId AS VARCHAR(300))))
                        ), 100) 'Concepto',
                SUM(Amount) 'Valor Q.'
         FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
@@ -1741,6 +1733,7 @@ BEGIN
                  cco.Concept;
     END;
 
+	--FORMATO BAM
     IF @IdBank = 1
     BEGIN
         --------DETALLADO
