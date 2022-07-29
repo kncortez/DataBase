@@ -114,7 +114,7 @@ BEGIN
 			'' as Place--,
 			--'' as [ManifestNumber]
 		 FROM dbo.DeliveryOrderDetail dod WITH(NOLOCK)
-            JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number

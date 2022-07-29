@@ -3,6 +3,11 @@
 -- Create date: <2021-02-06>
 -- Description:	<Recoleccion de guias, su funcion es insertar y actualizar informacion de las tablas DeliveryOrder, DeliveryOrderPaymentDetail y SchedulePickup >
 -- =============================================
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-07-20>
+-- Description:	< Cambio de agrupaciones para evitar duplicados en servicios de recolección (Falsos positivos) >
+-- =============================================
 CREATE PROCEDURE [dbo].[SetRecolectionRequest]
     @TblDeliveryOrdersList AS [TblDeliveryOrdersList2] READONLY,
     @Iscollected BIT = true,
@@ -215,13 +220,13 @@ BEGIN
                             (
                                 SELECT CodeOfReference
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                                    INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
+                                    JOIN VisitPointByUser VPU WITH (NOLOCK)
                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                            AND VPU.RowStatus = 1
-                                    INNER JOIN RegisterUser ru WITH (NOLOCK)
+                                    JOIN RegisterUser ru WITH (NOLOCK)
                                         ON VPU.RegisterUserID = ru.UsrIdUser
                                            AND ru.UsrRowStatus = 1
-                                    INNER JOIN [dbo].[RolByUserByAccount] rua
+                                    JOIN [dbo].[RolByUserByAccount] rua
                                         ON rua.RuaIdUser = ru.UsrIdUser
                                 WHERE rua.RuaIdAccount = @IdAccount
                             );
@@ -390,19 +395,30 @@ BEGIN
                        ord.Guide_Number AS Number,
                        ord.Guide_Serie AS Serie,
                        Sender_Phone,
-                       hl.IdHubLogistic AS Hub,
+                       HL.IdHublogistic AS Hub,
                        (SUM(dop.PaymentRecollections) + SUM(dop.RecolectPayment)) AS AmountPickup,
                        Sender_Address AS AddressPickup,
-                       TypeService
-                FROM DeliveryOrder ord
-                    INNER JOIN Township twn
-                        ON twn.IdTownship = ord.SenderIdTownship
-                    INNER JOIN DumpServiceCoverage dsc
-                        ON dsc.HeaderCode = twn.HeaderCode
-                           AND dsc.RowStatus = 1
-                    INNER JOIN HubLogistics hl
-                        ON hl.HubAbbreviation = dsc.Hub
-                           AND hl.HubStatus = 1
+                       TypeService,
+					   ord.IdCustomer
+                FROM DeliveryOrder ord WITH(NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
+						ON
+							ord.SenderIdTownship = Twn.IdTownship
+                    INNER JOIN (
+						SELECT
+							DSC.HeaderCode
+							,MAX(DSC.Hub) 'hub'
+						FROM
+							[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
+						GROUP BY
+							DSC.HeaderCode
+					) hubcov
+                        ON (Twn.HeaderCode = hubcov.HeaderCode)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
+						ON
+							hubcov.hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
                     INNER JOIN DeliveryOrderPaymentDetail dop
                         ON (
                                dop.GuideNumber = ord.Guide_Number
@@ -415,10 +431,11 @@ BEGIN
                            )
                 WHERE ord.Guide_Number IN ( t.Guide_Number )
                 GROUP BY Sender_ID,
+						 IdCustomer,
                          Sender_Phone,
                          ord.Guide_Number,
                          ord.Guide_Serie,
-                         hl.IdHubLogistic,
+                         HL.IdHublogistic,
                          Sender_Address,
                          Sender_FirstName,
                          Sender_LastName,
@@ -431,7 +448,8 @@ BEGIN
                            AddressPickup,
                            SchedulePickupId,
                            SP.AssigmentStatus,
-                           SM.IdServiceManagement
+                           SM.IdServiceManagement,
+						   DOR.IdCustomer
                     FROM dbo.SchedulePickup SP
                         LEFT JOIN dbo.ServiceManagement SM
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
@@ -460,7 +478,8 @@ BEGIN
                              AddressPickup,
                              SchedulePickupId,
                              SP.AssigmentStatus,
-                             SM.IdServiceManagement
+                             SM.IdServiceManagement,
+							 DOR.IdCustomer
                 ) sub_sp
                     ON (
                            sub_do.Sender_ID = sub_sp.Sender_ID
@@ -474,7 +493,10 @@ BEGIN
                                sub_do.Sender_ID <= 0
                                OR sub_do.Sender_ID IS NULL
                            )
-                       );
+						   AND
+                           sub_do.IdCustomer = sub_sp.IdCustomer
+                       )
+					   ;
 
             --declare @SenderId int  = (select top 1 Sender_ID  from DeliveryOrder ord
             --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
@@ -554,19 +576,29 @@ BEGIN
                    NULL,
                    NULL,
                    sd.Sender_ID,
-                   sd.SenderName,
-                   sd.Sender_Phone,
-                   sd.Hub,
+                   MAX(sd.SenderName),
+                   MAX(sd.Sender_Phone),
+                   MAX(sd.Hub),
                    NULL,
                    NULL,
                    sd.AddressPickup,
                    @TypeVehicleId
             FROM #Sender sd
             WHERE sd.SchedulePickupId IS NULL
+				AND NOT EXISTS (
+					SELECT
+						TOP 1
+							1
+					FROM
+						[DeliveryBackOffice].[dbo].[SchedulePickup] SP
+					WHERE
+						SP.SenderId = sd.Sender_ID
+						AND
+						SP.AddressPickup = sd.AddressPickup
+						AND
+						CAST(SP.StartDate AS DATE) = CAST(GETDATE() AS DATE)
+				)
             GROUP BY sd.Sender_ID,
-                     sd.SenderName,
-                     sd.Sender_Phone,
-                     sd.Hub,
                      sd.AddressPickup;
 
             DECLARE @transaction INT = SCOPE_IDENTITY();
@@ -745,6 +777,27 @@ BEGIN
 
             SELECT ('[' + @jsonOutput4 + ']') jsonOutput4;
             ROLLBACK TRANSACTION;
+				INSERT INTO dbo.RoutePreparationLogError
+			(
+				ErrorDescription,
+				ErrorNumber,
+				ErrorProcedure,
+				ErrorLine,
+				GuideSerie,
+				GuideNumber,
+				TokenCreated,
+				DateCreated
+			)
+			VALUES
+			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,0
+					   ,0
+					   ,'Error en SetRecolectionRequest filtro 3'
+					   ,GETDATE())
+
 
         END CATCH;
 
@@ -896,13 +949,13 @@ BEGIN
                     (
                         SELECT CodeOfReference
                         FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                            INNER JOIN VisitPointByUser VPU
+                            JOIN VisitPointByUser VPU
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                    AND VPU.RowStatus = 1
-                            INNER JOIN RegisterUser ru
+                            JOIN RegisterUser ru
                                 ON VPU.RegisterUserID = ru.UsrIdUser
                                    AND ru.UsrRowStatus = 1
-                            INNER JOIN [dbo].[RolByUserByAccount] rua
+                            JOIN [dbo].[RolByUserByAccount] rua
                                 ON rua.RuaIdUser = ru.UsrIdUser
                         WHERE rua.RuaIdAccount = @IdAccount
                     );
