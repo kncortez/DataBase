@@ -81,9 +81,22 @@ BEGIN
         pbs.ServiceManagmentId = sm.IdServiceManagement
     
     SELECT 
-		* 
+		Tmp.Guide_Code
+		,Tmp.Pieces_Cold
+		,Tmp.Pieces_Dry
+		,Tmp.Receiver_Fullname
+		,Tmp.Receiver_Address
+		,Tmp.Receiver_Zone
+		,Tmp.Receiver_Town
+		,Tmp.Receiver_Departament
+		,Tmp.Preparation_Date
+		,Tmp.Shipping_Date
+		,Tmp.Max_Date
+		,Tmp.Receiver_Phone
+		,Tmp.Rack_Position
+		,Tmp.Collect_on_Delivery
 	FROM 
-		@temp
+		@temp Tmp
     order by 
 		Receiver_Departament asc
 		, Receiver_Town asc
