@@ -41,7 +41,7 @@ BEGIN
         UNION
         SELECT vpc.CodeOfReference
         FROM VisitPointByUser vpu WITH(NOLOCK)
-            JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
+            INNER JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                 ON vpu.IdVisitPointClient = vpc.IdVisitPointClient
         WHERE RegisterUserID = @IdUser
     ) AS t;
@@ -59,17 +59,17 @@ BEGIN
 	SELECT TOP 1
 		@TypeUser = ctp.Description
 	FROM dbo.InternalUser iu WITH(NOLOCK)
-	JOIN dbo.RegisterUser rg WITH(NOLOCK)
+	INNER JOIN dbo.RegisterUser rg WITH(NOLOCK)
 		ON rg.UsrIdUser = iu.RegisterUserID
-	JOIN dbo.RolByUserByAccount bya WITH(NOLOCK)
+	INNER JOIN dbo.RolByUserByAccount bya WITH(NOLOCK)
 		ON bya.RuaIdUser = rg.UsrIdUser
-	JOIN dbo.Account acc WITH(NOLOCK)
+	INNER JOIN dbo.Account acc WITH(NOLOCK)
 		ON acc.AccIdAccount = bya.RuaIdAccount
-	JOIN dbo.Customer cs WITH(NOLOCK)
+	INNER JOIN dbo.Customer cs WITH(NOLOCK)
 		ON cs.IdCustomer = acc.IdCustomer
-	JOIN dbo.CustomerType ctp WITH(NOLOCK)
+	INNER JOIN dbo.CustomerType ctp WITH(NOLOCK)
 		ON ctp.IdCustomerType = cs.IdCustomerType
-	JOIN dbo.TokenLog tl WITH(NOLOCK)
+	INNER JOIN dbo.TokenLog tl WITH(NOLOCK)
 		ON tl.TknIdUser = bya.RuaIdUser
 	WHERE tl.TknIdToken = @Token
 
@@ -90,15 +90,13 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-								JOIN dbo.StatusOrder sto WITH(NOLOCK)
+								INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 									ON sto.StatusOrderId = ord.StatusOrderId
-								JOIN
+								INNER JOIN
 									#temp tp
 									ON
 										ord.Sender_ID = tp.CodeOfReference
 							WHERE
-								--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-								--AND
 								(
 									@CancelGuides = 0
 									AND ISNULL(ord.StatusOrderId, 15) != 7
@@ -176,7 +174,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -243,18 +240,7 @@ BEGIN
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -284,7 +270,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId 
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -294,7 +280,6 @@ BEGIN
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
-											--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 											LEFT JOIN dbo.Township twn WITH(NOLOCK)
 												ON twn.IdTownship = ord.SenderIdTownship
 											LEFT JOIN dbo.Province pr WITH(NOLOCK)
@@ -306,13 +291,11 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
 										WHERE
-											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-											--AND
 											(
 												@CancelGuides = 0
 												AND ISNULL(ord.StatusOrderId, 15) != 7
@@ -346,11 +329,9 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-								JOIN dbo.StatusOrder sto WITH(NOLOCK)
+								INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 									ON sto.StatusOrderId = ord.StatusOrderId
 							WHERE
-								--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-								--AND
 								(
 									((ord.Sender_ID IN
 									  (
@@ -447,7 +428,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -514,18 +494,7 @@ BEGIN
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -555,7 +524,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -565,7 +534,6 @@ BEGIN
 												ON (cattime.TimePlaId = paydord.TimePlaId)
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
-											--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 											LEFT JOIN dbo.Township twn WITH(NOLOCK)
 												ON twn.IdTownship = ord.SenderIdTownship
 											LEFT JOIN dbo.Province pr WITH(NOLOCK)
@@ -578,8 +546,6 @@ BEGIN
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 										WHERE
-											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-											--AND
 											(
 												((ord.Sender_ID IN
 												  (
@@ -652,13 +618,11 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-							JOIN
+							INNER JOIN
 								#temp tp
 								ON
 									ord.Sender_ID = tp.CodeOfReference
 							WHERE
-								--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-								--AND
 								ord.StatusOrderId = 15
 						);
 
@@ -730,7 +694,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -817,7 +780,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -830,13 +793,11 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
 										WHERE
-											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-											--AND
 											ord.StatusOrderId = 15
 										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1C ROWS FETCH NEXT @CantidadRegistros1C ROWS ONLY
 										FOR XML PATH(''), TYPE
@@ -859,8 +820,6 @@ BEGIN
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
 							WHERE
-								--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-								--AND
 								ord.StatusOrderId = 15
 								AND
 								(
@@ -947,7 +906,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -1034,7 +992,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1048,8 +1006,6 @@ BEGIN
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 										WHERE
-											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
-											--AND
 											ord.StatusOrderId = 15
 											AND
 											(
@@ -1108,7 +1064,7 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-							JOIN
+							INNER JOIN
 								#temp tp
 								ON
 									ord.Sender_ID = tp.CodeOfReference
@@ -1205,7 +1161,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -1294,7 +1249,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1307,11 +1262,10 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ISNULL(ord.StatusOrderId, 15) NOT IN ( 15, 5, 7, 22 )
 										ORDER BY ord.Guide_Number DESC OFFSET @Skip2C ROWS FETCH NEXT @CantidadRegistros2C ROWS ONLY
 										FOR XML PATH(''), TYPE
@@ -1439,7 +1393,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -1528,7 +1481,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1541,7 +1494,6 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ISNULL(ord.StatusOrderId, 15) NOT IN ( 15, 5, 7, 22 )
 											  AND
 											  (
@@ -1605,7 +1557,7 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-							JOIN
+							INNER JOIN
 								#temp tp
 								ON
 									ord.Sender_ID = tp.CodeOfReference
@@ -1680,7 +1632,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -1769,7 +1720,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1782,11 +1733,10 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
 										ORDER BY ord.Guide_Number DESC OFFSET @Skip3c ROWS FETCH NEXT @CantidadRegistros3c ROWS ONLY
 										FOR XML PATH(''), TYPE
@@ -1893,7 +1843,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -1982,7 +1931,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1995,7 +1944,6 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
 											  AND
 											  (
@@ -2121,7 +2069,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -2188,18 +2135,7 @@ BEGIN
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -2229,7 +2165,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2250,7 +2186,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -2337,7 +2273,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -2404,18 +2339,7 @@ BEGIN
 																								 'EFECTIVO'
 																							 ELSE
 																								 CASE
-																									 WHEN 1 = 1 /*
-																									 (
-																										 SELECT COUNT(*)
-																										 FROM Cost C
-																											 JOIN CostDetail CD
-																												 ON C.IdCost = CD.IdCost
-																													AND C.RowStatus = 1
-																										 WHERE ProductNumber = CONCAT(
-																																		 ord.Guide_Serie,
-																																		 ord.Guide_Number
-																																	 )
-																									 ) > 1*/ THEN
+																									 WHEN 1 = 1 THEN
 																										 'TARJETA'
 																									 WHEN
 																									 (
@@ -2445,7 +2369,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2578,7 +2502,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -2665,7 +2588,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2678,7 +2601,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -2763,7 +2686,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -2850,7 +2772,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2994,7 +2916,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -3083,7 +3004,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3096,11 +3017,10 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND ORD.StatusOrderId <> IIF(@CancelGuides =0,7,0)
 										ORDER BY ord.Guide_Number DESC
@@ -3204,7 +3124,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -3293,7 +3212,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3306,7 +3225,6 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
@@ -3415,7 +3333,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -3504,7 +3421,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3517,11 +3434,10 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 									
 										ORDER BY ord.Guide_Number DESC
@@ -3603,7 +3519,6 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
 											   +
-											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
 											   + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1)
 											   + '",' + '"CollectOnDelivery":"'
@@ -3692,7 +3607,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3705,7 +3620,6 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
