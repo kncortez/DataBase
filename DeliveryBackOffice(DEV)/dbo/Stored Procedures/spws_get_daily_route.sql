@@ -301,6 +301,8 @@ BEGIN
                                     "ServiceType":"'
                                                           + 'Delivery' + '",' + '"CodeOfReference":"'
                                                           + CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0)) + '",'
+														  + '"DeliveryOption":"' 
+														  + CONVERT( VARCHAR,ISNULL(DOR.IdDeliveryOption,0))  + '",' +
                                                           + '"Id":"'
                                                           + ISNULL(
                                                                       CONVERT(
