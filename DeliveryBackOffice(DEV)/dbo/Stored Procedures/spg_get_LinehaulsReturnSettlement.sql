@@ -43,7 +43,7 @@ select dbs.ID,
 	dbs.IdCourier,
 	sr.First_Name + ' ' + sr.Last_Name as Courier_Name
 from SettlementByPickup dbs
-join  DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dbs.IdCourier
+inner join  DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dbs.IdCourier
 WHERE dbs.SequenceCode = @IdManifest and dbs.SubTypeServiceManagmentId = @subservice 
 
 
