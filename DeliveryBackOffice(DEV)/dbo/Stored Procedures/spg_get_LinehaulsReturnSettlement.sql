@@ -53,7 +53,7 @@ SELECT DISTINCT
 	0 as Delivered,
 	0.00 as COD
 	from SettlementByPickup sbp 
-	inner join SettlementByPickupDetail sbpd on sbp.Id = sbpd.SettlementByPickupId
+	inner join SettlementByPickupDetail sbpd on sbp.Id = sbpd.SettlementByPickupId AND sbpd.RowStatus = 1
 	where sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = @subservice and (sbpd.IsReturn is null or sbpd.IsReturn = 0 ) and  (sbpd.IsPieceLiquidaded is null or sbpd.IsPieceLiquidaded = 0)
 
 INSERT INTO @GuidesDetailLiquid
