@@ -76,6 +76,8 @@ BEGIN
 			btd.CatConceptCODId Concept,
 			COALESCE(btd.CollectId,0) CollectId,
 			COALESCE(btd.RecolectionId,0) RecolectionId
+			,ISNULL(btc.CommissionId,0) CommissionId
+            ,btc.CommissionDate CommissionDate
     FROM [dbo].[BatchDetailCOD] btd WITH(NOLOCK)
         LEFT JOIN [dbo].[BatchCOD] bt WITH(NOLOCK)
             ON btd.[BatchCODId] = bt.[IdBatchCOD]
@@ -171,18 +173,11 @@ BEGIN
 		   vp.IdKindOfVPClient,
 			vp.DescriptionOfClient, 			
 			btd.CollectId,
-			btd.RecolectionId
+			btd.RecolectionId,
+			btc.CommissionId,
+            btc.CommissionDate
     ORDER BY bt.IdBatchCOD,
              bt.Date, btd.AuthorizationNumber DESC;
-​
-    SELECT DISTINCT
-           CommissionId,
-           CommissionDate
-    FROM [dbo].[BatchDetailCOD] WITH(NOLOCK)
-    WHERE CONVERT(DATE, CommissionDate) = @Date
-	AND RowStatus = 1
-    ORDER BY CommissionId;
-​
-​
+			 
     SET NOCOUNT OFF;
 END;
