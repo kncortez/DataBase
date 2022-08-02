@@ -5,7 +5,16 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_setInTransitToLinehaulRoutePreparation] 
 	@IdLinehaulRoutePreparation AS INT,
-	@SenderReceiverCUI AS NVARCHAR(50),
+	@SenderReceiverCUI AS NVARCHAR(50) = NULL,
+	@CatVehicleId AS INT = NULL,
+	@DriverCUI AS NVARCHAR(25),
+	@DriverName AS NVARCHAR(100),
+	@DriverPhone AS NVARCHAR(25),
+	@VehicleID AS NVARCHAR(25),
+	@VehicleDescription AS NVARCHAR(100),
+	@SecurityManName AS NVARCHAR(100),
+	@SecurityManPhone AS NVARCHAR(25),
+	@SecurityManCUI AS NVARCHAR(25),
 	@Tag AS NVARCHAR(25),
 	@TknUser AS NVARCHAR(50)
 
@@ -41,70 +50,83 @@ BEGIN
 										FROM [dbo].[SenderReceiver] SR
 										WHERE [SR].[CUI] = @SenderReceiverCUI);
 
-					IF (@EXISTING_SR > 0)
-						BEGIN
-							BEGIN TRANSACTION
-							BEGIN TRY
+					BEGIN
+						BEGIN TRANSACTION
+						BEGIN TRY
 
-								-- Insert Tag record in LinehaulRoutePreparationCustomsMark
-								INSERT INTO [LinehaulRoutePreparationCustomsMark]
-											([LinehaulRoutePreparationId],
-											 [CustomsMarkSerie],
-											 [RowStatus],
-											 [TokenCreated],
-											 [DateCreated])
-									VALUES	(@IdLinehaulRoutePreparation,
-											 @Tag, 
-											 1, 
-											 @TknUser, 
-											 SYSDATETIME());
+							-- Insert Tag record in LinehaulRoutePreparationCustomsMark
+							INSERT INTO [LinehaulRoutePreparationCustomsMark]
+										([LinehaulRoutePreparationId],
+											[CustomsMarkSerie],
+											[RowStatus],
+											[TokenCreated],
+											[DateCreated])
+								VALUES	(@IdLinehaulRoutePreparation,
+											@Tag, 
+											1, 
+											@TknUser, 
+											SYSDATETIME());
 
-								-- Update LinehaulRoutePreparation set SenderReceiver and LinehaulStatus
-								UPDATE	[LinehaulRoutePreparation]
-								SET		[SenderReceiverId] = @EXISTING_SR,
-										[CatLinehaulStatusId] = (SELECT [CLS].[IdCatLinehaulStatus]
-																FROM [dbo].[CatLinehaulStatus] CLS
-																WHERE [CLS].[StatusName] = 'IN TRANSIT'),
-										[TokenUpdated] = @TknUser,
-										[DateUpdated] = SYSDATETIME()
-								WHERE	[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
+							-- Update LinehaulRoutePreparation set SenderReceiver and LinehaulStatus
+							UPDATE	[LinehaulRoutePreparation]
+							SET		[SenderReceiverId] = @EXISTING_SR,
+									[CatVehicleId] = @CatVehicleId,
+									[DriverCUI] = @DriverCUI,
+									[DriverName] = @DriverName,
+									[DriverPhone] = @DriverPhone,
+									[VehicleID] = @VehicleID,
+									[VehicleDescription] = @VehicleDescription,
+									[SecurityManName] = @SecurityManName,
+									[SecurityManPhone] = @SecurityManPhone,
+									[SecurityManCUI] =  @SecurityManCUI,
+									[CatLinehaulStatusId] = (SELECT [CLS].[IdCatLinehaulStatus]
+															FROM [dbo].[CatLinehaulStatus] CLS
+															WHERE [CLS].[StatusName] = 'IN TRANSIT'),
+									[TokenUpdated] = @TknUser,
+									[DateUpdated] = SYSDATETIME()
+							WHERE	[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
-								SELECT	[LRP].[IdLinehaulRoutePreparation],
-										[LRP].[StationDispatchedId],
-										[LRP].[CatLinehaulStatusId],
-										[LRP].[CatRouteId],
-										[LRP].[SenderReceiverId],
-										[LRP].[CatVehicleId],
-										[LRP].[DateLinehaulRoutePreparation],
-										[LRP].[ContainerQuantity],
-										[LRP].[GuideQuantity],
-										[LRP].[DryPieceQuantity],
-										[LRP].[ColdPieceQuantity],
-										[LRP].[RowStatus],
-										[LRP].[TokenCreated],
-										[LRP].[DateCreated]
-								FROM	[dbo].[LinehaulRoutePreparation] LRP
-								WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
+							SELECT	[LRP].[IdLinehaulRoutePreparation],
+									[LRP].[StationDispatchedId],
+									[LRP].[CatLinehaulStatusId],
+									[LRP].[CatRouteId],
+									COALESCE([LRP].[SenderReceiverId], 0) AS SenderReceiverId,
+									COALESCE([LRP].[CatVehicleId], 0) AS CatVehicleId,
+									COALESCE([LRP].[DriverCUI], '') AS DriverCUI,
+									COALESCE([LRP].[DriverName], '') AS DriverName,
+									COALESCE([LRP].[DriverPhone], '') AS DriverPhone,
+									COALESCE([LRP].[VehicleID], '') AS VehicleID,
+									COALESCE([LRP].[VehicleDescription], '') AS VehicleDescription,
+									COALESCE([LRP].[SecurityManName], '') AS SecurityManName,
+									COALESCE([LRP].[SecurityManPhone], '') AS SecurityManPhone,
+									COALESCE([LRP].[SecurityManCUI], '') AS SecurityManCUI,
+									[LRP].[DateLinehaulRoutePreparation],
+									[LRP].[ContainerQuantity],
+									[LRP].[GuideQuantity],
+									[LRP].[DryPieceQuantity],
+									[LRP].[ColdPieceQuantity],
+									[LRP].[RowStatus],
+									[LRP].[TokenCreated],
+									[LRP].[DateCreated]
+							FROM	[dbo].[LinehaulRoutePreparation] LRP
+							WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
-								IF (@@TRANCOUNT > 0)
-									COMMIT TRANSACTION;
-							END TRY
-							BEGIN CATCH
-								SELECT 0 [spResult],
-										ERROR_NUMBER() AS [ErrorNumber],
-										ERROR_SEVERITY() AS [ErrorSeverity],
-										ERROR_STATE() AS [ErrorState],
-										ERROR_PROCEDURE() AS [ErrorProcedure],
-										ERROR_LINE() AS [ErrorLine],
-										ERROR_MESSAGE() AS [ErrorMessage];
+							IF (@@TRANCOUNT > 0)
+								COMMIT TRANSACTION;
+						END TRY
+						BEGIN CATCH
+							SELECT 0 [spResult],
+									ERROR_NUMBER() AS [ErrorNumber],
+									ERROR_SEVERITY() AS [ErrorSeverity],
+									ERROR_STATE() AS [ErrorState],
+									ERROR_PROCEDURE() AS [ErrorProcedure],
+									ERROR_LINE() AS [ErrorLine],
+									ERROR_MESSAGE() AS [ErrorMessage];
 
-								ROLLBACK TRANSACTION
-							END CATCH
-						END
-					ELSE
-						BEGIN
-							SELECT 1 [spResult], 'No valid sender receiver' [spMessage];
-						END
+							ROLLBACK TRANSACTION
+						END CATCH
+					END
+				
 				END
 			ELSE 
 				-- No active record, it was already processed or it doesn't exist

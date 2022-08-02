@@ -7,7 +7,6 @@
 CREATE PROCEDURE [DBO].[spHM_GenerateLinehaulRoutePreparation] 
 	@StationId AS INT,
 	@RouteId AS INT,
-	@CatVehicleId AS INT,
 	@UserName AS VARCHAR(25),
 	@DateSelected AS DATETIME,
 	@TknUsr AS VARCHAR(50)
@@ -24,7 +23,6 @@ BEGIN
 						 FROM [dbo].[LinehaulRoutePreparation] LRP
 						 WHERE [LRP].[StationDispatchedId] = @StationId
 							AND [LRP].[CatRouteId] = @RouteId
-							AND [LRP].[CatVehicleId] = @CatVehicleId
 							AND DAY([LRP].[DateLinehaulRoutePreparation]) = DAY(@DateSelected) 
 							AND MONTH([LRP].[DateLinehaulRoutePreparation]) = MONTH(@DateSelected) 
 							AND YEAR([LRP].[DateLinehaulRoutePreparation]) = YEAR(@DateSelected));
@@ -35,10 +33,19 @@ BEGIN
 				[LRP].[StationDispatchedId],
 				[LRP].[CatLinehaulStatusId], 
 				[LRP].[CatRouteId],
-				[LRP].[SenderReceiverId],
-				[LRP].[CatVehicleId],
+				COALESCE([LRP].[SenderReceiverId], 0) AS SenderReceiverId,
+				COALESCE([LRP].[CatVehicleId], 0) AS CatVehicleId,
+				COALESCE([LRP].[DriverCUI], '') AS DriverCUI,
+				COALESCE([LRP].[DriverName], '') AS DriverName,
+				COALESCE([LRP].[DriverPhone], '') AS DriverPhone,
+				COALESCE([LRP].[VehicleID], '') AS VehicleID,
+				COALESCE([LRP].[VehicleDescription], '') AS VehicleDescription,
+				COALESCE([LRP].[SecurityManName], '') AS SecurityManName,
+				COALESCE([LRP].[SecurityManPhone], '') AS SecurityManPhone,
+				COALESCE([LRP].[SecurityManCUI], '') AS SecurityManCUI,
 				[LRP].[DateLinehaulRoutePreparation],
 				[LRP].[ContainerQuantity],
+				[LRP].[GuideQuantity],
 				[LRP].[DryPieceQuantity],
 				[LRP].[ColdPieceQuantity],
 				[LRP].[RowStatus],
@@ -55,7 +62,6 @@ BEGIN
 							([StationDispatchedId],
 							 [CatLinehaulStatusId],
 							 [CatRouteId],
-							 [CatVehicleId],
 							 [DateLinehaulRoutePreparation],
 							 [ContainerQuantity],
 							 [GuideQuantity],
@@ -69,7 +75,6 @@ BEGIN
 							  FROM [dbo].[CatLinehaulStatus] CLS
 							  WHERE [CLS].[StatusName] = 'GENERATED'), 
 							 @RouteId, 
-							 @CatVehicleId,
 							 @DateSelected, 
 							 0, 
 							 0, 
@@ -85,10 +90,19 @@ BEGIN
 						[LRP].[StationDispatchedId],
 						[LRP].[CatLinehaulStatusId], 
 						[LRP].[CatRouteId],
-						[LRP].[SenderReceiverId],
-						[LRP].[CatVehicleId],
+						COALESCE([LRP].[SenderReceiverId], 0) AS SenderReceiverId,
+						COALESCE([LRP].[CatVehicleId], 0) AS CatVehicleId,
+						COALESCE([LRP].[DriverCUI], 0) AS DriverCUI,
+						COALESCE([LRP].[DriverName], 0) AS DriverName,
+						COALESCE([LRP].[DriverPhone], 0) AS DriverPhone,
+						COALESCE([LRP].[VehicleID], 0) AS VehicleID,
+						COALESCE([LRP].[VehicleDescription], 0) AS VehicleDescription,
+						COALESCE([LRP].[SecurityManName], 0) AS SecurityManName,
+						COALESCE([LRP].[SecurityManPhone], 0) AS SecurityManPhone,
+						COALESCE([LRP].[SecurityManCUI], 0) AS SecurityManCUI,
 						[LRP].[DateLinehaulRoutePreparation],
 						[LRP].[ContainerQuantity],
+						[LRP].[GuideQuantity],
 						[LRP].[DryPieceQuantity],
 						[LRP].[ColdPieceQuantity],
 						[LRP].[RowStatus],
