@@ -117,6 +117,7 @@ BEGIN
               + CONVERT(VARCHAR, ISNULL(PieceWidth, 0)) + ',' + +'"height":' + CONVERT(VARCHAR, ISNULL(PieceHeight, 0))
               + ',' + +'"weight":' + CONVERT(VARCHAR, ISNULL(PieceWeight, 0)) + ',' + +'"amount":'
               + CONVERT(VARCHAR, ISNULL(Amount, 0)) + ', ' + '"currency":"' + COALESCE(Currency, '') + '",'
+			  +'"ParcelCode":"'+ COALESCE(ParcelCode,'')+'",'+
               + +'"fragil":' + CASE
                                    WHEN fragile = 1 THEN
                                        'true'
@@ -355,7 +356,8 @@ BEGIN
                                      + '"ProductInsuranceAmount":'
                                      + CONVERT(VARCHAR, CAST(ISNULL(dev.InsuranceAmount, 0) AS MONEY)) + ','
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
-                                     + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ','
+                                     + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
+									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
                                      + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
                                      + '",'
                                      +
