@@ -392,7 +392,7 @@ BEGIN
                        invd.dti_fk_orderSerie dti_fk_orderSerie,
                        invd.dti_fk_orderNumber dti_fk_orderNumber
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
+                    INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
                            AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
