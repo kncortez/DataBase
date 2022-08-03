@@ -180,7 +180,7 @@ BEGIN
                     PayTypeId = t.IdTypePayment,
                     TypeofInOutMoneyId = t.IdWayToPayment,
                     TimePlaId = t.IdTimePayment
-                FROM dbo.DeliveryOrderPaymentDetail pay
+                FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                     INNER JOIN @TblDeliveryOrdersList t
                         ON (
                                t.Guide_Number = pay.GuideNumber
@@ -382,7 +382,7 @@ BEGIN
                     INNER JOIN HubLogistics hl
                         ON hl.HubAbbreviation = dsc.Hub
                            AND hl.HubStatus = 1
-                    INNER JOIN DeliveryOrderPaymentDetail dop
+                    INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                         ON (
                                dop.GuideNumber = ord.Guide_Number
                                AND dop.GuideSerie = ord.Guide_Serie
@@ -413,7 +413,7 @@ BEGIN
                     FROM dbo.SchedulePickup SP
                         LEFT JOIN dbo.ServiceManagement SM
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
-                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop
+                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                             ON dop.IdHeaderRecolection = SP.SchedulePickupId
                         LEFT JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
                             ON DOR.Guide_Number = dop.GuideNumber
@@ -641,7 +641,7 @@ BEGIN
                         INNER JOIN @TempPrice TP
                             ON TP.GuideSerie = SD.Serie
                                AND TP.GuideNumber = SD.Number
-						INNER JOIN DeliveryOrderPaymentDetail dopd 
+						INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 							ON dopd.GuideSerie = SD.Serie 
 								AND dopd.GuideNumber = SD.Number
                     GROUP BY SM.IdServiceManagement,
@@ -664,14 +664,13 @@ BEGIN
 				tp.AmountToPay,
 				dopd.TimePlaId
 			FROM #Sender sd
-			INNER JOIN DeliveryOrderPaymentDetail dopd
+			INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 				ON dopd.GuideSerie = sd.Serie
 				AND dopd.GuideNumber = sd.Number
 			INNER JOIN SchedulePickup sp
 				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
 			LEFT JOIN ServiceManagement sm
 				ON sm.IdSchedulePickup = sp.SchedulePickupId
-				--OR
 			INNER JOIN @TempPrice tp 
 			ON tp.GuideSerie=sd.Serie 
 			AND tp.GuideNumber=sd.Number
@@ -757,7 +756,7 @@ BEGIN
             SET ShipmentCompleted = t.ShipmentCompleted,
                 RecollectionCompleted = t.RecollectionCompleted,
                 PaidGuide = t.PaidGuide
-            FROM dbo.DeliveryOrderPaymentDetail pay
+            FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
                            t.Guide_Number = pay.GuideNumber
