@@ -133,10 +133,7 @@ BEGIN
                            AND LG.Guide_Number = DOR.Guide_Number
                     LEFT JOIN dbo.DeliveryOrderDetail DORD WITH (NOLOCK)
                         ON DOR.Guide_Serie = DORD.Guide_Serie
-                           AND DOR.Guide_Number = DORD.Guide_Number
-                --LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-                --LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
-                --LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
+                           AND DOR.Guide_Number = DORD.Guide_Number					
                 GROUP BY LG.Guide_Number,
                          DORD.StatusOrderId
                 HAVING (
@@ -360,14 +357,11 @@ BEGIN
                     (
                         SELECT 1
                         FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                            JOIN CostDetail CD WITH (NOLOCK)
+                            INNER JOIN CostDetail CD WITH (NOLOCK)
                                 ON CD.IdCost = C.IdCost
                                    AND CD.IdTypeOfMoney IN ( 2, 6 )
                         WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50)))
                     );
-                --	AND LG.ItemNumber NOT IN (SELECT GuideNumber
-                --FROM [dbo].[ProcessedGuideCOD]
-                --WHERE [GuideNumber] = DO.Guide_Number AND GuideSerie = DO.Guide_Serie)
                 END;
 
                 DELETE #listGuidesTemp

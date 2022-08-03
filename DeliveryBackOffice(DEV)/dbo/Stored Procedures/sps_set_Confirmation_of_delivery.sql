@@ -68,14 +68,14 @@ BEGIN
 					SELECT 
 						@COD =  ord.Collect_OnDelivery
 						, @IdCustomer = cus.IdCustomer
-					FROM DeliveryBackOffice.dbo.DeliveryOrder ord
+					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
 							LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = ord.Sender_ID
 							LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
 					WHERE ord.Guide_Serie = @Guide_Serie AND  ord.Guide_Number = @Guide_Number
 
 					SELECT 
 						@COLLECT =  1
-					FROM DeliveryBackOffice.dbo.DeliveryOrder ord
+					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
 							LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = ord.Sender_ID
 							LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
 					WHERE ord.Guide_Serie = @Guide_Serie AND  ord.Guide_Number = @Guide_Number 
@@ -124,41 +124,6 @@ BEGIN
 							,@IdCustomer)
 
 					END
-					--ELSE IF EXISTS (SELECT 1
-					--FROM DeliveryBackOffice.dbo.DeliveryOrder ord
-					--INNER JOIN dbo.DeliveryOrderPaymentDetail DOP 
-					--ON ord.Guide_Serie = DOP.GuideSerie AND ord.Guide_Number = DOP.GuideNumber
-					--		LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = ord.Sender_ID
-					--		LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
-					--WHERE ord.Guide_Serie = @Guide_Serie AND  ord.Guide_Number = @Guide_Number 
-					--AND ord.IsCollect = 'false'  and DOP.TimePlaId = 2)
-					--BEGIN
-					--INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
-					--	   (GuideSerie
-					--	   ,GuideNumber
-					--	   ,CourierManId
-					--	   ,Date
-					--	   ,BatchCODId
-					--	   ,BatchCODIdCommission
-					--	   ,DataOriginId
-					--	   ,Notificated
-					--	   ,Token
-					--	   ,CustomerId)
-					--	VALUES 
-					--		(@Guide_Serie
-					--		,@Guide_Number
-					--		,@CourierId
-					--		,GETDATE()
-					--		,NULL
-					--		,NULL
-					--		,@CatModuleId
-					--		,0
-					--		,@TokenId
-					--		,@IdCustomer)
-
-					--END
-
-
 				END
 				ELSE
 					SET @ValidateOperation = -2
@@ -188,7 +153,7 @@ BEGIN
 					@ValidateOperation AS 'NumTransferID'
 			 
 				 select top 10 Guide_Serie + CAST(Guide_Number as varchar) Guide,Ticket_Number Ticket, Receiver_FirstName + ' '+ Receiver_LastName Name, Courier_Route Route, convert(varchar, Dispatched_Date, 103) RouteDate 
-				 from DeliveryBackOffice.dbo.DeliveryOrder
+				 from DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
 				where Guide_Serie = @Guide_Serie and Guide_Number = @Guide_Number
 
 				print 'REGISTER EXISTS ' + CAST(COALESCE(@ValidateOperation,0) as varchar)

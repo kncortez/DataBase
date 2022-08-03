@@ -200,10 +200,6 @@ BEGIN
             IF (@IsCOD = 'true')
             BEGIN
 
-                --BEGIN TRANSACTION;
-
-                --BEGIN TRY
-
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET StatusOrderId = 24
@@ -221,26 +217,6 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
-
-
-            ---------------------
-            --END TRY
-            --BEGIN CATCH
-
-            --    SELECT 'Error al actualizar el estado de la guia';
-
-            --    ROLLBACK TRANSACTION;
-
-            --END CATCH;
-
-            --IF @@TRANCOUNT > 0
-            --BEGIN
-
-            --    COMMIT TRANSACTION;
-
-            --    SELECT 'estado actualizado exitosamente';
-
-            --END;
 
             END;
 
@@ -289,9 +265,6 @@ BEGIN
         UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
         SET User_Received_COD = @Token,
             Date_Received_COD = GETDATE(),
-
-            --Pieces_Dry_Received = @PiecesDryReceived,
-            --Pieces_Cold_Received = @PiecesColdReceived,
             Guides_Received_COD = @GuideQuantityCOD,
             Route_Received_COD = GETDATE()
         WHERE ID = @IdDeliveryOrderBySettlement;
