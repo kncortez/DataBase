@@ -258,7 +258,7 @@ BEGIN
                 ,TokenUpdated = @TokenId
                 ,DateUpdated = GETDATE()
             FROM ServiceManagement sm
-            INNER JOIN DeliveryOrderPaymentDetail dopd
+            INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                 ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
             INNER JOIN @ItemsTable it
                 ON dopd.GuideNumber = it.Guide_Number

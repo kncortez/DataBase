@@ -145,7 +145,7 @@ BEGIN
 
 					-- se obtiene el id del courierman
 					SELECT TOP 1 @CourierId = ID_Courier 
-					FROM [dbo].[DeliveryAttempt] 
+					FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
 					WHERE [Guide_Serie] = @GuideSerie
 						AND [Guide_Number] = @GuideNumber
 					ORDER BY [Date_Created] DESC
@@ -181,7 +181,7 @@ BEGIN
 					FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)						
 						LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = do.Sender_ID
 						LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-						INNER JOIN dbo.DeliveryOrderPaymentDetail DOP 
+						INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
 					ON do.Guide_Serie = DOP.GuideSerie AND do.Guide_Number = DOP.GuideNumber
 		
 					WHERE do.[Guide_Number] = @GuideNumber

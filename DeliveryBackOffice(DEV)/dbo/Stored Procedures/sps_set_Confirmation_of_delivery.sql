@@ -25,13 +25,13 @@ BEGIN
 	BEGIN TRANSACTION
 		BEGIN TRY
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
-			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId  OR StatusOrderId = 14))
+			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId  OR StatusOrderId = 14))
 
 			IF (@Times = 0)
 			BEGIN
 
 				SET @Datetime = (SELECT TOP 1 DateCreated 
-								FROM DeliveryBackOffice.dbo.DeliveryOrderDetail 
+								FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
 								WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number 
 								ORDER BY DateCreated DESC
 				)
@@ -95,7 +95,7 @@ BEGIN
 												WHERE ModName = 'Confirmación de Entrega'),0)
 						-- Obtener ID de Courier
 						SELECT TOP 1 @CourierId = ID_Courier 
-						FROM DeliveryBackOffice.dbo.DeliveryAttempt 
+						FROM DeliveryBackOffice.dbo.DeliveryAttempt WITH (NOLOCK)
 						WHERE Guide_Serie = @Guide_Serie
 							AND Guide_Number = @Guide_Number
 						ORDER BY Date_Created DESC
