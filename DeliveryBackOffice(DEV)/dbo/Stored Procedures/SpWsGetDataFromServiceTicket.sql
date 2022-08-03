@@ -33,6 +33,7 @@ BEGIN TRY
 	 DECLARE @Serie AS VARCHAR(2) = SUBSTRING(@TrackingNumber,1,2)
 	 DECLARE @NUMBER AS VARCHAR(20) = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
 	 DECLARE @COD AS DECIMAL (18,2)
+	 DECLARE @COLLECT AS BIT
 
 	 SELECT @TotalWeight = SUM(DOP.PieceWeight)
 	       ,@TotalValue  = SUM(DOP.Amount) 
@@ -46,12 +47,14 @@ BEGIN TRY
 	 WHERE DOP.GuideSerie = SUBSTRING(@TrackingNumber,1,2)
 		   AND DOP.GuideNumber = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
 
-     SELECT @IdCost = C.IdCost  
+     SELECT TOP 1 @IdCost = C.IdCost  
 	 FROM  DBO.Cost C 
 	 WHERE C.ProductNumber = @TrackingNumber
+	 ORDER BY DateCreated DESC
 
-     SELECT
-	       @COD = ISNULL(do.Collect_OnDelivery,0) 
+     SELECT 
+	       @COD = ISNULL(do.Collect_OnDelivery,0) ,
+		   @COLLECT =do.IsCollect
      FROM dbo.DeliveryOrder do 
 	 WHERE do.Collect_OnDelivery > 0 
 	       AND Guide_Serie = @Serie
@@ -59,6 +62,22 @@ BEGIN TRY
 
 	 DECLARE @IsCard AS BIT = (SELECT TOP 1 1 FROM dbo.CreditCardTransactionByCustomer WITH (NOLOCK) WHERE OrderNumber = @TrackingNumber AND ReasonCode = 1)
 
+
+	 IF (@COLLECT = 1)
+	 BEGIN
+	 EXEC [dbo].[spws_revalue_guide]
+										@GuideSerie  = @Serie
+										,@GuideNumber =@NUMBER
+										,@CodeApp = ''
+										,@Format =''
+										,@CalculateTaxes = 'true' -- Dado a nuevas tarifas, no cálcular impuestos
+										,@IdModule = 1
+										,@SetUpdate = 'true' -- Actualizar registros
+										,@Token = @Token
+								
+
+					SELECT  TOP 1 @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber ORDER BY DateCreated DESC
+	 END
 		 
 
 
@@ -78,7 +97,7 @@ BEGIN TRY
 								,@Token = @Token
 								,@ParIsCreditCard =1
 
-			SELECT @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber
+			SELECT TOP 1 @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber ORDER BY DateCreated DESC
 		END
 		ELSE
 			BEGIN
@@ -93,7 +112,7 @@ BEGIN TRY
 										,@Token = @Token
 								
 
-					SELECT @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber
+					SELECT TOP 1 @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber AND C.IdModule <>1 ORDER BY DateCreated DESC
 			END
 	END
 
@@ -124,12 +143,13 @@ BEGIN TRY
 		 ,COALESCE( Receiver_FirstName,'') + ' ' + COALESCE(Receiver_LastName ,'')  FromName 
 		 ,Receiver_Phone FromPhone
 		 ,COALESCE( Receiver_Email,'') FromEmail					
-		 ,Receiver_Address FromAddress
+		 ,SUBSTRING(Receiver_Address,1,130) FromAddress
+		 ,(Select SUBSTRING(Name,1,20) From splitstring(Receiver_Address,' '))
 		 ,PRV2.ProvinceDescription  FromCity					
 		 ,COALESCE(Sender_FirstName,'') + ' ' + COALESCE(Sender_LastName,'') ToName 
 		 ,Sender_Phone ToPhone
 		 ,COALESCE(  rgu.UsrEmail,'') ToEmail					
-		 ,Sender_Address ToAddress
+		 ,SUBSTRING(Sender_Address,1,130) ToAddress
 		 ,PRV.ProvinceDescription  ToCity	 
 	 FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 		 LEFT  JOIN DeliveryBackOffice.dbo.Account ACC 
@@ -167,6 +187,8 @@ BEGIN TRY
 						ON C.IdCost = BOP.IdCost
 					WHERE BOP.RowStatus=1 AND BOP.Amount<>0
 						AND C.ProductNumber = @TrackingNumber
+						AND BOP.IdCost =@IdCost
+						
 						UNION ALL
 					SELECT 
 					@TrackingNumber AS ProductNumber,
@@ -184,6 +206,8 @@ BEGIN TRY
 					ON C.IdCost = BOP.IdCost
 				WHERE BOP.RowStatus=1 AND BOP.Amount<>0
 					AND C.ProductNumber = @TrackingNumber
+					AND BOP.IdCost =@IdCost
+					
 		END
 		
 	 END
@@ -213,14 +237,14 @@ BEGIN TRY
 		 ,COALESCE( Receiver_FirstName,'') + ' ' + COALESCE(Receiver_LastName ,'')  FromName 
 		 ,Receiver_Phone FromPhone
 		 ,COALESCE( Receiver_Email,'') FromEmail					
-		 ,Receiver_Address FromAddress
+		 ,SUBSTRING(Receiver_Address,1,130) FromAddress
 		 ,PRV2.ProvinceDescription  FromCity					
 		 ,CASE WHEN cu.IdCustomerType = 1 THEN CASE WHEN DOR.IsReturn = 1 THEN COALESCE(DOR.Sender_FirstName,'')
 	      ELSE COALESCE(vpc.DescriptionOfClient,'') + ' ' + COALESCE(Sender_LastName,'') END
 	      ELSE CASE WHEN DOR.IsReturn = 1 THEN COALESCE(DOR.Sender_FirstName,'') ELSE COALESCE (cu.Name,'') END END ToName 
 		 ,Sender_Phone ToPhone
 		 ,COALESCE(  DOR.Sender_Mail,'') ToEmail					
-		 ,Sender_Address ToAddress
+		 ,SUBSTRING(Sender_Address,1,130) ToAddress
 		 ,PRV.ProvinceDescription  ToCity 
 	 FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
 			 LEFT JOIN DeliveryBackOffice.dbo.Township TOW 
@@ -257,6 +281,8 @@ BEGIN TRY
 						ON C.IdCost = BOP.IdCost
 					WHERE BOP.RowStatus=1 AND BOP.Amount<>0
 						AND C.ProductNumber = @TrackingNumber
+					    AND BOP.IdCost =@IdCost
+						
 						UNION ALL
 					SELECT 
 					@TrackingNumber AS ProductNumber,
@@ -274,12 +300,15 @@ BEGIN TRY
 					ON C.IdCost = BOP.IdCost
 				WHERE BOP.RowStatus=1 AND BOP.Amount<>0
 					AND C.ProductNumber = @TrackingNumber
+					AND BOP.IdCost =@IdCost
+					
+
 		END
 
 	 END
 
 
-
+	 
 
 END TRY
 BEGIN CATCH
