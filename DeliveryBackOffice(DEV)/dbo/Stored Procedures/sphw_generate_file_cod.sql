@@ -1,13 +1,10 @@
-﻿--exec sphw_generate_file_cod 31,0,1
-
+﻿
 CREATE PROCEDURE [dbo].[sphw_generate_file_cod]
     @IdBank INT,
     @BatchCODId INT,
     @CatConceptCODId INT = 2
 AS
 BEGIN
-    --DECLARE @IdBank INT = 3; -- 31 33 5 3
-    --DECLARE @BatchCODId INT = 17; -- 19 20 18 17
     DECLARE @BANKID INT =
             (
                 SELECT Id_bank FROM DeliveryBank WHERE Name = 'BANCO DE DESARROLLO RURAL'
@@ -168,7 +165,6 @@ BEGIN
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-        --AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
         GROUP BY cda.AccountNumber,
                  bd.AccountNumber,
                  bd.AccountName,
@@ -200,13 +196,10 @@ BEGIN
                           ON bd.GuideSerie = PGD.GuideSerie
                              AND bd.GuideNumber = PGD.GuideNumber
                   WHERE
-                      --bd.BatchCODId = @BatchCODId
-                      --AND 
                       bd.Excluded = @Excluded
                       AND bd.CatConceptCODId = @CatConceptCODId
                       AND ISNULL(bd.CommissionNotified, 0) = 0
                       AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-                      -- AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
                       AND PGD.BatchCODId IS NOT NULL
                       AND PGD.BatchCODIdCommission IS NOT NULL
                       AND bd.CommissionId IS NULL
@@ -411,13 +404,10 @@ BEGIN
                    AND invh.dti_fk_orderNumber = bd.GuideNumber
         WHERE PGD.RowStatus = 1
               AND
-            --bd.BatchCODId = @BatchCODId
-            --AND 
             bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-        --AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
         ORDER BY bd.CreditDate DESC;
     END;
     --============================= FORMATO BAC ENVIOS COLLECT INICIO ====================================
@@ -562,7 +552,6 @@ BEGIN
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-        --AND bd.CollectBatch = 'TRUE'
         GROUP BY cda.AccountNumber,
                  bd.AccountNumber,
                  bd.AccountName,
@@ -596,13 +585,10 @@ BEGIN
                       SELECT bd.IdBatchDetailCOD
                       FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
                       WHERE
-                          --bd.BatchCODId = @BatchCODId
-                          --AND 
                           bd.Excluded = @Excluded
                           AND bd.CatConceptCODId = @CatConceptCODId
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-                          --AND bd.CollectBatch = 'TRUE'
                           AND bd.CollectId IS NULL
                   )
                   AND CollectId IS NULL;
@@ -621,14 +607,11 @@ BEGIN
                       SELECT bd.IdBatchDetailCOD
                       FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
                       WHERE
-                          --bd.BatchCODId = @BatchCODId
-                          --AND 
                           bd.Excluded = @Excluded
                           AND bd.CatConceptCODId = @CatConceptCODId
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
                           AND bd.RecolectionId IS NULL
-                  --AND bd.RecolectionBatch = 'TRUE'
                   )
                   AND RecolectionId IS NULL;
         END;
@@ -838,7 +821,7 @@ BEGIN
                        invd.dti_fk_orderSerie dti_fk_orderSerie,
                        invd.dti_fk_orderNumber dti_fk_orderNumber
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
+                    INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
                            AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
@@ -850,17 +833,10 @@ BEGIN
                    AND invh.dti_fk_orderNumber = bd.GuideNumber
         WHERE PGD.RowStatus = 1
               AND
-            --bd.BatchCODId = @BatchCODId
-            --AND 
             bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
-        --AND
-        --(
-        --    bd.CollectBatch = 'TRUE'
-        --    OR bd.RecolectionBatch = 'TRUE'
-        --)
         ORDER BY bd.CreditDate DESC;
     END;
     --============================= FORMATO BAC ENVIOS COLLECT FIN =======================================
@@ -1007,7 +983,6 @@ BEGIN
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODDeposit
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-        --AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
         UNION
         --------ACUMULADO
         SELECT REPLACE(
@@ -1152,7 +1127,6 @@ BEGIN
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODDeposit
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-        --AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
         GROUP BY pgd.CustomerId,
                  cda.AccountNumber,
                  bd.AccountNumber,
@@ -1252,18 +1226,12 @@ BEGIN
                    AND btd.[GuideNumber] = pg.[GuideNumber]
             LEFT JOIN [dbo].[SenderReceiver] sr WITH (NOLOCK)
                 ON pg.CourierManId = sr.ID
-            --LEFT JOIN [dbo].[BatchDetailCOD] btc WITH(NOLOCK)
-            --    ON btc.GuideSerie = btd.GuideSerie
-            --       AND btc.GuideNumber = btd.GuideNumber
-            --       AND btc.CatConceptCODId = @EnabledRow
             LEFT JOIN DeliveryBackOffice.dbo.Customer cust WITH (NOLOCK)
                 ON pg.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = @EnabledRow
         WHERE btd.CatConceptCODId IN ( 2 )
               AND bt.RowStatus = @EnabledRow
-              --AND pg.RowStatus = @EnabledRow
               AND btd.RowStatus = @EnabledRow
-              --AND btc.RowStatus = @EnabledRow
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
@@ -1352,18 +1320,12 @@ BEGIN
                    AND btd.[GuideNumber] = pg.[GuideNumber]
             LEFT JOIN [dbo].[SenderReceiver] sr WITH (NOLOCK)
                 ON pg.CourierManId = sr.ID
-            --LEFT JOIN [dbo].[BatchDetailCOD] btc WITH(NOLOCK)
-            --    ON btc.GuideSerie = btd.GuideSerie
-            --       AND btc.GuideNumber = btd.GuideNumber
-            --       AND btc.CatConceptCODId = @EnabledRow
             LEFT JOIN DeliveryBackOffice.dbo.Customer cust WITH (NOLOCK)
                 ON pg.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = @EnabledRow
         WHERE btd.CatConceptCODId IN ( 2 )
               AND bt.RowStatus = @EnabledRow
-              --AND pg.RowStatus = @EnabledRow
               AND btd.RowStatus = @EnabledRow
-              --AND btc.RowStatus = @EnabledRow
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
@@ -1498,14 +1460,9 @@ BEGIN
                 ON pg.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = @EnabledRow
         WHERE
-            --AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI
-            --CONVERT(DATE, bt.[Date]) = @Date
-            --AND 
             btd.CatConceptCODId IN ( 2 )
             AND bt.RowStatus = @EnabledRow
-            --AND pg.RowStatus = @EnabledRow
             AND btd.RowStatus = @EnabledRow
-            --AND btc.RowStatus = @EnabledRow
             AND btd.BatchCODId = @BatchCODId
             AND btd.Excluded = @Excluded
             AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
@@ -1634,9 +1591,7 @@ BEGIN
                    AND cust.RowSatus = @EnabledRow
         WHERE btd.CatConceptCODId IN ( 2 )
               AND bt.RowStatus = @EnabledRow
-              --AND pg.RowStatus = @EnabledRow
               AND btd.RowStatus = @EnabledRow
-              --AND btc.RowStatus = @EnabledRow
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
@@ -1695,7 +1650,6 @@ BEGIN
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
-        --AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
         UNION
         -----------ACUMULADO
         SELECT RIGHT('000'
@@ -1724,7 +1678,6 @@ BEGIN
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
-        --AND ISNULL(bd.CODBatch,'TRUE') = 'TRUE'
         GROUP BY pgd.CustomerId,
                  bd.CatAccountTypeCODId,
                  bd.AccountNumber,
@@ -1864,8 +1817,6 @@ BEGIN
                  cda.CatAccountTypeCODId,
                  btd.AccountNumber,
                  cda.AccountNumber
-
-        --ORDER BY btd.Reference
         ;
     END;
 END;
