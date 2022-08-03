@@ -392,7 +392,7 @@ BEGIN
                        invd.dti_fk_orderSerie dti_fk_orderSerie,
                        invd.dti_fk_orderNumber dti_fk_orderNumber
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
+                    INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
                            AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
@@ -1182,7 +1182,7 @@ BEGIN
                           )
                     ) 'CUENTA CREDITO',
                btd.Amount 'MONTO'
-        FROM [dbo].[BatchDetailCOD] btd
+        FROM [dbo].[BatchDetailCOD] btd WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco WITH (NOLOCK)
                 ON cco.IdCatConceptCOD = btd.CatConceptCODId
                    AND cco.RowStatus = 1
@@ -1635,7 +1635,7 @@ BEGIN
                                   bd.GuideNumber
                               )), 100) 'Concepto',
                Amount 'Valor Q.'
-        FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
+        FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD pgd
                 ON bd.GuideSerie = pgd.GuideSerie
                    AND bd.GuideNumber = pgd.GuideNumber
@@ -1663,7 +1663,7 @@ BEGIN
                             CONCAT(' Ref ', CAST(bd.BatchCODId AS VARCHAR(300))))
                        ), 100) 'Concepto',
                SUM(Amount) 'Valor Q.'
-        FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
+        FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD pgd
                 ON bd.GuideSerie = pgd.GuideSerie
                    AND bd.GuideNumber = pgd.GuideNumber
@@ -1727,7 +1727,7 @@ BEGIN
                END 'TIPO DE CUENTA DESTINO',
                btd.Amount 'MONTO A PAGAR',
                CONCAT(btd.GuideSerie, btd.GuideNumber) 'GUIA'
-        FROM BatchDetailCOD btd
+        FROM BatchDetailCOD btd WITH (NOLOCK)
             INNER JOIN BatchCOD bt
                 ON bt.IdBatchCOD = btd.BatchCODId
             LEFT JOIN CatConceptCOD cco
@@ -1789,7 +1789,7 @@ BEGIN
                END 'TIPO DE CUENTA DESTINO',
                SUM(btd.Amount) 'MONTO A PAGAR',
                MAX(CONCAT(do.Guide_Serie, do.Guide_Number)) 'GUIA'
-        FROM BatchDetailCOD btd
+        FROM BatchDetailCOD btd WITH (NOLOCK)
             INNER JOIN BatchCOD bt
                 ON bt.IdBatchCOD = btd.BatchCODId
             LEFT JOIN CatConceptCOD cco
