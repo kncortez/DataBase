@@ -65,7 +65,7 @@ BEGIN
 		WHERE 
 		CONVERT(DATE, serv.DateCreated) BETWEEN CONVERT(DATE, GETDATE()-90) AND CONVERT( DATE, GETDATE()) AND 
 		serv.StatusOrderId NOT IN( 7,15,5,22) AND -- ocultar los servicios anulados		
-		(serv.Guide_Number = @Guide)  OR
+		(CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide)  OR
 		(serv.Guide_Serie + CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide) 		 
 END
 ELSE IF (@Sender IS NOT NULL AND LEN(@Sender) > 0)
@@ -264,8 +264,8 @@ BEGIN
 		WHERE 
 		CONVERT(DATE, serv.DateCreated) BETWEEN CONVERT(DATE, GETDATE()-90) AND CONVERT( DATE, GETDATE()) AND 
 		serv.StatusOrderId NOT IN( 7,15,5,22) AND -- ocultar los servicios anulados		
-		(serv.Guide_Number = @Guide)  OR
-		(serv.Guide_Serie + CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide) 
+		(CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide)  OR
+		(serv.Guide_Serie + CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide) 	
 END
 	
 END
