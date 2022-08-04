@@ -24,17 +24,6 @@
 -- Description:	< Adición de campos para alertas de servicios >
 -- =============================================
 
-/*
-EXEC [dbo].[spws_get_daily_route]
-@IdCourier = 3
-,@DateRoute = '2021-09-09'
-*/
-
---EXEC [dbo].[spws_get_daily_route]
---@IdCourier = 752
---,@DateRoute = '2022-05-12'
-
-
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
     @Token VARCHAR(200) = '',
     @IdCourier BIGINT,
@@ -51,8 +40,8 @@ BEGIN
     DECLARE @jsonResultErrror NVARCHAR(MAX);
 
     DECLARE @jsonToken NVARCHAR(MAX);
-    DECLARE @TokenAct INT = 1; --(select top 1 RowStatus from LogTokenPOD where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
-    DECLARE @hourtoken INT = 5; --(select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD where LogTokenPOD  LIKE '%' + @Token + '%')
+    DECLARE @TokenAct INT = 1; 
+    DECLARE @hourtoken INT = 5; 
     DECLARE @IdDeliveryOption AS INT; --FDAPI-337
 
     -- PARA VALIDAR TIPO DE SERVICIO PARA ALERTAS
@@ -95,8 +84,7 @@ BEGIN
 	SELECT DOA.AlertDescription,
            DOA.AlertTypeId,
            DOA.DateCreated,
-           SP.SchedulePickupId --ISNULL(COUNT(DOA.GuideNumber), 0)
-   -- INTO #TmpAlertList
+           SP.SchedulePickupId 
     FROM [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.ServiceManagement SMA WITH (NOLOCK)
             ON SMA.IdSchedulePickup = SP.SchedulePickupId
@@ -301,6 +289,8 @@ BEGIN
                                     "ServiceType":"'
                                                           + 'Delivery' + '",' + '"CodeOfReference":"'
                                                           + CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0)) + '",'
+														  + '"DeliveryOption":"' 
+														  + CONVERT( VARCHAR,ISNULL(DOR.IdDeliveryOption,0))  + '",' +
                                                           + '"Id":"'
                                                           + ISNULL(
                                                                       CONVERT(
@@ -618,8 +608,6 @@ BEGIN
                                     GROUP BY JDRS.JsonDataRow
                                 ) JDRS2
                                 ORDER BY topOrder ASC
-
-                                --and CAST(DAT.Date_Created AS DATE) = CAST(@DateRoute AS DATE)
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -632,32 +620,6 @@ BEGIN
 
         IF OBJECT_ID('tempdb.dbo.#GuideService', 'U') IS NOT NULL
             DROP TABLE #GuideService;
-
-
-
-
-        --SELECT smg.IdServiceManagement,
-        --       dpc.GuideSerie,
-        --       dpc.GuideNumber,
-        --       smg.ServiceStatusId,
-        --       @IdCourier IdPuCourrier
-        --INTO #GuideService
-        --FROM dbo.SettlementByPickup stp WITH (NOLOCK)
-        --    LEFT JOIN dbo.SettlementByPickupDetail std WITH (NOLOCK)
-        --        ON std.SettlementByPickupId = stp.Id
-        --    LEFT JOIN dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
-        --        ON dpc.GuideSerie = std.GuideSerie
-        --           AND dpc.GuideNumber = std.GuideNumber
-        --    LEFT JOIN dbo.PieceByService pbs WITH (NOLOCK)
-        --        ON pbs.GuidePieceId = dpc.GuidePiece
-        --    LEFT JOIN dbo.ServiceManagement SMG WITH (NOLOCK)
-        --        ON SMG.IdServiceManagement = pbs.ServiceManagmentId
-        --    LEFT JOIN dbo.RouteAssigment ras WITH (NOLOCK)
-        --        ON ras.IdRouteAssigment = SMG.IdDlRouteAssigment
-        --WHERE stp.IdCourier = @IdCourier
-        --      AND CONVERT(DATE, stp.DateCreated) = CONVERT(DATE, @DateRoute)
-        --      AND SMG.SubTypeServiceManagmentId = 3; --Solo filtro devoluciones
-
 
         CREATE TABLE #GuideService
         (
@@ -682,7 +644,6 @@ BEGIN
                dpc.GuideNumber,
                SMG.ServiceStatusId,
                @IdCourier IdPuCourrier
-       -- INTO #GuideService
         FROM dbo.SettlementByPickup stp WITH (NOLOCK)
             INNER JOIN dbo.SettlementByPickupDetail std WITH (NOLOCK)
                 ON std.SettlementByPickupId = stp.Id
@@ -693,8 +654,6 @@ BEGIN
                 ON pbs.GuidePieceId = dpc.GuidePiece
             INNER JOIN dbo.ServiceManagement SMG WITH (NOLOCK)
                 ON SMG.IdServiceManagement = pbs.ServiceManagmentId
-        --LEFT JOIN dbo.RouteAssigment ras WITH (NOLOCK)
-        --    ON ras.IdRouteAssigment = SMG.IdDlRouteAssigment
         WHERE stp.IdCourier = @IdCourier
               AND CONVERT(DATE, stp.DateCreated) = CONVERT(DATE, @DateRoute)
               AND SMG.SubTypeServiceManagmentId = 3; --Solo filtro devoluciones
@@ -939,35 +898,6 @@ BEGIN
         ---------------------------------------------End Retuns Services --------------------------------------------------		
 
 
-        /*
-							select 
-									',{"CodeOfReference":"' + convert( varchar,	isnull(vpc.CodeOfReference,0))  + '",' +
-									'"IdPickup":"' +  isnull( convert(varchar,spk.SchedulePickupId) , '-1') + '",' +
-									'"ServiceManagementId":"' +  isnull( convert(varchar,sma.IdServiceManagement) , 'N/A') + '",' +
-									'"Sender":"' +  isnull(isnull(spk.SenderName,vpc.DescriptionOfClient), 'N/A') + '",' +
-									'"Address":"' +  concat( ISNULL( isnull(spk.AddressPickup , vpc.Address) ,'N/A'), ' ' , vpc.Town , ' ' , vpc.Department) + '",' +
-									'"Phone":"' +  isnull( isnull(spk.SenderPhone , vpc.Phone)  ,'N/A') + '",' +
-									'"Pieces":"' + CONVERT(varchar,isnull((select (sum(isnull(ord.Pieces_Dry,0))+ sum(isnull(ord.Pieces_Cold,0))) pieces
-																from dbo.DeliveryOrderPaymentDetail pay
-																	left join dbo.DeliveryOrder ord on ord.Guide_Serie = pay.GuideSerie and ord.Guide_Number = pay.GuideNumber
-																where pay.IdHeaderRecolection = spk.SchedulePickupId),0))  + '",' +
-									'"ScheduleStart":"' +    substring( CONVERT(varchar, spk.StartDate  ,8),0,6)  + '",' +
-									'"ScheduleEnd":"' +     substring(CONVERT(varchar, spk.EndDate  ,8),0,6)   + '",' +
-									'"Photo":"' + '#'  + '",' +
-									'"Latitude":"' + '0'  + '",' +
-									'"Longitude":"' + '0'  + '",' +
-									'"Precision":"' + '0'  +  '",' +
-									'"Status":"' + convert(varchar,isnull(sma.ServiceStatusId,1))  +
-										+ '"}'
-									from dbo.RouteAssigment ras
-									left join dbo.ServiceManagement sma on sma.IdPuRouteAssigment = ras.IdRouteAssigment
-									left join dbo.SchedulePickup spk on spk.SchedulePickupId = sma.IdSchedulePickup
-									left join dbo.VisitPointClient vpc on vpc.CodeOfReference = spk.SenderId 
-										where ras.IdCurrierMan= @IdCurrier and ras.DateOfRoute = @DateRoute
-					
-								FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,''
-											) )*/
         PRINT CONCAT('@jsonResult3', ISNULL(@jsonResult3, 'hay un valor null'));
         IF @jsonResult IS NULL
            AND @jsonResult2 IS NULL
@@ -1023,12 +953,6 @@ BEGIN
 
         IF OBJECT_ID('tempdb.dbo.#GuideService', 'U') IS NOT NULL
             DROP TABLE #GuideService;
-
-    --select ('[' + COALESCE(@jsonResult,'') 
-    --+ CASE WHEN @jsonResult IS NOT NULL THEN ',' ELSE '' END 
-    --+ CASE WHEN @jsonResult2 IS NOT NULL THEN ',' ELSE ''',' END    
-    --+ COALESCE(@jsonResult3,'') + ']') jsonResult
-
 
 
     END;
