@@ -36,10 +36,10 @@ BEGIN
 	BEGIN TRANSACTION
 		BEGIN TRY
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
-			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId  OR StatusOrderId = 14))
+			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId  OR StatusOrderId = 14))
 
 			 
-       IF(NOT EXISTS (select top 1 1 from dbo.DeliveryOrder 
+       IF(NOT EXISTS (select top 1 1 from dbo.DeliveryOrder WITH (NOLOCK)
 										where IdDeliveryOption = 3
 										  AND Guide_Serie=@Guide_Serie AND Guide_Number= @Guide_Number)
 		  )
@@ -48,7 +48,7 @@ BEGIN
 			BEGIN
 
 				SET @Datetime = (SELECT TOP 1 DateCreated 
-								FROM DeliveryBackOffice.dbo.DeliveryOrderDetail 
+								FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
 								WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number 
 								ORDER BY DateCreated DESC
 				)
@@ -85,14 +85,14 @@ BEGIN
 					SELECT 
 						@COD =  ord.Collect_OnDelivery
 						, @IdCustomer = cus.IdCustomer
-					FROM DeliveryBackOffice.dbo.DeliveryOrder ord
+					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
 							LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = ord.Sender_ID
 							LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
 					WHERE ord.Guide_Serie = @Guide_Serie AND  ord.Guide_Number = @Guide_Number
 
 					SELECT 
 						@COLLECT =  1
-					FROM DeliveryBackOffice.dbo.DeliveryOrder ord
+					FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
 							LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = ord.Sender_ID
 							LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
 					WHERE ord.Guide_Serie = @Guide_Serie AND  ord.Guide_Number = @Guide_Number 
@@ -102,13 +102,13 @@ BEGIN
 					IF (@COD > 0 OR @COLLECT = 1) AND 
 						NOT EXISTS 
 							(SELECT 1
-							FROM DeliveryBackOffice.dbo.ProcessedGuideCOD
+							FROM DeliveryBackOffice.dbo.ProcessedGuideCOD WITH (NOLOCK)
 							WHERE GuideSerie = @Guide_Serie AND GuideNumber = @Guide_Number
 						)  AND NOT EXISTS
                     (
                         SELECT 1
                         FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                            JOIN CostDetail CD WITH (NOLOCK)
+                           INNER JOIN CostDetail CD WITH (NOLOCK)
                                 ON CD.IdCost = C.IdCost
                                    AND CD.IdTypeOfMoney IN ( 2, 6 )
                         WHERE C.ProductNumber = CONCAT(@Guide_Serie, CAST(@Guide_Number AS VARCHAR(50)))
@@ -121,7 +121,7 @@ BEGIN
 												WHERE ModName = 'Confirmación de Entrega'),0)
 						-- Obtener ID de Courier
 						SELECT TOP 1 @CourierId = ID_Courier 
-						FROM DeliveryBackOffice.dbo.DeliveryAttempt 
+						FROM DeliveryBackOffice.dbo.DeliveryAttempt WITH (NOLOCK)
 						WHERE Guide_Serie = @Guide_Serie
 							AND Guide_Number = @Guide_Number
 						ORDER BY Date_Created DESC
@@ -184,9 +184,9 @@ BEGIN
 					'Registros guardados correctamente' AS 'Description', 
 					@ValidateOperation AS 'NumTransferID'
 			 
-				 select top 10 Guide_Serie + CAST(Guide_Number as varchar) Guide,Ticket_Number Ticket, Receiver_FirstName + ' '+ Receiver_LastName Name, Courier_Route Route, convert(varchar, Dispatched_Date, 103) RouteDate 
-				 from DeliveryBackOffice.dbo.DeliveryOrder
-				where Guide_Serie = @Guide_Serie and Guide_Number = @Guide_Number
+				 SELECT TOP 10 Guide_Serie + CAST(Guide_Number as varchar) Guide,Ticket_Number Ticket, Receiver_FirstName + ' '+ Receiver_LastName Name, Courier_Route Route, convert(varchar, Dispatched_Date, 103) RouteDate 
+				 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+				 WHERE Guide_Serie = @Guide_Serie and Guide_Number = @Guide_Number
 
 				print 'REGISTER EXISTS ' + CAST(COALESCE(@ValidateOperation,0) as varchar)
 			END
