@@ -9,7 +9,6 @@
     [GuidesReceived]             INT           NULL,
     [GuidePiecesReceived]        INT           NULL,
     [GuidePiecesMissing]         INT           NULL,
-    [ActCode]                    NVARCHAR (50) NULL,
     [RowStatus]                  BIT           DEFAULT ((1)) NOT NULL,
     [TokenCreated]               NVARCHAR (50) NOT NULL,
     [DateCreated]                DATETIME      NOT NULL,
@@ -19,6 +18,8 @@
     CONSTRAINT [FK_LinehaulRouteSettlement_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
     CONSTRAINT [FK_LinehaulRouteSettlement_Station] FOREIGN KEY ([StationReceivedId]) REFERENCES [dbo].[CatStation] ([IdStation])
 );
+
+
 
 
 
@@ -50,7 +51,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lóg
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de acta (justificación) asignada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'ActCode';
+
 
 
 GO
