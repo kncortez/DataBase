@@ -25,12 +25,7 @@ BEGIN
             @current_BatchCODIdCommission INT,
             @dateBatchCOD DATE,
 			@LastState AS INT
-	----- Obtener último estado de la guía
-	SELECT
-	       TOP 1   @LastState = StatusOrderId 
-	FROM [dbo].[DeliveryOrderDetail] WITH (NOLOCK)
-	WHERE   Guide_Serie = @Guide_Serie AND  Guide_Number = @Guide_Number
-	ORDER BY DateCreated DESC
+	
 
    --Al estar en estado COD Pagado o COD Liquidado no debe permitir la reversión
     SELECT 
@@ -67,23 +62,14 @@ BEGIN
 				Guide_Serie =  @Guide_Serie
 				AND Guide_Number = @Guide_Number
 
-			IF @currentState = 5
-				SET @NewState = 4
-			ELSE IF @currentState = 22
-				SET @NewState = 21
-        
-			IF (@NewState IS NOT NULL)
-			BEGIN
-				UPDATE 
-					DeliveryBackOffice.dbo.DeliveryOrder 
-				SET 
-					StatusOrderId = @NewState
-				WHERE 
-					Guide_Serie =  @Guide_Serie
-					AND Guide_Number = @Guide_Number
-            END
-			ELSE
-			BEGIN
+			----- Obtener último estado de la guía
+					SELECT
+						   TOP 1   @LastState = StatusOrderId 
+					FROM [dbo].[DeliveryOrderDetail] WITH (NOLOCK)
+					WHERE   Guide_Serie = @Guide_Serie AND  Guide_Number = @Guide_Number
+							AND RowStatus = 1 AND StatusOrderId<> @currentState
+					ORDER BY DateCreated DESC
+           -- Se deberá actualizar al estado anterior en DeliveryOrder, según registros de DeliveryOrderDetail.
 				UPDATE 
 					DeliveryBackOffice.dbo.DeliveryOrder 
 				SET 
@@ -91,15 +77,15 @@ BEGIN
 				WHERE 
 					Guide_Serie =  @Guide_Serie
 					AND Guide_Number = @Guide_Number
-			END
+			
 			--Actualizamos el registro en la tabla DeliveryOrderDetail
-			-- Se deberá actualizar al estado anterior en DeliveryOrder, según registros de DeliveryOrderDetail.
+			
 			UPDATE 
 				DeliveryBackOffice.dbo.DeliveryOrderDetail ---Se deberá inactivar estado actual
 			SET 
 				RowStatus = 0,
-				Observations = 'Guía revertida desde modulo de reversión de estados.',
-				StatusOrderId = @LastState 
+				Observations = 'Guía revertida desde modulo de reversión de estados.'
+				
 			WHERE 
 				Guide_Serie =  @Guide_Serie
 				AND Guide_Number = @Guide_Number
