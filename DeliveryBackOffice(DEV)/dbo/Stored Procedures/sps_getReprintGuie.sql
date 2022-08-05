@@ -22,33 +22,27 @@ BEGIN
             @integrationCost VARCHAR(MAX) = '',
             @identityCost INT;
 
-    SELECT @i = COUNT(1)
-    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece]
-    WHERE GuideNumber = @Guide_Number;
-
-
-    SELECT @TotalWeight = ISNULL(SUM(PieceWeight), 0)
-    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece]
-    WHERE GuideNumber = @Guide_Number;
-
-
-    SELECT @TotalValue = ISNULL(SUM(Amount), 0)
-    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece]
-    WHERE GuideNumber = @Guide_Number;
-
+    SELECT 
+		@i = COUNT(1),
+		@TotalWeight = ISNULL(SUM(PieceWeight), 0),
+		@TotalValue = ISNULL(SUM(Amount), 0)
+    FROM 
+		DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
+    WHERE 
+		GuideNumber = @Guide_Number;
 
     INSERT INTO @TMPPICES
     (
         myrow
     )
     SELECT GuidePiece
-    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece]
+    FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE GuideNumber = @Guide_Number;
 
     DECLARE @DaysToExpiration INT =
             (
                 SELECT ISNULL(CAST(conf.Value AS INT), 45) DaysToExpiration
-                FROM DeliveryBackOffice.dbo.ConfigParams conf
+                FROM DeliveryBackOffice.dbo.ConfigParams conf WITH(NOLOCK)
                 WHERE conf.Name = 'DaysToExpiration'
                       AND Status = 1
             );
@@ -89,8 +83,8 @@ BEGIN
         SET @ExpressName =
         (
             SELECT DescriptionOfClient
-            FROM DeliveryOrder do WITH (NOLOCK)
-                JOIN VisitPointClient vpc WITH (NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.OriginSenderId
             WHERE Guide_Number = @Guide_Number
         );
@@ -102,8 +96,8 @@ BEGIN
             SET @ExpressName =
             (
                 SELECT DescriptionOfClient
-                FROM DeliveryOrder do WITH (NOLOCK)
-                    JOIN VisitPointClient vpc WITH (NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
                 WHERE Guide_Number = @Guide_Number
             );
@@ -360,9 +354,7 @@ BEGIN
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
                                      + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
                                      + '",'
-                                     +
-                                  -- '"Username":"' + dbo.fnt_String_Escape(Convert(varchar,coalesce( dev.Sender_Mail,'')),'json')+'",'+
-                                  '"Username":"'
+                                     + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
                                      + '",' + '"ExpirationDate":"'
                                      + CONVERT(
@@ -428,7 +420,6 @@ BEGIN
                                       ON ctm.IdCustomer = dev.IdCustomer
                                   LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)
                                       ON acc.IdCustomer = ctm.IdCustomer
-                                  --and acc.AccIdAccount = 1 
                                   LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH (NOLOCK)
                                       ON rbu.RuaIdAccount = acc.AccIdAccount
                                   LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu WITH (NOLOCK)
@@ -449,9 +440,9 @@ BEGIN
                                       ON dev.IdDeliveryOption = cdo.IdDeliveryOption
                                   LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage cov WITH (NOLOCK)
                                       ON cov.HeaderCode = tws2.HeaderCode
-                                  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD
+                                  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
                                       ON DOPD.GuideNumber = dev.Guide_Number
-                                  LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT
+                                  LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
                                       ON DOPD.TimePlaId = CPT.TimePlaId
                                          AND cov.RowStatus = 1
                               WHERE dev.Guide_Number = @Guide_Number
