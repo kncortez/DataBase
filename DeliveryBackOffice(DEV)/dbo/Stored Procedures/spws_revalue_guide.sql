@@ -518,7 +518,7 @@ BEGIN
 
         IF EXISTS
         (
-            SELECT cst.ProductNumber
+            SELECT TOP 1 cst.ProductNumber
             FROM dbo.Cost cst
             WHERE cst.IdProduct = 1
                   AND cst.ProductNumber = @ProdctNumber
@@ -529,7 +529,7 @@ BEGIN
             PRINT CONVERT(VARCHAR, GETDATE(), 9);
             SET @IdCost =
             (
-                SELECT cst.IdCost
+                SELECT TOP 1 cst.IdCost
                 FROM dbo.Cost cst
                 WHERE cst.IdProduct = 1
                       AND cst.ProductNumber = @ProdctNumber
