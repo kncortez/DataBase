@@ -73,7 +73,7 @@ BEGIN
 						[HL].[HubAbbreviation],
 						[DO].[StatusOrderId],
 						[SO].[OrderDescription]
-				FROM	[dbo].[DeliveryOrder] DO
+				FROM	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				LEFT JOIN [DBO].[HubLogistics] HL
 					ON	[DO].[HubDestinationId] = [HL].[IdHubLogistic]
 				INNER JOIN [DBO].[StatusOrder] SO
