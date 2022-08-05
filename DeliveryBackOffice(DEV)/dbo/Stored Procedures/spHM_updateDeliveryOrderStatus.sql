@@ -6,7 +6,7 @@
 CREATE PROCEDURE [dbo].[spHM_updateDeliveryOrderStatus]
 	@GuideSerie AS NVARCHAR(25),
 	@GuideNumber AS NVARCHAR(50),
-	@StatusOrderId AS INT, 
+	@StatusOrderId AS INT,
 	@TknUser AS NVARCHAR(50)
 AS
 BEGIN
@@ -37,7 +37,7 @@ BEGIN
 				[HL].[HubAbbreviation],
 				[DO].[StatusOrderId],
 				[SO].[OrderDescription]
-		FROM	[dbo].[DeliveryOrder] DO
+		FROM	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		LEFT JOIN [DBO].[HubLogistics] HL
 			ON	[DO].[HubDestinationId] = [HL].[IdHubLogistic]
 		INNER JOIN [DBO].[StatusOrder] SO
