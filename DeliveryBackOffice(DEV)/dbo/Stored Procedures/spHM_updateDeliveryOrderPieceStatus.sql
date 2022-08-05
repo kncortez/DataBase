@@ -39,7 +39,7 @@ BEGIN
 				[DOP].[NoPiece],
 				[DOP].[IsDry],
 				[DOP].[StatusOrderId]
-		FROM	[dbo].[DeliveryOrderPiece] DOP
+		FROM	[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 		WHERE	[DOP].[GuideSerie] = @GuideSerie
 			AND	[DOP].[GuideNumber] = @GuideNumber
 			AND [DOP].[NoPiece] = @NoPiece;

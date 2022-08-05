@@ -16,7 +16,7 @@ BEGIN
 	DECLARE @EXISTING_DELIVERY_ORDER AS INT;	-- Delivery Order item
 
 	SET @EXISTING_DELIVERY_ORDER = (SELECT COUNT([DO].[Guide_Number]) AS CONT
-									FROM	[dbo].[DeliveryOrder] DO
+									FROM	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 									WHERE	[DO].[Guide_Serie] = @GuideSerie
 										AND	[DO].[Guide_Number] = @GuideNumber);
 
@@ -45,7 +45,7 @@ BEGIN
 						[HL].[HubAbbreviation],
 						[DO].[StatusOrderId],
 						[SO].[OrderDescription]
-				FROM	[dbo].[DeliveryOrder] DO
+				FROM	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				LEFT JOIN [DBO].[HubLogistics] HL
 					ON	[DO].[HubDestinationId] = [HL].[IdHubLogistic]
 				INNER JOIN [DBO].[StatusOrder] SO
