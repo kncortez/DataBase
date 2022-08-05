@@ -13,19 +13,7 @@ BEGIN
 
 BEGIN TRY
 
-    /*if not exists
-     ( select 1
-	  from DeliveryBackOffice.dbo.TokenLog
-	  where TknRowStatus = 1 and TknIdToken = @Token	  
-	  and CAST(TknDateCreated AS DATE) = CAST(getdate() AS DATE)  
-	 )
-	 BEGIN
-	  print 'token inválido'
-	  select '500 'IdError
-	  ,'Token inválido'IdDescription	  
-	  return
-
-	 END*/
+  
      DECLARE @TotalWeight AS DECIMAL (18,2)
 	 DECLARE @TotalValue AS DECIMAL (18,2)
 	 DECLARE @ContentDescription AS VARCHAR(200)
@@ -48,7 +36,7 @@ BEGIN TRY
 		   AND DOP.GuideNumber = SUBSTRING(@TrackingNumber,3,LEN(@TrackingNumber))
 
      SELECT TOP 1 @IdCost = C.IdCost  
-	 FROM  DBO.Cost C 
+	 FROM  DBO.Cost C WITH (NOLOCK)
 	 WHERE C.ProductNumber = @TrackingNumber
 	 ORDER BY DateCreated DESC
 
@@ -97,7 +85,7 @@ BEGIN TRY
 								,@Token = @Token
 								,@ParIsCreditCard =1
 
-			SELECT TOP 1 @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber ORDER BY DateCreated DESC
+			SELECT TOP 1 @IdCost = C.IdCost  FROM  DBO.Cost C WITH (NOLOCK) WHERE C.ProductNumber = @TrackingNumber  AND C.IdModule <>1 ORDER BY DateCreated DESC
 		END
 		ELSE
 			BEGIN
@@ -143,7 +131,7 @@ BEGIN TRY
 		 ,COALESCE( Receiver_FirstName,'') + ' ' + COALESCE(Receiver_LastName ,'')  FromName 
 		 ,Receiver_Phone FromPhone
 		 ,COALESCE( Receiver_Email,'') FromEmail					
-		 ,SUBSTRING(Receiver_Address,1,130) FromAddress
+		 ,Receiver_Address FromAddress
 		 ,(Select SUBSTRING(Name,1,20) From splitstring(Receiver_Address,' '))
 		 ,PRV2.ProvinceDescription  FromCity					
 		 ,COALESCE(Sender_FirstName,'') + ' ' + COALESCE(Sender_LastName,'') ToName 
@@ -237,7 +225,7 @@ BEGIN TRY
 		 ,COALESCE( Receiver_FirstName,'') + ' ' + COALESCE(Receiver_LastName ,'')  FromName 
 		 ,Receiver_Phone FromPhone
 		 ,COALESCE( Receiver_Email,'') FromEmail					
-		 ,SUBSTRING(Receiver_Address,1,130) FromAddress
+		 ,Receiver_Address FromAddress
 		 ,PRV2.ProvinceDescription  FromCity					
 		 ,CASE WHEN cu.IdCustomerType = 1 THEN CASE WHEN DOR.IsReturn = 1 THEN COALESCE(DOR.Sender_FirstName,'')
 	      ELSE COALESCE(vpc.DescriptionOfClient,'') + ' ' + COALESCE(Sender_LastName,'') END
