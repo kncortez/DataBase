@@ -1,5 +1,11 @@
 ﻿
 
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-08-02>
+-- Description:	< Corrección para actualizar la opción de entrega y la dirección destino de guías >
+-- =============================================
+
 CREATE PROCEDURE [dbo].[spput_modify_guide_to_receiverid]
 	@Guide NVARCHAR(50),
 	@ReceiverId INT,
@@ -7,16 +13,25 @@ CREATE PROCEDURE [dbo].[spput_modify_guide_to_receiverid]
 AS
 BEGIN
 
---DECLARE @Guide NVARCHAR(50) = 'FD510014';
---DECLARE @ReceiverId INT = 4244;
---DECLARE @TokenUpdated VARCHAR(50) = 'SYS-AORTIZ';
+-- Variables "globales"
 DECLARE @DateUpdated DATETIME = GETDATE();
+DECLARE @NewDeliveryOptionID INT = ( SELECT TOP 1 CDO.IdDeliveryOption FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH(NOLOCK) WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI );
+DECLARE @NewDeliveryAddress NVARCHAR(600) = '';
+
+SELECT
+	@NewDeliveryAddress = VPC.[Address]
+FROM
+	[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+WHERE
+	VPC.CodeOfReference = @ReceiverId
 
 BEGIN TRANSACTION;
 
 BEGIN TRY
 	UPDATE dbo.DeliveryOrder
 	SET Receiver_ID = @ReceiverId,
+		IdDeliveryOption = @NewDeliveryOptionID,
+		Receiver_Address = (CASE WHEN LTRIM(RTRIM(ISNULL(@NewDeliveryAddress, ''))) != '' THEN @NewDeliveryAddress ELSE Receiver_Address END),
 		TokenUpdated = @TokenUpdated,
 		DateUpdated = @DateUpdated
 	WHERE CONCAT(Guide_Serie,Guide_Number) = @Guide;
