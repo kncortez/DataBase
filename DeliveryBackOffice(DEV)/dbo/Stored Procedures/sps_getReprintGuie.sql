@@ -414,7 +414,7 @@ BEGIN
                                      + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ] ' + '} }'
                                      + ''
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
-                                  JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
+                                  INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
                                   LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
                                       ON ctm.IdCustomer = dev.IdCustomer
