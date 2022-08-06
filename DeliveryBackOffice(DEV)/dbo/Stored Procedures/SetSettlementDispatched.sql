@@ -10,6 +10,11 @@
 -- Create date: <2022-01-12>
 -- Description:	<Mejora para manejo de cambio de orden al reasignar o quitar guías.>
 -- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-08-05>
+-- Description:	< Cambio para uso de orden como decimal y ETA de servicio.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SetSettlementDispatched]
     -- Add the parameters for the stored procedure here
@@ -20,7 +25,7 @@ CREATE PROCEDURE [dbo].[SetSettlementDispatched]
 	@GuidesQuantity INT,
 	@PiecesDry SMALLINT,
 	@PiecesCold SMALLINT,
-    @ListGuides TblGuideOrder READONLY,
+    @ListGuides TblGuideOrderETA READONLY,
 	@IdVehicle INT,
 	@IdCourier INT,
 	@CourierName NVARCHAR(200),
@@ -72,8 +77,8 @@ BEGIN
 			--Actualizar el registros para la piezas que deseamos reubicar
 			UPDATE wh
 			SET wh.Active = 0
-				,wh.UserCreated = @Token
-				,wh.DateCreated = GETDATE()
+				,wh.UserUpdated = @Token
+				,wh.DateUpdated = GETDATE()
 			FROM Warehouse wh
 			INNER JOIN @ListGuides lg
 				ON wh.Guide_Serie = lg.Guide_Serie AND wh.Guide_Number = lg.Guide_Number
@@ -304,7 +309,7 @@ BEGIN
 
 			-- Actualizar orden de guías en preparación
 			UPDATE rpd
-			SET rpd.GuideOrder = lg.Guide_Order, rpd.DateCreated = GETDATE(), rpd.TokenCreated = @Token
+			SET rpd.GuideOrder = IIF(lg.Guide_Order IS NULL, rpd.GuideOrder, lg.Guide_Order), rpd.DateUpdated = GETDATE(), rpd.TokenUpdated = @Token, rpd.ETAGuide = IIF(lg.Guide_ETA IS NULL, rpd.ETAGuide, lg.Guide_ETA)
 			FROM RoutePreparationDetail rpd
 			INNER JOIN @ListGuides lg
 			ON rpd.Guide_Serie = lg.Guide_Serie AND rpd.Guide_Number = lg.Guide_Number
@@ -316,9 +321,10 @@ BEGIN
 				,[Guide_Serie]
 				,[Guide_Number]
 				,[GuideOrder]
+				,[GuideETA]
 				,[DateCreated]
 				,[TokenCreated])
-			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order,GETDATE(),@Token
+			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order, lg.Guide_ETA,GETDATE(),@Token
 			FROM @ListGuides lg
 			INNER JOIN RoutePreparationDetail rpd
 				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
@@ -340,7 +346,7 @@ BEGIN
 				SET @ValidateOperation = @ValidateOperation + 1
 
 			--establecer ruta y fecha de ruta de las guías
-			DECLARE @CodeRoute VARCHAR(100) = (SELECT TOP 1 CodeRoute FROM CatRoute WHERE IdRoute = @IdRoute)
+			DECLARE @CodeRoute VARCHAR(100) = (SELECT CodeRoute FROM CatRoute WHERE IdRoute = @IdRoute)
 
 			UPDATE do 
 			SET do.Courier_Route = @CodeRoute
@@ -358,7 +364,7 @@ BEGIN
 				GuideSerie NVARCHAR(2)
 				,GuideNumber INT
 			)
-			DECLARE @CatModuleId INT = (SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'frmCheckpoint')
+			DECLARE @CatModuleId INT = (SELECT ModIdModule FROM CatModule WHERE ModPath = 'frmCheckpoint')
 
 			INSERT INTO @RevalueGuides
 				SELECT
@@ -403,27 +409,6 @@ BEGIN
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID'
 			ROLLBACK TRANSACTION
-
-			INSERT INTO dbo.RoutePreparationLogError
-			(
-				ErrorDescription,
-				ErrorNumber,
-				ErrorProcedure,
-				ErrorLine,
-				GuideSerie,
-				GuideNumber,
-				TokenCreated,
-				DateCreated
-			)
-			VALUES
-			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
-					   ,ERROR_NUMBER()
-					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
-					   ,ERROR_LINE()
-					   ,0
-					   ,0
-					   ,'Error en manifiesto ' + @CodeRoute
-					   ,GETDATE())
 		END CATCH;
 
 		IF @@TRANCOUNT > 0
