@@ -84,7 +84,7 @@ BEGIN
 						DeliveryBackOffice.dbo.DeliveryOrderAlert DOA WITH(NOLOCK)
 					WHERE DOA.GuideSerie = AG.GuideSerie AND DOA.GuideNumber = AG.GuideNumber AND DOA.ServiceTypeId = 3 AND DOA.RowStatus = 1 ),0)
         FROM @AcceptedGuides AG
-            JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 ON DOR.Guide_Serie = AG.GuideSerie
                    AND DOR.Guide_Number = AG.GuideNumber;
 
