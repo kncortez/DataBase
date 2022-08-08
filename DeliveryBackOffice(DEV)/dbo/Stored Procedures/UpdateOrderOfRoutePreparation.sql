@@ -38,8 +38,8 @@ BEGIN
 				,RPD.TokenUpdated = @Token
 				,RPD.DateUpdated = GETDATE()
 			FROM
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-				JOIN
+				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+				INNER JOIN
 					@GuidesToUpdate GTU
 					ON
 						RPD.Guide_Serie = GTU.Guide_Serie

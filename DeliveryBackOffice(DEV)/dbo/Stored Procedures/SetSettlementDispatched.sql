@@ -49,7 +49,7 @@ BEGIN
 				,rpdp.TokenUpdated = @Token
 				,rpdp.DateUpdated = GETDATE()
 			FROM RoutePreparationDetailPiece rpdp
-			inner JOIN RoutePreparationDetail rpd
+			inner JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				and rpd.RowStatus = 1
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation
@@ -145,11 +145,8 @@ BEGIN
 				INSERT INTO @GuidesTableWithoutFailRetries	
 				SELECT  LG.Guide_Serie, LG.Guide_Number,(DORD.StatusOrderId),COUNT(DORD.StatusOrderId)
 				FROM @ListGuides LG
-					LEFT JOIN DeliveryOrder DOR ON LG.Guide_Serie=DOR.Guide_Serie AND LG.Guide_Number=DOR.Guide_Number
-					LEFT JOIN DBO.DeliveryOrderDetail DORD  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
-					--LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-					--LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
-					--LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
+					LEFT JOIN DeliveryOrder DOR WITH(NOLOCK) ON LG.Guide_Serie=DOR.Guide_Serie AND LG.Guide_Number=DOR.Guide_Number
+					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK) ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number		
 				GROUP BY LG.Guide_Serie,LG.Guide_Number,DORD.StatusOrderId
 				HAVING 
 					(DORD.StatusOrderId=@IDSTATUSINROUTE AND COUNT(DORD.StatusOrderId)>=2)--CUANDO YA SALIERON A RUTA 2 O MAS VECES
@@ -189,7 +186,7 @@ BEGIN
 						GETDATE(),
 						NULL,
 						NULL
-						FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA 
+						FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA WITH(NOLOCK) 
 							ON  DOA.GuideSerie=GTWRD.Guide_Serie AND DOA.GuideNumber=GTWRD.Guide_Number
 						WHERE DOA.IdDeliveryOrderAlert IS NULL;
 				
@@ -215,7 +212,7 @@ BEGIN
 						GETDATE(),
 						NULL,
 						NULL
-					FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA 
+					FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA WITH(NOLOCK) 
 							ON  DOA.GuideSerie=GTWRD.Guide_Serie AND DOA.GuideNumber=GTWRD.Guide_Number
 				END
 				--FIN --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA				
@@ -282,12 +279,11 @@ BEGIN
 				,[User_Created]
 				,[Date_Created]
 				,[Guide_Piece]) 
-			--VALUES (@GuideSerie,@GuideNumber,@Dry,@Cold,0,@IDCourier,NULL,@UserCreated,GETDATE(),@GuidePiece)
 			SELECT lg.Guide_Serie, lg.Guide_Number, 
 				COALESCE(dop.IsDry,1), CASE WHEN dop.IsDry IS NULL THEN 0 ELSE 1-dop.IsDry END,
 				'','',0, @IdCourier, @ID_Manifest, @Token, GETDATE(), dop.NoPiece
 			FROM @ListGuides lg
-			INNER JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK) 
 				ON lg.Guide_Serie = dop.GuideSerie AND lg.Guide_Number = dop.GuideNumber
 
 			--operation 4
@@ -300,7 +296,7 @@ BEGIN
 				dsd.TokenUpdated = @Token,
 				dsd.DateUpdated = GETDATE()
 			FROM  DeliverySettlementDetail dsd
-			INNER JOIN DeliveryOrderBySettlement dobs 
+			INNER JOIN DeliveryOrderBySettlement dobs  WITH(NOLOCK) 
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 			INNER JOIN @ListGuides lg
 				ON dsd.Guide_Serie = lg.Guide_Serie AND dsd.Guide_Number = lg.Guide_Number
@@ -326,7 +322,7 @@ BEGIN
 				,[TokenCreated])
 			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order, lg.Guide_ETA,GETDATE(),@Token
 			FROM @ListGuides lg
-			INNER JOIN RoutePreparationDetail rpd
+			INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
 				AND rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
 
