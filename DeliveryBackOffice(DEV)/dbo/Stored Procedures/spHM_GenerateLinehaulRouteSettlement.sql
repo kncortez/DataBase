@@ -33,6 +33,7 @@ BEGIN
 							FROM	[dbo].[LinehaulRouteSettlement] LRS
 							WHERE	[LRS].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 								AND [LRS].[HubID] = @HubID
+								AND [LRS].[DateReceived] = @DateSelected
 								AND [LRS].[CatLinehaulStatusId] = (SELECT	[CLS].[IdCatLinehaulStatus]
 																	FROM	[dbo].[CatLinehaulStatus] CLS
 																	WHERE	[CLS].[StatusName] = 'GENERATED')
