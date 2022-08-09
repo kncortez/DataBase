@@ -103,7 +103,7 @@ BEGIN
 
         --Revertimos guía en tabla ProcessedGuideCOD
 		--Al estar en estado Entregado deberá inactivar el registro en la ProcessedGuide, siempre y cuando el BatchID y BatchCommision sean NULL
-			IF (@currentState = 5)
+			IF (@currentState in( 5,22))
 			BEGIN
 					UPDATE
 					   DeliveryBackOffice.dbo.ProcessedGuideCOD 
