@@ -101,11 +101,11 @@ BEGIN
                                                   + (CASE
                                                          WHEN ISNULL(SDFG.Latitude, 0) <> 0 AND ISNULL(SDFG.Longitude, 0) <> 0 THEN
                                                              '"lat"' + ':' + SUBSTRING(CONVERT(NVARCHAR(20), SDFG.Latitude), 1, 9) + ',' +
-			                                                 +'"lat"' + ':' + SUBSTRING(CONVERT(NVARCHAR(20), SDFG.Longitude), 1, 10)  + ','
+			                                                 +'"lon"' + ':' + SUBSTRING(CONVERT(NVARCHAR(20), SDFG.Longitude), 1, 10)  + ','
                                                          WHEN ISNULL(LTRIM(RTRIM(dbo.fn_ReplaceSpecialCharsForJSON(SSHL.Latitud))),'') <> ''
                                                               AND ISNULL(LTRIM(RTRIM(dbo.fn_ReplaceSpecialCharsForJSON(SSHL.Longitude))),'' ) <> '' THEN
                                                              '"lat"' + ':' + SUBSTRING(LTRIM(RTRIM(SSHL.Latitud)), 1, 9) + ',' +
-															 +'"lat"' + ':' + SUBSTRING(LTRIM(RTRIM(SSHL.Longitude)), 1, 10) + ','
+															 +'"lon"' + ':' + SUBSTRING(LTRIM(RTRIM(SSHL.Longitude)), 1, 10) + ','
                                                          WHEN EXISTS (
                                                                   SELECT TOP 1 1
                                                                   FROM DeliveryBackOffice.dbo.LocationRecord PHL1 WITH(NOLOCK)
@@ -114,17 +114,17 @@ BEGIN
                                                          (
                                                              SELECT TOP 1
                                                                     '"lat"' + ':' + SUBSTRING(LTRIM(RTRIM(PHL.Latitud)), 1, 9) + ',' +
-																	+'"lat"' + ':' + SUBSTRING(LTRIM(RTRIM(PHL.Longitude)), 1, 10) + ','
+																	+'"lon"' + ':' + SUBSTRING(LTRIM(RTRIM(PHL.Longitude)), 1, 10) + ','
                                                              FROM DeliveryBackOffice.dbo.LocationRecord PHL WITH(NOLOCK)
                                                              WHERE AG.ReceiverPhone LIKE '%' + PHL.Phone + '%'
                                                          )
                                                          WHEN  ISNULL(LTRIM(RTRIM(dbo.fn_ReplaceSpecialCharsForJSON(VPCr.Latitude))),'') <> '' 
 																AND ISNULL(LTRIM(RTRIM(dbo.fn_ReplaceSpecialCharsForJSON(VPCr.Longitude))),'') <> '' THEN
 															'"lat"' + ':'  + SUBSTRING(LTRIM(RTRIM(VPCr.Latitude)), 1, 9)+ ',' +
-															+ '"lat"' + ':'  + SUBSTRING(LTRIM(RTRIM(VPCr.Longitude)), 1, 10)  + ',' 
+															+ '"lon"' + ':'  + SUBSTRING(LTRIM(RTRIM(VPCr.Longitude)), 1, 10)  + ',' 
                                                          ELSE
                                                              '"lat"' + ':0,' +
-			                                                 +'"lat"' + ':0,'
+			                                                 +'"lon"' + ':0,'
                                                      END
                                                     ) 
 												  + '"duration"' + ':' + '"' + CAST( (10 + (AG.TotalPieces - 1)) AS NVARCHAR)+'"' + ','
