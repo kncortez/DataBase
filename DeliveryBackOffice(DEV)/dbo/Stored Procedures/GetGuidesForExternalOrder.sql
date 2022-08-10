@@ -109,14 +109,14 @@ BEGIN
                                                          WHEN EXISTS (
                                                                   SELECT TOP 1 1
                                                                   FROM DeliveryBackOffice.dbo.LocationRecord PHL1 WITH(NOLOCK)
-                                                                  WHERE AG.ReceiverPhone LIKE '%' + PHL1.Phone + '%'
+                                                                  WHERE AG.ReceiverPhone = PHL1.Phone
                                                               ) THEN
                                                          (
                                                              SELECT TOP 1
                                                                     '"lat"' + ':' + SUBSTRING(LTRIM(RTRIM(PHL.Latitud)), 1, 9) + ',' +
 																	+'"lon"' + ':' + SUBSTRING(LTRIM(RTRIM(PHL.Longitude)), 1, 10) + ','
                                                              FROM DeliveryBackOffice.dbo.LocationRecord PHL WITH(NOLOCK)
-                                                             WHERE AG.ReceiverPhone LIKE '%' + PHL.Phone + '%'
+                                                             WHERE AG.ReceiverPhone = PHL.Phone
                                                          )
                                                          WHEN  ISNULL(LTRIM(RTRIM(dbo.fn_ReplaceSpecialCharsForJSON(VPCr.Latitude))),'') <> '' 
 																AND ISNULL(LTRIM(RTRIM(dbo.fn_ReplaceSpecialCharsForJSON(VPCr.Longitude))),'') <> '' THEN
