@@ -603,130 +603,6 @@ BEGIN
 								tdop.CODAmountProccess != 0
 
 							END
-							--ELSE IF ( (@OldPriceshipment - @UpdatedValue) <= 0 )
-							--BEGIN
-
-							--INSERT INTO 
-							--	dbo.DeliveryOrderPaymentTransaction
-							--	(  
-							--		[GuideNumber]
-							--		,[GuideSerie]
-							--		,[PayTypeId]
-							--		,[TypeofInOutMoneyId]
-							--		,[TimePlaId]
-							--		,[amount]
-							--		,[PaymentRecollections]
-							--		,[PaymentNow]
-							--		,[PaymentDelivery]
-							--		,[StartDate]
-							--		,[EndDate]
-							--		,[ShipmentCompleted]
-							--		,[RecollectionCompleted]
-							--		,[PaidGuide]
-							--		,[TokenCreated]
-							--		,[DateCreated]
-							--		,[TokenUpdated]
-							--		,[DateUpdated]
-							--		,[TransaccionFAC]
-							--		,[IdHeaderRecolection]
-							--		,[TypeServiceId]
-							--		,[AccountId]
-							--		,[CODAmountProcess]
-							--		,[Fel]
-							--		,[VisitPoint]
-							--	)
-							--SELECT
-							--		Guide_Number 
-							--		,Guide_Serie
-							--		,IdTypePayment
-							--		,IdWayToPayment
-							--		,IdTimePayment
-							--		,@OldPriceshipment
-							--		,tdop.PaymentRecollections
-							--		,tdop.PaymentNow
-							--		,tdop.PaymentDelivery
-							--		,null
-							--		,null
-							--		,tdop.ShipmentCompleted
-							--		,tdop.RecollectionCompleted
-							--		,tdop.PaidGuide
-							--		,@TokenCreated
-							--		,getdate()
-							--		,null
-							--		,null
-							--		,null
-							--		,null
-							--		,tdop.IdTypeService
-							--		,IIF(@AccountId=0,null, @AccountId)
-							--		,tdop.CODAmountProccess
-							--		,null
-							--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-							--FROM 
-							--	@TblDeliveryOrdersList tdop
-							--WHERE 
-							--	tdop.CODAmountProccess != 0
-
-							--INSERT INTO 
-							--	dbo.DeliveryOrderPaymentTransaction
-							--	(  
-							--		[GuideNumber]
-							--		,[GuideSerie]
-							--		,[PayTypeId]
-							--		,[TypeofInOutMoneyId]
-							--		,[TimePlaId]
-							--		,[amount]
-							--		,[PaymentRecollections]
-							--		,[PaymentNow]
-							--		,[PaymentDelivery]
-							--		,[StartDate]
-							--		,[EndDate]
-							--		,[ShipmentCompleted]
-							--		,[RecollectionCompleted]
-							--		,[PaidGuide]
-							--		,[TokenCreated]
-							--		,[DateCreated]
-							--		,[TokenUpdated]
-							--		,[DateUpdated]
-							--		,[TransaccionFAC]
-							--		,[IdHeaderRecolection]
-							--		,[TypeServiceId]
-							--		,[AccountId]
-							--		,[CODAmountProcess]
-							--		,[Fel]
-							--		,[VisitPoint]
-							--	)
-							--SELECT
-							--		Guide_Number 
-							--		,Guide_Serie
-							--		,IdTypePayment
-							--		,IdWayToPayment
-							--		,IdTimePayment
-							--		,IIF(@OldPriceshipment > 0, -@OldPriceshipment, @OldPriceshipment)
-							--		,tdop.PaymentRecollections
-							--		,tdop.PaymentNow
-							--		,tdop.PaymentDelivery
-							--		,null
-							--		,null
-							--		,tdop.ShipmentCompleted
-							--		,tdop.RecollectionCompleted
-							--		,tdop.PaidGuide
-							--		,@TokenCreated
-							--		,getdate()
-							--		,null
-							--		,null
-							--		,null
-							--		,null
-							--		,tdop.IdTypeService
-							--		,IIF(@AccountId=0,null, @AccountId)
-							--		,tdop.CODAmountProccess
-							--		,null
-							--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-							--FROM 
-							--	@TblDeliveryOrdersList tdop
-							--WHERE 
-							--	tdop.CODAmountProccess != 0
-
-							--END
 
 					END
 			
@@ -928,6 +804,8 @@ BEGIN
 			  ,TokenUpdated = @TokenUpdated
 			  ,ECIIndicator = @ECIIndicator
 			  ,Authenticationresult = @Authenticationresult
+			  ,ReferenceNumber = (CASE WHEN LTRIM(RTRIM(ISNULL(@ReferenceNumber,''))) <> '' THEN @ReferenceNumber ELSE ReferenceNumber END)
+			  ,[Signature] = (CASE WHEN LTRIM(RTRIM(ISNULL(@Signature,''))) <> '' THEN @Signature ELSE [Signature] END)
 			  ,TransactionStain	 = @TransactionStain	
 			  ,CAVV = @CAVV	
 			  ,StatusSend = @StatusSend
@@ -1006,11 +884,6 @@ BEGIN
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
 		
-		--select 401 Code,'Error' Description
-		--, null coupSerie
-		--, null coupDate
-		--, null coupPromo
-
 		SELECT 'Error al procesar transacción' AS message,
 			'FALSE'	blnResult,
 			CAST(-1 AS VARCHAR(5)) IdResult,
