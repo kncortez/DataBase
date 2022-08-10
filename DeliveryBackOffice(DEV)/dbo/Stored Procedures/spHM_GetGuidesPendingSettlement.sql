@@ -22,6 +22,7 @@ BEGIN
 	INNER JOIN LinehaulRoutePreparationContainerDetailPiece lrpcdp
 		ON lrpcdp.LinehaulRoutePreparationContainerDetailId = lrpcd.IdLinehaulRoutePreparationContainerDetail
 	WHERE lrpc.LinehaulRoutePreparationId = @LinehaulRoutePreparationId
+		AND lrpcd.RowStatus = 1 AND lrpcdp.RowStatus = 1 AND lrpcdp.ActCode IS NULL
 	EXCEPT
 	SELECT
 		lrscd.GuideSerie
@@ -35,5 +36,6 @@ BEGIN
 	INNER JOIN LinehaulRouteSettlementContainerDetailPiece lrscdp
 		ON lrscdp.LinehaulRouteSettlementContainerDetailId = lrscd.IdLinehaulRouteSettlementContainerDetail
 	WHERE lrs.LinehaulRoutePreparationId = @LinehaulRoutePreparationId
+		AND lrscd.RowStatus = 1 AND lrscdp.RowStatus = 1 AND lrscdp.ActCode IS NULL
 
 END
