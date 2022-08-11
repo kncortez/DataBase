@@ -4,10 +4,20 @@
 -- Create date: <2022-01-19>
 -- Description:	< reorganización de orden de servicios de RoutePreparation .>
 -- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-08-05>
+-- Description:	< orden de guía como decimal.>
+-- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-08-05>
+-- Description:	< Cambio para uso de orden como decimal y ETA de servicio .>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[UpdateOrderOfRoutePreparation]
 	@IdRoutePreparation INT,
-	@GuidesToUpdate TblGuideOrder READONLY,
+	@GuidesToUpdate TblGuideOrderETA READONLY,
 	@Token NVARCHAR(50)
 AS
 BEGIN
@@ -23,12 +33,13 @@ BEGIN
 
 			UPDATE RPD
 			SET
-				RPD.GuideOrder = GTU.Guide_Order
+				RPD.GuideOrder = IIF(GTU.Guide_Order IS NULL, RPD.GuideOrder, GTU.Guide_Order)
+				,RPD.ETAGuide = IIF(GTU.Guide_ETA IS NULL, RPD.ETAGuide, GTU.Guide_ETA)
 				,RPD.TokenUpdated = @Token
 				,RPD.DateUpdated = GETDATE()
 			FROM
-				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-				JOIN
+				[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+				INNER JOIN
 					@GuidesToUpdate GTU
 					ON
 						RPD.Guide_Serie = GTU.Guide_Serie
