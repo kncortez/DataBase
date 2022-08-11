@@ -98,7 +98,7 @@ BEGIN
 				LEFT JOIN LinehaulRoutePreparationContainerDetailPiece lrpcdp
 					ON lrpcdp.LinehaulRoutePreparationContainerDetailId = lrpcd.IdLinehaulRoutePreparationContainerDetail
 				WHERE lrpc.LinehaulRoutePreparationId = @LinehaulRoutePreparationId
-				AND lrpc.RowStatus = 1
+				AND lrpc.RowStatus = 1 AND lrpcd.RowStatus = 1 AND lrpcdp.RowStatus = 1 AND lrpcdp.ActCode IS NULL
 			END
 			ELSE
 			BEGIN
