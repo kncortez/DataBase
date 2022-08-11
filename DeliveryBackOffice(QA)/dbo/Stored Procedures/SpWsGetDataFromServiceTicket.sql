@@ -13,19 +13,6 @@ BEGIN
 
     BEGIN TRY
 
-        /*if not exists
-     ( select 1
-	  from DeliveryBackOffice.dbo.TokenLog
-	  where TknRowStatus = 1 and TknIdToken = @Token	  
-	  and CAST(TknDateCreated AS DATE) = CAST(getdate() AS DATE)  
-	 )
-	 BEGIN
-	  print 'token inválido'
-	  select '500 'IdError
-	  ,'Token inválido'IdDescription	  
-	  return
-
-	 END*/
         DECLARE @TotalWeight AS DECIMAL(18, 2);
         DECLARE @TotalValue AS DECIMAL(18, 2);
         DECLARE @ContentDescription AS VARCHAR(200);
@@ -33,6 +20,7 @@ BEGIN
         DECLARE @Serie AS VARCHAR(2) = SUBSTRING(@TrackingNumber, 1, 2);
         DECLARE @NUMBER AS VARCHAR(20) = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber));
         DECLARE @COD AS DECIMAL(18, 2);
+        DECLARE @COLLECT AS BIT;
 
         SELECT @TotalWeight = SUM(DOP.PieceWeight),
                @TotalValue = SUM(DOP.Amount)
@@ -46,12 +34,15 @@ BEGIN
         WHERE DOP.GuideSerie = SUBSTRING(@TrackingNumber, 1, 2)
               AND DOP.GuideNumber = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber));
 
-        SELECT @IdCost = C.IdCost
-        FROM dbo.Cost C
-        WHERE C.ProductNumber = @TrackingNumber;
+        SELECT TOP 1
+               @IdCost = C.IdCost
+        FROM dbo.Cost C WITH (NOLOCK)
+        WHERE C.ProductNumber = @TrackingNumber
+        ORDER BY DateCreated DESC;
 
-        SELECT @COD = ISNULL(do.Collect_OnDelivery, 0)
-        FROM dbo.DeliveryOrder do
+        SELECT @COD = ISNULL(do.Collect_OnDelivery, 0),
+               @COLLECT = do.IsCollect
+        FROM dbo.DeliveryOrder do WITH (NOLOCK)
         WHERE do.Collect_OnDelivery > 0
               AND Guide_Serie = @Serie
               AND Guide_Number = @NUMBER;
@@ -65,6 +56,25 @@ BEGIN
                           AND ReasonCode = 1
                 );
 
+
+        IF (@COLLECT = 1)
+        BEGIN
+            EXEC [dbo].[spws_revalue_guide] @GuideSerie = @Serie,
+                                            @GuideNumber = @NUMBER,
+                                            @CodeApp = '',
+                                            @Format = '',
+                                            @CalculateTaxes = 'true', -- Dado a nuevas tarifas, no cálcular impuestos
+                                            @IdModule = 1,
+                                            @SetUpdate = 'true',      -- Actualizar registros
+                                            @Token = @Token;
+
+
+            SELECT TOP 1
+                   @IdCost = C.IdCost
+            FROM dbo.Cost C WITH (NOLOCK)
+            WHERE C.ProductNumber = @TrackingNumber
+            ORDER BY DateCreated DESC;
+        END;
 
 
 
@@ -83,9 +93,12 @@ BEGIN
                                                 @Token = @Token,
                                                 @ParIsCreditCard = 1;
 
-                SELECT @IdCost = C.IdCost
+                SELECT TOP 1
+                       @IdCost = C.IdCost
                 FROM dbo.Cost C WITH (NOLOCK)
-                WHERE C.ProductNumber = @TrackingNumber;
+                WHERE C.ProductNumber = @TrackingNumber
+                      AND C.IdModule <> 1
+                ORDER BY DateCreated DESC;
             END;
             ELSE
             BEGIN
@@ -99,9 +112,12 @@ BEGIN
                                                 @Token = @Token;
 
 
-                SELECT @IdCost = C.IdCost
+                SELECT TOP 1
+                       @IdCost = C.IdCost
                 FROM dbo.Cost C WITH (NOLOCK)
-                WHERE C.ProductNumber = @TrackingNumber;
+                WHERE C.ProductNumber = @TrackingNumber
+                      AND C.IdModule <> 1
+                ORDER BY DateCreated DESC;
             END;
         END;
 
@@ -161,7 +177,6 @@ BEGIN
                   AND DOR.Guide_Number = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber))
                   AND ACC.AccIdAccount = @IdAccount;
 
-            -- SELET BOP IdCOst
             IF (@COD > 0) ---- VALIDA QUE TIENE COD PARA AGREGAR A EL DETALLE
             BEGIN
                 SELECT C.ProductNumber,
@@ -173,6 +188,7 @@ BEGIN
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
                       AND C.ProductNumber = @TrackingNumber
+                      AND BOP.IdCost = @IdCost
                 UNION ALL
                 SELECT @TrackingNumber AS ProductNumber,
                        'Valor de Mercaderia' AS Description,
@@ -188,7 +204,9 @@ BEGIN
                         ON C.IdCost = BOP.IdCost
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
-                      AND C.ProductNumber = @TrackingNumber;
+                      AND C.ProductNumber = @TrackingNumber
+                      AND BOP.IdCost = @IdCost;
+
             END;
 
         END;
@@ -261,7 +279,6 @@ BEGIN
                   AND DOR.Guide_Number = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber));
 
 
-            --SELET BOP IdCOst
             IF (@COD > 0) ---- VALIDA QUE TIENE COD PARA AGREGAR A EL DETALLE
             BEGIN
                 SELECT C.ProductNumber,
@@ -273,6 +290,7 @@ BEGIN
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
                       AND C.ProductNumber = @TrackingNumber
+                      AND BOP.IdCost = @IdCost
                 UNION ALL
                 SELECT @TrackingNumber AS ProductNumber,
                        'Valor de Mercaderia' AS Description,
@@ -288,7 +306,10 @@ BEGIN
                         ON C.IdCost = BOP.IdCost
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
-                      AND C.ProductNumber = @TrackingNumber;
+                      AND C.ProductNumber = @TrackingNumber
+                      AND BOP.IdCost = @IdCost;
+
+
             END;
 
         END;
