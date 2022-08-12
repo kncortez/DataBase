@@ -30,7 +30,7 @@ BEGIN
 			1
 		FROM CatLinehaulStatus
 		WHERE IdCatLinehaulStatus = @CatLinehaulStatusId
-		AND StatusName = 'Cerrado')
+		AND StatusName = 'IN TRANSIT')
 		BEGIN
 			IF EXISTS (SELECT
 					1
