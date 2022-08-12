@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[ExtPlatformService] (
+CREATE TABLE [dbo].[ExtPlatformService] (
     [IdExtPlatformService] INT              IDENTITY (1, 1) NOT NULL,
     [ExtPlatformId]        INT              NOT NULL,
     [IdService]            INT              NOT NULL,
@@ -30,6 +30,8 @@
     PRIMARY KEY CLUSTERED ([IdExtPlatformService] ASC),
     CONSTRAINT [ExtPlatformService_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 
@@ -147,5 +149,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 
 GO
-
+CREATE NONCLUSTERED INDEX [idx_EstimatedTimeArrival]
+    ON [dbo].[ExtPlatformService]([EstimatedTimeArrival] ASC)
+    INCLUDE([IdService], [Latitude], [Longitude]);
 

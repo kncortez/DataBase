@@ -10,6 +10,11 @@
 -- Create date: <2022-01-12>
 -- Description:	<Mejora para manejo de cambio de orden al reasignar o quitar guías.>
 -- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-08-05>
+-- Description:	< Cambio para uso de orden como decimal y ETA de servicio.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SetSettlementDispatched]
     -- Add the parameters for the stored procedure here
@@ -20,7 +25,7 @@ CREATE PROCEDURE [dbo].[SetSettlementDispatched]
 	@GuidesQuantity INT,
 	@PiecesDry SMALLINT,
 	@PiecesCold SMALLINT,
-    @ListGuides TblGuideOrder READONLY,
+    @ListGuides TblGuideOrderETA READONLY,
 	@IdVehicle INT,
 	@IdCourier INT,
 	@CourierName NVARCHAR(200),
@@ -44,7 +49,7 @@ BEGIN
 				,rpdp.TokenUpdated = @Token
 				,rpdp.DateUpdated = GETDATE()
 			FROM RoutePreparationDetailPiece rpdp
-			inner JOIN RoutePreparationDetail rpd
+			inner JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				and rpd.RowStatus = 1
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation
@@ -72,8 +77,8 @@ BEGIN
 			--Actualizar el registros para la piezas que deseamos reubicar
 			UPDATE wh
 			SET wh.Active = 0
-				,wh.UserCreated = @Token
-				,wh.DateCreated = GETDATE()
+				,wh.UserUpdated = @Token
+				,wh.DateUpdated = GETDATE()
 			FROM Warehouse wh
 			INNER JOIN @ListGuides lg
 				ON wh.Guide_Serie = lg.Guide_Serie AND wh.Guide_Number = lg.Guide_Number
@@ -140,11 +145,8 @@ BEGIN
 				INSERT INTO @GuidesTableWithoutFailRetries	
 				SELECT  LG.Guide_Serie, LG.Guide_Number,(DORD.StatusOrderId),COUNT(DORD.StatusOrderId)
 				FROM @ListGuides LG
-					LEFT JOIN DeliveryOrder DOR ON LG.Guide_Serie=DOR.Guide_Serie AND LG.Guide_Number=DOR.Guide_Number
-					LEFT JOIN DBO.DeliveryOrderDetail DORD  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
-					--LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-					--LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
-					--LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
+					LEFT JOIN DeliveryOrder DOR WITH(NOLOCK) ON LG.Guide_Serie=DOR.Guide_Serie AND LG.Guide_Number=DOR.Guide_Number
+					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK) ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number		
 				GROUP BY LG.Guide_Serie,LG.Guide_Number,DORD.StatusOrderId
 				HAVING 
 					(DORD.StatusOrderId=@IDSTATUSINROUTE AND COUNT(DORD.StatusOrderId)>=2)--CUANDO YA SALIERON A RUTA 2 O MAS VECES
@@ -184,7 +186,7 @@ BEGIN
 						GETDATE(),
 						NULL,
 						NULL
-						FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA 
+						FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA WITH(NOLOCK) 
 							ON  DOA.GuideSerie=GTWRD.Guide_Serie AND DOA.GuideNumber=GTWRD.Guide_Number
 						WHERE DOA.IdDeliveryOrderAlert IS NULL;
 				
@@ -210,7 +212,7 @@ BEGIN
 						GETDATE(),
 						NULL,
 						NULL
-					FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA 
+					FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA WITH(NOLOCK) 
 							ON  DOA.GuideSerie=GTWRD.Guide_Serie AND DOA.GuideNumber=GTWRD.Guide_Number
 				END
 				--FIN --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA				
@@ -277,12 +279,11 @@ BEGIN
 				,[User_Created]
 				,[Date_Created]
 				,[Guide_Piece]) 
-			--VALUES (@GuideSerie,@GuideNumber,@Dry,@Cold,0,@IDCourier,NULL,@UserCreated,GETDATE(),@GuidePiece)
 			SELECT lg.Guide_Serie, lg.Guide_Number, 
 				COALESCE(dop.IsDry,1), CASE WHEN dop.IsDry IS NULL THEN 0 ELSE 1-dop.IsDry END,
 				'','',0, @IdCourier, @ID_Manifest, @Token, GETDATE(), dop.NoPiece
 			FROM @ListGuides lg
-			INNER JOIN DeliveryOrderPiece dop
+			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK) 
 				ON lg.Guide_Serie = dop.GuideSerie AND lg.Guide_Number = dop.GuideNumber
 
 			--operation 4
@@ -295,7 +296,7 @@ BEGIN
 				dsd.TokenUpdated = @Token,
 				dsd.DateUpdated = GETDATE()
 			FROM  DeliverySettlementDetail dsd
-			INNER JOIN DeliveryOrderBySettlement dobs 
+			INNER JOIN DeliveryOrderBySettlement dobs  WITH(NOLOCK) 
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 			INNER JOIN @ListGuides lg
 				ON dsd.Guide_Serie = lg.Guide_Serie AND dsd.Guide_Number = lg.Guide_Number
@@ -304,7 +305,7 @@ BEGIN
 
 			-- Actualizar orden de guías en preparación
 			UPDATE rpd
-			SET rpd.GuideOrder = lg.Guide_Order, rpd.DateCreated = GETDATE(), rpd.TokenCreated = @Token
+			SET rpd.GuideOrder = IIF(lg.Guide_Order IS NULL, rpd.GuideOrder, lg.Guide_Order), rpd.DateUpdated = GETDATE(), rpd.TokenUpdated = @Token, rpd.ETAGuide = IIF(lg.Guide_ETA IS NULL, rpd.ETAGuide, lg.Guide_ETA)
 			FROM RoutePreparationDetail rpd
 			INNER JOIN @ListGuides lg
 			ON rpd.Guide_Serie = lg.Guide_Serie AND rpd.Guide_Number = lg.Guide_Number
@@ -316,11 +317,12 @@ BEGIN
 				,[Guide_Serie]
 				,[Guide_Number]
 				,[GuideOrder]
+				,[GuideETA]
 				,[DateCreated]
 				,[TokenCreated])
-			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order,GETDATE(),@Token
+			SELECT @ID_Manifest,lg.Guide_Serie,lg.Guide_Number,lg.Guide_Order, lg.Guide_ETA,GETDATE(),@Token
 			FROM @ListGuides lg
-			INNER JOIN RoutePreparationDetail rpd
+			INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON lg.Guide_Serie = rpd.Guide_Serie AND lg.Guide_Number = rpd.Guide_Number
 				AND rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
 
@@ -340,7 +342,7 @@ BEGIN
 				SET @ValidateOperation = @ValidateOperation + 1
 
 			--establecer ruta y fecha de ruta de las guías
-			DECLARE @CodeRoute VARCHAR(100) = (SELECT TOP 1 CodeRoute FROM CatRoute WHERE IdRoute = @IdRoute)
+			DECLARE @CodeRoute VARCHAR(100) = (SELECT CodeRoute FROM CatRoute WHERE IdRoute = @IdRoute)
 
 			UPDATE do 
 			SET do.Courier_Route = @CodeRoute
@@ -358,7 +360,7 @@ BEGIN
 				GuideSerie NVARCHAR(2)
 				,GuideNumber INT
 			)
-			DECLARE @CatModuleId INT = (SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'frmCheckpoint')
+			DECLARE @CatModuleId INT = (SELECT ModIdModule FROM CatModule WHERE ModPath = 'frmCheckpoint')
 
 			INSERT INTO @RevalueGuides
 				SELECT
@@ -403,27 +405,6 @@ BEGIN
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID'
 			ROLLBACK TRANSACTION
-
-			INSERT INTO dbo.RoutePreparationLogError
-			(
-				ErrorDescription,
-				ErrorNumber,
-				ErrorProcedure,
-				ErrorLine,
-				GuideSerie,
-				GuideNumber,
-				TokenCreated,
-				DateCreated
-			)
-			VALUES
-			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
-					   ,ERROR_NUMBER()
-					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
-					   ,ERROR_LINE()
-					   ,0
-					   ,0
-					   ,'Error en manifiesto ' + @CodeRoute
-					   ,GETDATE())
 		END CATCH;
 
 		IF @@TRANCOUNT > 0
