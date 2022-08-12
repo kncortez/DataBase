@@ -1051,6 +1051,9 @@
     <Build Include="dbo\Stored Procedures\sp_get_customerParser.sql" />
     <Build Include="dbo\Stored Procedures\sp_get_CustomerName.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport.sql" />
+    <Build Include="dbo\Stored Procedures\GetStationLocation.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
+    <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\120\SqlSchemas\master.dacpac">

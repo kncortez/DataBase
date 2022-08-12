@@ -19,6 +19,11 @@
 -- Create date: <2022-02-02>
 -- Description:	< Cambio para uso de Ruta sobre Unidad .>
 -- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-08-05>
+-- Description:	< Cambio para uso de orden como decimal .>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetRoutePreparation]
 	@IdRoute INT,
 	@Date DATE
@@ -156,6 +161,7 @@ BEGIN
 		, RPDP.PieceType 'Piece_Type'
 		, CAST(IIF(DOP.StatusOrderId = 3, 1 ,0) AS BIT) 'IsProgrammed'
 		, cu.Abbreviation 'CustomerAbbreviation' 
+		, RPD.ETAGuide 'GuideETA'
 	FROM RoutePreparation RP WITH(NOLOCK)
 	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON
