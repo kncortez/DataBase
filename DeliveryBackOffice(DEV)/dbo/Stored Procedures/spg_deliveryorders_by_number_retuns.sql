@@ -19,10 +19,6 @@ BEGIN
 			SUBSTRING(Item, 1, 2) ItemSerie
 		   ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber
 		   ,SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item)) ItemPiece
-		--, 
-		--SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
-		--CHARINDEX('-',Item) charinde,  
-		--len(Item) len
 		INTO #listGuides
 		FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@_number, ',')
 
@@ -49,11 +45,7 @@ BEGIN
 	,do.Sender_ID as Sender_ID
 	,do.Recipe_Number as Recipe_Number
 	,'<B>Manifiesto:</B> ' + do.Manifest_Serie + convert(nvarchar, do.Manifest_Number) as Manifest
-	,case when do.IsCollect = 'TRUE' then 
-	CONVERT(VARCHAR, CAST((isnull(do.Collect_OnDelivery,0) + isnull(do.PriceShippment,0)) AS MONEY), 1) 
-	else 
-	CONVERT(VARCHAR, CAST((isnull(do.Collect_OnDelivery,0)) AS MONEY), 1) 
-	end AS  Collect_OnDelivery
+	,'0'  Collect_OnDelivery
 	,do.Contact_Confirmed
 	,do.Contact_Instructions
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do with(nolock)
