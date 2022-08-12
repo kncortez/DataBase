@@ -28,62 +28,73 @@ BEGIN
 
     -- tablix content
     INSERT INTO @temp
-    SELECT DISTINCT
-           do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR(50)) AS Guide_Code,
-           (
-               SELECT COUNT(*)
-               FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-                   INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
-                       ON pbs.GuidePieceId = dop.GuidePiece
-               WHERE dop.GuideNumber = do.Guide_Number
-                     AND dop.GuideSerie = do.Guide_Serie
-                     AND dop.IsDry = 0
+	SELECT DISTINCT
+		do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR(50)) AS Guide_Code,
+		(
+			SELECT COUNT(*)
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
+					ON pbs.GuidePieceId = dop.GuidePiece
+			WHERE dop.GuideNumber = do.Guide_Number
+					AND dop.GuideSerie = do.Guide_Serie
+					AND dop.IsDry = 0
 					AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-           ) AS Pieces_Cold,
-           (
-               SELECT COUNT(*)
-               FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
-                   INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
-                       ON pbs.GuidePieceId = dop.GuidePiece
-               WHERE dop.GuideNumber = do.Guide_Number
-                     AND dop.GuideSerie = do.Guide_Serie
-                     AND dop.IsDry = 1
+		) AS Pieces_Cold,
+		(
+			SELECT COUNT(*)
+			FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
+					ON pbs.GuidePieceId = dop.GuidePiece
+			WHERE dop.GuideNumber = do.Guide_Number
+					AND dop.GuideSerie = do.Guide_Serie
+					AND dop.IsDry = 1
 					AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-           ) AS Pieces_Dry,
-           ISNULL(do.Sender_FirstName, '') + ' ' + ISNULL(do.Sender_LastName, '') AS Receiver_Fullname,
-           do.Sender_Address AS Receiver_Address,
-           CONVERT(NVARCHAR, ISNULL(do.Sender_Zone, 0)) AS Receiver_Zone,
-           do.Sender_Town AS Receiver_Town,
-           do.Sender_Department AS Receiver_Departament,
-           CONVERT(VARCHAR, do.Preparation_Date, 103) + ' ' + CONVERT(VARCHAR(5), do.Preparation_Date, 108) AS Preparation_Date,
-           CONVERT(VARCHAR, do.Shipping_Date, 103) AS Shipping_Date,
-           ISNULL(CONVERT(VARCHAR, do.Delivery_Max_Date, 103), '') AS Max_Date,
-           do.Sender_Phone AS Receiver_Phone,
-           sbpd.Price Price
-    FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece pc WITH(NOLOCK)
-            ON pc.GuideSerie = do.Guide_Serie
-               AND pc.GuideNumber = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
-            ON pc.GuidePiece = pbs.GuidePieceId
-			AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-        INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd WITH(NOLOCK)
-            ON do.Guide_Number = sbpd.GuideNumber
-               AND sbpd.IsDispatched = 1
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dop WITH(NOLOCK)
-            ON dop.GuideNumber = do.Guide_Number
-               AND dop.GuideSerie = do.Guide_Serie
-        INNER JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp WITH(NOLOCK)
-            ON sbpd.SettlementByPickupId = sbp.Id
-               AND sbp.SequenceCode = @IdManifest
-               AND sbp.SubTypeServiceManagmentId = 3
-               AND sbpd.RowStatus = 1;
+		) AS Pieces_Dry,
+		ISNULL(do.Sender_FirstName, '') + ' ' + ISNULL(do.Sender_LastName, '') AS Receiver_Fullname,
+		do.Sender_Address AS Receiver_Address,
+		CONVERT(NVARCHAR, ISNULL(do.Sender_Zone, 0)) AS Receiver_Zone,
+		do.Sender_Town AS Receiver_Town,
+		do.Sender_Department AS Receiver_Departament,
+		CONVERT(VARCHAR, do.Preparation_Date, 103) + ' ' + CONVERT(VARCHAR(5), do.Preparation_Date, 108) AS Preparation_Date,
+		CONVERT(VARCHAR, do.Shipping_Date, 103) AS Shipping_Date,
+		ISNULL(CONVERT(VARCHAR, do.Delivery_Max_Date, 103), '') AS Max_Date,
+		do.Sender_Phone AS Receiver_Phone,
+		sbpd.Price Price
+	FROM
+		[DeliveryBackOffice].[dbo].SettlementByPickup sbp WITH(NOLOCK)
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].SettlementByPickupDetail sbpd WITH(NOLOCK)
+			ON sbpd.SettlementByPickupId = sbp.Id
+			AND sbpd.RowStatus = 1
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
+			ON
+				do.Guide_Number = sbpd.GuideNumber
+	WHERE
+		sbp.SequenceCode = @IdManifest
+		AND 
+		sbp.SubTypeServiceManagmentId = 3
 
-    SELECT *
-    FROM @temp
-    ORDER BY Receiver_Departament ASC,
-             Receiver_Town ASC,
-             Receiver_Zone ASC,
-             Receiver_Address ASC;
+    SELECT 
+		Guide_Code
+		,Pieces_Cold
+		,Pieces_Dry
+		,Receiver_Fullname
+		,Receiver_Address
+		,Receiver_Zone
+		,Receiver_Town
+		,Receiver_Departament
+		,Preparation_Date
+		,Shipping_Date
+		,Max_Date
+		,Receiver_Phone
+		,Price
+    FROM 
+		@temp Tmp
+    ORDER BY 
+		Receiver_Departament ASC,
+        Receiver_Town ASC,
+        Receiver_Zone ASC,
+        Receiver_Address ASC;
 
 END;
