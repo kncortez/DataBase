@@ -22,7 +22,7 @@ INSERT INTO	 [dbo].[LinehaulCoverage]
 			 WHERE [HL].[HubName] = 'MORALES'),
 			 'email@forzadelivery.com',
 			 1,
-			 'SYS-ADMIN',
+			 'SYS-JOCHOA',
 			 SYSDATETIME());
 
 INSERT INTO	 [dbo].[LinehaulCoverage]
@@ -44,7 +44,7 @@ INSERT INTO	 [dbo].[LinehaulCoverage]
 			 WHERE [HL].[HubName] = 'XELA'),
 			 'email@forzadelivery.com',
 			 1,
-			 'SYS-ADMIN',
+			 'SYS-JOCHOA',
 			 SYSDATETIME());
 
 INSERT INTO	 [dbo].[LinehaulCoverage]
@@ -66,5 +66,5 @@ INSERT INTO	 [dbo].[LinehaulCoverage]
 			 WHERE [HL].[HubName] = 'FLORES, PETEN'),
 			 'email@forzadelivery.com',
 			 1,
-			 'SYS-ADMIN',
+			 'SYS-JOCHOA',
 			 SYSDATETIME());
