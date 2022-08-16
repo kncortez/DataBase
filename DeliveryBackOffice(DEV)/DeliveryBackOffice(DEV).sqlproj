@@ -1053,6 +1053,7 @@
     <Build Include="dbo\Stored Procedures\spHM_GetGuidesPendingSettlement.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetLinehaulSettlementData.sql" />
     <Build Include="dbo\Stored Procedures\spHM_updateOpenProcessInLinehaulRouteSettlementContainerDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_AddGuideToContainerLinehaulSettlementMultiplePieces.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
