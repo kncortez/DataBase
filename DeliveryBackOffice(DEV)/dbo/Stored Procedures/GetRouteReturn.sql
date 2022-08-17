@@ -4,6 +4,11 @@
 -- Create date: <2022-02-21>
 -- Description:	<Obtiene información del despacho de devolución en base a una ruta y una fecha.>
 -- =============================================
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Create date: <2022-08-17>
+-- Description:	< Considerar piezas activas en servicio de devolución.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetRouteReturn]
 	@IdRoute INT,
@@ -21,6 +26,7 @@ BEGIN
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
 			INNER JOIN PieceByService pbs WITH(NOLOCK)
 				ON pbs.ServiceManagmentId = sm.IdServiceManagement
+				AND pbs.RowStatus = 1
 			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 				ON dop.GuidePiece = pbs.GuidePieceId
 			WHERE ra.IdRoute = @IdRoute
@@ -35,6 +41,7 @@ BEGIN
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
 			INNER JOIN PieceByService pbs WITH(NOLOCK)
 				ON pbs.ServiceManagmentId = sm.IdServiceManagement
+				AND pbs.RowStatus = 1
 			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 				ON dop.GuidePiece = pbs.GuidePieceId
 			WHERE ra.IdRoute = @IdRoute
@@ -83,6 +90,7 @@ BEGIN
 			ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
 		INNER JOIN PieceByService pbs WITH(NOLOCK)
 			ON pbs.ServiceManagmentId = sm.IdServiceManagement
+			AND pbs.RowStatus = 1
 		INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 			ON dop.GuidePiece = pbs.GuidePieceId
 		WHERE ra.IdRoute = @IdRoute
