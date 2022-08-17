@@ -1,16 +1,9 @@
-USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[spHM_RoutemanifestReportLinehaulDetail]    Script Date: 17/08/2022 12:58:10 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Edelman vásquez>
 -- Create date: <2022-08-05>
 -- Description:	<detalle de reporte manifiesto linehauls>
 -- =============================================
-ALTER PROCEDURE [dbo].[spHM_RoutemanifestReportLinehaulDetail] 
+CREATE PROCEDURE [dbo].[spHM_RoutemanifestReportLinehaulDetail] 
 @IdLinehaulRoutePreparation AS INT 	
 AS
 BEGIN
