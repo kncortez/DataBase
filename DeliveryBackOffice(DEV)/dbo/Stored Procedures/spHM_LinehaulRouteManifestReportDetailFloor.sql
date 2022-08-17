@@ -17,7 +17,7 @@ BEGIN
 		 SUM(ISNULL(LRPC.ColdPieceQuantity,0))  AS TotaldePiezasFriasAsignadasaPiso,
 		 SUM(ISNULL(LRPC.DryPieceQuantity,0))   AS TotaldePiezasAsignadasaPiso,
 		 LRPC.HubDestinyId
-  FROM   LinehaulRoutePreparationContainer LRPC
+  FROM   LinehaulRoutePreparationContainer LRPC WITH (NOLOCK)
 		INNER JOIN LinehaulRoutePreparationContainerDetail LRPCD WITH (NOLOCK)
 				ON LRPC.IdLinehaulRoutePreparationContainer = LRPCD.LinehaulRoutePreparationContainerId
 		LEFT JOIN Container C WITH (NOLOCK)
