@@ -6,9 +6,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 -- =============================================
--- Author:		<Author,Edelman vásquez>
--- Create date: <Create Date,2022-08-05>
--- Description:	<Description,detalle de reporte manifiesto linehauls>
+-- Author:		<Edelman vásquez>
+-- Create date: <2022-08-05>
+-- Description:	<detalle de reporte manifiesto linehauls>
 -- =============================================
 ALTER PROCEDURE [dbo].[spHM_RoutemanifestReportLinehaulDetail] 
 @IdLinehaulRoutePreparation AS INT 	

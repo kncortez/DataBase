@@ -6,12 +6,12 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 -- =============================================
--- Author:		<Author,Edelma Vásquez>
--- Create date: <Create Date,2022-08-05>
--- Description:	<Description, Detalle de reporte rutas linehauls contenedor de piso >
+-- Author:		<Edelma Vásquez>
+-- Create date: <2022-08-05>
+-- Description:	<Detalle de reporte rutas linehauls contenedor de piso >
 -- =============================================
 ALTER PROCEDURE [dbo].[spHM_LinehaulRouteManifestReportDetailFloor] 
-	-- Add the parameters for the stored procedure here
+	
 	@IdLinehaulRoutePreparation AS INT 	
 AS
 BEGIN
@@ -25,9 +25,9 @@ BEGIN
 		 SUM(ISNULL(LRPC.DryPieceQuantity,0))   AS TotaldePiezasAsignadasaPiso,
 		 LRPC.HubDestinyId
   FROM   LinehaulRoutePreparationContainer LRPC
-		INNER JOIN LinehaulRoutePreparationContainerDetail LRPCD
+		INNER JOIN LinehaulRoutePreparationContainerDetail LRPCD WITH (NOLOCK)
 				ON LRPC.IdLinehaulRoutePreparationContainer = LRPCD.LinehaulRoutePreparationContainerId
-		LEFT JOIN Container C
+		LEFT JOIN Container C WITH (NOLOCK)
 				ON LRPC.ContainerId = C.IdContainer
   WHERE C.ContainerDescription  LIKE ('%lh%') AND LRPC.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
   GROUP BY LRPC.HubDestinyId,C.ContainerDescription
