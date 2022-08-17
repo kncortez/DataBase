@@ -29,7 +29,9 @@ BEGIN
     FROM 
 		DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE 
-		GuideNumber = @Guide_Number;
+		GuideNumber = @Guide_Number
+		AND
+		GuideSerie = @Serie_Number;
 
     INSERT INTO @TMPPICES
     (
