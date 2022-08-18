@@ -16,7 +16,7 @@ BEGIN
 			[DO].[Guide_Number],
 			[DO].[Pieces_Dry],
 			[DO].[Pieces_Cold],
-			[DO].[ReceiverIdSettlement],
+			COALESCE([DO].[ReceiverIdSettlement], 0) AS ReceiverIdSettlement,
 			[DO].[ReceiverIdTownship],
 			[DO].[Receiver_Town],
 			[DO].[Receiver_Department],
@@ -33,7 +33,8 @@ BEGIN
 		ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
 		AND ([SO].[OrderDescription] = 'Recolectado' OR
 			[SO].[OrderDescription] = 'Arribó a las instalaciones' OR
-			[SO].[OrderDescription] = 'En inventario')
+			[SO].[OrderDescription] = 'En inventario' OR
+			[SO].[OrderDescription] = 'En Tránsito')
 	WHERE	[DO].[Guide_Serie] = @GuideSerie
 	AND		[DO].[Guide_Number] = @GuideNumber;
 END
