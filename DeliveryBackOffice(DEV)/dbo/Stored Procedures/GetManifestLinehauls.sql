@@ -40,7 +40,7 @@ AS
 		INNER JOIN Container ctn WITH (NOLOCK)
 		ON lrpc.ContainerId = ctn.IdContainer 
 		INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
-		ON ctn.IdContainer = ctc.IdCatTypeContainer
+		ON ctn.CatTypeContainerId = ctc.IdCatTypeContainer
 		INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
 			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
