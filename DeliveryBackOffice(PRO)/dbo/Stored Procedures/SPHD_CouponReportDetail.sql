@@ -73,8 +73,8 @@ BEGIN
 	WHERE	
 	     PC.DateCreated BETWEEN FORMAT(@DateOf, 'yyyy-MM-dd 00:00:00') 
 		                    AND Format(@DateTo, 'yyyy-MM-dd 23:59:59')
-							AND PC.VisitPointClientOrigin = @CodeOfReference
+							--AND PC.VisitPointClientOrigin = @CodeOfReference
 							AND PC.RowStatus = 1
-	ORDER BY  PC.DateCreated DESC 
+	ORDER BY VPC.DescriptionOfClient, PC.DateCreated DESC 
 
 END

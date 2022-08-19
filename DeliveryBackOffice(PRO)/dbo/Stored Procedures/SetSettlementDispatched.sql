@@ -342,7 +342,7 @@ BEGIN
 				SET @ValidateOperation = @ValidateOperation + 1
 
 			--establecer ruta y fecha de ruta de las guías
-			DECLARE @CodeRoute VARCHAR(100) = (SELECT CodeRoute FROM CatRoute WHERE IdRoute = @IdRoute)
+			DECLARE @CodeRoute VARCHAR(100) = (SELECT TOP 1 CodeRoute FROM CatRoute WHERE IdRoute = @IdRoute)
 
 			UPDATE do 
 			SET do.Courier_Route = @CodeRoute
@@ -360,7 +360,7 @@ BEGIN
 				GuideSerie NVARCHAR(2)
 				,GuideNumber INT
 			)
-			DECLARE @CatModuleId INT = (SELECT ModIdModule FROM CatModule WHERE ModPath = 'frmCheckpoint')
+			DECLARE @CatModuleId INT = (SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'frmCheckpoint')
 
 			INSERT INTO @RevalueGuides
 				SELECT
@@ -405,6 +405,27 @@ BEGIN
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID'
 			ROLLBACK TRANSACTION
+
+			INSERT INTO dbo.RoutePreparationLogError
+			(
+				ErrorDescription,
+				ErrorNumber,
+				ErrorProcedure,
+				ErrorLine,
+				GuideSerie,
+				GuideNumber,
+				TokenCreated,
+				DateCreated
+			)
+			VALUES
+			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,0
+					   ,0
+					   ,'Error en manifiesto ' + @CodeRoute
+					   ,GETDATE())
 		END CATCH;
 
 		IF @@TRANCOUNT > 0
