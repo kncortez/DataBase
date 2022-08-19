@@ -25,48 +25,12 @@ BEGIN
 	IF (COALESCE(@EXISTING_LRPCD, 0) > 0)
 		BEGIN
 			-- Check if there is a record with same data in LinehaulRoutePreparationContainerDetailPiece
-			SET @EXISTING_LRPCDP = (SELECT	[LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece]
+			SET @EXISTING_LRPCDP = (SELECT	COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece]) AS CONT
 									FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 									WHERE	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
 										AND [LRPCDP].[PieceNumber] = @PieceNumber);
 
-			IF (COALESCE(@EXISTING_LRPCDP, 0) > 0)
-				BEGIN
-					-- UPDATE DOC
-					BEGIN TRANSACTION
-					BEGIN TRY
-						UPDATE	[dbo].[LinehaulRoutePreparationContainerDetailPiece]
-						SET		[IsDryPiece] = @IsDry,
-								[RowStatus] = 1,
-								[TokenUpdated] = @TknUser, 
-								[DateUpdated] = SYSDATETIME()
-						WHERE	[IdLinehaulRoutePreparationContainerDetailPiece] = @EXISTING_LRPCDP;
-
-						SELECT	[LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece],
-								[LRPCDP].[LinehaulRoutePreparationContainerDetailId],
-								[LRPCDP].[PieceNumber],
-								[LRPCDP].[IsDryPiece],
-								COALESCE([LRPCDP].[ActCode], 0) AS ActCode,
-								[LRPCDP].[RowStatus]
-						FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-						WHERE	[LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece] = @EXISTING_LRPCDP;
-
-						IF (@@TRANCOUNT > 0)
-							COMMIT TRANSACTION
-					END TRY
-					BEGIN CATCH
-						SELECT 0 [spResult],
-							ERROR_NUMBER() AS [ErrorNumber],
-							ERROR_SEVERITY() AS [ErrorSeverity],
-							ERROR_STATE() AS [ErrorState],
-							ERROR_PROCEDURE() AS [ErrorProcedure],
-							ERROR_LINE() AS [ErrorLine],
-							ERROR_MESSAGE() AS [ErrorMessage];
-
-						ROLLBACK TRANSACTION
-					END CATCH 
-				END
-			ELSE 
+			IF (@EXISTING_LRPCDP = 0) 
 				BEGIN
 					-- INSERT DOC
 					BEGIN TRANSACTION
