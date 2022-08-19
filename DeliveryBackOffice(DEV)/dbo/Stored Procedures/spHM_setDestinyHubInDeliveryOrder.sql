@@ -33,17 +33,17 @@ BEGIN
 
 				SELECT	[DO].[Guide_Serie],
 						[DO].[Guide_Number],
-						[DO].[Pieces_Dry],
-						[DO].[Pieces_Cold],
+						COALESCE([DO].[Pieces_Dry], 0) AS Pieces_Dry,
+						COALESCE([DO].[Pieces_Cold], 0) AS Pieces_Cold,
 						COALESCE([DO].[ReceiverIdSettlement], 0) AS ReceiverIdSettlement,
-						[DO].[ReceiverIdTownship],
+						COALESCE([DO].[ReceiverIdTownship], 0) AS ReceiverIdTownship,
 						[DO].[Receiver_Town],
 						[DO].[Receiver_Department],
 						[DO].[Receiver_Address],
-						[DO].[Receiver_Zone],
-						[DO].[HubDestinationId],
+						COALESCE([DO].[Receiver_Zone], 0) AS Receiver_Zone,
+						COALESCE([DO].[HubDestinationId], 0) AS HubDestinationId,
 						[HL].[HubAbbreviation],
-						[DO].[StatusOrderId],
+						COALESCE([DO].[StatusOrderId], 0) AS StatusOrderId,
 						[SO].[OrderDescription]
 				FROM	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				LEFT JOIN [DBO].[HubLogistics] HL
