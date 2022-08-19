@@ -53,7 +53,7 @@ BEGIN
 			IF EXISTS (SELECT TOP 1
 					1
 				FROM AccountServiceCartDetail
-				WHERE @AccountServiceCartId = @AccountServiceCartId
+				WHERE AccountServiceCartId = @AccountServiceCartId
 				AND RowStatus = 1)
 			BEGIN
 				
