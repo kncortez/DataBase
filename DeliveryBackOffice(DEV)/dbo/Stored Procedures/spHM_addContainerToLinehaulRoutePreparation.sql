@@ -85,6 +85,7 @@ BEGIN
 						INSERT INTO [dbo].[LinehaulRoutePreparationContainer]
 									([LinehaulRoutePreparationId],
 									 [ContainerId],
+									 [CatLinehaulStatusId],
 									 [GuideQuantity],
 									 [DryPieceQuantity],
 									 [ColdPieceQuantity],
@@ -93,10 +94,11 @@ BEGIN
 									 [DateCreated])
 							VALUES ( @LinehaulRoutePreparationId,
 									 @ContainerId,
-									 0,
-									 0,
-									 0,
-									 1,
+									 (SELECT [CLS].[IdCatLinehaulStatus] FROM [dbo].[CatLinehaulStatus] CLS WHERE [CLS].[StatusName] = 'GENERATED'),
+									 0,		-- GuideQuantity
+									 0,		-- DryPieceQuantity
+									 0,		-- ColdPieceQuantity
+									 1,		-- RowStatus
 									 @TknUser,
 									 SYSDATETIME());
 						SET @INSERTED_DOC = SCOPE_IDENTITY();

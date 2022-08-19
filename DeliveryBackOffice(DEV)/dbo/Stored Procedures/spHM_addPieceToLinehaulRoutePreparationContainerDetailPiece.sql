@@ -73,12 +73,14 @@ BEGIN
 					BEGIN TRY
 						INSERT INTO [dbo].[LinehaulRoutePreparationContainerDetailPiece]
 									([LinehaulRoutePreparationContainerDetailId],
+									 [CatLinehaulStatusId],
 									 [PieceNumber],
 									 [IsDryPiece],
 									 [RowStatus],
 									 [TokenCreated],
 									 [DateCreated])
 							VALUES	(@LinehaulRoutePreparationContainerDetailId,
+									(SELECT [CLS].[IdCatLinehaulStatus] FROM [dbo].[CatLinehaulStatus] CLS WHERE [CLS].[StatusName] = 'IN TRANSIT'),
 									 @PieceNumber,
 									 @IsDry,
 									 1,

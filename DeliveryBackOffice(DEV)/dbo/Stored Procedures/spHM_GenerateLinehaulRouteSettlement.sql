@@ -5,7 +5,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_GenerateLinehaulRouteSettlement]
 	@LinehaulRoutePreparationId AS INT,
-	@DateSelected AS DATETIME,
+	@DateSelected AS DATE,
 	@HubID AS INT,
 	@UserName as  NVARCHAR(20),
 	@TknUser AS NVARCHAR(50)
@@ -66,6 +66,7 @@ BEGIN
 					AND [LRS].[CatLinehaulStatusId] = (SELECT	[CLS].[IdCatLinehaulStatus]
 														FROM	[dbo].[CatLinehaulStatus] CLS
 														WHERE	[CLS].[StatusName] = 'GENERATED')
+					AND [LRS].[DateReceived] = @DateSelected
 					AND [LRS].[RowStatus] = 1;
 			END
 		ELSE

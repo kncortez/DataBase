@@ -7,7 +7,7 @@
     [PiecesMissing]                            INT           NOT NULL,
     [GuideReceived]                            BIT           NOT NULL,
     [IsOpenProcess]                            INT           NOT NULL,
-    [UserProcess]                              NVARCHAR (25) NULL,
+    [UserProcess]                              NVARCHAR (50) NULL,
     [RowStatus]                                BIT           DEFAULT ((1)) NOT NULL,
     [TokenCreated]                             NVARCHAR (50) NOT NULL,
     [DateCreated]                              DATETIME      NOT NULL,
@@ -17,6 +17,8 @@
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_RouteSettlementContainer] FOREIGN KEY ([LinehaulRouteSettlementContainerId]) REFERENCES [dbo].[LinehaulRouteSettlementContainer] ([IdLinehaulRouteSettlementContainer])
 );
+
+
 
 
 

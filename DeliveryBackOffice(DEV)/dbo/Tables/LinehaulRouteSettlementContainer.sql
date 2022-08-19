@@ -2,6 +2,7 @@
     [IdLinehaulRouteSettlementContainer] INT           IDENTITY (1, 1) NOT NULL,
     [LinehaulRouteSettlementId]          INT           NOT NULL,
     [ContainerId]                        INT           NOT NULL,
+    [HubId]                              INT           NOT NULL,
     [GuideQuantity]                      INT           NOT NULL,
     [DryPiecesQuantity]                  INT           NULL,
     [ColdPiecesQuantity]                 INT           NULL,
@@ -12,8 +13,11 @@
     [DateUpdated]                        DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlementContainer] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlementContainer_Container] FOREIGN KEY ([ContainerId]) REFERENCES [dbo].[Container] ([IdContainer]),
+    CONSTRAINT [FK_LinehaulRouteSettlementContainer_Hub] FOREIGN KEY ([HubId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulRouteSettlementContainer_RouteSettlement] FOREIGN KEY ([LinehaulRouteSettlementId]) REFERENCES [dbo].[LinehaulRouteSettlement] ([IdLinehaulRouteSettlement])
 );
+
+
 
 
 GO
@@ -62,4 +66,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de contenedores en liquidación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainer';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hub destino asignado | Tabla HubLogistics', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainer', @level2type = N'COLUMN', @level2name = N'HubId';
 

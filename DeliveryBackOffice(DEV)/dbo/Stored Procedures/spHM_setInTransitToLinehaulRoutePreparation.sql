@@ -86,6 +86,13 @@ BEGIN
 									[DateUpdated] = SYSDATETIME()
 							WHERE	[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
+							UPDATE	[LinehaulRoutePreparationContainer]
+							SET		[CatLinehaulStatusId] = (SELECT [CLS].[IdCatLinehaulStatus]
+															FROM [dbo].[CatLinehaulStatus] CLS
+															WHERE [CLS].[StatusName] = 'IN TRANSIT')
+							WHERE	[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+								AND [RowStatus] = 1;
+
 							SELECT	[LRP].[IdLinehaulRoutePreparation],
 									[LRP].[StationDispatchedId],
 									[LRP].[CatLinehaulStatusId],
