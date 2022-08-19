@@ -78,7 +78,7 @@ ON PC.GuideSerieOrigin  = DO.Guide_Serie AND
    PC.GuideNumberOrigin = DO.Guide_Number
 WHERE PC.DateCreated BETWEEN FORMAT(@DateOf, 'yyyy-MM-dd 00:00:00') 
                          AND FORMAT(@DateTo, 'yyyy-MM-dd 23:59:59')
-						 AND PC.VisitPointClientOrigin = @CodeOfReference
+						-- AND PC.VisitPointClientOrigin = @CodeOfReference
 						
 	
 END
