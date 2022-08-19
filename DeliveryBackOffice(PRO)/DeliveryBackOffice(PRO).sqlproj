@@ -1054,6 +1054,7 @@
     <Build Include="dbo\Stored Procedures\GetStationLocation.sql" />
     <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
     <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
+    <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\120\SqlSchemas\master.dacpac">

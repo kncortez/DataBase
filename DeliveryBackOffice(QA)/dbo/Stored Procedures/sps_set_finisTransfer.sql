@@ -104,8 +104,27 @@ BEGIN
                 ON pbs.GuidePieceId = dpc.GuidePiece
             LEFT JOIN dbo.ServiceManagement smg WITH (NOLOCK)
                 ON smg.IdServiceManagement = pbs.ServiceManagmentId
-        WHERE stp.IdCourier = @IdCourier
-              AND smg.SubTypeServiceManagmentId = 3;
+        WHERE smg.SubTypeServiceManagmentId = 3;
+
+        UPDATE pbs
+        SET pbs.RowStatus = 0,
+            pbs.TokenUpdated = @TokenCreated,
+            pbs.DateUpdated = GETDATE()
+        FROM dbo.SettlementByPickup stp WITH (NOLOCK)
+            LEFT JOIN dbo.SettlementByPickupDetail std WITH (NOLOCK)
+                ON std.SettlementByPickupId = stp.Id
+                   AND std.RowStatus = 1
+            JOIN #listGuidesEnabled lge
+                ON lge.Guide_Serie = std.GuideSerie
+                   AND lge.Guide_Number = std.GuideNumber
+            LEFT JOIN dbo.DeliveryOrderPiece dpc WITH (NOLOCK)
+                ON dpc.GuideSerie = std.GuideSerie
+                   AND dpc.GuideNumber = std.GuideNumber
+            LEFT JOIN dbo.PieceByService pbs WITH (NOLOCK)
+                ON pbs.GuidePieceId = dpc.GuidePiece
+            LEFT JOIN dbo.ServiceManagement smg WITH (NOLOCK)
+                ON smg.IdServiceManagement = pbs.ServiceManagmentId
+        WHERE smg.SubTypeServiceManagmentId = 3;
 
         --INSERT INTO TABLE DELIVERYORDERDETAIL SO WE CAN SETUP A NEW CHECKPOINT FOR TRACKING PURPOSES. 
         INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
