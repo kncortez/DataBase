@@ -45,6 +45,8 @@ BEGIN
 		GuideDryPieces INT,
 		GuideColdPieces INT,
 		GuideTotalPieces INT,
+		GuideCoDAmountPaid DECIMAL(18,2),
+		GuideCoDAmountToPay DECIMAL(18,2),
 		INDEX INDX_FilteredGuides_Guide NONCLUSTERED(GuideSerie, GuideNumber)
 	);
 
@@ -119,6 +121,74 @@ BEGIN
 					'Envios realizados' 'BottomText'
 			END
 		END
+		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
+		BEGIN
+
+			INSERT INTO #FilteredGuides
+				(GuideSerie, GuideNumber, GuideStatus, GuideCoDAmountPaid, GuideCoDAmountToPay)
+			SELECT
+				DO.Guide_Serie, DO.Guide_Number, DO.StatusOrderId, (CASE WHEN DO.StatusOrderId IN (24, 25) THEN ISNULL(DO.Collect_OnDelivery,0) ELSE 0 END), (CASE WHEN DO.StatusOrderId NOT IN (SELECT SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.CatCheckpointTypeId = 3) OR DO.StatusOrderId = 5 THEN ISNULL(DO.Collect_OnDelivery,0) ELSE 0 END)
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+			WHERE
+				DO.DateCreated BETWEEN @StartFilterDate AND @EndFilterDate
+				AND
+				DO.IdCustomer = @CustomerId
+
+			IF( EXISTS(SELECT TOP 1 1 FROM #FilteredGuides) )
+			BEGIN
+
+				DECLARE @ResponseCoDTable AS TABLE(
+					TotalPaidCoD DECIMAL(18,2),
+					TotalPendingCoD DECIMAL(18,2)
+				);
+
+				INSERT INTO @ResponseCoDTable
+					(TotalPaidCoD, TotalPendingCoD)
+				SELECT
+					SUM(FG.GuideCoDAmountPaid) 'TotalPaidCoD', -- Estados terminales Cod liquidado y Cod pagado
+					SUM(FG.GuideCoDAmountToPay) 'TotalPendingCoD' -- Estados no terminales sin incluir entregado
+				FROM
+					#FilteredGuides FG
+					
+				IF( EXISTS(SELECT TOP 1 1 FROM @ResponseCoDTable))
+				BEGIN
+					SELECT
+						CAST(1 AS BIT) [blnResult]
+
+					SELECT
+						TotalPaidCoD 'TopValue',
+						'Monto pagado COD' 'TopText',
+						TotalPendingCoD 'BottomValue',
+						'Total por cobrar' 'BottomText'
+					FROM
+						@ResponseCoDTable
+				END
+				ELSE
+				BEGIN
+					SELECT
+						CAST(0 AS BIT) [blnResult]
+
+					SELECT
+						0 'TopValue',
+						'Monto pagado COD' 'TopText',
+						0 'BottomValue',
+						'Total por cobrar' 'BottomText'
+				END
+			END
+			ELSE
+			BEGIN
+				SELECT
+					CAST(0 AS BIT) [blnResult]
+
+				SELECT
+					0 'TopValue',
+					'Monto pagado COD' 'TopText',
+					0 'BottomValue',
+					'Total por cobrar' 'BottomText'
+			END
+
+		END
 		ELSE
 		BEGIN
 
@@ -135,7 +205,8 @@ BEGIN
 	END TRY
 	BEGIN CATCH
 		SELECT
-			CAST(0 AS BIT) [blnResult]
+			CAST(0 AS BIT) [blnResult],
+			ERROR_MESSAGE() [responseMessage]
 
 		SELECT
 			0 'TopValue',
