@@ -175,21 +175,35 @@ BEGIN
         --declare @value int = (select count (GuideNumber) from DeliveryOrderPiece where GuideNumber in (select ItemNumber from #listGuides))
 
         ---	 insertar checkpoint de recolectado.	
-        INSERT INTO dbo.DeliveryOrderDetail
-        (
-            [Guide_Serie],
-            [Guide_Number],
-            [StatusOrderId],
-            [UserCreated],
-            [DateCreated],
-            [DateCreatedInSystem],
-            [Observations],
-            [Temperature_Celsius],
-            [PieceId]
-        )
-        VALUES
-        (@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
-
+		IF( 
+			(
+				SELECT 
+					TOP 1 
+						DO.StatusOrderId 
+				FROM 
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) 
+				WHERE 
+					DO.Guide_Serie = @GuideSerie 
+					AND 
+					DO.Guide_Number = @GuideNumber
+			) IN (1,15,16) -- Solicitado, Generado, Programado para recolección
+		)
+		BEGIN
+			INSERT INTO dbo.DeliveryOrderDetail
+			(
+				[Guide_Serie],
+				[Guide_Number],
+				[StatusOrderId],
+				[UserCreated],
+				[DateCreated],
+				[DateCreatedInSystem],
+				[Observations],
+				[Temperature_Celsius],
+				[PieceId]
+			)
+			VALUES
+			(@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
+		END
         ---	 insertar checkpoint de arribo a instalaciones.	
         INSERT INTO dbo.DeliveryOrderDetail
         (
