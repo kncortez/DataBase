@@ -47,7 +47,7 @@ BEGIN
 		,@CustomerTypeId = Cu.IdCustomerType
 		,@VisitPointByAccount = VPC.CodeOfReference
 	FROM
-		[DeliveryBackOffice].[dbo].[Account] Acc wITH(NOLOCK)
+		[DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
 			ON
@@ -180,6 +180,8 @@ BEGIN
 	ELSE IF(@CustomerTypeId = 2) -- Redistribuidores - express center - cliente + punto de visita
 	BEGIN
 
+	PRINT @VisitPointByAccount
+	PRINT @CustomerId
 		SELECT
 			LTRIM(RTRIM(IIF(VPC.DescriptionOfClient IS NULL, '',CONCAT(VPC.CodeOfReference,' - ', VPC.DescriptionOfClient)))) 'Punto de origen'
 			,LTRIM(RTRIM(CONCAT(DO.Sender_FirstName,' ',DO.Sender_LastName))) 'Remitente'
@@ -271,10 +273,11 @@ BEGIN
 					ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
 		WHERE
 			DO.DateCreated BETWEEN @DateStart AND @DateFinish
+			--AND
+			--DO.IdCustomer = @CustomerId
 			AND
-			DO.IdCustomer = @CustomerId
-			AND
-			(@VisitPointByAccount IS NULL OR DO.Sender_ID = @VisitPointByAccount)
+			( DO.Sender_ID = @VisitPointByAccount OR do.OriginSenderId = @VisitPointByAccount)
+			
 		ORDER BY
 			DO.DateCreated DESC
 
