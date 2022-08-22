@@ -670,7 +670,17 @@ BEGIN
 
 				END
 
-				PRINT @IdSegment
+				IF(@IsTDA = 'true') -- Si se detecta un TDA para tarifa "especial"
+				BEGIN
+					SELECT
+						TOP 1 
+							@IdSegment = sg.CrsId 
+					FROM 
+						[DeliveryBackOffice].dbo.CatRateSegment sg WITH(NOLOCK) 
+					WHERE 
+						sg.CrsShortName ='ESP' COLLATE Latin1_General_CI_AI
+				END
+
 				IF(@IdSegment IS NULL)-- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
 				BEGIN
 					SELECT
@@ -679,7 +689,7 @@ BEGIN
 					FROM 
 						[DeliveryBackOffice].dbo.CatRateSegment sg WITH(NOLOCK) 
 					WHERE 
-						sg.CrsShortName ='FOR'
+						sg.CrsShortName ='FOR' COLLATE Latin1_General_CI_AI
 				END
 
 				-- Cálculo de precios
@@ -730,8 +740,6 @@ BEGIN
 				DECLARE @NewOverWeight DECIMAL(12,2) = 0;
 				SET @NewOverWeight = (@OverWeight - @ExpectedWeight);
 
-				--SET @OverWeight = ISNULL(( IIF( (@OverWeight - @ExpectedWeight) < 0, 0, (@OverWeight - @ExpectedWeight) ) ),0);
-
 				-- Actualizar con los que esten dentro del tarifario por tipo de servicio y tipo de segmento
 				UPDATE
 					#ParcelAmountPerType
@@ -749,7 +757,6 @@ BEGIN
 							 inner join #ListCode LC on abc.Code = LC.Item
 						where rh.RheId = @IdRate
 							and rd.TypeSegmentId = @IdSegment
-							--and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
 						GROUP BY
 							rd.TypeSegmentId,
 							rd.TypeServiceId
@@ -785,30 +792,6 @@ BEGIN
 				WHERE
 					TempValues.AddedSegmentType = SegmentType
 
-				DECLARE @RealRateGroup AS TABLE(
-					ServiceTypeId INT NOT NULL,
-					RowStatus BIT NOT NULL DEFAULT 1
-				);
-
-				INSERT INTO
-					@RealRateGroup
-					(ServiceTypeId)
-				SELECT
-					CtsId 
-				FROM 
-					[DeliveryBackOffice].dbo.CatTypeService CTS WITH(NOLOCK)
-				WHERE 
-					RateGroup = @IdRateGroup and CtsRowStatus = 1
-
-				DECLARE @SDDTypeId INT = (SELECT TOP 1 CTS.CtsId FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH(NOLOCK) WHERE CTS.CtsShortName = 'SDD' COLLATE Latin1_General_CI_AI)
-				IF(@IsSDD = 0)
-					UPDATE
-						@RealRateGroup
-					SET
-						RowStatus = 0
-					WHERE
-						ServiceTypeId = @SDDTypeId
-
 				-- Tarifas finales
 				insert into @TempRate
 				select DISTINCT
@@ -834,10 +817,8 @@ BEGIN
 					 left join dbo.CatTypeService sv on sv.CtsId = rd.TypeServiceId
 					 left join dbo.CatTypeRate cr on cr.IdTypeRate = rh.RateTypeId
 				where rh.RheId = @IdRate
-					--and rd.ArticleId is null
 					and rd.TypeSegmentId = @IdSegment
-					and  (rd.TypeServiceId in (SELECT RRG.ServiceTypeId from @RealRateGroup RRG WHERE RRG.RowStatus = 1) )
-					and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
+					and convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
 					
 				IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL DROP TABLE #ParcelOverweightPerType;
 				IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL DROP TABLE #ParcelAmountPerType;
