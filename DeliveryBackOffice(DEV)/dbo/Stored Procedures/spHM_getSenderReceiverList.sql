@@ -20,5 +20,6 @@ BEGIN
 				[SR].[Email],
 				[SR].[CUI]
 	FROM		[dbo].[SenderReceiver] SR
+	WHERE		[SR].[Estatus] = 1
 	ORDER BY	[SR].[Last_Name];
 END
