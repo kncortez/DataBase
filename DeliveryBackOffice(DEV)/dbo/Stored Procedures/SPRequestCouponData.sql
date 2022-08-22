@@ -149,7 +149,7 @@ BEGIN
 					(
 						(
 							-- Cliente individual e impersonado
-							@ClientType = 3
+							@ClientType = 3 OR @ClientType = 1
 						)
 						OR
 						(

@@ -31,3 +31,11 @@
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RheDefault]
+    ON [dbo].[RateHeader]([RheDefault] ASC)
+    INCLUDE([ReturnRate]);
+

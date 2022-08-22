@@ -1,57 +1,81 @@
 ﻿
 
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-08-02>
+-- Description:	< Corrección para actualizar la opción de entrega y la dirección destino de guías >
+-- =============================================
+
 CREATE PROCEDURE [dbo].[spput_modify_guide_to_receiverid]
-	@Guide NVARCHAR(50),
-	@ReceiverId INT,
-	@TokenUpdated VARCHAR(50)
+    @Guide NVARCHAR(50),
+    @ReceiverId INT,
+    @TokenUpdated VARCHAR(50)
 AS
 BEGIN
 
---DECLARE @Guide NVARCHAR(50) = 'FD510014';
---DECLARE @ReceiverId INT = 4244;
---DECLARE @TokenUpdated VARCHAR(50) = 'SYS-AORTIZ';
-DECLARE @DateUpdated DATETIME = GETDATE();
+    -- Variables "globales"
+    DECLARE @DateUpdated DATETIME = GETDATE();
+    DECLARE @NewDeliveryOptionID INT =
+            (
+                SELECT TOP 1
+                       CDO.IdDeliveryOption
+                FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH (NOLOCK)
+                WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @NewDeliveryAddress NVARCHAR(600) = N'';
 
-BEGIN TRANSACTION;
+    SELECT @NewDeliveryAddress = VPC.[Address]
+    FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
+    WHERE VPC.CodeOfReference = @ReceiverId;
 
-BEGIN TRY
-	UPDATE dbo.DeliveryOrder
-	SET Receiver_ID = @ReceiverId,
-		TokenUpdated = @TokenUpdated,
-		DateUpdated = @DateUpdated
-	WHERE CONCAT(Guide_Serie,Guide_Number) = @Guide;
-END TRY
-BEGIN CATCH
-	SELECT 'RollBackTransaction' AS message,
-			@Guide AS Guide,
-			'FALSE'	blnResult,
-			CAST(@ReceiverId AS VARCHAR(10)) IdResult,
-			CAST(500 AS VARCHAR(5)) StatusResult,
-			CAST(ERROR_NUMBER() AS VARCHAR) AS ErrorNumber,
-			CAST(ERROR_SEVERITY() AS VARCHAR) AS ErrorSeverity,
-			CAST(ERROR_STATE() AS VARCHAR) AS ErrorState,
-			CAST(ERROR_PROCEDURE() AS VARCHAR) AS ErrorProcedure,
-			CAST(ERROR_LINE() AS VARCHAR) AS ErrorLine,
-			CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage;
+    BEGIN TRANSACTION;
 
-    ROLLBACK TRANSACTION;
-END CATCH;
+    BEGIN TRY
+        UPDATE dbo.DeliveryOrder
+        SET Receiver_ID = @ReceiverId,
+            IdDeliveryOption = @NewDeliveryOptionID,
+            Receiver_Address = (CASE
+                                    WHEN LTRIM(RTRIM(ISNULL(@NewDeliveryAddress, ''))) != '' THEN
+                                        @NewDeliveryAddress
+                                    ELSE
+                                        Receiver_Address
+                                END
+                               ),
+            TokenUpdated = @TokenUpdated,
+            DateUpdated = @DateUpdated
+        WHERE CONCAT(Guide_Serie, Guide_Number) = @Guide;
+    END TRY
+    BEGIN CATCH
+        SELECT 'RollBackTransaction' AS message,
+               @Guide AS Guide,
+               'FALSE' blnResult,
+               CAST(@ReceiverId AS VARCHAR(10)) IdResult,
+               CAST(500 AS VARCHAR(5)) StatusResult,
+               CAST(ERROR_NUMBER() AS VARCHAR) AS ErrorNumber,
+               CAST(ERROR_SEVERITY() AS VARCHAR) AS ErrorSeverity,
+               CAST(ERROR_STATE() AS VARCHAR) AS ErrorState,
+               CAST(ERROR_PROCEDURE() AS VARCHAR) AS ErrorProcedure,
+               CAST(ERROR_LINE() AS VARCHAR) AS ErrorLine,
+               CAST(ERROR_MESSAGE() AS VARCHAR(MAX)) AS ResultMessage;
 
-IF @@TRANCOUNT > 0
-BEGIN
-	SELECT	'Succesfull' AS message,
-			@Guide AS Guide,
-			'TRUE' blnResult,
-			CAST(@ReceiverId AS VARCHAR(10)) IdResult,
-			CAST(200 AS VARCHAR(50)) StatusResult,
-			'' AS ErrorNumber,
-			'' AS ErrorSeverity,
-			'' AS ErrorState,
-			'' AS ErrorProcedure,
-			'' AS ErrorLine,
-			'Success' AS ResultMessage;
+        ROLLBACK TRANSACTION;
+    END CATCH;
 
-    COMMIT TRANSACTION;
-END
+    IF @@TRANCOUNT > 0
+    BEGIN
+        SELECT 'Succesfull' AS message,
+               @Guide AS Guide,
+               'TRUE' blnResult,
+               CAST(@ReceiverId AS VARCHAR(10)) IdResult,
+               CAST(200 AS VARCHAR(50)) StatusResult,
+               '' AS ErrorNumber,
+               '' AS ErrorSeverity,
+               '' AS ErrorState,
+               '' AS ErrorProcedure,
+               '' AS ErrorLine,
+               'Success' AS ResultMessage;
 
-END
+        COMMIT TRANSACTION;
+    END;
+
+END;

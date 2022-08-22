@@ -994,6 +994,63 @@ BEGIN
 
 		END
 
+		IF(@ReasonCode IN ('1','40','00'))
+		BEGIN
+
+			DECLARE @AcceptedGuides AS TABLE (
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT,
+				GuidePriceShipment DECIMAL(14,2)
+			);
+
+			INSERT INTO @AcceptedGuides
+				(GuideSerie, GuideNumber, GuidePriceShipment)
+			SELECT
+				DISTINCT
+					CCTBCD.SerieNumber,
+					CCTBCD.ProductNumber,
+					DO.PriceShippment
+			FROM
+				DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH(NOLOCK)
+				INNER JOIN
+					DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+					ON
+						CCTBCD.ProductNumber = DO.Guide_Number
+						AND
+						CCTBCD.SerieNumber = DO.Guide_Serie
+			WHERE
+				CCTBCD.OrderNumber = @OrderNumber
+
+			INSERT INTO
+				DeliveryBackOffice.dbo.Cost
+				( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated )
+			SELECT
+				1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TokenCreated, GETDATE()
+			FROM
+				@AcceptedGuides AG
+				LEFT JOIN
+					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
+					ON
+						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
+			WHERE
+				Co.IdCost IS NULL
+						
+			UPDATE
+				Co
+			SET
+				Co.TotalAmountPaid = Co.TotalAmount,
+				Co.PaymentDate = GETDATE(),
+				Co.TokenUpdated = @TokenCreated,
+				Co.DateUpdated = GETDATE()
+			FROM	
+				@AcceptedGuides AG
+				INNER JOIN
+					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
+					ON
+						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
+
+		END
+
 		IF(@@TRANCOUNT > 0)
 			COMMIT TRANSACTION;
 

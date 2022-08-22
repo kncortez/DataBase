@@ -34,7 +34,7 @@ BEGIN
            btd.GuideNumber,
 		   CONCAT(btd.GuideSerie, btd.GuideNumber) Guide,
            CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) AS Receiver,
-           IIF(cu.Name = 'FD EXPRESS CENTER', CONCAT(do.Sender_FirstName,' ', do.Sender_LastName), cu.Name) AS Client,
+           IIF(cu.Name = 'FD EXPRESS CENTER' OR kovpc.KindOfVPName = 'Express Center', CONCAT(do.Sender_FirstName,' ', do.Sender_LastName), cu.Name) AS Client,
            CASE WHEN btd.CatConceptCODId = 4 THEN
 		   (
                SELECT TOP 1
@@ -76,6 +76,8 @@ BEGIN
 			btd.CatConceptCODId Concept,
 			COALESCE(btd.CollectId,0) CollectId,
 			COALESCE(btd.RecolectionId,0) RecolectionId
+			,ISNULL(btc.CommissionId,0) CommissionId
+            ,btc.CommissionDate CommissionDate
     FROM [dbo].[BatchDetailCOD] btd WITH(NOLOCK)
         LEFT JOIN [dbo].[BatchCOD] bt WITH(NOLOCK)
             ON btd.[BatchCODId] = bt.[IdBatchCOD]
@@ -121,6 +123,8 @@ BEGIN
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
                AND btc.CatConceptCODId = 1
+		LEFT JOIN [dbo].[KindOfVPClient] kovpc
+			ON kovpc.IdKindOfVPClient = vp.IdKindOfVPClient
     WHERE
         --AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI
         CONVERT(DATE, bt.[Date]) = @Date
@@ -171,18 +175,12 @@ BEGIN
 		   vp.IdKindOfVPClient,
 			vp.DescriptionOfClient, 			
 			btd.CollectId,
-			btd.RecolectionId
+			btd.RecolectionId,
+			kovpc.KindOfVPName,
+			btc.CommissionId,
+            btc.CommissionDate
     ORDER BY bt.IdBatchCOD,
              bt.Date, btd.AuthorizationNumber DESC;
-​
-    SELECT DISTINCT
-           CommissionId,
-           CommissionDate
-    FROM [dbo].[BatchDetailCOD] WITH(NOLOCK)
-    WHERE CONVERT(DATE, CommissionDate) = @Date
-	AND RowStatus = 1
-    ORDER BY CommissionId;
-​
-​
+			 
     SET NOCOUNT OFF;
 END;

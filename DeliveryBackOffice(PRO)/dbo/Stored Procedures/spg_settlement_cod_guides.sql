@@ -55,7 +55,7 @@ WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
           vp.IdKindOfVPClient <> 1
           OR vp.IdKindOfVPClient IS NULL
       )
-	 -- AND dsd.Guide_Delivered =1
+	 AND dsd.Guide_Delivered =1
 ORDER BY Receiver_Departament ASC,
          Receiver_Town ASC,
          Receiver_Zone ASC,

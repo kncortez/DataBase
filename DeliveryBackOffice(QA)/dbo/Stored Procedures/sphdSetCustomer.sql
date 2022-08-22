@@ -221,10 +221,10 @@ BEGIN
 				   ,@CODContactPhone
 				   ,@CODContactEmail
 				   ,@RowSatus --'TRUE'
-				   ,NULL
-				   ,NULL
 				   ,@Token
 				   ,GETDATE()
+				   ,NULL
+				   ,NULL
 				   -------------------------
 				   --,NULL				   
 				   ,@CardCode

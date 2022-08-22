@@ -1,5 +1,6 @@
 ﻿
-CREATE PROCEDURE [dbo].[spg_deliveryorder_settlement_guides_returns] @IdManifest INT
+CREATE PROCEDURE [dbo].[spg_deliveryorder_settlement_guides_returns] 
+	@IdManifest INT
 AS
 BEGIN
 
@@ -31,21 +32,23 @@ BEGIN
            do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR(50)) AS Guide_Code,
            (
                SELECT COUNT(*)
-               FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop
-                   JOIN DeliveryBackOffice.dbo.PieceByService pbs
+               FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+                   INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
                        ON pbs.GuidePieceId = dop.GuidePiece
                WHERE dop.GuideNumber = do.Guide_Number
                      AND dop.GuideSerie = do.Guide_Serie
                      AND dop.IsDry = 0
+					AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
            ) AS Pieces_Cold,
            (
                SELECT COUNT(*)
-               FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop
-                   JOIN DeliveryBackOffice.dbo.PieceByService pbs
+               FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
+                   INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
                        ON pbs.GuidePieceId = dop.GuidePiece
                WHERE dop.GuideNumber = do.Guide_Number
                      AND dop.GuideSerie = do.Guide_Serie
                      AND dop.IsDry = 1
+					AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
            ) AS Pieces_Dry,
            ISNULL(do.Sender_FirstName, '') + ' ' + ISNULL(do.Sender_LastName, '') AS Receiver_Fullname,
            do.Sender_Address AS Receiver_Address,
@@ -57,19 +60,20 @@ BEGIN
            ISNULL(CONVERT(VARCHAR, do.Delivery_Max_Date, 103), '') AS Max_Date,
            do.Sender_Phone AS Receiver_Phone,
            sbpd.Price Price
-    FROM DeliveryOrder do
-        INNER JOIN DeliveryOrderPiece pc
+    FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece pc WITH(NOLOCK)
             ON pc.GuideSerie = do.Guide_Serie
                AND pc.GuideNumber = do.Guide_Number
-        JOIN dbo.PieceByService pbs
+        INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH(NOLOCK)
             ON pc.GuidePiece = pbs.GuidePieceId
-        JOIN SettlementByPickupDetail sbpd
+			AND CAST(pbs.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
+        INNER JOIN DeliveryBackOffice.dbo.SettlementByPickupDetail sbpd WITH(NOLOCK)
             ON do.Guide_Number = sbpd.GuideNumber
                AND sbpd.IsDispatched = 1
-        JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dop
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dop WITH(NOLOCK)
             ON dop.GuideNumber = do.Guide_Number
                AND dop.GuideSerie = do.Guide_Serie
-        JOIN SettlementByPickup sbp
+        INNER JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp WITH(NOLOCK)
             ON sbpd.SettlementByPickupId = sbp.Id
                AND sbp.SequenceCode = @IdManifest
                AND sbp.SubTypeServiceManagmentId = 3
