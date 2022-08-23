@@ -1043,9 +1043,7 @@
     <Build Include="dbo\Stored Procedures\GetStations.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
-<<<<<<< HEAD
     <Build Include="dbo\Stored Procedures\GetManifestLinehauls.sql" />
-=======
     <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport.sql" />
     <Build Include="dbo\Functions\FnGetHub.sql" />
     <Build Include="dbo\Functions\FnGetCustomerAttempts.sql" />
@@ -1057,7 +1055,6 @@
     <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
     <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
->>>>>>> develop
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
