@@ -1,0 +1,69 @@
+﻿-- =============================================
+-- Author:		<Eduardo Lòpez>
+-- Create date: <04/08/2022>
+-- Description:	<SP para obtener datos y pintarlos en grid de modulo de impresion y visor de manifiestos de Linehauls>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetManifestLinehauls]
+@DateFilter AS DATE = '',
+@Station INT
+
+AS
+
+	BEGIN
+
+	SELECT DISTINCT lrp.IdLinehaulRoutePreparation, 
+	cr.CodeRoute, 
+	IIF((lrp.CatVehicleId IS NULL), lrp.VehicleID, cv.CodeName) CodeVehicle,
+	IIF((lrp.SenderReceiverId IS NULL), lrp.DriverName, sr.First_Name+ ' '+sr.Last_Name) Courier,
+	cls.StatusName,
+	cls.StatusDescription,
+	lrp.DateCreated, 
+	lrp.DateLinehaulRoutePreparation,
+	lrp.ContainerQuantity,
+	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'BOX') AS TotalGuideNoPiso,
+	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)  Where ctc.TypeContainerSerie = 'BOX') AS TotalPiecesNoPiso,
+	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'LH') AS TotalGuidePiso,
+	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)   Where ctc.TypeContainerSerie = 'LH') AS TotalPiecesPiso,
+	(select sum(lrpcd.GuideDryPieceTotal) - sum(lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
+	(select sum(lrpcd.GuideColdPieceTotal) - sum(lrpcd.ColdPieceQuantity)) AS DifPiecesCold
+		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
+		INNER JOIN CatRoute cr WITH (NOLOCK)
+		ON lrp.CatRouteId = cr.IdRoute
+		LEFT JOIN CatVehicle cv WITH (NOLOCK)
+		ON lrp.CatVehicleId = cv.IdVehicle
+		LEFT JOIN SenderReceiver sr WITH (NOLOCK)
+		ON lrp.SenderReceiverId = sr.ID
+		INNER JOIN CatLinehaulStatus cls WITH (NOLOCK)
+		ON lrp.CatLinehaulStatusId = cls.IdCatLinehaulStatus
+		INNER JOIN LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
+		ON lrp.IdLinehaulRoutePreparation = lrpc.LinehaulRoutePreparationId
+		INNER JOIN Container ctn WITH (NOLOCK)
+		ON lrpc.ContainerId = ctn.IdContainer 
+		INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
+		ON ctn.CatTypeContainerId = ctc.IdCatTypeContainer
+		INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
+		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
+			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
+			AND lrp.StationDispatchedId = @Station
+					Group by lrp.IdLinehaulRoutePreparation, 
+					 cr.CodeRoute, 
+					 lrp.CatVehicleId,
+					 lrp.VehicleID,
+					 lrp.SenderReceiverId,
+					 lrp.DriverName,
+					 cv.CodeName, 
+					 sr.First_Name, 
+					 sr.Last_Name, 
+					 cls.StatusName, 
+					 cls.StatusDescription,
+					 lrp.DateCreated, 
+					 lrp.DateLinehaulRoutePreparation,
+					 lrp.ContainerQuantity,
+					 ctc.TypeContainerSerie,
+					 lrp.GuideQuantity,
+					 lrp.ColdPieceQuantity,
+					 lrp.DryPieceQuantity
+
+
+	
+	END
