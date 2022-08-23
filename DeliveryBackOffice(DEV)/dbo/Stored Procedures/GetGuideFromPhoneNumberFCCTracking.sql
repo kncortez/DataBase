@@ -1,7 +1,7 @@
 ﻿-- =============================================
--- Author:		<Author,,Name>
--- Create date: <Create Date,,>
--- Description:	<Description,,>
+-- Author:		<Edelman Vásquez>
+-- Create date: <2022-08-19>
+-- Description:	<SP para busqueda de ultimas 5 guías por medio de Número de teléfono para proyecto de contact center  >
 -- =============================================
 CREATE PROCEDURE [dbo].[GetGuideFromPhoneNumberFCCTracking] 
 @Phone AS NVARCHAR(20)
