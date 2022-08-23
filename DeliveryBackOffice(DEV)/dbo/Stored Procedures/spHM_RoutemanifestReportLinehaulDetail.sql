@@ -12,7 +12,7 @@ BEGIN
 
  SELECT  LRPC.LinehaulRoutePreparationId,
          C.ContainerDescription,
-		sum(LRPC.GuideQuantity)                 AS Totaldeguiasasignadasacontenedor,
+		ISNULL(LRPC.GuideQuantity,0)   AS Totaldeguiasasignadasacontenedor,
 		SUM(ISNULL(LRPC.ColdPieceQuantity,0))   AS TotaldePiezasFriasAsignadasaContenedor,
 		SUM(ISNULL(LRPC.DryPieceQuantity,0))    AS TotaldePiezasAsignadasContenedor,
 		 HL.HubName AS HubDestinyId
@@ -24,8 +24,10 @@ BEGIN
 		LEFT JOIN dbo.HubLogistics HL
 		    ON HL.IdHubLogistic = LRPC.HubDestinyId
   WHERE C.ContainerDescription NOT LIKE ('%lh%') AND LRPC.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
-	  GROUP BY LRPC.LinehaulRoutePreparationId, 
+	    AND LRPC.GuideQuantity>0
+	 GROUP BY LRPC.LinehaulRoutePreparationId, 
 	              C.ContainerDescription, 
-			     HL.HubName
+			     HL.HubName,
+				 LRPC.GuideQuantity
 
 END
