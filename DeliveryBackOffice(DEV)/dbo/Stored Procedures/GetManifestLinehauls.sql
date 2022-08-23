@@ -24,8 +24,8 @@ AS
 	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)  Where ctc.TypeContainerSerie = 'BOX') AS TotalPiecesNoPiso,
 	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'LH') AS TotalGuidePiso,
 	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)   Where ctc.TypeContainerSerie = 'LH') AS TotalPiecesPiso,
-	(select (lrpcd.GuideDryPieceTotal - lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
-	(select (lrpcd.GuideColdPieceTotal - lrpcd.ColdPieceQuantity)) AS DifPiecesCold
+	(select sum(lrpcd.GuideDryPieceTotal) - sum(lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
+	(select sum(lrpcd.GuideColdPieceTotal) - sum(lrpcd.ColdPieceQuantity)) AS DifPiecesCold
 		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
 		INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON lrp.CatRouteId = cr.IdRoute
@@ -45,6 +45,20 @@ AS
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
 			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
 			AND lrp.StationDispatchedId = @Station
+			Group by lrp.IdLinehaulRoutePreparation, 
+					 cr.CodeRoute, 
+					 cv.CodeName, 
+					 sr.First_Name, 
+					 sr.Last_Name, 
+					 cls.StatusName, 
+					 cls.StatusDescription,
+					 lrp.DateCreated, 
+					 lrp.DateLinehaulRoutePreparation,
+					 lrp.ContainerQuantity,
+					 ctc.TypeContainerSerie,
+					 lrp.GuideQuantity,
+					 lrp.ColdPieceQuantity,
+					 lrp.DryPieceQuantity
 
 
 	
