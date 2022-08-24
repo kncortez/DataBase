@@ -12,10 +12,6 @@
 --               en cambio se debe insertar el checkpoint Reenviado a Express Center>
 -- Hotfix: FDAPI-337
 -- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2022-06-28>
--- Description:	< Agregar validación para saber si se tiene pagos con TC o Datafono en dbo.CostDetail>
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -115,10 +111,10 @@ BEGIN
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
-                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                             INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                             INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -178,7 +174,7 @@ BEGIN
         INSERT INTO @Table
         SELECT da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
-            JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
+         INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
                 ON sr.ID = da.ID_Courier
         WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -328,7 +324,7 @@ BEGIN
 					   AND NOT EXISTS (SELECT
 							Top 1 1
 						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
-						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+						INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
 							ON CD.IdCost = C.IdCost
 						AND CD.IdTypeOfMoney IN (2, 6)
 						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
@@ -359,7 +355,7 @@ BEGIN
 					  AND NOT EXISTS (SELECT
 							Top 1 1
 						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
-						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+						INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
 							ON CD.IdCost = C.IdCost
 						AND CD.IdTypeOfMoney IN (2, 6)
 						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))));

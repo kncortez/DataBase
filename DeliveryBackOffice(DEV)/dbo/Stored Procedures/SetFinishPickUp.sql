@@ -314,7 +314,7 @@ BEGIN
                             SELECT TOP 1
                                    ord.Sender_ID
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord
+                              INNER  JOIN DeliveryOrder ord
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -330,7 +330,7 @@ BEGIN
                             SELECT TOP 1
                                    ISNULL(ord.IdCustomer, 6)
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord WITH (NOLOCK)
+                               INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -346,7 +346,7 @@ BEGIN
                             SELECT TOP 1
                                    CONCAT(ord.Sender_FirstName, ord.Sender_LastName) AS SenderName
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord WITH (NOLOCK)
+                              INNER  JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -362,7 +362,7 @@ BEGIN
                             SELECT TOP 1
                                    ord.Sender_Phone
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord WITH (NOLOCK)
+                              INNER  JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -379,7 +379,7 @@ BEGIN
                             SELECT TOP 1
                                    thb.IdHublogistic
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord WITH (NOLOCK)
+                               INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -403,7 +403,7 @@ BEGIN
                             SELECT TOP 1
                                    ord.Sender_Address
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord WITH (NOLOCK)
+                               INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -419,7 +419,7 @@ BEGIN
                             SELECT TOP 1
                                    ISNULL(REPLACE(REPLACE(cus.RegexEmail, '$', ''), '^', ''), ' ')
                             FROM #listGuides ls
-                                JOIN DeliveryOrder ord WITH (NOLOCK)
+                               INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
@@ -614,7 +614,7 @@ BEGIN
                         GuideNumber
                     ) -- Control de guías pagadas
                     FROM [DeliveryBackOffice].[dbo].[Cost] C
-                        JOIN #listGuides LG
+                       INNER JOIN #listGuides LG
                             ON C.ProductNumber = CONCAT(LG.ItemSerie, LG.ItemNumber)
                         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                             ON LG.ItemSerie = DOPD.GuideSerie
@@ -641,7 +641,7 @@ BEGIN
                            @Token,
                            GETDATE()
                     FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
-                        JOIN @PaymentUpdated PU
+                        INNER JOIN @PaymentUpdated PU
                             ON C.IdCost = PU.CostId
                         LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                             ON C.IdCost = CD.IdCost

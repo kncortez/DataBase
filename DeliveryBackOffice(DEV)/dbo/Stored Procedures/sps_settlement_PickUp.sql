@@ -164,6 +164,7 @@ BEGIN
 					FROM [dbo].[DeliveryAttempt] 
 					WHERE [Guide_Serie] = @GuideSerie
 						AND [Guide_Number] = @GuideNumber
+					ORDER BY [Date_Created] DESC
 
 				-- se verifica que no exita en las guías procesadas
 				IF NOT EXISTS 
@@ -210,7 +211,7 @@ BEGIN
 					    AND NOT EXISTS (SELECT
 							Top 1 1
 						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
-						JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+						INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
 							ON CD.IdCost = C.IdCost
 						AND CD.IdTypeOfMoney IN (2, 6)
 						WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))

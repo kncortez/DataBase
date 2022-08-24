@@ -538,7 +538,7 @@ BEGIN
 									AND NOT EXISTS (SELECT
 											Top 1 1
 										FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-										JOIN CostDetail CD WITH (NOLOCK)
+										INNER JOIN CostDetail CD WITH (NOLOCK)
 											ON CD.IdCost = C.IdCost
 											AND CD.IdTypeOfMoney IN (2, 6)
 										WHERE C.ProductNumber = CONCAT(dlo.Guide_Serie, CAST(dlo.Guide_Number AS VARCHAR(50))))
@@ -737,7 +737,7 @@ BEGIN
 									AND NOT EXISTS (SELECT
 											*
 										FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-										JOIN CostDetail CD WITH (NOLOCK)
+										INNER JOIN CostDetail CD WITH (NOLOCK)
 											ON CD.IdCost = C.IdCost
 											AND CD.IdTypeOfMoney IN (2, 6)
 										WHERE C.ProductNumber = CONCAT(dlo.Guide_Serie, CAST(dlo.Guide_Number AS VARCHAR(50))))

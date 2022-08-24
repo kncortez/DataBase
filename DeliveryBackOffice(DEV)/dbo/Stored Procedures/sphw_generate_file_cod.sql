@@ -396,7 +396,7 @@ BEGIN
                        invd.dti_fk_orderSerie dti_fk_orderSerie,
                        invd.dti_fk_orderNumber dti_fk_orderNumber
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH(NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH(NOLOCK)
+                  INNER  JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH(NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
                            AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
@@ -835,7 +835,7 @@ BEGIN
                        invd.dti_fk_orderSerie dti_fk_orderSerie,
                        invd.dti_fk_orderNumber dti_fk_orderNumber
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH(NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH(NOLOCK)
+                   INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH(NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
                            AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
@@ -968,7 +968,7 @@ BEGIN
                cat.Description 'TIPO DE CUENTA OTRO BANCO',
                IIF(cco.IdCatConceptCOD = 1,
                    cco.Concept,
-                   CONCAT(cco.Concept, ' ', bd.GuideSerie, bd.GuideNumber, ' Ref ', CAST(bd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO',
+                   CONCAT(bd.GuideSerie, bd.GuideNumber, ' Ref ', CAST(bd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO',
                Password 'CONTRASEÑA'
         FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH(NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda WITH(NOLOCK)
@@ -1108,8 +1108,6 @@ BEGIN
                MAX(IIF(cco.IdCatConceptCOD = 1,
                        cco.Concept,
                        CONCAT(
-                                 cco.Concept,
-                                 ' ',
                                  bd.GuideSerie,
                                  bd.GuideNumber,
                                  ' Ref ',
@@ -1437,7 +1435,7 @@ BEGIN
                btd.Amount 'MONTO',
                IIF(cco.IdCatConceptCOD = 1,
                    cco.Concept,
-                   CONCAT(cco.Concept, ' ', btd.GuideSerie, btd.GuideNumber, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO'
+                   CONCAT(btd.GuideSerie, btd.GuideNumber, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO'
     FROM [dbo].[BatchDetailCOD] btd WITH(NOLOCK)
 	 LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco WITH(NOLOCK)
                 ON cco.IdCatConceptCOD = bTd.CatConceptCODId
@@ -1567,8 +1565,6 @@ BEGIN
                MAX(IIF(cco.IdCatConceptCOD = 1,
                        cco.Concept,
                        CONCAT(
-                                 cco.Concept,
-                                 ' ',
                                  btd.GuideSerie,
                                  btd.GuideNumber,
                                  ' Ref ',
@@ -1672,8 +1668,6 @@ BEGIN
                                   ' Ref ',
                                   CAST(bd.BatchCODId AS VARCHAR(300)),
                                   ' ',
-                                  cco.Concept,
-                                  ' ',
                                   bd.GuideSerie,
                                   bd.GuideNumber
                               )), 100) 'Concepto',
@@ -1704,7 +1698,7 @@ BEGIN
                      + CAST(LTRIM(RTRIM(SUBSTRING(REPLACE(LTRIM(RTRIM(bd.AccountNumber)), '-', ''), 11, 1))) AS VARCHAR(1)), 1) AS 'Digito',
                LEFT(MAX(IIF(cco.IdCatConceptCOD = 1,
                             cco.Concept,
-                            CONCAT(' Ref ', CAST(bd.BatchCODId AS VARCHAR(300)), cco.Concept))
+                            CONCAT(' Ref ', CAST(bd.BatchCODId AS VARCHAR(300))))
                        ), 100) 'Concepto',
                SUM(Amount) 'Valor Q.'
         FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
@@ -1731,32 +1725,12 @@ BEGIN
                  cco.Concept;
     END;
 
+	--FORMATO BAM
 	IF @IdBank = 1
     BEGIN
         --------DETALLADO
 		SELECT
-			REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(
-										REPLACE(cda.AccountNumber,' ',''),
-									'-',''),
-								CHAR(1),''),
-							CHAR(2),''),
-						CHAR(3),''),
-					CHAR(9),''),
-				CHAR(10),''),
-			CHAR(13),'') 'CUENTA DEBITO'
-		   ,CASE
-				WHEN cda.CatAccountTypeCODId = 1 THEN 3
-				WHEN cda.CatAccountTypeCODId = 2 THEN 4
-				ELSE cda.CatAccountTypeCODId
-			END 'TIPO DE CUENTA DEBITO'
-		   ,btd.Amount 'MONTO'
-		   ,RTRIM(LTRIM(REPLACE(
+		   RTRIM(LTRIM(REPLACE(
 				REPLACE(
 					REPLACE(
 						REPLACE(
@@ -1768,28 +1742,15 @@ BEGIN
 						CHAR(3),''),
 					CHAR(9),''),
 				CHAR(10),''),
-			CHAR(13),''))) 'CUENTA CREDITO'
+			CHAR(13),''))) 'CUENTA DESTINO'
 		   ,CASE
 				WHEN btd.CatAccountTypeCODId = 1 THEN 3
 				WHEN btd.CatAccountTypeCODId = 2 THEN 4
 				ELSE btd.CatAccountTypeCODId
-			END 'TIPO DE CUENTA CREDITO'
-		   ,btd.Reference 'REFERENCIA'
-		   ,IIF(cco.IdCatConceptCOD = 1
-		   ,cco.Concept
-		   ,CONCAT(cco.Concept, ' ', btd.GuideSerie, btd.GuideNumber, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300)))) 'CONCEPTO'
-		   ,COALESCE(vp.email, cu.CODContactEmail, do.Sender_Mail, '0') 'CORREO ELECTRONICO'
-		   ,LEFT(
-			   RTRIM(
-					LTRIM(
-						REPLACE(
-							REPLACE(
-									COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '00000000')
-							,'-','')
-						,'(502)','')
-					)
-				)
-			, 8)'TELEFONO'
+			END 'TIPO DE CUENTA DESTINO'
+		   ,btd.Amount 'MONTO A PAGAR'
+
+		   ,CONCAT(btd.GuideSerie, btd.GuideNumber) 'GUIA'
 		FROM BatchDetailCOD btd
 		INNER JOIN BatchCOD bt
 			ON bt.IdBatchCOD = btd.BatchCODId
@@ -1818,28 +1779,7 @@ BEGIN
 		UNION
 		----------ACUMULADO
 		SELECT
-			REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(
-										REPLACE(cda.AccountNumber,' ',''),
-									'-',''),
-								CHAR(1),''),
-							CHAR(2),''),
-						CHAR(3),''),
-					CHAR(9),''),
-				CHAR(10),''),
-			CHAR(13),'') 'CUENTA DEBITO'
-		   ,CASE
-				WHEN cda.CatAccountTypeCODId = 1 THEN 3
-				WHEN cda.CatAccountTypeCODId = 2 THEN 4
-				ELSE cda.CatAccountTypeCODId
-			END 'TIPO DE CUENTA DEBITO'
-		   ,SUM(btd.Amount) 'MONTO'
-		   ,RTRIM(LTRIM(REPLACE(
+		   RTRIM(LTRIM(REPLACE(
 				REPLACE(
 					REPLACE(
 						REPLACE(
@@ -1851,30 +1791,15 @@ BEGIN
 						CHAR(3),''),
 					CHAR(9),''),
 				CHAR(10),''),
-			CHAR(13),''))) 'CUENTA CREDITO'
+			CHAR(13),''))) 'CUENTA DESTINO'
 		   ,CASE
 				WHEN btd.CatAccountTypeCODId = 1 THEN 3
 				WHEN btd.CatAccountTypeCODId = 2 THEN 4
 				ELSE btd.CatAccountTypeCODId
-			END 'TIPO DE CUENTA CREDITO'
-		   ,MAX(btd.Reference) 'REFERENCIA'
-		   ,MAX(IIF(cco.IdCatConceptCOD = 1,
-			cco.Concept,
-			CONCAT(cco.Concept, ' Ref ', CAST(btd.BatchCODId AS VARCHAR(300))))) 'CONCEPTO'
-		   ,MAX(COALESCE(vp.Email, cu.CODContactEmail, do.Sender_Mail, '0')) 'CORREO ELECTRONICO'
-		   ,LEFT(
-				RTRIM(
-					LTRIM(
-						REPLACE(
-							REPLACE(
-								MAX(
-									COALESCE(vp.Phone, cu.CustomerPhone, do.Sender_Phone, '00000000')
-								)
-							,'-','')
-						,'(502)','')
-					)
-				)
-			,8) 'TELEFONO'
+			END 'TIPO DE CUENTA DESTINO'
+		   ,SUM(btd.Amount) 'MONTO A PAGAR'
+
+		   ,MAX(CONCAT(do.Guide_Serie, do.Guide_Number)) 'GUIA'
 		FROM BatchDetailCOD btd 
 		INNER JOIN BatchCOD bt
 			ON bt.IdBatchCOD = btd.BatchCODId
@@ -1906,7 +1831,108 @@ BEGIN
 				,btd.AccountNumber
 				,cda.AccountNumber
 		
-		ORDER BY btd.Reference
+		--ORDER BY btd.Reference
 				;
+    END;
+
+	-- FORMATO PROMERICA
+	IF @IdBank = ( SELECT
+		Id_bank
+	FROM DeliveryBank
+	WHERE Name = 'BANCO PROMERICA'
+	AND Id_country = 'GT'
+	AND Id_status = 1)
+    BEGIN
+        --------DETALLADO
+		SELECT
+		   RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''),
+							CHAR(2),''),
+						CHAR(3),''),
+					CHAR(9),''),
+				CHAR(10),''),
+			CHAR(13),''))) 'CUENTA'
+		   ,CONCAT(btd.GuideSerie, btd.GuideNumber, ' L',bt.BatchNumber) 'DESCRIPCIÓN'
+		   ,btd.Amount 'MONTO'
+		FROM BatchDetailCOD btd
+		INNER JOIN BatchCOD bt
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN CatConceptCOD cco
+			ON cco.IdCatConceptCOD = bTd.CatConceptCODId
+				AND cco.RowStatus = 1
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie
+				AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu 
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+		LEFT JOIN CatDebitAccountCOD cda
+			ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
+				AND cda.BankId = @IdBank
+				AND cda.RowStatus = @EnabledRow
+		WHERE
+		btd.CatConceptCODId IN (2)
+		AND bt.RowStatus = @EnabledRow
+		AND BTD.RowStatus = @EnabledRow
+		AND btd.BatchCODId = @BatchCODId
+		AND btd.Excluded = @Excluded
+		AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+
+		UNION
+		----------ACUMULADO
+		SELECT
+		   RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''),
+							CHAR(2),''),
+						CHAR(3),''),
+					CHAR(9),''),
+				CHAR(10),''),
+			CHAR(13),''))) 'CUENTA'
+		   ,MAX(CONCAT(do.Guide_Serie, do.Guide_Number, ' L', bt.BatchNumber)) 'DESCRIPCIÓN'
+		   ,SUM(btd.Amount) 'MONTO'
+		FROM BatchDetailCOD btd 
+		INNER JOIN BatchCOD bt
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN CatConceptCOD cco
+			ON cco.IdCatConceptCOD = bTd.CatConceptCODId
+				AND cco.RowStatus = 1
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.[GuideSerie] = do.[Guide_Serie]
+				AND btd.[GuideNumber] = do.[Guide_Number]
+		LEFT JOIN VisitPointClient vp
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu
+			ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]
+		LEFT JOIN CatDebitAccountCOD cda 
+			ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
+				AND cda.BankId = @IdBank
+				AND cda.RowStatus = @EnabledRow
+		WHERE btd.CatConceptCODId IN (2)
+		AND bt.RowStatus = @EnabledRow
+		AND BTD.RowStatus = @EnabledRow
+		AND BTD.BatchCODId = @BatchCODId
+		AND btd.Excluded = @Excluded
+		AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+
+
+		GROUP BY cu.IdCustomer
+				,btd.CatAccountTypeCODId
+				,cda.CatAccountTypeCODId
+				,btd.AccountNumber
+				,cda.AccountNumber
+
     END;
 END;

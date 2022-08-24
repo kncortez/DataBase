@@ -304,7 +304,8 @@ BEGIN
                        @CourierId = ID_Courier
                 FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
                 WHERE [Guide_Serie] = @Guide_Serie
-                      AND [Guide_Number] = @GuideNumber;
+                      AND [Guide_Number] = @GuideNumber
+				ORDER BY [Date_Created] DESC;
 
                 -- se verifica que no exita en las guías procesadas
                 IF NOT EXISTS
@@ -364,7 +365,7 @@ BEGIN
                     (
                         SELECT 1
                         FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                            JOIN CostDetail CD WITH (NOLOCK)
+                           INNER JOIN CostDetail CD WITH (NOLOCK)
                                 ON CD.IdCost = C.IdCost
                                    AND CD.IdTypeOfMoney IN ( 2, 6 )
                         WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50)))
