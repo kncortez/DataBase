@@ -1054,6 +1054,13 @@
     <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
     <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
+    <Build Include="dbo\Tables\PaymentLinkHeader.sql" />
+    <Build Include="dbo\Tables\PaymentLinkDetail.sql" />
+    <Build Include="dbo\Tables\ConfigExternalPlatform.sql" />
+    <Build Include="dbo\Stored Procedures\SetPaymentLinkData.sql" />
+    <Build Include="dbo\Stored Procedures\SetConfigParameterOfExternalPlatform.sql" />
+    <Build Include="dbo\Stored Procedures\GetConfigParameterOfExternalPlatform.sql" />
+    <Build Include="dbo\User Defined Types\TblExtPlatTextParameterSetList.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
