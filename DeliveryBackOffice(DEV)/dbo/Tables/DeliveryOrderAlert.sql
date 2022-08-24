@@ -90,5 +90,6 @@ CREATE NONCLUSTERED INDEX [NonClusteredIndex-20220329-144352]
 
 
 GO
-
+CREATE NONCLUSTERED INDEX [IDX_GuideNumber_RowStatus_ServiceTypeId]
+    ON [dbo].[DeliveryOrderAlert]([GuideNumber] ASC, [RowStatus] ASC, [ServiceTypeId] ASC);
 

@@ -19,14 +19,14 @@
 );
 
 
+GO
+CREATE NONCLUSTERED INDEX [IX_NC_SocialSecurityId_LocationRecord]
+    ON [dbo].[LocationRecord]([SocialSecurityId] ASC);
 
 
 GO
-
-
-
-GO
-
+CREATE NONCLUSTERED INDEX [IX_NC_Phone_LocationRecord]
+    ON [dbo].[LocationRecord]([Phone] ASC);
 
 
 GO

@@ -151,5 +151,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 
 GO
-
+CREATE NONCLUSTERED INDEX [idx_EstimatedTimeArrival]
+    ON [dbo].[ExtPlatformService]([EstimatedTimeArrival] ASC)
+    INCLUDE([IdService], [Latitude], [Longitude]);
 
