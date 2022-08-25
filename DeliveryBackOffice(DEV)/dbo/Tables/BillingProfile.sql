@@ -10,9 +10,12 @@
     [BlpTokenUpdated]               VARCHAR (50)  NULL,
     [BlpDateUpdated]                DATETIME      NULL,
     [VisitPointByClientPortfolioId] INT           NULL,
+    [IsDefault]                     BIT           CONSTRAINT [DF_BillingProfile_IsDefault] DEFAULT ((0)) NOT NULL,
     PRIMARY KEY CLUSTERED ([BlpIdBilling] ASC),
     CONSTRAINT [FKBillingAccount] FOREIGN KEY ([BlpIdAccount]) REFERENCES [dbo].[Account] ([AccIdAccount])
 );
+
+
 
 
 GO
