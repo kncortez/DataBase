@@ -13,8 +13,11 @@
     [IdBank]                        INT          NULL,
     [NumberAccFavCOD]               VARCHAR (50) NULL,
     [VisitPointByClientPortfolioId] INT          NULL,
+    [IsDefault]                     BIT          CONSTRAINT [DF_DeliveryFavCOD_IsDefault] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_DeliveryFavCOD] PRIMARY KEY CLUSTERED ([IdDeliveryFavCOD] ASC)
 );
+
+
 
 
 GO
