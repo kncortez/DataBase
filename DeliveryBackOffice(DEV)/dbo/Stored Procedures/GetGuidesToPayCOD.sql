@@ -123,7 +123,7 @@ BEGIN
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
                AND btc.CatConceptCODId = 1
-		LEFT JOIN [dbo].[KindOfVPClient] kovpc
+		LEFT JOIN [dbo].[KindOfVPClient] kovpc WITH(NOLOCK)
 			ON kovpc.IdKindOfVPClient = vp.IdKindOfVPClient
     WHERE
         --AND db.[Id_bank] IN ( 5, 33,31,2 ) --Banrural y BI

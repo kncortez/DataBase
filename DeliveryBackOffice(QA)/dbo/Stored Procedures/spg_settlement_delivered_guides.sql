@@ -55,7 +55,7 @@ BEGIN
 	end
 	) AS  Collect_OnDelivery
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do
-	JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number AND dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
+	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number AND dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
 	where do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega

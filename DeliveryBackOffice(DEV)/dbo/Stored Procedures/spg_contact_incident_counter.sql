@@ -25,8 +25,8 @@ BEGIN
 	FROM DeliveryBackOffice.dbo.DeliveryOrder
 	WHERE User_Contact IN (
 		SELECT lbt.SSN_IdToken
-		FROM DenariusUser_Dev.dbo.LGN_User u
-		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdUser = u.USR_IdUser AND lbt.SSN_Username = u.USR_Username
+		FROM DenariusUser_Dev.dbo.LGN_User u with (nolock)
+		inner JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt  with (nolock) ON lbt.SSN_IdUser = u.USR_IdUser AND lbt.SSN_Username = u.USR_Username
 		WHERE u.USR_IdUser = @IdUser AND u.USR_Username = @Username AND CONVERT(VARCHAR, lbt.SSN_DateLogin, 23) = CONVERT(VARCHAR, GETDATE(), 23)
 	)
 END

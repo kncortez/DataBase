@@ -1,4 +1,6 @@
-﻿-- =============================================
+﻿
+
+-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-05-26>
 -- Description:	< Metodo para finalizar el proceso de generación de guías en express center tomando en cuenta cupones >
@@ -527,7 +529,8 @@ BEGIN
 		-- Flujo de SetServiceRecollect
 		DECLARE @ValidateTransaction INT = (
 			SELECT 
-				DopId 
+				TOP 1
+					DopId 
 			FROM 
 				[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
 				INNER JOIN @TblDeliveryOrdersList tpo
@@ -769,131 +772,6 @@ BEGIN
 						END
 
 					 END
-					 --ELSE IF ( (@OldPriceshipment - @UpdatedValue) <= 0 )
-					 --BEGIN
-
-						--INSERT INTO 
-						--	dbo.DeliveryOrderPaymentTransaction
-						--	(  
-						--		[GuideNumber]
-						--		,[GuideSerie]
-						--		,[PayTypeId]
-						--		,[TypeofInOutMoneyId]
-						--		,[TimePlaId]
-						--		,[amount]
-						--		,[PaymentRecollections]
-						--		,[PaymentNow]
-						--		,[PaymentDelivery]
-						--		,[StartDate]
-						--		,[EndDate]
-						--		,[ShipmentCompleted]
-						--		,[RecollectionCompleted]
-						--		,[PaidGuide]
-						--		,[TokenCreated]
-						--		,[DateCreated]
-						--		,[TokenUpdated]
-						--		,[DateUpdated]
-						--		,[TransaccionFAC]
-						--		,[IdHeaderRecolection]
-						--		,[TypeServiceId]
-						--		,[AccountId]
-						--		,[CODAmountProcess]
-						--		,[Fel]
-						--		,[VisitPoint]
-						--	)
-						--SELECT
-						--		Guide_Number 
-						--		,Guide_Serie
-						--		,IdTypePayment
-						--		,IdWayToPayment
-						--		,IdTimePayment
-						--		,@OldPriceshipment
-						--		,tdop.PaymentRecollections
-						--		,tdop.PaymentNow
-						--		,tdop.PaymentDelivery
-						--		,null
-						--		,null
-						--		,tdop.ShipmentCompleted
-						--		,tdop.RecollectionCompleted
-						--		,tdop.PaidGuide
-						--		,@Token
-						--		,getdate()
-						--		,null
-						--		,null
-						--		,null
-						--		,null
-						--		,tdop.IdTypeService
-						--		,IIF(@AccountId=0,null, @AccountId)
-						--		,tdop.CODAmountProccess
-						--		,null
-						--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-						--FROM 
-						--	@TblDeliveryOrdersList tdop
-						--WHERE 
-						--	tdop.CODAmountProccess != 0
-
-						--INSERT INTO 
-						--	dbo.DeliveryOrderPaymentTransaction
-						--	(  
-						--		[GuideNumber]
-						--		,[GuideSerie]
-						--		,[PayTypeId]
-						--		,[TypeofInOutMoneyId]
-						--		,[TimePlaId]
-						--		,[amount]
-						--		,[PaymentRecollections]
-						--		,[PaymentNow]
-						--		,[PaymentDelivery]
-						--		,[StartDate]
-						--		,[EndDate]
-						--		,[ShipmentCompleted]
-						--		,[RecollectionCompleted]
-						--		,[PaidGuide]
-						--		,[TokenCreated]
-						--		,[DateCreated]
-						--		,[TokenUpdated]
-						--		,[DateUpdated]
-						--		,[TransaccionFAC]
-						--		,[IdHeaderRecolection]
-						--		,[TypeServiceId]
-						--		,[AccountId]
-						--		,[CODAmountProcess]
-						--		,[Fel]
-						--		,[VisitPoint]
-						--	)
-						--SELECT
-						--		Guide_Number 
-						--		,Guide_Serie
-						--		,IdTypePayment
-						--		,IdWayToPayment
-						--		,IdTimePayment
-						--		,IIF(@OldPriceshipment > 0, -@OldPriceshipment, @OldPriceshipment)
-						--		,tdop.PaymentRecollections
-						--		,tdop.PaymentNow
-						--		,tdop.PaymentDelivery
-						--		,null
-						--		,null
-						--		,tdop.ShipmentCompleted
-						--		,tdop.RecollectionCompleted
-						--		,tdop.PaidGuide
-						--		,@Token
-						--		,getdate()
-						--		,null
-						--		,null
-						--		,null
-						--		,null
-						--		,tdop.IdTypeService
-						--		,IIF(@AccountId=0,null, @AccountId)
-						--		,tdop.CODAmountProccess
-						--		,null
-						--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-						--FROM 
-						--	@TblDeliveryOrdersList tdop
-						--WHERE 
-						--	tdop.CODAmountProccess != 0
-
-					 --END
-
 				END
 			
 		END

@@ -175,21 +175,35 @@ BEGIN
         --declare @value int = (select count (GuideNumber) from DeliveryOrderPiece where GuideNumber in (select ItemNumber from #listGuides))
 
         ---	 insertar checkpoint de recolectado.	
-        INSERT INTO dbo.DeliveryOrderDetail
-        (
-            [Guide_Serie],
-            [Guide_Number],
-            [StatusOrderId],
-            [UserCreated],
-            [DateCreated],
-            [DateCreatedInSystem],
-            [Observations],
-            [Temperature_Celsius],
-            [PieceId]
-        )
-        VALUES
-        (@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
-
+		IF( 
+			(
+				SELECT 
+					TOP 1 
+						DO.StatusOrderId 
+				FROM 
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) 
+				WHERE 
+					DO.Guide_Serie = @GuideSerie 
+					AND 
+					DO.Guide_Number = @GuideNumber
+			) IN (1,15,16) -- Solicitado, Generado, Programado para recolección
+		)
+		BEGIN
+			INSERT INTO dbo.DeliveryOrderDetail
+			(
+				[Guide_Serie],
+				[Guide_Number],
+				[StatusOrderId],
+				[UserCreated],
+				[DateCreated],
+				[DateCreatedInSystem],
+				[Observations],
+				[Temperature_Celsius],
+				[PieceId]
+			)
+			VALUES
+			(@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
+		END
         ---	 insertar checkpoint de arribo a instalaciones.	
         INSERT INTO dbo.DeliveryOrderDetail
         (
@@ -273,7 +287,7 @@ BEGIN
         DECLARE @VehicleTypeId INT =
                 (
                     SELECT cv.IdTypeVehicle
-                    FROM RouteAssigment ra
+                    FROM RouteAssigment ra WITH(NOLOCK)
                         INNER JOIN CatVehicle cv
                             ON cv.IdVehicle = ra.IdVehicle
                     WHERE ra.IdRoute = @IdRoute
@@ -420,7 +434,7 @@ BEGIN
 
             --Buscar si tiene asignado un servicio
             SELECT @ServiceManagementId = sm.IdServiceManagement
-            FROM ServiceManagement sm
+            FROM ServiceManagement sm WITH(NOLOCK)
             WHERE sm.IdSchedulePickup = @SchedulePickupId;
 
             --Si encontró el servicio
@@ -431,8 +445,8 @@ BEGIN
                 IF EXISTS
                 (
                     SELECT 1
-                    FROM RouteAssigment ra
-                        INNER JOIN ServiceManagement sm
+                    FROM RouteAssigment ra WITH(NOLOCK)
+                        INNER JOIN ServiceManagement sm WITH(NOLOCK)
                             ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
                                AND sm.IdServiceManagement = @ServiceManagementId
                     WHERE ra.IdRoute = @IdRoute
@@ -444,14 +458,14 @@ BEGIN
                     SET ServiceStatusId = 3,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
-                    FROM ServiceManagement sm
+                    FROM ServiceManagement sm WITH(NOLOCK)
                     WHERE sm.IdServiceManagement = @ServiceManagementId;
 
                     --Insertar EventService si no existe
                     IF NOT EXISTS
                     (
                         SELECT 1
-                        FROM EventService es
+                        FROM EventService es WITH(NOLOCK)
                         WHERE es.ServiceManagementId = @ServiceManagementId
                               AND es.ServiceStatusId = @ServiceStatus
                               AND es.RowStauts = 1
@@ -495,10 +509,10 @@ BEGIN
             BEGIN
                 SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
                        @ServiceManagementIdFind = sm.IdServiceManagement
-                FROM RouteAssigment ra
-                    INNER JOIN ServiceManagement sm
+                FROM RouteAssigment ra WITH(NOLOCK)
+                    INNER JOIN ServiceManagement sm WITH(NOLOCK)
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                    INNER JOIN SchedulePickup sp
+                    INNER JOIN SchedulePickup sp WITH(NOLOCK)
                         ON sp.SchedulePickupId = sm.IdSchedulePickup
                 WHERE ra.IdRoute = @IdRoute
                       AND ra.DateOfRoute = @tiempo
@@ -509,10 +523,10 @@ BEGIN
                 --Buscar por Dirección
                 SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
                        @ServiceManagementIdFind = sm.IdServiceManagement
-                FROM RouteAssigment ra
-                    INNER JOIN ServiceManagement sm
+                FROM RouteAssigment ra WITH(NOLOCK)
+                    INNER JOIN ServiceManagement sm WITH(NOLOCK)
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                    INNER JOIN SchedulePickup sp
+                    INNER JOIN SchedulePickup sp WITH(NOLOCK)
                         ON sp.SchedulePickupId = sm.IdSchedulePickup
                     INNER JOIN DeliveryOrder do WITH (NOLOCK)
                         ON do.Guide_Serie = @GuideSerie
@@ -538,7 +552,7 @@ BEGIN
                 SET ServiceStatusId = 3,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE()
-                FROM ServiceManagement sm
+                FROM ServiceManagement sm WITH(NOLOCK)
                 WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
 
                 UPDATE SchedulePickup
@@ -551,7 +565,7 @@ BEGIN
                 IF NOT EXISTS
                 (
                     SELECT 1
-                    FROM EventService es
+                    FROM EventService es WITH(NOLOCK)
                     WHERE es.ServiceManagementId = @ServiceManagementIdFind
                           AND es.ServiceStatusId = @ServiceStatus
                           AND es.RowStauts = 1
@@ -680,8 +694,8 @@ BEGIN
                 SET sm.IdPuRouteAssigment = ra.IdRouteAssigment,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE()
-                FROM ServiceManagement sm
-                    INNER JOIN RouteAssigment ra
+                FROM ServiceManagement sm WITH(NOLOCK)
+                    INNER JOIN RouteAssigment ra WITH(NOLOCK)
                         ON ra.IdRoute = @IdRoute
                            AND ra.DateOfRoute = @tiempo
                 WHERE sm.IdServiceManagement = @ServiceManagementId;
@@ -698,7 +712,7 @@ BEGIN
                 IF NOT EXISTS
                 (
                     SELECT 1
-                    FROM EventService es
+                    FROM EventService es WITH(NOLOCK)
                     WHERE es.ServiceManagementId = @ServiceManagementId
                           AND es.ServiceStatusId = @ServiceStatus
                           AND es.RowStauts = 1
@@ -776,7 +790,7 @@ BEGIN
                 IF NOT EXISTS
                 (
                     SELECT 1
-                    FROM EventService es
+                    FROM EventService es WITH(NOLOCK)
                     WHERE es.ServiceManagementId = @ServiceManagementId
                           AND es.ServiceStatusId = @ServiceStatus
                           AND es.RowStauts = 1
