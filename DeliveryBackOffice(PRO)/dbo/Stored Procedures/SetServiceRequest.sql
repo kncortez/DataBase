@@ -578,7 +578,7 @@ BEGIN
                1,
                PIC.IsDry
         FROM @Pieces PIC
-            JOIN #GuideTable GTB
+            INNER JOIN #GuideTable GTB
                 ON PIC.Guide_Serie = GTB.Guide_Serie
                    AND PIC.Guide_Number = GTB.Guide_Number;
 
@@ -588,7 +588,7 @@ BEGIN
                     SELECT TOP 1
                            CustomerID
                     FROM #GuideTable
-                        JOIN dbo.VisitPointClient
+                        INNER JOIN dbo.VisitPointClient
                             ON CodeOfReference = Sender_ID
                 );
 
@@ -614,7 +614,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #GuideTable lst
-                JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
             WHERE ISNULL(ord.PriceShippment, 0) = 0;
@@ -701,7 +701,7 @@ BEGIN
                ) AS 'Attempts'
         --FIN MODIFICACIÓN
         FROM DeliveryOrder D WITH (NOLOCK)
-            JOIN @CorrelativeTable C
+            INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
