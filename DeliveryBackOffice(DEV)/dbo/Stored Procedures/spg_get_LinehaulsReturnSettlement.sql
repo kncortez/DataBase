@@ -1,7 +1,4 @@
 ﻿
-
-
-
 -- =============================================
 -- Author:		<Hugo, Gomez>
 -- Create date: <2021-04-27>
@@ -53,7 +50,7 @@ SELECT DISTINCT
 	0 as Delivered,
 	0.00 as COD
 	from SettlementByPickup sbp 
-	inner join SettlementByPickupDetail sbpd on sbp.Id = sbpd.SettlementByPickupId
+	inner join SettlementByPickupDetail sbpd on sbp.Id = sbpd.SettlementByPickupId and sbpd.RowStatus = 1
 	where sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = @subservice and (sbpd.IsReturn is null or sbpd.IsReturn = 0 ) and  (sbpd.IsPieceLiquidaded is null or sbpd.IsPieceLiquidaded = 0)
 
 INSERT INTO @GuidesDetailLiquid
@@ -65,7 +62,7 @@ SELECT DISTINCT
 	0.00 as COD,
 	0 as Delivered
 	from SettlementByPickup sbp 
-	inner join SettlementByPickupDetail sbpd on sbp.Id = sbpd.SettlementByPickupId
+	inner join SettlementByPickupDetail sbpd on sbp.Id = sbpd.SettlementByPickupId and sbpd.RowStatus = 1
 	where sbp.SequenceCode = @IdManifest and sbp.SubTypeServiceManagmentId = @subservice and (sbpd.IsReturn  = 1  or sbpd.IsPieceLiquidaded = 1)
 	 	 
 	 

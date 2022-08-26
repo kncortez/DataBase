@@ -94,16 +94,17 @@ BEGIN
             IF NOT EXISTS
             (
                 SELECT 1
-                FROM [dbo].[ProcessedGuideCOD]
+                FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
                 WHERE [GuideNumber] = @GuideNumber
             )
             BEGIN
                 -- se obtiene el id del courierman
                 SELECT TOP 1
                        @CourierId = ID_Courier
-                FROM [dbo].[DeliveryAttempt]
+                FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
                 WHERE [Guide_Serie] = @GuideSerie
-                      AND [Guide_Number] = @GuideNumber;
+                      AND [Guide_Number] = @GuideNumber
+				ORDER BY Date_Created DESC;
 
                 -- se inserta en las guías procesadas si contine COD 
                 INSERT INTO [dbo].[ProcessedGuideCOD]
@@ -129,10 +130,10 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
-                    LEFT JOIN dbo.VisitPointClient vp
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
@@ -148,10 +149,10 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
-                    LEFT JOIN dbo.VisitPointClient vp
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
@@ -168,12 +169,12 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
-                    LEFT JOIN dbo.VisitPointClient vp
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP
+                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                         ON do.Guide_Serie = DOP.GuideSerie
                            AND do.Guide_Number = DOP.GuideNumber
                 WHERE do.[Guide_Number] = @GuideNumber
@@ -188,7 +189,7 @@ BEGIN
                              WHEN
                              (
                                  SELECT Collect_OnDelivery
-                                 FROM DeliveryBackOffice.dbo.DeliveryOrder
+                                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
                                  WHERE Guide_Number = @GuideNumber
                              ) > 0 THEN
                                  'true'
@@ -198,10 +199,6 @@ BEGIN
 
             IF (@IsCOD = 'true')
             BEGIN
-
-                --BEGIN TRANSACTION;
-
-                --BEGIN TRY
 
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -220,26 +217,6 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
-
-
-            ---------------------
-            --END TRY
-            --BEGIN CATCH
-
-            --    SELECT 'Error al actualizar el estado de la guia';
-
-            --    ROLLBACK TRANSACTION;
-
-            --END CATCH;
-
-            --IF @@TRANCOUNT > 0
-            --BEGIN
-
-            --    COMMIT TRANSACTION;
-
-            --    SELECT 'estado actualizado exitosamente';
-
-            --END;
 
             END;
 
@@ -288,9 +265,6 @@ BEGIN
         UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
         SET User_Received_COD = @Token,
             Date_Received_COD = GETDATE(),
-
-            --Pieces_Dry_Received = @PiecesDryReceived,
-            --Pieces_Cold_Received = @PiecesColdReceived,
             Guides_Received_COD = @GuideQuantityCOD,
             Route_Received_COD = GETDATE()
         WHERE ID = @IdDeliveryOrderBySettlement;

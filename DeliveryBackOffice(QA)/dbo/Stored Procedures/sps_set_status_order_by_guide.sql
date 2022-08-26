@@ -133,10 +133,7 @@ BEGIN
                            AND LG.Guide_Number = DOR.Guide_Number
                     LEFT JOIN dbo.DeliveryOrderDetail DORD WITH (NOLOCK)
                         ON DOR.Guide_Serie = DORD.Guide_Serie
-                           AND DOR.Guide_Number = DORD.Guide_Number
-                --LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-                --LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
-                --LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
+                           AND DOR.Guide_Number = DORD.Guide_Number					
                 GROUP BY LG.Guide_Number,
                          DORD.StatusOrderId
                 HAVING (
@@ -261,7 +258,7 @@ BEGIN
                 ,TokenUpdated = @TokenId
                 ,DateUpdated = GETDATE()
             FROM ServiceManagement sm
-            INNER JOIN DeliveryOrderPaymentDetail dopd
+            INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                 ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
             INNER JOIN @ItemsTable it
                 ON dopd.GuideNumber = it.Guide_Number
@@ -299,7 +296,8 @@ BEGIN
                        @CourierId = ID_Courier
                 FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
                 WHERE [Guide_Serie] = @Guide_Serie
-                      AND [Guide_Number] = @GuideNumber;
+                      AND [Guide_Number] = @GuideNumber
+				ORDER BY [Date_Created] DESC;
 
                 -- se verifica que no exita en las guías procesadas
                 IF NOT EXISTS
@@ -359,14 +357,11 @@ BEGIN
                     (
                         SELECT 1
                         FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
-                            JOIN CostDetail CD WITH (NOLOCK)
+                            INNER JOIN CostDetail CD WITH (NOLOCK)
                                 ON CD.IdCost = C.IdCost
                                    AND CD.IdTypeOfMoney IN ( 2, 6 )
                         WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50)))
                     );
-                --	AND LG.ItemNumber NOT IN (SELECT GuideNumber
-                --FROM [dbo].[ProcessedGuideCOD]
-                --WHERE [GuideNumber] = DO.Guide_Number AND GuideSerie = DO.Guide_Serie)
                 END;
 
                 DELETE #listGuidesTemp
