@@ -7,8 +7,6 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_PickUp]
     @Route NVARCHAR(100),
-    --@GuideQuantity INT,
-    --	@RouteReceived DATETIME,
     @Token NVARCHAR(50),
     @PiecesDry SMALLINT,
     @PiecesCold SMALLINT,
@@ -40,9 +38,6 @@ BEGIN
             DROP TABLE listNotGuides;
         IF OBJECT_ID('tempdb.dbo.#UpdOrd', 'U') IS NOT NULL
             DROP TABLE #UpdOrd;
-        --select SUBSTRING(Item, 1,2) ItemSerie,SUBSTRING(Item,3,len(Item)) ItemNumber 
-        --	into #listGuides
-        --	from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
 
 
         CREATE TABLE #listGuides
@@ -240,9 +235,10 @@ BEGIN
             -- se obtiene el id del courierman
             SELECT TOP 1
                    @CourierId = ID_Courier
-            FROM [dbo].[DeliveryAttempt]
+            FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
             WHERE [Guide_Serie] = @GuideSerie
-                  AND [Guide_Number] = @GuideNumber;
+                  AND [Guide_Number] = @GuideNumber
+            ORDER BY [Date_Created] DESC;
 
             -- se verifica que no exita en las guías procesadas
             IF NOT EXISTS
@@ -276,21 +272,18 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
-                    LEFT JOIN dbo.VisitPointClient vp
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP
+                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                         ON do.Guide_Serie = DOP.GuideSerie
                            AND do.Guide_Number = DOP.GuideNumber
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
                       AND do.IsCollect = 'false'
                       AND DOP.TimePlaId = 2;
-            --	AND LG.ItemNumber NOT IN (SELECT GuideNumber
-            --FROM [dbo].[ProcessedGuideCOD]
-            --WHERE [GuideNumber] = DO.Guide_Number AND GuideSerie = DO.Guide_Serie)
             END;
 
             DELETE #listGuidesTemp
