@@ -68,12 +68,12 @@ BEGIN
 		   ,ISNULL(MAX(ACH.TotalAmountFacturaCardDeclared), 0) TotalAmountFacturaCardDeclared
 		   ,ISNULL(MAX(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard), 0) TotalGeneral
 		   -- FIN MODIFICACIÓN
-		FROM dbo.AccountingClosuresHeader ACH
-		LEFT JOIN dbo.VisitPointClient VPC
+		FROM dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+		LEFT JOIN dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON VPC.CodeOfReference = ACH.VisitPoint
-		LEFT JOIN AccountingClosuresDetail ACD
+		LEFT JOIN AccountingClosuresDetail ACD WITH(NOLOCK)
 			ON ACD.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-		LEFT JOIN DeliveryOrderPaymentTransaction DOPD
+		LEFT JOIN DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 			ON DOPD.GuideSerie = ACD.GuideSerie
 			AND DOPD.GuideNumber = ACD.GuideNumber
 		WHERE CONVERT(DATE, ACH.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)

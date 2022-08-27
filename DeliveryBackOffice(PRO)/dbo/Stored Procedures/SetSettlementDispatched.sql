@@ -418,14 +418,16 @@ BEGIN
 				DateCreated
 			)
 			VALUES
-			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
-					   ,ERROR_NUMBER()
-					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
-					   ,ERROR_LINE()
-					   ,0
-					   ,0
-					   ,'Error en manifiesto ' + @CodeRoute
-					   ,GETDATE())
+			 (
+				CAST(ERROR_MESSAGE() AS VARCHAR(300))
+				,ERROR_NUMBER()
+				,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+				,ERROR_LINE()
+				,''
+				,0
+				,CONCAT('Error en manifiesto ', ISNULL(@CodeRoute,CAST(@IdRoute AS NVARCHAR)))
+				,GETDATE()
+			)
 		END CATCH;
 
 		IF @@TRANCOUNT > 0

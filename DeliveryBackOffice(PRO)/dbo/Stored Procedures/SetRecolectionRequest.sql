@@ -43,7 +43,7 @@ BEGIN
             SET PriceShippment = t.PriceShippment,
                 StatusOrderId = @IdStatus,
                 IsCollect = t.IsCollect
-            FROM dbo.DeliveryOrder ord
+            FROM dbo.DeliveryOrder ord with (nolock)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON t.Guide_Number = ord.Guide_Number
                        AND t.Guide_Serie = ord.Guide_Serie;
@@ -195,7 +195,7 @@ BEGIN
                 SET PriceShippment = t.PriceShippment,
                     StatusOrderId = @IdStatus,
                     IsCollect = t.IsCollect
-                FROM dbo.DeliveryOrder ord
+                FROM dbo.DeliveryOrder ord with (nolock)
                     INNER JOIN @TblDeliveryOrdersList t
                         ON t.Guide_Number = ord.Guide_Number
                            AND t.Guide_Serie = ord.Guide_Serie;
@@ -220,13 +220,13 @@ BEGIN
                             (
                                 SELECT CodeOfReference
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                                    JOIN VisitPointByUser VPU WITH (NOLOCK)
+                                    inner JOIN VisitPointByUser VPU WITH (NOLOCK)
                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                            AND VPU.RowStatus = 1
-                                    JOIN RegisterUser ru WITH (NOLOCK)
+                                    inner JOIN RegisterUser ru WITH (NOLOCK)
                                         ON VPU.RegisterUserID = ru.UsrIdUser
                                            AND ru.UsrRowStatus = 1
-                                    JOIN [dbo].[RolByUserByAccount] rua
+                                    inner JOIN [dbo].[RolByUserByAccount] rua
                                         ON rua.RuaIdUser = ru.UsrIdUser
                                 WHERE rua.RuaIdAccount = @IdAccount
                             );
@@ -375,6 +375,39 @@ BEGIN
                 DROP TABLE #Sender;
 
 
+
+  CREATE TABLE #Sender
+            (
+                [Sender_ID] INT,
+                [SenderName] NVARCHAR(300),
+                [Sender_Phone] NVARCHAR(100),
+                [Hub] NVARCHAR(20),
+                AmountPickup DECIMAL(12, 2),
+                AddressPickup NVARCHAR(500),
+                Number INT,
+                Serie NVARCHAR(2),
+                SchedulePickupId INT,
+                AssigmentStatus INT,
+                IdServiceManagement INT
+            );
+            CREATE NONCLUSTERED INDEX Senderserie ON #Sender (Serie, Number);
+            CREATE NONCLUSTERED INDEX SchedulePickupIdtempGuide ON #Sender (SchedulePickupId);
+            CREATE NONCLUSTERED INDEX IdServiceManagementtrempGuide ON #Sender (IdServiceManagement);
+
+			INSERT INTO #Sender
+			(
+			    Sender_ID,
+			    SenderName,
+			    Sender_Phone,
+			    Hub,
+			    AmountPickup,
+			    AddressPickup,
+			    Number,
+			    Serie,
+			    SchedulePickupId,
+			    AssigmentStatus,
+			    IdServiceManagement
+			)
             SELECT sub_do.[Sender_ID],
                    sub_do.[SenderName],
                    [Sender_Phone],
@@ -387,7 +420,7 @@ BEGIN
                    sub_sp.SchedulePickupId,
                    sub_sp.AssigmentStatus,
                    sub_sp.IdServiceManagement
-            INTO #Sender
+           -- INTO #Sender
             FROM
             (
                 SELECT Sender_ID,
@@ -922,7 +955,7 @@ BEGIN
             UPDATE dbo.DeliveryOrder
             SET StatusOrderId = @IdStatus,
                 IsCollect = t.IsCollect
-            FROM dbo.DeliveryOrder ord
+            FROM dbo.DeliveryOrder ord with (nolock)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON t.Guide_Number = ord.Guide_Number
                        AND t.Guide_Serie = ord.Guide_Serie;
@@ -934,11 +967,11 @@ BEGIN
                 (
                     SELECT AccIdAccount
                     FROM dbo.InternalUser IU
-                        JOIN RegisterUser RU
+                        INNER JOIN RegisterUser RU
                             ON RU.UsrIdUser = IU.RegisterUserID
-                        JOIN RolByUserByAccount RB
+                        INNER JOIN RolByUserByAccount RB
                             ON RB.RuaIdUser = RU.UsrIdUser
-                        JOIN Account ACC
+                        INNER JOIN Account ACC
                             ON RB.RuaIdAccount = ACC.AccIdAccount
                     WHERE IdUser = @IdUser
                 );
@@ -949,13 +982,13 @@ BEGIN
                     (
                         SELECT CodeOfReference
                         FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                            JOIN VisitPointByUser VPU
+                            INNER JOIN VisitPointByUser VPU
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                    AND VPU.RowStatus = 1
-                            JOIN RegisterUser ru
+                            INNER JOIN RegisterUser ru
                                 ON VPU.RegisterUserID = ru.UsrIdUser
                                    AND ru.UsrRowStatus = 1
-                            JOIN [dbo].[RolByUserByAccount] rua
+                            INNER JOIN [dbo].[RolByUserByAccount] rua
                                 ON rua.RuaIdUser = ru.UsrIdUser
                         WHERE rua.RuaIdAccount = @IdAccount
                     );
