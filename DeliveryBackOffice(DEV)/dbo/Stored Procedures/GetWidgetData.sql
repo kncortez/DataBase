@@ -1,4 +1,11 @@
-﻿
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[GetWidgetData]    Script Date: 8/27/2022 12:55:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-08-18>
@@ -89,10 +96,11 @@ BEGIN
 						CAST(1 AS BIT) [blnResult]
 
 					SELECT
-						TotalGuidePieces 'TopValue',
+						ISNULL(TotalGuidePieces,0) 'TopValue',
 						'Piezas' 'TopText',
-						TotalGuideDelivered 'BottomValue',
-						'Envios realizados' 'BottomText'
+						ISNULL(TotalGuide,0) 'BottomValue',
+						'Envios realizados' 'BottomText',
+						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					FROM
 						@ResponseTable
 				END
@@ -105,7 +113,8 @@ BEGIN
 						0 'TopValue',
 						'Piezas' 'TopText',
 						0 'BottomValue',
-						'Envios realizados' 'BottomText'
+						'Envios realizados' 'BottomText',
+						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
 			END
@@ -118,7 +127,8 @@ BEGIN
 					0 'TopValue',
 					'Piezas' 'TopText',
 					0 'BottomValue',
-					'Envios realizados' 'BottomText'
+					'Envios realizados' 'BottomText',
+					'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 		END
 		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
@@ -157,10 +167,11 @@ BEGIN
 						CAST(1 AS BIT) [blnResult]
 
 					SELECT
-						TotalPaidCoD 'TopValue',
+						ISNULL(TotalPaidCoD,0) 'TopValue',
 						'Monto pagado COD' 'TopText',
-						TotalPendingCoD 'BottomValue',
-						'Total por cobrar' 'BottomText'
+						ISNULL(TotalPendingCoD,0) 'BottomValue',
+						'Total por cobrar' 'BottomText',
+						'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					FROM
 						@ResponseCoDTable
 				END
@@ -173,7 +184,8 @@ BEGIN
 						0 'TopValue',
 						'Monto pagado COD' 'TopText',
 						0 'BottomValue',
-						'Total por cobrar' 'BottomText'
+						'Total por cobrar' 'BottomText',
+						'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 			END
 			ELSE
@@ -185,7 +197,8 @@ BEGIN
 					0 'TopValue',
 					'Monto pagado COD' 'TopText',
 					0 'BottomValue',
-					'Total por cobrar' 'BottomText'
+					'Total por cobrar' 'BottomText',
+					'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 
 		END
@@ -286,10 +299,11 @@ BEGIN
 							CAST(1 AS BIT) [blnResult]
 
 						SELECT
-							VelocidadEntregaDia 'TopValue',
+							ISNULL(VelocidadEntregaDia,0) 'TopValue',
 							'Velocidad de entrega' 'TopText',
-							PorcentajentregaTotal 'BottomValue',
-							'Porcentaje de entregas' 'BottomText'
+							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
+							'Porcentaje de entregas' 'BottomText',
+							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 						FROM
 							@ResponseVelTable
 					END
@@ -302,7 +316,8 @@ BEGIN
 							0 'TopValue',
 							'Velocidad de entrega/día' 'TopText',
 							0 'BottomValue',
-							'Porcentaje de entregas realizadas' 'BottomText'
+							'Porcentaje de entregas realizadas' 'BottomText',
+							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					END
 
 				END
@@ -315,7 +330,8 @@ BEGIN
 						0 'TopValue',
 						'Velocidad de entrega/día' 'TopText',
 						0 'BottomValue',
-						'Porcentaje de entregas realizadas' 'BottomText'
+						'Porcentaje de entregas realizadas' 'BottomText',
+						'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
 			END
@@ -328,7 +344,8 @@ BEGIN
 					0 'TopValue',
 					'Velocidad de entrega/día' 'TopText',
 					0 'BottomValue',
-					'Porcentaje de entregas realizadas' 'BottomText'
+					'Porcentaje de entregas realizadas' 'BottomText',
+					'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 
 		END
@@ -342,7 +359,8 @@ BEGIN
 				0 'TopValue',
 				'' 'TopText',
 				0 'BottomValue',
-				'' 'BottomText'
+				'' 'BottomText',
+				'' 'WidgetIcon'
 
 		END
 	END TRY
@@ -355,7 +373,8 @@ BEGIN
 			0 'TopValue',
 			'' 'TopText',
 			0 'BottomValue',
-			'' 'BottomText'
+			'' 'BottomText',
+			'' 'WidgetIcon'
 	END CATCH
 	
 	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
