@@ -1,4 +1,11 @@
-﻿
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[GetWidgetData]    Script Date: 8/27/2022 12:55:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-08-18>
@@ -89,10 +96,11 @@ BEGIN
 						CAST(1 AS BIT) [blnResult]
 
 					SELECT
-						TotalGuidePieces 'TopValue',
+						ISNULL(TotalGuidePieces,0) 'TopValue',
 						'Piezas' 'TopText',
-						TotalGuideDelivered 'BottomValue',
-						'Envios realizados' 'BottomText'
+						ISNULL(TotalGuide,0) 'BottomValue',
+						'Envios realizados' 'BottomText',
+						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					FROM
 						@ResponseTable
 				END
@@ -105,7 +113,8 @@ BEGIN
 						0 'TopValue',
 						'Piezas' 'TopText',
 						0 'BottomValue',
-						'Envios realizados' 'BottomText'
+						'Envios realizados' 'BottomText',
+						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
 			END
@@ -118,7 +127,8 @@ BEGIN
 					0 'TopValue',
 					'Piezas' 'TopText',
 					0 'BottomValue',
-					'Envios realizados' 'BottomText'
+					'Envios realizados' 'BottomText',
+					'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 		END
 		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
@@ -157,10 +167,11 @@ BEGIN
 						CAST(1 AS BIT) [blnResult]
 
 					SELECT
-						TotalPaidCoD 'TopValue',
+						ISNULL(TotalPaidCoD,0) 'TopValue',
 						'Monto pagado COD' 'TopText',
-						TotalPendingCoD 'BottomValue',
-						'Total por cobrar' 'BottomText'
+						ISNULL(TotalPendingCoD,0) 'BottomValue',
+						'Total por cobrar' 'BottomText',
+						'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					FROM
 						@ResponseCoDTable
 				END
@@ -173,7 +184,8 @@ BEGIN
 						0 'TopValue',
 						'Monto pagado COD' 'TopText',
 						0 'BottomValue',
-						'Total por cobrar' 'BottomText'
+						'Total por cobrar' 'BottomText',
+						'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 			END
 			ELSE
@@ -185,7 +197,155 @@ BEGIN
 					0 'TopValue',
 					'Monto pagado COD' 'TopText',
 					0 'BottomValue',
-					'Total por cobrar' 'BottomText'
+					'Total por cobrar' 'BottomText',
+					'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+			END
+
+		END
+		ELSE IF(@WidgetName = 'VelocidadEntrega' COLLATE Latin1_General_CI_AI)
+		BEGIN
+		
+			INSERT INTO #FilteredGuides
+				(GuideSerie, GuideNumber, GuideStatus)
+			SELECT
+				DO.Guide_Serie, DO.Guide_Number, DO.StatusOrderId
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+			WHERE
+				DO.DateCreated BETWEEN @StartFilterDate AND @EndFilterDate
+				AND
+				DO.IdCustomer = @CustomerId
+				
+
+			IF( EXISTS(SELECT TOP 1 1 FROM #FilteredGuides) )
+			BEGIN
+
+				CREATE TABLE #DeliveryDataOfGuide (
+					GuideSerie NVARCHAR(2),
+					GuideNumber INT,
+					DateArrivedOnForza DATE,
+					DateDelivered DATE,
+					INDEX INDX_DeliveryDataOfGuide_Guide NONCLUSTERED(GuideSerie, GuideNumber)
+				);
+
+				INSERT INTO #DeliveryDataOfGuide
+					(GuideSerie, GuideNumber, DateArrivedOnForza, DateDelivered)
+				SELECT
+					FG.GuideSerie
+					, FG.GuideNumber
+					, (
+						SELECT 
+							TOP 1
+								DOD.DateCreated
+						FROM
+							[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+						WHERE
+							DOD.Guide_Serie = FG.GuideSerie
+							AND
+							DOD.Guide_Number = FG.GuideNumber
+							AND
+							DOD.StatusOrderId IN (2, 11, 21) -- Recolectado, arribó a las instalaciones, recibido en express center
+						ORDER BY
+							DOD.DateCreated ASC
+					)
+					, (
+						SELECT 
+							TOP 1
+								DOD.DateCreated
+						FROM
+							[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+						WHERE
+							DOD.Guide_Serie = FG.GuideSerie
+							AND
+							DOD.Guide_Number = FG.GuideNumber
+							AND
+							DOD.StatusOrderId IN (5,22) -- Entregadas, entregadas en express center
+						ORDER BY
+							DOD.DateCreated DESC
+					)
+				FROM 
+					#FilteredGuides FG
+
+				IF( EXISTS(SELECT TOP 1 1 FROM #DeliveryDataOfGuide) )
+				BEGIN
+
+					DECLARE @ResponseVelTable AS TABLE(
+						VelocidadEntregaDia DECIMAL(5,2),
+						PorcentajentregaTotal DECIMAL(5,2)
+					);
+
+					INSERT INTO @ResponseVelTable
+						(VelocidadEntregaDia, PorcentajentregaTotal)
+					SELECT
+						-- Promedio de días desde arribo hasta entrega por guía                                         Días dentro del filtro de fechas indicado
+						(CAST(AVG(DATEDIFF(DAY,DDOG.DateArrivedOnForza, DDOG.DateDelivered)) AS DECIMAL) / CAST( DATEDIFF(DAY, @StartFilterDate, @EndFilterDate) AS DECIMAL)) 'VelocidadEntregaDia',
+						(ROUND(((CAST(SUM((CASE WHEN DDOG.DateDelivered IS NOT NULL THEN 1 ELSE 0 END)) AS DECIMAL) / CAST(COUNT(FG.GuideNumber) AS DECIMAL)) * 100), 2))  'PorcentajEntregaTotal'
+					FROM
+						#FilteredGuides FG
+						LEFT JOIN
+							#DeliveryDataOfGuide DDOG
+							ON
+								FG.GuideSerie = DDOG.GuideSerie
+								AND
+								FG.GuideNumber = DDOG.GuideNumber
+								AND
+								DDOG.DateArrivedOnForza IS NOT NULL
+								AND
+								DDOG.DateDelivered IS NOT NULL
+
+					IF( EXISTS(SELECT TOP 1 1 FROM @ResponseVelTable) )
+					BEGIN
+						SELECT
+							CAST(1 AS BIT) [blnResult]
+
+						SELECT
+							ISNULL(VelocidadEntregaDia,0) 'TopValue',
+							'Velocidad de entrega' 'TopText',
+							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
+							'Porcentaje de entregas' 'BottomText',
+							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						FROM
+							@ResponseVelTable
+					END
+					ELSE 
+					BEGIN
+						SELECT
+							CAST(0 AS BIT) [blnResult]
+
+						SELECT
+							0 'TopValue',
+							'Velocidad de entrega/día' 'TopText',
+							0 'BottomValue',
+							'Porcentaje de entregas realizadas' 'BottomText',
+							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					END
+
+				END
+				ELSE 
+				BEGIN
+					SELECT
+						CAST(0 AS BIT) [blnResult]
+
+					SELECT
+						0 'TopValue',
+						'Velocidad de entrega/día' 'TopText',
+						0 'BottomValue',
+						'Porcentaje de entregas realizadas' 'BottomText',
+						'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+				END
+
+			END
+			ELSE
+			BEGIN
+				SELECT
+					CAST(0 AS BIT) [blnResult]
+
+				SELECT
+					0 'TopValue',
+					'Velocidad de entrega/día' 'TopText',
+					0 'BottomValue',
+					'Porcentaje de entregas realizadas' 'BottomText',
+					'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 
 		END
@@ -199,7 +359,8 @@ BEGIN
 				0 'TopValue',
 				'' 'TopText',
 				0 'BottomValue',
-				'' 'BottomText'
+				'' 'BottomText',
+				'' 'WidgetIcon'
 
 		END
 	END TRY
@@ -212,7 +373,8 @@ BEGIN
 			0 'TopValue',
 			'' 'TopText',
 			0 'BottomValue',
-			'' 'BottomText'
+			'' 'BottomText',
+			'' 'WidgetIcon'
 	END CATCH
 	
 	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
