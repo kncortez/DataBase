@@ -18,7 +18,13 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_BillingProfile_LoadList]
     ON [dbo].[BillingProfile]([VisitPointByClientPortfolioId] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para identificar el perfil que se seleccionó como favorito.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BillingProfile', @level2type = N'COLUMN', @level2name = N'IsDefault';
 
