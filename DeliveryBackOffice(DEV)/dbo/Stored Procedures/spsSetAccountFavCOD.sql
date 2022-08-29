@@ -37,7 +37,9 @@ BEGIN
 	INSERT INTO DeliveryBackOffice.dbo.DeliveryFavCOD (AliasFavCOD, NameAccountFavCOD, TypeAccountFavCOD, DocumentIdFavCOD, StatusFavCOD, IdAccountFavCOD,TokenCreated, DateCreated, TokenUpdate, DateUpdate ,IdBank, NumberAccFavCOD)
 	VALUES (@Alias, @NameAccount, @TypeAccount, @DocID, 1,@IdAcount, @Token,GETDATE(), NULL, NULL, @IdBank, @NumberAcc)
 	
-	SELECT  'Se ha guardado correctamente sus registros' as Response 
+	SELECT
+		'Se ha guardado correctamente sus registros' AS Response
+	   ,@@IDENTITY Id
 END
 
 IF( @Id is not null )
@@ -48,13 +50,17 @@ BEGIN
 			UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD
 			SET  AliasFavCOD = @Alias , NameAccountFavCOD = @NameAccount, TypeAccountFavCOD = @TypeAccount, DocumentIdFavCOD = @DocID, StatusFavCOD = 1, IdAccountFavCOD = @IdAcount, TokenUpdate = @Token, DateUpdate = GETDATE(), IdBank = @IDBank, NumberAccFavCOD = @NumberAcc 
 			WHERE IdDeliveryFavCOD = @Id
-			SELECT  'Se ha actualizado actualizado sus registros' as Response
+			SELECT
+				'Se ha actualizado actualizado sus registros' AS Response
+			   ,@Id Id
 		end
 	else 
 		begin
 			UPDATE DeliveryBackOffice.dbo.DeliveryFavCOD set StatusFavCOD = @Status
 			WHERE IdDeliveryFavCOD = @Id
-			SELECT  'Registro eliminado' as Response
+			SELECT
+				'Registro eliminado' AS Response
+			   ,@Id Id
 		end
 	
 
