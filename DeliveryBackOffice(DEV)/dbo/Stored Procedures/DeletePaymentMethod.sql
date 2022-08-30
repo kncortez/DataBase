@@ -73,7 +73,6 @@ BEGIN
 				UPDATE CustomerPaymentValue
 				SET RowStatus = 0
 				   ,TokenizedToken = 'DATA DELETED'
-				   ,TokenizedNumber = 'DATA DELETED'
 				   ,TokenizedExpirationDate = 'DATA DELETED'
 				   ,IsDefault = 0
 				   ,TokenUpdated = @Token
