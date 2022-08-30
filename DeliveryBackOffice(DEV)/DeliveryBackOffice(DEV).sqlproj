@@ -1062,6 +1062,8 @@
     <Build Include="dbo\Stored Procedures\RemoveGuideFromServiceCart.sql" />
     <Build Include="dbo\Tables\AccountServiceCartDetail.sql" />
     <Build Include="dbo\Tables\AccountServiceCart.sql" />
+    <Build Include="dbo\Tables\CustomerPaymentValue.sql" />
+    <Build Include="dbo\Stored Procedures\SetPaymentMethod.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
