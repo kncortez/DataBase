@@ -1,25 +1,26 @@
 ﻿CREATE TABLE [dbo].[CustomerPaymentValue] (
-    [IdCustomerPaymentValue]  INT           IDENTITY (1, 1) NOT NULL,
-    [AccountId]               BIGINT        NULL,
-    [CustomerId]              INT           NOT NULL,
-    [VisitPointId]            INT           NULL,
-    [TokenizedToken]          NVARCHAR (50) NOT NULL,
-    [TokenizedNumber]         NVARCHAR (50) NOT NULL,
-    [TokenizedExpirationDate] NVARCHAR (50) NOT NULL,
-    [TokenizedCVV]            NVARCHAR (50) NOT NULL,
-    [DisplayText]             NVARCHAR (25) NOT NULL,
-    [IsDefault]               BIT           CONSTRAINT [DF_CustomerPaymentValue_IsDefault] DEFAULT ((0)) NOT NULL,
-    [Type]                    NVARCHAR (2)  NOT NULL,
-    [RowStatus]               BIT           CONSTRAINT [DF_CustomerPaymentValue_RowStatus] DEFAULT ((1)) NOT NULL,
-    [TokenCreated]            NVARCHAR (50) NOT NULL,
-    [DateCreated]             DATETIME      NOT NULL,
-    [TokenUpdated]            NVARCHAR (50) NULL,
-    [DateUpdated]             DATETIME      NULL,
+    [IdCustomerPaymentValue]  INT            IDENTITY (1, 1) NOT NULL,
+    [AccountId]               BIGINT         NULL,
+    [CustomerId]              INT            NOT NULL,
+    [VisitPointId]            INT            NULL,
+    [TokenizedToken]          NVARCHAR (100) NOT NULL,
+    [TokenizedExpirationDate] NVARCHAR (50)  NOT NULL,
+    [TokenizedCVV]            NVARCHAR (50)  NOT NULL,
+    [DisplayText]             NVARCHAR (25)  NOT NULL,
+    [IsDefault]               BIT            CONSTRAINT [DF_CustomerPaymentValue_IsDefault] DEFAULT ((0)) NOT NULL,
+    [Type]                    NVARCHAR (2)   NOT NULL,
+    [RowStatus]               BIT            CONSTRAINT [DF_CustomerPaymentValue_RowStatus] DEFAULT ((1)) NOT NULL,
+    [TokenCreated]            NVARCHAR (50)  NOT NULL,
+    [DateCreated]             DATETIME       NOT NULL,
+    [TokenUpdated]            NVARCHAR (50)  NULL,
+    [DateUpdated]             DATETIME       NULL,
     CONSTRAINT [PK_CustomerPaymentValue] PRIMARY KEY CLUSTERED ([IdCustomerPaymentValue] ASC),
     CONSTRAINT [FK_CustomerPaymentValue_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_CustomerPaymentValue_VisitPointClient] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -59,7 +60,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de fe
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token del número de la tarjeta de crédito/débito', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'TokenizedNumber';
+
 
 
 GO

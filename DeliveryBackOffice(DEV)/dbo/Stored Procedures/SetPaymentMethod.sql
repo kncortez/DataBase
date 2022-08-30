@@ -8,8 +8,7 @@ CREATE PROCEDURE [dbo].[SetPaymentMethod]
 	@AccountId BIGINT,
 	@CustomerId INT,
 	@VisitPointId INT,
-	@TokenizedToken NVARCHAR(50),
-	@TokenizedNumber NVARCHAR(50),
+	@TokenizedToken NVARCHAR(100),
 	@TokenizedExpirationDate NVARCHAR(50),
 	@TokenizedCVV NVARCHAR(50),
 	@DisplayText NVARCHAR(25),
@@ -24,7 +23,7 @@ BEGIN
 	BEGIN TRY
 		BEGIN TRANSACTION
 
-		IF NOT EXISTS (SELECT 1 FROM CustomerPaymentValue WHERE CustomerId = @CustomerId AND TokenizedNumber = @TokenizedNumber AND RowStatus = 1)
+		IF NOT EXISTS (SELECT 1 FROM CustomerPaymentValue WHERE CustomerId = @CustomerId AND TokenizedToken = @TokenizedToken AND RowStatus = 1)
 		BEGIN
 			DECLARE @IsDefault BIT = ISNULL((SELECT TOP 1 0 FROM CustomerPaymentValue WHERE CustomerId = @CustomerId AND RowStatus = 1), 1)
 		
@@ -33,7 +32,6 @@ BEGIN
 			, [CustomerId]
 			, [VisitPointId]
 			, [TokenizedToken]
-			, [TokenizedNumber]
 			, [TokenizedExpirationDate]
 			, [TokenizedCVV]
 			, [DisplayText]
@@ -44,7 +42,7 @@ BEGIN
 			, [DateCreated]
 			, [TokenUpdated]
 			, [DateUpdated])
-				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedNumber, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL)
+				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL)
 			
 			COMMIT TRANSACTION
 
