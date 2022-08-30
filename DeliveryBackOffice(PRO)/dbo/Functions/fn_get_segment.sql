@@ -1,4 +1,7 @@
 ﻿
+-- =============================================
+-- Description:	<Función utilizada para obtener el segmento al que pertenece una guía>
+-- =============================================
 
 
 CREATE FUNCTION [dbo].[fn_get_segment]

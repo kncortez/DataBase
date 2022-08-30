@@ -31,6 +31,12 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+	-- Variables "estaticas"
+	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
+	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
+	DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI);
+
+	-- Variables de control
     DECLARE @IdCustomer AS INT;
     DECLARE @IdSettlement AS INT;
     DECLARE @HeaderCodeSource VARCHAR(5);
@@ -65,11 +71,11 @@ BEGIN
            @OldPrice = ISNULL(ord.PriceShippment, 0),
            @ServiceShortName = ISNULL(ord.TypeService, 'NDD')
     FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-        LEFT JOIN dbo.Township stwn
+        LEFT JOIN dbo.Township stwn WITH (NOLOCK)
             ON stwn.IdTownship = ord.SenderIdTownship
-        LEFT JOIN dbo.Township rtwn
+        LEFT JOIN dbo.Township rtwn WITH (NOLOCK)
             ON rtwn.IdTownship = ord.ReceiverIdTownship
-        LEFT JOIN dbo.VisitPointClient vpc
+        LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
             ON vpc.CodeOfReference = ord.Sender_ID
     WHERE ord.Guide_Serie = @GuideSerie
           AND ord.Guide_Number = @GuideNumber;
@@ -86,7 +92,7 @@ BEGIN
     BEGIN
         SELECT TOP 1
                vpc.CodeOfReference
-        FROM dbo.VisitPointClient vpc
+        FROM dbo.VisitPointClient vpc WITH (NOLOCK)
         WHERE vpc.CustomerID = @IdCustomer;
     END;
 
@@ -98,7 +104,7 @@ BEGIN
     IF @HeaderCodeSource IS NULL
     BEGIN
         SELECT @HeaderCodeSource = twn.HeaderCode
-        FROM dbo.VisitPointClient vpc
+        FROM dbo.VisitPointClient vpc WITH (NOLOCK)
             LEFT JOIN dbo.Township twn
                 ON twn.IdTownship = vpc.IdTownship
         WHERE vpc.CodeOfReference = @VisitPointClient;
@@ -106,8 +112,8 @@ BEGIN
         IF @HeaderCodeSource IS NULL
         BEGIN
             SELECT @HeaderCodeSource = twn.HeaderCode
-            FROM dbo.DeliveryOrder ord
-                LEFT JOIN dbo.Township twn
+            FROM dbo.DeliveryOrder ord WITH (NOLOCK)
+                LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.TownshipName = ord.Sender_Town
             WHERE ord.Guide_Number = @GuideNumber;
         END;
@@ -118,8 +124,8 @@ BEGIN
         IF @HeaderCodeDestiny IS NULL
         BEGIN
             SELECT @HeaderCodeDestiny = twn.HeaderCode
-            FROM dbo.DeliveryOrder ord
-                LEFT JOIN dbo.Township twn
+            FROM dbo.DeliveryOrder ord WITH (NOLOCK)
+                LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.TownshipName = ord.Receiver_Town
             WHERE ord.Guide_Number = @GuideNumber;
         END;
@@ -143,11 +149,11 @@ BEGIN
            ISNULL(ps.MassWeight, 0) [MassWeightChecked],
            ISNULL(ps.volumetricWeight, 0) [VolumetricWeightChecked]
     INTO #Pieces
-    FROM dbo.DeliveryOrderPiece ps
+    FROM dbo.DeliveryOrderPiece ps WITH (NOLOCK)
     WHERE ps.GuideSerie = @GuideSerie
           AND ps.GuideNumber = @GuideNumber;
 
-    CREATE NONCLUSTERED INDEX IX_Pieces_ParcelCode ON #Pieces (ParcelCode);
+    CREATE NONCLUSTERED INDEX IX_Pieces_ParcelCode ON #Pieces (Id);
 
     DECLARE @count INT;
     SET @count = 1;
@@ -259,8 +265,8 @@ BEGIN
         SET @IsCreditCard =
         (
             SELECT IIF(COUNT(*) > 0, 'true', 'false') AS result
-            FROM dbo.Cost cst
-                LEFT JOIN dbo.BreakdownOfPayment br
+            FROM dbo.Cost cst WITH (NOLOCK)
+                LEFT JOIN dbo.BreakdownOfPayment br WITH (NOLOCK)
                     ON br.IdCost = cst.IdCost
             WHERE cst.IdProduct = 1
                   AND cst.ProductNumber = CONCAT('FD', @GuideNumber)
@@ -310,6 +316,48 @@ BEGIN
 
     PRINT 'pesos';
     PRINT @Pesos;
+	 
+	--- Validar la tarifa del usuario antes de realizar cambios
+	DECLARE @CustomerIdRate INT = 0;
+	SELECT
+		TOP 1
+			@CustomerIdRate = RBC.RbcIdRate
+	FROM
+		[DeliveryBackOffice].[dbo].[RatebyCustomer] RBC WITH(NOLOCK)
+	WHERE
+		RBC.RbcIdCustomer = @IdCustomer
+		AND
+		RBC.RbcRowStatus = 1
+
+	IF(@CustomerIdRate IN (@NewMainRates,@NewAutoSalesMainRates))
+	BEGIN
+	
+		IF( LTRIM(RTRIM(REPLACE(@Parcel,',',''))) = '' )
+		BEGIN
+			
+			DECLARE @DataCounter INT = 1;
+			
+			SET @Parcel = 'EXP076';
+			SET @Pesos = '10';
+			
+			IF(@DataCounter < @PiecesCount)
+			BEGIN
+				WHILE @DataCounter < @PiecesCount
+				BEGIN
+					
+					SET @Parcel = CONCAT(@Parcel,',EXP076');
+					SET @Pesos = CONCAT(@Pesos,',10');
+
+				    SET @DataCounter = @DataCounter + 1;
+
+				END;
+			END;
+
+		END;
+
+	END;
+	--- Fin de validaciónes de tarifa y tipo de pieza vacio
+
 
     --select @Pesos , @Parcel
     INSERT INTO @TempRate
@@ -470,8 +518,8 @@ BEGIN
 
         IF EXISTS
         (
-            SELECT cst.ProductNumber
-            FROM dbo.Cost cst
+            SELECT TOP 1 cst.ProductNumber
+            FROM dbo.Cost cst WITH (NOLOCK)
             WHERE cst.IdProduct = 1
                   AND cst.ProductNumber = @ProdctNumber
                   AND ISNULL(cst.TotalAmountPaid, 0) = 0
@@ -481,8 +529,8 @@ BEGIN
             PRINT CONVERT(VARCHAR, GETDATE(), 9);
             SET @IdCost =
             (
-                SELECT cst.IdCost
-                FROM dbo.Cost cst
+                SELECT TOP 1 cst.IdCost
+                FROM dbo.Cost cst WITH (NOLOCK)
                 WHERE cst.IdProduct = 1
                       AND cst.ProductNumber = @ProdctNumber
                       AND ISNULL(cst.TotalAmountPaid, 0) = 0
@@ -515,7 +563,7 @@ BEGIN
                    det.TokenCreated,
                    GETDATE()
             FROM @TblCost det
-                LEFT JOIN dbo.BreakdownOfPayment bk
+                LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                     ON bk.IdCost = @IdCost
                        AND bk.Description = det.Description
             WHERE bk.IdBreakdownOfPayment IS NULL

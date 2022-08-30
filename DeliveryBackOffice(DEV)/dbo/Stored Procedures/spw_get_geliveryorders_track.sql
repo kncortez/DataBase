@@ -324,7 +324,7 @@ BEGIN
                        ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityAlternante,
                        ISNULL(serv.Receiver_Alternant_Phone, '') PhoneAlternante
                 FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
-                    JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
+                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpclient WITH (NOLOCK)
                         ON serv.Sender_ID = vpclient.CodeOfReference
                     LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                         ON serv.StatusOrderId = so.StatusOrderId

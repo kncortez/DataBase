@@ -16,6 +16,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-20220329-144352]
     ON [dbo].[DeliveryOrderAlert]([GuideSerie] ASC, [GuideNumber] ASC, [AlertTypeId] ASC);
@@ -67,4 +69,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAlert', @level2type = N'COLUMN', @level2name = N'ServiceTypeId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideNumber_RowStatus_ServiceTypeId]
+    ON [dbo].[DeliveryOrderAlert]([GuideNumber] ASC, [RowStatus] ASC, [ServiceTypeId] ASC);
 

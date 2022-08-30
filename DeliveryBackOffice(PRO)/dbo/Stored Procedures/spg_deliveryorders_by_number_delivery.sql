@@ -9,6 +9,11 @@
 -- Create date: 21/09/2020
 -- Description:	Se agregó el costo de cobro en las entregas
 -- =============================================
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-08-05>
+-- Description:	< Corrección de datos e indice de tabla >
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_deliveryorders_by_number_delivery]
 	@_serie nvarchar(2) = 'FD'
 	,@_number nvarchar(max)  --parametro
@@ -20,16 +25,11 @@ BEGIN
 			DROP TABLE #listGuides;
 
 	SELECT
-		--SUBSTRING(Item, 1, 2) ItemSerie,
-		--SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
-		SUBSTRING(Item, 1, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
-		SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item)) ItemPiece
-		--, 
-		--SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
-		--CHARINDEX('-',Item) charinde,  
-		--len(Item) len
+		CAST(SUBSTRING(Item, 1, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 1))) AS INT) ItemNumber
 	INTO #listGuides
-	FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@_number, ',')
+	FROM DeliveryBackOffice.dbo.SplitUnlimited(@_number, ',')
+
+	CREATE NONCLUSTERED INDEX Temp_GuideList_Guide ON #listGuides (ItemNumber)
 
     select
 	do.Ticket_Number
@@ -74,4 +74,8 @@ BEGIN
 	and CAST(IIF(do.IsCollect = 'TRUE', isnull(do.PriceShippment,0), 0) AS MONEY) <= 0
 	and CAST(isnull(do.Collect_OnDelivery,0) AS MONEY) <= 0
 	order by do.Guide_Number asc
+
+	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+			DROP TABLE #listGuides;
+
 END

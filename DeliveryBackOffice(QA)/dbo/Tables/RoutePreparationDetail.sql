@@ -1,18 +1,21 @@
 ﻿CREATE TABLE [dbo].[RoutePreparationDetail] (
-    [IdRoutePreparationDetail] INT           IDENTITY (1, 1) NOT NULL,
-    [RoutePreparationId]       INT           NOT NULL,
-    [Guide_Serie]              NVARCHAR (2)  NOT NULL,
-    [Guide_Number]             INT           NOT NULL,
-    [RowStatus]                BIT           CONSTRAINT [df_RoutePreparationDetail_RowStatus] DEFAULT ('TRUE') NOT NULL,
-    [TokenCreated]             NVARCHAR (50) NOT NULL,
-    [DateCreated]              DATETIME      NOT NULL,
-    [TokenUpdated]             NVARCHAR (50) NULL,
-    [DateUpdated]              DATETIME      NULL,
-    [GuideOrder]               INT           NULL,
+    [IdRoutePreparationDetail] INT            IDENTITY (1, 1) NOT NULL,
+    [RoutePreparationId]       INT            NOT NULL,
+    [Guide_Serie]              NVARCHAR (2)   NOT NULL,
+    [Guide_Number]             INT            NOT NULL,
+    [RowStatus]                BIT            CONSTRAINT [df_RoutePreparationDetail_RowStatus] DEFAULT ('TRUE') NOT NULL,
+    [TokenCreated]             NVARCHAR (50)  NOT NULL,
+    [DateCreated]              DATETIME       NOT NULL,
+    [TokenUpdated]             NVARCHAR (50)  NULL,
+    [DateUpdated]              DATETIME       NULL,
+    [GuideOrder]               DECIMAL (5, 2) NULL,
+    [ETAGuide]                 TIME (7)       NULL,
     CONSTRAINT [PK_RoutePreparationDetail_IdRoutePreparationDetail] PRIMARY KEY CLUSTERED ([IdRoutePreparationDetail] ASC),
     CONSTRAINT [FK_RoutePreparationDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_RoutePreparationDetail_RoutePreparationId] FOREIGN KEY ([RoutePreparationId]) REFERENCES [dbo].[RoutePreparation] ([IdRoutePreparation])
 );
+
+
 
 
 
@@ -69,4 +72,8 @@ CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [IDX__Guide_Serie_Guide_Number_RowStatus]
     ON [dbo].[RoutePreparationDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [RowStatus] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora estimada de arribo al servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'ETAGuide';
 

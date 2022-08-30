@@ -1041,6 +1041,20 @@
     <Build Include="dbo\Stored Procedures\GetHubs_1.sql" />
     <Build Include="dbo\User Defined Types\TblCoDExecutionProcess_1.sql" />
     <Build Include="dbo\Stored Procedures\GetStations.sql" />
+    <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
+    <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
+    <Build Include="dbo\Functions\FnGetHub.sql" />
+    <Build Include="dbo\Functions\FnGetCustomerAttempts.sql" />
+    <Build Include="dbo\Functions\FnClearString.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_visitPointClientParser.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_customerParser.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_CustomerName.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport.sql" />
+    <Build Include="dbo\Stored Procedures\GetStationLocation.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
+    <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
+    <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
+    <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

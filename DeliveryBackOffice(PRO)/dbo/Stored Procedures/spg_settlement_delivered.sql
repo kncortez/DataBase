@@ -17,8 +17,8 @@ BEGIN
 	SET @GuideCount = (
 		SELECT 
 			COUNT(dobs.Guides_Received)
-		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
-		JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd ON dsd.ID_DeliveryOrderBySettlement = dobs.ID AND dsd.RowStatus = 1
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs WITH (NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH (NOLOCK) ON dsd.ID_DeliveryOrderBySettlement = dobs.ID AND dsd.RowStatus = 1
 		WHERE dobs.ID = @IdManifest
 		AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		AND dsd.Guide_Returned = 0  -- guía liquidada vía material devuelto
@@ -34,9 +34,9 @@ BEGIN
 			isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,'') as Courier_Name,
 			dobs.Route_Received,
 			CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username as IdUser_Username_Received
-		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs
-		JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.ID_Courier
-		JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.User_Received
+		FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] dobs WITH (NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK) ON sr.ID = dobs.ID_Courier
+		INNER JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK) ON lbt.SSN_IdToken = dobs.User_Received
 		WHERE dobs.ID = @IdManifest
 
 END

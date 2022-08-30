@@ -49,7 +49,9 @@ BEGIN
 					mun.IdTownship = pob.IdTownship
 					AND
 					mun.IdProvince = pob.IdProvince
-				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK)) DSC3
+					AND
+					pob.SettlementSatus = 1
+				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK) WHERE RowStatus = 1) DSC3
 					ON
 					pob.IdSettlement = DSC3.IdSettlement 
 				JOIN DeliveryBackOffice.dbo.Province dep  WITH(NOLOCK) ON	mun.IdProvince = dep.IdProvince and dep.ProvinceStatus = 'TRUE'
@@ -81,7 +83,9 @@ BEGIN
 					mun.IdTownship = pob.IdTownship
 					AND
 					mun.IdProvince = pob.IdProvince
-				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK) ) DSC3
+					AND
+					pob.SettlementSatus = 1
+				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK) WHERE RowStatus = 1) DSC3
 					ON
 					pob.IdSettlement = DSC3.IdSettlement
 				JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK) on	mun.IdProvince = dep.IdProvince and dep.ProvinceStatus = 'TRUE'
@@ -114,7 +118,9 @@ BEGIN
 					mun.IdTownship = pob.IdTownship
 					AND
 					mun.IdProvince = pob.IdProvince
-				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK)) DSC3
+					AND
+					pob.SettlementSatus = 1
+				LEFT JOIN (SELECT DISTINCT IdSettlement, Hub FROM DeliveryBackOffice.dbo.DumpServiceCoverage WITH(NOLOCK)  WHERE RowStatus = 1) DSC3
 					ON
 					pob.IdSettlement = DSC3.IdSettlement
 			JOIN DeliveryBackOffice.dbo.Province dep WITH(NOLOCK)  on	mun.IdProvince = dep.IdProvince and dep.ProvinceStatus = 'TRUE'
