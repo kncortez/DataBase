@@ -23,5 +23,6 @@ BEGIN
 		ON		[ADP].[ActDetailId] = [AD].[IdActDetail]
 		AND		[AD].[ActId] = @ActId
 		AND		[AD].[GuideSerie] = @GuideSerie
-		AND		[AD].[GuideNumber] = @GuideNumber;
+		AND		[AD].[GuideNumber] = @GuideNumber
+		AND		[ADP].[RowStatus] = 1;
 END
