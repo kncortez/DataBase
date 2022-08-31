@@ -1058,6 +1058,7 @@
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerPaymentData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
