@@ -1054,6 +1054,13 @@
     <Build Include="dbo\Tables\ActDetailPiece.sql" />
     <Build Include="dbo\Tables\ActDetail.sql" />
     <Build Include="dbo\Tables\Act.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActaLineHaulsDeletePice.sql" />
+    <Build Include="dbo\Stored Procedures\GetActasPiceGuideLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_CatTypeActa.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_AnularActaLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletasHeader.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletasDetail.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletas.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
