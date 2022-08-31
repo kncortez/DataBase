@@ -81,6 +81,15 @@ BEGIN
 		IF( EXISTS(SELECT TOP 1 1 FROM @VisaLinkHeader) AND EXISTS(SELECT TOP 1 1 FROM @VisaLinkDetail) )
 		BEGIN
 
+			UPDATE dos
+			SET GuidePaymentLink = (SELECT TOP 1 IdPaymentLinkHeader FROM @VisaLinkHeader)
+			FROM DeliveryOrderSurcharge dos
+			INNER JOIN @PaymentLinkDetail pld
+				ON pld.GuideSerie = dos.GuideSerie
+				AND pld.GuideNumber = dos.GuideNumber
+			WHERE dos.RowStatus = 1
+
+
 			IF(@@TRANCOUNT > 0)
 				COMMIT TRANSACTION;
 
