@@ -1050,6 +1050,10 @@
     <Build Include="dbo\Stored Procedures\sp_get_visitPointClientParser.sql" />
     <Build Include="dbo\Stored Procedures\sp_get_customerParser.sql" />
     <Build Include="dbo\Stored Procedures\sp_get_CustomerName.sql" />
+    <Build Include="dbo\Tables\CatTypeAct.sql" />
+    <Build Include="dbo\Tables\ActDetailPiece.sql" />
+    <Build Include="dbo\Tables\ActDetail.sql" />
+    <Build Include="dbo\Tables\Act.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
