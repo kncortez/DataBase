@@ -10,15 +10,62 @@ CREATE PROCEDURE [dbo].[FinishServiceCartbyAccount]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	DECLARE @CartGuides AS TABLE(
+		GuideSerie NVARCHAR(2),
+		GuideNumber INT,
+		INDEX INDX_TEMP_CartGuides_Guides NONCLUSTERED (GuideSerie, GuideNumber)
+	);
+
 	BEGIN TRANSACTION
 
 	BEGIN TRY
 
-		UPDATE AccountServiceCart
-		SET IsPending = 0
-		WHERE AccountId = @IdAccount
-		AND IsPending = 1
-		AND RowStatus = 1
+		INSERT INTO
+			@CartGuides
+			(GuideSerie, GuideNumber)
+		SELECT
+			DISTINCT
+				AccSCD.GuideSerie,
+				AccSCD.GuideNumber
+		FROM
+			DeliveryBackOffice.dbo.AccountServiceCart AccSC WITH(NOLOCK)
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
+				ON
+					AccSC.IdAccountServiceCart = AccSCD.AccountServiceCartId
+					AND
+					AccSCD.RowStatus = 1
+		WHERE
+			AccSC.AccountId = @IdAccount
+			AND
+			AccSC.IsPending = 1
+			AND
+			AccSC.RowStatus = 1
+
+		UPDATE
+			DOPD
+		SET
+			ShipmentCompleted = 1
+		FROM
+			DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK)
+			INNER JOIN
+				@CartGuides CG
+				ON
+					DOPD.GuideSerie = CG.GuideSerie
+					AND
+					DOPD.GuideNumber = CG.GuideNumber
+
+		UPDATE 
+			DeliveryBackOffice.dbo.AccountServiceCart
+		SET 
+			IsPending = 0
+		WHERE 
+			AccountId = @IdAccount
+			AND 
+			IsPending = 1
+			AND 
+			RowStatus = 1
 
 		IF (@@ROWCOUNT > 0)
 		BEGIN
