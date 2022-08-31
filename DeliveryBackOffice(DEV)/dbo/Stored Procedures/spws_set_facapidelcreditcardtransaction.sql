@@ -825,37 +825,6 @@ BEGIN
 
 			end 
 
-		-- 17-02-2022 Insert into CostDetail so we can save transaction data for Brain
-
-		DECLARE @PaymentTable AS TblPaymentList
-
-		INSERT INTO @PaymentTable
-		(
-			RowNumber,
-			IdTypeOfMoney,
-			Voucher,
-			Amount,
-			Responsible
-		)
-		VALUES
-		(   
-		0,    -- RowNumber - int
-		2, -- IdTypeOfMoney - int
-		@OrderNumber, -- Voucher - varchar(100)
-		@Ammount, -- Amount - decimal(18, 2)
-		@Signature  -- Responsible - nvarchar(100)
-		)
-
-		EXEC dbo.SetPaymentCost @TypeProduct = 1,    -- int
-							@ProductNumber = @OrderNumber, -- varchar(20)
-							@TblDetail = @PaymentTable,   -- TblPaymentList
-							@FullPayment = @Ammount, -- decimal(12, 2)
-							@TypeCharge = 1,     -- int
-							@Token = @TokenCreated,         -- varchar(50)
-							@CODPayment = NULL,  -- decimal(12, 2)
-							@Responsible = @Signature    -- varchar(100)
-		-- end 17-02-2022  ------------------------------------------------------------
-
 		INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor 
 			([TypeOfUse], 
 			[IdSystem], 
@@ -1003,6 +972,32 @@ BEGIN
 				GuidePriceShipment DECIMAL(14,2)
 			);
 
+			DECLARE @GeneratedCosts AS TABLE(
+				IdCost INT,
+				guide NVARCHAR(50),
+				amountGuide DECIMAL(14,2)
+			);
+
+			-- Guías individuales FD
+			INSERT INTO @AcceptedGuides
+				(GuideSerie, GuideNumber, GuidePriceShipment)
+			SELECT
+				DISTINCT
+					SUBSTRING(CCTBC.OrderNumber,1,2),
+					SUBSTRING(CCTBC.OrderNumber,3, LEN(CCTBC.OrderNumber)),
+					DO.PriceShippment
+			FROM
+				DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
+				INNER JOIN
+					DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+					ON
+						SUBSTRING(CCTBC.OrderNumber,1,2) = DO.Guide_Serie
+						AND
+						SUBSTRING(CCTBC.OrderNumber,3, LEN(CCTBC.OrderNumber)) = DO.Guide_Number
+			WHERE
+				CCTBC.OrderNumber = @OrderNumber
+
+			-- Guías agrupadas por HR
 			INSERT INTO @AcceptedGuides
 				(GuideSerie, GuideNumber, GuidePriceShipment)
 			SELECT
@@ -1021,9 +1016,11 @@ BEGIN
 			WHERE
 				CCTBCD.OrderNumber = @OrderNumber
 
+			-- Insertar datos de pago
 			INSERT INTO
 				DeliveryBackOffice.dbo.Cost
 				( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated )
+			OUTPUT inserted.IdCost, inserted.ProductNumber, inserted.TotalAmount INTO @GeneratedCosts(IdCost, guide, amountGuide)
 			SELECT
 				1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TokenCreated, GETDATE()
 			FROM
@@ -1049,6 +1046,20 @@ BEGIN
 					ON
 						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
 
+			INSERT INTO 
+				DeliveryBackOffice.dbo.CostDetail
+				( IdCost, IdTypeOfMoney, Amount, Voucher, RowStatus, DateCreated, TokenCreated )
+			SELECT
+				GC.IdCost, 2, GC.amountGuide, @ReferenceNumber, 1, GETDATE(), @TokenCreated
+			FROM
+				@GeneratedCosts GC
+				LEFT JOIN
+					DeliveryBackOffice.dbo.CostDetail CD WITH(NOLOCK)
+					ON
+						GC.IdCost = CD.IdCost
+			WHERE
+				CD.IdCost IS NULL
+
 		END
 
 		IF(@@TRANCOUNT > 0)
@@ -1063,11 +1074,6 @@ BEGIN
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
 		
-		--select 401 Code,'Error' Description
-		--, null coupSerie
-		--, null coupDate
-		--, null coupPromo
-
 		SELECT 'Error al procesar transacción' AS message,
 			'FALSE'	blnResult,
 			CAST(-1 AS VARCHAR(5)) IdResult,
