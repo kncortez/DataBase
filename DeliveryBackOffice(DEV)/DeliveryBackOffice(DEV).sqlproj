@@ -1059,6 +1059,8 @@
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerPaymentData.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceCartbyAccount.sql" />
+    <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccount.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
