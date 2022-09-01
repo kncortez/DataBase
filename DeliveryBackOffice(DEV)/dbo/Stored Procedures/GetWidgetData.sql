@@ -86,7 +86,7 @@ BEGIN
 				SELECT
 					SUM((CASE WHEN FG.GuideStatus != 7 THEN FG.GuideTotalPieces ELSE 0 END)),
 					SUM((CASE WHEN FG.GuideStatus IN (5, 22, 24, 25) THEN 1 ELSE 0 END)),
-					SUM((CASE WHEN FG.GuideStatus != 7 THEN FG.GuideTotalPieces ELSE 0 END))
+					SUM((CASE WHEN FG.GuideStatus != 7 THEN 1 ELSE 0 END))
 				FROM
 					#FilteredGuides FG
 
