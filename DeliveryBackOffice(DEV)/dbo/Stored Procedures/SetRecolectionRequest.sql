@@ -785,10 +785,69 @@ BEGIN
                              SM.Amount
                 ) SUB
                     ON SMT.IdServiceManagement = SUB.IdServiceManagement;
-            --WHERE IdServiceManagement=SUB.IdServiceManagement
 
-            --@TempPrice TP ON  SD.Serie=
+			
+			-- Actualizar
+			update 
+				do 
+			set  
+				StatusOrderId = 1 
+			from 
+				@TblDeliveryOrdersList ls
+				inner join DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+				on 
+					do.Guide_Serie =  ls.Guide_Serie 
+					and 
+					do.Guide_Number = ls.Guide_Number
 
+			update 
+				dopd 
+			set 
+				ShipmentCompleted = 1
+			from 
+				@TblDeliveryOrdersList ls
+				inner join 
+					DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+					on 
+						dopd.GuideSerie =  ls.Guide_Serie 
+						and 
+						dopd.GuideNumber = ls.Guide_Number
+
+			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
+			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 
+				[Guide_Serie]
+				,[Guide_Number]
+				,[StatusOrderId]
+				,[UserCreated]
+				,[DateCreated]
+				,[DateCreatedInSystem]
+				,[Observations]
+				,[Temperature_Celsius]
+			)
+			select 
+				DISTINCT
+					ls.Guide_Serie
+					,ls.Guide_Number
+					,1
+					,@Token
+					,GETDATE()
+					,GETDATE()
+					,null
+					,null
+			from 
+				@TblDeliveryOrdersList ls
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+					ON
+						ls.Guide_Serie = DOD.Guide_Serie
+						AND
+						ls.Guide_Number = DOD.Guide_Number
+						AND
+						DOD.StatusOrderId IN (1,21)
+						AND
+						DOD.RowStatus = 1
+			WHERE
+				DOD.DateCreated IS NULL
 
             DROP TABLE #Sender;
 

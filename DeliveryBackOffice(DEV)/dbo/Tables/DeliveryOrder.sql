@@ -75,7 +75,7 @@
     [IndicationsToSendOrigin]              VARCHAR (1500)  NULL,
     [IndicationsToSendDestination]         VARCHAR (1500)  NULL,
     [IsInsuarance]                         BIT             NULL,
-    [TypeService]                          VARCHAR (3)     NULL,
+    [TypeService]                          VARCHAR (4)     NULL,
     [Sender_Mail]                          NVARCHAR (200)  NULL,
     [BilledWeight]                         DECIMAL (12, 2) NULL,
     [InsuranceAmount]                      DECIMAL (12, 2) NULL,
@@ -113,6 +113,8 @@
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 
