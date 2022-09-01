@@ -6,7 +6,8 @@
 CREATE PROCEDURE [dbo].[spHM_GetDetailPiecesAct]
 	@ActId AS INT,
 	@GuideSerie AS NVARCHAR(5),
-	@GuideNumber AS NVARCHAR(15)
+	@GuideNumber AS NVARCHAR(15),
+	@DateOfRoute AS DATE
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -21,8 +22,12 @@ BEGIN
 	FROM		[dbo].[ActDetailPiece] ADP
 	INNER JOIN	[dbo].[ActDetail] AD
 		ON		[ADP].[ActDetailId] = [AD].[IdActDetail]
-		AND		[AD].[ActId] = @ActId
 		AND		[AD].[GuideSerie] = @GuideSerie
 		AND		[AD].[GuideNumber] = @GuideNumber
-		AND		[ADP].[RowStatus] = 1;
+		AND		[ADP].[RowStatus] = 1
+	INNER JOIN	[dbo].[Act] A
+		ON		[AD].ActId = [A].[IdAct]
+		AND		[A].[IdAct] = @ActId
+		AND		[A].[DateOfRoute] = @DateOfRoute
+		AND		[A].[RowStatus] = 1;
 END
