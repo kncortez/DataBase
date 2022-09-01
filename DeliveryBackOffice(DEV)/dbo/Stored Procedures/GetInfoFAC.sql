@@ -86,14 +86,14 @@ BEGIN
 
 	-- Punto de visita por cuenta ingresada
 	SET @VisitPointClientIdByUser = (
-		SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-		JOIN VisitPointByUser VPU
+		SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
+		INNER JOIN VisitPointByUser VPU WITH(NOLOCK)
 			ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
 				AND VPU.RowStatus = 1
-		JOIN RegisterUser ru
+		INNER JOIN RegisterUser ru WITH(NOLOCK)
 			ON VPU.RegisterUserID = ru.UsrIdUser
 				AND ru.UsrRowStatus = 1
-		JOIN [dbo].[RolByUserByAccount] rua
+		INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 			ON rua.RuaIdUser = ru.UsrIdUser
 		WHERE rua.RuaIdAccount = @AccountId
 	)
@@ -401,7 +401,7 @@ BEGIN
 						update  dbo.DeliveryOrderPaymentDetail 
 						set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 						, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-						from dbo.DeliveryOrderPaymentDetail pay
+						from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 								inner join @TblDeliveryOrdersList t 
 								on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -465,7 +465,7 @@ BEGIN
 							EXISTS( 
 								SELECT TOP 1 1 
 								FROM 
-									[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP 
+									[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP  WITH(NOLOCK)
 								WHERE 
 									BOP.IdCost = @CostId 
 									AND 
@@ -480,7 +480,7 @@ BEGIN
 								Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
 								DateUpdated = GETDATE(),
 								TokenUpdated = @Token,
-								PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
+								PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie)
 							WHERE
 								IdCost = @CostId
 								AND
@@ -514,7 +514,7 @@ BEGIN
 						SELECT 
 							DopId 
 						FROM 
-							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
+							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH(NOLOCK)
 							INNER JOIN @TblDeliveryOrdersList tpo
 								ON do.GuideNumber = tpo.Guide_Number
 									AND do.GuideSerie = tpo.Guide_Serie
@@ -550,7 +550,7 @@ BEGIN
 								update  dbo.DeliveryOrderPaymentDetail 
 								set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 								, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-								from dbo.DeliveryOrderPaymentDetail pay
+								from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 									 inner join @TblDeliveryOrdersList t 
 									 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -843,7 +843,7 @@ BEGIN
 						DISTINCT
 							DOPD.IdHeaderRecolection
 					FROM
-						DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD
+						DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK)
 						INNER JOIN
 							@AcceptedGuides AG
 							ON
