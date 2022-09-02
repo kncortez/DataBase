@@ -170,10 +170,10 @@ BEGIN
 					ON
 						DA.ID = DAP.IdDeliveryAttemptProcess
 
-			-- Estado actual de la guía
-            DECLARE @StatusId INT = ( SELECT TOP 1 DO.StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber );
+			-- Revisar si la guía ya ha sido entregada anteriormente
+            DECLARE @StatusId INT = ISNULL(( SELECT TOP 1 DOD.StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK) WHERE DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber AND DOD.StatusOrderId IN (5,22,24,25)),0);
 
-            IF (@StatusId NOT IN ( 5, 22 )) -- estado etregado
+            IF (@StatusId NOT IN ( 5, 22 )) -- La guía no ha sido entregada
             BEGIN
 
 				DECLARE @UpdatesDone AS TABLE (
