@@ -1055,6 +1055,7 @@
     <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetGudeFCCDataClients.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
