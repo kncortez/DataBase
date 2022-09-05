@@ -1073,6 +1073,9 @@
     <Build Include="dbo\Stored Procedures\SetPaymentMethod.sql" />
     <Build Include="dbo\Stored Procedures\DeletePaymentMethod.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePaymentMethod.sql" />
+    <Build Include="dbo\Tables\ConfirmedAddress.sql" />
+    <Build Include="dbo\Tables\CatStateConfirmedAddress.sql" />
+    <Build Include="dbo\Stored Procedures\SetConfirmedAddress.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

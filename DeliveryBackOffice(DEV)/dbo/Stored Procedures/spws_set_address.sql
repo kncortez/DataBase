@@ -23,8 +23,10 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@Token nvarchar(200),
 	@IdCityPlace int = 31,
 	@Latitude varchar(50)=NULL,
-	@Longitude varchar(50)=NULL
-
+	@Longitude varchar(50)=NULL,
+	@Neighborhood varchar(50) = NULL,
+	@Zone smallint = NULL
+	--@IdModule int = NULL
 	
 	
 AS
@@ -47,7 +49,7 @@ BEGIN
 		-- insertar en tabla temporal posbibles mensajes de respuesta
 
 		IF OBJECT_ID('tempdb.dbo.#messagelist', 'U') IS NOT NULL DROP TABLE messagelist;
-			select * INTO #messagelist 
+			select IdResult,Message,Id INTO #messagelist 
 			from (SELECT  200 AS IdResult
 					,'Registro creado correctamente' AS Message
 					,'Insert' as Id 
@@ -62,19 +64,19 @@ BEGIN
 			union
 			SELECT  200 AS IdResult
 					,'Registro Eliminado' AS Message
-					,'Delete' as Id )  as messagess
+					,'Delete' as Id) as messagess
 
 		-- obtener el id de usuarion con base al token
 
 		declare @IdUser bigint  = (select t.TknIdUser from TokenLog t
 						where t.TknIdToken = @Token)
 
-		select * 
+		select RuaIdAccount 
 		into #Access
 		from dbo.RolByUserByAccount  rua
 		where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser
 
-	if(select count(*) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
+	if(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
 	begin
 
 		select uad.UadIdAddress
@@ -159,7 +161,6 @@ BEGIN
 					ON UADD.CodeOfReference=VP.CodeOfReference
 				 WHERE [UadIdAddress] =  @IdAddress
 
-
 				 set @jsonResult =(
 					SELECT STUFF(( 
 					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
@@ -174,66 +175,62 @@ BEGIN
 		end
 		else -- la cuenta no existe, entonces se crea
 		begin
-			SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)
-
-			
-			--Inserta Visit Point en la tabla VisitPointClient
+			SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)			
+					--Inserta Visit Point en la tabla VisitPointClient
 			INSERT INTO [dbo].[VisitPointClient]
-           ([CodeOfReference]
-           ,[DescriptionOfClient]
-           ,[StatusClient]
-           ,[CountryId]
-           ,[VisitPointId]
-           ,[TokenCreated]
-           ,[DateCreated]
-           ,[TokenUpdated]
-           ,[DateUpdated]
-           ,[CustomerID]
-           ,[Address]
-           ,[Zone]
-           ,[Town]
-           ,[Department]
-           ,[Phone]
-           ,[ContactName]
-           ,[IdKindOfVPClient]
-           ,[IdKindOfVPBusiness]
-           ,[IdSettlement]
-           ,[Email]
-           ,[IdTownship]
-		   ,[Latitude]
-		   ,[Longitude])
-     VALUES
-           (
-		    @CodeOfReference
-		   ,@FullName
-		   ,@Status
-		   ,@IdCountry
-		   ,NULL
-		   ,@Token
-		   ,GETDATE()
-		   ,NULL
-		   ,NULL
-		   ,@IdCustomer
-		   ,CAST((@Address1 + @Address2) AS NVARCHAR(600))
-		   ,NULL
-		   ,@TownshipName
-		   ,@Department
-		   ,@Phone
-		   ,NULL
-		   ,6
-		   ,@IdKindOfVPBusiness
-		   ,NULL
-		   ,NULL
-		   ,@IdTownship
-		   ,@Latitude
-		   ,@Longitude
-		   )
+				   ([CodeOfReference]
+				   ,[DescriptionOfClient]
+				   ,[StatusClient]
+				   ,[CountryId]
+				   ,[VisitPointId]
+				   ,[TokenCreated]
+				   ,[DateCreated]
+				   ,[TokenUpdated]
+				   ,[DateUpdated]
+				   ,[CustomerID]
+				   ,[Address]
+				   ,[Zone]
+				   ,[Town]
+				   ,[Department]
+				   ,[Phone]
+				   ,[ContactName]
+				   ,[IdKindOfVPClient]
+				   ,[IdKindOfVPBusiness]
+				   ,[IdSettlement]
+				   ,[Email]
+				   ,[IdTownship]
+				   ,[Latitude]
+				   ,[Longitude])
+			 VALUES
+				   (
+					@CodeOfReference
+				   ,@FullName
+				   ,@Status
+				   ,@IdCountry
+				   ,NULL
+				   ,@Token
+				   ,GETDATE()
+				   ,NULL
+				   ,NULL
+				   ,@IdCustomer
+				   ,CAST((@Address1 + @Address2) AS NVARCHAR(600))
+				   ,NULL
+				   ,@TownshipName
+				   ,@Department
+				   ,@Phone
+				   ,NULL
+				   ,6
+				   ,@IdKindOfVPBusiness
+				   ,NULL
+				   ,NULL
+				   ,@IdTownship
+				   ,@Latitude
+				   ,@Longitude
+				   )
+			set @IdVisitPointClient = SCOPE_IDENTITY()
 
-		   set @IdVisitPointClient = SCOPE_IDENTITY()
 
-
-			-- insertar nueva direccion
-
+			--insertar nueva direccion
 			INSERT INTO [dbo].[UserAddress]
 					([UadIdTownship]
 					,[UadIdAccount]
@@ -251,7 +248,7 @@ BEGIN
 					,[UadDateUpdated]
 					,CodeOfReference
 					,IdCityPlace)
-				 VALUES
+					VALUES
 					(@IdTownship
 					,@IdAccount
 					,@IdCountry
@@ -269,6 +266,8 @@ BEGIN
 					,@CodeOfReference
 					,@IdCityPlace)
 
+
+
 			set @IdAddress = SCOPE_IDENTITY()
 			set @jsonResult =(
 					SELECT STUFF(( 
@@ -285,8 +284,90 @@ BEGIN
 					FOR XML PATH(''), TYPE
 					).value('.', 'varchar(max)'),1,1,''
 						  ) 
-					)
+					)			
 		end
+		--------INICIO Homologación de campos para OAC (Tabla: ConfirmedAddres)--------
+		if @Status = 0
+		begin 
+				UPDATE [dbo].[ConfirmedAddress] SET
+						   [TokenUpdate] =@Token
+						   ,[DateUpdate] =getdate()
+						   ,[RowStatus] =0
+				WHERE NirPhone=@NirPhone AND Phone=@Phone			
+		end
+		else if @Status = 1
+		begin 
+			--Comprobar si existe el telefono
+			if EXISTS(SELECT Phone FROM DBO.ConfirmedAddress WHERE NirPhone=@NirPhone AND Phone=@Phone)
+			begin
+				UPDATE [dbo].[ConfirmedAddress] SET
+						   [NirPhone] =@NirPhone
+						   ,[Phone] = @Phone
+						   ,[TokenUpdate] =@Token
+						   ,[DateUpdate] =getdate()
+						   ,[RowStatus] =1
+						   ,[IdAccount] = @IdAccount
+						   ,[IdTownship] = @IdTownship
+						   ,[NameAddress] = @FullName
+						   ,[Address] = @Address1 
+						   ,[AdditionalInstructions] = @AdditionalInstructions
+						   ,[IdCityPlace] = @IdCityPlace
+						   ,[CodeOfReference] = @CodeOfReference
+						   ,[IdDeliveryOption] = NULL
+						   ,[Latitude] = @Latitude
+						   ,[Longitude] = @Longitude
+						   ,[Neighborhood] = @Neighborhood
+						   ,[Zone] = @Zone
+				WHERE NirPhone=@NirPhone AND Phone=@Phone;
+			end
+			else
+			begin
+				--Si no existe, crearlo
+				INSERT INTO [dbo].[ConfirmedAddress]
+					([NirPhone]
+					,[Phone]
+					,[TokenCreated]
+					,[DateCreated]
+					,[TokenUpdate]
+					,[DateUpdate]
+					,[RowStatus]
+					,[IdAccount]
+					,[IdTownship]
+					,[NameAddress]
+					,[Address]
+					,[AdditionalInstructions]
+					,[IdCityPlace]
+					,[CodeOfReference]
+					,[IdDeliveryOption]
+					,[Latitude]
+					,[Longitude]
+					,[Neighborhood]
+					,[IdModule]
+					,[IdStatusAddress])
+				VALUES
+					(@NirPhone
+					,@Phone
+					,@Token
+					,getdate()
+					,NULL
+					,NULL
+					,1
+					,@IdAccount
+					,@IdTownship
+					,@FullName
+					,@Address1 
+					,@AdditionalInstructions
+					,@IdCityPlace
+					,@CodeOfReference
+					,NULL
+					,@Latitude
+					,@Longitude
+					,@Neighborhood
+					,@Zone
+					,(select IdStatus from dbo.CatStateConfirmedAddress where NameState='CONFIRMADO'));
+			end			
+		end
+		--------FIN Homologación de campos para OAC --------
 	end
 	else
 	begin
