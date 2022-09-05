@@ -108,8 +108,6 @@ BEGIN
             Message VARCHAR(255),
         );
 
-        --select * from #Temp
-        --DECLARE @Tabla1 TABLE(id INT, nombreVARCHAR(20), telefonoVARCHAR(12));
 
 
         INSERT INTO #Temp
@@ -293,14 +291,6 @@ BEGIN
                 FROM #listGuides ni;
 
 
-                --- UPDATE PARA MANEJO DE ENVIO DE MENSAJITOS EN HORA DE RECOLECCION
-                /*
-				update [DeliveryBackOffice].[dbo].[SMS_UpdatedElements]
-				set UpdateStatus=1
-				where ElementId=1002
-			*/
-                --- FIN MODIFICACION
-
                 -------------------------- Drop la tabla temporal -------------------------------------------------------------------
 
                 --DROP TABLE #UpdateNow
@@ -444,7 +434,7 @@ BEGIN
 
                 UPDATE DeliveryOrderPaymentDetail
                 SET IdHeaderRecolection = @IdPickup
-                FROM DeliveryOrderPaymentDetail dop
+                FROM DeliveryOrderPaymentDetail dop 
                     INNER JOIN DeliveryOrder ord
                         ON (
                                ord.Guide_Number = dop.GuideNumber
@@ -474,39 +464,7 @@ BEGIN
                           (
                               SELECT ItemSerie FROM #listGuides
                           );
-                /*
-						
-						-------------------WEBHOOK.INI-----------------------			
-			IF ( SELECT ISNULL(WebhookEndpointId,0) 
-		FROM WebhookEndpoint wep
-		WHERE wep.IdCustomer  IN (
-							select od.IdCustomer
-							from  #listGuides ls
-								  INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.ItemSerie AND od.Guide_Number = ls.ItemNumber
-								)
-		) > 0
-	BEGIN 
-						INSERT INTO [dbo].[WebhookTrackingQueue]
-						       ([Guide_Serie]
-						       ,[Guide_Number]
-						       ,[IdCustomer]
-						       ,[Status]
-						       ,[WebhookEndpointId]
-						       ,[HasNotified]
-						       ,[ChangedDate])
-						SELECT  od.[Guide_Serie]
-						       ,od.[Guide_Number]
-						       ,od.[IdCustomer]
-						       ,od.[StatusOrderId]
-						       ,(SELECT WebhookEndpointId FROM WebhookEndpoint WHERE IdCustomer = od.IdCustomer)
-						       ,0
-						       ,GETDATE()
-						FROM   #listGuides ls
-							   INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.ItemSerie AND od.Guide_Number = ls.ItemNumber
-		END
-						-------------------WEBHOOK.FIN------------------------------	
-	*/
-                ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
+                
 
 
                 UPDATE DeliveryOrderPiece
@@ -613,7 +571,7 @@ BEGIN
                         GuideSerie,
                         GuideNumber
                     ) -- Control de guías pagadas
-                    FROM [DeliveryBackOffice].[dbo].[Cost] C
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C 
                        INNER JOIN #listGuides LG
                             ON C.ProductNumber = CONCAT(LG.ItemSerie, LG.ItemNumber)
                         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
@@ -671,8 +629,8 @@ BEGIN
 				(
                     SELECT TOP 1 
 					       sr.ID 
-				    FROM DeliveryBackOffice.dbo.SenderReceiver sr
-                        INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp
+				    FROM [DeliveryBackOffice].[dbo].[SenderReceiver] sr WITH (NOLOCK)
+                        INNER JOIN [DeliveryBackOffice].[dbo].[LogTokenPOD] ltp WITH (NOLOCK)
                             ON ltp.LogTokenPOD = @Token 
 						AND ltp.RowStatus=1 
 						AND ltp.IdCourierman = sr.ID
@@ -725,7 +683,7 @@ BEGIN
                 (
 					SELECT TOP 1  
 					        schp.SenderId  
-					FROM DeliveryBackOffice.dbo.SchedulePickup schp
+					FROM [DeliveryBackOffice].[dbo].[SchedulePickup] schp WITH (NOLOCK)
 					WHERE schp.SchedulePickupId = @IdPickup
 					      AND schp.RowStatus = 1 
 					ORDER BY schp.DateCreated ASC
@@ -758,7 +716,7 @@ BEGIN
                        lge.ItemNumber GuideNumber,
                        (
                            SELECT IdCourierman
-                           FROM DeliveryBackOffice.dbo.LogTokenPOD
+                           FROM [DeliveryBackOffice].[dbo].[LogTokenPOD] WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
@@ -797,7 +755,7 @@ BEGIN
 						WHERE C.ProductNumber = CONCAT(dlo.Guide_Serie, CAST(dlo.Guide_Number AS VARCHAR(50))))
 					AND pcd.IdProcessedGuideCOD IS NULL;
 
-                --------------PROCESSGUIDECOD.FIN
+                --------------PROCESSGUIDECOD.FIN---------------------
 
                 PRINT 'exito';
 
@@ -864,8 +822,8 @@ BEGIN
 				   ISNULL(vpc.Department,'') AS 'Sender_Department',
 				   0 AS 'Consolidated_Number',
 				   ISNULL(vpc.Email, '') AS 'Sender_Email'
-            FROM DeliveryBackOffice.dbo.SchedulePickup slp
-			    RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc 
+            FROM [DeliveryBackOffice].[dbo].[SchedulePickup] slp WITH (NOLOCK)
+			    RIGHT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK) 
 			       ON vpc.CodeOfReference = slp.SenderId
             WHERE slp.SchedulePickupId = @IdPickup;
             WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
@@ -900,7 +858,8 @@ BEGIN
                 INNER JOIN #listGuides lp 
 				    ON lp.ItemSerie = dop.GuideSerie 
 				       AND lp.ItemNumber = dop.GuideNumber
-                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = dop.GuideSerie AND do.Guide_Number = dop.GuideNumber
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) 
+				    ON do.Guide_Serie = dop.GuideSerie AND do.Guide_Number = dop.GuideNumber
             GROUP BY dop.GuideNumber,
 			         dop.GuideSerie ,
 					 dop.NoPiece,

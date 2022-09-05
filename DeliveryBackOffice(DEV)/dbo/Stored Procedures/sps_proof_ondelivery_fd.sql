@@ -12,7 +12,10 @@
 --               en cambio se debe insertar el checkpoint Reenviado a Express Center>
 -- Hotfix: FDAPI-337
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2022-06-20>
+-- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,

@@ -43,18 +43,12 @@ BEGIN
 						IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL DROP TABLE #listGuides;
 						IF OBJECT_ID('tempdb.dbo.#listNotGuides', 'U') IS NOT NULL DROP TABLE listNotGuides;
 						IF OBJECT_ID('tempdb.dbo.#UpdOrd', 'U') IS NOT NULL DROP TABLE #UpdOrd;
-								--select SUBSTRING(Item, 1,2) ItemSerie,SUBSTRING(Item,3,len(Item)) ItemNumber 
-								--into #listGuides
-								--from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
-								--declare @InGuides   NVARCHAR(400) = 'FD198907-3,FD198910-1,FD198910-2,FD198941-1'
+								
 
 								select SUBSTRING(Item, 1,2) ItemSerie,
 								SUBSTRING(Item,3, iif(CHARINDEX('-',Item)=0, (len(item)) , (CHARINDEX('-',Item)- 3))) ItemNumber,
 								SUBSTRING(Item, CHARINDEX('-',Item)+1,len(item)) ItemPiece
-								 --, 
-								--SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
-								--CHARINDEX('-',Item) charinde,  
-								--len(Item) len
+							
 										into #listGuides
 										from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
 
@@ -63,10 +57,7 @@ BEGIN
 								select SUBSTRING(Item, 1,2) ItemSerie,
 								SUBSTRING(Item,3, iif(CHARINDEX('-',Item)=0, (len(item)) , (CHARINDEX('-',Item)- 3))) ItemNumber,
 								SUBSTRING(Item, CHARINDEX('-',Item)+1,len(item)) ItemPiece
-								 --, 
-								--SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
-								--CHARINDEX('-',Item) charinde,  
-								--len(Item) len
+							
 										into #listNotGuides
 										from DenariusDesktop_Dev.dbo.SplitUnlimited(@NotGuides,',')
 
@@ -161,7 +152,7 @@ BEGIN
 
 					-- se obtiene el id del courierman
 					SELECT TOP 1 @CourierId = ID_Courier 
-					FROM [dbo].[DeliveryAttempt] 
+					FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
 					WHERE [Guide_Serie] = @GuideSerie
 						AND [Guide_Number] = @GuideNumber
 					ORDER BY [Date_Created] DESC
@@ -169,8 +160,8 @@ BEGIN
 				-- se verifica que no exita en las guías procesadas
 				IF NOT EXISTS 
 					(SELECT 1
-					FROM [dbo].[ProcessedGuideCOD]
-					WHERE [GuideNumber] = @GuideNumber AND GuideSerie = @GuideSerie
+					 FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
+					 WHERE [GuideNumber] = @GuideNumber AND GuideSerie = @GuideSerie
 				)
 				BEGIN
 					INSERT INTO [dbo].[ProcessedGuideCOD]
@@ -194,7 +185,7 @@ BEGIN
 						,0
 						,@Token
 						,cus.IdCustomer
-					FROM [dbo].[DeliveryOrder] do						
+					FROM [dbo].[DeliveryOrder] do	WITH (NOLOCK)					
 						LEFT JOIN dbo.VisitPointClient vp ON vp.CodeOfReference = do.Sender_ID
 						LEFT JOIN dbo.Customer cus ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
 						INNER JOIN dbo.DeliveryOrderPaymentDetail DOP 
@@ -205,9 +196,7 @@ BEGIN
 						AND do.IsCollect = 'false'
 						AND DOP.TimePlaId = 2
 						
-					--	AND LG.ItemNumber NOT IN (SELECT GuideNumber
-					--FROM [dbo].[ProcessedGuideCOD]
-					--WHERE [GuideNumber] = DO.Guide_Number AND GuideSerie = DO.Guide_Serie)
+				
 					    AND NOT EXISTS (SELECT
 							Top 1 1
 						FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)

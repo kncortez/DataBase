@@ -1,6 +1,4 @@
-﻿
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-25>
 -- Description:	<Registrar transacción de liquidación (cobro) de guías en área de COD>
@@ -130,7 +128,7 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus
@@ -149,7 +147,7 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus
@@ -176,7 +174,7 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do
+                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
                     LEFT JOIN dbo.VisitPointClient vp
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus
@@ -238,24 +236,7 @@ BEGIN
 
 
             ---------------------
-            --END TRY
-            --BEGIN CATCH
-
-            --    SELECT 'Error al actualizar el estado de la guia';
-
-            --    ROLLBACK TRANSACTION;
-
-            --END CATCH;
-
-            --IF @@TRANCOUNT > 0
-            --BEGIN
-
-            --    COMMIT TRANSACTION;
-
-            --    SELECT 'estado actualizado exitosamente';
-
-            --END;
-
+      
             END;
 
             -- se elimina la guía de la tabla temporal
@@ -303,9 +284,6 @@ BEGIN
         UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
         SET User_Received_COD = @Token,
             Date_Received_COD = GETDATE(),
-
-            --Pieces_Dry_Received = @PiecesDryReceived,
-            --Pieces_Cold_Received = @PiecesColdReceived,
             Guides_Received_COD = @GuideQuantityCOD,
             Route_Received_COD = GETDATE()
         WHERE ID = @IdDeliveryOrderBySettlement;
