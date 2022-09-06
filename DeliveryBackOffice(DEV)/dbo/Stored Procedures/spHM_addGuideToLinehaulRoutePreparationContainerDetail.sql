@@ -31,7 +31,8 @@ BEGIN
 			-- Document already exists, return data, only update token created AND open process value
 			UPDATE	[LinehaulRoutePreparationContainerDetail]	
 			SET		[TokenCreated] = @TknUser, 
-					[IsOpenProcess] = @IsOpenProcess
+					[IsOpenProcess] = @IsOpenProcess,
+					[RowStatus] = 1
 			WHERE	[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
 				AND	[GuideSerie] = @GuideSerie
 				AND [GuideNumber] = @GuideNumber;

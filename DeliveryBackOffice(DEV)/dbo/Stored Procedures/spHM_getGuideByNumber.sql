@@ -30,7 +30,8 @@ BEGIN
 		ON	[DO].[HubDestinationId] = [HL].[IdHubLogistic]
 	INNER JOIN [dbo].[StatusOrder] SO
 		ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-		AND ([SO].[OrderDescription] = 'Recolectado' OR
+		AND ([SO].[OrderDescription] = 'Generado' OR
+			[SO].[OrderDescription] = 'Recolectado' OR
 			[SO].[OrderDescription] = 'Arribó a las instalaciones' OR
 			[SO].[OrderDescription] = 'En inventario' OR
 			[SO].[OrderDescription] = 'En Tránsito')
