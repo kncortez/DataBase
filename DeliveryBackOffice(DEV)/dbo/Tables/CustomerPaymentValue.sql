@@ -14,11 +14,14 @@
     [DateCreated]             DATETIME       NOT NULL,
     [TokenUpdated]            NVARCHAR (50)  NULL,
     [DateUpdated]             DATETIME       NULL,
+    [Holder]                  NVARCHAR (50)  NOT NULL,
     CONSTRAINT [PK_CustomerPaymentValue] PRIMARY KEY CLUSTERED ([IdCustomerPaymentValue] ASC),
     CONSTRAINT [FK_CustomerPaymentValue_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_CustomerPaymentValue_VisitPointClient] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -89,4 +92,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'El tipo de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de CVV de tarjeta de crédito/débito', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'TokenizedCVV';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre titular', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CustomerPaymentValue', @level2type = N'COLUMN', @level2name = N'Holder';
 
