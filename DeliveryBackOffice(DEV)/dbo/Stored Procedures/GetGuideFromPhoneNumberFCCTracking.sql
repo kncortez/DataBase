@@ -31,7 +31,7 @@ IF (SELECT LEN(@Phone) ) > 8
 				,SO.OrderDescription
 				,DO.DateCreated
 				, CASE
-				      WHEN DO.StatusOrderId NOT IN(5,22) THEN 'Pendiente de Finalziar' 
+				      WHEN DO.StatusOrderId NOT IN(5,22) THEN 'Pendiente de Finalizar' 
 				  ELSE 'Servicio Finalizado' END StatusService
 				, CASE 
 				      WHEN DOD.StatusOrderId = 11 THEN Convert(varchar,DOD.DateCreated, 103)
@@ -45,7 +45,7 @@ IF (SELECT LEN(@Phone) ) > 8
 				,ISNULL(DO.Package_Description, 'Sin descripción') AS Package_Description
 				,ISNULL(SO.OrderDescription,'N/D') AS CheckPointRastreo
 				,ISNULL(DCBA.DCBA_Nom_account,'N/D')  AS NameAcount
-				,ISNULL(CBAT.BankAccountType,'N/D') AS BankAccountType
+				,ISNULL(DCBA.DCBA_BankAccountType,'N/D') AS BankAccountType
 				,ISNULL(DB.Acronym,'N/D') AS Bank
 		From 
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
@@ -59,8 +59,6 @@ IF (SELECT LEN(@Phone) ) > 8
 			ON      DO.HubOriginId = HL.IdHubLogistic
 			LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount] DCBA
 			ON     DO.DCBA_ID = DCBA.DCBA_Id
-			LEFT JOIN CatBankAccountType CBAT
-			ON DCBA.DCBA_BankAccountType = CBAT.IdBankAccountType
 			LEFT JOIN DBO.DeliveryBank DB
 			ON  DCBA.DCBA_Bank_Id =DB.Id_bank
 		WHERE 
