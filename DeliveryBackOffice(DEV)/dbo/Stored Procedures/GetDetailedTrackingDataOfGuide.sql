@@ -304,7 +304,7 @@ BEGIN
 			   OrdChkPnt.[StageDate],
 			   OrdChkPnt.[StageTitle],
 			   OrdChkPnt.[StageSource],
-			   ISNULL(
+			   LTRIM(RTRIM(ISNULL(
 					'[ ' + ISNULL(vpc.DescriptionOfClient, (SELECT TOP (1) hub.HubAbbreviation 
 							FROM DeliveryBackOffice.dbo.HubLogistics hub  WITH (NOLOCK)
 							WHERE hub.IdStation = epl.IdStation AND hub.HubStatus ='TRUE'
@@ -312,7 +312,7 @@ BEGIN
 							)) + ' ]' +--[Where]
 					 '' --[Complement] 
 					,'') 
-			   + ' ' + ISNULL(OrdChkPnt.StageDescription,'') 
+			   + ' ' + ISNULL(OrdChkPnt.StageDescription,'')))
 			   AS [StageDescription] ,
 			   OrdChkPnt.[ImagePath],
 			   OrdChkPnt.[Dry],
