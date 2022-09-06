@@ -66,10 +66,10 @@ BEGIN
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
-                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
