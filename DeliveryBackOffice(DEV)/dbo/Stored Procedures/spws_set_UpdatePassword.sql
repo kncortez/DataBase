@@ -138,9 +138,10 @@ AS
 												@Email = us.UsrEmail
                                                 FROM RegisterUser us
                                                      INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                                                                                                  AND rua.RuaRowStatus = 1
+                                                        AND rua.RuaRowStatus = 1
                                                      INNER JOIN [dbo].Account ac ON ac.AccIdAccount = rua.RuaIdAccount
-                                                                                    AND ac.AccRowStatus = 1
+                                                        AND ac.AccRowStatus = 1
+                                                     LEFT JOIN [dbo].Person prs ON us.UsrIdPerson= prs.PerIdPerson
                                                 WHERE ac.AccIdAccount = @IdAccount
 
                                             UPDATE RegisterUser
