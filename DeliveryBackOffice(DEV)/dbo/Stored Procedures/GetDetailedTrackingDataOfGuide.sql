@@ -127,11 +127,8 @@ BEGIN
 			'web' [StageSource],
 			'' AS [StageDescription], 
 			'' AS [ImagePath],
-			 --(Select top 1 Path_Dry from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Dry,
-			 --(Select top 1 Path_Cold from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Cold,
 			 '' AS [Dry],
 			 '' AS [Cold],
-			--ISNULL([Cold], '') AS Cold,
 			ISNULL(do.[NameOfReceiver], '') AS NameOfReceiver,
 			do.SenderName AS Place,
 			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) AS [ManifestNumber],
@@ -146,7 +143,6 @@ BEGIN
 			AND do.Guide_Number = @Guide_Number
 		UNION
         SELECT
-            --ROW_NUMBER() OVER (ORDER BY  dod.StatusOrderId ASC)  AS EventID,
             RANK() OVER (PARTITION BY dod.Guide_Number
                          ORDER BY CONVERT(DATE, dod.DateCreated),
                                   dod.StatusOrderId ASC
@@ -178,7 +174,7 @@ BEGIN
 								   FROM dbo.SenderReceiver courier WHERE courier.ID = da.ID_Courier ) + ' ' + 
 								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
 							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
-								JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
 									ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
@@ -187,7 +183,11 @@ BEGIN
                      ''
                            )
 				WHEN dod.StatusOrderId IN (5) THEN
-					'[' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](@GuideDeliveryCourierAttempt) + ']'
+					'Entregado en destino'
+				WHEN dod.StatusOrderId IN (20) THEN
+					'Se traslado a un express center para su futura entrega'
+				WHEN dod.StatusOrderId IN (22) THEN
+					'Entregado en express center'
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
                      ''
 				ELSE
@@ -215,7 +215,7 @@ BEGIN
                                                   ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
                                               Date_Photo
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                           JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                                           INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
                                                   AND da.Guide_Number = dp.Guide_Number
 												  AND da.Delivered = 1
@@ -245,7 +245,7 @@ BEGIN
 				(SELECT TOP 1
 					IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
 						FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-							JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+							INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 								ON da.Guide_Serie = dp.Guide_Serie
 									AND da.Guide_Number = dp.Guide_Number
 									AND da.Delivered = 1
@@ -257,7 +257,7 @@ BEGIN
 				(SELECT TOP 1
 					IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
                         FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                            JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                            INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                     AND da.Guide_Number = dp.Guide_Number
 									AND da.Delivered = 1
@@ -272,11 +272,11 @@ BEGIN
             (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
 			dod.UserCreated Token
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-            JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
+				AND so.CatStatusTypeId = 2
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
-        --ORDER BY DateCreated
         GROUP BY CONVERT(DATE, dod.DateCreated),
                  dod.Guide_Serie,
                  dod.Guide_Number,
@@ -305,16 +305,14 @@ BEGIN
 			   OrdChkPnt.[StageTitle],
 			   OrdChkPnt.[StageSource],
 			   ISNULL(
-		   			'[ ' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](ISNULL(epl.FirstName,'') + ' ' + ISNULL(epl.LastName1,'')) + ' ]' + --[who],
-					' ' +
-					'[ ' + (SELECT TOP (1) hub.HubAbbreviation 
+					'[ ' + ISNULL(vpc.DescriptionOfClient, (SELECT TOP (1) hub.HubAbbreviation 
 							FROM DeliveryBackOffice.dbo.HubLogistics hub  WITH (NOLOCK)
 							WHERE hub.IdStation = epl.IdStation AND hub.HubStatus ='TRUE'
 							ORDER BY hub.IdStation 
-							) + ' ]' +--[Where]
+							)) + ' ]' +--[Where]
 					 '' --[Complement] 
 					,'') 
-			   + '' + ISNULL(OrdChkPnt.StageDescription,'') 
+			   + ' ' + ISNULL(OrdChkPnt.StageDescription,'') 
 			   AS [StageDescription] ,
 			   OrdChkPnt.[ImagePath],
 			   OrdChkPnt.[Dry],
@@ -323,12 +321,17 @@ BEGIN
 			   OrdChkPnt.[Place],
 			   OrdChkPnt.[ManifestNumber],
 			   OrdChkPnt.[Latitude],
-			   OrdChkPnt.[Longitude]--,
-			   --OrdChkPnt.Token
+			   OrdChkPnt.[Longitude]
 	FROM #OrdChkpnt OrdChkPnt
+	-- Obtener datos desde usuario Desktop
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser  WITH (NOLOCK) ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username
 	LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl  WITH (NOLOCK) ON epl.IdEmployee = duser.USR_IdEmployee 
+	-- Obtener datos desde usuario portal
+	LEFT JOIN DeliveryBackOffice.dbo.TokenLog tl WITH(NOLOCK) ON OrdChkPnt.Token = tl.TknIdToken
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH(NOLOCK) ON tl.TknIdUser = ru.UsrIdUser
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser vpbu WITH(NOLOCK) ON ru.UsrIdUser = vpbu.RegisterUserID
+	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) ON vpbu.IdVisitPointClient = vpc.IdVisitPointClient and vpc.IdKindOfVPClient = 1 and vpc.DescriptionOfClient LIKE 'FD%EXC%'
 	ORDER BY OrdChkPnt.[StageDate] ASC,
 			 OrdChkPnt.[EventID];
 
