@@ -4,8 +4,7 @@
 -- Create date: <2022-09-01>
 -- Description:	<SP para cargar data a Contact Center sobre clientes, este se ejecuta de 1 AM a 3 AM>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHW_GetGudeFCCDataClients] 
-	
+CREATE PROCEDURE [dbo].[SPHW_GetGuideFCCDataClients] 	
 AS
 BEGIN
 	
