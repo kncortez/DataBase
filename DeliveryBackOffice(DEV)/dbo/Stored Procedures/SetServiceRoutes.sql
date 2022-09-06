@@ -114,6 +114,7 @@ BEGIN
 			/*****************************************************************************/
 			IF(@SenderId IS NULL OR @SenderId <> (SELECT OriginCode FROM @ServiceRoutes WHERE IdTblServiceRoutes = @RowNumber))
 			BEGIN 
+				SET @SenderId = NULL
 				SELECT
 					@SenderId = vpc.CodeOfReference
 					,@SenderFirstName = cu.Name
@@ -129,6 +130,17 @@ BEGIN
 				WHERE vpc.CodeOfReference = (SELECT OriginCode FROM @ServiceRoutes WHERE IdTblServiceRoutes = @RowNumber)
 			END
 
+			-- Si no se encuentra el VP se detiene el proceso
+			IF (@SenderId IS NULL)
+			BEGIN
+				SELECT
+					0 AS 'StatusCode'
+				   ,CONCAT('No se encontró información del OriginCode ', (SELECT OriginCode FROM @ServiceRoutes WHERE IdTblServiceRoutes = @RowNumber),'.') AS 'Description'
+				   ,@@TRANCOUNT AS 'NumTransferID'
+
+				DELETE FROM @TableResponse
+				BREAK;
+			END
 
 			/**********************************************************************/
 			/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
@@ -425,7 +437,7 @@ BEGIN
 										   ,@SetUpdate = 'true' -- Actualizar registros
 										   ,@Token = @CodeApp
 										   ,@IsReturn = 'false'
-										   ,@ParIsInsurance  = @IsInsurance
+										   ,@ParIsInsurance = @IsInsurance
 										   ,@ParInsuranceAmount = @InsuranceAmount
 
 			-- INSERTAR EN TABLA PARA RESPUESTA
@@ -437,18 +449,31 @@ BEGIN
 			WHERE Guide_Number = @GuideNumber
 		END
 
-		SELECT
-			1 AS 'StatusCode'
-		   ,'Success' AS 'Description'
-		   ,@@TRANCOUNT AS 'NumTransferID'
+		IF EXISTS (SELECT TOP 1 1 FROM @TableResponse)
+		BEGIN
 
-		SELECT
-			CONCAT(GuideSerie, GuideNumber) Guide
-		   ,Ticket_Number Ticket_Number
-		FROM @TableResponse
+			SELECT
+				1 AS 'StatusCode'
+			   ,'Success' AS 'Description'
+			   ,@@TRANCOUNT AS 'NumTransferID'
 
-		IF (@@TRANCOUNT > 0)
-				COMMIT TRANSACTION
+			SELECT
+				CONCAT(GuideSerie, GuideNumber) Guide
+			   ,Ticket_Number Ticket_Number
+			FROM @TableResponse
+
+			IF (@@TRANCOUNT > 0)
+					COMMIT TRANSACTION
+		END
+		ELSE
+		BEGIN 
+			SELECT
+				0 AS 'StatusCode'
+			   ,'Ocurrió un error.' AS 'Description'
+			   ,@@TRANCOUNT AS 'NumTransferID'
+
+			ROLLBACK TRANSACTION
+		END
 	END TRY
 	BEGIN CATCH
 
