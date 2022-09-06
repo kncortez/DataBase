@@ -38,6 +38,8 @@ BEGIN
 		IF ( EXISTS(SELECT TOP 1 1 FROM @UpdatedTutorialByAccount) )
 		BEGIN
 
+			COMMIT TRANSACTION;
+
 			SELECT
 				CAST(1 AS BIT) [blnResult],
 				'Se ha actualizado exitosamente el tutorial del usuario' [resultMessage]
@@ -45,6 +47,8 @@ BEGIN
 		END
 		ELSE 
 		BEGIN
+		
+			ROLLBACK TRANSACTION;
 
 			SELECT
 				CAST(1 AS BIT) [blnResult],
