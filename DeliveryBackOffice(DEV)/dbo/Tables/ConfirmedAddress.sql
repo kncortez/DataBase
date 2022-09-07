@@ -6,26 +6,26 @@
     [TokenUpdate]            VARCHAR (50)   NULL,
     [DateUpdate]             DATETIME       NULL,
     [RowStatus]              BIT            NOT NULL,
-    [IdAccount]              BIGINT         NOT NULL,
-    [IdTownship]             INT            NOT NULL,
+    [AccountId]              BIGINT         NOT NULL,
+    [TownshipId]             INT            NOT NULL,
     [NameAddress]            VARCHAR (100)  NOT NULL,
     [Address]                NVARCHAR (600) NOT NULL,
     [AdditionalInstructions] VARCHAR (250)  NULL,
-    [IdCityPlace]            INT            NOT NULL,
+    [CityPlaceId]            INT            NOT NULL,
     [CodeOfReference]        INT            NULL,
-    [IdDeliveryOption]       BIGINT         NULL,
+    [DeliveryOptionId]       BIGINT         NULL,
     [Latitude]               VARCHAR (20)   NULL,
     [Longitude]              VARCHAR (20)   NULL,
     [Neighborhood]           VARCHAR (50)   NULL,
     [Zone]                   SMALLINT       NULL,
-    [IdModule]               INT            NULL,
-    [IdStatusAddress]        INT            NOT NULL,
+    [CatModuleId]               INT            NULL,
+    [StatusAddressId]        INT            NOT NULL,
     CONSTRAINT [PK_ConfirmedAddress] PRIMARY KEY CLUSTERED ([NirPhone] ASC, [Phone] ASC),
-    CONSTRAINT [FK_CADD_Account] FOREIGN KEY ([IdAccount]) REFERENCES [dbo].[Account] ([AccIdAccount]),
-    CONSTRAINT [FK_CADD_CityPlace] FOREIGN KEY ([IdCityPlace]) REFERENCES [dbo].[CatCityPlace] ([IdCityPlace]),
-    CONSTRAINT [FK_CADD_Module] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
-    CONSTRAINT [FK_CADD_State] FOREIGN KEY ([IdStatusAddress]) REFERENCES [dbo].[CatStateConfirmedAddress] ([IdStatus]),
-    CONSTRAINT [FK_CADD_Township] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
+    CONSTRAINT [FK_CADD_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
+    CONSTRAINT [FK_CADD_CityPlace] FOREIGN KEY ([CityPlaceId]) REFERENCES [dbo].[CatCityPlace] ([IdCityPlace]),
+    CONSTRAINT [FK_CADD_Module] FOREIGN KEY ([CatModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
+    CONSTRAINT [FK_CADD_State] FOREIGN KEY ([StatusAddressId]) REFERENCES [dbo].[CatStateConfirmedAddress] ([IdStatus]),
+    CONSTRAINT [FK_CADD_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_CADD_VP] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
 
@@ -73,27 +73,27 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Guarda la l
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del municipio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdTownship';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del municipio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'TownshipId';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado d ela dirección confirmada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdStatusAddress';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado d ela dirección confirmada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'StatusAddressId';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del módulo desde donde se crea el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdModule';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del módulo desde donde se crea el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'CatModuleId';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la opción de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdDeliveryOption';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la opción de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'DeliveryOptionId';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del código de referencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdCityPlace';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del código de referencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'CityPlaceId';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id referente a la tabla Account', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdAccount';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id referente a la tabla Account', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'AccountId';
 
 
 GO

@@ -306,14 +306,14 @@ BEGIN
 						   ,[TokenUpdate] =@Token
 						   ,[DateUpdate] =getdate()
 						   ,[RowStatus] =1
-						   ,[IdAccount] = @IdAccount
-						   ,[IdTownship] = @IdTownship
+						   ,[AccountId] = @IdAccount
+						   ,[TownshipId] = @IdTownship
 						   ,[NameAddress] = @FullName
 						   ,[Address] = @Address1 
 						   ,[AdditionalInstructions] = @AdditionalInstructions
-						   ,[IdCityPlace] = @IdCityPlace
+						   ,[CityPlaceId] = @IdCityPlace
 						   ,[CodeOfReference] = @CodeOfReference
-						   ,[IdDeliveryOption] = NULL
+						   ,[DeliveryOptionId] = NULL
 						   ,[Latitude] = @Latitude
 						   ,[Longitude] = @Longitude
 						   ,[Neighborhood] = @Neighborhood
@@ -331,19 +331,19 @@ BEGIN
 					,[TokenUpdate]
 					,[DateUpdate]
 					,[RowStatus]
-					,[IdAccount]
-					,[IdTownship]
+					,[AccountId]
+					,[TownshipId]
 					,[NameAddress]
 					,[Address]
 					,[AdditionalInstructions]
-					,[IdCityPlace]
+					,[CityPlaceId]
 					,[CodeOfReference]
-					,[IdDeliveryOption]
+					,[DeliveryOptionId]
 					,[Latitude]
 					,[Longitude]
 					,[Neighborhood]
-					,[IdModule]
-					,[IdStatusAddress])
+					,[CatModuleId]
+					,[StatusAddressId])
 				VALUES
 					(@NirPhone
 					,@Phone
