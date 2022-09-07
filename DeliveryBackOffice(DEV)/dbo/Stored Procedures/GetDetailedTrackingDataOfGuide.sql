@@ -182,16 +182,10 @@ BEGIN
                      ),
                      ''
                            )
-				WHEN dod.StatusOrderId IN (5) THEN
-					'Entregado en destino'
-				WHEN dod.StatusOrderId IN (20) THEN
-					'Se traslado a un express center para su futura entrega'
-				WHEN dod.StatusOrderId IN (22) THEN
-					'Entregado en express center'
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
                      ''
 				ELSE
-					ISNULL(dod.Observations, '')
+					ISNULL(dod.Observations, ISNULL(so.StatusOrderTrackingDescription , ''))
              END
             ) AS [StageDescription]
             ,(CASE dod.StatusOrderId
@@ -283,7 +277,8 @@ BEGIN
                  dod.StatusOrderId,
                  dod.UserCreated,
                  dod.Observations,
-                 so.OrderDescription
+                 so.OrderDescription,
+				 so.StatusOrderTrackingDescription
     ) RES
     ORDER BY RES.[StageDate] ASC,
              RES.[EventID];
