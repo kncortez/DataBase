@@ -14,7 +14,7 @@
     [DateCreated]             DATETIME       NOT NULL,
     [TokenUpdated]            NVARCHAR (50)  NULL,
     [DateUpdated]             DATETIME       NULL,
-    [Holder]                  NVARCHAR (50)  NOT NULL,
+    [Holder]                  NVARCHAR (50)  NULL,
     CONSTRAINT [PK_CustomerPaymentValue] PRIMARY KEY CLUSTERED ([IdCustomerPaymentValue] ASC),
     CONSTRAINT [FK_CustomerPaymentValue_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CustomerPaymentValue_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
