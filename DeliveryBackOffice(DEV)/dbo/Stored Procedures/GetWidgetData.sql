@@ -1,12 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[GetWidgetData]    Script Date: 8/27/2022 12:55:35 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-08-18>
 -- Description:	< Método dinamico para obtener datos para Widgets del lado de portal web  >
