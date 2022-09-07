@@ -185,7 +185,7 @@ BEGIN
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
                      ''
 				ELSE
-					ISNULL(dod.Observations, ISNULL(so.StatusOrderTrackingDescription , ''))
+					ISNULL(so.StatusOrderTrackingDescription, '')
              END
             ) AS [StageDescription]
             ,(CASE dod.StatusOrderId
