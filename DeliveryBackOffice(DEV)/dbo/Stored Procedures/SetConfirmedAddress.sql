@@ -48,7 +48,7 @@ BEGIN
 		-- insertar en tabla temporal posbibles mensajes de respuesta
 
 		IF OBJECT_ID('tempdb.dbo.#messagelist', 'U') IS NOT NULL DROP TABLE messagelist;
-			select * INTO #messagelist 
+			select IdResult,Message,Id INTO #messagelist 
 			from (SELECT  200 AS IdResult
 					,'Registro creado correctamente' AS Message
 					,'Insert' as Id 
@@ -70,12 +70,12 @@ BEGIN
 		declare @IdUser bigint  = (select t.TknIdUser from TokenLog t
 						where t.TknIdToken = @Token)
 
-		select * 
+		select RuaIdAccount  
 		into #Access
 		from dbo.RolByUserByAccount  rua
 		where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser
 
-	if(select count(*) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
+	if(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
 	begin
 
 		if @Status = 0
@@ -122,19 +122,19 @@ BEGIN
 					,[TokenUpdate]
 					,[DateUpdate]
 					,[RowStatus]
-					,[IdAccount]
-					,[IdTownship]
+					,[AccountId]
+					,[TownshipId]
 					,[NameAddress]
 					,[Address]
 					,[AdditionalInstructions]
-					,[IdCityPlace]
+					,[CityPlaceId]
 					,[CodeOfReference]
-					,[IdDeliveryOption]
+					,[DeliveryOptionId]
 					,[Latitude]
 					,[Longitude]
 					,[Neighborhood]
-					,[IdModule]
-					,[IdStatusAddress])
+					,[CatModuleId]
+					,[StatusAddressId])
 				VALUES
 					(@NirPhone
 					,@Phone
