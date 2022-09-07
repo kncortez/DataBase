@@ -173,8 +173,8 @@ BEGIN
 											' ]'
 								   FROM dbo.SenderReceiver courier WHERE courier.ID = da.ID_Courier ) + ' ' + 
 								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
-							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
-								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
+							FROM DeliveryBackOffice.dbo.CatTypeIncidence I WITH(NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da  WITH(NOLOCK)
 									ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
