@@ -26,7 +26,6 @@ BEGIN
 	END
 	ELSE IF @RoutePreparationId IS NOT NULL
 	BEGIN 
-		PRINT('IF1')
 		--Verificando registros existentes para parámetro routeid
 		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation RP WHERE RP.IdRoutePreparation=@RoutePreparationId);
 		--Verificando SI LA GUÍA PERTENECE AL ROUTEPREPARATION
@@ -40,7 +39,6 @@ BEGIN
 	END
 	ELSE
 	BEGIN 
-		PRINT('IF2')
 		--Verificando registros existentes para parámetros @RouteId y @Datepreparation
 		SET @RecordExist= (SELECT TOP 1 1 FROM RoutePreparation WHERE CatRouteId = @RouteId AND DateRoutePreparation = @DatePreparation);
 		--Verificando SI LA GUÍA PERTENECE AL ROUTEPREPARATION
@@ -89,7 +87,7 @@ BEGIN
 		INNER JOIN RoutePreparationDetailPiece rpdp
 			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				AND rpdp.RowStatus = 1
-		INNER JOIN DeliveryOrder do
+		INNER JOIN DeliveryOrder do WITH(NOLOCK)
 			ON rpd.Guide_Serie = do.Guide_Serie
 				AND rpd.Guide_Number = do.Guide_Number
 		WHERE 		
