@@ -21,7 +21,6 @@ CREATE PROCEDURE [dbo].[sps_proof_onincident]
 	@GuideNumber INT,
 	@PhoneNumber NVARCHAR(50),
 	@IdIssue INT,
-	--@PhotoIncidentB64 VARCHAR(MAX),
 	@ImageIncident VARCHAR(300),
 	@Latitude NVARCHAR(20),
 	@Longitude NVARCHAR(20),
@@ -62,15 +61,15 @@ BEGIN
 							SELECT 
 								', '+CONCAT(CAST(P.PointLongitude AS DECIMAL(9,6)),' ',CAST(P.PointLatitude AS DECIMAL(9,6)))
 							FROM
-								[DeliveryBackOffice].[dbo].[Geofence] G 
+								[DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
 								INNER JOIN 
-									[DeliveryBackOffice].[dbo].[GeofencePoint] GP
+									[DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
 									ON
 										G.IdGeofence = GP.IdGeofence
 										AND
 										GP.RowStatus = 1
 								INNER JOIN
-									[DeliveryBackOffice].[dbo].[Point] P
+									[DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
 									ON
 										GP.IdPoint = P.IdPoint
 										AND
@@ -119,14 +118,13 @@ BEGIN
 		BEGIN TRY
 
 			-- convertir base64 a varbinary
-			--SET @PhotoIncidentVB = (CAST(N'' AS xml).value('xs:base64Binary(sql:variable("@PhotoIncidentB64"))', 'varbinary(max)'))
-
 			-- buscar registros de tabla de entregas
 			INSERT INTO @Table
 			SELECT
 				da.ID
-			FROM DeliveryBackOffice.dbo.DeliveryAttempt da
-			INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = da.ID_Courier
+			FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
+			ON sr.ID = da.ID_Courier
 			WHERE sr.Phone like '%' + @PhoneNumber + '%'
 				AND da.Guide_Serie = @GuideSerie
 				AND da.Guide_Number = @GuideNumber
