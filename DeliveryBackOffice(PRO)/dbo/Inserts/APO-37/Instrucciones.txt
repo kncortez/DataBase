@@ -1,0 +1,5 @@
+APO-37
+Instrucciones: 
+Luego de levantar la rama APO-37 proceder a realizar los inserts que se incluyen
+en la carpeta "1. Sentencias" de este directorio.
+Los inserts se encuentran en orden de ejecución y solo afectan la tabla CatLinehaulStatus
