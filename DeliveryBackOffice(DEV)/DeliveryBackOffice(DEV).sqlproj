@@ -1049,7 +1049,9 @@
     <Build Include="dbo\Tables\CatTypeContainer.sql" />
     <Build Include="dbo\Tables\CatTypeAct.sql" />
     <Build Include="dbo\Tables\CatLinehaulStatus.sql" />
-    <Build Include="dbo\Stored Procedures\sp_HM_Login.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_Login.sql" />
+    <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
+    <Build Include="dbo\User Defined Types\TblCoDExecutionProcess.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
