@@ -1105,6 +1105,7 @@
     <Build Include="dbo\Stored Procedures\spHM_addPieceToLinehaulRoutePreparationContainerDetailPiece.sql" />
     <Build Include="dbo\Stored Procedures\spHM_addGuideToLinehaulRoutePreparationContainerDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_addContainerToLinehaulRoutePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestLinehauls.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\120\SqlSchemas\master.dacpac">
