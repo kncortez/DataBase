@@ -1076,6 +1076,7 @@
     <Build Include="dbo\Tables\ConfirmedAddress.sql" />
     <Build Include="dbo\Tables\CatStateConfirmedAddress.sql" />
     <Build Include="dbo\Stored Procedures\SetConfirmedAddress.sql" />
+    <Build Include="dbo\Tables\ConfirmedAddressByCustomer.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

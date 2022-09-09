@@ -1,33 +1,38 @@
 ﻿CREATE TABLE [dbo].[ConfirmedAddress] (
+    [IdConfirmedAddress]     BIGINT         IDENTITY (1, 1) NOT NULL,
+    [AccountId]              BIGINT         NOT NULL,
     [NirPhone]               NVARCHAR (4)   NOT NULL,
     [Phone]                  NVARCHAR (15)  NOT NULL,
-    [TokenCreated]           VARCHAR (50)   NOT NULL,
-    [DateCreated]            DATETIME       NOT NULL,
-    [TokenUpdate]            VARCHAR (50)   NULL,
-    [DateUpdate]             DATETIME       NULL,
-    [RowStatus]              BIT            NOT NULL,
-    [AccountId]              BIGINT         NOT NULL,
-    [TownshipId]             INT            NOT NULL,
     [NameAddress]            VARCHAR (100)  NOT NULL,
-    [Address]                NVARCHAR (600) NOT NULL,
-    [AdditionalInstructions] VARCHAR (250)  NULL,
-    [CityPlaceId]            INT            NOT NULL,
     [CodeOfReference]        INT            NULL,
     [DeliveryOptionId]       BIGINT         NULL,
+    [ProvinceId]             INT            NOT NULL,
+    [TownshipId]             INT            NOT NULL,
+    [Zone]                   SMALLINT       NULL,
+    [Neighborhood]           VARCHAR (50)   NULL,
+    [CityPlaceId]            INT            NOT NULL,
+    [Address]                NVARCHAR (600) NOT NULL,
+    [AdditionalInstructions] VARCHAR (250)  NULL,
     [Latitude]               VARCHAR (20)   NULL,
     [Longitude]              VARCHAR (20)   NULL,
-    [Neighborhood]           VARCHAR (50)   NULL,
-    [Zone]                   SMALLINT       NULL,
-    [CatModuleId]               INT            NULL,
+    [CatModuleId]            INT            NULL,
     [StatusAddressId]        INT            NOT NULL,
-    CONSTRAINT [PK_ConfirmedAddress] PRIMARY KEY CLUSTERED ([NirPhone] ASC, [Phone] ASC),
+    [RowStatus]              BIT            DEFAULT ((1)) NOT NULL,
+    [DateCreated]            DATETIME       NOT NULL,
+    [TokenCreated]           VARCHAR (50)   NOT NULL,
+    [DateUpdate]             DATETIME       NULL,
+    [TokenUpdate]            VARCHAR (50)   NULL,
+    CONSTRAINT [PK_ConfirmedAddress] PRIMARY KEY CLUSTERED ([IdConfirmedAddress] ASC),
     CONSTRAINT [FK_CADD_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_CADD_CityPlace] FOREIGN KEY ([CityPlaceId]) REFERENCES [dbo].[CatCityPlace] ([IdCityPlace]),
     CONSTRAINT [FK_CADD_Module] FOREIGN KEY ([CatModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
+    CONSTRAINT [FK_CADD_Province] FOREIGN KEY ([ProvinceId]) REFERENCES [dbo].[Province] ([IdProvince]),
     CONSTRAINT [FK_CADD_State] FOREIGN KEY ([StatusAddressId]) REFERENCES [dbo].[CatStateConfirmedAddress] ([IdStatus]),
     CONSTRAINT [FK_CADD_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_CADD_VP] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -45,15 +50,21 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que c
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'RowStatus';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lógico del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Teléfono', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'Phone';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Teléfono asociado a la dirección', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'Phone';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código del país', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'NirPhone';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código del país de teléfono', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'NirPhone';
+
+
 
 
 GO
@@ -77,7 +88,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del muni
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado d ela dirección confirmada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'StatusAddressId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado de la dirección confirmada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'StatusAddressId';
+
+
 
 
 GO
@@ -114,4 +127,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Dirección'
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Instrucciones especiales', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'AdditionalInstructions';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de direcciones confirmadas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del departamento', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'ProvinceId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdConfirmedAddress';
 
