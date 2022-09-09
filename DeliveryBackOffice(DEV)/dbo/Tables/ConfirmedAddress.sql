@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacena la zona de la dirección', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'Zone';
 
@@ -139,4 +141,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del depa
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmedAddress', @level2type = N'COLUMN', @level2name = N'IdConfirmedAddress';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_ConfirmedAddress_Address]
+    ON [dbo].[ConfirmedAddress]([Phone] ASC, [ProvinceId] ASC, [TownshipId] ASC);
 
