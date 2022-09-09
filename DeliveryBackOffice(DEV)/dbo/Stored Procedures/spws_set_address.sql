@@ -342,7 +342,7 @@ BEGIN
 					,[Latitude]
 					,[Longitude]
 					,[Neighborhood]
-					,[CatModuleId]
+					,[Zone]
 					,[StatusAddressId])
 				VALUES
 					(@NirPhone
