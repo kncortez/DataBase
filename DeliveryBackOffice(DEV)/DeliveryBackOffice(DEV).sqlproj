@@ -1095,6 +1095,7 @@
     <Build Include="dbo\Stored Procedures\spHM_AddContainerInStopOverToLinehaulRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_getGuideInformationByLinehaulRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_removeGuideFromLinehaulRoutePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetTopGuidesLinehaulRoutePreparation.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
