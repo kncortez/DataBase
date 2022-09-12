@@ -35,7 +35,7 @@ BEGIN
 				, IIF(spd.SettlementDate IS NULL, 0 , 1 )
 		FROM 
 			dbo.SenderReceiver sr WITH(NOLOCK)
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStation sps WITH(NOLOCK)
 				ON 
 					sps.CouriermanId = sr.ID 
@@ -43,25 +43,25 @@ BEGIN
 					sps.TransactionDate  = CONVERT(DATE,GETDATE())
 					AND
 					sps.RowStatus = 1
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStationDetail spd WITH(NOLOCK)
 				ON 
 					spd.SettlementPickupStationId = sps.IdSettlementPickupStation
 					AND
 					spd.RowStatus = 1
-			JOIN 
+			INNER JOIN 
 				dbo.ServiceManagement srv WITH(NOLOCK)
 				ON 
 					srv.IdServiceManagement = spd.ServiceManagementId
-			JOIN 
+			INNER JOIN 
 				dbo.SchedulePickup scp WITH(NOLOCK)
 				ON 
 					scp.SchedulePickupId = srv.IdSchedulePickup
-			JOIN 
+			INNER JOIN 
 				dbo.DeliveryOrderPaymentDetail dop WITH(NOLOCK)
 				ON 
 					dop.IdHeaderRecolection = scp.SchedulePickupId
-			JOIN 
+			INNER JOIN 
 				dbo.DeliveryOrder ord WITH(NOLOCK)
 				ON 
 					ord.Guide_Serie = dop.GuideSerie
@@ -163,7 +163,7 @@ BEGIN
 			, srv.IdServiceManagement
 		FROM 
 			dbo.SenderReceiver sr WITH(NOLOCK)
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStation sps WITH(NOLOCK)
 				ON 
 					sps.CouriermanId = sr.ID 
@@ -171,25 +171,25 @@ BEGIN
 					sps.TransactionDate  = CONVERT(DATE,GETDATE())
 					AND
 					sps.RowStatus = 1
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStationDetail spd WITH(NOLOCK)
 				ON 
 					spd.SettlementPickupStationId = sps.IdSettlementPickupStation
 					AND
 					spd.RowStatus = 1
-			JOIN 
+			INNER JOIN 
 				dbo.ServiceManagement srv WITH(NOLOCK)
 				ON 
 					srv.IdServiceManagement = spd.ServiceManagementId
-			JOIN 
+			INNER JOIN 
 				dbo.SchedulePickup scp WITH(NOLOCK)
 				ON 
 					scp.SchedulePickupId = srv.IdSchedulePickup
-			JOIN 
+			INNER JOIN 
 				dbo.DeliveryOrderPaymentDetail dop WITH(NOLOCK)
 				ON 
 					dop.IdHeaderRecolection = scp.SchedulePickupId
-			JOIN 
+			INNER JOIN 
 				dbo.DeliveryOrder ord WITH(NOLOCK)
 				ON 
 					ord.Guide_Serie = dop.GuideSerie
@@ -214,7 +214,7 @@ BEGIN
 			sps.IdSettlementPickupStation idManifest
 		FROM 
 			dbo.SenderReceiver sr WITH(NOLOCK)
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStation sps WITH(NOLOCK) 
 				ON 
 					sps.CouriermanId = sr.ID 
@@ -231,7 +231,7 @@ BEGIN
 			, (ord.Pieces_Dry + ord.Pieces_Cold) 'Pieces'
 		FROM 
 			dbo.SenderReceiver sr WITH(NOLOCK)
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStation sps WITH(NOLOCK)
 				ON 
 					sps.CouriermanId = sr.ID 
@@ -239,25 +239,25 @@ BEGIN
 					sps.TransactionDate  = CONVERT(DATE,GETDATE())
 					AND
 					sps.RowStatus = 1
-			JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStationDetail spd WITH(NOLOCK)
 				ON 
 					spd.SettlementPickupStationId = sps.IdSettlementPickupStation
 					AND
 					spd.RowStatus = 1
-			JOIN 
+			INNER JOIN 
 				dbo.ServiceManagement srv WITH(NOLOCK)
 				ON 
 					srv.IdServiceManagement = spd.ServiceManagementId
-			JOIN 
+			INNER JOIN 
 				dbo.SchedulePickup scp WITH(NOLOCK)
 				ON 
 					scp.SchedulePickupId = srv.IdSchedulePickup
-			JOIN 
+			INNER JOIN 
 				dbo.DeliveryOrderPaymentDetail dop WITH(NOLOCK)
 				ON 
 					dop.IdHeaderRecolection = scp.SchedulePickupId
-			JOIN 
+			INNER JOIN 
 				dbo.DeliveryOrder ord WITH(NOLOCK)
 				ON 
 					ord.Guide_Serie = dop.GuideSerie

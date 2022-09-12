@@ -146,6 +146,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder AS dro WITH (NOLOCK)
             ON dro.Guide_Number = dop.GuideNumber
                AND dro.Guide_Serie = dop.GuideSerie
+			   AND DRO.SalePipeLineId !=7
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnTdro WITH (NOLOCK)
             ON dro.SenderIdTownship = twnTdro.IdTownship
         LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
@@ -184,7 +185,7 @@ BEGIN
             )
         AND shp.RowStatus = 1
         AND (@hubId = -1 OR shp.IdHubLogistics = @hubId)
-        AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)) -- Si tiene guía y no está anulada
+       -- AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)) -- Si tiene guía y no está anulada
     --PRINT CONVERT(VARCHAR, GETDATE(), 9);
     --DECLARE @guides NVARCHAR(MAX) =
     --        (
@@ -292,6 +293,6 @@ BEGIN
              --HubAbbreviation,
              --ServiceVehicle,
              --StatusName
-    OPTION (OPTIMIZE FOR UNKNOWN);
+  --  OPTION (OPTIMIZE FOR UNKNOWN);
 
 END;
