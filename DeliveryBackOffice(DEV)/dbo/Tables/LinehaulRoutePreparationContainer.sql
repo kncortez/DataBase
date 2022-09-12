@@ -3,7 +3,7 @@
     [LinehaulRoutePreparationId]          INT           NOT NULL,
     [ContainerId]                         INT           NOT NULL,
     [HubDestinyId]                        INT           NULL,
-    [CatLinehaulStatusId]                 INT           NOT NULL,
+    [CatLinehaulStatusId]                 INT           CONSTRAINT [DF_LinehaulRoutePreparationContainer_CatLinehaulStatusId] DEFAULT ((1)) NOT NULL,
     [GuideQuantity]                       INT           NOT NULL,
     [DryPieceQuantity]                    INT           NOT NULL,
     [ColdPieceQuantity]                   INT           NOT NULL,
@@ -19,6 +19,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_RoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_Container] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationId] ASC, [ContainerId] ASC)
 );
+
+
 
 
 
