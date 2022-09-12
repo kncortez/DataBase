@@ -1049,7 +1049,6 @@
     <Build Include="dbo\Tables\CatTypeContainer.sql" />
     <Build Include="dbo\Tables\CatTypeAct.sql" />
     <Build Include="dbo\Tables\CatLinehaulStatus.sql" />
-    <Build Include="dbo\Stored Procedures\sp_HM_Login.sql" />
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\FnGetCustomerAttempts.sql" />
     <Build Include="dbo\Functions\FnGetHub.sql" />
