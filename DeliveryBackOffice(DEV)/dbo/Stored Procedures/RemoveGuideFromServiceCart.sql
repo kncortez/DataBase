@@ -36,7 +36,7 @@ BEGIN
 			WHERE IsPending = 1
 			AND RowStatus = 1
 			AND IdAccountServiceCart <> @AccountServiceCartId
-
+			AND AccountId = @IdAccount
 
 			DECLARE @AccountServicecartDetailId INT
 
