@@ -1058,6 +1058,7 @@
     <Build Include="dbo\Stored Procedures\spHM_GetRoutePreparation.sql" />
     <Build Include="dbo\Tables\ServiceManagementDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetGuidesRoutePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ExtractGuidePreparation.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
