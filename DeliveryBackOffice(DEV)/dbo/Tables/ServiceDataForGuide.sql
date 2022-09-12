@@ -28,6 +28,8 @@
 
 
 
+
+
 GO
 
 
@@ -122,4 +124,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Inicio de s
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fin de segunda ventana horaria para realizar el servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'EndTime2';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'El radio aproximado en donde se úbica la ubicación (Latitud y Longitud)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'Accuracy';
 
