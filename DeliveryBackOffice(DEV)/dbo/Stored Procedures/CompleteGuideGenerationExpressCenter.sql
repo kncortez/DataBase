@@ -367,7 +367,7 @@ BEGIN
 					, StatusOrderId = @IdStatus
 					, IsCollect = t.IsCollect
 				FROM 
-					dbo.DeliveryOrder ord
+					dbo.DeliveryOrder ord WITH(NOLOCK)
 					INNER JOIN 
 						@TblDeliveryOrdersList t 
 						ON 
@@ -385,7 +385,7 @@ BEGIN
 				update  dbo.DeliveryOrderPaymentDetail 
 				set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 				, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-				from dbo.DeliveryOrderPaymentDetail pay
+				from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 						inner join @TblDeliveryOrdersList t 
 						on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -442,7 +442,7 @@ BEGIN
 					IF(ISNULL(@UpdatedValue, 0) > 0)
 					BEGIN
 
-						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WHERE CD.IdCost = @CostId ))
+						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK) WHERE CD.IdCost = @CostId ))
 						BEGIN
 
 							-- Nuevo valor en cost detail
@@ -499,7 +499,7 @@ BEGIN
 						Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
 						DateUpdated = GETDATE(),
 						TokenUpdated = @Token,
-						PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
+						PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie)
 					WHERE
 						IdCost = @CostId
 						AND
@@ -516,7 +516,7 @@ BEGIN
 						[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
 						(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
 					VALUES
-						(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @Token, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie))
+						(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @Token, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie))
 
 					IF(@@ROWCOUNT > 0)
 						SET @CoUpdated = 1;
@@ -532,7 +532,7 @@ BEGIN
 				TOP 1
 					DopId 
 			FROM 
-				[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
+				[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH(NOLOCK)
 				INNER JOIN @TblDeliveryOrdersList tpo
 					ON do.GuideNumber = tpo.Guide_Number
 						AND do.GuideSerie = tpo.Guide_Serie
@@ -552,7 +552,7 @@ BEGIN
 						, StatusOrderId = @IdStatus
 						, IsCollect = t.IsCollect
 					from 
-						dbo.DeliveryOrder ord
+						dbo.DeliveryOrder ord WITH(NOLOCK)
 					inner join 
 						@TblDeliveryOrdersList t 
 						on 
@@ -568,7 +568,7 @@ BEGIN
 					update  dbo.DeliveryOrderPaymentDetail 
 					set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 					, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-					from dbo.DeliveryOrderPaymentDetail pay
+					from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 						 inner join @TblDeliveryOrdersList t 
 						 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -727,7 +727,7 @@ BEGIN
 
 						END
 
-						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WHERE CD.IdCost = @CostId ))
+						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK) WHERE CD.IdCost = @CostId ))
 						BEGIN
 
 							-- Nuevo valor en cost detail

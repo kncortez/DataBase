@@ -163,15 +163,15 @@ BEGIN
                        CASE
                            WHEN do.IsCollect = 1 THEN
                            (
-                               SELECT PayTypeId FROM CatPaymentType WHERE PayTypeAbrev = 'COLLT'
+                               SELECT PayTypeId FROM CatPaymentType WITH(NOLOCK) WHERE PayTypeAbrev = 'COLLT'
                            )
                            WHEN cu.ConditionOfPaymentID > 1 THEN
                            (
-                               SELECT PayTypeId FROM CatPaymentType WHERE PayTypeAbrev = 'CREDT'
+                               SELECT PayTypeId FROM CatPaymentType WITH(NOLOCK) WHERE PayTypeAbrev = 'CREDT'
                            )
                            ELSE
                        (
-                           SELECT PayTypeId FROM CatPaymentType WHERE PayTypeAbrev = 'CONT'
+                           SELECT PayTypeId FROM CatPaymentType WITH(NOLOCK) WHERE PayTypeAbrev = 'CONT'
                        )
                        END,
                        CASE
@@ -185,15 +185,15 @@ BEGIN
                        CASE
                            WHEN do.IsCollect = 1 THEN
                            (
-                               SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaAbrev = 'DEST'
+                               SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaAbrev = 'DEST'
                            )
                            WHEN cu.ConditionOfPaymentID > 1 THEN
                            (
-                               SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaAbrev = 'POST'
+                               SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaAbrev = 'POST'
                            )
                            ELSE
                        (
-                           SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaAbrev = 'AHR'
+                           SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaAbrev = 'AHR'
                        )
                        END,
                        0,
@@ -215,12 +215,12 @@ BEGIN
                        NULL,
                        NULL
                 FROM DeliveryOrder do WITH (NOLOCK)
-                    JOIN Customer cu WITH (NOLOCK)
+                    INNER JOIN Customer cu WITH (NOLOCK)
                         ON cu.IdCustomer =
                         (
                             SELECT TOP 1
                                    ISNULL(do.IdCustomer, vpc.CustomerID)
-                            FROM dbo.VisitPointClient vpc
+                            FROM dbo.VisitPointClient vpc WITH (NOLOCK)
                             WHERE vpc.CodeOfReference = do.Sender_ID
                         )
                 WHERE do.Guide_Serie = @GuideSerie
@@ -240,9 +240,9 @@ BEGIN
             BEGIN
                 SELECT @SchedulePickupId = sm.IdSchedulePickup
                 FROM RouteAssigment ra WITH (NOLOCK)
-                    JOIN ServiceManagement sm WITH (NOLOCK)
+                    INNER JOIN ServiceManagement sm WITH (NOLOCK)
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                    JOIN SchedulePickup sp WITH (NOLOCK)
+                    INNER JOIN SchedulePickup sp WITH (NOLOCK)
                         ON sp.SchedulePickupId = sm.IdSchedulePickup
                 WHERE ra.IdRoute = @IDROUTE
                       AND ra.DateOfRoute = @tiempo
@@ -258,7 +258,7 @@ BEGIN
 
                     UPDATE sm
                     SET ServiceStatusId = 3
-                    FROM ServiceManagement sm
+                    FROM ServiceManagement sm WITH (NOLOCK)
                     WHERE sm.IdSchedulePickup = @SchedulePickupId;
                 END;
                 ELSE
@@ -331,7 +331,7 @@ BEGIN
                         (
                             SELECT TOP 1
                                    ISNULL(do.IdCustomer, vpc.CustomerID)
-                            FROM dbo.VisitPointClient vpc
+                            FROM dbo.VisitPointClient vpc WITH(NOLOCK)
                             WHERE vpc.CodeOfReference = do.Sender_ID
                         )
                 WHERE do.Guide_Serie = @GuideSerie
@@ -514,14 +514,14 @@ BEGIN
         UPDATE SM
         SET SM.ServiceStatusId = 3
         FROM [DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH (NOLOCK)
-            JOIN @AllServiceManagementToUpdate ASMTU
+           inner JOIN @AllServiceManagementToUpdate ASMTU
                 ON SM.IdServiceManagement = ASMTU.IdServiceManagement;
 
         -- Actualizar estado de guía a traslado a express center
         UPDATE DO
         SET StatusOrderId = @NewStatus
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-            JOIN @GuidesToUpdate GTU
+            INNER JOIN @GuidesToUpdate GTU
                 ON DO.Guide_Number = GTU.Guide_Number
                    AND DO.Guide_Serie = GTU.Guide_Serie;
 
@@ -572,16 +572,16 @@ BEGIN
             SPSD.TokenUpdated = @Token,
             SPSD.DateUpdated = GETDATE()
         FROM [DeliveryBackOffice].[dbo].[SettlementPickupStation] SPS WITH (NOLOCK)
-            JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                 ON SPS.IdSettlementPickupStation = SPSD.SettlementPickupStationId
                    AND SPSD.RowStatus = 1
-            JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH (NOLOCK)
                 ON SPSD.ServiceManagementId = SM.IdServiceManagement
-            JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
                 ON SM.IdSchedulePickup = SP.SchedulePickupId
-            JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON SP.SchedulePickupId = DOPD.IdHeaderRecolection
-            JOIN @GuidesToServiceManagement GTSM
+            INNER JOIN @GuidesToServiceManagement GTSM
                 ON GTSM.GuideSerie = DOPD.GuideSerie
                    AND GTSM.GuideNumber = DOPD.GuideNumber
         WHERE SPS.IdSettlementPickupStation = @IdSettlementPickupStation
@@ -596,10 +596,10 @@ BEGIN
             SPSD.TokenUpdated = @Token,
             SPSD.DateUpdated = GETDATE()
         FROM [DeliveryBackOffice].[dbo].[SettlementPickupStation] SPS WITH (NOLOCK)
-            JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                 ON SPS.IdSettlementPickupStation = SPSD.SettlementPickupStationId
                    AND SPSD.RowStatus = 1
-            JOIN @AllServiceManagementToUpdate SMTU
+            INNER JOIN @AllServiceManagementToUpdate SMTU
                 ON SPSD.ServiceManagementId = SMTU.IdServiceManagement
         WHERE SPS.IdSettlementPickupStation = @IdSettlementPickupStation
               AND SPS.RowStatus = 1;
@@ -623,6 +623,7 @@ BEGIN
                         )
         );
 
+		PRINT 'ejecuta pending payment'
 		DELETE FROM @BrainProcessedGuides;
         INSERT INTO @BrainProcessedGuides
         EXEC [dbo].[spws_get_guide_pending_payment] @GUIDECONCAT2, -- Guías recibidas
@@ -653,23 +654,28 @@ BEGIN
                (
                    SELECT TOP 1
                           IdTypeService
-                   FROM CatTypeServiceClosure
+                   FROM CatTypeServiceClosure WITH(NOLOCK)
                    WHERE NameTypeService = 'Traslado'
                ),
                0
                      ),
                @IdUser
         FROM @BrainProcessedGuides BP
-            LEFT JOIN dbo.DeliveryOrderPaymentTransaction DOPT
+            LEFT JOIN dbo.DeliveryOrderPaymentTransaction DOPT with(nolock)
                 ON BP.GuideNumber = DOPT.GuideNumber
                    AND BP.GuideSerie = DOPT.GuideSerie
         WHERE DOPT.GuideNumber IS NULL;
 
+		PRINT 'Ejecutas transfer closing'
+
         EXEC [dbo].[sphdSetTransferClosing] @TblDeliveryOrdersList,
                                             @IdUser = @IdUser,
                                             @FEL = 'No Asignado';
-        ---------------------------------------------------------------------------------------------
-        IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
+        --------------------------------------------------------------
+		PRINT 'termina transfer closing'
+		-------------------------------
+        --IF (@@TRANCOUNT > 0) 
+		COMMIT TRANSACTION;
 
         SELECT 1 [blnResult],
                @TopSequence [SettlementSequence],
@@ -681,7 +687,7 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-
+	  ROLLBACK TRANSACTION;
         SELECT 0 [blnResult],
                ERROR_NUMBER() AS [ErrorNumber],
                ERROR_SEVERITY() AS [ErrorSeverity],
@@ -690,7 +696,29 @@ BEGIN
                ERROR_LINE() AS [ErrorLine],
                ERROR_MESSAGE() AS [ErrorMessage];
 
-        ROLLBACK TRANSACTION;
+      
+
+		INSERT INTO dbo.RoutePreparationLogError
+			(
+				ErrorDescription,
+				ErrorNumber,
+				ErrorProcedure,
+				ErrorLine,
+				GuideSerie,
+				GuideNumber,
+				TokenCreated,
+				DateCreated
+			)
+			VALUES
+			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,0
+					   ,0
+					   ,'Error en rabbit'
+					   ,GETDATE())
+
     END CATCH;
 
 END;

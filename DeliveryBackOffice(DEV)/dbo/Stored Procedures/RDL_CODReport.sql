@@ -54,7 +54,10 @@ BEGIN
                cbc.ReasonDescription
         FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer cbc WITH (NOLOCK)
         WHERE SUBSTRING(OrderNumber, 0, 3) = 'FD'
-              AND cbc.ReasonCode = 1
+              AND 
+			  (cbc.ReasonCode = '1'
+			  OR cbc.ReasonCode = '01'
+			  )
         UNION
         SELECT DOP.GuideSerie,
                DOP.GuideNumber,
@@ -70,7 +73,10 @@ BEGIN
                     ON DOP.IdHeaderRecolection = SCP.SchedulePickupId
                 ON CBC.OrderNumber = SCP.TransaccionFAC
         WHERE SUBSTRING(CBC.OrderNumber, 0, 3) = 'HR'
-              AND CBC.ReasonCode = 1
+              AND 
+			  (cbc.ReasonCode = '1'
+			  OR cbc.ReasonCode = '01'
+			  )
     ) CBC;
 
 	

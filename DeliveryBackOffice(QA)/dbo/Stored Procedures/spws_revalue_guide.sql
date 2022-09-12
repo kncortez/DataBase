@@ -578,7 +578,7 @@ BEGIN
                 RowStatus = det.RowStatus,
                 DateUpdated = GETDATE()
             FROM dbo.Cost cs
-                JOIN dbo.BreakdownOfPayment bk
+                INNER JOIN dbo.BreakdownOfPayment bk
                     ON bk.IdCost = cs.IdCost
                 JOIN @TblCost det
                     ON det.Description = bk.Description

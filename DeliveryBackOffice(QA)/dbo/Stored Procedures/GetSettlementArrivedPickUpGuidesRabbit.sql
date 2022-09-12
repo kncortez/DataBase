@@ -16,7 +16,7 @@ BEGIN
 	SELECT TOP 1
 	   @SettlementPickupStationId = IdSettlementPickupStation
 	FROM SettlementPickupStation sps WITH(NOLOCK)
-	JOIN SettlementPickupStationDetail spsd WITH(NOLOCK)
+	INNER JOIN SettlementPickupStationDetail spsd WITH(NOLOCK)
 		ON spsd.SettlementPickupStationId = sps.IdSettlementPickupStation
 	WHERE spsd.SettlementSequence = @SettlementSequence
 		AND sps.RowStatus = 'TRUE'
@@ -42,13 +42,13 @@ BEGIN
 			,do.Sender_Department SenderDepartament
 			,do.Sender_Phone SenderPhone
 		FROM SettlementPickupStationDetail spsd WITH(NOLOCK)
-		JOIN ServiceManagement sm WITH(NOLOCK)
+		INNER JOIN ServiceManagement sm WITH(NOLOCK)
 			ON sm.IdServiceManagement = spsd.ServiceManagementId
-		JOIN SchedulePickup sp WITH(NOLOCK)
+		INNER JOIN SchedulePickup sp WITH(NOLOCK)
 			ON sp.SchedulePickupId = sm.IdSchedulePickup
-		JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+		INNER JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
 			ON dopd.IdHeaderRecolection = sp.SchedulePickupId
-		JOIN DeliveryOrder do WITH(NOLOCK)
+		INNER JOIN DeliveryOrder do WITH(NOLOCK)
 			ON do.Guide_Serie = dopd.GuideSerie
 			AND do.Guide_Number = dopd.GuideNumber
 		WHERE spsd.SettlementPickupStationId = @SettlementPickupStationId
