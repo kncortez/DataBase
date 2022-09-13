@@ -34,7 +34,7 @@ BEGIN
 			WHERE IsPending = 1
 			AND RowStatus = 1
 			AND IdAccountServiceCart <> @AccountServiceCartId
-
+			AND AccountId = @IdAccount
 
 			--Eliminar guías anuladas
 			UPDATE ascd
