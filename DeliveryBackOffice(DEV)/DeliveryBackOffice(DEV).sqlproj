@@ -1120,6 +1120,7 @@
     <Build Include="dbo\Tables\Tutorial.sql" />
     <Build Include="dbo\Stored Procedures\SetTutorialStatusOfAccount.sql" />
     <Build Include="dbo\Stored Procedures\GetTutorialStatusOfAccount.sql" />
+    <Build Include="dbo\Tables\ConfirmedAddressByCustomer.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
