@@ -1102,6 +1102,7 @@
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\spHM_RouteManifestReportlinehaulHeader.sql" />
     <Build Include="dbo\Stored Procedures\spHM_RoutemanifestReportLinehaulDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_LinehaulRouteManifestReportDetailFloor.sql" />
