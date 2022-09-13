@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[ExtPlatformService] (
+﻿CREATE TABLE [dbo].[ExtPlatformService] (
     [IdExtPlatformService] INT              IDENTITY (1, 1) NOT NULL,
     [ExtPlatformId]        INT              NOT NULL,
     [IdService]            INT              NOT NULL,
@@ -30,6 +30,8 @@ CREATE TABLE [dbo].[ExtPlatformService] (
     PRIMARY KEY CLUSTERED ([IdExtPlatformService] ASC),
     CONSTRAINT [ExtPlatformService_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 
