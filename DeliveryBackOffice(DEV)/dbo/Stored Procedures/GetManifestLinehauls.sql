@@ -11,7 +11,11 @@ AS
 
 	BEGIN
 
-	SELECT DISTINCT lrp.IdLinehaulRoutePreparation, 
+	SELECT DISTINCT 
+	ROW_NUMBER () OVER( ORDER BY 
+	      lrp.IdLinehaulRoutePreparation 
+	     )   AS numberrow ,
+	lrp.IdLinehaulRoutePreparation, 
 	cr.CodeRoute, 
 	cv.CodeName AS CodeVehicle, 
 	(sr.First_Name+ ' '+sr.Last_Name) AS Courier, 
@@ -19,13 +23,13 @@ AS
 	cls.StatusDescription,
 	lrp.DateCreated, 
 	lrp.DateLinehaulRoutePreparation,
-	lrp.ContainerQuantity,
-	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'BOX') AS TotalGuideNoPiso,
-	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)  Where ctc.TypeContainerSerie = 'BOX') AS TotalPiecesNoPiso,
-	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'LH') AS TotalGuidePiso,
-	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)   Where ctc.TypeContainerSerie = 'LH') AS TotalPiecesPiso,
-	(select sum(lrpcd.GuideDryPieceTotal) - sum(lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
-	(select sum(lrpcd.GuideColdPieceTotal) - sum(lrpcd.ColdPieceQuantity)) AS DifPiecesCold
+	ISNULL(lrp.ContainerQuantity,0) AS ContainerQuantity,
+	ISNULL((select ISNULL(lrp.GuideQuantity,0)  Where ctc.TypeContainerSerie = 'BOX'),0) AS TotalGuideNoPiso,
+	ISNULL((select ISNULL((lrp.ColdPieceQuantity+ lrp.DryPieceQuantity),0)  Where ctc.TypeContainerSerie = 'BOX'),0) AS TotalPiecesNoPiso,
+	(select ISNULL(lrp.GuideQuantity,0)  Where ctc.TypeContainerSerie = 'LH') AS TotalGuidePiso,
+	(select ISNULL((lrp.ColdPieceQuantity+ lrp.DryPieceQuantity),0)   Where ctc.TypeContainerSerie = 'LH') AS TotalPiecesPiso,
+	(select ISNULL((lrpcd.GuideDryPieceTotal - lrpcd.DryPieceQuantity),0)) AS DifPiecesDry, 
+	(select ISNULL((lrpcd.GuideColdPieceTotal - lrpcd.ColdPieceQuantity),0)) AS DifPiecesCold
 		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
 		INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON lrp.CatRouteId = cr.IdRoute
@@ -45,20 +49,6 @@ AS
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
 			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
 			AND lrp.StationDispatchedId = @Station
-			Group by lrp.IdLinehaulRoutePreparation, 
-					 cr.CodeRoute, 
-					 cv.CodeName, 
-					 sr.First_Name, 
-					 sr.Last_Name, 
-					 cls.StatusName, 
-					 cls.StatusDescription,
-					 lrp.DateCreated, 
-					 lrp.DateLinehaulRoutePreparation,
-					 lrp.ContainerQuantity,
-					 ctc.TypeContainerSerie,
-					 lrp.GuideQuantity,
-					 lrp.ColdPieceQuantity,
-					 lrp.DryPieceQuantity
 
 
 	
