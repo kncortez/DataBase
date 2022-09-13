@@ -1,27 +1,29 @@
 ﻿CREATE TABLE [dbo].[ServiceDataForGuide] (
-    [IdServiceDataForGuide] BIGINT        IDENTITY (1, 1) NOT NULL,
-    [GuideSerie]            NVARCHAR (2)  NOT NULL,
-    [GuideNumber]           INT           NOT NULL,
-    [GuideToken]            NVARCHAR (50) NOT NULL,
-    [Latitude]              VARCHAR (20)  NULL,
-    [Longitude]             VARCHAR (20)  NULL,
-    [Accuracy]              VARCHAR (20)  NULL,
-    [StartTime]             TIME (7)      NULL,
-    [EndTime]               TIME (7)      NULL,
-    [DateUsed]              DATETIME      NULL,
-    [ProviderModule]        INT           NULL,
-    [IsDelivery]            BIT           NOT NULL,
-    [RowStatus]             BIT           NOT NULL,
-    [TokenCreated]          NVARCHAR (50) NOT NULL,
-    [DateCreated]           DATETIME      NOT NULL,
-    [TokenUpdated]          NVARCHAR (50) NULL,
-    [DateUpdated]           DATETIME      NULL,
-    [StartTime2]            TIME (7)      NULL,
-    [EndTime2]              TIME (7)      NULL,
+    [IdServiceDataForGuide] BIGINT           IDENTITY (1, 1) NOT NULL,
+    [GuideSerie]            NVARCHAR (2)     NOT NULL,
+    [GuideNumber]           INT              NOT NULL,
+    [GuideToken]            NVARCHAR (50)    NOT NULL,
+    [Latitude]              DECIMAL (18, 15) NULL,
+    [Longitude]             DECIMAL (18, 15) NULL,
+    [StartTime]             TIME (7)         NULL,
+    [EndTime]               TIME (7)         NULL,
+    [DateUsed]              DATETIME         NULL,
+    [ProviderModule]        INT              NULL,
+    [IsDelivery]            BIT              NOT NULL,
+    [RowStatus]             BIT              NOT NULL,
+    [TokenCreated]          NVARCHAR (50)    NOT NULL,
+    [DateCreated]           DATETIME         NOT NULL,
+    [TokenUpdated]          NVARCHAR (50)    NULL,
+    [DateUpdated]           DATETIME         NULL,
+    [StartTime2]            TIME (7)         NULL,
+    [EndTime2]              TIME (7)         NULL,
+    [Accuracy]              VARCHAR (20)     NULL,
     CONSTRAINT [PK__ServiceD__4A754EABDE13152E] PRIMARY KEY CLUSTERED ([IdServiceDataForGuide] ASC),
     CONSTRAINT [ServiceDataForGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY ([ProviderModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 
