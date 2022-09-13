@@ -1105,6 +1105,14 @@
     <Build Include="dbo\Stored Procedures\spHM_RouteManifestReportlinehaulHeader.sql" />
     <Build Include="dbo\Stored Procedures\spHM_RoutemanifestReportLinehaulDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_LinehaulRouteManifestReportDetailFloor.sql" />
+    <Build Include="dbo\Tables\WebhookType.sql" />
+    <Build Include="dbo\Tables\WebhookTrackingQueue.sql" />
+    <Build Include="dbo\Tables\WebhookRestrinctionByUser.sql" />
+    <Build Include="dbo\Tables\WebhookLog.sql" />
+    <Build Include="dbo\Tables\WebhookEndpoint.sql" />
+    <Build Include="dbo\Stored Procedures\SetWebhookLog.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueue.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
