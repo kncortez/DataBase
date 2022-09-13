@@ -315,7 +315,8 @@ BEGIN
                         SELECT STUFF(
                                         (
                                             SELECT ',{"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata
-                                                   + '",' + '"Path":"' + cmo.ModPath + '",' + '"Rol":"' + rol.RolName
+                                                   + '",' + '"Path":"' + cmo.ModPath + '",' + '"MenuId":' + CAST(ISNULL(rms.RmsModuleMenu,1) AS NVARCHAR)  + ','
+												   + '"NewFunction":' + CAST(ISNULL(rms.RmsHasNewFunction,0) AS NVARCHAR) + ',' + '"Rol":"' + rol.RolName
                                                    + (CASE
                                                           WHEN LEN(ISNULL(TMP.SUBMODULES, '')) > 0 THEN
                                                               '",' + '"SubModule":[' + COALESCE(TMP.SUBMODULES, '')
@@ -363,10 +364,10 @@ BEGIN
                                                              'Express'
                                                          ELSE
                                                              ta.TacName
-                                                     END + '",' + '"IdCustomer":"'
-                                                   + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
-												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +'
-"}'
+                                                     END + '",' 
+												   + '"IdCustomer":"' + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
+												   + '"RolName":"' + ro.RolName + '",' 
+												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +' "}'
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
