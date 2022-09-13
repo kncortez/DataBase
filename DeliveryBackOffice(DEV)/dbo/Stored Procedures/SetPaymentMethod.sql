@@ -13,7 +13,8 @@ CREATE PROCEDURE [dbo].[SetPaymentMethod]
 	@TokenizedCVV NVARCHAR(50),
 	@DisplayText NVARCHAR(25),
 	@Type NVARCHAR(2),
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@Holder NVARCHAR(50)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -41,8 +42,9 @@ BEGIN
 			, [TokenCreated]
 			, [DateCreated]
 			, [TokenUpdated]
-			, [DateUpdated])
-				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL)
+			, [DateUpdated]
+			, [Holder])
+				VALUES (@AccountId, @CustomerId, @VisitPointId, @TokenizedToken, @TokenizedExpirationDate, @TokenizedCVV, @DisplayText, @IsDefault, @Type, 1, @Token, GETDATE(), NULL, NULL,@Holder)
 			
 			COMMIT TRANSACTION
 
