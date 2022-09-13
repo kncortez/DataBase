@@ -52,6 +52,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber]
     ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC);
@@ -176,4 +178,10 @@ GO
 CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber_include]
     ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC)
     INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [BankId], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_bankid_authorizationnumber]
+    ON [dbo].[BatchDetailCOD]([BankId] ASC, [AuthorizationNumber] ASC)
+    INCLUDE([GuideSerie], [GuideNumber]);
 

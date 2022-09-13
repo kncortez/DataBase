@@ -1,4 +1,6 @@
-﻿-- =============================================
+﻿
+
+-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-05-26>
 -- Description:	< Metodo para finalizar el proceso de generación de guías en express center tomando en cuenta cupones >
@@ -18,6 +20,12 @@ CREATE PROCEDURE [dbo].[CompleteGuideGenerationExpressCenter]
 	@TblDeliveryOrdersList [TblDeliveryOrdersList2] READONLY
 AS
 BEGIN
+
+	-- Variables "globales"
+	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
+	DECLARE @IdDatafonoPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'Datafono' COLLATE Latin1_General_CI_AI);
+	
+	DECLARE @TypeExpressCenter INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'REDISTRIBUIDOR' COLLATE Latin1_General_CI_AI);
 
 	-- Manejo cuando dato viene vacio o es 0
 	IF(@VisitPointClientId = 0)
@@ -45,6 +53,7 @@ BEGIN
 	DECLARE @DOAlreadyUpdated BIT = 0;
 	DECLARE @DOPDAlreadyUpdated BIT = 0;
 	DECLARE @CoUpdated BIT = 0;
+	DECLARE @CostId INT = 0;
 
 	-- Variables adicionales de datos
 	DECLARE @CustomerId INT = 0;
@@ -358,7 +367,7 @@ BEGIN
 					, StatusOrderId = @IdStatus
 					, IsCollect = t.IsCollect
 				FROM 
-					dbo.DeliveryOrder ord
+					dbo.DeliveryOrder ord WITH(NOLOCK)
 					INNER JOIN 
 						@TblDeliveryOrdersList t 
 						ON 
@@ -376,7 +385,7 @@ BEGIN
 				update  dbo.DeliveryOrderPaymentDetail 
 				set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 				, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-				from dbo.DeliveryOrderPaymentDetail pay
+				from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 						inner join @TblDeliveryOrdersList t 
 						on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -386,7 +395,6 @@ BEGIN
 				END
 
 				DECLARE @PromoName NVARCHAR(50) = '';
-				DECLARE @CostId INT = 0;
 
 				SET @CostId = ISNULL((
 					SELECT
@@ -418,12 +426,14 @@ BEGIN
 
 				IF(ISNULL(@CostId, 0) > 0)
 				BEGIN
+
 					-- Actuaizar nuevo valor a Cost
 					UPDATE
 						[DeliveryBackOffice].[dbo].[Cost] 
 					SET
 						TotalAmount = @UpdatedValue
 						,TotalAmountPaid = @UpdatedValue
+						,PaymentDate = GETDATE()
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
 					WHERE
@@ -432,7 +442,7 @@ BEGIN
 					IF(ISNULL(@UpdatedValue, 0) > 0)
 					BEGIN
 
-						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WHERE CD.IdCost = @CostId ))
+						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK) WHERE CD.IdCost = @CostId ))
 						BEGIN
 
 							-- Nuevo valor en cost detail
@@ -489,7 +499,7 @@ BEGIN
 						Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
 						DateUpdated = GETDATE(),
 						TokenUpdated = @Token,
-						PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
+						PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie)
 					WHERE
 						IdCost = @CostId
 						AND
@@ -506,7 +516,7 @@ BEGIN
 						[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
 						(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
 					VALUES
-						(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @Token, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie))
+						(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @Token, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie))
 
 					IF(@@ROWCOUNT > 0)
 						SET @CoUpdated = 1;
@@ -519,9 +529,10 @@ BEGIN
 		-- Flujo de SetServiceRecollect
 		DECLARE @ValidateTransaction INT = (
 			SELECT 
-				DopId 
+				TOP 1
+					DopId 
 			FROM 
-				[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
+				[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH(NOLOCK)
 				INNER JOIN @TblDeliveryOrdersList tpo
 					ON do.GuideNumber = tpo.Guide_Number
 						AND do.GuideSerie = tpo.Guide_Serie
@@ -541,7 +552,7 @@ BEGIN
 						, StatusOrderId = @IdStatus
 						, IsCollect = t.IsCollect
 					from 
-						dbo.DeliveryOrder ord
+						dbo.DeliveryOrder ord WITH(NOLOCK)
 					inner join 
 						@TblDeliveryOrdersList t 
 						on 
@@ -557,7 +568,7 @@ BEGIN
 					update  dbo.DeliveryOrderPaymentDetail 
 					set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 					, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-					from dbo.DeliveryOrderPaymentDetail pay
+					from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
 						 inner join @TblDeliveryOrdersList t 
 						 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -631,132 +642,136 @@ BEGIN
 							OR
 							tdop.CODAmountProccess != 0
 
+						SET @CostId = ISNULL((
+							SELECT
+								TOP 1
+									Co.IdCost
+							FROM
+								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+							WHERE
+								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+								AND
+								Co.IdProduct = 1
+								AND
+								Co.RowStatus = 1
+						), 0)
+
+						IF(@CostId > 0)
+						BEGIN
+
+							UPDATE
+								[DeliveryBackOffice].[dbo].[Cost] 
+							SET
+								TotalAmount = @UpdatedValue
+								,TotalAmountPaid = @UpdatedValue
+								,PaymentDate = GETDATE()
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								IdCost = @CostId
+
+						END
+						ELSE
+						BEGIN
+
+							DECLARE @PaidWithCreditCard BIT = 0;
+							SET @PaidWithCreditCard = ISNULL((
+								SELECT
+									TOP 1
+										1
+								FROM
+									@TblDeliveryOrdersList TBOL
+								WHERE
+									TBOL.IdWayToPayment IN (@IdCreditCardPayment, @IdDatafonoPayment)
+									AND
+									@CustomerType NOT IN (@TypeExpressCenter)
+							),0);
+
+							DECLARE @ExecResult INT = 0;
+							-- Revalorizar guía para generar registros
+							EXEC @ExecResult =[dbo].[spws_revalue_guide]
+								@GuideSerie  = @GuideSerie
+								,@GuideNumber = @GuideNumber
+								,@CodeApp = '' -- CodeApp generico de forza
+								,@Format ='Non'
+								,@CalculateTaxes = 'false' -- Dado a nuevas tarifas, no cálcular impuestos
+								,@IdModule = 1
+								,@SetUpdate = 'true' -- Actualizar registros
+								,@Token = @Token
+								,@ParIsCreditCard = @PaidWithCreditCard
+								
+							SET @CostId = ISNULL((
+								SELECT
+									TOP 1
+										Co.IdCost
+								FROM
+									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+								WHERE
+									Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+									AND
+									Co.IdProduct = 1
+									AND
+									Co.RowStatus = 1
+							), 0)
+							
+							UPDATE
+								[DeliveryBackOffice].[dbo].[Cost] 
+							SET
+								TotalAmount = @UpdatedValue
+								,TotalAmountPaid = @UpdatedValue
+								,PaymentDate = GETDATE()
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								IdCost = @CostId
+
+						END
+
+						IF(NOT EXISTS( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK) WHERE CD.IdCost = @CostId ))
+						BEGIN
+
+							-- Nuevo valor en cost detail
+							INSERT INTO
+								[DeliveryBackOffice].[dbo].[CostDetail]
+								(IdCost, Amount, IdTypeOfMoney, Voucher, RowStatus, TokenCreated, DateCreated)
+							SELECT
+								TOP 1
+									@CostId
+									,@UpdatedValue
+									,TDOL.IdWayToPayment
+									,IIF(TDOL.IdWayToPayment = 2 OR TDOL.IdWayToPayment = 6, @Voucher, '')
+									,1
+									,@Token
+									,GETDATE()
+							FROM
+								@TblDeliveryOrdersList TDOL
+
+						END
+						ELSE
+						BEGIN
+
+							DECLARE @TypePayment INT = 0;
+
+							SELECT
+								@TypePayment = TDOL.IdWayToPayment
+							FROM
+								@TblDeliveryOrdersList TDOL
+
+							-- Actuaizar nuevo valor a Cost detail
+							UPDATE
+								[DeliveryBackOffice].[dbo].[CostDetail] 
+							SET
+								Amount = @UpdatedValue
+								,Voucher = IIF(@TypePayment = 2 OR @TypePayment = 6, @Voucher, '')
+								,IdTypeOfMoney = @TypePayment
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								IdCost = @CostId
+
+						END
+
 					 END
-					 --ELSE IF ( (@OldPriceshipment - @UpdatedValue) <= 0 )
-					 --BEGIN
-
-						--INSERT INTO 
-						--	dbo.DeliveryOrderPaymentTransaction
-						--	(  
-						--		[GuideNumber]
-						--		,[GuideSerie]
-						--		,[PayTypeId]
-						--		,[TypeofInOutMoneyId]
-						--		,[TimePlaId]
-						--		,[amount]
-						--		,[PaymentRecollections]
-						--		,[PaymentNow]
-						--		,[PaymentDelivery]
-						--		,[StartDate]
-						--		,[EndDate]
-						--		,[ShipmentCompleted]
-						--		,[RecollectionCompleted]
-						--		,[PaidGuide]
-						--		,[TokenCreated]
-						--		,[DateCreated]
-						--		,[TokenUpdated]
-						--		,[DateUpdated]
-						--		,[TransaccionFAC]
-						--		,[IdHeaderRecolection]
-						--		,[TypeServiceId]
-						--		,[AccountId]
-						--		,[CODAmountProcess]
-						--		,[Fel]
-						--		,[VisitPoint]
-						--	)
-						--SELECT
-						--		Guide_Number 
-						--		,Guide_Serie
-						--		,IdTypePayment
-						--		,IdWayToPayment
-						--		,IdTimePayment
-						--		,@OldPriceshipment
-						--		,tdop.PaymentRecollections
-						--		,tdop.PaymentNow
-						--		,tdop.PaymentDelivery
-						--		,null
-						--		,null
-						--		,tdop.ShipmentCompleted
-						--		,tdop.RecollectionCompleted
-						--		,tdop.PaidGuide
-						--		,@Token
-						--		,getdate()
-						--		,null
-						--		,null
-						--		,null
-						--		,null
-						--		,tdop.IdTypeService
-						--		,IIF(@AccountId=0,null, @AccountId)
-						--		,tdop.CODAmountProccess
-						--		,null
-						--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-						--FROM 
-						--	@TblDeliveryOrdersList tdop
-						--WHERE 
-						--	tdop.CODAmountProccess != 0
-
-						--INSERT INTO 
-						--	dbo.DeliveryOrderPaymentTransaction
-						--	(  
-						--		[GuideNumber]
-						--		,[GuideSerie]
-						--		,[PayTypeId]
-						--		,[TypeofInOutMoneyId]
-						--		,[TimePlaId]
-						--		,[amount]
-						--		,[PaymentRecollections]
-						--		,[PaymentNow]
-						--		,[PaymentDelivery]
-						--		,[StartDate]
-						--		,[EndDate]
-						--		,[ShipmentCompleted]
-						--		,[RecollectionCompleted]
-						--		,[PaidGuide]
-						--		,[TokenCreated]
-						--		,[DateCreated]
-						--		,[TokenUpdated]
-						--		,[DateUpdated]
-						--		,[TransaccionFAC]
-						--		,[IdHeaderRecolection]
-						--		,[TypeServiceId]
-						--		,[AccountId]
-						--		,[CODAmountProcess]
-						--		,[Fel]
-						--		,[VisitPoint]
-						--	)
-						--SELECT
-						--		Guide_Number 
-						--		,Guide_Serie
-						--		,IdTypePayment
-						--		,IdWayToPayment
-						--		,IdTimePayment
-						--		,IIF(@OldPriceshipment > 0, -@OldPriceshipment, @OldPriceshipment)
-						--		,tdop.PaymentRecollections
-						--		,tdop.PaymentNow
-						--		,tdop.PaymentDelivery
-						--		,null
-						--		,null
-						--		,tdop.ShipmentCompleted
-						--		,tdop.RecollectionCompleted
-						--		,tdop.PaidGuide
-						--		,@Token
-						--		,getdate()
-						--		,null
-						--		,null
-						--		,null
-						--		,null
-						--		,tdop.IdTypeService
-						--		,IIF(@AccountId=0,null, @AccountId)
-						--		,tdop.CODAmountProccess
-						--		,null
-						--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-						--FROM 
-						--	@TblDeliveryOrdersList tdop
-						--WHERE 
-						--	tdop.CODAmountProccess != 0
-
-					 --END
-
 				END
 			
 		END

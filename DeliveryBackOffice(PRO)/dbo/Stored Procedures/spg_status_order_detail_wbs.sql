@@ -109,7 +109,7 @@ BEGIN
 								   FROM dbo.SenderReceiver courier WHERE courier.ID = da.ID_Courier ) + ' ' + 
 								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
 							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
-								JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
+								inner JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 									ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
@@ -142,7 +142,7 @@ BEGIN
 			'' as Latitude,
 			'' as Longitude
 		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod with(nolock) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
-		   JOIN DeliveryBackOffice.dbo.StatusOrder so with(nolock) on so.StatusOrderId = dod.StatusOrderId
+		   INNER JOIN DeliveryBackOffice.dbo.StatusOrder so with(nolock) on so.StatusOrderId = dod.StatusOrderId
 		WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
 		) RES
 		ORDER BY RES.[EventID], RES.[StageDate] ASC

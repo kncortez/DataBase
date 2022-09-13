@@ -1,38 +1,37 @@
 ﻿
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Update date: <2022-07-26>
+-- Description:	< Mejora de rendimiento del SP, realizando el cast de tipo de dato de @IdRoute, adicionando WITH(NOLOCK) y removiendo subconsulta innecesaria >
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_get_linehauls_by_service] 
-@IdRoute AS NVARCHAR(50) = 99999,
-@DateOfRoute DATE
-
-
+	@IdRoute AS NVARCHAR(50) = 99999,
+	@DateOfRoute DATE
 AS
 BEGIN
-	DECLARE @ValidateOperation BIGINT = 0
-	DECLARE @RowUpdated INT
-	DECLARE @ExisteRuta INT
-	DECLARE @HUB_Destino INT
+	DECLARE @IdRouteAsINT INT = CAST(@IdRoute AS INT)
 	DECLARE @IdRouteASG INT
-	DECLARE @ExisteServicio INT
-	DECLARE @IdServiceManagement INT
-	DECLARE @ExistePiezaPorServicio INT
-	DECLARE @ItemsTable AS TABLE (
-		Guide_Number INT
+
+	SET @IdRouteASG = (
+		SELECT
+			ra.IdRouteAssigment
+		FROM 
+			DeliveryBackOffice.dbo.RouteAssigment ra WITH(NOLOCK)
+		WHERE 
+			ra.IdRoute = @IdRouteAsINT
+			AND 
+			ra.DateOfRoute = @DateOfRoute
 	)
 
-	
-	BEGIN
-		
-			SET @IdRouteASG = (SELECT
-						ra.IdRouteAssigment
-					FROM RouteAssigment ra
-					WHERE ra.IdRoute = @IdRoute
-					AND ra.DateOfRoute = @DateOfRoute)
 
-
-			SELECT (SELECT COUNT(1) FROM  ServiceManagement sm
-						WHERE sm.IdPuRouteAssigment = @IdRouteASG ) contador,
-							sm.IdServiceManagement
-						FROM ServiceManagement sm
-						WHERE sm.IdPuRouteAssigment = @IdRouteASG 
-						
-	END
+	SELECT 
+		sm.IdServiceManagement,
+		COUNT(1) 'contador'
+	FROM 
+		DeliveryBackOffice.dbo.ServiceManagement sm WITH(NOLOCK)
+	WHERE 
+		sm.IdPuRouteAssigment = @IdRouteASG 
+	GROUP BY
+		sm.IdServiceManagement
+				
 END

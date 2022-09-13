@@ -24,7 +24,15 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_SequenceCode]
     ON [dbo].[SettlementByPickup]([SequenceCode] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCourier_DateCreated]
+    ON [dbo].[SettlementByPickup]([IdCourier] ASC, [DateCreated] ASC)
+    INCLUDE([Id]);
 

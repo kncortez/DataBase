@@ -95,10 +95,14 @@
     [Sender_Lng]                           VARCHAR (50)    NULL,
     [Receiver_Lat]                         VARCHAR (50)    NULL,
     [Receiver_Lng]                         VARCHAR (50)    NULL,
+    [CatSystemId]                          INT             NULL,
+    [CatModuleId]                          INT             NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
     FOREIGN KEY ([SalePipeLineId]) REFERENCES [dbo].[CatSalePipelines] ([IdSalePipeLine]),
+    CONSTRAINT [FK_Deliveryorder_CatModuleId] FOREIGN KEY ([CatModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
+    CONSTRAINT [FK_Deliveryorder_CatSystemId] FOREIGN KEY ([CatSystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FK_DeliveryOrder_ContactIncident] FOREIGN KEY ([ID_ContactIncident]) REFERENCES [dbo].[ContactIncident] ([ID]),
     CONSTRAINT [FK_DeliveryOrder_ReceiverTownship] FOREIGN KEY ([ReceiverIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_DeliveryOrder_SenderTownship] FOREIGN KEY ([SenderIdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
@@ -109,6 +113,8 @@
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 
@@ -260,4 +266,12 @@ GO
 CREATE NONCLUSTERED INDEX [idx_Sender_ID_DateCreated]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC, [DateCreated] ASC)
     INCLUDE([Ticket_Number], [Order_Number], [Shipping_Date], [Pieces_Dry], [Pieces_Cold], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Address], [Receiver_Department], [Receiver_Alternant_FullName], [Receiver_Alternant_Phone], [Receiver_Alternant_SocialSecurity_ID], [Guide_Serie], [Guide_Number], [Manifest_Serie], [Manifest_Number], [StatusOrderId], [Receiver_CUI], [Receiver_Alternant_CUI], [NameOfReceiver], [Collect_OnDelivery], [IsCollect], [PriceShippment], [IdCustomer]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatSystem, el cual indica en que sistema se creo la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'CatSystemId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatModule, el cual indica en que módulo del sistema se creo la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'CatModuleId';
 

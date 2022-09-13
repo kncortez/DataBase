@@ -1,11 +1,13 @@
 ﻿
-
-
-
 -- =============================================
 -- Author:		<Andre, Ruiz>
 -- Create date: <2022-01-21>
 -- Description:	<Recupera información para generar manifiesto de despacho tomando en cuenta las piezas escaneadas en la preparación>
+-- =============================================
+-- =============================================
+-- Author:		<Andres, Ruiz>
+-- Update date: <2022-08-05>
+-- Description:	< Corrección de datos e indice de tabla >
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDeliveryOrderSettlementDataUnderRoutePrepration]
 	@IdManifest INT
@@ -17,7 +19,8 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @temp TABLE (
-		GuideOrder int,
+		GuideOrder decimal(5,2),
+		GuideETA TIME(7),
 		Guide_Code	nvarchar(max),
 		Pieces_Cold int,
 		Pieces_Dry int,
@@ -40,11 +43,13 @@ BEGIN
 	INSERT INTO @temp
 	SELECT
 		dsd.GuideOrder
+		,dsd.GuideETA AS GuideETA
 		, do.Guide_Serie + isnull(convert(nvarchar,do.Guide_Number),'') as Guide_Code
-		,(DO.Pieces_Cold
+		,(
+			do.Pieces_Cold
 		) AS Pieces_Cold
-		,( DO.Pieces_Dry
-			
+		,(
+			do.Pieces_Dry
 		) as Pieces_Dry
 		,isnull(do.Receiver_FirstName,'') + ' ' + isnull(do.Receiver_LastName,'') as Receiver_Fullname
 		,do.Receiver_Address AS Receiver_Address
@@ -67,9 +72,9 @@ BEGIN
 		END
 		) AS  Total
 	from 
-		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH (NOLOCK)
-	JOIN 
-		DeliverySettlementDetail dsd WITH (NOLOCK)
+		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
+	INNER JOIN 
+		DeliverySettlementDetail dsd WITH(NOLOCK)
 		ON 
 			do.Guide_Serie = dsd.Guide_Serie 
 			AND 
@@ -80,14 +85,31 @@ BEGIN
 			dsd.RowStatus = 1
 
 	SELECT 
-		* 
+		GuideOrder
+		,GuideETA
+		,Guide_Code
+		,Pieces_Cold
+		,Pieces_Dry
+		,Receiver_Fullname
+		,Receiver_Address
+		,Receiver_Zone
+		,Receiver_Town
+		,Receiver_Departament
+		,Preparation_Date
+		,Shipping_Date
+		,Max_Date
+		,Receiver_Phone
+		,Rack_Position
+		,Price
+		,Collect_on_Delivery
+		,Total
 	FROM 
-		@temp
+		@temp tmp
 	ORDER BY 
-		COALESCE(GuideOrder,999999) ASC
-		,Receiver_Departament asc
-		,Receiver_Town asc
-		,Receiver_Zone asc
-		,Receiver_Address asc
+		COALESCE(GuideOrder,0) ASC
+		,tmp.Receiver_Departament asc
+		,tmp.Receiver_Town asc
+		,tmp.Receiver_Zone asc
+		,tmp.Receiver_Address asc
 
 END

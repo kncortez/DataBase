@@ -196,6 +196,8 @@ PRINT '*************************************************************************
     ORDER BY lg.ItemSerie,
              lg.ItemNumber;
 
+	CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (GuideSerie, GuideNumber)
+
 			 PRINT '************************************************************************************* SELECT DISTINCT'
 	
     SELECT DISTINCT

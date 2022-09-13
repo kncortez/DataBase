@@ -46,11 +46,25 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#TblExist', 'U') IS NOT NULL
         DROP TABLE #TblExist;
 
+
+    CREATE TABLE #TblExist
+    (
+        IdCost INT,
+        TotalAmountPaid DECIMAL(12, 2)
+    );
+    CREATE NONCLUSTERED INDEX TempTblExistIdCost ON #TblExist (IdCost);
+
+
     DECLARE @jsonResult NVARCHAR(MAX);
+    INSERT INTO #TblExist
+    (
+        IdCost,
+        TotalAmountPaid
+    )
     SELECT TOP 1
            cst.IdCost,
            cst.TotalAmountPaid
-    INTO #TblExist
+    --  INTO #TblExist
     FROM dbo.Cost cst WITH (NOLOCK)
     WHERE cst.IdProduct = @IdProduct
           AND cst.ProductNumber = @ProductNumber;
@@ -119,7 +133,7 @@ BEGIN
                 IF (@Voucher != '' OR @Voucher IS NOT NULL)
                 BEGIN
                     SELECT @CostCount = COUNT(1)
-                    FROM CostDetail cd WITH(NOLOCK)
+                    FROM CostDetail cd WITH (NOLOCK)
                     WHERE cd.IdCost = @IdCost;
 
                     IF (@CostCount > 0)
@@ -169,7 +183,7 @@ BEGIN
                        det.TokenCreated,
                        GETDATE()
                 FROM @TblDetail det
-                    LEFT JOIN dbo.BreakdownOfPayment bk WITH(NOLOCK)
+                    LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
                            AND bk.IdCost = @IdCost
                 WHERE bk.IdBreakdownOfPayment IS NULL;
@@ -178,10 +192,10 @@ BEGIN
                 UPDATE dbo.BreakdownOfPayment
                 SET Amount = det.Amount,
                     RowStatus = det.RowStatus,
-					TokenUpdated = @Token,
+                    TokenUpdated = @Token,
                     DateUpdated = GETDATE()
                 FROM @TblDetail det
-                    LEFT JOIN dbo.BreakdownOfPayment bk WITH(NOLOCK)
+                    LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
                            AND bk.IdCost = @IdCost
                 WHERE bk.IdBreakdownOfPayment IS NOT NULL;
@@ -191,7 +205,7 @@ BEGIN
                 SET @Amount =
                 (
                     SELECT SUM(ISNULL(bk.Amount, 0))
-                    FROM dbo.BreakdownOfPayment bk WITH(NOLOCK)
+                    FROM dbo.BreakdownOfPayment bk WITH (NOLOCK)
                     WHERE bk.IdCost = @IdCost
                           AND bk.RowStatus = 1
                 );
@@ -207,105 +221,99 @@ BEGIN
             END;
             ELSE IF (@Exist IS NULL OR @Exist = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
             BEGIN
-				
-				IF( 
-					NOT EXISTS
-					(
-						SELECT
-							TOP 1
-								1
-						FROM
-							[DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-						WHERE
-							C.IdProduct = @IdProduct
-							AND
-							C.IdTypeCharge = @IdTypeCharge
-							AND
-							C.ProductNumber = @ProductNumber
-					)
-				)
-				BEGIN
 
-					INSERT INTO dbo.Cost
-					(
-						IdProduct,
-						ProductNumber,
-						IdTypeCharge,
-						TotalAmount,
-						PaymentDate,
-						IdModule,
-						RowStatus,
-						TokenCreated,
-						DateCreated,
-						TokenUpdated,
-						DateUpdated,
-						ReturnAmount
-					)
-					VALUES
-					(   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
-						1, -- guardar los registros como activos 
-						@Token, GETDATE(), NULL, NULL, @ReturnAmount);
+                IF (NOT EXISTS
+                (
+                    SELECT TOP 1
+                           1
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                    WHERE C.IdProduct = @IdProduct
+                          AND C.IdTypeCharge = @IdTypeCharge
+                          AND C.ProductNumber = @ProductNumber
+                )
+                   )
+                BEGIN
 
-					SET @IdCost = SCOPE_IDENTITY();
+                    INSERT INTO dbo.Cost
+                    (
+                        IdProduct,
+                        ProductNumber,
+                        IdTypeCharge,
+                        TotalAmount,
+                        PaymentDate,
+                        IdModule,
+                        RowStatus,
+                        TokenCreated,
+                        DateCreated,
+                        TokenUpdated,
+                        DateUpdated,
+                        ReturnAmount
+                    )
+                    VALUES
+                    (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
+                        1, -- guardar los registros como activos 
+                        @Token, GETDATE(), NULL, NULL, @ReturnAmount);
 
-					IF (@Voucher != '' OR @Voucher IS NOT NULL)
-					BEGIN
-						SELECT @CostCount = COUNT(1)
-						FROM CostDetail cd WITH(NOLOCK)
-						WHERE cd.IdCost = @IdCost;
+                    SET @IdCost = SCOPE_IDENTITY();
 
-						IF (@CostCount > 0)
-						BEGIN
+                    IF (@Voucher != '' OR @Voucher IS NOT NULL)
+                    BEGIN
+                        SELECT @CostCount = COUNT(1)
+                        FROM CostDetail cd WITH (NOLOCK)
+                        WHERE cd.IdCost = @IdCost;
 
-							UPDATE CostDetail
-							SET Amount = @Amount,
-								Voucher = @Voucher,
-								TokenUpdated = @Token,
-								DateUpdated = GETDATE()
-							WHERE IdCost = @IdCost;
+                        IF (@CostCount > 0)
+                        BEGIN
 
-						END;
-						ELSE IF (@CostCount = 0)
-						BEGIN
+                            UPDATE CostDetail
+                            SET Amount = @Amount,
+                                Voucher = @Voucher,
+                                TokenUpdated = @Token,
+                                DateUpdated = GETDATE()
+                            WHERE IdCost = @IdCost;
 
-							INSERT INTO CostDetail
-							(
-								IdCost,
-								IdTypeOfMoney,
-								Amount,
-								Voucher,
-								RowStatus,
-								TokenCreated,
-								DateCreated,
-								TokenUpdated,
-								DateUpdated
-							)
-							VALUES
-							(@IdCost, 6, @Amount, @Voucher, 1, @Token, GETDATE(), NULL, NULL);
+                        END;
+                        ELSE IF (@CostCount = 0)
+                        BEGIN
 
-						END;
-					END;
+                            INSERT INTO CostDetail
+                            (
+                                IdCost,
+                                IdTypeOfMoney,
+                                Amount,
+                                Voucher,
+                                RowStatus,
+                                TokenCreated,
+                                DateCreated,
+                                TokenUpdated,
+                                DateUpdated
+                            )
+                            VALUES
+                            (@IdCost, 6, @Amount, @Voucher, 1, @Token, GETDATE(), NULL, NULL);
 
-					INSERT INTO [dbo].[BreakdownOfPayment]
-					(
-						[IdCost],
-						[Description],
-						[Amount],
-						[ModIdModule],
-						[RowStatus],
-						[TokenCreated],
-						[DateCreated]
-					)
-					SELECT @IdCost,
-						   det.Description,
-						   det.Amount,
-						   det.ModIdModule,
-						   1, -- crear registro activo por default
-						   det.TokenCreated,
-						   GETDATE()
-					FROM @TblDetail det;
+                        END;
+                    END;
 
-				END;
+                    INSERT INTO [dbo].[BreakdownOfPayment]
+                    (
+                        [IdCost],
+                        [Description],
+                        [Amount],
+                        [ModIdModule],
+                        [RowStatus],
+                        [TokenCreated],
+                        [DateCreated]
+                    )
+                    SELECT @IdCost,
+                           det.Description,
+                           det.Amount,
+                           det.ModIdModule,
+                           1, -- crear registro activo por default
+                           det.TokenCreated,
+                           GETDATE()
+                    FROM @TblDetail det;
+
+                END;
 
             END;
 
@@ -317,17 +325,12 @@ BEGIN
 					Y que el pago sea inmediato (Pago en portal)
 				*/
 
-			SELECT
-				@Exist = 1
-				,@IsPaid = ISNULL(C.TotalAmountPaid,0)
-			FROM
-				[DeliveryBackOffice].[dbo].[Cost] C
-			WHERE
-				C.IdProduct = @IdProduct
-				AND
-				C.IdTypeCharge = @IdTypeCharge
-				AND
-				C.ProductNumber = @ProductNumber
+            SELECT @Exist = 1,
+                   @IsPaid = ISNULL(C.TotalAmountPaid, 0)
+            FROM [DeliveryBackOffice].[dbo].[Cost] C
+            WHERE C.IdProduct = @IdProduct
+                  AND C.IdTypeCharge = @IdTypeCharge
+                  AND C.ProductNumber = @ProductNumber;
 
             IF (@Exist > 0 AND @IsPaid = 0 AND @PaymentType = 6 AND @TimeOfPayment = 1)
             BEGIN
@@ -345,21 +348,24 @@ BEGIN
                     GuideSerie,
                     GuideNumber
                 )
-                FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
                 WHERE C.ProductNumber = @ProductNumber
-					  AND C.IdProduct = @IdProduct
-					  AND C.IdTypeCharge = @IdTypeCharge
-                      AND (C.TotalAmountPaid IS NULL
-                      OR C.TotalAmountPaid = 0);
+                      AND C.IdProduct = @IdProduct
+                      AND C.IdTypeCharge = @IdTypeCharge
+                      AND
+                      (
+                          C.TotalAmountPaid IS NULL
+                          OR C.TotalAmountPaid = 0
+                      );
 
                 SET @CostDetailExists = ISNULL(
                                         (
                                             SELECT TOP 1
                                                    CD.IdCostDetail
-                                            FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-                                                JOIN @PaymentUpdated PU 
+                                            FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                                                INNER JOIN @PaymentUpdated PU
                                                     ON C.IdCost = PU.CostId
-                                                LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+                                                LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                                                     ON C.IdCost = CD.IdCost
                                         ),
                                         0
@@ -374,10 +380,10 @@ BEGIN
                         CD.Voucher = @Voucher,
                         CD.TokenUpdated = @Token,
                         CD.DateUpdated = GETDATE()
-                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-                        JOIN @PaymentUpdated PU
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                        INNER JOIN @PaymentUpdated PU
                             ON C.IdCost = PU.CostId
-                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                             ON C.IdCost = CD.IdCost
                     WHERE CD.IdCostDetail = @CostDetailExists;
                 END;
@@ -401,10 +407,10 @@ BEGIN
                            1,
                            @Token,
                            GETDATE()
-                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-                        JOIN @PaymentUpdated PU
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                        INNER JOIN @PaymentUpdated PU
                             ON C.IdCost = PU.CostId
-                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                             ON C.IdCost = CD.IdCost
                     WHERE CD.IdCostDetail IS NULL;
                 END;
@@ -471,7 +477,7 @@ BEGIN
                        det.TokenCreated,
                        GETDATE()
                 FROM @TblDetail det
-                    LEFT JOIN dbo.BreakdownOfPayment bk WITH(NOLOCK)
+                    LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
                            AND bk.IdCost = @IdCost
                 WHERE bk.IdBreakdownOfPayment IS NULL;
@@ -480,10 +486,10 @@ BEGIN
                 UPDATE dbo.BreakdownOfPayment
                 SET Amount = det.Amount,
                     RowStatus = det.RowStatus,
-					TokenUpdated = @Token,
+                    TokenUpdated = @Token,
                     DateUpdated = GETDATE()
                 FROM @TblDetail det
-                    LEFT JOIN dbo.BreakdownOfPayment bk WITH(NOLOCK)
+                    LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
                            AND bk.IdCost = @IdCost
                 WHERE bk.IdBreakdownOfPayment IS NOT NULL;
@@ -493,7 +499,7 @@ BEGIN
                 SET @Amount =
                 (
                     SELECT SUM(ISNULL(bk.Amount, 0))
-                    FROM dbo.BreakdownOfPayment bk WITH(NOLOCK)
+                    FROM dbo.BreakdownOfPayment bk WITH (NOLOCK)
                     WHERE bk.IdCost = @IdCost
                           AND bk.RowStatus = 1
                 );
@@ -508,65 +514,59 @@ BEGIN
             ELSE IF (@Exist IS NULL OR @Exist = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
             BEGIN
 
-				IF( 
-					NOT EXISTS
-					(
-						SELECT
-							TOP 1
-								1
-						FROM
-							[DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-						WHERE
-							C.IdProduct = @IdProduct
-							AND
-							C.IdTypeCharge = @IdTypeCharge
-							AND
-							C.ProductNumber = @ProductNumber
-					)
-				)
-				BEGIN
+                IF (NOT EXISTS
+                (
+                    SELECT TOP 1
+                           1
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                    WHERE C.IdProduct = @IdProduct
+                          AND C.IdTypeCharge = @IdTypeCharge
+                          AND C.ProductNumber = @ProductNumber
+                )
+                   )
+                BEGIN
 
-					INSERT INTO dbo.Cost
-					(
-						IdProduct,
-						ProductNumber,
-						IdTypeCharge,
-						TotalAmount,
-						PaymentDate,
-						IdModule,
-						RowStatus,
-						TokenCreated,
-						DateCreated,
-						TokenUpdated,
-						DateUpdated
-					)
-					VALUES
-					(   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
-						1, -- guardar los registros como activos 
-						@Token, GETDATE(), NULL, NULL);
+                    INSERT INTO dbo.Cost
+                    (
+                        IdProduct,
+                        ProductNumber,
+                        IdTypeCharge,
+                        TotalAmount,
+                        PaymentDate,
+                        IdModule,
+                        RowStatus,
+                        TokenCreated,
+                        DateCreated,
+                        TokenUpdated,
+                        DateUpdated
+                    )
+                    VALUES
+                    (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
+                        1, -- guardar los registros como activos 
+                        @Token, GETDATE(), NULL, NULL);
 
-					SET @IdCost = SCOPE_IDENTITY();
+                    SET @IdCost = SCOPE_IDENTITY();
 
-					INSERT INTO [dbo].[BreakdownOfPayment]
-					(
-						[IdCost],
-						[Description],
-						[Amount],
-						[ModIdModule],
-						[RowStatus],
-						[TokenCreated],
-						[DateCreated]
-					)
-					SELECT @IdCost,
-						   det.Description,
-						   det.Amount,
-						   det.ModIdModule,
-						   1, -- crear registro activo por default
-						   det.TokenCreated,
-						   GETDATE()
-					FROM @TblDetail det;
+                    INSERT INTO [dbo].[BreakdownOfPayment]
+                    (
+                        [IdCost],
+                        [Description],
+                        [Amount],
+                        [ModIdModule],
+                        [RowStatus],
+                        [TokenCreated],
+                        [DateCreated]
+                    )
+                    SELECT @IdCost,
+                           det.Description,
+                           det.Amount,
+                           det.ModIdModule,
+                           1, -- crear registro activo por default
+                           det.TokenCreated,
+                           GETDATE()
+                    FROM @TblDetail det;
 
-				END
+                END;
             END;
             -- actualizar precios de producto
             IF (@IdTypeCharge = 1) -- consto de envio (flete)
@@ -595,17 +595,12 @@ BEGIN
 					Y que el pago sea inmediato (Pago en portal)
 				*/
 
-			SELECT
-				@Exist = 1
-				,@IsPaid = ISNULL(C.TotalAmountPaid,0)
-			FROM
-				[DeliveryBackOffice].[dbo].[Cost] C
-			WHERE
-				C.IdProduct = @IdProduct
-				AND
-				C.IdTypeCharge = @IdTypeCharge
-				AND
-				C.ProductNumber = @ProductNumber
+            SELECT @Exist = 1,
+                   @IsPaid = ISNULL(C.TotalAmountPaid, 0)
+            FROM [DeliveryBackOffice].[dbo].[Cost] C
+            WHERE C.IdProduct = @IdProduct
+                  AND C.IdTypeCharge = @IdTypeCharge
+                  AND C.ProductNumber = @ProductNumber;
 
             IF (@Exist > 0 AND @IsPaid = 0 AND @PaymentType = 1 AND @TimeOfPayment = 1)
             BEGIN
@@ -623,21 +618,24 @@ BEGIN
                     GuideSerie,
                     GuideNumber
                 )
-                FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
+                FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
                 WHERE C.ProductNumber = @ProductNumber
-					  AND C.IdProduct = @IdProduct
-					  AND C.IdTypeCharge = @IdTypeCharge
-                      AND (C.TotalAmountPaid IS NULL
-                      OR C.TotalAmountPaid = 0);
+                      AND C.IdProduct = @IdProduct
+                      AND C.IdTypeCharge = @IdTypeCharge
+                      AND
+                      (
+                          C.TotalAmountPaid IS NULL
+                          OR C.TotalAmountPaid = 0
+                      );
 
                 SET @CostDetailExists = ISNULL(
                                         (
                                             SELECT TOP 1
                                                    CD.IdCostDetail
-                                            FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-                                                JOIN @PaymentUpdated PU
+                                            FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                                                INNER JOIN @PaymentUpdated PU
                                                     ON C.IdCost = PU.CostId
-                                                LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+                                                LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                                                     ON C.IdCost = CD.IdCost
                                         ),
                                         0
@@ -652,10 +650,10 @@ BEGIN
                         CD.Voucher = '',
                         CD.TokenUpdated = @Token,
                         CD.DateUpdated = GETDATE()
-                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-                        JOIN @PaymentUpdated PU
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                        INNER JOIN @PaymentUpdated PU
                             ON C.IdCost = PU.CostId
-                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                             ON C.IdCost = CD.IdCost
                     WHERE CD.IdCostDetail = @CostDetailExists;
                 END;
@@ -679,10 +677,10 @@ BEGIN
                            1,
                            @Token,
                            GETDATE()
-                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
-                        JOIN @PaymentUpdated PU
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                        INNER JOIN @PaymentUpdated PU
                             ON C.IdCost = PU.CostId
-                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
                             ON C.IdCost = CD.IdCost
                     WHERE CD.IdCostDetail IS NULL;
                 END;
