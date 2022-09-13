@@ -364,10 +364,10 @@ BEGIN
                                                              'Express'
                                                          ELSE
                                                              ta.TacName
-                                                     END + '",' + '"IdCustomer":"'
-                                                   + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
-												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +'
-"}'
+                                                     END + '",' 
+												   + '"IdCustomer":"' + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
+												   + '"RolName":"' + ro.RolName + '",' 
+												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +' "}'
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
