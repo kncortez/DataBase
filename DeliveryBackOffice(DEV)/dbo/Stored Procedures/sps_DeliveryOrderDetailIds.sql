@@ -2,7 +2,7 @@
  @GuideSerie						varchar(2) = 'FD'
 ,@GuideNumber						int = 0
 ,@IdCustomer						int = 0 
-,@TypeService						varchar(3) = 'EXP'
+,@TypeService						varchar(4) = 'EXP'
 ,@IndicationsOrigin					varchar(1500) = ''
 ,@IndicationsDestination			varchar(1500) = ''
 ,@Sender_Mail						varchar(200) = ''
@@ -16,6 +16,7 @@
 ,@ReceiverId						int = 0
 ,@OriginSenderId					int = 0
 ,@IsReturn							bit = 0
+,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
 AS 
 BEGIN
@@ -90,7 +91,8 @@ BEGIN
 					@IdModule = 33,
 					@SetUpdate = 'true',
 					@Token = 'sps_DeliveryOrderDetailIds',
-					@IsReturn = 'false'
+					@IsReturn = 'false',
+					@ParIsCreditCard = @IsCreditCardPayment
 	END
 
 	select 1;
