@@ -39,6 +39,15 @@ BEGIN
 
             DECLARE @jsonResult2 NVARCHAR(MAX);
 
+            UPDATE dbo.DeliveryOrder
+            SET PriceShippment = t.PriceShippment,
+                StatusOrderId = @IdStatus,
+                IsCollect = t.IsCollect
+            FROM dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN @TblDeliveryOrdersList t
+                    ON t.Guide_Number = ord.Guide_Number
+                       AND t.Guide_Serie = ord.Guide_Serie;
+
             INSERT INTO dbo.DeliveryOrderPaymentDetail
             (
                 [GuideNumber],
@@ -166,7 +175,7 @@ BEGIN
                 SET PriceShippment = t.PriceShippment,
                     StatusOrderId = @IdStatus,
                     IsCollect = t.IsCollect
-                FROM dbo.DeliveryOrder ord with (nolock)
+                FROM dbo.DeliveryOrder ord WITH (NOLOCK)
                     INNER JOIN @TblDeliveryOrdersList t
                         ON t.Guide_Number = ord.Guide_Number
                            AND t.Guide_Serie = ord.Guide_Serie;
@@ -176,7 +185,7 @@ BEGIN
                     PayTypeId = t.IdTypePayment,
                     TypeofInOutMoneyId = t.IdWayToPayment,
                     TimePlaId = t.IdTimePayment
-                FROM dbo.DeliveryOrderPaymentDetail pay
+                FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                     INNER JOIN @TblDeliveryOrdersList t
                         ON (
                                t.Guide_Number = pay.GuideNumber
@@ -444,7 +453,7 @@ BEGIN
                          TypeService
             ) AS sub_do
                 LEFT JOIN
-                (		
+                (
                     SELECT DOR.Sender_ID,
                            AddressPickup,
                            SchedulePickupId,
@@ -454,7 +463,7 @@ BEGIN
                     FROM dbo.SchedulePickup SP with(nolock)
                         LEFT JOIN dbo.ServiceManagement SM with(nolock)
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
-                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop with(nolock)
+                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                             ON dop.IdHeaderRecolection = SP.SchedulePickupId
                         LEFT JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
                             ON DOR.Guide_Number = dop.GuideNumber
@@ -683,48 +692,77 @@ BEGIN
                                                         @Token = 'SYSTEM';
             UPDATE SMT
             SET Amount = SUB.NewTotal
+				,CatPaymentTimeId = SUB.TimePlaId
             FROM dbo.ServiceManagement SMT
                 INNER JOIN
                 (
                     SELECT SM.IdServiceManagement,
-                           SM.Amount + SUM(TP.AmountToPay) AS NewTotal
-                    FROM dbo.ServiceManagement SM with(nolock)
+                           SM.Amount + SUM(TP.AmountToPay) AS NewTotal,
+						   dopd.TimePlaId
+                    FROM dbo.ServiceManagement SM with (nolock)
                         INNER JOIN dbo.#Sender SD
                             ON SM.IdServiceManagement = SD.IdServiceManagement
                         INNER JOIN @TempPrice TP
                             ON TP.GuideSerie = SD.Serie
                                AND TP.GuideNumber = SD.Number
+						INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+							ON dopd.GuideSerie = SD.Serie 
+								AND dopd.GuideNumber = SD.Number
                     GROUP BY SM.IdServiceManagement,
-                             SM.Amount
+                             SM.Amount,
+						     dopd.TimePlaId
                 ) SUB
                     ON SMT.IdServiceManagement = SUB.IdServiceManagement;
 
+			DECLARE @TblServiceManagement TABLE(
+				IdServiceManagement INT,
+				IdSchedulePickup BIGINT,
+				Amount DECIMAL(16,2),
+				CatPaymentTimeId INT
+			)
 			
-			-- Actualizar
-			update 
-				do 
-			set  
-				StatusOrderId = 1 
-			from 
-				@TblDeliveryOrdersList ls
-				inner join DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
-				on 
-					do.Guide_Serie =  ls.Guide_Serie 
-					and 
-					do.Guide_Number = ls.Guide_Number
+			INSERT INTO @TblServiceManagement
+			SELECT
+				sm.IdServiceManagement,
+				sp.SchedulePickupId,
+				tp.AmountToPay,
+				dopd.TimePlaId
+			FROM #Sender sd
+			INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+				ON dopd.GuideSerie = sd.Serie
+				AND dopd.GuideNumber = sd.Number
+			INNER JOIN SchedulePickup sp
+				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
+			LEFT JOIN ServiceManagement sm
+				ON sm.IdSchedulePickup = sp.SchedulePickupId
+			INNER JOIN @TempPrice tp 
+			ON tp.GuideSerie=sd.Serie 
+			AND tp.GuideNumber=sd.Number
 
-			update 
-				dopd 
-			set 
-				ShipmentCompleted = 1
-			from 
-				@TblDeliveryOrdersList ls
-				inner join 
-					DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
-					on 
-						dopd.GuideSerie =  ls.Guide_Serie 
-						and 
-						dopd.GuideNumber = ls.Guide_Number
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagement] (IdSchedulePickup, RowStatus, TokenCreated, DateCreated, ServiceStatusId, Amount, CatPaymentTimeId)
+				SELECT
+					IdSchedulePickup
+				   ,1
+				   ,@token
+				   ,GETDATE()
+				   ,1
+				   ,Amount
+				   ,CatPaymentTimeId
+				FROM @TblServiceManagement
+				WHERE IdServiceManagement IS NULL
+
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[EventService] (ServiceManagementId,ServiceStatusId,RowStauts,TokenCreated,DateCreated)
+				SELECT
+					sm.IdServiceManagement
+				   ,1
+				   ,1
+				   ,@token
+				   ,GETDATE()
+				FROM @TblServiceManagement tsm
+				INNER JOIN ServiceManagement sm
+					ON sm.IdSchedulePickup = tsm.IdSchedulePickup
+				WHERE tsm.IdServiceManagement IS NULL
 
 			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
 			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 
@@ -817,13 +855,12 @@ BEGIN
             SET ShipmentCompleted = t.ShipmentCompleted,
                 RecollectionCompleted = t.RecollectionCompleted,
                 PaidGuide = t.PaidGuide
-            FROM dbo.DeliveryOrderPaymentDetail pay with(nolock)
+            FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
                            t.Guide_Number = pay.GuideNumber
                            AND t.Guide_Serie = pay.GuideSerie
                        );
-
         END TRY
         BEGIN CATCH
             DECLARE @jsonOutput6 NVARCHAR(MAX);
@@ -878,7 +915,7 @@ BEGIN
             UPDATE dbo.DeliveryOrder
             SET StatusOrderId = @IdStatus,
                 IsCollect = t.IsCollect
-            FROM dbo.DeliveryOrder ord with (nolock)
+            FROM dbo.DeliveryOrder ord WITH (NOLOCK)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON t.Guide_Number = ord.Guide_Number
                        AND t.Guide_Serie = ord.Guide_Serie;
