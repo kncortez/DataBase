@@ -1123,6 +1123,7 @@
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetDetailedTrackingDataOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromServiceCart.sql" />
