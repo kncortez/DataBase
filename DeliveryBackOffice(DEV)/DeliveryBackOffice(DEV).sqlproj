@@ -1086,7 +1086,7 @@
     <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny_by_hub_cras.sql" />
     <Build Include="dbo\Stored Procedures\UpdateWireTransferExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetHubs.sql" />
-    <Build Include="dbo\Stored Procedures\GetStations.sql" />  
+    <Build Include="dbo\Stored Procedures\GetStations.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport.sql" />
@@ -1121,6 +1121,7 @@
     <Build Include="dbo\Stored Procedures\SetTutorialStatusOfAccount.sql" />
     <Build Include="dbo\Stored Procedures\GetTutorialStatusOfAccount.sql" />
     <Build Include="dbo\Tables\ConfirmedAddressByCustomer.sql" />
+    <Build Include="dbo\Stored Procedures\GetNearestCourierCandidates.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
