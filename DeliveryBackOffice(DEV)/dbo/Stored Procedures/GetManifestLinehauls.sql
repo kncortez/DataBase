@@ -12,9 +12,6 @@ AS
 	BEGIN
 
 	SELECT DISTINCT 
-	ROW_NUMBER () OVER( ORDER BY 
-	      lrp.IdLinehaulRoutePreparation 
-	     )   AS numberrow ,
 	lrp.IdLinehaulRoutePreparation, 
 	cr.CodeRoute, 
 	cv.CodeName AS CodeVehicle, 
@@ -26,8 +23,8 @@ AS
 	ISNULL(lrp.ContainerQuantity,0) AS ContainerQuantity,
 	ISNULL((select ISNULL(lrp.GuideQuantity,0)  Where ctc.TypeContainerSerie = 'BOX'),0) AS TotalGuideNoPiso,
 	ISNULL((select ISNULL((lrp.ColdPieceQuantity+ lrp.DryPieceQuantity),0)  Where ctc.TypeContainerSerie = 'BOX'),0) AS TotalPiecesNoPiso,
-	(select ISNULL(lrp.GuideQuantity,0)  Where ctc.TypeContainerSerie = 'LH') AS TotalGuidePiso,
-	(select ISNULL((lrp.ColdPieceQuantity+ lrp.DryPieceQuantity),0)   Where ctc.TypeContainerSerie = 'LH') AS TotalPiecesPiso,
+	ISNULL((select ISNULL(lrp.GuideQuantity,0)  Where ctc.TypeContainerSerie = 'LH'),0) AS TotalGuidePiso,
+	ISNULL((select ISNULL((lrp.ColdPieceQuantity+ lrp.DryPieceQuantity),0)   Where ctc.TypeContainerSerie = 'LH'),0) AS TotalPiecesPiso,
 	(select ISNULL((lrpcd.GuideDryPieceTotal - lrpcd.DryPieceQuantity),0)) AS DifPiecesDry, 
 	(select ISNULL((lrpcd.GuideColdPieceTotal - lrpcd.ColdPieceQuantity),0)) AS DifPiecesCold
 		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
