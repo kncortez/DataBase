@@ -452,7 +452,7 @@ BEGIN
 						[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
 						ON
 							hubcov.hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
-                    INNER JOIN DeliveryOrderPaymentDetail dop
+                    INNER JOIN DeliveryOrderPaymentDetail dop with(nolock)
                         ON (
                                dop.GuideNumber = ord.Guide_Number
                                AND dop.GuideSerie = ord.Guide_Serie
@@ -483,10 +483,10 @@ BEGIN
                            SP.AssigmentStatus,
                            SM.IdServiceManagement,
 						   DOR.IdCustomer
-                    FROM dbo.SchedulePickup SP
-                        LEFT JOIN dbo.ServiceManagement SM
+                    FROM dbo.SchedulePickup SP with(nolock)
+                        LEFT JOIN dbo.ServiceManagement SM with(nolock)
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
-                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop
+                        LEFT JOIN dbo.DeliveryOrderPaymentDetail dop with(nolock)
                             ON dop.IdHeaderRecolection = SP.SchedulePickupId
                         LEFT JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
                             ON DOR.Guide_Number = dop.GuideNumber
@@ -623,7 +623,7 @@ BEGIN
 						TOP 1
 							1
 					FROM
-						[DeliveryBackOffice].[dbo].[SchedulePickup] SP
+						[DeliveryBackOffice].[dbo].[SchedulePickup] SP with(nolock)
 					WHERE
 						SP.SenderId = sd.Sender_ID
 						AND
@@ -775,7 +775,7 @@ BEGIN
                 (
                     SELECT SM.IdServiceManagement,
                            SM.Amount + SUM(TP.AmountToPay) AS NewTotal
-                    FROM dbo.ServiceManagement SM
+                    FROM dbo.ServiceManagement SM with(nolock)
                         INNER JOIN dbo.#Sender SD
                             ON SM.IdServiceManagement = SD.IdServiceManagement
                         INNER JOIN @TempPrice TP
@@ -866,7 +866,7 @@ BEGIN
             SET ShipmentCompleted = t.ShipmentCompleted,
                 RecollectionCompleted = t.RecollectionCompleted,
                 PaidGuide = t.PaidGuide
-            FROM dbo.DeliveryOrderPaymentDetail pay
+            FROM dbo.DeliveryOrderPaymentDetail pay with(nolock)
                 INNER JOIN @TblDeliveryOrdersList t
                     ON (
                            t.Guide_Number = pay.GuideNumber
@@ -982,7 +982,7 @@ BEGIN
                     (
                         SELECT CodeOfReference
                         FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                            INNER JOIN VisitPointByUser VPU
+                            INNER JOIN VisitPointByUser VPU with(nolock)
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                    AND VPU.RowStatus = 1
                             INNER JOIN RegisterUser ru

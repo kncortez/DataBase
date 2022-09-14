@@ -31,7 +31,7 @@ BEGIN
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
               -- -1 ES ANULADA
               AND ihd.inv_type IN ( 1, 2 )			 
-              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2022-07-01' AS DATE)
+              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2022-08-01' AS DATE)
               --AND cast(ihd.inv_dateRegister as date) <= CAST('2022-05-30' as date)
               AND
               (
@@ -45,18 +45,7 @@ BEGIN
                   OR ir.invRetries <= 3
               )
 			  AND IHD.IsManualInvoice IS NULL
-			  --AND ihd.inv_pk_id in (1013437
-					--				,1013438
-					--				,1013439
-					--				,1013440
-					--				,1013441
-					--				,1013442
-					--				,1013443
-					--				,1013444
-					--				,1013445
-					--				,1013446
-					--				,1013447
-					--				,1013448)
+			 -- AND ihd.inv_pk_id in ()							
 
 			  --and 1= 0 --VARIABLE A UTILIZAR CADA VEZ QUE SE SUBA NUEVA VERSIÓN DEL SERVICIO
 			  ORDER BY ihd.inv_pk_id;

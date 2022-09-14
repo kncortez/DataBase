@@ -61,7 +61,7 @@ BEGIN
         SELECT TOP 1
                @SchedulePickupFinded = SchedulePickupId,
                @SchedulePickupStatusFinded = SchedulePickupStatus
-        FROM SchedulePickup
+        FROM SchedulePickup WITH(NOLOCK)
         WHERE CAST(StartDate AS DATE) = CAST(@startDate AS DATE)
               AND
               (
@@ -87,11 +87,11 @@ BEGIN
             SELECT @ServiceManagementFinded = sm.IdServiceManagement,
                    @CatServiceStatusFinded = sm.ServiceStatusId,
                    @CodeRoute = CONCAT(' (', cr.CodeRoute, ')')
-            FROM ServiceManagement sm
-                LEFT JOIN RouteAssigment ra
+            FROM ServiceManagement sm WITH(NOLOCK)
+                LEFT JOIN RouteAssigment ra WITH(NOLOCK)
                     ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
                        AND ra.RowStatus = 1
-                LEFT JOIN CatRoute cr
+                LEFT JOIN CatRoute cr WITH(NOLOCK)
                     ON cr.IdRoute = ra.IdRoute
             WHERE sm.IdSchedulePickup = @SchedulePickupFinded
                   AND sm.RowStatus = 1;
@@ -104,7 +104,7 @@ BEGIN
 
                 --Si se encuentra, validar en qué estado se encuentra
                 SELECT @CatServiceStatusName = [Name]
-                FROM CatServiceStatus
+                FROM CatServiceStatus WITH(NOLOCK)
                 WHERE IdServiceStatus = @CatServiceStatusFinded;
 
                 IF @CatServiceStatusName = 'Cancelado'
@@ -241,11 +241,11 @@ BEGIN
             IF @PaymentTime IS NOT NULL
                 SET @CatPaymentTimeId =
             (
-                SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaName = @PaymentTime
+                SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaName = @PaymentTime
             )   ;
 
             SELECT @amountPickUp = Value
-            FROM [DeliveryBackOffice].[dbo].[CatToCharge]
+            FROM [DeliveryBackOffice].[dbo].[CatToCharge] WITH(NOLOCK)
             WHERE IdToCharge = 1;
 
             IF @idHub != ''
@@ -380,7 +380,7 @@ BEGIN
 
                 --Validar que tenga registro en la DeliveryOrderPaymentDetail sino lo crea
                 SELECT @dopdId = dopd.DopId
-                FROM DeliveryOrderPaymentDetail dopd
+                FROM DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
                 WHERE dopd.GuideSerie = @GuideSerie
                       AND dopd.GuideNumber = @GuideNumber;
 
@@ -420,15 +420,15 @@ BEGIN
                            CASE
                                WHEN do.IsCollect = 1 THEN
                                (
-                                   SELECT PayTypeId FROM CatPaymentType WHERE PayTypeAbrev = 'COLLT'
+                                   SELECT PayTypeId FROM CatPaymentType WITH(NOLOCK) WHERE PayTypeAbrev = 'COLLT'
                                )
                                WHEN cu.ConditionOfPaymentID > 1 THEN
                                (
-                                   SELECT PayTypeId FROM CatPaymentType WHERE PayTypeAbrev = 'CREDT'
+                                   SELECT PayTypeId FROM CatPaymentType WITH(NOLOCK) WHERE PayTypeAbrev = 'CREDT'
                                )
                                ELSE
                            (
-                               SELECT PayTypeId FROM CatPaymentType WHERE PayTypeAbrev = 'CONT'
+                               SELECT PayTypeId FROM CatPaymentType WITH(NOLOCK) WHERE PayTypeAbrev = 'CONT'
                            )
                            END,
                            CASE
@@ -442,15 +442,15 @@ BEGIN
                            CASE
                                WHEN do.IsCollect = 1 THEN
                                (
-                                   SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaAbrev = 'DEST'
+                                   SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaAbrev = 'DEST'
                                )
                                WHEN cu.ConditionOfPaymentID > 1 THEN
                                (
-                                   SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaAbrev = 'POST'
+                                   SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaAbrev = 'POST'
                                )
                                ELSE
                            (
-                               SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaAbrev = 'AHR'
+                               SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaAbrev = 'AHR'
                            )
                            END,
                            0,
@@ -473,13 +473,13 @@ BEGIN
                            NULL
                     --,NULL
                     --,NULL
-                    FROM DeliveryOrder do
-                        JOIN Customer cu
+                    FROM DeliveryOrder do WITH(NOLOCK)
+                        INNER JOIN Customer cu WITH(NOLOCK)
                             ON cu.IdCustomer =
                             (
                                 SELECT TOP 1
                                        ISNULL(do.IdCustomer, vpc.CustomerID)
-                                FROM dbo.VisitPointClient vpc
+                                FROM dbo.VisitPointClient vpc WITH(NOLOCK)
                                 WHERE vpc.CodeOfReference = do.Sender_ID
                             )
                     WHERE do.Guide_Serie = @GuideSerie
@@ -525,7 +525,7 @@ BEGIN
             IF NOT EXISTS
             (
                 SELECT IdSchedulePickup
-                FROM [DeliveryBackOffice].[dbo].[ServiceManagement]
+                FROM [DeliveryBackOffice].[dbo].[ServiceManagement] WITH(NOLOCK)
                 WHERE IdSchedulePickup = @idSchedulePickUp
             )
             BEGIN
@@ -580,7 +580,7 @@ BEGIN
 
                 SELECT TOP 1
                        @idSchedule = LSM.IdServiceManagement
-                FROM @LastServiceManagement LSM
+                FROM @LastServiceManagement LSM 
                 ORDER BY LSM.DateOfSM DESC;
             END;
 
@@ -663,12 +663,12 @@ BEGIN
             IF @PaymentTime IS NOT NULL
                 SET @CatPaymentTimeId =
             (
-                SELECT TimePlaId FROM CatPaymentTime WHERE TimePlaName = @PaymentTime
+                SELECT TimePlaId FROM CatPaymentTime WITH(NOLOCK) WHERE TimePlaName = @PaymentTime
             )   ;
 
             SELECT @ServiceManagementFinded = sm.IdServiceManagement,
                    @CatServiceStatusName = css.[Name]
-            FROM ServiceManagement sm
+            FROM ServiceManagement sm WITH(NOLOCK)
                 INNER JOIN CatServiceStatus css
                     ON css.IdServiceStatus = sm.ServiceStatusId
             WHERE sm.IdSchedulePickup = @SchedulePickupId;
