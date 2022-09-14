@@ -33,6 +33,7 @@ BEGIN
 												FROM	[dbo].[CatLinehaulStatus] CLS
 												WHERE	[CLS].[StatusName] = 'IN TRANSIT')
 		AND		[LRPCDP].[ActCode] IS NULL
+		AND		[LRPCDP].[RowStatus] = 1
 	ORDER BY	[CTC].[TypeContainerSerie],
 				[C].[ContainerNumber],
 				[LRPCD].[GuideNumber],
