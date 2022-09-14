@@ -1098,6 +1098,7 @@
     <Build Include="dbo\Stored Procedures\spHM_GetTopGuidesLinehaulRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetGeneralNumbersLinehaulRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetTopGuidesLinehaulRouteSettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetGeneralNumbersLinehaulRouteSettlement.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
