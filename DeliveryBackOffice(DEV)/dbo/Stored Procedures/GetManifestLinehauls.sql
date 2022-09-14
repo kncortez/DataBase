@@ -49,6 +49,25 @@ AS
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
 			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
 			AND lrp.StationDispatchedId = @Station
+		GROUP BY lrp.IdLinehaulRoutePreparation,
+	            	cr.CodeRoute, 
+	               cv.CodeName,
+				   sr.First_Name,
+				   sr.Last_Name,
+				   cls.StatusName,
+				   cls.StatusDescription,
+	               lrp.DateCreated, 
+	               lrp.DateLinehaulRoutePreparation,
+				   lrp.GuideQuantity,
+				   lrp.ContainerQuantity,
+				   ctc.TypeContainerSerie,
+				   lrp.ColdPieceQuantity,
+				   lrp.DryPieceQuantity,
+				   lrpcd.GuideDryPieceTotal,
+				   lrpcd.DryPieceQuantity,
+				   lrpcd.GuideColdPieceTotal,
+				   lrpcd.ColdPieceQuantity
+				   
 
 
 	
