@@ -53,6 +53,13 @@ BEGIN
 			RETURN;
 		END
 
+	IF (@EXISTING_SR > 0)
+		BEGIN
+			SET @EXISTING_SR = (SELECT [SR].[ID]
+								FROM [dbo].[SenderReceiver] SR
+								WHERE [SR].[CUI] = @SenderReceiverCUI);
+		END
+
 	IF (@EXISTING_LRP = 0) 
 		BEGIN
 			SELECT 0 [spResult], 'No existe ningún registro de despacho de linehaul con los datos ingresados' [spMessage];
@@ -86,7 +93,7 @@ BEGIN
 			INNER JOIN	[dbo].[CatTypeContainer] CTC
 				ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 			WHERE		[LRPC].[GuideQuantity] = 0
-					AND	[LRPC].[LinehaulRoutePreparationId] = 1
+					AND	[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 					AND	[LRPC].[RowStatus] = 1;
 
 			RETURN;
