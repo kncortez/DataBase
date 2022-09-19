@@ -12,14 +12,15 @@ BEGIN
 	
 	SET NOCOUNT ON;
 	
-		SELECT DISTINCT A.IdAct, 
+		SELECT DISTINCT 'ACT'+Cast(A.IdAct AS varchar) AS IdAct, 
 		       A.ResponsibleName Piloto,
 			   CTA.ActName,
-			   AD.GuideDryPieceTotal PiezasSecasTotal,
-			   AD.GuideColdPieceTotal PiezasFriasTotal,
+			   SUM(AD.GuideDryPieceTotal) PiezasSecasTotal,
+			   SUM(AD.GuideColdPieceTotal) PiezasFriasTotal,
 			   AD2.TotalGuide,
-			   SUBSTRING(CONVERT(VARCHAR, A.DateCreated,101),1,10) AS DateCreated ,
+			   SUBSTRING(CONVERT(VARCHAR, A.DateCreated,101),1,10) AS DateCreated,
 			   AD.RowStatus
+			 
 		FROM dbo.Act A WITH (NOLOCK)
 		LEFT  JOIN
 			 dbo.ActDetail AD WITH (NOLOCK)
@@ -32,4 +33,15 @@ BEGIN
 		ON A.CatTypeActId = CTA.IdCatTypeAct
 		WHERE AD.ActId= @IdAct  
 		AND AD.RowStatus=1
+		GROUP BY A.IdAct,A.ResponsibleName,
+				CTA.ActName,
+				AD.GuideDryPieceTotal,
+				AD.GuideColdPieceTotal,
+				AD2.TotalGuide,
+				A.DateCreated,AD.RowStatus
 END
+
+
+
+
+				select * from dbo.ActDetail

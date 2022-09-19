@@ -5,10 +5,11 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHD_ActaLinehaulsPiezasIncompletas] 
 	@TblListGuideActa TblListGuideActa READONLY,
-	@Token NVARCHAR(50),
+	@Token AS NVARCHAR(50),
 	@ActType AS NVARCHAR(50),
 	@ResponsibleName AS NVARCHAR(100)=NULL,
-	@ResponsibleCUI  AS NVARCHAR(20)=NULL
+	@ResponsibleCUI  AS NVARCHAR(20)=NULL,
+	@CodeRoute AS NVARCHAR(10)=NULL
 	
 AS
 BEGIN	
@@ -20,12 +21,14 @@ BEGIN
 	BEGIN TRY
 	DECLARE @IdActaNew AS INT;
 	DECLARE @IdActaDetailNew AS INT;
-	
 	DECLARE @Numero AS INT;
 	DECLARE @Serie  AS NVARCHAR(2);
 	DECLARE @PIEZAS AS INT;
 	DECLARE @PICE AS NVARCHAR(20);
+	DECLARE @DryPieceQuantity AS INT=0;	
+	DECLARE	@ColdPieceQuantity AS INT=0;
 	DECLARE @RESULT AS INT=0;
+	DECLARE @IdRoute AS INT;
 	DECLARE @RevalueGuides AS TABLE(
 				GuideSerie NVARCHAR(2),
 				GuideNumber INT,
@@ -33,12 +36,15 @@ BEGIN
 			)
 	INSERT INTO @RevalueGuides
 				SELECT
-					SUBSTRING(lg.NumberGuidePice,1,2)
-				    ,CAST(SUBSTRING(LTRIM(lg.NumberGuidePice), 3, CAST(LEN(NumberGuidePice) AS INT)-4) AS INT)
-				    ,lg.NumberGuidePice
+					SUBSTRING(lg.NumberGuidePice,1,2),
+				    CAST(
+					SUBSTRING(lg.NumberGuidePice,3, 
+					CHARINDEX('-',lg.NumberGuidePice)-3)  AS INT),
+				    lg.NumberGuidePice
 				FROM @TblListGuideActa lg
 
-
+					
+		SELECT @IdRoute = CR.IdRoute FROM dbo.CatRoute CR WITH (NOLOCK) where CodeRoute = @CodeRoute  		    
 
 ------Insert Actas---------------------------
 			INSERT INTO [dbo].[Act]
@@ -52,7 +58,16 @@ BEGIN
 			RowStatus,	
 			TokenCreated,	
 			DateCreated)
-			VALUES (1, Getdate(),@ResponsibleName,@ResponsibleCUI,1,GETDATE(),1,@Token,GETDATE()) 
+			VALUES (
+			        @IdRoute, 
+			        Getdate(),
+					@ResponsibleName,
+					@ResponsibleCUI,
+					(select Top 1 IdCatTypeAct from CatTypeAct where ActName = @ActType),
+					GETDATE(),
+					1,
+					@Token,
+					GETDATE()) 
 			SET @IdActaNew = SCOPE_IDENTITY();
 ------------Insert Detail Acta ----------------------------
 WHILE EXISTS (SELECT TOP 1 1 FROM @RevalueGuides)
@@ -60,10 +75,11 @@ BEGIN
 					SELECT TOP 1
 						@Serie  =  rg.GuideSerie,
 						@Numero =  rg.GuideNumber,
-						@PICE =  rg.Pice
+						@PICE =    rg.Pice
 				   FROM @RevalueGuides rg
 
-
+	   SET  @DryPieceQuantity  =  @DryPieceQuantity  + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 1 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT))
+	   SET  @ColdPieceQuantity =  @ColdPieceQuantity + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 0 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT)) 
 		 SET @RESULT=@RESULT+1;
 		 INSERT INTO [dbo].[ActDetail]
 		   (
@@ -78,10 +94,22 @@ BEGIN
 		   TokenCreated,
 		   DateCreated	)
 		   
-		   VALUES (@IdActaNew,@Serie,@Numero,1,1,1,1,1,@Token,GETDATE())
+		   VALUES (@IdActaNew,
+		           @Serie,
+				   @Numero,
+		           (SELECT COUNT(ISNULL(NoPiece,0))  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry=1),
+				   (SELECT COUNT(ISNULL(NoPiece,0))  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry=0),
+				   @DryPieceQuantity,
+				   @ColdPieceQuantity,
+				   1,
+				   @Token,
+				   GETDATE()
+				   )
 		   SET @IdActaDetailNew = SCOPE_IDENTITY();
 
+		  
 
+		   
 ----------Insert Pice  of Actas-----------------
 		   INSERT INTO [dbo].[ActDetailPiece](
 		   	ActDetailId,
@@ -91,16 +119,28 @@ BEGIN
 			TokenCreated,	
 			DateCreated	
 		   )
-		   values(@IdActaDetailNew,
-		   CAST(RIGHT(@PICE, 1) AS INT),
-		   1,1,@Token,GETDATE())
+		   values(
+		   @IdActaDetailNew,
+		   CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT),
+		   (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry=1 AND NoPiece=CAST(RIGHT(@PICE, 1) AS INT)),
+		   1,
+		   @Token,
+		   GETDATE()
+		   )
 
 	DELETE FROM @RevalueGuides
 	WHERE Pice = @PICE;
 
 END
+           UPDATE [dbo].[ActDetail] 
+			SET DryPieceQuantity = @DryPieceQuantity, 
+			    ColdPieceQuantity = @ColdPieceQuantity 
+			WHERE ActId =@IdActaNew 
+
+
 			COMMIT TRANSACTION;
 			SELECT @IdActaNew 
+			
           
 	   END TRY
 			 BEGIN CATCH
