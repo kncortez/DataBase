@@ -4,7 +4,7 @@
 -- Description:	<Activa o desactiva un servicio de recolección (servicemanagement) y su respectiva recoleccion programada(schedulepickup) >
 -- =============================================
 CREATE PROCEDURE spwh_SetPickupStatus
-	@SchedulePickupId BIGINT,	
+	@ServiceManagementId INT,
 	@Status BIT,
 	@Token NVARCHAR(50)
 AS
@@ -16,7 +16,7 @@ BEGIN
 	-- Control actualización
 	DECLARE @RModified INT =0;
 
-	DECLARE @ServiceManagementId INT;
+	DECLARE @IdchedulePickup BIGINT
 	DECLARE @StatusOld INT;
 	DECLARE @StatusNew INT;
 	DECLARE @statusschedulepickup BIT;
@@ -24,12 +24,12 @@ BEGIN
 	BEGIN TRY
 
 		SELECT
-			@ServiceManagementId = sm.IdServiceManagement
-		   ,@StatusOld = sm.ServiceStatusId
+		   @StatusOld = sm.ServiceStatusId
+		   ,@IdchedulePickup=sm.IdSchedulePickup
 		FROM ServiceManagement sm
-		WHERE sm.IdSchedulePickup = @SchedulePickupId
+		WHERE sm.IdServiceManagement = @ServiceManagementId
 
-		IF @StatusOld is not null and @StatusOld IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a ruta','Cancelado'))
+	    IF @StatusOld is not null and @StatusOld IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a ruta','Cancelado'))
 		BEGIN
 			IF @Status = 1
 			BEGIN
@@ -54,14 +54,14 @@ BEGIN
 			SET ServiceStatusId = @StatusNew,
 				TokenUpdated = @Token,
 				DateUpdated = GETDATE()
-			WHERE IdSchedulePickup = @SchedulePickupId
+			WHERE IdSchedulePickup = @IdchedulePickup
 
 			UPDATE SchedulePickup
 			SET	
 				SchedulePickupStatus = @Status,
 				TokenUpdated = @Token,
 				DateUpdated = GETDATE()
-			WHERE SchedulePickupId = @SchedulePickupId
+			WHERE SchedulePickupId = @IdchedulePickup
 
 			SET @RModified = @@ROWCOUNT
 		END
@@ -82,7 +82,7 @@ BEGIN
 
 	IF (@RModified > 0)
 	BEGIN
-		
+
 		INSERT INTO [dbo].[ServiceManagementStatusLog] ([ServiceManagementId]
 		, [ServiceStatusIdOld]
 		, [ServiceStatusIdNew]
@@ -100,12 +100,12 @@ BEGIN
 		, [DateCreated]
 		, [TokenUpdated]
 		, [DateUpdated])
-			VALUES (@SchedulePickupId, @Status, 1, @Token, GETDATE(), NULL, NULL)
+			VALUES (@IdchedulePickup, @Status, 1, @Token, GETDATE(), NULL, NULL)
 		SELECT			  
 			1 'StatusCode',
 			'Registro actualizado correctamente' 'Description', 
 			@Status 'Status'
-		COMMIT TRANSACTION;
+			COMMIT TRANSACTION;
 	END
 	ELSE
 		SELECT			  
