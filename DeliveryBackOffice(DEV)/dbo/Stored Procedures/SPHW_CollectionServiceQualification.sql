@@ -24,6 +24,11 @@ BEGIN
 	 SET ServiceRate = @Qualification
 	 WHERE SchedulePickupId = @IdSchedulePickup
 
+	 SELECT Result= 1
+  END
+  ELSE
+  BEGIN 
+   SELECT Result= 0
   END
 
 END
