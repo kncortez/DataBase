@@ -133,7 +133,7 @@ BEGIN TRY
 		OUTPUT inserted.ModIdModule INTO @NewModule(IdModule)
 		SELECT
 			TOP 1
-				'Monitoreo de recolecciones', NPPM.IdModule, '/operaciones/recolecciones/monitoreo', 'Nuevo módulo operacional de monitoreo de solicitudes de recolección', 1, '', 1, 1, 'SYS-ARUIZ', GETDATE()
+				'Monitoreo de recolecciones', NPPM.IdModule, '/operaciones/recolecciones/monitoreo', 'Nuevo módulo operacional de monitoreo de solicitudes de recolección', 2, '', 1, 1, 'SYS-ARUIZ', GETDATE()
 		FROM
 			@NewPickupParentModule NPPM
 		
@@ -165,7 +165,7 @@ BEGIN TRY
 		OUTPUT inserted.ModIdModule INTO @NewModule(IdModule)
 		SELECT
 			TOP 1
-				'Recolecciones pendientes', NPPM.IdModule, '/operaciones/recolecciones/asignacion', 'Nuevo módulo operacional de asignación de solicitudes de recolección', 1, '', 1, 1, 'SYS-ARUIZ', GETDATE()
+				'Recolecciones pendientes', NPPM.IdModule, '/operaciones/recolecciones/asignacion', 'Nuevo módulo operacional de asignación de solicitudes de recolección', 3, '', 1, 1, 'SYS-ARUIZ', GETDATE()
 		FROM
 			@NewPickupParentModule NPPM
 		
