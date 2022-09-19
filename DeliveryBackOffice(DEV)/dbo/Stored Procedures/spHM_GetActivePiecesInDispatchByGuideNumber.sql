@@ -21,6 +21,7 @@ BEGIN
 		ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
 		AND		[LRPCD].[GuideSerie] = @GuideSerie
 		AND		[LRPCD].[GuideNumber] = @GuideNumber
+		AND		[LRPCD].[RowStatus] = 1
 	INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 		ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 	INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP

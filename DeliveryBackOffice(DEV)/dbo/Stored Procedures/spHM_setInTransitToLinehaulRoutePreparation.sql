@@ -59,6 +59,10 @@ BEGIN
 								FROM [dbo].[SenderReceiver] SR
 								WHERE [SR].[CUI] = @SenderReceiverCUI);
 		END
+	ELSE 
+		BEGIN
+			SET @EXISTING_SR = NULL;
+		END
 
 	IF (@EXISTING_LRP = 0) 
 		BEGIN
