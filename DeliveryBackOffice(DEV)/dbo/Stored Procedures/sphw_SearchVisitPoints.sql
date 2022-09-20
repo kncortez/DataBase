@@ -3,7 +3,7 @@
 -- Create date: <20-09-2022>
 -- Description:	<Hace la busqueda de puntos de visita por teléfono, correo o nombre>
 -- =============================================
-CREATE PROCEDURE sphw_SearchtVisitPoints
+CREATE PROCEDURE sphw_SearchVisitPoints
 	-- Add the parameters for the stored procedure here
 	@search NVARCHAR(80)=NULL,
 	@filter INT = -1
@@ -32,7 +32,7 @@ BEGIN
 	VP.Department,
 	VP.Latitude,
 	VP.Longitude,
-	UA.IdCityPlace,
+	ISNULL(UA.IdCityPlace,0),
 	CP.CityPlace,
 	PR.PerFirstName 'FirstName',
 	PR.PerLastName 'LastName'
