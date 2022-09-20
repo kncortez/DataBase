@@ -99,7 +99,7 @@ BEGIN TRY
 		OUTPUT inserted.ModIdModule INTO @NewModule(IdModule)
 		SELECT
 			TOP 1
-				'Solicitud de recolección', NPPM.IdModule, '/operaciones/recolecciones/manual', 'Nuevo módulo operacional de creación de solicitudes de recolección', 1, '', 1, 1, 'SYS-ARUIZ', GETDATE()
+				'Solicitud de recolección', NPPM.IdModule, '/operaciones/recolecciones/manual', 'Nuevo módulo operacional de creación de solicitudes de recolección', 1, 'fa fa-shipping-fast fa-1x', 1, 1, 'SYS-ARUIZ', GETDATE()
 		FROM
 			@NewPickupParentModule NPPM
 		
@@ -133,7 +133,7 @@ BEGIN TRY
 		OUTPUT inserted.ModIdModule INTO @NewModule(IdModule)
 		SELECT
 			TOP 1
-				'Monitoreo de recolecciones', NPPM.IdModule, '/operaciones/recolecciones/monitoreo', 'Nuevo módulo operacional de monitoreo de solicitudes de recolección', 2, '', 1, 1, 'SYS-ARUIZ', GETDATE()
+				'Monitoreo de recolecciones', NPPM.IdModule, '/operaciones/recolecciones/monitoreo', 'Nuevo módulo operacional de monitoreo de solicitudes de recolección', 2, 'fa-1x bi bi-ui-checks', 1, 1, 'SYS-ARUIZ', GETDATE()
 		FROM
 			@NewPickupParentModule NPPM
 		
@@ -165,7 +165,7 @@ BEGIN TRY
 		OUTPUT inserted.ModIdModule INTO @NewModule(IdModule)
 		SELECT
 			TOP 1
-				'Recolecciones pendientes', NPPM.IdModule, '/operaciones/recolecciones/asignacion', 'Nuevo módulo operacional de asignación de solicitudes de recolección', 3, '', 1, 1, 'SYS-ARUIZ', GETDATE()
+				'Recolecciones pendientes', NPPM.IdModule, '/operaciones/recolecciones/asignacion', 'Nuevo módulo operacional de asignación de solicitudes de recolección', 3, 'fa-1x bi bi-boxes', 1, 1, 'SYS-ARUIZ', GETDATE()
 		FROM
 			@NewPickupParentModule NPPM
 		
