@@ -30,19 +30,22 @@ BEGIN
 		BEGIN 
 			SELECT			  
 				0 AS 'StatusCode',
-				'Términos y condiciones de servicios de recolección no aceptados' AS 'Description';
+				'Términos y condiciones de servicios de recolección no aceptados' AS 'Description',
+				-1 AS 'ServiceId';
 		END
 		ELSE IF @TAC2 = 0
 		BEGIN
 			SELECT			  
 				0 AS 'StatusCode',
-				'Declaración de no contenido de productos ilegales no aceptados' AS 'Description';
+				'Declaración de no contenido de productos ilegales no aceptados' AS 'Description',
+				-1 AS 'ServiceId';
 		END
 		ELSE IF @Scheduled = 1 AND @StartDate IS NULL
 		BEGIN
 			SELECT			  
 				0 AS 'StatusCode',
-				'No se ha indicado la fecha y hora de recolección' AS 'Description';			
+				'No se ha indicado la fecha y hora de recolección' AS 'Description',
+				-1 AS 'ServiceId';			
 		END
 		BEGIN 
 
@@ -196,53 +199,6 @@ BEGIN
                 GuideSerie NVARCHAR(25) NULL,
                 GuideNumber NVARCHAR(25) NULL
             );
-			--Listando guías ASOCIADAS AL CODEOFREFERENCE			
-			INSERT INTO @TempGuides
-            SELECT DISTINCT
-                    DO.Guide_Serie,DO.Guide_Number
-			FROM [dbo].[DeliveryOrder] DO 
-					LEFT JOIN DBO.DeliveryOrderPaymentDetail DOPD ON DOPD.GuideSerie=DO.Guide_Serie AND DOPD.GuideNumber=DO.Guide_Number
-				where DO.Sender_ID=@CodeOfReference AND DOPD.IdHeaderRecolection IS NULL
-				AND DO.StatusOrderId IN (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Generado')
-            GROUP BY DO.Guide_Serie,
-                    DO.Guide_Number
-
-
-			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
-			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 
-				[Guide_Serie]
-				,[Guide_Number]
-				,[StatusOrderId]
-				,[UserCreated]
-				,[DateCreated]
-				,[DateCreatedInSystem]
-				,[Observations]
-				,[Temperature_Celsius]
-			)
-			select 
-				DISTINCT
-					TP.GuideSerie
-					,TP.GuideNumber
-					,(SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Solicitado')
-					,@Token
-					,GETDATE()
-					,GETDATE()
-					,null
-					,null
-			from 
-				@TempGuides TP
-				LEFT JOIN
-					[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
-					ON
-						TP.GuideSerie= DOD.Guide_Serie
-						AND
-						TP.GuideNumber= DOD.Guide_Number
-						AND
-						DOD.StatusOrderId IN (1,21)
-						AND
-						DOD.RowStatus = 1
-			WHERE
-				DOD.DateCreated IS NULL
 		
 
 			
@@ -260,30 +216,6 @@ BEGIN
 				Longitude=@RecollectionLongitude
 			WHERE CodeOfReference=@CodeOfReference;
 
-
-            --ACTUALIZANDO GUIAS 
-			UPDATE DO SET
-				StatusOrderId = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Solicitado'),
-				DateUpdated=GETDATE(),
-				TokenUpdated=@Token
-			FROM @TempGuides TP
-			INNER JOIN  dbo.DeliveryOrder DO  WITH (NOLOCK) ON TP.GuideSerie=DO.Guide_Serie AND TP.GuideNumber=DO.Guide_Number			
-			INNER JOIN dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK) ON  
-				DO.Guide_Serie=pay.GuideSerie 
-				AND DO.Guide_Number = pay.GuideNumber
-				and pay.IdHeaderRecolection IS NULL;
-			
-
-            UPDATE dbo.DeliveryOrderPaymentDetail
-            SET IdHeaderRecolection = @IDSCHEDULEPICKUP,
-                StartDate = @StartDate,
-                EndDate = @EndDate,
-                DateUpdated = GETDATE(),
-                TokenUpdated = @Token
-            FROM @TempGuides TP
-				INNER JOIN dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK) ON TP.GuideSerie=PAY.GuideSerie AND TP.GuideNumber=PAY.GuideNumber
-            WHERE PAY.IdHeaderRecolection IS NULL;			
-
 			
 
 		END
@@ -293,7 +225,8 @@ BEGIN
             ROLLBACK TRANSACTION;
 			SELECT
 				0 'StatusCode', 
-			ERROR_MESSAGE() 'Description';
+			ERROR_MESSAGE() 'Description',
+			-1 AS 'ServiceId';
 
 			INSERT INTO dbo.RoutePreparationLogError
 			(
@@ -324,7 +257,8 @@ BEGIN
             COMMIT TRANSACTION;
 			SELECT			  
 				1 AS 'StatusCode',
-				'Solicitud de recolección correcta' AS 'Description';
+				'Solicitud de recolección correcta' AS 'Description',
+				@IDSERVICEMANAGEMENT AS 'ServiceId';
         END;
 
 END
