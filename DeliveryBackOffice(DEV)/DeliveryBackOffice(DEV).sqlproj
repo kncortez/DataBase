@@ -1124,6 +1124,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_CollectionServiceQualification.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetRoutePreparationPickupByRange.sql" />
     <Build Include="dbo\Stored Procedures\spwh_SetPickupStatus.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_AssignRouteCollection.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
