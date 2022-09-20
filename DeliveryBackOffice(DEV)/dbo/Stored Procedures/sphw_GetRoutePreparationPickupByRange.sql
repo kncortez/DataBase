@@ -40,7 +40,7 @@ BEGIN
     --INSERT INTO @tbl
     SELECT shp.ServiceRate 'Qualification',
 			srv.IdServiceManagement 'IdServiceManagement' , 
-		   CONVERT(VARCHAR(10), shp.DateCreated, 105) 'datecreated',
+		   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
            CONVERT(VARCHAR(10), shp.StartDate, 105) 'datePickUp',
            CONVERT(VARCHAR(10), shp.StartDate, 108) 'hourPickUp',
 		   ISNULL(ctv.Name, '') 'ServiceVehicle',
