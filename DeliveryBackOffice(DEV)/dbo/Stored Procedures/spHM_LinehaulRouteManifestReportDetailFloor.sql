@@ -11,11 +11,12 @@ BEGIN
 
 	SET NOCOUNT ON;
 
-	 SELECT 
+	 SELECT distinct
+	     ROW_NUMBER () OVER(ORDER BY LRPC.IdLinehaulRoutePreparationContainer ) NumberRow,
 	     C.ContainerDescription,
-		 ISNULL(LRPC.GuideQuantity,0)    AS Totaldeguiasasignadasacontenedor,
-		 SUM(ISNULL(LRPC.ColdPieceQuantity,0))  AS TotaldePiezasFriasAsignadasaPiso,
-		 SUM(ISNULL(LRPC.DryPieceQuantity,0))   AS TotaldePiezasAsignadasaPiso,
+		 ISNULL(LRPC.GuideQuantity,0)      AS Totaldeguiasasignadasacontenedor,
+		 ISNULL(LRPC.ColdPieceQuantity,0)  AS TotaldePiezasFriasAsignadasaPiso,
+		 ISNULL(LRPC.DryPieceQuantity,0)   AS TotaldePiezasAsignadasaPiso,
 		  HL.HubName AS HubDestinyId
   FROM   LinehaulRoutePreparationContainer LRPC WITH (NOLOCK)
 		INNER JOIN LinehaulRoutePreparationContainerDetail LRPCD WITH (NOLOCK)
@@ -25,7 +26,11 @@ BEGIN
 		LEFT JOIN dbo.HubLogistics HL
 		       ON HL.IdHubLogistic = LRPC.HubDestinyId
   WHERE C.ContainerDescription  LIKE ('%lh%') AND LRPC.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
-  GROUP BY LRPC.HubDestinyId,C.ContainerDescription, HL.HubName, LRPC.GuideQuantity
+  GROUP BY LRPC.IdLinehaulRoutePreparationContainer,
+           LRPC.HubDestinyId,C.ContainerDescription, 
+		   HL.HubName, LRPC.GuideQuantity,
+		   LRPC.ColdPieceQuantity,
+		   LRPC.DryPieceQuantity
 
 
 
