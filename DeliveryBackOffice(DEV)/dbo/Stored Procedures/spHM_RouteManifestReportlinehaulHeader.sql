@@ -22,7 +22,10 @@ SELECT DISTINCT
 		  WHEN 
 				LRP.CatVehicleId IS NULL 
 		   THEN LRP.VehicleID ELSE CAST(LRP.CatVehicleId AS VARCHAR) END AS CatVehicleId,
-		CV.Plate,
+		CASE
+		  WHEN 
+				CV.Plate IS NULL 
+		   THEN LRP.VehicleID ELSE CV.Plate END AS Plate,
 		LRP.DriverName,
 		LRP.ContainerQuantity,
 		LRP.GuideQuantity,
