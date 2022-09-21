@@ -67,6 +67,7 @@ AS
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
 			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
 			AND lrp.StationDispatchedId = @Station
+			AND lrpcd.RowStatus = 1
 					Group by lrp.IdLinehaulRoutePreparation, 
 					 cr.CodeRoute, 
 					 lrp.CatVehicleId,
