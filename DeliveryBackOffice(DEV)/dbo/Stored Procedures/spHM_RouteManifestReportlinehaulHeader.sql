@@ -26,7 +26,11 @@ SELECT DISTINCT
 		  WHEN 
 				CV.Plate IS NULL 
 		   THEN LRP.VehicleID ELSE CV.Plate END AS Plate,
-		LRP.DriverName,
+		CASE 
+		   WHEN LRP.DriverName IS NULL THEN (SELECT TOP 1 First_Name 
+		                                     FROM dbo.SenderReceiver  WITH (NOLOCK)
+											 WHERE ID = LRP.SenderReceiverId )   
+			ELSE LRP.DriverName END AS DriverName,
 		LRP.ContainerQuantity,
 		LRP.GuideQuantity,
 		LRP.ColdPieceQuantity + LRP.DryPieceQuantity as PieceQuantity,
@@ -56,7 +60,8 @@ SELECT DISTINCT
 			LRP.DryPieceQuantity,
 			LRPCM.CustomsMarkSerie,
 			HL.HubAbbreviation,
-			LRP.VehicleID
+			LRP.VehicleID,
+			LRP.SenderReceiverId
 
 
    
