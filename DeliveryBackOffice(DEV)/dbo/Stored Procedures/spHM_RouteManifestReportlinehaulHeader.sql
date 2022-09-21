@@ -11,18 +11,24 @@ BEGIN
 	
 	SET NOCOUNT ON;
 
-SELECT distinct
+
+
+
+SELECT DISTINCT
 	    LRP.IdLinehaulRoutePreparation,
-	    FORMAT(LRP.DateLinehaulRoutePreparation,'yyyy-MM-dd HH:mm:ss') DateLinehaulRoutePreparation,
+	    FORMAT(LRP.DateLinehaulRoutePreparation,'dd/MM/yyyy HH:mm:ss') DateLinehaulRoutePreparation,
         CR.CodeRoute,
-		LRP.CatVehicleId,
+		CASE
+		  WHEN 
+				LRP.CatVehicleId IS NULL 
+		   THEN LRP.VehicleID ELSE CAST(LRP.CatVehicleId AS VARCHAR) END AS Vehicle,
 		CV.Plate,
 		LRP.DriverName,
 		LRP.ContainerQuantity,
 		LRP.GuideQuantity,
 		LRP.ColdPieceQuantity + LRP.DryPieceQuantity as PieceQuantity,
 		LRPCM.CustomsMarkSerie,
-		HL.HubName
+		HL.HubAbbreviation
  FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
       LEFT JOIN [DeliveryBackOffice].[dbo].[CatVehicle] CV		WITH (NOLOCK)
 			ON LRP.CatVehicleId = CV.IdVehicle
@@ -46,7 +52,8 @@ SELECT distinct
 			LRP.ColdPieceQuantity,
 			LRP.DryPieceQuantity,
 			LRPCM.CustomsMarkSerie,
-			HL.HubName
+			HL.HubAbbreviation,
+			LRP.VehicleID
 
 
    
