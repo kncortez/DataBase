@@ -21,14 +21,14 @@ SELECT DISTINCT
 		CASE
 		  WHEN 
 				LRP.CatVehicleId IS NULL 
-		   THEN LRP.VehicleID ELSE CAST(LRP.CatVehicleId AS VARCHAR) END AS Vehicle,
+		   THEN LRP.VehicleID ELSE CAST(LRP.CatVehicleId AS VARCHAR) END AS CatVehicleId,
 		CV.Plate,
 		LRP.DriverName,
 		LRP.ContainerQuantity,
 		LRP.GuideQuantity,
 		LRP.ColdPieceQuantity + LRP.DryPieceQuantity as PieceQuantity,
 		LRPCM.CustomsMarkSerie,
-		HL.HubAbbreviation
+		HL.HubAbbreviation AS HubName
  FROM [DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
       LEFT JOIN [DeliveryBackOffice].[dbo].[CatVehicle] CV		WITH (NOLOCK)
 			ON LRP.CatVehicleId = CV.IdVehicle
