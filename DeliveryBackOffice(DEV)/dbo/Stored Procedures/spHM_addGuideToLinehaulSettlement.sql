@@ -241,6 +241,7 @@ BEGIN
 														AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 														AND [LRPCD].[GuideSerie] = @GuideSerie
 														AND [LRPCD].[GuideNumber] = @GuideNumber
+														AND [LRPCD].[RowStatus] = 1
 														AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 														AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId;
 
@@ -301,6 +302,7 @@ BEGIN
 														AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 														AND [LRPCD].[GuideSerie] = @GuideSerie
 														AND [LRPCD].[GuideNumber] = @GuideNumber
+														AND [LRPCD].[RowStatus] = 1
 														AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 														AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId;
 
@@ -391,6 +393,7 @@ BEGIN
 											AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 											AND [LRPCD].[GuideSerie] = @GuideSerie
 											AND [LRPCD].[GuideNumber] = @GuideNumber
+											AND [LRPCD].[RowStatus] = 1
 											AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 											AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId;
 
@@ -451,6 +454,7 @@ BEGIN
 											AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 											AND [LRPCD].[GuideSerie] = @GuideSerie
 											AND [LRPCD].[GuideNumber] = @GuideNumber
+											AND [LRPCD].[RowStatus] = 1
 											AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 											AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId;
 
@@ -547,6 +551,7 @@ BEGIN
 								AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 								AND [LRPCD].[GuideSerie] = @GuideSerie
 								AND [LRPCD].[GuideNumber] = @GuideNumber
+								AND [LRPCD].[RowStatus] = 1
 								AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 								AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId;
 
@@ -607,6 +612,7 @@ BEGIN
 								AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 								AND [LRPCD].[GuideSerie] = @GuideSerie
 								AND [LRPCD].[GuideNumber] = @GuideNumber
+								AND [LRPCD].[RowStatus] = 1
 								AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 								AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId;
 
