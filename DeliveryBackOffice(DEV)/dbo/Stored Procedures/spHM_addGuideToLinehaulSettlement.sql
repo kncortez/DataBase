@@ -59,9 +59,11 @@ BEGIN
 								AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
 								AND [LRPCD].[GuideSerie] = @GuideSerie
 								AND [LRPCD].[GuideNumber] = @GuideNumber
+								AND [LRPCD].[RowStatus] = 1
 								AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
 								AND [LRPC].[ContainerId] = @ContainerId
-								AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId);
+								AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+								AND [LRPC].[RowStatus] = 1);
 
 	SET @DOP_PIECES = (SELECT	COUNT([DOP].[NoPiece]) AS CONT
 						FROM	[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
