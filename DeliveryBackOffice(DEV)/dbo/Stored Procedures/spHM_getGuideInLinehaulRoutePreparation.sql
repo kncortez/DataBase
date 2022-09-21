@@ -11,6 +11,16 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	DECLARE @LIQUIDATED_STATUS_ID AS INT;
+	DECLARE @STOPOVER_STATUS_ID AS INT;
+
+	SET @LIQUIDATED_STATUS_ID = (SELECT [CLS].[IdCatLinehaulStatus]
+								FROM	[dbo].[CatLinehaulStatus] CLS
+								WHERE	[CLS].[StatusName] = 'LIQUIDATED');
+
+	SET @STOPOVER_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
+								FROM	[dbo].[CatLinehaulStatus] CLS
+								WHERE	[CLS].[StatusName] = 'STOPOVER');
 
     SELECT		[LRP].[CatRouteId],
 				[CR].[CodeRoute],
@@ -51,6 +61,8 @@ BEGIN
 		ON		[LRP].[CatLinehaulStatusId] = [CLS].[IdCatLinehaulStatus]
 	INNER JOIN	[dbo].[Container] C
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
+		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
+		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
 	INNER JOIN	[dbo].[CatTypeContainer] CTP
 		ON		[C].[CatTypeContainerId] = [CTP].[IdCatTypeContainer]
 	INNER JOIN	[dbo].[HubLogistics] HL
