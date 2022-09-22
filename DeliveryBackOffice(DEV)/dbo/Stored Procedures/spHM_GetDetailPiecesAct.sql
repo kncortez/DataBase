@@ -28,6 +28,6 @@ BEGIN
 	INNER JOIN	[dbo].[Act] A
 		ON		[AD].ActId = [A].[IdAct]
 		AND		[A].[IdAct] = @ActId
-		AND		[A].[DateOfRoute] = @DateOfRoute
+		AND		CAST([A].[DateOfRoute] AS DATE) = CAST(@DateOfRoute AS DATE)
 		AND		[A].[RowStatus] = 1;
 END
