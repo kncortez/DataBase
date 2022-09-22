@@ -1063,6 +1063,7 @@
     <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletas.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidacionGuiaenActa.sql" />
     <Build Include="dbo\User Defined Types\TblListGuideActa.sql" />
+    <Build Include="dbo\Stored Procedures\GetPiceGuideLinehauls.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
