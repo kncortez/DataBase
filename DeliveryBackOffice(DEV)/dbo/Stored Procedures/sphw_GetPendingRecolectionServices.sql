@@ -3,7 +3,7 @@
 -- Create date: <22-09-2022>
 -- Description:	<Método para carga de servicios pendientes de procesar filtrado por hubs y rango de fechas>
 -- =============================================
-create PROCEDURE sphw_GetPendingRecolectionServices
+CREATE PROCEDURE sphw_GetPendingRecolectionServices
 	-- Add the parameters for the stored procedure here
 	@HubId	INT = -1,
 	@StartDate DATE =NULL,
@@ -28,6 +28,10 @@ BEGIN
 			SET @StartDate = GETDATE();
 		IF @EndDate IS NULL
 			SET @EndDate = GETDATE();
+
+		SELECT 
+			1 AS 'StatusCode', 
+			'Registros obtenidos' AS 'Description';
 		
 		SELECT shp.ServiceRate 'Qualification',
 			srv.IdServiceManagement 'IdServiceManagement' , 
@@ -134,6 +138,9 @@ BEGIN
             ROLLBACK TRANSACTION;  
         ELSE IF XACT_STATE() <> -1  
                 ROLLBACK TRANSACTION SPGetPendingRecolectionServices;  
+		SELECT 
+			0 AS 'StatusCode', 
+			ERROR_MESSAGE() AS 'Description';
 	END CATCH
 
 END
