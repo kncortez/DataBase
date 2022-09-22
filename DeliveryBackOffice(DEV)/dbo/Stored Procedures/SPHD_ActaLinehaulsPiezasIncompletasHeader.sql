@@ -18,7 +18,7 @@ BEGIN
 			   SUM(AD.GuideDryPieceTotal) PiezasSecasTotal,
 			   SUM(AD.GuideColdPieceTotal) PiezasFriasTotal,
 			   AD2.TotalGuide,
-			   SUBSTRING(CONVERT(VARCHAR, A.DateCreated,101),1,10) AS DateCreated,
+			   FORMAT(A.DateCreated,'dd/MM/yyyy') AS DateCreated,
 			   AD.RowStatus
 			 
 		FROM dbo.Act A WITH (NOLOCK)
@@ -40,8 +40,3 @@ BEGIN
 				AD2.TotalGuide,
 				A.DateCreated,AD.RowStatus
 END
-
-
-
-
-				select * from dbo.ActDetail
