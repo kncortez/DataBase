@@ -1129,6 +1129,9 @@
     <Build Include="dbo\Stored Procedures\sphw_SearchVisitPoints.sql" />
     <Build Include="dbo\Stored Procedures\sphw_SetVisitPointClient.sql" />
     <Build Include="dbo\Stored Procedures\sphw_RecolectionLinkClosure.sql" />
+    <Build Include="dbo\Stored Procedures\MigrateUserToSystem.sql" />
+    <Build Include="dbo\Stored Procedures\GetVisitPointDataLinkInformation.sql" />
+    <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
