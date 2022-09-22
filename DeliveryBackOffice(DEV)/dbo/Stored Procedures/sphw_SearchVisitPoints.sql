@@ -32,7 +32,7 @@ BEGIN
 	VP.Department,
 	VP.Latitude,
 	VP.Longitude,
-	ISNULL(UA.IdCityPlace,0),
+	ISNULL(UA.IdCityPlace,0) 'IdCityPlace',
 	CP.CityPlace,
 	PR.PerFirstName 'FirstName',
 	PR.PerLastName 'LastName'
