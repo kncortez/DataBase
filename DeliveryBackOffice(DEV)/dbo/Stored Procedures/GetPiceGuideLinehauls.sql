@@ -13,16 +13,13 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT
-	     B.GuideSerie + CAST(B.GuideNumber AS VARCHAR)  +'-'+ CAST(C.PieceNumber AS VARCHAR) AS Guide 
-	FROM 
-		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer]            A WITH (NOLOCK) 
-			INNER JOIN 
-		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail]      B WITH (NOLOCK)
-				ON  A.IdLinehaulRoutePreparationContainer = B.LinehaulRoutePreparationContainerId
-			INNER JOIN
-		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetailPiece] C WITH (NOLOCK)
-				ON	B.IdLinehaulRoutePreparationContainerDetail = C.LinehaulRoutePreparationContainerDetailId
-    WHERE B.GuideSerie  + CAST(B.GuideNumber AS varchar) = @Guide
-	ORDER BY C.PieceNumber
+	     B.GuideSerie + CAST(B.GuideNumber AS VARCHAR)  +'-'+ CAST(B.NoPiece AS VARCHAR) AS Guide 
+	FROM [dbo].[DeliveryOrderPiece] B WITH (NOLOCK)
+	INNER JOIN
+	      [dbo].StatusOrder C WITH (NOLOCK)
+	ON  B.StatusOrderId =C.StatusOrderId
+    WHERE B.GuideSerie  + CAST(B.GuideNumber AS varchar) = RTRIM(LTRIM(@Guide)) AND 
+		  C.OrderDescription NOT IN('Entregado','Anulado','Entregado En Express Center')
+	ORDER BY B.NoPiece
 
 END
