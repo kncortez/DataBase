@@ -4,7 +4,7 @@
 -- Description:	<Crea una solicitud de recolección>
 -- =============================================
 
-CREATE PROCEDURE sphw_RegisterRecolectionRequest
+CREATE PROCEDURE [dbo].[sphw_RegisterRecolectionRequest]
 	-- Add the parameters for the stored procedure here
 	@TAC1 BIT = NULL,
 	@TAC2 BIT = NULL,
@@ -23,9 +23,15 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-       BEGIN TRANSACTION;
-        BEGIN TRY
+    DECLARE @TranCounter INT;  
+    SET @TranCounter = @@TRANCOUNT;  
+    IF @TranCounter > 0  
+        SAVE TRANSACTION ProcedureSave;  
+    ELSE  
+        BEGIN TRANSACTION;  
+		
 
+        BEGIN TRY
 		IF @TAC1 = 0
 		BEGIN 
 			SELECT			  
@@ -47,6 +53,7 @@ BEGIN
 				'No se ha indicado la fecha y hora de recolección' AS 'Description',
 				-1 AS 'ServiceId';			
 		END
+		ELSE
 		BEGIN 
 
 			IF @Scheduled = 0
@@ -222,7 +229,11 @@ BEGIN
 
         END TRY
         BEGIN CATCH
-            ROLLBACK TRANSACTION;
+			IF @TranCounter = 0  
+				ROLLBACK TRANSACTION;  
+			ELSE IF XACT_STATE() <> -1  
+				ROLLBACK TRANSACTION ProcedureSave;  
+
 			SELECT
 				0 'StatusCode', 
 			ERROR_MESSAGE() 'Description',
@@ -252,9 +263,10 @@ BEGIN
 
         END CATCH;
 
-        IF @@TRANCOUNT > 0
+        IF @IDSERVICEMANAGEMENT IS NOT NULL
         BEGIN
-            COMMIT TRANSACTION;
+	        IF @TranCounter = 0  
+		        COMMIT TRANSACTION;  
 			SELECT			  
 				1 AS 'StatusCode',
 				'Solicitud de recolección correcta' AS 'Description',
