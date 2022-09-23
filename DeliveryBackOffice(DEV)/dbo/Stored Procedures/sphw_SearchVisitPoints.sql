@@ -19,45 +19,49 @@ BEGIN
 	SELECT			  
 	1 AS 'StatusCode',
 	'Registros obtenidos' AS 'Description';
-	
 
-	SELECT 
-	VP.CodeOfReference,
-	VP.DescriptionOfClient,
-	VP.ContactName,
-	VP.Address,
-	VP.Phone,
-	VP.Email,
-	VP.Town,
-	VP.Department,
-	VP.Latitude,
-	VP.Longitude,
-	ISNULL(UA.IdCityPlace,0) 'IdCityPlace',
-	CP.CityPlace,
-	PR.PerFirstName 'FirstName',
-	PR.PerLastName 'LastName'
-	FROM DBO.VisitPointClient VP
-	INNER JOIN DBO.UserAddress UA ON VP.CodeOfReference=UA.CodeOfReference
-	LEFT JOIN [DeliveryBackOffice].[dbo].[Account] Ac WITH(NOLOCK)
-				ON Ac.IdCustomer = VP.CustomerID
-	LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
-				ON RBUBA.RuaIdAccount = Ac.AccIdAccount
-	LEFT JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK)
-				ON RU.UsrIdUser = RBUBA.RuaIdUser
-	LEFT JOIN [DeliveryBackOffice].[dbo].[Person] PR WITH(NOLOCK)
-				ON PR.PerIdPerson = RU.UsrIdPerson
-	LEFT JOIN DBO.CatCityPlace CP ON UA.IdCityPlace=CP.IdCityPlace
-	WHERE 
-	(
-		@filter =-1
-		OR
-		(@filter = 0 AND VP.Phone  LIKE '%'+@search+'%' COLLATE Latin1_General_CI_AI)
-		OR
-		(@filter = 1 AND VP.Email LIKE '%'+@search+'%' COLLATE Latin1_General_CI_AI)
-		OR
-		(@filter = 2 AND VP.DescriptionOfClient LIKE '%'+@search+'%' COLLATE Latin1_General_CI_AI)
-	)
-	AND VP.StatusClient = 1
+
+		SELECT 
+		VP.CodeOfReference,
+		VP.DescriptionOfClient,
+		VP.ContactName,
+		VP.Address,
+		VP.Phone,
+		VP.Email,
+		VP.Town,
+		VP.Department,
+		VP.Latitude,
+		VP.Longitude,
+		ISNULL(UA.IdCityPlace,0) 'IdCityPlace',
+		CP.CityPlace,
+		PR.PerFirstName 'FirstName',
+		PR.PerLastName 'LastName',
+		AC.AccIdAccount 'IdAccount',
+		IIF((CU.[Name] = 'Cliente Referenciado' AND CU.Domain = '@forzadelivery'),1,0) 'IsReferredCustomer',
+		CU.Name 'CustomerName'
+		FROM DBO.VisitPointClient VP
+		LEFT JOIN DBO.UserAddress UA ON VP.CodeOfReference=UA.CodeOfReference
+		LEFT JOIN DBO.Customer CU ON CU.IdCustomer=VP.CustomerID
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Account] Ac WITH(NOLOCK)
+					ON Ac.IdCustomer = VP.CustomerID
+		LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
+					ON RBUBA.RuaIdAccount = Ac.AccIdAccount
+		LEFT JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK)
+					ON RU.UsrIdUser = RBUBA.RuaIdUser
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Person] PR WITH(NOLOCK)
+					ON PR.PerIdPerson = RU.UsrIdPerson
+		LEFT JOIN DBO.CatCityPlace CP ON UA.IdCityPlace=CP.IdCityPlace
+		WHERE 
+		(
+			@filter =-1
+			OR
+			(@filter = 0 AND VP.Phone  LIKE '%'+@search+'%' COLLATE Latin1_General_CI_AI)
+			OR
+			(@filter = 1 AND VP.Email = @search COLLATE Latin1_General_CI_AI)
+			OR
+			(@filter = 2 AND CONCAT(PR.PerFirstName,' ',PR.PerLastName) = '%'+@search+'%' COLLATE Latin1_General_CI_AI)
+		)
+		AND VP.StatusClient = 1	;
 
 	
 END
