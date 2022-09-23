@@ -1054,12 +1054,19 @@
     <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
     <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
     <Build Include="dbo\Stored Procedures\TrackRequestedGuides.sql" />
+    <Build Include="dbo\Tables\NotificationMediumByTypeIncidence.sql" />
+    <Build Include="dbo\Tables\IncidenceActionByTypeIncidence.sql" />
+    <Build Include="dbo\Tables\CatNotificationMedium.sql" />
+    <Build Include="dbo\Tables\CatIncidenceReview.sql" />
+    <Build Include="dbo\Tables\CatIncidenceClasification.sql" />
+    <Build Include="dbo\Tables\CatIncidenceAction.sql" />
     <Build Include="dbo\Stored Procedures\GetTotalAmountOfBatchCOD.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetRoutePreparation.sql" />
     <Build Include="dbo\Tables\ServiceManagementDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetGuidesRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_ExtractGuidePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_ReassignGuidePreparation.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetRoutePreparationDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
