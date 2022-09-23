@@ -1127,6 +1127,7 @@
     <Build Include="dbo\Tables\TermsAndConditionsByService.sql" />
     <Build Include="dbo\Stored Procedures\sphw_RegisterRecolectionRequest.sql" />
     <Build Include="dbo\Stored Procedures\sphw_SearchVisitPoints.sql" />
+    <Build Include="dbo\Tables\HubLogisticByUser.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
