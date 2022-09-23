@@ -7,8 +7,12 @@
     [DateCreated]         DATETIME      NOT NULL,
     [TokenUpdated]        NVARCHAR (50) NULL,
     [DateUpdated]         DATETIME      NULL,
-    CONSTRAINT [PK_HubLogisticByUser] PRIMARY KEY CLUSTERED ([IdHubLogisticByUser] ASC)
+    CONSTRAINT [PK_HubLogisticByUser] PRIMARY KEY CLUSTERED ([IdHubLogisticByUser] ASC),
+    CONSTRAINT [FK_HubLogisticByUser_HubLogistic] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
+    CONSTRAINT [FK_HubLogisticByUser_RegisterUser] FOREIGN KEY ([UserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 GO
