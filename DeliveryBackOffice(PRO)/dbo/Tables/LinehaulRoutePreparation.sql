@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparation] (
     [IdLinehaulRoutePreparation]   INT            IDENTITY (1, 1) NOT NULL,
     [StationDispatchedId]          INT            NULL,
-    [CatLinehaulStatusId]          INT            NOT NULL,
+    [CatLinehaulStatusId]          INT            CONSTRAINT [DF_LinehaulRoutePreparation_CatLinehaulStatusId] DEFAULT ((1)) NOT NULL,
     [CatRouteId]                   INT            NOT NULL,
     [SenderReceiverId]             INT            NULL,
     [CatVehicleId]                 INT            NULL,
@@ -30,6 +30,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Vehicle] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 GO

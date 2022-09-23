@@ -14,9 +14,10 @@
     [TokenUpdated]                             NVARCHAR (50) NULL,
     [DateUpdated]                              DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlementContainerDetail] ASC),
-    CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_RouteSettlementContainer] FOREIGN KEY ([LinehaulRouteSettlementContainerId]) REFERENCES [dbo].[LinehaulRouteSettlementContainer] ([IdLinehaulRouteSettlementContainer])
 );
+
+
 
 
 

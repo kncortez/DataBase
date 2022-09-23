@@ -8,17 +8,19 @@
     [DryPieceQuantity]                          INT           NOT NULL,
     [ColdPieceQuantity]                         INT           NOT NULL,
     [IsOpenProcess]                             INT           NOT NULL,
-    [UserProcess]                               NVARCHAR (50) NULL,
     [RowStatus]                                 BIT           DEFAULT ((1)) NOT NULL,
     [TokenCreated]                              NVARCHAR (50) NOT NULL,
     [DateCreated]                               DATETIME      NOT NULL,
     [TokenUpdated]                              NVARCHAR (50) NULL,
     [DateUpdated]                               DATETIME      NULL,
+    [UserProcess]                               NVARCHAR (50) NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparationContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Container] FOREIGN KEY ([LinehaulRoutePreparationContainerId]) REFERENCES [dbo].[LinehaulRoutePreparationContainer] ([IdLinehaulRoutePreparationContainer]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_ContainerGuide] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC)
 );
+
+
 
 
 

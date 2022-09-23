@@ -7,17 +7,32 @@ CREATE PROCEDURE [dbo].[spHM_updateDeliveryOrderPieceStatus]
 	@GuideSerie AS NVARCHAR(25),
 	@GuideNumber AS NVARCHAR(50),
 	@NoPiece AS INT,
-	@StatusOrderId AS INT,
+	@IsSettlement AS INT,
 	@TknUser AS NVARCHAR(50)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	DECLARE @STATUS_ORDER_ID AS INT;	-- StatusOrder
+
+	IF (@IsSettlement = 0)
+		BEGIN
+			SET @STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
+									FROM	[dbo].[StatusOrder] SO
+									WHERE	[SO].[OrderDescription] = 'En Tránsito');
+		END
+	ELSE
+		BEGIN
+			SET @STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
+									FROM	[dbo].[StatusOrder] SO
+									WHERE	[SO].[OrderDescription] = 'Arribó a las instalaciones');
+		END
+
 	BEGIN TRANSACTION
 	BEGIN TRY
 		UPDATE	[DeliveryOrderPiece]
-		SET		[StatusOrderId] = @StatusOrderId
+		SET		[StatusOrderId] = @STATUS_ORDER_ID
 		WHERE	[GuideSerie] = @GuideSerie
 			AND [GuideNumber] = @GuideNumber
 			AND [NoPiece] = @NoPiece;

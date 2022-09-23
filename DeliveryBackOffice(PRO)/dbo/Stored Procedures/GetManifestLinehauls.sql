@@ -10,28 +10,50 @@ CREATE PROCEDURE [dbo].[GetManifestLinehauls]
 AS
 
 	BEGIN
-
 	SELECT DISTINCT lrp.IdLinehaulRoutePreparation, 
 	cr.CodeRoute, 
-	cv.CodeName AS CodeVehicle, 
-	(sr.First_Name+ ' '+sr.Last_Name) AS Courier, 
+	IIF((lrp.CatVehicleId IS NULL), lrp.VehicleID, cv.CodeName) CodeVehicle,
+	IIF((lrp.SenderReceiverId IS NULL), lrp.DriverName, sr.First_Name+ ' '+sr.Last_Name) Courier,
 	cls.StatusName,
 	cls.StatusDescription,
 	lrp.DateCreated, 
 	lrp.DateLinehaulRoutePreparation,
 	lrp.ContainerQuantity,
-	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'BOX') AS TotalGuideNoPiso,
-	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)  Where ctc.TypeContainerSerie = 'BOX') AS TotalPiecesNoPiso,
-	(select lrp.GuideQuantity  Where ctc.TypeContainerSerie = 'LH') AS TotalGuidePiso,
-	(select (lrp.ColdPieceQuantity+ lrp.DryPieceQuantity)   Where ctc.TypeContainerSerie = 'LH') AS TotalPiecesPiso,
+	(select sum(lrpc2.GuideQuantity) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
+	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
+	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
+	inner join Container ctn2 WITH (NOLOCK)
+	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 1 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
+			AND lrp2.StationDispatchedId = @Station) AS TotalGuideNoPiso,
+
+	(select top 1 ((sum(lrpc2.ColdPieceQuantity))+(sum(lrpc2.DryPieceQuantity))) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
+	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
+	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
+	inner join Container ctn2 WITH (NOLOCK)
+	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 1 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
+			AND lrp2.StationDispatchedId = @Station) AS TotalPiecesNoPiso,
+
+	(select sum(lrpc2.GuideQuantity) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
+	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
+	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
+	inner join Container ctn2 WITH (NOLOCK)
+	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 2 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
+			AND lrp2.StationDispatchedId = @Station) AS TotalGuidePiso,
+
+	(select top 1 ((sum(lrpc2.ColdPieceQuantity))+(sum(lrpc2.DryPieceQuantity))) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
+	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
+	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
+	inner join Container ctn2 WITH (NOLOCK)
+	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 2 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
+			AND lrp2.StationDispatchedId = @Station) AS TotalPiecesPiso,
 	(select sum(lrpcd.GuideDryPieceTotal) - sum(lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
 	(select sum(lrpcd.GuideColdPieceTotal) - sum(lrpcd.ColdPieceQuantity)) AS DifPiecesCold
 		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
 		INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON lrp.CatRouteId = cr.IdRoute
-		INNER JOIN CatVehicle cv WITH (NOLOCK)
+		LEFT JOIN CatVehicle cv WITH (NOLOCK)
 		ON lrp.CatVehicleId = cv.IdVehicle
-		INNER JOIN SenderReceiver sr WITH (NOLOCK)
+		LEFT JOIN SenderReceiver sr WITH (NOLOCK)
 		ON lrp.SenderReceiverId = sr.ID
 		INNER JOIN CatLinehaulStatus cls WITH (NOLOCK)
 		ON lrp.CatLinehaulStatusId = cls.IdCatLinehaulStatus
@@ -45,8 +67,13 @@ AS
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
 			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
 			AND lrp.StationDispatchedId = @Station
-			Group by lrp.IdLinehaulRoutePreparation, 
+			AND lrpcd.RowStatus = 1
+					Group by lrp.IdLinehaulRoutePreparation, 
 					 cr.CodeRoute, 
+					 lrp.CatVehicleId,
+					 lrp.VehicleID,
+					 lrp.SenderReceiverId,
+					 lrp.DriverName,
 					 cv.CodeName, 
 					 sr.First_Name, 
 					 sr.Last_Name, 
@@ -55,7 +82,6 @@ AS
 					 lrp.DateCreated, 
 					 lrp.DateLinehaulRoutePreparation,
 					 lrp.ContainerQuantity,
-					 ctc.TypeContainerSerie,
 					 lrp.GuideQuantity,
 					 lrp.ColdPieceQuantity,
 					 lrp.DryPieceQuantity
