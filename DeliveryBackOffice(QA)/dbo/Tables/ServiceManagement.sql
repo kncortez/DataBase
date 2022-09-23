@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_SubTypeServiceManagmentId]
     ON [dbo].[ServiceManagement]([SubTypeServiceManagmentId] ASC)
@@ -58,4 +60,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de p
 GO
 CREATE NONCLUSTERED INDEX [idx_idpurrouteassigment]
     ON [dbo].[ServiceManagement]([IdPuRouteAssigment] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup]
+    ON [dbo].[ServiceManagement]([IdSchedulePickup] ASC);
 

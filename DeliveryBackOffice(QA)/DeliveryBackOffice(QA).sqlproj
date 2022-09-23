@@ -1105,6 +1105,19 @@
     <Build Include="dbo\Stored Procedures\spHM_addPieceToLinehaulRoutePreparationContainerDetailPiece.sql" />
     <Build Include="dbo\Stored Procedures\spHM_addGuideToLinehaulRoutePreparationContainerDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_addContainerToLinehaulRoutePreparation.sql" />
+    <Build Include="dbo\Tables\VisitPointClient_Parser.sql" />
+    <Build Include="dbo\Tables\DeliveryOrderRoute.sql" />
+    <Build Include="dbo\Tables\DeliveryOrderContentDelivered.sql" />
+    <Build Include="dbo\Tables\DeliveryOrderContent.sql" />
+    <Build Include="dbo\Tables\Customer_Parser.sql" />
+    <Build Include="dbo\Stored Procedures\SetServiceRoutes.sql" />
+    <Build Include="dbo\Stored Procedures\SetExternalDelivery.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\GetFreshDeliveryRouteHeader.sql" />
+    <Build Include="dbo\Stored Procedures\GetFreshDeliveryRouteGuides.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRoutesParcel.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRoutesContent.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRoutes.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
