@@ -10,12 +10,15 @@ BEGIN
 	
 	SET NOCOUNT ON;
 
- SELECT  LRPC.LinehaulRoutePreparationId,
+ SELECT  DISTINCT
+       ROW_NUMBER() OVER(
+       ORDER BY  LRPC.LinehaulRoutePreparationId) AS NumberRow,
+        LRPC.LinehaulRoutePreparationId,
          C.ContainerDescription,
 		ISNULL(LRPC.GuideQuantity,0)   AS Totaldeguiasasignadasacontenedor,
-		SUM(ISNULL(LRPC.ColdPieceQuantity,0))   AS TotaldePiezasFriasAsignadasaContenedor,
-		SUM(ISNULL(LRPC.DryPieceQuantity,0))    AS TotaldePiezasAsignadasContenedor,
-		 HL.HubName AS HubDestinyId
+		ISNULL(LRPC.ColdPieceQuantity,0)  AS TotaldePiezasFriasAsignadasaContenedor,
+		ISNULL(LRPC.DryPieceQuantity,0)    AS TotaldePiezasAsignadasContenedor,
+		 HL.HubAbbreviation AS HubDestinyId
   FROM   LinehaulRoutePreparationContainer LRPC WITH (NOLOCK)
 		INNER JOIN LinehaulRoutePreparationContainerDetail LRPCD WITH (NOLOCK)
 			ON LRPC.IdLinehaulRoutePreparationContainer = LRPCD.LinehaulRoutePreparationContainerId
@@ -27,7 +30,9 @@ BEGIN
 	    AND LRPC.GuideQuantity>0
 	 GROUP BY LRPC.LinehaulRoutePreparationId, 
 	              C.ContainerDescription, 
-			     HL.HubName,
-				 LRPC.GuideQuantity
+			     HL.HubAbbreviation,
+				 LRPC.GuideQuantity,
+				 LRPC.ColdPieceQuantity,
+				 LRPC.DryPieceQuantity
 
 END
