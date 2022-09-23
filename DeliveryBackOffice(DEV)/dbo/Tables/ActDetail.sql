@@ -7,70 +7,11 @@
     [GuideColdPieceTotal] INT           NOT NULL,
     [DryPieceQuantity]    INT           NOT NULL,
     [ColdPieceQuantity]   INT           NOT NULL,
-    [RowStatus]           BIT           DEFAULT ((1)) NOT NULL,
+    [RowStatus]           BIT           CONSTRAINT [DF__ActDetail__RowSt__481C70BE] DEFAULT ((1)) NOT NULL,
     [TokenCreated]        NVARCHAR (50) NOT NULL,
     [DateCreated]         DATETIME      NOT NULL,
     [TokenUpdated]        NVARCHAR (50) NULL,
     [DateUpdated]         DATETIME      NULL,
-    PRIMARY KEY CLUSTERED ([IdActDetail] ASC),
-    CONSTRAINT [FK_LinehaulRoutePreparationActDetail_Act] FOREIGN KEY ([ActId]) REFERENCES [dbo].[Act] ([IdAct]),
-    CONSTRAINT [FK_LinehaulRoutePreparationActDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [UQ_LinehaulRoutePreparationActDetail_ActGuide] UNIQUE NONCLUSTERED ([ActId] ASC, [GuideSerie] ASC, [GuideNumber] ASC)
+    CONSTRAINT [PK__ActDetai__97FDCB8BB3BA02E6] PRIMARY KEY CLUSTERED ([IdActDetail] ASC)
 );
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'DateCreated';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'TokenCreated';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lógico', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'RowStatus';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de piezas frías escaneadas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'ColdPieceQuantity';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de piezas secas escaneadas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'DryPieceQuantity';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Total de piezas frías asignadas a la guía enlazada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'GuideColdPieceTotal';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Total de piezas secas asignadas a la guía enlazada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'GuideDryPieceTotal';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de guía asignada | Tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'GuideNumber';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Serie de guía asignada | Tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'GuideSerie';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de encabezado de asignación de acta a preparación de ruta | Tabla LinehaulRoutePreparationAct', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'ActId';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail', @level2type = N'COLUMN', @level2name = N'IdActDetail';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de actas (justificaciones) para piezas faltantes en procesos de recolección o linehaul.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ActDetail';
 
