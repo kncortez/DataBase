@@ -3,7 +3,7 @@
 -- Create date: <2022-08-5>
 -- Description:	<obtener piezas de guía para generar, Actas de justificación piezas faltantes rutas Linehauls>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetActasPiceGuideLinehauls]
+CREATE PROCEDURE [dbo].[GetActPieceGuideLinehauls]
 
 @IdActa AS  INT
 	

@@ -3,7 +3,7 @@
 -- Create date: <Create Date,2022-08-17>
 -- Description:	<Description, SP para anulación de actas, detalle y piezas (borrado logico)>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_AnularActaLinehauls] 
+CREATE PROCEDURE [dbo].[SPHD_CancelLinehaulsAct] 
 	-- Add the parameters for the stored procedure here
 @IdAct AS INT,
 @Token AS NVARCHAR(100)

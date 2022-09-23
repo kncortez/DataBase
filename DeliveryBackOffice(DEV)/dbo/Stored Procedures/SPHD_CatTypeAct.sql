@@ -3,7 +3,7 @@
 -- Create date: <2022-08-30>
 -- Description:	<SP para mostrar tipos catálogo  de actas>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_CatTypeActa]
+CREATE PROCEDURE [dbo].[SPHD_CatTypeAct]
 	
 AS
 BEGIN

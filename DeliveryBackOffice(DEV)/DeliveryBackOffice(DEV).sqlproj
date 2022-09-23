@@ -1054,17 +1054,17 @@
     <Build Include="dbo\Tables\ActDetailPiece.sql" />
     <Build Include="dbo\Tables\ActDetail.sql" />
     <Build Include="dbo\Tables\Act.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_ActaLineHaulsDeletePice.sql" />
-    <Build Include="dbo\Stored Procedures\GetActasPiceGuideLinehauls.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_CatTypeActa.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_AnularActaLinehauls.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletasHeader.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletasDetail.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_ActaLinehaulsPiezasIncompletas.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_ValidacionGuiaenActa.sql" />
     <Build Include="dbo\User Defined Types\TblListGuideActa.sql" />
-    <Build Include="dbo\Stored Procedures\GetPiceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_RouteLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ValidationGuideinAct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_CatTypeAct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_CancelLinehaulsAct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncompleteHeader.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncomplete.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncompletaeDetail.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActLineHaulsDeletePiece.sql" />
+    <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

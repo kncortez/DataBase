@@ -3,7 +3,7 @@
 -- Create date: <2022-08-11>
 -- Description:	<Encabezado de reporte de actas rutas linehauls>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ActaLinehaulsPiezasIncompletasHeader] 
+CREATE PROCEDURE [dbo].[SPHD_ActLinehaulsPieceIncompleteHeader] 
 	
 @IdAct AS INT
 	

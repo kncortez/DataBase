@@ -3,7 +3,7 @@
 -- Create date: <2022-9-19>
 -- Description:	<SP para validar que una pieza de guía no este en un acta>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ValidacionGuiaenActa]
+CREATE PROCEDURE [dbo].[SPHD_ValidationGuideinAct]
 @Guidepart AS NVARCHAR(20)
 
 

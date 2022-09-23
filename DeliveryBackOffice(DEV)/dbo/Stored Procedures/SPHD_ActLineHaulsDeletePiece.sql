@@ -3,7 +3,7 @@
 -- Create date: <2022/08/30>
 -- Description:	<SP para anular pieza de un acta de justificación pieza incompleta ruta Linehauls>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ActaLineHaulsDeletePice]
+CREATE PROCEDURE [dbo].[SPHD_ActLineHaulsDeletePiece]
 @IdAct AS INT,
 @GuideNumberPice AS NVARCHAR(20),
 @Token AS NVARCHAR (100)

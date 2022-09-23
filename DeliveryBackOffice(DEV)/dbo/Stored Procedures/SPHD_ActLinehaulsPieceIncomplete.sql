@@ -3,7 +3,7 @@
 -- Create date: <2022-08-09>
 -- Description:	<SP para crear Acta de justificaciónd e piezas incompletas en las guías>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ActaLinehaulsPiezasIncompletas] 
+CREATE PROCEDURE [dbo].[SPHD_ActLinehaulsPieceIncomplete] 
 	@TblListGuideActa TblListGuideActa READONLY,
 	@Token AS NVARCHAR(50),
 	@ActType AS NVARCHAR(50),
@@ -19,6 +19,7 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
+
 	DECLARE @IdActaNew AS INT;
 	DECLARE @IdActaDetailNew AS INT;
 	DECLARE @Numero AS INT;
@@ -63,7 +64,7 @@ BEGIN
 			        Getdate(),
 					@ResponsibleName,
 					@ResponsibleCUI,
-					(select Top 1 IdCatTypeAct from CatTypeAct where ActName = @ActType),
+					(SELECT Top 1 IdCatTypeAct FROM CatTypeAct WHERE ActName = @ActType),
 					GETDATE(),
 					1,
 					@Token,
@@ -80,7 +81,10 @@ BEGIN
 
 	   SET  @DryPieceQuantity  =  @DryPieceQuantity  + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 1 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT))
 	   SET  @ColdPieceQuantity =  @ColdPieceQuantity + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 0 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT)) 
-		 SET @RESULT=@RESULT+1;
+	   SET  @RESULT=@RESULT+1;
+
+	   IF (NOT EXISTS(SELECT TOP 1 1 FROM dbo.ActDetail WITH (NOLOCK) WHERE GuideSerie=@Serie AND GuideNumber=@Numero))
+	   BEGIN
 		 INSERT INTO [dbo].[ActDetail]
 		   (
 		   ActId,	
@@ -107,7 +111,7 @@ BEGIN
 				   )
 		   SET @IdActaDetailNew = SCOPE_IDENTITY();
 
-		  
+		  END
 
 		   
 ----------Insert Pice  of Actas-----------------

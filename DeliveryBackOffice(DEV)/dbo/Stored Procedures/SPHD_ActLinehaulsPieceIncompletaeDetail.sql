@@ -3,7 +3,7 @@
 -- Create date: <2022-08-11>
 -- Description:	<detalle de actas por justificacion de piezas incompletas>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ActaLinehaulsPiezasIncompletasDetail] 
+CREATE PROCEDURE [dbo].[SPHD_ActLinehaulsPieceIncompletaeDetail] 
 	
 @IdAct AS INT
 	
