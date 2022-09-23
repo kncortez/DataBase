@@ -1061,11 +1061,12 @@
     <Build Include="dbo\Stored Procedures\SPHD_CancelLinehaulsAct.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncompleteHeader.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncomplete.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncompletaeDetail.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ActLineHaulsDeletePiece.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncomplete.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncompleteDetail.sql" />
+    <Build Include="dbo\Stored Procedures\GetPickupVehiclesByUserHub.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
