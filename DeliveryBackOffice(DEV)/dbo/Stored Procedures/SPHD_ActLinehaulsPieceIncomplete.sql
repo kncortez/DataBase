@@ -83,7 +83,8 @@ BEGIN
 	   SET  @ColdPieceQuantity =  @ColdPieceQuantity + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 0 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT)) 
 	   SET  @RESULT=@RESULT+1;
 
-	   IF (NOT EXISTS(SELECT TOP 1 1 FROM dbo.ActDetail WITH (NOLOCK) WHERE GuideSerie=@Serie AND GuideNumber=@Numero))
+	   IF (NOT EXISTS(SELECT TOP 1 1 FROM dbo.ActDetail WITH (NOLOCK) WHERE GuideSerie=@Serie AND GuideNumber=@Numero AND ActId=@IdActaNew))
+	  
 	   BEGIN
 		 INSERT INTO [dbo].[ActDetail]
 		   (
