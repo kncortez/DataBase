@@ -42,6 +42,10 @@ BEGIN
 						-- Remove container from LinehaulRoutePreparationContainer
 						UPDATE	[LinehaulRoutePreparationContainer]
 						SET		[RowStatus] = 0,
+								[HubDestinyId] = NULL,
+								[GuideQuantity] = 0,
+								[DryPieceQuantity] = 0,
+								[ColdPieceQuantity] = 0,
 								[TokenUpdated] = @TknUser, 
 								[DateUpdated] = SYSDATETIME()
 						WHERE	[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId

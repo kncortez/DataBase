@@ -3,6 +3,7 @@
     [LinehaulRoutePreparationId]          INT           NOT NULL,
     [ContainerId]                         INT           NOT NULL,
     [HubDestinyId]                        INT           NULL,
+    [CatLinehaulStatusId]                 INT           CONSTRAINT [DF_LinehaulRoutePreparationContainer_CatLinehaulStatusId] DEFAULT ((1)) NOT NULL,
     [GuideQuantity]                       INT           NOT NULL,
     [DryPieceQuantity]                    INT           NOT NULL,
     [ColdPieceQuantity]                   INT           NOT NULL,
@@ -12,11 +13,16 @@
     [TokenUpdated]                        NVARCHAR (50) NULL,
     [DateUpdated]                         DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparationContainer] ASC),
+    CONSTRAINT [FK_LinehaulRoutePreparationContainer_CatLinehaulStatus] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_Container] FOREIGN KEY ([ContainerId]) REFERENCES [dbo].[Container] ([IdContainer]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_HubLogistics] FOREIGN KEY ([HubDestinyId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_RoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_Container] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationId] ASC, [ContainerId] ASC)
 );
+
+
+
+
 
 
 
@@ -71,4 +77,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de re
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del HUB destino asignado | Tabla HubLogistics', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainer', @level2type = N'COLUMN', @level2name = N'HubDestinyId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del status asignado | Tabla CatLinehaulStatus', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainer', @level2type = N'COLUMN', @level2name = N'CatLinehaulStatusId';
 
