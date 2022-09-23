@@ -4,7 +4,6 @@
 -- Create date: <2022-09-13>
 -- Description:	<Devuelve todas las recolecciones de un usuario individual filtradas por un rango de fechas, siendo máximo 30 días atras>
 -- =============================================
-
 CREATE PROCEDURE [dbo].[sphw_GetRoutePreparationPickupByRange]
 	@startDate AS DATE = NULL, --Fecha inicio de filtro
 	@endDate AS DATE = NULL, --Fecha fin de filtro
@@ -54,7 +53,7 @@ BEGIN
 			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
 			   ISNULL(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
 			   css.[Name] StatusName,
-			   vpc.Address 'OriginAddress',
+			   ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
@@ -72,9 +71,9 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
 		WHERE
-			CONVERT(date, shp.StartDate) >= @startDate
+			CONVERT(date, shp.DateCreated) >= @startDate
 			AND
-			CONVERT(date, shp.StartDate) <= @endDate
+			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND shp.AccountId = @accountId
 		
@@ -97,7 +96,7 @@ BEGIN
 			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
 			   ISNULL(QuantityOverDimensionedPackage,0)'QuantityOverDimensionedPackage',
 			   css.[Name] StatusName,
-			   vpc.Address 'OriginAddress',
+			   ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
 			   vpc.DescriptionOfClient 'OriginAddressName',		   
 			   vpc.Department 'OriginAddressProvince',
 			   vpc.Town 'OriginAddressTown',           
@@ -137,9 +136,9 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] as sr WITH (NOLOCK)
 				ON ra.IdCurrierMan = sr.ID
 		WHERE
-			CONVERT(date, shp.StartDate) >= @startDate
+			CONVERT(date, shp.DateCreated) >= @startDate
 			AND
-			CONVERT(date, shp.StartDate) <= @endDate
+			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
 
@@ -153,5 +152,3 @@ BEGIN
 	END
 	   
 END;
-
----select * from HubLogistics
