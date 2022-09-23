@@ -43,6 +43,7 @@ BEGIN
 					CHARINDEX('-',lg.NumberGuidePice)-3)  AS INT),
 				    lg.NumberGuidePice
 				FROM @TblListGuideActa lg
+				ORDER BY lg.NumberGuidePice ASC
 
 					
 		SELECT @IdRoute = CR.IdRoute FROM dbo.CatRoute CR WITH (NOLOCK) where CodeRoute = @CodeRoute  		    
@@ -71,13 +72,14 @@ BEGIN
 					GETDATE()) 
 			SET @IdActaNew = SCOPE_IDENTITY();
 ------------Insert Detail Acta ----------------------------
-WHILE EXISTS (SELECT TOP 1 1 FROM @RevalueGuides)
+WHILE EXISTS (SELECT TOP 1 1 FROM @RevalueGuides )
 BEGIN
 					SELECT TOP 1
 						@Serie  =  rg.GuideSerie,
 						@Numero =  rg.GuideNumber,
 						@PICE =    rg.Pice
-				   FROM @RevalueGuides rg
+				   FROM @RevalueGuides rg ORDER BY GuideSerie+CAST(GuideNumber AS VARCHAR)+'-'+ CAST(Pice AS VARCHAR) ASC
+				   
 
 	   SET  @DryPieceQuantity  =  @DryPieceQuantity  + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 1 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT))
 	   SET  @ColdPieceQuantity =  @ColdPieceQuantity + (SELECT COUNT(NoPiece)  FROM dbo.DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie = @Serie AND GuideNumber = @Numero AND IsDry = 0 AND NoPiece = CAST(SUBSTRING(@PICE,CHARINDEX('-',@PICE)+1,3) AS INT)) 
