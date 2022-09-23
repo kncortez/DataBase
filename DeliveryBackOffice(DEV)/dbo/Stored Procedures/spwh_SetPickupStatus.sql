@@ -13,6 +13,13 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+    DECLARE @TranCounter INT;  
+    SET @TranCounter = @@TRANCOUNT;  
+    IF @TranCounter > 0  
+        SAVE TRANSACTION SPSetPickupStatus;  
+    ELSE  
+        BEGIN TRANSACTION;  
+
 	-- Control actualización
 	DECLARE @RModified INT =0;
 
@@ -20,7 +27,6 @@ BEGIN
 	DECLARE @StatusOld INT;
 	DECLARE @StatusNew INT;
 	DECLARE @statusschedulepickup BIT;
-	BEGIN TRANSACTION
 	BEGIN TRY
 
 		SELECT
@@ -69,43 +75,48 @@ BEGIN
 			SELECT			  
 				0 AS 'StatusCode',
 				'Estado inválido para ser cancelado/activado' AS 'Description', 
-				@StatusOld 'Status'
+				@StatusOld 'Status';
 
+		IF @TranCounter = 0  
+            COMMIT TRANSACTION; 
 	END TRY
 	BEGIN CATCH
-	SELECT 
+		SELECT 
 			0 'StatusCode', 
 			ERROR_MESSAGE() 'Description', 
-			@Status 'Status'
-			ROLLBACK TRANSACTION;
+			@Status 'Status';
+
+        IF @TranCounter = 0  
+            ROLLBACK TRANSACTION;  
+        ELSE IF XACT_STATE() <> -1  
+                ROLLBACK TRANSACTION SPSetPickupStatus;  
 	END CATCH
 
 	IF (@RModified > 0)
 	BEGIN
 
-		INSERT INTO [dbo].[ServiceManagementStatusLog] ([ServiceManagementId]
-		, [ServiceStatusIdOld]
-		, [ServiceStatusIdNew]
-		, [RowStatus]
-		, [TokenCreated]
-		, [DateCreated]
-		, [TokenUpdated]
-		, [DateUpdated])
-			VALUES (@ServiceManagementId, @StatusOld, @StatusNew, 1, @Token, GETDATE(), NULL, NULL)
-
-		INSERT INTO [dbo].[SchedulePickupStatusLog] ([SchedulePickupId]
-		, [SchedulePickupStatus]
-		, [RowStatus]
-		, [TokenCreated]
-		, [DateCreated]
-		, [TokenUpdated]
-		, [DateUpdated])
-			VALUES (@IdchedulePickup, @Status, 1, @Token, GETDATE(), NULL, NULL)
+        INSERT INTO EventService
+        (
+            ServiceManagementId,
+            ServiceStatusId,
+            RowStauts,
+            TokenCreated,
+            DateCreated,
+            Observations
+        )
+        VALUES
+        (	
+			@ServiceManagementId, 
+			@StatusNew, 
+			1, 
+			@Token, 
+			GETDATE(), 
+			IIF(@Status=1,'Servicio reactivado','Servicio cancelado')
+		);
 		SELECT			  
 			1 'StatusCode',
 			'Registro actualizado correctamente' 'Description', 
 			@Status 'Status'
-			COMMIT TRANSACTION;
 	END
 	ELSE
 		SELECT			  
