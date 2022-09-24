@@ -1105,6 +1105,7 @@
     <Build Include="dbo\Stored Procedures\spHM_RouteManifestReportlinehaulHeader.sql" />
     <Build Include="dbo\Stored Procedures\spHM_RoutemanifestReportLinehaulDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_LinehaulRouteManifestReportDetailFloor.sql" />
+    <Build Include="dbo\Stored Procedures\ValidExistActs.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
