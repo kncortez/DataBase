@@ -44,7 +44,9 @@ BEGIN
 							--'"IdProvince":"' +  convert(varchar,prv.IdProvince)  + 
 							'"IdProvince":"' +  convert(varchar,prv.IdProvince)  + '",' +							
 							'"Latitude":"' +  ISNULL(vp.Latitude,'') + '",' +
-							'"Longitude":"' +  ISNULL(vp.Longitude,'') +
+							'"Longitude":"' +  ISNULL(vp.Longitude,'') +'",' +
+							'"Zone":"' +  ISNULL(CAST(conf.Zone as varchar(2)),'')+'",' +
+							'"Neighborhood":"' +  ISNULL(conf.Neighborhood,'')
 							+ '"}'
 
 					from dbo.RolByUserByAccount  rua
@@ -53,6 +55,7 @@ BEGIN
 						join dbo.Province prv on prv.IdProvince = twn.IdProvince
 						join dbo.CatCityPlace ctp on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
 						left join dbo.VisitPointClient vp on vp.CodeOfReference=ua.CodeOfReference
+						left join dbo.ConfirmedAddress conf on conf.NirPhone=ua.UadNirPhone and conf.Phone=ua.UadPhone
 					where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser and ua.UadRowStatus = 1
 						and (ua.UadIdAddress = @IdAddress or @IdAddress = -1)
 					FOR XML PATH(''), TYPE

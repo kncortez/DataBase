@@ -23,11 +23,6 @@ BEGIN
     DECLARE @StatusUser BIT;
     DECLARE @IdUser BIGINT;
     DECLARE @StatusAccount CHAR(1);
-    --	declare @Username as nvarchar(100)='a.cesarene@gmail.com'
-    --	declare	@Password as nvarchar(100)='7hFMXRrKI3G0addPtjwAHA=='
-    --	declare @IdSystem as int = 1 
-    --	DECLARE	@IP AS NVARCHAR(30) ='localhost'
-    -- validar usuario y contraseña
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -40,7 +35,6 @@ BEGIN
         WHERE ru.UsrEmail = @Username
               AND ru.UsrRowStatus = 1
     );
-
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
@@ -155,8 +149,6 @@ BEGIN
                     DECLARE @JsonProfile NVARCHAR(MAX);
                     DECLARE @JsonProfileEXP NVARCHAR(MAX) = N'';
 
-
-
                     -- obtener modulos a los que tiene acceso el usuario logueado
                     /*tabla temporal ModIdModule*/
                     DECLARE @TOTALSUBMODULES INT = 0,
@@ -229,8 +221,6 @@ BEGIN
                             ModIdModuleCHILD INT
                         );
 
-                        --	IF (@VERIFYUSER  > 0 )
-                        --BEGIN
 						DELETE @TBSUBMODULES2 WHERE 1=1
                         INSERT INTO @TBSUBMODULES2
                         (
@@ -277,17 +267,7 @@ BEGIN
                             SELECT @CHILDSMD
                                 = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",'
                                   + '"Path":"' + cmo.ModPath + '"},'
-                            FROM /*RegisterUser us
-                                                 INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                                                                                              AND rua.RuaRowStatus = 1
-                                                 INNER JOIN dbo.RolByModuleBySystem rms ON rms.RmsIdRol = rua.RuaIdRol
-                                                          AND rms.RmsRowStatus = 1
-                                                 INNER JOIN */
-                                [dbo].CatModule cmo --ON cmo.ModIdModule = rms.RmsIdModule
-                            --AND cmo.ModRowStatus = 1
-                            --AND cmo.ModVisible = 1
-                            --AND cmo.ModIdModuleParent IS NOT NULL
-                            --INNER JOIN [dbo].CatRol rol ON rol.RolIdRol = rms.RmsIdRol
+                            FROM [dbo].CatModule cmo
                             WHERE cmo.ModIdModule =
                             (
                                 SELECT TMP.ModIdModuleCHILD
@@ -315,7 +295,8 @@ BEGIN
                         SELECT STUFF(
                                         (
                                             SELECT ',{"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata
-                                                   + '",' + '"Path":"' + cmo.ModPath + '",' + '"Rol":"' + rol.RolName
+                                                   + '",' + '"Path":"' + cmo.ModPath + '",' + '"MenuId":' + CAST(ISNULL(rms.RmsModuleMenu,1) AS NVARCHAR)  + ',' + '"GroupId":' + CAST(ISNULL(cmo.ModGroup,0) AS NVARCHAR)  + ','
+												   + '"NewFunction":' + CAST(ISNULL(rms.RmsHasNewFunction,0) AS NVARCHAR) + ',' + '"Rol":"' + rol.RolName
                                                    + (CASE
                                                           WHEN LEN(ISNULL(TMP.SUBMODULES, '')) > 0 THEN
                                                               '",' + '"SubModule":[' + COALESCE(TMP.SUBMODULES, '')
@@ -363,10 +344,10 @@ BEGIN
                                                              'Express'
                                                          ELSE
                                                              ta.TacName
-                                                     END + '",' + '"IdCustomer":"'
-                                                   + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
-												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +'
-"}'
+                                                     END + '",' 
+												   + '"IdCustomer":"' + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
+												   + '"RolName":"' + ro.RolName + '",' 
+												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +' "}'
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
@@ -473,17 +454,17 @@ BEGIN
 													   -- FIN MODIFICACIÓN
                                                        + '}'
                                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                                                    JOIN VisitPointByUser VPU
+                                                    INNER JOIN VisitPointByUser VPU
                                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                                            AND VPU.RowStatus = 1
-                                                    JOIN RegisterUser ru
+                                                    INNER JOIN RegisterUser ru
                                                         ON VPU.RegisterUserID = ru.UsrIdUser
                                                            AND ru.UsrRowStatus = 1
-                                                    JOIN DeliveryBackOffice.dbo.Settlement STL
+                                                    INNER JOIN DeliveryBackOffice.dbo.Settlement STL
                                                         ON VPC.IdSettlement = STL.IdSettlement
-                                                    JOIN DeliveryBackOffice.dbo.Township TWS
+                                                    INNER JOIN DeliveryBackOffice.dbo.Township TWS
                                                         ON TWS.IdTownship = STL.IdTownship
-                                                    JOIN DeliveryBackOffice.dbo.Province PRV
+                                                    INNER JOIN DeliveryBackOffice.dbo.Province PRV
                                                         ON PRV.IdProvince = TWS.IdProvince
                                                 WHERE IdKindOfVPClient = 1
                                                       AND ru.UsrEmail = @Username

@@ -39,35 +39,6 @@ BEGIN
 
             DECLARE @jsonResult2 NVARCHAR(MAX);
 
-            UPDATE dbo.DeliveryOrder
-            SET PriceShippment = t.PriceShippment,
-                StatusOrderId = @IdStatus,
-                IsCollect = t.IsCollect
-            FROM dbo.DeliveryOrder ord with (nolock)
-                INNER JOIN @TblDeliveryOrdersList t
-                    ON t.Guide_Number = ord.Guide_Number
-                       AND t.Guide_Serie = ord.Guide_Serie;
-
-            -- insertar checkpoint de generado.	
-            --insert into dbo.DeliveryOrderDetail
-            --( [Guide_Serie]
-            --,[Guide_Number]
-            --     ,[StatusOrderId]
-            --     ,[UserCreated]
-            --     ,[DateCreated]
-            --     ,[DateCreatedInSystem]
-            --     ,[Observations]
-            --     ,[Temperature_Celsius])
-            --select Guide_Serie
-            --,Guide_Number
-            --,@IdStatus
-            --,@Token
-            --,GETDATE()
-            --,null
-            --,null
-            --,null
-            --from @TblDeliveryOrdersList
-
             INSERT INTO dbo.DeliveryOrderPaymentDetail
             (
                 [GuideNumber],
@@ -220,13 +191,13 @@ BEGIN
                             (
                                 SELECT CodeOfReference
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                                    inner JOIN VisitPointByUser VPU WITH (NOLOCK)
+                                    INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                            AND VPU.RowStatus = 1
-                                    inner JOIN RegisterUser ru WITH (NOLOCK)
+                                    INNER JOIN RegisterUser ru WITH (NOLOCK)
                                         ON VPU.RegisterUserID = ru.UsrIdUser
                                            AND ru.UsrRowStatus = 1
-                                    inner JOIN [dbo].[RolByUserByAccount] rua
+                                    INNER JOIN [dbo].[RolByUserByAccount] rua
                                         ON rua.RuaIdUser = ru.UsrIdUser
                                 WHERE rua.RuaIdAccount = @IdAccount
                             );
@@ -416,11 +387,9 @@ BEGIN
                    sub_do.AddressPickup,
                    Number,
                    Serie,
-                   --,IIF(SM.IdServiceManagement IS NULL, SP.SchedulePickupId, IIF(SM.ServiceStatusId IN (select IdServiceStatus from dbo.CatServiceStatus WHERE Name IN ('Creado','Asignado a Ruta')), SP.SchedulePickupId, NULL)) SchedulePickupId
                    sub_sp.SchedulePickupId,
                    sub_sp.AssigmentStatus,
                    sub_sp.IdServiceManagement
-           -- INTO #Sender
             FROM
             (
                 SELECT Sender_ID,
@@ -475,8 +444,7 @@ BEGIN
                          TypeService
             ) AS sub_do
                 LEFT JOIN
-                (
-                    --SELECT  SenderPhone,IdHubLogistics,AddressPickup,SenderName,SchedulePickupId,IdServiceManagement,ServiceStatusId FROM DBO.SchedulePickup SP				
+                (		
                     SELECT DOR.Sender_ID,
                            AddressPickup,
                            SchedulePickupId,
@@ -491,7 +459,6 @@ BEGIN
                         LEFT JOIN dbo.DeliveryOrder DOR WITH (NOLOCK)
                             ON DOR.Guide_Number = dop.GuideNumber
                                AND DOR.Guide_Serie = dop.GuideSerie
-                    --WHERE (SP.AssigmentStatus =0 OR (SM.RowStatus=1 AND SP.RowStatus=1 AND SP.AssigmentStatus=1 AND SM.ServiceStatusId IN(1,2)) ) --THIS LINE IS EQUIVALENT TO LINE BELOW
                     WHERE (
                               SM.IdServiceManagement IS NULL
                               OR
@@ -530,46 +497,6 @@ BEGIN
                            sub_do.IdCustomer = sub_sp.IdCustomer
                        )
 					   ;
-
-            --declare @SenderId int  = (select top 1 Sender_ID  from DeliveryOrder ord
-            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-            --				 inner join @TblDeliveryOrdersList t  on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-            --				where ord.Guide_Number in (t.Guide_Number))
-
-            --declare @SenderName varchar (50)  = (select top 1  concat(Sender_FirstName, Sender_LastName) as SenderName  from DeliveryOrder ord
-            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-            --				 inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-            --				where ord.Guide_Number in (t.Guide_Number))
-
-            --declare @Sender_Phone varchar (20)  = (select top 1  Sender_Phone from DeliveryOrder ord
-            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-            --				 inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-            --				where ord.Guide_Number in (t.Guide_Number))
-
-
-            --declare @IdHublogistic int  = (select top 1  thb.IdHublogistic from DeliveryOrder ord
-            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-            --				 inner join @TblDeliveryOrdersList t   on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-            --				where ord.Guide_Number in (t.Guide_Number))
-
-
-            --declare @AmountPickup decimal (18,2)  = (select top 1  (sum (dop.PaymentRecollections) + sum (dop.RecolectPayment)) as AmountPickup from DeliveryOrder ord
-            --				inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-            --				inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-            --				 inner join @TblDeliveryOrdersList t  on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-            --				where ord.Guide_Number in (t.Guide_Number))
-
-            --declare @Sender_Address varchar (200)  = (select top 1  Sender_Address from DeliveryOrder ord
-            --			inner join TownshipByHubLogistic thb on (ord.SenderIdTownship = thb.IdTownship)
-            --			inner join DeliveryOrderPaymentDetail dop on (dop.GuideNumber = ord.Guide_Number and dop.GuideSerie = ord.Guide_Serie)
-            --			 inner join @TblDeliveryOrdersList t  on (t.Guide_Number = dop.GuideNumber and t.Guide_Serie = dop.GuideSerie) 
-            --			where ord.Guide_Number in (t.Guide_Number))
-
-
 
             INSERT INTO dbo.SchedulePickup
             (
@@ -685,20 +612,6 @@ BEGIN
                        AND sd.Number = pay.GuideNumber
             WHERE sd.SchedulePickupId IS NOT NULL;
 
-            --ACTUALIZANDO ESTADO DE LAS GUÍAS (A PROGRAMADO PARA RECOLECCIÓN)PARA LOS SERVICIOS QUE YA ESTAN ASIGNADOS
-            -- DECLARE @IdStatusSh tinyint= (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription='Programado para recolección');
-            -- UPDATE DBO.DeliveryOrder
-            --	SET StatusOrderId=@IdStatusSh 
-            --FROM DBO.DeliveryOrder DO WITH (NOLOCK)
-            --INNER JOIN #Sender SD 
-            --	ON  DO.Guide_Serie=SD.Serie AND DO.Guide_Number=SD.Number AND SD.AssigmentStatus=1
-
-            -- UPDATE DBO.DeliveryOrderPiece
-            --	SET StatusOrderId=@IdStatusSh 
-            --FROM DBO.DeliveryOrderPiece DO WITH (NOLOCK)
-            --INNER JOIN #Sender SD 
-            --	ON  DO.GuideSerie=SD.Serie AND DO.GuideNumber=SD.Number AND SD.AssigmentStatus=1
-
             --ACTUALIZANDO MONTO DE SERVICIOS QUE YA ESTABAN ASIGNADOS A RUTA(SE SUMA EL NUEVO MONTO DE LA NUEVA GUÍA PROGRAMADO)
             DECLARE @TempPrice TABLE
             (
@@ -785,10 +698,69 @@ BEGIN
                              SM.Amount
                 ) SUB
                     ON SMT.IdServiceManagement = SUB.IdServiceManagement;
-            --WHERE IdServiceManagement=SUB.IdServiceManagement
 
-            --@TempPrice TP ON  SD.Serie=
+			
+			-- Actualizar
+			update 
+				do 
+			set  
+				StatusOrderId = 1 
+			from 
+				@TblDeliveryOrdersList ls
+				inner join DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+				on 
+					do.Guide_Serie =  ls.Guide_Serie 
+					and 
+					do.Guide_Number = ls.Guide_Number
 
+			update 
+				dopd 
+			set 
+				ShipmentCompleted = 1
+			from 
+				@TblDeliveryOrdersList ls
+				inner join 
+					DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+					on 
+						dopd.GuideSerie =  ls.Guide_Serie 
+						and 
+						dopd.GuideNumber = ls.Guide_Number
+
+			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
+			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 
+				[Guide_Serie]
+				,[Guide_Number]
+				,[StatusOrderId]
+				,[UserCreated]
+				,[DateCreated]
+				,[DateCreatedInSystem]
+				,[Observations]
+				,[Temperature_Celsius]
+			)
+			select 
+				DISTINCT
+					ls.Guide_Serie
+					,ls.Guide_Number
+					,1
+					,@Token
+					,GETDATE()
+					,GETDATE()
+					,null
+					,null
+			from 
+				@TblDeliveryOrdersList ls
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+					ON
+						ls.Guide_Serie = DOD.Guide_Serie
+						AND
+						ls.Guide_Number = DOD.Guide_Number
+						AND
+						DOD.StatusOrderId IN (1,21)
+						AND
+						DOD.RowStatus = 1
+			WHERE
+				DOD.DateCreated IS NULL
 
             DROP TABLE #Sender;
 
@@ -810,27 +782,6 @@ BEGIN
 
             SELECT ('[' + @jsonOutput4 + ']') jsonOutput4;
             ROLLBACK TRANSACTION;
-				INSERT INTO dbo.RoutePreparationLogError
-			(
-				ErrorDescription,
-				ErrorNumber,
-				ErrorProcedure,
-				ErrorLine,
-				GuideSerie,
-				GuideNumber,
-				TokenCreated,
-				DateCreated
-			)
-			VALUES
-			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
-					   ,ERROR_NUMBER()
-					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
-					   ,ERROR_LINE()
-					   ,0
-					   ,0
-					   ,'Error en SetRecolectionRequest filtro 3'
-					   ,GETDATE())
-
 
         END CATCH;
 
@@ -872,34 +823,6 @@ BEGIN
                            t.Guide_Number = pay.GuideNumber
                            AND t.Guide_Serie = pay.GuideSerie
                        );
-
-        --update dbo.DeliveryOrder 
-        --set  StatusOrderId = @IdStatus   
-        --from dbo.DeliveryOrder ord
-        --inner join @TblDeliveryOrdersList t on t.Guide_Number = ord.Guide_Number and t.Guide_Serie = ord.Guide_Serie
-
-
-        --		---	 insertar checkpoint de generado.	
-        --insert into dbo.DeliveryOrderDetail
-        --( [Guide_Serie]
-        --,[Guide_Number]
-        --  ,[StatusOrderId]
-        --  ,[UserCreated]
-        --  ,[DateCreated]
-        --  ,[DateCreatedInSystem]
-        --  ,[Observations]
-        --  ,[Temperature_Celsius])
-        --select Guide_Serie
-        --,Guide_Number
-        --,@IdStatus
-        --,@Token
-        --,GETDATE()
-        --,null
-        --,null
-        --,null
-        --from @TblDeliveryOrdersList
-
-
 
         END TRY
         BEGIN CATCH
