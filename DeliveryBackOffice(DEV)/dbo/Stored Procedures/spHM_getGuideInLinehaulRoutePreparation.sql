@@ -11,14 +11,24 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	DECLARE @LIQUIDATED_STATUS_ID AS INT;
+	DECLARE @STOPOVER_STATUS_ID AS INT;
+
+	SET @LIQUIDATED_STATUS_ID = (SELECT [CLS].[IdCatLinehaulStatus]
+								FROM	[dbo].[CatLinehaulStatus] CLS
+								WHERE	[CLS].[StatusName] = 'LIQUIDATED');
+
+	SET @STOPOVER_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
+								FROM	[dbo].[CatLinehaulStatus] CLS
+								WHERE	[CLS].[StatusName] = 'STOPOVER');
 
     SELECT		[LRP].[CatRouteId],
 				[CR].[CodeRoute],
 				[CR].[Description],
-				[LRP].[CatVehicleId],
+				COALESCE([LRP].[CatVehicleId], 0) AS CatVehicleId,
 				[CV].[UnitNumber],
 				COALESCE([LRP].[SenderReceiverId], 0) AS SenderReceiverId,
-				[LRP].[CatLinehaulStatusId],
+				COALESCE([LRP].[CatLinehaulStatusId], 0) AS CatLinehaulStatusId,
 				[CLS].[StatusName],
 				[LRP].[DateLinehaulRoutePreparation],
 				[LRP].[DateCreated],
@@ -45,12 +55,14 @@ BEGIN
 		ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
 	INNER JOIN	[dbo].[CatRoute] CR
 		ON		[LRP].[CatRouteId] = [CR].[IdRoute]
-	INNER JOIN	[dbo].[CatVehicle] CV
+	LEFT JOIN	[dbo].[CatVehicle] CV
 		ON		[LRP].[CatVehicleId] = [CV].[IdVehicle]
 	INNER JOIN	[dbo].[CatLinehaulStatus] CLS
 		ON		[LRP].[CatLinehaulStatusId] = [CLS].[IdCatLinehaulStatus]
 	INNER JOIN	[dbo].[Container] C
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
+		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
+		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
 	INNER JOIN	[dbo].[CatTypeContainer] CTP
 		ON		[C].[CatTypeContainerId] = [CTP].[IdCatTypeContainer]
 	INNER JOIN	[dbo].[HubLogistics] HL

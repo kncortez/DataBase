@@ -11,3 +11,10 @@
     CONSTRAINT [FKEventStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ServiceManagementId_ServiceStatusId_RowStauts]
+    ON [dbo].[EventService]([ServiceManagementId] ASC, [ServiceStatusId] ASC, [RowStauts] ASC);
+

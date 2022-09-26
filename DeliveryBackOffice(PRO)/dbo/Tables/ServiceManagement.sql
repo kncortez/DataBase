@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_SubTypeServiceManagmentId]
     ON [dbo].[ServiceManagement]([SubTypeServiceManagmentId] ASC)
@@ -58,4 +60,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Monto total
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de pago del servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'CatPaymentTimeId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup]
+    ON [dbo].[ServiceManagement]([IdSchedulePickup] ASC);
 

@@ -35,7 +35,6 @@ BEGIN
 						[DO].[Guide_Number],
 						COALESCE([DO].[Pieces_Dry], 0) AS Pieces_Dry,
 						COALESCE([DO].[Pieces_Cold], 0) AS Pieces_Cold,
-						COALESCE([DO].[ReceiverIdSettlement], 0) AS ReceiverIdSettlement,
 						COALESCE([DO].[ReceiverIdTownship], 0) AS ReceiverIdTownship,
 						[DO].[Receiver_Town],
 						[DO].[Receiver_Department],

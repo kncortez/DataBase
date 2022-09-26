@@ -42,13 +42,15 @@ BEGIN
 													FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 													WHERE	[LRPCDP].[IsDryPiece] = 1
 														AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @IdLinehaulRoutePreparationContainerDetail
-														AND [LRPCDP].[RowStatus] = 1);
+														AND [LRPCDP].[RowStatus] = 1
+														AND	[LRPCDP].[ActCode] IS NULL);
 
 				SET @COLD_PIECE_QUANTITY_PIECE =	(SELECT	COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
 													FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 													WHERE	[LRPCDP].[IsDryPiece] = 0
 														AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @IdLinehaulRoutePreparationContainerDetail
-														AND [LRPCDP].[RowStatus] = 1);
+														AND [LRPCDP].[RowStatus] = 1
+														AND	[LRPCDP].[ActCode] IS NULL);
 
 				UPDATE	[LinehaulRoutePreparationContainerDetail]
 				SET		[DryPieceQuantity] =							@DRY_PIECE_QUANTITY_PIECE,
