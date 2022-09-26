@@ -554,7 +554,24 @@ BEGIN
         );
     END
 
-
+	ELSE IF (@TypeMethod = 'GetTypeArticle')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"ArticleTypeId":"' + CONVERT(NVARCHAR, cta.TarId) + '",'
+									   + '"ArticleType":"' + CONVERT(NVARCHAR, cta.TarName) + '",' + '}'
+                                FROM CatTypeArticle cta
+								WHERE cta.TarRowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
     SELECT '[' + @jsonResult + ']' FormatJson;
 
