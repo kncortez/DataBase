@@ -34,7 +34,12 @@ BEGIN
 			  DateUpdated  = GETDATE()
 	 WHERE ActDetailId = (SELECT TOP 1 IdActDetail FROM dbo.ActDetail WHERE ActId= @IdAct)
 
+	 UPDATE [dbo].[LinehaulRoutePreparationContainerDetailPiece]
+	      SET ActCode = NULL
+	  WHERE ActCode = @IdAct
+
 		COMMIT TRANSACTION
+	
 
 		SELECT 1 AS RESULT
 		
