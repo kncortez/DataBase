@@ -15,6 +15,7 @@ BEGIN
 	-- Variables de respuesta
 	DECLARE @DataLinkInfo AS TABLE (
 		DataLinkId INT,
+		AccountId BIGINT,
 		VisitPointCode INT,
 
 		VisitPointDescription NVARCHAR(100),
@@ -37,6 +38,7 @@ BEGIN
 		INSERT INTO @DataLinkInfo
 			(
 				DataLinkId
+				, AccountId
 				, VisitPointCode
 				, VisitPointDescription
 				, VisitPointContact
@@ -52,6 +54,7 @@ BEGIN
 			)
 		SELECT
 			VPDL.IdVisitPointDataLink
+			,VPDL.AccountId
 			,VPC.CodeOfReference
 			,VPC.DescriptionOfClient
 			,VPC.ContactName
@@ -96,6 +99,7 @@ BEGIN
 
 			SELECT
 				DLI.DataLinkId
+				, DLI.AccountId
 				, DLI.VisitPointCode
 				, DLI.VisitPointDescription
 				, DLI.VisitPointContact
