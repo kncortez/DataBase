@@ -3,7 +3,7 @@
 -- Create date: <22-09-2022>
 -- Description:	<Método para carga de servicios pendientes de procesar filtrado por hubs y rango de fechas>
 -- =============================================
-CREATE PROCEDURE sphw_GetPendingRecolectionServices
+create PROCEDURE sphw_GetPendingRecollectionServices
 	-- Add the parameters for the stored procedure here
 	@HubId	INT = -1,
 	@StartDate DATE =NULL,
@@ -121,7 +121,7 @@ BEGIN
 			AND(
 				@IdUser =-1
 				OR
-				HLBU.UsrIdUser=@IdUser
+				HLBU.UserId=@IdUser
 			)
 			AND
 			------------------------------------------------------------------------
