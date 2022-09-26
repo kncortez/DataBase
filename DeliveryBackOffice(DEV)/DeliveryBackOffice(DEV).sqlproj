@@ -1133,6 +1133,7 @@
     <Build Include="dbo\Stored Procedures\GetVisitPointDataLinkInformation.sql" />
     <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
     <Build Include="dbo\Tables\HubLogisticByUser.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_RecollectionLinkClosure.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
