@@ -1068,6 +1068,7 @@
     <Build Include="dbo\Stored Procedures\spHM_ReassignGuidePreparation.sql" />
     <Build Include="dbo\Stored Procedures\spHM_SetRoutePreparationDetail.sql" />
   </ItemGroup>
+    <Build Include="dbo\Tables\ActDetailPiece.sql" />
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
