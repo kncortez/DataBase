@@ -1107,6 +1107,7 @@
     <Build Include="dbo\Stored Procedures\spHM_LinehaulRouteManifestReportDetailFloor.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetPendingRecolectionServices.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCatHubs.sql" />
+    <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
