@@ -3,8 +3,7 @@
 -- Create date: <19-09-2022>
 -- Description:	<Crea una solicitud de recolección>
 -- =============================================
-
-CREATE PROCEDURE [dbo].[sphw_RegisterRecolectionRequest]
+CREATE PROCEDURE [dbo].[sphw_RegisterRecollectionRequest]
 	-- Add the parameters for the stored procedure here
 	@TAC1 BIT = NULL,
 	@TAC2 BIT = NULL,
