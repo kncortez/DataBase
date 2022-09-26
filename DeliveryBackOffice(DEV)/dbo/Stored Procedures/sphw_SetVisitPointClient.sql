@@ -38,7 +38,7 @@ BEGIN
 	DECLARE @HeaderCode VARCHAR(10)
 	DECLARE @CityName VARCHAR(50)
 	DEClARE @IdDepartment INT;
-
+	DECLARE @IsReferredCustomer BIT = 0;
 	DECLARE @UpdatedAddress AS TABLE (
 		IdUpdated BIGINT
 	);
@@ -83,6 +83,8 @@ BEGIN
 				FROM Customer
 				WHERE Name = 'Cliente Referenciado'
 				AND Domain = '@forzadelivery')
+
+			SET @IsReferredCustomer = 1
 		END
 		ELSE
 		BEGIN
@@ -262,6 +264,8 @@ BEGIN
 						   ,'Se ha eliminado la dirección correctamente.' AS 'Description'
 						   ,@IdAddress AS 'IdAddress'
 						   ,@CodeOfReference AS 'CodeOfReference'
+						   ,@IdAccount AS 'IdAccount'
+						   ,@IsReferredCustomer AS 'IsReferredCustomer'
 
 						COMMIT TRANSACTION
 					END
@@ -296,16 +300,20 @@ BEGIN
 						   ,vp.IdKindOfVPBusiness = @IdKindOfVPBusiness
 						   ,vp.Latitude = @Latitude
 						   ,vp.Longitude = @Longitude
+						   ,@CodeOfReference = vp.CodeOfReference
 						FROM UserAddress ua
 						LEFT JOIN VisitPointClient vp WITH (NOLOCK)
 							ON ua.CodeOfReference = vp.CodeOfReference
 						WHERE UadIdAddress = @IdAddress
+						
 
 						SELECT
 							1 AS 'StatusCode'
 						   ,'Se ha actualizado la dirección correctamente.' AS 'Description'
 						   ,@IdAddress AS 'IdAddress'
 						   ,@CodeOfReference AS 'CodeOfReference'
+						   ,@IdAccount AS 'IdAccount'
+						   ,@IsReferredCustomer AS 'IsReferredCustomer'
 
 						COMMIT TRANSACTION
 					END
@@ -381,6 +389,8 @@ BEGIN
 				   ,'Dirección creada correctamente.' AS 'Description'
 				   ,@IdAddress AS 'IdAddress'
 				   ,@CodeOfReference AS 'CodeOfReference'
+				   ,@IdAccount AS 'IdAccount'
+				   ,@IsReferredCustomer AS 'IsReferredCustomer'
 
 				COMMIT TRANSACTION
 			END
