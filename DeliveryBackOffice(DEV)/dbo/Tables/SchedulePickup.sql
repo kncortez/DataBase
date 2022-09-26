@@ -27,6 +27,7 @@
     [TypeVehicleId]                  INT             NULL,
     [IsScheduled]                    BIT             NULL,
     [ServiceRate]                    BIT             NULL,
+    [ServiceComment]                 NVARCHAR (200)  NULL,
     CONSTRAINT [PK_SchedulePickup] PRIMARY KEY CLUSTERED ([SchedulePickupId] ASC),
     FOREIGN KEY ([IdHubLogistics]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     FOREIGN KEY ([IdSourcePlataform]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
@@ -34,6 +35,8 @@
     CONSTRAINT [FK_SchedulePickup_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_SchedulePickup_CatTypeVehicle] FOREIGN KEY ([TypeVehicleId]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle])
 );
+
+
 
 
 
