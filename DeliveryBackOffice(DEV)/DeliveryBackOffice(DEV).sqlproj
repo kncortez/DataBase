@@ -1132,6 +1132,7 @@
     <Build Include="dbo\Stored Procedures\sphw_GetPendingRecolectionServices.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCatHubs.sql" />
     <Build Include="dbo\Stored Procedures\sphw_SetStatusService.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_StartServiceRecollection.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetPendingRecollectionServices.sql" />
   </ItemGroup>
   <ItemGroup>
