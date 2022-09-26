@@ -26,7 +26,8 @@ BEGIN
   BEGIN
 
      UPDATE [dbo].[SchedulePickup] 
-	 SET ServiceRate = @Qualification
+	 SET ServiceRate = @Qualification,
+	     ServiceComment =@comment 
 	 WHERE SchedulePickupId = @ID;
 
 	 SELECT Result = 1,Descrip='Calificación exitosa';
