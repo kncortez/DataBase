@@ -1129,6 +1129,7 @@
     <Build Include="dbo\Stored Procedures\sphw_SearchVisitPoints.sql" />
     <Build Include="dbo\Tables\VisitPointDataLink.sql" />
     <Build Include="dbo\Tables\CatDataLinkStatus.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_CollectionLinkGeneration.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
