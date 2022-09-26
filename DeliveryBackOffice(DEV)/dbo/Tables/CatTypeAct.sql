@@ -11,16 +11,14 @@
 );
 
 
+
+
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de tipos de actas (justificaciones).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct';
 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
 
 GO
@@ -32,7 +30,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lóg
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del tipo de acta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'ActDescription';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'IdCatTypeAct';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
 
 GO
@@ -40,9 +46,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'IdCatTypeAct';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de tipos de actas (justificaciones).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del tipo de acta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeAct', @level2type = N'COLUMN', @level2name = N'ActDescription';
 

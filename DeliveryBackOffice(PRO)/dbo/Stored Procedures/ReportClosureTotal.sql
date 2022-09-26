@@ -31,8 +31,8 @@ BEGIN
                          0
                      ) 'TotalGeneral'
         -- FIN MODIFICACIÓN
-        FROM dbo.AccountingClosuresHeader ACH
-            JOIN dbo.VisitPointClient VPC
+        FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
+            INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
                    AND VPC.CodeOfReference = @VisitPointId
         WHERE CONVERT(DATE, ACH.DateCreated)
@@ -60,8 +60,8 @@ BEGIN
                          0
                      ) 'TotalGeneral'
         -- FIN MODIFICACIÓN
-        FROM dbo.AccountingClosuresHeader ACH
-            JOIN dbo.VisitPointClient VPC
+        FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
+            INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
                    AND VPC.CodeOfReference = @VisitPointId
         WHERE CONVERT(DATE, ACH.DateCreated)
@@ -89,7 +89,7 @@ BEGIN
                          0
                      ) 'TotalGeneral'
         -- FIN MODIFICACIÓN
-        FROM dbo.AccountingClosuresHeader ACH
+        FROM dbo.AccountingClosuresHeader ACH WITH (NOLOCK)
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate);
     END;

@@ -11,12 +11,15 @@
     [DateCreated]                         DATETIME      NOT NULL,
     [TokenUpdated]                        NVARCHAR (50) NULL,
     [DateUpdated]                         DATETIME      NULL,
+    [CatLinehaulStatusId]                 INT           DEFAULT ((1)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparationContainer] ASC),
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_Container] FOREIGN KEY ([ContainerId]) REFERENCES [dbo].[Container] ([IdContainer]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_HubLogistics] FOREIGN KEY ([HubDestinyId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainer_RoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_Container] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationId] ASC, [ContainerId] ASC)
 );
+
+
 
 
 GO
@@ -69,4 +72,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de contenedores asignados a preparación de ruta de linehaul.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainer';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del status asignado | Tabla CatLinehaulStatus', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainer', @level2type = N'COLUMN', @level2name = N'CatLinehaulStatusId';
 

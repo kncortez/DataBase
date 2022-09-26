@@ -13,11 +13,14 @@
     [DateCreated]                               DATETIME      NOT NULL,
     [TokenUpdated]                              NVARCHAR (50) NULL,
     [DateUpdated]                               DATETIME      NULL,
+    [UserProcess]                               NVARCHAR (50) NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparationContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Container] FOREIGN KEY ([LinehaulRoutePreparationContainerId]) REFERENCES [dbo].[LinehaulRoutePreparationContainer] ([IdLinehaulRoutePreparationContainer]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_ContainerGuide] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC)
 );
+
+
 
 
 GO
@@ -78,4 +81,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de contenedores asignados a preparación de ruta de linehaul.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetail';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Control de usuario en manejo de procesos abiertos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetail', @level2type = N'COLUMN', @level2name = N'UserProcess';
 

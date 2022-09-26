@@ -1,7 +1,6 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlement] (
     [IdLinehaulRouteSettlement]  INT           IDENTITY (1, 1) NOT NULL,
     [LinehaulRoutePreparationId] INT           NOT NULL,
-    [StationReceivedId]          INT           NULL,
     [UserReceived]               NVARCHAR (50) NOT NULL,
     [DateReceived]               DATETIME      NOT NULL,
     [ContainersReceived]         INT           NULL,
@@ -9,16 +8,24 @@
     [GuidesReceived]             INT           NULL,
     [GuidePiecesReceived]        INT           NULL,
     [GuidePiecesMissing]         INT           NULL,
-    [ActCode]                    NVARCHAR (50) NULL,
     [RowStatus]                  BIT           DEFAULT ((1)) NOT NULL,
     [TokenCreated]               NVARCHAR (50) NOT NULL,
     [DateCreated]                DATETIME      NOT NULL,
     [TokenUpdated]               NVARCHAR (50) NULL,
     [DateUpdated]                DATETIME      NULL,
+    [HubID]                      INT           NULL,
+    [CatLinehaulStatusId]        INT           NOT NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlement] ASC),
-    CONSTRAINT [FK_LinehaulRouteSettlement_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation]),
-    CONSTRAINT [FK_LinehaulRouteSettlement_Station] FOREIGN KEY ([StationReceivedId]) REFERENCES [dbo].[CatStation] ([IdStation])
+    CONSTRAINT [FK_LinehaulRouteSettlement_CatLinehaulStatus] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
+    CONSTRAINT [FK_LinehaulRouteSettlement_Hub] FOREIGN KEY ([HubID]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
+    CONSTRAINT [FK_LinehaulRouteSettlement_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation])
 );
+
+
+
+
+
+
 
 
 
@@ -50,7 +57,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lóg
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de acta (justificación) asignada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'ActCode';
+
 
 
 GO
@@ -84,7 +91,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario liq
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de estación liquidadora | Tabla CatStation', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'StationReceivedId';
+
 
 
 GO
@@ -99,4 +106,12 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de liquidación de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement';
 
 
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de HUB liquidador | Tabla HubLogistics', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'HubID';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de estado | Tabla CatLinehaulStatus', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'CatLinehaulStatusId';
 

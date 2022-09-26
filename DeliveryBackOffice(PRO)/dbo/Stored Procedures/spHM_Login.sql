@@ -21,7 +21,7 @@ BEGIN
 			ON IU.RegisterUserID = RU.UsrIdUser
 		INNER JOIN RolByUserBySystem RUS
 			ON IU.RegisterUserID = RUS.RusIdUser
-	WHERE IU.IdUser = @Code AND IU.Username = @Username
+	WHERE IU.IdUser = @Code AND IU.Username = @Username COLLATE SQL_LATIN1_GENERAL_CP1_CS_AS
 		AND RU.UsrLastPassword = @Password
 		AND RUS.RusIdSystem = @SystemId AND RUS.RusRowStatus = 1;
 END
