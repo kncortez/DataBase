@@ -1,7 +1,7 @@
 ﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <21-09-2022>
--- Description:	<Cierra un link de recolección y genera una solciitud de recolección agrupado por codigo de referencia>
+-- Description:	<Cierra un link de recolección y genera una solcitud de recolección agrupado por codigo de referencia>
 -- =============================================
 CREATE PROCEDURE sphw_RecollectionLinkClosure
 	@VisitPointDataLinkId BIGINT,
