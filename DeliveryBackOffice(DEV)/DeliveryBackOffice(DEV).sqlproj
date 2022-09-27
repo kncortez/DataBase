@@ -1125,7 +1125,6 @@
     <Build Include="dbo\Stored Procedures\sphw_GetRoutePreparationPickupByRange.sql" />
     <Build Include="dbo\Stored Procedures\spwh_SetPickupStatus.sql" />
     <Build Include="dbo\Tables\TermsAndConditionsByService.sql" />
-    <Build Include="dbo\Stored Procedures\sphw_RegisterRecolectionRequest.sql" />
     <Build Include="dbo\Tables\HubLogisticByUser.sql" />
     <Build Include="dbo\Stored Procedures\sphw_RegisterRecollectionRequest.sql" />
   </ItemGroup>
