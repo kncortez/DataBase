@@ -3,7 +3,7 @@
 -- Create date: <2022-08-04>
 -- Description:	<encabezado de reporte Ruta  LineHauls>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_RouteManifestReportlinehaulHeader] 
+create PROCEDURE [dbo].[spHM_RouteManifestReportlinehaulHeader] 
 
 @IdLinehaulRoutePreparation AS INT 
 AS
@@ -27,10 +27,8 @@ SELECT DISTINCT
 				CV.Plate IS NULL 
 		   THEN LRP.VehicleID ELSE CV.Plate END AS Plate,
 		CASE 
-		   WHEN LRP.DriverName IS NULL THEN (SELECT TOP 1 First_Name 
-		                                     FROM dbo.SenderReceiver  WITH (NOLOCK)
-											 WHERE ID = LRP.SenderReceiverId )   
-			ELSE LRP.DriverName END AS DriverName,
+		   WHEN LRP.SenderReceiverId IS NULL THEN LRP.DriverName
+			ELSE SR.First_Name END AS DriverName,
 		LRP.ContainerQuantity,
 		LRP.GuideQuantity,
 		LRP.ColdPieceQuantity + LRP.DryPieceQuantity as PieceQuantity,
@@ -47,6 +45,8 @@ SELECT DISTINCT
 	        ON LRP.CatRouteId = LC.CatRouteId
 	  LEFT JOIN HubLogistics HL WITH (NOLOCK)
 	        ON LC.HubOriginId = HL.IdHubLogistic
+	LEFT JOIN DBO.SenderReceiver SR WITH (NOLOCK)
+			ON SR.ID=LRP.SenderReceiverId
  WHERE IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
  GROUP BY   LRP.IdLinehaulRoutePreparation,
             LRP.DateLinehaulRoutePreparation,
@@ -61,7 +61,8 @@ SELECT DISTINCT
 			LRPCM.CustomsMarkSerie,
 			HL.HubAbbreviation,
 			LRP.VehicleID,
-			LRP.SenderReceiverId
+			LRP.SenderReceiverId,
+			SR.First_Name
 
 
    
