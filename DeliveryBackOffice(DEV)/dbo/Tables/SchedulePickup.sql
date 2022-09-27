@@ -31,7 +31,7 @@
     CONSTRAINT [PK_SchedulePickup] PRIMARY KEY CLUSTERED ([SchedulePickupId] ASC),
     FOREIGN KEY ([IdHubLogistics]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     FOREIGN KEY ([IdSourcePlataform]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
-    CONSTRAINT [FK__ScheduleP__Sende__04459E07] FOREIGN KEY ([SenderId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
+    FOREIGN KEY ([SenderId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_SchedulePickup_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_SchedulePickup_CatTypeVehicle] FOREIGN KEY ([TypeVehicleId]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle])
 );
