@@ -57,9 +57,9 @@ BEGIN
 			OR
 			(@filter = 0 AND VP.Phone  LIKE '%'+@search+'%' COLLATE Latin1_General_CI_AI)
 			OR
-			(@filter = 1 AND VP.Email = @search COLLATE Latin1_General_CI_AI)
+			(@filter = 1 AND RU.UsrEmail = @search COLLATE Latin1_General_CI_AI)
 			OR
-			(@filter = 2 AND CONCAT(PR.PerFirstName,' ',PR.PerLastName) = '%'+@search+'%' COLLATE Latin1_General_CI_AI)
+			(@filter = 2 AND CONCAT(PR.PerFirstName,' ',PR.PerLastName) like '%'+@search+'%' COLLATE Latin1_General_CI_AI)
 		)
 		AND VP.StatusClient = 1	;
 
