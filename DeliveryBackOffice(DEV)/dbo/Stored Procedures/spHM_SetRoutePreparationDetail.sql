@@ -41,7 +41,7 @@ BEGIN
 	--- Control de procesos abiertos
 	DECLARE @IsOpenProcess BIT = 0;
 	DECLARE @IsValidOpenProcess BIT = 1;
-
+	DECLARE @UserProcess NVARCHAR(50)
 
 	--- Control para ServiceManagement
 	DECLARE @IdServiceManagementDetail BIGINT
@@ -99,7 +99,7 @@ BEGIN
 					, [DateCreated]
 					, [TokenUpdated]
 					, [DateUpdated])
-						VALUES (@RouteId, @Date, 1, @GuidePieceIsDry, IIF(@GuidePieceIsDry = 0, 1, 0), 1, @Token, GETDATE(), NULL, NULL)
+						VALUES (@RouteId, @Date, 0, 0, 0, 1, @Token, GETDATE(), NULL, NULL)
 
 					SET @IdRoutePreparation = SCOPE_IDENTITY()
 				END
@@ -161,6 +161,11 @@ BEGIN
 									VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, @Token, GETDATE(), GETDATE())
 							END
 
+							--- Actualizar contadores de guías
+							UPDATE RoutePreparation
+							SET GuidesQuantity += 1
+							WHERE IdRoutePreparation = @IdRoutePreparation
+
 							SET @CreateServiceManagement = 1
 						END
 
@@ -198,6 +203,12 @@ BEGIN
 								WHERE GuideSerie = @GuideSerie
 								AND GuideNumber = @GuideNumber
 								AND NoPiece = @GuidePiece
+
+								--- Actualizar contadores de piezas
+								UPDATE RoutePreparation
+								SET PiecesDry += @GuidePieceIsDry
+								   ,PiecesCold += IIF(@GuidePieceIsDry = 0, 1, 0)
+								WHERE IdRoutePreparation = @IdRoutePreparation
 							END
 							ELSE
 								SET @RModified += 1
@@ -232,7 +243,14 @@ BEGIN
 									WHERE IdRoutePreparationDetailPiece = @IdRoutePreparationDetailPiece
 								END
 								ELSE 
+								BEGIN
 									SET @IsValidOpenProcess = 0;
+
+									SELECT
+										@UserProcess = rpd.UserProcess
+									FROM RoutePreparationDetail rpd
+									WHERE rpd.IdRoutePreparationDetail = @IdRoutePreparationDetail
+								END
 
 							END
 							ELSE IF @CreateServiceManagement = 1
@@ -244,15 +262,24 @@ BEGIN
 									@IdServiceManagementDetail = smd.IdServiceManagementDetail
 								FROM DeliveryOrder do WITH (NOLOCK)
 								INNER JOIN ServiceManagementDetail smd
-									ON (do.IsLastMileReturn = 1
-											AND ((smd.ServiceVisitPointId = do.Sender_ID
-													AND do.Sender_ID <> 0)
-												OR smd.ServiceAddress = do.Sender_Address))
-										OR ((do.IsLastMileReturn IS NULL
-												OR do.IsLastMileReturn = 0)
-											AND ((smd.ServiceVisitPointId = do.Receiver_ID
-													AND do.Receiver_ID <> 0)
-												OR smd.ServiceAddress = do.Receiver_Address))
+									ON smd.IdServiceManagementDetail IN (SELECT DISTINCT
+												smd.IdServiceManagementDetail
+											FROM RoutePreparation rp
+											INNER JOIN RoutePreparationDetail rpd
+												ON rpd.RoutePreparationId = rp.IdRoutePreparation
+											INNER JOIN ServiceManagementDetail smd
+												ON smd.IdServiceManagementDetail = rpd.ServiceManagementDetailId
+											WHERE rp.IdRoutePreparation = @IdRoutePreparation
+											AND rpd.RowStatus = 1)
+										AND ((do.IsLastMileReturn = 1
+												AND ((smd.ServiceVisitPointId = do.Sender_ID
+														AND do.Sender_ID <> 0)
+													OR smd.ServiceAddress = do.Sender_Address))
+											OR ((do.IsLastMileReturn IS NULL
+													OR do.IsLastMileReturn = 0)
+												AND ((smd.ServiceVisitPointId = do.Receiver_ID
+														AND do.Receiver_ID <> 0)
+													OR smd.ServiceAddress = do.Receiver_Address)))
 								WHERE do.Guide_Serie = @GuideSerie
 								AND do.Guide_Number = @GuideNumber
 								AND smd.RowStatus = 1
@@ -285,7 +312,7 @@ BEGIN
 										   ,do.PriceShippment
 										   ,dopd.TimePlaId
 										FROM DeliveryOrder do WITH (NOLOCK)
-										INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+										LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 											ON dopd.GuideSerie = do.Guide_Serie
 												AND dopd.GuideNumber = do.Guide_Number
 										WHERE do.Guide_Serie = @GuideSerie
@@ -378,7 +405,7 @@ BEGIN
 								--- Se asigna el servicio
 								UPDATE RoutePreparationDetail
 								SET ServiceManagementDetailId = @IdServiceManagementDetail
-								WHERE RoutePreparationId = @IdRoutePreparationDetail
+								WHERE IdRoutePreparationDetail = @IdRoutePreparationDetail
 							END
 
 							--- Si tiene acta, revocarla
@@ -387,6 +414,7 @@ BEGIN
 								,adp.DateRevoke = GETDATE()
 								,adp.TokenUpdated = @Token
 								,adp.DateUpdated = GETDATE()
+								,adp.RowStatus = 0
 							FROM ActDetailPiece adp
 							INNER JOIN ActDetail ad
 								ON ad.IdActDetail = adp.ActDetailId
@@ -470,19 +498,51 @@ BEGIN
 									1 'StatusCode'
 									,'Pieza asignada correctamente.' 'Description'
 
+								-- Retornar información de la guía
+								SELECT
+									rpd.IdRoutePreparationDetail 'IdRoutePreparationDetail'
+								   ,rpd.Guide_Serie 'GuideSerie'
+								   ,rpd.Guide_Number 'GuideNumber'
+								   ,COUNT(1) 'Pieces'
+								   ,COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) 'PiecesTotal'
+								   ,do.Receiver_Department 'Department'
+								   ,do.Receiver_Town 'Town'
+								   ,do.Receiver_Address 'Address'
+								   ,rpd.GuideOrder 'GuideOrder'
+								FROM RoutePreparationDetail rpd
+								INNER JOIN DeliveryOrder do WITH (NOLOCK)
+									ON rpd.Guide_Serie = do.Guide_Serie
+										AND rpd.Guide_Number = do.Guide_Number
+								WHERE rpd.IdRoutePreparationDetail = @IdRoutePreparationDetail
+								GROUP BY IdRoutePreparationDetail
+										,rpd.Guide_Serie
+										,rpd.Guide_Number
+										,do.Pieces_Dry
+										,do.Pieces_Cold
+										,do.Receiver_Department
+										,do.Receiver_Town
+										,do.Receiver_Address
+										,rpd.GuideOrder
+
 								-- Si es proceso abierto, retornar información de las piezas
 								IF @IsOpenProcess = 1 
 									SELECT
 										dop.NoPiece
-										,IIF(adp.IdActDetailPiece IS NULL, 0, 1) PieceAct
+									   ,IIF(act.IdActDetailPiece IS NULL, 0, 1) PieceAct
 									FROM DeliveryOrderPiece dop WITH (NOLOCK)
-									LEFT JOIN ActDetail ad
-										ON ad.GuideSerie = dop.GuideSerie
-										AND ad.GuideNumber = dop.GuideNumber
-										AND ad.RowStatus = 1
-									LEFT JOIN ActDetailPiece adp
-										ON adp.ActDetailId  = ad.IdActDetail
-										AND adp.RowStatus = 1
+									LEFT JOIN (SELECT
+											ad.GuideSerie
+										   ,ad.GuideNumber
+										   ,adp.PieceNumber
+										   ,adp.IdActDetailPiece
+										FROM ActDetail ad WITH (NOLOCK)
+										INNER JOIN ActDetailPiece adp WITH (NOLOCK)
+											ON adp.ActDetailId = ad.IdActDetail
+											AND adp.RowStatus = 1
+										WHERE ad.RowStatus = 1) act
+										ON act.GuideSerie = dop.GuideSerie
+											AND act.GuideNumber = dop.GuideNumber
+											AND act.PieceNumber = dop.NoPiece
 									WHERE dop.GuideSerie = @GuideSerie
 									AND dop.GuideNumber = @GuideNumber
 
@@ -500,6 +560,7 @@ BEGIN
 									SELECT
 										7 'StatusCode'
 										,'Ya existe un proceso abierto para la guía con otro usuario.' 'Description'
+										,@UserProcess 'UserProcess'
 							END
 						END
 						ELSE
