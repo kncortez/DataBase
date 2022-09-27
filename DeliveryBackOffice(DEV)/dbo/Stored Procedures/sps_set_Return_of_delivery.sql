@@ -5,6 +5,11 @@
 -- Create date: <2020-09-15>
 -- Description:	<Devolucion entrega de guía>
 -- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-09-26>
+-- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
 		@Guide_Serie AS VARCHAR(2), --guide serie
 		@Guide_Number AS INT, --guide number
@@ -33,6 +38,11 @@ BEGIN
 
 				IF (@DateOfDelivery > @Datetime)
 				BEGIN
+
+				 --l momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+				  UPDATE  dbo.warehouse SET Rack_Position=NULL 
+				  where Guide_Serie = @Guide_Serie AND 
+                        Guide_Number = @Guide_Number
 
 					-- Actualizar registro de guía a último estado 
 					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
