@@ -297,6 +297,26 @@ BEGIN
 						,RusDateCreated)
 					values (@IdRol,@IdSystem,@IdUser,1,'SYS-CAQUINO',GETDATE())
 					
+
+					-- Author: Oscar Morales
+					-- Date: 2022-09-27
+					-- Agregar registros de los tutoriales
+					INSERT INTO [dbo].[TutorialByAccount] ([TutorialId]
+					, [AccountId]
+					, [ToDisplay]
+					, [RowStatus]
+					, [DateCreated]
+					, [TokenCreated])
+						SELECT
+							t.IdTutorial
+						   ,@IdAccount
+						   ,1
+						   ,1
+						   ,GETDATE()
+						   ,'SYS-ADMIN'
+						FROM Tutorial t
+						WHERE t.RowStatus = 1
+					-- Fin Agregar registros de los tutoriales
 				
 				END TRY
 				BEGIN CATCH				
