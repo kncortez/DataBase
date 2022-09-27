@@ -18,7 +18,12 @@ CREATE PROCEDURE [dbo].[sphd_CreateAlertOrder]
 	@iduser bigint
 AS
 BEGIN
-	BEGIN TRANSACTION
+		DECLARE @TranCounter INT;  
+		SET @TranCounter = @@TRANCOUNT;  
+		IF @TranCounter > 0  
+			SAVE TRANSACTION CreateAlertOrderPT;
+		ELSE  
+			BEGIN TRANSACTION;  
 	
 		BEGIN TRY
 		BEGIN
@@ -140,7 +145,8 @@ BEGIN
 
 
 		END
-
+		IF @TranCounter = 0  
+			COMMIT TRANSACTION;
 		END TRY
 
 		BEGIN CATCH
@@ -149,8 +155,12 @@ BEGIN
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID',
 				@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide'
-			ROLLBACK TRANSACTION
+			IF @TranCounter = 0  
+				ROLLBACK TRANSACTION;  
+			ELSE IF XACT_STATE() <> -1  
+				ROLLBACK TRANSACTION CreateAlertOrderPT;  
 		END CATCH
-		COMMIT TRANSACTION;	
+
+
 END        
 		
