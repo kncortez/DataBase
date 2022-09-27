@@ -346,7 +346,7 @@ PRINT @ExistePiezaPorServicio
 		--	   ,@ValidateOperation AS 'NumTransferID'
 		--END
 	UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
-		  SET Active = 0, UserUpdated = @TokenId, DateUpdated = GETDATE()
+		  SET Active = 0, UserUpdated = @TokenId, DateUpdated = GETDATE(),Rack_Position=NULL 
 			 WHERE Guide_Serie=SUBSTRING(@Guide_Number,1,2) and Guide_Number=SUBSTRING(Replace(@guide_Number,'FD',''),0,
 				                                                          CHARINDEX('-',Replace(@guide_Number,'FD',''))) 
 		COMMIT TRANSACTION;
