@@ -55,7 +55,11 @@ BEGIN
 						join dbo.Province prv on prv.IdProvince = twn.IdProvince
 						join dbo.CatCityPlace ctp on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
 						left join dbo.VisitPointClient vp on vp.CodeOfReference=ua.CodeOfReference
-						left join dbo.ConfirmedAddress conf on conf.NirPhone=ua.UadNirPhone and conf.Phone=ua.UadPhone
+						left join dbo.ConfirmedAddress conf on 
+								conf.NirPhone=ua.UadNirPhone
+								AND conf.Phone=ua.UadPhone
+								AND conf.TownshipId = VP.IdTownship
+								AND conf.[Address] = VP.Address
 					where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser and ua.UadRowStatus = 1
 						and (ua.UadIdAddress = @IdAddress or @IdAddress = -1)
 					FOR XML PATH(''), TYPE
