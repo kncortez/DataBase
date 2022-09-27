@@ -112,6 +112,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica 
 
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para calificación de envío, 1 bueno, 0 malo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SchedulePickup', @level2type = N'COLUMN', @level2name = N'ServiceRate';
+
+GO
 CREATE NONCLUSTERED INDEX [idx_TransaccionFAC]
     ON [dbo].[SchedulePickup]([TransaccionFAC] ASC);
 
