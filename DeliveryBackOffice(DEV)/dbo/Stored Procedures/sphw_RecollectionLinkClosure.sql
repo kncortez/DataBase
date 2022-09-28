@@ -14,7 +14,7 @@ CREATE PROCEDURE sphw_RecollectionLinkClosure
 	@Token nvarchar(100),
 	@IdAccount int,
 	@Scheduled  bit,
-	@Startdate datetime,
+	@Startdate datetime = NULL,
 	--DATOS DEL VISITPOINT A MODIFICAR
 	@IdTownship INT = NULL,
 	@IdCountry  nvarchar(10) = 'GT',
@@ -63,7 +63,7 @@ BEGIN
 			Description,
 			ServiceId
 		)
-		EXECUTE [dbo].[sphw_RegisterRecolectionRequest] 
+		EXECUTE [dbo].[sphw_RegisterRecollectionRequest] 
 			@TAC1
 			,@TAC2
 			,@Scheduled
