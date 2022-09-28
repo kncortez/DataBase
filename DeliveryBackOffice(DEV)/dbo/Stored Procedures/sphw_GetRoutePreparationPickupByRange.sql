@@ -72,9 +72,9 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
 				ON css.IdServiceStatus = srv.ServiceStatusId
 		WHERE
-			CONVERT(date, shp.StartDate) >= @startDate
+			CONVERT(date, shp.DateCreated) >= @startDate
 			AND
-			CONVERT(date, shp.StartDate) <= @endDate
+			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND shp.AccountId = @accountId
 		ORDER BY shp.DateCreated desc
@@ -137,9 +137,9 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] as sr WITH (NOLOCK)
 				ON ra.IdCurrierMan = sr.ID
 		WHERE
-			CONVERT(date, shp.StartDate) >= @startDate
+			CONVERT(date, shp.DateCreated) >= @startDate
 			AND
-			CONVERT(date, shp.StartDate) <= @endDate
+			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
 		ORDER BY shp.DateCreated desc
