@@ -63,7 +63,7 @@ BEGIN
 			Description,
 			ServiceId
 		)
-		EXECUTE [dbo].[sphw_RegisterRecolectionRequest] 
+		EXECUTE [dbo].[sphw_RegisterRecollectionRequest] 
 			@TAC1
 			,@TAC2
 			,@Scheduled
