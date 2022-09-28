@@ -26,7 +26,7 @@ BEGIN
 		   ,rp.PiecesDry
 		   ,rp.PiecesCold
 		   ,rp.DeliveryOrderBySettlementId
-		FROM RoutePreparation rp
+		FROM RoutePreparation rp WITH (NOLOCK)
 		WHERE rp.CatRouteId = @RouteId
 		AND rp.DateRoutePreparation = @Date
 		AND rp.RowStatus = 1
@@ -42,14 +42,14 @@ BEGIN
 		   ,do.Receiver_Town 'Town'
 		   ,do.Receiver_Address 'Address'
 		   ,rpd.GuideOrder 'GuideOrder'
-		FROM RoutePreparation rp
-		INNER JOIN RoutePreparationDetail rpd
+		FROM RoutePreparation rp WITH (NOLOCK)
+		INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
 				AND rpd.RowStatus = 1
-		INNER JOIN RoutePreparationDetailPiece rpdp
+		INNER JOIN RoutePreparationDetailPiece rpdp WITH (NOLOCK)
 			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				AND rpdp.RowStatus = 1
-		INNER JOIN DeliveryOrder do
+		INNER JOIN DeliveryOrder do WITH (NOLOCK)
 			ON rpd.Guide_Serie = do.Guide_Serie
 				AND rpd.Guide_Number = do.Guide_Number
 		WHERE rp.CatRouteId = @RouteId
