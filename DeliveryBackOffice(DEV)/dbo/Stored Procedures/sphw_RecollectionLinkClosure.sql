@@ -119,8 +119,8 @@ BEGIN
 					,VP.DateUpdated = GETDATE()
 					,VP.Town= ISNULL(@TownShipName,VP.Town)
 					,VP.Department= ISNULL(@ProvinceName,VP.Department)
-					,VP.Latitude=@Latitude
-					,VP.Longitude=@Longitude
+					,VP.Latitude=ISNULL(@RecollectionLatitude,VP.Latitude)
+					,VP.Longitude=ISNULL(@RecollectionLongitude,VP.Longitude)
 			FROM [dbo].[VisitPointClient] VP 
 				WHERE [CodeOfReference] =  @CodeOfReference
 			--------FIN ACTUALIZACIÓN--------------
