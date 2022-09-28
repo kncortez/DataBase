@@ -559,8 +559,16 @@ BEGIN
 								ELSE
 									SELECT
 										7 'StatusCode'
-										,'Ya existe un proceso abierto para la guía con otro usuario.' 'Description'
-										,@UserProcess 'UserProcess'
+									   ,'Ya existe un proceso abierto para la guía con otro usuario.' 'Description'
+									   ,ISNULL((SELECT
+												CONCAT(p.PerFirstName, ' ', p.PerLastName)
+											FROM TokenLog tl WITH (NOLOCK)
+											INNER JOIN RegisterUser ru WITH (NOLOCK)
+												ON ru.UsrIdUser = tl.TknIdUser
+											INNER JOIN Person p WITH (NOLOCK)
+												ON p.PerIdPerson = ru.UsrIdPerson
+											WHERE tl.TknIdToken = @UserProcess)
+										, @UserProcess) 'UserProcess'
 							END
 						END
 						ELSE
