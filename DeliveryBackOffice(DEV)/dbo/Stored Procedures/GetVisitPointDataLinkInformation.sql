@@ -86,7 +86,7 @@ BEGIN
 			AND
 			VPDL.DataLinkStatusId NOT IN (@CompletedLinkStatusId) -- Si link esta en estado no operable
 			AND
-			(VPDL.ServiceTokenExpiration IS NULL OR VPDL.ServiceTokenExpiration <= GETDATE()) -- Si Link ha expirado por tiempo
+			(VPDL.ServiceTokenExpiration IS NULL OR VPDL.ServiceTokenExpiration >= GETDATE()) -- Si Link ha expirado por tiempo
 			AND
 			VPDL.RowStatus = 1 -- Si link sigue activo lógicamente
 
