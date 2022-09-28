@@ -77,7 +77,7 @@ BEGIN
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
 			AND shp.AccountId = @accountId
-		
+		ORDER BY shp.DateCreated desc
 	END
 	ELSE IF (@userId IS NOT NULL AND ISNULL(@accountId,0) = 0)
 	BEGIN
@@ -142,7 +142,7 @@ BEGIN
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
-
+		ORDER BY shp.DateCreated desc
 	END
 	ELSE
 	BEGIN
