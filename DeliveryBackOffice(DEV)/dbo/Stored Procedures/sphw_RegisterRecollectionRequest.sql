@@ -110,7 +110,8 @@ BEGIN
 					AmountPickup,
 					IdSourcePlataform,
 					AddressPickup,
-					TypeVehicleId
+					TypeVehicleId,
+					IsScheduled
 				)
 				SELECT @IdAccount,
 					   @StartDate,
@@ -132,7 +133,8 @@ BEGIN
 					   NULL,
 					   NULL,
 					   vp.Address,
-					   @TypeVehicleId					   
+					   @TypeVehicleId,
+					   @Scheduled
 				FROM VisitPointClient VP
 					INNER JOIN UserAddress UA ON UA.CodeOfReference =VP.CodeOfReference
 					INNER JOIN Customer CU ON VP.CustomerID =CU.IdCustomer					
