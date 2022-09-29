@@ -1128,6 +1128,7 @@
     <Build Include="dbo\Tables\HubLogisticByUser.sql" />
     <Build Include="dbo\Stored Procedures\sphw_RegisterRecollectionRequest.sql" />
     <Build Include="dbo\Stored Procedures\GetNearestCourierCandidates.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_AssignRouteCollection.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
