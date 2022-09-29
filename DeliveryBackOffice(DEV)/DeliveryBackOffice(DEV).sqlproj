@@ -1053,6 +1053,10 @@
     <Build Include="dbo\Stored Procedures\GetStationLocation.sql" />
     <Build Include="dbo\Stored Procedures\GetGuidesForExternalOrder.sql" />
     <Build Include="dbo\User Defined Types\TblGuideOrderETA.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateActivateHub.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_getHubsOnly.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetCountryHubs.sql" />
+    <Build Include="dbo\Stored Procedures\ModifyHub.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
