@@ -338,15 +338,9 @@ PRINT @ExistePiezaPorServicio
 
 
 		END
-		--ELSE
-		--BEGIN
-		--	SELECT
-		--		0 AS 'StatusCode'
-		--	   ,'El registro no existe' AS 'Description'
-		--	   ,@ValidateOperation AS 'NumTransferID'
-		--END
+	--- Borrado Logico de posición en la guía
 	UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
-		  SET Active = 0, UserUpdated = @TokenId, DateUpdated = GETDATE(),Rack_Position=NULL 
+		  SET Active = 0, UserUpdated = @TokenId, DateUpdated = GETDATE()
 			 WHERE Guide_Serie=SUBSTRING(@Guide_Number,1,2) and Guide_Number=SUBSTRING(Replace(@guide_Number,'FD',''),0,
 				                                                          CHARINDEX('-',Replace(@guide_Number,'FD',''))) 
 		COMMIT TRANSACTION;
