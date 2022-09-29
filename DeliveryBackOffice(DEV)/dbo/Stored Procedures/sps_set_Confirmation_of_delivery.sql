@@ -82,7 +82,7 @@ BEGIN
 
 
 				  --l momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
-				  UPDATE  dbo.warehouse SET Rack_Position=NULL 
+				  UPDATE  dbo.warehouse SET Active =0 
 				  where Guide_Serie = @Guide_Serie AND 
                         Guide_Number = @Guide_Number
 
