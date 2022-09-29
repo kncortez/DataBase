@@ -19,7 +19,6 @@ BEGIN
 					WHERE LRPCD.Guide_Serie  = @GuideSerie   AND 
 						  LRPCD.Guide_Number = @GuideNumber  AND 
 						  LRPCD.UserProcess  = @Token        AND 
-						  LRPCD.RowStatus=1                  AND 
 						  LRPCD.IsOpenProcess = 1
 
    IF (@IdDetail > 0 OR  @IdDetail IS NOT NULL)
@@ -34,7 +33,6 @@ BEGIN
 			WHERE  Guide_Serie   =  @GuideSerie   AND 
 				   Guide_Number  =  @GuideNumber  AND 
 				   UserProcess   =  @Token        AND 
-				   RowStatus=1                    AND 
 				   IsOpenProcess = 1;
            
 		   UPDATE [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]
@@ -50,8 +48,7 @@ BEGIN
 				SET @RESULT = 2; /* PROCESESO FALLIDO */
 			END  CATCH
 	END 
-	
-     
+	 
 	 SELECT @Result AS Result;
 
 END
