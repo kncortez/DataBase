@@ -18,6 +18,21 @@ BEGIN
         DROP TABLE #listaCheck;
     IF OBJECT_ID('tempdb.dbo.#listaCheck1', 'U') IS NOT NULL
         DROP TABLE #listaCheck1;
+				
+	DECLARE @SchedulePickupData AS TABLE (
+		ServiceStartDate DATETIME,
+		ServiceEndDate DATETIME,
+		ServiceVisitPointId INT,
+		ServiceCustomerName NVARCHAR(100),
+		ServiceProvinceId INT,
+		ServiceTownshipId INT,
+		ServiceAddress NVARCHAR(600),
+		ServicePhone NVARCHAR(50),
+		HubLogisticsId INT,
+		ServiceAmount DECIMAL(18,2),
+		TypeVehicleId INT
+	);
+	DECLARE @PickupSubTypeServiceManagementId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI );
 
     DECLARE @idCourrier AS INT;
     DECLARE @idRouteAssigment AS INT;
@@ -462,6 +477,75 @@ BEGIN
                        )
             WHERE sm.IdSchedulePickup = @idSchedulePickup;
         END;
+
+		-- Proceso de ruta unificada
+		IF( 
+			NOT EXISTS
+			(
+				SELECT
+					TOP 1
+						1
+				FROM
+					[DeliveryBackOffice].[dbo].[ServiceManagementDetail] SMD WITH(NOLOCK)
+					INNER JOIN
+						@SchedulePickupData SPD
+						ON
+							SMD.ServiceVisitPointId = SPD.ServiceVisitPointId
+							AND
+							SMD.ServiceAddress = SPD.ServiceAddress
+							AND
+							SMD.SubTypeServiceManagmentId = @PickupSubTypeServiceManagementId
+							AND
+							CAST(SMD.ServiceStartDate AS DATE) = CAST(GETDATE() AS DATE)
+							AND
+							SMD.RowStatus = 1
+			)
+		)
+		BEGIN
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagementDetail]
+				(
+					ServiceManagement
+					,ServiceStartDate
+					,ServiceEndDate
+					,ServiceVisitPointId
+					,ServiceCustomerName
+					,ProvinceId
+					,TownshipId
+					,ServiceAddress
+					,ServicePhone
+					,HubLogisticsId
+					,ServiceAmount
+					,ServiceExtraAmount
+					,TypeVehicleId
+					,SubTypeServiceManagmentId
+					,RowStatus
+					,TokenCreated
+					,DateCreated
+				)
+			SELECT
+				TOP 1
+					@idSchedule
+					,SPD.ServiceStartDate
+					,SPD.ServiceEndDate
+					,SPD.ServiceVisitPointId
+					,SPD.ServiceCustomerName
+					,SPD.ServiceProvinceId
+					,SPD.ServiceTownshipId
+					,SPD.ServiceAddress
+					,SPD.ServicePhone
+					,SPD.HubLogisticsId
+					,ISNULL(SPD.ServiceAmount, 0)
+					,0
+					,SPD.TypeVehicleId
+					,@PickupSubTypeServiceManagementId
+					,1
+					,@token
+					,GETDATE()
+			FROM
+				@SchedulePickupData SPD
+
+		END
 
         --Proceso para rutas de Rabbit
         IF
