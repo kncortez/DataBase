@@ -1071,6 +1071,7 @@
     <Build Include="dbo\Stored Procedures\spHM_RegisterIndividualPartOpenProcesses.sql" />
     <Build Include="dbo\Stored Procedures\spHM_OpenProcessTermination.sql" />
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessesPreparationDeliveries.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_OpenProcessTermination.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
