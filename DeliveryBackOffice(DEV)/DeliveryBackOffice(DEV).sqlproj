@@ -1078,6 +1078,8 @@
     <Build Include="dbo\Tables\ConfigWarehouseByRouteAssignment.sql" />
     <Build Include="dbo\Tables\ActDetail.sql" />
     <Build Include="dbo\Tables\Act.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\User Defined Types\TblConfigWarehouseByRouteAssignment.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
