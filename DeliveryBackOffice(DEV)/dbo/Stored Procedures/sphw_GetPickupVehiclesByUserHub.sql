@@ -22,6 +22,8 @@ BEGIN
 	   ,cl.CourierPhone CourierPhone
 	   ,ctv.IdTypeVehicle VehicleTypeId
 	   ,ctv.Name VehicleTypeName
+	   ,cv.IdVehicle VehicleId
+	   ,cv.UnitNumber VehicleUnitNumber
 	   ,cv.Plate VehiclePlate
 	   ,(SELECT
 				COUNT(1)
@@ -37,17 +39,23 @@ BEGIN
 			INNER JOIN DeliveryOrderPiece dop WITH (NOLOCK)
 				ON dop.GuideSerie = dopd.GuideSerie
 				AND dop.GuideNumber = dopd.GuideNumber
+			INNER JOIN CatServiceStatus css WITH (NOLOCK)
+				ON css.IdServiceStatus = sm.ServiceStatusId
 			WHERE sm.IdPuRouteAssigment = ra.IdRouteAssigment
+			AND css.Name = 'Recolectado'
 			AND sm.RowStatus = 1)
-		TotalPieces
+		TotalPiecesSuccessful
 	   ,(SELECT
 				COUNT(1)
 			FROM ServiceManagement sm WITH (NOLOCK)
 			INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 				ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
+			INNER JOIN CatServiceStatus css WITH (NOLOCK)
+				ON css.IdServiceStatus = sm.ServiceStatusId
 			WHERE sm.IdPuRouteAssigment = ra.IdRouteAssigment
+			AND css.Name = 'Recolectado'
 			AND sm.RowStatus = 1)
-		TotalGuides
+		TotalGuidesSuccessful
 	   ,(SELECT
 				COUNT(1)
 			FROM ServiceManagement sm WITH (NOLOCK)
