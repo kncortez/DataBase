@@ -3,7 +3,7 @@
 -- Create date: <22-09-2022>
 -- Description:	<Método para carga de servicios pendientes de procesar filtrado por hubs y rango de fechas>
 -- =============================================
-create PROCEDURE sphw_GetPendingRecollectionServices
+CREATE PROCEDURE sphw_GetPendingRecollectionServices
 	-- Add the parameters for the stored procedure here
 	@HubId	INT = -1,
 	@StartDate DATE =NULL,
@@ -55,7 +55,9 @@ BEGIN
 			shp.IsScheduled 'Scheduled',
 			RA.IdCurrierMan 'CurrierManId',
 			SNR.First_Name 'CurrierFirstName',
-			SNR.Last_Name 'Last_Name'
+			SNR.Last_Name 'Last_Name',
+			vpc.Latitude 'Latitude',
+			vpc.Longitude 'Longitude'
            
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
