@@ -1076,6 +1076,8 @@
     <Build Include="dbo\Tables\UnifiedRouteSettlementDetail.sql" />
     <Build Include="dbo\Tables\UnifiedRouteSettlement.sql" />
     <Build Include="dbo\Tables\ConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\Tables\ActDetail.sql" />
+    <Build Include="dbo\Tables\Act.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
