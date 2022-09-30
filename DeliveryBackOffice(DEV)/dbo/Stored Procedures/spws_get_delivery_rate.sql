@@ -670,17 +670,6 @@ BEGIN
 
 				END
 
-				IF(@IsTDA = 'true') -- Si se detecta un TDA para tarifa "especial"
-				BEGIN
-					SELECT
-						TOP 1 
-							@IdSegment = sg.CrsId 
-					FROM 
-						[DeliveryBackOffice].dbo.CatRateSegment sg WITH(NOLOCK) 
-					WHERE 
-						sg.CrsShortName ='ESP' COLLATE Latin1_General_CI_AI
-				END
-
 				IF(@IdSegment IS NULL)-- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
 				BEGIN
 					SELECT
