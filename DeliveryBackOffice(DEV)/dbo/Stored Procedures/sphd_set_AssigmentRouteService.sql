@@ -4,6 +4,11 @@
 -- Create date: <2021-12-28>
 -- Description:	<Crea un registro en la tabla SchedulePickup y asigna una ruta a un servicio>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vasquez>
+-- Create date: <2021-09-30>
+-- Description:	<Cuando se realiza el proceso de asignación de servicios programados a rutas de recolección, también se generan los registros de ruta unificada.>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_set_AssigmentRouteService]
 	@token AS VARCHAR(50),
 	@idRoute AS INT,
@@ -13,6 +18,12 @@ AS
 BEGIN
 	
 	SET NOCOUNT ON;
+	DECLARE @ServiceCustomerName AS NVARCHAR(100)
+	DECLARE @subtypeservicemanagment AS INT
+	DECLARE @SenderPhone AS NVARCHAR(50)
+	DECLARE @AddressPickup AS NVARCHAR(100)
+	DECLARE	@TownshipId AS INT
+	DECLARE @ProvinceId AS INT
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -90,7 +101,8 @@ BEGIN
 			END
 			ELSE
 			BEGIN 
-				SELECT @idSchedulePickup = spu.SchedulePickupId
+				SELECT @idSchedulePickup = spu.SchedulePickupId,
+				       @ServiceCustomerName = spu.SenderName
 						FROM [dbo].[SchedulePickup] spu
 						INNER JOIN #TblRouteData sp ON spu.SenderId = sp.CodeOfReference
 						WHERE spu.StartDate = sp.StartDate AND
@@ -131,6 +143,7 @@ BEGIN
 				BEGIN
 					SELECT
 						@idSchedule = IdServiceManagement
+						
 					FROM [DeliveryBackOffice].[dbo].[ServiceManagement] NOLOCK
 					WHERE IdSchedulePickup = @idSchedulePickup
 				
@@ -166,6 +179,76 @@ BEGIN
 			END
 			
 			SET	@indexData = @indexData + 1
+		
+			SELECT @ServiceCustomerName = SPu.SenderName,
+			       @SenderPhone= SPu.SenderPhone, 
+				   @AddressPickup =  SPu.AddressPickup,
+			       @TownshipId =SPu.TownshipId
+			From dbo.SchedulePickup SPu
+			where  SPu.SchedulePickupId=@idSchedulePickup
+
+			SET @ProvinceId = (SELECT IdProvince FROM dbo.Township
+			WHERE IdTownship= @TownshipId)
+
+			SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment WHERE Name = 'Recolección' COLLATE Latin1_General_CI_AI)
+			
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagementDetail]
+			(
+			ServiceManagement,
+			ServiceStartDate,
+			ServiceEndDate,
+			ServiceVisitPointId,
+			ServiceVisitPointPortfolioId,
+			ServiceCustomerName,
+			ProvinceId,
+			TownshipId,
+			SettlementId,
+			ServiceAddress,
+			ServiceSpecialInstructions,
+			ServicePhone,	
+			HubLogisticsId,
+			ServiceAmount,
+			ServiceExtraAmount,
+			TypeVehicleId,
+			SubTypeServiceManagmentId,
+			RowStatus,
+			TokenCreated,
+			DateCreated,	
+			TokenUpdated,
+			DateUpdated
+
+			)
+			VALUES
+			(
+			@idSchedule,
+			GETDATE(),
+	     	GETDATE(),
+			NULL,
+			NULL,
+			@ServiceCustomerName
+			,@ProvinceId
+			,@TownshipId
+			,NULL
+			,@AddressPickup
+			,NULL
+			,@SenderPhone
+			,NULL
+			,0
+			,0
+			,NULL
+			,@subtypeservicemanagment--<SubTypeServiceManagmentId, bigint,>
+			,1
+			,@Token
+			,GETDATE()
+			,NULL
+			,NULL
+
+
+			)
+
+
+
+
 			
 		END--ENDWHILE
 
