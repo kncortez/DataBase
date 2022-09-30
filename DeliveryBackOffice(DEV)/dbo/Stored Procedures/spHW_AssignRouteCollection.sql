@@ -6,7 +6,7 @@
 CREATE PROCEDURE [dbo].[spHW_AssignRouteCollection]
 @IdCurrierMan AS INT,
 @IdRoute AS INT,
-@IdVehicle AS INT,
+@IdVehicle AS INT=NULL,
 @IdServiceManagment AS INT,
 @Token AS NVARCHAR(50),
 @IdRouteAssigment AS INT
@@ -17,7 +17,7 @@ BEGIN
 	
 	SET NOCOUNT ON;
 
-	SET @IDRUTETYPE =(SELECT IdTypeRoute FROM DBO.CatTypeRoute WITH (NOLOCK) WHERE Name ='Recolección' AND RowStatus=1);
+	SET @IDRUTETYPE =(SELECT IdTypeRoute FROM DBO.CatTypeRoute WITH (NOLOCK) WHERE Name ='Recolección'  COLLATE Latin1_General_CI_AI AND RowStatus=1);
 BEGIN TRANSACTION
 BEGIN TRY
    IF (EXISTS(
@@ -28,7 +28,6 @@ BEGIN TRY
 		ON RA.IdRoute = CR.IdRoute
 		WHERE RA.IdCurrierMan = @IdCurrierMan AND 
 		      RA.IdRoute = @IdRoute AND 
-			  RA.IdVehicle = @IdVehicle AND 
 			  CR.IdTypeRoute = @IDRUTETYPE AND RA.DateOfRoute=FORMAT(GETDATE(),'yyyy-MM-dd') 
        ))
 	BEGIN
@@ -37,29 +36,26 @@ BEGIN TRY
 			UPDATE [DeliveryBackOffice].[dbo].[ServiceManagement]
 				SET IdPuCourrier = @IdCurrierMan,
 					IdPuRouteAssigment = @idRouteAssigment,
-					ServiceStatusId = 2
+					ServiceStatusId = 2,
+					TokenUpdated = @Token,
+					DateUpdated = GETDATE()
 				WHERE IdServiceManagement = @IdServiceManagment 
 	
 	         SELECT Result=1, Descrip='Ruta asignada exitosamente'
 
-		COMMIT TRANSACTION
+	
 
 	END
 		ELSE
 		  BEGIN 
-				SELECT Result=0, Descrip='Vehiculo no disponible'
+				SELECT Result=0, Descrip='CurrierMan no disponible'
 		  END 
-
+	COMMIT TRANSACTION
 	END TRY
 	BEGIN CATCH
 
-        SELECT 0 [blnResult],
-               ERROR_NUMBER() AS [ErrorNumber],
-               ERROR_SEVERITY() AS [ErrorSeverity],
-               ERROR_STATE() AS [ErrorState],
-               ERROR_PROCEDURE() AS [ErrorProcedure],
-               ERROR_LINE() AS [ErrorLine],
-               ERROR_MESSAGE() AS [ErrorMessage];
+        SELECT  Result =2
+             
 		
 		ROLLBACK TRANSACTION;
 	END CATCH
