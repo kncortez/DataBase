@@ -74,13 +74,13 @@ BEGIN
 				ON
 					VPDL.VisitPointId = VPC.CodeOfReference
 			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK)
-				ON
-					VPC.Department = Prv.ProvinceName COLLATE Latin1_General_CI_AI
-			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
 				ON
-					VPC.Town = Twn.TownshipName COLLATE Latin1_General_CI_AI
+					VPC.IdTownship = Twn.IdTownship
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK)
+				ON
+					Twn.IdProvince = Prv.IdProvince
 		WHERE
 			VPDL.ServiceToken = @DataLinkToken
 			AND
