@@ -48,6 +48,8 @@ BEGIN
 	DECLARE @IdServiceManagement INT
 	DECLARE @CreateServiceManagement BIT = 0;
 
+	--- Control RouteAssignment
+	DECLARE @IdRouteAssignment INT
 
 	BEGIN TRANSACTION
 
@@ -110,6 +112,22 @@ BEGIN
 					-- Validar que la ruta no haya sido despachada
 					IF @IdManifest IS NULL
 					BEGIN
+
+						-- Verificar si existe RouteAssignment, sino lo crea
+						SET @IdRouteAssignment = (SELECT
+								ra.IdRouteAssigment
+							FROM RouteAssigment ra
+							WHERE ra.IdRoute = @RouteId
+							AND ra.DateOfRoute = @Date
+							AND ra.RowStatus = 1)
+
+						IF @IdRouteAssignment IS NULL
+						BEGIN
+							INSERT INTO RouteAssigment (IdRoute, DateOfRoute, RowStatus, TokenCreated, DateCreated)
+								VALUES (@RouteId, @Date, 1, @Token, GETDATE())
+
+							SET @IdRouteAssignment = SCOPE_IDENTITY()
+						END
 
 						-- Verificar si existe la guía en el detalle de la preparación de ruta
 						SELECT
@@ -294,7 +312,8 @@ BEGIN
 									, [ServiceStatusId]
 									, [SubTypeServiceManagmentId]
 									, [Amount]
-									, [CatPaymentTimeId])
+									, [CatPaymentTimeId]
+									, [IdPuRouteAssigment])
 										SELECT
 											1
 										   ,@Token
@@ -311,6 +330,7 @@ BEGIN
 											)
 										   ,do.PriceShippment
 										   ,dopd.TimePlaId
+										   ,@IdRouteAssignment
 										FROM DeliveryOrder do WITH (NOLOCK)
 										LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 											ON dopd.GuideSerie = do.Guide_Serie
@@ -568,7 +588,7 @@ BEGIN
 											INNER JOIN Person p WITH (NOLOCK)
 												ON p.PerIdPerson = ru.UsrIdPerson
 											WHERE tl.TknIdToken = @UserProcess)
-										, @UserProcess) 'UserProcess'
+										, @UserProcess) 'UserProcess'	
 							END
 						END
 						ELSE
