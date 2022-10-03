@@ -13,26 +13,70 @@ CREATE PROCEDURE [dbo].[spHW_AssignmentCollectionServicesCourier]
 AS
 BEGIN
 
-	DECLARE @IDRUTETYPE AS INT=(SELECT IdTypeRoute FROM DBO.CatTypeRoute WITH (NOLOCK) WHERE Name ='Recolección' AND RowStatus=1);
-	DECLARE @status INT =
+    DECLARE @SenderName AS NVARCHAR(100)
+	DECLARE @SenderPhone AS NVARCHAR(50)
+	DECLARE @SenderAdress AS NVARCHAR(100)
+	DECLARE @Result AS INT
+	DECLARE @IdSchedulePickup as int
+	DECLARE @IDRUTETYPE AS INT=(
+	                            SELECT IdTypeRoute 
+	                            FROM DBO.CatTypeRoute WITH (NOLOCK)
+								WHERE Name ='Recolección' COLLATE Latin1_General_CI_AI AND RowStatus=1
+								);
+	DECLARE @status AS  INT =
             (
                 SELECT StatusOrderId
-                FROM StatusOrder
-                WHERE OrderDescription = 'Programado para recolección'
+                FROM StatusOrder WITH(NOLOCK) 
+                WHERE OrderDescription = 'Programado para recolección' COLLATE Latin1_General_CI_AI
             );
-	
+
+
+			SELECT 
+					@SenderName   =   SMD.ServiceCustomerName,
+					@SenderPhone  =  SMD.ServicePhone,
+					@SenderAdress = SMD.ServiceAddress
+			FROM [dbo].[ServiceManagementDetail] SMD WITH(NOLOCK) 
+			WHERE 	SMD.ServiceManagement = @IdServiceManagment
+
+
+			SELECT   @IdSchedulePickup = IdSchedulePickup
+					FROM [dbo].[ServiceManagement] SMD WITH(NOLOCK) 
+					WHERE SMD.IdServiceManagement = @IdServiceManagment
+
+
 	SET NOCOUNT ON;
-	IF(EXISTS(select TOP 1 1 from dbo.SchedulePickup where SchedulePickupId =36365))
+	IF(EXISTS(SELECT TOP 1 1 FROM dbo.SchedulePickup WITH(NOLOCK) WHERE SchedulePickupId = @IdSchedulePickup))
 	BEGIN
-	UPDATE [DeliveryBackOffice].[dbo].[ServiceManagement]
-				SET IdPuCourrier = @IdCurrierMan,
-					IdPuRouteAssigment = @idRouteAssigment,
-					ServiceStatusId = 2,
-					TokenUpdated = @Token,
-					DateUpdated = GETDATE()
-				WHERE IdServiceManagement = @IdServiceManagment 
+	BEGIN TRANSACTION
+	BEGIN TRY
+			UPDATE [DeliveryBackOffice].[dbo].[ServiceManagement]
+						SET IdPuCourrier = @IdCurrierMan,
+							IdPuRouteAssigment = @idRouteAssigment,
+							ServiceStatusId = @status,
+							TokenUpdated = @Token,
+							DateUpdated = GETDATE()
+						WHERE IdServiceManagement = @IdServiceManagment 
 	
-	         SELECT Result=1, Descrip='Ruta asignada exitosamente'
+			UPDATE [DeliveryBackOffice].[dbo].[SchedulePickup]
+						SET  StartDate = GETDATE(),
+							 EndDate = GETDATE(),
+							 SenderName    =  @SenderName,
+							 SenderPhone   =  @SenderPhone,
+							 AddressPickup =  @SenderAdress
+						WHERE SchedulePickupId = @IdServiceManagment 
+
+					SET @Result = 1
+
+      COMMIT TRANSACTION
+	  END TRY
+		BEGIN CATCH
+		   SET @Result = 2
+			ROLLBACK
+
+	  END CATCH
+
+	
+	SELECT @Result;
 
 	END
 	
