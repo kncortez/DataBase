@@ -1,7 +1,7 @@
 ﻿-- =============================================
 -- Author:		<Edelman Vásquez>
 -- Create date: <26/09/26>
--- Description:	<>
+-- Description:	<SP desplegar catálogo de estados para servicios>
 -- =============================================
 CREATE PROCEDURE [dbo].[StateCatalogforServices] 
 
@@ -11,6 +11,6 @@ BEGIN
 	SET NOCOUNT ON;
 
    SELECT IdServiceStatus,
-          Name 
-   FROM dbo.CatServiceStatus
+          [Name] 
+   FROM dbo.CatServiceStatus WITH (NOLOCK)
 END
