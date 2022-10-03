@@ -242,6 +242,8 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
+														AND
+														RBUBA.RusIdSystem = @IdSystem
 														AND 
 														RBUBA.RusRowStatus = 1
 												INNER JOIN 
@@ -287,6 +289,8 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
+														AND
+														RBUBA.RusIdSystem = @IdSystem
 														AND 
 														RBUBA.RusRowStatus = 1
                                                 INNER JOIN 
@@ -341,6 +345,8 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
+														AND
+														RBUBA.RusIdSystem = @IdSystem
 														AND 
 														RBUBA.RusRowStatus = 1
 												INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) ON rms.RmsIdRol = RBUBA.RusIdRol
@@ -404,6 +410,8 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
+														AND
+														RBUBA.RusIdSystem = @IdSystem
 														AND 
 														RBUBA.RusRowStatus = 1
                                                  INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) ON rms.RmsIdRol = RBUBA.RusIdRol
@@ -434,6 +442,8 @@ AS
 														DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 														ON 
 															RBUBA.RusIdUser = us.UsrIdUser
+															AND
+															RBUBA.RusIdSystem = @IdSystem
 															AND 
 															RBUBA.RusRowStatus = 1
                                                  INNER JOIN DeliveryBackOffice.dbo.CatRol ro WITH(NOLOCK) ON ro.RolIdRol = RBUBA.RusIdRol
@@ -482,6 +492,8 @@ AS
 					INNER JOIN  DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 						ON 
 							RBUBA.RusIdUser = ru.UsrIdUser
+							AND
+							RBUBA.RusIdSystem = @IdSystem
 							AND 
 							RBUBA.RusRowStatus = 1
 					LEFT JOIN [DeliveryBackOffice].[dbo].[CatStation] CS WITH(NOLOCK)
