@@ -48,12 +48,14 @@ BEGIN
 			vpc.Department 'OriginAddressProvince',
 			vpc.Town 'OriginAddressTown',           
 			CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour',
-			hub.IdHubLogistic 'IdHubLogistic',
-			hub.HubAbbreviation 'HubAbbreviation',
+			ISNULL(SPHUB.IdHubLogistic,hub.IdHubLogistic) 'IdHubLogistic',
+			ISNULL(SPHUB.IdHubLogistic,hub.HubAbbreviation) 'HubAbbreviation',
 			PR.PerFirstName 'FirstName',
 			PR.PerLastName 'LastName',
 			shp.IsScheduled 'Scheduled',
 			RA.IdCurrierMan 'CurrierManId',
+			RA.IdRoute 'IdRoute',
+			RA.IdRouteAssigment 'IdRouteAssigment',
 			SNR.First_Name 'CurrierFirstName',
 			SNR.Last_Name 'Last_Name',
 			vpc.Latitude 'Latitude',
@@ -104,13 +106,15 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].HubLogisticByUser HLBU
 						ON HLBU.HubLogisticId=hub.IdHubLogistic
 			------------------------------------------------------------------------------------
+			LEFT JOIN DBO.HubLogistics SPHUB ON shp.IdHubLogistics=SPHUB.IdHubLogistic
+			------------------------------------------------------------------------------------
 			--INCIDENCIA
 			LEFT JOIN (
 				SELECT INSRV.ServiceManagementId FROM [DeliveryBackOffice].[dbo].IncidenceServices INSRV
 				GROUP BY ServiceManagementId
 			) INSRV
 						ON INSRV.ServiceManagementId=srv.IdServiceManagement
-			------------------------------------------------------------------------------------
+
 		WHERE
 			CONVERT(date, shp.StartDate) >= @startDate
 			AND
@@ -118,7 +122,8 @@ BEGIN
 			AND shp.RowStatus = 1
 			AND (
 				@HubId = -1 
-				OR (IdHubLogistic = @HubId)
+				OR (SPHUB.IdHubLogistic IS NOT NULL AND SPHUB.IdHubLogistic= @HubId)
+				OR (HUB.IdHubLogistic = @HubId)
 			)
 			AND(
 				@IdUser =-1
