@@ -28,8 +28,6 @@ BEGIN TRY
 	DECLARE @ForTypeId INT = (SELECT TOP 1 CRS.CrsId FROM [DeliveryBackOffice].[dbo].[CatRateSegment] CRS WITH(NOLOCK) WHERE CRS.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI)
 	DECLARE @EspTypeId INT = (SELECT TOP 1 CRS.CrsId FROM [DeliveryBackOffice].[dbo].[CatRateSegment] CRS WITH(NOLOCK) WHERE CRS.CrsShortName = 'ESP' COLLATE Latin1_General_CI_AI)
 
-	-- Artículo a ignorar
-	DECLARE @FilePackageId INT =	(SELECT TOP 1 ABC.AbcId FROM [DeliveryBackOffice].[dbo].[CatArticle] CA WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH(NOLOCK) ON CA.ArtId = ABC.AbcIdArticle WHERE CA.ArtName = 'Sobre' COLLATE Latin1_General_CI_AI AND ABC.Code = 'EXP075' COLLATE Latin1_General_CI_AI);
 	-- Artículos
 	DECLARE @SmallPackageId INT =	(SELECT TOP 1 ABC.AbcId FROM [DeliveryBackOffice].[dbo].[CatArticle] CA WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH(NOLOCK) ON CA.ArtId = ABC.AbcIdArticle WHERE CA.ArtName = 'Paquete pequeño' COLLATE Latin1_General_CI_AI AND ABC.Code = 'EXP076' COLLATE Latin1_General_CI_AI);
 	DECLARE @MediumPackageId INT =	(SELECT TOP 1 ABC.AbcId FROM [DeliveryBackOffice].[dbo].[CatArticle] CA WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH(NOLOCK) ON CA.ArtId = ABC.AbcIdArticle WHERE CA.ArtName = 'Paquete mediano' COLLATE Latin1_General_CI_AI AND ABC.Code = 'EXP077' COLLATE Latin1_General_CI_AI);
@@ -47,15 +45,17 @@ BEGIN TRY
 	-- Configuración de precios
 	DECLARE @ExpressCenterDiscount DECIMAL(14,2) = 5.00;
 
-	DECLARE @BaseLocSTDPrice DECIMAL(14,2) = 26.00;
-	DECLARE @BaseMetSTDPrice DECIMAL(14,2) = 36.00;
-	DECLARE @BaseForSTDPrice DECIMAL(14,2) = 43.00;
-	DECLARE @BaseEspSTDPrice DECIMAL(14,2) = 50.00;
+	DECLARE @BaseLocSTDPrice DECIMAL(14,2) = 24.00;
+	DECLARE @BaseMetSTDPrice DECIMAL(14,2) = 28.00;
+	DECLARE @BaseForSTDPrice DECIMAL(14,2) = 35.00;
+	DECLARE @BaseEspSTDPrice DECIMAL(14,2) = 42.00;
 	
+	/* BLOQUE PENDIENTE DE CONFIRMAR */
 	DECLARE @BaseLocCODPrice DECIMAL(14,2) = 23.00;
 	DECLARE @BaseMetCODPrice DECIMAL(14,2) = 26.00;
 	DECLARE @BaseForCODPrice DECIMAL(14,2) = 33.00;
 	DECLARE @BaseEspCODPrice DECIMAL(14,2) = 40.00;
+	/* BLOQUE PENDIENTE DE CONFIRMAR */
 
 	-- Insertar información de tarifario a principal
 	INSERT INTO [DeliveryBackOffice].[dbo].[RateData]
@@ -124,8 +124,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -143,8 +142,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -162,8 +160,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -181,8 +178,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -256,8 +252,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -275,8 +270,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -294,8 +288,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
@@ -313,8 +306,7 @@ BEGIN TRY
 			ABC.Code LIKE 'EXP%'
 			AND
 			ABC.AbcId NOT IN (
-				@FilePackageId
-				,@SmallPackageId
+				@SmallPackageId
 				,@MediumPackageId
 				,@BigPackageId
 				,@ExtraBigPackageId
