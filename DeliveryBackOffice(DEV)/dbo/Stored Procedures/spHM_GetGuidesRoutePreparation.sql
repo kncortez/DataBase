@@ -1,5 +1,5 @@
 ﻿-- =============================================
--- Author:		<Alberot Ixchop>
+-- Author:		<Alberto Ixchop>
 -- Create date: <08-09-2022>
 -- Description:	<Busca una guía dentro de una preparación de ruta de entrega>
 -- =============================================
@@ -107,7 +107,29 @@ BEGIN
 				,do.Receiver_Town
 				,do.Receiver_Address
 				,rpd.GuideOrder
-		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC 
+		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC ;
+		--TABLE 2 Información de las piezas de la guía en preparación
+		SELECT			
+			rpd.Guide_Serie 'GuideSerie'
+			,rpd.Guide_Number 'GuideNumber'
+			,rpdp.PieceNumber 'PieceNumber'
+			,rpdp.PieceType 'IsDry'
+			,ISNULL(AD.ActId,0) 'ActCode'
+		FROM RoutePreparation rp
+		INNER JOIN RoutePreparationDetail rpd
+			ON rpd.RoutePreparationId = rp.IdRoutePreparation
+				AND rpd.RowStatus = 1
+		INNER JOIN RoutePreparationDetailPiece rpdp
+			ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
+				AND rpdp.RowStatus = 1
+		LEFT JOIN DBO.ActDetail AD WITH(NOLOCK)
+					ON AD.GuideSerie=rpd.Guide_Serie
+					AND AD.GuideNumber=RPD.Guide_Number
+		WHERE 		
+		rpd.Guide_Serie = @Serie AND RPD.Guide_Number=@Number
+		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC
+
+		
 	END
 
 
