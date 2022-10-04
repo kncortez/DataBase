@@ -25,18 +25,12 @@ BEGIN
 								);
 	DECLARE @status AS  INT =
             (
-                SELECT StatusOrderId
-                FROM StatusOrder WITH(NOLOCK) 
-                WHERE OrderDescription = 'Programado para recolección' COLLATE Latin1_General_CI_AI
+                 SELECT IdServiceStatus
+                  FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] WITH(NOLOCK) 
+                  WHERE [Name] = 'Asignado a Ruta' COLLATE Latin1_General_CI_AI
             );
 
 
-			SELECT 
-					@SenderName   =   SMD.ServiceCustomerName,
-					@SenderPhone  =  SMD.ServicePhone,
-					@SenderAdress = SMD.ServiceAddress
-			FROM [dbo].[ServiceManagementDetail] SMD WITH(NOLOCK) 
-			WHERE 	SMD.ServiceManagement = @IdServiceManagment
 
 
 			SELECT   @IdSchedulePickup = IdSchedulePickup
@@ -51,7 +45,7 @@ BEGIN
 	BEGIN TRY
 			UPDATE [DeliveryBackOffice].[dbo].[ServiceManagement]
 						SET IdPuCourrier = @IdCurrierMan,
-							IdPuRouteAssigment = @idRouteAssigment,
+							IdPuRouteAssigment = @IdRouteAssigment,
 							ServiceStatusId = @status,
 							TokenUpdated = @Token,
 							DateUpdated = GETDATE()
@@ -59,14 +53,11 @@ BEGIN
 	
 			UPDATE [DeliveryBackOffice].[dbo].[SchedulePickup]
 						SET  StartDate = GETDATE(),
-							 EndDate = GETDATE(),
-							 SenderName    =  @SenderName,
-							 SenderPhone   =  @SenderPhone,
-							 AddressPickup =  @SenderAdress
-						WHERE SchedulePickupId = @IdServiceManagment 
+							 EndDate = GETDATE()
+						WHERE SchedulePickupId = @IdSchedulePickup 
 
 					SET @Result = 1
-
+			
       COMMIT TRANSACTION
 	  END TRY
 		BEGIN CATCH
