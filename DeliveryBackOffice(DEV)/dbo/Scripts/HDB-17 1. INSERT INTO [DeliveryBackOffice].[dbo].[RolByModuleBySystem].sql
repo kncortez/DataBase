@@ -28,15 +28,15 @@ BEGIN TRY
 	BEGIN
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[CatSystem]
-			( SysNameSystem, SysPlataform, SysDescription, SysRowStatus, SysTokenCreated, SysDateCreated, SysShow)
+			( SysNameSystem, SysPlataform, SysDescription, SysRowStatus, SysTokenCreated, SysDateCreated)
 		OUTPUT inserted.SysIdSystem INTO @NewSystem(IdSystem)
 		VALUES
-			('Hermes web operaciones', 'forzadelivery.com', 'Sistema de operaciones desde portal web', 1, 'SYS-ARUIZ', GETDATE(), 0)
+			('Hermes web operaciones', 'forzadelivery.com', 'Sistema de operaciones desde portal web', 1, 'SYS-ARUIZ', GETDATE())
 
 	END
 
 
-	IF( NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAP web' COLLATE Latin1_General_CI_AI) )
+	IF( NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI) )
 	BEGIN
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[CatRol]
