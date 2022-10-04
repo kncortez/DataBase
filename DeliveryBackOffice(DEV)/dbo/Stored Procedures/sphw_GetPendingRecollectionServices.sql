@@ -3,7 +3,7 @@
 -- Create date: <22-09-2022>
 -- Description:	<Método para carga de servicios pendientes de procesar filtrado por hubs y rango de fechas>
 -- =============================================
-CREATE PROCEDURE sphw_GetPendingRecollectionServices
+CREATE PROCEDURE [dbo].[sphw_GetPendingRecollectionServices]
 	-- Add the parameters for the stored procedure here
 	@HubId	INT = -1,
 	@StartDate DATE =NULL,
@@ -49,7 +49,7 @@ BEGIN
 			vpc.Town 'OriginAddressTown',           
 			CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour',
 			ISNULL(SPHUB.IdHubLogistic,hub.IdHubLogistic) 'IdHubLogistic',
-			ISNULL(SPHUB.IdHubLogistic,hub.HubAbbreviation) 'HubAbbreviation',
+			ISNULL(SPHUB.HubAbbreviation,hub.HubAbbreviation) 'HubAbbreviation',
 			PR.PerFirstName 'FirstName',
 			PR.PerLastName 'LastName',
 			shp.IsScheduled 'Scheduled',
@@ -103,8 +103,8 @@ BEGIN
 						ON SNR.ID=RA.IdCurrierMan
 			------------------------------------------------------------------------------------
 			--USUARIO POR HUB ASIGNADO
-			LEFT JOIN [DeliveryBackOffice].[dbo].HubLogisticByUser HLBU
-						ON HLBU.HubLogisticId=hub.IdHubLogistic
+			INNER JOIN [DeliveryBackOffice].[dbo].HubLogisticByUser HLBU
+						ON HLBU.HubLogisticId=ISNULL(shp.IdHubLogistics, hub.IdHubLogistic)
 			------------------------------------------------------------------------------------
 			LEFT JOIN DBO.HubLogistics SPHUB ON shp.IdHubLogistics=SPHUB.IdHubLogistic
 			------------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ BEGIN
 			AND (
 				@HubId = -1 
 				OR (SPHUB.IdHubLogistic IS NOT NULL AND SPHUB.IdHubLogistic= @HubId)
-				OR (HUB.IdHubLogistic = @HubId)
+				OR (HUB.IdHubLogistic IS NULL AND HUB.IdHubLogistic = @HubId)
 			)
 			AND(
 				@IdUser =-1
