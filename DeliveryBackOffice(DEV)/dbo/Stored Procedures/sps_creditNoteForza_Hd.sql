@@ -54,7 +54,7 @@ BEGIN
 				   ,@motivoNotaCredito
 				   ,inv_date
 				   ,inv_certificationFEL
-				from invoiceHeader
+				from invoiceHeader WITH (NOLOCK)
 				where inv_pk_id = @idInvoice
 
 				set @idNotaCredito = @@IDENTITY
@@ -86,11 +86,11 @@ BEGIN
 				   ,[dti_amount]
 				   ,GETDATE()
 				   ,@token
-				FROM [DeliveryBackOffice].[dbo].[invoiceDetail]
+				FROM [DeliveryBackOffice].[dbo].[invoiceDetail] WITH (NOLOCK)
 				WHERE [dti_fk_header] = @idInvoice
 
 				declare @detalles as int = @@rowcount
-				Set @vpCodeOfReferences =(Select inv_vpCodeOfReferences from invoiceHeader where inv_pk_id = @idNotaCredito)
+				Set @vpCodeOfReferences =(Select inv_vpCodeOfReferences from invoiceHeader WITH (NOLOCK) where inv_pk_id = @idNotaCredito)
 
 				update invoiceHeader
 				set inv_creditNote = @idNotaCredito,
