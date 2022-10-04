@@ -27,7 +27,8 @@ BEGIN
 		PersonIdentification NVARCHAR(50),
 		PersonNationality NVARCHAR(100),
 		PersonPhone NVARCHAR(15),
-		UserPassword NVARCHAR(50)
+		UserPassword NVARCHAR(50),
+		UserEmail NVARCHAR(50)
 	);
 	DECLARE @PersonExistsDELIVERY AS TABLE (
 		PersonId BIGINT
@@ -76,6 +77,7 @@ BEGIN
 				, PersonNationality
 				, PersonPhone
 				, UserPassword
+				, UserEmail
 			)
 		SELECT
 			TOP 1
@@ -89,6 +91,7 @@ BEGIN
 				, LGTIE.IdCountry
 				, IIF(LTRIM(RTRIM(ISNULL(LGTIE.CellPhone, ''))) != '', LTRIM(RTRIM(ISNULL(LGTIE.CellPhone, ''))), NULL)
 				, LGNU.USR_Password
+				, CONCAT(LGNU.USR_Username, '@forzadelivery.com')
 		FROM
 			[DenariusUser_Dev].[dbo].[LGN_User] LGNU WITH(NOLOCK)
 			INNER JOIN
@@ -186,11 +189,11 @@ BEGIN
 			
 					PRINT 'USUARIO NO EXISTE Y SE PROCEDE A GENERAR UNO [RegisterUser]'
 					INSERT INTO [DeliveryBackOffice].[dbo].[RegisterUser]
-						(UsrIdPerson, UsrNickName, UsrLastPassword, Phone, UsrPasswordExpiration, UsrDeviceType, UsrRowStatus, UsrTokenCreated, UsrDateCreated)
+						(UsrIdPerson, UsrNickName, UsrLastPassword, UsrEmail, Phone, UsrPasswordExpiration, UsrDeviceType, UsrRowStatus, UsrTokenCreated, UsrDateCreated)
 					OUTPUT inserted.UsrIdUser INTO @RegisterUserExistsDELIVERY(RegisterUserId)
 					SELECT
 						TOP 1
-							PED.PersonId, UED.UserName, UED.UserPassword, UED.PersonPhone, DATEADD(DAY, 90, CAST(GETDATE() AS DATE)), 'WEB', 1, @Token, GETDATE()
+							PED.PersonId, UED.UserName, UED.UserPassword, UED.UserEmail, UED.PersonPhone, DATEADD(DAY, 90, CAST(GETDATE() AS DATE)), 'WEB', 1, @Token, GETDATE()
 					FROM
 						@PersonExistsDELIVERY PED
 						CROSS JOIN
