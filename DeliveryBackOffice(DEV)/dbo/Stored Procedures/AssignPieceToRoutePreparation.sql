@@ -14,11 +14,6 @@
 -- Create date: <2022-09-28>
 -- Description:	<generar los datos del servicio tomando en cuenta si esta esta marcada para una devolución.>
 -- =============================================
--- =============================================
--- Author:		<Alberto Ixchop>
--- Create date: <2022-09-28>
--- Description:	<UNIFICACION DE RUTERO EN PREPARACION DE ENTREGA>
--- =============================================
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@IdRoute INT,
 	@Date DATE,
@@ -102,7 +97,7 @@ BEGIN
 			SELECT 
 				@IdRoutePreparation = ISNULL(RP.IdRoutePreparation,0)
 			FROM 
-				[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
 			WHERE 
 				RP.CatRouteId = @IdRoute
 				AND
@@ -171,9 +166,9 @@ BEGIN
 					@IdRoutePreparationDetail = ISNULL(RPD.IdRoutePreparationDetail,0),
 					@FirstPieceEntered = IIF(RPD.IdRoutePreparationDetail IS NULL,1,0)
 				FROM
-					[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
 					JOIN
-						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
 						AND
@@ -233,7 +228,7 @@ BEGIN
 					SELECT
 						@GuidePieceExists = 1
 					FROM
-						[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP
+						[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
 					WHERE
 						DOP.GuideSerie = @GuideSerie
 						AND
@@ -243,18 +238,22 @@ BEGIN
 
 					--- Verificar si la pieza de la guía si existe
 					IF(@GuidePieceExists = 1)
-					BEGIN						
+					BEGIN	
+					
+						--- La pieza es real
+
+
 						--- Verificar si existe la pieza de la guía dentro del detalle de la preparación de la ruta
 						SELECT
 							@IdRoutePreparationDetailPiece = RPDP.PieceNumber
 						FROM
-							[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+							[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
 							JOIN
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 								ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
 							JOIN
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
 								ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
 						WHERE
@@ -272,7 +271,8 @@ BEGIN
 							AND
 							RP.DateRoutePreparation = @Date
 							AND
-							RP.RowStatus = 1							
+							RP.RowStatus = 1			
+														
 						--- Verificar si la pieza de la guía ya existe dentro de las piezas registradas en la preparación de ruta
 						IF(@IdRoutePreparationDetailPiece IS NULL OR @IdRoutePreparationDetailPiece = 0)
 						BEGIN
@@ -437,7 +437,7 @@ BEGIN
 								GETDATE()
 							WHERE NOT EXISTS (
 								SELECT 1
-								FROM RoutePreparationDetail
+								FROM RoutePreparationDetail WITH (NOLOCK)
 								WHERE 
 									RoutePreparationId = @IdRoutePreparation
 									AND 
@@ -669,8 +669,8 @@ BEGIN
 							,NULL
 							,NULL
 							,NULL
-							,NULL
 							,@RouteAssigmentId
+							,NULL
 							,NULL
 							,NULL
 							,1
@@ -860,4 +860,4 @@ BEGIN
 			ERROR_MESSAGE() AS 'Description', 
 			CONVERT(BIGINT, 0) AS 'NumTransferID'
 	END
-END
+END;
