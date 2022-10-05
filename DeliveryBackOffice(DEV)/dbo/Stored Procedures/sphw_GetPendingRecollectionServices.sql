@@ -59,7 +59,8 @@ BEGIN
 			SNR.First_Name 'CurrierFirstName',
 			SNR.Last_Name 'Last_Name',
 			vpc.Latitude 'Latitude',
-			vpc.Longitude 'Longitude'
+			vpc.Longitude 'Longitude',
+			CAST(ISNULL((SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK) WHERE DOA.ServiceManagementId = srv.IdServiceManagement AND DOA.RowStatus = 1),0) AS BIT) 'IsAlerted'
            
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
@@ -137,6 +138,9 @@ BEGIN
 				AND
 				INSRV.ServiceManagementId IS NULL--No posee ninguna incidencia registrada
 			------------------------------------------------------------------------
+		ORDER BY
+			ISNULL((SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK) WHERE DOA.ServiceManagementId = srv.IdServiceManagement AND DOA.RowStatus = 1),0) DESC
+
 		IF @TranCounter = 0  
             COMMIT TRANSACTION;  
 	END TRY
