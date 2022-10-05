@@ -23,7 +23,7 @@ BEGIN
 		ISNULL(VPC.Phone,'N/D') AS Phone	
  FROM [dbo].VisitPointClient VPC WITH (NOLOCK)
 	LEFT JOIN Customer C  WITH (NOLOCK)
- ON vpc.CustomerID = C.IdCustomer 
+ ON vpc.CustomerID = C.IdCustomer  AND C.RowSatus=1
 	INNER JOIN CustomerType CT WITH (NOLOCK)
  ON CT.IdCustomerType =C.IdCustomerType 
     LEFT JOIN dbo.CatBusinessActivity D
