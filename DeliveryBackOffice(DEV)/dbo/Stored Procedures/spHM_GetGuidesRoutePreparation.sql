@@ -125,9 +125,20 @@ BEGIN
 		LEFT JOIN DBO.ActDetail AD WITH(NOLOCK)
 					ON AD.GuideSerie=rpd.Guide_Serie
 					AND AD.GuideNumber=RPD.Guide_Number
-		WHERE 		
+		WHERE 
+		(
+			(@RoutePreparationId IS NOT NULL AND rp.IdRoutePreparation=@RoutePreparationId)
+			OR
+			(@RoutePreparationId IS NULL AND rp.CatRouteId = @RouteId AND rp.DateRoutePreparation = @DatePreparation)
+		)		
+		AND
 		rpd.Guide_Serie = @Serie AND RPD.Guide_Number=@Number
-		ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC
+		GROUP BY rpd.Guide_Serie
+				,rpd.Guide_Number
+				,rpdp.PieceNumber
+				,rpdp.PieceType
+				,AD.ActId;
+		
 
 		
 	END
