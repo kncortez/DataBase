@@ -28,7 +28,7 @@ BEGIN
 	IF NOT ((@DatePreparation IS NOT NULL) AND (@RouteId IS NOT NULL)) AND @RoutePreparationId IS NULL
 	BEGIN 
 			SELECT
-				2 'StatusCode'
+				0 'StatusCode'
 			   ,'Parámetros inválidos' 'Description'
 	END
 	ELSE IF @RoutePreparationId IS NOT NULL
@@ -60,20 +60,20 @@ BEGIN
 	IF @BelongsToRoute <> 1
 	BEGIN 
 		SELECT
-			2 'StatusCode'
+			0 'StatusCode'
 			,@Msg_error 'Description'
 	END
 	ELSE IF @RecordExist = 0 
 	BEGIN
 		SELECT
-			2 'StatusCode'
+			0 'StatusCode'
 			,'No se encontraron guías' 'Description'
 	END
 	ELSE
 	IF @RecordExist <> 0
 	BEGIN
 		SELECT
-			2 'StatusCode'
+			1 'StatusCode'
 			,'Extracción de guía correcta' 'Description'
 
 		--Anulando preparación de guías
