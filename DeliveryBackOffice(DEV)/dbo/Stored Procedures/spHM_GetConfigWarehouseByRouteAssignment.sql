@@ -73,19 +73,13 @@ BEGIN
 					FROM (SELECT
 							(SELECT
 									COUNT(1)
-								FROM IncidenceServices [is]
-								INNER JOIN ServiceManagement sm WITH (NOLOCK)
-									ON sm.IdServiceManagement = [is].ServiceManagementId
-									AND sm.RowStatus = 1
-								INNER JOIN ServiceManagementDetail smd WITH (NOLOCK)
-									ON smd.ServiceManagement = sm.IdServiceManagement
-									AND smd.RowStatus = 1
-								INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
-									ON rpd.ServiceManagementDetailId = smd.IdServiceManagementDetail
-									AND rpd.RowStatus = 1
-								WHERE [is].RowStatus = 1
-								AND rpd.Guide_Serie = do.Guide_Serie
-								AND rpd.Guide_Number = do.Guide_Number)
+								FROM DeliveryOrderDetail dod WITH (NOLOCK)
+								INNER JOIN StatusOrder so WITH (NOLOCK)
+									ON so.StatusOrderId = dod.StatusOrderId
+								WHERE dod.RowStatus = 1
+								AND dod.Guide_Serie = do.Guide_Serie
+								AND dod.Guide_Number = do.Guide_Number
+								AND so.OrderDescription = 'Intento de entrega fallida')
 							FailedAttempt
 						   ,ISNULL((SELECT
 									rh.Attempt
@@ -128,19 +122,13 @@ BEGIN
 					FROM (SELECT
 							(SELECT
 									COUNT(1)
-								FROM IncidenceServices [is]
-								INNER JOIN ServiceManagement sm WITH (NOLOCK)
-									ON sm.IdServiceManagement = [is].ServiceManagementId
-									AND sm.RowStatus = 1
-								INNER JOIN ServiceManagementDetail smd WITH (NOLOCK)
-									ON smd.ServiceManagement = sm.IdServiceManagement
-									AND smd.RowStatus = 1
-								INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
-									ON rpd.ServiceManagementDetailId = smd.IdServiceManagementDetail
-									AND rpd.RowStatus = 1
-								WHERE [is].RowStatus = 1
-								AND rpd.Guide_Serie = do.Guide_Serie
-								AND rpd.Guide_Number = do.Guide_Number)
+								FROM DeliveryOrderDetail dod WITH (NOLOCK)
+								INNER JOIN StatusOrder so WITH (NOLOCK)
+									ON so.StatusOrderId = dod.StatusOrderId
+								WHERE dod.RowStatus = 1
+								AND dod.Guide_Serie = do.Guide_Serie
+								AND dod.Guide_Number = do.Guide_Number
+								AND so.OrderDescription = 'Intento de entrega fallida')
 							FailedAttempt
 						   ,(SELECT
 									ISNULL(rh.Attempt, 2) + rh.AttemptReturn
