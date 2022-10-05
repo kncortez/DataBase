@@ -41,7 +41,7 @@ BEGIN
 
 		--MARCANDO SERVICIO COMO ACTIVO
 		UPDATE SM SET
-			SM.IsActiveService = 1,
+			SM.IsActiveService = (CASE WHEN SM.IsActiveService = 1 THEN 0 ELSE 1 END),
 			SM.TokenUpdated=@Token,
 			SM.DateUpdated = GETDATE()
 		FROM DBO.ServiceManagement SM
