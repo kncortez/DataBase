@@ -156,45 +156,42 @@ BEGIN
 						   ,NULL)--<IsSimpliRoute, int,>;
 				SET @ToRoutePreparationId = SCOPE_IDENTITY();
 			END
+
+			DECLARE @DRYPIECES INT =0;
+			DECLARE @COLDPIECES INT =0;
+			SELECT
+				@DRYPIECES=COUNT(CASE WHEN RPDP.PieceType=1 THEN RPDP.IdRoutePreparationDetailPiece ELSE NULL END),
+				@COLDPIECES=COUNT(CASE WHEN RPDP.PieceType=0 THEN RPDP.IdRoutePreparationDetailPiece ELSE NULL END)
+			FROM DBO.RoutePreparationDetail RPD
+			INNER JOIN DBO.RoutePreparationDetailPiece RPDP
+				ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail	
+				AND RPDP.RowStatus=1
+			WHERE Guide_Number=@GuideNumber
+			AND Guide_Serie=@GuideSerie
+			AND RPD.RoutePreparationId=@RoutePreparationId
+			AND RPDP.RowStatus=1
+
+
 			--Actualizando route preparation origen
 			update rp set
 				rp.TokenUpdated = @Token,
 				rp.DateUpdated = GETDATE(),
-				rp.GuidesQuantity = rp.GuidesQuantity + 1
+				rp.GuidesQuantity = rp.GuidesQuantity - 1,
+				rp.PiecesDry=rp.PiecesDry-@DRYPIECES,
+				rp.PiecesCold=rp.PiecesCold-@COLDPIECES
 			from RoutePreparation rp
 			where rp.IdRoutePreparation=@RoutePreparationId;
 			--Actualizando route preparation destino
 			update rp set
 				rp.TokenUpdated = @Token,
 				rp.DateUpdated = GETDATE(),
-				rp.GuidesQuantity = rp.GuidesQuantity + 1
+				rp.GuidesQuantity = rp.GuidesQuantity + 1,
+				rp.PiecesDry=rp.PiecesDry+@DRYPIECES,
+				rp.PiecesCold=rp.PiecesCold+@COLDPIECES
 			from RoutePreparation rp
 			where rp.IdRoutePreparation=@ToRoutePreparationId;
 
-			--Inicio anulanción de preparación de guías origen
-			UPDATE RPDP
-			SET
-				TokenUpdated=@Token,
-				DateUpdated= GETDATE(),
-				RowStatus = 0
-			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP 
-			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
-			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
-				ON RP.IdRoutePreparation=RPD.RoutePreparationId
-			WHERE RP.IdRoutePreparation=@RoutePreparationId;
 
-			UPDATE RPD
-			SET     
-				UserProcess = NULL,
-				IsOpenProcess = 0,
-				RowStatus = 0,
-				TokenUpdated=@Token,
-				DateUpdated= GETDATE()
-			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
-				ON RP.IdRoutePreparation=RPD.RoutePreparationId
-			WHERE RP.IdRoutePreparation=@RoutePreparationId;
-			--Fin anulanción de preparación de guías origen
 
 			--Nuevo registro con la guía en la preparación de ruta destino
 			INSERT INTO [dbo].[RoutePreparationDetail]
@@ -225,6 +222,65 @@ BEGIN
 				,NULL--<UserProcess, nvarchar(50),>
 				,0--<IsOpenProcess, bit,>
 				,NULL);--<ServiceManagementDetailId, bigint,>)
+			DECLARE @IDTORoutePreparationDetail INT = SCOPE_IDENTITY();
+			INSERT INTO [dbo].[RoutePreparationDetailPiece]
+					   ([RoutePreparationDetailId]
+					   ,[PieceNumber]
+					   ,[PieceType]
+					   ,[RowStatus]
+					   ,[TokenCreated]
+					   ,[DateCreated]
+					   ,[TokenUpdated]
+					   ,[DateUpdated])
+			SELECT
+					   @IDTORoutePreparationDetail
+					   ,RPDP.PieceNumber--<PieceNumber, int,>
+					   ,RPDP.PieceType--<PieceType, bit,>
+					   ,1--<RowStatus, bit,>
+					   ,@Token--<TokenCreated, nvarchar(50),>
+					   ,GETDATE()--<DateCreated, datetime,>
+					   ,NULL--<TokenUpdated, nvarchar(50),>
+					   ,NULL--<DateUpdated, datetime,>
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP 
+			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
+			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				ON RP.IdRoutePreparation=RPD.RoutePreparationId
+			WHERE RP.IdRoutePreparation=@RoutePreparationId
+				AND RPD.Guide_Serie=@GuideSerie
+				AND RPD.Guide_Number=@GuideNumber
+				AND RPDP.RowStatus=1;
+
+			--Inicio anulanción de preparación de guías origen
+			UPDATE RPDP
+			SET
+				TokenUpdated=@Token,
+				DateUpdated= GETDATE(),
+				RowStatus = 0
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP 
+			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
+			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				ON RP.IdRoutePreparation=RPD.RoutePreparationId
+			WHERE RP.IdRoutePreparation=@RoutePreparationId
+			AND RPD.Guide_Serie=@GuideSerie
+			AND RPD.Guide_Number=@GuideNumber
+			AND RPD.RowStatus=1
+			AND RP.RowStatus=1
+
+			UPDATE RPD
+			SET     
+				UserProcess = NULL,
+				IsOpenProcess = 0,
+				RowStatus = 0,
+				TokenUpdated=@Token,
+				DateUpdated= GETDATE()
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				ON RP.IdRoutePreparation=RPD.RoutePreparationId
+			WHERE RP.IdRoutePreparation=@RoutePreparationId
+				AND RPD.Guide_Serie=@GuideSerie
+				AND RPD.Guide_Number=@GuideNumber
+				AND RPD.RowStatus=1
+				AND RP.RowStatus=1
 			----------------------------------------------------				
 			----FIN DE REASIGNACIÓN DE RUTA DE PREPARACIÓN
 			----------------------------------------------------
