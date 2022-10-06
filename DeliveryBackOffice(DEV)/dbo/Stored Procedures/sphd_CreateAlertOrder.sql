@@ -67,6 +67,20 @@ BEGIN
 						1 'NumTransferID',
 						'' 'Guide';
 
+					IF(@AlertForService = 1)
+					BEGIN
+						SELECT
+							ISNULL(RA.IdCurrierMan, -1) 'IdCourier'
+						FROM
+							[DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH(NOLOCK)
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
+								ON
+									SM.IdPuRouteAssigment = RA.IdRouteAssigment
+						WHERE
+							SM.IdServiceManagement = @serviceManagementId
+					END
+
                 END
             ELSE
                 BEGIN --CREATE ALERT
@@ -138,6 +152,20 @@ BEGIN
 						'Alerta creada' AS 'Description',
 						1 'NumTransferID',
 						'' 'Guide';
+						
+					IF(@AlertForService = 1)
+					BEGIN
+						SELECT
+							ISNULL(RA.IdCurrierMan, -1) 'IdCourier'
+						FROM
+							[DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH(NOLOCK)
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
+								ON
+									SM.IdPuRouteAssigment = RA.IdRouteAssigment
+						WHERE
+							SM.IdServiceManagement = @serviceManagementId
+					END
 
                 END
 		END
