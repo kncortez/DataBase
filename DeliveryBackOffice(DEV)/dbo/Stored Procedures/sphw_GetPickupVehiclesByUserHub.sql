@@ -96,13 +96,13 @@ BEGIN
 	WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
 	AND ((SELECT
 			hl.HubAbbreviation
-		FROM HubLogisticByUser hlbu
+		FROM HubLogisticByUser hlbu WITH (NOLOCK)
 		INNER JOIN HubLogistics hl
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
 		WHERE UserId = @IdUser)
 	= (SELECT TOP 1
 			dsc.Hub
-		FROM DumpServiceCoverage dsc
+		FROM DumpServiceCoverage dsc WITH (NOLOCK)
 		WHERE dsc.HeaderCode = tw.HeaderCode)
 	)
 	AND sr.Estatus = 1
