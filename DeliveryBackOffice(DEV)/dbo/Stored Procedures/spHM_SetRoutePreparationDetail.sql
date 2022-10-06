@@ -51,6 +51,9 @@ BEGIN
 	--- Control RouteAssignment
 	DECLARE @IdRouteAssignment INT
 
+	--- Control reasignación
+	DECLARE @IsReassignment BIT = 0
+
 	BEGIN TRANSACTION
 
 	BEGIN TRY
@@ -480,6 +483,9 @@ BEGIN
 								AND rpd.Guide_Number = @GuideNumber
 								AND rp.IdRoutePreparation <> @IdRoutePreparation
 								AND rp.DateRoutePreparation = @Date
+
+								IF @@rowcount > 0
+									SET @IsReassignment = 1
 							END
 								
 							DECLARE @UpdatedWarehouseByPiece INT = 0
@@ -514,9 +520,14 @@ BEGIN
 							BEGIN
 								COMMIT TRANSACTION
 
-								SELECT
-									1 'StatusCode'
-									,'Pieza asignada correctamente.' 'Description'
+								IF @IsReassignment = 0
+									SELECT
+										1 'StatusCode'
+										,'Pieza asignada correctamente.' 'Description'
+								ELSE 
+									SELECT
+										9 'StatusCode'
+										,'Pieza reasignada correctamente.' 'Description'
 
 								-- Retornar información de la guía
 								SELECT
