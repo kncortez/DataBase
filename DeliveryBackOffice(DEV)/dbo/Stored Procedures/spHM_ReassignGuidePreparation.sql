@@ -169,6 +169,7 @@ BEGIN
 			WHERE Guide_Number=@GuideNumber
 			AND Guide_Serie=@GuideSerie
 			AND RPD.RoutePreparationId=@RoutePreparationId
+			AND RPDP.RowStatus=1
 
 
 			--Actualizando route preparation origen
@@ -190,30 +191,7 @@ BEGIN
 			from RoutePreparation rp
 			where rp.IdRoutePreparation=@ToRoutePreparationId;
 
-			--Inicio anulanción de preparación de guías origen
-			UPDATE RPDP
-			SET
-				TokenUpdated=@Token,
-				DateUpdated= GETDATE(),
-				RowStatus = 0
-			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP 
-			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
-			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
-				ON RP.IdRoutePreparation=RPD.RoutePreparationId
-			WHERE RP.IdRoutePreparation=@RoutePreparationId;
 
-			UPDATE RPD
-			SET     
-				UserProcess = NULL,
-				IsOpenProcess = 0,
-				RowStatus = 0,
-				TokenUpdated=@Token,
-				DateUpdated= GETDATE()
-			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
-				ON RP.IdRoutePreparation=RPD.RoutePreparationId
-			WHERE RP.IdRoutePreparation=@RoutePreparationId;
-			--Fin anulanción de preparación de guías origen
 
 			--Nuevo registro con la guía en la preparación de ruta destino
 			INSERT INTO [dbo].[RoutePreparationDetail]
@@ -267,7 +245,42 @@ BEGIN
 			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
 			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
 				ON RP.IdRoutePreparation=RPD.RoutePreparationId
-			WHERE RP.IdRoutePreparation=@RoutePreparationId;
+			WHERE RP.IdRoutePreparation=@RoutePreparationId
+				AND RPD.Guide_Serie=@GuideSerie
+				AND RPD.Guide_Number=@GuideNumber
+				AND RPDP.RowStatus=1;
+
+			--Inicio anulanción de preparación de guías origen
+			UPDATE RPDP
+			SET
+				TokenUpdated=@Token,
+				DateUpdated= GETDATE(),
+				RowStatus = 0
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP 
+			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
+			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				ON RP.IdRoutePreparation=RPD.RoutePreparationId
+			WHERE RP.IdRoutePreparation=@RoutePreparationId
+			AND RPD.Guide_Serie=@GuideSerie
+			AND RPD.Guide_Number=@GuideNumber
+			AND RPD.RowStatus=1
+			AND RP.RowStatus=1
+
+			UPDATE RPD
+			SET     
+				UserProcess = NULL,
+				IsOpenProcess = 0,
+				RowStatus = 0,
+				TokenUpdated=@Token,
+				DateUpdated= GETDATE()
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				ON RP.IdRoutePreparation=RPD.RoutePreparationId
+			WHERE RP.IdRoutePreparation=@RoutePreparationId
+				AND RPD.Guide_Serie=@GuideSerie
+				AND RPD.Guide_Number=@GuideNumber
+				AND RPD.RowStatus=1
+				AND RP.RowStatus=1
 			----------------------------------------------------				
 			----FIN DE REASIGNACIÓN DE RUTA DE PREPARACIÓN
 			----------------------------------------------------
