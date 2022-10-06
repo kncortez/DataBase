@@ -222,6 +222,16 @@ BEGIN
 					FROM
 						[DeliveryBackOffice].[dbo].[InternalUser] IU WITH(NOLOCK)
 						INNER JOIN
+							@UserExistsDENARIUS UED
+							ON
+								IU.IdUser = UED.UserCode
+					UNION
+					SELECT
+						TOP 1
+							IU.IdUser
+					FROM
+						[DeliveryBackOffice].[dbo].[InternalUser] IU WITH(NOLOCK)
+						INNER JOIN
 							@RegisterUserExistsDELIVERY RUED
 							ON
 								RUED.RegisterUserId = IU.RegisterUserID
