@@ -156,18 +156,37 @@ BEGIN
 						   ,NULL)--<IsSimpliRoute, int,>;
 				SET @ToRoutePreparationId = SCOPE_IDENTITY();
 			END
+
+			DECLARE @DRYPIECES INT =0;
+			DECLARE @COLDPIECES INT =0;
+			SELECT
+				@DRYPIECES=COUNT(CASE WHEN RPDP.PieceType=1 THEN RPDP.IdRoutePreparationDetailPiece ELSE NULL END),
+				@COLDPIECES=COUNT(CASE WHEN RPDP.PieceType=0 THEN RPDP.IdRoutePreparationDetailPiece ELSE NULL END)
+			FROM DBO.RoutePreparationDetail RPD
+			INNER JOIN DBO.RoutePreparationDetailPiece RPDP
+				ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail	
+				AND RPDP.RowStatus=1
+			WHERE Guide_Number=@GuideNumber
+			AND Guide_Serie=@GuideSerie
+			AND RPD.RoutePreparationId=@RoutePreparationId
+
+
 			--Actualizando route preparation origen
 			update rp set
 				rp.TokenUpdated = @Token,
 				rp.DateUpdated = GETDATE(),
-				rp.GuidesQuantity = rp.GuidesQuantity + 1
+				rp.GuidesQuantity = rp.GuidesQuantity - 1,
+				rp.PiecesDry=rp.PiecesDry-@DRYPIECES,
+				rp.PiecesCold=rp.PiecesCold-@COLDPIECES
 			from RoutePreparation rp
 			where rp.IdRoutePreparation=@RoutePreparationId;
 			--Actualizando route preparation destino
 			update rp set
 				rp.TokenUpdated = @Token,
 				rp.DateUpdated = GETDATE(),
-				rp.GuidesQuantity = rp.GuidesQuantity + 1
+				rp.GuidesQuantity = rp.GuidesQuantity + 1,
+				rp.PiecesDry=rp.PiecesDry+@DRYPIECES,
+				rp.PiecesCold=rp.PiecesCold+@COLDPIECES
 			from RoutePreparation rp
 			where rp.IdRoutePreparation=@ToRoutePreparationId;
 
@@ -225,6 +244,30 @@ BEGIN
 				,NULL--<UserProcess, nvarchar(50),>
 				,0--<IsOpenProcess, bit,>
 				,NULL);--<ServiceManagementDetailId, bigint,>)
+			DECLARE @IDTORoutePreparationDetail INT = SCOPE_IDENTITY();
+			INSERT INTO [dbo].[RoutePreparationDetailPiece]
+					   ([RoutePreparationDetailId]
+					   ,[PieceNumber]
+					   ,[PieceType]
+					   ,[RowStatus]
+					   ,[TokenCreated]
+					   ,[DateCreated]
+					   ,[TokenUpdated]
+					   ,[DateUpdated])
+			SELECT
+					   @IDTORoutePreparationDetail
+					   ,RPDP.PieceNumber--<PieceNumber, int,>
+					   ,RPDP.PieceType--<PieceType, bit,>
+					   ,1--<RowStatus, bit,>
+					   ,@Token--<TokenCreated, nvarchar(50),>
+					   ,GETDATE()--<DateCreated, datetime,>
+					   ,NULL--<TokenUpdated, nvarchar(50),>
+					   ,NULL--<DateUpdated, datetime,>
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP 
+			INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
+			INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
+				ON RP.IdRoutePreparation=RPD.RoutePreparationId
+			WHERE RP.IdRoutePreparation=@RoutePreparationId;
 			----------------------------------------------------				
 			----FIN DE REASIGNACIÓN DE RUTA DE PREPARACIÓN
 			----------------------------------------------------
