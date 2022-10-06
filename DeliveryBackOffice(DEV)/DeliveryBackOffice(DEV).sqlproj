@@ -1136,6 +1136,7 @@
     <Build Include="dbo\Stored Procedures\sphw_GetPendingRecollectionServices.sql" />
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierDataByID.sql" />
+    <Build Include="dbo\Stored Procedures\GetPickupServiceDataByID.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
