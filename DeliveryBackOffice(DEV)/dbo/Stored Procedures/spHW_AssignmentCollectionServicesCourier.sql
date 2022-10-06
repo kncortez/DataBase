@@ -52,8 +52,7 @@ BEGIN
 						WHERE IdServiceManagement = @IdServiceManagment 
 	
 			UPDATE [DeliveryBackOffice].[dbo].[SchedulePickup]
-						SET  StartDate = GETDATE(),
-							 EndDate = GETDATE()
+						SET  AssigmentStatus = 1
 						WHERE SchedulePickupId = @IdSchedulePickup 
 
 					SET @Result = 1
