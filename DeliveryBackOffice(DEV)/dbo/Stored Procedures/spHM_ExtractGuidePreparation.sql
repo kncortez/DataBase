@@ -77,6 +77,23 @@ BEGIN
 			,'Extracción de guía correcta' 'Description'
 
 		--Anulando preparación de guías
+		DECLARE @DRYPIECES INT =0;
+		DECLARE @COLDPIECES INT =0;
+		SELECT
+			@DRYPIECES=COUNT(CASE WHEN RPDP.PieceType=1 THEN RPDP.IdRoutePreparationDetailPiece ELSE NULL END),
+			@COLDPIECES=COUNT(CASE WHEN RPDP.PieceType=0 THEN RPDP.IdRoutePreparationDetailPiece ELSE NULL END)
+		FROM DBO.RoutePreparationDetail RPD
+		INNER JOIN DBO.RoutePreparationDetailPiece RPDP
+			ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail	
+			AND RPDP.RowStatus=1
+		WHERE Guide_Number=@GuideNumber
+		AND Guide_Serie=@GuideSerie
+		AND RPD.RoutePreparationId=@RoutePreparationId
+		AND RPDP.RowStatus=1;
+		UPDATE RoutePreparation SET
+			PiecesDry=PiecesDry-@DRYPIECES,
+			PiecesCold=PiecesCold-@COLDPIECES
+		WHERE IdRoutePreparation=@RoutePreparationId;
 
 		UPDATE RPDP
 		SET     
@@ -87,7 +104,9 @@ BEGIN
 		INNER JOIN[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD ON RPDP.RoutePreparationDetailId=RPD.IdRoutePreparationDetail
 		INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
 			ON RP.IdRoutePreparation=RPD.RoutePreparationId
-		WHERE RP.IdRoutePreparation=@RoutePreparationId;
+		WHERE RP.IdRoutePreparation=@RoutePreparationId
+				AND RPD.Guide_Serie=@GuideSerie
+				AND RPD.Guide_Number=@GuideNumber;;
 
 		UPDATE RPD
 		SET     
@@ -99,7 +118,9 @@ BEGIN
 		FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
 		INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] RP
 			ON RP.IdRoutePreparation=RPD.RoutePreparationId
-		WHERE RP.IdRoutePreparation=@RoutePreparationId;
+		WHERE RP.IdRoutePreparation=@RoutePreparationId
+				AND RPD.Guide_Serie=@GuideSerie
+				AND RPD.Guide_Number=@GuideNumber;
 
 		--Ejecutando sp que reversa el estádo de la guía
 		EXEC [dbo].[sphd_setReversal] @GuideSerie,@GuideNumber, 'Reversando guía por motivo de extacción de guía de una preparación de rutas de entrega en hermes móvil',@Token
