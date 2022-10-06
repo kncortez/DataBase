@@ -232,7 +232,7 @@ BEGIN
 						,TokenUpdated
 						,DateUpdated
 						)
-					VALUES((SELECT IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1)
+					VALUES((SELECT IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1 AND Name = 'New Termns And Conditions')
 							,@IdAccount
 							,1
 							,1

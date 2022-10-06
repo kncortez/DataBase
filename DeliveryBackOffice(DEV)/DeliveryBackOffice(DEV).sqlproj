@@ -1137,6 +1137,29 @@
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierDataByID.sql" />
     <Build Include="dbo\Stored Procedures\GetPickupServiceDataByID.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CollectionServiceQualification.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_GetRoutePreparationPickupByRange.sql" />
+    <Build Include="dbo\Stored Procedures\spwh_SetPickupStatus.sql" />
+    <Build Include="dbo\Tables\TermsAndConditionsByService.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_SearchVisitPoints.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_SetVisitPointClient.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_RecolectionLinkClosure.sql" />
+    <Build Include="dbo\Stored Procedures\MigrateUserToSystem.sql" />
+    <Build Include="dbo\Stored Procedures\GetVisitPointDataLinkInformation.sql" />
+    <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
+    <Build Include="dbo\Tables\HubLogisticByUser.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_RecollectionLinkClosure.sql" />
+    <Build Include="dbo\Tables\VisitPointDataLink.sql" />
+    <Build Include="dbo\Tables\CatDataLinkStatus.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_CollectionLinkGeneration.sql" />
+    <Build Include="dbo\Tables\CatDataLinkStatus.sql" />
+    <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
+    <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
+    <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_RouteManifestReportlinehaulHeader.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_RoutemanifestReportLinehaulDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_LinehaulRouteManifestReportDetailFloor.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_AssignmentCollectionServicesCourier.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

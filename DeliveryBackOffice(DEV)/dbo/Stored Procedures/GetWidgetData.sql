@@ -91,7 +91,7 @@ BEGIN
 						ISNULL(TotalGuidePieces,0) 'TopValue',
 						'Piezas' 'TopText',
 						ISNULL(TotalGuide,0) 'BottomValue',
-						'Envios realizados' 'BottomText',
+						'Envíos realizados' 'BottomText',
 						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					FROM
 						@ResponseTable
@@ -105,7 +105,7 @@ BEGIN
 						0 'TopValue',
 						'Piezas' 'TopText',
 						0 'BottomValue',
-						'Envios realizados' 'BottomText',
+						'Envíos realizados' 'BottomText',
 						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
@@ -119,7 +119,7 @@ BEGIN
 					0 'TopValue',
 					'Piezas' 'TopText',
 					0 'BottomValue',
-					'Envios realizados' 'BottomText',
+					'Envíos realizados' 'BottomText',
 					'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 		END
