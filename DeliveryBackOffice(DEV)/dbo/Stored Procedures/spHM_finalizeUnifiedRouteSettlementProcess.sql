@@ -22,8 +22,7 @@ BEGIN
 	 DECLARE @TotalPiecesMissing AS INT
 	 DECLARE @TotalPiecesSettled AS INT
 
-	BEGIN TRANSACTION
-	BEGIN TRY
+
 	
 
 
@@ -46,7 +45,11 @@ BEGIN
        SELECT @TotalPiecesSettled= COUNT(NoPiece) - @TotalPiecesMissing 
 	   FROM dbo.DeliveryOrderPiece WITH (NOLOCK)
 	   WHERE GuideSerie=@GuideSerie and GuideNumber=@GuideNumber
-	
+
+IF (EXISTS(SELECT TOP 1 1 FROM dbo.UnifiedRouteSettlementDetail WHERE GuideSerie=@GuideSerie AND GuideNumber=@GuideNumber AND IsOpenProcess = 1))
+BEGIN	
+	BEGIN TRANSACTION
+	BEGIN TRY
  ----------actualizar estado de piezas piezas 
     UPDATE  RPDP
 	SET     
@@ -161,7 +164,6 @@ BEGIN
 
  			SET @RESULT = 1; /* PROCESESO EXITOSO */
 		COMMIT TRANSACTION
-		 
 	        SELECT @Result AS Result;
         END TRY
 			BEGIN CATCH
@@ -171,4 +173,11 @@ BEGIN
 	        SELECT @Result AS Result
 					
 			END  CATCH
+		 
+END
+ELSE
+BEGIN
+ SELECT @Result AS Result
+END
+
 	END
