@@ -1135,6 +1135,18 @@
     <Build Include="dbo\Stored Procedures\sphw_StartServiceRecollection.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetPendingRecollectionServices.sql" />
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CollectionServiceQualification.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_GetRoutePreparationPickupByRange.sql" />
+    <Build Include="dbo\Stored Procedures\spwh_SetPickupStatus.sql" />
+    <Build Include="dbo\Tables\TermsAndConditionsByService.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_RegisterRecolectionRequest.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_SearchVisitPoints.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_SetVisitPointClient.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_RecolectionLinkClosure.sql" />
+    <Build Include="dbo\Stored Procedures\MigrateUserToSystem.sql" />
+    <Build Include="dbo\Stored Procedures\GetVisitPointDataLinkInformation.sql" />
+    <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
+    <Build Include="dbo\Stored Procedures\UpdatePickupServiceHub.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
