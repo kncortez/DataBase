@@ -6,7 +6,7 @@ CREATE PROCEDURE [dbo].[spHM_CancelOpenProcessLiquidationUnifiedRoutes]
 @GuideSerie AS NVARCHAR(2),
 @GuideNumber AS INT,
 @Token AS NVARCHAR(50),
-@IdRoute AS INT,
+@IdCourier AS INT,
 @DateRoute AS DATETIME	
 AS
 BEGIN
@@ -15,13 +15,15 @@ BEGIN
 	  DECLARE @Result AS INT = 0; /* 0 GUÍA SIN PROCESO ABIERTO */
 	  DECLARE @IdRouteAssignment AS INT 
 	  DECLARE @TotalPiecesSettled AS INT
+	  DECLARE @IdRoute AS INT
 	  DECLARE @TotalPiecesMissing AS INT
 	  
-	  SELECT @IdRouteAssignment=IdRouteAssigment 
+	  SELECT @IdRouteAssignment=IdRouteAssigment,
+	        @IdRoute = IdRoute
 	  FROM dbo.RouteAssigment RA WITH (NOLOCK) 
-	  WHERE RA.IdRoute=@IdRoute AND RA.DateOfRoute=FORMAT(@DateRoute,'yyyy-MM-dd')
+	  WHERE RA.IdCurrierMan=@IdCourier AND RA.DateOfRoute=FORMAT(@DateRoute,'yyyy-MM-dd')
 
-	  
+	  select *   FROM dbo.RouteAssigment RA WITH (NOLOCK) 
 		SELECT @TotalPiecesMissing = COUNT(PieceNumber)  FROM  dbo.Act A WITH (NOLOCK)
 		INNER JOIN 
 		dbo.ActDetail AD WITH (NOLOCK)
@@ -32,6 +34,7 @@ BEGIN
 			  AD.GuideNumber=@GuideNumber AND 
 			  ADP.RowStatus = 1   AND
 			  A.CatRouteId = @IdRoute
+			  
 
        SELECT @TotalPiecesSettled= COUNT(NoPiece) - @TotalPiecesMissing 
 	   FROM dbo.DeliveryOrderPiece WITH (NOLOCK)
