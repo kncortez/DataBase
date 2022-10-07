@@ -11,7 +11,8 @@ BEGIN
 
 	SELECT 
 		IIF(LTRIM(RTRIM(ISNULL(VPC.Phone,''))) != '', LTRIM(RTRIM(VPC.Phone)), Cu.CustomerPhone) 'destinationPhone',
-		IIF(LTRIM(RTRIM(ISNULL(VPC.DescriptionOfClient,''))) != '', LTRIM(RTRIM(VPC.DescriptionOfClient)), ISNULL(Cu.CommercialName, Cu.[Name])) 'destinationClientName'
+		IIF(LTRIM(RTRIM(ISNULL(VPC.DescriptionOfClient,''))) != '', LTRIM(RTRIM(VPC.DescriptionOfClient)), ISNULL(Cu.CommercialName, Cu.[Name])) 'destinationClientName',
+		LTRIM(RTRIM(VPC.[Address])) 'AddressPickup'
 	FROM 
 		[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 		LEFT JOIN
