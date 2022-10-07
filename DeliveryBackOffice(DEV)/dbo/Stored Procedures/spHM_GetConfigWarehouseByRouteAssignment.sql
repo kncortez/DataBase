@@ -17,6 +17,9 @@ BEGIN
 	DECLARE @SenderReceiverId INT 
 	DECLARE @SenderReceiverName NVARCHAR(201)
 
+	DECLARE @TotalSettlementPieces INT
+
+
 	DECLARE @RouteAssignment TABLE (
 		IdRouteAssignment INT NOT NULL
 	   ,IdRoute INT NULL
@@ -58,140 +61,61 @@ BEGIN
 					1 'StatusCode'
 				   ,'Datos cálculados correctamente.' 'Description'
 
-				-- Table 1 - Tabla de configuraciones
+				SELECT 
+					@TotalSettlementPieces = urs.TotalPiecesSettled
+				FROM UnifiedRouteSettlement urs WITH (NOLOCK)
+				INNER JOIN @RouteAssignment ra
+				ON urs.RouteAssignmentId = ra.IdRouteAssignment
+				WHERE urs.RowStatus = 1
+
+				-- Table 0 - Contadores de piezas
 				SELECT
-				DISTINCT
-					RouteAssignmentId
-				   ,WarehouseLocationServiceType
-				FROM (SELECT
-					DISTINCT
-						X.IdRouteAssignment RouteAssignmentId
-					   ,CASE
-							WHEN X.Attemps > X.FailedAttempt THEN 'Retorno'
-							ELSE 'Devolución local'
-						END WarehouseLocationServiceType
-					FROM (SELECT
-							(SELECT
-									COUNT(1)
-								FROM DeliveryOrderDetail dod WITH (NOLOCK)
-								INNER JOIN StatusOrder so WITH (NOLOCK)
-									ON so.StatusOrderId = dod.StatusOrderId
-								WHERE dod.RowStatus = 1
-								AND dod.Guide_Serie = do.Guide_Serie
-								AND dod.Guide_Number = do.Guide_Number
-								AND so.OrderDescription = 'Intento de entrega fallida')
-							FailedAttempt
-						   ,ISNULL((SELECT
-									rh.Attempt
-								FROM RateHeader rh WITH (NOLOCK)
-								LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-									ON vpc.CodeOfReference = do.Sender_ID
-								INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-									ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-								WHERE rh.RheId = rc.RbcIdRate)
-							, 2)
-							Attemps
-						   ,ra.IdRouteAssignment
-						FROM @RouteAssignment ra
-						INNER JOIN ServiceManagement sm WITH (NOLOCK)
-							ON sm.IdPuRouteAssigment = ra.IdRouteAssignment
-							AND sm.RowStatus = 1
-						INNER JOIN ServiceManagementDetail smd WITH (NOLOCK)
-							ON smd.ServiceManagement = sm.IdServiceManagement
-							AND smd.RowStatus = 1
-						INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
-							ON rpd.ServiceManagementDetailId = smd.IdServiceManagementDetail
-						INNER JOIN DeliveryOrder do WITH (NOLOCK)
-							ON do.Guide_Serie = rpd.Guide_Serie
-							AND do.Guide_Number = rpd.Guide_Number
-							AND do.StatusOrderId NOT IN (SELECT
-									so.StatusOrderId
-								FROM StatusOrder so WITH (NOLOCK)
-								WHERE so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado'))
-							AND rpd.RowStatus = 1
-						WHERE do.IsLastMileReturn IS NULL
-						OR do.IsLastMileReturn = 0) X
-					UNION
-					SELECT
-					DISTINCT
-						X.IdRouteAssignment RouteAssignmentId
-					   ,CASE
-							WHEN X.Attemps > X.FailedAttempt THEN 'Devolución local'
-							ELSE 'Bazar'
-						END WarehouseLocationServiceType
-					FROM (SELECT
-							(SELECT
-									COUNT(1)
-								FROM DeliveryOrderDetail dod WITH (NOLOCK)
-								INNER JOIN StatusOrder so WITH (NOLOCK)
-									ON so.StatusOrderId = dod.StatusOrderId
-								WHERE dod.RowStatus = 1
-								AND dod.Guide_Serie = do.Guide_Serie
-								AND dod.Guide_Number = do.Guide_Number
-								AND so.OrderDescription = 'Intento de entrega fallida')
-							FailedAttempt
-						   ,(SELECT
-									ISNULL(rh.Attempt, 2) + rh.AttemptReturn
-								FROM RateHeader rh WITH (NOLOCK)
-								LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-									ON vpc.CodeOfReference = do.Sender_ID
-								INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-									ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-								WHERE rh.RheId = rc.RbcIdRate)
-							Attemps
-						   ,ra.IdRouteAssignment
-						FROM @RouteAssignment ra
-						INNER JOIN ServiceManagement sm WITH (NOLOCK)
-							ON sm.IdPuRouteAssigment = ra.IdRouteAssignment
-							AND sm.RowStatus = 1
-						INNER JOIN ServiceManagementDetail smd WITH (NOLOCK)
-							ON smd.ServiceManagement = sm.IdServiceManagement
-							AND smd.RowStatus = 1
-						INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
-							ON rpd.ServiceManagementDetailId = smd.IdServiceManagementDetail
-						INNER JOIN DeliveryOrder do WITH (NOLOCK)
-							ON do.Guide_Serie = rpd.Guide_Serie
-							AND do.Guide_Number = rpd.Guide_Number
-							AND do.StatusOrderId NOT IN (SELECT
-									so.StatusOrderId
-								FROM StatusOrder so WITH (NOLOCK)
-								WHERE so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center'))
-							AND rpd.RowStatus = 1
-						WHERE do.IsLastMileReturn = 1) X
-					UNION
-					SELECT
-					DISTINCT
-						ra.IdRouteAssignment RouteAssignmentId
-					   ,IIF(ISNULL(sp.IdHubLogistics, (SELECT TOP 1
-								hl.IdHubLogistic
-							FROM DumpServiceCoverage dsc WITH (NOLOCK)
-							INNER JOIN Township t WITH (NOLOCK)
-								ON t.IdTownship = do.ReceiverIdTownship
-								OR t.TownshipName = do.Receiver_Town
-							INNER JOIN HubLogistics hl WITH (NOLOCK)
-								ON hl.HubAbbreviation = dsc.Hub
-							WHERE dsc.HeaderCode = t.HeaderCode
-							AND dsc.RowStatus = 1)
-						) = cs.HubLogisticId, 'Recolección local', 'Linehaul') WarehouseLocationServiceType
-					FROM @RouteAssignment ra
-					INNER JOIN ServiceManagement sm WITH (NOLOCK)
-						ON sm.IdPuRouteAssigment = ra.IdRouteAssignment
-						AND sm.ServiceStatusId = (SELECT
-								css.IdServiceStatus
-							FROM CatServiceStatus css
-							WHERE css.Name = 'Recolectado')
+					SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
+					so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center')
+					, 1, 0)) TotalDelivery
+				   ,SUM(IIF(sp.SchedulePickupId IS NOT NULL AND
+					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')
+					, 1, 0)) TotalPickup
+				   ,SUM(IIF(((sp.SchedulePickupId IS NOT NULL AND
+					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')) OR
+					rpd.ServiceManagementDetailId IS NOT NULL AND
+					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Anulado', 'Entrega parcial', 'Traslado a Express Center'))
+					, 1, 0)) TotalPhysicalPieces
+				   ,SUM(IIF(sp.SchedulePickupId IS NOT NULL AND
+					so.OrderDescription IN ('Generado', 'Solicitado', 'Programado para recolección')
+					, 1, 0))
+					+ SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
+					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Intento de entrega fallida')
+					, 1, 0)) TotalPendingSettlement
+				   ,ISNULL(@TotalSettlementPieces, 0) TotalSettlementPieces
+				   ,SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
+					so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center')
+					, IIF(do.IsCollect = 1, do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0), 0)) TotalCOD
+				FROM @RouteAssignment ra
+				INNER JOIN ServiceManagement sm WITH (NOLOCK)
+					ON ra.IdRouteAssignment = sm.IdPuRouteAssigment
 						AND sm.RowStatus = 1
-					INNER JOIN SchedulePickup sp WITH (NOLOCK)
-						ON sp.SchedulePickupId = sm.IdSchedulePickup
+				INNER JOIN CatServiceStatus css WITH (NOLOCK)
+					ON sm.ServiceStatusId = css.IdServiceStatus
+				LEFT JOIN ServiceManagementDetail smd WITH (NOLOCK)
+					ON sm.IdServiceManagement = smd.ServiceManagement
+						AND smd.RowStatus = 1
+				LEFT JOIN RoutePreparationDetail rpd WITH (NOLOCK)
+					ON smd.IdServiceManagementDetail = rpd.ServiceManagementDetailId
+						AND rpd.RowStatus = 1
+				LEFT JOIN SchedulePickup sp WITH (NOLOCK)
+					ON sm.IdSchedulePickup = sp.SchedulePickupId
 						AND sp.RowStatus = 1
-					INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-						ON dopd.IdHeaderRecolection = sp.SchedulePickupId
-					INNER JOIN DeliveryOrder do WITH (NOLOCK)
-						ON dopd.GuideSerie = do.Guide_Serie
-						AND dopd.GuideNumber = do.Guide_Number
-					INNER JOIN CatStation cs WITH (NOLOCK)
-						ON cs.IdStation = @StationId
-						AND cs.RowStatus = 1) xy
+						AND (sp.SchedulePickupStatus IS NULL
+							OR sp.SchedulePickupStatus = 1)
+				LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+					ON sp.SchedulePickupId = dopd.IdHeaderRecolection
+				INNER JOIN DeliveryOrder do WITH (NOLOCK)
+					ON ISNULL(dopd.GuideSerie, rpd.Guide_Serie) = do.Guide_Serie
+						AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = do.Guide_Number
+				INNER JOIN StatusOrder so WITH (NOLOCK)
+					ON do.StatusOrderId = so.StatusOrderId
+				WHERE css.[Name] <> 'Cancelado'
 
 				-- Table 2 - Información Courier
 				SELECT
