@@ -1,7 +1,7 @@
 ﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <21-09-2022>
--- Description:	<Cierra un link de recolección y genera una solcitud de recolección agrupado por codigo de referencia>
+-- Description:	<Cierra un link de recolección y genera una solciitud de recolección agrupado por codigo de referencia>
 -- =============================================
 CREATE PROCEDURE sphw_RecollectionLinkClosure
 	@VisitPointDataLinkId BIGINT,
@@ -13,6 +13,8 @@ CREATE PROCEDURE sphw_RecollectionLinkClosure
 	@RecollectionLongitude varchar(50),
 	@Token nvarchar(100),
 	@IdAccount int,
+	@Scheduled  bit,
+	@Startdate datetime = NULL,
 	--DATOS DEL VISITPOINT A MODIFICAR
 	@IdTownship INT = NULL,
 	@IdCountry  nvarchar(10) = 'GT',
@@ -54,8 +56,6 @@ BEGIN
 		FROM DBO.VisitPointDataLink VPDL
 		WHERE VPDL.IdVisitPointDataLink=@VisitPointDataLinkId;
 
-		DECLARE @Scheduled bit = 0--SE CREARA UNA RECOLECCIÓN NO PROGRAMADA
-
 
 		INSERT INTO @RESULTREGISTERRECOLECTION
 		(
@@ -72,7 +72,7 @@ BEGIN
 			,@RecollectionLatitude
 			,@RecollectionLongitude
 			,@Regularpiezer
-			,NULL
+			,@Startdate
 			,NULL
 			,@Token
 			,@IdAccount;
