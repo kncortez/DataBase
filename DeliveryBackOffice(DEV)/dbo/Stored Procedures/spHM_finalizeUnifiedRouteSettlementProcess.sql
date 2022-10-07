@@ -8,7 +8,7 @@ CREATE PROCEDURE [dbo].[spHM_finalizeUnifiedRouteSettlementProcess]
 @GuideSerie  AS NVARCHAR(2),
 @GuideNumber AS INT,
 @DateRoute AS DATETIME,
-@IdRoute AS INT,
+@IdCourier AS INT,
 @Token AS NVARCHAR(50)
 
 AS  
@@ -21,14 +21,13 @@ BEGIN
 	 DECLARE @IdRouteAssignment AS INT
 	 DECLARE @TotalPiecesMissing AS INT
 	 DECLARE @TotalPiecesSettled AS INT
+	 DECLARE @IdRoute AS INT
 
 
-	
-
-
-	  SELECT @IdRouteAssignment=IdRouteAssigment 
+	  SELECT @IdRouteAssignment=IdRouteAssigment ,
+	         @IdRoute = IdRoute
 	  FROM dbo.RouteAssigment RA WITH (NOLOCK) 
-	  WHERE RA.IdRoute=@IdRoute AND RA.DateOfRoute=FORMAT(@DateRoute,'yyyy-MM-dd')
+	  WHERE RA.IdCurrierMan=@IdCourier AND RA.DateOfRoute=FORMAT(@DateRoute,'yyyy-MM-dd')
 
 	    
 		SELECT @TotalPiecesMissing = COUNT(PieceNumber)  FROM  dbo.Act A WITH (NOLOCK)
@@ -66,7 +65,6 @@ BEGIN
 		   RP.RouteAssignmentId = @IdRouteAssignment AND
 		   FORMAT(RP.DateSettlement, 'yyyy-mm-dd' ) = FORMAT(@DateRoute, 'yyyy-mm-dd')
 		   AND RPD.IsOpenProcess = 1
-
 
 	------------------------------- Actualizar estado del detalle de la guia
 	UPDATE  RPD
@@ -161,9 +159,10 @@ BEGIN
 				RP.RowStatus = 1
 
 
-
  			SET @RESULT = 1; /* PROCESESO EXITOSO */
 		COMMIT TRANSACTION
+
+		
 	        SELECT @Result AS Result;
         END TRY
 			BEGIN CATCH
@@ -175,9 +174,9 @@ BEGIN
 			END  CATCH
 		 
 END
-ELSE
-BEGIN
- SELECT @Result AS Result
-END
+	ELSE
+		BEGIN
+			 SELECT @Result AS Result
+		END
 
 	END
