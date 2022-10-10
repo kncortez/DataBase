@@ -81,13 +81,16 @@ BEGIN
 		URSD.GuideSerie=DOPD.GuideSerie
 		AND URSD.GuideNumber=DOPD.GuideNumber
 		AND URSD.RowStatus=1
+	LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
+		URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+		AND URSD.RowStatus=1
 	WHERE 
 		SR.Estatus=1
 		AND RA.RowStatus=1		
 		AND RA.IdVehicle IS NOT NULL
 		AND RA.IdRoute IS NOT NULL		
 		AND SR.CUI=@CUI--@CUI
-		AND URSD.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 	
 	IF @TOTALGUIDESRECO IS NOT NULL AND @TOTALGUIDESRECO>0
 	BEGIN
@@ -154,13 +157,16 @@ BEGIN
 		URSD.GuideSerie=RPD.Guide_Serie
 		AND URSD.GuideNumber=RPD.Guide_Number
 		AND URSD.RowStatus=1
+	LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
+		URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+		AND URSD.RowStatus=1
 	WHERE 
 		SR.Estatus=1
 		AND RA.RowStatus=1		
 		AND RA.IdVehicle IS NOT NULL
 		AND RA.IdRoute IS NOT NULL		
 		AND SR.CUI=@CUI--@CUI
-		AND URSD.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 	
 	IF  @TOTALGUIDESDL IS NOT NULL AND @TOTALGUIDESDL>0
 	BEGIN
@@ -237,6 +243,7 @@ BEGIN
 			,URS.DateUpdated=@CURRENTDATE 
 			,URS.TokenUpdated=@CURRENTDATE 
 			,URS.TotalPiecesSettled=SUB1.TotalPieces
+			,URS.UserSettlement=@Token
 		FROM DBO.UnifiedRouteSettlement URS
 		INNER JOIN 
 			(SELECT
