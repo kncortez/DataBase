@@ -1082,6 +1082,7 @@
     <Build Include="dbo\User Defined Types\TblConfigWarehouseByRouteAssignment.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetSettlementUnifiedRoutes.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ClosureSettlementUnifiedRoutes.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
