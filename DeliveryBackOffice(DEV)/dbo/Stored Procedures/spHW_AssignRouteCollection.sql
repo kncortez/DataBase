@@ -1,7 +1,7 @@
 ﻿-- =============================================
 -- Author:		<Edelman Vásquez>
 -- Create date: <2022-09-13>
--- Description:	<SP  asignacón de servicio de recolección bajo selección de courier>
+-- Description:	<SP  asignación de servicio de recolección bajo selección de courier>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_AssignRouteCollection]
 @IdCurrierMan AS INT,
@@ -58,7 +58,7 @@ BEGIN TRY
 	END
 		ELSE
 		  BEGIN 
-				SELECT Result=0, Descrip='CurrierMan no disponible'
+				SELECT Result=0, Descrip='Courierman no disponible'
 		  END 
 	COMMIT TRANSACTION
 	END TRY
