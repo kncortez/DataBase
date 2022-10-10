@@ -36,8 +36,9 @@ BEGIN
 		WHERE
 			SR.ID=@CourierId 
 			AND SM.RowStatus= 1
-			AND IsActiveService=1 OR IsActiveService IS NULL
-			AND CONVERT(DATE,SP.StartDate)=CONVERT(DATE,GETDATE());--FILTRANDO PARA FECHAS DEL DÍA DE HOY
+			AND (IsActiveService=1 OR IsActiveService IS NULL)
+			AND CONVERT(DATE,SP.StartDate)=CONVERT(DATE,GETDATE())
+			AND SM.IdServiceManagement <> @ServiceManagementId;--FILTRANDO PARA FECHAS DEL DÍA DE HOY
 
 		--MARCANDO SERVICIO COMO ACTIVO
 		UPDATE SM SET
