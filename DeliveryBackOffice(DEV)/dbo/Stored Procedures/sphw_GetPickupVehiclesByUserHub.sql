@@ -94,16 +94,17 @@ BEGIN
 	INNER JOIN Township tw WITH (NOLOCK)
 		ON tw.IdTownship = cr.IdTownship
 	WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
-	AND ((SELECT
+	AND (
+	 (SELECT TOP 1
+			dsc.Hub
+		FROM DumpServiceCoverage dsc WITH (NOLOCK)
+		WHERE dsc.HeaderCode = tw.HeaderCode) IN
+		(SELECT
 			hl.HubAbbreviation
 		FROM HubLogisticByUser hlbu WITH (NOLOCK)
 		INNER JOIN HubLogistics hl
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
 		WHERE UserId = @IdUser)
-	= (SELECT TOP 1
-			dsc.Hub
-		FROM DumpServiceCoverage dsc WITH (NOLOCK)
-		WHERE dsc.HeaderCode = tw.HeaderCode)
 	)
 	AND sr.Estatus = 1
 	AND ra.RowStatus = 1
