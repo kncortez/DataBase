@@ -1083,6 +1083,7 @@
     <Build Include="dbo\Stored Procedures\spHM_GetSettlementUnifiedRoutes.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetConfigWarehouseByRouteAssignment.sql" />
     <Build Include="dbo\Stored Procedures\spHM_ClosureSettlementUnifiedRoutes.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetCatExpressCenter.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
