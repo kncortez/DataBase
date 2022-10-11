@@ -41,8 +41,9 @@ BEGIN
 
 				   SELECT @STATUS = StatusOrderId
 				   FROM dbo.DeliveryOrderDetail
+				   WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
 
-                   IF (@STATUS NOT IN(22,5))
+                   IF (@STATUS NOT IN(22,5,7))
 				   BEGIN
 
 						UPDATE dbo.DeliveryOrder SET IsLastMileReturn = 1 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
