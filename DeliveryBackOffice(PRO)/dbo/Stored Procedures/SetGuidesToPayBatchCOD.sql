@@ -5,8 +5,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SetGuidesToPayBatchCOD]
 -- Add the parameters for the stored procedure here
-	@BatchCODId int,
-	@TotalAmount decimal(18,2),
+	@BatchCODId INT,
+	@TotalAmount DECIMAL(18,2),
 	@AuthorizationNumber nvarchar(50),
 	@AuthorizationDate datetime,
 	@TokenCreated nvarchar(50),
@@ -74,6 +74,116 @@ BEGIN
               )
       SELECT GuideSerie,GuideNumber,25, @TokenCreated,GETDATE() FROM [dbo].[BatchDetailCOD] 
 	    WHERE [BatchCODId] = @BatchCODId AND Excluded=0 AND CatConceptCODId =2
+
+		
+		-----------------WEBHOOK.INI-----------------------		
+		DECLARE @WebhookCustomerTable AS TABLE(
+			CustomerId INT,
+			CustomerEndpointId BIGINT,
+			WebhookType INT,
+			GuideSerie NVARCHAR(2),
+			GuideNumber INT,
+			GuideStatusId TINYINT
+		)
+		BEGIN TRY
+			DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+
+			-- Clientes de las guías por procesar
+			INSERT INTO 
+				@WebhookCustomerTable
+				(CustomerId, GuideSerie, GuideNumber, GuideStatusId)
+			SELECT
+				DISTINCT
+					DO.IdCustomer,
+					BDCOD.GuideSerie,
+					BDCOD.GuideNumber,
+					DO.StatusOrderId
+			FROM
+				[DeliveryBackOffice].[dbo].[BatchDetailCOD] BDCOD WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+					ON
+						BDCOD.GuideNumber = DO.Guide_Number
+						AND
+						BDCOD.GuideSerie = DO.Guide_Serie
+			WHERE
+				BDCOD.BatchCODId = @BatchCODId 
+				AND 
+				Excluded = 0 
+				AND 
+				CatConceptCODId = 2;
+
+			-- Ingresar endpoints de cliente
+			UPDATE
+				@WebhookCustomerTable
+			SET
+				CustomerEndpointId = WE.IdWebhookEndpoint
+				,WebhookType = @GuideStatusChangeWebhook
+			FROM
+				[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
+				INNER JOIN
+					@WebhookCustomerTable WCT
+					ON
+						WE.CustomerId = WCT.CustomerId
+						AND
+						WE.WebhookTypeId = @GuideStatusChangeWebhook;
+
+			DECLARE @ResponseTable AS TABLE (
+				InsertedId BIGINT
+			);
+
+			INSERT INTO 
+				[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+				(
+					[GuideSerie]
+					,[GuideNumber]
+					,[CustomerId]
+					,[StatusOrderId]
+					,[WebhookEndpointId]
+					,[HasNotified]
+					,[TokenCreated]
+					,[DateCreated]
+				)
+			OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+			SELECT
+				WCT.GuideSerie
+				,WCT.GuideNumber
+				,WCT.CustomerId
+				,WCT.GuideStatusId
+				,WCT.CustomerEndpointId
+				,0
+				,@TokenCreated
+				,GETDATE()
+			FROM
+				@WebhookCustomerTable WCT
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK)
+					ON
+						WCT.CustomerId = WRBU.CustomerId
+						AND
+						WCT.GuideStatusId = WRBU.StatusOrderId
+						AND
+						WCT.WebhookType = WRBU.WebhookTypeId
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
+					ON
+						WCT.GuideSerie = WTQ.GuideSerie
+						AND
+						WCT.GuideNumber = WTQ.GuideNumber
+						AND
+						WCT.GuideStatusId = WTQ.StatusOrderId
+						AND 
+						WTQ.RowStatus = 1
+			WHERE
+				WRBU.IdWebhookRestrinctionByUser IS NOT NULL
+				AND
+				WTQ.IdWebhookTrackingQueue IS NULL
+
+		END TRY
+		BEGIN CATCH
+
+		END CATCH
+		-------------------WEBHOOK.FIN------------------------------	
 
 			--------------------------------------------------------------------------------
 

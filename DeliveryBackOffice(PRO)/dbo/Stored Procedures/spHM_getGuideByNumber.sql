@@ -13,6 +13,8 @@ BEGIN
 	SET NOCOUNT ON;
 	DECLARE @IS_HUB_DESTINY AS INT;		-- Delivery Order
 	DECLARE @HUB_ID AS INT;				-- Hub Logistics
+	
+	PRINT 'HUB DESTINO'
 
 	SET @IS_HUB_DESTINY = (	SELECT  COALESCE([DO].[HubDestinationId], 0) AS HubDestinationId
 							FROM	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
@@ -21,8 +23,11 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
+
+	PRINT 'BEGIN TRAN'
 		IF (@IS_HUB_DESTINY = 0)
 			BEGIN
+			PRINT 'UPDATE HUB'
 				UPDATE	[dbo].[DeliveryOrder]
 				SET		[HubDestinationId] = (	SELECT IdHubLogistic
 												FROM HubLogistics
@@ -30,7 +35,7 @@ BEGIN
 				WHERE	[Guide_Serie] = @GuideSerie 
 					AND [Guide_Number] = @GuideNumber;
 			END
-
+			PRINT 'SELECT'
 		SELECT	[DO].[Guide_Serie], 
 				[DO].[Guide_Number],
 				COALESCE([DO].[Pieces_Dry], 0) AS Pieces_Dry,
@@ -39,7 +44,7 @@ BEGIN
 				[DO].[Receiver_Town],
 				[DO].[Receiver_Department],
 				[DO].[Receiver_Address],
-				COALESCE([DO].[Receiver_Zone], 0) AS Receiver_Zone,
+				COALESCE([DO].[Receiver_Zone], '0') AS Receiver_Zone,
 				COALESCE([DO].[HubDestinationId], 0) AS HubDestinationId,
 				[HL].[HubAbbreviation],
 				COALESCE([DO].[StatusOrderId], 0) AS StatusOrderId,
