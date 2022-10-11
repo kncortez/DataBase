@@ -44,7 +44,6 @@ BEGIN
         HaveCredit NVARCHAR(50) NULL,
         CollectCOD NVARCHAR(50) NULL,
         ReturnRate DECIMAL(14, 2) NULL,
-        --AmountToPay DECIMAL(14, 2) NULL,
         CODAmount DECIMAL(14, 2) NULL,
         ReturnRates DECIMAL(14, 2) NULL
     );
@@ -75,9 +74,7 @@ BEGIN
         GuideSerie NVARCHAR(2) NULL,
         GuideNumber INT NULL,
         ServiceVehicle NVARCHAR(100) NULL,
-        --Amount DECIMAL(12, 2) NULL,
         Timeid INT NULL,
-        --StatusName NVARCHAR(100)
         IdServiceManagement INT NULL
     );
 
@@ -92,10 +89,10 @@ BEGIN
            ISNULL(dro.Sender_Zone, '0') Zone,
            SenderPhone 'Phone',
            shp.StartDate,
-           shp.EndDate,
+           ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))),
            CONVERT(VARCHAR(10), shp.StartDate, 105) AS datePickUp,
            CONVERT(VARCHAR(10), shp.StartDate, 108) AS hourPickUp,
-           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
+           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))), 108)) AS rangeHour,
            QuantityRegularPackages,
            QuantityOverDimensionedPackage,
            EstimatedWeight,
@@ -130,13 +127,9 @@ BEGIN
            dop.GuideSerie,
            dop.GuideNumber,
            ISNULL(ctv.Name, '') ServiceVehicle,
-           --ISNULL(srv.Amount, 0),
            dop.TimePlaId,
-           --,css.[Name] StatusName
            srv.IdServiceManagement
     FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
-        --LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hub WITH (NOLOCK)
-        --    ON shp.IdHubLogistics = hub.IdHubLogistic
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnT WITH (NOLOCK)
             ON shp.TownshipId = twnT.IdTownship
         LEFT JOIN [DeliveryBackOffice].[dbo].[Province] prv WITH (NOLOCK)
@@ -168,12 +161,10 @@ BEGIN
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
             ON css.IdServiceStatus = srv.ServiceStatusId
     WHERE
-        --@datePickUp BETWEEN CONVERT(DATE, shp.StartDate) AND CONVERT( DATE, shp.EndDate)
-        --AND shp.AssigmentStatus IS NULL
         (NOT (
                  NOT (
                          @datePickUp_Internal >= CONVERT(DATE, shp.StartDate)
-                         AND CONVERT(DATE, shp.EndDate) >= @datePickUp_Internal
+                         AND CONVERT(DATE, ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME)))) >= @datePickUp_Internal
                      )
                  AND NOT (@datePickUp_Internal = '')
              )
@@ -185,62 +176,6 @@ BEGIN
             )
         AND shp.RowStatus = 1
         AND (@hubId = -1 OR shp.IdHubLogistics = @hubId)
-       -- AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)) -- Si tiene guía y no está anulada
-    --PRINT CONVERT(VARCHAR, GETDATE(), 9);
-    --DECLARE @guides NVARCHAR(MAX) =
-    --        (
-    --            SELECT STUFF(
-    --                   (
-    --                      SELECT DISTINCT
-    --                              ',' + CONCAT(GuideSerie, GuideNumber)
-    --                       FROM @tbl
-    --                       WHERE Amount = 0
-    --                             AND Timeid < 3
-    --                       GROUP BY GuideSerie,
-    --                                GuideNumber
-    --                       FOR XML PATH('')
-    --                   ),
-    --                   1,
-    --                   1,
-    --                   ''
-    --                        )
-    --        );
-
-    --PRINT 'inicia brain';
-    --PRINT CONVERT(VARCHAR, GETDATE(), 9);
-    --INSERT INTO @TempPrice
-    --(
-    --    GuideSerie,
-    --    GuideNumber,
-    --    IsCollect,
-    --    Price,
-    --    COD,
-    --    AmountPaid,
-    --    CODPaid,
-    --    CODIsPaid,
-    --    PaymentTime,
-    --    TimeSequence,
-    --    FelNumber,
-    --    IsPaid,
-    --    IsCustomer,
-    --    ConditionPayment,
-    --    HaveCredit,
-    --    CollectCOD,
-    --    ReturnRate,
-    --    AmountToPay,
-    --    CODAmount,
-    --    ReturnRates
-    --)
-    --EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @guides,
-    --                                            @InTime = 2,
-    --                                            @IsReturn = 'FALSE',
-    --                                            @CodeApp = 'SIFDCECOM300720201459',
-    --                                            @IdModule = 1,
-    --                                            @Token = 'SYSTEM';
-
-
-
-
 
     PRINT 'termina brain';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
@@ -264,9 +199,7 @@ BEGIN
            MAX(tb.NameProvince) 'NameProvince',
            MIN(tb.TypeService) 'TypeService',
            tb.SchedulePickupStatus 'SchedulePickupStatus',
-           --SUM(ISNULL(tp.AmountToPay,0)) Amount,
            MIN(tb.ServiceVehicle) 'ServiceVehicle',
-           --ISNULL(tb.StatusName,'') StatusName
            tb.IdServiceManagement
     FROM @tbl tb
         LEFT JOIN @TempPrice tp
@@ -275,24 +208,6 @@ BEGIN
     GROUP BY idSchedulePickUp,
              IdServiceManagement,
              Address,
-             --Name,--
-             --NameProvince,--
-             --NameTownship,--
-             --Zone,
-             --TypeService,
              SchedulePickupStatus
-             --StartDate,
-             --Periodicy,
-             --Phone,
-             --StartDate,
-             --EndDate,
-             --datePickUp,
-             --hourPickUp,
-             --rangeHour,
-             --IdHubLogistics,
-             --HubAbbreviation,
-             --ServiceVehicle,
-             --StatusName
-  --  OPTION (OPTIMIZE FOR UNKNOWN);
 
 END;
