@@ -1,11 +1,12 @@
 ﻿-- =============================================
--- Author:		<Alberto Ixchop>
+-- Author:		<Alberto Ixchop>     
 -- Create date: <03-10-2022>
 -- Description:	<Cierre de proceso de liquidación de ruta unificada>
 -- =============================================
 CREATE PROCEDURE spHM_ClosureSettlementUnifiedRoutes
 	@CUI NVARCHAR(25),
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@Date AS DATE = NULL
 AS
 BEGIN
 
@@ -20,6 +21,10 @@ BEGIN
         SAVE TRANSACTION SPClosureSettlementUnifiedRoutes
     ELSE  
 	BEGIN TRANSACTION;  
+
+	BEGIN TRY
+		IF @TranCounter = 0  
+            COMMIT TRANSACTION; 
 
 	DECLARE @TOTALGUIDESRECO INT = 0;
 	DECLARE @TOTALGUIDESDL INT = 0;
@@ -39,7 +44,51 @@ BEGIN
 	DECLARE @STATUSINCIDENCE_SM INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus CS WHERE CS.Name= 'Incidencia');
 	DECLARE @STATUSDELIVERED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Entregado');
 	DECLARE @STATUSRETURNED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto');
+	DECLARE @STATUSINROUTE INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'En ruta');
 	DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+
+	DECLARE @IdSubTypeDelivery INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Entrega');
+	DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Devolución');
+
+	IF @Date IS NULL
+		SET @Date =GETDATE()
+
+	------------------------------------------------------
+	--INICIO ACTUALIZACIÓN GUÍAS EN RUTA QUE FUERON RECOLECTADOS 
+		UPDATE DO SET DO.StatusOrderId = @STATUSDELIVERED_DO
+			FROM RouteAssigment RA
+			INNER JOIN DBO.ServiceManagement SM 
+				ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+				AND SM .RowStatus=1
+			INNER JOIN DBO.ServiceManagementDetail SMD
+				ON SMD.ServiceManagement=SM.IdServiceManagement
+			INNER JOIN DBO.SchedulePickup SP
+				ON SM.IdSchedulePickup= SP.SchedulePickupId
+				AND SP.RowStatus=1
+			INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD
+				ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
+			INNER JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
+				ON DO.Guide_Serie=DOPD.GuideSerie
+				AND DO.Guide_Number=DOPD.GuideNumber
+			LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
+				URSD.GuideSerie=DOPD.GuideSerie
+				AND URSD.GuideNumber=DOPD.GuideNumber
+				AND URSD.RowStatus=1
+			LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
+				URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+				AND URSD.RowStatus=1
+			WHERE 
+				RA.RowStatus=1		
+				AND RA.IdVehicle IS NOT NULL
+				AND RA.IdRoute IS NOT NULL		
+				AND RA.IdCurrierMan=@IDCOURIER--@CUI
+				AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+				AND RA.DateOfRoute=@Date		
+				AND DO.StatusOrderId = @STATUSINROUTE 
+				AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
+				AND URSD.IsOpenProcess=0
+	--FIN ACTUALIZACIÓN GUÍAS EN RUTA QUE FUERON RECOLECTADOS 
+	------------------------------------------------------
 
 
 	--- Tabla donde se guarda las guías a liquidar
@@ -61,9 +110,7 @@ BEGIN
 		,@COUNTGUIDESNOTRECOLECTED_PU=SUM(CASE WHEN DO.StatusOrderId<>@STATUSCOLLECTED_DO THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE RECOLECCIÓN QUE NO ESTAN EN ESTADO RECOLECTADO
 		,@COUNTSERVICESWITHINCIDENCE_PU=SUM(CASE WHEN SM.ServiceStatusId=@STATUSINCIDENCE_SM THEN 1 ELSE 0 END) --CANTIDAD DE SERVICIOS CON INCIDENCIA
 		,@TOTALGUIDESRECO = COUNT(DISTINCT CHECKSUM(DO.Guide_Number,DO.Guide_Serie))
-	FROM DBO.SenderReceiver SR 
-	LEFT JOIN DBO.RouteAssigment RA 
-		ON RA.IdCurrierMan=SR.ID
+	FROM RouteAssigment RA
 	INNER JOIN DBO.ServiceManagement SM 
 		ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 		AND SM .RowStatus=1
@@ -85,12 +132,12 @@ BEGIN
 		URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
 		AND URSD.RowStatus=1
 	WHERE 
-		SR.Estatus=1
-		AND RA.RowStatus=1		
+		RA.RowStatus=1		
 		AND RA.IdVehicle IS NOT NULL
 		AND RA.IdRoute IS NOT NULL		
-		AND SR.CUI=@CUI--@CUI
+		AND RA.IdCurrierMan=@IDCOURIER--@CUI
 		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+		AND RA.DateOfRoute=@Date
 	
 	IF @TOTALGUIDESRECO IS NOT NULL AND @TOTALGUIDESRECO>0
 	BEGIN
@@ -135,9 +182,7 @@ BEGIN
 		,@SERVICESCOUNTWITHINCIDENCE_DL=SUM(CASE WHEN SM.ServiceStatusId=@STATUSINCIDENCE_SM THEN 1 ELSE 0 END) --CANTIDAD DE SERVICIOS CON INCIDENCIA
 		,@DELIVERYFAILEDCOUNT_DL=SUM(CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN 1 ELSE 0 END)--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
 		,@TOTALGUIDESDL = COUNT(DISTINCT CHECKSUM(DO.Guide_Number,DO.Guide_Serie))
-	FROM DBO.SenderReceiver SR 
-	LEFT JOIN DBO.RouteAssigment RA 
-		ON RA.IdCurrierMan=SR.ID
+	FROM RouteAssigment RA 
 	INNER JOIN DBO.ServiceManagement SM 
 		ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 	INNER JOIN DBO.ServiceManagementDetail SMD 
@@ -161,12 +206,12 @@ BEGIN
 		URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
 		AND URSD.RowStatus=1
 	WHERE 
-		SR.Estatus=1
-		AND RA.RowStatus=1		
+		RA.RowStatus=1		
 		AND RA.IdVehicle IS NOT NULL
 		AND RA.IdRoute IS NOT NULL		
-		AND SR.CUI=@CUI--@CUI
+		AND RA.IdCurrierMan=@IDCOURIER--@CUI
 		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+		AND RA.DateOfRoute=@Date
 	
 	IF  @TOTALGUIDESDL IS NOT NULL AND @TOTALGUIDESDL>0
 	BEGIN
@@ -233,7 +278,7 @@ BEGIN
 			INNER JOIN ServiceManagementDetail SMD ON SMD.ServiceManagement = URSD.ServiceManagementId
 			INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment
 		WHERE RA.IdCurrierMan=@IDCOURIER
-		AND URSD.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR;
+		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR;
 
 
 		DECLARE @CURRENTDATE DATETIME = GETDATE();
@@ -418,6 +463,51 @@ BEGIN
 		--FIN MANIFIESTO PARA DEVOLUCIÓN 
 		----------------------------------------------------
 
+
+
+			----------------------------------------------------------------------------------------------
+			----ACTUALIZANDO ESTADO DE SERVICIOS
+			DECLARE @StatusServiceDelivered INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus where Name ='Entregado ' );
+			DECLARE @StatusServiceReturned INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus where Name ='Devuelto ' );			
+			DECLARE @StatusServiceCollected INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus where Name ='Recolectado ');
+
+			--	--> Actualizando servicios de guías entregadas/trasladadas
+				UPDATE SM SET 
+					ServiceStatusId= SMD.SubTypeServiceManagmentId
+				FROM @AllGuidesSettled	AGS
+				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
+					ON URSD.IdUnifiedRouteSettlementDetail=AGS.IdUnifiedRouteSettlementDetail
+				INNER JOIN DBO.ServiceManagement SM ON URSD.ServiceManagementId=SM.IdServiceManagement
+				INNER JOIN DBO.ServiceManagementDetail SMD ON SMD.ServiceManagement=SM.IdServiceManagement
+				--where SMD.SubTypeServiceManagmentId IN (@IdSubTypeDelivery)
+				--AND GTS.IsTransfer=0
+				--GROUP BY SM.IdServiceManagement;
+
+				INSERT INTO [dbo].[EventService]
+						   ([ServiceManagementId]
+						   ,[ServiceStatusId]
+						   ,[RowStauts]
+						   ,[TokenCreated]
+						   ,[DateCreated]
+						   ,[Observations])
+				SELECT
+						   SM.IdServiceManagement
+						   ,SMD.SubTypeServiceManagmentId
+						   ,1
+						   ,@Token
+						   ,GETDATE()
+						   ,'Actualización de estado desde spHM_GetSettlementUnifiedRoutes'
+				FROM @AllGuidesSettled	AGS
+				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
+					ON URSD.IdUnifiedRouteSettlementDetail=AGS.IdUnifiedRouteSettlementDetail
+				INNER JOIN DBO.ServiceManagement SM ON URSD.ServiceManagementId=SM.IdServiceManagement
+				INNER JOIN DBO.ServiceManagementDetail SMD ON SMD.ServiceManagement=SM.IdServiceManagement				
+				GROUP BY SM.IdServiceManagement,SMD.SubTypeServiceManagmentId;
+
+
+
+
+
 		SELECT			  
 			1 AS 'StatusCode',
 			'Cierre de liquidación de ruta unificada completada' AS 'Description';
@@ -431,9 +521,7 @@ BEGIN
 			0 AS 'StatusCode',
 			@MESSAGEERROR AS 'Description';
 	END;		
-	BEGIN TRY
-		IF @TranCounter = 0  
-            COMMIT TRANSACTION; 
+
 	END TRY
 	BEGIN CATCH
         IF @TranCounter = 0  
