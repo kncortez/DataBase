@@ -23,8 +23,6 @@ BEGIN
 	BEGIN TRANSACTION;  
 
 	BEGIN TRY
-		IF @TranCounter = 0  
-            COMMIT TRANSACTION; 
 
 	DECLARE @TOTALGUIDESRECO INT = 0;
 	DECLARE @TOTALGUIDESDL INT = 0;
@@ -520,7 +518,10 @@ BEGIN
 		SELECT			  
 			0 AS 'StatusCode',
 			@MESSAGEERROR AS 'Description';
-	END;		
+	END;
+	
+	IF @TranCounter = 0  
+		COMMIT TRANSACTION; 
 
 	END TRY
 	BEGIN CATCH
