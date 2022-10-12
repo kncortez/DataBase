@@ -28,7 +28,7 @@ BEGIN
 	INSERT INTO @RevalueGuides
 				SELECT
 					SUBSTRING(lg.NumberGuidePice,1,2)
-				    ,CAST(SUBSTRING(LTRIM(lg.NumberGuidePice), 3, CAST(LEN(NumberGuidePice) AS INT)-4) AS INT)
+				    ,CAST(SUBSTRING(LTRIM(lg.NumberGuidePice), 3, CAST(LEN(lg.NumberGuidePice) AS INT)) AS INT)
 				FROM @TblListGuideActa lg
 
 ------------Modificar Bandera campo IsLastMileReturn ----------------------------
@@ -43,14 +43,14 @@ BEGIN
 				   FROM dbo.DeliveryOrderDetail
 				   WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
 
-                   IF (@STATUS NOT IN(22,5,7))
-				   BEGIN
+                  --IF (@STATUS NOT IN(22,5,7))
+				   --BEGIN
 
 						UPDATE dbo.DeliveryOrder SET IsLastMileReturn = 1 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
 				   
 				        INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
-				   END
-
+				  -- END
+				 
 	DELETE FROM @RevalueGuides
 	WHERE GuideSerie = @Serie AND GuideNumber = @Numero
 
