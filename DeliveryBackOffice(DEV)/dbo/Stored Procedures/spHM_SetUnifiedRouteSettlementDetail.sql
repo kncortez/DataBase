@@ -655,6 +655,17 @@ BEGIN
 					IF @UserSettlement IS NULL
 					BEGIN
 						
+						-- Verificar si es un proceso abierto, de ser así debe continuar el usuario que lo abrió
+						SET @CountPiece = (SELECT
+								SUM(1)
+							FROM DeliveryOrderPiece WITH (NOLOCK)
+							WHERE GuideSerie = @GuideSerie
+							AND GuideNumber = @GuideNumber)
+
+						--- Si tiene más de una pieza es un proceso abierto
+						IF @CountPiece > 1
+							SET @IsOpenProcess = 1
+
 						-- Verificar si existe la guía en el detalle de la preparación de ruta
 						SELECT
 							@IdUnifiedRouteSettlementDetail = ursd.IdUnifiedRouteSettlementDetail
@@ -741,10 +752,11 @@ BEGIN
 							
 							SET @IdUnifiedRouteSettlementDetail = SCOPE_IDENTITY()
 
-							--- Actualizar contadores de guías
-							UPDATE UnifiedRouteSettlement
-							SET TotalGuidesSettled += 1
-							WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
+							--- Actualizar contadores de guías si no es un proceso abierto 
+							IF @IsOpenProcess <> 1
+								UPDATE UnifiedRouteSettlement
+								SET TotalGuidesSettled += 1
+								WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
 						END
 
 						IF @IsError <> 1
@@ -771,23 +783,16 @@ BEGIN
 
 									SET @IdUnifiedRouteSettlementDetailPiece = SCOPE_IDENTITY()
 
-									--- Actualizar contadores de piezas
-									UPDATE UnifiedRouteSettlement
-									SET TotalPiecesSettled += 1
-									WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
+									--- Actualizar contadores de piezas si no es un proceso abierto
+									IF @IsOpenProcess <> 1
+										UPDATE UnifiedRouteSettlement
+										SET TotalPiecesSettled += 1
+										WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
 								END
 
-								-- Verificar si es un proceso abierto, de ser así debe continuar el usuario que lo abrió
-								SET @CountPiece = (SELECT
-										SUM(1)
-									FROM DeliveryOrderPiece WITH (NOLOCK)
-									WHERE GuideSerie = @GuideSerie
-									AND GuideNumber = @GuideNumber)
-
-								--- Si tiene más de una pieza es un proceso abierto
-								IF (@CountPiece > 1)
+								--- Si es un proceso abierto
+								IF (@IsOpenProcess = 1)
 								BEGIN
-									SET @IsOpenProcess = 1;
 
 									IF EXISTS (SELECT
 											1
