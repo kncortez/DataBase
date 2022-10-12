@@ -38,33 +38,6 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-		-- Extraer pieza de acta si existe
-		IF (EXISTS(
-		SELECT TOP 1 1 
-		FROM dbo.ActDetail AD WITH(NOLOCK)
-		INNER JOIN dbo.ActDetailPiece ADP WITH(NOLOCK)
-		ON AD.IdActDetail = ADP.ActDetailId
-		WHERE AD.GuideSerie  = @GuideSerie  AND 
-			  AD.GuideNumber = @GuideNumber AND
-			  AD.RowStatus   = 1 AND
-			  ADP.PieceNumber = @PieceNumber
-			  ))
-		BEGIN
-
-			UPDATE ADP 
-			SET ADP.DateRevoke = GETDATE(),
-				ADP.UserRevoke = @Token,
-				ADP.RowStatus  = 0
-				FROM dbo.ActDetail AD WITH(NOLOCK)
-			INNER JOIN dbo.ActDetailPiece ADP WITH(NOLOCK)
-			ON AD.IdActDetail = ADP.ActDetailId
-			WHERE AD.GuideSerie  = @GuideSerie  AND 
-				  AD.GuideNumber = @GuideNumber AND
-				  AD.RowStatus   = 1 AND
-				  ADP.PieceNumber = @PieceNumber
-
-		END
-
 		-- Verificar que la guía este dentro de la liquidación en un proceso abierto
 		IF(
 			EXISTS(
@@ -107,7 +80,7 @@ BEGIN
 					@IdUnifiedRouteSettlementDetail,
 					@PieceNumber,
 					(SELECT CASE WHEN X.IsDry = 1 THEN 1 ELSE 0 END FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] X WHERE GuideSerie=@GuideSerie AND GuideNumber=@GuideNumber AND NoPiece= @PieceNumber),
-					NULL,
+					(SELECT TOP 1 ACT.IdAct FROM [DeliveryBackOffice].[dbo].[Act] ACT WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[ActDetail] ACTD WITH(NOLOCK) ON ACT.IdAct = ACTD.ActId AND ACTD.GuideSerie = @GuideSerie AND ACTD.GuideNumber = @GuideNumber AND ACTD.RowStatus = 1 INNER JOIN [DeliveryBackOffice].[dbo].[ActDetailPiece] ACTDP WITH(NOLOCK) ON ACTD.IdActDetail = ACTDP.ActDetailId AND ACTDP.PieceNumber = @PieceNumber AND ACTDP.RowStatus = 1 WHERE ACT.RowStatus = 1),
 					0,
 					@Token,
 					GETDATE()
@@ -120,11 +93,25 @@ BEGIN
 			END
 			ELSE
 			BEGIN
-			
-				ROLLBACK TRANSACTION
 
+				UPDATE
+					c
+				SET
+					c.ActCode = (SELECT TOP 1 ACT.IdAct FROM [DeliveryBackOffice].[dbo].[Act] ACT WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[ActDetail] ACTD WITH(NOLOCK) ON ACT.IdAct = ACTD.ActId AND ACTD.GuideSerie = @GuideSerie AND ACTD.GuideNumber = @GuideNumber AND ACTD.RowStatus = 1 INNER JOIN [DeliveryBackOffice].[dbo].[ActDetailPiece] ACTDP WITH(NOLOCK) ON ACTD.IdActDetail = ACTDP.ActDetailId AND ACTDP.PieceNumber = @PieceNumber AND ACTDP.RowStatus = 1 WHERE ACT.RowStatus = 1),
+					c.RowStatus = 0,
+					c.TokenUpdated = @Token,
+					c.DateUpdated = GETDATE()
+				FROM dbo.UnifiedRouteSettlement a
+					INNER JOIN  dbo.UnifiedRouteSettlementDetail b
+					ON a.IdUnifiedRouteSettlement = b.UnifiedRouteSettlementId
+					INNER JOIN dbo.UnifiedRouteSettlementDetailPiece c
+					ON b.IdUnifiedRouteSettlementDetail = c.UnifiedRouteSettlementDetailId
+					WHERE b.GuideSerie=@GuideSerie  AND B.GuideNumber = @GuideNumber AND c.PieceNumber = @PieceNumber
+			
 				SET @Result = 3; /* PROCESESO FALLIDO */
 				SET @ResultMessage = 'Pieza indicada ya existe dentro de liquidación'
+				
+				COMMIT TRANSACTION
 
 			END
 		END
