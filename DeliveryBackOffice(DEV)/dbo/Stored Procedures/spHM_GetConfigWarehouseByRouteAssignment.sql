@@ -62,7 +62,7 @@ BEGIN
 				   ,'Datos cálculados correctamente.' 'Description'
 
 				SELECT 
-					@TotalSettlementPieces = urs.TotalPiecesSettled
+					@TotalSettlementPieces = SUM(urs.TotalPiecesSettled)
 				FROM UnifiedRouteSettlement urs WITH (NOLOCK)
 				INNER JOIN @RouteAssignment ra
 				ON urs.RouteAssignmentId = ra.IdRouteAssignment
