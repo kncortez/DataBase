@@ -18,9 +18,16 @@
     [UsrDateUpdated]          DATE          NULL,
     [PrefixCallingCode]       NVARCHAR (4)  NULL,
     [Phone]                   NVARCHAR (15) NULL,
+    [VerifiedPhone]           BIT           DEFAULT ('false') NULL,
     PRIMARY KEY CLUSTERED ([UsrIdUser] ASC),
     FOREIGN KEY ([UsrIdPerson]) REFERENCES [dbo].[Person] ([PerIdPerson])
 );
 
 
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo que indica si telefono ya fue verificado o no.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RegisterUser', @level2type = N'COLUMN', @level2name = N'VerifiedPhone';
 
