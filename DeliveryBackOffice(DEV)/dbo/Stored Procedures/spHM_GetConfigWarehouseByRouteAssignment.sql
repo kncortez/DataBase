@@ -71,7 +71,7 @@ BEGIN
 				-- Table 0 - Contadores de piezas
 				SELECT
 					SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
-					so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center')
+					so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Traslado a Express Center')
 					, 1, 0)) TotalDelivery
 				   ,SUM(IIF(sp.SchedulePickupId IS NOT NULL AND
 					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')
@@ -85,11 +85,11 @@ BEGIN
 					so.OrderDescription IN ('Generado', 'Solicitado', 'Programado para recolección')
 					, 1, 0))
 					+ SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
-					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Intento de entrega fallida')
+					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Intento de entrega fallida', 'Traslado a Express Center')
 					, 1, 0)) TotalPendingSettlement
 				   ,ISNULL(@TotalSettlementPieces, 0) TotalSettlementPieces
 				   ,SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
-					so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center')
+					so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto')
 					, IIF(do.IsCollect = 1, do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0), 0)) TotalCOD
 				FROM @RouteAssignment ra
 				INNER JOIN ServiceManagement sm WITH (NOLOCK)
