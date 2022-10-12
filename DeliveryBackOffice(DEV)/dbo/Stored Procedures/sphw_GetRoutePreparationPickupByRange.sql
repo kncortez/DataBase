@@ -45,8 +45,8 @@ BEGIN
 		--INSERT INTO @tbl
 		SELECT shp.ServiceRate 'Qualification',
 				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
-			   CONVERT(VARCHAR(10), shp.StartDate, 105) 'datePickUp',
+			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 103),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
+			   CONVERT(VARCHAR(10), shp.StartDate, 103) 'datePickUp',
 			   CONVERT(VARCHAR(10), shp.StartDate, 108) 'hourPickUp',
 			   ISNULL(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
@@ -90,10 +90,10 @@ BEGIN
 		--INSERT INTO @tbl
 		SELECT shp.ServiceRate 'Qualification',
 				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
+			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 103),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
 			   hlf.HubAbbreviation 'hub',
 			   RTRIM(LTRIM(CONCAT(sr.First_Name,' ', sr.Last_Name))) 'courier',
-			   CONVERT(VARCHAR(10), shp.StartDate, 105) 'datePickUp',
+			   CONVERT(VARCHAR(10), shp.StartDate, 103) 'datePickUp',
 			   CONVERT(VARCHAR(10), shp.StartDate, 108) 'hourPickUp',
 			   ISNULL(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
