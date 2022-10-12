@@ -236,7 +236,20 @@ BEGIN
 			IF @IdAddress IS NOT NULL 
 			BEGIN
 				
-				IF EXISTS (SELECT 1 FROM UserAddress WHERE UadIdAddress = @IdAddress AND UadRowStatus = 1)
+				DECLARE @ExistsAddress BIT = 0
+
+				SELECT
+					@ExistsAddress = 1
+				   ,@IsReferredCustomer = IIF(c.[Name] = 'Cliente Referenciado' AND c.[Domain] = '@forzadelivery', 1, 0)
+				FROM UserAddress ua WITH (NOLOCK)
+				LEFT JOIN Account a WITH (NOLOCK)
+					ON ua.UadIdAccount = a.AccIdAccount
+				LEFT JOIN Customer c WITH (NOLOCK)
+					ON a.IdCustomer = c.IdCustomer
+				WHERE ua.UadIdAddress = @IdAddress
+				AND ua.UadRowStatus = 1
+
+				IF @ExistsAddress = 1
 				BEGIN
 					
 					-- Si se elimina
