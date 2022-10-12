@@ -1088,6 +1088,7 @@
     <Build Include="dbo\Tables\CatActionByServiceType.sql" />
     <Build Include="dbo\Stored Procedures\spHM_SetUnifiedRouteSettlementDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_EntryofPieceOpenProcessofLiquidationofUnifiedRoute.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_finalizeUnifiedRouteSettlementProcess.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
