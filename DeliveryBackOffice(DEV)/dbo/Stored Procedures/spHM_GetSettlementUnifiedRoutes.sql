@@ -386,7 +386,7 @@ BEGIN
 				STSM.IdSubTypeServiceManagment 'IdTypeService',
 				STSM.[Name] 'NameTypeService',
 				CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-				ISNULL(AD.ActId,0) 'ActId',
+				IIF(ADP.IdActDetailPiece IS NOT NULL,AD.ActId,0) 'ActId',
 				NULL 'IdSettlement'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
@@ -412,6 +412,9 @@ BEGIN
 			LEFT JOIN DBO.ActDetail AD ON
 				AD.GuideSerie=DOPD.GuideSerie
 				AND AD.GuideNumber=DOPD.GuideNumber
+			LEFT JOIN DBO.ActDetailPiece ADP ON
+				ADP.ActDetailId=AD.IdActDetail
+				AND ADP.PieceNumber=DOP.NoPiece
 			WHERE 
 				RA.RowStatus=1		
 				AND RA.IdVehicle IS NOT NULL
@@ -429,7 +432,8 @@ BEGIN
 				URSD.IsOpenProcess,
 				DOP.IsDry,				
 				DOP.NoPiece,
-				AD.ActId
+				AD.ActId,
+				ADP.IdActDetailPiece
 			UNION 
 			SELECT 
 						RPD.Guide_Serie 'GuideSerie',
@@ -440,7 +444,7 @@ BEGIN
 						STSM.IdSubTypeServiceManagment 'IdTypeService',
 						STSM.[Name] 'NameTypeService',
 						CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-						ISNULL(AD.ActId,0) 'ActId',
+						IIF(ADP.IdActDetailPiece IS NOT NULL,AD.ActId,0) 'ActId',
 						IIF(STSM.IdSubTypeServiceManagment=2,DSETTD.ID_DeliveryOrderBySettlement,sbp.Id) 'IdSettlement'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
@@ -462,6 +466,9 @@ BEGIN
 			LEFT JOIN DBO.ActDetail AD ON
 				AD.GuideSerie=RPD.Guide_Serie
 				AND AD.GuideNumber=RPD.Guide_Number
+			LEFT JOIN DBO.ActDetailPiece ADP ON
+				ADP.ActDetailId=AD.IdActDetail
+				AND ADP.PieceNumber=DOP.NoPiece
 			LEFT JOIN DBO.DeliverySettlementDetail DSETTD ON 
 				DSETTD.Guide_Serie=RPD.Guide_Serie
 				AND DSETTD.Guide_Number=RPD.Guide_Number
@@ -485,6 +492,7 @@ BEGIN
 				DOP.IsDry,				
 				DOP.NoPiece,
 				AD.ActId,
+				ADP.IdActDetailPiece,
 				DSETTD.ID_DeliveryOrderBySettlement,
 				sbp.Id
 
