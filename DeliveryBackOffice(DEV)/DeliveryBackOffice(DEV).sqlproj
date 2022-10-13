@@ -1156,6 +1156,7 @@
     <Build Include="dbo\Stored Procedures\spHW_RecordScheduledCollections.sql" />
     <Build Include="dbo\Stored Procedures\ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ListofPaidGuidesthatdonotHaveanInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ListofInvoicesIssuedClient.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
