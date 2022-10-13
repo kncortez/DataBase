@@ -92,7 +92,7 @@ BEGIN
            ISNULL(dro.Sender_Zone, '0') Zone,
            SenderPhone 'Phone',
            shp.StartDate,
-           shp.EndDate,
+           ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))),
            CONVERT(VARCHAR(10), shp.StartDate, 105) AS datePickUp,
            CONVERT(VARCHAR(10), shp.StartDate, 108) AS hourPickUp,
            CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))), 108)) AS rangeHour,
