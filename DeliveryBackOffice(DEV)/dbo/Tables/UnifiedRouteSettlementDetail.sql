@@ -23,11 +23,14 @@
     [DateCreated]                    DATETIME        NOT NULL,
     [TokenUpdated]                   NVARCHAR (50)   NULL,
     [DateUpdated]                    DATETIME        NULL,
+    [IsLost]                         BIT             CONSTRAINT [DF_UnifiedRouteSettlementDetail_IsLost] DEFAULT ((0)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdUnifiedRouteSettlementDetail] ASC),
     CONSTRAINT [FK_UnifiedRouteSettlementDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_UnifiedRouteSettlementDetail_ServiceManagement] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     CONSTRAINT [FK_UnifiedRouteSettlementDetail_UnifiedRouteSettlement] FOREIGN KEY ([UnifiedRouteSettlementId]) REFERENCES [dbo].[UnifiedRouteSettlement] ([IdUnifiedRouteSettlement])
 );
+
+
 
 
 GO
@@ -124,4 +127,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de guías y servicios liquidados en liquidación unificada.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'UnifiedRouteSettlementDetail';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la guía fue un paquete extraviado.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'UnifiedRouteSettlementDetail', @level2type = N'COLUMN', @level2name = N'IsLost';
 
