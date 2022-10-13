@@ -49,7 +49,8 @@ BEGIN
 					INNER JOIN dbo.StatusOrder SO WITH (NOLOCK)
 					    ON  DO.StatusOrderId = SO.StatusOrderId 
 				WHERE CONVERT(DATE, ih.inv_date)
-				BETWEEN Format(@DateOf,'yyyy-MM-dd') AND Format(@DateTo,'yyyy-MM-dd');
+				BETWEEN  CONVERT(DATE ,@DateOf)  AND CONVERT(DATE, @DateTo) 
+				
 	END
 	ELSE
 	BEGIN 
@@ -71,7 +72,7 @@ BEGIN
 					INNER JOIN dbo.StatusOrder SO WITH (NOLOCK)
 					    ON  DO.StatusOrderId = SO.StatusOrderId 
 				WHERE CONVERT(DATE, ih.inv_date)
-				BETWEEN Format(@DateOf,'yyyy-MM-dd') AND Format(@DateTo,'yyyy-MM-dd');
+					BETWEEN  CONVERT(DATE ,@DateOf)  AND CONVERT(DATE, @DateTo) 
 	
 	
 	END
