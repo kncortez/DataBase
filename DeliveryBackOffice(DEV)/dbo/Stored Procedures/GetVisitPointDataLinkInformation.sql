@@ -15,7 +15,7 @@ BEGIN
 	-- Variables de respuesta
 	DECLARE @DataLinkInfo AS TABLE (
 		DataLinkId INT,
-		CustomerId INT,
+		AccountId BIGINT,
 		VisitPointCode INT,
 
 		VisitPointDescription NVARCHAR(100),
@@ -38,7 +38,7 @@ BEGIN
 		INSERT INTO @DataLinkInfo
 			(
 				DataLinkId
-				, CustomerId
+				, AccountId
 				, VisitPointCode
 				, VisitPointDescription
 				, VisitPointContact
@@ -54,7 +54,7 @@ BEGIN
 			)
 		SELECT
 			VPDL.IdVisitPointDataLink
-			,VPC.CustomerID
+			,VPDL.AccountId
 			,VPC.CodeOfReference
 			,VPC.DescriptionOfClient
 			,VPC.ContactName
@@ -74,19 +74,19 @@ BEGIN
 				ON
 					VPDL.VisitPointId = VPC.CodeOfReference
 			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK)
-				ON
-					VPC.Department = Prv.ProvinceName COLLATE Latin1_General_CI_AI
-			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
 				ON
-					VPC.Town = Twn.TownshipName COLLATE Latin1_General_CI_AI
+					VPC.IdTownship = Twn.IdTownship
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK)
+				ON
+					Twn.IdProvince = Prv.IdProvince
 		WHERE
 			VPDL.ServiceToken = @DataLinkToken
 			AND
 			VPDL.DataLinkStatusId NOT IN (@CompletedLinkStatusId) -- Si link esta en estado no operable
 			AND
-			(VPDL.ServiceTokenExpiration IS NULL OR VPDL.ServiceTokenExpiration <= GETDATE()) -- Si Link ha expirado por tiempo
+			(VPDL.ServiceTokenExpiration IS NULL OR VPDL.ServiceTokenExpiration >= GETDATE()) -- Si Link ha expirado por tiempo
 			AND
 			VPDL.RowStatus = 1 -- Si link sigue activo lógicamente
 
@@ -99,7 +99,7 @@ BEGIN
 
 			SELECT
 				DLI.DataLinkId
-				, DLI.CustomerId
+				, DLI.AccountId
 				, DLI.VisitPointCode
 				, DLI.VisitPointDescription
 				, DLI.VisitPointContact

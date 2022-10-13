@@ -27,7 +27,8 @@ BEGIN
 		PersonIdentification NVARCHAR(50),
 		PersonNationality NVARCHAR(100),
 		PersonPhone NVARCHAR(15),
-		UserPassword NVARCHAR(50)
+		UserPassword NVARCHAR(50),
+		UserEmail NVARCHAR(50)
 	);
 	DECLARE @PersonExistsDELIVERY AS TABLE (
 		PersonId BIGINT
@@ -61,7 +62,7 @@ BEGIN
 			;THROW 50005, N'Estación no existe en el catálogo, revise el sistema.', 1;
 		END
 		
-		DECLARE @RoleAsId INT = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = @Role COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1)
+		DECLARE @RoleAsId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = @Role COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1)
 
 		PRINT 'OBTENER DATOS DE PERSONA DE DENARIUS'
 		INSERT INTO @UserExistsDENARIUS
@@ -76,6 +77,7 @@ BEGIN
 				, PersonNationality
 				, PersonPhone
 				, UserPassword
+				, UserEmail
 			)
 		SELECT
 			TOP 1
@@ -89,6 +91,7 @@ BEGIN
 				, LGTIE.IdCountry
 				, IIF(LTRIM(RTRIM(ISNULL(LGTIE.CellPhone, ''))) != '', LTRIM(RTRIM(ISNULL(LGTIE.CellPhone, ''))), NULL)
 				, LGNU.USR_Password
+				, CONCAT(LGNU.USR_Username, '@forzadelivery.com')
 		FROM
 			[DenariusUser_Dev].[dbo].[LGN_User] LGNU WITH(NOLOCK)
 			INNER JOIN
@@ -186,11 +189,11 @@ BEGIN
 			
 					PRINT 'USUARIO NO EXISTE Y SE PROCEDE A GENERAR UNO [RegisterUser]'
 					INSERT INTO [DeliveryBackOffice].[dbo].[RegisterUser]
-						(UsrIdPerson, UsrNickName, UsrLastPassword, Phone, UsrPasswordExpiration, UsrDeviceType, UsrRowStatus, UsrTokenCreated, UsrDateCreated)
+						(UsrIdPerson, UsrNickName, UsrLastPassword, UsrEmail, Phone, UsrPasswordExpiration, UsrDeviceType, UsrRowStatus, UsrTokenCreated, UsrDateCreated)
 					OUTPUT inserted.UsrIdUser INTO @RegisterUserExistsDELIVERY(RegisterUserId)
 					SELECT
 						TOP 1
-							PED.PersonId, UED.UserName, UED.UserPassword, UED.PersonPhone, DATEADD(DAY, 90, CAST(GETDATE() AS DATE)), 'WEB', 1, @Token, GETDATE()
+							PED.PersonId, UED.UserName, UED.UserPassword, UED.UserEmail, UED.PersonPhone, DATEADD(DAY, 90, CAST(GETDATE() AS DATE)), 'WEB', 1, @Token, GETDATE()
 					FROM
 						@PersonExistsDELIVERY PED
 						CROSS JOIN
@@ -213,6 +216,16 @@ BEGIN
 					-- Revisar si existe usuario dentro del sistema
 					INSERT INTO @InternalUserExistsDELIVERY
 						(InternalUserId)
+					SELECT
+						TOP 1
+							IU.IdUser
+					FROM
+						[DeliveryBackOffice].[dbo].[InternalUser] IU WITH(NOLOCK)
+						INNER JOIN
+							@UserExistsDENARIUS UED
+							ON
+								IU.IdUser = UED.UserCode
+					UNION
 					SELECT
 						TOP 1
 							IU.IdUser

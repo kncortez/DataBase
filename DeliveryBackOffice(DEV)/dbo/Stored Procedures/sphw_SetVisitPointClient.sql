@@ -38,7 +38,7 @@ BEGIN
 	DECLARE @HeaderCode VARCHAR(10)
 	DECLARE @CityName VARCHAR(50)
 	DEClARE @IdDepartment INT;
-
+	DECLARE @IsReferredCustomer BIT = 0;
 	DECLARE @UpdatedAddress AS TABLE (
 		IdUpdated BIGINT
 	);
@@ -83,6 +83,8 @@ BEGIN
 				FROM Customer
 				WHERE Name = 'Cliente Referenciado'
 				AND Domain = '@forzadelivery')
+
+			SET @IsReferredCustomer = 1
 		END
 		ELSE
 		BEGIN
@@ -234,7 +236,20 @@ BEGIN
 			IF @IdAddress IS NOT NULL 
 			BEGIN
 				
-				IF EXISTS (SELECT 1 FROM UserAddress WHERE UadIdAddress = @IdAddress AND UadRowStatus = 1)
+				DECLARE @ExistsAddress BIT = 0
+
+				SELECT
+					@ExistsAddress = 1
+				   ,@IsReferredCustomer = IIF(c.[Name] = 'Cliente Referenciado' AND c.[Domain] = '@forzadelivery', 1, 0)
+				FROM UserAddress ua WITH (NOLOCK)
+				LEFT JOIN Account a WITH (NOLOCK)
+					ON ua.UadIdAccount = a.AccIdAccount
+				LEFT JOIN Customer c WITH (NOLOCK)
+					ON a.IdCustomer = c.IdCustomer
+				WHERE ua.UadIdAddress = @IdAddress
+				AND ua.UadRowStatus = 1
+
+				IF @ExistsAddress = 1
 				BEGIN
 					
 					-- Si se elimina
@@ -262,6 +277,8 @@ BEGIN
 						   ,'Se ha eliminado la dirección correctamente.' AS 'Description'
 						   ,@IdAddress AS 'IdAddress'
 						   ,@CodeOfReference AS 'CodeOfReference'
+						   ,@IdAccount AS 'IdAccount'
+						   ,@IsReferredCustomer AS 'IsReferredCustomer'
 
 						COMMIT TRANSACTION
 					END
@@ -296,16 +313,20 @@ BEGIN
 						   ,vp.IdKindOfVPBusiness = @IdKindOfVPBusiness
 						   ,vp.Latitude = @Latitude
 						   ,vp.Longitude = @Longitude
+						   ,@CodeOfReference = vp.CodeOfReference
 						FROM UserAddress ua
 						LEFT JOIN VisitPointClient vp WITH (NOLOCK)
 							ON ua.CodeOfReference = vp.CodeOfReference
 						WHERE UadIdAddress = @IdAddress
+						
 
 						SELECT
 							1 AS 'StatusCode'
 						   ,'Se ha actualizado la dirección correctamente.' AS 'Description'
 						   ,@IdAddress AS 'IdAddress'
 						   ,@CodeOfReference AS 'CodeOfReference'
+						   ,@IdAccount AS 'IdAccount'
+						   ,@IsReferredCustomer AS 'IsReferredCustomer'
 
 						COMMIT TRANSACTION
 					END
@@ -381,6 +402,8 @@ BEGIN
 				   ,'Dirección creada correctamente.' AS 'Description'
 				   ,@IdAddress AS 'IdAddress'
 				   ,@CodeOfReference AS 'CodeOfReference'
+				   ,@IdAccount AS 'IdAccount'
+				   ,@IsReferredCustomer AS 'IsReferredCustomer'
 
 				COMMIT TRANSACTION
 			END

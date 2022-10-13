@@ -6,12 +6,20 @@
 CREATE PROCEDURE spwh_SetPickupStatus
 	@ServiceManagementId INT,
 	@Status BIT,
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@Validate bit = 1--Activa o desactiva la validación de estados validos a ser activados/reactivados
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+
+    DECLARE @TranCounter INT;  
+    SET @TranCounter = @@TRANCOUNT;  
+    IF @TranCounter > 0  
+        SAVE TRANSACTION SPSetPickupStatus;  
+    ELSE  
+        BEGIN TRANSACTION;  
 
 	-- Control actualización
 	DECLARE @RModified INT =0;
@@ -20,7 +28,6 @@ BEGIN
 	DECLARE @StatusOld INT;
 	DECLARE @StatusNew INT;
 	DECLARE @statusschedulepickup BIT;
-	BEGIN TRANSACTION
 	BEGIN TRY
 
 		SELECT
@@ -29,7 +36,8 @@ BEGIN
 		FROM ServiceManagement sm
 		WHERE sm.IdServiceManagement = @ServiceManagementId
 
-	    IF @StatusOld is not null and @StatusOld IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a ruta','Cancelado'))
+	    IF @IdchedulePickup IS NOT NULL AND 
+			(@Validate =0 OR (@StatusOld is not null and @StatusOld IN (SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE Name IN ('Creado','Asignado a ruta','Cancelado'))))
 		BEGIN
 			IF @Status = 1
 			BEGIN
@@ -68,48 +76,53 @@ BEGIN
 		ELSE
 			SELECT			  
 				0 AS 'StatusCode',
-				'Estado inválido para ser cancelado/activado' AS 'Description', 
-				@StatusOld 'Status'
+				'Estado inválido para ser cancelado/activado o servicio inexistente' AS 'Description', 
+				@StatusOld 'Status';
 
+		IF @TranCounter = 0  
+            COMMIT TRANSACTION; 
 	END TRY
 	BEGIN CATCH
-	SELECT 
+		SELECT 
 			0 'StatusCode', 
 			ERROR_MESSAGE() 'Description', 
-			@Status 'Status'
-			ROLLBACK TRANSACTION;
+			@Status 'Status';
+
+        IF @TranCounter = 0  
+            ROLLBACK TRANSACTION;  
+        ELSE IF XACT_STATE() <> -1  
+                ROLLBACK TRANSACTION SPSetPickupStatus;  
 	END CATCH
 
 	IF (@RModified > 0)
 	BEGIN
 
-		INSERT INTO [dbo].[ServiceManagementStatusLog] ([ServiceManagementId]
-		, [ServiceStatusIdOld]
-		, [ServiceStatusIdNew]
-		, [RowStatus]
-		, [TokenCreated]
-		, [DateCreated]
-		, [TokenUpdated]
-		, [DateUpdated])
-			VALUES (@ServiceManagementId, @StatusOld, @StatusNew, 1, @Token, GETDATE(), NULL, NULL)
-
-		INSERT INTO [dbo].[SchedulePickupStatusLog] ([SchedulePickupId]
-		, [SchedulePickupStatus]
-		, [RowStatus]
-		, [TokenCreated]
-		, [DateCreated]
-		, [TokenUpdated]
-		, [DateUpdated])
-			VALUES (@IdchedulePickup, @Status, 1, @Token, GETDATE(), NULL, NULL)
+        INSERT INTO EventService
+        (
+            ServiceManagementId,
+            ServiceStatusId,
+            RowStauts,
+            TokenCreated,
+            DateCreated,
+            Observations
+        )
+        VALUES
+        (	
+			@ServiceManagementId, 
+			@StatusNew, 
+			1, 
+			@Token, 
+			GETDATE(), 
+			IIF(@Status=1,'Servicio reactivado','Servicio cancelado')
+		);
 		SELECT			  
 			1 'StatusCode',
 			'Registro actualizado correctamente' 'Description', 
-			@Status 'Status'
-			COMMIT TRANSACTION;
+			@Status 'Status';
 	END
 	ELSE
 		SELECT			  
 			0 AS 'StatusCode',
 			'Registro no encontrado' AS 'Description', 
-			@Status 'Status'
+			@Status 'Status';
 END

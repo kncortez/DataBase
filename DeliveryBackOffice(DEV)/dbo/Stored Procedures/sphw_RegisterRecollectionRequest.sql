@@ -3,16 +3,15 @@
 -- Create date: <19-09-2022>
 -- Description:	<Crea una solicitud de recolección>
 -- =============================================
-
-CREATE PROCEDURE [dbo].[sphw_RegisterRecolectionRequest]
+CREATE PROCEDURE [dbo].[sphw_RegisterRecollectionRequest]
 	-- Add the parameters for the stored procedure here
 	@TAC1 BIT = NULL,
 	@TAC2 BIT = NULL,
 	@Scheduled BIT = NULL,
 	@CodeOfReference int,
     @TypeVehicleId INT = NULL,
-    @RecollectionLatitude AS varchar(50) = 0,
-    @RecollectionLongitude AS varchar(50) = 0,
+    @RecollectionLatitude AS varchar(50) = NULL,
+    @RecollectionLongitude AS varchar(50) = NULL,
 	@Regularpiezer AS INT = 1,
     @StartDate AS DATETIME = NULL,
     @EndDate AS DATETIME = NULL,
@@ -111,7 +110,8 @@ BEGIN
 					AmountPickup,
 					IdSourcePlataform,
 					AddressPickup,
-					TypeVehicleId
+					TypeVehicleId,
+					IsScheduled
 				)
 				SELECT @IdAccount,
 					   @StartDate,
@@ -133,7 +133,8 @@ BEGIN
 					   NULL,
 					   NULL,
 					   vp.Address,
-					   @TypeVehicleId					   
+					   @TypeVehicleId,
+					   @Scheduled
 				FROM VisitPointClient VP
 					INNER JOIN UserAddress UA ON UA.CodeOfReference =VP.CodeOfReference
 					INNER JOIN Customer CU ON VP.CustomerID =CU.IdCustomer					
