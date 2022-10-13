@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Alberto,Ixchop>
 -- Create date: <2021-11-30>
@@ -7,12 +6,13 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[sphd_CreateAlertOrder]
 	-- Add the parameters for the stored procedure here
-	@guideserie nvarchar(2),
-	@guidenumber int,
+	@guideserie nvarchar(2) =NULL,
+	@guidenumber int =NULL,
+	@serviceManagementId int =NULL,
 	@tokenuser nvarchar(50),
-	@idTypealert int,
+	@idTypealert int =1,
 	@alertdescription nvarchar(500),
-	@serviceTypeId bigint,
+	@serviceTypeId bigint =Null,
 	@flagModifyAlert bit,
 	@idAlert int =NULL,
 	@iduser bigint
@@ -23,8 +23,26 @@ BEGIN
 		BEGIN TRY
 		BEGIN
 
-		DECLARE @RModified INT
+		DECLARE @AlertForGuide BIT=0;
+		DECLARE @AlertForService BIT=1;
 
+		IF (@guideserie is not null and @guidenumber is not null )and @AlertForService is null
+			SET @AlertForGuide=1;
+		IF @serviceManagementId is not null and (@guideserie is null and @guidenumber is null )
+			SET @AlertForService=1;			
+	
+		IF (SELECT @AlertForGuide ^ @AlertForService) =0
+		BEGIN
+			SELECT 
+				0 AS 'StatusCode', 
+				'Se esperaba solo serie y número de guía ó solo id de servicio' AS 'Description',
+				0 'NumTransferID',
+				' ' 'Guide';
+		END
+		ELSE 
+		BEGIN 
+
+			DECLARE @RModified INT
             IF @flagModifyAlert=1 --MODIFY ALERT
                 BEGIN
                     UPDATE DBO.DeliveryOrderAlert
@@ -36,7 +54,13 @@ BEGIN
                     AlertTypeId=@idTypealert,
                     TokenUpdated=@tokenuser,
                     DateUpdated=GETDATE()
-                    WHERE IdDeliveryOrderAlert=@idAlert;
+                    WHERE IdDeliveryOrderAlert=@idAlert;	
+
+					SELECT 
+						1 AS 'StatusCode', 
+						'Alerta Modificada' AS 'Description',
+						1 'NumTransferID',
+						'' 'Guide';
 
                 END
             ELSE
@@ -52,7 +76,8 @@ BEGIN
                     TokenCreated,
                     DateCreated,
                     TokenUpdated,
-                    DateUpdated)
+                    DateUpdated,
+					ServiceManagementId)
                     VALUES
                     (
                         @guideserie,
@@ -64,8 +89,10 @@ BEGIN
                         @tokenuser,
                         GETDATE(),
                         NULL,
-                        NULL		
+                        NULL,
+						@serviceManagementId
                     );
+					SET @idAlert = SCOPE_IDENTITY();
                     INSERT INTO DBO.DeliveryOrderAlertDetail
                     (
                         author,
@@ -83,15 +110,34 @@ BEGIN
                         @iduser,
                         (SELECT Username FROM DBO.InternalUser WHERE IdUser=@iduser),
                         'Alerta creada',
+						@idAlert,
+                        1,
+                        @tokenuser,
+                        GETDATE(),
+                        NULL,
+                        NULL
+                    ),
+                    (
+                        @iduser,
+                        (SELECT Username FROM DBO.InternalUser WHERE IdUser=@iduser),
+                        @alertdescription,
 						IDENT_CURRENT('DeliveryOrderAlert'),
                         1,
                         @tokenuser,
                         GETDATE(),
                         NULL,
                         NULL
-                    )
-					
+                    )  
+					SELECT 
+						1 AS 'StatusCode', 
+						'Alerta creada' AS 'Description',
+						1 'NumTransferID',
+						'' 'Guide';
+
                 END
+		END
+
+
 
 		END
 
