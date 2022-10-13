@@ -376,17 +376,26 @@ BEGIN
 				GROUP BY GTS.ServiceManagement;
 
 			
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+--=>INICIO LISTANDO GUÍAS
+			DECLARE @GuidesListed TABLE (
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT,
+				Guide NVARCHAR(100),
+				IdTypeService INT,
+				NameTypeService NVARCHAR(50),
+				Settlement BIT,
+				IdSettlement INT
+			);
 
+			INSERT INTO @GuidesListed
 			SELECT 
 				DOPD.GuideSerie 'GuideSerie',
 				DOPD.GuideNumber 'GuideNumber',
-				DOP.IsDry 'IsDry',
-				DOP.NoPiece 'NumberPiece',
 				CONCAT(DOPD.GuideSerie,CAST(DOPD.GuideNumber AS NVARCHAR(100))) 'Guide',
 				STSM.IdSubTypeServiceManagment 'IdTypeService',
 				STSM.[Name] 'NameTypeService',
 				CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-				IIF(ADP.IdActDetailPiece IS NOT NULL,AD.ActId,0) 'ActId',
 				NULL 'IdSettlement'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
@@ -429,22 +438,16 @@ BEGIN
 				DOPD.GuideNumber,
 				SMD.ServiceManagement,
 				URSD.RowStatus,
-				URSD.IsOpenProcess,
-				DOP.IsDry,				
-				DOP.NoPiece,
-				AD.ActId,
-				ADP.IdActDetailPiece
-			UNION 
+				URSD.IsOpenProcess
+			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber)
+			UNION
 			SELECT 
 						RPD.Guide_Serie 'GuideSerie',
 						RPD.Guide_Number 'GuideNumber',
-						DOP.IsDry 'IsDry',
-						DOP.NoPiece 'NumberPiece',
 						CONCAT(RPD.Guide_Serie,CAST(RPD.Guide_Number AS NVARCHAR(100))) 'Guide',
 						STSM.IdSubTypeServiceManagment 'IdTypeService',
 						STSM.[Name] 'NameTypeService',
 						CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-						IIF(ADP.IdActDetailPiece IS NOT NULL,AD.ActId,0) 'ActId',
 						IIF(STSM.IdSubTypeServiceManagment=2,DSETTD.ID_DeliveryOrderBySettlement,sbp.Id) 'IdSettlement'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
@@ -489,12 +492,43 @@ BEGIN
 				SMD.ServiceManagement,
 				URSD.RowStatus,
 				URSD.IsOpenProcess,
-				DOP.IsDry,				
-				DOP.NoPiece,
-				AD.ActId,
-				ADP.IdActDetailPiece,
 				DSETTD.ID_DeliveryOrderBySettlement,
 				sbp.Id
+			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber);
+			
+			
+			
+			SELECT
+				GuideSerie,
+				GuideNumber,
+				Guide,
+				IdTypeService,
+				NameTypeService,
+				Settlement,
+				IdSettlement
+			FROM @GuidesListed
+
+			SELECT 
+				GL.GuideSerie 'GuideSerie',
+				GL.GuideNumber 'GuideNumber',
+				GL.Guide 'Guide',
+				DOP.IsDry 'IsDry',
+				DOP.NoPiece 'NumberPiece',
+				IIF(ADP.IdActDetailPiece IS NOT NULL,AD.ActId,0) 'ActId'
+				--NUM
+			FROM @GuidesListed GL
+			LEFT JOIN DBO.DeliveryOrderPiece DOP 
+				ON DOP.GuideSerie=GL.GuideSerie
+				AND DOP.GuideNumber=GL.GuideNumber
+			LEFT JOIN DBO.ActDetail AD 
+				ON AD.GuideSerie=DOP.GuideSerie
+				AND AD.GuideNumber=DOP.GuideNumber
+			LEFT JOIN DBO.ActDetailPiece ADP ON
+				ADP.ActDetailId=AD.IdActDetail
+				AND ADP.PieceNumber=DOP.NoPiece
+
+--=>FIN LISTANDO GUÍAS
+------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
 		END
 
