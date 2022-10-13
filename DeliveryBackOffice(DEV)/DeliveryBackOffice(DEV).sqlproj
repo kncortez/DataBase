@@ -1092,6 +1092,7 @@
     <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessLiquidationUnifiedRoutes.sql" />
     <Build Include="dbo\Stored Procedures\spHM_ValidatePiecesinActUnifiedRoutes .sql" />
     <Build Include="dbo\Stored Procedures\spHM_SetActionToGuidesPendingSettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetIncidentTypeCatalog.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
