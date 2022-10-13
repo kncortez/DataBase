@@ -5,7 +5,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_SetActionToGuidesPendingSettlement]
 	-- Add the parameters for the stored procedure here
-	@Action TINYINT,
+	@Action TINYINT, --1=entrega, 2=devuelto, 3=traslado, 4=incidencia, 5=extraviado
 	@CourierId INT,
 	@ReceiverName NVARCHAR(200) = '',
 	@GuideSerie NVARCHAR(2) = '',
@@ -703,10 +703,10 @@ BEGIN
 							FROM DeliveryOrderPiece dop WITH (NOLOCK)
 							WHERE dop.GuideSerie = @GuideSerie
 							AND dop.GuideNumber = @GuideNumber
-
+							
 							WHILE EXISTS (SELECT TOP 1 1 FROM @Pieces)
 							BEGIN
-								SET @GuidePiece = (SELECT TOP 1 NoPiece FROM @Pieces)
+
 								SELECT TOP 1
 									@GuidePiece = NoPiece,
 									@GuidePieceIsDry = ISNULL(IsDry, 1)
@@ -730,11 +730,17 @@ BEGIN
 
 									SET @IdUnifiedRouteSettlementDetailPiece = SCOPE_IDENTITY()
 
-									--- Actualizar contadores de piezas si no es un proceso abierto
+									--- Actualizar contadores de piezas
 									UPDATE UnifiedRouteSettlement
 									SET TotalPiecesSettled += 1
 									WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
+
+									UPDATE UnifiedRouteSettlementDetail
+									SET PiecesSettled += 1
+									WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
 								END
+
+								SET @IdUnifiedRouteSettlementDetailPiece = NULL
 
 								DELETE FROM @Pieces
 								WHERE NoPiece = @GuidePiece
