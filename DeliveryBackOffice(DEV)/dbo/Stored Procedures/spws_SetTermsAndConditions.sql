@@ -22,7 +22,7 @@ BEGIN
 						   WHERE IdAccount = @IdAccount);
 	-- Guarda el ID de los términos y condiciones actuales
 	DECLARE @ActualTerms INT = (SELECT IdTAC FROM [dbo].[TermsAndConditions]
-								WHERE RowStatus = 1)
+								WHERE RowStatus = 1 AND Name = 'New Termns And Conditions')
 
 	-- No existe				
 	IF (@IdTAC IS NULL)
@@ -40,7 +40,7 @@ BEGIN
 				,[DateUpdated])
 			VALUES
 				((SELECT IdTAC FROM [dbo].[TermsAndConditions] 
-				WHERE RowStatus = 1)
+				WHERE RowStatus = 1 AND Name = 'New Termns And Conditions')
 				,@IdAccount
 				,1
 				,1

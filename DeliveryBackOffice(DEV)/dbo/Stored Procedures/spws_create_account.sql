@@ -32,6 +32,9 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	
+
+	DECLARE @NewMainUserRol INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Nuevo estándar' COLLATE Latin1_General_CI_AI);
+
 	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
 	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
 
@@ -229,7 +232,7 @@ BEGIN
 						,TokenUpdated
 						,DateUpdated
 						)
-					VALUES((SELECT IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1)
+					VALUES((SELECT IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1 AND Name = 'New Termns And Conditions')
 							,@IdAccount
 							,1
 							,1
@@ -251,7 +254,7 @@ BEGIN
 						,RuaRowStatus
 						,RuaTokenCreated
 						,RuaDateCreated)
-					values (@IdRol,@IdUser,@IdAccount,1,'SYS-ADMIN',GETDATE())
+					values (@NewMainUserRol,@IdUser,@IdAccount,1,'SYS-ADMIN',GETDATE())
 
 					--inserta los wizards por deafult
 					insert into DeliveryBackOffice.dbo.DeliveryWizardAccount
@@ -295,7 +298,7 @@ BEGIN
 						,RusRowStatus
 						,RusTokenCreated
 						,RusDateCreated)
-					values (@IdRol,@IdSystem,@IdUser,1,'SYS-CAQUINO',GETDATE())
+					values (@NewMainUserRol,@IdSystem,@IdUser,1,'SYS-CAQUINO',GETDATE())
 					
 				
 				END TRY
