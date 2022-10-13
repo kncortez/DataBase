@@ -1,7 +1,7 @@
 ﻿-- =============================================
 -- Author:		<Edelman>
 -- Create date: <2022-09-22>
--- Description:	<Sp para asignar servicio de recolección a Courierman>
+-- Description:	<Sp para asignar servicio de recolección a courierman>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_AssignmentCollectionServicesCourier] 
 @IdCurrierMan AS INT,
