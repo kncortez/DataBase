@@ -49,6 +49,7 @@ BEGIN
 
 	--- Control de monto de servicio y COD
 	DECLARE @IsCollect BIT = 0
+	DECLARE @IsLastMileReturn BIT = 0
 	DECLARE @ServiceAmount DECIMAL(14,2) = 0
 	DECLARE @CODAmount DECIMAL(14,2) = 0
 
@@ -83,6 +84,7 @@ BEGIN
 			   ,@IsCollect = do.IsCollect
 			   ,@ServiceAmount = do.PriceShippment
 			   ,@CODAmount = ISNULL(do.Collect_OnDelivery, 0)
+			   ,@IsLastMileReturn = ISNULL(do.IsLastMileReturn, 0)
 			FROM RouteAssigment ra WITH (NOLOCK)
 			INNER JOIN ServiceManagement sm WITH (NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
@@ -748,7 +750,7 @@ BEGIN
 							
 
 							INSERT INTO UnifiedRouteSettlementDetail (UnifiedRouteSettlementId, ServiceManagementId, GuideSerie, GuideNumber, ServiceSettlementAmount, ServiceCODSettlementAmount, IsArrival, IsReturn, IsDelivered, IsTransfered, RowStatus, TokenCreated, DateCreated)
-								VALUES (@IdUnifiedRouteSettlement, @ServiceManagementId, @GuideSerie, @GuideNumber, CASE WHEN @IsDelivered = 1 THEN IIF(@IsCollect = 1, @ServiceAmount, 0) ELSE 0 END, CASE WHEN @IsDelivered = 1 THEN @CODAmount ELSE 0 END, @IsArrival, @IsReturn, @IsDelivered, @IsTransfered, 1, @Token, GETDATE());
+								VALUES (@IdUnifiedRouteSettlement, @ServiceManagementId, @GuideSerie, @GuideNumber, CASE WHEN @IsDelivered = 1 THEN IIF(@IsCollect = 1, @ServiceAmount, 0) ELSE 0 END, CASE WHEN @IsDelivered = 1 AND @IsLastMileReturn = 0 THEN @CODAmount ELSE 0 END, @IsArrival, @IsReturn, @IsDelivered, @IsTransfered, 1, @Token, GETDATE());
 							
 							SET @IdUnifiedRouteSettlementDetail = SCOPE_IDENTITY()
 
@@ -785,9 +787,15 @@ BEGIN
 
 									--- Actualizar contadores de piezas si no es un proceso abierto
 									IF @IsOpenProcess <> 1
+									BEGIN 
 										UPDATE UnifiedRouteSettlement
 										SET TotalPiecesSettled += 1
 										WHERE IdUnifiedRouteSettlement = @IdUnifiedRouteSettlement
+
+										UPDATE UnifiedRouteSettlementDetail
+										SET PiecesSettled += 1
+										WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+									END
 								END
 
 								--- Si es un proceso abierto
