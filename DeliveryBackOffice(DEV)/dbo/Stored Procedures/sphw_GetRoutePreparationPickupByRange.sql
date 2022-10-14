@@ -134,7 +134,7 @@ BEGIN
 				ON ISNULL(shp.IdHubLogistics, hl.IdHubLogistic) = hlbu.HubLogisticId
 				AND hlbu.UserId = @userId
 			INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] as hlf WITH (NOLOCK)
-				ON hlbu.IdHubLogisticByUser = hlf.IdHubLogistic
+				ON shp.IdHubLogistics = hlf.IdHubLogistic
 			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
 				ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
 			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] as sr WITH (NOLOCK)
