@@ -397,7 +397,39 @@ BEGIN
 					AND GuideNumber = @GuideNumberRevalue
 			END
 			--Termina revalorziar guías
+			-----------------------------------------------------------------------------------------------------------------
+			--FDD-975 ACTUALIZACIÓN DE  INFORMACIÓN DE COURIER Y VEHÍCULO DE ASIGNACIÓN DE RUTA AL DESPACHAR UNA RUTA DE ENTREGA
+			UPDATE RA SET
+				RA.IdCurrierMan=@IdCourier,
+				RA.IdVehicle=@IdVehicle,
+				RA.TokenUpdated=@Token,
+				RA.DateUpdated=GETDATE()
+			FROM DBO.RoutePreparationDetail RPD
+				INNER JOIN DBO.ServiceManagementDetail SMD
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+				INNER JOIN DBO.ServiceManagement SM
+					ON SM.IdServiceManagement=SMD.ServiceManagement
+				INNER JOIN DBO.RouteAssigment RA
+					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+			WHERE
+				RPD.RoutePreparationId = @IdRoutePreparation;
 
+			
+			DECLARE @IdRouteAssigment INT= (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WHERE IdRoute = @IdRoute AND DateOfRoute=@Date)
+
+			UPDATE  SM SET
+				SM.IdPuCourrier=@IdCourier,
+				SM.IdPuRouteAssigment=@IdRouteAssigment
+			FROM @ListGuides LG  
+				INNER JOIN DBO.RoutePreparationDetail RPD
+					ON RPD.Guide_Serie=LG.Guide_Serie
+					AND RPD.Guide_Number=RPD.Guide_Number
+				INNER JOIN DBO.ServiceManagementDetail SMD
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+				INNER JOIN DBO.ServiceManagement SM
+					ON SM.IdServiceManagement=SMD.ServiceManagement;
+
+			-----------------------------------------------------------------------------------------------------------------
 		END TRY
 		BEGIN CATCH
 			SELECT 
