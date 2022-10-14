@@ -6,6 +6,7 @@
 CREATE PROCEDURE [dbo].[sphw_GetPickupVehiclesByUserHub]
 	-- Add the parameters for the stored procedure here
 	@IdUser BIGINT,
+	@UbicaCourierLocations TblCourierLocation READONLY
 	@CourierLocations TblCourierLocation READONLY
 AS
 BEGIN
