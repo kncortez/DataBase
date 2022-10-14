@@ -347,6 +347,9 @@ BEGIN
                                                      END + '",' 
 												   + '"IdCustomer":"' + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
 												   + '"RolName":"' + ro.RolName + '",' 
+												   + '"ImageProfile":"' + ISNULL(ac.ImageProfile,'') + '",' 
+												   + '"StarRating":"' + CONVERT( VARCHAR(1),ISNULL(ac.StarRating,0)) + '",' 
+												   + '"VerifiedEmail.":"' + IIF(ac.AccConfirm ='C','1','0') + '",' 
 												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +' "}'
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
@@ -392,8 +395,9 @@ BEGIN
                                                    + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                    + CONVERT(VARCHAR, us.UsrNickName) + '",' + '"Phone":"'
 												   -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                                   + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",' + '"TAC":"' 
-												   + @TAC + '"}'
+                                                   + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",'
+												   + '"VerifiedPhone.":"' + CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone,'false')) + '",' 
+												   + '"TAC":"' + @TAC + '"}'
 												   -- FIN MODIFICACIÓN
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
@@ -454,17 +458,17 @@ BEGIN
 													   -- FIN MODIFICACIÓN
                                                        + '}'
                                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                                                    INNER JOIN VisitPointByUser VPU
+                                                    JOIN VisitPointByUser VPU
                                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                                            AND VPU.RowStatus = 1
-                                                    INNER JOIN RegisterUser ru
+                                                    JOIN RegisterUser ru
                                                         ON VPU.RegisterUserID = ru.UsrIdUser
                                                            AND ru.UsrRowStatus = 1
-                                                    INNER JOIN DeliveryBackOffice.dbo.Settlement STL
+                                                    JOIN DeliveryBackOffice.dbo.Settlement STL
                                                         ON VPC.IdSettlement = STL.IdSettlement
-                                                    INNER JOIN DeliveryBackOffice.dbo.Township TWS
+                                                    JOIN DeliveryBackOffice.dbo.Township TWS
                                                         ON TWS.IdTownship = STL.IdTownship
-                                                    INNER JOIN DeliveryBackOffice.dbo.Province PRV
+                                                    JOIN DeliveryBackOffice.dbo.Province PRV
                                                         ON PRV.IdProvince = TWS.IdProvince
                                                 WHERE IdKindOfVPClient = 1
                                                       AND ru.UsrEmail = @Username
