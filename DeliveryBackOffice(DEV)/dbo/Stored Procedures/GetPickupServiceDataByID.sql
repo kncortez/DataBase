@@ -56,7 +56,7 @@ BEGIN
 				SD.ServiceId,
 				SD.ServiceCustomerName,
 				SD.ServiceVisitPointDescription,
-				SD.ServiceAddress
+				SD.ServiceAddress 'AddressPickup'
 			FROM
 				@ServiceData SD
 
