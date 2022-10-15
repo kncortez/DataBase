@@ -55,8 +55,8 @@ BEGIN
 
 				SELECT
 					TOP 1
-						200 [blnResult],
-						CONCAT(@PickupLinkBase, RP.PickupToken) [resultMessage]
+						200 StatusCode,
+						CONCAT(@PickupLinkBase, RP.PickupToken) 'Description'
 				FROM
 					@ResponseData RP 
 
@@ -67,8 +67,8 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 				SELECT
-					404 [blnResult],
-					'Link no encontrado' [resultMessage]
+					404 StatusCode,
+					'Link no encontrado' 'Description'
 
 			END
 
@@ -105,8 +105,8 @@ BEGIN
 
 				SELECT
 					TOP 1
-						200 [blnResult],
-						CONCAT(@PickupLinkBase, RP.PickupToken) [resultMessage]
+						200 StatusCode,
+						CONCAT(@PickupLinkBase, RP.PickupToken) 'Description'
 				FROM
 					@ResponseData RP 
 
@@ -117,8 +117,8 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 				SELECT
-					404 [blnResult],
-					'Link no encontrado' [resultMessage]
+					404 StatusCode,
+					'Link no encontrado' 'Description'
 
 			END
 
@@ -130,8 +130,8 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 		SELECT
-			500 [blnResult],
-			ERROR_MESSAGE() [resultMessage]
+			500 StatusCode,
+			ERROR_MESSAGE() 'Description'
 
 	END CATCH
 
