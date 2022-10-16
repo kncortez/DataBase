@@ -1244,6 +1244,25 @@
     <Build Include="dbo\Stored Procedures\ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ListofInvoicesIssuedClient.sql" />
+    <Build Include="dbo\Tables\UnifiedRouteSettlementDetailPiece.sql" />
+    <Build Include="dbo\Tables\UnifiedRouteSettlementDetail.sql" />
+    <Build Include="dbo\Tables\UnifiedRouteSettlement.sql" />
+    <Build Include="dbo\Tables\ConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\User Defined Types\TblConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetSettlementUnifiedRoutes.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetConfigWarehouseByRouteAssignment.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ClosureSettlementUnifiedRoutes.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetCatExpressCenter.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetPendingProcessServicesOfUnifiedRouteSettlement.sql" />
+    <Build Include="dbo\Tables\CatActionByServiceType.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetUnifiedRouteSettlementDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_EntryofPieceOpenProcessofLiquidationofUnifiedRoute.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_finalizeUnifiedRouteSettlementProcess.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_CancelOpenProcessLiquidationUnifiedRoutes.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ValidatePiecesinActUnifiedRoutes .sql" />
+    <Build Include="dbo\Stored Procedures\spHM_SetActionToGuidesPendingSettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetIncidentTypeCatalog.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
