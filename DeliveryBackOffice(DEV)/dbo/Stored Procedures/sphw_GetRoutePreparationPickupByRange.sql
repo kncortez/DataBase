@@ -36,7 +36,9 @@ BEGIN
 	END	 
 	--FIN
 	----------------------------------------------------------------------------
-	   	 
+	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' COLLATE Latin1_General_CI_AI)
+
+
 	IF (@accountId IS NOT NULL AND ISNULL(@userId,0) = 0)
 	BEGIN
 
@@ -45,10 +47,10 @@ BEGIN
 		--INSERT INTO @tbl
 		SELECT shp.ServiceRate 'Qualification',
 				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 103),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
-			   CONVERT(VARCHAR(10), shp.StartDate, 103) 'datePickUp',
+			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 103),' ',CONVERT(VARCHAR(10), shp.StartDate, 108))  'datecreated',
 			   IIF(RA.IdCurrierMan IS NULL, '', CAST(RA.IdCurrierMan AS NVARCHAR))  'courier',
-			   CONVERT(VARCHAR(10), shp.StartDate, 108) 'hourPickUp',
+			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = 1 AND ES.RowStauts = @ServicePickupStatus ORDER BY ES.DateCreated DESC), 103) 'datePickUp',
+			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = 1 AND ES.RowStauts = @ServicePickupStatus ORDER BY ES.DateCreated DESC), 108) 'hourPickUp',
 			   ISNULL(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
 			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
@@ -93,11 +95,11 @@ BEGIN
 		--INSERT INTO @tbl
 		SELECT shp.ServiceRate 'Qualification',
 				srv.IdServiceManagement 'IdServiceManagement' , 
-			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 103),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
+			   CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 103),' ',CONVERT(VARCHAR(10), shp.StartDate, 108))  'datecreated',
 			   hlf.HubAbbreviation 'hub',
 			   RTRIM(LTRIM(CONCAT(sr.First_Name,' ', sr.Last_Name))) 'courier',
-			   CONVERT(VARCHAR(10), shp.StartDate, 103) 'datePickUp',
-			   CONVERT(VARCHAR(10), shp.StartDate, 108) 'hourPickUp',
+			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = 1 AND ES.RowStauts = @ServicePickupStatus ORDER BY ES.DateCreated DESC), 103) 'datePickUp',
+			   CONVERT(VARCHAR(10), (SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = srv.IdServiceManagement AND ES.ServiceStatusId = 1 AND ES.RowStauts = @ServicePickupStatus ORDER BY ES.DateCreated DESC), 108) 'hourPickUp',
 			   ISNULL(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
 			   ISNULL(QuantityRegularPackages,0) 'QuantityRegularPackages',
