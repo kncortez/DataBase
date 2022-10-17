@@ -47,6 +47,7 @@ BEGIN
 				srv.IdServiceManagement 'IdServiceManagement' , 
 			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 103),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
 			   CONVERT(VARCHAR(10), shp.StartDate, 103) 'datePickUp',
+			   CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
 			   CONVERT(VARCHAR(10), shp.StartDate, 108) 'hourPickUp',
 			   ISNULL(ctv.Name, '') 'ServiceVehicle',
 			   shp.IsScheduled 'IsScheduled',
@@ -73,6 +74,8 @@ BEGIN
 				ON css.IdServiceStatus = srv.ServiceStatusId
 			LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] hl WITH (NOLOCK)
 			    ON shp.IdHubLogistics = hl.IdHubLogistic
+			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
+				ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
 		WHERE
 			CONVERT(date, shp.DateCreated) >= @startDate
 			AND
