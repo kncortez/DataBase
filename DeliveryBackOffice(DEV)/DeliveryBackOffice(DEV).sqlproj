@@ -1195,6 +1195,8 @@
     <Build Include="dbo\Stored Procedures\spHM_ValidatePiecesinActUnifiedRoutes .sql" />
     <Build Include="dbo\Stored Procedures\spHM_SetActionToGuidesPendingSettlement.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetIncidentTypeCatalog.sql" />
+    <Build Include="dbo\Stored Procedures\spg_lost_unified_route_guides.sql" />
+    <Build Include="dbo\Stored Procedures\spg_lost_unified_route.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
