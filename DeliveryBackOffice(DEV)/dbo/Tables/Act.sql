@@ -11,8 +11,7 @@
     [DateCreated]       DATETIME       NOT NULL,
     [TokenUpdated]      NVARCHAR (50)  NULL,
     [DateUpdated]       DATETIME       NULL,
-    CONSTRAINT [PK_Act] PRIMARY KEY CLUSTERED ([IdAct] ASC),
-    CONSTRAINT [FK_Act_Act] FOREIGN KEY ([IdAct]) REFERENCES [dbo].[Act] ([IdAct])
+    CONSTRAINT [PK_Act] PRIMARY KEY CLUSTERED ([IdAct] ASC)
 );
 
 

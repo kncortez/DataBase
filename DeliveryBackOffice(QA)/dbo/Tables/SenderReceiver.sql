@@ -25,10 +25,18 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del hub al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiver', @level2type = N'COLUMN', @level2name = N'HubLogisticId';
 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del tipo de piloto/courierman', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiver', @level2type = N'COLUMN', @level2name = N'CatTypeSenderReceiverId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Phone_INCLUDE]
+    ON [dbo].[SenderReceiver]([Phone] ASC)
+    INCLUDE([First_Name], [Last_Name]);
 

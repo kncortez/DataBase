@@ -23,9 +23,9 @@ BEGIN
 	   ,@Station = ISNULL(vp.DescriptionOfClient,'')
 	   ,@TokenSettlement = spsd.TokenSettlement
 	FROM SettlementPickupStation sps WITH(NOLOCK)
-	JOIN SenderReceiver sr WITH(NOLOCK)
+	INNER JOIN SenderReceiver sr WITH(NOLOCK)
 		ON sr.ID = sps.CouriermanId
-	JOIN SettlementPickupStationDetail spsd WITH(NOLOCK)
+	INNER JOIN SettlementPickupStationDetail spsd WITH(NOLOCK)
 		ON spsd.SettlementPickupStationId = sps.IdSettlementPickupStation
 	LEFT JOIN VisitPointClient vp WITH(NOLOCK)
 		ON vp.CodeOfReference = spsd.SettlementStationId
@@ -38,11 +38,11 @@ BEGIN
 		SET @Guides = (SELECT
 				COUNT(1)
 			FROM SettlementPickupStationDetail spsd WITH(NOLOCK)
-			JOIN ServiceManagement sm WITH(NOLOCK)
+			INNER JOIN ServiceManagement sm WITH(NOLOCK)
 				ON sm.IdServiceManagement = spsd.ServiceManagementId
-			JOIN SchedulePickup sp WITH(NOLOCK)
+			INNER JOIN SchedulePickup sp WITH(NOLOCK)
 				ON sp.SchedulePickupId = sm.IdSchedulePickup
-			JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+			INNER JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
 				ON dopd.IdHeaderRecolection = sp.SchedulePickupId
 			WHERE spsd.SettlementPickupStationId = @SettlementPickupStationId
 				AND spsd.RowStatus = 'TRUE'
@@ -62,7 +62,7 @@ BEGIN
 		   ,@Guides Guides
 		   ,ISNULL(@Station, '') Station
 		FROM SettlementPickupStation sps WITH(NOLOCK)
-		JOIN CatRoute cr WITH(NOLOCK)
+		INNER JOIN CatRoute cr WITH(NOLOCK)
 			ON cr.IdRoute = sps.RouteId
 		WHERE sps.IdSettlementPickupStation = @SettlementPickupStationId
 
