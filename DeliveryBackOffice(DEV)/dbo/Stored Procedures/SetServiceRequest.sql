@@ -672,6 +672,10 @@ BEGIN
     IF @@TRANCOUNT > 0
     BEGIN
         COMMIT TRANSACTION;
+
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+
+
         SELECT 1 AS 'StatusCode',
                'Registros guardados correctamente' AS 'Description',
                --@IdTransaction AS 'NumTransferID'
@@ -698,11 +702,26 @@ BEGIN
                -- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
-               ) AS 'Attempts'
+               ) AS 'Attempts',
+			   IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			   (CASE
+					WHEN 
+						(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
+						or ctm.Abbreviation IN ('IGSS','RENAP')
+
+					THEN
+						'D'
+					ELSE
+						''
+					END
+				)'Icon'
         --FIN MODIFICACIÓN
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
+			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
+				ON ctm.IdCustomer = D.IdCustomer
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
