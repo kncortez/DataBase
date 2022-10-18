@@ -307,7 +307,7 @@ BEGIN
 							ISNULL(VelocidadEntregaDia,0) 'TopValue',
 							'Velocidad de entrega' 'TopText',
 							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
-							'% de entregas' 'BottomText',
+							'Entregas' 'BottomText',
 							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 						FROM
 							@ResponseVelTable
@@ -321,7 +321,7 @@ BEGIN
 							0 'TopValue',
 							'Velocidad de entrega/día' 'TopText',
 							0 'BottomValue',
-							'% de entregas' 'BottomText',
+							'Entregas' 'BottomText',
 							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					END
 
@@ -335,7 +335,7 @@ BEGIN
 						0 'TopValue',
 						'Velocidad de entrega/día' 'TopText',
 						0 'BottomValue',
-						'% de entregas' 'BottomText',
+						'Entregas' 'BottomText',
 						'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
