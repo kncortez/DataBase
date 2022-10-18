@@ -80,11 +80,13 @@ BEGIN
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+
     IF (@Impersonate = 'TRUE')
     BEGIN
         SET @ExpressName =
         (
-            SELECT DescriptionOfClient
+            SELECT IIF(vpc.CodeOfReference=0,'',DescriptionOfClient)
             FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.OriginSenderId
@@ -413,7 +415,21 @@ BEGIN
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') + '",'
                                      + '"BankAccountId":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') + '",'
                                      + '"Identification":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '')
-                                     + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ] ' + '} }'
+                                     + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
+									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
+									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
+									 + '"Icon": "' + (CASE
+															WHEN 
+																(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
+																or ctm.Abbreviation IN ('IGSS','RENAP')
+
+															THEN
+															   'D'
+														   ELSE
+															   ''
+													   END
+													  ) + '"'
+									 + '} }'
                                      + ''
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
