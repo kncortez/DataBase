@@ -468,6 +468,24 @@ BEGIN
                           (
                               SELECT ItemSerie FROM #listGuides
                           );
+						  
+				UPDATE
+					ASCD
+				SET
+					RowStatus = 0
+					,TokenUpdated = @Token
+					,DateUpdated = GETDATE()
+				FROM
+					[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+					INNER JOIN
+						#listGuides LGE WITH(NOLOCK)
+						ON
+							ASCD.GuideSerie = LGE.ItemSerie
+							AND
+							ASCD.GuideNumber = LGE.ItemNumber
+							AND
+							ASCD.RowStatus = 1
+
                 /*
 						
 						-------------------WEBHOOK.INI-----------------------			
