@@ -412,7 +412,7 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						ISNULL(TotalCompletedPickups,0) 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'bi fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					FROM
 						@ResponseServicesTable
 				END
@@ -426,7 +426,7 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						0 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'bi fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
 			END
@@ -440,7 +440,7 @@ BEGIN
 					'Recolecciones pendientes' 'TopText',
 					0 'BottomValue',
 					'Recolecciones completadas' 'BottomText',
-					'bi fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 		END
 		ELSE
