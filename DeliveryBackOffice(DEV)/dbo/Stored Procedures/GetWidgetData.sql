@@ -379,11 +379,6 @@ BEGIN
 				AND
 				SP.AccountId = @AccoundId
 
-			SELECT
-				*
-			FROM
-				#FilteredServices
-
 			IF( EXISTS(SELECT TOP 1 1 FROM #FilteredServices) )
 			BEGIN
 
