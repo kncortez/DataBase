@@ -1263,6 +1263,7 @@
     <Build Include="dbo\Stored Procedures\spHM_ValidatePiecesinActUnifiedRoutes .sql" />
     <Build Include="dbo\Stored Procedures\spHM_SetActionToGuidesPendingSettlement.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetIncidentTypeCatalog.sql" />
+    <Build Include="dbo\Stored Procedures\IndividualCustomerCODAmountsData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
