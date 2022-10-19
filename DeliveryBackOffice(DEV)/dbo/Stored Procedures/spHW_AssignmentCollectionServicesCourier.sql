@@ -106,6 +106,3 @@ BEGIN
 	END
 	
 END
-
-
-select * from dbo.catroute
