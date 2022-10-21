@@ -3,7 +3,7 @@
 -- Create date: <21-09-2022>
 -- Description:	<Cierra un link de recolección y genera una solciitud de recolección agrupado por codigo de referencia>
 -- =============================================
-CREATE PROCEDURE sphw_RecollectionLinkClosure
+CREATE PROCEDURE [dbo].[sphw_RecollectionLinkClosure]
 	@VisitPointDataLinkId BIGINT,
 	@TAC1 BIT,
 	@TAC2 BIT,
@@ -44,19 +44,100 @@ BEGIN
 	(StatusCode INT, 
 		Description NVARCHAR(100),
 		ServiceId INT
-	)		
+	)
+	
+	DECLARE @IsUpdate BIT = 1
+	DECLARE @CodeOfReference INT;
+	DECLARE @IdCustomer INT;
+	DECLARE @TownShipName NVARCHAR(100)=NULL;
+	DECLARE @ProvinceName NVARCHAR(100)=NULL;
+	DECLARE @IdKindOfVPBusiness INT
+
 	BEGIN TRY
 
+		-- Si se tiene que crear el vp
+		IF @IdAccount IS NULL
+		BEGIN 
+
+			SET @IsUpdate = 0
+
+			-- Buscar cliente referenciado
+			SELECT
+				@IdAccount = AccIdAccount
+				,@IdCustomer = IdCustomer
+			FROM Account WITH (NOLOCK)
+			WHERE IdCustomer = (SELECT
+					IdCustomer
+				FROM Customer
+				WHERE Name = 'Cliente Referenciado'
+				AND Domain = '@forzadelivery')
+			
+			SELECT TOP 1 
+				@TownShipName = twn.TownshipName,
+				@ProvinceName = prv.ProvinceName
+			FROM DBO.Township twn
+				LEFT JOIN DBO.Province prv ON twn.IdProvince=prv.IdProvince
+			WHERE IdTownship = @IdTownship
+
+			SET @IdKindOfVPBusiness = (SELECT
+				IdKindOfVPBusiness
+			FROM KindOfVPBusiness WITH (NOLOCK)
+			WHERE Shorthand = 'HUB')
+
+			-- Se crean los registros
+			SET @CodeOfReference = (SELECT
+					MAX(CodeOfReference) + 1
+				FROM VisitPointClient)
+
+			--Inserta Visit Point en la tabla VisitPointClient
+			INSERT INTO [dbo].[VisitPointClient] ([CodeOfReference]
+			, [CustomerID]
+			, [IdTownship]
+			, [CountryId]
+			, [DescriptionOfClient]
+			, [Address]
+			, [Phone]
+			, [Town]
+			, [Department]
+			, [Latitude]
+			, [Longitude]
+			, [IdKindOfVPClient]
+			, [IdKindOfVPBusiness]
+			, [StatusClient]
+			, [TokenCreated]
+			, [DateCreated])
+				VALUES (@CodeOfReference, @IdCustomer, @IdTownship, @IdCountry, @NameVP, @Address1, @Phone, @TownShipName, @ProvinceName, @RecollectionLatitude, @RecollectionLongitude, 6, @IdKindOfVPBusiness, 1, @Token, GETDATE())
+				
+			--insertar nueva direccion
+			INSERT INTO [dbo].[UserAddress] ([UadIdTownship]
+			, [UadIdAccount]
+			, [UadIdCountry]
+			, [UadFullName]
+			, [UadAddress1]
+			, [UadNirPhone]
+			, [UadPhone]
+			, [UadAdditionalInstructions]
+			, [UadRowStatus]
+			, [UadTokenCreated]
+			, [UadDateCreated]
+			, [UadTokenUpdated]
+			, [UadDateUpdated]
+			, CodeOfReference
+			, IdCityPlace)
+				VALUES (@IdTownship, @IdAccount, @IdCountry, @NameVP, @Address1, @NirPhone, @Phone, @AdditionalInstructions, 1 
+				, @Token, GETDATE(), NULL, NULL, @CodeOfReference, @IdCityPlace)
+
+		END
+		ELSE
+		BEGIN
+
+			SELECT 
+				@CodeOfReference=VPDL.VisitPointId
+			FROM DBO.VisitPointDataLink VPDL
+			WHERE VPDL.IdVisitPointDataLink=@VisitPointDataLinkId;
+		END
 
 		--CREANDO SOLICITUD DE RECOLECCIÓN
-		DECLARE @CodeOfReference INT;
-		DECLARE @CustomerId INT;
-		SELECT 
-			@CodeOfReference=VPDL.VisitPointId
-		FROM DBO.VisitPointDataLink VPDL
-		WHERE VPDL.IdVisitPointDataLink=@VisitPointDataLinkId;
-
-
 		INSERT INTO @RESULTREGISTERRECOLECTION
 		(
 			StatusCode,
@@ -86,44 +167,48 @@ BEGIN
 			WHERE IdVisitPointDataLink=@VisitPointDataLinkId;
 			SELECT StatusCode 'StatusCode',Description 'Description',ServiceId 'ServiceId' FROM @RESULTrEGISTERRECOLECTION;		
 
-			UPDATE [dbo].[UserAddress]
-				SET [UadIdTownship] = ISNULL(@IdTownship,UadIdTownship)
-					,[UadIdAccount] = ISNULL(@IdAccount,UadIdAccount)
-					,[UadIdCountry] = ISNULL(@IdCountry,UadIdCountry)
-					,[UadFullName] = ISNULL(@NameVP,UadFullName) 
-					,[UadAddress1] = ISNULL(@Address1,UadAddress1)
-					,[UadNirPhone] = ISNULL(@NirPhone,UadNirPhone)
-					,[UadPhone] = ISNULL(@Phone,UadPhone)
-					,[UadAdditionalInstructions] = ISNULL(@AdditionalInstructions,UadAdditionalInstructions)
-					,[UadTokenUpdated] = @Token
-					,[UadDateUpdated] = GETDATE()
-					,[IdCityPlace] = ISNULL(@IdCityPlace,IdCityPlace)
-				WHERE CodeOfReference=@CodeOfReference
-			DECLARE @TownShipName NVARCHAR(100)=NULL;
-			DECLARE @ProvinceName NVARCHAR(100)=NULL;
+			IF @IsUpdate = 1
+			BEGIN
 
-			SELECT TOP 1 
-				@TownShipName = twn.TownshipName,
-				@ProvinceName = prv.ProvinceName
-			FROM DBO.Township twn
-				LEFT JOIN DBO.Province prv ON twn.IdProvince=prv.IdProvince
-			WHERE IdTownship = @IdTownship
+				UPDATE [dbo].[UserAddress]
+					SET [UadIdTownship] = ISNULL(@IdTownship,UadIdTownship)
+						,[UadIdAccount] = ISNULL(@IdAccount,UadIdAccount)
+						,[UadIdCountry] = ISNULL(@IdCountry,UadIdCountry)
+						,[UadFullName] = ISNULL(@NameVP,UadFullName) 
+						,[UadAddress1] = ISNULL(@Address1,UadAddress1)
+						,[UadNirPhone] = ISNULL(@NirPhone,UadNirPhone)
+						,[UadPhone] = ISNULL(@Phone,UadPhone)
+						,[UadAdditionalInstructions] = ISNULL(@AdditionalInstructions,UadAdditionalInstructions)
+						,[UadTokenUpdated] = @Token
+						,[UadDateUpdated] = GETDATE()
+						,[IdCityPlace] = ISNULL(@IdCityPlace,IdCityPlace)
+					WHERE CodeOfReference=@CodeOfReference
+				
 
-			UPDATE VP
-				SET VP.IdTownship = ISNULL(@IdTownship,VP.IdTownship)
-					,VP.CountryId = ISNULL(@IdCountry,VP.CountryId)
-					,VP.DescriptionOfClient =ISNULL(@NameVP,VP.DescriptionOfClient) 
-					,VP.Address = ISNULL(@Address1,VP.Address)
-					,VP.Phone =ISNULL(@Phone,VP.Phone)
-					,VP.TokenUpdated = @Token
-					,VP.DateUpdated = GETDATE()
-					,VP.Town= ISNULL(@TownShipName,VP.Town)
-					,VP.Department= ISNULL(@ProvinceName,VP.Department)
-					,VP.Latitude=ISNULL(@RecollectionLatitude,VP.Latitude)
-					,VP.Longitude=ISNULL(@RecollectionLongitude,VP.Longitude)
-			FROM [dbo].[VisitPointClient] VP 
-				WHERE [CodeOfReference] =  @CodeOfReference
-			--------FIN ACTUALIZACIÓN--------------
+				SELECT TOP 1 
+					@TownShipName = twn.TownshipName,
+					@ProvinceName = prv.ProvinceName
+				FROM DBO.Township twn
+					LEFT JOIN DBO.Province prv ON twn.IdProvince=prv.IdProvince
+				WHERE IdTownship = @IdTownship
+
+				UPDATE VP
+					SET VP.IdTownship = ISNULL(@IdTownship,VP.IdTownship)
+						,VP.CountryId = ISNULL(@IdCountry,VP.CountryId)
+						,VP.DescriptionOfClient =ISNULL(@NameVP,VP.DescriptionOfClient) 
+						,VP.Address = ISNULL(@Address1,VP.Address)
+						,VP.Phone =ISNULL(@Phone,VP.Phone)
+						,VP.TokenUpdated = @Token
+						,VP.DateUpdated = GETDATE()
+						,VP.Town= ISNULL(@TownShipName,VP.Town)
+						,VP.Department= ISNULL(@ProvinceName,VP.Department)
+						,VP.Latitude=ISNULL(@RecollectionLatitude,VP.Latitude)
+						,VP.Longitude=ISNULL(@RecollectionLongitude,VP.Longitude)
+				FROM [dbo].[VisitPointClient] VP 
+					WHERE [CodeOfReference] =  @CodeOfReference
+				--------FIN ACTUALIZACIÓN--------------
+			END
+
 			IF @TranCounter = 0  
 				COMMIT TRANSACTION;
 		END
