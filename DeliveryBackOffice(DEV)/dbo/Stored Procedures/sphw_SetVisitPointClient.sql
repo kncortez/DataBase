@@ -36,7 +36,6 @@ BEGIN
 	DECLARE @IdKindOfVPBusiness INT
 	DECLARE @IdVisitPointClient INT
 	DECLARE @HeaderCode VARCHAR(10)
-	DECLARE @CityName VARCHAR(50)
 	DEClARE @IdDepartment INT;
 	DECLARE @IsReferredCustomer BIT = 0;
 	DECLARE @UpdatedAddress AS TABLE (
@@ -56,20 +55,12 @@ BEGIN
 		SELECT
 			@Department = ProvinceName
 			,@IdDepartment = PV.IdProvince
+			,@HeaderCode = TS.HeaderCode
+			,@TownshipName = TS.TownshipName
 		FROM Province PV WITH (NOLOCK)
 		INNER JOIN Township TS WITH (NOLOCK)
 			ON PV.IdProvince = TS.IdProvince
 		WHERE TS.IdTownship = @IdTownship
-
-		SELECT
-			@HeaderCode = HeaderCode
-			,@TownshipName = TownshipName
-		FROM dbo.Township WITH (NOLOCK);
-
-		SET @CityName = (SELECT
-				CityPlace
-			FROM DBO.CatCityPlace WITH (NOLOCK)
-			WHERE IdCityPlace = @IdCityPlace)
 
 		-- Buscar cliente referenciado en caso no venga un Account
 		IF (@IdAccount IS NULL)
