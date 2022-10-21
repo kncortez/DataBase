@@ -7,7 +7,9 @@ CREATE PROCEDURE [dbo].[spHW_CollectionLinkGeneration]
 
 @VisitPointCodeOfReference AS INT,
 @AccountId AS BIGINT,
-@Token NVARCHAR(50)
+@Token NVARCHAR(50),
+@VisitPointPhone NVARCHAR(50),
+@VisitPointName NVARCHAR(100)
 
 AS
 BEGIN
@@ -27,7 +29,8 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-		IF ( EXISTS (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[VisitPointDataLink] VPDL WITH(NOLOCK) WHERE VPDL.AccountId = @AccountId AND VPDL.VisitPointId = @VisitPointCodeOfReference AND VPDL.DataLinkStatusId != @CompletedLinkStatusId AND VPDL.RowStatus = 1)  )
+		IF @VisitPointCodeOfReference IS NOT NULL AND @AccountId IS NOT NULL 
+			AND ( EXISTS (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[VisitPointDataLink] VPDL WITH(NOLOCK) WHERE VPDL.AccountId = @AccountId AND VPDL.VisitPointId = @VisitPointCodeOfReference AND VPDL.DataLinkStatusId != @CompletedLinkStatusId AND VPDL.RowStatus = 1)  )
 		BEGIN
 
 			INSERT INTO @ResponseData
@@ -55,8 +58,8 @@ BEGIN
 
 				SELECT
 					TOP 1
-						200 StatusCode,
-						CONCAT(@PickupLinkBase, RP.PickupToken) 'Description'
+						200 [StatusCode],
+						CONCAT(@PickupLinkBase, RP.PickupToken) [Description]
 				FROM
 					@ResponseData RP 
 
@@ -67,8 +70,8 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 				SELECT
-					404 StatusCode,
-					'Link no encontrado' 'Description'
+					404 [StatusCode],
+					'Link no encontrado' [Description]
 
 			END
 
@@ -76,27 +79,33 @@ BEGIN
 		ELSE
 		BEGIN
 
-			INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointDataLink]
-				(
-					AccountId
-					, VisitPointId
-					, DataLinkStatusId
-					, ServiceToken
-					, ServiceTokenExpiration
-					, TokenCreated
-					, DateCreated
-				)
-			OUTPUT inserted.ServiceToken, inserted.IdVisitPointDataLink INTO @ResponseData (PickupToken, DataLinkId)
-			VALUES
-				(
-					@AccountId
-					, @VisitPointCodeOfReference
-					, @GeneratedLinkStatusId
-					, CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(RIGHT(CONCAT('0000000000',@AccountId), 10), RIGHT(CONCAT('0000000000', @VisitPointCodeOfReference), 10), CONVERT(NVARCHAR, GETDATE(), 25))), 2)
-					, DATEADD(DAY, 30, GETDATE())
-					, @Token
-					, GETDATE()
-				)
+			IF @VisitPointCodeOfReference IS NOT NULL AND @AccountId IS NOT NULL 
+				OR @VisitPointPhone IS NOT NULL AND @VisitPointName IS NOT NULL
+				INSERT INTO [DeliveryBackOffice].[dbo].[VisitPointDataLink]
+					(
+						AccountId
+						, VisitPointId
+						, DataLinkStatusId
+						, ServiceToken
+						, ServiceTokenExpiration
+						, TokenCreated
+						, DateCreated
+						, VisitPointPhone
+						, VisitPointName
+					)
+				OUTPUT inserted.ServiceToken, inserted.IdVisitPointDataLink INTO @ResponseData (PickupToken, DataLinkId)
+				VALUES
+					(
+						@AccountId
+						, @VisitPointCodeOfReference
+						, @GeneratedLinkStatusId
+						, CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(RIGHT(CONCAT('0000000000',@AccountId), 10), RIGHT(CONCAT('0000000000', @VisitPointCodeOfReference), 10), CONVERT(NVARCHAR, GETDATE(), 25))), 2)
+						, DATEADD(DAY, 30, GETDATE())
+						, @Token
+						, GETDATE()
+						, @VisitPointPhone
+						, @VisitPointName
+					)
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @ResponseData))
 			BEGIN
@@ -105,8 +114,8 @@ BEGIN
 
 				SELECT
 					TOP 1
-						200 StatusCode,
-						CONCAT(@PickupLinkBase, RP.PickupToken) 'Description'
+						200 [StatusCode],
+						CONCAT(@PickupLinkBase, RP.PickupToken) [Description]
 				FROM
 					@ResponseData RP 
 
@@ -117,8 +126,8 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 				SELECT
-					404 StatusCode,
-					'Link no encontrado' 'Description'
+					404 [StatusCode],
+					'Link no encontrado' [Description]
 
 			END
 
@@ -130,8 +139,8 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 		SELECT
-			500 StatusCode,
-			ERROR_MESSAGE() 'Description'
+			500 [StatusCode],
+			ERROR_MESSAGE() [Description]
 
 	END CATCH
 

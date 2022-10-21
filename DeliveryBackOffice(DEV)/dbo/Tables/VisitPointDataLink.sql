@@ -1,20 +1,24 @@
 ﻿CREATE TABLE [dbo].[VisitPointDataLink] (
-    [IdVisitPointDataLink]   BIGINT        IDENTITY (1, 1) NOT NULL,
-    [VisitPointId]           INT           NOT NULL,
-    [ServiceToken]           NVARCHAR (50) NOT NULL,
-    [ServiceTokenExpiration] DATETIME      NULL,
-    [DataLinkStatusId]       INT           NOT NULL,
-    [RowStatus]              BIT           DEFAULT ((1)) NOT NULL,
-    [TokenCreated]           NVARCHAR (50) NOT NULL,
-    [DateCreated]            DATETIME      NOT NULL,
-    [TokenUpdated]           NVARCHAR (50) NULL,
-    [DateUPdated]            DATETIME      NULL,
-    [AccountId]              BIGINT        NULL,
+    [IdVisitPointDataLink]   BIGINT         IDENTITY (1, 1) NOT NULL,
+    [VisitPointId]           INT            NULL,
+    [ServiceToken]           NVARCHAR (50)  NOT NULL,
+    [ServiceTokenExpiration] DATETIME       NULL,
+    [DataLinkStatusId]       INT            NOT NULL,
+    [RowStatus]              BIT            DEFAULT ((1)) NOT NULL,
+    [TokenCreated]           NVARCHAR (50)  NOT NULL,
+    [DateCreated]            DATETIME       NOT NULL,
+    [TokenUpdated]           NVARCHAR (50)  NULL,
+    [DateUPdated]            DATETIME       NULL,
+    [AccountId]              BIGINT         NULL,
+    [VisitPointPhone]        NVARCHAR (50)  NULL,
+    [VisitPointName]         NVARCHAR (100) NULL,
     PRIMARY KEY CLUSTERED ([IdVisitPointDataLink] ASC),
     CONSTRAINT [FK_VisitPointDataLink_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_VisitPointDataLink_DataLinkStatus] FOREIGN KEY ([DataLinkStatusId]) REFERENCES [dbo].[CatDataLinkStatus] ([IdCatDataLinkStatus]),
     CONSTRAINT [FK_VisitPointDataLink_VisitPoint] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -65,4 +69,12 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la cuenta para poder generar servicio de recolección de la tabla AccountId.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointDataLink', @level2type = N'COLUMN', @level2name = N'AccountId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Telefono del VisitPoint si no se ha creado el VisitPoint.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointDataLink', @level2type = N'COLUMN', @level2name = N'VisitPointPhone';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del Cliente del VisitPoint si no se ha creado el VisitPoint.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointDataLink', @level2type = N'COLUMN', @level2name = N'VisitPointName';
 
