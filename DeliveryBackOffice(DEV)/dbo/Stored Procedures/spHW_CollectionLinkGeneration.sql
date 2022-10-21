@@ -99,7 +99,7 @@ BEGIN
 						@AccountId
 						, @VisitPointCodeOfReference
 						, @GeneratedLinkStatusId
-						, CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(RIGHT(CONCAT('0000000000',@AccountId), 10), RIGHT(CONCAT('0000000000', @VisitPointCodeOfReference), 10), CONVERT(NVARCHAR, GETDATE(), 25))), 2)
+						, CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(RIGHT(CONCAT('0000000000',ISNULL(@AccountId, @VisitPointPhone)), 10), RIGHT(CONCAT('0000000000', ISNULL(@VisitPointCodeOfReference, @VisitPointPhone)), 10), CONVERT(NVARCHAR, GETDATE(), 25))), 2)
 						, DATEADD(DAY, 30, GETDATE())
 						, @Token
 						, GETDATE()
