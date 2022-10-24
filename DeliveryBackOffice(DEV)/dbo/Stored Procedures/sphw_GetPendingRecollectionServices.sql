@@ -16,12 +16,45 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	DECLARE @RefClientId INT = (SELECT TOP 1 Cu.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado' COLLATE Latin1_General_CI_AI);
+
     DECLARE @TranCounter INT;  
     SET @TranCounter = @@TRANCOUNT;  
     IF @TranCounter > 0  
         SAVE TRANSACTION SPGetPendingRecolectionServices;  
     ELSE  
         BEGIN TRANSACTION;  
+
+	DECLARE @ResponseTable AS TABLE(
+		Qualification BIT,
+		IdServiceManagement INT,
+		datecreated NVARCHAR(50),
+		datePickUp NVARCHAR(50),
+		hourPickUp NVARCHAR(50),
+		ServiceVehicle NVARCHAR(50),
+		IsScheduled BIT,
+		QuantityRegularPackages INT,
+		QuantityOverDimensionedPackage INT,
+		StatusName NVARCHAR(50),
+		OriginAddress NVARCHAR(600),
+		OriginAddressName NVARCHAR(100),
+		OriginAddressProvince NVARCHAR(50),
+		OriginAddressTown NVARCHAR(50),
+		rangeHour NVARCHAR(50),
+		IdHubLogistic INT,
+		HubAbbreviation NVARCHAR(10),
+		FirstName NVARCHAR(100),
+		LastName NVARCHAR(100),
+		Scheduled BIT,
+		CurrierManId INT,
+		IdRoute INT,
+		IdRouteAssigment INT,
+		CurrierFirstName NVARCHAR(100),
+		Last_Name NVARCHAR(100),
+		Latitude NVARCHAR(100),
+		Longitude NVARCHAR(100),
+		IsAlerted BIT
+	);
 		
 	BEGIN TRY
 		IF @StartDate IS NULL
@@ -33,7 +66,9 @@ BEGIN
 			1 AS 'StatusCode', 
 			'Registros obtenidos' AS 'Description';
 		
-		SELECT shp.ServiceRate 'Qualification',
+		INSERT INTO @ResponseTable
+		SELECT 
+			ISNULL(shp.ServiceRate,0) 'Qualification',
 			srv.IdServiceManagement 'IdServiceManagement' , 
 			CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108))  'datecreated',
 			CONVERT(VARCHAR(10), shp.StartDate, 105) 'datePickUp',
@@ -50,18 +85,17 @@ BEGIN
 			CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour',
 			ISNULL(SPHUB.IdHubLogistic,hub.IdHubLogistic) 'IdHubLogistic',
 			ISNULL(SPHUB.HubAbbreviation,hub.HubAbbreviation) 'HubAbbreviation',
-			PR.PerFirstName 'FirstName',
-			PR.PerLastName 'LastName',
+			(CASE WHEN Cu.IdCustomer = @RefClientId THEN vpc.DescriptionOfClient ELSE ISNULL(Cu.[Name], shp.SenderName) END) 'FirstName',
+			'' 'LastName',
 			shp.IsScheduled 'Scheduled',
 			RA.IdCurrierMan 'CurrierManId',
-			RA.IdRoute 'IdRoute',
+			ISNULL(RA.IdRoute,-1) 'IdRoute',
 			RA.IdRouteAssigment 'IdRouteAssigment',
 			SNR.First_Name 'CurrierFirstName',
 			SNR.Last_Name 'Last_Name',
 			vpc.Latitude 'Latitude',
 			vpc.Longitude 'Longitude',
 			CAST(ISNULL((SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK) WHERE DOA.ServiceManagementId = srv.IdServiceManagement AND DOA.RowStatus = 1),0) AS BIT) 'IsAlerted'
-           
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 				ON shp.SenderId = vpc.CodeOfReference
@@ -88,30 +122,24 @@ BEGIN
 				ON css.IdServiceStatus = srv.ServiceStatusId
 			------------------------------------------------------------------------
 			--FOR CLIENT DATA 
-			LEFT JOIN [DeliveryBackOffice].[dbo].[Account] Ac WITH(NOLOCK)
-						ON Ac.IdCustomer = vpc.CustomerID
-			LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
-						ON RBUBA.RuaIdAccount = Ac.AccIdAccount
-			LEFT JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK)
-						ON RU.UsrIdUser = RBUBA.RuaIdUser
-			LEFT JOIN [DeliveryBackOffice].[dbo].[Person] PR WITH(NOLOCK)
-						ON PR.PerIdPerson = RU.UsrIdPerson
+			LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
+						ON Cu.IdCustomer = vpc.CustomerID
 			------------------------------------------------------------------------------------
 			--COURIER ASIGNADO
-			LEFT JOIN [DeliveryBackOffice].[dbo].RouteAssigment RA
+			LEFT JOIN [DeliveryBackOffice].[dbo].RouteAssigment RA WITH(NOLOCK)
 						ON RA.IdRouteAssigment = srv.IdPuRouteAssigment
-			LEFT JOIN [DeliveryBackOffice].[dbo].SenderReceiver SNR
+			LEFT JOIN [DeliveryBackOffice].[dbo].SenderReceiver SNR WITH(NOLOCK)
 						ON SNR.ID=RA.IdCurrierMan
 			------------------------------------------------------------------------------------
 			--USUARIO POR HUB ASIGNADO
-			INNER JOIN [DeliveryBackOffice].[dbo].HubLogisticByUser HLBU
+			INNER JOIN [DeliveryBackOffice].[dbo].HubLogisticByUser HLBU WITH(NOLOCK)
 						ON HLBU.HubLogisticId=ISNULL(shp.IdHubLogistics, hub.IdHubLogistic)
 			------------------------------------------------------------------------------------
 			LEFT JOIN DBO.HubLogistics SPHUB ON shp.IdHubLogistics=SPHUB.IdHubLogistic
 			------------------------------------------------------------------------------------
 			--INCIDENCIA
 			LEFT JOIN (
-				SELECT INSRV.ServiceManagementId FROM [DeliveryBackOffice].[dbo].IncidenceServices INSRV
+				SELECT INSRV.ServiceManagementId FROM [DeliveryBackOffice].[dbo].IncidenceServices INSRV WITH(NOLOCK)
 				GROUP BY ServiceManagementId
 			) INSRV
 						ON INSRV.ServiceManagementId=srv.IdServiceManagement
@@ -121,11 +149,11 @@ BEGIN
 			AND
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
-			AND (
-				@HubId = -1 
-				OR (SPHUB.IdHubLogistic IS NOT NULL AND SPHUB.IdHubLogistic= @HubId)
-				OR (HUB.IdHubLogistic IS NULL AND HUB.IdHubLogistic = @HubId)
-			)
+			--AND (
+			--	@HubId = -1 
+			--	OR (SPHUB.IdHubLogistic IS NOT NULL AND SPHUB.IdHubLogistic= @HubId)
+			--	OR (HUB.IdHubLogistic IS NULL AND HUB.IdHubLogistic = @HubId)
+			--)
 			AND(
 				@IdUser =-1
 				OR
@@ -138,8 +166,42 @@ BEGIN
 				AND
 				INSRV.ServiceManagementId IS NULL--No posee ninguna incidencia registrada
 			------------------------------------------------------------------------
+
+		SELECT
+			DISTINCT
+				RT.Qualification
+				,RT.IdServiceManagement
+				,RT.datecreated
+				,RT.datePickUp
+				,RT.hourPickUp
+				,RT.ServiceVehicle
+				,RT.IsScheduled
+				,RT.QuantityRegularPackages
+				,RT.QuantityOverDimensionedPackage
+				,RT.StatusName
+				,RT.OriginAddress
+				,RT.OriginAddressName
+				,RT.OriginAddressProvince
+				,RT.OriginAddressTown
+				,RT.rangeHour
+				,RT.IdHubLogistic
+				,RT.HubAbbreviation
+				,RT.FirstName
+				,RT.LastName
+				,RT.Scheduled
+				,RT.CurrierManId
+				,RT.IdRoute
+				,RT.IdRouteAssigment
+				,RT.CurrierFirstName
+				,RT.Last_Name
+				,RT.Latitude
+				,RT.Longitude
+				,RT.IsAlerted
+		FROM
+			@ResponseTable RT
 		ORDER BY
-			ISNULL((SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA WITH(NOLOCK) WHERE DOA.ServiceManagementId = srv.IdServiceManagement AND DOA.RowStatus = 1),0) DESC
+			RT.IsAlerted DESC,
+			RT.datecreated DESC
 
 		IF @TranCounter = 0  
             COMMIT TRANSACTION;  
