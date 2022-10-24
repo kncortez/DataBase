@@ -358,6 +358,7 @@ BEGIN
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
                                      + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
                                      + '",'
+									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
                                      + '",' + '"ExpirationDate":"'
