@@ -81,7 +81,7 @@ BEGIN
 					,GSRT.GuideNumber
 					,GSRT.GuideStatus
 					,GSRT.GuideStatusChange
-					,DP.Path_Incident  AS ImageEvidence
+					,ISNULL(DP.Path_Incident,'') AS ImageEvidence
 					,ISNULL(NameOfReceiver,'')  AS ReceiverName
 				FROM
 					@GuideStatusResponseTable GSRT
@@ -101,7 +101,7 @@ BEGIN
 					,GSRT.GuideNumber
 					,GSRT.GuideStatus
 					,GSRT.GuideStatusChange
-					,BDC.AuthorizationNumber
+					,ISNULL(BDC.AuthorizationNumber,'') AS AuthorizationNumber
 				FROM
 					@GuideStatusResponseTable GSRT
 					LEFT JOIN 
@@ -114,7 +114,7 @@ BEGIN
 					,GSRT.GuideNumber
 					,GSRT.GuideStatus
 					,GSRT.GuideStatusChange
-					,DP.Path_Incident  AS ImageEvidence
+					,ISNULL(DP.Path_Incident,'')  AS ImageEvidence
 					,ISNULL(NameOfReceiver,'')  AS ReceiverName
 				FROM
 					@GuideStatusResponseTable GSRT
@@ -143,9 +143,9 @@ BEGIN
 					,GSRT.GuideNumber
 					,GSRT.GuideStatus
 					,GSRT.GuideStatusChange
-					,DA.Longitude
-					,DA.Latitude
-					,CTI.DescriptionIncidence
+					,ISNULL(DA.Longitude,'') AS Longitude
+					,ISNULL(DA.Latitude,'') AS Latitude
+					,ISNULL(CTI.DescriptionIncidence,'') AS DescriptionIncidence
 				FROM
 					@GuideStatusResponseTable GSRT
 					LEFT JOIN 
