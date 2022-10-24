@@ -15,7 +15,8 @@ CREATE PROCEDURE [dbo].[sphd_CreateAlertOrder]
 	@serviceTypeId bigint =Null,
 	@flagModifyAlert bit,
 	@idAlert int =NULL,
-	@iduser bigint
+	@iduser bigint,
+	@alertMessage nvarchar(500)=NULL
 AS
 BEGIN
 		DECLARE @TranCounter INT;  
@@ -139,7 +140,7 @@ BEGIN
                     (
                         @iduser,
                         (SELECT Username FROM DBO.InternalUser WHERE IdUser=@iduser),
-                        @alertdescription,
+                        IIF(@serviceManagementId IS NOT NULL ,@alertMessage,@alertdescription),
 						IDENT_CURRENT('DeliveryOrderAlert'),
                         1,
                         @tokenuser,
