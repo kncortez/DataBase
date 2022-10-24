@@ -209,24 +209,19 @@ BEGIN
                                        + '"Precision":"' + CONVERT(VARCHAR, ISNULL(vpc.Accuracy, 0)) + '",'
                                        + '"Price":"' + '0' + '",' + '"Pickup":"' + '0' + '",' + '"customerName":"'
                                        + ' ' + '",' + '"alterName":"' + ' ' + '",' + '"HighPriority":'
-                                       + CONVERT(
-                                                    VARCHAR,
-                                                    IIF(
-                                                       (
-                                                           SELECT ISNULL(COUNT(1), 0)
-                                                           FROM #TmpAlertList TMP
-                                                           WHERE TMP.SchedulePickupId = spk.SchedulePickupId
-                                                       ) > 0,
-                                                       'true',
-                                                       'false')
-                                                ) + ',' + '"Alerts":['
+                                       + CONVERT(varchar, IIF((SELECT
+															COUNT(1)
+														FROM DeliveryOrderAlert doa WITH (NOLOCK)
+														WHERE doa.ServiceManagementId = sma.IdServiceManagement
+														AND doa.RowStatus = 1)
+													> 0, 'true','false'))+ ',' + '"Alerts":['
                                        + IIF((SELECT
 															COUNT(1)
 														FROM DeliveryOrderAlert doa WITH (NOLOCK)
 														WHERE doa.ServiceManagementId = sma.IdServiceManagement
 														AND doa.RowStatus = 1)
-													> 0, (SELECT TOP 1
-															STUFF((SELECT
+													> 0, (SELECT
+															STUFF((SELECT TOP 1
 																	',{"TypeAlert":' + CONVERT(VARCHAR, doa.AlertTypeId) + ',' +
 																	'"DescriptionAlert":"' + dbo.fnt_String_Escape(dbo.fn_replace_special_characters(doa.AlertDescription), 'json') + '",' +
 																	'"DateCreated":"' + (CONVERT(VARCHAR, doa.DateCreated, 24)) + ' - ' + (CONVERT(VARCHAR, doa.DateCreated, 103)) + '"}'
