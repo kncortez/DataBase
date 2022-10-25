@@ -20,7 +20,7 @@ BEGIN
 		BEGIN
 			SET @STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
 									FROM	[dbo].[StatusOrder] SO
-									WHERE	[SO].[OrderDescription] = 'En Tránsito');
+									WHERE	[SO].[OrderDescription] = 'En preparación de traslado');
 		END
 	ELSE
 		BEGIN

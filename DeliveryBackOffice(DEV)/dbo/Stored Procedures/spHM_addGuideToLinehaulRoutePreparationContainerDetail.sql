@@ -114,7 +114,7 @@ BEGIN
 								[TokenCreated],
 								[DateCreated])
 						VALUES	(@EXISTING_LRPCD,
-								(SELECT [CLS].[IdCatLinehaulStatus] FROM [dbo].[CatLinehaulStatus] CLS WHERE [CLS].[StatusName] = 'IN TRANSIT'),
+								(SELECT [CLS].[IdCatLinehaulStatus] FROM [dbo].[CatLinehaulStatus] CLS WHERE [CLS].[StatusName] = 'PREPARATION FOR TRANSFER'),
 								@PieceNumber,
 								@IsDry,
 								1,		-- Row Status
@@ -138,9 +138,16 @@ BEGIN
 
 		-- Starts Update General Numbers -----------------------------------------------------------------------------------------
 		-- UPDATE LinehaulRoutePreparationContainerDetail
-		SELECT @DRY_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece]), @COLD_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
+		SELECT @DRY_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
 		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 		WHERE	[LRPCDP].[IsDryPiece] = 1
+			AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
+			AND [LRPCDP].[RowStatus] = 1
+			AND	[LRPCDP].[ActCode] IS NULL;
+
+		SELECT @COLD_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
+		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+		WHERE	[LRPCDP].[IsDryPiece] = 0
 			AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
 			AND [LRPCDP].[RowStatus] = 1
 			AND	[LRPCDP].[ActCode] IS NULL;
