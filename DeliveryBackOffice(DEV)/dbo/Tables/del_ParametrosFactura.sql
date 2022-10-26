@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[del_ParametrosFactura] (
+CREATE TABLE [dbo].[del_ParametrosFactura] (
     [dpf_VpCodeOfReference]          INT            NOT NULL,
     [dpf_FELRequestor]               VARCHAR (200)  NOT NULL,
     [dpf_FELTransaction]             VARCHAR (200)  NOT NULL,
@@ -30,13 +30,15 @@
     [dpf_OcrCode]                    NVARCHAR (50)  NULL,
     [dpf_OcrCode2]                   NVARCHAR (50)  NULL,
     [dpf_StatusFACE]                 NVARCHAR (1)   NULL,
-    [dpf_AlmacenCode]                INT            NULL,
+    [dpf_WarehouseCode]              INT            NULL,
     CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC)
 );
 
 
 
 
+
+
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar codigo de almacen de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'del_ParametrosFactura', @level2type = N'COLUMN', @level2name = N'dpf_AlmacenCode';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar codigo de almacen de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'del_ParametrosFactura', @level2type = N'COLUMN', @level2name = N'dpf_WarehouseCode';
 

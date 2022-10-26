@@ -27,7 +27,7 @@ BEGIN
 	case when io_type = 2 then io_amount else 0 end credCard,
 	iod.io_ticket 'Ticket',
 	io_SAPDocEntryPaymentDetail 'docEntry',
-	(select del.dpf_AlmacenCode from del_ParametrosFactura del WITH(NOLOCK)  
+	(select del.dpf_WarehouseCode from del_ParametrosFactura del WITH(NOLOCK)  
 	where del.dpf_SAParticulo = cts.SAPCode 
 	AND inh.inv_vpCodeOfReferences = del.dpf_VpCodeOfReference 
 	AND cts.SendAlmacenExp = 1) 'CodeAlmacen'
