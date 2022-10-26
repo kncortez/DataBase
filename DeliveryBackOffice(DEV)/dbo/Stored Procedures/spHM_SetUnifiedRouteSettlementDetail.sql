@@ -74,17 +74,22 @@ BEGIN
 		BEGIN
 
 			-- Verificar información de la guía
-			SELECT TOP 1
-				@RouteAssignmentId = ra.IdRouteAssigment
-			   ,@StatusOrder = do.StatusOrderId
-			   ,@RouteAssignmentCourierId = ra.IdCurrierMan
-			   ,@ServiceManagementId = sm.IdServiceManagement
-			   ,@SchedulePickupId = sm.IdSchedulePickup
-			   ,@ServiceStatusId = sm.ServiceStatusId
+			SELECT
+				@StatusOrder = do.StatusOrderId
 			   ,@IsCollect = do.IsCollect
 			   ,@ServiceAmount = do.PriceShippment
 			   ,@CODAmount = ISNULL(do.Collect_OnDelivery, 0)
 			   ,@IsLastMileReturn = ISNULL(do.IsLastMileReturn, 0)
+			FROM DeliveryOrder do WITH (NOLOCK)
+			WHERE do.Guide_Serie = @GuideSerie
+			AND do.Guide_Number = @GuideNumber
+
+			SELECT TOP 1
+				@RouteAssignmentId = ra.IdRouteAssigment
+			   ,@RouteAssignmentCourierId = ra.IdCurrierMan
+			   ,@ServiceManagementId = sm.IdServiceManagement
+			   ,@SchedulePickupId = sm.IdSchedulePickup
+			   ,@ServiceStatusId = sm.ServiceStatusId
 			FROM RouteAssigment ra WITH (NOLOCK)
 			INNER JOIN ServiceManagement sm WITH (NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
@@ -104,13 +109,10 @@ BEGIN
 						OR sp.SchedulePickupStatus = 1)
 			LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
-			INNER JOIN DeliveryOrder do WITH (NOLOCK)
-				ON ISNULL(dopd.GuideSerie, rpd.Guide_Serie) = do.Guide_Serie
-					AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = do.Guide_Number
 			WHERE css.[Name] <> 'Cancelado'
 			AND ra.DateOfRoute = CAST(GETDATE() AS DATE)
-			AND do.Guide_Serie = @GuideSerie
-			AND do.Guide_Number = @GuideNumber
+			AND ISNULL(dopd.GuideSerie, rpd.Guide_Serie) = @GuideSerie
+			AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = @GuideNumber
 			ORDER BY ra.DateCreated DESC 
 
 			-- si no está asignada a una ruta o sino pertenece al courier
@@ -133,18 +135,18 @@ BEGIN
 				SET @RouteAssignmentId = (SELECT TOP 1
 						ra.IdRouteAssigment
 					FROM RouteAssigment ra WITH (NOLOCK)
-					INNER JOIN ServiceManagement sm WITH (NOLOCK)
-						ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
+					INNER JOIN CatRoute cr WITH (NOLOCK)
+						ON ra.IdRoute = cr.IdRoute
+					INNER JOIN CatTypeRoute ctr WITH (NOLOCK)
+						ON cr.IdTypeRoute = ctr.IdTypeRoute
 					WHERE ra.IdCurrierMan = @CourierId
 					AND ra.DateOfRoute = CAST(GETDATE() AS DATE)
-					AND sm.IdSchedulePickup IS NOT NULL
+					AND ctr.[Name] = 'Recolección'
 					AND ra.RowStatus = 1
 					ORDER BY ra.DateCreated DESC)
 
-
 				IF @RouteAssignmentId IS NOT NULL
 				BEGIN
-
 					IF (@StatusOrder IN (SELECT
 								so.StatusOrderId
 							FROM StatusOrder so
@@ -406,6 +408,9 @@ BEGIN
 						--Si se encuentra el vp entre los servicios de recolección, se asigna
 						IF @SchedulePickupIdFind IS NOT NULL
 						BEGIN
+							SET @ServiceManagementId = @ServiceManagementIdFind
+							SET @SchedulePickupId = @SchedulePickupIdFind
+
 							UPDATE DeliveryOrderPaymentDetail
 							SET IdHeaderRecolection = @SchedulePickupIdFind
 							   ,TokenUpdated = @Token
@@ -628,7 +633,7 @@ BEGIN
 				END
 			END 
 
-			IF @RouteAssignmentId IS NOT NULL 
+			IF @RouteAssignmentId IS NOT NULL AND @ServiceManagementId IS NOT NULL
 			BEGIN
 
 				--- Verificar si existe la ruta unificada y si ya fue liquidada
@@ -679,7 +684,7 @@ BEGIN
 
 						IF @IdUnifiedRouteSettlementDetail IS NULL
 						BEGIN
-
+							
 							-- Verificar a qué flujo pertenece la guía
 							SELECT
 								@IsArrival = IIF(Flow.GuideFlow = 'IsArrival', 1, 0)
@@ -829,8 +834,6 @@ BEGIN
 										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
 									END
 								END
-
-								PRINT @IdUnifiedRouteSettlementDetailPiece
 
 								IF @IdUnifiedRouteSettlementDetailPiece IS NOT NULL AND @IsValidOpenProcess = 1
 								BEGIN
