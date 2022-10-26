@@ -841,15 +841,20 @@ BEGIN
 
 									SELECT
 										1 'StatusCode'
-										,'Pieza asignada correctamente.' 'Description'
+									   ,'Pieza asignada correctamente.' 'Description'
+									   ,@IsOpenProcess 'IsOpenProcess'
+									   ,(CASE
+											WHEN @SchedulePickupId IS NOT NULL THEN 'Recolección'
+											WHEN @IsLastMileReturn = 1 THEN 'Devolución'
+											ELSE 'Entrega'
+										END) 'FlowType'
 
-									-- Si es proceso abierto, retornar información de las piezas
-									IF @IsOpenProcess = 1 
-										SELECT
-											dop.NoPiece
-										FROM DeliveryOrderPiece dop WITH (NOLOCK)
-										WHERE dop.GuideSerie = @GuideSerie
-										AND dop.GuideNumber = @GuideNumber
+									SELECT
+										dop.NoPiece
+									   ,dop.IsDry
+									FROM DeliveryOrderPiece dop WITH (NOLOCK)
+									WHERE dop.GuideSerie = @GuideSerie
+									AND dop.GuideNumber = @GuideNumber
 
 								END
 								ELSE
@@ -917,7 +922,7 @@ BEGIN
 
 				SELECT
 					3 'StatusCode'
-				   ,CONCAT('La guía ', @GuideSerie, @GuideNumber, ' no puede ser asignada, pertenece a otro Courier y ya fué operada o el courier no tiene ruta de recolección asignada.') 'Description'
+				   ,CONCAT('La guía ', @GuideSerie, @GuideNumber, ' no puede ser asignada, pertenece a otro Courier y ya fué operada o el courier no tiene ruta asignada.') 'Description'
 			END
 		END
 		ELSE
