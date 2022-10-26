@@ -73,8 +73,6 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[CatTypeVehicle] CTV WITH(NOLOCK)
 			ON
 				CV.IdTypeVehicle = CTV.IdTypeVehicle
-				AND
-				CTV.IdTypeVehicle = @VehicleType
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
 			ON
@@ -175,9 +173,13 @@ BEGIN
 		ROUND(CL.CourierDistance, 2) 'CourierDistance'
 	FROM
 		@CouriersWithPickupVehicleAssignment CL
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[TypeVehicleGroup] TVG WITH(NOLOCK)
+			ON
+				CL.VehicleType = TVG.TypeVehicleValid
+				AND
+				TVG.TypeVehicleOrigin = @VehicleType
 	WHERE
-		CL.VehicleType = @VehicleType
-		AND
 		CL.CourierDistance <= @MaxDistance
 	
 	
@@ -198,9 +200,13 @@ BEGIN
 			@FinalCourierCandidates FCD
 			ON
 				CL.CourierId = FCD.CourierId
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[TypeVehicleGroup] TVG WITH(NOLOCK)
+			ON
+				CL.VehicleType = TVG.TypeVehicleValid
+				AND
+				TVG.TypeVehicleOrigin = @VehicleType
 	WHERE
-		CL.VehicleType = @VehicleType
-		AND
 		CL.CourierDistance <= @MaxDistance
 		AND
 		FCD.CourierId IS NULL
