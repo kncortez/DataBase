@@ -50,8 +50,11 @@ BEGIN
 		FROM @UnifiedRouteSettlementId)
 
 	SELECT TOP 1
-		IIF(p.PerIdPerson IS NOT NULL, CONCAT(p.PerFirstName, ' ', p.PerLastName)
-		, urs.UserSettlement) SettlementPerson
+		(CASE
+			WHEN p.PerIdPerson IS NOT NULL THEN CONCAT(p.PerFirstName, ' ', p.PerLastName)
+			WHEN lbt.SSN_IdUser IS NOT NULL THEN CONCAT(lbt.SSN_IdUser, ' - ', lbt.SSN_Username)
+			ELSE 'N/A'
+		END) SettlementPerson
 	   ,urs.DateSettlement SettlementDate
 	   ,IIF(sr.Id IS NOT NULL, CONCAT(sr.First_Name, ' ', sr.Last_Name), 'N/A') CourierName
 	   ,IIF(cv.IdVehicle IS NOT NULL, cv.UnitNumber, 'N/A') VechicleUnitNumber
@@ -61,6 +64,8 @@ BEGIN
 	   ,@TotalPiecesSettlement TotalPiecesSettlement
 	   ,@TotalPiecesMissing TotalPiecesMissing
 	FROM UnifiedRouteSettlement urs WITH (NOLOCK)
+	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK)
+		ON urs.UserCODSettlement = lbt.SSN_IdToken
 	LEFT JOIN TokenLog tl WITH (NOLOCK)
 		ON urs.UserSettlement = tl.TknIdToken
 	LEFT JOIN RegisterUser ru WITH (NOLOCK)
