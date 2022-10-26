@@ -1197,6 +1197,11 @@
     <Build Include="dbo\Stored Procedures\spHM_GetIncidentTypeCatalog.sql" />
     <Build Include="dbo\Stored Procedures\spg_lost_unified_route_guides.sql" />
     <Build Include="dbo\Stored Procedures\spg_lost_unified_route.sql" />
+    <Build Include="dbo\Stored Procedures\spg_settlement_COD_unified_route_guides.sql" />
+    <Build Include="dbo\Stored Procedures\spg_settlement_COD_unified_route.sql" />
+    <Build Include="dbo\Stored Procedures\SetCODUnifiedRouteSettlement.sql" />
+    <Build Include="dbo\Stored Procedures\GetCODUnifiedRouteSettlement.sql" />
+    <Build Include="dbo\User Defined Types\TblId.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
