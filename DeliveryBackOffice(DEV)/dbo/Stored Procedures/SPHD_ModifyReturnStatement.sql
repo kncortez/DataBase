@@ -40,23 +40,32 @@ BEGIN
 				   FROM @RevalueGuides rg
 
 				   SELECT @STATUS = StatusOrderId
-				   FROM dbo.DeliveryOrderDetail
+				   FROM [dbo].[DeliveryOrderDetail] WITH (NOLOCK)
 				   WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
 
-                  --IF (@STATUS NOT IN(22,5,7))
-				   --BEGIN
+                  IF (EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrder]  WITH (NOLOCK) 
+				  WHERE Guide_Serie = @Serie AND Guide_Number = @Numero AND
+				        IsLastMileReturn = 0 OR IsLastMileReturn IS NULL )
+					  )
+				   BEGIN
 
-						UPDATE dbo.DeliveryOrder SET IsLastMileReturn = 1 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
-				   
-				        INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
-				  -- END
+							UPDATE [dbo].[DeliveryOrder] SET IsLastMileReturn = 1 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
+							INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
+				   END
+					   ELSE
+					   BEGIN
+						    UPDATE [dbo].[DeliveryOrder] SET IsLastMileReturn = 0 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
+						    INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
+					   END
 				 
 	DELETE FROM @RevalueGuides
 	WHERE GuideSerie = @Serie AND GuideNumber = @Numero
 
 END
 			COMMIT TRANSACTION;
-			SELECT * FROM @GuidesModify 
+			SELECT GuideSerie,
+				   GuideNumber 
+			FROM @GuidesModify 
           
 	   END TRY
 			 BEGIN CATCH
