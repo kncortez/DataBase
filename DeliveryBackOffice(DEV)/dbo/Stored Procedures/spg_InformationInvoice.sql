@@ -30,7 +30,7 @@ BEGIN
 	(select del.dpf_WarehouseCode from del_ParametrosFactura del WITH(NOLOCK)  
 	where del.dpf_SAParticulo = cts.SAPCode 
 	AND inh.inv_vpCodeOfReferences = del.dpf_VpCodeOfReference 
-	AND cts.SendAlmacenExp = 1) 'CodeAlmacen'
+	AND cts.SendAlmacenExp = 1) 'WarehouseCode'
 	from InOutOfMoneyDetail iod WITH(NOLOCK)
 	inner join invoiceHeader inh WITH(NOLOCK)
 	on iod.io_invoice = inh.inv_pk_id
