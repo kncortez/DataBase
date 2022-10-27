@@ -115,6 +115,17 @@ BEGIN
 			AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = @GuideNumber
 			ORDER BY ra.DateCreated DESC 
 
+			-- Verificar si es un proceso abierto, de ser así debe continuar el usuario que lo abrió
+			SET @CountPiece = (SELECT
+					COUNT(1)
+				FROM DeliveryOrderPiece WITH (NOLOCK)
+				WHERE GuideSerie = @GuideSerie
+				AND GuideNumber = @GuideNumber)
+
+			--- Si tiene más de una pieza es un proceso abierto
+			IF @CountPiece > 1
+				SET @IsOpenProcess = 1
+
 			-- si no está asignada a una ruta o sino pertenece al courier
 			IF ((@RouteAssignmentId IS NULL
 				AND @StatusOrder IN (SELECT
@@ -149,24 +160,28 @@ BEGIN
 				BEGIN
 					IF (@StatusOrder IN (SELECT
 								so.StatusOrderId
-							FROM StatusOrder so
+							FROM StatusOrder so WITH(NOLOCK)
 							WHERE so.OrderDescription IN ('Generado', 'Solicitado'))
 						)
 					BEGIN
-						DECLARE @StatusOrderId TINYINT = (SELECT
-								so.StatusOrderId
-							FROM StatusOrder so WITH (NOLOCK)
-							WHERE so.OrderDescription = 'Recolectado')
+						-- Si no generará un proceso abierto, proceder a actualizar estados
+						IF NOT @IsOpenProcess = 1
+						BEGIN
+							DECLARE @StatusOrderId TINYINT = (SELECT
+									so.StatusOrderId
+								FROM StatusOrder so WITH (NOLOCK)
+								WHERE so.OrderDescription = 'Recolectado')
 
-						--Actualiza estado de la guía
-						UPDATE DeliveryOrder
-						SET StatusOrderId = @StatusOrderId
-						WHERE Guide_Serie = @GuideSerie
-						AND Guide_Number = @GuideNumber
+							--Actualiza estado de la guía
+							UPDATE DeliveryOrder
+							SET StatusOrderId = @StatusOrderId
+							WHERE Guide_Serie = @GuideSerie
+							AND Guide_Number = @GuideNumber
 
-						--Inserta checkpoint de recolectado
-						INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, PieceId, RowStatus)
-							VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, @Token, GETDATE(), GETDATE(), NULL, NULL, NULL, 1);
+							--Inserta checkpoint de recolectado
+							INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, PieceId, RowStatus)
+								VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, @Token, GETDATE(), GETDATE(), NULL, NULL, NULL, 1);
+						END
 					END 
 
 					--Validar si pertenece a un punto de visita
@@ -322,36 +337,40 @@ BEGIN
 								WHERE ra.IdRouteAssigment = @RouteAssignmentId
 							)
 							BEGIN
-								--Se marca como recolectado
-								UPDATE sm
-								SET ServiceStatusId = @ServiceStatus,
-									TokenUpdated = @Token,
-									DateUpdated = GETDATE()
-								FROM ServiceManagement sm
-								WHERE sm.IdServiceManagement = @ServiceManagementId;
 
-								--Insertar EventService si no existe
-								IF NOT EXISTS
-								(
-									SELECT 1
-									FROM EventService es
-									WHERE es.ServiceManagementId = @ServiceManagementId
-										  AND es.ServiceStatusId = @ServiceStatus
-										  AND es.RowStauts = 1
-								)
+								IF NOT @IsOpenProcess = 1
 								BEGIN
-									INSERT INTO EventService
+									--Se marca como recolectado
+									UPDATE sm
+									SET ServiceStatusId = @ServiceStatus,
+										TokenUpdated = @Token,
+										DateUpdated = GETDATE()
+									FROM ServiceManagement sm
+									WHERE sm.IdServiceManagement = @ServiceManagementId;
+
+									--Insertar EventService si no existe
+									IF NOT EXISTS
 									(
-										ServiceManagementId,
-										ServiceStatusId,
-										RowStauts,
-										TokenCreated,
-										DateCreated,
-										Observations
+										SELECT 1
+										FROM EventService es
+										WHERE es.ServiceManagementId = @ServiceManagementId
+											  AND es.ServiceStatusId = @ServiceStatus
+											  AND es.RowStauts = 1
 									)
-									VALUES
-									(@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
-								END;
+									BEGIN
+										INSERT INTO EventService
+										(
+											ServiceManagementId,
+											ServiceStatusId,
+											RowStauts,
+											TokenCreated,
+											DateCreated,
+											Observations
+										)
+										VALUES
+										(@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+									END;
+								END
 							END
 							ELSE
 							BEGIN
@@ -418,44 +437,47 @@ BEGIN
 							WHERE GuideSerie = @GuideSerie
 							AND GuideNumber = @GuideNumber;
 
-							--Se marca como recolectado
-							UPDATE sm
-							SET ServiceStatusId = @ServiceStatusId,
-								TokenUpdated = @Token,
-								DateUpdated = GETDATE()
-							FROM ServiceManagement sm
-							WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
-
-
-							UPDATE SchedulePickup
-							SET AssigmentStatus = 1
-							   ,TokenUpdated = @Token
-							   ,DateUpdated = GETDATE()
-							WHERE SchedulePickupId = @SchedulePickupIdFind;
-
-							--Insertar EventService si no existe
-							IF NOT EXISTS
-							(
-								SELECT 1
-								FROM EventService es
-								WHERE es.ServiceManagementId = @ServiceManagementIdFind
-									  AND es.ServiceStatusId = @ServiceStatus
-									  AND es.RowStauts = 1
-							)
+							IF NOT @IsOpenProcess = 1
 							BEGIN
-								INSERT INTO EventService
-								(
-									ServiceManagementId,
-									ServiceStatusId,
-									RowStauts,
-									TokenCreated,
-									DateCreated,
-									Observations
-								)
-								VALUES
-								(@ServiceManagementIdFind, @ServiceStatus, 1, @Token, GETDATE(), NULL);
-							END
 
+								--Se marca como recolectado
+								UPDATE sm
+								SET ServiceStatusId = @ServiceStatusId,
+									TokenUpdated = @Token,
+									DateUpdated = GETDATE()
+								FROM ServiceManagement sm
+								WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
+
+
+								UPDATE SchedulePickup
+								SET AssigmentStatus = 1
+								   ,TokenUpdated = @Token
+								   ,DateUpdated = GETDATE()
+								WHERE SchedulePickupId = @SchedulePickupIdFind;
+
+								--Insertar EventService si no existe
+								IF NOT EXISTS
+								(
+									SELECT 1
+									FROM EventService es
+									WHERE es.ServiceManagementId = @ServiceManagementIdFind
+										  AND es.ServiceStatusId = @ServiceStatus
+										  AND es.RowStauts = 1
+								)
+								BEGIN
+									INSERT INTO EventService
+									(
+										ServiceManagementId,
+										ServiceStatusId,
+										RowStauts,
+										TokenCreated,
+										DateCreated,
+										Observations
+									)
+									VALUES
+									(@ServiceManagementIdFind, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+								END
+							END
 						END
 						ELSE
 						BEGIN
@@ -607,27 +629,30 @@ BEGIN
 
 						SET @ServiceManagementId = SCOPE_IDENTITY()
 
-						--Insertar EventService si no existe
-						IF NOT EXISTS
-						(
-							SELECT 1
-							FROM EventService es
-							WHERE es.ServiceManagementId = @ServiceManagementId
-									AND es.ServiceStatusId = @ServiceStatus
-									AND es.RowStauts = 1
-						)
+						IF NOT @IsOpenProcess = 1
 						BEGIN
-							INSERT INTO EventService
+							--Insertar EventService si no existe
+							IF NOT EXISTS
 							(
-								ServiceManagementId,
-								ServiceStatusId,
-								RowStauts,
-								TokenCreated,
-								DateCreated,
-								Observations
+								SELECT 1
+								FROM EventService es
+								WHERE es.ServiceManagementId = @ServiceManagementId
+										AND es.ServiceStatusId = @ServiceStatus
+										AND es.RowStauts = 1
 							)
-							VALUES
-							(@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+							BEGIN
+								INSERT INTO EventService
+								(
+									ServiceManagementId,
+									ServiceStatusId,
+									RowStauts,
+									TokenCreated,
+									DateCreated,
+									Observations
+								)
+								VALUES
+								(@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+							END
 						END
 					END
 				END
@@ -662,17 +687,7 @@ BEGIN
 					IF @UserSettlement IS NULL
 					BEGIN
 						
-						-- Verificar si es un proceso abierto, de ser así debe continuar el usuario que lo abrió
-						SET @CountPiece = (SELECT
-								SUM(1)
-							FROM DeliveryOrderPiece WITH (NOLOCK)
-							WHERE GuideSerie = @GuideSerie
-							AND GuideNumber = @GuideNumber)
-
-						--- Si tiene más de una pieza es un proceso abierto
-						IF @CountPiece > 1
-							SET @IsOpenProcess = 1
-
+						
 						-- Verificar si existe la guía en el detalle de la preparación de ruta
 						SELECT
 							@IdUnifiedRouteSettlementDetail = ursd.IdUnifiedRouteSettlementDetail
@@ -740,7 +755,7 @@ BEGIN
 													END
 											END
 										WHEN sm.IdSchedulePickup IS NOT NULL AND
-											so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección') THEN 'IsArrival'
+											so.OrderDescription NOT IN ('Anulado') THEN 'IsArrival'
 										ELSE 'IsError'
 									END) GuideFlow
 								FROM DeliveryOrder do WITH (NOLOCK)
