@@ -877,7 +877,11 @@ BEGIN
 												INNER JOIN Person p WITH (NOLOCK)
 													ON p.PerIdPerson = ru.UsrIdPerson
 												WHERE tl.TknIdToken = @UserProcess)
-											, @UserProcess) 'UserProcess'	
+											, ISNULL((SELECT
+													CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
+												FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
+												WHERE llbt.SSN_IdToken = @UserProcess)
+											, 'N/A')) 'UserProcess'	
 								END
 							END
 							ELSE
