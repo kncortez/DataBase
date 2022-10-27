@@ -28,7 +28,7 @@ BEGIN
 			-- Status for dispatch
 			SET @NEW_STATUS_ID =(SELECT	[SO].[StatusOrderId]
 								FROM	[dbo].[StatusOrder] SO
-								WHERE	[SO].[OrderDescription] = 'En Tránsito');
+								WHERE	[SO].[OrderDescription] = 'En preparación de traslado');
 		END
 
 	IF (@NEW_STATUS_ID > 0)

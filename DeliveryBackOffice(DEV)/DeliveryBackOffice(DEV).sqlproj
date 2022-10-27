@@ -1264,6 +1264,7 @@
     <Build Include="dbo\Stored Procedures\spHM_SetActionToGuidesPendingSettlement.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetIncidentTypeCatalog.sql" />
     <Build Include="dbo\Tables\TypeVehicleGroup.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetConfigParams.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
