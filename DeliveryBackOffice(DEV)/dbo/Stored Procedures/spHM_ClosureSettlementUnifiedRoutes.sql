@@ -3,7 +3,7 @@
 -- Create date: <03-10-2022>
 -- Description:	<Cierre de proceso de liquidación de ruta unificada>
 -- =============================================
-CREATE PROCEDURE spHM_ClosureSettlementUnifiedRoutes
+CREATE PROCEDURE [dbo].[spHM_ClosureSettlementUnifiedRoutes]
 	@CUI NVARCHAR(25),
 	@Token NVARCHAR(50),
 	@Date AS DATE = NULL
@@ -46,6 +46,7 @@ BEGIN
 	DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
 
 	DECLARE @IdSubTypeDelivery INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Entrega');
+	DECLARE @IdSubTypeRecollection INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Recolección');
 	DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Devolución');
 
 	IF @Date IS NULL
@@ -99,6 +100,7 @@ BEGIN
 		IdUnifiedRouteSettlement INT,
 		SubTypeServiceManagmentId INT
 	);
+	DECLARE @EXISTGUIDES BIT =0;
 	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	--INICIO VALIDACIÓN DE GUÍAS Y SERVICIOS DE RECOLECCIÓN
 	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,8 +114,8 @@ BEGIN
 	INNER JOIN DBO.ServiceManagement SM 
 		ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 		AND SM .RowStatus=1
-	INNER JOIN DBO.ServiceManagementDetail SMD
-		ON SMD.ServiceManagement=SM.IdServiceManagement
+	--INNER JOIN DBO.ServiceManagementDetail SMD
+		--ON SMD.ServiceManagement=SM.IdServiceManagement
 	INNER JOIN DBO.SchedulePickup SP
 		ON SM.IdSchedulePickup= SP.SchedulePickupId
 		AND SP.RowStatus=1
@@ -157,11 +159,14 @@ BEGIN
 	END
 	ELSE
 	BEGIN
-			SET @ALLOK=0;
-			SET @MESSAGEERROR= CONCAT(@MESSAGEERROR,'No se encontraron guías asociadas al courier')
+		SET @EXISTGUIDES = IIF(@EXISTGUIDES=1,1,0)
 	END
-
-
+	
+	IF @EXISTGUIDES=1
+	BEGIN
+		SET @ALLOK=0;
+		SET @MESSAGEERROR= 'No se encontraron guías asociadas al courier'
+	END
 
 	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	--FIN VALIDACIÓN DE GUÍAS Y SERVICIOS DE RECOLECCIÓN
@@ -237,8 +242,7 @@ BEGIN
 	END
 	ELSE IF @TOTALGUIDESRECO IS NULL OR @TOTALGUIDESRECO=0
 	BEGIN
-			SET @ALLOK=0;
-			SET @MESSAGEERROR= 'No se encontraron guías asociadas al courier'
+		SET @EXISTGUIDES=0;
 	END
 
 
@@ -277,7 +281,33 @@ BEGIN
 			INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment
 		WHERE RA.IdCurrierMan=@IDCOURIER
 		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR;
-
+		UNION
+		SELECT  
+			URSD.GuideSerie,
+			URSD.GuideNumber,
+			URSDP.PieceNumber,
+			[IdUnifiedRouteSettlement],
+			[IdUnifiedRouteSettlementDetail],
+			[IdUnifiedRouteSettlementDetailPiece],			
+			@IdSubTypeRecollection
+		FROM DBO.UnifiedRouteSettlement URS
+			INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
+				ON URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+			INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSDP
+				ON URSDP.UnifiedRouteSettlementDetailId=URSD.IdUnifiedRouteSettlementDetail
+			--INNER JOIN ServiceManagementDetail SMD ON SMD.ServiceManagement = URSD.ServiceManagementId
+			INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment
+			LEFT JOIN DBO.ServiceManagement SM ON URSD.ServiceManagementId=SM.IdServiceManagement
+			-----------------------------------------------------------------------------
+			--RECOLECCIÓN
+			LEFT JOIN DBO.SchedulePickup SP
+				ON SM.IdSchedulePickup= SP.SchedulePickupId
+				AND SP.RowStatus=1
+			LEFT JOIN DBO.DeliveryOrderPaymentDetail DOPD
+				ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
+			-----------------------------------------------------------------------------
+		WHERE RA.IdCurrierMan=@IDCOURIER
+		AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR;		
 
 		DECLARE @CURRENTDATE DATETIME = GETDATE();
 		UPDATE URS SET
@@ -468,15 +498,24 @@ BEGIN
 			DECLARE @StatusServiceDelivered INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus where Name ='Entregado ' );
 			DECLARE @StatusServiceReturned INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus where Name ='Devuelto ' );			
 			DECLARE @StatusServiceCollected INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus where Name ='Recolectado ');
-
+			
 			--	--> Actualizando servicios de guías entregadas/trasladadas
-				UPDATE SM SET 
-					ServiceStatusId= SMD.SubTypeServiceManagmentId
-				FROM @AllGuidesSettled	AGS
+				UPDATE SM
+				SET ServiceStatusId =
+				CASE
+					WHEN (stsm.IdSubTypeServiceManagment IS NULL OR
+						stsm.[Name] = 'Recolección') THEN @StatusServiceCollected
+					WHEN stsm.[Name] = 'Entrega' THEN @StatusServiceDelivered
+					WHEN stsm.[Name] = 'Devolución' THEN @StatusServiceReturned
+					ELSE SM.ServiceStatusId
+				END
+				FROM @AllGuidesSettled AGS
 				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
-					ON URSD.IdUnifiedRouteSettlementDetail=AGS.IdUnifiedRouteSettlementDetail
-				INNER JOIN DBO.ServiceManagement SM ON URSD.ServiceManagementId=SM.IdServiceManagement
-				INNER JOIN DBO.ServiceManagementDetail SMD ON SMD.ServiceManagement=SM.IdServiceManagement
+					ON URSD.IdUnifiedRouteSettlementDetail = AGS.IdUnifiedRouteSettlementDetail
+				INNER JOIN DBO.ServiceManagement SM
+					ON URSD.ServiceManagementId = SM.IdServiceManagement
+				LEFT JOIN SubTypeServiceManagment stsm WITH (NOLOCK)
+					ON SM.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
 				--where SMD.SubTypeServiceManagmentId IN (@IdSubTypeDelivery)
 				--AND GTS.IsTransfer=0
 				--GROUP BY SM.IdServiceManagement;

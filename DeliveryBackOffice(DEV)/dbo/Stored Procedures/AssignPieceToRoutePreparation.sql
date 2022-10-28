@@ -65,7 +65,9 @@ BEGIN
 		GuideSenderPhone NVARCHAR(50),
 		GuideSenderAddress NVARCHAR(600),
 		GUidePriceShippment decimal(14,2),
-		GuideCOD decimal(14,2)
+		GuideCOD decimal(14,2),
+		SenderId INT,
+		ReceiverId INT
 	);
 
 	------Variables para proceso de generación de datos de servicio marcados como devolución
@@ -323,7 +325,9 @@ BEGIN
 										[GuideSenderFirstName],
 										[GuideSenderLastName],
 										[GuideReceiverFirstName],
-										[GuideReceiverLastName]
+										[GuideReceiverLastName],
+										[SenderId],
+										[ReceiverId]
 							)
 							SELECT
 								@IdRoutePreparation
@@ -349,6 +353,8 @@ BEGIN
 								,DO.Sender_LastName
 								,DO.Receiver_FirstName
 								,DO.Receiver_LastName
+								,DO.Sender_ID
+								,DO.Receiver_ID
 							FROM
 								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 							WHERE
@@ -577,7 +583,7 @@ BEGIN
 				SELECT 
 					@ServiceManagementDetailId=ServiceManagementDetailId
 				FROM DBO.RoutePreparationDetail 
-				WHERE RoutePreparationId=@IdRoutePreparationDetail;
+				WHERE RoutePreparationId = @IdRoutePreparationDetail;
 			
 				IF @ServiceManagementDetailId IS NULL
 				BEGIN 					
@@ -589,6 +595,7 @@ BEGIN
 					DECLARE @GuideCOD decimal(14,2);
 					DECLARE @FirstName NVARCHAR(100);
 					DECLARE @LastName NVARCHAR(100);
+					DECLARE @CodeOfReference INT;
 					SELECT  
 						@ProvinceId=IIF(@IsReturn =1, PRV_Sender.IdProvince,PRV_Receiver.IdProvince),
 						@TonwShipId=IIF(@IsReturn =1,RT.GuideSenderIdTownShip,RT.GuideReceiverIdTownShip) ,
@@ -596,22 +603,46 @@ BEGIN
 						@ServicePhone=IIF(@IsReturn = 1,RT.GuideSenderPhone,RT.GuideReceiverPhone ),
 						@PriceShippment=RT.GUidePriceShippment,
 						@GuideCOD=RT.GuideCOD,
-						@FirstName=IIF(@IsReturn = 1,RT.GuideReceiverFirstName,RT.GuideSenderFirstName),
-						@LastName=IIF(@IsReturn = 1,RT.GuideReceiverLastName,RT.GuideSenderLastName )
+						@FirstName=IIF(@IsReturn = 1,RT.GuideSenderFirstName,RT.GuideReceiverFirstName),
+						@LastName=IIF(@IsReturn = 1,RT.GuideSenderLastName,RT.GuideReceiverLastName ),
+						@CodeOfReference = IIF(@IsReturn = 1, RT.SenderId, RT.ReceiverId)
 					FROM @ResponseTable RT
 					LEFT JOIN  DBO.Township PRV_Receiver ON 
 						RT.GuideReceiverIdTownShip=PRV_Receiver.IdTownship
 					LEFT JOIN  DBO.Township PRV_Sender ON 
 						RT.GuideSenderIdTownShip=PRV_Sender.IdTownship;
-					SELECT TOP 1 @ServiceManagementDetailId=SMD.IdServiceManagementDetail
-					FROM dbo.ServiceManagementDetail SMD 						
-						WHERE CONVERT(DATE,SMD.ServiceStartDate)= @Date AND
-							SMD.ProvinceId=@ProvinceId AND
-							SMD.TownshipId=@TonwShipId AND
-							SMD.ServiceAddress = @ServiceAddress AND
-							SMD.ServicePhone = @ServicePhone AND
-							SMD.SubTypeServiceManagmentId = @subtypeservicemanagment
-							AND SMD.RowStatus=1 						;
+
+					SELECT 
+						TOP 1 
+							@ServiceManagementDetailId=SMD.IdServiceManagementDetail
+					FROM 
+						DeliveryBackOffice.dbo.ServiceManagementDetail SMD 	
+						LEFT JOIN
+							DeliveryBackOffice.dbo.RoutePreparationDetail RPD
+							ON
+								SMD.IdServiceManagementDetail = RPD.ServiceManagementDetailId
+								AND
+								RPD.RowStatus = 1
+						LEFT JOIN
+							DeliveryBackOffice.dbo.RoutePreparation RP
+							ON
+								RPD.RoutePreparationId = RP.IdRoutePreparation
+								AND
+								RP.CatRouteId = @IdRoute
+								AND
+								RP.DateRoutePreparation = @Date
+								AND
+								RP.RowStatus = 1
+					WHERE 
+						CONVERT(DATE,SMD.ServiceStartDate)= @Date AND
+						SMD.ProvinceId=@ProvinceId AND
+						SMD.TownshipId=@TonwShipId AND
+						SMD.ServiceAddress = @ServiceAddress AND
+						SMD.ServicePhone = @ServicePhone AND
+						SMD.SubTypeServiceManagmentId = @subtypeservicemanagment
+						AND SMD.RowStatus=1
+						AND RP.IdRoutePreparation IS NOT NULL;
+
 					IF @ServiceManagementDetailId IS NULL
 					BEGIN
 					SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WHERE IdRoute = @IdRoute AND DateOfRoute=@Date);
@@ -714,7 +745,7 @@ BEGIN
 							(@IdServiceManagement
 							,GETDATE()
 							,DATEADD(hh,20,cast(CONVERT(DATE,GETDATE()) as datetime))--HORA FIN 8PM
-							,NULL
+							,@CodeOfReference
 							,NULL
 							,CONCAT(@FirstName,' ',@LastName)
 							,@ProvinceId
@@ -734,12 +765,21 @@ BEGIN
 							,NULL
 							,NULL);
 						SET @ServiceManagementDetailId = SCOPE_IDENTITY();
+
 						UPDATE RD SET
 							RD.ServiceManagementDetailId=@ServiceManagementDetailId
 						FROM DBO.RoutePreparationDetail RD
 						WHERE IdRoutePreparationDetail=@IdRoutePreparationDetail
 					END	
-					
+					ELSE 
+					BEGIN
+
+						UPDATE RD SET
+							RD.ServiceManagementDetailId=@ServiceManagementDetailId
+						FROM DBO.RoutePreparationDetail RD
+						WHERE IdRoutePreparationDetail=@IdRoutePreparationDetail
+
+					END
 					
 					UPDATE ServiceManagementDetail SET
 						ServiceAmount = ServiceAmount+ @PriceShippment,

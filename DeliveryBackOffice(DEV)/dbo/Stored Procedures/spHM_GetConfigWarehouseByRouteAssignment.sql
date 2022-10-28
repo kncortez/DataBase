@@ -17,7 +17,8 @@ BEGIN
 	DECLARE @SenderReceiverId INT 
 	DECLARE @SenderReceiverName NVARCHAR(201)
 
-	DECLARE @TotalSettlementPieces INT
+	DECLARE @TotalSettlementPieces INT = 0
+	DECLARE @TotalServicesPending INT = 0
 
 
 	DECLARE @RouteAssignment TABLE (
@@ -68,35 +69,54 @@ BEGIN
 				ON urs.RouteAssignmentId = ra.IdRouteAssignment
 				WHERE urs.RowStatus = 1
 
+				SELECT
+					@TotalServicesPending = COUNT(1)
+				FROM @RouteAssignment ra
+				INNER JOIN ServiceManagement sm WITH (NOLOCK)
+					ON ra.IdRouteAssignment = sm.IdPuRouteAssigment
+				INNER JOIN CatServiceStatus css WITH (NOLOCK)
+					ON sm.ServiceStatusId = css.IdServiceStatus
+				LEFT JOIN SubTypeServiceManagment stsm WITH (NOLOCK)
+					ON sm.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
+				LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+					ON sm.IdSchedulePickup = dopd.IdHeaderRecolection
+				WHERE sm.RowStatus = 1 
+				AND (stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección')
+				AND dopd.DopId IS NULL
+				AND css.[Name] = 'Asignado a Ruta'
+				GROUP BY sm.IdServiceManagement
+
 				-- Table 0 - Contadores de piezas
 				SELECT
-					ISNULL(SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
+					ISNULL(SUM(IIF(stsm.[Name] IN ('Entrega', 'Devolución') AND
 					so.OrderDescription IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Traslado a Express Center')
-					, 1, 0)),0) TotalDelivery
-				   ,ISNULL(SUM(IIF(sp.SchedulePickupId IS NOT NULL AND
+					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) TotalDelivery
+				   ,ISNULL(SUM(IIF((stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
 					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')
-					, 1, 0)),0) TotalPickup
-				   ,ISNULL(SUM(IIF(((sp.SchedulePickupId IS NOT NULL AND
+					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) TotalPickup
+				   ,ISNULL(SUM(IIF((((stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
 					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')) OR
-					rpd.ServiceManagementDetailId IS NOT NULL AND
-					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Anulado', 'Entrega parcial', 'Traslado a Express Center'))
-					, 1, 0)),0) TotalPhysicalPieces
-				   ,ISNULL(SUM(IIF(sp.SchedulePickupId IS NOT NULL AND
+					(stsm.[Name] IN ('Entrega', 'Devolución') AND
+					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Anulado', 'Entrega parcial', 'Traslado a Express Center')))
+					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) TotalPhysicalPieces
+				   ,ISNULL(SUM(IIF((stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
 					so.OrderDescription IN ('Generado', 'Solicitado', 'Programado para recolección')
-					, 1, 0)),0)
-					+ ISNULL(SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
+					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0)
+					+ ISNULL(SUM(IIF(stsm.[Name] IN ('Entrega', 'Devolución') AND
 					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Intento de entrega fallida', 'Traslado a Express Center')
-					, 1, 0)),0) TotalPendingSettlement
+					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) + @TotalServicesPending TotalPendingSettlement
 				   ,ISNULL(@TotalSettlementPieces, 0) TotalSettlementPieces
-				   ,ISNULL(SUM(IIF(rpd.ServiceManagementDetailId IS NOT NULL AND
+				   ,ISNULL(SUM(IIF(stsm.[Name] IN ('Entrega', 'Devolución') AND
 					so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto')
-					, IIF(do.IsCollect = 1, do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0), 0)),0) TotalCOD
+					, IIF(do.IsCollect = 1, do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0), 0)), 0) TotalCOD
 				FROM @RouteAssignment ra
 				INNER JOIN ServiceManagement sm WITH (NOLOCK)
 					ON ra.IdRouteAssignment = sm.IdPuRouteAssigment
 						AND sm.RowStatus = 1
 				INNER JOIN CatServiceStatus css WITH (NOLOCK)
 					ON sm.ServiceStatusId = css.IdServiceStatus
+				LEFT JOIN SubTypeServiceManagment stsm WITH (NOLOCK)
+					ON sm.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
 				LEFT JOIN ServiceManagementDetail smd WITH (NOLOCK)
 					ON sm.IdServiceManagement = smd.ServiceManagement
 						AND smd.RowStatus = 1
@@ -115,7 +135,7 @@ BEGIN
 						AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = do.Guide_Number
 				INNER JOIN StatusOrder so WITH (NOLOCK)
 					ON do.StatusOrderId = so.StatusOrderId
-				WHERE css.[Name] <> 'Cancelado'
+				WHERE css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL
 
 				-- Table 2 - Información Courier
 				SELECT
