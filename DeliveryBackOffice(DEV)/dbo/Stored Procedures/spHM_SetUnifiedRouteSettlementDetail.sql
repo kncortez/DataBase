@@ -21,6 +21,8 @@ BEGIN
 	DECLARE @GuidePieceIsDry BIT;
 	DECLARE @CountPiece INT;
 	DECLARE @StatusOrder TINYINT;
+	DECLARE @SenderAddress NVARCHAR(200);
+	DECLARE @Sender_ID INT;
 
 	--- Variables para control de RouteAssignment
 	DECLARE @RouteAssignmentId INT
@@ -28,6 +30,7 @@ BEGIN
 	DECLARE @ServiceManagementId INT
 	DECLARE @SchedulePickupId BIGINT
 	DECLARE @ServiceStatusId INT
+	DECLARE @IsPickup BIT = 0
 
 	--- Variables para manejo de ruta unificada
 	DECLARE @UserSettlement NVARCHAR(50);
@@ -80,6 +83,8 @@ BEGIN
 			   ,@ServiceAmount = do.PriceShippment
 			   ,@CODAmount = ISNULL(do.Collect_OnDelivery, 0)
 			   ,@IsLastMileReturn = ISNULL(do.IsLastMileReturn, 0)
+			   ,@SenderAddress = do.Sender_Address
+			   ,@Sender_ID = do.Sender_ID
 			FROM DeliveryOrder do WITH (NOLOCK)
 			WHERE do.Guide_Serie = @GuideSerie
 			AND do.Guide_Number = @GuideNumber
@@ -90,12 +95,15 @@ BEGIN
 			   ,@ServiceManagementId = sm.IdServiceManagement
 			   ,@SchedulePickupId = sm.IdSchedulePickup
 			   ,@ServiceStatusId = sm.ServiceStatusId
+			   ,@IsPickup = IIF(stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección', 1, 0)
 			FROM RouteAssigment ra WITH (NOLOCK)
 			INNER JOIN ServiceManagement sm WITH (NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
 					AND sm.RowStatus = 1
-			INNER JOIN CatServiceStatus css WITH (NOLOCK)
+			LEFT JOIN CatServiceStatus css WITH (NOLOCK)
 				ON sm.ServiceStatusId = css.IdServiceStatus
+			LEFT JOIN SubTypeServiceManagment stsm WITH (NOLOCK)
+				ON sm.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
 			LEFT JOIN ServiceManagementDetail smd WITH (NOLOCK)
 				ON sm.IdServiceManagement = smd.ServiceManagement
 					AND smd.RowStatus = 1
@@ -109,7 +117,7 @@ BEGIN
 						OR sp.SchedulePickupStatus = 1)
 			LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
-			WHERE css.[Name] <> 'Cancelado'
+			WHERE (css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL)
 			AND ra.DateOfRoute = CAST(GETDATE() AS DATE)
 			AND ISNULL(dopd.GuideSerie, rpd.Guide_Serie) = @GuideSerie
 			AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = @GuideNumber
@@ -141,6 +149,8 @@ BEGIN
 				)
 				)
 			BEGIN
+				
+				SET @IsPickup = 1
 
 				-- Buscar una ruta
 				SET @RouteAssignmentId = (SELECT TOP 1
@@ -187,7 +197,6 @@ BEGIN
 					--Validar si pertenece a un punto de visita
 					DECLARE @tiempo DATE = (SELECT
 							CAST(GETDATE() AS DATE));
-					DECLARE @Sender_ID INT;
 					DECLARE @dopdId BIGINT;
 					DECLARE @ServiceManagementIdFind INT;
 					DECLARE @SchedulePickupIdFind BIGINT;
@@ -302,10 +311,6 @@ BEGIN
 					END
 
 					--Validar si pertenece a un punto de visita para buscar si ya existe el servicio
-					SELECT @Sender_ID = do.Sender_ID
-					FROM DeliveryOrder do WITH (NOLOCK)
-					WHERE do.Guide_Serie = @GuideSerie
-							AND do.Guide_Number = @GuideNumber;
 
 					--Si tiene un SchedulePickup buscar si ya está asignado a un servicio y si es el correcto
 					IF @SchedulePickupId IS NOT NULL
@@ -416,12 +421,8 @@ BEGIN
 								ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
 							INNER JOIN SchedulePickup sp WITH (NOLOCK)
 								ON sp.SchedulePickupId = sm.IdSchedulePickup
-							INNER JOIN DeliveryOrder do WITH (NOLOCK)
-								ON do.Guide_Serie = @GuideSerie
-									AND do.Guide_Number = @GuideNumber
-									AND sp.AddressPickup = do.Sender_Address
 							WHERE ra.IdRouteAssigment = @RouteAssignmentId
-							AND sp.AddressPickup = do.Sender_Address;
+							AND sp.AddressPickup = @SenderAddress;
 						END;
 
 						--Si se encuentra el vp entre los servicios de recolección, se asigna
@@ -442,7 +443,7 @@ BEGIN
 
 								--Se marca como recolectado
 								UPDATE sm
-								SET ServiceStatusId = @ServiceStatusId,
+								SET ServiceStatusId = @ServiceStatus,
 									TokenUpdated = @Token,
 									DateUpdated = GETDATE()
 								FROM ServiceManagement sm
@@ -621,7 +622,7 @@ BEGIN
 							   ,3
 							   ,NULL
 							   ,NULL
-							   ,1
+							   ,(SELECT IdSubTypeServiceManagment FROM SubTypeServiceManagment WHERE [Name] = 'Recolección')
 							   ,NULL
 							   ,1
 							FROM RouteAssigment ra WITH (NOLOCK)
@@ -709,7 +710,7 @@ BEGIN
 							   ,@IsError = IIF(Flow.GuideFlow = 'IsError', 1, 0)
 							FROM (SELECT
 									(CASE
-										WHEN smd.IdServiceManagementDetail IS NOT NULL THEN CASE
+										WHEN @IsPickup = 0 THEN CASE
 												WHEN so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto') THEN 'IsDelivered'
 												WHEN so.OrderDescription IN ('Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center') THEN 'IsTransfered'
 												WHEN (do.IsLastMileReturn IS NULL OR
@@ -754,17 +755,13 @@ BEGIN
 														ELSE 'IsBazar'
 													END
 											END
-										WHEN sm.IdSchedulePickup IS NOT NULL AND
+										WHEN @IsPickup = 1 AND
 											so.OrderDescription NOT IN ('Anulado') THEN 'IsArrival'
 										ELSE 'IsError'
 									END) GuideFlow
 								FROM DeliveryOrder do WITH (NOLOCK)
 								INNER JOIN StatusOrder so (NOLOCK)
 									ON do.StatusOrderId = so.StatusOrderId
-								INNER JOIN ServiceManagement sm WITH (NOLOCK)
-									ON sm.IdServiceManagement = @ServiceManagementId
-								LEFT JOIN ServiceManagementDetail smd WITH (NOLOCK)
-									ON sm.IdServiceManagement = smd.ServiceManagement
 								WHERE do.Guide_Serie = @GuideSerie
 								AND do.Guide_Number = @GuideNumber) Flow
 							
@@ -859,7 +856,7 @@ BEGIN
 									   ,'Pieza asignada correctamente.' 'Description'
 									   ,@IsOpenProcess 'IsOpenProcess'
 									   ,(CASE
-											WHEN @SchedulePickupId IS NOT NULL THEN 'Recolección'
+											WHEN @IsPickup = 1 THEN 'Recolección'
 											WHEN @IsLastMileReturn = 1 THEN 'Devolución'
 											ELSE 'Entrega'
 										END) 'FlowType'
