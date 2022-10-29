@@ -57,8 +57,8 @@ BEGIN
 			SELECT			  
 				1 AS 'StatusCode',
 				'Registros obtenidos' AS 'Description';
-			--------------------------------------------------------------------------------------------
-			--Liquidando guias pendiente de liquidar(Solo guias de entrega, devolución y traslado )
+			----------------------------------------------------------------------------------------------
+			----Liquidando guias pendiente de liquidar(Solo guias de entrega, devolución y traslado )
 			INSERT INTO @GuidesToSettled (
 				GuideSerie,
 				GuideNumber,
@@ -378,6 +378,11 @@ BEGIN
 			
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 --=>INICIO LISTANDO GUÍAS
+			DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+			DECLARE @STATUSCOLLECTED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Recolectado');
+			DECLARE @STATUSDELIVERED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Entregado');
+			DECLARE @STATUSRETURNED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto');
+
 			DECLARE @GuidesListed TABLE (
 				GuideSerie NVARCHAR(2),
 				GuideNumber INT,
@@ -385,7 +390,10 @@ BEGIN
 				IdTypeService INT,
 				NameTypeService NVARCHAR(50),
 				Settlement BIT,
-				IdSettlement INT
+				IdSettlement INT,
+				IdRoute INT,
+				IncidencesCount INT,
+				Completed bit
 			);
 
 			INSERT INTO @GuidesListed
@@ -396,7 +404,10 @@ BEGIN
 				STSM.IdSubTypeServiceManagment 'IdTypeService',
 				STSM.[Name] 'NameTypeService',
 				CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-				NULL 'IdSettlement'
+				NULL 'IdSettlement',
+				RA.IdRoute,
+				0 'IncidencesCount',
+				(CASE WHEN DO.StatusOrderId=@STATUSCOLLECTED_DO THEN 1 ELSE 0 END) 'Completed'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
 				ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
@@ -413,6 +424,9 @@ BEGIN
 			INNER JOIN DBO.DeliveryOrderPiece DOP WITH (NOLOCK)
 				ON DOP.GuideSerie=DOPD.GuideSerie
 				AND DOP.GuideNumber=DOPD.GuideNumber
+			INNER JOIN DBO.DeliveryOrder DO 
+				ON DO.Guide_Serie=DOPD.GuideSerie
+				AND DO.Guide_Number=DOPD.GuideNumber
 			LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 				URSD.GuideSerie=DOPD.GuideSerie
 				AND URSD.GuideNumber=DOPD.GuideNumber
@@ -430,7 +444,7 @@ BEGIN
 				AND RA.IdRoute IS NOT NULL		
 				AND RA.IdCurrierMan=@IdCourier--@CUI
 				AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
-				AND RA.DateOfRoute =@Date
+				--AND RA.DateOfRoute =@Date
 			GROUP BY 
 				STSM.IdSubTypeServiceManagment,
 				STSM.Name,
@@ -438,7 +452,9 @@ BEGIN
 				DOPD.GuideNumber,
 				SMD.ServiceManagement,
 				URSD.RowStatus,
-				URSD.IsOpenProcess
+				URSD.IsOpenProcess,
+				RA.IdRoute,
+				DO.StatusOrderId
 			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber)
 			UNION
 			SELECT 
@@ -448,7 +464,10 @@ BEGIN
 						STSM.IdSubTypeServiceManagment 'IdTypeService',
 						STSM.[Name] 'NameTypeService',
 						CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-						IIF(STSM.IdSubTypeServiceManagment=2,DSETTD.ID_DeliveryOrderBySettlement,sbp.Id) 'IdSettlement'
+						IIF(STSM.IdSubTypeServiceManagment=2,DSETTD.ID_DeliveryOrderBySettlement,sbp.Id) 'IdSettlement',
+						RA.IdRoute,
+						SUM(CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN 1 ELSE 0 END) 'IncidencesCount',--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
+						(CASE WHEN DO.StatusOrderId in(@STATUSDELIVERED_DO,@STATUSRETURNED_DO) THEN 1 ELSE 0 END) 'Completed'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
 				ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
@@ -461,6 +480,15 @@ BEGIN
 			INNER JOIN DBO.DeliveryOrderPiece DOP WITH (NOLOCK)
 				ON DOP.GuideSerie=RPD.Guide_Serie
 				AND DOP.GuideNumber=RPD.Guide_Number
+			INNER JOIN DBO.DeliveryOrder DO 
+				ON DO.Guide_Serie=RPD.Guide_Serie
+				AND DO.Guide_Number=RPD.Guide_Number
+			OUTER APPLY (
+				SELECT TOP 1 StatusOrderId 'StatusCheckpoint'  FROM DBO.DeliveryOrderDetail
+				WHERE Guide_Serie=RPD.Guide_Serie
+				AND Guide_Number=RPD.Guide_Number
+				ORDER BY DateCreated DESC
+			) DOD		
 			LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 				URSD.GuideSerie=RPD.Guide_Serie
 				AND URSD.GuideNumber=RPD.Guide_Number
@@ -483,7 +511,7 @@ BEGIN
 				AND RA.IdRoute IS NOT NULL		
 				AND RA.IdCurrierMan=@IdCourier--@CUI
 				AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
-				AND RA.DateOfRoute =@Date
+				--AND RA.DateOfRoute =@Date
 			GROUP BY 
 				STSM.IdSubTypeServiceManagment,
 				STSM.Name,
@@ -493,7 +521,9 @@ BEGIN
 				URSD.RowStatus,
 				URSD.IsOpenProcess,
 				DSETTD.ID_DeliveryOrderBySettlement,
-				sbp.Id
+				sbp.Id,
+				RA.IdRoute,
+				DO.StatusOrderId
 			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber);
 			
 			
@@ -505,7 +535,10 @@ BEGIN
 				IdTypeService,
 				NameTypeService,
 				Settlement,
-				IdSettlement
+				IdSettlement,
+				IdRoute,
+				IncidencesCount,
+				Completed
 			FROM @GuidesListed
 
 			SELECT 
