@@ -73,6 +73,8 @@ BEGIN
 					,do.Receiver_Address
 					,do.IsCollect
 					,do.Collect_OnDelivery
+					,ISNULL(CAST(do.DCBA_ID AS NVARCHAR), '') 'DCBA_ID'
+					,ISNULL(CAST(do.InsuranceAmount AS NVARCHAR),'') InsuranceAmount
 				FROM AccountServiceCartDetail ascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = ascd.GuideSerie
