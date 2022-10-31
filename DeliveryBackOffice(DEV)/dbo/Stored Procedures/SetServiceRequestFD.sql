@@ -489,10 +489,25 @@ BEGIN
 			isnull(@Route,'')  as 'Route'
 			,D.PriceShippment AS 'Price',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts'
+			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
+			IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			CONCAT('https://develop.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			(CASE
+				WHEN 
+					(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
+					or ctm.Abbreviation IN ('IGSS','RENAP')
+
+				THEN
+					'D'
+				ELSE
+					''
+				END
+			)'Icon'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
+			ON ctm.IdCustomer = D.IdCustomer
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END
