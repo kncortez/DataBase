@@ -28,6 +28,14 @@ BEGIN
 		VisitPointTownId INT,
 		VisitPointTown NVARCHAR(100),
 		VisitPointAddress NVARCHAR(600),
+
+		VisitPointReferenceId INT,
+		VisitPointReferenceName NVARCHAR(50),
+
+		VisitPointZone NVARCHAR(50),
+		VisitPointColony NVARCHAR(50),
+
+		VisitPointSpecialInstructions NVARCHAR(200),
 		
 		VisitPointLatitude NVARCHAR(20),
 		VisitPointLongitude NVARCHAR(20)
@@ -49,6 +57,11 @@ BEGIN
 				, VisitPointTownId
 				, VisitPointTown
 				, VisitPointAddress
+				, VisitPointReferenceId
+				, VisitPointReferenceName
+				, VisitPointZone
+				, VisitPointColony
+				, VisitPointSpecialInstructions
 				, VisitPointLatitude
 				, VisitPointLongitude
 			)
@@ -56,20 +69,25 @@ BEGIN
 			VPDL.IdVisitPointDataLink
 			,VPDL.AccountId
 			,VPC.CodeOfReference
-			,VPC.DescriptionOfClient
-			,VPC.ContactName
-			,VPC.Phone
+			,ISNULL(VPC.DescriptionOfClient, VPDL.VisitPointName) 'DescriptionOfClient'
+			,ISNULL(VPC.ContactName, VPDL.VisitPointName) 'ContactName'
+			,ISNULL(VPC.Phone,VPDL.VisitPointPhone) 'Phone'
 			,VPC.Email
 			,Prv.IdProvince
 			,VPC.Department
 			,Twn.IdTownship
 			,VPC.Town
 			,VPC.[Address]
+			,UA.IdCityPlace
+			,CCP.CityPlace
+			,VPC.[Zone]
+			,''
+			,UA.UadAdditionalInstructions
 			,VPC.Latitude
 			,VPC.Longitude
 		FROM
 			[DeliveryBackOffice].[dbo].[VisitPointDataLink] VPDL WITH(NOLOCK)
-			INNER JOIN
+			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 				ON
 					VPDL.VisitPointId = VPC.CodeOfReference
@@ -81,6 +99,14 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK)
 				ON
 					Twn.IdProvince = Prv.IdProvince
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[UserAddress] UA WITH(NOLOCK)
+				ON
+					VPC.CodeOfReference = UA.CodeOfReference
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[CatCityPlace] CCP WITH(NOLOCK)
+				ON
+					UA.IdCityPlace = CCP.IdCityPlace
 		WHERE
 			VPDL.ServiceToken = @DataLinkToken
 			AND
@@ -110,6 +136,11 @@ BEGIN
 				, DLI.VisitPointTownId
 				, DLI.VisitPointTown
 				, DLI.VisitPointAddress
+				, DLI.VisitPointSpecialInstructions
+				, DLI.VisitPointReferenceId
+				, DLI.VisitPointReferenceName
+				, DLI.VisitPointZone
+				, DLI.VisitPointColony
 				, DLI.VisitPointLatitude
 				, DLI.VisitPointLongitude
 			FROM
