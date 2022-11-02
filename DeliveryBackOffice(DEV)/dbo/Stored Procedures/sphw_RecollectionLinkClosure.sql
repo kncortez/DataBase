@@ -190,6 +190,7 @@ BEGIN
 			, [UadIdCountry]
 			, [UadFullName]
 			, [UadAddress1]
+			, [UadAddress2]
 			, [UadNirPhone]
 			, [UadPhone]
 			, [UadAdditionalInstructions]
@@ -200,7 +201,7 @@ BEGIN
 			, [UadDateUpdated]
 			, CodeOfReference
 			, IdCityPlace)
-				VALUES (@IdTownship, @IdAccount, @IdCountry, @NameVP, @Address1, @NirPhone, @Phone, @AdditionalInstructions, 1 
+				VALUES (@IdTownship, @IdAccount, @IdCountry, @NameVP, @Address1, '', @NirPhone, @Phone, @AdditionalInstructions, 1 
 				, @Token, GETDATE(), NULL, NULL, @CodeOfReference, @IdCityPlace)
 
 		END
