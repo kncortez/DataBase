@@ -24,7 +24,8 @@ CREATE PROCEDURE [dbo].[spws_create_account]
 	@BusinessName AS VARCHAR(200),
 	@URL AS NVARCHAR(MAX),
 	@NIT AS VARCHAR(18),
-	@PhoneNumber AS VARCHAR(30)
+	@PhoneNumber AS VARCHAR(30),
+	@AddedField AS NVARCHAR(50) = NULL
 	
 AS
 BEGIN
@@ -300,7 +301,41 @@ BEGIN
 						,RusDateCreated)
 					values (@NewMainUserRol,@IdSystem,@IdUser,1,'SYS-CAQUINO',GETDATE())
 					
+
+					-- Author: Oscar Morales
+					-- Date: 2022-09-27
+					-- Agregar registros de los tutoriales
+					INSERT INTO [dbo].[TutorialByAccount] ([TutorialId]
+					, [AccountId]
+					, [ToDisplay]
+					, [RowStatus]
+					, [DateCreated]
+					, [TokenCreated])
+						SELECT
+							t.IdTutorial
+						   ,@IdAccount
+						   ,1
+						   ,1
+						   ,GETDATE()
+						   ,'SYS-ADMIN'
+						FROM Tutorial t
+						WHERE t.RowStatus = 1
+					-- Fin
 				
+					-- Promo del mundial al crear usuario
+					DECLARE @CheckFifaWorldCup BIT = ISNULL((SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK) WHERE CP.[Name] = 'MundialPromo' COLLATE Latin1_General_CI_AI AND CP.[Status] = 1),0);
+					IF(@CheckFifaWorldCup = 1 AND @AddedField IS NOT NULL)
+					BEGIN
+
+						INSERT INTO [DeliveryBackOffice].[dbo].[WorldCupCandidateByAccount]
+							(AccountId, WorldCupCandidateId, TokenCreated, DateCreated)
+						SELECT
+							TOP 1
+								@IdAccount, CAST(@AddedField AS INT), 'SYS-ADMIN' , GETDATE()
+
+					END
+					-- 
+
 				END TRY
 				BEGIN CATCH				
 					set @jsonResult =(

@@ -1268,6 +1268,7 @@
     <Build Include="dbo\Tables\TypeVehicleGroup.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetConfigParams.sql" />
     <Build Include="dbo\Tables\WorldCupPromoCandidate.sql" />
+    <Build Include="dbo\Tables\WorldCupCandidateByAccount.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
