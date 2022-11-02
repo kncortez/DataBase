@@ -575,6 +575,25 @@ BEGIN
                         )
         );
     END
+    
+	ELSE IF (@TypeMethod = 'MundialPromo')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"CandidateId":"' + CONVERT(NVARCHAR, WCPC.IdWorldCupPromoCandidate) + '",'
+									   + '"CandidateName":"' + CONVERT(NVARCHAR, WCPC.WorldCupCandidateName) + '",' + '}'
+                                FROM [DeliveryBackOffice].[dbo].[WorldCupPromoCandidate] WCPC WITH(NOLOCK)
+								WHERE WCPC.RowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
     SELECT '[' + @jsonResult + ']' FormatJson;
 
