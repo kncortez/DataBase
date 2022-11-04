@@ -12,8 +12,12 @@
     [TokenUpdated]      NVARCHAR (50)  NULL,
     [DateUpdated]       DATETIME       NULL,
     CONSTRAINT [PK_Act] PRIMARY KEY CLUSTERED ([IdAct] ASC),
-    CONSTRAINT [FK_Act_Act] FOREIGN KEY ([IdAct]) REFERENCES [dbo].[Act] ([IdAct])
+    CONSTRAINT [FK_Act_ActType] FOREIGN KEY ([CatTypeActId]) REFERENCES [dbo].[CatTypeAct] ([IdCatTypeAct]),
+    CONSTRAINT [FK_Act_CatRoute] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
+    CONSTRAINT [UQ_Act] UNIQUE NONCLUSTERED ([CatTypeActId] ASC)
 );
+
+
 
 
 GO
