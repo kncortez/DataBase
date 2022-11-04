@@ -1269,6 +1269,8 @@
     <Build Include="dbo\Stored Procedures\spHM_GetConfigParams.sql" />
     <Build Include="dbo\Stored Procedures\spg_settlement_unified_route_guides.sql" />
     <Build Include="dbo\Stored Procedures\spg_settlement_unified_route.sql" />
+    <Build Include="dbo\Stored Procedures\spg_lost_unified_route_guides.sql" />
+    <Build Include="dbo\Stored Procedures\spg_lost_unified_route.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
