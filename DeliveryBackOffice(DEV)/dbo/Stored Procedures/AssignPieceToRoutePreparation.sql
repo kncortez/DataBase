@@ -645,30 +645,32 @@ BEGIN
 
 					IF @ServiceManagementDetailId IS NULL
 					BEGIN
-					SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WHERE IdRoute = @IdRoute AND DateOfRoute=@Date);
-					IF @RouteAssigmentId IS NULL
-						INSERT INTO [dbo].[RouteAssigment]
-							([IdRoute]
-							,[IdCurrierMan]
-							,[IdVehicle]
-							,[DateOfRoute]
-							,[RowStatus]
-							,[TokenCreated]
-							,[DateCreated]
-							,[TokenUpdated]
-							,[DateUpdated])
-						VALUES
-							(@IdRoute
-							,NULL
-							,NULL
-							,@Date
-							,1
-							,@Token
-							,GETDATE()
-							,NULL
-							,NULL);
+						SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WHERE IdRoute = @IdRoute AND DateOfRoute=@Date);
+						IF @RouteAssigmentId IS NULL
+						BEGIN
+							INSERT INTO [dbo].[RouteAssigment]
+								([IdRoute]
+								,[IdCurrierMan]
+								,[IdVehicle]
+								,[DateOfRoute]
+								,[RowStatus]
+								,[TokenCreated]
+								,[DateCreated]
+								,[TokenUpdated]
+								,[DateUpdated])
+							VALUES
+								(@IdRoute
+								,NULL
+								,NULL
+								,@Date
+								,1
+								,@Token
+								,GETDATE()
+								,NULL
+								,NULL);
 
-						SET @RouteAssigmentId = SCOPE_IDENTITY();
+							SET @RouteAssigmentId = SCOPE_IDENTITY();
+						END
 						INSERT INTO [dbo].[ServiceManagement]
 							([IdPuCourrier]
 							,[IdDlCourrier]

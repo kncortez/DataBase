@@ -415,7 +415,7 @@ BEGIN
 				RPD.RoutePreparationId = @IdRoutePreparation;
 
 			
-			DECLARE @IdRouteAssigment INT= (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WHERE IdRoute = @IdRoute AND DateOfRoute=@Date)
+			DECLARE @IdRouteAssigment INT= (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment RA WHERE IdRoute = @IdRoute AND DateOfRoute=@Date AND RA.IdCurrierMan=@IdCourier)
 
 			UPDATE  SM SET
 				SM.IdPuCourrier=@IdCourier,
@@ -423,11 +423,23 @@ BEGIN
 			FROM @ListGuides LG  
 				INNER JOIN DBO.RoutePreparationDetail RPD
 					ON RPD.Guide_Serie=LG.Guide_Serie
-					AND RPD.Guide_Number=RPD.Guide_Number
+					AND RPD.Guide_Number=LG.Guide_Number
 				INNER JOIN DBO.ServiceManagementDetail SMD
 					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
 				INNER JOIN DBO.ServiceManagement SM
-					ON SM.IdServiceManagement=SMD.ServiceManagement;
+					ON SM.IdServiceManagement=SMD.ServiceManagement
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 							
+					URSD.GuideSerie=RPD.Guide_Serie
+					AND URSD.GuideNumber=RPD.Guide_Number
+					AND URSD.RowStatus=1
+					AND URSD.ServiceManagementId=SM.IdServiceManagement
+				LEFT JOIN DBO.UnifiedRouteSettlement URS ON
+					URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+				LEFT JOIN DBO.RouteAssigment RA ON
+					RA.IdRouteAssigment= URS.RouteAssignmentId
+			WHERE URS.UserSettlement IS NULL AND RA.DateOfRoute=CONVERT(DATE,GETDATE()) AND RA.IdCurrierMan=@IdCourier
+
+			
 
 			-----------------------------------------------------------------------------------------------------------------
 		END TRY

@@ -68,6 +68,7 @@ BEGIN
 				INNER JOIN @RouteAssignment ra
 				ON urs.RouteAssignmentId = ra.IdRouteAssignment
 				WHERE urs.RowStatus = 1
+				and urs.UserSettlement is null
 
 				SELECT
 					@TotalServicesPending = COUNT(1)
@@ -80,10 +81,13 @@ BEGIN
 					ON sm.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
 				LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 					ON sm.IdSchedulePickup = dopd.IdHeaderRecolection
+				LEFT JOIN DBO.UnifiedRouteSettlement URS
+					ON URS.RouteAssignmentId=RA.IdRouteAssignment
 				WHERE sm.RowStatus = 1 
 				AND (stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección')
 				AND dopd.DopId IS NULL
 				AND css.[Name] = 'Asignado a Ruta'
+				AND URS.UserSettlement IS NULL
 				GROUP BY sm.IdServiceManagement
 
 				-- Table 0 - Contadores de piezas
@@ -135,7 +139,16 @@ BEGIN
 						AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = do.Guide_Number
 				INNER JOIN StatusOrder so WITH (NOLOCK)
 					ON do.StatusOrderId = so.StatusOrderId
-				WHERE css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL
+				INNER JOIN DBO.UnifiedRouteSettlement URS
+					ON URS.RouteAssignmentId=RA.IdRouteAssignment
+				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
+					ON URSD.GuideNumber=DO.Guide_Number
+					AND URSD.GuideSerie=DO.Guide_Serie
+					AND URSD.RowStatus=1
+					AND URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement	
+				WHERE 
+					(css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL)
+					AND URS.UserSettlement IS NULL
 
 				-- Table 2 - Información Courier
 				SELECT

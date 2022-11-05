@@ -3,7 +3,7 @@
 -- Create date: <30-09-2022>
 -- Description:	<Carga de detalle de manifiestos de liquidación de rutas unificadas>
 -- =============================================
-CREATE PROCEDURE spHM_GetSettlementUnifiedRoutes
+CREATE PROCEDURE [dbo].[spHM_GetSettlementUnifiedRoutes]
 	@CUI NVARCHAR(25)
 	,@Token NVARCHAR(50)
 	,@Date AS DATE = NULL
@@ -23,16 +23,17 @@ BEGIN
 	BEGIN TRY			
 		IF @Date IS NULL
 			SET @Date =GETDATE()
-		DECLARE @IdSubTypeDelivery INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Entrega');
-		DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Devolución');
-		DECLARE @IdSubTypePickup INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Recolección');
-		DECLARE @IdCourier INT = (select ID from dbo.SenderReceiver SR where SR.CUI=@CUI);
+		DECLARE @IdSubTypeDelivery INT=(SELECT IdSubTypeServiceManagment FROM dbo.SubTypeServiceManagment WHERE [Name] =  'Entrega');
+		DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment FROM dbo.SubTypeServiceManagment WHERE [Name] =  'Devolución');
+		DECLARE @IdSubTypePickup INT=(SELECT IdSubTypeServiceManagment FROM dbo.SubTypeServiceManagment WHERE [Name] =  'Recolección');
+		DECLARE @IdCourier INT = (SELECT ID FROM dbo.SenderReceiver SR WHERE SR.CUI=@CUI);
 
 		DECLARE @ORDERSTATUS_DELIVERED INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription ='Entregado');
 		DECLARE @ORDERSTATUS_RETURNED INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription ='Devuelto');
 		DECLARE @ORDERSTATUS_TRASLATE INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Traslado a Express Center');
 		DECLARE @ORDERSTATUS_TRASLATE_Del INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Entregado En Express Center');
 		DECLARE @ORDERSTATUS_TRASLATE_Ret INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto en Express Center');
+		DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
 
 		DECLARE @GuidesToSettled TABLE (
 			GuideSerie NVARCHAR(2),
@@ -44,7 +45,8 @@ BEGIN
 			IdUnifiedRouteSettlementDetail INT,
 			IsOpenProcess BIT,
 			IsDry BIT,
-			IsTransfer BIT
+			IsTransfer BIT,
+			IsDelivered BIT
 		);
 
 		IF @IdCourier IS NULL
@@ -58,7 +60,8 @@ BEGIN
 				1 AS 'StatusCode',
 				'Registros obtenidos' AS 'Description';
 			----------------------------------------------------------------------------------------------
-			----Liquidando guias pendiente de liquidar(Solo guias de entrega, devolución y traslado )
+			----Liquidando guias pendiente de liquidar(Solo guias de entrega, devolución, intento de ntrega fallida y traslado )
+--LISTANDO ENTREGAS
 			INSERT INTO @GuidesToSettled (
 				GuideSerie,
 				GuideNumber,
@@ -69,7 +72,8 @@ BEGIN
 				IdUnifiedRouteSettlementDetail,
 				IsOpenProcess,
 				IsDry,
-				IsTransfer
+				IsTransfer,
+				IsDelivered
 			)
 			SELECT 
 				RPD.Guide_Serie,
@@ -77,31 +81,33 @@ BEGIN
 				DOP.NoPiece,
 				RA.IdRouteAssigment,
 				STSM.IdSubTypeServiceManagment,
-				SMD.ServiceManagement,
+				SM.IdServiceManagement,
 				URSD.IdUnifiedRouteSettlementDetail,
 				URSD.IsOpenProcess,
 				IIF(DO.Pieces_Dry=1,1,0),
-				ISNULL(TransferGuide.IsTraslate,0)
+				ISNULL(TransferGuide.IsTraslate,0),
+				ISNULL(DeliveredGuide.IsDelivered,0)
 			FROM DBO.RouteAssigment RA
 			INNER JOIN DBO.ServiceManagement SM 
 				ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
-			INNER JOIN DBO.ServiceManagementDetail SMD 
+			LEFT JOIN DBO.ServiceManagementDetail SMD 
 				ON SMD.ServiceManagement=SM.IdServiceManagement		
-			INNER JOIN DBO.SubTypeServiceManagment STSM 
+			LEFT JOIN DBO.SubTypeServiceManagment STSM 
 				ON SMD.SubTypeServiceManagmentId=STSM.IdSubTypeServiceManagment
-			INNER JOIN DBO.RoutePreparationDetail RPD 
+			LEFT JOIN DBO.RoutePreparationDetail RPD 
 				ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
-			INNER JOIN DBO.DeliveryOrderPiece DOP ON
+			LEFT JOIN DBO.DeliveryOrderPiece DOP ON
 				DOP.GuideSerie=RPD.Guide_Serie
 				AND DOP.GuideNumber= RPD .Guide_Number
-			INNER JOIN DBO.DeliveryOrder DO ON 
+			LEFT JOIN DBO.DeliveryOrder DO ON 
 				DO.Guide_Serie=DOP.GuideSerie
 				AND DO.Guide_Number=DOP.GuideNumber				
+			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.RouteAssignmentId=RA.IdRouteAssigment
 			LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 				URSD.GuideSerie=RPD.Guide_Serie
 				AND URSD.GuideNumber=RPD.Guide_Number
 				AND URSD.RowStatus=1
-			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+				AND URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
 			OUTER APPLY (
 				SELECT TOP 1 1 'IsTraslate' 
 				FROM DBO.DeliveryOrderDetail DOD
@@ -110,6 +116,14 @@ BEGIN
 					AND DOD.StatusOrderId IN (@ORDERSTATUS_TRASLATE,@ORDERSTATUS_TRASLATE_Del,@ORDERSTATUS_TRASLATE_Ret)
 					AND DOD.RowStatus=1
 			) TransferGuide
+			OUTER APPLY (
+				SELECT TOP 1 1 'IsDelivered' 
+				FROM DBO.DeliveryOrderDetail DOD
+				WHERE DOD.Guide_Serie= RPD.Guide_Serie
+					AND DOD.Guide_Number =RPD.Guide_Number
+					AND DOD.StatusOrderId IN (@ORDERSTATUS_DELIVERED, @ORDERSTATUS_RETURNED)
+					AND DOD.RowStatus=1
+			) DeliveredGuide
 			WHERE 
 				--AND 
 				RA.RowStatus=1		
@@ -121,10 +135,88 @@ BEGIN
 					URSD.IdUnifiedRouteSettlementDetail IS NULL
 				AND(
 					--FILTRANDO  GUIAS EN ESTADO EXITOSO
-					DO.StatusOrderId IN (@ORDERSTATUS_DELIVERED,@ORDERSTATUS_RETURNED)
+					DO.StatusOrderId IN (@ORDERSTATUS_DELIVERED,@ORDERSTATUS_RETURNED,@STATUSFAILED_DO)
 					OR TransferGuide.IsTraslate = 1
 				)
 				AND RA.DateOfRoute =@Date
+			--LISTANDO RECOLECCIONES
+
+
+			--SELECT '@GuidesToSettled antes de recos' test, * FROM  @GuidesToSettled
+						--LISTANDO ENTREGAS
+			--INSERT INTO @GuidesToSettled (
+			--	GuideSerie,
+			--	GuideNumber,
+			--	PieceNumber,
+			--	IdRouteAssigment,
+			--	IdSubTypeServiceManagment,
+			--	ServiceManagement,
+			--	IdUnifiedRouteSettlementDetail,
+			--	IsOpenProcess,
+			--	IsDry,
+			--	IsTransfer
+			--)
+			--SELECT 
+			--	DOP.GuideSerie,
+			--	DOP.GuideNumber,
+			--	DOP.NoPiece,
+			--	RA.IdRouteAssigment,
+			--	@IdSubTypePickup,
+			--	SM.IdServiceManagement,
+			--	URSD.IdUnifiedRouteSettlementDetail,
+			--	URSD.IsOpenProcess,
+			--	IIF(DO.Pieces_Dry=1,1,0),
+			--	ISNULL(TransferGuide.IsTraslate,0)
+			--FROM DBO.RouteAssigment RA
+			--INNER JOIN DBO.ServiceManagement SM 
+			--	ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+			--LEFT JOIN DBO.ServiceManagementDetail SMD 
+			--	ON SMD.ServiceManagement=SM.IdServiceManagement		
+			-------------------------------------------------------------------------------
+			----RECOLECCIÓN
+			--LEFT JOIN DBO.SchedulePickup SP
+			--	ON SM.IdSchedulePickup= SP.SchedulePickupId
+			--	AND SP.RowStatus=1
+			--LEFT JOIN DBO.DeliveryOrderPaymentDetail DOPD
+			--	ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
+			-------------------------------------------------------------------------------
+			--LEFT JOIN DBO.DeliveryOrderPiece DOP ON
+			--	DOP.GuideSerie=DOPD.GuideSerie
+			--	AND DOP.GuideNumber= DOPD.GuideNumber
+			--LEFT JOIN DBO.DeliveryOrder DO ON 
+			--	DO.Guide_Serie=DOP.GuideSerie
+			--	AND DO.Guide_Number=DOP.GuideNumber				
+			--LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
+			--	URSD.GuideSerie=DOPD.GuideSerie
+			--	AND URSD.GuideNumber=DOPD.GuideNumber
+			--	AND URSD.RowStatus=1
+			--LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+			--OUTER APPLY (
+			--	SELECT TOP 1 1 'IsTraslate' 
+			--	FROM DBO.DeliveryOrderDetail DOD
+			--	WHERE DOD.Guide_Serie= DOP.GuideSerie
+			--		AND DOD.Guide_Number =DOP.GuideNumber
+			--		AND DOD.StatusOrderId IN (@ORDERSTATUS_TRASLATE,@ORDERSTATUS_TRASLATE_Del,@ORDERSTATUS_TRASLATE_Ret)
+			--		AND DOD.RowStatus=1
+			--) TransferGuide
+			--WHERE 
+			--	--AND 
+			--	RA.RowStatus=1		
+			--	AND RA.IdVehicle IS NOT NULL
+			--	AND RA.IdRoute IS NOT NULL		
+			--	AND RA.IdCurrierMan=@IdCourier
+			--	--FILTRANDO GUIAS PENDIENTES DE LIQUIDAR (NO SE TOMAN EN CUENTA AQUELLOS QUE TIENEN PROCESO ABIERTO)
+			--	AND
+			--		URSD.IdUnifiedRouteSettlementDetail IS NULL
+			--	AND(
+			--		--FILTRANDO  GUIAS EN ESTADO EXITOSO
+			--		DO.StatusOrderId IN (@ORDERSTATUS_DELIVERED,@ORDERSTATUS_RETURNED)
+			--		OR TransferGuide.IsTraslate = 1
+			--	)
+			--	AND RA.DateOfRoute =@Date
+
+
+			--	SELECT '@GuidesToSettled' test, * FROM @GuidesToSettled
 			
 
 			------Buscar guias las cuales el routeassigment no estan asociados a un UnifiedrouteSettlement
@@ -164,8 +256,37 @@ BEGIN
 				NULL,
 				NULL
 			FROM @GuidesToSettled GTS
-			WHERE GTS.IdRouteAssigment IS NULL
+				LEFT JOIN dbo.UnifiedRouteSettlement ufs ON ufs.RouteAssignmentId = GTS.IdRouteAssigment AND ufs.RowStatus = 1
+			WHERE ufs.IdUnifiedRouteSettlement IS NULL
 			GROUP BY GTS.IdRouteAssigment;
+
+
+
+
+			--	SELECT 
+			--	'insert a [UnifiedRouteSettlement]' test,
+			--	IdRouteAssigment,
+			--	COUNT(DISTINCT CHECKSUM(GTS.GuideSerie,GTS.GuideNumber)),
+			--	COUNT(DISTINCT CHECKSUM(GTS.GuideSerie,GTS.GuideNumber,GTS.PieceNumber)),
+			--	0,
+			--	NULL,
+			--	NULL,
+			--	NULL,
+			--	0,
+			--	NULL,
+			--	NULL,
+			--	NULL,
+			--	1,
+			--	@Token,
+			--	GETDATE(),
+			--	NULL,
+			--	NULL
+			
+			--FROM @GuidesToSettled GTS
+			--	LEFT JOIN dbo.UnifiedRouteSettlement ufs ON ufs.RouteAssignmentId = GTS.IdRouteAssigment AND ufs.RowStatus = 1
+			--WHERE ufs.IdUnifiedRouteSettlement IS NULL
+			--GROUP BY GTS.IdRouteAssigment;
+
 
 
 			--------Insertar en UnifiedRouteSettlementDetail las guías que no estan liquidadas
@@ -202,7 +323,7 @@ BEGIN
 				0,
 				SUM(SM.Amount),
 				0,
-				@Token,
+				NULL,
 				GETDATE(),
 				NULL,
 				NULL,
@@ -210,8 +331,8 @@ BEGIN
 				NULL,
 				0,
 				0,
-				0,
-				0,
+				MAX(IIF( ISNULL(GTS.IsDelivered,0) = 0, 1, 0 )),
+				MAX(IIF( ISNULL(GTS.IsTransfer,0) = 1 , 1, 0)),
 				1,
 				@Token,
 				GETDATE(),
@@ -227,6 +348,42 @@ BEGIN
 				GTS.GuideSerie,				
 				GTS.GuideNumber;
 				
+
+
+
+			--		SELECT 'insert  a [UnifiedRouteSettlementDetail]' test,
+			--	URS.IdUnifiedRouteSettlement,--([UnifiedRouteSettlementId]
+			--	GTS.ServiceManagement,		--ServiceManagementId
+			--	GTS.GuideSerie,				--[GuideSerie]
+			--	GTS.GuideNumber,
+			--	COUNT(DISTINCT CHECKSUM(GTS.GuideSerie,GTS.GuideNumber,GTS.PieceNumber)),
+			--	0,
+			--	SUM(SM.Amount),
+			--	0,
+			--	@Token,
+			--	GETDATE(),
+			--	NULL,
+			--	NULL,
+			--	0,
+			--	NULL,
+			--	0,
+			--	0,
+			--	0,
+			--	0,
+			--	1,
+			--	@Token,
+			--	GETDATE(),
+			--	NULL,
+			--	NULL
+			--FROM @GuidesToSettled GTS
+			--	INNER JOIN UnifiedRouteSettlement URS ON
+			--		URS.RouteAssignmentId=GTS.IdRouteAssigment
+			--	INNER JOIN ServiceManagement SM ON
+			--		SM.IdServiceManagement=GTS.ServiceManagement
+			--GROUP BY URS.IdUnifiedRouteSettlement,
+			--	GTS.ServiceManagement,		
+			--	GTS.GuideSerie,				
+			--	GTS.GuideNumber;
 
 
 			INSERT INTO [dbo].[UnifiedRouteSettlementDetailPiece]
@@ -378,7 +535,7 @@ BEGIN
 			
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 --=>INICIO LISTANDO GUÍAS
-			DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+			
 			DECLARE @STATUSCOLLECTED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Recolectado');
 			DECLARE @STATUSDELIVERED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Entregado');
 			DECLARE @STATUSRETURNED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto');
@@ -394,6 +551,7 @@ BEGIN
 				IdRoute INT,
 				IncidencesCount INT,
 				Completed bit
+				--IdSM int
 			);
 
 			INSERT INTO @GuidesListed
@@ -401,21 +559,22 @@ BEGIN
 				DOPD.GuideSerie 'GuideSerie',
 				DOPD.GuideNumber 'GuideNumber',
 				CONCAT(DOPD.GuideSerie,CAST(DOPD.GuideNumber AS NVARCHAR(100))) 'Guide',
-				STSM.IdSubTypeServiceManagment 'IdTypeService',
-				STSM.[Name] 'NameTypeService',
+				@IdSubTypePickup,
+				'Recolección' 'NameTypeService',
 				CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
 				NULL 'IdSettlement',
 				RA.IdRoute,
 				0 'IncidencesCount',
 				(CASE WHEN DO.StatusOrderId=@STATUSCOLLECTED_DO THEN 1 ELSE 0 END) 'Completed'
+				--SM.IdServiceManagement 'IdSM'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
 				ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 				AND SM .RowStatus=1
-			INNER JOIN DBO.ServiceManagementDetail SMD
-				ON SMD.ServiceManagement=SM.IdServiceManagement
-			INNER JOIN DBO.SubTypeServiceManagment STSM 
-				ON SMD.SubTypeServiceManagmentId=STSM.IdSubTypeServiceManagment
+			--INNER JOIN DBO.ServiceManagementDetail SMD
+			--	ON SMD.ServiceManagement=SM.IdServiceManagement
+			--INNER JOIN DBO.SubTypeServiceManagment STSM 
+				--ON SMD.SubTypeServiceManagmentId=STSM.IdSubTypeServiceManagment
 			INNER JOIN DBO.SchedulePickup SP
 				ON SM.IdSchedulePickup= SP.SchedulePickupId
 				AND SP.RowStatus=1
@@ -427,11 +586,13 @@ BEGIN
 			INNER JOIN DBO.DeliveryOrder DO 
 				ON DO.Guide_Serie=DOPD.GuideSerie
 				AND DO.Guide_Number=DOPD.GuideNumber
+			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.RouteAssignmentId=RA.IdRouteAssigment
 			LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 				URSD.GuideSerie=DOPD.GuideSerie
 				AND URSD.GuideNumber=DOPD.GuideNumber
 				AND URSD.RowStatus=1
-			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+				AND URS.IdUnifiedRouteSettlement = URSD.UnifiedRouteSettlementId
+			
 			LEFT JOIN DBO.ActDetail AD ON
 				AD.GuideSerie=DOPD.GuideSerie
 				AND AD.GuideNumber=DOPD.GuideNumber
@@ -440,34 +601,36 @@ BEGIN
 				AND ADP.PieceNumber=DOP.NoPiece
 			WHERE 
 				RA.RowStatus=1		
-				AND RA.IdVehicle IS NOT NULL
+				--AND RA.IdVehicle IS NOT NULL
 				AND RA.IdRoute IS NOT NULL		
 				AND RA.IdCurrierMan=@IdCourier--@CUI
 				AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
-				--AND RA.DateOfRoute =@Date
+				AND RA.DateOfRoute =@Date
 			GROUP BY 
-				STSM.IdSubTypeServiceManagment,
-				STSM.Name,
+				--STSM.IdSubTypeServiceManagment,
+				--STSM.Name,
 				DOPD.GuideSerie,
 				DOPD.GuideNumber,
-				SMD.ServiceManagement,
+				--SMD.ServiceManagement,
 				URSD.RowStatus,
 				URSD.IsOpenProcess,
 				RA.IdRoute,
 				DO.StatusOrderId
+				--SM.IdServiceManagement
 			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber)
-			UNION
-			SELECT 
+			UNION ALL
+			(SELECT 
 						RPD.Guide_Serie 'GuideSerie',
 						RPD.Guide_Number 'GuideNumber',
 						CONCAT(RPD.Guide_Serie,CAST(RPD.Guide_Number AS NVARCHAR(100))) 'Guide',
 						STSM.IdSubTypeServiceManagment 'IdTypeService',
 						STSM.[Name] 'NameTypeService',
 						CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
-						IIF(STSM.IdSubTypeServiceManagment=2,DSETTD.ID_DeliveryOrderBySettlement,sbp.Id) 'IdSettlement',
+						SMD.ServiceManagement 'IdSettlement',
 						RA.IdRoute,
 						SUM(CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN 1 ELSE 0 END) 'IncidencesCount',--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
 						(CASE WHEN DO.StatusOrderId in(@STATUSDELIVERED_DO,@STATUSRETURNED_DO) THEN 1 ELSE 0 END) 'Completed'
+						--SM.IdServiceManagement 'IdSM'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
 				ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
@@ -489,11 +652,12 @@ BEGIN
 				AND Guide_Number=RPD.Guide_Number
 				ORDER BY DateCreated DESC
 			) DOD		
+			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.RouteAssignmentId=RA.IdRouteAssigment
 			LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 				URSD.GuideSerie=RPD.Guide_Serie
 				AND URSD.GuideNumber=RPD.Guide_Number
 				AND URSD.RowStatus=1
-			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+				AND URS.IdUnifiedRouteSettlement = URSD.UnifiedRouteSettlementId
 			LEFT JOIN DBO.ActDetail AD ON
 				AD.GuideSerie=RPD.Guide_Serie
 				AND AD.GuideNumber=RPD.Guide_Number
@@ -503,15 +667,16 @@ BEGIN
 			LEFT JOIN DBO.DeliverySettlementDetail DSETTD ON 
 				DSETTD.Guide_Serie=RPD.Guide_Serie
 				AND DSETTD.Guide_Number=RPD.Guide_Number
+				AND DSETTD.RowStatus=1
 			LEFT JOIN dbo.SettlementByPickup sbp ON
 				sbp.RouteAssigmentId=RA.IdRouteAssigment
 			WHERE 
 				RA.RowStatus=1		
-				AND RA.IdVehicle IS NOT NULL
+				--AND RA.IdVehicle IS NOT NULL
 				AND RA.IdRoute IS NOT NULL		
 				AND RA.IdCurrierMan=@IdCourier--@CUI
 				AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
-				--AND RA.DateOfRoute =@Date
+				AND RA.DateOfRoute =@Date
 			GROUP BY 
 				STSM.IdSubTypeServiceManagment,
 				STSM.Name,
@@ -520,17 +685,18 @@ BEGIN
 				SMD.ServiceManagement,
 				URSD.RowStatus,
 				URSD.IsOpenProcess,
-				DSETTD.ID_DeliveryOrderBySettlement,
+				--DSETTD.ID_DeliveryOrderBySettlement,
 				sbp.Id,
 				RA.IdRoute,
-				DO.StatusOrderId
-			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber);
+				DO.StatusOrderId,
+				SM.IdServiceManagement
+			HAVING COUNT(DOP.NoPiece)>COUNT(ADP.PieceNumber));
 			
 			
 			
 			SELECT
-				GuideSerie,
-				GuideNumber,
+				GL.GuideSerie,
+				GL.GuideNumber,
 				Guide,
 				IdTypeService,
 				NameTypeService,
@@ -538,8 +704,27 @@ BEGIN
 				IdSettlement,
 				IdRoute,
 				IncidencesCount,
-				Completed
-			FROM @GuidesListed
+				Completed,
+				URSD.UnifiedRouteSettlementId URSID,
+				URSD.IdUnifiedRouteSettlementDetail URS_DETAILID
+				--GL.IdSM
+			FROM @GuidesListed GL
+			OUTER APPLY (
+				SELECT
+					URSDaux.GuideSerie,
+					URSDaux.GuideNumber,
+					MAX(URSDaux.UnifiedRouteSettlementId) 'UnifiedRouteSettlementId',
+					MAX(URSDaux.IdUnifiedRouteSettlementDetail) 'IdUnifiedRouteSettlementDetail'
+				FROM
+					dbo.UnifiedRouteSettlementDetail URSDaux
+				WHERE 
+					URSDaux.GuideSerie=GL.GuideSerie AND
+					URSDaux.GuideNumber = GL.GuideNumber
+				GROUP BY
+					URSDaux.GuideSerie,
+					URSDaux.GuideNumber
+			) URSD
+
 
 			SELECT 
 				GL.GuideSerie 'GuideSerie',

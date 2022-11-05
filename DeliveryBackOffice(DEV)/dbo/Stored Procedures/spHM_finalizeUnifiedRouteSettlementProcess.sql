@@ -18,6 +18,56 @@ BEGIN
    
 	SET NOCOUNT ON;
 	 DECLARE @Result AS INT = 0; 
+	 DECLARE @IsPickup BIT = 0;
+	 DECLARE @ServiceManagementId INT
+	 DECLARE @SchedulePickupId BIGINT
+	DECLARE @StatusOrderId TINYINT = ( SELECT
+		so.StatusOrderId
+	FROM StatusOrder so WITH (NOLOCK)
+	WHERE so.OrderDescription = 'Recolectado')
+	DECLARE @ServiceStatus INT =
+    (
+        SELECT IdServiceStatus FROM CatServiceStatus WHERE [Name] = 'Recolectado'
+    );
+
+
+			SELECT TOP 1
+				--@RouteAssignmentId = ra.IdRouteAssigment
+			 --  ,@RouteAssignmentCourierId = ra.IdCurrierMan
+			   @ServiceManagementId = sm.IdServiceManagement,
+			   @SchedulePickupId = sm.IdSchedulePickup,
+			 --  ,@ServiceStatusId = sm.ServiceStatusId
+			   --,
+			   @IsPickup = IIF(stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección', 1, 0)
+			FROM RouteAssigment ra WITH (NOLOCK)
+			INNER JOIN ServiceManagement sm WITH (NOLOCK)
+				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
+					AND sm.RowStatus = 1
+			LEFT JOIN CatServiceStatus css WITH (NOLOCK)
+				ON sm.ServiceStatusId = css.IdServiceStatus
+			LEFT JOIN SubTypeServiceManagment stsm WITH (NOLOCK)
+				ON sm.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
+			LEFT JOIN ServiceManagementDetail smd WITH (NOLOCK)
+				ON sm.IdServiceManagement = smd.ServiceManagement
+					AND smd.RowStatus = 1
+			LEFT JOIN RoutePreparationDetail rpd WITH (NOLOCK)
+				ON smd.IdServiceManagementDetail = rpd.ServiceManagementDetailId
+					AND rpd.RowStatus = 1
+			LEFT JOIN SchedulePickup sp WITH (NOLOCK)
+				ON sm.IdSchedulePickup = sp.SchedulePickupId
+					AND sp.RowStatus = 1
+					AND (sp.SchedulePickupStatus IS NULL
+						OR sp.SchedulePickupStatus = 1)
+			LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
+			WHERE 
+			--(css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL)
+			--AND 
+			ra.DateOfRoute = CAST(GETDATE() AS DATE)
+			AND
+			ISNULL(dopd.GuideSerie, rpd.Guide_Serie) = @GuideSerie
+			AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = @GuideNumber
+			ORDER BY ra.DateCreated DESC 
 
 IF (EXISTS(SELECT TOP 1 1 FROM dbo.UnifiedRouteSettlementDetail WHERE GuideSerie=@GuideSerie AND GuideNumber=@GuideNumber AND IsOpenProcess = 1 AND UserProcess = @Token))
 BEGIN	
@@ -185,7 +235,64 @@ BEGIN
 						URSDaux.GuideNumber = @GuideNumber
 
 
+			--//ACTUALIZANDO GUÍAS DE RECOLECCIÓN--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+					IF @IsPickup = 1
+					BEGIN
+						
+						--Actualiza estado de la guía
+						UPDATE DeliveryOrder
+						SET StatusOrderId = @StatusOrderId
+						WHERE Guide_Serie = @GuideSerie
+						AND Guide_Number = @GuideNumber
 
+						IF (NOT EXISTS (SELECT TOP 1
+								1
+							FROM DeliveryOrderDetail WITH (NOLOCK)
+							WHERE Guide_Serie = @GuideSerie
+							AND Guide_Number = @GuideNumber
+							AND StatusOrderId = @StatusOrderId)
+						)
+						BEGIN
+							--Inserta checkpoint de recolectado
+							INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, PieceId, RowStatus)
+								VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, @Token, GETDATE(), GETDATE(), NULL, NULL, NULL, 1);
+						END
+
+						 --Se marca como recolectado
+						UPDATE sm
+						SET ServiceStatusId = @ServiceStatus,
+							TokenUpdated = @Token,
+							DateUpdated = GETDATE()
+						FROM ServiceManagement sm
+						WHERE sm.IdSchedulePickup = @SchedulePickupId;
+
+
+						UPDATE SchedulePickup
+						SET AssigmentStatus = 1
+							,TokenUpdated = @Token
+							,DateUpdated = GETDATE()
+						WHERE SchedulePickupId = @SchedulePickupId;
+
+						 --Insertar EventService si no existe
+						IF NOT EXISTS (SELECT
+								1
+							FROM EventService es
+							WHERE es.ServiceManagementId = @ServiceManagementId
+							AND es.ServiceStatusId = @ServiceStatus
+							AND es.RowStauts = 1)
+						BEGIN
+							INSERT INTO EventService (ServiceManagementId,
+							ServiceStatusId,
+							RowStauts,
+							TokenCreated,
+							DateCreated,
+							Observations)
+								VALUES (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
+						END
+					END
+			--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			--------------------------------------------------------------------------------------------------------------------------------------------------------------------
  			SET @Result = 1; /* PROCESESO EXITOSO */
 		COMMIT TRANSACTION
 

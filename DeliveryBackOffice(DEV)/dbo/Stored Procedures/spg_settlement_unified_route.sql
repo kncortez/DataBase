@@ -51,7 +51,7 @@ BEGIN
 
 	SELECT TOP 1
 		(CASE
-			WHEN p.PerIdPerson IS NOT NULL THEN CONCAT(p.PerFirstName, ' ', p.PerLastName)
+			WHEN iu.IdUser IS NOT NULL THEN CONCAT(iu.IdUser, ' - ', iu.Username)
 			WHEN lbt.SSN_IdUser IS NOT NULL THEN CONCAT(lbt.SSN_IdUser, ' - ', lbt.SSN_Username)
 			ELSE 'N/A'
 		END) SettlementPerson
@@ -65,13 +65,13 @@ BEGIN
 	   ,@TotalPiecesMissing TotalPiecesMissing
 	FROM UnifiedRouteSettlement urs WITH (NOLOCK)
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK)
-		ON urs.UserCODSettlement = lbt.SSN_IdToken
+		ON urs.UserSettlement = lbt.SSN_IdToken
 	LEFT JOIN TokenLog tl WITH (NOLOCK)
 		ON urs.UserSettlement = tl.TknIdToken
 	LEFT JOIN RegisterUser ru WITH (NOLOCK)
 		ON tl.TknIdUser = ru.UsrIdUser
-	LEFT JOIN Person p WITH (NOLOCK)
-		ON ru.UsrIdPerson = p.PerIdPerson
+	LEFT JOIN InternalUser iu WITH (NOLOCK)
+		ON ru.UsrIdUser = iu.RegisterUserID
 	LEFT JOIN RouteAssigment ra WITH (NOLOCK)
 		ON urs.RouteAssignmentId = ra.IdRouteAssigment
 	LEFT JOIN SenderReceiver sr WITH (NOLOCK)

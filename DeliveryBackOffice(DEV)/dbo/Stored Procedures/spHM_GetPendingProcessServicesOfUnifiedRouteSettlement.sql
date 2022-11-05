@@ -180,9 +180,8 @@ BEGIN
 				AND
 				-- Que no este liquidada en el proceso de las rutas actuales
 				URSD.IdUnifiedRouteSettlementDetail IS NULL
-				AND
-				-- Que no este en un proceso abierto de las rutas actuales
-				URSDOP.IdUnifiedRouteSettlementDetail IS NULL
+				--AND
+				--URSDOP.IdUnifiedRouteSettlementDetail IS NULL
 
 			-- Devoluciones
 			INSERT INTO @GuideList
@@ -331,6 +330,7 @@ BEGIN
 				AND
 				-- Que no este en un proceso abierto de las rutas actuales
 				URSDOP.IdUnifiedRouteSettlementDetail IS NULL
+				AND URS.UserSettlement IS NULL
 
 			IF ( 
 				EXISTS ( SELECT TOP 1 1 FROM @GuideList ) 

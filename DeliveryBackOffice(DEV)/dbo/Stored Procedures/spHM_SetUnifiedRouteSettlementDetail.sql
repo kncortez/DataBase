@@ -48,7 +48,7 @@ BEGIN
 	--- Control de procesos abiertos
 	DECLARE @IsOpenProcess BIT = 0;
 	DECLARE @IsValidOpenProcess BIT = 1;
-	DECLARE @UserProcess NVARCHAR(50)
+	DECLARE @UserProcess NVARCHAR(100)
 
 	--- Control de monto de servicio y COD
 	DECLARE @IsCollect BIT = 0
@@ -709,10 +709,11 @@ BEGIN
 							   ,@IsTransfered = IIF(Flow.GuideFlow = 'IsTransfered', 1, 0)
 							   ,@IsError = IIF(Flow.GuideFlow = 'IsError', 1, 0)
 							FROM (SELECT
-									(CASE
+									(CASE 
 										WHEN @IsPickup = 0 THEN CASE
 												WHEN so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto') THEN 'IsDelivered'
 												WHEN so.OrderDescription IN ('Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center') THEN 'IsTransfered'
+												WHEN so.OrderDescription NOT IN ('Intento de entrega fallida') THEN 'IsError'
 												WHEN (do.IsLastMileReturn IS NULL OR
 													do.IsLastMileReturn = 0) THEN CASE
 														WHEN ISNULL((SELECT
@@ -819,12 +820,40 @@ BEGIN
 								IF (@IsOpenProcess = 1)
 								BEGIN
 
-									IF EXISTS (SELECT
-											1
-										FROM UnifiedRouteSettlementDetail ursd
-										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
-										AND (ursd.UserProcess = @Token
-										OR ursd.UserProcess IS NULL))
+									--- Buscar usuario de proceso abierto
+									SELECT
+										@UserProcess = ISNULL((SELECT
+												CONCAT(iu.IdUser, ' - ', iu.Username)
+											FROM TokenLog tl WITH (NOLOCK)
+											INNER JOIN RegisterUser ru WITH (NOLOCK)
+												ON ru.UsrIdUser = tl.TknIdUser
+											INNER JOIN InternalUser iu WITH (NOLOCK)
+												ON iu.RegisterUserID = ru.UsrIdUser
+											WHERE tl.TknIdToken = ursd.UserProcess)
+										, ISNULL((SELECT
+												CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
+											FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
+											WHERE llbt.SSN_IdToken = ursd.UserProcess)
+										, 'N/A'))
+									FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
+									WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+									AND ursd.UserProcess IS NOT NULL
+									
+									IF @UserProcess IS NULL OR( @UserProcess <> 'N/A' AND @UserProcess = ( SELECT
+											ISNULL((SELECT
+													CONCAT(iu.IdUser, ' - ', iu.Username)
+												FROM TokenLog tl WITH (NOLOCK)
+												INNER JOIN RegisterUser ru WITH (NOLOCK)
+													ON ru.UsrIdUser = tl.TknIdUser
+												INNER JOIN InternalUser iu WITH (NOLOCK)
+													ON iu.RegisterUserID = ru.UsrIdUser
+												WHERE tl.TknIdToken = @Token)
+											, ISNULL((SELECT
+													CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
+												FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
+												WHERE llbt.SSN_IdToken = @Token)
+											, 'N/A')))
+									)
 									BEGIN
 										UPDATE UnifiedRouteSettlementDetail
 										SET IsOpenProcess = 1
@@ -836,14 +865,9 @@ BEGIN
 										SET RowStatus = 0
 										WHERE IdUnifiedRouteSettlementDetailPiece = @IdUnifiedRouteSettlementDetailPiece
 									END
-									ELSE 
+									ELSE
 									BEGIN
 										SET @IsValidOpenProcess = 0;
-
-										SELECT
-											@UserProcess = ursd.UserProcess
-										FROM UnifiedRouteSettlementDetail ursd
-										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
 									END
 								END
 
@@ -881,19 +905,7 @@ BEGIN
 										SELECT
 											9 'StatusCode'
 										   ,'Ya existe un proceso abierto para la guía con otro usuario.' 'Description'
-										   ,ISNULL((SELECT
-													CONCAT(p.PerFirstName, ' ', p.PerLastName)
-												FROM TokenLog tl WITH (NOLOCK)
-												INNER JOIN RegisterUser ru WITH (NOLOCK)
-													ON ru.UsrIdUser = tl.TknIdUser
-												INNER JOIN Person p WITH (NOLOCK)
-													ON p.PerIdPerson = ru.UsrIdPerson
-												WHERE tl.TknIdToken = @UserProcess)
-											, ISNULL((SELECT
-													CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
-												FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
-												WHERE llbt.SSN_IdToken = @UserProcess)
-											, 'N/A')) 'UserProcess'	
+										   ,@UserProcess 'UserProcess'	
 								END
 							END
 							ELSE
@@ -911,7 +923,7 @@ BEGIN
 
 							SELECT
 								6 'StatusCode'
-							   ,'La guía no se encuentra en un flujo válido, por favor verifique el estado de la guía.' 'Description'
+							   ,'La guía no se encuentra en un flujo válido, por favor verifique el estado de la guía u opere la guía desde las acciones disponibles.' 'Description'
 						END
 					END
 					ELSE
