@@ -1160,6 +1160,7 @@
     <Build Include="dbo\Stored Procedures\SetWebhookLog.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuideFCCTracking.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
