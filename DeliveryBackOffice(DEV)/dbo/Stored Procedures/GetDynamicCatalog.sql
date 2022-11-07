@@ -328,6 +328,7 @@ BEGIN
                                     JOIN DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK)
                                         ON PRV.IdProvince = TWS.IdProvince
                                 WHERE IdKindOfVPClient = 1
+								AND VPC.StatusClient = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,

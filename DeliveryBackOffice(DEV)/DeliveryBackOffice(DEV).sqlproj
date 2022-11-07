@@ -1161,6 +1161,15 @@
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
     <Build Include="dbo\Stored Procedures\GetGuideFCCTracking.sql" />
+    <Build Include="dbo\Tables\LinehaulRouteSettlementGuideDetail.sql" />
+    <Build Include="dbo\Tables\LinehaulRoutePreparationActDetailPiece.sql" />
+    <Build Include="dbo\Tables\LinehaulRoutePreparationActDetail.sql" />
+    <Build Include="dbo\Tables\LinehaulRoutePreparationAct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetGuideFCCDataClients.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuideFromPhoneNumberFCCTracking.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuideFCCInvoiceData.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuideFCCCoDTracking.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuideFCCBilling.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
