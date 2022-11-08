@@ -106,8 +106,11 @@ BEGIN
 			URSID INT
 		);
 		INSERT INTO @ManifestList
-			SELECT URS.IdUnifiedRouteSettlement 'URSID' FROM DBO.UnifiedRouteSettlement URS
-		WHERE URS.UserSettlement IS NULL;
+			SELECT URS.IdUnifiedRouteSettlement 'URSID' FROM DBO.UnifiedRouteSettlement URS 
+				INNER JOIN DBO.RouteAssigment RA ON 
+					RA.IdRouteAssigment=URS.RouteAssignmentId
+			WHERE RA.IdCurrierMan=@IDCOURIER AND RA.DateOfRoute=@Date
+			AND URS.UserSettlement IS NULL;
 
 		DECLARE @EXISTGUIDES BIT =0;
 		----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
