@@ -123,151 +123,42 @@ BEGIN
                                     END)																'Collected',
 									 COALESCE(CONVERT(VARCHAR, dev.PriceShippment), '0.00')				'Price',
 									 COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') 'IdCustomer',
-									 CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) 'HeaderCodeTownship_FA',
-									 REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           (CASE
-                                                                                WHEN AUX.Impersonate = 'TRUE' THEN
-                                                                                    --IMPERSONADO
-                                                                                    CASE
-                                                                                        WHEN (dev.IsReturn = 1) THEN
-                                                                                            --SI DEVOLUCION
-                                                                                            CASE
-                                                                                                WHEN (ctm.IdCustomerType = 1) THEN
-                                                                                                    --CORPORATIVO
-                                                                                                    COALESCE(
-                                                                                                                dev.Sender_FirstName,
-                                                                                                                ''
-                                                                                                            )
-                                                                                                ELSE
-                                                                                                    --INDIVIDUAL
-                                                                                                    COALESCE(
-                                                                                                                dev.Sender_FirstName,
-                                                                                                                ''
-                                                                                                            )
-                                                                                            END
-                                                                                        ELSE
-                                                                                            -- NO DEVOLUCION
-                                                                                            CASE
-                                                                                                WHEN (ctm.IdCustomerType = 1) THEN
-                                                                                                    --CORPORATIVO
-                                                                                                    COALESCE(
-                                                                                                                vp.DescriptionOfClient,
-                                                                                                                ''
-                                                                                                            )
-                                                                                                ELSE
-                                                                                                    --INDIVIDUAL
-                                                                                                    COALESCE(
-                                                                                                                dev.Sender_FirstName,
-                                                                                                                ''
-                                                                                                            )
-                                                                                            END
-                                                                                    END
-                                                                                ELSE
-                                                                                    --NO IMPERSONADO
-                                                                                    CONVERT(
-                                                                                               VARCHAR,
-                                                                                               COALESCE(
-                                                                                                           dev.Sender_FirstName,
-                                                                                                           ''
-                                                                                                       )
-                                                                                           ) + ' '
-                                                                                    + CONVERT(
-                                                                                                 VARCHAR,
-                                                                                                 COALESCE(
-                                                                                                             dev.Sender_LastName,
-                                                                                                             ''
-                                                                                                         )
-                                                                                             )
-                                                                            END
-                                                                           ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-                                              )																'name_FA',
-
-									 CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, ''))							'email_FA',
-									 REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') 'phone_FA',
-									  REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           CONVERT(
-                                                                                      VARCHAR(200),
-                                                                                      COALESCE(dev.Sender_Address, '')
-                                                                                  ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-                                              )																'address1_FA',
-									REPLACE(dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json'), '"', ' ') 'address2_FA',
-									COALESCE(ctm.Abbreviation, '') 'city_FA',
+									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) END ) 'HeaderCodeTownship_FA',
+									 (CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_FA.NAME_FA ELSE NAME_TA.NAME_TA END)	'name_FA',
+									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN  CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) ELSE REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ') END)'email_FA',
+									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') ELSE REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') END )'phone_FA',
+									  (CASE WHEN DEV.IsLastMileReturn <>1 THEN   ADDRES1_FA.ADDRES1_FA	ELSE REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', ' ') END) 'address1_FA',
+									(CASE WHEN DEV.IsLastMileReturn <>1 THEN
+										REPLACE(dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json'), '"', ' ')
+										ELSE
+										REPLACE(dbo.fnt_String_Escape(COALESCE(LOWER(dev.IndicationsToSendDestination),''),'json'),'"',' ') 
+									END) 'address2_FA',
+									(CASE WHEN DEV.IsLastMileReturn <>1 THEN COALESCE(ctm.Abbreviation, '') ELSE '' END) 'city_FA',
 									COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') 'IdMerchant_FA',
-									(CASE
-                                            WHEN AUX.Impersonate = 'TRUE' THEN
-                                                --IMPERSONADO
-                                                CASE
-                                                    WHEN (dev.IsReturn = 1) THEN
-                                                        --SI DEVOLUCION
-                                                        CASE
-                                                            WHEN (ctm.IdCustomerType = 1) THEN
-                                                                --CORPORATIVO
-                                                                COALESCE(AUX2.ExpressName, '')
-                                                            ELSE
-                                                                --INDIVIDUAL
-                                                                COALESCE(AUX2.ExpressName, '')
-                                                        END
-                                                    ELSE
-                                                        -- NO DEVOLUCION
-                                                        CASE
-                                                            WHEN (ctm.IdCustomerType = 1) THEN
-                                                                --CORPORATIVO
-                                                                COALESCE(dev.Sender_FirstName, '')
-                                                            ELSE
-                                                                --INDIVIDUAL
-                                                                COALESCE(AUX2.ExpressName, '')
-                                                        END
-                                                END
-                                            ELSE
-                                                --NO IMPERSONADO
-                                                CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
-                                                + CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
-                                        END
-                                       ) 'contact_FA',
-								CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) 'HeaderCodeTownship_TA',
-								REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(dev.Receiver_FirstName, '') + ' '
-                                                                           + COALESCE(dev.Receiver_LastName, ''),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-                                )												'name_TA',
-								REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') 'phone_TA',
-								REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ') 'email_TA',
-								REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', ' ') 'address1_TA',
-								REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(
-                                                                                       LOWER(dev.IndicationsToSendDestination),
-                                                                                       ''
-                                                                                   ),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-								)'address2_TA',
-								'' 'city_TA',
-								CONVERT(VARCHAR, ISNULL(dev.ReceiverIdSettlement, 0)) 'ReceiverIdSettlement_TA',
-								REPLACE(
-                                                  dbo.fnt_String_Escape(
-                                                                           COALESCE(dev.Receiver_Alternant_FullName, ''),
-                                                                           'json'
-                                                                       ),
-                                                  '"',
-                                                  ' '
-								)'contact_TA',
+									 CONTACT_FA.CONTACT_FA 'contact_FA',
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws.HeaderCode, ''))  END )'HeaderCodeTownship_TA',
+								(CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_TA.NAME_TA  ELSE  NAME_FA.NAME_FA END) 'name_TA',
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ')  ELSE CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) END) 'email_TA',
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') ELSE  REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') END ) 'phone_TA',								
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN   REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', ' ') ELSE ADDRES1_FA.ADDRES1_FA	END) 'address1_TA',
+								
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN
+									REPLACE(dbo.fnt_String_Escape(COALESCE(LOWER(dev.IndicationsToSendDestination),''),'json'),'"',' ') 										
+									ELSE
+									REPLACE(dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json'), '"', ' ')
+								END) 'address2_TA',
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN '' ELSE COALESCE(ctm.Abbreviation, '') END) 'city_TA',
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, ISNULL(dev.ReceiverIdSettlement, 0)) ELSE 0 END)'ReceiverIdSettlement_TA',
+
+								(
+									CASE WHEN DEV.IsLastMileReturn <>1 THEN 
+										REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Alternant_FullName, ''),'json'),'"',' ')
+									ELSE 
+										CONTACT_FA.CONTACT_FA
+									END
+								)
+								'contact_TA',
+
 
 								--PARCELS
 								--+ '"' + '},' + '"parcels": [' + COALESCE(@arpieces, '') + ' ] , '
@@ -418,6 +309,128 @@ BEGIN
 									WHERE Guide_Number = dev.Guide_Number and Guide_Serie=dev.Guide_Serie	
 								
 								  )AUX2
+								  OUTER APPLY(
+									 SELECT TOP 1 REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                           (CASE
+                                                                                WHEN AUX.Impersonate = 'TRUE' THEN
+                                                                                    --IMPERSONADO
+                                                                                    CASE
+                                                                                        WHEN (dev.IsReturn = 1) THEN
+                                                                                            --SI DEVOLUCION
+                                                                                            CASE
+                                                                                                WHEN (ctm.IdCustomerType = 1) THEN
+                                                                                                    --CORPORATIVO
+                                                                                                    COALESCE(
+                                                                                                                dev.Sender_FirstName,
+                                                                                                                ''
+                                                                                                            )
+                                                                                                ELSE
+                                                                                                    --INDIVIDUAL
+                                                                                                    COALESCE(
+                                                                                                                dev.Sender_FirstName,
+                                                                                                                ''
+                                                                                                            )
+                                                                                            END
+                                                                                        ELSE
+                                                                                            -- NO DEVOLUCION
+                                                                                            CASE
+                                                                                                WHEN (ctm.IdCustomerType = 1) THEN
+                                                                                                    --CORPORATIVO
+                                                                                                    COALESCE(
+                                                                                                                vp.DescriptionOfClient,
+                                                                                                                ''
+                                                                                                            )
+                                                                                                ELSE
+                                                                                                    --INDIVIDUAL
+                                                                                                    COALESCE(
+                                                                                                                dev.Sender_FirstName,
+                                                                                                                ''
+                                                                                                            )
+                                                                                            END
+                                                                                    END
+                                                                                ELSE
+                                                                                    --NO IMPERSONADO
+                                                                                    CONVERT(
+                                                                                               VARCHAR,
+                                                                                               COALESCE(
+                                                                                                           dev.Sender_FirstName,
+                                                                                                           ''
+                                                                                                       )
+                                                                                           ) + ' '
+                                                                                    + CONVERT(
+                                                                                                 VARCHAR,
+                                                                                                 COALESCE(
+                                                                                                             dev.Sender_LastName,
+                                                                                                             ''
+                                                                                                         )
+                                                                                             )
+                                                                            END
+                                                                           ),
+                                                                           'json'
+                                                                       ),
+                                                  '"',
+                                                  ' '
+                                              )NAME_FA								  
+								) NAME_FA
+								OUTER APPLY (
+									SELECT REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                           COALESCE(dev.Receiver_FirstName, '') + ' '
+                                                                           + COALESCE(dev.Receiver_LastName, ''),
+                                                                           'json'
+                                                                       ),
+                                                  '"',
+                                                  ' '
+									)NAME_TA								
+								)NAME_TA
+
+								OUTER APPLY (
+									SELECT REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                           CONVERT(
+                                                                                      VARCHAR(200),
+                                                                                      COALESCE(dev.Sender_Address, '')
+                                                                                  ),
+                                                                           'json'
+                                                                       ),
+                                                  '"',
+                                                  ' '
+                                              )	ADDRES1_FA							
+								)ADDRES1_FA
+								OUTER APPLY (
+									SELECT (CASE
+                                            WHEN AUX.Impersonate = 'TRUE' THEN
+                                                --IMPERSONADO
+                                                CASE
+                                                    WHEN (dev.IsReturn = 1) THEN
+                                                        --SI DEVOLUCION
+                                                        CASE
+                                                            WHEN (ctm.IdCustomerType = 1) THEN
+                                                                --CORPORATIVO
+                                                                COALESCE(AUX2.ExpressName, '')
+                                                            ELSE
+                                                                --INDIVIDUAL
+                                                                COALESCE(AUX2.ExpressName, '')
+                                                        END
+                                                    ELSE
+                                                        -- NO DEVOLUCION
+                                                        CASE
+                                                            WHEN (ctm.IdCustomerType = 1) THEN
+                                                                --CORPORATIVO
+                                                                COALESCE(dev.Sender_FirstName, '')
+                                                            ELSE
+                                                                --INDIVIDUAL
+                                                                COALESCE(AUX2.ExpressName, '')
+                                                        END
+                                                END
+                                            ELSE
+                                                --NO IMPERSONADO
+                                                CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
+                                                + CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
+                                        END
+                                       )CONTACT_FA								
+								)CONTACT_FA
 								  INNER JOIN @TMPPICES TP ON 
 									TP.GuideSerie=DEV.Guide_Serie
 									AND  TP.GuideNumber=DEV.Guide_Number
