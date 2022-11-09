@@ -73,10 +73,8 @@ BEGIN
                      ),
                      ''
                            )
-                 WHEN dod.StatusOrderId IN ( 15 ) THEN
-                     ''
 				ELSE
-					''
+					so.StatusOrderTrackingDescription
              END
             ) AS [StageDescription],
 			'' as NameOfReceiver,
@@ -94,7 +92,8 @@ BEGIN
                  dod.UserCreated,
                  dod.Observations,
                  so.OrderDescription,
-				 so.NextSteps
+				 so.NextSteps,
+				so.StatusOrderTrackingDescription
 		) RES
 		ORDER BY RES.[StageDate] ASC, RES.[EventID]
 	
