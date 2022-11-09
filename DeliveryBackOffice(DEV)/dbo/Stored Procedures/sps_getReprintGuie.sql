@@ -199,7 +199,16 @@ BEGIN
                                   /*valor collect*/
                                   '"IdCustomer":'
                                      + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
-                                     + ',' + '"from_address": {' + '"HeaderCodeTownship":"'
+                                     + ',' + 
+									 
+									 (
+									 CASE WHEN dev.IsLastMileReturn=1 THEN
+										'"to_address":'
+										ELSE
+										'"from_address":'
+										END
+									 )
+									 +' {' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"name":"'
@@ -282,6 +291,8 @@ BEGIN
                                      + '",' + '"city":"' + COALESCE(ctm.Abbreviation, '') + '",' + '"IdMerchant":'
                                      + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
                                      + ',' +
+									 + '"ReceiverIdSettlement":0'
+                                      + ', ' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"contact":"'
                                      + (CASE
@@ -314,7 +325,17 @@ BEGIN
                                                 CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
                                                 + CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
                                         END
-                                       ) + '"' + '},' + '"to_address": {' + '"HeaderCodeTownship":"'
+                                       ) + '"' + '},' +
+									   
+									 (
+									 CASE WHEN dev.IsLastMileReturn=1 THEN
+										'"from_address":'
+										ELSE
+										'"to_address":'
+										END
+									 )									   
+									   
+									   +'{' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) + '",' + '"name":"'
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
@@ -339,7 +360,12 @@ BEGIN
                                                                        ),
                                                   '"',
                                                   ' '
-                                              ) + '",' + '"city":"' + '' + '",' + '"ReceiverIdSettlement":'
+                                              ) + '",' + '"city":"' + '' + '",' 
+											  
+											  +'"IdMerchant":'
+                                     + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') + ','
+
+											  + '"ReceiverIdSettlement":'
                                      + CONVERT(VARCHAR, ISNULL(dev.ReceiverIdSettlement, 0)) + ', ' + '"contact":"'
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
@@ -358,6 +384,7 @@ BEGIN
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
                                      + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
                                      + '",'
+									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
                                      + '",' + '"ExpirationDate":"'
