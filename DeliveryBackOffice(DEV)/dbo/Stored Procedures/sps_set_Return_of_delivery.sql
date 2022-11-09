@@ -5,6 +5,16 @@
 -- Create date: <2020-09-15>
 -- Description:	<Devolucion entrega de guía>
 -- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-09-26>
+-- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2022-10-19>
+-- Description:	<confirmación de devolución, ingreso a cola de webhooks>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
 		@Guide_Serie AS VARCHAR(2), --guide serie
 		@Guide_Number AS INT, --guide number
@@ -19,6 +29,14 @@ BEGIN
 
 	BEGIN TRANSACTION
 		BEGIN TRY
+
+		DECLARE @CurrentStatus int 
+
+		SELECT @CurrentStatus = dr.StatusOrderId FROM dbo.DeliveryOrder dr
+		WHERE dr.Guide_Serie = @Guide_Serie AND dr.Guide_Number = @Guide_Number
+
+		IF (@CurrentStatus IN(17,16))
+			BEGIN
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId OR StatusOrderId = 5))
 
@@ -33,6 +51,11 @@ BEGIN
 
 				IF (@DateOfDelivery > @Datetime)
 				BEGIN
+
+				 --l momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+				  UPDATE  dbo.warehouse SET Active=0 
+				  where Guide_Serie = @Guide_Serie AND 
+                        Guide_Number = @Guide_Number
 
 					-- Actualizar registro de guía a último estado 
 					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -52,6 +75,66 @@ BEGIN
 					)
 			
 					SET @ValidateOperation = COALESCE(@@ROWCOUNT,0)
+
+					
+	-------------------WEBHOOK.INI--------------------------------------------------------------------------------------------
+				DECLARE @WebhookCustomerId INT = -1;
+				DECLARE @CustomerEndpointId INT = -1;
+				-- Debido a que se procesa únicamente 1 guía
+				DECLARE @GuideCurrentStatus INT = -1;
+
+				BEGIN TRY
+					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+
+					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie),-1);
+					SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
+
+					SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie);
+
+					-- Cliente tiene webhook configurado para el tipo especificado
+					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
+					IF ( @WebhookCustomerId > 0 AND @CustomerEndpointId > 0 AND @GuideCurrentStatus IN (SELECT WRBU.StatusOrderId FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) WHERE WRBU.CustomerId = @WebhookCustomerId AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook) )
+					BEGIN 
+
+						DECLARE @ResponseTable AS TABLE (
+							InsertedId BIGINT
+						);
+
+						INSERT INTO 
+							[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+							(
+								[GuideSerie]
+								,[GuideNumber]
+								,[CustomerId]
+								,[StatusOrderId]
+								,[WebhookEndpointId]
+								,[HasNotified]
+								,[TokenCreated]
+								,[DateCreated]
+							)
+						OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+						VALUES
+							(
+								 @Guide_Serie
+								,@Guide_Number
+								,@WebhookCustomerId
+								,@GuideCurrentStatus
+								,@CustomerEndpointId
+								,0
+								,@TokenId
+								,GETDATE()
+							)
+
+					END
+
+				END TRY
+				BEGIN CATCH
+
+				END CATCH
+							
+					-------------------WEBHOOK.INI FIN----------------------------------------------------------------------------------------
+
+
 				END
 				ELSE
 					SET @ValidateOperation = -2	
@@ -59,6 +142,9 @@ BEGIN
 			-- registro existente
 			ELSE
 				SET @ValidateOperation = -1
+			END
+			ELSE
+				SET @ValidateOperation = -3
 
 		END TRY
 
@@ -97,6 +183,13 @@ BEGIN
 				SELECT			  
 					-2 AS 'StatusCode',
 					'Fecha y hora incorrecta' AS 'Description', 
+					@ValidateOperation AS 'NumTransferID'
+			END
+			ELSE IF (@ValidateOperation = -3)
+			BEGIN
+				SELECT			  
+					-3 AS 'StatusCode',
+					'Para operar una guia en este mópdulo debe estar en estado [Programado para recolección] o [Programado para devolución]' AS 'Description', 
 					@ValidateOperation AS 'NumTransferID'
 			END
 			ELSE
