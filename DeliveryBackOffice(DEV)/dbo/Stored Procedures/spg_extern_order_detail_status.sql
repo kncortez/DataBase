@@ -17,15 +17,7 @@ BEGIN
 	
 	SELECT RES.[EventID],
 		   RES.[OrderId],
-		   --RES.[PreparationDate],
-		   --RES.[DifferenceStarted],
 		   RES.[CustomerFullname],
-		   --RES.[OriginAdress],
-		   --RES.[OriginLatitude],
-		   --RES.[OriginLongitude],
-		   --RES.[DestinyAddress],
-		   --RES.[DestintyLatitude],
-		   --RES.[DestinyLongitude],
 		   RES.[EstimatedDeliveryDate],
 		   RES.[CourierName],
 		   RES.[StageId],
@@ -33,50 +25,31 @@ BEGIN
 		   RES.[StageTitle],
 		   RES.[StageSource],
 		   RES.[StageDescription],
-		   --RES.[ImagePath],
 		   RES.[NameOfReceiver],
-		   RES.[Place]--,
-		   --RES.[ManifestNumber]
+		   RES.[Place],
+		   RES.[NextSteps]
 	FROM 
 		(SELECT
 			0 [EventID],
 			do.Guide_Serie + CAST(do.Guide_Number AS VARCHAR) as [OrderId], -- guide [Field3]
 			do.Receiver_FirstName + ' ' + do.Receiver_LastName as [CustomerFullname], -- receiver fullname  [Field2]
-			--do.Sender_Address as [OriginAdress], -- sender address   [Field8]
-			--'' as [OriginLatitude],
-			--'' as [OriginLongitude],
-			--do.Receiver_Address as [DestinyAddress], -- receiver address  [Field4]
-			--'' as [DestintyLatitude],
-			--'' as [DestinyLongitude],
 			 CONVERT(varchar,do.Delivery_Max_Date ,120) as [EstimatedDeliveryDate], --[Field5],
-				--FORMAT(do.Delivery_Max_Date, 'dddd', 'es-es') + ', '  + CONVERT(varchar,do.Delivery_Max_Date,106) as [EstimatedDeliveryDate], 
-				--FORMAT(do.Delivery_Max_Date, 'U', 'es-es')  --[Field5] Otra opcion con hora
 			'' [CourierName], --[Field9]
 			'' [StageId], -- status order id
 			'' [StageDate], -- date of status id
 			'' [StageTitle], -- status order name
 			'web' [StageSource],
 			'' as [StageDescription], --detail description or observations in events
-			--'' as [ImagePath],
 			ISNULL([NameOfReceiver],'') as NameOfReceiver,
-			ISNULL(Sender_FirstName + ' ' + Sender_LastName, '') as Place -- ,
-			--do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) as [ManifestNumber]
+			ISNULL(Sender_FirstName + ' ' + Sender_LastName, '') as Place,
+			NULL NextSteps
 		FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 		WHERE do.Guide_Serie = @Guide_Serie AND do.Guide_Number = @Guide_Number
 		UNION
 		SELECT DISTINCT
-			--ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC)  AS EventID,
 			RANK() OVER(PARTITION BY  dod.Guide_Number ORDER BY dod.StatusOrderId ASC) AS EventID , 
 			dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR) as [OrderId], -- guide [Field3]
-			--'' [PreparationDate],   --[Field6],
-			--'' [DifferenceStarted], --[Field1]
 			'' [CustomerFullname], -- receiver fullname  [Field2]
-			--'' [OriginAdress], -- sender address   [Field8]
-			--'' [OriginLatitude],
-			--'' [OriginLongitude],
-			--'' [DestinyAddress], -- receiver address  [Field4]
-			--'' [DestintyLatitude],
-			--'' [DestinyLongitude],
 			'' [EstimatedDeliveryDate], --[Field5],
 			'' [CourierName], --[Field9]
 			Cast(dod.StatusOrderId as nvarchar) as [StageId], -- status order id
@@ -106,26 +79,22 @@ BEGIN
 					''
              END
             ) AS [StageDescription],
-			--(CASE ROW_NUMBER() OVER (ORDER BY dod.DateCreated ASC) WHEN 1 THEN
-			--															ISNULL(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + 
-			--																												  CAST(dod.Guide_Number AS VARCHAR)) as VARCHAR(300)),'')
-			--													   ELSE '' END) as [ImagePath],
 			'' as NameOfReceiver,
-			'' as Place--,
-			--'' as [ManifestNumber]
+			'' as Place,
+			so.NextSteps NextSteps
 		 FROM dbo.DeliveryOrderDetail dod WITH(NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
-        --ORDER BY DateCreated
         GROUP BY CONVERT(DATE, dod.DateCreated),
                  dod.Guide_Serie,
                  dod.Guide_Number,
                  dod.StatusOrderId,
                  dod.UserCreated,
                  dod.Observations,
-                 so.OrderDescription
+                 so.OrderDescription,
+				 so.NextSteps
 		) RES
 		ORDER BY RES.[StageDate] ASC, RES.[EventID]
 	
