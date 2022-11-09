@@ -1,8 +1,4 @@
 ﻿
-
-
-
-
 -- =============================================
 -- Author:		<Carlos,Cano>
 -- Create date: <13/06/2020>
@@ -241,10 +237,13 @@ BEGIN
 			   ISNULL(
 		   			'[ ' + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](ISNULL(epl.FirstName,'') + ' ' + ISNULL(epl.LastName1,'')) + ' ]' + --[who],
 					' ' +
-					'[ ' + (SELECT TOP (1) hub.HubAbbreviation 
-							FROM DeliveryBackOffice.dbo.HubLogistics hub  WITH (NOLOCK)
-							WHERE hub.IdStation = epl.IdStation AND hub.HubStatus ='TRUE'
-							ORDER BY hub.IdStation 
+					'[ ' + (SELECT TOP (1) CS.StationName
+							FROM DeliveryBackOffice.dbo.CatStation CS WITH (NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.RolByUserBySystem RBUBS WITH(NOLOCK)
+								ON
+									CS.IdStation = RBUBS.StationId AND CS.RowStatus = 1
+							WHERE IU.RegisterUserID = RBUBS.RusIdUser
+							ORDER BY CS.IdStation DESC 
 							) + ' ]' +--[Where]
 					 '' --[Complement] 
 					,'') 
@@ -260,13 +259,12 @@ BEGIN
 			   OrdChkPnt.[Longitude]--,
 			   --OrdChkPnt.Token
 	FROM #OrdChkpnt OrdChkPnt
-	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
-	LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser  WITH (NOLOCK) ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username
-	LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl  WITH (NOLOCK) ON epl.IdEmployee = duser.USR_IdEmployee 
+		LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
+		LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser  WITH (NOLOCK) ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username
+		LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl  WITH (NOLOCK) ON epl.IdEmployee = duser.USR_IdEmployee 
+		LEFT JOIN DeliveryBackOffice.dbo.InternalUser IU WITH(NOLOCK) ON epl.CodeEmployee = IU.IdUser
 	ORDER BY OrdChkPnt.[StageDate] ASC,
 			 OrdChkPnt.[EventID];
-
-
 
 END;
 
