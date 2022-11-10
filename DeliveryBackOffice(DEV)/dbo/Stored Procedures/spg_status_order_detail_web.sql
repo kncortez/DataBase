@@ -39,7 +39,8 @@ BEGIN
            RES.[ManifestNumber],
            RES.[Latitude],
            RES.[Longitude],
-		   RES.Token
+		   RES.Token,
+		   RES.NextSteps
 	INTO #OrdChkpnt
     FROM
     (
@@ -70,7 +71,8 @@ BEGIN
 			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) AS [ManifestNumber],
 			ISNULL(da.Latitude,'')  [Latitude],
 			ISNULL(da.Longitude,'') [Longitude],
-			'' [Token]
+			'' [Token],
+			NULL [NextSteps]
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 			ON da.Guide_Serie = do.Guide_Serie
@@ -200,7 +202,8 @@ BEGIN
             '' AS [ManifestNumber],
             '' AS Latitude,
             '' AS Longitude,
-			dod.UserCreated Token
+			dod.UserCreated Token,
+			so.NextSteps NextSteps
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
@@ -213,7 +216,8 @@ BEGIN
                  dod.StatusOrderId,
                  dod.UserCreated,
                  dod.Observations,
-                 so.OrderDescription
+                 so.OrderDescription,
+				 so.NextSteps
     ) RES
     ORDER BY RES.[StageDate] ASC,
              RES.[EventID];
@@ -256,8 +260,8 @@ BEGIN
 			   OrdChkPnt.[Place],
 			   OrdChkPnt.[ManifestNumber],
 			   OrdChkPnt.[Latitude],
-			   OrdChkPnt.[Longitude]--,
-			   --OrdChkPnt.Token
+			   OrdChkPnt.[Longitude],
+			   OrdChkPnt.[NextSteps]
 	FROM #OrdChkpnt OrdChkPnt
 		LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
 		LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser  WITH (NOLOCK) ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username

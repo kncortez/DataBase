@@ -106,7 +106,8 @@ BEGIN
            RES.[ManifestNumber],
            RES.[Latitude],
            RES.[Longitude],
-		   RES.Token
+		   RES.Token,
+		   RES.NextSteps
 	INTO #OrdChkpnt
     FROM
     (
@@ -134,7 +135,8 @@ BEGIN
 			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) AS [ManifestNumber],
 			''  [Latitude],
 			'' [Longitude],
-			'' [Token]
+			'' [Token],
+			NULL [NextSteps]
 	FROM @GuideOrderTemp do
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 			ON da.Guide_Serie = do.Guide_Serie
@@ -264,7 +266,8 @@ BEGIN
             '' AS [ManifestNumber],
             (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
             (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
-			dod.UserCreated Token
+			dod.UserCreated Token,
+			so.NextSteps NextSteps
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
@@ -278,7 +281,8 @@ BEGIN
                  dod.UserCreated,
                  dod.Observations,
                  so.OrderDescription,
-				 so.StatusOrderTrackingDescription
+				 so.StatusOrderTrackingDescription,
+				 so.NextSteps
     ) RES
     ORDER BY RES.[StageDate] ASC,
              RES.[EventID];
@@ -316,7 +320,8 @@ BEGIN
 			   OrdChkPnt.[Place],
 			   OrdChkPnt.[ManifestNumber],
 			   OrdChkPnt.[Latitude],
-			   OrdChkPnt.[Longitude]
+			   OrdChkPnt.[Longitude],
+			   OrdChkPnt.[NextSteps]
 	FROM #OrdChkpnt OrdChkPnt
 	-- Obtener datos desde usuario Desktop
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
