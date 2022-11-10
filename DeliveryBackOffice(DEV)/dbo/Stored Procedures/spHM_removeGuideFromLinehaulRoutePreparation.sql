@@ -84,12 +84,24 @@ BEGIN
 					AND	[Guide_Number] = @GuideNumber;
 
 				UPDATE	[dbo].[DeliveryOrderDetail]
-				SET		[RowStatus] = 0
+				SET		[StatusOrderId] = @STATUS_ORDER_ID
 				WHERE	[Guide_Serie] = @GuideSerie
-					AND	[Guide_Number] = @GuideNumber;
+					AND	[Guide_Number] = @GuideNumber
+					AND [RowStatus] = 1;
 			END
 		ELSE
 			BEGIN
+				-- SET ROWSTATUS 0 TO LAST CHECKPOINT
+				WITH [DOD] AS 
+				(SELECT TOP 1 [Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [RowStatus]
+				FROM	[dbo].[DeliveryOrderDetail] WITH (NOLOCK)
+				WHERE	[Guide_Serie] = @GuideSerie
+					AND [Guide_Number] = @GuideNumber
+					AND [RowStatus] = 1
+				ORDER BY [DateCreated] DESC)
+				UPDATE DOD SET [RowStatus] = 0;
+
+				-- GET THE CHECKPOINT BEFORE THE CURRENT PROCESS
 				SET @STATUS_ORDER_ID = (SELECT TOP 1 [DOD].[StatusOrderId]
 										FROM		[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
 										WHERE		[DOD].[Guide_Serie] = @GuideSerie
@@ -97,18 +109,11 @@ BEGIN
 											AND		[DOD].[RowStatus] = 1
 										ORDER BY	[DOD].[DateCreated] DESC);
 
+				-- UPDATE CHECKPOINT
 				UPDATE	[dbo].[DeliveryOrder]
 				SET		[StatusOrderId] = @STATUS_ORDER_ID
 				WHERE	[Guide_Serie] = @GuideSerie
 					AND	[Guide_Number] = @GuideNumber;
-
-				WITH [DOD] AS 
-				(SELECT [Guide_Serie], [Guide_Number], [StatusOrderId], [UserCreated], [DateCreated], [RowStatus]
-				FROM	[dbo].[DeliveryOrderDetail] WITH (NOLOCK)
-				WHERE	[Guide_Serie] = @GuideSerie
-					AND [Guide_Number] = @GuideNumber
-					AND [RowStatus] = 1)
-				UPDATE DOD SET [RowStatus] = 0;
 
 			END
 
