@@ -4,6 +4,11 @@
 -- Create date: <2020-03-04>
 -- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2022-10-19>
+-- Description:	<confirmación de devolución, ingreso a cola de webhooks>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
@@ -287,7 +292,7 @@ BEGIN
         DECLARE @VehicleTypeId INT =
                 (
                     SELECT cv.IdTypeVehicle
-                    FROM RouteAssigment ra WITH(NOLOCK)
+                    FROM RouteAssigment ra
                         INNER JOIN CatVehicle cv
                             ON cv.IdVehicle = ra.IdVehicle
                     WHERE ra.IdRoute = @IdRoute
@@ -434,7 +439,7 @@ BEGIN
 
             --Buscar si tiene asignado un servicio
             SELECT @ServiceManagementId = sm.IdServiceManagement
-            FROM ServiceManagement sm WITH(NOLOCK)
+            FROM ServiceManagement sm
             WHERE sm.IdSchedulePickup = @SchedulePickupId;
 
             --Si encontró el servicio
@@ -445,8 +450,8 @@ BEGIN
                 IF EXISTS
                 (
                     SELECT 1
-                    FROM RouteAssigment ra WITH(NOLOCK)
-                        INNER JOIN ServiceManagement sm WITH(NOLOCK)
+                    FROM RouteAssigment ra
+                        INNER JOIN ServiceManagement sm
                             ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
                                AND sm.IdServiceManagement = @ServiceManagementId
                     WHERE ra.IdRoute = @IdRoute
@@ -458,14 +463,14 @@ BEGIN
                     SET ServiceStatusId = 3,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
-                    FROM ServiceManagement sm WITH(NOLOCK)
+                    FROM ServiceManagement sm
                     WHERE sm.IdServiceManagement = @ServiceManagementId;
 
                     --Insertar EventService si no existe
                     IF NOT EXISTS
                     (
                         SELECT 1
-                        FROM EventService es WITH(NOLOCK)
+                        FROM EventService es
                         WHERE es.ServiceManagementId = @ServiceManagementId
                               AND es.ServiceStatusId = @ServiceStatus
                               AND es.RowStauts = 1
@@ -509,10 +514,10 @@ BEGIN
             BEGIN
                 SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
                        @ServiceManagementIdFind = sm.IdServiceManagement
-                FROM RouteAssigment ra WITH(NOLOCK)
-                    INNER JOIN ServiceManagement sm WITH(NOLOCK)
+                FROM RouteAssigment ra
+                    INNER JOIN ServiceManagement sm
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                    INNER JOIN SchedulePickup sp WITH(NOLOCK)
+                    INNER JOIN SchedulePickup sp
                         ON sp.SchedulePickupId = sm.IdSchedulePickup
                 WHERE ra.IdRoute = @IdRoute
                       AND ra.DateOfRoute = @tiempo
@@ -523,10 +528,10 @@ BEGIN
                 --Buscar por Dirección
                 SELECT @SchedulePickupIdFind = sm.IdSchedulePickup,
                        @ServiceManagementIdFind = sm.IdServiceManagement
-                FROM RouteAssigment ra WITH(NOLOCK)
-                    INNER JOIN ServiceManagement sm WITH(NOLOCK)
+                FROM RouteAssigment ra
+                    INNER JOIN ServiceManagement sm
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-                    INNER JOIN SchedulePickup sp WITH(NOLOCK)
+                    INNER JOIN SchedulePickup sp
                         ON sp.SchedulePickupId = sm.IdSchedulePickup
                     INNER JOIN DeliveryOrder do WITH (NOLOCK)
                         ON do.Guide_Serie = @GuideSerie
@@ -552,7 +557,7 @@ BEGIN
                 SET ServiceStatusId = 3,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE()
-                FROM ServiceManagement sm WITH(NOLOCK)
+                FROM ServiceManagement sm
                 WHERE sm.IdSchedulePickup = @SchedulePickupIdFind;
 
                 UPDATE SchedulePickup
@@ -565,7 +570,7 @@ BEGIN
                 IF NOT EXISTS
                 (
                     SELECT 1
-                    FROM EventService es WITH(NOLOCK)
+                    FROM EventService es
                     WHERE es.ServiceManagementId = @ServiceManagementIdFind
                           AND es.ServiceStatusId = @ServiceStatus
                           AND es.RowStauts = 1
@@ -694,8 +699,8 @@ BEGIN
                 SET sm.IdPuRouteAssigment = ra.IdRouteAssigment,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE()
-                FROM ServiceManagement sm WITH(NOLOCK)
-                    INNER JOIN RouteAssigment ra WITH(NOLOCK)
+                FROM ServiceManagement sm
+                    INNER JOIN RouteAssigment ra
                         ON ra.IdRoute = @IdRoute
                            AND ra.DateOfRoute = @tiempo
                 WHERE sm.IdServiceManagement = @ServiceManagementId;
@@ -712,7 +717,7 @@ BEGIN
                 IF NOT EXISTS
                 (
                     SELECT 1
-                    FROM EventService es WITH(NOLOCK)
+                    FROM EventService es
                     WHERE es.ServiceManagementId = @ServiceManagementId
                           AND es.ServiceStatusId = @ServiceStatus
                           AND es.RowStauts = 1
@@ -790,7 +795,7 @@ BEGIN
                 IF NOT EXISTS
                 (
                     SELECT 1
-                    FROM EventService es WITH(NOLOCK)
+                    FROM EventService es
                     WHERE es.ServiceManagementId = @ServiceManagementId
                           AND es.ServiceStatusId = @ServiceStatus
                           AND es.RowStauts = 1
@@ -810,6 +815,67 @@ BEGIN
                 END;
             END;
         END;
+
+
+
+		
+				-----------------WEBHOOK.INI-----------------------		
+				DECLARE @WebhookCustomerId INT = -1;
+				DECLARE @CustomerEndpointId INT = -1;
+				-- Debido a que se procesa únicamente 1 guía
+				DECLARE @GuideCurrentStatus INT = -1;
+
+				BEGIN TRY
+					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+
+					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
+					SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
+
+					SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie);
+
+					-- Cliente tiene webhook configurado para el tipo especificado
+					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
+					IF ( @WebhookCustomerId > 0 AND @CustomerEndpointId > 0 AND @GuideCurrentStatus IN (SELECT WRBU.StatusOrderId FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) WHERE WRBU.CustomerId = @WebhookCustomerId AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook) )
+					BEGIN 
+
+						DECLARE @ResponseTable AS TABLE (
+							InsertedId BIGINT
+						);
+
+						INSERT INTO 
+							[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+							(
+								[GuideSerie]
+								,[GuideNumber]
+								,[CustomerId]
+								,[StatusOrderId]
+								,[WebhookEndpointId]
+								,[HasNotified]
+								,[TokenCreated]
+								,[DateCreated]
+							)
+						OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+						VALUES
+							(
+								@GuideSerie
+								,@GuideNumber
+								,@WebhookCustomerId
+								,@GuideCurrentStatus
+								,@CustomerEndpointId
+								,0
+								,@Token
+								,GETDATE()
+							)
+
+					END
+
+				END TRY
+				BEGIN CATCH
+
+				END CATCH
+				-------------------WEBHOOK.FIN------------------------------
+
+
 
     END TRY
     BEGIN CATCH

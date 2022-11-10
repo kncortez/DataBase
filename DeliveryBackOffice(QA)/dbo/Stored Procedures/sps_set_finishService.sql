@@ -1,4 +1,13 @@
-﻿
+﻿-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2022-06-20>
+-- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2022-10-19>
+-- Description:	<devolución ingreso a cola de webhooks>
+-- =============================================
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX),
     @TblListGuides AS TblListGuides READONLY,
@@ -471,7 +480,7 @@ BEGIN
 
 
 
-                            ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y SEA COD---------
+                            ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA ENTREGA Y NO TENGA COD---------
                             IF (UPPER(@ServiceType) = 'DELIVERY')
                             BEGIN
 
@@ -486,7 +495,6 @@ BEGIN
                                         ON ppt.GuideNumber = do.Guide_Number
                                            AND ppt.GuideSerie = do.Guide_Serie
                                 WHERE lge.ExcludeCOD = 1;
-
 
                                 INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
                                 (
@@ -529,35 +537,17 @@ BEGIN
                                     LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
                                         ON pcd.GuideSerie = dlo.Guide_Serie
                                            AND pcd.GuideNumber = dlo.Guide_Number
-                                WHERE (
-                                          dlo.Collect_OnDelivery = 0
-                                          AND dlo.IsCollect = 'true'
-                                      )
-                                      AND pcd.IdProcessedGuideCOD IS NULL
-                                UNION
-                                SELECT lge.Guide_Serie,
-                                       lge.Guide_Number,
-                                       25,
-                                       @TokenP UserCreated,
-                                       cus.IdCustomer
-                                FROM #listGuidesEnabled lge
-                                    INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
-                                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-                                        ON dlo.Guide_Serie = DOP.GuideSerie
-                                           AND dlo.Guide_Number = DOP.GuideNumber
-                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                                        ON vp.CodeOfReference = dlo.Sender_ID
-                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
-                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
-                                        ON pcd.GuideSerie = dlo.Guide_Serie
-                                           AND pcd.GuideNumber = dlo.Guide_Number
-                                WHERE (
-                                          dlo.IsCollect = 'false'
-                                          AND DOP.TimePlaId = 2
-                                      )
-                                      AND pcd.IdProcessedGuideCOD IS NULL;
+                                WHERE 
+                                    dlo.Collect_OnDelivery = 0
+                                    AND dlo.IsCollect = 'true'
+									AND NOT EXISTS (SELECT
+											Top 1 1
+										FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+										INNER JOIN CostDetail CD WITH (NOLOCK)
+											ON CD.IdCost = C.IdCost
+											AND CD.IdTypeOfMoney NOT IN (2, 6)
+										WHERE C.ProductNumber = CONCAT(dlo.Guide_Serie, CAST(dlo.Guide_Number AS VARCHAR(50))))
+									AND pcd.IdProcessedGuideCOD IS NULL;
                             END;
 
                             UPDATE do
@@ -590,10 +580,26 @@ BEGIN
                                     ON lge.Guide_Number = dop.GuideNumber
                                        AND lge.Guide_Serie = dop.GuideSerie;
 
-							
+							UPDATE
+								ASCD
+							SET
+								RowStatus = 0
+								,TokenUpdated = @TokenP
+								,DateUpdated = GETDATE()
+							FROM
+								[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+								INNER JOIN
+									#listGuidesEnabled LGE WITH(NOLOCK)
+									ON
+										ASCD.GuideSerie = LGE.Guide_Serie
+										AND
+										ASCD.GuideNumber = LGE.Guide_Number
+										AND
+										ASCD.RowStatus = 1
+
 							-----------------WEBHOOK.INI-----------------------		
-							IF (UPPER(@ServiceType) = 'DELIVERY')
-                            BEGIN
+							--IF (UPPER(@ServiceType) = 'DELIVERY')
+                          --  BEGIN
 								DECLARE @WebhookCustomerTable AS TABLE(
 									CustomerId INT,
 									CustomerEndpointId BIGINT,
@@ -683,8 +689,6 @@ BEGIN
 												WCT.GuideNumber = WTQ.GuideNumber
 												AND
 												WCT.GuideStatusId = WTQ.StatusOrderId
-												AND
-												WTQ.RowStatus = 1
 									WHERE
 										WRBU.IdWebhookRestrinctionByUser IS NOT NULL
 										AND
@@ -694,7 +698,7 @@ BEGIN
 								BEGIN CATCH
 
 								END CATCH
-							END
+							--END
 							-------------------WEBHOOK.FIN------------------------------	
 
                             -------GUARDAR COSTO--------------------
@@ -809,7 +813,63 @@ BEGIN
                                 WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
                             END;
                             -----------------------------------------
+							
+							
+                            ----INSERTAR REGISTRO EN ProcessGuideCOD CUANDO SEA RECOLECCIÓN Y NO TENGA COD---------
+							IF (UPPER(@ServiceType) = 'PICKUP')
+							BEGIN
+							
+								UPDATE do
+								SET do.Collect_OnDelivery = 0
+								   ,do.LastCollectOnDelivery = ppt.CODAmount
+								FROM DeliveryOrder do 
+								INNER JOIN #listGuidesEnabled lge
+									ON lge.Guide_Number = do.Guide_Number
+									AND lge.Guide_Serie = do.Guide_Serie
+								INNER JOIN #PendingPaymentTemp ppt
+									ON ppt.GuideNumber = do.Guide_Number
+									AND ppt.GuideSerie = do.Guide_Serie
+								WHERE lge.ExcludeCOD = 1;
 
+								INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD (GuideSerie,
+								GuideNumber,
+								DataOriginId,
+								Token,
+								CustomerID)
+									SELECT
+										lge.Guide_Serie
+									   ,lge.Guide_Number
+									   ,25
+									   ,@TokenP UserCreated
+									   ,cus.IdCustomer
+									FROM #listGuidesEnabled lge
+									INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+										ON lge.Guide_Number = dlo.Guide_Number
+									INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
+										ON dlo.Guide_Serie = DOP.GuideSerie
+											AND dlo.Guide_Number = DOP.GuideNumber
+									LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+										ON vp.CodeOfReference = dlo.Sender_ID
+									LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+										ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+									LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+										ON pcd.GuideSerie = dlo.Guide_Serie
+											AND pcd.GuideNumber = dlo.Guide_Number
+									WHERE (dlo.IsCollect = 'false'
+									AND DOP.PayTypeId = 1
+									AND (DOP.TimePlaId = 1
+									OR DOP.TimePlaId = 2)
+									AND DOP.TypeofInOutMoneyId = 1)
+									AND NOT EXISTS (SELECT
+											*
+										FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
+										INNER JOIN CostDetail CD WITH (NOLOCK)
+											ON CD.IdCost = C.IdCost
+											AND CD.IdTypeOfMoney NOT IN (2, 6)
+										WHERE C.ProductNumber = CONCAT(dlo.Guide_Serie, CAST(dlo.Guide_Number AS VARCHAR(50))))
+									AND pcd.IdProcessedGuideCOD IS NULL
+
+							END;
 
                             -----------------------------------------
 
