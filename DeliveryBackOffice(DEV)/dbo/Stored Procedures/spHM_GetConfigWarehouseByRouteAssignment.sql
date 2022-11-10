@@ -61,7 +61,7 @@ BEGIN
 				SELECT
 					1 'StatusCode'
 				   ,'Datos cálculados correctamente.' 'Description'
-
+				   
 				UPDATE
 					URS
 				SET
@@ -84,6 +84,8 @@ BEGIN
 							INNER JOIN [DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD WITH(NOLOCK)
 							ON URS.IdUnifiedRouteSettlement =URSD.UnifiedRouteSettlementId
 							AND URSD.RowStatus = 1
+							LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+							ON URSD.GuideSerie = DO.Guide_Serie AND URSD.GuideNumber = DO.Guide_Number
 							OUTER APPLY
 							(
 								SELECT
@@ -94,6 +96,7 @@ BEGIN
 									URSD.IdUnifiedRouteSettlementDetail = URSDPreal.UnifiedRouteSettlementDetailId
 									AND URSDPreal.RowStatus = 1
 									AND URSDPreal.ActCode IS NULL
+									AND URSDPreal.PieceNumber <= (DO.Pieces_Dry + DO.Pieces_Cold) 
 							) URSDPreal
 							OUTER APPLY
 							(
@@ -105,6 +108,7 @@ BEGIN
 									URSD.IdUnifiedRouteSettlementDetail = URSDPmiss.UnifiedRouteSettlementDetailId
 									AND URSDPmiss.RowStatus = 1
 									AND URSDPmiss.ActCode IS NOT NULL
+									AND URSDPmiss.PieceNumber <= (DO.Pieces_Dry + DO.Pieces_Cold) 
 							) URSDPmiss
 						GROUP BY
 							URS.IdUnifiedRouteSettlement
