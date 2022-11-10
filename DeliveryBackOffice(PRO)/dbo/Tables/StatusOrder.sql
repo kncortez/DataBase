@@ -3,10 +3,13 @@
     [OrderDescription]    NVARCHAR (100) NOT NULL,
     [CatCheckpointTypeId] TINYINT        DEFAULT ((2)) NOT NULL,
     [CatStatusTypeId]     INT            NULL,
+    [StatusMessage]       NVARCHAR (500) NULL,
     CONSTRAINT [PK_Table_1] PRIMARY KEY CLUSTERED ([StatusOrderId] ASC),
     CONSTRAINT [FK_StatusOrder_CatCheckpointType] FOREIGN KEY ([CatCheckpointTypeId]) REFERENCES [dbo].[CatCheckpointType] ([IdCatCheckpointType]),
     CONSTRAINT [FK_StatusOrder_StatusType] FOREIGN KEY ([CatStatusTypeId]) REFERENCES [dbo].[CatStatusType] ([IdCatStatusType])
 );
+
+
 
 
 
@@ -29,4 +32,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del tipo de visibilidad de la tabla CatStatusType.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'StatusOrder', @level2type = N'COLUMN', @level2name = N'CatStatusTypeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Mensaje de estado para consumo Contact Center', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'StatusOrder', @level2type = N'COLUMN', @level2name = N'StatusMessage';
 
