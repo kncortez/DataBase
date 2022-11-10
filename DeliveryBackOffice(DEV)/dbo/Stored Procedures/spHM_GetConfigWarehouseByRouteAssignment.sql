@@ -62,6 +62,56 @@ BEGIN
 					1 'StatusCode'
 				   ,'Datos cálculados correctamente.' 'Description'
 
+				UPDATE
+					URS
+				SET
+					URS.TotalGuidesSettled = TotalPieces.TotalGuides
+					,URS.TotalPiecesSettled = TotalPieces.TotalSettled
+					,URS.TotalPiecesMissing = TotalPieces.TotalMissing
+				FROM 
+					[DeliveryBackOffice].[dbo].[UnifiedRouteSettlement] URS WITH(NOLOCK)
+					INNER JOIN
+					(
+						SELECT
+							URS.IdUnifiedRouteSettlement,
+							COUNT(DISTINCT URSD.GuideNumber) 'TotalGuides',
+							SUM( URSDPreal.RealPieces) 'TotalSettled',
+							SUM( URSDPmiss.MissingPieces) 'TotalMissing'
+						FROM
+							@RouteAssignment RA
+							INNER JOIN [DeliveryBackOffice].[dbo].[UnifiedRouteSettlement]  URS WITH (NOLOCK)
+							ON URS.RouteAssignmentId = RA.IdRouteAssignment
+							INNER JOIN [DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD WITH(NOLOCK)
+							ON URS.IdUnifiedRouteSettlement =URSD.UnifiedRouteSettlementId
+							AND URSD.RowStatus = 1
+							OUTER APPLY
+							(
+								SELECT
+									COUNT(DISTINCT URSDPreal.PieceNumber) 'RealPieces'
+								FROM
+									[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetailPiece] URSDPreal WITH(NOLOCK)
+								WHERE
+									URSD.IdUnifiedRouteSettlementDetail = URSDPreal.UnifiedRouteSettlementDetailId
+									AND URSDPreal.RowStatus = 1
+									AND URSDPreal.ActCode IS NULL
+							) URSDPreal
+							OUTER APPLY
+							(
+								SELECT
+									COUNT(DISTINCT URSDPmiss.PieceNumber) 'MissingPieces'
+								FROM
+									[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetailPiece] URSDPmiss WITH(NOLOCK)
+								WHERE
+									URSD.IdUnifiedRouteSettlementDetail = URSDPmiss.UnifiedRouteSettlementDetailId
+									AND URSDPmiss.RowStatus = 1
+									AND URSDPmiss.ActCode IS NOT NULL
+							) URSDPmiss
+						GROUP BY
+							URS.IdUnifiedRouteSettlement
+					) TotalPieces
+					ON
+						URS.IdUnifiedRouteSettlement = TotalPieces.IdUnifiedRouteSettlement
+
 				SELECT 
 					@TotalSettlementPieces = SUM(urs.TotalPiecesSettled)
 				FROM UnifiedRouteSettlement urs WITH (NOLOCK)
@@ -71,7 +121,7 @@ BEGIN
 				and urs.UserSettlement is null
 
 				SELECT
-					@TotalServicesPending = COUNT(1)
+					@TotalServicesPending = COUNT(DISTINCT sm.IdServiceManagement)
 				FROM @RouteAssignment ra
 				INNER JOIN ServiceManagement sm WITH (NOLOCK)
 					ON ra.IdRouteAssignment = sm.IdPuRouteAssigment
@@ -88,7 +138,6 @@ BEGIN
 				AND dopd.DopId IS NULL
 				AND css.[Name] = 'Asignado a Ruta'
 				AND URS.UserSettlement IS NULL
-				GROUP BY sm.IdServiceManagement
 
 				-- Table 0 - Contadores de piezas
 				SELECT
@@ -98,19 +147,19 @@ BEGIN
 				   ,ISNULL(SUM(IIF((stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
 					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')
 					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) TotalPickup
-				   ,ISNULL(SUM(IIF((((stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
+				   ,ISNULL(SUM(IIF(((URS.UserSettlement IS NULL AND (stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
 					so.OrderDescription NOT IN ('Generado', 'Solicitado', 'Anulado', 'Programado para recolección')) OR
-					(stsm.[Name] IN ('Entrega', 'Devolución') AND
+					(URS.UserSettlement IS NULL AND stsm.[Name] IN ('Entrega', 'Devolución') AND
 					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Anulado', 'Entrega parcial', 'Traslado a Express Center')))
 					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) TotalPhysicalPieces
-				   ,ISNULL(SUM(IIF((stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
+				   ,ISNULL(SUM(IIF(URS.UserSettlement IS NULL AND (stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección') AND
 					so.OrderDescription IN ('Generado', 'Solicitado', 'Programado para recolección')
 					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0)
-					+ ISNULL(SUM(IIF(stsm.[Name] IN ('Entrega', 'Devolución') AND
+					+ ISNULL(SUM(IIF(URS.UserSettlement IS NULL AND stsm.[Name] IN ('Entrega', 'Devolución') AND
 					so.OrderDescription NOT IN ('Entregado', 'Entregado En Express Center', 'COD liquidado', 'COD pagado', 'Devuelto', 'Devuelto en Express Center', 'Intento de entrega fallida', 'Traslado a Express Center')
-					, do.Pieces_Dry + do.Pieces_Cold, 0)), 0) + @TotalServicesPending TotalPendingSettlement
+					, 1, 0)), 0) + @TotalServicesPending TotalPendingSettlement
 				   ,ISNULL(@TotalSettlementPieces, 0) TotalSettlementPieces
-				   ,ISNULL(SUM(IIF(stsm.[Name] IN ('Entrega', 'Devolución') AND
+				   ,ISNULL(SUM(IIF(URS.UserSettlement IS NULL AND stsm.[Name] IN ('Entrega', 'Devolución') AND
 					so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto')
 					, IIF(do.IsCollect = 1, do.PriceShippment, 0) + ISNULL(do.Collect_OnDelivery, 0), 0)), 0) TotalCOD
 				FROM @RouteAssignment ra
@@ -139,16 +188,15 @@ BEGIN
 						AND ISNULL(dopd.GuideNumber, rpd.Guide_Number) = do.Guide_Number
 				INNER JOIN StatusOrder so WITH (NOLOCK)
 					ON do.StatusOrderId = so.StatusOrderId
-				INNER JOIN DBO.UnifiedRouteSettlement URS
+				LEFT JOIN UnifiedRouteSettlement URS
 					ON URS.RouteAssignmentId=RA.IdRouteAssignment
-				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
+				LEFT JOIN UnifiedRouteSettlementDetail URSD
 					ON URSD.GuideNumber=DO.Guide_Number
 					AND URSD.GuideSerie=DO.Guide_Serie
 					AND URSD.RowStatus=1
 					AND URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement	
 				WHERE 
 					(css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL)
-					AND URS.UserSettlement IS NULL
 
 				-- Table 2 - Información Courier
 				SELECT
