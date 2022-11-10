@@ -63,6 +63,7 @@ BEGIN
 												'"PiecesDry":'+ CONVERT(VARCHAR,ISNULL( dor.Pieces_Dry, '') ) +','+
 												'"PiecesCold":'+ CONVERT(VARCHAR,ISNULL( dor.Pieces_Cold, '') )  +','+
 												'"ShipmentPrice":'+CONVERT(VARCHAR,ISNULL( dor.PriceShippment, '') ) +','+
+												'"IsLastMileReturn":'+CONVERT(VARCHAR, ISNULL( dor.IsLastMileReturn, 0) ) +','+
 												'"COD":'+CONVERT(VARCHAR,ISNULL( dor.Collect_OnDelivery, '') ) +''+
 											'},'+
 									'"CourierData":{'+
