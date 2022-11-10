@@ -34,6 +34,7 @@ BEGIN
 		DECLARE @ORDERSTATUS_TRASLATE_Del INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Entregado En Express Center');
 		DECLARE @ORDERSTATUS_TRASLATE_Ret INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto en Express Center');
 		DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+		DECLARE @STATUSTRANSFER_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WITH (NOLOCK) WHERE OrderDescription ='Traslado a Express Center');
 
 		DECLARE @GuidesToSettled TABLE (
 			GuideSerie NVARCHAR(2),
@@ -629,7 +630,7 @@ BEGIN
 						SMD.ServiceManagement 'IdSettlement',
 						RA.IdRoute,
 						SUM(CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN 1 ELSE 0 END) 'IncidencesCount',--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
-						(CASE WHEN DO.StatusOrderId in(@STATUSDELIVERED_DO,@STATUSRETURNED_DO) THEN 1 ELSE 0 END) 'Completed'
+						(CASE WHEN DO.StatusOrderId in(@STATUSDELIVERED_DO,@STATUSRETURNED_DO,@STATUSTRANSFER_DO) THEN 1 ELSE 0 END) 'Completed'
 						--SM.IdServiceManagement 'IdSM'
 			FROM DBO.RouteAssigment RA 
 			INNER JOIN DBO.ServiceManagement SM 
