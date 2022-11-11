@@ -75,8 +75,8 @@ BEGIN
 						SELECT
 							URS.IdUnifiedRouteSettlement,
 							COUNT(DISTINCT URSD.GuideNumber) 'TotalGuides',
-							SUM( URSDPreal.RealPieces) 'TotalSettled',
-							SUM( URSDPmiss.MissingPieces) 'TotalMissing'
+							SUM( URSD.PiecesSettled ) 'TotalSettled',
+							SUM( URSD.PiecesMissing ) 'TotalMissing'
 						FROM
 							@RouteAssignment RA
 							INNER JOIN [DeliveryBackOffice].[dbo].[UnifiedRouteSettlement]  URS WITH (NOLOCK)
@@ -84,32 +84,6 @@ BEGIN
 							INNER JOIN [DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD WITH(NOLOCK)
 							ON URS.IdUnifiedRouteSettlement =URSD.UnifiedRouteSettlementId
 							AND URSD.RowStatus = 1
-							LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-							ON URSD.GuideSerie = DO.Guide_Serie AND URSD.GuideNumber = DO.Guide_Number
-							OUTER APPLY
-							(
-								SELECT
-									COUNT(DISTINCT URSDPreal.PieceNumber) 'RealPieces'
-								FROM
-									[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetailPiece] URSDPreal WITH(NOLOCK)
-								WHERE
-									URSD.IdUnifiedRouteSettlementDetail = URSDPreal.UnifiedRouteSettlementDetailId
-									AND URSDPreal.RowStatus = 1
-									AND URSDPreal.ActCode IS NULL
-									AND URSDPreal.PieceNumber <= (DO.Pieces_Dry + DO.Pieces_Cold) 
-							) URSDPreal
-							OUTER APPLY
-							(
-								SELECT
-									COUNT(DISTINCT URSDPmiss.PieceNumber) 'MissingPieces'
-								FROM
-									[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetailPiece] URSDPmiss WITH(NOLOCK)
-								WHERE
-									URSD.IdUnifiedRouteSettlementDetail = URSDPmiss.UnifiedRouteSettlementDetailId
-									AND URSDPmiss.RowStatus = 1
-									AND URSDPmiss.ActCode IS NOT NULL
-									AND URSDPmiss.PieceNumber <= (DO.Pieces_Dry + DO.Pieces_Cold) 
-							) URSDPmiss
 						GROUP BY
 							URS.IdUnifiedRouteSettlement
 					) TotalPieces
