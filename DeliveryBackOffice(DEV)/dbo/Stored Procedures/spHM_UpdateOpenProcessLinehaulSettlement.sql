@@ -17,8 +17,14 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	DECLARE @SETTLEMENT_STATUS_ORDER_ID AS INT; -- StatusOrderId
+
 	BEGIN TRANSACTION
 	BEGIN TRY
+		SET @SETTLEMENT_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
+											FROM	[dbo].[StatusOrder] SO
+											WHERE	[SO].[OrderDescription] = 'Trasladado a Hub');
+
 		UPDATE	[LinehaulRouteSettlementContainerDetail]
 		SET		[IsOpenProcess] = @OpenProcess,
 				[UserProcess] = @TknUser,
