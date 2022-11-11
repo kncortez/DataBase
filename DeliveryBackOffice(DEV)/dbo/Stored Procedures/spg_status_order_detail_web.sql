@@ -6,12 +6,22 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
     @Guide_Serie NVARCHAR(2),
-    @Guide_Number BIGINT
+    @Guide_Number BIGINT,
+	@Receiver_Phone NVARCHAR(100) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+	--Control para mostrar imagenes
+	DECLARE @IsPhoneValid BIT = CASE WHEN @Receiver_Phone IS NOT NULL AND LTRIM(RTRIM(@Receiver_Phone)) = ( SELECT
+			LTRIM(RTRIM(Receiver_Phone))
+		FROM DeliveryOrder WITH (NOLOCK)
+		WHERE Guide_Serie = @Guide_Serie
+		AND Guide_Number = @Guide_Number) THEN 1
+		ELSE 0
+	END
 
 	IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL DROP TABLE #OrdChkpnt;
 
@@ -69,8 +79,8 @@ BEGIN
 			ISNULL([NameOfReceiver], '') AS NameOfReceiver,
 			ISNULL(Sender_FirstName, '') + ' ' + ISNULL(Sender_LastName, '') AS Place,
 			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) AS [ManifestNumber],
-			ISNULL(da.Latitude,'')  [Latitude],
-			ISNULL(da.Longitude,'') [Longitude],
+			CASE WHEN @IsPhoneValid = 1 THEN ISNULL(da.Latitude,'') ELSE '' END  [Latitude],
+			CASE WHEN @IsPhoneValid = 1 THEN ISNULL(da.Longitude,'') ELSE '' END [Longitude],
 			'' [Token],
 			NULL [NextSteps]
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
@@ -127,7 +137,7 @@ BEGIN
 					ISNULL(dod.Observations, '')
              END
             ) AS [StageDescription]
-            ,(CASE ROW_NUMBER() OVER (ORDER BY CONVERT(DATE, dod.DateCreated) ASC)
+            ,IIF(@IsPhoneValid = 1, (CASE ROW_NUMBER() OVER (ORDER BY CONVERT(DATE, dod.DateCreated) ASC)
                  WHEN 1 THEN
                      ISNULL(
                                ISNULL(
@@ -173,10 +183,10 @@ BEGIN
                  ELSE
                      ''
              END
-            ) AS [ImagePath],
+            ), '') AS [ImagePath],
 
 			(SELECT TOP 1
-			IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
+			IIF([dp].[Path_Dry] = '' AND @IsPhoneValid = 1, dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
                                            JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
@@ -187,7 +197,7 @@ BEGIN
                                              AND dp.Guide_Number = @Guide_Number order By dp.Date_Photo desc) AS [Dry],
 
 			(SELECT TOP 1
-			IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
+			IIF([dp].[Path_Cold] = '' AND @IsPhoneValid = 1, dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
                                            JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie

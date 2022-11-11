@@ -6,7 +6,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2),
-    @Guide_Number BIGINT
+    @Guide_Number BIGINT,
+	@Receiver_Phone NVARCHAR(100) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -23,7 +24,8 @@ BEGIN
 		Manifest_Serie NVARCHAR(2),
 		Manifest_Number INT,
 		NameOfReceiver NVARCHAR(200),
-		Delivery_Max_Date DATETIME
+		Delivery_Max_Date DATETIME,
+		Receiver_Phone NVARCHAR(100)
 	);
 
 	-- Variables de datos de entrega
@@ -60,7 +62,7 @@ BEGIN
 	-- Datos de guía
 	INSERT INTO
 		@GuideOrderTemp
-		(Guide_Serie, Guide_Number, SenderName, Sender_Address, ReceiverName, Receiver_Address, Manifest_Serie, Manifest_Number, NameOfReceiver, Delivery_Max_Date)
+		(Guide_Serie, Guide_Number, SenderName, Sender_Address, ReceiverName, Receiver_Address, Manifest_Serie, Manifest_Number, NameOfReceiver, Delivery_Max_Date, Receiver_Phone)
 	SELECT
 		TOP 1
 			DO.Guide_Serie
@@ -73,12 +75,20 @@ BEGIN
 			, DO.Manifest_Number
 			, DO.NameOfReceiver
 			, DO.Delivery_Max_Date
+			, LTRIM(RTRIM(DO.Receiver_Phone))
 	FROM
 		[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	WHERE
 		DO.Guide_Serie = @Guide_Serie
 		AND
 		DO.Guide_Number = @Guide_Number;
+
+	--Control para mostrar imagenes
+	DECLARE @IsPhoneValid BIT = CASE WHEN @Receiver_Phone IS NOT NULL AND LTRIM(RTRIM(@Receiver_Phone)) = ( SELECT
+			Receiver_Phone
+		FROM @GuideOrderTemp) THEN 1
+		ELSE 0
+	END
 
 	IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL DROP TABLE #OrdChkpnt;
 
@@ -190,8 +200,7 @@ BEGIN
 					ISNULL(so.StatusOrderTrackingDescription, '')
              END
             ) AS [StageDescription]
-            ,(CASE dod.StatusOrderId
-                 WHEN 5 THEN
+            ,(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN
                      ISNULL(
                                ISNULL(
                                (
@@ -237,7 +246,7 @@ BEGIN
              END
             ) AS [ImagePath],
 
-			(CASE WHEN dod.StatusOrderId = 5 THEN 
+			(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN 
 				(SELECT TOP 1
 					IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
 						FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
@@ -249,7 +258,7 @@ BEGIN
 								AND dp.Guide_Number = @Guide_Number order By dp.Date_Photo desc)
 			ELSE '' END) AS [Dry],
 
-			(CASE WHEN dod.StatusOrderId = 5 THEN 
+			(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN 
 				(SELECT TOP 1
 					IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
                         FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
@@ -264,8 +273,8 @@ BEGIN
             (CASE WHEN dod.StatusOrderId = 5 THEN (SELECT TOP 1 NameOfReceiver FROM @GuideOrderTemp) ELSE '' END) AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
-            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
+            (CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
+            (CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
 			dod.UserCreated Token,
 			so.NextSteps NextSteps
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
