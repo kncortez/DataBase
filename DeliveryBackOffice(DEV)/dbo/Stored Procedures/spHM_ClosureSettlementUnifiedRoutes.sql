@@ -48,6 +48,8 @@ BEGIN
 	DECLARE @RETURNEDTOFORZA_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Retornado a forza');
 	DECLARE @STATUSLOST_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Paquete Extraviado');
 
+	DECLARE @STATUSTRANSFER_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WITH (NOLOCK) WHERE OrderDescription ='Traslado a Express Center');
+
 	DECLARE @IdSubTypeDelivery INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Entrega');
 	DECLARE @IdSubTypeRecollection INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Recolección');
 	DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Devolución');
@@ -193,7 +195,7 @@ BEGIN
 		DECLARE @DELIVERYFAILEDCOUNT_DL INT = 0;
 		SELECT 
 			@GUIDESCOUNTNOTLIQUIDED_DL=COUNT(DISTINCT CASE WHEN URSD.UnifiedRouteSettlementId IS NULL OR  NOT(URSD.RowStatus=1 AND URSD.IsOpenProcess IN (0,NULL)) THEN DO.Guide_Number ELSE NULL END)--CANTIDAD DE GUÍAS SIN LIQUIDAR
-			,@GUIDESCOUNTNOTDELIVERED_DL=SUM(CASE WHEN DO.StatusOrderId NOT IN (@STATUSDELIVERED_DO,@STATUSRETURNED_DO,@STATUSFAILED_DO,@STATUSLOST_DO) THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE ENTREGA/RECOLECCIÓN QUE NO ESTAN EN ESTADO DE ENTREGA O DEVUELTO, INTENTO DE ENTREGA FALLIDO
+			,@GUIDESCOUNTNOTDELIVERED_DL=SUM(CASE WHEN DO.StatusOrderId NOT IN (@STATUSDELIVERED_DO,@STATUSRETURNED_DO,@STATUSFAILED_DO,@STATUSLOST_DO,@STATUSTRANSFER_DO) THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE ENTREGA/RECOLECCIÓN QUE NO ESTAN EN ESTADO DE ENTREGA O DEVUELTO, INTENTO DE ENTREGA FALLIDO
 			,@SERVICESCOUNTWITHINCIDENCE_DL=SUM(CASE WHEN SM.ServiceStatusId=@STATUSINCIDENCE_SM THEN 1 ELSE 0 END) --CANTIDAD DE SERVICIOS CON INCIDENCIA
 			--,@DELIVERYFAILEDCOUNT_DL=COUNT(DISTINCT CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN CHECKSUM(DOD.StatusCheckpoint,DO.Guide_Number,DO.Guide_Serie) ELSE NULL END)--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
 			,@TOTALGUIDESDL = COUNT(DISTINCT CHECKSUM(DO.Guide_Number,DO.Guide_Serie))
@@ -488,16 +490,69 @@ BEGIN
 				GROUP BY AGS.IdUnifiedRouteSettlement
 				) AS SUB1 ON SUB1.IdUnifiedRouteSettlement=URS.IdUnifiedRouteSettlement;
 
+			---------------------------------------------
+			--INICIO Actualización de UnifiedRouteSettlementDetail y montos de servicio y montos de servicios COD 
+
+					DECLARE @BrainProcessedGuides AS TABLE
+						(GuideSerie NVARCHAR(2),
+						GuideNumber INT,
+						IsCollect BIT,
+						Price DECIMAL(18, 2),
+						COD DECIMAL(18, 2),
+						AmountPaid DECIMAL(18, 2),
+						CODPaid DECIMAL(18, 2),
+						CODIsPaid BIT,
+						PaymentTime INT,
+						TimeSequence INT,
+						FelNumber NVARCHAR(50),
+						IsPaid BIT,
+						IsCustomer INT,
+						ConditionPayment NVARCHAR(200),
+						HaveCredit BIT,
+						CollectCOD BIT,
+						ReturnRate DECIMAL(5, 2),
+						AmountToPay DECIMAL(18, 2),
+						CODAmount DECIMAL(18, 2),
+						ReturnRates DECIMAL(5, 2));
+					DECLARE @GUIDECONCAT NVARCHAR(MAX);
+					set @GUIDECONCAT= (select STUFF(
+							 (
+							  SELECT ',' + BPG.GuideSerie+CONVERT(nvarchar,BPG.GuideNumber)
+							  FROM @BrainProcessedGuides as BPG
+							  FOR XML PATH ('')
+							  ), 1, 1, ''
+						   ) );
+
+
+					INSERT INTO @BrainProcessedGuides
+					EXEC [dbo].[spws_get_guide_pending_payment] @GUIDECONCAT, -- Guías recibidas
+																3,            -- Tiempo de pago 2 - En recolección
+																1,            -- No es ret5orno
+																'',           -- Codeapp
+																1,            -- Identificador de modulo donde proviene
+																@Token;       -- Token de courier
+
 			UPDATE URSD SET 
 				URSD.DateSettlement=@CURRENTDATE 
 				,URSD.DateUpdated=@CURRENTDATE 
 				,URSD.TokenUpdated=@CURRENTDATE 
 				,URSD.UserSettlement=@Token
+				,URSD.ServiceSettlementAmount=IIF(1 IN (URSD.IsDelivered,URSD.IsReturn),BPG.AmountToPay,URSD.ServiceSettlementAmount)
+				,URSD.ServiceCODSettlementAmount=IIF(1 IN (URSD.IsDelivered),BPG.CODAmount,URSD.ServiceCODSettlementAmount)
 			FROM DBO.UnifiedRouteSettlementDetail URSD 
 				INNER JOIN  DBO.UnifiedRouteSettlement URS ON 
 					URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+				LEFT JOIN @BrainProcessedGuides BPG ON
+					URSD.GuideNumber = BPG.GuideNumber
+					AND URSD.GuideSerie=BPG.GuideSerie
 			WHERE URS.IdUnifiedRouteSettlement 
 				IN (SELECT AGS.IdUnifiedRouteSettlement FROM @AllGuidesSettled AGS) 
+				--AND 
+				
+				
+
+			--FIN Actualización de UnifiedRouteSettlementDetail y montos de servicio y montos de servicios COD 
+			---------------------------------------------
 			
 		
 			----------------------------------------------------
