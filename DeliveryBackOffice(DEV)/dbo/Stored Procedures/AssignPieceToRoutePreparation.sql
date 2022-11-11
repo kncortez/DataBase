@@ -544,7 +544,17 @@ BEGIN
 				IF @IsReturn =1
 				BEGIN 
 
-					print('devol');
+
+
+
+					--SELECT @AmountToPay  = bpg.AmountToPay
+					--FROM  @BrainProcessedGuides bpg
+
+					SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment WHERE Name = 'Devolución')
+				END
+				ELSE
+				BEGIN
+
 					DECLARE @BrainProcessedGuides AS TABLE
 						(GuideSerie NVARCHAR(2),
 						GuideNumber INT,
@@ -574,12 +584,11 @@ BEGIN
 																'',           -- Codeapp
 																1,            -- Identificador de modulo donde proviene
 																@Token;       -- Token de courier
-
 					SELECT @AmountToPay  = bpg.AmountToPay
 					FROM  @BrainProcessedGuides bpg
-
-					SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment WHERE Name = 'Devolución')
 				END
+
+
 				SELECT 
 					@ServiceManagementDetailId=ServiceManagementDetailId
 				FROM DBO.RoutePreparationDetail 
@@ -784,7 +793,7 @@ BEGIN
 					END
 					
 					UPDATE ServiceManagementDetail SET
-						ServiceAmount = ServiceAmount+ @PriceShippment,
+						ServiceAmount = IIF(@IsReturn=1,ServiceAmount,ServiceAmount+@AmountToPay),
 						ServiceExtraAmount = IIF(@IsReturn=1,0,(ServiceExtraAmount +@GuideCOD)),
 						TokenUpdated=@Token,
 						DateUpdated=GETDATE()
