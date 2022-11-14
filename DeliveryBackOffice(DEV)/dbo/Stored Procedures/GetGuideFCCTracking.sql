@@ -143,22 +143,22 @@ BEGIN
 				TOP 1
 					1 [blnResult]
 					,CASE 
-					     WHEN RT.GuideStatus = 2   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<municipio>',RT.TownShipName)
-					     WHEN RT.GuideStatus = 12  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<catálogo_de_incidencias>', ISNULL(RT.Incidencia,''))
-						 WHEN RT.GuideStatus = 3   THEN REPLACE (REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<municipio>',RT.TownShipName),'<departamento>',RT.Departament)
-						 WHEN RT.GuideStatus = 5   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<nombre_persona_recibe>', RT.ReceiverName)
-						 WHEN RT.GuideStatus = 6   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 8   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 10  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 11  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 19  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 20  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 21  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 22  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 23  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 29  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 WHEN RT.GuideStatus = 31  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
-						 ELSE REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2)
+					     WHEN RT.GuideStatusDescription = 'Recolectado'   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<municipio>',RT.TownShipName)
+					     WHEN RT.GuideStatusDescription = 'Intento de entrega fallida'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<catálogo_de_incidencias>', ISNULL(RT.Incidencia,''))
+						 WHEN RT.GuideStatusDescription = 'Intento de entrega fallida'   THEN REPLACE (REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<municipio>',RT.TownShipName),'<departamento>',RT.Departament)
+						 WHEN RT.GuideStatusDescription = 'Entregado'   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<nombre_persona_recibe>', RT.ReceiverName)
+						 WHEN RT.GuideStatusDescription = 'Retornado al origen'   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Retornado a forza'   THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'En Inventario'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Arribó a las instalaciones'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'En Tránsito'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Traslado a Express Center'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Recibido En Express Center'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Entregado En Express Center'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Devuelto en Express Center'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Reenviado al Hub origen para devolución'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 WHEN RT.GuideStatusDescription = 'Inventario de devoluciones'  THEN REPLACE (REPLACE (REPLACE(RT.GuideStatusMesseage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2),'<Nombre completo del HUB/EXC>', RT.Incidencia)
+						 ELSE REPLACE (REPLACE(@GoodResponseMessage,'<STATUS>',RT.GuideStatusDescription),'<DATE>', @Datetext2)
 					END [messageResult]
 					,@FailureResponseMessage [errorMessageResult]
 					,RT.GuideNumber
