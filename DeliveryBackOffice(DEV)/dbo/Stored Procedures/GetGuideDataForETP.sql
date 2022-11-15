@@ -17,6 +17,7 @@ BEGIN
 		ServiceDestinyName NVARCHAR(200),
 		ServiceCustomerName NVARCHAR(200),
 		ServiceDestinyPhone NVARCHAR(100),
+		ServiceCustomerPhone NVARCHAR(100),
 		ServiceDestinyAddress NVARCHAR(600),
 		IsReturn BIT,
 		DeliveryToken NVARCHAR(50)
@@ -25,13 +26,14 @@ BEGIN
 	BEGIN TRY
 
 		INSERT INTO @ResponseTable
-			(CourierName, CourierPhones, ServiceDestinyName, ServiceCustomerName, ServiceDestinyPhone, ServiceDestinyAddress, IsReturn, DeliveryToken)
+			(CourierName, CourierPhones, ServiceDestinyName, ServiceCustomerName, ServiceDestinyPhone, ServiceCustomerPhone, ServiceDestinyAddress, IsReturn, DeliveryToken)
 		SELECT
 			TOP 1
 				ISNULL(LTRIM(RTRIM(CONCAT(SR.First_Name, ' ', SR.Last_Name))), '') 'CourierName',
 				ISNULL(SR.Phone,'') 'CourierPhones',
 				LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName, ' ', DO.Receiver_LastName))) 'ServiceDestinyName',
 				LTRIM(RTRIM(CONCAT(DO.Sender_FirstName, ' ', DO.Sender_LastName))) 'ServiceCustomerName',
+				DO.Receiver_Phone 'ServiceDestinyPhone',
 				DO.Receiver_Phone 'ServiceCustomerPhone',
 				DO.Receiver_Address 'ServiceDestinyAddress',
 				ISNULL(DO.IsLastMileReturn, 0) 'IsReturn',
@@ -99,6 +101,7 @@ BEGIN
 				RT.ServiceDestinyName,
 				RT.ServiceCustomerName,
 				RT.ServiceDestinyPhone,
+				RT.ServiceCustomerPhone,
 				RT.ServiceDestinyAddress,
 				RT.IsReturn,
 				RT.DeliveryToken
