@@ -1340,6 +1340,7 @@
     <Build Include="dbo\Stored Procedures\GetCODUnifiedRouteSettlement.sql" />
     <Build Include="dbo\User Defined Types\TblId.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetGuideDetailPendingToSettled.sql" />
+    <Build Include="dbo\Stored Procedures\sp_GetDailyRoute.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
