@@ -116,6 +116,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -387,6 +388,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -670,6 +672,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -887,6 +890,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -1123,6 +1127,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -1357,6 +1362,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -1620,6 +1626,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",' + 
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   '"Registros":"' + CONVERT(VARCHAR, @counter3C) + '",' + '"IdBatch":'
 											   + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ',' + '"RequestDate":"'
 											   + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') + '",' + '"Source":"'
@@ -1833,6 +1840,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 												+ '"Registros":"' + CONVERT(VARCHAR, @counter3) + '",' + '"IdBatch":'
 											   + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ',' + '"RequestDate":"'
 											   + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') + '",' + '"Source":"'
@@ -2061,6 +2069,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2277,6 +2286,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2518,6 +2528,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2703,6 +2714,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2912,6 +2924,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3122,6 +3135,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3355,6 +3369,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",' 
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3543,6 +3558,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",' 
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
