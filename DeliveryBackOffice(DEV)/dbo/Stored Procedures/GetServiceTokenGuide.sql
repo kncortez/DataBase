@@ -23,11 +23,12 @@ BEGIN
 
 	-- Variables de respuesta
 	DECLARE @jsonResult NVARCHAR(MAX);
-
+	
 	SET @IsDelivery = (
-		SELECT [IsDelivery] 
+		SELECT TOP 1 (CASE WHEN SDFG.[IsDelivery] = 1 AND SDFG.IsInRoute = 0 THEN 1 ELSE 0 END) 
 		FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
 		WHERE SDFG.GuideToken = @GuideToken
+		ORDER BY SDFG.DateCreated DESC
 	);
 
 	IF (@IsDelivery = 1) -- Servicio es de entrega

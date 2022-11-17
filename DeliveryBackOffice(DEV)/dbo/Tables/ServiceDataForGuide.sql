@@ -18,10 +18,15 @@
     [StartTime2]            TIME (7)         NULL,
     [EndTime2]              TIME (7)         NULL,
     [Accuracy]              VARCHAR (20)     NULL,
+    [IsInRoute]             BIT              CONSTRAINT [DF_ServiceDataForGuide_IsInRoute] DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([IdServiceDataForGuide] ASC),
     CONSTRAINT [ServiceDataForGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY ([ProviderModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
+
+
 
 
 
