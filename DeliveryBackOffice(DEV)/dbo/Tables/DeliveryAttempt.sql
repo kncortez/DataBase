@@ -21,12 +21,16 @@
     [Guide_Piece]                  SMALLINT      NULL,
     [LogLatitude]                  NVARCHAR (20) NULL,
     [LogLongitude]                 NVARCHAR (20) NULL,
+    [ConfirmationOfIncidenceId]    INT           NULL,
     CONSTRAINT [PK_DeliveryAttempt] PRIMARY KEY CLUSTERED ([ID] ASC),
+    CONSTRAINT [FK_DeliveryAttempt_ConfirmationOfIncidence] FOREIGN KEY ([ConfirmationOfIncidenceId]) REFERENCES [dbo].[ConfirmationOfIncidence] ([IdConfirmationOfIncidence]),
     CONSTRAINT [FK_DeliveryAttempt_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliveryAttempt_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
     CONSTRAINT [FK_DeliveryAttempt_DeliveryProof] FOREIGN KEY ([ID_Proof]) REFERENCES [dbo].[DeliveryProof] ([ID]),
     CONSTRAINT [FK_DeliveryAttempt_IDCourier] FOREIGN KEY ([ID_Courier]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
 
 
 
