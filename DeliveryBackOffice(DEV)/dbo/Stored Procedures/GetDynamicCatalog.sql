@@ -554,7 +554,27 @@ BEGIN
         );
     END
 
-
+	ELSE IF (@TypeMethod = 'GetPaymentMethod')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
+                                       + '"DisplayText":"' + cpv.DisplayText + '",' 
+									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' + '}'
+                                FROM CustomerPaymentValue cpv
+								WHERE (cpv.AccountId = @IdAccount
+								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WHERE AccIdAccount = @IdAccount)))
+								AND cpv.RowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
     SELECT '[' + @jsonResult + ']' FormatJson;
 

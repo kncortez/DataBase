@@ -472,7 +472,7 @@ BEGIN
 			SET @CountPiecebyArticle = (SELECT
 					COUNT(1)
 				FROM #ParceWeigth pw
-				JOIN #ParceCode pc
+				INNER JOIN #ParceCode pc
 					ON pc.ID = pw.ID
 				WHERE pc.Item <> '0'
 				AND pc.Item <> ''
@@ -487,9 +487,9 @@ BEGIN
 			SET @ParcelPrice2 = ( SELECT
 					SUM(ISNULL(ra.RateValue, ISNULL(ar.PriceDefault, 0)))
 				FROM #ListCode2 ls
-				JOIN dbo.ArticleByCustomer ar
+				INNER JOIN dbo.ArticleByCustomer ar
 					ON ar.Code = ls.Item
-				JOIN dbo.RateData ra
+				INNER JOIN dbo.RateData ra
 					ON ra.ArticleId = ar.AbcId
 					AND ra.TypeSegmentId = @IdSegment
 					AND ra.RateId = @IdRate)
@@ -514,7 +514,7 @@ BEGIN
 			, isnull(sv.CtsDescription,'') as CtsDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
 			from dbo.RateHeader rh WITH(NOLOCK)
-				 join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 inner join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
 				 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
 				 left join dbo.CatTypeService sv WITH(NOLOCK) ON sv.CtsId = rd.TypeServiceId
 				 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
@@ -547,7 +547,7 @@ BEGIN
 			, isnull(sv.CtsDescription,'') as CtsDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
 			from dbo.RateHeader rh WITH(NOLOCK)
-				 join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 inner join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
 				 left join dbo.CatRateSegment sg WITH(NOLOCK) ON sg.CrsId = rd.TypeSegmentId
 				 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
 				 left join dbo.CatTypeRate cr WITH(NOLOCK) on cr.IdTypeRate = rh.RateTypeId
@@ -597,7 +597,7 @@ BEGIN
 			, isnull(sv.CtsDescription,'') as CstDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
 			from dbo.RateHeader rh WITH(NOLOCK)
-				 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 inner join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
 				 left join dbo.CatRateSegment sg WITH(NOLOCK) ON sg.CrsId = rd.TypeSegmentId
 				 left join dbo.CatTypeService sv WITH(NOLOCK) ON sv.CtsId = rd.TypeServiceId
 				 left join dbo.CatTypeRate cr WITH(NOLOCK) on cr.IdTypeRate = rh.RateTypeId
@@ -670,7 +670,6 @@ BEGIN
 
 				END
 
-				PRINT @IdSegment
 				IF(@IdSegment IS NULL)-- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
 				BEGIN
 					SELECT
@@ -679,7 +678,7 @@ BEGIN
 					FROM 
 						[DeliveryBackOffice].dbo.CatRateSegment sg WITH(NOLOCK) 
 					WHERE 
-						sg.CrsShortName ='FOR'
+						sg.CrsShortName ='FOR' COLLATE Latin1_General_CI_AI
 				END
 
 				-- Cálculo de precios
@@ -730,8 +729,6 @@ BEGIN
 				DECLARE @NewOverWeight DECIMAL(12,2) = 0;
 				SET @NewOverWeight = (@OverWeight - @ExpectedWeight);
 
-				--SET @OverWeight = ISNULL(( IIF( (@OverWeight - @ExpectedWeight) < 0, 0, (@OverWeight - @ExpectedWeight) ) ),0);
-
 				-- Actualizar con los que esten dentro del tarifario por tipo de servicio y tipo de segmento
 				UPDATE
 					#ParcelAmountPerType
@@ -749,7 +746,6 @@ BEGIN
 							 inner join #ListCode LC on abc.Code = LC.Item
 						where rh.RheId = @IdRate
 							and rd.TypeSegmentId = @IdSegment
-							--and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
 						GROUP BY
 							rd.TypeSegmentId,
 							rd.TypeServiceId
@@ -785,30 +781,6 @@ BEGIN
 				WHERE
 					TempValues.AddedSegmentType = SegmentType
 
-				DECLARE @RealRateGroup AS TABLE(
-					ServiceTypeId INT NOT NULL,
-					RowStatus BIT NOT NULL DEFAULT 1
-				);
-
-				INSERT INTO
-					@RealRateGroup
-					(ServiceTypeId)
-				SELECT
-					CtsId 
-				FROM 
-					[DeliveryBackOffice].dbo.CatTypeService CTS WITH(NOLOCK)
-				WHERE 
-					RateGroup = @IdRateGroup and CtsRowStatus = 1
-
-				DECLARE @SDDTypeId INT = (SELECT TOP 1 CTS.CtsId FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH(NOLOCK) WHERE CTS.CtsShortName = 'SDD' COLLATE Latin1_General_CI_AI)
-				IF(@IsSDD = 0)
-					UPDATE
-						@RealRateGroup
-					SET
-						RowStatus = 0
-					WHERE
-						ServiceTypeId = @SDDTypeId
-
 				-- Tarifas finales
 				insert into @TempRate
 				select DISTINCT
@@ -820,7 +792,7 @@ BEGIN
 				, 0 DiscountValue
 				, iif(@IsFragile ='true', isnull(rh.FragilRate,0),0) as fragilRate
 				, iif(@IsCollected ='true', isnull(rh.CollectRate,0),0) as CollectedRate
-				, iif(@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast((@InsuranceAmount * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
+				, iif(@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount - isnull(rh.InsuranceExempt,0)) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
 				, iif(@IsCreditCardPayment ='true', isnull(rh.CreditCardRate,0) ,0 ) as CreditCardRate
 				, iif(@NewOverWeight > 0, @NewOverWeight * isnull(rh.AdditionalWeightRate,0),0) OverWeightRate
 				, isnull(papt.TotalAmount,0) as IrregularParcelRate
@@ -834,10 +806,8 @@ BEGIN
 					 left join dbo.CatTypeService sv on sv.CtsId = rd.TypeServiceId
 					 left join dbo.CatTypeRate cr on cr.IdTypeRate = rh.RateTypeId
 				where rh.RheId = @IdRate
-					--and rd.ArticleId is null
 					and rd.TypeSegmentId = @IdSegment
-					and  (rd.TypeServiceId in (SELECT RRG.ServiceTypeId from @RealRateGroup RRG WHERE RRG.RowStatus = 1) )
-					and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
+					and convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
 					
 				IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerType', 'U') IS NOT NULL DROP TABLE #ParcelOverweightPerType;
 				IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL DROP TABLE #ParcelAmountPerType;
@@ -850,8 +820,8 @@ BEGIN
 			set @ParcelPrice =(
 			select sum( isnull( ra.RateValue , isnull(ar.PriceDefault ,0) )) 
 			from #ListCode ls
-				join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
-				join dbo.RateData ra WITH(NOLOCK) ON ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
+				inner join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
+				inner join dbo.RateData ra WITH(NOLOCK) ON ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
 				)
 			--select @ParcelPrice as price
 	-------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
@@ -872,7 +842,7 @@ BEGIN
 				, isnull(sv.CtsDescription,'') as CtsDescription
 				, isnull(rh.ReturnRate,0) as ReturnRate
 				from dbo.RateHeader rh WITH(NOLOCK)
-					 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+					 inner join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
 					 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
 					 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
 					 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
@@ -959,7 +929,7 @@ BEGIN
 			   ,ISNULL(rh.ReturnRate, 0) AS ReturnRate
 			   ,ISNULL(rh.AdditionalWeightRate, 0) AdditionalWeightRate
 			FROM RateHeader rh
-			JOIN RateData rd
+			inner JOIN RateData rd
 				ON rd.RateId = rh.RheId
 				AND rd.RowStatus = 1
 			LEFT JOIN CatRateSegment crs
@@ -968,7 +938,7 @@ BEGIN
 				ON cts.CtsId = rd.TypeServiceId
 			LEFT JOIN CatTypeRate ctr
 				ON ctr.IdTypeRate = rh.RateTypeId
-			JOIN #ParceWeigth pw
+			inner JOIN #ParceWeigth pw
 				ON pw.Item BETWEEN rd.WeightFrom AND rd.WeightTo
 			WHERE rh.RheId = @IdRate
 			AND rd.TypeSegmentId = @IdSegment
@@ -998,7 +968,7 @@ BEGIN
 			   ,ISNULL(rh.ReturnRate, 0) AS ReturnRate
 			   ,ISNULL(rh.AdditionalWeightRate, 0) AdditionalWeightRate
 			FROM RateHeader rh
-			JOIN RateData rd
+			inner JOIN RateData rd
 				ON rd.RateId = rh.RheId
 				AND rd.RowStatus = 1
 			LEFT JOIN CatRateSegment crs
@@ -1007,7 +977,7 @@ BEGIN
 				ON cts.CtsId = rd.TypeServiceId
 			LEFT JOIN CatTypeRate ctr
 				ON ctr.IdTypeRate = rh.RateTypeId
-			JOIN @tblNotInRange pw
+			inner JOIN @tblNotInRange pw
 				ON pw.CatTypeServiceId = rd.TypeServiceId
 				AND rd.IdRateData = (SELECT TOP 1
 						IdRateData

@@ -92,10 +92,10 @@ BEGIN
            ISNULL(dro.Sender_Zone, '0') Zone,
            SenderPhone 'Phone',
            shp.StartDate,
-           shp.EndDate,
+           ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))),
            CONVERT(VARCHAR(10), shp.StartDate, 105) AS datePickUp,
            CONVERT(VARCHAR(10), shp.StartDate, 108) AS hourPickUp,
-           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
+           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))), 108)) AS rangeHour,
            QuantityRegularPackages,
            QuantityOverDimensionedPackage,
            EstimatedWeight,
@@ -173,7 +173,7 @@ BEGIN
         (NOT (
                  NOT (
                          @datePickUp_Internal >= CONVERT(DATE, shp.StartDate)
-                         AND CONVERT(DATE, shp.EndDate) >= @datePickUp_Internal
+                         AND CONVERT(DATE, ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME)))) >= @datePickUp_Internal
                      )
                  AND NOT (@datePickUp_Internal = '')
              )

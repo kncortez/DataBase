@@ -397,7 +397,51 @@ BEGIN
 					AND GuideNumber = @GuideNumberRevalue
 			END
 			--Termina revalorziar guías
+			-----------------------------------------------------------------------------------------------------------------
+			--FDD-975 ACTUALIZACIÓN DE  INFORMACIÓN DE COURIER Y VEHÍCULO DE ASIGNACIÓN DE RUTA AL DESPACHAR UNA RUTA DE ENTREGA
+			UPDATE RA SET
+				RA.IdCurrierMan=@IdCourier,
+				RA.IdVehicle=@IdVehicle,
+				RA.TokenUpdated=@Token,
+				RA.DateUpdated=GETDATE()
+			FROM DBO.RoutePreparationDetail RPD
+				INNER JOIN DBO.ServiceManagementDetail SMD
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+				INNER JOIN DBO.ServiceManagement SM
+					ON SM.IdServiceManagement=SMD.ServiceManagement
+				INNER JOIN DBO.RouteAssigment RA
+					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+			WHERE
+				RPD.RoutePreparationId = @IdRoutePreparation;
 
+			
+			DECLARE @IdRouteAssigment INT= (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment RA WHERE IdRoute = @IdRoute AND DateOfRoute=@Date AND RA.IdCurrierMan=@IdCourier)
+
+			UPDATE  SM SET
+				SM.IdPuCourrier=@IdCourier,
+				SM.IdPuRouteAssigment=@IdRouteAssigment
+			FROM @ListGuides LG  
+				INNER JOIN DBO.RoutePreparationDetail RPD
+					ON RPD.Guide_Serie=LG.Guide_Serie
+					AND RPD.Guide_Number=LG.Guide_Number
+				INNER JOIN DBO.ServiceManagementDetail SMD
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+				INNER JOIN DBO.ServiceManagement SM
+					ON SM.IdServiceManagement=SMD.ServiceManagement
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 							
+					URSD.GuideSerie=RPD.Guide_Serie
+					AND URSD.GuideNumber=RPD.Guide_Number
+					AND URSD.RowStatus=1
+					AND URSD.ServiceManagementId=SM.IdServiceManagement
+				LEFT JOIN DBO.UnifiedRouteSettlement URS ON
+					URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+				LEFT JOIN DBO.RouteAssigment RA ON
+					RA.IdRouteAssigment= URS.RouteAssignmentId
+			WHERE URS.UserSettlement IS NULL AND RA.DateOfRoute=CONVERT(DATE,GETDATE()) AND RA.IdCurrierMan=@IdCourier
+
+			
+
+			-----------------------------------------------------------------------------------------------------------------
 		END TRY
 		BEGIN CATCH
 			SELECT 
