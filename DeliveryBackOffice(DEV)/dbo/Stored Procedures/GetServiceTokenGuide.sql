@@ -50,7 +50,7 @@ BEGIN
 								'"updatedData":' + IIF( SDFG.DateUsed IS NULL, '0', '1') + ',' +
 								'"DeliveryAttempt":' + ISNULL(CAST(DA.ID AS NVARCHAR), '') + ',' +
 								'"RoutePreparation":' + ISNULL(CAST(RPD.IdRoutePreparationDetail AS NVARCHAR), '') + ',' +
-								'"RoutePreparation":' + ISNULL(CAST(RPD.DeliveryOrderBySettlementId AS NVARCHAR), '') + ',' +
+								'"DeliverySettlement":' + ISNULL(CAST(RPD.DeliveryOrderBySettlementId AS NVARCHAR), '') + ',' +
 								'"trackingForza":"https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '/",' +
 								'"Province":"'+ DO.Receiver_Department + '",' +
 								'"Township":"'+ DO.Receiver_Town + '",' +
