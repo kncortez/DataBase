@@ -225,7 +225,7 @@ BEGIN
 			
 				-- registrar estado en tabla de checkpoints
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius)
-				VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident',GETDATE(), GETDATE(), NULL, NULL)
+				VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident',@DateStatusOrder, @DateStatusOrder, NULL, NULL)
 				SET @RInserted = @@ROWCOUNT
 
 				
