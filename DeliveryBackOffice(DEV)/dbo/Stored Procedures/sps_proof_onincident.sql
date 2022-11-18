@@ -24,7 +24,8 @@ CREATE PROCEDURE [dbo].[sps_proof_onincident]
 	@ImageIncident VARCHAR(300),
 	@Latitude NVARCHAR(20),
 	@Longitude NVARCHAR(20),
-	@Accuracy NVARCHAR(20)
+	@Accuracy NVARCHAR(20),
+	@MaxDistance FLOAT = 7000 --Distancia en metros
 AS
 BEGIN
 	-- control de inserciones para transacción
@@ -40,6 +41,15 @@ BEGIN
 	DECLARE @FixedLatitude NVARCHAR(20) = @Latitude
 	DECLARE @FixedLongitude NVARCHAR(20) = @Longitude
 	DECLARE @IdIncidenceReviewOrigin AS INT;
+
+	-- Control de confirmación de incidencia
+	DECLARE @VPLatitude NVARCHAR(50)
+	DECLARE @VPLongitude NVARCHAR(50)
+	DECLARE @StatusOrderId TINYINT
+	DECLARE @IsValidDistance BIT
+	DECLARE @DateStatusOrder DATETIME
+	DECLARE @CatTypeConfirmationOfIncidenceId INT
+	DECLARE @ConfirmationOfIncidenceId INT
 
 	BEGIN TRY
 
@@ -136,6 +146,60 @@ BEGIN
 
 			IF (@ID_Photo > 0)
 			BEGIN
+
+				-- Validación del rango de distancia entre el VP y Courier
+
+				-- Buscar ubicación del VP
+				SELECT 
+					@VPLatitude = vpc.Latitude
+					,@VPLongitude = vpc.Longitude
+				FROM DeliveryOrder do WITH (NOLOCK)
+				INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+					ON vpc.CodeOfReference = (CASE WHEN do.IsLastMileReturn = 1 THEN do.Sender_ID ELSE do.Receiver_ID END)
+				WHERE do.Guide_Serie = @GuideSerie
+				AND do.Guide_Number = @GuideNumber
+
+				-- Si tiene ubicación el VP
+				IF (RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
+					AND (RTRIM(LTRIM(ISNULL(@Latitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@Longitude, ''))) <> '')
+				BEGIN
+					-- Validar rango
+					IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @Longitude, ' ', @Latitude, ')'), 4326)) ) <= @MaxDistance)
+					BEGIN
+						SET @IsValidDistance = 1
+						SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Intento de entrega fallida')
+						SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida')
+					END
+					ELSE
+					BEGIN
+						SET @IsValidDistance = 0
+						SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Incidencia en ruta')
+						SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta')
+					END
+				END
+				ELSE
+				BEGIN
+					-- Si no se puede validar
+					SET @IsValidDistance = 0
+					SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Incidencia en ruta')
+					SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta')
+				END
+
+				SET @DateStatusOrder = GETDATE()
+
+				INSERT INTO [dbo].[ConfirmationOfIncidence] ([ConfirmationOfIncidentToken]
+				, [CatTypeConfirmationOfIncidenceId]
+				, [IsValid]
+				, [IsConfirmed]
+				, [StatusOrderId]
+				, [DateStatusOrder]
+				, [RowStatus]
+				, [TokenCreated]
+				, [DateCreated])
+					VALUES (CONCAT(@GuideSerie, @GuideNumber, ROUND(((99999 - 10000) * RAND() + 10000), 0)), @CatTypeConfirmationOfIncidenceId, @IsValidDistance, 0, @StatusOrderId, @DateStatusOrder, 1, 'sps_proof_onincident', GETDATE())
+			
+				SET @ConfirmationOfIncidenceId = SCOPE_IDENTITY()
+
 				-- actualizar tabla de entregas
 				UPDATE 
 					DeliveryBackOffice.dbo.DeliveryAttempt 
@@ -147,20 +211,21 @@ BEGIN
 					, LogLatitude = IIF(@Latitude = @FixedLatitude,NULL,@Latitude)
 					, LogLongitude = IIF(@Longitude = @FixedLongitude,NULL,@Longitude)
 					, Accuracy = @Accuracy
+					, ConfirmationOfIncidenceId = @ConfirmationOfIncidenceId
 				WHERE ID IN (SELECT ID FROM @Table)
 			
 				-- actualizar tabla de registro de guías electrónicas
-				UPDATE DeliveryBackOffice.dbo.DeliveryOrder SET StatusOrderId = 12 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+				UPDATE DeliveryBackOffice.dbo.DeliveryOrder SET StatusOrderId = @StatusOrderId WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 
 				--- Actualizar el estado de las piezas
 				UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
 				SET
-					StatusOrderId = 12
+					StatusOrderId = @StatusOrderId
 				WHERE GuideSerie = @GuideSerie AND GuideNumber =  @GuideNumber
 			
 				-- registrar estado en tabla de checkpoints
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius)
-				VALUES (@GuideSerie, @GuideNumber, 12, 'sps_proof_onincident',GETDATE(), GETDATE(), NULL, NULL)
+				VALUES (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident',GETDATE(), GETDATE(), NULL, NULL)
 				SET @RInserted = @@ROWCOUNT
 
 				
