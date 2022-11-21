@@ -18,10 +18,10 @@ BEGIN
 	DECLARE @Guide_number NVARCHAR(50) = SUBSTRING(@Guide, 3, LEN(@Guide));
 	DECLARE @jsonResult NVARCHAR(MAX) = '';
 
-	DECLARE @Status INT =  (SELECT StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrder WHERE Guide_Number = @Guide_number)
+	DECLARE @Status INT =  (SELECT StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @Series AND Guide_Number = @Guide_number)
 	DECLARE @IdCourier INT = (
-	SELECT TOP 1 ID_Courier FROM DeliveryBackOffice.dbo.DeliveryAttempt 
-	WHERE Guide_Number = @Guide_number ORDER BY Date_Created DESC
+	SELECT TOP 1 ID_Courier FROM DeliveryBackOffice.dbo.DeliveryAttempt WITH(NOLOCK)
+	WHERE Guide_Serie = @Series AND Guide_Number = @Guide_number ORDER BY Date_Created DESC
 	);
 	
 	IF(ISNULL(@IdCourier,0) = 0)
@@ -73,8 +73,8 @@ BEGIN
 												'"CourierDPI":"'+sr.CUI+'"'+
 											'}'
 								+'}'
-				FROM DeliveryBackOffice.dbo.DeliveryOrder dor
-				JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = @IdCourier
+				FROM DeliveryBackOffice.dbo.DeliveryOrder dor WITH(NOLOCK)
+				INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = @IdCourier
 				WHERE
 				dor.Guide_Number = @Guide_number AND dor.Guide_Serie = @Series
 				
