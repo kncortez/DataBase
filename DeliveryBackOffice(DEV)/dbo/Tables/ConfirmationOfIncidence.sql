@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[ConfirmationOfIncidence] (
     [IdConfirmationOfIncidence]        INT           IDENTITY (1, 1) NOT NULL,
-    [ConfirmationOfIncidentToken]      NVARCHAR (50) NULL,
+    [ConfirmationOfIncidentToken]      NVARCHAR (50) NOT NULL,
     [CatTypeConfirmationOfIncidenceId] INT           NOT NULL,
     [IsValid]                          BIT           CONSTRAINT [DF_ConfirmationOfIncidence_IsValid] DEFAULT ((0)) NOT NULL,
     [IsConfirmed]                      BIT           CONSTRAINT [DF_ConfirmationOfIncidence_IsConfirmed] DEFAULT ((0)) NOT NULL,
@@ -15,6 +15,8 @@
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 
@@ -69,4 +71,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado que 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de la creación del checkpoint, para ubicarlo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'DateStatusOrder';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_ConfirmationOfIncidence_ConfirmationOfIncidentToken]
+    ON [dbo].[ConfirmationOfIncidence]([ConfirmationOfIncidentToken] ASC);
 
