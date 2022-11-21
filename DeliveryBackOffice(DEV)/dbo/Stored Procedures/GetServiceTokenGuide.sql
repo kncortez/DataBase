@@ -48,9 +48,9 @@ BEGIN
 								',{"IdResult":200,"receiverAddress":"' +  DO.Receiver_Address + '",' +
 								'"serviceType":"DeliveryInRoute"' + ',' +
 								'"updatedData":' + IIF( SDFG.DateUsed IS NULL, '0', '1') + ',' +
-								'"DeliveryAttempt":' + ISNULL(CAST(DA.ID AS NVARCHAR), '') + ',' +
-								'"RoutePreparation":' + ISNULL(CAST(RPD.IdRoutePreparationDetail AS NVARCHAR), '') + ',' +
-								'"DeliverySettlement":' + ISNULL(CAST(RPD.DeliveryOrderBySettlementId AS NVARCHAR), '') + ',' +
+								'"DeliveryAttempt":' + ISNULL(CAST(DA.ID AS NVARCHAR), 'null') + ',' +
+								'"RoutePreparation":' + ISNULL(CAST(RPD.IdRoutePreparation AS NVARCHAR), 'null') + ',' +
+								'"DeliverySettlement":' + ISNULL(CAST(RPD.DeliveryOrderBySettlementId AS NVARCHAR), 'null') + ',' +
 								'"trackingForza":"https://forzadelivery.com/rastreo/' + DO.Guide_Serie + CAST(DO.Guide_Number AS NVARCHAR) + '/",' +
 								'"Province":"'+ DO.Receiver_Department + '",' +
 								'"Township":"'+ DO.Receiver_Town + '",' +
@@ -81,7 +81,7 @@ BEGIN
 								OUTER APPLY (
 									SELECT
 										TOP 1
-											RPD.IdRoutePreparationDetail
+											RP.IdRoutePreparation
 											,DOBS.ID 'DeliveryOrderBySettlementId'
 									FROM
 										[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
@@ -110,6 +110,7 @@ BEGIN
 								AND DO.StatusOrderId IN (4,18) -- En ruta, en ruta para devolución
 								AND SDFG.IsDelivery = 1
 								AND SDFG.IsInRoute = 1
+								AND SDFG.DateUsed IS NULL
 								ORDER BY
 								SDFG.DateCreated DESC
 								FOR XML PATH(''), TYPE
