@@ -22,7 +22,8 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@NewZone NVARCHAR(100) = '',
 	@NewAddress NVARCHAR(600) = '',
 	@NewTownshipID INT = -1,
-	@NewSettlementID BIGINT = -1
+	@NewSettlementID BIGINT = -1,
+	@IsConfirmed BIT = 1
 AS
 BEGIN
 	-- Variables de control de flujo
@@ -35,6 +36,9 @@ BEGIN
 	DECLARE @UpdatedSDFG BIT = 0;
 	DECLARE @UpdatedDO BIT = 0;
 	DECLARE @UpdatedVPC BIT = 0;
+
+	DECLARE @StatusOrderId TINYINT
+	DECLARE @CatTypeConfirmationOfIncidenceId INT
 
 	-- Variables de respuesta
 	DECLARE @jsonResult NVARCHAR(MAX);
@@ -119,6 +123,95 @@ BEGIN
 								).value('.', 'varchar(max)'),1,1,'') )
 			select ('[' + @jsonResult +  ']') jsonResultError 
 			ROLLBACK TRANSACTION;
+		END CATCH
+	END
+	ELSE IF EXISTS (SELECT TOP 1 1 FROM ConfirmationOfIncidence coi WITH (NOLOCK) WHERE coi.ConfirmationOfIncidentToken = @GuideToken AND coi.RowStatus = 1)
+	BEGIN
+		
+		BEGIN TRANSACTION
+		
+		BEGIN TRY
+			IF @IsConfirmed = 1
+			BEGIN
+				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida') 
+			END
+			ELSE
+			BEGIN
+				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
+			END
+
+			-- Si tiene diferente estado, actualizar 
+			IF EXISTS (SELECT 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
+			BEGIN 
+			
+				UPDATE dod 
+				SET StatusOrderId = @StatusOrderId
+				FROM DeliveryOrderDetail dod
+				INNER JOIN DeliveryAttempt da
+					ON dod.Guide_Serie = da.Guide_Serie
+					AND dod.Guide_Number = da.Guide_Number
+				INNER JOIN ConfirmationOfIncidence coi 
+					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+				AND coi.RowStatus = 1
+				AND dod.StatusOrderId = coi.StatusOrderId
+				AND dod.DateCreated = coi.DateStatusOrder
+
+				UPDATE do
+				SET StatusOrderId = @StatusOrderId 
+				FROM DeliveryOrder do
+				INNER JOIN DeliveryAttempt da
+					ON do.Guide_Serie = da.Guide_Serie
+					AND do.Guide_Number = da.Guide_Number
+				INNER JOIN ConfirmationOfIncidence coi 
+					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+				AND coi.RowStatus = 1
+
+				UPDATE dop
+				SET StatusOrderId = @StatusOrderId
+				FROM DeliveryOrderPiece dop
+				INNER JOIN DeliveryAttempt da
+					ON dop.GuideSerie = da.Guide_Serie
+					AND dop.GuideNumber = da.Guide_Number
+				INNER JOIN ConfirmationOfIncidence coi 
+					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+				AND coi.RowStatus = 1
+			
+
+			END
+		
+
+			UPDATE ConfirmationOfIncidence
+			SET IsConfirmed = 1
+			   ,StatusOrderId = @StatusOrderId
+			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
+			   ,TokenUpdated = 'SetServiceTokenGuideData'
+			   ,DateUpdated = GETDATE()
+			WHERE ConfirmationOfIncidentToken = @GuideToken
+			AND RowStatus = 1
+
+			COMMIT TRANSACTION
+			set @jsonResult =(
+								SELECT STUFF(( 
+								SELECT ',{"IdResult":200,' 
+								+ '"Success":"Exito ingresando datos de incidencia."}' 
+								FOR XML PATH(''), TYPE
+								).value('.', 'varchar(max)'),1,1,'') )
+			select ('[' + @jsonResult +  ']') jsonResult 
+		END TRY
+		BEGIN CATCH
+			ROLLBACK TRANSACTION
+			set @jsonResult =(
+								SELECT STUFF(( 
+								SELECT '{{"IdResult":500,' 
+								+ '"Error":"'+ERROR_MESSAGE()+'"}' 
+								FOR XML PATH(''), TYPE
+								).value('.', 'varchar(max)'),1,1,'') )
+			select ('[' + @jsonResult +  ']') jsonResultError 
 		END CATCH
 	END
 	ELSE
