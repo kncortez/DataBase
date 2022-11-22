@@ -40,6 +40,8 @@ BEGIN
 		   ,cr.CodeRoute 'CodeRoute'
 		   ,rp.IsSimpliRoute
 		   ,rp.CatRouteId 'IdRoute'
+		   ,rp.DateRoutePreparation
+		   ,rpd.IsCustomerReschedule
 		FROM /*RoutePreparationDetailPiece rpdp
 		JOIN */RoutePreparationDetail rpd WITH(NOLOCK)
 			--ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
@@ -47,13 +49,13 @@ BEGIN
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
 		JOIN CatRoute cr WITH(NOLOCK)
 			ON rp.CatRouteId = cr.IdRoute
-		WHERE rp.DateRoutePreparation = @Date
+		WHERE rp.DateRoutePreparation >= @Date
 		AND rpd.RowStatus = 1
 		--AND rpdp.RowStatus = 1
 		AND Guide_Serie = @GuideSerie
 		AND Guide_Number = @GuideNumber
 		--AND PieceNumber = @GuidePiece
-		AND rp.DateRoutePreparation = CONVERT(DATE, GETDATE())
+		--AND rp.DateRoutePreparation = CONVERT(DATE, GETDATE())
 		AND rp.RowStatus = 1
 		ORDER BY rpd.DateCreated DESC
 

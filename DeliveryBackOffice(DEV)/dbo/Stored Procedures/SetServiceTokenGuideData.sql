@@ -204,7 +204,6 @@ BEGIN
 						IdRoutePreparationDetail INT
 					)
 
-
 					IF(@NewRouteManifest = 0)
 					BEGIN
 
@@ -248,10 +247,33 @@ BEGIN
 
 						END
 
-						IF(ISNULL(@NewRoutePreparation,0) > 0 AND NOT EXISTS (SELECT TOP 1 1 FROM [dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) WHERE RPD.Guide_Serie = @TokenGuideSerie AND RPD.Guide_Number = @TokenGuideNumber))
+						IF(
+							ISNULL(@NewRoutePreparation,0) > 0 
+							AND 
+							NOT EXISTS 
+								(
+									SELECT 
+										TOP 1 
+											1 
+									FROM 
+										[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].RoutePreparation RP WITH(NOLOCK)
+											ON
+												RPD.RoutePreparationId = RP.IdRoutePreparation
+												AND
+												RP.DateRoutePreparation = @RescheduleDate
+									WHERE 
+										RPD.Guide_Serie = @TokenGuideSerie 
+										AND 
+										RPD.Guide_Number = @TokenGuideNumber 
+										AND
+										RPD.RowStatus = 1
+								)
+							)
 						BEGIN
 
-							INSERT INTO [dbo].[RoutePreparationDetail]
+							INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetail]
 								(
 									[RoutePreparationId]
 									,[Guide_Serie]
@@ -261,6 +283,7 @@ BEGIN
 									,[DateCreated]
 									,[TokenUpdated]
 									,[DateUpdated]
+									,[IsCustomerReschedule]
 								)
 							OUTPUT inserted.IdRoutePreparationDetail INTO @InsertedRoutePreparationDetail (IdRoutePreparationDetail)
 							VALUES 
@@ -273,6 +296,7 @@ BEGIN
 									, GETDATE()
 									, NULL
 									, NULL
+									, 1
 								)
 
 							IF @@ROWCOUNT > 0
