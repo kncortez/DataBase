@@ -191,6 +191,24 @@ BEGIN
 			SELECT
 				204 'ResultCode',
 				'Sin datos bajo los parametros indicados.' 'ResultMessage'
+				
+			SELECT
+				CD.CourierId,
+				CD.CourierName,
+				CD.CourierFirstName,
+				CD.CourierLastName,
+				CD.TotalServices,
+				CD.TotalScheduled,
+				CD.TotalOnDemand,
+				CD.TotalSuccessfulScheduled,
+				CD.TotalSuccessfulOnDemand,
+				CD.TotalFailedScheduled,
+				CD.TotalFailedOnDemand,
+				CD.TotalPendingScheduled,
+				CD.TotalPendingOnDemand,
+				CD.TotalPickedPieces
+			FROM
+				@CourierData CD
 
 		END
 
