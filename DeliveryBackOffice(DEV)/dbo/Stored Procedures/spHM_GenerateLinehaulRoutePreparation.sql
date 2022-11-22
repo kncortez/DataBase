@@ -21,11 +21,11 @@ BEGIN
 	-- Check if there is a record with the entered parameters
 	SET @EXISTING_DOC = (SELECT [LRP].[IdLinehaulRoutePreparation] AS ID 
 						 FROM [dbo].[LinehaulRoutePreparation] LRP
-						 WHERE [LRP].[StationDispatchedId] = @StationId
-							AND [LRP].[CatRouteId] = @RouteId
+						 WHERE [LRP].[CatRouteId] = @RouteId
 							AND DAY([LRP].[DateLinehaulRoutePreparation]) = DAY(@DateSelected) 
 							AND MONTH([LRP].[DateLinehaulRoutePreparation]) = MONTH(@DateSelected) 
-							AND YEAR([LRP].[DateLinehaulRoutePreparation]) = YEAR(@DateSelected));
+							AND YEAR([LRP].[DateLinehaulRoutePreparation]) = YEAR(@DateSelected)
+							AND [LRP].[RowStatus] = 1 );
 
 	IF (@EXISTING_DOC > 0) 
 		-- Return existing doc
