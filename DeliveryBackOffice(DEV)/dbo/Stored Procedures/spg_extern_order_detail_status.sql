@@ -150,7 +150,7 @@ BEGIN
                          SELECT TOP 1
 								   I.DescriptionIncidence
 							FROM DeliveryBackOffice.dbo.CatTypeIncidence  I  WITH(NOLOCK)
-								JOIN DeliveryBackOffice.dbo.DeliveryAttempt da  WITH(NOLOCK)
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da  WITH(NOLOCK)
 									ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
