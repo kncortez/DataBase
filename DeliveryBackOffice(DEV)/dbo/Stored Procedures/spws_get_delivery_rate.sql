@@ -472,7 +472,7 @@ BEGIN
 			SET @CountPiecebyArticle = (SELECT
 					COUNT(1)
 				FROM #ParceWeigth pw
-				JOIN #ParceCode pc
+				INNER JOIN #ParceCode pc
 					ON pc.ID = pw.ID
 				WHERE pc.Item <> '0'
 				AND pc.Item <> ''
@@ -487,9 +487,9 @@ BEGIN
 			SET @ParcelPrice2 = ( SELECT
 					SUM(ISNULL(ra.RateValue, ISNULL(ar.PriceDefault, 0)))
 				FROM #ListCode2 ls
-				JOIN dbo.ArticleByCustomer ar
+				INNER JOIN dbo.ArticleByCustomer ar
 					ON ar.Code = ls.Item
-				JOIN dbo.RateData ra
+				INNER JOIN dbo.RateData ra
 					ON ra.ArticleId = ar.AbcId
 					AND ra.TypeSegmentId = @IdSegment
 					AND ra.RateId = @IdRate)
@@ -514,7 +514,7 @@ BEGIN
 			, isnull(sv.CtsDescription,'') as CtsDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
 			from dbo.RateHeader rh WITH(NOLOCK)
-				 join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 INNER join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
 				 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
 				 left join dbo.CatTypeService sv WITH(NOLOCK) ON sv.CtsId = rd.TypeServiceId
 				 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
@@ -547,7 +547,7 @@ BEGIN
 			, isnull(sv.CtsDescription,'') as CtsDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
 			from dbo.RateHeader rh WITH(NOLOCK)
-				 join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 INNER join dbo.RateData rd WITH(NOLOCK) on rd.RateId = rh.RheId and rd.RowStatus ='true'
 				 left join dbo.CatRateSegment sg WITH(NOLOCK) ON sg.CrsId = rd.TypeSegmentId
 				 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
 				 left join dbo.CatTypeRate cr WITH(NOLOCK) on cr.IdTypeRate = rh.RateTypeId
@@ -597,7 +597,7 @@ BEGIN
 			, isnull(sv.CtsDescription,'') as CstDescription
 			, isnull(rh.ReturnRate,0) as ReturnRate
 			from dbo.RateHeader rh WITH(NOLOCK)
-				 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+				 INNER join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
 				 left join dbo.CatRateSegment sg WITH(NOLOCK) ON sg.CrsId = rd.TypeSegmentId
 				 left join dbo.CatTypeService sv WITH(NOLOCK) ON sv.CtsId = rd.TypeServiceId
 				 left join dbo.CatTypeRate cr WITH(NOLOCK) on cr.IdTypeRate = rh.RateTypeId
@@ -850,8 +850,8 @@ BEGIN
 			set @ParcelPrice =(
 			select sum( isnull( ra.RateValue , isnull(ar.PriceDefault ,0) )) 
 			from #ListCode ls
-				join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
-				join dbo.RateData ra WITH(NOLOCK) ON ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
+				INNER join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
+				INNER join dbo.RateData ra WITH(NOLOCK) ON ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
 				)
 			--select @ParcelPrice as price
 	-------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
@@ -872,7 +872,7 @@ BEGIN
 				, isnull(sv.CtsDescription,'') as CtsDescription
 				, isnull(rh.ReturnRate,0) as ReturnRate
 				from dbo.RateHeader rh WITH(NOLOCK)
-					 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+					 INNER join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
 					 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
 					 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
 					 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
@@ -959,7 +959,7 @@ BEGIN
 			   ,ISNULL(rh.ReturnRate, 0) AS ReturnRate
 			   ,ISNULL(rh.AdditionalWeightRate, 0) AdditionalWeightRate
 			FROM RateHeader rh
-			JOIN RateData rd
+			INNER JOIN RateData rd
 				ON rd.RateId = rh.RheId
 				AND rd.RowStatus = 1
 			LEFT JOIN CatRateSegment crs
@@ -968,7 +968,7 @@ BEGIN
 				ON cts.CtsId = rd.TypeServiceId
 			LEFT JOIN CatTypeRate ctr
 				ON ctr.IdTypeRate = rh.RateTypeId
-			JOIN #ParceWeigth pw
+			INNER JOIN #ParceWeigth pw
 				ON pw.Item BETWEEN rd.WeightFrom AND rd.WeightTo
 			WHERE rh.RheId = @IdRate
 			AND rd.TypeSegmentId = @IdSegment
@@ -998,7 +998,7 @@ BEGIN
 			   ,ISNULL(rh.ReturnRate, 0) AS ReturnRate
 			   ,ISNULL(rh.AdditionalWeightRate, 0) AdditionalWeightRate
 			FROM RateHeader rh
-			JOIN RateData rd
+			INNER JOIN RateData rd
 				ON rd.RateId = rh.RheId
 				AND rd.RowStatus = 1
 			LEFT JOIN CatRateSegment crs
@@ -1007,7 +1007,7 @@ BEGIN
 				ON cts.CtsId = rd.TypeServiceId
 			LEFT JOIN CatTypeRate ctr
 				ON ctr.IdTypeRate = rh.RateTypeId
-			JOIN @tblNotInRange pw
+			INNER JOIN @tblNotInRange pw
 				ON pw.CatTypeServiceId = rd.TypeServiceId
 				AND rd.IdRateData = (SELECT TOP 1
 						IdRateData
@@ -1081,7 +1081,7 @@ BEGIN
 						'"Price":"' +convert(varchar(20), convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.OverWeightRate, 'false'))) + '",' +
 						'"Currency":"' + @Currency + '"' +
 						'}' ,' '  ) +
-						iif((tr.CreditCardRate)>0, ',{"Description":"' + 'Recargo por pago con tarjeta' + '",' + 
+						iif((tr.CreditCardRate)>0, ',{"Description":"' + 'Otros recargos' + '",' + 
 						'"Price":"' + convert(varchar(20), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CreditCardRate, 'false') ) + '",' +
 						'"Currency":"' + COALESCE(@Currency,'') + '"' +
 						'}' ,' '  ) +
