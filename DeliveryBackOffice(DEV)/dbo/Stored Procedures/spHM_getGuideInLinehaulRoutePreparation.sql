@@ -69,5 +69,6 @@ BEGIN
 		ON		[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 	WHERE		[LRPCD].[GuideSerie] = @GuideSerie
 		AND		[LRPCD].[GuideNumber] = @GuideNumber
+		AND		[LRPCD].[IsOpenProcess] = 0
 		AND		[LRPCD].[RowStatus] = 1;
 END
