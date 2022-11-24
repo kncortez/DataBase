@@ -6,10 +6,16 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'DEscripción de etiqueta de variable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TagsVariables', @level2type = N'COLUMN', @level2name = N'Description';
 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Etiqueta de variable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TagsVariables', @level2type = N'COLUMN', @level2name = N'Tag';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador unico del tag', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TagsVariables', @level2type = N'COLUMN', @level2name = N'IdTagsVariables';
 
