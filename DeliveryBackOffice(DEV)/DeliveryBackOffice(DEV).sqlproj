@@ -1155,6 +1155,7 @@
     <Build Include="dbo\Stored Procedures\GetGuideDataForETP.sql" />
     <Build Include="dbo\Tables\ConfigExternalPlatform.sql" />
     <Build Include="dbo\Stored Procedures\GetExternalPlatformConfigByName.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetVisitPointDataByCodeOfReference.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
