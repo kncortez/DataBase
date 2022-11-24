@@ -1342,6 +1342,8 @@
     <Build Include="dbo\Stored Procedures\spHM_GetGuideDetailPendingToSettled.sql" />
     <Build Include="dbo\Tables\ConfirmationOfIncidence.sql" />
     <Build Include="dbo\Tables\CatTypeConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisits.sql" />
+    <Build Include="dbo\Stored Procedures\sphw_SetGuideInformationFailedVisits.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
