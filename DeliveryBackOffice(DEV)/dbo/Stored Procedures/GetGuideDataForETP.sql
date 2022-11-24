@@ -34,7 +34,7 @@ BEGIN
 				LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName, ' ', DO.Receiver_LastName))) 'ServiceDestinyName',
 				LTRIM(RTRIM(CONCAT(DO.Sender_FirstName, ' ', DO.Sender_LastName))) 'ServiceCustomerName',
 				DO.Receiver_Phone 'ServiceDestinyPhone',
-				DO.Receiver_Phone 'ServiceCustomerPhone',
+				DO.Sender_Phone 'ServiceCustomerPhone',
 				DO.Receiver_Address 'ServiceDestinyAddress',
 				ISNULL(DO.IsLastMileReturn, 0) 'IsReturn',
 				SDFG.GuideToken 'DeliveryToken'
