@@ -35,12 +35,19 @@ BEGIN
 				WHEN do.IsLastMileReturn = 1 THEN do.Sender_Address
 				ELSE do.Receiver_Address
 			END CustomerAddress
+			,ISNULL(do.IsLastMileReturn, 0) IsReturn
+			,cti.NameIncidence IncidenceDescription
+			,da.Date_Created IncidenceDate
+			,da.Latitude IncidenceLatitude
+			,da.Longitude IncidenceLongitude
 		FROM ConfirmationOfIncidence coi WITH (NOLOCK)
 		INNER JOIN CatTypeConfirmationOfIncidence ctcoi WITH (NOLOCK)
 			ON coi.CatTypeConfirmationOfIncidenceId = ctcoi.IdCatTypeConfirmationOfIncidence
 			AND ctcoi.[Name] = 'Visita Fallida'
 		INNER JOIN DeliveryAttempt da WITH (NOLOCK)
 			ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+		INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+			ON da.ID_Incident = cti.IdIncidenceType
 		INNER JOIN DeliveryOrderBySettlement dobs WITH (NOLOCK)
 			ON da.ID_DeliveryOrderBySettlement = dobs.ID
 		INNER JOIN SenderReceiver sr WITH (NOLOCK)
