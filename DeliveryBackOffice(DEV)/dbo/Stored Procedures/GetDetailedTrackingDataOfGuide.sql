@@ -296,7 +296,8 @@ BEGIN
     ORDER BY RES.[StageDate] ASC,
              RES.[EventID];
 
-
+	CREATE NONCLUSTERED INDEX ix_OrdChkpnt_Token_StageDate_EventID ON #OrdChkpnt ([Token],[StageDate],[EventID]);
+			 
 	SELECT     OrdChkPnt.[EventID],
 			   OrdChkPnt.[OrderId],
 			   OrdChkPnt.[CustomerFullname],
