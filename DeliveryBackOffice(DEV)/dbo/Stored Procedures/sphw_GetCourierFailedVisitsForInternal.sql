@@ -54,6 +54,7 @@ BEGIN
 			AND CAST(da.Date_Created AS DATE) <= @FinishDate
 			AND (@CourierId = 0
 			OR @CourierId = sr.ID)
+			AND (da.Guide_Piece IS NULL OR da.Guide_Piece = 1)
 			GROUP BY sr.ID
 					,sr.First_Name
 					,sr.Last_Name
