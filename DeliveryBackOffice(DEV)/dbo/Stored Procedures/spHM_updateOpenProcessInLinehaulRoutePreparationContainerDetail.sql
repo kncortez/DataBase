@@ -26,9 +26,15 @@ BEGIN
 	DECLARE @GUIDE_QUANTITY_CONTAINER AS INT;		-- Linehaul Route Preparation Container
 	DECLARE @DRY_QUANTITY_CONTAINER AS INT;			-- Linehaul Route Preparation Container
 	DECLARE @COLD_QUANTITY_CONTAINER AS INT;		-- Linehaul Route Preparation Container
+	DECLARE @NEW_STATUS_ID AS INT;					-- StatusOrder
 
 	BEGIN TRANSACTION
 	BEGIN TRY
+
+		-- Status for dispatch
+		SET @NEW_STATUS_ID =(SELECT	[SO].[StatusOrderId]
+							FROM	[dbo].[StatusOrder] SO
+							WHERE	[SO].[OrderDescription] = 'En preparación de traslado');
 
 		UPDATE	[LinehaulRoutePreparationContainerDetailPiece]
 		SET		[RowStatus] = @RowStatus
@@ -146,6 +152,33 @@ BEGIN
 				[DryPieceQuantity] =			@DRY_QUANTITY_CONTAINER,
 				[ColdPieceQuantity] =			@COLD_QUANTITY_CONTAINER
 		WHERE	[IdLinehaulRoutePreparation] =	@EXISTING_LRP;
+
+		-- UPDATE DeliveryOrderDetail
+		IF (@RowStatus = 1) 
+			BEGIN
+				INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+							([Guide_Serie],
+							 [Guide_Number],
+							 [StatusOrderId],
+							 [UserCreated],
+							 [DateCreated],
+							 [DateCreatedInSystem],
+							 [RowStatus])
+					VALUES	(@GuideSerie,
+							 @GuideNumber,
+							 @NEW_STATUS_ID,
+							 @TknUser,
+							 SYSDATETIME(),
+							 SYSDATETIME(),
+							 1);
+
+				UPDATE	[DeliveryOrder]
+				SET		[StatusOrderId] = @NEW_STATUS_ID,
+						[TokenUpdated] = @TknUser,
+						[DateUpdated] = SYSDATETIME()
+				WHERE	[Guide_Serie] = @GuideSerie
+					AND [Guide_Number] = @GuideNumber;
+			END
 
 		IF (@@TRANCOUNT > 0)
 			COMMIT TRANSACTION;
