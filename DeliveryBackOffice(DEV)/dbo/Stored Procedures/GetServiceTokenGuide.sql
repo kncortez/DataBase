@@ -123,6 +123,7 @@ BEGIN
 									ON da.ID_Incident = cti.IdIncidenceType
 								WHERE coi.ConfirmationOfIncidentToken = @GuideToken
 								AND coi.RowStatus = 1
+								AND coi.IsConfirmed <> 1
 								FOR XML PATH(''), TYPE
 								).value('.', 'varchar(max)'),1,1,''
 								) )
