@@ -178,8 +178,8 @@ BEGIN
 			UPDATE
 				CD
 			SET
-				CourierLatitude = ISNULL(UCL.CourierLatitude, ISNULL(CL.CourierLatitude, ''))
-				,CourierLongitude = ISNULL(UCL.CourierLongitude, ISNULL(CL.CourierLongitude, ''))
+				CourierLatitude = ISNULL(UCL.CourierLatitude, '')
+				,CourierLongitude = ISNULL(UCL.CourierLongitude, '')
 			FROM
 				@CourierData CD
 				INNER JOIN
@@ -200,20 +200,55 @@ BEGIN
 						RA.IdRoute = CR.IdRoute
 						AND
 						CR.IdTypeRoute = @PickupRouteTypeId
+				-- Ubicación por ubica
 				LEFT JOIN
 					[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH(NOLOCK)
 					ON
 						RA.IdVehicle = CV.IdVehicle
-				-- Ubicación por ubica
 				LEFT JOIN
 					@UbicaCourierLocations UCL
 					ON
 						REPLACE(UCL.VehicleTypeDescription,' ','') = REPLACE(CV.Plate,' ','')
+			WHERE
+				ISNULL(CD.CourierLatitude,'') = ''
+				AND
+				ISNULL(CD.CourierLongitude,'') = ''
+				
+			-- Actualización con ubicaciones
+			UPDATE
+				CD
+			SET
+				CourierLatitude = ISNULL(CL.CourierLatitude, '')
+				,CourierLongitude = ISNULL(CL.CourierLongitude, '')
+			FROM
+				@CourierData CD
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH(NOLOCK)
+					ON
+						CD.CourierId = SR.ID
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
+					ON
+						CD.CourierId = RA.IdCurrierMan
+						AND
+						RA.DateOfRoute = CAST(GETDATE() AS DATE)
+						AND
+						RA.RowStatus = 1
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
+					ON
+						RA.IdRoute = CR.IdRoute
+						AND
+						CR.IdTypeRoute = @PickupRouteTypeId
 				-- Ubicación por forza driver
 				LEFT JOIN
 					@CourierLocations CL
 					ON 
 						sr.Phone LIKE CONCAT('%', cl.CourierPhone, '%')
+			WHERE
+				ISNULL(CD.CourierLatitude,'') = ''
+				AND
+				ISNULL(CD.CourierLongitude,'') = ''
 
 			SELECT
 				200 'ResultCode',
