@@ -7,9 +7,12 @@ CREATE PROCEDURE [dbo].[spHW_GetPickpuDashboardData]
 	@StartDate DATETIME = NULL,
 	@EndDate DATETIME = NULL,
 	@UserId BIGINT,
-	@CourierId INT = NULL
+	@CourierId INT = NULL,
+	@CourierLocations TblCourierLocation READONLY,
+	@UbicaCourierLocations TblCourierLocation READONLY
 AS
 BEGIN
+
 	-- Manejo de fechas
 	IF(@EndDate IS NULL)
 	BEGIN
@@ -45,6 +48,7 @@ BEGIN
 	END
 
 	-- Variables de apoyo
+	DECLARE @PickupRouteTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI);
 	DECLARE @PickupServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI)
 
 	DECLARE @PickedupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado' COLLATE Latin1_General_CI_AI)
@@ -57,6 +61,8 @@ BEGIN
 		CourierName NVARCHAR(200),
 		CourierFirstName NVARCHAR(100),
 		CourierLastName NVARCHAR(100),
+		CourierLatitude NVARCHAR(20),
+		CourierLongitude NVARCHAR(20),
 		TotalServices INT,
 		TotalScheduled INT,
 		TotalOnDemand INT,
@@ -115,6 +121,12 @@ BEGIN
 					SR.ID = RA.IdCurrierMan
 					AND
 					RA.DateOfRoute BETWEEN @StartDate AND @EndDate
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
+				ON
+					RA.IdRoute = CR.IdRoute
+					AND
+					CR.IdTypeRoute = @PickupRouteTypeId
 			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH(NOLOCK)
 				ON
@@ -161,6 +173,47 @@ BEGIN
 				@CourierData
 			SET
 				CourierName = LTRIM(RTRIM(CONCAT(CourierFirstName,' ', CourierLastName)))
+
+			-- Actualización con ubicaciones
+			UPDATE
+				CD
+			SET
+				CourierLatitude = ISNULL(UCL.CourierLatitude, ISNULL(CL.CourierLatitude, ''))
+				,CourierLongitude = ISNULL(UCL.CourierLongitude, ISNULL(CL.CourierLongitude, ''))
+			FROM
+				@CourierData CD
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH(NOLOCK)
+					ON
+						CD.CourierId = SR.ID
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[RouteAssigment] RA WITH(NOLOCK)
+					ON
+						CD.CourierId = RA.IdCurrierMan
+						AND
+						RA.DateOfRoute = CAST(GETDATE() AS DATE)
+						AND
+						RA.RowStatus = 1
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[CatRoute] CR WITH(NOLOCK)
+					ON
+						RA.IdRoute = CR.IdRoute
+						AND
+						CR.IdTypeRoute = @PickupRouteTypeId
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH(NOLOCK)
+					ON
+						RA.IdVehicle = CV.IdVehicle
+				-- Ubicación por ubica
+				LEFT JOIN
+					@UbicaCourierLocations UCL
+					ON
+						REPLACE(UCL.VehicleTypeDescription,' ','') = REPLACE(CV.Plate,' ','')
+				-- Ubicación por forza driver
+				LEFT JOIN
+					@CourierLocations CL
+					ON 
+						sr.Phone LIKE CONCAT('%', cl.CourierPhone, '%')
 
 			SELECT
 				200 'ResultCode',
