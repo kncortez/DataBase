@@ -5,8 +5,7 @@
 -- Description:	<Devuelve todos los couriers basado en los hubs del usuario interno>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphw_GetRoutePreparationDeliveryByUserHub]
-	@StartDate DATETIME = NULL,
-	@EndDate DATETIME = NULL,
+	@TargetDate DATE = NULL,
 	@UserId BIGINT,
 	@CourierId INT = NULL
 AS
@@ -15,36 +14,10 @@ BEGIN
 	IF OBJECT_ID('tempdb.dbo.#DeliveryServiceList', 'U') IS NOT NULL DROP TABLE #DeliveryServiceList;
 
 	-- Manejo de fechas
-	IF(@EndDate IS NULL)
+	IF(@TargetDate IS NULL)
 	BEGIN
 
-		SET @EndDate = DATEADD(SECOND,-1,DATEADD(DAY,1,CAST(CAST(GETDATE() AS DATE) AS DATETIME)))
-
-	END
-	ELSE 
-	BEGIN
-
-		SET @EndDate = DATEADD(SECOND,-1,DATEADD(DAY,1,CAST(CAST(@EndDate AS DATE) AS DATETIME)))
-
-	END
-
-	IF(@StartDate IS NULL)
-	BEGIN
-
-		SET @StartDate = CAST(CAST(DATEADD(DAY,-7,@EndDate) AS DATE) AS DATETIME)
-
-	END
-	ELSE
-	BEGIN
-
-		SET @StartDate = CAST(CAST(@StartDate AS DATE) AS DATETIME)
-
-	END
-
-	IF(DATEDIFF(DAY,@StartDate, @EndDate) > 30)
-	BEGIN
-
-		SET @StartDate = CAST(CAST(DATEADD(DAY,-30,@EndDate) AS DATE) AS DATETIME)
+		SET @TargetDate = CAST(GETDATE() AS DATE);
 
 	END
 
@@ -60,7 +33,10 @@ BEGIN
 		IsReturn BIT,
 		GuideFlow NVARCHAR(50),
 		StatusDescription NVARCHAR(100),
-		DateStatus DATETIME
+		DateStatus DATETIME,
+		IncidenceDescription NVARCHAR(200),
+		ServiceLatitude NVARCHAR(50),
+		ServiceLongitude NVARCHAR(50)
 	);
 
 	-- Variables de apoyo
@@ -69,7 +45,7 @@ BEGIN
 	BEGIN TRY
 
 	INSERT INTO #DeliveryServiceList
-		(IdCourier, CourierName, RouteCode, DispatchDate, GuideSerie, GuideNumber, Guide, IsReturn, GuideFlow, StatusDescription, DateStatus)
+		(IdCourier, CourierName, RouteCode, DispatchDate, GuideSerie, GuideNumber, Guide, IsReturn, GuideFlow, StatusDescription, DateStatus, IncidenceDescription, ServiceLatitude, ServiceLongitude)
 	SELECT
 		SR.ID 'IdCourier'
 		,LTRIM(RTRIM(CONCAT(SR.First_Name, ' ', SR.Last_Name))) 'CourierName'
@@ -87,6 +63,14 @@ BEGIN
 		) 'GuideFlow'
 		,DODLast.StatusDescription
 		,DODLast.DateStatus
+		,(
+			CASE
+				WHEN DA.Delivered = 0 AND DA.ID_Incident IS NOT NULL THEN CTI.NameIncidence
+				ELSE ''
+			END
+		) 'IncidenceDescription',
+		DA.Latitude 'ServiceLatitude',
+		DA.Longitude 'ServiceLongitude'
 	FROM
 		[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 		INNER JOIN
@@ -125,6 +109,10 @@ BEGIN
 				DA.Guide_Serie = DO.Guide_Serie
 				AND
 				DA.Guide_Number = DO.Guide_Number
+		LEFT JOIN
+			[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK)
+			ON
+				DA.ID_Incident = CTI.IdIncidenceType
 		OUTER APPLY (
 			SELECT
 				TOP 1
@@ -146,7 +134,7 @@ BEGIN
 				ISNULL(DOD.DateCreated, DOD.DateCreatedInSystem) DESC
 		) DODLast
 	WHERE
-		CAST(DA.Date_Created AS DATE) BETWEEN @StartDate AND @EndDate
+		CAST(DA.Date_Created AS DATE) = @TargetDate
 		AND
 		(@CourierId IS NULL OR DA.ID_Courier = @CourierId)
 
@@ -168,7 +156,10 @@ BEGIN
 			DSL.IsReturn,
 			DSL.GuideFlow,
 			DSL.StatusDescription,
-			DSL.DateStatus
+			DSL.DateStatus,
+			DSL.IncidenceDescription,
+			DSL.ServiceLatitude,
+			DSL.ServiceLongitude
 		FROM
 			#DeliveryServiceList DSL
 
@@ -191,7 +182,10 @@ BEGIN
 			DSL.IsReturn,
 			DSL.GuideFlow,
 			DSL.StatusDescription,
-			DSL.DateStatus
+			DSL.DateStatus,
+			DSL.IncidenceDescription,
+			DSL.ServiceLatitude,
+			DSL.ServiceLongitude
 		FROM
 			#DeliveryServiceList DSL
 
