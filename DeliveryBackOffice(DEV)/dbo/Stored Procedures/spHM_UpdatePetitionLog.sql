@@ -4,14 +4,13 @@
 -- Create date: <2022-11-25>
 -- Description:	<proceso para almacenar en bitacora la informacion del consumo de servicios web de API mobile>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_RegisterPetitionLog] 
+CREATE PROCEDURE [dbo].[spHM_UpdatePetitionLog] 
 	-- Add the parameters for the stored procedure here
-	@PetitionMethod nvarchar(10),
-	@PetitionUrl nvarchar(MAX),
-	@RequestHeader nvarchar(4000),
-	@RequestBody nvarchar(MAX) = '',
-	@RequestDateTime datetime = NULL,
-	@RequestLauValue nvarchar(500)
+	@LogId BIGINT,
+	@ResponseHeader nvarchar(4000),
+	@ResponseBody nvarchar(MAX) = '',
+	@ResponseDateTime datetime = NULL,
+	@ResponseCode int
 
 AS
 BEGIN
@@ -19,8 +18,8 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	IF(@RequestDateTime IS NULL)
-		SET @RequestDateTime = GETDATE()
+	IF(@ResponseDateTime IS NULL)
+		SET @ResponseDateTime = GETDATE()
 
 	DECLARE @InsertedLog AS TABLE (
 		IdInsert BIGINT
@@ -29,25 +28,16 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-		INSERT INTO [DeliveryBackOffice].[dbo].[APIMobileLog]
-			(
-				[PetitionMethod]
-				,[PetitionUrl]
-				,[RequestHeader]
-				,[RequestBody]
-				,[RequestDateTime]
-				,[RequestLauValue]
-			)
+		UPDATE 
+			[DeliveryBackOffice].[dbo].[APIMobileLog]
+		SET
+			[ResponseHeader] = @ResponseHeader
+			,[ResponseBody] = @ResponseBody
+			,[ResponseDateTime] = @ResponseDateTime
+			,[ResponseCode] = @ResponseCode
 		OUTPUT inserted.IdAPIMobileLog INTO @InsertedLog(IdInsert)
-		VALUES
-		(
-			@PetitionMethod
-			,@PetitionUrl
-			,@RequestHeader
-			,@RequestBody
-			,@RequestDateTime
-			,@RequestLauValue
-		)
+		WHERE
+			IdAPIMobileLog = @LogId
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @InsertedLog))
 		BEGIN
@@ -55,11 +45,7 @@ BEGIN
 			COMMIT TRANSACTION;
 
 			SELECT
-				TOP 1
-					200 'ResultCode',
-					IL.IdInsert 'ResultLog'
-			FROM
-				@InsertedLog IL
+				200 'ResultCode'
 
 		END
 		ELSE

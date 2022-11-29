@@ -1152,8 +1152,9 @@
     <Build Include="dbo\Stored Procedures\SPHD_ActLineHaulsDeletePiece.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
-    <Build Include="dbo\Tables\APIMobileLogs.sql" />
     <Build Include="dbo\Stored Procedures\spHM_RegisterPetitionLog.sql" />
+    <Build Include="dbo\Tables\APIMobileLog.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_UpdatePetitionLog.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
