@@ -13,6 +13,7 @@ CREATE PROCEDURE [dbo].[spHM_addGuideToLinehaulRoutePreparationContainerDetail]
 	@IsOpenProcess AS INT,
 	@PieceNumber AS INT,
 	@IsSettlement AS INT,
+	@IdHub AS INT,
 	@TknUser AS NVARCHAR(50)
 AS
 BEGIN
@@ -34,8 +35,13 @@ BEGIN
 	DECLARE @STATUS_ORDER_ID AS INT;				-- StatusOrder
 	DECLARE @DELIVERY_ORDER_PIECE AS INT;			-- DeliveryOrderPiece
 	DECLARE @IS_DRY AS INT;							-- DeliveryOrderPiece
+	DECLARE @CONTAINER_HUB AS INT;					-- LinehaulRoutePreparationContainer
 
-	-- First, check deliveryOrderPiece
+	SET @CONTAINER_HUB = (SELECT COALESCE([LRPC].[HubDestinyId], 0) AS HubDestiny
+						  FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+						  WHERE	[LRPC].[IdLinehaulRoutePreparationContainer] = @LinehaulRoutePreparationContainerId);
+
+	-- Check deliveryOrderPiece
 	SET @IS_DRY = (SELECT	[DOP].[IsDry]
 					FROM	[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 					WHERE	[DOP].[GuideSerie] = @GuideSerie
@@ -55,6 +61,12 @@ BEGIN
 	IF (@EXISTING_LRP = 0)
 		BEGIN
 			SELECT 0 [spResult], 'Preparación de ruta de linehaul NO existe' [spMessage];
+			RETURN;
+		END
+
+	IF (@CONTAINER_HUB != 0 AND @CONTAINER_HUB != @IdHub)
+		BEGIN
+			SELECT 6 [spResult], 'Guía y contenedor tienen un HUB destino diferente' [spMessage];
 			RETURN;
 		END
 	
@@ -81,6 +93,11 @@ BEGIN
 
 	BEGIN TRANSACTION
 	BEGIN TRY
+
+		UPDATE [LinehaulRoutePreparationContainer]
+		SET [HubDestinyId] = @IdHub
+		WHERE [IdLinehaulRoutePreparationContainer] = @LinehaulRoutePreparationContainerId;
+
 		IF (@EXISTING_LRPCD = 0)
 			BEGIN
 			-- Create document
