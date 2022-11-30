@@ -1152,6 +1152,12 @@
     <Build Include="dbo\Stored Procedures\SPHD_ActLineHaulsDeletePiece.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
+    <Build Include="dbo\Tables\ContentTitle.sql" />
+    <Build Include="dbo\Tables\ContentDetailByTag.sql" />
+    <Build Include="dbo\Tables\ContentDetail.sql" />
+    <Build Include="dbo\Tables\CatTypeContent.sql" />
+    <Build Include="dbo\Tables\CatTagContent.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetContentDataByType.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
