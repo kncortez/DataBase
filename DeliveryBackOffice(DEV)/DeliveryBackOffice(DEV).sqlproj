@@ -1345,6 +1345,7 @@
     <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisits.sql" />
     <Build Include="dbo\Stored Procedures\sphw_SetGuideInformationFailedVisits.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisitsForInternal.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttemps.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
