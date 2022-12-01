@@ -15,7 +15,7 @@ BEGIN
 BEGIN TRANSACTION
 BEGIN TRY
 
-	IF(EXISTS(SELECT TOP  1 1 from dbo.RegisterUser where UsrIdUser=@IdUser))
+	IF(EXISTS(SELECT Top 1 1 FROM dbo.SenderReceiverByUser WHERE SenderReceiverId=@SenderReceiverId And UserId=@IdUser And RowStatus=1) )
 	BEGIN
 
 		INSERT INTO [dbo].[SenderReceiverbyUser]
@@ -46,14 +46,13 @@ BEGIN TRY
 			 SELECT [blnResult] = 2
 	
 		END
-		COMMIT TRANSACTION
+COMMIT TRANSACTION
 END TRY
 BEGIN CATCH
           
 	ROLLBACK TRANSACTION
 			SELECT [blnResult] = 0
-                  
-			
+                  			
 END CATCH
 
 END
