@@ -147,9 +147,13 @@ BEGIN
                        END ItemPiece
                 INTO #listGuides
                 FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
-
-                ---SELECT * FROM #listGuides
-
+				
+				UPDATE
+					#listGuides
+				SET
+					ItemPiece = 1
+				WHERE
+					ISNULL(ItemPiece, 0) = 0
 
                 ---declare @IdCustomer int = (select IdCustomer from Account where AccIdAccount = @IdAccount)
 
