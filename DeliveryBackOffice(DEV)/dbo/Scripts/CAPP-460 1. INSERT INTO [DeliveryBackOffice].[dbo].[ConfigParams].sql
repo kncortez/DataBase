@@ -5,6 +5,6 @@ BEGIN
 	INSERT INTO [DeliveryBackOffice].[dbo].[ConfigParams]
 		(Name, Description, Value, Status, CreateDate)
 	VALUES
-		('GuideRegex', 'Expresión regular de formato de guías actual', '^(FD)([0-9]{7,10})(-([0-9]{1,3}))?$', 1, GETDATE())
+		('GuideRegex', 'Expresión regular de formato de guías actual', '^([0-9]{6,10})(-([0-9]{1,3}))?$', 1, GETDATE())
 
 END
