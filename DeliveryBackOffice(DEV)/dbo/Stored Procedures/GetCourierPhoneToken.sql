@@ -18,6 +18,16 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+	
+	DECLARE @GuideRegexData NVARCHAR(500) = (
+		SELECT
+			TOP 1
+				CP.[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK)
+		WHERE
+			Cp.[Name] = 'GuideRegex' COLLATE Latin1_General_CI_AI
+		)
 
     DECLARE @jsonResult NVARCHAR(MAX);
 
@@ -110,6 +120,7 @@ BEGIN
                                        + '"LastName":"' + ISNULL(CONVERT(VARCHAR, sr.Last_Name), 'N/A') + '",'
                                        + '"Vehicle":"' + ISNULL(CONVERT(VARCHAR, vh.Plate), 'N/A') + '",'
                                        + '"Route":"' + ISNULL(CONVERT(VARCHAR, cr.CodeRoute), 'N/A') + '",'
+									   + '"GuideRegex":"' + ISNULL(CONVERT(VARCHAR(500), @GuideRegexData), '') + '",'
                                        + '"BillingEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultEmail), 'N/A') + '",'
                                        + '"PickUpManifestEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                        + '"Token":"' + ISNULL(LogTokenPOD, '') + +'"}'
