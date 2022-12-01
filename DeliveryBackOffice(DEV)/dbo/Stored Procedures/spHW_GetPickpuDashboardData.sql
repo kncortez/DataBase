@@ -13,6 +13,9 @@ CREATE PROCEDURE [dbo].[spHW_GetPickpuDashboardData]
 AS
 BEGIN
 
+	-- Variable para control de ubicación
+	DECLARE @IsRecentDate BIT = 0;
+
 	-- Manejo de fechas
 	IF(@EndDate IS NULL)
 	BEGIN
@@ -46,6 +49,10 @@ BEGIN
 		SET @StartDate = CAST(CAST(DATEADD(DAY,-30,@EndDate) AS DATE) AS DATETIME)
 
 	END
+	
+	-- Si la fecha del rango es la fecha actual
+	IF( CAST(@StartDate AS DATE) = CAST(GETDATE() AS DATE) AND CAST(@StartDate AS DATE) = CAST(@EndDate AS DATE) )
+		SET @IsRecentDate = 1;
 
 	-- Variables de apoyo
 	DECLARE @PickupRouteTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI);
@@ -259,6 +266,8 @@ BEGIN
 				CD.CourierName,
 				CD.CourierFirstName,
 				CD.CourierLastName,
+				( CASE WHEN @IsRecentDate = 1 THEN CD.CourierLatitude ELSE '' END) 'CourierLatitude',
+				( CASE WHEN @IsRecentDate = 1 THEN CD.CourierLongitude ELSE '' END) 'CourierLongitude',
 				CD.TotalServices,
 				CD.TotalScheduled,
 				CD.TotalOnDemand,
@@ -285,6 +294,8 @@ BEGIN
 				CD.CourierName,
 				CD.CourierFirstName,
 				CD.CourierLastName,
+				CD.CourierLatitude,
+				CD.CourierLongitude,
 				CD.TotalServices,
 				CD.TotalScheduled,
 				CD.TotalOnDemand,
