@@ -13,15 +13,12 @@
 -- Description:	<Modificación para mostrar tags y valores de reemplazo en plantillas>
 -- =============================================
 -- =============================================
-
 CREATE PROCEDURE [dbo].[GetGuideFCCTracking] 
 	@GuideNumber INT,
 	@GuideSerie NVARCHAR(2) = 'FD'
-
 AS
 BEGIN
 	
-
 	SET NOCOUNT ON;
 	
 	-- Variables "configurables"
@@ -46,18 +43,15 @@ BEGIN
 		ProvidenceDelivery NVARCHAR(100),
 		NamePersonSending NVARCHAR(100),
 		TownshipDelivery NVARCHAR(100),
-		GuideSerie NVARCHAR(2)
-	
+		GuideSerie NVARCHAR(2),
+	    Client NVARCHAR(50) --NUEVO BNHL
 	);
-
 	DECLARE @TagsTable AS TABLE(
 	   TagName NVARCHAR(50),
 	   TagValue  NVARCHAR(200)
 	
 	
 	);
-
-
 	DECLARE @ExternalTypeId INT = (
 		SELECT
 			TOP 1
@@ -67,9 +61,6 @@ BEGIN
 		WHERE
 			CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
 	)
-
-
-
 	
 	SET @Exc= (SELECT
 				TOP 1
@@ -89,10 +80,7 @@ BEGIN
 					ON
 						VPU.IdVisitPointClient = VPC.IdVisitPointClient
 						WHERE VPC.CodeOfReference=(SELECT  TOP 1 ISNULL(a.Sender_ID, a.Receiver_ID)  FROM dbo.DeliveryOrder a WITH(NOLOCK)  WHERE a.Guide_Number=@GuideNumber))
-
-
 	BEGIN TRY
-
 		INSERT INTO
 		@ResponseTable
 		(   GuideNumber,
@@ -109,8 +97,8 @@ BEGIN
 			ProvidenceDelivery,
 			NamePersonSending,
 			TownshipDelivery,
-			GuideSerie
-
+			GuideSerie,
+			Client --NUEVO BNHL
 		)
 		SELECT 
 			TOP 1  
@@ -123,12 +111,13 @@ BEGIN
 				,DO.Sender_Department
 				,HL.HubName
 				,@Exc
-				,I.[Description] AS Incidence
-				,DO.Receiver_FirstName 
+				,I.NameIncidence AS Incidence
+				,DO.Receiver_FirstName+' '+DO.Receiver_LastName 
 				,DO.Sender_Department
-				,Sender_FirstName
+				,Sender_FirstName+' '+DO.Sender_LastName
 				,(SELECT TownshipName FROM [dbo].[Township] WITH(NOLOCK) WHERE IdTownship= DO.ReceiverIdTownship)
 				,DO.Guide_Serie
+				,DO.Sender_FirstName + DO.Sender_LastName Client --NUEVO BNHL
 		From 
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK) 
 		     INNER JOIN 
@@ -143,18 +132,35 @@ BEGIN
 			 LEFT JOIN
 			 [DeliveryBackOffice].[dbo].[Township] TS WITH (NOLOCK)
 			 ON DO.SenderIdTownship = TS.IdTownship
-			 LEFT JOIN
-			 [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH (NOLOCK)
+			 LEFT JOIN (
+				SELECT
+					HeaderCode,
+					MAX(DSC.Hub) 'Hub'
+				FROM
+					[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH (NOLOCK)
+				GROUP BY
+					DSC.HeaderCode
+			) DSC
 			 ON TS.HeaderCode= DSC.HeaderCode
 			 LEFT JOIN
 			 [DeliveryBackOffice].[dbo].[HubLogistics] HL WITH (NOLOCK)
 			 ON DSC.Hub = HL.HubAbbreviation
-			 LEFT JOIN 
-			 [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-			 ON DO.Guide_Number = DA.Guide_Number
-			 LEFT JOIN 
-			 [DeliveryBackOffice].[dbo].[Incident] I WITH (NOLOCK)
-			 ON DA.ID_Incident= I.ID
+			 OUTER APPLY (
+				SELECT
+					TOP 1
+						I.NameIncidence
+				FROM
+					[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+					LEFT JOIN 
+					[DeliveryBackOffice].[dbo].[CatTypeIncidence] I WITH (NOLOCK)
+					ON DA.ID_Incident= I.IdIncidenceType
+				WHERE
+					DA.Guide_Serie = DO.Guide_Serie
+					AND
+					DA.Guide_Number = DO.Guide_Number
+				ORDER BY
+					DA.Date_Created DESC
+			 ) I
 		Where 
 			DOD.Guide_Number = @GuideNumber
 			AND
@@ -163,31 +169,20 @@ BEGIN
 			CST.IdCatStatusType = @ExternalTypeId
 		ORDER BY
 			DOD.DateCreated DESC
-
 		IF( EXISTS (SELECT TOP 1 1 FROM @ResponseTable) )
 		BEGIN
-		
+		   SET LANGUAGE Spanish
 			SELECT @Datetext=RT.GuideStatusDate FROM @ResponseTable RT
-
 			declare @mes nvarchar(10) 
 			declare @diafecha nvarchar(10)
 			declare @anio nvarchar(10)=YEAR(CAST(@Datetext AS datetime))
 		    declare @diaf nvarchar(10)=DAY(CAST(@Datetext AS datetime))
-
-
-
-			SET LANGUAGE Spanish
+			
 			DECLARE @dia INT
 			SET @dia = 1
 			SELECT @mes= DATENAME(month, DATEADD(day, @dia-1, CAST(@Datetext AS datetime)))
 			SELECT @diafecha =datename(weekday, @Datetext) 
-
-
-
-
            SET @Datetext2 = @diafecha+' '+@diaf+' de '+@mes +' de '+@anio
-
-
 			SELECT
 				TOP 1
 					1 [blnResult]
@@ -206,16 +201,12 @@ BEGIN
 					,RT.ProvidencePickup
 					,RT.ProvidenceDelivery
 					,RT.TownshipDelivery
-				
+				    ,RT.Client --NUEVO BNHL
 					
 			FROM
 				@ResponseTable RT
-
-
          
-
 		
-
 		 INSERT INTO @TagsTable(TagName,TagValue)
 		        SELECT  A.Tag
 				        ,CASE 
@@ -230,21 +221,16 @@ BEGIN
 							 WHEN A.Tag='<NamePersonSending>' THEN B.NamePersonSending
 							 WHEN A.Tag='<ProvidenceDelivery>' THEN B.ProvidenceDelivery
 							 WHEN A.Tag='<ProvidencePickup>' THEN B.ProvidencePickup
-							 WHEN A.Tag='<NameHub>' THEN B.HUB
+							 WHEN A.Tag='<NameHubOrigin>' THEN B.HUB
 							  WHEN A.Tag='<NameExc>' THEN B.EXC
+							   WHEN A.Tag='<Client>' THEN B.Client
 						ELSE '' END TagValue
 				FROM [DeliveryBackOffice].[dbo].[TagsVariables] A WITH(NOLOCK) 
 				CROSS JOIN @ResponseTable B
-
-
-
-
 		   SELECT TagName, TagValue FROM  @TagsTable
-
 		END
 		ELSE
 		BEGIN
-
 			SELECT
 				0 [blnResult] -- Indica que no existe un último estado publico posible de retornar
 				,@FailureResponseMessage [messageResult]
@@ -255,6 +241,5 @@ BEGIN
 		SELECT
 			0 [blnResult] -- Indica que no existe un último estado publico posible de retornar
 			,@FailureResponseMessage [messageResult]
-
 	END CATCH
 END
