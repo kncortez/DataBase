@@ -151,7 +151,7 @@ BEGIN
 			'' [EstimatedDeliveryDate], --[Field5],
 			'' [CourierName], --[Field9]
 			Cast(dod.StatusOrderId as nvarchar) as [StageId], -- status order id
-			(SELECT MAX(DT.DateCreated) FROM dbo.DeliveryOrderDetail DT WHERE DT.Guide_Serie = dod.Guide_Serie AND DT.Guide_Number = DOD.Guide_Number AND DT.StatusOrderId = DOD.StatusOrderId ) as [StageDate], -- date of status id
+			(SELECT MAX(DT.DateCreated) FROM dbo.DeliveryOrderDetail DT WITH(NOLOCK) WHERE DT.Guide_Serie = dod.Guide_Serie AND DT.Guide_Number = DOD.Guide_Number AND DT.StatusOrderId = DOD.StatusOrderId ) as [StageDate], -- date of status id
 			so.OrderDescription +', '+ CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) as [StageTitle], -- status order name
 			'web' as [StageSource],
 			so.StatusOrderTrackingDescription as [StageDescription],
