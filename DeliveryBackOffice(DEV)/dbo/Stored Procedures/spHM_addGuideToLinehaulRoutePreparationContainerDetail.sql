@@ -250,19 +250,29 @@ BEGIN
 		WHERE	[IdLinehaulRoutePreparation] =	@LinehaulRoutePreparationId;
 		-- End Update General Numbers --------------------------------------------------------------------------------------------
 
-		SELECT	[LRPD].[IdLinehaulRoutePreparationContainerDetail],
-				[LRPD].[LinehaulRoutePreparationContainerId],
-				[LRPD].[GuideSerie],
-				[LRPD].[GuideNumber],
-				[LRPD].[GuideDryPieceTotal],
-				[LRPD].[GuideColdPieceTotal],
-				[LRPD].[DryPieceQuantity],
-				[LRPD].[ColdPieceQuantity],
-				[LRPD].[IsOpenProcess]
-		FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPD
-		WHERE	[LRPD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
-			AND [LRPD].[GuideSerie] = @GuideSerie
-			AND [LRPD].[GuideNumber] = @GuideNumber;
+		SELECT		[LRPCD].[IdLinehaulRoutePreparationContainerDetail],
+					[LRPCD].[LinehaulRoutePreparationContainerId],
+					[LRPCD].[GuideSerie],
+					[LRPCD].[GuideNumber],
+					[LRPCD].[GuideDryPieceTotal],
+					[LRPCD].[GuideColdPieceTotal],
+					[LRPCD].[DryPieceQuantity],
+					[LRPCD].[ColdPieceQuantity],
+					[LRPCD].[IsOpenProcess],
+					[LRPCDP].[PieceNumber],
+					[LRPCDP].[IsDryPiece],
+					[LRPCDP].[TokenCreated],
+					[LRPCDP].[TokenUpdated]
+		FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+			AND		[LRPCD].[GuideSerie] = @GuideSerie
+			AND		[LRPCD].[GuideNumber] = @GuideNumber
+			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+		WHERE		[LRPCDP].[ActCode] IS NULL
+			AND		[LRPCDP].[RowStatus] = 1
+			AND		([LRPCDP].[TokenCreated] = @TknUser
+			OR		[LRPCDP].[TokenUpdated] = @TknUser)
 
 		IF (@@TRANCOUNT > 0)
 			COMMIT TRANSACTION;
