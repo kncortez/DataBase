@@ -149,7 +149,7 @@ BEGIN
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderDetail dod
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
 					ON dod.Guide_Serie = da.Guide_Serie
 					AND dod.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -162,7 +162,7 @@ BEGIN
 				UPDATE do
 				SET StatusOrderId = @StatusOrderId 
 				FROM DeliveryOrder do
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -173,7 +173,7 @@ BEGIN
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderPiece dop
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
 					ON dop.GuideSerie = da.Guide_Serie
 					AND dop.GuideNumber = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
