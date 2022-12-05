@@ -61,8 +61,27 @@ BEGIN
 	   ,IIF(cv.IdVehicle IS NULL, CONCAT(lrp.VehicleID, ' - ', lrp.VehicleDescription), cv.Plate) Vehicle
 	   ,cls.StatusName StatusName
 	   ,cls.StatusDescription StatusDescription
-	   ,FORMAT(lrp.DateCreated, 'dd/MM/yyyy') DateCreated
-	   ,FORMAT(lrp.DateLinehaulRoutePreparation, 'dd/MM/yyyy') DateRoutePreparation
+	   ,FORMAT(ISNULL((SELECT TOP 1
+				lrpcd.DateCreated
+			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
+			INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
+				ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
+				AND lrpc.RowStatus = 1
+			WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
+			AND lrpc.RowStatus = 1
+			ORDER BY lrpcd.DateCreated)
+		, lrp.DateCreated), 'dd/MM/yyyy hh:mm tt') DateCreated
+	   ,FORMAT(ISNULL((SELECT TOP 1
+				lrpcd.DateCreated
+			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
+			INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
+				ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
+				AND lrpc.RowStatus = 1
+			WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
+			AND lrpc.RowStatus = 1
+			ORDER BY lrpcd.DateCreated DESC)
+		, lrp.DateLinehaulRoutePreparation), 'dd/MM/yyyy hh:mm tt') DateRoutePreparation
+		, ISNULL(lrpcm.CustomsMarkSerie, '') CustomMark
 	FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
 	LEFT JOIN CatRoute cr WITH (NOLOCK)
 		ON cr.IdRoute = lrp.CatRouteId
@@ -72,6 +91,9 @@ BEGIN
 		ON cv.IdVehicle = lrp.CatVehicleId
 	INNER JOIN CatLinehaulStatus cls WITH (NOLOCK)
 		ON cls.IdCatLinehaulStatus = lrp.CatLinehaulStatusId
+	LEFT JOIN LinehaulRoutePreparationCustomsMark lrpcm WITH(NOLOCK)
+		ON lrp.IdLinehaulRoutePreparation = lrpcm.LinehaulRoutePreparationId
+		AND lrpcm.RowStatus = 1
 	WHERE lrp.IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
 	AND lrp.RowStatus = 1
 
@@ -79,7 +101,6 @@ BEGIN
 	SELECT
 		CONCAT(lrpcd.GuideSerie, lrpcd.GuideNumber) Guide
 	   ,CONCAT((lrpcd.DryPieceQuantity + lrpcd.ColdPieceQuantity), '/', (lrpcd.GuideDryPieceTotal + lrpcd.GuideColdPieceTotal)) Pieces
-	   ,c.ContainerNumber ContainerNumber
 	   ,c.ContainerDescription ContainerDescription
 	   ,hl.HubName
 	   ,hl.HubAbbreviation
@@ -93,6 +114,21 @@ BEGIN
 			WHERE dsc.Hub = hl.HubAbbreviation)
 		Department
 	   ,IIF((lrpcd.DryPieceQuantity + lrpcd.ColdPieceQuantity) = (lrpcd.GuideDryPieceTotal + lrpcd.GuideColdPieceTotal), 0, 1) IsParcial
+	   ,so.OrderDescription StatusDescription
+	   ,ad.ActId Act
+	   ,CASE
+			WHEN ad.ActId IS NOT NULL THEN (SELECT
+						STUFF((SELECT
+								', ' + CAST(adp.PieceNumber AS VARCHAR)
+							FROM ActDetail ad2 WITH (NOLOCK)
+							INNER JOIN ActDetailPiece adp WITH (NOLOCK)
+								ON ad2.IdActDetail = adp.ActDetailId
+							WHERE ad2.IdActDetail = ad.ActId
+							FOR XML PATH (''))
+						, 1, 2, ''))
+			ELSE NULL
+		END ActPieces
+
 	FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 	INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 		ON lrpcd.LinehaulRoutePreparationContainerId = lrpc.IdLinehaulRoutePreparationContainer
@@ -101,7 +137,16 @@ BEGIN
 		ON c.IdContainer = lrpc.ContainerId
 	INNER JOIN HubLogistics hl WITH (NOLOCK)
 		ON hl.IdHubLogistic = lrpc.HubDestinyId
+	INNER JOIN DeliveryOrder do WITH (NOLOCK)
+		ON lrpcd.GuideSerie = do.Guide_Serie
+			AND lrpcd.GuideNumber = do.Guide_Number
+	INNER JOIN StatusOrder so WITH (NOLOCK)
+		ON do.StatusOrderId = so.StatusOrderId
+	LEFT JOIN ActDetail ad WITH (NOLOCK)
+		ON lrpcd.GuideSerie = ad.GuideSerie
+			AND lrpcd.GuideNumber = ad.GuideNumber
+			AND ad.RowStatus = 1
 	WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
 	AND lrpc.RowStatus = 1
-
+	ORDER BY hl.HubName
 END
