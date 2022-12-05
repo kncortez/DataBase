@@ -103,7 +103,7 @@ BEGIN
 		SELECT 
 			TOP 1  
 				 DOD.Guide_Number
-				,DOD.StatusOrderId
+				,DO.StatusOrderId
 				,SO.OrderDescription
 				,DOD.DateCreated
 				,SO.StatusMessage
@@ -112,12 +112,12 @@ BEGIN
 				,HL.HubName
 				,@Exc
 				,I.NameIncidence AS Incidence
-				,DO.Receiver_FirstName+' '+DO.Receiver_LastName 
+				,COALESCE(DO.Receiver_FirstName,'') +' '+COALESCE(DO.Receiver_LastName,'') 
 				,DO.Sender_Department
-				,Sender_FirstName+' '+DO.Sender_LastName
+				,COALESCE(Sender_FirstName,'')+' '+COALESCE(DO.Sender_LastName,'')
 				,(SELECT TownshipName FROM [dbo].[Township] WITH(NOLOCK) WHERE IdTownship= DO.ReceiverIdTownship)
 				,DO.Guide_Serie
-				,DO.Sender_FirstName + DO.Sender_LastName Client --NUEVO BNHL
+				,COALESCE(DO.Sender_FirstName,'') + COALESCE(DO.Sender_LastName,'') Client --NUEVO BNHL
 		From 
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK) 
 		     INNER JOIN 
@@ -125,7 +125,7 @@ BEGIN
 			 ON DO.Guide_Serie = DOD.Guide_Serie  AND DO.Guide_Number = DOD.Guide_Number
 			 LEFT JOIN 
 			 [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
-			 ON DOD.StatusOrderId = SO.StatusOrderId
+			 ON DO.StatusOrderId = SO.StatusOrderId
 			 LEFT JOIN 
 			 [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
 			 ON SO.CatStatusTypeId = CST.IdCatStatusType
@@ -222,8 +222,8 @@ BEGIN
 							 WHEN A.Tag='<ProvidenceDelivery>' THEN B.ProvidenceDelivery
 							 WHEN A.Tag='<ProvidencePickup>' THEN B.ProvidencePickup
 							 WHEN A.Tag='<NameHubOrigin>' THEN B.HUB
-							  WHEN A.Tag='<NameExc>' THEN B.EXC
-							   WHEN A.Tag='<Client>' THEN B.Client
+							 WHEN A.Tag='<NameExc>' THEN B.EXC
+							 WHEN A.Tag='<Client>' THEN B.Client
 						ELSE '' END TagValue
 				FROM [DeliveryBackOffice].[dbo].[TagsVariables] A WITH(NOLOCK) 
 				CROSS JOIN @ResponseTable B
