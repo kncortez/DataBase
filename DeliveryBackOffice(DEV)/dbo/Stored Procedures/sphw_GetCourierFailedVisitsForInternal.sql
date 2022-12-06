@@ -3,6 +3,11 @@
 -- Create date: <2022-11-25>
 -- Description:	<Obtiene información de visitas fallidas de couriers para pantalla de dashboard de visitas fallidas de usuarios internos de operaciones>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2022-12-06>
+-- Description:	<validación que el @UserId tenga asignado el courier esta relación se implementa en la tabla SenderReceiverbyUser>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_GetCourierFailedVisitsForInternal]
 	-- Add the parameters for the stored procedure here
 	@StartDate DATE,
@@ -45,17 +50,18 @@ BEGIN
 			FROM DeliveryAttempt da WITH (NOLOCK)
 			INNER JOIN SenderReceiver sr WITH (NOLOCK)
 				ON da.ID_Courier = sr.ID
+			INNER JOIN [dbo].[SenderReceiverByUser] SRU
+			    ON  sr.ID = SRU.SenderReceiverId
 			LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
 				ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
 			LEFT JOIN CatTypeConfirmationOfIncidence ctcoi WITH (NOLOCK)
 				ON coi.CatTypeConfirmationOfIncidenceId = ctcoi.IdCatTypeConfirmationOfIncidence
-			LEFT JOIN [dbo].[SenderReceiverByUser] SRU
-			    ON  sr.ID = SRU.SenderReceiverId
 			WHERE @FinishDate >= @StartDate
 			AND CAST(da.Date_Created AS DATE) >= @StartDate
 			AND CAST(da.Date_Created AS DATE) <= @FinishDate 
+			AND (@CourierId=0 OR da.ID_Courier=@CourierId)
 			AND (da.Guide_Piece IS NULL OR da.Guide_Piece = 1)
-			AND SRU.SenderReceiverId = @CourierId
+			AND SRU.UserId =@UserId
 			GROUP BY sr.ID
 					,sr.First_Name
 					,sr.Last_Name
