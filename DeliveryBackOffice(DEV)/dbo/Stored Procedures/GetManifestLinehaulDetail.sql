@@ -31,7 +31,7 @@ BEGIN
 		, 0)
 		ContainerGuideTotal
 	   ,ISNULL((SELECT
-				SUM(lrpc.DryPieceQuantity + lrpc.DryPieceQuantity)
+				SUM(lrpc.DryPieceQuantity + lrpc.ColdPieceQuantity)
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN Container c
 				ON lrpc.ContainerId = c.IdContainer

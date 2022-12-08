@@ -16,8 +16,9 @@ AS
 	IIF((lrp.SenderReceiverId IS NULL), lrp.DriverName, sr.First_Name+ ' '+sr.Last_Name) Courier,
 	cls.StatusName,
 	cls.StatusDescription,
-	lrp.DateCreated, 
-	lrp.DateLinehaulRoutePreparation,
+	CONVERT(VARCHAR, lrp.DateLinehaulRoutePreparation, 103) DateRoute,
+	lrp.DateCreated DateCreated,
+	lrp.DateUpdated DateUpdated,
 	lrp.ContainerQuantity,
 	(select sum(lrpc2.GuideQuantity) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
 	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
@@ -65,7 +66,7 @@ AS
 		ON ctn.CatTypeContainerId = ctc.IdCatTypeContainer
 		INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
-			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
+			WHERE lrp.DateLinehaulRoutePreparation = @DateFilter
 			AND lrp.StationDispatchedId = @Station
 			AND lrpcd.RowStatus = 1
 					Group by lrp.IdLinehaulRoutePreparation, 
@@ -79,7 +80,8 @@ AS
 					 sr.Last_Name, 
 					 cls.StatusName, 
 					 cls.StatusDescription,
-					 lrp.DateCreated, 
+					 lrp.DateCreated,
+					 lrp.DateUpdated,
 					 lrp.DateLinehaulRoutePreparation,
 					 lrp.ContainerQuantity,
 					 lrp.GuideQuantity,
