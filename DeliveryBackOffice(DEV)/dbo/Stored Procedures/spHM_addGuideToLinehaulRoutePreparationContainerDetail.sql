@@ -191,19 +191,25 @@ BEGIN
 
 		-- Starts Update General Numbers -----------------------------------------------------------------------------------------
 		-- UPDATE LinehaulRoutePreparationContainerDetail
-		SELECT @DRY_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
-		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-		WHERE	[LRPCDP].[IsDryPiece] = 1
-			AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
-			AND [LRPCDP].[RowStatus] = 1
-			AND	[LRPCDP].[ActCode] IS NULL;
+		SELECT		@DRY_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
+		FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+			AND		[LRPCD].[IsOpenProcess] = 0
+		WHERE		[LRPCDP].[IsDryPiece] = 1
+			AND		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
+			AND		[LRPCDP].[RowStatus] = 1
+			AND		[LRPCDP].[ActCode] IS NULL;
 
-		SELECT @COLD_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
-		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
-		WHERE	[LRPCDP].[IsDryPiece] = 0
-			AND	[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
-			AND [LRPCDP].[RowStatus] = 1
-			AND	[LRPCDP].[ActCode] IS NULL;
+		SELECT		@COLD_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
+		FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+			AND		[LRPCD].[IsOpenProcess] = 0
+		WHERE		[LRPCDP].[IsDryPiece] = 0
+			AND		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
+			AND		[LRPCDP].[RowStatus] = 1
+			AND		[LRPCDP].[ActCode] IS NULL;
 
 		UPDATE	[LinehaulRoutePreparationContainerDetail]
 		SET		[DryPieceQuantity] =							@DRY_PIECE_QUANTITY_PIECE,
@@ -215,11 +221,13 @@ BEGIN
 		SET @GUIDE_QUANTITY_DETAIL =	(SELECT COUNT([LRPCD].[IdLinehaulRoutePreparationContainerDetail])
 										FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 										WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+											AND [LRPCD].[IsOpenProcess] = 0
 											AND [LRPCD].[RowStatus] = 1);
 
 		SELECT @DRY_PIECE_QUANTITY_DETAIL = COALESCE(SUM([LRPCD].[DryPieceQuantity]), 0), @COLD_PIECE_QUANTITY_DETAIL = COALESCE(SUM([LRPCD].[ColdPieceQuantity]), 0)
 		FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 		WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+			AND [LRPCD].[IsOpenProcess] = 0
 			AND [LRPCD].[RowStatus] = 1;
 
 		UPDATE	[LinehaulRoutePreparationContainer]
