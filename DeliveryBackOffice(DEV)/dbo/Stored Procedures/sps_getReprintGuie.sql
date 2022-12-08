@@ -1,5 +1,4 @@
-﻿
-CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+﻿ALTER PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 AS
@@ -80,11 +79,13 @@ BEGIN
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+
     IF (@Impersonate = 'TRUE')
     BEGIN
         SET @ExpressName =
         (
-            SELECT DescriptionOfClient
+            SELECT IIF(vpc.CodeOfReference=0,'',DescriptionOfClient)
             FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.OriginSenderId
@@ -197,7 +198,16 @@ BEGIN
                                   /*valor collect*/
                                   '"IdCustomer":'
                                      + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
-                                     + ',' + '"from_address": {' + '"HeaderCodeTownship":"'
+                                     + ',' + 
+									 
+									 (
+									 CASE WHEN dev.IsLastMileReturn=1 THEN
+										'"to_address":'
+										ELSE
+										'"from_address":'
+										END
+									 )
+									 +' {' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"name":"'
@@ -280,6 +290,8 @@ BEGIN
                                      + '",' + '"city":"' + COALESCE(ctm.Abbreviation, '') + '",' + '"IdMerchant":'
                                      + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
                                      + ',' +
+									 + '"ReceiverIdSettlement":0'
+                                      + ', ' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"contact":"'
                                      + (CASE
@@ -312,7 +324,17 @@ BEGIN
                                                 CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
                                                 + CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
                                         END
-                                       ) + '"' + '},' + '"to_address": {' + '"HeaderCodeTownship":"'
+                                       ) + '"' + '},' +
+									   
+									 (
+									 CASE WHEN dev.IsLastMileReturn=1 THEN
+										'"from_address":'
+										ELSE
+										'"to_address":'
+										END
+									 )									   
+									   
+									   +'{' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) + '",' + '"name":"'
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
@@ -337,7 +359,12 @@ BEGIN
                                                                        ),
                                                   '"',
                                                   ' '
-                                              ) + '",' + '"city":"' + '' + '",' + '"ReceiverIdSettlement":'
+                                              ) + '",' + '"city":"' + '' + '",' 
+											  
+											  +'"IdMerchant":'
+                                     + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') + ','
+
+											  + '"ReceiverIdSettlement":'
                                      + CONVERT(VARCHAR, ISNULL(dev.ReceiverIdSettlement, 0)) + ', ' + '"contact":"'
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
@@ -356,6 +383,7 @@ BEGIN
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
                                      + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
                                      + '",'
+									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
                                      + '",' + '"ExpirationDate":"'
@@ -413,7 +441,29 @@ BEGIN
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') + '",'
                                      + '"BankAccountId":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') + '",'
                                      + '"Identification":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '')
-                                     + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ] ' + '} }'
+                                     + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
+									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
+									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",'
+									 -- MODIFICACION 08/12/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
+                                     + '"Pieces_Cold": ' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'') + ','
+									 + '"Receiver_CUI": "' +  COALESCE(CONVERT(VARCHAR,dev.Receiver_CUI),'') + '",'
+									 + '"Order_Number": ' +  COALESCE(CONVERT(VARCHAR,dev.Order_Number),'') + ','
+									 + '"Ticket_Number": ' +  COALESCE(CONVERT(VARCHAR,dev.Ticket_Number),'') + ','
+									 + '"Receiver_SocialSecurity_ID": "' +  COALESCE(CONVERT(VARCHAR,dev.Receiver_SocialSecurity_ID),'') + '",'
+									 -- FIN MODIFICACIÓN
+									 + '"Icon": "' + (CASE
+															WHEN 
+																(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
+																or ctm.Abbreviation IN ('IGSS','RENAP')
+
+															THEN
+															   'D'
+														   ELSE
+															   ''
+													   END
+													  ) + '"'
+									 + '} }'
                                      + ''
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
