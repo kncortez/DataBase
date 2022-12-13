@@ -1050,6 +1050,9 @@
     <Build Include="dbo\Stored Procedures\sp_get_visitPointClientParser.sql" />
     <Build Include="dbo\Stored Procedures\sp_get_customerParser.sql" />
     <Build Include="dbo\Stored Procedures\sp_get_CustomerName.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ValidateStationType.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_getHubsLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_RouteLinehauls.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
