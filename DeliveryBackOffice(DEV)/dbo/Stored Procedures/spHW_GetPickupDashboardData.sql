@@ -3,7 +3,7 @@
 -- Create date: <04/08/2022>
 -- Description:	<SP para obtener datos y pintarlos en grid de modulo de impresion y visor de manifiestos de Linehauls>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHW_GetPickpuDashboardData]
+CREATE PROCEDURE [dbo].[spHW_GetPickupDashboardData]
 	@StartDate DATETIME = NULL,
 	@EndDate DATETIME = NULL,
 	@UserId BIGINT,
@@ -104,7 +104,7 @@ BEGIN
 			SR.ID 'CourierId'
 			,SR.First_Name 'CourierFirstName'
 			,SR.Last_Name 'CourierLastName'
-			,COUNT(SM.IdServiceManagement) 'TotalServices'
+			,COUNT(DISTINCT SM.IdServiceManagement) 'TotalServices'
 			,SUM(CASE WHEN SM.IdServiceManagement IS NOT NULL AND ISNULL(SP.IsScheduled,1) = 1 THEN 1 ELSE 0 END) 'TotalScheduled'
 			,SUM(CASE WHEN SM.IdServiceManagement IS NOT NULL AND ISNULL(SP.IsScheduled,1) = 0 THEN 1 ELSE 0 END) 'TotalOnDemand'
 			,SUM(CASE WHEN SM.IdServiceManagement IS NOT NULL AND SM.ServiceStatusId = @PickedupServiceStatusId AND ISNULL(SP.IsScheduled,1) = 1 THEN 1 ELSE 0 END) 'TotalSuccessfulScheduled'
@@ -148,20 +148,20 @@ BEGIN
 					SM.IdSchedulePickup = SP.SchedulePickupId
 					AND
 					SP.RowStatus = 1
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH(NOLOCK)
-				ON
-					DOPD.IdHeaderRecolection = SP.SchedulePickupId
 			OUTER APPLY
 				(
 					SELECT
 						COUNT(DISTINCT CHECKSUM(DOP.GuideSerie, DOP.GuideNumber, DOP.NoPiece)) 'TotalGuidePieces'
 					FROM
 						[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH(NOLOCK)
+						ON
+							DOPD.GuideSerie = DOP.GuideSerie
+							AND
+							DOPD.GuideNumber = DOP.GuideNumber
 					WHERE
-						DOPD.GuideSerie = DOP.GuideSerie
-						AND
-						DOPD.GuideNumber = DOP.GuideNumber
+						DOPD.IdHeaderRecolection = SP.SchedulePickupId
 					GROUP BY
 						DOP.GuideSerie
 						,DOP.GuideNumber
