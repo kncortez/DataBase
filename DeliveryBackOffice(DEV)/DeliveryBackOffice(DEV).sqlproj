@@ -1152,6 +1152,9 @@
     <Build Include="dbo\Stored Procedures\SPHD_ActLineHaulsDeletePiece.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestLinehaulDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes_guides.sql" />
+    <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
