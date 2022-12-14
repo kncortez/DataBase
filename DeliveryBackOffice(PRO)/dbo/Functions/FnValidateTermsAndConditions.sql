@@ -14,7 +14,8 @@ BEGIN
 	DECLARE @ActualTerms INT;	-- Variable que almacenará el ID de los términos y condiciones actuales.
 
 	SET @ActualTerms = (SELECT IdTAC FROM [dbo].[TermsAndConditions]
-						 WHERE RowStatus = 1)
+						WHERE RowStatus = 1
+						AND Name = 'New Termns And Conditions')
 
 	-- Usuario individual
 	IF(@Login = 1)

@@ -47,15 +47,38 @@ BEGIN
 		GuidePieces INT,
 		GuideDryPieces INT,
 		GuideColdPieces INT,
+		GuideReceiverFirstName NVARCHAR(100),
+		GuideReceiverLastName NVARCHAR(100),
+		GuideReceiverIdTownShip NVARCHAR(100),
 		GuideReceiverDepartment NVARCHAR(100),
 		GuideReceiverTown NVARCHAR(100),
-		GuideReceiverAddress NVARCHAR(600)
+		GuideReceiverAddress NVARCHAR(600),
+		GuideReceiverPhone NVARCHAR(100),
+		GuideSenderFirstName NVARCHAR(100),
+		GuideSenderLastName NVARCHAR(100),
+		GuideSenderDepartment NVARCHAR(100),
+		GuideSenderIdTownship INT,
+		GuideSenderPhone NVARCHAR(50),
+		GuideSenderAddress NVARCHAR(600),
+		GUidePriceShippment decimal(14,2),
+		GuideCOD decimal(14,2),
+		SenderId INT,
+		ReceiverId INT
 	);
 
+	------Variables para proceso de generación de datos de servicio marcados como devolución
+	DECLARE @AmountToPay AS DECIMAL (18,2)
+	DECLARE @IdServiceManagement AS INT
+	DECLARE @subtypeservicemanagment AS INT 
+
+	------Variables para unificación de rutero 
+	DECLARE @RouteAssigmentId AS INT= NULL
+	DECLARE @ServiceManagementDetailId AS INT = NULL;
+	DECLARE @FirstPieceEntered AS BIT=1;
+
 	BEGIN TRANSACTION
-
 		BEGIN TRY
-
+		
 			--- Verificar si existe la preparación de ruta y si ya fue despachada
 			SELECT 
 				@IdRoutePreparation = ISNULL(RP.IdRoutePreparation,0)
@@ -126,15 +149,28 @@ BEGIN
 
 				-- Verificar si existe la guía en el detalle de la preparación de ruta
 				SELECT
-					@IdRoutePreparationDetail = ISNULL(RPD.IdRoutePreparationDetail,0)
+					@IdRoutePreparationDetail = ISNULL(RPD.IdRoutePreparationDetail,0),
+					@FirstPieceEntered = IIF(RPD.IdRoutePreparationDetail IS NULL,1,0)
 				FROM
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-					JOIN
+					INNER JOIN
 						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
 						AND
 						RPD.RowStatus = 1
+					OUTER APPLY
+						(
+							SELECT
+								RPDP.RoutePreparationDetailId,
+								ISNULL(COUNT(1), NULL) 'PieceCount'
+							FROM
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
+							WHERE
+								RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
+							GROUP BY
+								RPDP.RoutePreparationDetailId
+						) RPDP
 				WHERE
 					RPD.Guide_Serie = @GuideSerie
 					AND
@@ -182,7 +218,6 @@ BEGIN
 
 				END
 				---ELSE No existe data que actualizar en el detalle de la preparacón de ruta
-
 				--- Verificar el detalle de la preparación de ruta
 				IF(@IdRoutePreparationDetail > 0)
 				BEGIN
@@ -201,20 +236,21 @@ BEGIN
 
 					--- Verificar si la pieza de la guía si existe
 					IF(@GuidePieceExists = 1)
-					BEGIN
-
+					BEGIN	
+					
 						--- La pieza es real
+
 
 						--- Verificar si existe la pieza de la guía dentro del detalle de la preparación de la ruta
 						SELECT
 							@IdRoutePreparationDetailPiece = RPDP.PieceNumber
 						FROM
 							[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-							JOIN
+							INNER JOIN
 								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 								ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-							JOIN
+							INNER JOIN
 								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
 								ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
@@ -233,8 +269,8 @@ BEGIN
 							AND
 							RP.DateRoutePreparation = @Date
 							AND
-							RP.RowStatus = 1
-							
+							RP.RowStatus = 1			
+														
 						--- Verificar si la pieza de la guía ya existe dentro de las piezas registradas en la preparación de ruta
 						IF(@IdRoutePreparationDetailPiece IS NULL OR @IdRoutePreparationDetailPiece = 0)
 						BEGIN
@@ -260,7 +296,6 @@ BEGIN
 
 							IF COALESCE(@@ROWCOUNT,0) > 0
 								SET @RModified = @RModified + 1
-
 							--- Ingresar datos a tabla para retornar datos
 							INSERT INTO @ResponseTable
 									(
@@ -274,7 +309,21 @@ BEGIN
 										[GuideColdPieces],
 										[GuideReceiverDepartment],
 										[GuideReceiverTown],
-										[GuideReceiverAddress]
+										[GuideReceiverAddress],
+										[GuideReceiverIdTownShip],
+										[GuideReceiverPhone],
+										[GuideSenderDepartment],
+										[GuideSenderIdTownship],
+										[GuideSenderPhone],
+										[GuideSenderAddress],
+										[GUidePriceShippment],
+										[GuideCOD],
+										[GuideSenderFirstName],
+										[GuideSenderLastName],
+										[GuideReceiverFirstName],
+										[GuideReceiverLastName],
+										[SenderId],
+										[ReceiverId]
 							)
 							SELECT
 								@IdRoutePreparation
@@ -288,6 +337,20 @@ BEGIN
 								,DO.Receiver_Department
 								,DO.Receiver_Town
 								,DO.Receiver_Address
+								,DO.ReceiverIdTownship
+								,DO.Receiver_Phone
+								,Do.Sender_Department
+								,Do.SenderIdTownship
+								,Do.Sender_Phone
+								,Do.Sender_Address
+								,DO.PriceShippment
+								,DO.Collect_OnDelivery
+								,DO.Sender_FirstName
+								,DO.Sender_LastName
+								,DO.Receiver_FirstName
+								,DO.Receiver_LastName
+								,DO.Sender_ID
+								,DO.Receiver_ID
 							FROM
 								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 							WHERE
@@ -301,15 +364,15 @@ BEGIN
 								RPDP.TokenUpdated = @Token,
 								RPDP.DateUpdated = GETDATE()
 							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
-								JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK) 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
 									ON
 									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
 									AND
 									RPD.RowStatus = 1
-								JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
 									AND
@@ -331,9 +394,9 @@ BEGIN
 								RPD.TokenUpdated = @Token,
 								RPD.DateUpdated = GETDATE()
 							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-								JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
 									AND
@@ -471,6 +534,7 @@ BEGIN
 		END TRY
 		BEGIN CATCH
 			ROLLBACK TRANSACTION
+
 			--Insert en tabla de log
 			INSERT INTO [dbo].[RoutePreparationLogError]
 					   ([ErrorDescription]
@@ -495,7 +559,7 @@ BEGIN
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID'
-		
+			
 		END CATCH;
 	--- END TRANSACTION
 

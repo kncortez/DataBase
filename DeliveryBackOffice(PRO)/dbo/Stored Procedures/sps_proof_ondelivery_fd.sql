@@ -37,6 +37,7 @@ AS
 BEGIN
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
+	DECLARE @IsReturn BIT = 0;
     -- tabla temporal para actualizar registros encontrados
     DECLARE @Table AS TABLE
     (
@@ -74,7 +75,8 @@ BEGIN
 
     SELECT TOP 1
            @IdDeliveryOptionGuide = IdDeliveryOption,
-           @IsExpress = IIF(ISNULL(kvp.KindOfVPName, '') = 'Express Center', 'true', 'false')
+           @IsExpress = IIF(ISNULL(kvp.KindOfVPName, '') = 'Express Center', 'true', 'false'),
+		   @IsReturn = ISNULL(IsLastMileReturn,0)
     FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
         LEFT JOIN dbo.VisitPointClient vpr WITH(NOLOCK)
             ON vpr.CodeOfReference = DeliveryOrder.Receiver_ID
@@ -113,10 +115,10 @@ BEGIN
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
-                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -176,7 +178,7 @@ BEGIN
         INSERT INTO @Table
         SELECT da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
-            JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
                 ON sr.ID = da.ID_Courier
         WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -220,7 +222,7 @@ BEGIN
                     (
                         SELECT TOP 1
                                ISNULL(StatusOrderId, 1)
-                        FROM dbo.DeliveryOrder
+                        FROM dbo.DeliveryOrder WITH(NOLOCK)
                         WHERE Guide_Serie = @GuideSerie
                               AND Guide_Number = @GuideNumber
                     );
@@ -237,7 +239,7 @@ BEGIN
                 SET NameOfReceiver = @ReceiverName,
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
                                         @StatusEXC,
-                                        IIF(@IsExpress = 'true', @StatusEXC, 5)),
+                                        IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
                     LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', null, Collect_OnDelivery),
                     Collect_OnDelivery = IIF(@ExcludeCODPyament = 'true', 0, Collect_OnDelivery) -- 2021-09-09 si el flag de exlucion de pago COD es true actualizar monto COD a 0
                 WHERE Guide_Serie = @GuideSerie
@@ -264,7 +266,7 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber,
-                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption, @StatusEXC, IIF(@IsExpress = 'true', @StatusEXC, 5)),
+                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption, @StatusEXC, IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
                  @Token, GETDATE(), GETDATE(), NULL,
                  IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 

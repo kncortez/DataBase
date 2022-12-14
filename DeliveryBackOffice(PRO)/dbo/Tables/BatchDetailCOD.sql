@@ -52,6 +52,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_CatConceptCODId]
     ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC);
@@ -182,4 +184,14 @@ GO
 CREATE NONCLUSTERED INDEX [idx_bankid_authorizationnumber]
     ON [dbo].[BatchDetailCOD]([BankId] ASC, [AuthorizationNumber] ASC)
     INCLUDE([GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideNumber]
+    ON [dbo].[BatchDetailCOD]([GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GUIDE_SERIE]
+    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC);
 

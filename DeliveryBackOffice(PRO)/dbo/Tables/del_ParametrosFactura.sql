@@ -30,6 +30,13 @@
     [dpf_OcrCode]                    NVARCHAR (50)  NULL,
     [dpf_OcrCode2]                   NVARCHAR (50)  NULL,
     [dpf_StatusFACE]                 NVARCHAR (1)   NULL,
+    [dpf_WarehouseCode]              INT            NULL,
     CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC)
 );
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar código de almacen de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'del_ParametrosFactura', @level2type = N'COLUMN', @level2name = N'dpf_WarehouseCode';
 

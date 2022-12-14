@@ -3,7 +3,6 @@
 
 
 
-
 -- =============================================
 -- Author:		<Gomez, Hugo>
 -- Create date: <2021-01-27>
@@ -21,7 +20,12 @@ CREATE PROCEDURE [dbo].[spsSetAccountFavCOD]
 	 @Token  varchar (30) = null,
 	 @NumberAcc varchar(30),
 	 @TokenUpdate varchar(30) = null,
-@Status int = 1
+	@Status int = 1,
+	@IsDefault BIT = 0,
+    @PhoneNumber AS INT=null,
+    @NIT AS nvarchar(15)=null,
+	@FlagInstantDeposits AS bit=null,
+	@FlagApprovalofCODPaymentsWithTC as bit=null
 
 
 AS

@@ -118,6 +118,7 @@ PRINT '*************************************************************************
     FROM DeliveryBackOffice.dbo.SplitUnlimited(@_InGuides, ',');
 
 	CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN ON #listGuidesBrain (ItemNumber, ItemSerie)
+	CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN2 ON #listGuidesBrain (ItemNumber)
 	--SELECT --l.ItemSerie,
  --         --l.ItemNumber 
 	--	  *
@@ -196,7 +197,7 @@ PRINT '*************************************************************************
     ORDER BY lg.ItemSerie,
              lg.ItemNumber;
 
-	CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (GuideSerie, GuideNumber)
+	CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (IsCustomer, GuideNumber)
 
 			 PRINT '************************************************************************************* SELECT DISTINCT'
 	
@@ -275,7 +276,8 @@ PRINT '*************************************************************************
            END [ReturnRate]
     FROM #TempPrice tp
     ORDER BY tp.IsCustomer,
-             tp.GuideNumber;
+             tp.GuideNumber
+			 OPTION(OPTIMIZE FOR UNKNOWN);
 
 	DROP TABLE #TempPrice
 	DROP TABLE #listGuidesBrain

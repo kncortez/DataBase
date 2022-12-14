@@ -48,26 +48,27 @@ BEGIN
 				[LRPCD].[GuideColdPieceTotal],
 				[LRPCD].[DryPieceQuantity],
 				[LRPCD].[ColdPieceQuantity]
-	FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-	INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+	FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+	INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 		ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-	INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+	INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 		ON		[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
-	INNER JOIN	[dbo].[CatRoute] CR
+	INNER JOIN	[dbo].[CatRoute] CR WITH (NOLOCK)
 		ON		[LRP].[CatRouteId] = [CR].[IdRoute]
-	LEFT JOIN	[dbo].[CatVehicle] CV
+	LEFT JOIN	[dbo].[CatVehicle] CV WITH (NOLOCK)
 		ON		[LRP].[CatVehicleId] = [CV].[IdVehicle]
-	INNER JOIN	[dbo].[CatLinehaulStatus] CLS
+	INNER JOIN	[dbo].[CatLinehaulStatus] CLS WITH (NOLOCK)
 		ON		[LRP].[CatLinehaulStatusId] = [CLS].[IdCatLinehaulStatus]
-	INNER JOIN	[dbo].[Container] C
+	INNER JOIN	[dbo].[Container] C WITH (NOLOCK)
 		ON		[LRPC].[ContainerId] = [C].[IdContainer]
 		AND		[LRPC].[CatLinehaulStatusId] != @LIQUIDATED_STATUS_ID
 		AND		[LRPC].[CatLinehaulStatusId] != @STOPOVER_STATUS_ID
-	INNER JOIN	[dbo].[CatTypeContainer] CTP
+	INNER JOIN	[dbo].[CatTypeContainer] CTP WITH (NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTP].[IdCatTypeContainer]
-	INNER JOIN	[dbo].[HubLogistics] HL
+	INNER JOIN	[dbo].[HubLogistics] HL WITH (NOLOCK)
 		ON		[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 	WHERE		[LRPCD].[GuideSerie] = @GuideSerie
 		AND		[LRPCD].[GuideNumber] = @GuideNumber
+		AND		[LRPCD].[IsOpenProcess] = 0
 		AND		[LRPCD].[RowStatus] = 1;
 END

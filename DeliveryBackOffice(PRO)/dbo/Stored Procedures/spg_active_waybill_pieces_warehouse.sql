@@ -17,7 +17,7 @@ BEGIN
       ,w.[Guide_Number]
       ,SUM(CAST(w.[Dry] AS INT)) AS Total_Active_Dry
       ,SUM(CAST(w.[Cold]AS INT)) AS Total_Active_Cold
-  FROM [DeliveryBackOffice].[dbo].[Warehouse] w
+  FROM [DeliveryBackOffice].[dbo].[Warehouse] w WITH (NOLOCK)
   WHERE w.Guide_Serie = @GuideSerie AND w.Guide_Number = @GuideNumber AND w.Active = 1
   GROUP BY w.Guide_Serie, w.Guide_Number
 
