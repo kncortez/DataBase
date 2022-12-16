@@ -4,28 +4,50 @@
 -- Description:	<SP para agregar nueva ruta a covertura linehauls>
 -- =============================================
 CREATE PROCEDURE [dbo].[NewRouteCoverageLinehauls]
-@CatRouteId AS INT,
 @HubOriginId AS INT,
 @HubDestinyId AS INT,
 @ReportEmail AS NVARCHAR(100),
-@Token AS NVARCHAR(50)
+@Token AS NVARCHAR(50),
+
+@CodeRoute AS NVARCHAR(20),
+@DescriptionRoute AS NVARCHAR(100),
+@Township AS INT
+
 
 AS
 BEGIN
 
 	SET NOCOUNT ON;
-
+	DECLARE @IdRoutePreparation  INT
 	BEGIN TRANSACTION 
 	BEGIN TRY
 	
-		INSERT INTO dbo.LinehaulCoverage VALUES (1749,55,4,'',1,'SYS-CVALDES',GETDATE(),NULL,NULL)
-        
+		IF (NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[CatRoute] WHERE CodeRoute = @CodeRoute AND RowStatus=1))
+		BEGIN
+		/* Agregar nueva Ruta linehauls */
+		INSERT INTO dbo.CatRoute VALUES (@CodeRoute,@DescriptionRoute,@Township,2,NULL,1,@Token,GETDATE(),NULL,NULL)
+		SET @IdRoutePreparation = SCOPE_IDENTITY()
+
+		/* Asociar nueva ruta linehauls con hub y estación   */
+		     
+				INSERT INTO [dbo].[CatLinehaul] 
+				VALUES (@IdRoutePreparation ,@HubOriginId,@HubDestinyId,@ReportEmail,1,@Token,GETDATE(),NULL,NULL)
+             
+			 SELECT Result=1 
+		END
+		   ELSE
+		      BEGIN
+			  
+			  SELECT Result=2
+			  
+			  END
+
 		COMMIT TRANSACTION
-        SELECT Result=1
+			
 
    END TRY
    BEGIN CATCH
 	ROLLBACK TRANSACTION
-	SELECT Result=0
+		SELECT Result=0, ERROR_MESSAGE() AS [ErrorMessage];
    END CATCH
 END
