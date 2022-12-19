@@ -28,6 +28,10 @@
     [SaleChannelId]           INT            NULL,
     [ExcludePriceShippingCOD] BIT            NULL,
     [ExcludeCommissionCOD]    BIT            NULL,
+    [IdPopulated]             INT            NULL,
+    [Predeterminated]         BIT            DEFAULT ('false') NULL,
+    [VisibleInGuide]          BIT            DEFAULT ('false') NULL,
+    [PickupsProgram]          BIT            DEFAULT ('false') NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPBusiness] FOREIGN KEY ([IdKindOfVPBusiness]) REFERENCES [dbo].[KindOfVPBusiness] ([IdKindOfVPBusiness]),
@@ -36,6 +40,8 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 GO
@@ -61,4 +67,20 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para indicar si se excluye la comision.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'ExcludeCommissionCOD';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar bandera si la direccion sera visible o no en la guía.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'VisibleInGuide';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar valor de bandera que indica si es direccion predeterminada.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Predeterminated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar bandera si tiene recoleciones programadas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'PickupsProgram';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar id del poblado.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IdPopulated';
 

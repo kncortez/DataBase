@@ -15,6 +15,26 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+	DECLARE @GuideRegexData NVARCHAR(500) = (
+		SELECT
+			TOP 1
+				CP.[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK)
+		WHERE
+			Cp.[Name] = 'GuideRegex' COLLATE Latin1_General_CI_AI
+		)
+	
+	DECLARE @GuideRegexScannerData NVARCHAR(500) = (
+		SELECT
+			TOP 1
+				CP.[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK)
+		WHERE
+			Cp.[Name] = 'GuideRegexScanner' COLLATE Latin1_General_CI_AI
+		)
+
     DECLARE @jsonResult NVARCHAR(MAX);
 
     -- insertar en tabla temporal posbibles mensajes de respuesta
@@ -106,6 +126,8 @@ BEGIN
                                        + '"LastName":"' + ISNULL(CONVERT(VARCHAR, sr.Last_Name), 'N/A') + '",'
                                        + '"Vehicle":"' + ISNULL(CONVERT(VARCHAR, vh.Plate), 'N/A') + '",'
                                        + '"Route":"' + ISNULL(CONVERT(VARCHAR, cr.CodeRoute), 'N/A') + '",'
+									   + '"GuideRegex":"' + ISNULL(CONVERT(VARCHAR(500), @GuideRegexData), '') + '",'					-- Para validar solo los digitos de la guía
+									   + '"GuideRegexEscaner":"' + ISNULL(CONVERT(VARCHAR(500), @GuideRegexScannerData), '') + '",'		-- Para el input del escaner de la courier
                                        + '"BillingEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultEmail), 'N/A') + '",'
                                        + '"PickUpManifestEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                        + '"Token":"' + ISNULL(LogTokenPOD, '') + +'"}'
