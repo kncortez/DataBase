@@ -27,6 +27,7 @@ BEGIN
 	INNER JOIN	[dbo].[CatTypeContainer] CTC
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 	WHERE		[LRSCD].[RowStatus] = 1
+		AND		[LRSCD].[IsOpenProcess] = 0
 	ORDER BY	[LRSCD].[DateCreated] DESC;
     
 END
