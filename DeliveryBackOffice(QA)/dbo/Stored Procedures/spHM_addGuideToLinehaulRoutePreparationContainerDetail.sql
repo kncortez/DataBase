@@ -12,7 +12,8 @@ CREATE PROCEDURE [dbo].[spHM_addGuideToLinehaulRoutePreparationContainerDetail]
     @PiecesColdTotal AS INT,
     @IsOpenProcess AS INT,
     @PieceNumber AS INT,
-    @IsDry AS INT,
+    @IsSettlement AS INT,
+    @IdHub AS INT,
     @TknUser AS NVARCHAR(50)
 AS
 BEGIN
@@ -31,6 +32,34 @@ BEGIN
     DECLARE @COLD_PIECE_QUANTITY_DETAIL AS INT; -- LinehaulRoutePreparationContainerDetail
     DECLARE @DRY_PIECE_QUANTITY_PIECE AS INT; -- LinehaulRoutePreparationContainerDetailPiece
     DECLARE @COLD_PIECE_QUANTITY_PIECE AS INT; -- LinehaulRoutePreparationContainerDetailPiece
+    DECLARE @STATUS_ORDER_ID AS INT; -- StatusOrder
+    DECLARE @DELIVERY_ORDER_PIECE AS INT; -- DeliveryOrderPiece
+    DECLARE @IS_DRY AS INT; -- DeliveryOrderPiece
+    DECLARE @CONTAINER_HUB AS INT; -- LinehaulRoutePreparationContainer
+
+    SET @CONTAINER_HUB =
+    (
+        SELECT COALESCE([LRPC].[HubDestinyId], 0) AS HubDestiny
+        FROM [dbo].[LinehaulRoutePreparationContainer] LRPC
+        WHERE [LRPC].[IdLinehaulRoutePreparationContainer] = @LinehaulRoutePreparationContainerId
+    );
+
+    -- Check deliveryOrderPiece
+    SET @IS_DRY =
+    (
+        SELECT [DOP].[IsDry]
+        FROM [dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
+        WHERE [DOP].[GuideSerie] = @GuideSerie
+              AND [DOP].[GuideNumber] = @GuideNumber
+              AND [DOP].[NoPiece] = @PieceNumber
+    );
+
+    IF (@IS_DRY IS NULL)
+    BEGIN
+        SELECT 3 [spResult],
+               'Pieza NO válida.' [spMessage];
+        RETURN;
+    END
 
     SET @EXISTING_LRP =
     (
@@ -44,8 +73,14 @@ BEGIN
         SELECT 0 [spResult],
                'Preparación de ruta de linehaul NO existe' [spMessage];
         RETURN;
+    END
 
-    END;
+    IF (@CONTAINER_HUB != 0 AND @CONTAINER_HUB != @IdHub)
+    BEGIN
+        SELECT 6 [spResult],
+               'Guía y contenedor tienen un HUB destino diferente' [spMessage];
+        RETURN;
+    END
 
     -- Check if there is a record in LinehaulRoutePreparationContainerDetail with same data
     SET @EXISTING_LRPCD =
@@ -57,8 +92,33 @@ BEGIN
               AND [LRPD].[GuideNumber] = @GuideNumber
     );
 
-    BEGIN TRANSACTION;
+    -- Get StatusOrderId
+    IF (@IsSettlement = 0)
+    BEGIN
+        SET @STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'En preparación de traslado'
+        );
+    END
+    ELSE
+    BEGIN
+        SET @STATUS_ORDER_ID =
+        (
+            SELECT [SO].[StatusOrderId]
+            FROM [dbo].[StatusOrder] SO
+            WHERE [SO].[OrderDescription] = 'Arribó a las instalaciones'
+        );
+    END
+
+    BEGIN TRANSACTION
     BEGIN TRY
+
+        UPDATE [LinehaulRoutePreparationContainer]
+        SET [HubDestinyId] = @IdHub
+        WHERE [IdLinehaulRoutePreparationContainer] = @LinehaulRoutePreparationContainerId;
+
         IF (@EXISTING_LRPCD = 0)
         BEGIN
             -- Create document
@@ -77,12 +137,19 @@ BEGIN
                 [DateCreated]
             )
             VALUES
-            (   @LinehaulRoutePreparationContainerId, @GuideSerie, @GuideNumber, @PiecesDryTotal, @PiecesColdTotal,
-                0,                 -- DryPiecesQuantity
-                0,                 -- ColdPiecesQuantity
-                @IsOpenProcess, 1, -- RowStatus
-                @TknUser, SYSDATETIME());
-        END;
+            (   @LinehaulRoutePreparationContainerId,
+                @GuideSerie,
+                @GuideNumber,
+                @PiecesDryTotal,
+                @PiecesColdTotal,
+                0, -- DryPiecesQuantity
+                0, -- ColdPiecesQuantity
+                @IsOpenProcess,
+                1, -- RowStatus
+                @TknUser,
+                SYSDATETIME()
+            );
+        END
 
         SET @EXISTING_LRPCD =
         (
@@ -131,9 +198,14 @@ BEGIN
                     SELECT [CLS].[IdCatLinehaulStatus]
                     FROM [dbo].[CatLinehaulStatus] CLS
                     WHERE [CLS].[StatusName] = 'PREPARATION FOR TRANSFER'
-                ), @PieceNumber, @IsDry, 1, -- Row Status
-                @TknUser, SYSDATETIME());
-        END;
+                ),
+                @PieceNumber,
+                @IS_DRY,
+                1, -- Row Status
+                @TknUser,
+                SYSDATETIME()
+            );
+        END
 
         SET @EXISTING_LRPCDP =
         (
@@ -152,10 +224,20 @@ BEGIN
 
         -- End Piece process -----------------------------------------------------------------------------------------------------
 
+        -- UPDATE DeliveryOrderPiece Status
+        UPDATE [DeliveryOrderPiece]
+        SET [StatusOrderId] = @STATUS_ORDER_ID
+        WHERE [GuideSerie] = @GuideSerie
+              AND [GuideNumber] = @GuideNumber
+              AND [NoPiece] = @PieceNumber;
+
         -- Starts Update General Numbers -----------------------------------------------------------------------------------------
         -- UPDATE LinehaulRoutePreparationContainerDetail
         SELECT @DRY_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
         FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+                ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+                   AND [LRPCD].[IsOpenProcess] = 0
         WHERE [LRPCDP].[IsDryPiece] = 1
               AND [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
               AND [LRPCDP].[RowStatus] = 1
@@ -163,6 +245,9 @@ BEGIN
 
         SELECT @COLD_PIECE_QUANTITY_PIECE = COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
         FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+                ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+                   AND [LRPCD].[IsOpenProcess] = 0
         WHERE [LRPCDP].[IsDryPiece] = 0
               AND [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = @EXISTING_LRPCD
               AND [LRPCDP].[RowStatus] = 1
@@ -180,6 +265,7 @@ BEGIN
             SELECT COUNT([LRPCD].[IdLinehaulRoutePreparationContainerDetail])
             FROM [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
             WHERE [LRPCD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+                  AND [LRPCD].[IsOpenProcess] = 0
                   AND [LRPCD].[RowStatus] = 1
         );
 
@@ -187,6 +273,7 @@ BEGIN
                @COLD_PIECE_QUANTITY_DETAIL = COALESCE(SUM([LRPCD].[ColdPieceQuantity]), 0)
         FROM [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
         WHERE [LRPCD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+              AND [LRPCD].[IsOpenProcess] = 0
               AND [LRPCD].[RowStatus] = 1;
 
         UPDATE [LinehaulRoutePreparationContainer]
@@ -220,21 +307,33 @@ BEGIN
         WHERE [IdLinehaulRoutePreparation] = @LinehaulRoutePreparationId;
         -- End Update General Numbers --------------------------------------------------------------------------------------------
 
-        SELECT [LRPD].[IdLinehaulRoutePreparationContainerDetail],
-               [LRPD].[LinehaulRoutePreparationContainerId],
-               [LRPD].[GuideSerie],
-               [LRPD].[GuideNumber],
-               [LRPD].[GuideDryPieceTotal],
-               [LRPD].[GuideColdPieceTotal],
-               [LRPD].[DryPieceQuantity],
-               [LRPD].[ColdPieceQuantity],
-               [LRPD].[IsOpenProcess]
-        FROM [dbo].[LinehaulRoutePreparationContainerDetail] LRPD
-        WHERE [LRPD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
-              AND [LRPD].[GuideSerie] = @GuideSerie
-              AND [LRPD].[GuideNumber] = @GuideNumber;
+        SELECT [LRPCD].[IdLinehaulRoutePreparationContainerDetail],
+               [LRPCD].[LinehaulRoutePreparationContainerId],
+               [LRPCD].[GuideSerie],
+               [LRPCD].[GuideNumber],
+               [LRPCD].[GuideDryPieceTotal],
+               [LRPCD].[GuideColdPieceTotal],
+               [LRPCD].[DryPieceQuantity],
+               [LRPCD].[ColdPieceQuantity],
+               [LRPCD].[IsOpenProcess],
+               [LRPCDP].[PieceNumber],
+               [LRPCDP].[IsDryPiece],
+               [LRPCDP].[TokenCreated],
+               [LRPCDP].[TokenUpdated]
+        FROM [dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+                ON [LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+                   AND [LRPCD].[GuideSerie] = @GuideSerie
+                   AND [LRPCD].[GuideNumber] = @GuideNumber
+                   AND [LRPCD].[LinehaulRoutePreparationContainerId] = @LinehaulRoutePreparationContainerId
+        WHERE [LRPCDP].[ActCode] IS NULL
+              AND [LRPCDP].[RowStatus] = 1
+              AND (
+                      [LRPCDP].[TokenCreated] = @TknUser
+                      OR [LRPCDP].[TokenUpdated] = @TknUser
+                  )
 
-        COMMIT TRANSACTION;
+        IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         SELECT 0 [spResult],
@@ -245,22 +344,6 @@ BEGIN
                ERROR_LINE() AS [ErrorLine],
                ERROR_MESSAGE() AS [spMessage];
 
-        ROLLBACK TRANSACTION;
-
-        INSERT INTO dbo.RoutePreparationLogError
-        (
-            ErrorDescription,
-            ErrorNumber,
-            ErrorProcedure,
-            ErrorLine,
-            GuideSerie,
-            GuideNumber,
-            TokenCreated,
-            DateCreated
-        )
-        VALUES
-        (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)), ERROR_LINE(),
-         @GuideSerie  , @GuideNumber, 'spHM_addGuideToLinehaulRoutePreparationContainerDetail', GETDATE());
-
-    END CATCH;
-END;
+        ROLLBACK TRANSACTION
+    END CATCH
+END

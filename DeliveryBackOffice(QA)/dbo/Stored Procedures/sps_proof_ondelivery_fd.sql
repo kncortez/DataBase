@@ -294,7 +294,7 @@ BEGIN
 					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
 					IF ( @WebhookCustomerId > 0 AND @CustomerEndpointId > 0 AND @GuideCurrentStatus IN (SELECT WRBU.StatusOrderId FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) WHERE WRBU.CustomerId = @WebhookCustomerId AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook) )
 					BEGIN 
-
+					
 						DECLARE @ResponseTable AS TABLE (
 							InsertedId BIGINT
 						);
@@ -353,6 +353,11 @@ BEGIN
 					END
 				END TRY
 				BEGIN CATCH
+
+					INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+						(DateCreated, TokenCreated, ErrorProcedure, ErrorLine, ErrorDescription)
+					VALUES
+						(GETDATE(), 'Test', 'ProofDelivery', ERROR_LINE(), ERROR_MESSAGE())
 
 				END CATCH
 				-------------------WEBHOOK.FIN------------------------------			
