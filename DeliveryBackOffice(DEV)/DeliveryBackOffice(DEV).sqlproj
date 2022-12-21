@@ -1217,6 +1217,9 @@
     <Build Include="dbo\Stored Procedures\SPHD_ActLineHaulsDeletePiece.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestLinehaulDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes_guides.sql" />
+    <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ActLinehaulsPieceIncompleteDetail.sql" />
     <Build Include="dbo\Stored Procedures\ValidExistActs.sql" />
     <Build Include="dbo\Tables\ConfirmedAddressByCustomer.sql" />

@@ -351,6 +351,11 @@ BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
 
+			IF @EndDate IS NULL
+				SET @EndDate = CONCAT(CAST(@STARTDATE AS DATE), ' 19:00:00')
+			ELSE IF CAST(@EndDate AS TIME) = '00:00:00:000'
+				SET @EndDate = CONCAT(CAST(@EndDate AS DATE), ' 19:00:00')
+
             IF OBJECT_ID('tempdb.dbo.#Sender', 'U') IS NOT NULL
                 DROP TABLE #Sender;
 
@@ -740,7 +745,7 @@ BEGIN
 			AND tp.GuideNumber=sd.Number
 
 			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagement] (IdSchedulePickup, RowStatus, TokenCreated, DateCreated, ServiceStatusId, Amount, CatPaymentTimeId)
-				SELECT
+				SELECT DISTINCT
 					IdSchedulePickup
 				   ,1
 				   ,@token
@@ -753,7 +758,7 @@ BEGIN
 
 
 			INSERT INTO [DeliveryBackOffice].[dbo].[EventService] (ServiceManagementId,ServiceStatusId,RowStauts,TokenCreated,DateCreated)
-				SELECT
+				SELECT DISTINCT
 					sm.IdServiceManagement
 				   ,1
 				   ,1
@@ -763,6 +768,32 @@ BEGIN
 				INNER JOIN ServiceManagement sm
 					ON sm.IdSchedulePickup = tsm.IdSchedulePickup
 				WHERE tsm.IdServiceManagement IS NULL
+
+			-- Actualizar
+			update 
+				do 
+			set  
+				StatusOrderId = 1  -- Recolección
+			from 
+				@TblDeliveryOrdersList ls
+				inner join DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+				on 
+					do.Guide_Serie =  ls.Guide_Serie 
+					and 
+					do.Guide_Number = ls.Guide_Number
+
+			update 
+				dopd 
+			set 
+				ShipmentCompleted = 1
+			from 
+				@TblDeliveryOrdersList ls
+				inner join 
+					DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+					on 
+						dopd.GuideSerie =  ls.Guide_Serie 
+						and 
+						dopd.GuideNumber = ls.Guide_Number
 
 			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
 			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 

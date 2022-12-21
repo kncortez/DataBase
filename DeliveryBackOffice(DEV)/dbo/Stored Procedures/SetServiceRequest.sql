@@ -183,6 +183,7 @@ BEGIN
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
+                      AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1
             ),
             ReceiverIdTownship =
             (
@@ -195,6 +196,7 @@ BEGIN
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
                       )
+                      AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1
             ),
             SourceSystemId =
             (
