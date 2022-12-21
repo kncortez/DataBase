@@ -1155,6 +1155,8 @@
     <Build Include="dbo\Stored Procedures\GetManifestLinehaulDetail.sql" />
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes_guides.sql" />
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_SetBusinessPartnerSegments.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetBusinessPartnerSegments.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
