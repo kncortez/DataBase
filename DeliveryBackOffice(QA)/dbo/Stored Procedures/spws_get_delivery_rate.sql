@@ -70,6 +70,8 @@ BEGIN
 	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
 	DECLARE @NewAutoSalesMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI);
 
+	DECLARE @NDDServiceTypeId INT = (SELECT TOP 1 CRS.CtsId FROM [DeliveryBackOffice].[dbo].[CatTypeService] CRS WITH(NOLOCK) WHERE CRS.CtsName = 'Next Day Delivery' COLLATE Latin1_General_CI_AI);
+
 	DECLARE @IdRate as int
 	DECLARE @IdTypeRate as int
 	DECLARE @WeigthLimit as decimal(12,2) =0
@@ -330,46 +332,79 @@ BEGIN
 			where vp.CustomerID = @IdCustomer
 		end
 	DECLARE @IdSegment int
-
-	--PRINT 'CodeOfReference'
-	--PRINT @CodeOfReferenceSource
-
-	--PRINT '@IdHubDestiny'
-	--PRINT @IdHubDestiny
-	select  top 1  @IdSegment = cov.SegmentId 
-	from dbo.VisitPointCoverage cov
-	where cov.RowStatus ='true'
-	and cov.HublogisticId = @IdHubDestiny
-	and cov.VisitPointId = @CodeOfReferenceSource
-
-	--PRINT 'segmento'
-	--PRINT @IdSegment
-	if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
+	
+	-- HeaderCodes Iguales - LOC
+	IF(@HeaderCodeSource = @HeaderCodeDestiny)
+	BEGIN
+		SELECT 
+			TOP 1 
+				@IdSegment = sg.CrsId 
+		FROM 
+			dbo.CatRateSegment sg WITH(NOLOCK)
+		WHERE 
+			sg.CrsShortName ='LOC'
+	END
+	-- HeaderCodes diferentes - revisar tabla
+	ELSE
+	BEGIN
+		IF(@CustomerType != 1)
 		BEGIN
-		--PRINT 'segmento nulo'
-			IF @IdHubSource = @IdHubDestiny 
-				BEGIN
-				--PRINT 'hubs iguales'
-					SELECT top 1   @IdSegment = sg.CrsId 
-					FROM dbo.CatRateSegment sg  WITH(NOLOCK) WHERE sg.CrsShortName ='LOC'
-				END
-			ELSE 
-				BEGIN
-				--PRINT 'hubs default'
-					select  top 1  @IdSegment = cov.SegmentId  -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
-						from dbo.VisitPointCoverage cov WITH(NOLOCK)
-					where cov.RowStatus ='true'
-						and cov.HublogisticId = @IdHubDestiny
-						and @IdHubSource IN(1,22)
-				END
+			SELECT
+				TOP 1
+					@IdSegment = RTC.SegmentTypeId
+			FROM
+				[DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[Township] TwnSource WITH(NOLOCK)
+					ON
+						RTC.TownshipSourceId = TwnSource.IdTownship
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[Township] TwnDestiny WITH(NOLOCK)
+					ON
+						RTC.TownshipDestinyId = TwnDestiny.IdTownship
+			WHERE
+				RTC.RateId = @IdRate
+				AND
+				(TwnSource.HeaderCode = @HeaderCodeSource)
+				AND
+				(TwnDestiny.HeaderCode = @HeaderCodeDestiny 
+				)
+				AND RTC.RowStatus = 1
 		END
-        
-		if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
+		ELSE
 		BEGIN
-			
-					SELECT top 1   @IdSegment = sg.CrsId 
-			from dbo.CatRateSegment sg WITH(NOLOCK) where sg.CrsShortName ='FOR'
+			SELECT
+				TOP 1
+					@IdSegment = CTC.SegmentTypeId
+			FROM
+				[DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[Township] TwnSource WITH(NOLOCK)
+					ON
+						CTC.TownshipSourceId = TwnSource.IdTownship
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[Township] TwnDestiny WITH(NOLOCK)
+					ON
+						CTC.TownshipDestinyId = TwnDestiny.IdTownship
+			WHERE
+				(TwnSource.HeaderCode = @HeaderCodeSource)
+				AND
+				(TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+				AND CTC.RowStatus = 1
 		END
+
+	END
+
+	IF(@IdSegment IS NULL)-- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
+	BEGIN
+		SELECT
+			TOP 1 
+				@IdSegment = sg.CrsId 
+		FROM 
+			[DeliveryBackOffice].dbo.CatRateSegment sg WITH(NOLOCK) 
+		WHERE 
+			sg.CrsShortName ='FOR' COLLATE Latin1_General_CI_AI
+	END
 
 --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
 -------------------------------Obtener descuento --------------------------------------------------------------------------
@@ -521,7 +556,7 @@ BEGIN
 			where rh.RheRowStatus = 'true'
 				and rh.RheId = @IdRate
 				and rd.ArticleId is null
-				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
+				and (rd.TypeServiceId in (@NDDServiceTypeId))
 				and rd.HubSourceId = @IdHubSource
 				and rd.HubDestinyId = @IdHubDestiny
 				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
@@ -554,7 +589,7 @@ BEGIN
 			where rh.RheRowStatus = 'true'
 				and rh.RheId = @IdRate
 				and rd.ArticleId is null
-				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
+				and (rd.TypeServiceId in (@NDDServiceTypeId))
 				and rd.HubSourceId = @IdHubSource
 				and rd.HubDestinyId = @IdHubDestiny
 				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
@@ -604,7 +639,7 @@ BEGIN
 			where rh.RheId = @IdRate
 				and rd.ArticleId is null
 				and rd.TypeSegmentId = @IdSegment
-				and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
+				and (rd.TypeServiceId in (@NDDServiceTypeId))
 				and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
 		end
 	else if @IdTypeRate = 3 -- tarifas por articulo
@@ -850,7 +885,7 @@ BEGIN
 				where rh.RheId = @IdRate
 					and rd.ArticleId is null
 					and rd.TypeSegmentId = @IdSegment
-					and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService WITH(NOLOCK)  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
+					and  (rd.TypeServiceId in (@NDDServiceTypeId))
 					and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
 			
         END
@@ -943,12 +978,7 @@ BEGIN
 				ON pw.Item BETWEEN rd.WeightFrom AND rd.WeightTo
 			WHERE rh.RheId = @IdRate
 			AND rd.TypeSegmentId = @IdSegment
-			AND (rd.TypeServiceId IN (SELECT
-					CtsId
-				FROM CatTypeService
-				WHERE RateGroup = @IdRateGroup
-				AND CtsRowStatus = 1)
-			)
+			AND (rd.TypeServiceId in (@NDDServiceTypeId))
 			AND CONVERT(DATETIME, @Time, 108) <= ISNULL(CONVERT(DATETIME, ISNULL(rd.LimitHourPickup, cts.LimitHourPickup), 108), CONVERT(DATETIME, '23:59:59', 108))
 			UNION ALL
 			SELECT

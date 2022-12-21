@@ -41,7 +41,7 @@ BEGIN
         UNION
         SELECT vpc.CodeOfReference
         FROM VisitPointByUser vpu WITH(NOLOCK)
-            JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
+            INNER JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                 ON vpu.IdVisitPointClient = vpc.IdVisitPointClient
         WHERE RegisterUserID = @IdUser
     ) AS t;
@@ -59,17 +59,17 @@ BEGIN
 	SELECT TOP 1
 		@TypeUser = ctp.Description
 	FROM dbo.InternalUser iu WITH(NOLOCK)
-	JOIN dbo.RegisterUser rg WITH(NOLOCK)
+	INNER JOIN dbo.RegisterUser rg WITH(NOLOCK)
 		ON rg.UsrIdUser = iu.RegisterUserID
-	JOIN dbo.RolByUserByAccount bya WITH(NOLOCK)
+	INNER JOIN dbo.RolByUserByAccount bya WITH(NOLOCK)
 		ON bya.RuaIdUser = rg.UsrIdUser
-	JOIN dbo.Account acc WITH(NOLOCK)
+	INNER JOIN dbo.Account acc WITH(NOLOCK)
 		ON acc.AccIdAccount = bya.RuaIdAccount
-	JOIN dbo.Customer cs WITH(NOLOCK)
+	INNER JOIN dbo.Customer cs WITH(NOLOCK)
 		ON cs.IdCustomer = acc.IdCustomer
-	JOIN dbo.CustomerType ctp WITH(NOLOCK)
+	INNER JOIN dbo.CustomerType ctp WITH(NOLOCK)
 		ON ctp.IdCustomerType = cs.IdCustomerType
-	JOIN dbo.TokenLog tl WITH(NOLOCK)
+	INNER JOIN dbo.TokenLog tl WITH(NOLOCK)
 		ON tl.TknIdUser = bya.RuaIdUser
 	WHERE tl.TknIdToken = @Token
 
@@ -90,9 +90,9 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-								JOIN dbo.StatusOrder sto WITH(NOLOCK)
+								INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 									ON sto.StatusOrderId = ord.StatusOrderId
-								JOIN
+								INNER JOIN
 									#temp tp
 									ON
 										ord.Sender_ID = tp.CodeOfReference
@@ -116,6 +116,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -284,7 +285,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId 
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -306,7 +307,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -346,7 +347,7 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-								JOIN dbo.StatusOrder sto WITH(NOLOCK)
+								INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 									ON sto.StatusOrderId = ord.StatusOrderId
 							WHERE
 								--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
@@ -387,6 +388,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -555,7 +557,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -652,7 +654,7 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-							JOIN
+							INNER JOIN
 								#temp tp
 								ON
 									ord.Sender_ID = tp.CodeOfReference
@@ -670,6 +672,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -817,7 +820,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -830,7 +833,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -887,6 +890,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -1034,7 +1038,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1108,7 +1112,7 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-							JOIN
+							INNER JOIN
 								#temp tp
 								ON
 									ord.Sender_ID = tp.CodeOfReference
@@ -1123,6 +1127,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -1294,7 +1299,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1307,7 +1312,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -1357,6 +1362,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -1528,7 +1534,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1605,7 +1611,7 @@ BEGIN
 						(
 							SELECT COUNT(ORD.Guide_Number)
 							FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-							JOIN
+							INNER JOIN
 								#temp tp
 								ON
 									ord.Sender_ID = tp.CodeOfReference
@@ -1620,6 +1626,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",' + 
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   '"Registros":"' + CONVERT(VARCHAR, @counter3C) + '",' + '"IdBatch":'
 											   + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ',' + '"RequestDate":"'
 											   + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') + '",' + '"Source":"'
@@ -1769,7 +1776,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -1782,7 +1789,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -1833,6 +1840,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 												+ '"Registros":"' + CONVERT(VARCHAR, @counter3) + '",' + '"IdBatch":'
 											   + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ',' + '"RequestDate":"'
 											   + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A') + '",' + '"Source":"'
@@ -1982,7 +1990,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH(NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH(NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2061,6 +2069,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2229,7 +2238,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2250,7 +2259,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -2277,6 +2286,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2445,7 +2455,7 @@ BEGIN
 													   ) + '",' + +'"TypeService":"'
 											   + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
 										FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2518,6 +2528,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2665,7 +2676,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2678,7 +2689,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -2703,6 +2714,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -2850,7 +2862,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -2912,6 +2924,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3083,7 +3096,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3096,7 +3109,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -3122,6 +3135,7 @@ BEGIN
 											   + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3293,7 +3307,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3355,6 +3369,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",' 
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3504,7 +3519,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)
@@ -3517,7 +3532,7 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
-											JOIN
+											INNER JOIN
 												#temp tp
 												ON
 													ord.Sender_ID = tp.CodeOfReference
@@ -3543,6 +3558,7 @@ BEGIN
 										SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",' 
 											   +'"Pieces":' + ISNULL(CONVERT(VARCHAR, (ISNULL(ord.Pieces_Dry,0) + ISNULL(ord.Pieces_Cold,0))),'') + ',' +
 											   +'"Reference":"' + ISNULL(ord.Ticket_Number,'') + '",' +
+												+'"ReceiverPhone":"' + ISNULL(ord.Receiver_Phone,'') + '",' +
 											   + '"IdBatch":' + CONVERT(NVARCHAR, ISNULL(gb.IdBatch, '')) + ','
 											   + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
 											   + '",' + '"Source":"'
@@ -3692,7 +3708,7 @@ BEGIN
 												ON twd.IdTownship = ord.ReceiverIdTownship
 											LEFT JOIN dbo.Province prd WITH (NOLOCK)
 												ON prd.IdProvince = twd.IdProvince
-											JOIN dbo.StatusOrder sto WITH (NOLOCK)
+											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
 												ON (ord.Guide_Number = paydord.GuideNumber)

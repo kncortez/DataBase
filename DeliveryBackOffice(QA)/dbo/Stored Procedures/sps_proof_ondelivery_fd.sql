@@ -37,6 +37,7 @@ AS
 BEGIN
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
+	DECLARE @IsReturn BIT = 0;
     -- tabla temporal para actualizar registros encontrados
     DECLARE @Table AS TABLE
     (
@@ -74,7 +75,8 @@ BEGIN
 
     SELECT TOP 1
            @IdDeliveryOptionGuide = IdDeliveryOption,
-           @IsExpress = IIF(ISNULL(kvp.KindOfVPName, '') = 'Express Center', 'true', 'false')
+           @IsExpress = IIF(ISNULL(kvp.KindOfVPName, '') = 'Express Center', 'true', 'false'),
+		   @IsReturn = ISNULL(IsLastMileReturn,0)
     FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
         LEFT JOIN dbo.VisitPointClient vpr WITH(NOLOCK)
             ON vpr.CodeOfReference = DeliveryOrder.Receiver_ID
@@ -237,7 +239,7 @@ BEGIN
                 SET NameOfReceiver = @ReceiverName,
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
                                         @StatusEXC,
-                                        IIF(@IsExpress = 'true', @StatusEXC, 5)),
+                                        IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
                     LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', null, Collect_OnDelivery),
                     Collect_OnDelivery = IIF(@ExcludeCODPyament = 'true', 0, Collect_OnDelivery) -- 2021-09-09 si el flag de exlucion de pago COD es true actualizar monto COD a 0
                 WHERE Guide_Serie = @GuideSerie
@@ -264,7 +266,7 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber,
-                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption, @StatusEXC, IIF(@IsExpress = 'true', @StatusEXC, 5)),
+                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption, @StatusEXC, IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
                  @Token, GETDATE(), GETDATE(), NULL,
                  IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 

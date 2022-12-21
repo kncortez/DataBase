@@ -26,7 +26,20 @@ BEGIN
 	case when io_type = 1 then io_amount else 0 end cash,
 	case when io_type = 2 then io_amount else 0 end credCard,
 	iod.io_ticket 'Ticket',
-	io_SAPDocEntryPaymentDetail 'docEntry'
+	io_SAPDocEntryPaymentDetail 'docEntry',
+	(select del.dpf_WarehouseCode from del_ParametrosFactura del WITH(NOLOCK)  
+	where 
+	inh.inv_vpCodeOfReferences = del.dpf_VpCodeOfReference 
+	AND cts.SendAlmacenExp = 1) 'WarehouseCode'
 	from InOutOfMoneyDetail iod WITH(NOLOCK)
+	inner join invoiceHeader inh WITH(NOLOCK)
+	on iod.io_invoice = inh.inv_pk_id
+	inner join invoiceDetail ind WITH(NOLOCK)
+	on inh.inv_pk_id = ind.dti_fk_header
+	left join CatArticleSAP cts WITH(NOLOCK)
+	on ind.SAPCode = cts.SAPCode
 	where io_invoice = @idInvoice
+	and cts.RowSatus = 1
+
+	
 END

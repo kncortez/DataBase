@@ -25,11 +25,14 @@
     [ReturnRate]           DECIMAL (12, 2) NULL,
     [CollectRate]          DECIMAL (12, 2) NULL,
     [PiecesIncluded]       DECIMAL (12, 2) NULL,
+    [AttemptReturn]        INT             CONSTRAINT [DF__RateHeade__Attem__6423B28F] DEFAULT ((2)) NOT NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 

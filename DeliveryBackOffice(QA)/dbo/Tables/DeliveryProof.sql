@@ -17,6 +17,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryProof]
     ON [dbo].[DeliveryProof]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -28,4 +30,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar url de imágen cold la cual es evidencia de entrega en courierApp.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryProof', @level2type = N'COLUMN', @level2name = N'Path_Cold';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
+    ON [dbo].[DeliveryProof]([Guide_Number] ASC);
 

@@ -1,20 +1,24 @@
 ﻿CREATE TABLE [dbo].[TransferLog] (
-    [IdTransferLog] INT            IDENTITY (1, 1) NOT NULL,
-    [IdCourier]     INT            NOT NULL,
-    [CourierName]   NVARCHAR (50)  NOT NULL,
-    [DPI]           NVARCHAR (50)  NULL,
-    [IdIncidence]   INT            NULL,
-    [IncidenceName] VARCHAR (200)  NULL,
-    [Comentary]     NVARCHAR (200) NULL,
-    [GuideSerie]    NVARCHAR (2)   NOT NULL,
-    [GuideNumber]   INT            NOT NULL,
-    [TokenCreated]  NVARCHAR (50)  NOT NULL,
-    [DateCreated]   DATETIME       NOT NULL,
-    [TokenUpdate]   NVARCHAR (50)  NULL,
-    [DateUpdate]    DATETIME       NULL,
+    [IdTransferLog]   INT            IDENTITY (1, 1) NOT NULL,
+    [IdCourier]       INT            NOT NULL,
+    [CourierName]     NVARCHAR (50)  NOT NULL,
+    [DPI]             NVARCHAR (50)  NULL,
+    [IdIncidence]     INT            NULL,
+    [IncidenceName]   VARCHAR (200)  NULL,
+    [Comentary]       NVARCHAR (200) NULL,
+    [GuideSerie]      NVARCHAR (2)   NOT NULL,
+    [GuideNumber]     INT            NOT NULL,
+    [TokenCreated]    NVARCHAR (50)  NOT NULL,
+    [DateCreated]     DATETIME       NOT NULL,
+    [TokenUpdate]     NVARCHAR (50)  NULL,
+    [DateUpdate]      DATETIME       NULL,
+    [CodeOfReference] INT            NULL,
     CONSTRAINT [Pk_TransferLog] PRIMARY KEY CLUSTERED ([IdTransferLog] ASC),
-    FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
+    FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
+    CONSTRAINT [FK_TransferLog_VisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

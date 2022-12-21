@@ -14,9 +14,12 @@
     [CardPercent]             DECIMAL (3, 2)  NULL,
     [CardAmount]              DECIMAL (14, 2) NULL,
     [IsSurcharge]             BIT             NULL,
+    [SendAlmacenExp]          BIT             DEFAULT ('false') NULL,
     PRIMARY KEY CLUSTERED ([IdCatArticleSAP] ASC),
     CONSTRAINT [FK_CatArticleSAP_CatCategoryArticleSAP] FOREIGN KEY ([CatCategoryArticleSAPId]) REFERENCES [dbo].[CatArticleCategorySAP] ([IdCatCategoryArticleSAP]) ON DELETE CASCADE
 );
+
+
 
 
 GO
@@ -77,4 +80,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si es artículo para recargos por tarjeta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'IsSurcharge';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar valor que indica si se envía o no código de almacén de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'SendAlmacenExp';
 
