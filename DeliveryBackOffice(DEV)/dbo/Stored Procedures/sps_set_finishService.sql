@@ -590,6 +590,23 @@ BEGIN
                                     ON lge.Guide_Number = dop.GuideNumber
                                        AND lge.Guide_Serie = dop.GuideSerie;
 
+							UPDATE
+								ASCD
+							SET
+								RowStatus = 0
+								,TokenUpdated = @TokenP
+								,DateUpdated = GETDATE()
+							FROM
+								[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+								INNER JOIN
+									#listGuidesEnabled LGE WITH(NOLOCK)
+									ON
+										ASCD.GuideSerie = LGE.Guide_Serie
+										AND
+										ASCD.GuideNumber = LGE.Guide_Number
+										AND
+										ASCD.RowStatus = 1
+
                             -------GUARDAR COSTO--------------------
                             DECLARE @IdCost INT = 0;
                             DECLARE @TotalAmountPaid DECIMAL(12, 2) = 0;
