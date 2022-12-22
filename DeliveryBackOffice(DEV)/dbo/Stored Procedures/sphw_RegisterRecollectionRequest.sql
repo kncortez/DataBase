@@ -59,7 +59,7 @@ BEGIN
 			BEGIN				
 				DECLARE @CURRENTDATE DATETIME= GETDATE();
 				SET @StartDate =DATEADD(mi,15,@CURRENTDATE);
-				SET @EndDate =DATEADD(mi,30,@CURRENTDATE);
+				SET @EndDate =DATEADD(mi,45,@CURRENTDATE);
 			END
 			--DECLARE @IDTAC1 BIGINT= (SELECT IdTAC FROM DBO.TermsAndConditions WHERE Name='Collection Services Terms and Conditions' AND RowStatus=1)
 			--DECLARE @IDTAC2 BIGINT= (SELECT IdTAC FROM DBO.TermsAndConditions WHERE Name='Declaration no content of illegal products' AND RowStatus=1)
