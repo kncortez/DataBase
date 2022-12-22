@@ -31,6 +31,8 @@ BEGIN
 			UPDATE AccountServiceCart
 			SET IsPending = 0
 			   ,RowStatus = 0
+			   ,TokenUpdated = @Token
+			   ,DateUpdated = GETDATE()
 			WHERE IsPending = 1
 			AND RowStatus = 1
 			AND IdAccountServiceCart <> @AccountServiceCartId
@@ -49,7 +51,35 @@ BEGIN
 				ON so.StatusOrderId = do.StatusOrderId
 			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 			AND so.OrderDescription = 'Anulado'
+
+			--Eliminar guías pagadas
+			DECLARE @PaidGuides AS TABLE(
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT
+			);
+			UPDATE ascd
+			SET ascd.RowStatus = 0
+			   ,ascd.TokenUpdated = @Token
+			   ,ascd.DateUpdated = GETDATE()
+			OUTPUT inserted.GuideSerie, inserted.GuideNumber INTO @PaidGuides(GuideSerie, GuideNumber)
+			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+				ON do.Guide_Serie = ascd.GuideSerie
+				AND do.Guide_Number = ascd.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.Cost Co
+				ON Co.ProductNumber = CONCAT(do.Guide_Serie, Guide_Number)
+			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
+			AND ISNULL(co.TotalAmountPaid,0) > 0
 			
+			-- Actualizar guías validas que fueron procesadas
+			UPDATE DOPD
+			SET ShipmentCompleted = 1
+			FROM 
+			DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK)
+			INNER JOIN @PaidGuides PG
+				ON PG.GuideSerie = DOPD.GuideSerie
+				AND PG.GuideNumber = DOPD.GuideNumber
+
 			IF EXISTS (SELECT TOP 1
 					1
 				FROM AccountServiceCartDetail
@@ -73,6 +103,8 @@ BEGIN
 					,do.Receiver_Address
 					,do.IsCollect
 					,do.Collect_OnDelivery
+					,ISNULL(CAST(do.DCBA_ID AS NVARCHAR), '') 'DCBA_ID'
+					,ISNULL(CAST(do.InsuranceAmount AS NVARCHAR),'') InsuranceAmount
 				FROM AccountServiceCartDetail ascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = ascd.GuideSerie
@@ -86,7 +118,7 @@ BEGIN
 				   ,bop.[Description] [Description]
 				   ,bop.Amount Amount
 				FROM AccountServiceCartDetail ascd
-				INNER JOIN Cost c WITH(NOLOCK)
+				INNER JOIN Cost c WITH (NOLOCK)
 					ON CONCAT(ascd.GuideSerie, ascd.GuideNumber) = c.ProductNumber
 						AND c.RowStatus = 1
 				INNER JOIN BreakdownOfPayment bop WITH (NOLOCK)
