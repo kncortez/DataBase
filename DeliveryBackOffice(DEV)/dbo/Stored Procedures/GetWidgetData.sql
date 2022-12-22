@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-08-18>
 -- Description:	< Método dinamico para obtener datos para Widgets del lado de portal web  >
@@ -35,6 +36,8 @@ BEGIN
 	-- Limpieza de tablas
 	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
 			DROP TABLE #FilteredGuides
+	IF OBJECT_ID('tempdb.dbo.#FilteredServices', 'U') IS NOT NULL
+			DROP TABLE #FilteredServices
 
 	-- De requerir datos para nuevos filtros, adicionar a esta tabla para minimizar el consumo de DeliveryOrder
 	CREATE TABLE #FilteredGuides (
@@ -47,6 +50,16 @@ BEGIN
 		GuideCoDAmountPaid DECIMAL(18,2),
 		GuideCoDAmountToPay DECIMAL(18,2),
 		INDEX INDX_FilteredGuides_Guide NONCLUSTERED(GuideSerie, GuideNumber)
+	);
+	CREATE TABLE #FilteredServices (
+		ServiceManagement INT,
+		SchedulePickup BIGINT,
+		ServiceStatus INT,
+		ServiceDate DATETIME,
+		ServiceExpectedDate DATETIME,
+		ServicePickupDate DATETIME,
+		INDEX INDX_FilteredServices_ServiceManagement NONCLUSTERED(ServiceManagement),
+		INDEX INDX_FilteredServices_SchedulePickup NONCLUSTERED(SchedulePickup)
 	);
 
 	BEGIN TRY
@@ -294,7 +307,7 @@ BEGIN
 							ISNULL(VelocidadEntregaDia,0) 'TopValue',
 							'Velocidad de entrega' 'TopText',
 							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
-							'Porcentaje de entregas' 'BottomText',
+							'Entregas' 'BottomText',
 							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 						FROM
 							@ResponseVelTable
@@ -308,7 +321,7 @@ BEGIN
 							0 'TopValue',
 							'Velocidad de entrega/día' 'TopText',
 							0 'BottomValue',
-							'Porcentaje de entregas realizadas' 'BottomText',
+							'Entregas' 'BottomText',
 							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 					END
 
@@ -322,7 +335,7 @@ BEGIN
 						0 'TopValue',
 						'Velocidad de entrega/día' 'TopText',
 						0 'BottomValue',
-						'Porcentaje de entregas realizadas' 'BottomText',
+						'Entregas' 'BottomText',
 						'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 				END
 
@@ -336,10 +349,94 @@ BEGIN
 					0 'TopValue',
 					'Velocidad de entrega/día' 'TopText',
 					0 'BottomValue',
-					'Porcentaje de entregas realizadas' 'BottomText',
+					'% de entregas' 'BottomText',
 					'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
 			END
 
+		END
+		ELSE IF(@WidgetName = 'RecoleccionesRealizados' COLLATE Latin1_General_CI_AI)
+		BEGIN
+
+			DECLARE @PickupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado' COLLATE Latin1_General_CI_AI)
+			DECLARE @CancelServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' COLLATE Latin1_General_CI_AI)
+
+			INSERT INTO #FilteredServices
+				(ServiceManagement, SchedulePickup, ServiceStatus, ServiceDate, ServicePickupDate)
+			SELECT
+				SM.IdServiceManagement
+				,SP.SchedulePickupId
+				,SM.ServiceStatusId
+				,SP.DateCreated
+				,(SELECT TOP 1 ES.DateCreated FROM [DeliveryBackOffice].[dbo].[EventService] ES WITH(NOLOCK) WHERE ES.ServiceManagementId = SM.IdServiceManagement AND ES.ServiceStatusId = @PickupServiceStatusId ORDER BY ES.DateCreated ASC)
+			FROM
+				[DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH(NOLOCK)
+					ON
+						SM.IdSchedulePickup = SP.SchedulePickupId
+			WHERE
+				SP.DateCreated BETWEEN @StartFilterDate AND @EndFilterDate
+				AND
+				SP.AccountId = @AccoundId
+
+			IF( EXISTS(SELECT TOP 1 1 FROM #FilteredServices) )
+			BEGIN
+
+				DECLARE @ResponseServicesTable AS TABLE(
+					TotalPickupServices INT,
+					TotalCompletedPickups INT,
+					TotalPendingPickups INT
+				);
+
+				INSERT INTO @ResponseServicesTable
+					(TotalPickupServices, TotalCompletedPickups, TotalPendingPickups)
+				SELECT
+					COUNT(1),
+					SUM((CASE WHEN FS.ServicePickupDate IS NOT NULL THEN 1 ELSE 0 END)),
+					SUM((CASE WHEN FS.ServicePickupDate IS NULL THEN 1 ELSE 0 END))
+				FROM
+					#FilteredServices FS
+
+				IF( EXISTS(SELECT TOP 1 1 FROM @ResponseServicesTable))
+				BEGIN
+					SELECT
+						CAST(1 AS BIT) [blnResult]
+
+					SELECT
+						ISNULL(TotalPendingPickups,0) 'TopValue',
+						'Recolecciones pendientes' 'TopText',
+						ISNULL(TotalCompletedPickups,0) 'BottomValue',
+						'Recolecciones completadas' 'BottomText',
+						'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					FROM
+						@ResponseServicesTable
+				END
+				ELSE
+				BEGIN
+					SELECT
+						CAST(0 AS BIT) [blnResult]
+
+					SELECT
+						0 'TopValue',
+						'Recolecciones pendientes' 'TopText',
+						0 'BottomValue',
+						'Recolecciones completadas' 'BottomText',
+						'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+				END
+
+			END
+			ELSE
+			BEGIN
+				SELECT
+					CAST(0 AS BIT) [blnResult]
+
+				SELECT
+					0 'TopValue',
+					'Recolecciones pendientes' 'TopText',
+					0 'BottomValue',
+					'Recolecciones completadas' 'BottomText',
+					'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+			END
 		END
 		ELSE
 		BEGIN
@@ -371,4 +468,7 @@ BEGIN
 	
 	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
 			DROP TABLE #FilteredGuides
+	IF OBJECT_ID('tempdb.dbo.#FilteredServices', 'U') IS NOT NULL
+			DROP TABLE #FilteredServices
+
 END
