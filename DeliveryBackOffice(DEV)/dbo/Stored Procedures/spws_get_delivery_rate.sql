@@ -792,7 +792,7 @@ BEGIN
 				, 0 DiscountValue
 				, iif(@IsFragile ='true', isnull(rh.FragilRate,0),0) as fragilRate
 				, iif(@IsCollected ='true', isnull(rh.CollectRate,0),0) as CollectedRate
-				, iif(@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount - isnull(rh.InsuranceExempt,0)) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
+				, iif(@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
 				, iif(@IsCreditCardPayment ='true', isnull(rh.CreditCardRate,0) ,0 ) as CreditCardRate
 				, iif(@NewOverWeight > 0, @NewOverWeight * isnull(rh.AdditionalWeightRate,0),0) OverWeightRate
 				, isnull(papt.TotalAmount,0) as IrregularParcelRate
