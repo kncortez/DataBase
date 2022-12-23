@@ -16,7 +16,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @RefClientId INT = (SELECT TOP 1 Cu.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado' COLLATE Latin1_General_CI_AI);
+	DECLARE @RefClientId BIGINT = (SELECT TOP 1 Acc.AccIdAccount FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado' COLLATE Latin1_General_CI_AI);
 
     DECLARE @TranCounter INT;  
     SET @TranCounter = @@TRANCOUNT;  
@@ -85,8 +85,8 @@ BEGIN
 			CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour',
 			ISNULL(SPHUB.IdHubLogistic,hub.IdHubLogistic) 'IdHubLogistic',
 			ISNULL(SPHUB.HubAbbreviation,hub.HubAbbreviation) 'HubAbbreviation',
-			(CASE WHEN Cu.IdCustomer = @RefClientId THEN vpc.DescriptionOfClient ELSE ISNULL(Cu.[Name], shp.SenderName) END) 'FirstName',
-			'' 'LastName',
+			(CASE WHEN Ac.AccIdAccount = @RefClientId THEN vpc.DescriptionOfClient ELSE PR.PerFirstName END) 'FirstName',
+			PR.PerLastName 'LastName',
 			shp.IsScheduled 'Scheduled',
 			RA.IdCurrierMan 'CurrierManId',
 			ISNULL(RA.IdRoute,-1) 'IdRoute',
@@ -202,6 +202,41 @@ BEGIN
 		ORDER BY
 			RT.IsAlerted DESC,
 			RT.datecreated DESC
+
+		SELECT
+			DISTINCT
+				RT.Qualification
+				,RT.IdServiceManagement
+				,RT.datecreated
+				,RT.datePickUp
+				,RT.hourPickUp
+				,RT.ServiceVehicle
+				,RT.IsScheduled
+				,RT.QuantityRegularPackages
+				,RT.QuantityOverDimensionedPackage
+				,RT.StatusName
+				,RT.OriginAddress
+				,RT.OriginAddressName
+				,RT.OriginAddressProvince
+				,RT.OriginAddressTown
+				,RT.rangeHour
+				,RT.IdHubLogistic
+				,RT.HubAbbreviation
+				,RT.FirstName
+				,RT.LastName
+				,RT.Scheduled
+				,RT.CurrierManId
+				,RT.IdRoute
+				,RT.IdRouteAssigment
+				,RT.CurrierFirstName
+				,RT.Last_Name
+				,RT.Latitude
+				,RT.Longitude
+				,RT.IsAlerted
+		FROM
+			@ResponseTable RT
+		ORDER BY
+			IsAlerted DESC
 
 		IF @TranCounter = 0  
             COMMIT TRANSACTION;  
