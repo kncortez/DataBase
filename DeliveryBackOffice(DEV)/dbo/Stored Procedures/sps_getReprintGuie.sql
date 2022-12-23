@@ -447,8 +447,7 @@ BEGIN
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
 									 + '"Icon": "' + (CASE
 															WHEN 
-																(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
-																or ctm.Abbreviation IN ('IGSS','RENAP')
+																vp.IsDocument = 1
 
 															THEN
 															   'D'
