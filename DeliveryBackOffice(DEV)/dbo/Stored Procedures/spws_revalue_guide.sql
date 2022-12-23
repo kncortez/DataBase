@@ -270,7 +270,7 @@ BEGIN
                     ON br.IdCost = cst.IdCost
             WHERE cst.IdProduct = 1
                   AND cst.ProductNumber = CONCAT('FD', @GuideNumber)
-                  AND br.Description = 'Recargo por pago con tarjeta'
+                  AND (br.Description = 'Otros recargos' OR br.Description = 'Recargo por pago con tarjeta')
                   AND br.RowStatus = 'true'
                   AND br.Amount > 0
         );
@@ -484,7 +484,7 @@ BEGIN
         (3, 'Seguro', @InsuranceRate, @IdModule, 'true', @Token),
         (4, 'Pago en Destino', @CollectedRate, @IdModule, 'true', @Token),
         (5, 'Recargo por Peso', @OverWeightRate, @IdModule, 'true', @Token),
-        (6, 'Recargo por pago con tarjeta', @CreditCardRate, @IdModule, 'true', @Token),
+        (6, 'Otros recargos', @CreditCardRate, @IdModule, 'true', @Token),
         (7, @DiscountDescription, @Discount, @IdModule, 'true', @Token),
         (8, 'IVA', @Taxes, @IdModule, 'true', @Token);
 
@@ -576,13 +576,27 @@ BEGIN
             UPDATE dbo.BreakdownOfPayment
             SET Amount = det.Amount,
                 RowStatus = det.RowStatus,
+				TokenUpdated = @Token,
                 DateUpdated = GETDATE()
             FROM dbo.Cost cs
                 INNER JOIN dbo.BreakdownOfPayment bk
                     ON bk.IdCost = cs.IdCost
-                JOIN @TblCost det
+                INNER JOIN @TblCost det
                     ON det.Description = bk.Description
             WHERE cs.IdCost = @IdCost;
+
+            -- actualizar los registros que no existen 
+            UPDATE dbo.BreakdownOfPayment
+            SET RowStatus = 0,
+				TokenUpdated = @Token,
+                DateUpdated = GETDATE()
+            FROM dbo.Cost cs
+                INNER JOIN dbo.BreakdownOfPayment bk
+                    ON bk.IdCost = cs.IdCost
+                LEFT JOIN @TblCost det
+                    ON det.Description = bk.Description
+            WHERE cs.IdCost = @IdCost
+			AND det.RowNumber IS NULL;
 
         END;
         ELSE
@@ -736,7 +750,7 @@ BEGIN
                                                       ) + '",' + '"Currency":"' + tr.Currency + '"' + '}',
                                              ' ')
                                        + IIF((tr.CreditCardRate) > 0,
-                                             ',{"Description":"' + 'Recargo por pago con tarjeta' + '",' + '"Price":"'
+                                             ',{"Description":"' + 'Otros recargos' + '",' + '"Price":"'
                                              + CONVERT(
                                                           VARCHAR(20),
                                                           dbo.fnt_Iva_Calculator(
