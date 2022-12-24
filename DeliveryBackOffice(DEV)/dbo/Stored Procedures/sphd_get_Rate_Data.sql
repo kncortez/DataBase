@@ -61,6 +61,7 @@ BEGIN
 
     ELSE IF @TypeRateId = 2
        OR @TypeRateId = 3 -- tarifas todo destino
+	   OR @TypeRateId = 6 -- Coberturas
     BEGIN
 
         SELECT rd.RateId [RateId],

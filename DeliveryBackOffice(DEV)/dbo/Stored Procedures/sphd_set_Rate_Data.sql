@@ -45,6 +45,7 @@ CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
 	@TblWeightRate AS TblWeightRate READONLY
 AS
 BEGIN
+
 	DECLARE @STD INT =
             (
                 SELECT TOP (1)
@@ -179,6 +180,7 @@ BEGIN
         END;
         IF @IdTypeRate = 2
            OR @IdTypeRate = 3 -- tarifas todo destino y por articulo
+		   OR @IdTypeRate = 6 -- Cobertura
         BEGIN
 
             -- insertar tarifas todo destino y por articulo STD
