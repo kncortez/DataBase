@@ -97,9 +97,9 @@ BEGIN
 		   ,ts.CtsShortName Service
 		   ,rs.CrsShortName Segment
 		FROM RateData rd
-		JOIN CatTypeService ts
+		INNER JOIN CatTypeService ts
 			ON ts.CtsId = rd.TypeServiceId
-		JOIN CatRateSegment rs
+		INNER JOIN CatRateSegment rs
 			ON rs.CrsId = rd.TypeSegmentId
 		WHERE rd.RateId = @IdRate
 			AND rd.RowStatus = 'TRUE'

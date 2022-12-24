@@ -880,11 +880,10 @@ BEGIN
 
         END;
 
-		IF @IdTypeRate = (SELECT IdTypeRate FROM CatTypeRate WHERE Name = 'Por Peso') -- insertar por rango de pesos
+		IF @IdTypeRate = (SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por Peso') -- insertar por rango de pesos
         BEGIN			
 
 			--rango de pesos
-			PRINT 'RANGO DE PESOS'
 
 			--Eliminar rango de pesos STD
 			UPDATE rd
@@ -892,7 +891,7 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
 			WHERE rd.RateId = @IdRate
 			AND twr.CatTypeService = 1
@@ -905,7 +904,7 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
 			WHERE rd.RateId = @IdRate
 			AND twr.CatTypeService = 2
@@ -919,14 +918,14 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1  --STD en desktop
+			WHERE twr.CatTypeService = 1
 			AND rd.TypeServiceId = @STD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @LOC
 			AND twr.State = 2
-
+			
 			--Actualizar rango de pesos STD MET
 			UPDATE rd
 			SET rd.WeightTo = twr.WeightTo
@@ -934,9 +933,9 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1  --STD en desktop
+			WHERE twr.CatTypeService = 1
 			AND rd.TypeServiceId = @STD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @MET
@@ -949,9 +948,9 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1  --STD en desktop
+			WHERE twr.CatTypeService = 1
 			AND rd.TypeServiceId = @STD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @FOR
@@ -960,13 +959,13 @@ BEGIN
 			--Actualizar rango de pesos STD ESP
 			UPDATE rd
 			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Foraneo
+			   ,rd.RateValue = twr.Especial
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1  --STD en desktop
+			WHERE twr.CatTypeService = 1
 			AND rd.TypeServiceId = @STD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @ESP
@@ -979,9 +978,9 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2  --COD en desktop
+			WHERE twr.CatTypeService = 2
 			AND rd.TypeServiceId = @COD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @LOC
@@ -994,9 +993,9 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2  --COD en desktop
+			WHERE twr.CatTypeService = 2
 			AND rd.TypeServiceId = @COD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @MET
@@ -1009,9 +1008,9 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2  --COD en desktop
+			WHERE twr.CatTypeService = 2
 			AND rd.TypeServiceId = @COD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @FOR
@@ -1024,9 +1023,9 @@ BEGIN
 			   ,rd.TokenUpdated = @Token
 			   ,rd.DateUpdated = GETDATE()
 			FROM RateData rd
-			JOIN @TblWeightRate twr
+			INNER JOIN @TblWeightRate twr
 				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2  --COD en desktop
+			WHERE twr.CatTypeService = 2
 			AND rd.TypeServiceId = @COD
 			AND rd.WeightFrom = twr.WeightFrom
 			AND rd.TypeSegmentId = @ESP
@@ -1086,7 +1085,7 @@ BEGIN
 					@IdRate
 				   ,@STD
 				   ,@ESP
-				   ,Foraneo --AGREGAR ESP
+				   ,Especial
 				   ,'TRUE'
 				   ,@Token
 				   ,GETDATE()
@@ -1133,7 +1132,7 @@ BEGIN
 				SELECT
 					@IdRate
 				   ,@COD
-				   ,@FOR
+				   ,@For
 				   ,Foraneo
 				   ,'TRUE'
 				   ,@Token
@@ -1149,8 +1148,8 @@ BEGIN
 				SELECT
 					@IdRate
 				   ,@COD
-				   ,@FOR
-				   ,Foraneo --AGREGAR ESP
+				   ,@ESP
+				   ,Especial
 				   ,'TRUE'
 				   ,@Token
 				   ,GETDATE()
