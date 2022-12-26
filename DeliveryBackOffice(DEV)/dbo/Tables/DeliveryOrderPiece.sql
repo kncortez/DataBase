@@ -31,8 +31,15 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_GuidePieceNumber]
     ON [dbo].[DeliveryOrderPiece]([GuidePiece] ASC)
     INCLUDE([GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_guide_serie_piece_status]
+    ON [dbo].[DeliveryOrderPiece]([GuideNumber] ASC, [GuideSerie] ASC, [NoPiece] ASC, [StatusOrderId] ASC);
 

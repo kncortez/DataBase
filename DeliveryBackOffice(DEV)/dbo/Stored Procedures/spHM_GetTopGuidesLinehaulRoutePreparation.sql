@@ -11,7 +11,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	SELECT		TOP 20
+	SELECT		TOP 40
 				[LRPCD].[GuideSerie],
 				[LRPCD].[GuideNumber],
 				[LRPCD].[DryPieceQuantity],
@@ -27,6 +27,7 @@ BEGIN
 	INNER JOIN	[dbo].[CatTypeContainer] CTC
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 	WHERE		[LRPCD].[RowStatus] = 1
+	AND			[LRPCD].[IsOpenProcess] = 0
 	ORDER BY	[LRPCD].[DateCreated] DESC;
     
 END

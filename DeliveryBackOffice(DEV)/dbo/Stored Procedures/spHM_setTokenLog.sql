@@ -3,7 +3,7 @@
 -- Create date: <01/07/2022>
 -- Description:	<Save or update Token Log>
 -- =============================================
-CREATE PROCEDURE [DBO].[spHM_setTokenLog]
+CREATE PROCEDURE [dbo].[spHM_setTokenLog]
 	@idToken AS NVARCHAR(75),
 	@idUser AS INT,  -- This is from Table Internal User
 	@idSystem AS INT,
@@ -23,8 +23,8 @@ BEGIN
 	BEGIN TRY
 		-- Get RegisterUserId from InternalUser table
 		SET @rusIdUser = (
-			SELECT [IU].[RegisterUserID]
-			FROM [dbo].[InternalUser] IU
+			SELECT [IU].[RegisterUserID] 
+			FROM [dbo].[InternalUser] IU WITH(NOLOCK)
 			WHERE [IU].[IdUser] = @idUser
 		)
 		-- Verify if TknIdToken record already exists in TokenLog table
@@ -80,7 +80,7 @@ BEGIN
 					[TknIdToken] != @idToken
 			END
 
-			IF(@@TRANCOUNT > 0)
+			--IF(@@TRANCOUNT > 0)
 				COMMIT TRANSACTION
 
 			SELECT

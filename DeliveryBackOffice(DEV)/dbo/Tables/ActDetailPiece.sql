@@ -8,8 +8,12 @@
     [DateCreated]      DATETIME      NOT NULL,
     [TokenUpdated]     NVARCHAR (50) NULL,
     [DateUpdated]      DATETIME      NULL,
+    [UserRevoke]       NVARCHAR (50) NULL,
+    [DateRevoke]       DATETIME      NULL,
     CONSTRAINT [PK__ActDetai__EA4B46252BE4438C] PRIMARY KEY CLUSTERED ([IdActDetailPiece] ASC),
     CONSTRAINT [FK_ActDetailPiece_Guide] FOREIGN KEY ([ActDetailId]) REFERENCES [dbo].[ActDetail] ([IdActDetail]),
     CONSTRAINT [UQ_ActDetailPiece_GuidePiece] UNIQUE NONCLUSTERED ([ActDetailId] ASC, [PieceNumber] ASC)
 );
+
+
 

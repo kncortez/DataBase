@@ -12,19 +12,20 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-	DECLARE @EXISTING_LRP AS INT;			-- Linehaul Route Preparation document
-	DECLARE @EXISTING_C AS INT;				-- Container
-	DECLARE @EXISTING_LPC AS INT;			-- Linehaul Route Preparation Container document
-	DECLARE @EXISTING_LPC_DIF AS INT;		-- Linehaul Route Preparation Container active in diferent document
-	DECLARE @EXISTING_LPC_STOPOVER AS INT;	-- Linehaul Route Preparation Container 
-	DECLARE @GENERATED_STATUS_ID AS INT;	-- Cat Linehaul Status
-	DECLARE @LIQUIDATED_STATUS_ID AS INT;	-- Cat Linehaul Status
-	DECLARE @STOPOVER_STATUS_ID AS INT;		-- Cat Linehaul Status
-	DECLARE @INSERTED_DOC AS INT;			-- Last doc ID inserted
-	DECLARE @CONTAINER_STOPOVER AS INT;		-- Linehaul Route Preparation Container
-	DECLARE @LINEHAUL_ROUTE_ID AS INT;		-- LinehaulRoutePreparation
-	DECLARE @CONTAINER_STOPOVER_HUB AS INT; -- LinehaulRoutePreparationContainer
-	DECLARE @IS_LINEHAUL_COVERAGE AS INT;	-- LinehaulCoverage
+	DECLARE @EXISTING_LRP AS INT;					-- Linehaul Route Preparation document
+	DECLARE @EXISTING_C AS INT;						-- Container
+	DECLARE @EXISTING_LPC AS INT;					-- Linehaul Route Preparation Container document
+	DECLARE @EXISTING_LPC_DIF AS INT;				-- Linehaul Route Preparation Container active in diferent document
+	DECLARE @EXISTING_LPC_STOPOVER AS INT;			-- Linehaul Route Preparation Container 
+	DECLARE @GENERATED_STATUS_ID AS INT;			-- Cat Linehaul Status
+	DECLARE @LIQUIDATED_STATUS_ID AS INT;			-- Cat Linehaul Status
+	DECLARE @STOPOVER_STATUS_ID AS INT;				-- Cat Linehaul Status
+	DECLARE @INSERTED_DOC AS INT;					-- Last doc ID inserted
+	DECLARE @CONTAINER_STOPOVER AS INT;				-- Linehaul Route Preparation Container
+	DECLARE @LINEHAUL_ROUTE_ID AS INT;				-- LinehaulRoutePreparation
+	DECLARE @CONTAINER_STOPOVER_HUB AS INT;			-- LinehaulRoutePreparationContainer
+	DECLARE @IS_LINEHAUL_COVERAGE AS INT;			-- LinehaulCoverage
+	DECLARE @CONTAINER_QUANTITY_CONTAINER AS INT;	-- LinehaulRoutePreparationContainer
 
 	-- Check if there is a record in Linehaul Route Preparation Table
 	SET @EXISTING_LRP = (SELECT COUNT([LRP].[IdLinehaulRoutePreparation]) AS CONT
@@ -145,12 +146,22 @@ BEGIN
 				SET @INSERTED_DOC = SCOPE_IDENTITY();
 			END
 
-			UPDATE	[LinehaulRoutePreparationContainer]
-			SET		[RowStatus] = 1
-			WHERE	[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-				AND [ContainerId] = @ContainerId;
+		UPDATE	[LinehaulRoutePreparationContainer]
+		SET		[RowStatus] = 1
+		WHERE	[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+			AND [ContainerId] = @ContainerId;
 
-			SELECT	[LRPC].[IdLinehaulRoutePreparationContainer],
+		-- UPDATE LinehaulRoutePreparation
+		SET @CONTAINER_QUANTITY_CONTAINER = (SELECT COUNT([LRPC].[ContainerId])
+											FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
+											WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+												AND [LRPC].[RowStatus] = 1);
+
+		UPDATE	[LinehaulRoutePreparation]
+		SET		[ContainerQuantity] =			@CONTAINER_QUANTITY_CONTAINER
+		WHERE	[IdLinehaulRoutePreparation] =	@LinehaulRoutePreparationId;
+
+		SELECT	[LRPC].[IdLinehaulRoutePreparationContainer],
 					[LRPC].[LinehaulRoutePreparationId],
 					[LRPC].[ContainerId],
 					COALESCE([LRPC].[HubDestinyId], 0) AS HubDestinyId,

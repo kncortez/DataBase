@@ -194,7 +194,7 @@ BEGIN
                                                           )
                                                 ) + '",' + '"ScheduleStart":"'
                                        + SUBSTRING(CONVERT(VARCHAR, spk.StartDate, 8), 0, 6) + '",' + '"ScheduleEnd":"'
-                                       + SUBSTRING(CONVERT(VARCHAR, spk.EndDate, 8), 0, 6) + '",' + '"Photo":"'
+                                       + SUBSTRING(CONVERT(VARCHAR, ISNULL(spk.EndDate, DATEADD(HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME))), 8), 0, 6) + '",' + '"Photo":"'
                                        + ISNULL(
                                          (
                                              SELECT TOP 1
@@ -208,46 +208,32 @@ BEGIN
                                        + '",' + '"Longitude":"' + CONVERT(VARCHAR, ISNULL(vpc.Longitude, 0)) + '",'
                                        + '"Precision":"' + CONVERT(VARCHAR, ISNULL(vpc.Accuracy, 0)) + '",'
                                        + '"Price":"' + '0' + '",' + '"Pickup":"' + '0' + '",' + '"customerName":"'
-                                       + ' ' + '",' + '"alterName":"' + ' ' + '",' + '"HighPriority":'
-                                       + CONVERT(
-                                                    VARCHAR,
-                                                    IIF(
-                                                       (
-                                                           SELECT ISNULL(COUNT(1), 0)
-                                                           FROM #TmpAlertList TMP
-                                                           WHERE TMP.SchedulePickupId = spk.SchedulePickupId
-                                                       ) > 0,
-                                                       'true',
-                                                       'false')
-                                                ) + ',' + '"Alerts":['
-                                       + IIF(
-                                            (
-                                                SELECT ISNULL(COUNT(1), 0)
-                                                FROM #TmpAlertList TMP
-                                                WHERE TMP.SchedulePickupId = spk.SchedulePickupId
-                                            ) > 0,
-                                         (
-                                             SELECT STUFF(
-                                                    (
-                                                        SELECT ',{"TypeAlert":' + CONVERT(VARCHAR, TMP.AlertTypeId)
-                                                               + ',' + '"DescriptionAlert":"'
-                                                               + dbo.fnt_String_Escape(
-                                                                                          dbo.fn_replace_special_characters(TMP.AlertDescription),
-                                                                                          'json'
-                                                                                      ) + '",' + '"DateCreated":"'
-                                                               + (CONVERT(VARCHAR, TMP.DateCreated, 24)) + ' - '
-                                                               + (CONVERT(VARCHAR, TMP.DateCreated, 103)) + '"}'
-                                                        FROM #TmpAlertList TMP
-                                                        WHERE TMP.SchedulePickupId = spk.SchedulePickupId
-                                                        ORDER BY TMP.DateCreated DESC
-                                                        FOR XML PATH('')
-                                                    ),
-                                                    1,
-                                                    1,
-                                                    ''
-                                                         )
-                                         ),
-                                            '') + '],' + '"Status":"'
+                                       + ' ' + '",' + '"alterName":"' + ' ' + '",' + '"HighPriority":' + Convert(varchar, IIF((SELECT
+															COUNT(1)
+														FROM DeliveryOrderAlert doa WITH (NOLOCK)
+														WHERE doa.ServiceManagementId = sma.IdServiceManagement
+														AND doa.RowStatus = 1)
+													> 0, 'true','false'))+ ',' + 
+									
+									'"Alerts":[' + IIF((SELECT
+															COUNT(1)
+														FROM DeliveryOrderAlert doa WITH (NOLOCK)
+														WHERE doa.ServiceManagementId = sma.IdServiceManagement
+														AND doa.RowStatus = 1)
+													> 0, (SELECT
+															STUFF((SELECT TOP 1
+																	',{"TypeAlert":' + CONVERT(VARCHAR, doa.AlertTypeId) + ',' +
+																	'"DescriptionAlert":"' + dbo.fnt_String_Escape(dbo.fn_replace_special_characters(doa.AlertDescription), 'json') + '",' +
+																	'"DateCreated":"' + (CONVERT(VARCHAR, doa.DateCreated, 24)) + ' - ' + (CONVERT(VARCHAR, doa.DateCreated, 103)) + '"}'
+																FROM DeliveryOrderAlert doa WITH (NOLOCK)
+																WHERE doa.ServiceManagementId = sma.IdServiceManagement
+																AND doa.RowStatus = 1
+																ORDER BY DOA.DateCreated DESC
+																FOR XML PATH (''))
+															, 1, 1, ''))
+													, '') 
+										+
+									'],' + '"Status":"'
                                        + CONVERT(VARCHAR, ISNULL(sma.ServiceStatusId, 1)) + +'"}'
                                 FROM dbo.RouteAssigment ras WITH (NOLOCK)
                                     LEFT JOIN dbo.ServiceManagement sma WITH (NOLOCK)
@@ -556,7 +542,7 @@ BEGIN
                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                                                 ON DAT.Guide_Serie = DOR.Guide_Serie
                                                    AND DAT.Guide_Number = DOR.Guide_Number
-                                                   AND DOR.StatusOrderId IN ( 4, 5, 12, 20, 25 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
                                             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
                                                 ON DSD.Guide_Serie = DAT.Guide_Serie
                                                    AND DSD.Guide_Number = DAT.Guide_Number

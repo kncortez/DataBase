@@ -59,7 +59,7 @@ BEGIN
         UPDATE 
             DeliveryBackOffice.dbo.DeliveryOrder 
         SET 
-            StatusOrderId = @NewState
+            StatusOrderId = ISNULL(@NewState,@currentState)
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number
@@ -68,7 +68,7 @@ BEGIN
         UPDATE 
             DeliveryBackOffice.dbo.DeliveryOrderDetail 
         SET 
-            RowStatus = 0,
+            RowStatus = IIF(@NewState  = NULL,1,0),
             Observations = 'Guía revertida desde módulo de reversión de estados.'
         WHERE 
             Guide_Serie =  @Guide_Serie
@@ -93,6 +93,28 @@ BEGIN
         WHERE
            GuideSerie = @Guide_Serie 
            AND GuideNumber = @Guide_Number
+
+		IF( @currentState IN (5, 22, 25)) -- Entregado, entregado en express center o COD Pagado
+		BEGIN
+		
+				-------------------WEBHOOK.INI------------------------------
+					UPDATE
+						[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+					SET
+						RowStatus = 0
+						,TokenUpdated = @UserToken
+						,DateUpdated = GETDATE()
+					WHERE
+						GuideSerie = @Guide_Serie
+						AND
+						GuideNumber = @Guide_Number
+						AND
+						RowStatus = 1
+						AND
+						StatusOrderId = @currentState;
+				-------------------WEBHOOK.FIN------------------------------
+
+		END
 
         --Por ultimo se inserta en la tabla DeliveryOrderReversalStatus para tener un log de las reversiones.
         INSERT INTO [dbo].[DeliveryOrderReversalStatus]

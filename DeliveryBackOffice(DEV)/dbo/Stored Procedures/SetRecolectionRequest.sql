@@ -39,6 +39,15 @@ BEGIN
 
             DECLARE @jsonResult2 NVARCHAR(MAX);
 
+            --UPDATE dbo.DeliveryOrder
+            --SET PriceShippment = t.PriceShippment,
+            --    StatusOrderId = @IdStatus,
+            --    IsCollect = t.IsCollect
+            --FROM dbo.DeliveryOrder ord WITH (NOLOCK)
+            --    INNER JOIN @TblDeliveryOrdersList t
+            --        ON t.Guide_Number = ord.Guide_Number
+            --           AND t.Guide_Serie = ord.Guide_Serie;
+
             INSERT INTO dbo.DeliveryOrderPaymentDetail
             (
                 [GuideNumber],
@@ -191,13 +200,13 @@ BEGIN
                             (
                                 SELECT CodeOfReference
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                                    inner JOIN VisitPointByUser VPU WITH (NOLOCK)
+                                    INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
                                         ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                            AND VPU.RowStatus = 1
-                                    inner JOIN RegisterUser ru WITH (NOLOCK)
+                                    INNER JOIN RegisterUser ru WITH (NOLOCK)
                                         ON VPU.RegisterUserID = ru.UsrIdUser
                                            AND ru.UsrRowStatus = 1
-                                    inner JOIN [dbo].[RolByUserByAccount] rua
+                                    INNER JOIN [dbo].[RolByUserByAccount] rua
                                         ON rua.RuaIdUser = ru.UsrIdUser
                                 WHERE rua.RuaIdAccount = @IdAccount
                             );
@@ -342,11 +351,6 @@ BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
 
-			IF @EndDate IS NULL
-				SET @EndDate = CONCAT(CAST(@STARTDATE AS DATE), ' 19:00:00')
-			ELSE IF CAST(@EndDate AS TIME) = '00:00:00:000'
-				SET @EndDate = CONCAT(CAST(@EndDate AS DATE), ' 19:00:00')
-
             IF OBJECT_ID('tempdb.dbo.#Sender', 'U') IS NOT NULL
                 DROP TABLE #Sender;
 
@@ -395,7 +399,6 @@ BEGIN
                    sub_sp.SchedulePickupId,
                    sub_sp.AssigmentStatus,
                    sub_sp.IdServiceManagement
-           -- INTO #Sender
             FROM
             (
                 SELECT Sender_ID,
@@ -737,7 +740,7 @@ BEGIN
 			AND tp.GuideNumber=sd.Number
 
 			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagement] (IdSchedulePickup, RowStatus, TokenCreated, DateCreated, ServiceStatusId, Amount, CatPaymentTimeId)
-				SELECT DISTINCT
+				SELECT
 					IdSchedulePickup
 				   ,1
 				   ,@token
@@ -750,7 +753,7 @@ BEGIN
 
 
 			INSERT INTO [DeliveryBackOffice].[dbo].[EventService] (ServiceManagementId,ServiceStatusId,RowStauts,TokenCreated,DateCreated)
-				SELECT DISTINCT
+				SELECT
 					sm.IdServiceManagement
 				   ,1
 				   ,1
@@ -760,32 +763,6 @@ BEGIN
 				INNER JOIN ServiceManagement sm
 					ON sm.IdSchedulePickup = tsm.IdSchedulePickup
 				WHERE tsm.IdServiceManagement IS NULL
-
-			-- Actualizar
-			update 
-				do 
-			set  
-				StatusOrderId = 1  -- Recolección
-			from 
-				@TblDeliveryOrdersList ls
-				inner join DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
-				on 
-					do.Guide_Serie =  ls.Guide_Serie 
-					and 
-					do.Guide_Number = ls.Guide_Number
-
-			update 
-				dopd 
-			set 
-				ShipmentCompleted = 1
-			from 
-				@TblDeliveryOrdersList ls
-				inner join 
-					DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
-					on 
-						dopd.GuideSerie =  ls.Guide_Serie 
-						and 
-						dopd.GuideNumber = ls.Guide_Number
 
 			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
 			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 
@@ -843,27 +820,6 @@ BEGIN
 
             SELECT ('[' + @jsonOutput4 + ']') jsonOutput4;
             ROLLBACK TRANSACTION;
-				INSERT INTO dbo.RoutePreparationLogError
-			(
-				ErrorDescription,
-				ErrorNumber,
-				ErrorProcedure,
-				ErrorLine,
-				GuideSerie,
-				GuideNumber,
-				TokenCreated,
-				DateCreated
-			)
-			VALUES
-			 (CAST(ERROR_MESSAGE() AS VARCHAR(300))
-					   ,ERROR_NUMBER()
-					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
-					   ,ERROR_LINE()
-					   ,0
-					   ,0
-					   ,'Error en SetRecolectionRequest filtro 3'
-					   ,GETDATE())
-
 
         END CATCH;
 

@@ -18,7 +18,14 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_IdCost]
     ON [dbo].[CostDetail]([IdCost] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateCreated]
+    ON [dbo].[CostDetail]([DateCreated] ASC);
 
