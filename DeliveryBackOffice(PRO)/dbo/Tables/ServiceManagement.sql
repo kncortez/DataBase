@@ -23,6 +23,7 @@
     [Order]                     SMALLINT        DEFAULT ((1)) NOT NULL,
     [Amount]                    DECIMAL (16, 2) NULL,
     [CatPaymentTimeId]          INT             NULL,
+    [IsActiveService]           BIT             NULL,
     PRIMARY KEY CLUSTERED ([IdServiceManagement] ASC),
     CONSTRAINT [FK_ServiceManagement_CatPaymentTimeId] FOREIGN KEY ([CatPaymentTimeId]) REFERENCES [dbo].[CatPaymentTime] ([TimePlaId]),
     CONSTRAINT [fk_ServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
@@ -33,6 +34,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 

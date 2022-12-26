@@ -1,4 +1,8 @@
-﻿-- =============================================
+﻿
+
+
+
+-- =============================================
 -- Author:		<Hugo,Gomez>
 -- Create date: <2021-02-11>
 -- Description:	<Recotizacion>
@@ -14,6 +18,22 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+    DECLARE @GuideRegexData NVARCHAR(500) =
+            (
+                SELECT TOP 1
+                       CP.[Value]
+                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
+                WHERE CP.[Name] = 'GuideRegex' COLLATE Latin1_General_CI_AI
+            );
+
+    DECLARE @GuideRegexScannerData NVARCHAR(500) =
+            (
+                SELECT TOP 1
+                       CP.[Value]
+                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
+                WHERE CP.[Name] = 'GuideRegexScanner' COLLATE Latin1_General_CI_AI
+            );
 
     DECLARE @jsonResult NVARCHAR(MAX);
 
@@ -104,20 +124,26 @@ BEGIN
                                        + '"DateToken":"' + ISNULL(CONVERT(VARCHAR, pod.DateCreated, 23), 'N/A') + '",'
                                        + '"FirstName":"' + ISNULL(CONVERT(VARCHAR, sr.First_Name), 'N/A') + '",'
                                        + '"LastName":"' + ISNULL(CONVERT(VARCHAR, sr.Last_Name), 'N/A') + '",'
-                                       + '"Vehicle":"' + ISNULL(CONVERT(VARCHAR, vh.Plate), 'N/A') + '",'
-                                       + '"Route":"' + ISNULL(CONVERT(VARCHAR, cr.CodeRoute), 'N/A') + '",'
+                                       + '"Vehicle":"' + ISNULL(CONVERT(VARCHAR, vh.Plate), 'N/A') + '",' + '"Route":"'
+                                       + ISNULL(CONVERT(VARCHAR, cr.CodeRoute), 'N/A') + '",' + '"GuideRegex":"'
+                                       + ISNULL(CONVERT(VARCHAR(500), @GuideRegexData), '')
+                                       + '",' -- Para validar solo los digitos de la guía
+                                       + '"GuideRegexEscaner":"'
+                                       + ISNULL(CONVERT(VARCHAR(500), @GuideRegexScannerData), '')
+                                       + '",' -- Para el input del escaner de la courier
                                        + '"BillingEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultEmail), 'N/A') + '",'
-                                       + '"PickUpManifestEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultPickupManifestEmail), 'N/A') + '",'
+                                       + '"PickUpManifestEmail":"'
+                                       + ISNULL(CONVERT(VARCHAR(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                        + '"Token":"' + ISNULL(LogTokenPOD, '') + +'"}'
-                                FROM LogTokenPOD pod WITH(NOLOCK)
-                                    INNER JOIN SenderReceiver sr WITH(NOLOCK)
+                                FROM LogTokenPOD pod WITH (NOLOCK)
+                                    INNER JOIN SenderReceiver sr WITH (NOLOCK)
                                         ON (sr.ID = pod.IdCourierman)
-                                    LEFT JOIN dbo.RouteAssigment ras WITH(NOLOCK)
+                                    LEFT JOIN dbo.RouteAssigment ras WITH (NOLOCK)
                                         ON ras.IdCurrierMan = sr.ID
                                            AND DateOfRoute = CONVERT(DATE, GETDATE())
-                                    LEFT JOIN dbo.CatVehicle vh WITH(NOLOCK)
+                                    LEFT JOIN dbo.CatVehicle vh WITH (NOLOCK)
                                         ON vh.IdVehicle = ras.IdVehicle
-                                    LEFT JOIN dbo.CatRoute cr WITH(NOLOCK)
+                                    LEFT JOIN dbo.CatRoute cr WITH (NOLOCK)
                                         ON cr.IdRoute = ras.IdRoute
                                 WHERE LogTokenPOD = @Token
                                 ORDER BY 1 DESC

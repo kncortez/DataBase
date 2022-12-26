@@ -25,12 +25,12 @@ BEGIN
         @current_BatchCODIdCommission = ISNULL(PGD.BatchCODIdCommission,BDCCM.BatchCODId),
         @dateBatchCOD = Date
     FROM 
-        DeliveryBackOffice.dbo.ProcessedGuideCOD PGD
-		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDC 		
+        DeliveryBackOffice.dbo.ProcessedGuideCOD PGD WITH(NOLOCK) 
+		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDC  WITH(NOLOCK) 		
 		ON BDC.GuideSerie = PGD.GuideSerie
         AND BDC.GuideNumber = PGD.GuideNumber
 		AND BDC.CatConceptCODId = 2
-		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDCCM 
+		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDCCM  WITH(NOLOCK) 
 		ON BDCCM.GuideSerie = PGD.GuideSerie
         AND BDCCM.GuideNumber = PGD.GuideNumber
 		AND BDCCM.CatConceptCODId = 1
@@ -46,7 +46,7 @@ BEGIN
         SELECT 
             @currentState = StatusOrderId
         FROM 
-            DeliveryBackOffice.dbo.DeliveryOrder do
+            DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number

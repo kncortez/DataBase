@@ -24,3 +24,15 @@
     CONSTRAINT [FK_VisitPointConfiguration_VisitPointClient] FOREIGN KEY ([VisitPointID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_VisitPointID]
+    ON [dbo].[VisitPointConfiguration]([VisitPointID] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateStartOperation]
+    ON [dbo].[VisitPointConfiguration]([DateStartOperation] ASC);
+

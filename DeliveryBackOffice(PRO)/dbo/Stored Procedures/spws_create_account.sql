@@ -229,7 +229,7 @@ BEGIN
 						,TokenUpdated
 						,DateUpdated
 						)
-					VALUES((SELECT IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1)
+					VALUES((SELECT TOP 1 IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1 AND Name = 'New Termns And Conditions' ORDER BY DateCreated DESC)
 							,@IdAccount
 							,1
 							,1

@@ -18,15 +18,16 @@ BEGIN
 				[LRSCD].[PiecesMissing],
 				[CTC].[TypeContainerSerie],
 				[C].[ContainerNumber]
-	FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-	INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
+	FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD WITH (NOLOCK)
+	INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC WITH (NOLOCK)
 		ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 		AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId
-	INNER JOIN	[dbo].[Container] C
+	INNER JOIN	[dbo].[Container] C WITH (NOLOCK)
 		ON		[LRSC].[ContainerId] = [C].[IdContainer]
-	INNER JOIN	[dbo].[CatTypeContainer] CTC
+	INNER JOIN	[dbo].[CatTypeContainer] CTC WITH (NOLOCK)
 		ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
 	WHERE		[LRSCD].[RowStatus] = 1
+		AND		[LRSCD].[IsOpenProcess] = 0
 	ORDER BY	[LRSCD].[DateCreated] DESC;
     
 END

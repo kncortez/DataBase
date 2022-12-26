@@ -21,14 +21,14 @@ BEGIN
 			-- Status for settlement
 			SET @NEW_STATUS_ID =(SELECT	[SO].[StatusOrderId]
 								FROM	[dbo].[StatusOrder] SO
-								WHERE	[SO].[OrderDescription] = 'Arribó a las instalaciones');
+								WHERE	[SO].[OrderDescription] = 'Trasladado a Hub');
 		END
 	ELSE
 		BEGIN
 			-- Status for dispatch
 			SET @NEW_STATUS_ID =(SELECT	[SO].[StatusOrderId]
 								FROM	[dbo].[StatusOrder] SO
-								WHERE	[SO].[OrderDescription] = 'En Tránsito');
+								WHERE	[SO].[OrderDescription] = 'En preparación de traslado');
 		END
 
 	IF (@NEW_STATUS_ID > 0)

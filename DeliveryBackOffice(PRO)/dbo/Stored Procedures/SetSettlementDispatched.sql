@@ -40,6 +40,19 @@ BEGIN
 	-- control de inserción de manifiesto de despacho
 	DECLARE @ID_Manifest INT
 
+	DECLARE @GuidesToSendMessage AS TABLE(
+		GuideSerie NVARCHAR(2)
+		,GuideNumber INT
+		,GuideToken NVARCHAR(50)
+		,GuideOriginName NVARCHAR(200)
+		,GuideDestinyName NVARCHAR(200)
+		,GuideOriginPhone NVARCHAR(100)
+		,GuideDestinyPhone NVARCHAR(100)
+		,GuideOriginAddress NVARCHAR(600)
+		,GuideDestinyAddress NVARCHAR(600)
+		,IsDelivery BIT
+	);
+
 	BEGIN TRANSACTION
 		BEGIN TRY
 		
@@ -398,6 +411,70 @@ BEGIN
 			END
 			--Termina revalorziar guías
 
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide]
+				( 
+					GuideSerie
+					, GuideNumber
+					, IsDelivery
+					, IsInRoute
+					, GuideToken
+					, RowStatus
+					, DateCreated
+					, TokenCreated 
+				)
+			OUTPUT 
+				inserted.GuideSerie
+				, inserted.GuideNumber
+				, inserted.GuideToken
+				, inserted.IsDelivery 
+			INTO 
+				@GuidesToSendMessage
+				(
+					GuideSerie
+					, GuideNumber
+					, GuideToken
+					, IsDelivery
+				)
+			SELECT
+				DISTINCT
+				LG.Guide_Serie
+				, LG.Guide_Number
+				, 1 -- ~DO.IsLastMileReturn cuando se integre DOHKO
+				, 1
+				, CONCAT(LG.Guide_Serie, LG.Guide_Number, RIGHT ('00000'+CAST( ( (FLOOR(RAND()*(99999-0+1))+0) ) AS NVARCHAR),5))
+				--, CONCAT(LG.Guide_Serie, LG.Guide_Number, RIGHT ('00000'+CAST( ( (FLOOR(RAND(LG.Guide_Number + CAST(FORMAT(GETDATE(),'MMyyyymmss','en') AS INT) )*(99999-0+1))+0) ) AS NVARCHAR),5))
+				
+				, 1
+				, GETDATE()
+				, @Token
+			FROM
+				@ListGuides LG
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+					ON
+						LG.Guide_Serie = DO.Guide_Serie
+						AND
+						LG.Guide_Number = DO.Guide_Number
+
+						
+
+			UPDATE
+				GTSM
+			SET
+				GuideOriginPhone = ISNULL(DO.Sender_Phone, '')
+				,GuideDestinyPhone = ISNULL(DO.Receiver_Phone, '')
+				,GuideOriginName = LTRIM(RTRIM(CONCAT(DO.Sender_FirstName, ' ',DO.Sender_LastName)))
+				,GuideDestinyName = LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName, ' ', DO.Receiver_LastName)))
+				,GuideOriginAddress = Sender_Address
+				,GuideDestinyAddress = Receiver_Address
+			FROM
+				@GuidesToSendMessage GTSM
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+					ON
+						GTSM.GuideSerie = DO.Guide_Serie
+						AND
+						GTSM.GuideNumber = DO.Guide_Number
 		END TRY
 		BEGIN CATCH
 			SELECT 
@@ -439,6 +516,20 @@ BEGIN
 					@ID_Manifest AS 'StatusCode',
 					'Registros guardados correctamente' AS 'Description', 
 					@@TRANCOUNT AS 'NumTransferID'
+
+				SELECT
+					GTSM.GuideSerie
+					,GTSM.GuideNumber
+					,GTSM.GuideToken
+					,CAST(ISNULL(GTSM.IsDelivery, 0) AS BIT) 'IsDelivery'
+					,GTSM.GuideOriginName
+					,GTSM.GuideDestinyName
+					,GTSM.GuideOriginPhone
+					,GTSM.GuideDestinyPhone
+					,GTSM.GuideOriginAddress
+					,GTSM.GuideDestinyAddress
+				FROM
+					@GuidesToSendMessage GTSM
 			END
 			ELSE
 			BEGIN

@@ -21,12 +21,16 @@
     [Guide_Piece]                  SMALLINT      NULL,
     [LogLatitude]                  NVARCHAR (20) NULL,
     [LogLongitude]                 NVARCHAR (20) NULL,
+    [ConfirmationOfIncidenceId]    INT           NULL,
     CONSTRAINT [PK_DeliveryAttempt] PRIMARY KEY CLUSTERED ([ID] ASC),
+    CONSTRAINT [FK_DeliveryAttempt_ConfirmationOfIncidence] FOREIGN KEY ([ConfirmationOfIncidenceId]) REFERENCES [dbo].[ConfirmationOfIncidence] ([IdConfirmationOfIncidence]),
     CONSTRAINT [FK_DeliveryAttempt_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliveryAttempt_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
     CONSTRAINT [FK_DeliveryAttempt_DeliveryProof] FOREIGN KEY ([ID_Proof]) REFERENCES [dbo].[DeliveryProof] ([ID]),
     CONSTRAINT [FK_DeliveryAttempt_IDCourier] FOREIGN KEY ([ID_Courier]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
+
+
 
 
 GO
@@ -63,4 +67,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora d
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora de longitud relacionada al servicio la cual no entro dentro de una geocerca', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryAttempt', @level2type = N'COLUMN', @level2name = N'LogLongitude';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
+    ON [dbo].[DeliveryAttempt]([Guide_Number] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de tabla ConfirmationOfIncidence que sirve para la landing page de incidencias.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryAttempt', @level2type = N'COLUMN', @level2name = N'ConfirmationOfIncidenceId';
 
