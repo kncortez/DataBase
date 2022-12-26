@@ -37,8 +37,14 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_RheDefault]
     ON [dbo].[RateHeader]([RheDefault] ASC)
     INCLUDE([ReturnRate]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de intentos disponibles para devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'AttemptReturn';
 

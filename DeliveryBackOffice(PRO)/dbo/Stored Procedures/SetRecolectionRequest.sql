@@ -342,6 +342,11 @@ BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
 
+            IF @EndDate IS NULL
+                SET @EndDate = CONCAT(CAST(@StartDate AS DATE), ' 19:00:00');
+            ELSE IF CAST(@EndDate AS TIME) = '00:00:00:000'
+                SET @EndDate = CONCAT(CAST(@EndDate AS DATE), ' 19:00:00');
+
             IF OBJECT_ID('tempdb.dbo.#Sender', 'U') IS NOT NULL
                 DROP TABLE #Sender;
 
@@ -730,7 +735,8 @@ BEGIN
                 Amount,
                 CatPaymentTimeId
             )
-            SELECT IdSchedulePickup,
+            SELECT DISTINCT
+                   IdSchedulePickup,
                    1,
                    @Token,
                    GETDATE(),
@@ -749,7 +755,8 @@ BEGIN
                 TokenCreated,
                 DateCreated
             )
-            SELECT sm.IdServiceManagement,
+            SELECT DISTINCT
+                   sm.IdServiceManagement,
                    1,
                    1,
                    @Token,
