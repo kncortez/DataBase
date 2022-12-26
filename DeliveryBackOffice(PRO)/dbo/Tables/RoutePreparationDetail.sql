@@ -25,9 +25,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_RowStatus]
-    ON [dbo].[RoutePreparationDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [RowStatus] ASC);
+
 
 
 GO
@@ -97,4 +98,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la guía fue reprogramada por el cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'IsCustomerReschedule';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ServiceManagementDetailId_RowStatus]
+    ON [dbo].[RoutePreparationDetail]([ServiceManagementDetailId] ASC, [RowStatus] ASC);
 

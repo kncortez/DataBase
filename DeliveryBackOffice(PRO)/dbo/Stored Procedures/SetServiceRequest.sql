@@ -121,9 +121,6 @@ BEGIN
             LEFT JOIN @CorrelativeTable C
                 ON C.[Row_Number] = RowNumber;
 
-		CREATE NONCLUSTERED INDEX IX_GuideTable_Guide ON #GuideTable (Guide_Serie, Guide_Number); 
-		CREATE NONCLUSTERED INDEX IX_GuideTable_VPC ON #GuideTable (Sender_ID); 
-
         /**********************************************************************/
         /******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
         /**********************************************************************/
@@ -186,6 +183,7 @@ BEGIN
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
+                      AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1
             ),
             ReceiverIdTownship =
             (
@@ -198,6 +196,7 @@ BEGIN
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
                       )
+                      AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1
             ),
             SourceSystemId =
             (

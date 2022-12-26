@@ -17,6 +17,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_ordernumber_orderserie]
     ON [dbo].[invoiceDetail]([dti_fk_orderSerie] ASC, [dti_fk_orderNumber] ASC);
@@ -28,8 +30,7 @@ CREATE NONCLUSTERED INDEX [idx_dti_fk_header]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_dti_fk_orderNumber_dti_fk_orderSerie]
-    ON [dbo].[invoiceDetail]([dti_fk_orderNumber] ASC, [dti_fk_orderSerie] ASC);
+
 
 
 GO

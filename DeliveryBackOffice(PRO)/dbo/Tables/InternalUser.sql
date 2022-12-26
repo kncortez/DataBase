@@ -12,3 +12,10 @@
     CONSTRAINT [FK_InternalUser_RegisterUser] FOREIGN KEY ([RegisterUserID]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ RegisterUserID]
+    ON [dbo].[InternalUser]([RegisterUserID] ASC);
+

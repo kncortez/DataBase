@@ -13,6 +13,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PieceNumber_RowStatus]
     ON [dbo].[RoutePreparationDetailPiece]([PieceNumber] ASC, [RowStatus] ASC)
@@ -62,4 +64,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que m
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creo la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetailPiece', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RoutePreparationDetailId_PieceNumber]
+    ON [dbo].[RoutePreparationDetailPiece]([RoutePreparationDetailId] ASC, [PieceNumber] ASC);
 
