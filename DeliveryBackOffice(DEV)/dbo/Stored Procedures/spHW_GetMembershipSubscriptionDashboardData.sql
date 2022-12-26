@@ -16,6 +16,9 @@ BEGIN
 	DECLARE @MEMBERSHIP_STATUS_ACTIVE_ID AS INT;	-- CatSalesPackageStatus
 	DECLARE @MEMBERSHIP_STATUS_INACTIVE_ID AS INT;	-- CatSalesPackageStatus
 
+	SET @DateStart = DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(@DateStart AS DATE)) AS DATETIME));
+	SET @DateEnd = DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(@DateEnd AS DATE)) AS DATETIME));
+
 	SET @MEMBERSHIP_STATUS_ACTIVE_ID = (SELECT	[CSPS].[IdCatSalesPackageStatus]
 										FROM	[dbo].[CatSalesPackageStatus] CSPS
 										WHERE	[CSPS].[SalesPackageStatusName] = 'Activa');
@@ -47,7 +50,6 @@ BEGIN
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[RowStatus] = 1
-					AND [MSL].[SubscriptionId] IS NULL
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [MembershipDeliveriesCount]
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
