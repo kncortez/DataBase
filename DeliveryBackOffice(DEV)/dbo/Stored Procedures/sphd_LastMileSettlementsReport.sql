@@ -39,7 +39,7 @@ BEGIN
               (
                   SELECT Name FROM splitstring(@hubsIds, ',')
               )
-		  AND (IIF(ord.IsCollect = 1, ord.PriceShippment, 0) + ord.Collect_OnDelivery) > 0
+		  AND ((CASE WHEN (ord.IsCollect = 1) THEN ord.PriceShippment ELSE 0) + ord.Collect_OnDelivery) > 0
           --dsd.Settlement_Collect_OnDelivery > 0
           AND dsd.Guide_Delivered = 'true'
           AND dsd.Guide_Discharged IS NOT NULL
