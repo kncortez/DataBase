@@ -61,4 +61,61 @@ BEGIN
 		AND [MSL].[RowStatus] = 1
 		AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
 
+	-- Subscription Data
+	SELECT		[S].[IdSubscription],
+				[S].[CatSubscriptionId],
+				[CS].[SubscriptionName],
+				[S].[CatSubscriptionStatusId],
+				[CSPS].[SalesPackageStatusName],
+				[S].[SubscriptionCost],
+				[S].[CustomerId],
+				[S].[AccountId],
+				[S].[IsAutoRenewable],
+				[S].[SubscriptionMaxServiceFixedValue],
+				[S].[ActualServiceCount],
+				([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) [SubscriptionRemainingUses],
+				(([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) [SubscriptionUsagePercentage],
+				[S].[ExpirationDate]
+	FROM		[dbo].[Subscription] S
+	INNER JOIN  [dbo].[CatSubscription] CS
+		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
+	INNER JOIN	[dbo].[CatSalesPackageStatus] CSPS
+		ON		[S].[CatSubscriptionStatusId] = [CSPS].[IdCatSalesPackageStatus]
+	WHERE		[S].[MembershipId] = @MEMBERSHIP_ID
+		AND		[S].[RowStatus] = 1
+		AND		[S].[CatSubscriptionStatusId] IN (@MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID);
+
+	-- Subscription Attributes
+	SELECT		[CSA].[IdCatSubscriptionAttribute],
+				[CSA].[CatSubscriptionId],
+				[CSA].[CatAttributeId],
+				[CA].[AttributeName],
+				[CSA].[SubscriptionAttributeValue],
+				[CSA].[SubscriptionAttributeDescription]
+	FROM		[dbo].[CatSubscriptionAtribute] CSA
+	INNER JOIN	[dbo].[CatAttribute] CA
+		ON		[CSA].[CatAttributeId] = [CA].[IdCatAttribute]
+	WHERE		[CSA].[CatSubscriptionId] IN (	SELECT	[S].[CatSubscriptionId]
+												FROM	[dbo].[Subscription] S
+												WHERE	[S].[MembershipId] = @MEMBERSHIP_ID)
+		AND		[CSA].[RowStatus] = 1
+	ORDER BY	[CSA].[CatSubscriptionId], 
+				[CSA].[SubscriptionAttributePosition];
+
+	-- Subscription History
+	SELECT		[MSL].[IdMembershipSubscriptionLog],
+				[MSL].[MembershipId],
+				[MSL].[SubscriptionId],
+				[MSL].[LogActionDescription],
+				CONCAT([MSL].[LogGuideSerie], [MSL].[LogGuideNumber]) [Guide],
+				[MSL].[LogGuideOriginalValue] [OriginalAmount],
+				[MSL].[LogGuideNewValue] [NewAmount],
+				([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied],
+				[MSL].[DateCreated] [Date]
+	FROM		[dbo].[MembershipSubscriptionLog] MSL
+	WHERE		[MSL].[MembershipId] = @MEMBERSHIP_ID
+		AND		[MSL].[SubscriptionId] IS NOT NULL
+		AND		[MSL].[RowStatus] = 1
+	ORDER BY	[MSL].[SubscriptionId], 
+				[MSL].[LogServiceNumber];
 END
