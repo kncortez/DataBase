@@ -1349,6 +1349,7 @@
     <Build Include="dbo\Tables\MembershipUsageByAffiliate.sql" />
     <Build Include="dbo\Tables\MembershipAffiliateDiscount.sql" />
     <Build Include="dbo\Tables\Affiliate.sql" />
+    <Build Include="dbo\Stored Procedures\spHAW_GetDiscountForMembershipByAffiliate.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
