@@ -25,6 +25,8 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @ParIsCreditCard BIT = NULL,
     @ParPesos VARCHAR(400) = NULL,
     @IsReturn BIT = 'false'
+ ,@UseMembership bit=0
+
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
