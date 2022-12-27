@@ -1345,6 +1345,10 @@
     <Build Include="dbo\Stored Procedures\spHM_GetGuideDetailPendingToSettled.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuides.sql" />
     <Build Include="dbo\Stored Procedures\IndividualCustomerCODAmountsData.sql" />
+    <Build Include="dbo\Tables\RegisterUserByAffiliate.sql" />
+    <Build Include="dbo\Tables\MembershipUsageByAffiliate.sql" />
+    <Build Include="dbo\Tables\MembershipAffiliateDiscount.sql" />
+    <Build Include="dbo\Tables\Affiliate.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
