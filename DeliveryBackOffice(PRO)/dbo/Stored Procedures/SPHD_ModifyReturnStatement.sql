@@ -18,6 +18,7 @@ BEGIN
 	DECLARE @Numero AS INT;
 	DECLARE @Serie  AS NVARCHAR(2);
 	DECLARE @STATUS AS INT; 
+	DECLARE @STATUSDECLAREDRETURNED_DO INT = (SELECT TOP 1 SO.StatusOrderId FROM DBO.StatusOrder SO WITH(NOLOCK) WHERE OrderDescription = 'Declarado para Devolución');
 	DECLARE @RevalueGuides AS TABLE(
 				GuideSerie NVARCHAR(2),
 				GuideNumber INT)
@@ -49,12 +50,112 @@ BEGIN
 					  )
 				   BEGIN
 
-							UPDATE [dbo].[DeliveryOrder] SET IsLastMileReturn = 1 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
+							-- Activar guía para devolución y asignar estado de "Declarado para devolución"
+							UPDATE 
+								[dbo].[DeliveryOrder] 
+							SET 
+								IsLastMileReturn = 1,
+								StatusOrderId= @STATUSDECLAREDRETURNED_DO,
+								TokenUpdated=@Token,
+								DateUpdated=GETDATE()
+							WHERE 
+								Guide_Serie = @Serie 
+								AND 
+								Guide_Number = @Numero
 							INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
+
+							-- Ingresar nuevo estado al historico
+							INSERT INTO 
+								[DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+								(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
+							VALUES
+								(@Serie, @Numero, @STATUSDECLAREDRETURNED_DO, @Token, GETDATE(), GETDATE(), 1)
 				   END
 					   ELSE
 					   BEGIN
-						    UPDATE [dbo].[DeliveryOrder] SET IsLastMileReturn = 0 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
+							-- Para revisar estado del historico
+							DECLARE @TOPSTATUS INT;
+							DECLARE @TOPSTATUSROWDATE DATETIME;
+							-- En caso sea necesario recuperar un estado
+							DECLARE @NEWTOPSTATUS INT;
+
+							-- Revisar último estado de la guía
+							SELECT
+								TOP 1
+									@TOPSTATUS = DOD.StatusOrderId,
+									@TOPSTATUSROWDATE = ISNULL(DOD.DateCreatedInSystem, DOD.DateCreated)
+							FROM
+								[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+							WHERE
+								DOD.Guide_Serie = @Serie
+								AND
+								DOD.Guide_Number = @Numero
+								AND
+								DOD.RowStatus = 1
+							ORDER BY
+								ISNULL(DOD.DateCreatedInSystem, DOD.DateCreated) DESC
+
+							-- Si la guía esta como "Declarado para devolución"
+							IF(@TOPSTATUS = @STATUSDECLAREDRETURNED_DO)
+							BEGIN
+							
+								-- Inactivar estado de declarado
+								UPDATE 
+									DeliveryBackOffice.dbo.DeliveryOrderDetail 
+								SET 
+									RowStatus = 0,
+									Observations = 'Declaración de devolución revertido.'
+								WHERE 
+									Guide_Serie =  @Serie
+									AND Guide_Number = @Numero
+									AND StatusOrderId = @TOPSTATUS
+									AND ISNULL(DateCreatedInSystem, DateCreated) = @TOPSTATUSROWDATE
+									
+								-- Rescatar último estado de la guía previo a la declaración para devolución
+								SELECT
+									TOP 1
+										@NEWTOPSTATUS = DOD.StatusOrderId
+								FROM
+									[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+								WHERE
+									DOD.Guide_Serie = @Serie
+									AND
+									DOD.Guide_Number = @Numero
+									AND
+									DOD.RowStatus = 1
+								ORDER BY
+									ISNULL(DOD.DateCreatedInSystem, DOD.DateCreated) DESC
+									
+								-- Revertir bandera de devolución de la guía y asignar estado previo
+								UPDATE 
+									[dbo].[DeliveryOrder] 
+								SET 
+									IsLastMileReturn = 0,
+									StatusOrderId = @NEWTOPSTATUS,
+									TokenUpdated=@Token,
+									DateUpdated=GETDATE()
+								WHERE 
+									Guide_Serie = @Serie 
+									AND 
+									Guide_Number = @Numero
+							END
+							-- Último estado de la guía no es declaración para devolución
+							ELSE
+							BEGIN
+
+								-- Solo actualizar bandera de devolución de la guía
+								UPDATE 
+									[dbo].[DeliveryOrder] 
+								SET 
+									IsLastMileReturn = 0,
+									TokenUpdated=@Token,
+									DateUpdated=GETDATE()
+								WHERE 
+									Guide_Serie = @Serie 
+									AND 
+									Guide_Number = @Numero
+
+							END
 						    INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
 					   END
 				 

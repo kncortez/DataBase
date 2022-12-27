@@ -26,6 +26,7 @@ BEGIN
                 FROM StatusOrder so
                 WHERE so.OrderDescription = 'Paquete destruido'
             );
+	DECLARE @STATUSDECLAREDRETURNED_DO INT = (SELECT TOP 1 SO.StatusOrderId FROM DBO.StatusOrder SO WITH(NOLOCK) WHERE OrderDescription = 'Declarado para Devolución');
 
     DECLARE @Active BIT = 'false';
 
@@ -157,11 +158,20 @@ BEGIN
 
             -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
             UPDATE do
-            SET do.IsLastMileReturn = 1
+            SET do.IsLastMileReturn = 1,
+				do.StatusOrderId = @STATUSDECLAREDRETURNED_DO
             FROM DeliveryOrder do
                 INNER JOIN @TblGuides tg
                     ON do.Guide_Serie = tg.GuideSerie
                        AND do.Guide_Number = tg.GuideNumber
+            WHERE tg.FlowGuide = 2;
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+				(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
+			SELECT
+				DISTINCT
+					tg.GuideSerie, tg.GuideNumber, @STATUSDECLAREDRETURNED_DO, 'spHD_ValidateDeliveryAttemps', GETDATE(), GETDATE(), 1
+			FROM @TblGuides tg
             WHERE tg.FlowGuide = 2;
 
             COMMIT TRANSACTION;

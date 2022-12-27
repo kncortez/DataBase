@@ -1019,6 +1019,9 @@
     <Build Include="dbo\User Defined Types\TblLstDetail.sql" />
     <Build Include="dbo\User Defined Types\TblInOutOfMoneyDetail.sql" />
     <Build Include="dbo\Tables\CatStatusType.sql" />
+    <Build Include="dbo\Tables\ConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Tables\CatTypeConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Tables\ServiceManagementDetail.sql" />
     <Build Include="dbo\Stored Procedures\SPRequestCouponData_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPCouponData.sql" />
     <Build Include="dbo\Stored Procedures\spg_ddeli_deliveryOrders_esp.sql" />
@@ -1031,14 +1034,8 @@
     <Build Include="dbo\Sequences\NewGuideNumberSequence.sql" />
     <Build Include="dbo\Sequences\NewGuideManifestSequence.sql" />
     <Build Include="dbo\Tables\RateTownshipCoverage.sql" />
-    <Build Include="dbo\Tables\CoDDailyExecution_1.sql" />
-    <Build Include="dbo\Tables\CatCoDDailySchedule_1.sql" />
     <Build Include="dbo\Tables\AlternativeRateByCustomer.sql" />
-    <Build Include="dbo\Stored Procedures\UpdateWireTransferExecutionQueue_1.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny_by_hub_cras.sql" />
-    <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetHubs_1.sql" />
-    <Build Include="dbo\User Defined Types\TblCoDExecutionProcess_1.sql" />
     <Build Include="dbo\Stored Procedures\GetStations.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />

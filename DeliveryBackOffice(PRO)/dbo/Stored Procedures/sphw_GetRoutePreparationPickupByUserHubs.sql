@@ -58,8 +58,8 @@ BEGIN
 		ISNULL(QuantityRegularPackages, 0) 'QuantityRegularPackages',
 		ISNULL(QuantityOverDimensionedPackage, 0) 'QuantityOverDimensionedPackage',
 		css.[Name] StatusName,
-		ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
-		vpc.DescriptionOfClient 'OriginAddressName',
+		ISNULL(shp.AddressPickup, vpc.Address) 'OriginAddress',
+		ISNULL(vpc.DescriptionOfClient, shp.SenderName) 'OriginAddressName',
 		vpc.Department 'OriginAddressProvince',
 		vpc.Town 'OriginAddressTown',
 		CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour'
@@ -78,6 +78,7 @@ BEGIN
 			ON hl.IdHubLogistic = shp.IdHubLogistics
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 			ON shp.SenderId = vpc.CodeOfReference
+				AND shp.SenderId != 0
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 			ON shp.TypeVehicleId = ctv.IdTypeVehicle
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
