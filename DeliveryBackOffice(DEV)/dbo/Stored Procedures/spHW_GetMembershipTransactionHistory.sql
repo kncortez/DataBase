@@ -75,6 +75,7 @@ BEGIN
 				[S].[ActualServiceCount],
 				([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) [SubscriptionRemainingUses],
 				(([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) [SubscriptionUsagePercentage],
+				[S].[DateCreated],
 				[S].[ExpirationDate]
 	FROM		[dbo].[Subscription] S
 	INNER JOIN  [dbo].[CatSubscription] CS
