@@ -96,7 +96,8 @@ BEGIN
 					@SetUpdate = 'true',
 					@Token = 'sps_DeliveryOrderDetailIds',
 					@IsReturn = 'false',
-					@ParIsCreditCard = @IsCreditCardPayment
+					@ParIsCreditCard = @IsCreditCardPayment,
+					@UseMembership = @UseMembership
 	--END
 
 	select 1;
