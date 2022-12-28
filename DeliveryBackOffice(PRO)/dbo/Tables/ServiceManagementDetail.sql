@@ -35,6 +35,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de actualización de la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagementDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -125,4 +127,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del Serv
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de tabla ServiceManagementDetail', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagementDetail', @level2type = N'COLUMN', @level2name = N'IdServiceManagementDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ServiceManagement_RowStatus]
+    ON [dbo].[ServiceManagementDetail]([ServiceManagement] ASC, [RowStatus] ASC);
 
