@@ -23,7 +23,11 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@Token nvarchar(200),
 	@IdCityPlace int = 31,
 	@Latitude varchar(50)=NULL,
-	@Longitude varchar(50)=NULL
+	@Longitude varchar(50)=NULL,
+	@IdPopulated int = NULL,
+	@Predeterminated bit = NULL,
+	@VisibleInGuide bit = NULL,
+	@PickupsProgram bit = NULL
 
 	
 	

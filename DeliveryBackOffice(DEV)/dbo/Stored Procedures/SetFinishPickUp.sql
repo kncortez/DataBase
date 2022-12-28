@@ -38,6 +38,8 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+	
+
     DECLARE @jsonResult NVARCHAR(MAX);
     DECLARE @jsonResult1 NVARCHAR(MAX);
     DECLARE @jsonResult2 NVARCHAR(MAX);
@@ -668,7 +670,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.SenderReceiver sr
                         INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp
                             ON ltp.LogTokenPOD = @Token
-                               AND ltp.RowStatus = 1
+                               --AND ltp.RowStatus = 1
                                AND ltp.IdCourierman = sr.ID
                 );
 
@@ -732,7 +734,7 @@ BEGIN
                 -- asignar valor a la variable ModName
                 SET @ModName = N'Courier App';
 
-                SELECT @DataOriginId = cm.ModIdModule
+                SELECT  TOP 1 @DataOriginId = cm.ModIdModule
                 FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                 WHERE cm.ModName = @ModName;
 
@@ -749,7 +751,7 @@ BEGIN
                        lge.ItemSerie GuideSerie,
                        lge.ItemNumber GuideNumber,
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -804,6 +806,23 @@ BEGIN
                                     ''
                                 )
                 );
+
+				 INSERT INTO dbo.RoutePreparationLogError
+        (
+            ErrorDescription,
+            ErrorNumber,
+            ErrorProcedure,
+            ErrorLine,
+            GuideSerie,
+            GuideNumber,
+            TokenCreated,
+            DateCreated
+        )
+        VALUES
+        (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)), ERROR_LINE(),
+         0  , 0, 'SetFinishPickup', GETDATE());
+
+
             END CATCH;
             IF @@TRANCOUNT > 0
             BEGIN

@@ -25,6 +25,7 @@
     [ReturnRate]           DECIMAL (12, 2) NULL,
     [CollectRate]          DECIMAL (12, 2) NULL,
     [PiecesIncluded]       DECIMAL (12, 2) NULL,
+    [AttemptReturn]        INT             CONSTRAINT [DF__RateHeade__Attem__6423B28F] DEFAULT ((2)) NOT NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
@@ -34,8 +35,14 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_RheDefault]
     ON [dbo].[RateHeader]([RheDefault] ASC)
     INCLUDE([ReturnRate]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de intentos disponibles para devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'AttemptReturn';
 

@@ -40,6 +40,19 @@ BEGIN
 	-- control de inserción de manifiesto de despacho
 	DECLARE @ID_Manifest INT
 
+	DECLARE @GuidesToSendMessage AS TABLE(
+		GuideSerie NVARCHAR(2)
+		,GuideNumber INT
+		,GuideToken NVARCHAR(50)
+		,GuideOriginName NVARCHAR(200)
+		,GuideDestinyName NVARCHAR(200)
+		,GuideOriginPhone NVARCHAR(100)
+		,GuideDestinyPhone NVARCHAR(100)
+		,GuideOriginAddress NVARCHAR(600)
+		,GuideDestinyAddress NVARCHAR(600)
+		,IsDelivery BIT
+	);
+
 	BEGIN TRANSACTION
 		BEGIN TRY
 		
@@ -397,6 +410,113 @@ BEGIN
 					AND GuideNumber = @GuideNumberRevalue
 			END
 			--Termina revalorziar guías
+			
+			-- Manejo de envío de mensajitos de whatsapp en despacho
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide]
+				( 
+					GuideSerie
+					, GuideNumber
+					, IsDelivery
+					, IsInRoute
+					, GuideToken
+					, RowStatus
+					, DateCreated
+					, TokenCreated 
+				)
+			OUTPUT 
+				inserted.GuideSerie
+				, inserted.GuideNumber
+				, inserted.GuideToken
+				, inserted.IsDelivery 
+			INTO 
+				@GuidesToSendMessage
+				(
+					GuideSerie
+					, GuideNumber
+					, GuideToken
+					, IsDelivery
+				)
+			SELECT
+				DISTINCT
+				LG.Guide_Serie
+				, LG.Guide_Number
+				, 1 -- ~DO.IsLastMileReturn cuando se integre DOHKO
+				, 1
+				, CONCAT(LG.Guide_Serie, LG.Guide_Number, RIGHT ('00000'+CAST( ( (FLOOR(RAND()*(99999-0+1))+0) ) AS NVARCHAR),5))
+				--, CONCAT(LG.Guide_Serie, LG.Guide_Number, RIGHT ('00000'+CAST( ( (FLOOR(RAND(LG.Guide_Number + CAST(FORMAT(GETDATE(),'MMyyyymmss','en') AS INT) )*(99999-0+1))+0) ) AS NVARCHAR),5))
+				
+				, 1
+				, GETDATE()
+				, @Token
+			FROM
+				@ListGuides LG
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+					ON
+						LG.Guide_Serie = DO.Guide_Serie
+						AND
+						LG.Guide_Number = DO.Guide_Number
+
+			UPDATE
+				GTSM
+			SET
+				GuideOriginPhone = ISNULL(DO.Sender_Phone, '')
+				,GuideDestinyPhone = ISNULL(DO.Receiver_Phone, '')
+				,GuideOriginName = LTRIM(RTRIM(CONCAT(DO.Sender_FirstName, ' ',DO.Sender_LastName)))
+				,GuideDestinyName = LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName, ' ', DO.Receiver_LastName)))
+				,GuideOriginAddress = Sender_Address
+				,GuideDestinyAddress = Receiver_Address
+			FROM
+				@GuidesToSendMessage GTSM
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+					ON
+						GTSM.GuideSerie = DO.Guide_Serie
+						AND
+						GTSM.GuideNumber = DO.Guide_Number
+			-- Manejo de envío de mensajitos de whatsapp en despacho
+
+			-----------------------------------------------------------------------------------------------------------------
+			--FDD-975 ACTUALIZACIÓN DE  INFORMACIÓN DE COURIER Y VEHÍCULO DE ASIGNACIÓN DE RUTA AL DESPACHAR UNA RUTA DE ENTREGA
+			UPDATE RA SET
+				RA.IdCurrierMan=@IdCourier,
+				RA.IdVehicle=@IdVehicle,
+				RA.TokenUpdated=@Token,
+				RA.DateUpdated=GETDATE()
+			FROM DBO.RoutePreparationDetail RPD WITH(NOLOCK)
+				INNER JOIN DBO.ServiceManagementDetail SMD
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+				INNER JOIN DBO.ServiceManagement SM WITH(NOLOCK)
+					ON SM.IdServiceManagement=SMD.ServiceManagement
+				INNER JOIN DBO.RouteAssigment RA
+					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+			WHERE
+				RPD.RoutePreparationId = @IdRoutePreparation;
+
+			DECLARE @IdRouteAssigment INT= (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment RA WITH(NOLOCK) WHERE IdRoute = @IdRoute AND DateOfRoute=@Date AND RA.IdCurrierMan=@IdCourier)
+
+			UPDATE  SM SET
+				SM.IdPuCourrier=@IdCourier,
+				SM.IdPuRouteAssigment=@IdRouteAssigment
+			FROM @ListGuides LG  
+				INNER JOIN DBO.RoutePreparationDetail RPD WITH(NOLOCK)
+					ON RPD.Guide_Serie=LG.Guide_Serie
+					AND RPD.Guide_Number=LG.Guide_Number
+				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK)
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+				INNER JOIN DBO.ServiceManagement SM
+					ON SM.IdServiceManagement=SMD.ServiceManagement
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 							
+					URSD.GuideSerie=RPD.Guide_Serie
+					AND URSD.GuideNumber=RPD.Guide_Number
+					AND URSD.RowStatus=1
+					AND URSD.ServiceManagementId=SM.IdServiceManagement
+				LEFT JOIN DBO.UnifiedRouteSettlement URS WITH(NOLOCK) ON
+					URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
+				LEFT JOIN DBO.RouteAssigment RA WITH(NOLOCK) ON
+					RA.IdRouteAssigment= URS.RouteAssignmentId
+			WHERE URS.UserSettlement IS NULL AND RA.DateOfRoute=CONVERT(DATE,GETDATE()) AND RA.IdCurrierMan=@IdCourier
+			-----------------------------------------------------------------------------------------------------------------
 
 		END TRY
 		BEGIN CATCH
@@ -439,6 +559,20 @@ BEGIN
 					@ID_Manifest AS 'StatusCode',
 					'Registros guardados correctamente' AS 'Description', 
 					@@TRANCOUNT AS 'NumTransferID'
+
+				SELECT
+					GTSM.GuideSerie
+					,GTSM.GuideNumber
+					,GTSM.GuideToken
+					,CAST(ISNULL(GTSM.IsDelivery, 0) AS BIT) 'IsDelivery'
+					,GTSM.GuideOriginName
+					,GTSM.GuideDestinyName
+					,GTSM.GuideOriginPhone
+					,GTSM.GuideDestinyPhone
+					,GTSM.GuideOriginAddress
+					,GTSM.GuideDestinyAddress
+				FROM
+					@GuidesToSendMessage GTSM
 			END
 			ELSE
 			BEGIN

@@ -121,7 +121,8 @@ BEGIN
         --AND CAST(BTD.AuthorizationDate AS DATE)
         --BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
         ) s1
-        ORDER BY s1.[AuthorizationDate] ASC;
+        ORDER BY s1.[AuthorizationDate] ASC
+		OPTION (OPTIMIZE FOR UNKNOWN)
 
     END;
     ELSE IF (@SenderEmail != '-1')

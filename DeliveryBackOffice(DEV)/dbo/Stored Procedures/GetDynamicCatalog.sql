@@ -128,15 +128,15 @@ BEGIN
 										   ,abc.MassWeight
 										   ,IIF(ra.RateId IN (@NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates), IIF(ra.TypeServiceId IS NOT NULL AND ra.TypeSegmentId IS NOT NULL, 1, 0), NULL) 'IsMainPackage'
 										FROM dbo.CatArticle art
-										JOIN dbo.ArticleByCustomer abc
+										INNER JOIN dbo.ArticleByCustomer abc
 											ON abc.AbcIdArticle = art.ArtId
 										LEFT JOIN CatTypeArticle ta
 											ON ta.TarId = art.ArtIdTypeArticle
-										JOIN RateData ra
+										INNER JOIN RateData ra
 											ON ra.ArticleId = abc.AbcId
-										JOIN RatebyCustomer rbc
+										INNER JOIN RatebyCustomer rbc
 											ON rbc.RbcIdRate = ra.RateId
-										JOIN Account ac
+										INNER JOIN Account ac
 											ON ac.IdCustomer = rbc.RbcIdCustomer
 										WHERE ac.AccIdAccount = @IdAccount
 										AND art.ArtRowStatus = 'TRUE'
@@ -321,13 +321,14 @@ BEGIN
 									   + '"CodeOfReference":"'+ ISNULL(CONVERT(NVARCHAR, VPC.CodeOfReference), '') + '"'
                                        + '}'
                                 FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
-                                    JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)
                                         ON VPC.IdSettlement = STL.IdSettlement 
-                                    JOIN DeliveryBackOffice.dbo.Township TWS WITH(NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.Township TWS WITH(NOLOCK)
                                         ON TWS.IdTownship = STL.IdTownship
-                                    JOIN DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK)
                                         ON PRV.IdProvince = TWS.IdProvince
                                 WHERE IdKindOfVPClient = 1
+								AND VPC.StatusClient = 1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -409,7 +410,7 @@ BEGIN
                                            AND rc.RbcRowStatus = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp WITH(NOLOCK)
                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
-                                    JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
+                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
                                         ON vpc.CustomerID = cu.IdCustomer
                                            AND vpc.StatusClient = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)

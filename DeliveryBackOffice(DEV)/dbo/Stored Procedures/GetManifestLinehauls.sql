@@ -10,7 +10,7 @@ CREATE PROCEDURE [dbo].[GetManifestLinehauls]
 AS
 
 	BEGIN
-	SELECT DISTINCT lrp.IdLinehaulRoutePreparation, 
+SELECT DISTINCT lrp.IdLinehaulRoutePreparation, 
 	cr.CodeRoute, 
 	IIF((lrp.CatVehicleId IS NULL), lrp.VehicleID, cv.CodeName) CodeVehicle,
 	IIF((lrp.SenderReceiverId IS NULL), lrp.DriverName, sr.First_Name+ ' '+sr.Last_Name) Courier,
@@ -24,28 +24,28 @@ AS
 	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
 	inner join Container ctn2 WITH (NOLOCK)
 	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 1 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station) AS TotalGuideNoPiso,
+			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalGuideNoPiso,
 
 	(select top 1 ((sum(lrpc2.ColdPieceQuantity))+(sum(lrpc2.DryPieceQuantity))) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
 	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
 	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
 	inner join Container ctn2 WITH (NOLOCK)
 	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 1 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station) AS TotalPiecesNoPiso,
+			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalPiecesNoPiso,
 
 	(select sum(lrpc2.GuideQuantity) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
 	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
 	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
 	inner join Container ctn2 WITH (NOLOCK)
 	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 2 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station) AS TotalGuidePiso,
+			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalGuidePiso,
 
 	(select top 1 ((sum(lrpc2.ColdPieceQuantity))+(sum(lrpc2.DryPieceQuantity))) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
 	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
 	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
 	inner join Container ctn2 WITH (NOLOCK)
 	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 2 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station) AS TotalPiecesPiso,
+			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalPiecesPiso,
 	(select sum(lrpcd.GuideDryPieceTotal) - sum(lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
 	(select sum(lrpcd.GuideColdPieceTotal) - sum(lrpcd.ColdPieceQuantity)) AS DifPiecesCold
 		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
@@ -85,6 +85,7 @@ AS
 					 lrp.GuideQuantity,
 					 lrp.ColdPieceQuantity,
 					 lrp.DryPieceQuantity
+
 
 
 	

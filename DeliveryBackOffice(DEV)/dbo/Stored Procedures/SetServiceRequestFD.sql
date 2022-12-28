@@ -8,10 +8,10 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @SystemModule NVARCHAR(200) = NULL
 AS
 BEGIN
-	DECLARE @IdTransaction bigint = NULL
-	DECLARE @ManifestNumber int = 0
-	DECLARE @ManifestSerie varchar(2) = 'FM'
-	DECLARE @GuideSerie varchar(2) = 'FD'
+	DECLARE @IdTransaction BIGINT = NULL
+	DECLARE @ManifestNumber INT = 0
+	DECLARE @ManifestSerie VARCHAR(2) = 'FM'
+	DECLARE @GuideSerie VARCHAR(2) = 'FD'
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
@@ -145,10 +145,7 @@ BEGIN
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
 		/**********************************************************************/
 		SET @ManifestNumber = NEXT VALUE FOR [dbo].[NewGuideManifestSequence]; 
-		--(
-		--	SELECT MAX([Manifest_Number]) + 1 
-		--	FROM [DeliveryBackOffice].[dbo].[ServiceRequest] 
-		--)
+
 		INSERT INTO DeliveryBackOffice.dbo.ServiceRequest (
 			[Messageid], 
 			[Receiver_Name], 
@@ -414,6 +411,9 @@ BEGIN
 	IF @@TRANCOUNT > 0
 	BEGIN
 		COMMIT TRANSACTION;
+
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+
 		SELECT 
 			1 AS 'StatusCode',
 			'Registros guardados correctamente' AS 'Description', 
@@ -432,10 +432,25 @@ BEGIN
 			isnull(@Route,'')  as 'Route'
 			,D.PriceShippment AS 'Price',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts'
+			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
+			IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			CONCAT('https://develop.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			(CASE
+				WHEN 
+					(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
+					or ctm.Abbreviation IN ('IGSS','RENAP')
+
+				THEN
+					'D'
+				ELSE
+					''
+				END
+			)'Icon'
 		FROM DeliveryOrder D WITH(NOLOCK)
-		JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
+		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
+			ON ctm.IdCustomer = D.IdCustomer
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END

@@ -147,7 +147,7 @@ BEGIN
                'SYS-HERMESROUTES',
                @PreparationDay
         FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-            JOIN (
+            INNER JOIN (
 				SELECT 
 					DOD.Guide_Serie,
 					DOD.Guide_Number,
@@ -169,7 +169,7 @@ BEGIN
                    AND DOR.Guide_Number = EPSL.GuideNumber
                    AND EPSL.RowStatus = 1
                    AND CAST(EPSL.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
-			JOIN
+			INNER JOIN
 				[DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
 				ON
 					DOR.Receiver_Department = P.ProvinceName COLLATE Latin1_General_CI_AI
@@ -179,7 +179,7 @@ BEGIN
 					P.IdProvince = SPC.ProvinceId
 					AND
 					SPC.RowStatus = 1
-			JOIN
+			INNER JOIN
 				[DeliveryBackOffice].[dbo].[Township] TMun WITH(NOLOCK)
 				ON
 					DOR.Receiver_Town = TMun.TownshipName COLLATE Latin1_General_CI_AI
@@ -266,7 +266,7 @@ BEGIN
             AG.TypeService = DOR.TypeService,
             AG.IdDeliveryOption = DOR.IdDeliveryOption
         FROM @AcceptedGuides AG
-            JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 ON DOR.Guide_Serie = AG.GuideSerie
                    AND DOR.Guide_Number = AG.GuideNumber;
 
@@ -643,7 +643,7 @@ BEGIN
                                                   ''
                                               )
                                 FROM @AcceptedGuides AG
-                                    JOIN
+                                    INNER JOIN
                                     (
                                         SELECT DOPA.GuideSerie,
                                                DOPA.GuideNumber,
@@ -763,7 +763,7 @@ BEGIN
                 EPSL.TokenUpdated = 'SYS-HERMESROUTES',
                 EPSL.DateUpdated = GETDATE()
             FROM [DeliveryBackOffice].[dbo].[ExternalPlatformServiceLog] EPSL
-                JOIN @AcceptedGuides TSV
+                INNER JOIN @AcceptedGuides TSV
                     ON EPSL.GuideSerie = TSV.GuideSerie
                        AND EPSL.GuideNumber = TSV.GuideNumber;
 

@@ -47,6 +47,7 @@ BEGIN
 								INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 									ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 									AND		[LRPC].[ContainerId] = @CONTAINER_ID
+									AND		[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 								WHERE		[LRPCDP].[ActCode] IS NULL
 									AND		[LRPCDP].[CatLinehaulStatusId] != @STATUS_IN_TRANSIT
 									AND		[LRPCDP].[RowStatus] = 1);
@@ -71,7 +72,7 @@ BEGIN
 		BEGIN
 			SELECT 1 [spResult], 'Contenedor con diferente HUB destino al actual, puede ser liquidado por completo' [spMessage];
 			RETURN;
-		END
+		END 		
 
 	SELECT 2 [spResult], 'Contenedor válido' [spMessage];
 										

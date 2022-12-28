@@ -18,10 +18,13 @@
     [StartTime2]            TIME (7)         NULL,
     [EndTime2]              TIME (7)         NULL,
     [Accuracy]              VARCHAR (20)     NULL,
+    [IsInRoute]             BIT              DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([IdServiceDataForGuide] ASC),
     CONSTRAINT [ServiceDataForGuide_Guide_FK] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [ServiceDataForGuide_Module_FK] FOREIGN KEY ([ProviderModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 
@@ -126,4 +129,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fin de segu
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'El radio aproximado en donde se úbica la ubicación (Latitud y Longitud)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'Accuracy';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si el flujo es de una guía en ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'IsInRoute';
 

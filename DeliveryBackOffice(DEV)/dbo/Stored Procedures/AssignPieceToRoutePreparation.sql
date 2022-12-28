@@ -9,7 +9,11 @@
 -- Create date: <2022-02-02>
 -- Description:	< Cambio para uso de Ruta sobre Unidad .>
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2022-09-28>
+-- Description:	<generar los datos del servicio tomando en cuenta si esta esta marcada para una devolución.>
+-- =============================================
 CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@IdRoute INT,
 	@Date DATE,
@@ -47,14 +51,49 @@ BEGIN
 		GuidePieces INT,
 		GuideDryPieces INT,
 		GuideColdPieces INT,
+		GuideReceiverFirstName NVARCHAR(100),
+		GuideReceiverLastName NVARCHAR(100),
+		GuideReceiverIdTownShip NVARCHAR(100),
 		GuideReceiverDepartment NVARCHAR(100),
 		GuideReceiverTown NVARCHAR(100),
-		GuideReceiverAddress NVARCHAR(600)
+		GuideReceiverAddress NVARCHAR(600),
+		GuideReceiverPhone NVARCHAR(100),
+		GuideSenderFirstName NVARCHAR(100),
+		GuideSenderLastName NVARCHAR(100),
+		GuideSenderDepartment NVARCHAR(100),
+		GuideSenderIdTownship INT,
+		GuideSenderPhone NVARCHAR(50),
+		GuideSenderAddress NVARCHAR(600),
+		GUidePriceShippment decimal(14,2),
+		GuideCOD decimal(14,2),
+		SenderId INT,
+		ReceiverId INT
 	);
 
-	BEGIN TRANSACTION
+	------Variables para proceso de generación de datos de servicio marcados como devolución
+	DECLARE @IsReturn AS BIT=0--bandera de dvolución
+	DECLARE @AmountToPay AS DECIMAL (18,2)
+	DECLARE @IdServiceManagement AS INT
+	DECLARE @subtypeservicemanagment AS INT 
 
+	------Variables para unificación de rutero 
+	DECLARE @RouteAssigmentId AS INT= NULL
+	DECLARE @ServiceManagementDetailId AS INT = NULL;
+	DECLARE @FirstPieceEntered AS BIT=1;
+
+	BEGIN TRANSACTION
 		BEGIN TRY
+    ------------------------------------------------------------------------------------
+	------FDD-949--proceso de generación de datos de servicio marcados como devolución
+		SELECT TOP 1 @IsReturn =1
+			       FROM dbo.DeliveryOrder do WITH (NOLOCK)
+				   WHERE 
+				   do.IsLastMileReturn=1 AND
+                   do.Guide_Serie =@GuideSerie AND 
+				   do.Guide_Number = @GuideNumber ;  
+	------FDD-949--proceso de generación de datos de servicio marcados como devolución
+	------------------------------------------------------------------------------------
+
 
 			--- Verificar si existe la preparación de ruta y si ya fue despachada
 			SELECT 
@@ -126,15 +165,28 @@ BEGIN
 
 				-- Verificar si existe la guía en el detalle de la preparación de ruta
 				SELECT
-					@IdRoutePreparationDetail = ISNULL(RPD.IdRoutePreparationDetail,0)
+					@IdRoutePreparationDetail = ISNULL(RPD.IdRoutePreparationDetail,0),
+					@FirstPieceEntered = IIF(RPD.IdRoutePreparationDetail IS NULL,1,0)
 				FROM
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-					JOIN
+					INNER JOIN
 						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
 						AND
 						RPD.RowStatus = 1
+					OUTER APPLY
+						(
+							SELECT
+								RPDP.RoutePreparationDetailId,
+								ISNULL(COUNT(1), NULL) 'PieceCount'
+							FROM
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
+							WHERE
+								RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
+							GROUP BY
+								RPDP.RoutePreparationDetailId
+						) RPDP
 				WHERE
 					RPD.Guide_Serie = @GuideSerie
 					AND
@@ -182,7 +234,6 @@ BEGIN
 
 				END
 				---ELSE No existe data que actualizar en el detalle de la preparacón de ruta
-
 				--- Verificar el detalle de la preparación de ruta
 				IF(@IdRoutePreparationDetail > 0)
 				BEGIN
@@ -201,20 +252,21 @@ BEGIN
 
 					--- Verificar si la pieza de la guía si existe
 					IF(@GuidePieceExists = 1)
-					BEGIN
-
+					BEGIN	
+					
 						--- La pieza es real
+
 
 						--- Verificar si existe la pieza de la guía dentro del detalle de la preparación de la ruta
 						SELECT
 							@IdRoutePreparationDetailPiece = RPDP.PieceNumber
 						FROM
 							[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-							JOIN
+							INNER JOIN
 								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 								ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-							JOIN
+							INNER JOIN
 								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
 								ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
@@ -233,8 +285,8 @@ BEGIN
 							AND
 							RP.DateRoutePreparation = @Date
 							AND
-							RP.RowStatus = 1
-							
+							RP.RowStatus = 1			
+														
 						--- Verificar si la pieza de la guía ya existe dentro de las piezas registradas en la preparación de ruta
 						IF(@IdRoutePreparationDetailPiece IS NULL OR @IdRoutePreparationDetailPiece = 0)
 						BEGIN
@@ -260,7 +312,6 @@ BEGIN
 
 							IF COALESCE(@@ROWCOUNT,0) > 0
 								SET @RModified = @RModified + 1
-
 							--- Ingresar datos a tabla para retornar datos
 							INSERT INTO @ResponseTable
 									(
@@ -274,7 +325,21 @@ BEGIN
 										[GuideColdPieces],
 										[GuideReceiverDepartment],
 										[GuideReceiverTown],
-										[GuideReceiverAddress]
+										[GuideReceiverAddress],
+										[GuideReceiverIdTownShip],
+										[GuideReceiverPhone],
+										[GuideSenderDepartment],
+										[GuideSenderIdTownship],
+										[GuideSenderPhone],
+										[GuideSenderAddress],
+										[GUidePriceShippment],
+										[GuideCOD],
+										[GuideSenderFirstName],
+										[GuideSenderLastName],
+										[GuideReceiverFirstName],
+										[GuideReceiverLastName],
+										[SenderId],
+										[ReceiverId]
 							)
 							SELECT
 								@IdRoutePreparation
@@ -288,6 +353,20 @@ BEGIN
 								,DO.Receiver_Department
 								,DO.Receiver_Town
 								,DO.Receiver_Address
+								,DO.ReceiverIdTownship
+								,DO.Receiver_Phone
+								,Do.Sender_Department
+								,Do.SenderIdTownship
+								,Do.Sender_Phone
+								,Do.Sender_Address
+								,DO.PriceShippment
+								,DO.Collect_OnDelivery
+								,DO.Sender_FirstName
+								,DO.Sender_LastName
+								,DO.Receiver_FirstName
+								,DO.Receiver_LastName
+								,DO.Sender_ID
+								,DO.Receiver_ID
 							FROM
 								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 							WHERE
@@ -301,15 +380,15 @@ BEGIN
 								RPDP.TokenUpdated = @Token,
 								RPDP.DateUpdated = GETDATE()
 							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
-								JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK) 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
 									ON
 									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
 									AND
 									RPD.RowStatus = 1
-								JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
 									AND
@@ -331,9 +410,9 @@ BEGIN
 								RPD.TokenUpdated = @Token,
 								RPD.DateUpdated = GETDATE()
 							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
-								JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
 									AND
@@ -467,10 +546,291 @@ BEGIN
 				SET @FatalError = 2;
 			END
 
+			------------------------------------------------------------------------
+			----INICIO-FDD-942 UNIFICACION DE RUTERO EN PREPARACION DE ENTREGA		
+			IF @IdRoutePreparationDetail IS NOT NULL--VERIFICACION DE EXISTENCIA DE ROUTE PREPARATION 
+			   AND @FirstPieceEntered = 1 --VERIFICACIÓN DE PRIMERA PIEZA DE LA GUÍA INGRESADA, ESTO PERMITE QUE SE EJECUTE EL PROCESO POR GUIA Y NO POR PIEZA
+			BEGIN
+				SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment 	WITH(NOLOCK) WHERE Name = 'Entrega')
+				--PROCESO PARA SOPORTAR GUIAS CON DEVOLUCIÓN
+				IF @IsReturn =1
+				BEGIN 
 
+					SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment 	WITH(NOLOCK) WHERE Name = 'Devolución')
+
+				END
+				ELSE
+				BEGIN
+
+					DECLARE @BrainProcessedGuides AS TABLE
+						(GuideSerie NVARCHAR(2),
+						GuideNumber INT,
+						IsCollect BIT,
+						Price DECIMAL(18, 2),
+						COD DECIMAL(18, 2),
+						AmountPaid DECIMAL(18, 2),
+						CODPaid DECIMAL(18, 2),
+						CODIsPaid BIT,
+						PaymentTime INT,
+						TimeSequence INT,
+						FelNumber NVARCHAR(50),
+						IsPaid BIT,
+						IsCustomer INT,
+						ConditionPayment NVARCHAR(200),
+						HaveCredit BIT,
+						CollectCOD BIT,
+						ReturnRate DECIMAL(5, 2),
+						AmountToPay DECIMAL(18, 2),
+						CODAmount DECIMAL(18, 2),
+						ReturnRates DECIMAL(5, 2));
+					DECLARE @GUIDECONCAT NVARCHAR(MAX) = CONCAT(@GuideSerie, CONVERT(NVARCHAR(MAX), @GuideNumber));
+					INSERT INTO @BrainProcessedGuides
+					EXEC [dbo].[spws_get_guide_pending_payment] @GUIDECONCAT, -- Guías recibidas
+																3,            -- Tiempo de pago 2 - En recolección
+																1,            -- No es ret5orno
+																'',           -- Codeapp
+																1,            -- Identificador de modulo donde proviene
+																@Token;       -- Token de courier
+					SELECT @AmountToPay  = bpg.AmountToPay
+					FROM  @BrainProcessedGuides bpg
+				END
+
+
+				SELECT 
+					@ServiceManagementDetailId=ServiceManagementDetailId
+				FROM DBO.RoutePreparationDetail WITH(NOLOCK)
+				WHERE RoutePreparationId = @IdRoutePreparationDetail;
+			
+				IF @ServiceManagementDetailId IS NULL
+				BEGIN 					
+					DECLARE @ProvinceId INT;
+					DECLARE @TonwShipId INT;
+					DECLARE @ServiceAddress NVARCHAR(600);
+					DECLARE @ServicePhone NVARCHAR(100);
+					DECLARE @PriceShippment decimal(14,2);
+					DECLARE @GuideCOD decimal(14,2);
+					DECLARE @FirstName NVARCHAR(100);
+					DECLARE @LastName NVARCHAR(100);
+					DECLARE @CodeOfReference INT;
+					SELECT  
+						@ProvinceId=IIF(@IsReturn =1, PRV_Sender.IdProvince,PRV_Receiver.IdProvince),
+						@TonwShipId=IIF(@IsReturn =1,RT.GuideSenderIdTownShip,RT.GuideReceiverIdTownShip) ,
+						@ServiceAddress=IIF(@IsReturn = 1,GuideSenderAddress,RT.GuideReceiverAddress),
+						@ServicePhone=IIF(@IsReturn = 1,RT.GuideSenderPhone,RT.GuideReceiverPhone ),
+						@PriceShippment=RT.GUidePriceShippment,
+						@GuideCOD=RT.GuideCOD,
+						@FirstName=IIF(@IsReturn = 1,RT.GuideSenderFirstName,RT.GuideReceiverFirstName),
+						@LastName=IIF(@IsReturn = 1,RT.GuideSenderLastName,RT.GuideReceiverLastName ),
+						@CodeOfReference = IIF(@IsReturn = 1, RT.SenderId, RT.ReceiverId)
+					FROM @ResponseTable RT
+					LEFT JOIN  DBO.Township PRV_Receiver WITH(NOLOCK) ON 
+						RT.GuideReceiverIdTownShip=PRV_Receiver.IdTownship
+					LEFT JOIN  DBO.Township PRV_Sender 	WITH(NOLOCK) ON 
+						RT.GuideSenderIdTownShip=PRV_Sender.IdTownship;
+
+					SELECT 
+						TOP 1 
+							@ServiceManagementDetailId=SMD.IdServiceManagementDetail
+					FROM 
+						DeliveryBackOffice.dbo.ServiceManagementDetail SMD WITH(NOLOCK)
+						LEFT JOIN
+							DeliveryBackOffice.dbo.RoutePreparationDetail RPD WITH(NOLOCK)
+							ON
+								SMD.IdServiceManagementDetail = RPD.ServiceManagementDetailId
+								AND
+								RPD.RowStatus = 1
+						LEFT JOIN
+							DeliveryBackOffice.dbo.RoutePreparation RP WITH(NOLOCK)
+							ON
+								RPD.RoutePreparationId = RP.IdRoutePreparation
+								AND
+								RP.CatRouteId = @IdRoute
+								AND
+								RP.DateRoutePreparation = @Date
+								AND
+								RP.RowStatus = 1
+					WHERE 
+						CONVERT(DATE,SMD.ServiceStartDate)= @Date AND
+						SMD.ProvinceId=@ProvinceId AND
+						SMD.TownshipId=@TonwShipId AND
+						SMD.ServiceAddress = @ServiceAddress AND
+						SMD.ServicePhone = @ServicePhone AND
+						SMD.SubTypeServiceManagmentId = @subtypeservicemanagment
+						AND SMD.RowStatus=1
+						AND RP.IdRoutePreparation IS NOT NULL;
+
+					IF(@ProvinceId IS NULL)
+					BEGIN
+
+						SELECT
+							TOP 1
+								@ProvinceId = Twn.IdProvince
+						FROM
+							[DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
+						WHERE
+							Twn.IdTownship = @TonwShipId
+
+					END
+
+					IF @ServiceManagementDetailId IS NULL
+					BEGIN
+						SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WITH(NOLOCK) WHERE IdRoute = @IdRoute AND DateOfRoute=@Date);
+						IF @RouteAssigmentId IS NULL
+						BEGIN
+							INSERT INTO [dbo].[RouteAssigment]
+								([IdRoute]
+								,[IdCurrierMan]
+								,[IdVehicle]
+								,[DateOfRoute]
+								,[RowStatus]
+								,[TokenCreated]
+								,[DateCreated]
+								,[TokenUpdated]
+								,[DateUpdated])
+							VALUES
+								(@IdRoute
+								,NULL
+								,NULL
+								,@Date
+								,1
+								,@Token
+								,GETDATE()
+								,NULL
+								,NULL);
+
+							SET @RouteAssigmentId = SCOPE_IDENTITY();
+						END
+
+						INSERT INTO [dbo].[ServiceManagement]
+							([IdPuCourrier]
+							,[IdDlCourrier]
+							,[CiPuDate]
+							,[CoPuDate]
+							,[CiDlDate]
+							,[CoDlDate]
+							,[IdPuRouteAssigment]
+							,[IdDlRouteAssigment]
+							,[IdSchedulePickup]
+							,[IdProofOnDelivery]
+							,[RowStatus]
+							,[TokenCreated]
+							,[DateCreated]
+							,[TokenUpdated]
+							,[DateUpdated]
+							,[ServiceStatusId]
+							,[PuSignaturePath]
+							,[DiSignaturePath]
+							,[SubTypeServiceManagmentId]
+							,[IdHubDestination]
+							,[Order]
+							,[Amount]
+							,[CatPaymentTimeId])
+						VALUES
+							(NULL
+							,NULL
+							,NULL
+							,NULL
+							,NULL
+							,NULL
+							,@RouteAssigmentId
+							,NULL
+							,NULL
+							,NULL
+							,1
+							,@Token
+							,GETDATE()
+							,NULL
+							,NULL
+							,(SELECT IdServiceStatus FROM DBO.CatServiceStatus WHERE NAME = 'Creado')--<ServiceStatusId, int,>
+							,NULL
+							,NULL
+							,@subtypeservicemanagment--<SubTypeServiceManagmentId, int,>
+							,NULL
+							,1
+							,0
+							,NULL);
+
+						SET @IdServiceManagement = SCOPE_IDENTITY();
+
+						INSERT INTO [dbo].[ServiceManagementDetail]
+							([ServiceManagement]
+							,[ServiceStartDate]
+							,[ServiceEndDate]
+							,[ServiceVisitPointId]
+							,[ServiceVisitPointPortfolioId]
+							,[ServiceCustomerName]
+							,[ProvinceId]
+							,[TownshipId]
+							,[SettlementId]
+							,[ServiceAddress]
+							,[ServiceSpecialInstructions]
+							,[ServicePhone]
+							,[HubLogisticsId]
+							,[ServiceAmount]
+							,[ServiceExtraAmount]
+							,[TypeVehicleId]
+							,[SubTypeServiceManagmentId]
+							,[RowStatus]
+							,[TokenCreated]
+							,[DateCreated]
+							,[TokenUpdated]
+							,[DateUpdated])
+						VALUES
+							(@IdServiceManagement
+							,GETDATE()
+							,DATEADD(hh,20,cast(CONVERT(DATE,GETDATE()) as datetime))--HORA FIN 8PM
+							,@CodeOfReference
+							,NULL
+							,CAST(CONCAT(@FirstName,' ',@LastName) AS NVARCHAR(100))
+							,ISNULL(@ProvinceId, 7)
+							,ISNULL(@TonwShipId, 73)
+							,NULL
+							,CAST(@ServiceAddress AS NVARCHAR(500))
+							,NULL
+							,CAST(@ServicePhone AS NVARCHAR(20))
+							,NULL
+							,0
+							,0
+							,NULL
+							,@subtypeservicemanagment--<SubTypeServiceManagmentId, bigint,>
+							,1
+							,CAST(@Token AS NVARCHAR(50))
+							,GETDATE()
+							,NULL
+							,NULL);
+
+						SET @ServiceManagementDetailId = SCOPE_IDENTITY();
+
+						UPDATE RD SET
+							RD.ServiceManagementDetailId=@ServiceManagementDetailId
+						FROM DBO.RoutePreparationDetail RD
+						WHERE IdRoutePreparationDetail=@IdRoutePreparationDetail
+					END	
+					ELSE 
+					BEGIN
+
+						UPDATE RD SET
+							RD.ServiceManagementDetailId=@ServiceManagementDetailId
+						FROM DBO.RoutePreparationDetail RD
+						WHERE IdRoutePreparationDetail=@IdRoutePreparationDetail
+
+					END
+
+					UPDATE ServiceManagementDetail SET
+						ServiceAmount = IIF(@IsReturn=1,ServiceAmount,ServiceAmount+@AmountToPay),
+						ServiceExtraAmount = IIF(@IsReturn=1,0,(ServiceExtraAmount +@GuideCOD)),
+						TokenUpdated=@Token,
+						DateUpdated=GETDATE()
+					WHERE IdServiceManagementDetail = @ServiceManagementDetailId;							
+				END				
+
+			END
+			----FIN-FDD-942 UNIFICACION DE RUTERO EN PREPARACION DE ENTREGAGO
+			--------------------------------------------------------------------
 		END TRY
 		BEGIN CATCH
 			ROLLBACK TRANSACTION
+
 			--Insert en tabla de log
 			INSERT INTO [dbo].[RoutePreparationLogError]
 					   ([ErrorDescription]
@@ -494,8 +854,9 @@ BEGIN
 			SELECT 
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
-				CONVERT(BIGINT, 0) AS 'NumTransferID'
-		
+				CONVERT(BIGINT, 0) AS 'NumTransferID',
+				ERROR_LINE() AS 'ErrorLine'
+			
 		END CATCH;
 	--- END TRANSACTION
 
@@ -573,6 +934,7 @@ BEGIN
 		SELECT 
 			0 AS 'StatusCode', 
 			ERROR_MESSAGE() AS 'Description', 
-			CONVERT(BIGINT, 0) AS 'NumTransferID'
+			CONVERT(BIGINT, 0) AS 'NumTransferID',
+			ERROR_LINE() AS 'ErrorLine'
 	END
 END;

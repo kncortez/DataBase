@@ -25,12 +25,12 @@ BEGIN
         @current_BatchCODIdCommission = ISNULL(PGD.BatchCODIdCommission,BDCCM.BatchCODId),
         @dateBatchCOD = Date
     FROM 
-        DeliveryBackOffice.dbo.ProcessedGuideCOD PGD
-		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDC 		
+        DeliveryBackOffice.dbo.ProcessedGuideCOD PGD WITH(NOLOCK) 
+		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDC  WITH(NOLOCK) 		
 		ON BDC.GuideSerie = PGD.GuideSerie
         AND BDC.GuideNumber = PGD.GuideNumber
 		AND BDC.CatConceptCODId = 2
-		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDCCM 
+		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDCCM  WITH(NOLOCK) 
 		ON BDCCM.GuideSerie = PGD.GuideSerie
         AND BDCCM.GuideNumber = PGD.GuideNumber
 		AND BDCCM.CatConceptCODId = 1
@@ -46,7 +46,7 @@ BEGIN
         SELECT 
             @currentState = StatusOrderId
         FROM 
-            DeliveryBackOffice.dbo.DeliveryOrder do
+            DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number
@@ -93,6 +93,28 @@ BEGIN
         WHERE
            GuideSerie = @Guide_Serie 
            AND GuideNumber = @Guide_Number
+
+		IF( @currentState IN (5, 22, 25)) -- Entregado, entregado en express center o COD Pagado
+		BEGIN
+		
+				-------------------WEBHOOK.INI------------------------------
+					UPDATE
+						[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+					SET
+						RowStatus = 0
+						,TokenUpdated = @UserToken
+						,DateUpdated = GETDATE()
+					WHERE
+						GuideSerie = @Guide_Serie
+						AND
+						GuideNumber = @Guide_Number
+						AND
+						RowStatus = 1
+						AND
+						StatusOrderId = @currentState;
+				-------------------WEBHOOK.FIN------------------------------
+
+		END
 
         --Por ultimo se inserta en la tabla DeliveryOrderReversalStatus para tener un log de las reversiones.
         INSERT INTO [dbo].[DeliveryOrderReversalStatus]
