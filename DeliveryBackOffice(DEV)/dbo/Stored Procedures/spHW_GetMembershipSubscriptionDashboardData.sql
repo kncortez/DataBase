@@ -45,7 +45,7 @@ BEGIN
 				[M].[MembershipMaxServiceFixedValue],
 				[M].[ActualServiceCount],
 				[M].[ExpirationDate] [MembershipExpirationDate],
-				(([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) [MembershipUsagePercentage],
+				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage],
 				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
