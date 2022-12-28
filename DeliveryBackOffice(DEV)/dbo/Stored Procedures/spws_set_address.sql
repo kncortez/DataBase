@@ -27,7 +27,11 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@Neighborhood varchar(50) = NULL,
 	@Zone smallint = NULL,
 	@ProvinceTownship NVARCHAR(100) = '', -- Posible texto con datos de municipio y/o departamento concatenados
-	@IsOriginVisitPoint bit = 1
+	@IsOriginVisitPoint bit = 1,
+	@IdPopulated int = NULL,
+	@Predeterminated bit = NULL,
+	@VisibleInGuide bit = NULL,
+	@PickupsProgram bit = NULL
 	
 	
 AS

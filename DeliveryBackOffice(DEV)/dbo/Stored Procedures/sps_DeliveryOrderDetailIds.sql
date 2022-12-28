@@ -18,6 +18,7 @@
 ,@IsReturn							bit = 0
 ,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
+,@UseMembership bit=0
 AS 
 BEGIN
 
@@ -76,12 +77,15 @@ BEGIN
 		AND
 		PC.GuideNumberDestination = @GuideNumber
 		AND
+		PC.FinalActiveDate >= GETDATE()
+		AND
 		PC.RowStatus = 1), 0)
 
-
+		
 	DECLARE @RC INT;
-	IF @Price =0 AND @CouponApplied = 0
-	BEGIN
+	--SE COMENTA PARA CÁLCULAR MEMBRESÍAS
+	--IF @Price =0 AND @CouponApplied = 0 
+	--BEGIN
 		EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide
 					@GuideSerie = @GuideSerie,
 					@GuideNumber = @GuideNumber,
@@ -92,8 +96,9 @@ BEGIN
 					@SetUpdate = 'true',
 					@Token = 'sps_DeliveryOrderDetailIds',
 					@IsReturn = 'false',
-					@ParIsCreditCard = @IsCreditCardPayment
-	END
+					@ParIsCreditCard = @IsCreditCardPayment,
+					@UseMembership = @UseMembership
+	--END
 
 	select 1;
 END

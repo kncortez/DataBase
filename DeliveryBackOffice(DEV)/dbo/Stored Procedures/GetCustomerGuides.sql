@@ -113,6 +113,7 @@ BEGIN
 			Ticket_Number NVARCHAR(50),
 			Receiver_FirstName NVARCHAR(100),
 			Receiver_LastName NVARCHAR(100),
+			Receiver_Phone NVARCHAR(100),
 			IsCollect BIT,
 			PriceShippment DECIMAL(18,2),
 			Collect_OnDelivery DECIMAL(18,2),
@@ -133,6 +134,7 @@ BEGIN
 				,Ticket_Number
 				,Receiver_FirstName
 				,Receiver_LastName
+				,Receiver_Phone
 				,IsCollect
 				,PriceShippment
 				,Collect_OnDelivery
@@ -149,6 +151,7 @@ BEGIN
 				,DO.Ticket_Number
 				,DO.Receiver_FirstName
 				,DO.Receiver_LastName
+				,DO.Receiver_Phone
 				,DO.IsCollect
 				,DO.PriceShippment
 				,DO.Collect_OnDelivery
@@ -172,7 +175,7 @@ BEGIN
 			AND
 			( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
 			AND
-			( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) = LTRIM(RTRIM(@GuideFilter)) )
+			( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
 
 		IF( EXISTS(SELECT TOP 1 1 FROM #AccountFilteredGuides) )
 		BEGIN
@@ -187,12 +190,13 @@ BEGIN
 				(ISNULL(DO.Pieces_Dry,0) + ISNULL(DO.Pieces_Cold,0)) 'Pieces',
 				ISNULL(DO.Ticket_Number,'') 'Reference',
 				UPPER(LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName,' ',DO.Receiver_LastName)))) 'ReceiverName',
+				ISNULL(DO.Receiver_Phone, '') 'ReceiverPhone',
 				ISNULL(DO.IsCollect, 0) 'IsCollect',
-				DO.PriceShippment 'ServicePrice',
-				ISNULL(DO.Collect_OnDelivery, 0) 'CollectOnDelivery',
-				SO.StatusOrderId 'StatusId',
+				CAST(CAST(ISNULL(DO.PriceShippment, 0) AS MONEY) AS NVARCHAR) 'PriceService',
+				CAST(CAST(ISNULL(DO.Collect_OnDelivery, 0) AS MONEY) AS NVARCHAR) 'CollectOnDelivery',
+				SO.StatusOrderId 'IdStatus',
 				UPPER(SO.OrderDescription) 'StatusDescription',
-				ISNULL(DOPD.ShipmentCompleted, 0) 'GuideCompleted',
+				ISNULL(DOPD.ShipmentCompleted, 0) 'ShippmentComplete',
 				ISNULL((
 					CASE
 						WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN 'PENDIENTE'
@@ -209,7 +213,10 @@ BEGIN
 						ELSE UPPER(IOOMT.tio_pk_name)
 					END
 				), UPPER('pago en efectivo')) 'TypePayment',
-				UPPER(ISNULL(DO.TypeService, '')) 'ServiceType'
+				UPPER(ISNULL(DO.TypeService, '')) 'TypeService',
+				ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 'TimePayment',
+				ISNULL(CPTime.TimePlaName, '') 'TimePaymentDescription',
+				'Q.' 'CurrencySymbol'
 			FROM
 				#AccountFilteredGuides DO WITH(NOLOCK)
 				INNER JOIN

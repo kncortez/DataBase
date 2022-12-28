@@ -24,7 +24,8 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @ParInsuranceAmount decimal(12, 2) = null,
     @ParIsCreditCard bit = null,
     @ParPesos varchar(400) = null,
-    @IsReturn bit = 'false'
+    @IsReturn bit = 'false',
+	@UseMembership bit=0
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -405,7 +406,9 @@ BEGIN
                                            @CalculateTaxes = @CalculateTaxes,
                                            @CalculateMembership = 'false'
     --select tp.* from @TempRate tp
-
+	
+	 IF(@UseMembership = 1)
+	 BEGIN
     /* Membresias y Suscripciones */
     -- Oscar Morales 2022-07-21
     DECLARE @PriceShippment DECIMAL(14, 2)
@@ -854,10 +857,10 @@ BEGIN
                     VALUES
                     (
                         (
-                            SELECT SysIdSystem FROM CatSystem WHERE SysNameSystem = 'Hermes Parser'
+                            SELECT TOP 1 SysIdSystem FROM CatSystem WHERE SysNameSystem = 'Parser'
                         ),
                         (
-                            SELECT ModIdModule FROM CatModule WHERE ModPath = 'Parser'
+                            SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'Parser'
                         ),
                         @MembershipId,
                         IIF(@ServiceAppliedType = 1, NULL, @SubscriptionId),
@@ -883,6 +886,7 @@ BEGIN
         END
     END
 
+	END
     /* Termina membresías y suscripciones */
 
     print 'inicio de actualizacion de datos'

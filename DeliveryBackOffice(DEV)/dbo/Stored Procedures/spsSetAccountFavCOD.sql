@@ -16,7 +16,11 @@ CREATE PROCEDURE [dbo].[spsSetAccountFavCOD]
 	@NumberAcc varchar(30),
 	@TokenUpdate varchar(30) = null,
 	@Status int = 1,
-	@IsDefault BIT = 0
+	@IsDefault BIT = 0,
+    @PhoneNumber AS INT=null,
+    @NIT AS nvarchar(15)=null,
+	@FlagInstantDeposits AS bit=null,
+	@FlagApprovalofCODPaymentsWithTC as bit=null
 
 AS
 BEGIN

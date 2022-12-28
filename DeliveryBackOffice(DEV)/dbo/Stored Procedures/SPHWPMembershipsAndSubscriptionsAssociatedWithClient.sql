@@ -26,32 +26,34 @@ BEGIN
 					( 
 				SELECT STUFF((
 				SELECT ',{'+
-							            '"IdResult": 200',+  ',' +
-										'"Type": "MEMBERSHIP"',+  ',' +
-										'"IdCard": "' + CAST(ISNULL(M.CustomerPaymentid,0) AS VARCHAR), +'"'+  ',' +
-										'"Id":     "' + CAST(CM.IdCatMembership AS VARCHAR),  +'"'+  ',' +
-										'"Name":   "' + CM.MembershipName, +'"'+  ',' +
-										'"Attibutos": [{'+
-														 '"Id":"' + CAST(CMA.IdCatMembershipAttribute AS VARCHAR) +'"'+  ',' +
-														 '"Descripcion":"' + CMA.MembershipAttributeDescription+'"'+ ',' +
-														 '"Valor":"' + CAST(CMA.MembershipAttributeValue AS VARCHAR)+'"'+  ',' +
-														 '"Posicion":"' +CAST(CMA.MembershipAttributePosition AS VARCHAR)+'"'+  ',' +
-										                 '"Costo":"' + CAST(CM.MembershipCost AS VARCHAR)+'"'+  ',' +
-														 '"StatusMembershipt":"' + CAST(M.RowStatus AS VARCHAR)+'"'+  ',' +
-														 '"ExpirationDate":"' + CAST(FORMAT(M.ExpirationDate,'dd/MM/yyyy') AS VARCHAR)+'"'+  ',' +
-														 '"DateCreated":"' + CAST(FORMAT(M.DateCreated,'dd/MM/yyyy') AS VARCHAR)+'"'+  ',' +
-														 '"IsAutoRenewable":"' + CAST(M.IsAutoRenewable AS VARCHAR)+'"'+  ',' +
-										                 '"Tiempodevalidez":"'+CAST(CM.MembershipValidity AS VARCHAR)+'"'+  
-							                           '}]}' 
-						
-			                          
+					'"IdResult": 200',+  ',' +
+					'"Type": "MEMBERSHIP"',+  ',' +
+					'"IdPayment": "' + CAST(ISNULL(M.CustomerPaymentid,0) AS VARCHAR), +'"'+  ',' +
+					'"IdMembership":     "' + CAST(M.IdMembership AS VARCHAR),  +'"'+  ',' +
+					'"Name": "' + CM.MembershipName, +'"'+  ',' +
+					'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(M.LastPaymentDate, M.DateCreated), 103) +'"'+  ',' +
+					'"ExpirationDate": "' + CONVERT(NVARCHAR, M.ExpirationDate, 103) +'"'+  ',' +
+					'"Attibutos": [' + 
+					(
+						SELECT STUFF(
+										(
+											SELECT ',{' + '"Id":"' + CAST(CMA.IdCatMembershipAttribute AS VARCHAR) +'"'+  ',' +
+														'"Descripcion":"' + CMA.MembershipAttributeDescription+'"'+ ',' +
+														'"Posicion":"' +CAST(CMA.MembershipAttributePosition AS VARCHAR)+'"'+'}'
+											FROM [dbo].[Membership] Maux WITH(NOLOCK)
+											INNER JOIN [dbo].[CatMembershipAttribute] CMA WITH (NOLOCK)
+											ON Maux.CatMembershipId = CMA.CatMembershipId
+											WHERE Maux.IdMembership = M.IdMembership
+											FOR XML PATH(''), TYPE
+										).value('.', 'varchar(max)'),
+										1,
+										1,
+										''
+									)
+					) + ']}'                 
 				FROM  [dbo].[Membership] M
-				INNER JOIN 
-					 [dbo].[CatMembership] CM                  WITH (NOLOCK)
+				INNER JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
 					 ON M.CatMembershipId = CM.IdCatMembership
-				INNER JOIN
-					 [dbo].[CatMembershipAttribute] CMA 	   WITH (NOLOCK)
-				ON CM.IdCatMembership = CMA.CatMembershipId
 				WHERE M.AccountId = @IdAcount
 				ORDER BY CM.IdCatMembership Desc
 				FOR XML PATH(''), TYPE 
@@ -69,27 +71,32 @@ BEGIN
 						( 
 					SELECT STUFF((
 					SELECT ',{'+ 
-							
-							 
 							            '"IdResult": 200',+  ',' +
-								            '"Subscription" : [{' +
-											'"IdCard": "' + CAST(ISNULL(S.CustomerPaymentId,0) AS VARCHAR),  +'"'+  ',' +
-											'"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR), +'"'+  ',' +
-											'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
-											'"Attibutos": [{'+
-															 '"Id":"' + CAST(CSA.IdCatSubscriptionAttribute AS VARCHAR) +'"'+  ',' +
-															 '"Descripcion":"' + CSA.SubscriptionAttributeDescription+'"'+ ',' +
-															 '"Valor":"' + CAST(CSA.SubscriptionAttributeValue AS VARCHAR)+'"'+  ',' +
-															 '"Posicion":"' +CAST(CSA.SubscriptionAttributePosition AS VARCHAR)+'"'+  ',' +  
-													         '"Costo":"' + CAST(CS.SubscriptionCost AS VARCHAR)+'"'+  ',' +
-															 '"StatusSubcription":"' + CAST(S.RowStatus AS VARCHAR)+'"'+  ',' +
-															 '"ExpirationDate":"' + CONVERT(VARCHAR,S.ExpirationDate, 103 )+'"'+  ',' +
-														     '"DateCreated":"' +  CONVERT(VARCHAR,S.DateCreated, 103 )+'"'+  ',' +
-															 '"IsAutoRenewable":"' + CAST(S.IsAutoRenewable AS VARCHAR)+'"'+  ',' +
-											                 '"Tiempodevalidez":"'+CAST(CS.SubscriptionValidity AS VARCHAR)+'"'  +
-
-														  '}]' +
-														'}]}'
+								        '"Subscription" : [{' +
+										'"IdCard": "' + CAST(ISNULL(S.CustomerPaymentId,0) AS VARCHAR),  +'"'+  ',' +
+										'"IdSubscription":   "' + CAST(S.IdSubscription AS VARCHAR), +'"'+  ',' +
+										'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
+										'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(S.LastPaymentDate, S.DateCreated), 103) +'"'+  ',' +
+										'"ExpirationDate": "' + CONVERT(NVARCHAR, S.ExpirationDate, 103) +'"'+  ',' +
+										'"Attibutos": ['+
+										(
+											SELECT STUFF(
+															(
+																SELECT ',{' + '"Id":"' + CAST(CSA.IdCatSubscriptionAttribute AS VARCHAR) +'"'+  ',' +
+																			'"Descripcion":"' + CSA.SubscriptionAttributeDescription+'"'+ ',' +
+																			'"Posicion":"' +CAST(CSA.SubscriptionAttributePosition AS VARCHAR)+'"'+'}'
+																FROM [dbo].[Subscription] Saux WITH(NOLOCK)
+																INNER JOIN [dbo].[CatSubscriptionAtribute] CSA WITH (NOLOCK)
+																ON Saux.CatSubscriptionId = CSA.CatSubscriptionId
+																WHERE Saux.IdSubscription = S.IdSubscription
+																FOR XML PATH(''), TYPE
+															).value('.', 'varchar(max)'),
+															1,
+															1,
+															''
+														)
+										) + ']' +
+													'}]}'
 													
 						  
 			
@@ -97,9 +104,6 @@ BEGIN
 					INNER JOIN 
 						 [dbo].[CatSubscription] CS                 WITH (NOLOCK)
 					ON    S.CatSubscriptionId = CS.IdCatSubscription
-					INNER JOIN
-						 [dbo].[CatSubscriptionAtribute] CSA  	    WITH (NOLOCK)
-					ON CS.IdCatSubscription = CSA.CatSubscriptionId
 					WHERE S.AccountId = @IdAcount
 					ORDER BY CS.IdCatSubscription Desc
 
