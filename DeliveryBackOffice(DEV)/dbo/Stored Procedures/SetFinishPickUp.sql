@@ -457,6 +457,20 @@ BEGIN
                           OR dop.IdHeaderRecolection IS NULL
                       );
 
+				-- Quitar guías no recolectadas asociadas al servicio
+				UPDATE DeliveryOrderPaymentDetail
+                SET IdHeaderRecolection = NULL
+				FROM DeliveryOrderPaymentDetail dop
+				LEFT JOIN #listGuides LG
+					ON
+						dop.GuideNumber = LG.ItemNumber
+						AND
+						dop.GuideSerie = LG.ItemSerie
+				WHERE
+					dop.IdHeaderRecolection = @IdPickup
+					AND
+					LG.ItemNumber IS NULL
+
                 ------------------------------------------------- Actualiza su StatusId a 2 = Recoleccion todas las guias del lote -------------------------------------
 
                 UPDATE DeliveryOrder
@@ -470,6 +484,42 @@ BEGIN
                           (
                               SELECT ItemSerie FROM #listGuides
                           );
+						
+				DECLARE @CartGuides AS TABLE (
+					GuideSerie NVARCHAR(2),
+					GuideNumber INT
+				);  
+				UPDATE
+					ASCD
+				SET
+					RowStatus = 0
+					,TokenUpdated = @Token
+					,DateUpdated = GETDATE()
+				FROM
+					[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+					INNER JOIN
+						#listGuides LGE WITH(NOLOCK)
+						ON
+							ASCD.GuideSerie = LGE.ItemSerie
+							AND
+							ASCD.GuideNumber = LGE.ItemNumber
+							AND
+							ASCD.RowStatus = 1
+
+				UPDATE
+					DOPD
+				SET
+					DOPD.ShipmentCompleted = 1
+				FROM
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+					INNER JOIN
+						@CartGuides CG
+						ON
+							DOPD.GuideSerie = CG.GuideSerie
+							AND
+							DOPD.GuideNumber = CG.GuideNumber
+
+
                 /*
 						
 						-------------------WEBHOOK.INI-----------------------			

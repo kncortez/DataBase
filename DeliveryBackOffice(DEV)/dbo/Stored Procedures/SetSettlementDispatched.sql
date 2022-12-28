@@ -517,7 +517,6 @@ BEGIN
 					RA.IdRouteAssigment= URS.RouteAssignmentId
 			WHERE URS.UserSettlement IS NULL AND RA.DateOfRoute=CONVERT(DATE,GETDATE()) AND RA.IdCurrierMan=@IdCourier
 			-----------------------------------------------------------------------------------------------------------------
-
 		END TRY
 		BEGIN CATCH
 			SELECT 

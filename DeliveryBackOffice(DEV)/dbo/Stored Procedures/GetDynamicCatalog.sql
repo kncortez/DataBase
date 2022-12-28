@@ -555,7 +555,88 @@ BEGIN
         );
     END
 
+	ELSE IF (@TypeMethod = 'GetPaymentMethod')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
+                                       + '"DisplayText":"' + cpv.DisplayText + '",' 
+									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' + '}'
+                                FROM CustomerPaymentValue cpv
+								WHERE (cpv.AccountId = @IdAccount
+								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WHERE AccIdAccount = @IdAccount)))
+								AND cpv.RowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
+	ELSE IF (@TypeMethod = 'GetTypeArticle')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"ArticleTypeId":"' + CONVERT(NVARCHAR, cta.TarId) + '",'
+									   + '"ArticleType":"' + CONVERT(NVARCHAR, cta.TarName) + '",' + '}'
+                                FROM CatTypeArticle cta
+								WHERE cta.TarRowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
+	
+	ELSE IF (@TypeMethod = 'MundialPromo')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"CandidateId":"' + CONVERT(NVARCHAR, WCPC.IdWorldCupPromoCandidate) + '",'
+									   + '"CandidateName":"' + CONVERT(NVARCHAR, WCPC.WorldCupCandidateName) + '",' + '}'
+                                FROM [DeliveryBackOffice].[dbo].[WorldCupPromoCandidate] WCPC WITH(NOLOCK)
+								WHERE WCPC.RowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
+	
+	ELSE IF (@TypeMethod = 'ActiveMembership')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"ActiveMembership":' + CAST((CASE WHEN Mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END) AS NVARCHAR) + '}'
+                                FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
+								LEFT JOIN [DeliveryBackOffice].[dbo].[Membership] Mmbrshp WITH(NOLOCK)
+								ON Acc.IdCustomer = Mmbrshp.CustomerId 
+								AND acc.AccIdAccount = Mmbrshp.AccountId
+								AND Mmbrshp.RowStatus = 1
+								AND Mmbrshp.ExpirationDate >= GETDATE()
+								WHERE Acc.AccIdAccount = @IdAccount
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
     SELECT '[' + @jsonResult + ']' FormatJson;
 

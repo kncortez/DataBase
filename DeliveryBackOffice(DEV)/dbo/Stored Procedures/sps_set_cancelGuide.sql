@@ -12,7 +12,20 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#listGuidesDisabled', 'U') IS NOT NULL
 		 DROP TABLE #listGuidesDisabled;
 
-
+	--Variabes Membresías y suscripciones
+	DECLARE @MembershipId INT
+	DECLARE @SubscriptionId INT
+	DECLARE @MembershipSubscriptionLogId BIGINT
+	DECLARE @i INT
+	DECLARE @TblGuidesMembership TABLE(
+		Id INT IDENTITY(1,1),
+		GuideSerie NVARCHAR(2),
+		GuideNumber INT,
+		UNIQUE NONCLUSTERED (Id) 
+	)
+	DECLARE @GuideSerieMembership NVARCHAR(2)
+	DECLARE @GuideNumberMembership INT 
+	-------------------------------------
 
 	SELECT *
     INTO #TblListGuides
@@ -73,7 +86,74 @@ IF ((SELECT COUNT(1)FROM #listGuidesDisabled) <= 0)
                                        @Token UserCreated,
                                        GETDATE()
                                 FROM #listGuidesEnabled lge
+			
+			--Membresías y suscripciones
+			--Oscar Morales 25/07/2022
 
+			INSERT INTO @TblGuidesMembership (GuideSerie, GuideNumber)
+				SELECT
+					Guide_Serie
+				   ,Guide_Number
+				FROM #listGuidesEnabled
+
+			SET @i = 0;
+
+			WHILE EXISTS (SELECT TOP 1
+					1
+				FROM @TblGuidesMembership)
+			BEGIN
+				SET @i = @i + 1;
+				SELECT
+					@GuideSerieMembership = GuideSerie
+				   ,@GuideNumberMembership = GuideNumber
+				FROM @TblGuidesMembership
+				WHERE Id = @i
+
+				DELETE FROM @TblGuidesMembership
+				WHERE Id = @i
+
+				SET @MembershipSubscriptionLogId = NULL
+
+				SELECT
+					@MembershipSubscriptionLogId = IdMembershipSubscriptionLog
+					,@MembershipId = MembershipId
+					,@SubscriptionId = SubscriptionId
+				FROM MembershipSubscriptionLog 
+				WHERE LogGuideSerie = @GuideSerieMembership
+				AND LogGuideNumber = @GuideNumberMembership
+				AND RowStatus = 1
+
+				IF @MembershipSubscriptionLogId IS NOT NULL
+				BEGIN
+
+					UPDATE MembershipSubscriptionLog 
+					SET RowStatus = 0
+						,TokenUpdated = @Token
+						,DateUpdated = GETDATE()
+					WHERE IdMembershipSubscriptionLog = @MembershipSubscriptionLogId
+
+					IF @SubscriptionId IS NULL
+					BEGIN
+					
+						UPDATE Membership 
+						SET ActualServiceCount = ActualServiceCount - 1
+							,TokenUpdated = @Token
+							,DateUpdated = GETDATE()
+						WHERE IdMembership = @MembershipId
+					END
+					ELSE
+					BEGIN
+					
+						UPDATE Subscription
+						SET ActualServiceCount = ActualServiceCount - 1
+							,TokenUpdated = @Token
+							,DateUpdated = GETDATE()
+						WHERE IdSubscription = @SubscriptionId
+					END
+
+				END
+			END
+			--Termina Membresías y suscripciones
                                    
 			END TRY
 			BEGIN CATCH

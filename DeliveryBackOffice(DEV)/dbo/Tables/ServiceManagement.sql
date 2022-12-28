@@ -69,3 +69,7 @@ GO
 CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup]
     ON [dbo].[ServiceManagement]([IdSchedulePickup] ASC);
 
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si el servicio esta siendo realizado por el courier asignado actualmente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'IsActiveService';
+

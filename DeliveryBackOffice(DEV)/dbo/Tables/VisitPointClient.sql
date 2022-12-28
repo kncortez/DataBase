@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[VisitPointClient] (
+﻿CREATE TABLE [dbo].[VisitPointClient] (
     [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
     [DescriptionOfClient]     NVARCHAR (100) NULL,
@@ -28,6 +28,7 @@ CREATE TABLE [dbo].[VisitPointClient] (
     [SaleChannelId]           INT            NULL,
     [ExcludePriceShippingCOD] BIT            NULL,
     [ExcludeCommissionCOD]    BIT            NULL,
+    [IsOriginVisitPoint]      BIT            CONSTRAINT [DF_VisitPointClient_IsOriginVisitPoint] DEFAULT ((1)) NOT NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPBusiness] FOREIGN KEY ([IdKindOfVPBusiness]) REFERENCES [dbo].[KindOfVPBusiness] ([IdKindOfVPBusiness]),
@@ -36,6 +37,8 @@ CREATE TABLE [dbo].[VisitPointClient] (
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 
