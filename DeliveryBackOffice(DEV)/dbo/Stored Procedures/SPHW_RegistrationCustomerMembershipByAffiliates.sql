@@ -8,14 +8,14 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationCustomerMembershipByAffiliates]
 @Idaffiliate AS INT,
 @OriginalAmountOfConsumption AS Decimal(18,2),
 @FinalAmountAfterApplyingDiscount AS Decimal(18,2),
-@InvoiceIdentifier AS INT=0,
+@InvoiceIdentifier AS nvarchar(200)='',
 @Token nvarchar(50)
 AS
 BEGIN
 
 
 DECLARE @CatMembershipId AS INT =(SELECT  CatMembershipId FROM [dbo].[Membership] WHERE IdMembership = @IdMembership)
-
+DECLARE @Affiliate AS INT=(Select AffiliateId From [dbo].[RegisterUserByAffiliate] WHERE RegisterUserId=@Idaffiliate)
 BEGIN TRANSACTION
 BEGIN TRY
 
@@ -36,11 +36,11 @@ BEGIN TRY
 		 VALUES
 		 (
 		  @IdMembership,
-		  @Idaffiliate,
+		  @Affiliate,
 		  @InvoiceIdentifier,
 		  @OriginalAmountOfConsumption,
-		  (SELECT DiscountValueType FROM  [dbo].[MembershipAffiliateDiscount] WHERE CatMembershipId = @CatMembershipId AND AffiliateId = @Idaffiliate ),
-		  (SELECT DiscountValue     FROM  [dbo].[MembershipAffiliateDiscount] WHERE CatMembershipId = @CatMembershipId AND AffiliateId = @Idaffiliate ),
+		  (SELECT DiscountValueType FROM  [dbo].[MembershipAffiliateDiscount] WHERE CatMembershipId = @CatMembershipId AND AffiliateId = @Affiliate ),
+		  (SELECT DiscountValue     FROM  [dbo].[MembershipAffiliateDiscount] WHERE CatMembershipId = @CatMembershipId AND AffiliateId = @Affiliate),
 		  @OriginalAmountOfConsumption - @FinalAmountAfterApplyingDiscount,
 		  @FinalAmountAfterApplyingDiscount,
 		  1,
