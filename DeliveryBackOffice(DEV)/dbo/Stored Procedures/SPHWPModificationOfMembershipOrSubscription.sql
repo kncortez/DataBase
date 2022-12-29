@@ -13,7 +13,7 @@ CREATE PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
 	@ModulId AS INT = NULL, --  pagina o form desde donde se hizo la operación 
 	@SystemId AS INT , --  1 y 2 web o 
  	@Token AS NVARCHAR(50),
-	@IsAutoRenewable AS INT = 0,
+	@IsAutoRenewable AS bit = 0,
 	@UpdateCustomerPaymentId AS INT = 0
 AS
 BEGIN
@@ -59,7 +59,7 @@ BEGIN
 						UPDATE  [dbo].[Membership] 
 						   SET IsAutoRenewable   = @IsAutoRenewable,
 						       CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
-						WHERE AccountId = @IdAccount AND CatMembershipId = @IdSalePackage
+						WHERE AccountId = @IdAccount AND IdMembership = @IdSalePackage
 
 					
 
@@ -93,7 +93,7 @@ BEGIN
 					UPDATE  [dbo].[Subscription] 
 								   SET IsAutoRenewable   = @IsAutoRenewable,
 									   CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
-								WHERE AccountId = @IdAccount AND CatSubscriptionId = @IdSalePackage
+								WHERE AccountId = @IdAccount AND IdSubscription = @IdSalePackage
 
 			
 
