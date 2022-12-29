@@ -13,15 +13,15 @@ CREATE PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
 	@ModulId AS INT = NULL, --  pagina o form desde donde se hizo la operación 
 	@SystemId AS INT , --  1 y 2 web o 
  	@Token AS NVARCHAR(50),
-	@IsAutoRenewable AS INT = 0,
+	@IsAutoRenewable AS bit = 0,
 	@UpdateCustomerPaymentId AS INT = 0
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	--SET NOCOUNT ON;
-	DECLARE @StatusMembershipt INT = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[Membership] WITH   (NOLOCK) WHERE AccountId =   @IdAccount    AND RowStatus = 1 AND CatMembershipId = @IdSalePackage)​
-	DECLARE @StatusSubcription INT = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[Subscription] WITH (NOLOCK) WHERE AccountId = @IdAccount  AND RowStatus = 1 AND CatSubscriptionId = @IdSalePackage)​
+	DECLARE @StatusMembershipt INT = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[Membership] WITH   (NOLOCK) WHERE AccountId =   @IdAccount    AND RowStatus = 1 AND IdMembership = @IdSalePackage)​
+	DECLARE @StatusSubcription INT = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[Subscription] WITH (NOLOCK) WHERE AccountId =   @IdAccount    AND RowStatus = 1 AND IdSubscription = @IdSalePackage)​
 	DECLARE @JsonResponse NVARCHAR(MAX) = '';
 	DECLARE @HasCredit BIT = 0;
 	DECLARE @ClientType INT = 0;
@@ -59,7 +59,7 @@ BEGIN
 						UPDATE  [dbo].[Membership] 
 						   SET IsAutoRenewable   = @IsAutoRenewable,
 						       CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
-						WHERE AccountId = @IdAccount AND CatMembershipId = @IdSalePackage
+						WHERE AccountId = @IdAccount AND IdMembership = @IdSalePackage
 
 					
 
@@ -93,7 +93,7 @@ BEGIN
 					UPDATE  [dbo].[Subscription] 
 								   SET IsAutoRenewable   = @IsAutoRenewable,
 									   CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
-								WHERE AccountId = @IdAccount AND CatSubscriptionId = @IdSalePackage
+								WHERE AccountId = @IdAccount AND IdSubscription = @IdSalePackage
 
 			
 

@@ -1402,6 +1402,7 @@
     <Build Include="dbo\Stored Procedures\spHW_GetMembershipSubscriptionDashboardData.sql" />
     <Build Include="dbo\Stored Procedures\spHAW_GetDiscountForMembershipByAffiliate.sql" />
     <Build Include="dbo\Stored Procedures\GetAffiliateLogIn.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationCustomerMembershipByAffiliates.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
