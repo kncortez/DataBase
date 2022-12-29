@@ -1,4 +1,5 @@
 ﻿
+
 -- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2022-12-27>
@@ -175,6 +176,7 @@ AS
                             BEGIN
                                 IF @StatusUser = 1 -- usuario activo
                                     BEGIN
+										PRINT 'Generar token'
                                         -- GENERAR TOKEN 
                                         DECLARE @Token AS NVARCHAR(50)=
                                         (
@@ -235,7 +237,7 @@ AS
 											, ModIdModule INT
 											, SUBMODULES VARCHAR(MAX)
 										);
-
+										
 										SELECT @TOTALSUBMODULES = (
 											SELECT 
 												COUNT(cmo.ModIdModule) 
@@ -503,16 +505,18 @@ AS
 
 		    FOR XML PATH(''), TYPE
 		   ).value('.', 'varchar(max)'),1,1,''
-		   			  )) 				
+		   			  )) 	
+					  
 END
-
-         SET @jsonResult =
+	
+								SET @jsonResult =
                                         (
                                             SELECT STUFF(
                                         (
                                             SELECT '{"IdResult":200' + ',' + '"Token":"' + @Token + '",' + '"Modules":[' + ISNULL(@JsonModules,'No hay módulos') + '],' + '"Accounts":[' + @JsonAccounts + '],' + '"Profile":[' + CASE WHEN @VERIFYUSER > 0 THEN @JsonProfile + ',' + @JsonProfileEXP ELSE @JsonProfile END + ']' + '}' FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)'), 1, 1, '')
                                         );
+
                                     END;
                                     ELSE
                                     BEGIN
@@ -585,5 +589,5 @@ END
 
         -- retornar resultado en formato json
 
-        SELECT('[{' + @jsonResult + ']') jsonResult;
+        SELECT('{' + @jsonResult ) jsonResult;
     END;

@@ -7,6 +7,7 @@ CREATE PROCEDURE [dbo].[sphw_RegisterRecollectionRequest]
 	-- Add the parameters for the stored procedure here
 	@TAC1 BIT = NULL,
 	@TAC2 BIT = NULL,
+	@TAC3 BIT = NULL,
 	@Scheduled BIT = NULL,
 	@CodeOfReference int,
     @TypeVehicleId INT = NULL,
@@ -39,6 +40,13 @@ BEGIN
 				-1 AS 'ServiceId';
 		END
 		ELSE IF @TAC2 = 0
+		BEGIN
+			SELECT			  
+				0 AS 'StatusCode',
+				'Términos y condiciones de seguro no aceptados' AS 'Description',
+				-1 AS 'ServiceId';
+		END
+		ELSE IF @TAC3 = 0
 		BEGIN
 			SELECT			  
 				0 AS 'StatusCode',
@@ -199,7 +207,7 @@ BEGIN
 						NULL,
 						NULL
 				 FROM DBO.TermsAndConditions 				 
-				 WHERE NAME IN ('Collection Services Terms and Conditions','Declaration no content of illegal products');
+				 WHERE NAME IN ('Collection Services Terms and Conditions','Declaration no content of illegal products', 'Insurance acknowledgement');
 			---------------------
 			
             DECLARE @TempGuides TABLE
