@@ -1155,8 +1155,6 @@
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes_guides.sql" />
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidateGuideStatus.sql" />
-    <Build Include="dbo\Tables\WorldCupPromoCandidate.sql" />
-    <Build Include="dbo\Tables\WorldCupCandidateByAccount.sql" />
     <Build Include="dbo\Tables\WebhookType.sql" />
     <Build Include="dbo\Tables\WebhookTrackingQueue.sql" />
     <Build Include="dbo\Tables\WebhookRestrinctionByUser.sql" />
@@ -1258,7 +1256,6 @@
     <Build Include="dbo\Stored Procedures\UpdateSalePackageStatusAndPayment.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePickupServiceHub.sql" />
     <Build Include="dbo\Stored Procedures\UpdatePaymentMethod.sql" />
-    <Build Include="dbo\Stored Procedures\StateCatalogforServices_JARP.sql" />
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\spwh_SetPickupStatus.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintMultipleGuides.sql" />
@@ -1381,7 +1378,6 @@
     <Build Include="dbo\Stored Procedures\GetNearestCourierCandidates.sql" />
     <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
     <Build Include="dbo\Stored Procedures\GetGuideDataForETP.sql" />
-    <Build Include="dbo\Stored Procedures\GetDetailedTrackingDataOfGuide_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\GetDetailedTrackingDataOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerPaymentData.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuides.sql" />

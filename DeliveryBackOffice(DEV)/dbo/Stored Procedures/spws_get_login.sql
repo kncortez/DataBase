@@ -23,6 +23,11 @@ BEGIN
     DECLARE @StatusUser BIT;
     DECLARE @IdUser BIGINT;
     DECLARE @StatusAccount CHAR(1);
+    --	declare @Username as nvarchar(100)='a.cesarene@gmail.com'
+    --	declare	@Password as nvarchar(100)='7hFMXRrKI3G0addPtjwAHA=='
+    --	declare @IdSystem as int = 1 
+    --	DECLARE	@IP AS NVARCHAR(30) ='localhost'
+    -- validar usuario y contraseña
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -35,6 +40,7 @@ BEGIN
         WHERE ru.UsrEmail = @Username
               AND ru.UsrRowStatus = 1
     );
+
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
@@ -149,6 +155,8 @@ BEGIN
                     DECLARE @JsonProfile NVARCHAR(MAX);
                     DECLARE @JsonProfileEXP NVARCHAR(MAX) = N'';
 
+
+
                     -- obtener modulos a los que tiene acceso el usuario logueado
                     /*tabla temporal ModIdModule*/
                     DECLARE @TOTALSUBMODULES INT = 0,
@@ -221,6 +229,8 @@ BEGIN
                             ModIdModuleCHILD INT
                         );
 
+                        --	IF (@VERIFYUSER  > 0 )
+                        --BEGIN
 						DELETE @TBSUBMODULES2 WHERE 1=1
                         INSERT INTO @TBSUBMODULES2
                         (
@@ -261,14 +271,23 @@ BEGIN
 
                         SELECT @CHILDSMENU = COUNT(1)
                         FROM @TBSUBMODULES2;
-						PRINT 'CHILDSMENU';
                         PRINT @CHILDSMENU;
                         WHILE @CHILDSMENU > 0
                         BEGIN
                             SELECT @CHILDSMD
                                 = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",'
                                   + '"Path":"' + cmo.ModPath + '"},'
-                            FROM [dbo].CatModule cmo
+                            FROM /*RegisterUser us
+                                                 INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
+                                                                                              AND rua.RuaRowStatus = 1
+                                                 INNER JOIN dbo.RolByModuleBySystem rms ON rms.RmsIdRol = rua.RuaIdRol
+                                                          AND rms.RmsRowStatus = 1
+                                                 INNER JOIN */
+                                [dbo].CatModule cmo --ON cmo.ModIdModule = rms.RmsIdModule
+                            --AND cmo.ModRowStatus = 1
+                            --AND cmo.ModVisible = 1
+                            --AND cmo.ModIdModuleParent IS NOT NULL
+                            --INNER JOIN [dbo].CatRol rol ON rol.RolIdRol = rms.RmsIdRol
                             WHERE cmo.ModIdModule =
                             (
                                 SELECT TMP.ModIdModuleCHILD
@@ -289,15 +308,14 @@ BEGIN
                         SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
                         SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
                     END;
-					PRINT 'END SUBMODULOES'
+
                     /*END SUBMODULOES*/
                     SET @JsonModules =
                     (
                         SELECT STUFF(
                                         (
                                             SELECT ',{"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata
-                                                   + '",' + '"Path":"' + cmo.ModPath + '",' + '"MenuId":' + CAST(ISNULL(rms.RmsModuleMenu,1) AS NVARCHAR)  + ',' + '"GroupId":' + CAST(ISNULL(cmo.ModGroup,0) AS NVARCHAR)  + ','
-												   + '"NewFunction":' + CAST(ISNULL(rms.RmsHasNewFunction,0) AS NVARCHAR) + ',' + '"Rol":"' + rol.RolName
+                                                   + '",' + '"Path":"' + cmo.ModPath + '",' + '"Rol":"' + rol.RolName
                                                    + (CASE
                                                           WHEN LEN(ISNULL(TMP.SUBMODULES, '')) > 0 THEN
                                                               '",' + '"SubModule":[' + COALESCE(TMP.SUBMODULES, '')
@@ -345,13 +363,10 @@ BEGIN
                                                              'Express'
                                                          ELSE
                                                              ta.TacName
-                                                     END + '",' 
-												   + '"IdCustomer":"' + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
-												   + '"RolName":"' + ro.RolName + '",' 
-												   + '"ImageProfile":"' + ISNULL(ac.ImageProfile,'') + '",' 
-												   + '"StarRating":"' + CONVERT( VARCHAR(1),ISNULL(ac.StarRating,0)) + '",' 
-												   + '"VerifiedEmail.":"' + IIF(ac.AccConfirm ='C','1','0') + '",' 
-												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +' "}'
+                                                     END + '",' + '"IdCustomer":"'
+                                                   + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",' 
+												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +'
+"}'
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
@@ -384,7 +399,7 @@ BEGIN
 					-- Valida el valor en la tabla; 1 = TRUE, si fuera 0 o NULL devuelve FALSE
 					DECLARE @TAC VARCHAR(5) = CASE WHEN @ValTAC = 1 THEN 'TRUE' ELSE 'FALSE' END
 					-- FIN MODIFICACIÓN
-					PRINT 'jsonprofile line 394'
+
                     SET @JsonProfile =
                     (
                         SELECT STUFF(
@@ -396,9 +411,8 @@ BEGIN
                                                    + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                    + CONVERT(VARCHAR, us.UsrNickName) + '",' + '"Phone":"'
 												   -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                                   + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",'
-												   + '"VerifiedPhone.":"' + CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone,'false')) + '",' 
-												   + '"TAC":"' + @TAC + '"}'
+                                                   + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",' + '"TAC":"' 
+												   + @TAC + '"}'
 												   -- FIN MODIFICACIÓN
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
@@ -437,7 +451,6 @@ BEGIN
 
                     IF (@VERIFYUSER > 0)
                     BEGIN
-					PRINT '@JsonProfileEXP line 447'
                         SET @JsonProfileEXP =
                         (
                             SELECT STUFF(

@@ -13,8 +13,8 @@ DECLARE @PATH VARCHAR(250)
 
 	SELECT TOP 1
 		@PATH=ISNULL(RTRIM(V.LastPath) + '\' + RTRIM(P.filepath),'')
-	FROM [HOP_LINKEDSERVER_QA].HOP.HOP.DOCDATAPAGE P
-	INNER JOIN [HOP_LINKEDSERVER_QA].HOP.HOP.REPOSITORIESVOLUMES V ON V.VolumeNum = P.logicalfolder AND v.RepNum=p.repnum
+	FROM HOP.HOP.DOCDATAPAGE P
+	INNER JOIN HOP.HOP.REPOSITORIESVOLUMES V ON V.VolumeNum = P.logicalfolder AND v.RepNum=p.repnum
 	INNER JOIN (
 			-- BUSCAR EN TABLA DE VOUCHERS  (KeyItem2)
 			/*SELECT D.*
@@ -28,14 +28,14 @@ DECLARE @PATH VARCHAR(250)
 			UNION*/
 			-- BUSCAR EN TABLA DE COMPROBANTES (KeyItem4)
 			SELECT D.*
-			FROM   [HOP_LINKEDSERVER_QA].HOP.HOP.DOCDATA d ,
-				[HOP_LINKEDSERVER_QA].HOP.HOP.KEYITEM4 ki4
+			FROM   HOP.HOP.DOCDATA d ,
+				HOP.HOP.KEYITEM4 ki4
 			WHERE  
 				(d.itemid = ki4.ITEMNUM AND ki4.KEYVALUECHAR = @IdDoc)
 				AND d.status = 0
 				AND ( d.doctypeid IN ( 12 ) ) -- voucher y comprobante de entrega
 		) AS I ON I.itemid = P.itemid
-	INNER JOIN [HOP_LINKEDSERVER_QA].HOP.HOP.DOCTYPES dt ON dt.DOCTYPEID = I.doctypeid 
+	INNER JOIN HOP.HOP.DOCTYPES dt ON dt.DOCTYPEID = I.doctypeid 
 	and dt.DOCTYPEID IN (/*7,*/12)
 
 	-- remove physical path and replace it for predefined folder in webpage

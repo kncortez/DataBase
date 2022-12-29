@@ -25,7 +25,7 @@ BEGIN
 	  left join [DeliveryBackOffice].[dbo].[SMS_Sent] ss with(nolock)
 	  on do.Guide_Serie=ss.Sent_Guide_Series and do.Guide_Number=ss.Sent_Guide_Number
 	  where do.DateCreatedInSystem>=@LastUpdate
-	  and   CAST(do.DateCreatedInSystem as date)>=CAST('2022-10-24' as date)
+	  and   CAST(do.DateCreatedInSystem as date)>=CAST('2022-03-07' as date)
 	  and (
 		(do.StatusOrderId=11 and (@ElementId = 1001 or @ElementId = 1002) and ISNULL(ss.SentTypeStatus,0) = 0 and ISNULL(ss.Sent,0) = 0) 
 		/*or 
@@ -79,7 +79,7 @@ BEGIN
 		,RTRIM(LTRIM(ISNULL(/*IIF(do.Sender_ID <> 0,VPC.DescriptionOfClient,*/do.Sender_FirstName +' ' + do.Sender_LastName /*)*/,'') ))
 		,' https://forzadelivery.com/rastreo/' + do.Guide_Serie 
 		  + convert(varchar,do.Guide_Number)
-		, IIF(SDFG.GuideToken IS NOT NULL, CONCAT( ' https://staging.forzadelivery.io/' , SDFG.GuideToken ),'')
+		, IIF(SDFG.GuideToken IS NOT NULL, CONCAT( ' https://forzadelivery.io/' , SDFG.GuideToken ),'')
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	left join DeliveryBackOffice.dbo.VisitPointClient VPC with(nolock) ON VPC.CodeOfReference = do.Sender_ID
