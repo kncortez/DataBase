@@ -8,7 +8,7 @@
     [DateCreated]                   DATETIME     NOT NULL,
     [TokenUpdated]                  VARCHAR (50) NULL,
     [DateUpdated]                   DATETIME     NULL,
-    CONSTRAINT [PK__TermsAnd__28A2DA8AFF294DD3] PRIMARY KEY CLUSTERED ([IdTermsAndConditionsByService] ASC),
+    PRIMARY KEY CLUSTERED ([IdTermsAndConditionsByService] ASC),
     CONSTRAINT [FK_TACBYSERVICE_SERVICEM] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement]),
     CONSTRAINT [FK_TACBYSERVICE_TAC] FOREIGN KEY ([TermsAndConditionsId]) REFERENCES [dbo].[TermsAndConditions] ([IdTAC])
 );
