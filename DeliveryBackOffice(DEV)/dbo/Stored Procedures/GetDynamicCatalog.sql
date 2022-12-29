@@ -358,6 +358,8 @@ BEGIN
     END;
     ELSE IF (@TypeMethod = 'GetCorporateCustomers')
     BEGIN
+	
+		DECLARE @ActiveSalesPackageId INT = ( SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI )
 
         SET @jsonResult =
         (
@@ -372,7 +374,9 @@ BEGIN
                                        + '",' + '"Address":"' + ISNULL(REPLACE(vpc.[Address], '"', ''), '') + '",'
                                        + '"Province":"' + ISNULL(pr.ProvinceName, '') + '",' + '"Township":"'
                                        + ISNULL(TWS.TownshipName, '') + '",' + '"HeaderCode":"'
-                                       + ISNULL(TWS.HeaderCode, '') + '",' + '"HasRate":"'
+                                       + ISNULL(TWS.HeaderCode, '') + '",' 
+									   + '"HasMembership":' + CONVERT(NVARCHAR, ISNULL((CASE WHEN mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END), 0)) + ','
+									   + '"HasRate":"'
                                        + CONVERT(NVARCHAR, ISNULL(rc.[RbcRowStatus], '')) + '",' + '"HasCredit":"'
                                        + CONVERT(
                                                     NVARCHAR,
@@ -383,10 +387,10 @@ BEGIN
                                                               ''
                                                           )
                                                 ) + '",' + '"Billing":' + '[{' + '"EntityName":"'
-                                       + REPLACE(ISNULL([InvoiceName], ''), '"', '') + '",' + '"TaxId":"'
-                                       + ISNULL([TaxIdentificationNumber], '') + '",' + '"TaxAddress":"'
-                                       + REPLACE(ISNULL([FiscalAddress], ''), '"', '') + '",' + '"TaxEmail":"'
-                                       + REPLACE(ISNULL([InvoiceEmail], ''), CHAR(31), '') + '"' + '}]' + ','
+                                       + REPLACE(ISNULL(Cu.[InvoiceName], ''), '"', '') + '",' + '"TaxId":"'
+                                       + ISNULL(Cu.[TaxIdentificationNumber], '') + '",' + '"TaxAddress":"'
+                                       + REPLACE(ISNULL(Cu.[FiscalAddress], ''), '"', '') + '",' + '"TaxEmail":"'
+                                       + REPLACE(ISNULL(Cu.[InvoiceEmail], ''), CHAR(31), '') + '"' + '}]' + ','
                                        + '"Cod":' + '[{' + '"IdBank":"'
                                        + CONVERT(NVARCHAR, ISNULL([CODAccountBankID], '')) + '",'
                                        + '"BankDescription":"'
@@ -418,6 +422,11 @@ BEGIN
                                         ON TWS.IdTownship = STL.IdTownship 
                                     LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH(NOLOCK)
                                         ON pr.IdProvince = TWS.IdProvince
+									LEFT JOIN DeliveryBackOffice.dbo.Membership mmbrshp WITH(NOLOCK)
+										ON cu.IdCustomer = mmbrshp.CustomerId
+										AND mmbrshp.RowStatus = 1
+										AND mmbrshp.ExpirationDate >= GETDATE()
+										AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
                                 WHERE IdCustomerType = 1
                                       AND cu.RowSatus = 1
 									   

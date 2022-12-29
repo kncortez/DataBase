@@ -19,13 +19,15 @@ DECLARE @IdAccount INT;
 DECLARE @IdUser INT;
 DECLARE @jsonResult NVARCHAR(MAX);
 
+DECLARE @ActiveSalesPackageId INT = ( SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI )
+
 IF (@Email='')
 
 BEGIN
 
 SELECT TOP 1 @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.Person 
-JOIN dbo.RegisterUser ru ON ru.UsrIdPerson = PerIdPerson
-JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
+INNER JOIN dbo.RegisterUser ru ON ru.UsrIdPerson = PerIdPerson
+INNER JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
 WHERE PerIdentification= @DPI
 
 END
@@ -35,7 +37,7 @@ ELSE
 BEGIN
 
 SELECT @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.RegisterUser 
-JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
+INNER JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
 WHERE UsrEmail = @Email
 
 END
@@ -50,6 +52,7 @@ SET @jsonResult =
 										+'"Name":"' + ISNULL(cu.[Name], '') + '",'
 										+'"Email":"' + ISNULL(ru.[UsrEmail], '') + '",'
 										+'"Phone":"' + ISNULL(ru.[Phone], '') + '",'
+										+'"HasMembership":' + CONVERT(NVARCHAR, ISNULL((CASE WHEN mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END), 0)) + ','
 										+'"Addresses":[' + 
 										ISNULL((SELECT STUFF(( 
 													select  
@@ -73,9 +76,9 @@ SET @jsonResult =
 
 													from dbo.RolByUserByAccount  rua
 														inner join dbo.UserAddress ua on ua.UadIdAccount = rua.RuaIdAccount
-														join dbo.Township twn on twn.IdTownship = ua.UadIdTownship
-														join dbo.Province prv on prv.IdProvince = twn.IdProvince
-														join dbo.CatCityPlace ctp on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
+														inner join dbo.Township twn on twn.IdTownship = ua.UadIdTownship
+														inner join dbo.Province prv on prv.IdProvince = twn.IdProvince
+														inner join dbo.CatCityPlace ctp on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
 													where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser and ua.UadRowStatus = 1
 													FOR XML PATH(''), TYPE
 															).value('.', 'varchar(max)'),1,1,''
@@ -83,8 +86,13 @@ SET @jsonResult =
 										+ ']'
                                         +'}'
                                 FROM DeliveryBackOffice.dbo.Account ac 
-								JOIN DeliveryBackOffice.dbo.Customer cu ON cu.IdCustomer = ac.IdCustomer
-								JOIN DeliveryBackOffice.dbo.RegisterUser ru ON ru.UsrIdUser = @IdUser
+								INNER JOIN DeliveryBackOffice.dbo.Customer cu ON cu.IdCustomer = ac.IdCustomer
+								INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru ON ru.UsrIdUser = @IdUser
+								LEFT JOIN DeliveryBackOffice.dbo.Membership mmbrshp WITH(NOLOCK)
+									ON cu.IdCustomer = mmbrshp.CustomerId
+									AND mmbrshp.RowStatus = 1
+									AND mmbrshp.ExpirationDate >= GETDATE()
+									AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
 								WHERE ac.AccIdAccount = @IdAccount
 							
                                 

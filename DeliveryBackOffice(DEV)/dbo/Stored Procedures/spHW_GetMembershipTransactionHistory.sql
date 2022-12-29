@@ -14,6 +14,8 @@ BEGIN
 	DECLARE @CUSTOMER_ID AS INT;					-- Customer
 	DECLARE @MEMBERSHIP_STATUS_ACTIVE_ID AS INT;	-- CatSalesPackageStatus
 	DECLARE @MEMBERSHIP_STATUS_INACTIVE_ID AS INT;	-- CatSalesPackageStatus
+	DECLARE @NULL_STATUS_ORDER AS INT;				-- StatusOrder
+	DECLARE @DESTROYED_STATUS_ORDER AS INT;			-- StatusOrder
 
 	SET @CUSTOMER_ID = (SELECT	[A].[IdCustomer]
 						FROM	[dbo].[Account] A
@@ -33,11 +35,19 @@ BEGIN
 								AND [M].[RowStatus] = 1
 								AND [M].[CatMembershipStatusId] IN (@MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID));
 
+	SET @NULL_STATUS_ORDER = (	SELECT	[SO].[StatusOrderId]
+								FROM	[dbo].[StatusOrder] SO
+								WHERE	[SO].[OrderDescription] = 'Anulado');
+
+	SET @DESTROYED_STATUS_ORDER = (	SELECT	[SO].[StatusOrderId]
+									FROM	[dbo].[StatusOrder] SO
+									WHERE	[SO].[OrderDescription] = 'Paquete destruido');
+
 	-- Membership data
 	SELECT		[M].[IdMembership],
 				[M].[CustomerId],
-				([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) [MembershipRemainingUses],
-				(([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) [MembershipUsagePercentage]
+				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) < 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipRemainingUses],
+				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage]
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
@@ -48,18 +58,22 @@ BEGIN
 		AND		[M].[CatMembershipStatusId] IN (@MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID);
 
 	-- Membership history
-	SELECT	[MSL].[IdMembershipSubscriptionLog],
-			CONCAT([MSL].[LogGuideSerie], [MSL].[LogGuideNumber]) [Guide],
-			[MSL].[DateCreated] [Date],
-			[MSL].[LogGuideOriginalValue] [OriginalAmount],
-			[MSL].[LogGuideNewValue] [NewAmount],
-			([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied]
-	FROM	[dbo].[MembershipSubscriptionLog] MSL
-	WHERE	[MSL].[CustomerId] = @CUSTOMER_ID
-		AND [MSL].[MembershipId] = @MEMBERSHIP_ID
-		AND [MSL].[SubscriptionId] IS NULL
-		AND [MSL].[RowStatus] = 1
-		AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
+	SELECT		[MSL].[IdMembershipSubscriptionLog],
+				CONCAT([MSL].[LogGuideSerie], [MSL].[LogGuideNumber]) [Guide],
+				[MSL].[DateCreated] [Date],
+				[MSL].[LogGuideOriginalValue] [OriginalAmount],
+				[MSL].[LogGuideNewValue] [NewAmount],
+				([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied]
+	FROM		[dbo].[MembershipSubscriptionLog] MSL
+	INNER JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		ON		[MSL].[LogGuideSerie] = [DO].[Guide_Serie]
+		AND		[MSL].[LogGuideNumber] = [DO].[Guide_Number]
+		AND		[DO].[StatusOrderId] NOT IN (@NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER)
+	WHERE		[MSL].[CustomerId] = @CUSTOMER_ID
+		AND		[MSL].[MembershipId] = @MEMBERSHIP_ID
+		AND		[MSL].[SubscriptionId] IS NULL
+		AND		[MSL].[RowStatus] = 1
+		AND		[MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
 
 	-- Subscription Data
 	SELECT		[S].[IdSubscription],
@@ -73,8 +87,8 @@ BEGIN
 				[S].[IsAutoRenewable],
 				[S].[SubscriptionMaxServiceFixedValue],
 				[S].[ActualServiceCount],
-				([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) [SubscriptionRemainingUses],
-				(([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) [SubscriptionUsagePercentage],
+				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) < 0, 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionRemainingUses],
+				IIF((([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) > 100, 100, (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue])) [SubscriptionUsagePercentage],
 				[S].[DateCreated],
 				[S].[ExpirationDate]
 	FROM		[dbo].[Subscription] S
@@ -114,6 +128,10 @@ BEGIN
 				([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied],
 				[MSL].[DateCreated] [Date]
 	FROM		[dbo].[MembershipSubscriptionLog] MSL
+	INNER JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		ON		[MSL].[LogGuideSerie] = [DO].[Guide_Serie]
+		AND		[MSL].[LogGuideNumber] = [DO].[Guide_Number]
+		AND		[DO].[StatusOrderId] NOT IN (@NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER)
 	WHERE		[MSL].[MembershipId] = @MEMBERSHIP_ID
 		AND		[MSL].[SubscriptionId] IS NOT NULL
 		AND		[MSL].[RowStatus] = 1

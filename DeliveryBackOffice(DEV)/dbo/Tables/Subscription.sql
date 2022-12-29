@@ -20,6 +20,13 @@
     [TokenUpdated]                     NVARCHAR (50)   NULL,
     [DateUpdated]                      DATETIME        NULL,
     [LastPaymentDate]                  DATETIME        NULL,
+    [RenewalFixedDay]                  INT             NULL,
     CONSTRAINT [PK_Subscription] PRIMARY KEY CLUSTERED ([IdSubscription] ASC)
 );
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Día  el cual se desea poder renovar la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'RenewalFixedDay';
 

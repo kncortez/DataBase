@@ -78,7 +78,7 @@ BEGIN
 			​
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Membership]
-				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress)
+				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress, RenewalFixedDay)
 			OUTPUT inserted.IdMembership INTO @AuxNewMEmbership(IdNewMembership)
 			SELECT
 				CM.IdCatMembership
@@ -106,6 +106,7 @@ BEGIN
 				,@TaxName
 				,@InvoiceEmail
 				,@FiscalAddress
+				,DAY(GETDATE())
 			FROM
 				[DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			WHERE
@@ -185,7 +186,7 @@ BEGIN
 
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Subscription]
-				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated)
+				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RenewalFixedDay)
 			OUTPUT inserted.IdSubscription INTO @AuxNewSubscriptions(IdNewSubscriptions)
 			SELECT
 			    IIF(@CustomerType = 2, NULL, @ActiveMembershipId) 
@@ -210,6 +211,7 @@ BEGIN
 				,1
 				,@Token
 				,GETDATE()
+				,DAY(GETDATE())
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			WHERE
