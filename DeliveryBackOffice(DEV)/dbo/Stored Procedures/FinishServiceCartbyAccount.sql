@@ -97,12 +97,22 @@ BEGIN
 					CONCAT(CG.GuideSerie, CG.GuideNumber) = CCTBCmain.OrderNumber
 					AND
 					CCTBCmain.ReasonCode = '00'
+			LEFT JOIN -- Guías con membresia o suscripción y monto 0
+				[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
+				ON
+					CG.GuideSerie = MSL.LogGuideSerie
+					AND
+					CG.GuideNumber = MSL.LogGuideNumber
+					AND
+					MSL.LogGuideNewValue = 0
 		WHERE
 			DOPD.DopId IS NOT NULL
 			OR
 			CCTBCdet.IdTransaction IS NOT NULL
 			OR
 			CCTBCmain.IdTransaction IS NOT NULL
+			OR
+			MSL.IdMembershipSubscriptionLog IS NOT NULL
 		
 		-- Actualizar guías validas que fueron procesadas
 		UPDATE

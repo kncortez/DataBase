@@ -290,7 +290,9 @@ set arithabort on;
                     on br.IdCost = cst.IdCost
             WHERE cst.IdProduct = 1
                   AND cst.ProductNumber = concat('FD', @GuideNumber)
-                  and br.Description = 'Recargo por pago con tarjeta'
+                  and (br.Description = 'Recargo por pago con tarjeta'
+				  or br.Description = 'Otros recargos'
+				  )
                   and br.RowStatus = 'true'
                   and br.Amount > 0
         )
@@ -1257,7 +1259,7 @@ set arithabort on;
                                                       ) + '",' + '"Currency":"' + tr.Currency + '"' + '}',
                                              ' ')
                                        + iif((tr.CreditCardRate) > 0,
-                                             ',{"Description":"' + 'Recargo por pago con tarjeta' + '",' + '"Price":"'
+                                             ',{"Description":"' + 'Otros recargos' + '",' + '"Price":"'
                                              + convert(
                                                           varchar(20),
                                                           dbo.fnt_Iva_Calculator(

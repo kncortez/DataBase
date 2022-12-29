@@ -1247,7 +1247,7 @@ BEGIN
 						'"Price":"' +convert(varchar(20), convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.OverWeightRate, 'false'))) + '",' +
 						'"Currency":"' + @Currency + '"' +
 						'}' ,' '  ) +
-						iif((tr.CreditCardRate)>0, ',{"Description":"' + 'Recargo por pago con tarjeta' + '",' + 
+						iif((tr.CreditCardRate)>0, ',{"Description":"' + 'Otros recargos' + '",' + 
 						'"Price":"' + convert(varchar(20), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CreditCardRate, 'false') ) + '",' +
 						'"Currency":"' + COALESCE(@Currency,'') + '"' +
 						'}' ,' '  ) +

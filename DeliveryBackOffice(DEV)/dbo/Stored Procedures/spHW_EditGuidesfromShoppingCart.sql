@@ -9,7 +9,8 @@ CREATE PROCEDURE [dbo].[spHW_EditGuidesfromShoppingCart]
 @NewInsuranceAmount AS Decimal(12,2) = NULL,
 @NewCollect_OnDelivery AS Decimal(14,2) = NULL,
 @IdDeliveryFavCOD AS INT = NULL,
-@Token AS NVARCHAR(50)
+@Token AS NVARCHAR(50),
+@GuideUsedMembership BIT = 0
 AS
 BEGIN
 	
@@ -72,6 +73,7 @@ BEGIN
 				,@SetUpdate = 'true' -- Actualizar registros
 				,@Token = @Token
 				,@ParIsCreditCard = @IsTCCPaid
+				,@UseMembership = @GuideUsedMembership
 
 			COMMIT TRANSACTION
 				SELECT 

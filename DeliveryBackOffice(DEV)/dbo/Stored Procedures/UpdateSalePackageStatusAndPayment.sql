@@ -78,7 +78,7 @@ BEGIN
 						Mmshp
 					SET
 						Mmshp.LastPaymentDate = @FixedDate
-						,Mmshp.ExpirationDate = DATEADD(DAY, CM.MembershipValidity, @FixedDate)
+						,Mmshp.ExpirationDate = (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 1, @FixedDate) )) <= Mmshp.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 1, @FixedDate) ) ELSE DATEADD(MONTH, 1, @FixedDate) END)
 						,Mmshp.CatMembershipStatusId = @ActiveStatus
 						,Mmshp.ActualServiceCount = 0
 						,Mmshp.RowStatus = 1
@@ -299,7 +299,7 @@ BEGIN
 						Sbscrptn
 					SET
 						Sbscrptn.LastPaymentDate = @FixedDate2
-						,Sbscrptn.ExpirationDate = DATEADD(DAY, CS.SubscriptionValidity, @FixedDate2)
+						,Sbscrptn.ExpirationDate = (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 1, @FixedDate2) )) <= Sbscrptn.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 1, @FixedDate2) ) ELSE DATEADD(MONTH, 1, @FixedDate2) END)
 						,Sbscrptn.CatSubscriptionStatusId = @ActiveStatus
 						,Sbscrptn.ActualServiceCount = 0
 						,Sbscrptn.RowStatus = 1

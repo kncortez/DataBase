@@ -12,6 +12,7 @@ AS
 BEGIN
 	
 	DECLARE @IdCustomer AS INT = (SELECT TOP 1 IdCustomer FROM dbo.Account WHERE AccIdAccount = @IdAccount)
+        SET @EndDate  = Format(GETDATE(),'yyyy-MM-dd');
 	
 	SET NOCOUNT ON;
 
@@ -29,7 +30,7 @@ BEGIN
 		SET @EndDate    = Format(GETDATE(),'yyyy-MM-dd');
 
 
-		SELECT		
+    SELECT		
 		   s1.GuideNumber
 		  ,s1.Receiver
 		  ,s1.FechaEntrega
@@ -103,8 +104,6 @@ BEGIN
 
 
 		) s1
-		WHERE 
-			LTRIM(RTRIM(ISNULL(s1.FechaEntrega,''))) <> ''
 		ORDER BY s1.[AuthorizationDate] ASC;
 	END
 	ELSE
@@ -183,8 +182,6 @@ BEGIN
 
 
 		) s1
-		WHERE 
-			LTRIM(RTRIM(ISNULL(s1.FechaEntrega,''))) <> ''
 		ORDER BY s1.[AuthorizationDate] ASC;
 
 	END

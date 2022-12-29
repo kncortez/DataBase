@@ -105,10 +105,15 @@ BEGIN
 					,do.Collect_OnDelivery
 					,ISNULL(CAST(do.DCBA_ID AS NVARCHAR), '') 'DCBA_ID'
 					,ISNULL(CAST(do.InsuranceAmount AS NVARCHAR),'') InsuranceAmount
+					,(CASE WHEN ISNULL(MSL.IdMembershipSubscriptionLog, 0) > 0 THEN 'true' ELSE 'false' END) UsedMembership
 				FROM AccountServiceCartDetail ascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = ascd.GuideSerie
 					AND do.Guide_Number = ascd.GuideNumber
+				LEFT JOIN DeliveryBackOffice.dbo.MembershipSubscriptionLog MSL WITH(NOLOCK)
+					ON ascd.GuideSerie = MSL.LogGuideSerie
+					AND ascd.GuideNumber = MSL.LogGuideNumber
+					AND MSL.RowStatus = 1
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 				AND ascd.RowStatus = 1
 
