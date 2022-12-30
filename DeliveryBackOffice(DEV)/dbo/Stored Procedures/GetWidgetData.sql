@@ -4,7 +4,10 @@
 -- Create date: <2022-08-18>
 -- Description:	< Método dinamico para obtener datos para Widgets del lado de portal web  >
 -- =============================================
-
+/*
+	Actualización: Actualizar texto de íconos quemados en estructura de respuesta
+	Autor: Jerson Ochoa - 30-12-2022
+*/
 CREATE PROCEDURE [dbo].[GetWidgetData]
 	
 	@AccoundId BIGINT,
@@ -105,7 +108,7 @@ BEGIN
 						'Piezas' 'TopText',
 						ISNULL(TotalGuide,0) 'BottomValue',
 						'Envíos realizados' 'BottomText',
-						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'bi bi-box-seam' 'WidgetIcon'
 					FROM
 						@ResponseTable
 				END
@@ -119,7 +122,7 @@ BEGIN
 						'Piezas' 'TopText',
 						0 'BottomValue',
 						'Envíos realizados' 'BottomText',
-						'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'bi bi-box-seam' 'WidgetIcon'
 				END
 
 			END
@@ -133,7 +136,7 @@ BEGIN
 					'Piezas' 'TopText',
 					0 'BottomValue',
 					'Envíos realizados' 'BottomText',
-					'bi bi-box-seam fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					'bi bi-box-seam' 'WidgetIcon'
 			END
 		END
 		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
@@ -176,7 +179,7 @@ BEGIN
 						'Monto pagado COD' 'TopText',
 						ISNULL(TotalPendingCoD,0) 'BottomValue',
 						'Total por cobrar' 'BottomText',
-						'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'bi bi-cash' 'WidgetIcon'
 					FROM
 						@ResponseCoDTable
 				END
@@ -190,7 +193,7 @@ BEGIN
 						'Monto pagado COD' 'TopText',
 						0 'BottomValue',
 						'Total por cobrar' 'BottomText',
-						'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'bi bi-cash' 'WidgetIcon'
 				END
 			END
 			ELSE
@@ -203,7 +206,7 @@ BEGIN
 					'Monto pagado COD' 'TopText',
 					0 'BottomValue',
 					'Total por cobrar' 'BottomText',
-					'bi bi-cash fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					'bi bi-cashSettlement' 'WidgetIcon'
 			END
 
 		END
@@ -307,8 +310,8 @@ BEGIN
 							ISNULL(VelocidadEntregaDia,0) 'TopValue',
 							'Velocidad de entrega' 'TopText',
 							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
-							'% de entregas' 'BottomText',
-							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+							'Entregas' 'BottomText',
+							'fas fa-paper-plane' 'WidgetIcon'
 						FROM
 							@ResponseVelTable
 					END
@@ -321,8 +324,8 @@ BEGIN
 							0 'TopValue',
 							'Velocidad de entrega/día' 'TopText',
 							0 'BottomValue',
-							'% de entregas' 'BottomText',
-							'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+							'Entregas' 'BottomText',
+							'fas fa-paper-plane' 'WidgetIcon'
 					END
 
 				END
@@ -335,8 +338,8 @@ BEGIN
 						0 'TopValue',
 						'Velocidad de entrega/día' 'TopText',
 						0 'BottomValue',
-						'% de entregas' 'BottomText',
-						'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'Entregas' 'BottomText',
+						'fas fa-paper-plane' 'WidgetIcon'
 				END
 
 			END
@@ -350,7 +353,7 @@ BEGIN
 					'Velocidad de entrega/día' 'TopText',
 					0 'BottomValue',
 					'% de entregas' 'BottomText',
-					'fas fa-paper-plane fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					'fas fa-paper-plane' 'WidgetIcon'
 			END
 
 		END
@@ -407,7 +410,7 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						ISNULL(TotalCompletedPickups,0) 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'fa fa-shipping-fast' 'WidgetIcon'
 					FROM
 						@ResponseServicesTable
 				END
@@ -421,7 +424,7 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						0 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+						'fa fa-shipping-fast' 'WidgetIcon'
 				END
 
 			END
@@ -435,7 +438,7 @@ BEGIN
 					'Recolecciones pendientes' 'TopText',
 					0 'BottomValue',
 					'Recolecciones completadas' 'BottomText',
-					'fa fa-shipping-fast fa-3x fa-lg float-right mr-4' 'WidgetIcon'
+					'fa fa-shipping-fast' 'WidgetIcon'
 			END
 		END
 		ELSE
