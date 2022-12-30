@@ -1160,6 +1160,9 @@
     <Build Include="dbo\Stored Procedures\spHW_GetMembershipTransactionHistory.sql" />
     <Build Include="dbo\Stored Procedures\GetAffiliateLogIn.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromServiceCart.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWPMembershipsAndSubscriptionsAssociatedWithClient.sql" />
+    <Build Include="dbo\Stored Procedures\SPHWPMembershipOrSubscriptions.sql" />
+    <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
