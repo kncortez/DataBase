@@ -3,6 +3,10 @@
 -- Create date: <Create Date,12/07/2022>
 -- Description:	<Description,muestra las membresias y credenciales disponibles con su respectivo detalle>
 -- =============================================
+/*
+	Actualización: Ordenar atributos de acuerdo a campo AttributePosition
+	Autor: Jerson Ochoa - 30-12-2022
+*/
 CREATE PROCEDURE [dbo].[SPHWPMembershipOrSubscriptions]
 -- Add the parameters for the stored procedure here
   
@@ -48,7 +52,7 @@ BEGIN
 							  
 			
 																from  [dbo].[CatMembershipAttribute] CMA     where CatMembershipId= CM.IdCatMembership
-
+																order by [CMA].[MembershipAttributePosition]
 																FOR XML PATH(''), TYPE 
 													) 
 																.value('.', 'varchar(max)'),1,1,'' 
@@ -106,7 +110,7 @@ BEGIN
 							  
 			
 																			from  [dbo].[CatSubscriptionAtribute] CSA    where CatSubscriptionId = CS.IdCatSubscription
-
+																			ORDER BY [CSA].[SubscriptionAttributePosition]
 																				FOR XML PATH(''), TYPE 
 																				) 
 																						.value('.', 'varchar(max)'),1,1,'' 

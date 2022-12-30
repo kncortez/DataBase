@@ -3,6 +3,10 @@
 -- Create date: <Create Date,2022-07-20>
 -- Description:	<Description, lista de membresias y suscripciones asociadas al cliente>
 -- =============================================
+/*
+	Actualización: Ordenar atributos de acuerdo a campo AttributePosition
+	Autor: Jerson Ochoa - 30-12-2022
+*/
 CREATE PROCEDURE [dbo].[SPHWPMembershipsAndSubscriptionsAssociatedWithClient]
 	-- Add the parameters for the stored procedure here
 	@IdAcount AS BIGINT,
@@ -44,6 +48,7 @@ BEGIN
 											INNER JOIN [dbo].[CatMembershipAttribute] CMA WITH (NOLOCK)
 											ON Maux.CatMembershipId = CMA.CatMembershipId
 											WHERE Maux.IdMembership = M.IdMembership
+											ORDER BY [CMA].[MembershipAttributePosition]
 											FOR XML PATH(''), TYPE
 										).value('.', 'varchar(max)'),
 										1,
@@ -89,6 +94,7 @@ BEGIN
 																INNER JOIN [dbo].[CatSubscriptionAtribute] CSA WITH (NOLOCK)
 																ON Saux.CatSubscriptionId = CSA.CatSubscriptionId
 																WHERE Saux.IdSubscription = S.IdSubscription
+																ORDER BY [CSA].[SubscriptionAttributePosition]
 																FOR XML PATH(''), TYPE
 															).value('.', 'varchar(max)'),
 															1,
