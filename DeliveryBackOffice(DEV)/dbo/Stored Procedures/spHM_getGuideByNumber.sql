@@ -39,7 +39,7 @@ BEGIN
 				[DO].[Receiver_Town],
 				[DO].[Receiver_Department],
 				[DO].[Receiver_Address],
-				COALESCE([DO].[Receiver_Zone], 0) AS Receiver_Zone,
+				COALESCE([DO].[Receiver_Zone], '0') AS Receiver_Zone,
 				COALESCE([DO].[HubDestinationId], 0) AS HubDestinationId,
 				[HL].[HubAbbreviation],
 				COALESCE([DO].[StatusOrderId], 0) AS StatusOrderId,
@@ -53,7 +53,9 @@ BEGIN
 				[SO].[OrderDescription] = 'Recolectado' OR
 				[SO].[OrderDescription] = 'Arribó a las instalaciones' OR
 				[SO].[OrderDescription] = 'En inventario' OR
-				[SO].[OrderDescription] = 'En Tránsito')
+				[SO].[OrderDescription] = 'En Tránsito' OR
+				[SO].[OrderDescription] = 'En preparación de traslado' OR
+				[SO].[OrderDescription] = 'Trasladado a Hub')
 		WHERE	[DO].[Guide_Serie] = @GuideSerie
 		AND		[DO].[Guide_Number] = @GuideNumber;
 

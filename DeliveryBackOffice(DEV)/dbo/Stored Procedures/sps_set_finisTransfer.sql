@@ -71,26 +71,28 @@ BEGIN
             TokenUpdated = @TokenCreated,
             DateUpdated = GETDATE()
         FROM DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement dos
+                ON dos.ID = dsd.ID_DeliveryOrderBySettlement
             INNER JOIN #listGuidesEnabled lge
                 ON dsd.Guide_Serie = lge.Guide_Serie
-                   AND lge.Guide_Number = dsd.Guide_Number
-			INNER JOIN DeliveryOrderBySettlement dobs
-				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
-		WHERE dsd.RowStatus = 1
-		AND CAST(dobs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
+                   AND lge.Guide_Number = dsd.Guide_Number;
+            /*INNER JOIN DeliveryOrderBySettlement dobs
+                ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
+        WHERE dsd.RowStatus = 1
+              AND CAST(dobs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)*/
 
-		UPDATE rpd 
-		SET RowStatus = 0,
-			TokenUpdated = @TokenCreated,
-			DateUpdated = GETDATE()
-		FROM RoutePreparationDetail rpd
-		INNER JOIN #listGuidesEnabled lge
-			ON rpd.Guide_Serie = lge.Guide_Serie
-			AND rpd.Guide_Number = lge.Guide_Number
-		INNER JOIN RoutePreparation rp
-			ON rpd.RoutePreparationId = rp.IdRoutePreparation
-		WHERE rpd.RowStatus = 1
-			AND rp.DateRoutePreparation = CAST(GETDATE() AS DATE)
+        UPDATE rpd
+        SET RowStatus = 0,
+            TokenUpdated = @TokenCreated,
+            DateUpdated = GETDATE()
+        FROM RoutePreparationDetail rpd
+            INNER JOIN #listGuidesEnabled lge
+                ON rpd.Guide_Serie = lge.Guide_Serie
+                   AND rpd.Guide_Number = lge.Guide_Number
+            INNER JOIN RoutePreparation rp
+                ON rpd.RoutePreparationId = rp.IdRoutePreparation
+        WHERE rpd.RowStatus = 1
+              AND rp.DateRoutePreparation = CAST(GETDATE() AS DATE)
 
         -- Actualizar registros del detalle de servicios de devolución
         UPDATE std

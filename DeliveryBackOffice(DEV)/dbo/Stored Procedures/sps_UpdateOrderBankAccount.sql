@@ -13,7 +13,6 @@ BEGIN
 
     update [DeliveryBackOffice].[dbo].DeliveryOrder
 	set DCBA_ID= @Id_BankAccount
-	where Guide_Number = @Guide_Number
-
-	
+	WHERE Guide_Serie = 'FD' AND
+	Guide_Number = @Guide_Number
 END

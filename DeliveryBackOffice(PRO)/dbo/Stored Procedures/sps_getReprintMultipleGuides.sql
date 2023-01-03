@@ -3,6 +3,11 @@
 -- Create date: <2022-10-27>
 -- Description:	<Genera los datos necesarios para poder realizar una reimpresión de guía>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2022-12-20>
+-- Description:	<Agregar Campos de Piezas Frías y piezas Secas>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY
@@ -227,6 +232,8 @@ BEGIN
 								--COALESCE(@integrationCost, '') 'Integration',
                                 COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') 'Priority',
 								COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
+								COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') 'Pieces_Dry' ,
+                                COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'')  'Pieces_Cold',
 								(CASE
 									WHEN 
 										(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
@@ -246,8 +253,10 @@ BEGIN
                                       ON vp.CodeOfReference = dev.Sender_ID
                                   LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
                                       ON ctm.IdCustomer = dev.IdCustomer
-                                  LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)
-                                      ON acc.IdCustomer = ctm.IdCustomer
+                                  OUTER APPLY(
+									SELECT  TOP 1 acc1.AccIdAccount FROM  DeliveryBackOffice.dbo.Account acc1 WITH (NOLOCK)
+                                      WHERE acc1.IdCustomer = ctm.IdCustomer
+								  )acc
                                   LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount rbu WITH (NOLOCK)
                                       ON rbu.RuaIdAccount = acc.AccIdAccount
                                   LEFT JOIN DeliveryBackOffice.dbo.RegisterUser rgu WITH (NOLOCK)

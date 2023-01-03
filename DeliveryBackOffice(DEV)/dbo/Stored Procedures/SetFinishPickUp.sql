@@ -38,6 +38,8 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+	
+
     DECLARE @jsonResult NVARCHAR(MAX);
     DECLARE @jsonResult1 NVARCHAR(MAX);
     DECLARE @jsonResult2 NVARCHAR(MAX);
@@ -455,6 +457,20 @@ BEGIN
                           OR dop.IdHeaderRecolection IS NULL
                       );
 
+				-- Quitar guías no recolectadas asociadas al servicio
+				UPDATE DeliveryOrderPaymentDetail
+                SET IdHeaderRecolection = NULL
+				FROM DeliveryOrderPaymentDetail dop
+				LEFT JOIN #listGuides LG
+					ON
+						dop.GuideNumber = LG.ItemNumber
+						AND
+						dop.GuideSerie = LG.ItemSerie
+				WHERE
+					dop.IdHeaderRecolection = @IdPickup
+					AND
+					LG.ItemNumber IS NULL
+
                 ------------------------------------------------- Actualiza su StatusId a 2 = Recoleccion todas las guias del lote -------------------------------------
 
                 UPDATE DeliveryOrder
@@ -468,6 +484,42 @@ BEGIN
                           (
                               SELECT ItemSerie FROM #listGuides
                           );
+						
+				DECLARE @CartGuides AS TABLE (
+					GuideSerie NVARCHAR(2),
+					GuideNumber INT
+				);  
+				UPDATE
+					ASCD
+				SET
+					RowStatus = 0
+					,TokenUpdated = @Token
+					,DateUpdated = GETDATE()
+				FROM
+					[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+					INNER JOIN
+						#listGuides LGE WITH(NOLOCK)
+						ON
+							ASCD.GuideSerie = LGE.ItemSerie
+							AND
+							ASCD.GuideNumber = LGE.ItemNumber
+							AND
+							ASCD.RowStatus = 1
+
+				UPDATE
+					DOPD
+				SET
+					DOPD.ShipmentCompleted = 1
+				FROM
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+					INNER JOIN
+						@CartGuides CG
+						ON
+							DOPD.GuideSerie = CG.GuideSerie
+							AND
+							DOPD.GuideNumber = CG.GuideNumber
+
+
                 /*
 						
 						-------------------WEBHOOK.INI-----------------------			
@@ -668,7 +720,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.SenderReceiver sr
                         INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp
                             ON ltp.LogTokenPOD = @Token
-                               AND ltp.RowStatus = 1
+                               --AND ltp.RowStatus = 1
                                AND ltp.IdCourierman = sr.ID
                 );
 
@@ -732,7 +784,7 @@ BEGIN
                 -- asignar valor a la variable ModName
                 SET @ModName = N'Courier App';
 
-                SELECT @DataOriginId = cm.ModIdModule
+                SELECT  TOP 1 @DataOriginId = cm.ModIdModule
                 FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                 WHERE cm.ModName = @ModName;
 
@@ -749,7 +801,7 @@ BEGIN
                        lge.ItemSerie GuideSerie,
                        lge.ItemNumber GuideNumber,
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -804,6 +856,23 @@ BEGIN
                                     ''
                                 )
                 );
+
+				 INSERT INTO dbo.RoutePreparationLogError
+        (
+            ErrorDescription,
+            ErrorNumber,
+            ErrorProcedure,
+            ErrorLine,
+            GuideSerie,
+            GuideNumber,
+            TokenCreated,
+            DateCreated
+        )
+        VALUES
+        (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)), ERROR_LINE(),
+         0  , 0, 'SetFinishPickup', GETDATE());
+
+
             END CATCH;
             IF @@TRANCOUNT > 0
             BEGIN
