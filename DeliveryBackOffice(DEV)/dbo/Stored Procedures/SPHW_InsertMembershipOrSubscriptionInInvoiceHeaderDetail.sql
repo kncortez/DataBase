@@ -40,7 +40,7 @@ BEGIN
 	DECLARE		@dti_quantity decimal(10, 5)=1
 	DECLARE		@dti_measurement varchar(20)='UND'
 	DECLARE		@dti_priceUnit money
-	DECLARE		@dti_description varchar(MAX)=(Select [Description] From [dbo].[CatArticleSAP] WITH (NOLOCK) Where Name='MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI) 
+	DECLARE		@dti_description varchar(MAX)=(Select TOP 1 [Description] From [dbo].[CatArticleSAP] WITH (NOLOCK) Where Name='MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI) 
 	DECLARE		@dti_IVA money
 	DECLARE		@dti_amount money
 	DECLARE		@dti_dateRegister datetime=GETDATE()
@@ -48,16 +48,18 @@ BEGIN
 	DECLARE		@SAPCode nvarchar(50)=(Select TOP 1 SAPCode From [dbo].[CatArticleSAP] WITH (NOLOCK) Where Name='MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI)
 	DECLARE		@SendToInvoice bit=1
 	DECLARE     @Descriptionp AS NVARCHAR(500)
+	DECLARE     @SuscriptionDesc AS NVARCHAR(200)
 
+	SET @SuscriptionDesc = (SELECT Top 1 ISNULL(SubscriptionName,'') FROM [dbo].[CatSubscription] WITH (NOLOCK) WHERE IdCatSubscription= @IdSalePackage)
 
-	IF(@TypeSalePackage ='Plan Básico')
-		 SET @dti_description = (Select TOP 1[Description] From [dbo].[CatArticleSAP] WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL A' COLLATE Latin1_General_CI_AI)
-	ELSE IF(@TypeSalePackage ='Plan Básico +')
-		SET  @IdSalePackage = (Select TOP 1[Description] From [dbo].[CatArticleSAP]   WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL B' COLLATE Latin1_General_CI_AI)
-    ELSE IF(@TypeSalePackage = 'Plan Gold')
-	    SET  @dti_description =(Select TOP 1 [Description] From [dbo].[CatArticleSAP]  WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL C' COLLATE Latin1_General_CI_AI)
-	ELSE IF(@TypeSalePackage = 'Plan Corporativo')
-	    SET @dti_description =(Select TOP 1 [Description] From [dbo].[CatArticleSAP]   WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL D' COLLATE Latin1_General_CI_AI)
+	     IF(@SuscriptionDesc ='Plan Básico' AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI)
+		                SET  @dti_description = (Select TOP 1[Description] From [dbo].[CatArticleSAP] WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL A' COLLATE Latin1_General_CI_AI)
+	ELSE IF(@SuscriptionDesc ='Plan Básico +' AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI)
+		                SET  @dti_description = (Select TOP 1[Description] From [dbo].[CatArticleSAP]   WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL B' COLLATE Latin1_General_CI_AI)
+    ELSE IF(@SuscriptionDesc = 'Plan Gold' AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI)
+	                    SET  @dti_description =(Select TOP 1 [Description] From [dbo].[CatArticleSAP]  WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL C' COLLATE Latin1_General_CI_AI)
+	ELSE IF(@SuscriptionDesc = 'Plan Corporativo' AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI)
+	                   SET  @dti_description =(Select TOP 1 [Description] From [dbo].[CatArticleSAP]   WITH (NOLOCK) Where [Name]='SUSCRIPCION MENSUAL D' COLLATE Latin1_General_CI_AI)
 	
 
 
@@ -82,7 +84,7 @@ BEGIN TRY
 				 M.RowStatus = 1 AND 
 				 CM.IdCatMembership = @IdSalePackage
 
-				SET @dti_description = @dti_description 
+				
 		 
 
 		END
@@ -191,11 +193,11 @@ BEGIN TRY
 
 		COMMIT TRANSACTION
 
-		SELECT Result=1,'Transacción exitosa' AS 'Description' ,@dti_fk_header IdInvoice
+		SELECT Result=1,'Transacción exitosa' AS 'Description' ,@dti_fk_header IdInvoice, @inv_cli_email inv_cli_email,  @Token Token
 END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION
 		SELECT Result=0,	
-		       ERROR_MESSAGE() AS 'Description', IdInvoice=0
+		       ERROR_MESSAGE() AS 'Description', IdInvoice=0,@dti_fk_header IdInvoice, @inv_cli_email inv_cli_email,  @Token Token
 	END CATCH
 END
