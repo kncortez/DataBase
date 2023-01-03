@@ -16,3 +16,10 @@
     CONSTRAINT [FK_Township_Province] FOREIGN KEY ([IdProvince]) REFERENCES [dbo].[Province] ([IdProvince])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222011]
+    ON [dbo].[Township]([TownshipName] ASC);
+

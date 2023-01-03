@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[RouteAssigment] (
+﻿CREATE TABLE [dbo].[RouteAssigment] (
     [IdRouteAssigment] INT          IDENTITY (1, 1) NOT NULL,
     [IdRoute]          INT          NULL,
     [IdCurrierMan]     INT          NULL,
@@ -18,6 +18,8 @@ CREATE TABLE [dbo].[RouteAssigment] (
 
 
 
+
+
 GO
 
 
@@ -30,4 +32,10 @@ CREATE NONCLUSTERED INDEX [NonClusteredIndex-20220329-145059]
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdRoute_DateOfRoute]
     ON [dbo].[RouteAssigment]([IdRoute] ASC, [DateOfRoute] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DateOfRoute]
+    ON [dbo].[RouteAssigment]([DateOfRoute] ASC)
+    INCLUDE([IdCurrierMan], [DateCreated]);
 

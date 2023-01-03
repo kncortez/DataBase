@@ -23,6 +23,7 @@ AS
         );
         DECLARE @IdUser					AS BIGINT;
         DECLARE @Email					AS VARCHAR(200);
+        DECLARE @UserName				AS VARCHAR(200);
         DECLARE @PasswordVerification	AS NVARCHAR(MAX);
         DECLARE @IdUserUPDATE			AS BIGINT;
         DECLARE @IdResult				AS INT;
@@ -131,16 +132,18 @@ AS
                                         END;
                                         ELSE
                                         BEGIN
-                                            SET @IdUserUPDATE =
-                                            (
-                                                SELECT us.UsrIdUser
+                                            SELECT 
+                                                @IdUserUPDATE = us.UsrIdUser,
+												@UserName = prs.PerFirstName,
+												@Email = us.UsrEmail
                                                 FROM RegisterUser us
                                                      INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                                                                                                  AND rua.RuaRowStatus = 1
+                                                        AND rua.RuaRowStatus = 1
                                                      INNER JOIN [dbo].Account ac ON ac.AccIdAccount = rua.RuaIdAccount
-                                                                                    AND ac.AccRowStatus = 1
+                                                        AND ac.AccRowStatus = 1
+                                                     LEFT JOIN [dbo].Person prs ON us.UsrIdPerson= prs.PerIdPerson
                                                 WHERE ac.AccIdAccount = @IdAccount
-                                            );
+
                                             UPDATE RegisterUser
                                               SET 
                                                   UsrLastPassword = @Password, 
@@ -199,5 +202,6 @@ AS
         -- retornar resultado en formato json
 
         SELECT @IdResult AS IdResult, 
-               ('[{' + @jsonResult + ']') jsonResult;
+               ('[{' + @jsonResult + ']') jsonResult,
+               @Email email, @UserName username;
     END;

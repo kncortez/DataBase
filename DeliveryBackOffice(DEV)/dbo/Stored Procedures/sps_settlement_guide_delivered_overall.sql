@@ -80,8 +80,8 @@ BEGIN
 					LEFT JOIN DBO.DeliveryOrderDetail DORD  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
 						AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder where OrderDescription ='Intento de entrega fallida')
 					LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-					LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer
-					LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId						
+					LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer AND rc.RbcRowStatus ='true' AND rc.RbcCodeOfReference IS NULL
+					LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId AND rh.RheRowStatus ='true'							
 				WHERE dsd.ID_DeliveryOrderBySettlement = @IdManifest
 					AND dsd.RowStatus = 1
 					AND Guide_Settlement = 1 -- guía liquidada en bodega

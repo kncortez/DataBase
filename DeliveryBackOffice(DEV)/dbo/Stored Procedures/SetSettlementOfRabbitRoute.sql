@@ -80,6 +80,9 @@ BEGIN
     BEGIN TRANSACTION;
     BEGIN TRY
 
+	PRINT 'inicio'
+	PRINT GETDATE()
+
         SELECT @IDCOURIER = SPS.CouriermanId,
                @IDROUTE = SPS.RouteId,
                @NAMECOURIER = RTRIM(CONCAT(SR.First_Name, ' ', SR.Last_Name)),
@@ -131,6 +134,10 @@ BEGIN
             IF @dopdId IS NULL
             BEGIN
                 SET @hasIdHeaderRecolection = 0;
+
+					PRINT 'Insertar en [DeliveryOrderPaymentDetail]'
+	PRINT GETDATE()
+
 
                 INSERT INTO [dbo].[DeliveryOrderPaymentDetail]
                 (
@@ -229,6 +236,9 @@ BEGIN
             END;
 
             --Validar si pertenece a un punto de visita
+
+				PRINT 'Validar si pertenece a un punto de visita'
+				PRINT GETDATE()
             SELECT @Sender_ID = do.Sender_ID
             FROM DeliveryOrder do WITH (NOLOCK)
             WHERE do.Guide_Serie = @GuideSerie
@@ -238,6 +248,10 @@ BEGIN
             IF @hasIdHeaderRecolection = 0
                AND @Sender_ID <> 0
             BEGIN
+
+				PRINT 'Si no tiene asociado un servicio y si el Sender_ID no es 0'
+				PRINT GETDATE()
+
                 SELECT @SchedulePickupId = sm.IdSchedulePickup
                 FROM RouteAssigment ra WITH (NOLOCK)
                     INNER JOIN ServiceManagement sm WITH (NOLOCK)
@@ -251,6 +265,10 @@ BEGIN
                 --Si se encuentra el visit point entre los servicios de recolección se asigna
                 IF @SchedulePickupId IS NOT NULL
                 BEGIN
+
+					PRINT 'Si se encuentra el visit point entre los servicios de recolección se asigna'
+				PRINT GETDATE()
+
                     UPDATE DeliveryOrderPaymentDetail
                     SET IdHeaderRecolection = @SchedulePickupId
                     WHERE GuideSerie = @GuideSerie
@@ -270,6 +288,9 @@ BEGIN
             --Si no tiene registro en SchedulePickup, crea uno y lo asocia al servicio
             IF @CreateSchedulePickup = 1
             BEGIN
+
+			PRINT 'Si no tiene registro en SchedulePickup, crea uno y lo asocia al servicio'
+				PRINT GETDATE()
 
                 INSERT INTO [dbo].[SchedulePickup]
                 (
@@ -409,6 +430,11 @@ BEGIN
                     (@idservicemanagment);
                 END;
 
+
+				
+			PRINT 'Inicia Brain'
+				PRINT GETDATE()
+
                 DECLARE @BrainProcessedGuides AS TABLE
                 (
                     GuideSerie NVARCHAR(2),
@@ -440,6 +466,10 @@ BEGIN
                                                             '',           -- Codeapp
                                                             1,            -- Identificador de modulo donde proviene
                                                             @Token;       -- Token de courier
+
+				PRINT 'termina Brain'
+				PRINT GETDATE()
+
 
                 INSERT INTO [dbo].[SettlementPickupStationDetail]
                 (
@@ -485,6 +515,11 @@ BEGIN
               );
 
         -- INSERT INTO TRANSFERLOG SO WE CAN MONITOR ALL THE GUIDES THAT WERE TRANSFER TO A EXPRESS CENTER
+
+
+		PRINT 'INSERT INTO TRANSFERLOG SO WE CAN MONITOR ALL THE GUIDES THAT WERE TRANSFER TO A EXPRESS CENTER'
+				PRINT GETDATE()
+
         INSERT INTO DeliveryBackOffice.dbo.TransferLog
         (
             [IdCourier],
@@ -563,6 +598,9 @@ BEGIN
               AND SPS.RowStatus = 1;
 
         -- Actualizar montos de registros de servicios liquidados
+
+		PRINT 'Actualizar montos de registros de servicios liquidados'
+				PRINT GETDATE()
         UPDATE SPSD
         SET SPSD.SettlementStationId = @IdExpressCenter,
             SPSD.SettlementSequence = @TopSequence,

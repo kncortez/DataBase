@@ -20,7 +20,8 @@ CREATE PROCEDURE [dbo].[sps_proof_onincident]
 	@ImageIncident VARCHAR(300),
 	@Latitude NVARCHAR(20),
 	@Longitude NVARCHAR(20),
-	@Accuracy NVARCHAR(20)
+	@Accuracy NVARCHAR(20),
+	@MaxDistance FLOAT = 7000 --Distancia en metros
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -39,6 +40,15 @@ BEGIN
     DECLARE @FixedLatitude NVARCHAR(20) = @Latitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @Longitude;
 
+	-- Control de confirmación de incidencia
+	DECLARE @VPLatitude NVARCHAR(50)
+	DECLARE @VPLongitude NVARCHAR(50)
+	DECLARE @StatusOrderId TINYINT
+	DECLARE @IsValidDistance BIT
+	DECLARE @DateStatusOrder DATETIME
+	DECLARE @CatTypeConfirmationOfIncidenceId INT
+	DECLARE @ConfirmationOfIncidenceId INT
+	
     BEGIN TRY
 
         IF (
@@ -65,10 +75,10 @@ BEGIN
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G
-                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               JOIN [DeliveryBackOffice].[dbo].[Point] P
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -122,8 +132,8 @@ BEGIN
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
         SELECT da.ID
-        FROM DeliveryBackOffice.dbo.DeliveryAttempt da
-            JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
                 ON sr.ID = da.ID_Courier
         WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -144,6 +154,64 @@ BEGIN
 
         IF (@ID_Photo > 0)
         BEGIN
+
+			-- Validación del rango de distancia entre el VP y Courier
+
+			-- Buscar ubicación del VP
+			SELECT 
+				@VPLatitude = vpc.Latitude
+				,@VPLongitude = vpc.Longitude
+			FROM DeliveryOrder do WITH (NOLOCK)
+			INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+				ON vpc.CodeOfReference = (CASE WHEN do.IsLastMileReturn = 1 THEN do.Sender_ID ELSE do.Receiver_ID END)
+			WHERE do.Guide_Serie = @GuideSerie
+			AND do.Guide_Number = @GuideNumber
+
+			-- Si tiene ubicación el VP
+			IF (RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
+				AND (RTRIM(LTRIM(ISNULL(@Latitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@Longitude, ''))) <> '')
+			BEGIN
+				-- Validar rango
+				IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @Longitude, ' ', @Latitude, ')'), 4326)) ) <= @MaxDistance)
+				BEGIN
+					SET @IsValidDistance = 1
+					SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Intento de entrega fallida')
+					SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida')
+				END
+				ELSE
+				BEGIN
+					SET @IsValidDistance = 0
+					SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Incidencia en ruta')
+					SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta')
+				END
+			END
+			ELSE
+			BEGIN
+				-- Si no se puede validar
+				--SET @IsValidDistance = 0
+				--SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Incidencia en ruta')
+				--SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta')
+				-- de momento si no se puede validar se toma como intento de entrega fallida**
+				SET @IsValidDistance = 1
+				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Intento de entrega fallida')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida')
+			END
+
+			SET @DateStatusOrder = GETDATE()
+
+			INSERT INTO [dbo].[ConfirmationOfIncidence] ([ConfirmationOfIncidentToken]
+			, [CatTypeConfirmationOfIncidenceId]
+			, [IsValid]
+			, [IsConfirmed]
+			, [StatusOrderId]
+			, [DateStatusOrder]
+			, [RowStatus]
+			, [TokenCreated]
+			, [DateCreated])
+				VALUES (CONCAT(@GuideSerie, @GuideNumber, ROUND(((99999 - 10000) * RAND() + 10000), 0)), @CatTypeConfirmationOfIncidenceId, @IsValidDistance, 0, @StatusOrderId, @DateStatusOrder, 1, 'sps_proof_onincident', GETDATE())
+		
+			SET @ConfirmationOfIncidenceId = SCOPE_IDENTITY()
+				
             -- actualizar tabla de entregas
             UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
             SET ID_Incident = @IdIssue,
@@ -152,7 +220,8 @@ BEGIN
                 Longitude = @FixedLongitude,
                 LogLatitude = IIF(@Latitude = @FixedLatitude, NULL, @Latitude),
                 LogLongitude = IIF(@Longitude = @FixedLongitude, NULL, @Longitude),
-                Accuracy = @Accuracy
+                Accuracy = @Accuracy,
+				ConfirmationOfIncidenceId = @ConfirmationOfIncidenceId
             WHERE ID IN
                   (
                       SELECT ID FROM @Table
@@ -160,13 +229,13 @@ BEGIN
 
             -- actualizar tabla de registro de guías electrónicas
             UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-            SET StatusOrderId = 12
+            SET StatusOrderId = @StatusOrderId
             WHERE Guide_Serie = @GuideSerie
                   AND Guide_Number = @GuideNumber;
 
             --- Actualizar el estado de las piezas
             UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]
-            SET StatusOrderId = 12
+            SET StatusOrderId = @StatusOrderId
             WHERE GuideSerie = @GuideSerie
                   AND GuideNumber = @GuideNumber;
 
@@ -183,7 +252,7 @@ BEGIN
                 Temperature_Celsius
             )
             VALUES
-            (@GuideSerie, @GuideNumber, 12, 'sps_proof_onincident', GETDATE(), GETDATE(), NULL, NULL);
+            (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder, NULL, NULL);
             SET @RInserted = @@ROWCOUNT;
         END
 		ELSE

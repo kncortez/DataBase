@@ -44,8 +44,11 @@ BEGIN
 							--'"IdProvince":"' +  convert(varchar,prv.IdProvince)  + 
 							'"IdProvince":"' +  convert(varchar,prv.IdProvince)  + '",' +							
 							'"Latitude":"' +  ISNULL(vp.Latitude,'') + '",' +
-							'"Longitude":"' +  ISNULL(vp.Longitude,'') +
-							+ '"}'
+							'"Longitude":"' +  ISNULL(vp.Longitude,'') +'",' +
+							'"Zone":"' +  ISNULL(CAST(conf.Zone as varchar(2)),'')+'",' +
+							'"Neighborhood":"' +  ISNULL(conf.Neighborhood,'') + '",' +
+							'"IsOrigin":' +  CAST(ISNULL(vp.IsOriginVisitPoint,1) AS NVARCHAR) + ''
+							+ '}'
 
 					from dbo.RolByUserByAccount  rua
 						inner join dbo.UserAddress ua on ua.UadIdAccount = rua.RuaIdAccount
@@ -53,6 +56,11 @@ BEGIN
 						join dbo.Province prv on prv.IdProvince = twn.IdProvince
 						join dbo.CatCityPlace ctp on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
 						left join dbo.VisitPointClient vp on vp.CodeOfReference=ua.CodeOfReference
+						left join dbo.ConfirmedAddress conf on 
+								conf.NirPhone=ua.UadNirPhone
+								AND conf.Phone=ua.UadPhone
+								AND conf.TownshipId = VP.IdTownship
+								AND conf.[Address] = VP.Address
 					where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser and ua.UadRowStatus = 1
 						and (ua.UadIdAddress = @IdAddress or @IdAddress = -1)
 					FOR XML PATH(''), TYPE

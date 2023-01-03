@@ -18,7 +18,12 @@ CREATE PROCEDURE [dbo].[spws_set_profile]
 	@Currency VARCHAR(10),
 	@Token VARCHAR(200),
 	@IdSystem INT = 1,
-	@Phone NVARCHAR(15) = '+502'
+	@Phone NVARCHAR(15) = '+502',
+	@VerifiedPhone NVARCHAR(10) = '',
+	@UrlFacebook NVARCHAR(10)= '',
+	@UrlInstagram NVARCHAR(10)= '',
+	@UrlEcommerce NVARCHAR(10)= '',
+	@UrlWebsite NVARCHAR(10)= ''
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

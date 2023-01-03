@@ -51,30 +51,30 @@ BEGIN
                --)
                RegexEmail,
                '0' SenderEmail,
-               btd.BankId  AS DCBA_Bank_Id
-        FROM [dbo].[BatchDetailCOD] AS btd
+               btd.BankId AS DCBA_Bank_Id
+        FROM [dbo].[BatchDetailCOD] AS btd 
             INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
                 ON btd.[GuideSerie] = pg.[GuideSerie]
                    AND btd.[GuideNumber] = pg.[GuideNumber]
-            INNER JOIN [dbo].[DeliveryOrder] AS do
+            INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
                 ON btd.[GuideSerie] = do.[Guide_Serie]
                    AND btd.[GuideNumber] = do.[Guide_Number]
             --LEFT JOIN VisitPointByClientPortfolio vpbc 
             --	ON do.VisitpointClientPortfolioId = vpbc.IdVisitPointByClientPortfolio 
             --	AND vpbc.RowStatus = 1
-            LEFT JOIN dbo.Township twn
+            LEFT JOIN dbo.Township twn WITH (NOLOCK)
                 ON twn.IdTownship = do.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw
+            LEFT JOIN dbo.Township tw WITH (NOLOCK)
                 ON tw.TownshipName = do.Receiver_Town
-            LEFT JOIN dbo.Province prv
+            LEFT JOIN dbo.Province prv WITH (NOLOCK)
                 ON prv.IdProvince = twn.IdProvince
             LEFT JOIN dbo.Province pr
                 ON pr.IdProvince = tw.IdProvince
-            LEFT JOIN dbo.VisitPointClient vpc
+            LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                 ON vpc.CodeOfReference = do.Sender_ID
-            LEFT JOIN dbo.Customer cu
+            LEFT JOIN dbo.Customer cu WITH (NOLOCK)
                 ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-            LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+            LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
                 ON dc.DCBA_Id = do.DCBA_ID
                    AND dc.DCBA_Id_estado = 1
         WHERE pg.[Notificated] = 0
@@ -105,30 +105,30 @@ BEGIN
                    --)
                    RegexEmail,
                    do.Sender_Mail SenderEmail,
-                   btd.BankId  AS DCBA_Bank_Id
+                   btd.BankId AS DCBA_Bank_Id
             FROM [dbo].[BatchDetailCOD] AS btd
                 INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
                     ON btd.[GuideSerie] = pg.[GuideSerie]
                        AND btd.[GuideNumber] = pg.[GuideNumber]
-                INNER JOIN [dbo].[DeliveryOrder] AS do
+                INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
                     ON btd.[GuideSerie] = do.[Guide_Serie]
                        AND btd.[GuideNumber] = do.[Guide_Number]
                 --LEFT JOIN VisitPointByClientPortfolio vpbc 
                 --	ON do.VisitpointClientPortfolioId = vpbc.IdVisitPointByClientPortfolio 
                 --	AND vpbc.RowStatus = 1
-                LEFT JOIN dbo.Township twn
+                LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.IdTownship = do.ReceiverIdTownship
-                LEFT JOIN dbo.Township tw
+                LEFT JOIN dbo.Township tw WITH (NOLOCK)
                     ON tw.TownshipName = do.Receiver_Town
-                LEFT JOIN dbo.Province prv
+                LEFT JOIN dbo.Province prv WITH (NOLOCK)
                     ON prv.IdProvince = twn.IdProvince
-                LEFT JOIN dbo.Province pr
+                LEFT JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-                LEFT JOIN dbo.VisitPointClient vpc
+                LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.Sender_ID
-                LEFT JOIN dbo.Customer cu
+                LEFT JOIN dbo.Customer cu WITH (NOLOCK)
                     ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
                     ON dc.DCBA_Id = do.DCBA_ID
                        AND dc.DCBA_Id_estado = 1
             WHERE pg.[Notificated] = 0
@@ -141,7 +141,7 @@ BEGIN
                      dc.DCBA_Bank_Id,
                      pg.GuideSerie,
                      pg.GuideNumber,
-					 btd.BankId
+                     btd.BankId
         ) X
     ) CDATA
     WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0;
