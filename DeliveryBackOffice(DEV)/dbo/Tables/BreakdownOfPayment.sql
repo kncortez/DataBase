@@ -1,20 +1,24 @@
 ﻿CREATE TABLE [dbo].[BreakdownOfPayment] (
-    [IdBreakdownOfPayment] INT             IDENTITY (1, 1) NOT NULL,
-    [IdCost]               INT             NULL,
-    [Description]          VARCHAR (100)   NULL,
-    [Amount]               DECIMAL (18, 2) NULL,
-    [ModIdModule]          INT             NULL,
-    [RowStatus]            BIT             NULL,
-    [TokenCreated]         VARCHAR (50)    NOT NULL,
-    [DateCreated]          DATETIME        NOT NULL,
-    [TokenUpdated]         VARCHAR (50)    NULL,
-    [DateUpdated]          DATETIME        NULL,
-    [PromoCouponId]        INT             NULL,
+    [IdBreakdownOfPayment]     INT             IDENTITY (1, 1) NOT NULL,
+    [IdCost]                   INT             NULL,
+    [Description]              VARCHAR (100)   NULL,
+    [Amount]                   DECIMAL (18, 2) NULL,
+    [ModIdModule]              INT             NULL,
+    [RowStatus]                BIT             NULL,
+    [TokenCreated]             VARCHAR (50)    NOT NULL,
+    [DateCreated]              DATETIME        NOT NULL,
+    [TokenUpdated]             VARCHAR (50)    NULL,
+    [DateUpdated]              DATETIME        NULL,
+    [PromoCouponId]            INT             NULL,
+    [BreakdownOfPaymentTypeId] INT             NULL,
     PRIMARY KEY CLUSTERED ([IdBreakdownOfPayment] ASC),
     CONSTRAINT [FK_BreakdownOfPayment_PromoCoupon] FOREIGN KEY ([PromoCouponId]) REFERENCES [dbo].[PromoCoupon] ([IdPromoCoupon]),
+    CONSTRAINT [FK_BreakdownOfPaymentTypeId_TypeId] FOREIGN KEY ([BreakdownOfPaymentTypeId]) REFERENCES [dbo].[CatBreakdownOfPaymentType] ([IdCatBreakdownOfPaymentType]),
     CONSTRAINT [FKCost] FOREIGN KEY ([IdCost]) REFERENCES [dbo].[Cost] ([IdCost]),
     CONSTRAINT [FKCostDetCatModule] FOREIGN KEY ([ModIdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 
 
 

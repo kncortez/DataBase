@@ -86,14 +86,14 @@ BEGIN
 
 	-- Punto de visita por cuenta ingresada
 	SET @VisitPointClientIdByUser = (
-		SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
-		INNER JOIN VisitPointByUser VPU WITH(NOLOCK)
+		SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+		JOIN VisitPointByUser VPU
 			ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
 				AND VPU.RowStatus = 1
-		INNER JOIN RegisterUser ru WITH(NOLOCK)
+		JOIN RegisterUser ru
 			ON VPU.RegisterUserID = ru.UsrIdUser
 				AND ru.UsrRowStatus = 1
-		INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
+		JOIN [dbo].[RolByUserByAccount] rua
 			ON rua.RuaIdUser = ru.UsrIdUser
 		WHERE rua.RuaIdAccount = @AccountId
 	)
@@ -401,7 +401,7 @@ BEGIN
 						update  dbo.DeliveryOrderPaymentDetail 
 						set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 						, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-						from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
+						from dbo.DeliveryOrderPaymentDetail pay
 								inner join @TblDeliveryOrdersList t 
 								on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -414,17 +414,31 @@ BEGIN
 						DECLARE @CostId INT = 0;
 
 						SET @CostId = ISNULL((
-							SELECT
+						SELECT
 								TOP 1
 									Co.IdCost
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-								AND
-								Co.IdProduct = 1
+								(
+									(
+										Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+										AND
+										Co.GuideNumber = @GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
 								AND
 								Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
 						), 0)
 
 						SET @PromoName = ISNULL((
@@ -465,7 +479,7 @@ BEGIN
 							EXISTS( 
 								SELECT TOP 1 1 
 								FROM 
-									[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP  WITH(NOLOCK)
+									[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP 
 								WHERE 
 									BOP.IdCost = @CostId 
 									AND 
@@ -480,7 +494,7 @@ BEGIN
 								Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
 								DateUpdated = GETDATE(),
 								TokenUpdated = @Token,
-								PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) WHERE PC.PromoCouponSerie = @CouponSerie)
+								PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
 							WHERE
 								IdCost = @CostId
 								AND
@@ -514,7 +528,7 @@ BEGIN
 						SELECT 
 							DopId 
 						FROM 
-							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do WITH(NOLOCK)
+							[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
 							INNER JOIN @TblDeliveryOrdersList tpo
 								ON do.GuideNumber = tpo.Guide_Number
 									AND do.GuideSerie = tpo.Guide_Serie
@@ -550,7 +564,7 @@ BEGIN
 								update  dbo.DeliveryOrderPaymentDetail 
 								set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
 								, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-								from dbo.DeliveryOrderPaymentDetail pay WITH(NOLOCK)
+								from dbo.DeliveryOrderPaymentDetail pay
 									 inner join @TblDeliveryOrdersList t 
 									 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
 
@@ -625,131 +639,6 @@ BEGIN
 										tdop.CODAmountProccess != 0
 
 								 END
-								 --ELSE IF ( (@OldPriceshipment - @UpdatedValue) <= 0 )
-								 --BEGIN
-
-									--INSERT INTO 
-									--	dbo.DeliveryOrderPaymentTransaction
-									--	(  
-									--		[GuideNumber]
-									--		,[GuideSerie]
-									--		,[PayTypeId]
-									--		,[TypeofInOutMoneyId]
-									--		,[TimePlaId]
-									--		,[amount]
-									--		,[PaymentRecollections]
-									--		,[PaymentNow]
-									--		,[PaymentDelivery]
-									--		,[StartDate]
-									--		,[EndDate]
-									--		,[ShipmentCompleted]
-									--		,[RecollectionCompleted]
-									--		,[PaidGuide]
-									--		,[TokenCreated]
-									--		,[DateCreated]
-									--		,[TokenUpdated]
-									--		,[DateUpdated]
-									--		,[TransaccionFAC]
-									--		,[IdHeaderRecolection]
-									--		,[TypeServiceId]
-									--		,[AccountId]
-									--		,[CODAmountProcess]
-									--		,[Fel]
-									--		,[VisitPoint]
-									--	)
-									--SELECT
-									--		Guide_Number 
-									--		,Guide_Serie
-									--		,IdTypePayment
-									--		,IdWayToPayment
-									--		,IdTimePayment
-									--		,@OldPriceshipment
-									--		,tdop.PaymentRecollections
-									--		,tdop.PaymentNow
-									--		,tdop.PaymentDelivery
-									--		,null
-									--		,null
-									--		,tdop.ShipmentCompleted
-									--		,tdop.RecollectionCompleted
-									--		,tdop.PaidGuide
-									--		,@Token
-									--		,getdate()
-									--		,null
-									--		,null
-									--		,null
-									--		,null
-									--		,tdop.IdTypeService
-									--		,IIF(@AccountId=0,null, @AccountId)
-									--		,tdop.CODAmountProccess
-									--		,null
-									--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-									--FROM 
-									--	@TblDeliveryOrdersList tdop
-									--WHERE 
-									--	tdop.CODAmountProccess != 0
-
-									--INSERT INTO 
-									--	dbo.DeliveryOrderPaymentTransaction
-									--	(  
-									--		[GuideNumber]
-									--		,[GuideSerie]
-									--		,[PayTypeId]
-									--		,[TypeofInOutMoneyId]
-									--		,[TimePlaId]
-									--		,[amount]
-									--		,[PaymentRecollections]
-									--		,[PaymentNow]
-									--		,[PaymentDelivery]
-									--		,[StartDate]
-									--		,[EndDate]
-									--		,[ShipmentCompleted]
-									--		,[RecollectionCompleted]
-									--		,[PaidGuide]
-									--		,[TokenCreated]
-									--		,[DateCreated]
-									--		,[TokenUpdated]
-									--		,[DateUpdated]
-									--		,[TransaccionFAC]
-									--		,[IdHeaderRecolection]
-									--		,[TypeServiceId]
-									--		,[AccountId]
-									--		,[CODAmountProcess]
-									--		,[Fel]
-									--		,[VisitPoint]
-									--	)
-									--SELECT
-									--		Guide_Number 
-									--		,Guide_Serie
-									--		,IdTypePayment
-									--		,IdWayToPayment
-									--		,IdTimePayment
-									--		,IIF(@OldPriceshipment > 0, -@OldPriceshipment, @OldPriceshipment)
-									--		,tdop.PaymentRecollections
-									--		,tdop.PaymentNow
-									--		,tdop.PaymentDelivery
-									--		,null
-									--		,null
-									--		,tdop.ShipmentCompleted
-									--		,tdop.RecollectionCompleted
-									--		,tdop.PaidGuide
-									--		,@Token
-									--		,getdate()
-									--		,null
-									--		,null
-									--		,null
-									--		,null
-									--		,tdop.IdTypeService
-									--		,IIF(@AccountId=0,null, @AccountId)
-									--		,tdop.CODAmountProccess
-									--		,null
-									--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-									--FROM 
-									--	@TblDeliveryOrdersList tdop
-									--WHERE 
-									--	tdop.CODAmountProccess != 0
-
-								 --END
-
 							END
 			
 					END
@@ -778,7 +667,10 @@ BEGIN
 								+ '}'
 							FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 							WHERE
+							--StatusSend = 1
+							--and 
 							OrderNumber = @OrderNumber
+							--and CustomerReference = @AccountId
 							AND RowStatus = 1
 							FOR XML PATH (''), TYPE)
 						.value('.', 'varchar(max)'), 1, 1, ''
@@ -786,43 +678,38 @@ BEGIN
 
 				--=====================DETALLE_PAGOS.INI======================
 
-				/*Actualiza el ID de transacción del pago realizado con tarjeta*/
-				--TransaccionFAC.INI
-
-				IF (@OrderNumber != '')
+				SELECT
+					@TransactionAmount = Ammount
+				   ,@TransactionTokenUpdated = TokenUpdated
+				   ,@TransactionTokeCreated = TokenCreated
+				FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				WHERE OrderNumber = @OrderNumber
+				
+				IF (SUBSTRING(@OrderNumber, 1, 2) = 'HR')
 				BEGIN
-
+				
 					DECLARE @AcceptedGuides AS TABLE (
 						GuideSerie NVARCHAR(2),
 						GuideNumber INT,
-						INDEX INDX_TEMP_AcceptedGuides_Guides NONCLUSTERED (GuideSerie, GuideNumber)
+						GuidePriceShipment DECIMAL(14,2)
 					);
 
-					-- Guías individuales FD
-					INSERT INTO @AcceptedGuides
-						(GuideSerie, GuideNumber)
-					SELECT
-						DISTINCT
-							SUBSTRING(CCTBC.OrderNumber,1,2),
-							SUBSTRING(CCTBC.OrderNumber,3, LEN(CCTBC.OrderNumber))
-					FROM
-						DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH(NOLOCK)
-						INNER JOIN
-							DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
-							ON
-								SUBSTRING(CCTBC.OrderNumber,1,2) = DO.Guide_Serie
-								AND
-								SUBSTRING(CCTBC.OrderNumber,3, LEN(CCTBC.OrderNumber)) = DO.Guide_Number
-					WHERE
-						CCTBC.OrderNumber = @OrderNumber
+					DECLARE @CostUpdated AS TABLE (
+						IdCost INT,
+						GuideSerie NVARCHAR(2),
+						GuideNumber INT,
+						GuidePriceShipment DECIMAL(14,2)
+					)
 
-					-- Guías agrupadas por HR
+					SET @IdProduct = 2
+					
 					INSERT INTO @AcceptedGuides
-						(GuideSerie, GuideNumber)
+						(GuideSerie, GuideNumber, GuidePriceShipment)
 					SELECT
 						DISTINCT
 							CCTBCD.SerieNumber,
-							CCTBCD.ProductNumber
+							CCTBCD.ProductNumber,
+							DO.PriceShippment
 					FROM
 						DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH(NOLOCK)
 						INNER JOIN
@@ -834,49 +721,268 @@ BEGIN
 					WHERE
 						CCTBCD.OrderNumber = @OrderNumber
 
-					DECLARE @SchedulePickups AS TABLE(
-						IdSchedulePickup INT
-					);
-
-					INSERT INTO @SchedulePickups
+					-- Generar cost inexistentes
+					INSERT INTO
+						DeliveryBackOffice.dbo.Cost
+						( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
 					SELECT
-						DISTINCT
-							DOPD.IdHeaderRecolection
+						1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TransactionTokeCreated, GETDATE(), (CASE WHEN AG.GuideSerie != 'FD' THEN NULL ELSE AG.GuideSerie END), (CASE WHEN AG.GuideSerie != 'FD' THEN NULL ELSE AG.GuideNumber END)
 					FROM
-						DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK)
-						INNER JOIN
-							@AcceptedGuides AG
-							ON
-								DOPD.GuideSerie = AG.GuideSerie
+						@AcceptedGuides AG
+						OUTER APPLY (
+							SELECT
+								TOP 1
+									Co.IdCost
+							FROM
+								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+							WHERE
+								(
+									(
+										Co.GuideSerie = ISNULL(AG.GuideSerie,'FD')
+										AND
+										Co.GuideNumber = AG.GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie,'FD'), AG.GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
 								AND
-								DOPD.GuideNumber = AG.GuideNumber
+								Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
+						) CoAux
+					WHERE
+						CoAux.IdCost IS NULL
 						
-					-- Actualizar datos de guías con transacción realizada
-					UPDATE 
-						DOPD
-					SET 
-						DOPD.TransaccionFAC = ISNULL(@OrderNumber, '')
-					FROM
-						DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK)
-						INNER JOIN
-							@AcceptedGuides AG
-							ON
-								DOPD.GuideSerie = AG.GuideSerie
+					-- Actualizar todos los costs existentes
+					UPDATE
+						Co
+					SET
+						Co.TotalAmountPaid = Co.TotalAmount,
+						Co.PaymentDate = GETDATE(),
+						Co.TokenUpdated = @TransactionTokenUpdated,
+						Co.DateUpdated = GETDATE(),
+						Co.GuideSerie = (CASE WHEN AG.GuideSerie != 'FD' THEN NULL ELSE AG.GuideSerie END),
+						Co.GuideNumber = (CASE WHEN AG.GuideSerie != 'FD' THEN NULL ELSE AG.GuideNumber END)
+					OUTPUT inserted.IdCost, inserted.TotalAmount, inserted.GuideSerie, inserted.GuideNumber INTO @CostUpdated (IdCost, GuidePriceShipment, GuideSerie, GuideNumber)
+					FROM	
+						@AcceptedGuides AG
+						OUTER APPLY (
+							SELECT
+								TOP 1
+									Co.IdCost
+							FROM
+								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+							WHERE
+								(
+									(
+										Co.GuideSerie = ISNULL(AG.GuideSerie,'FD')
+										AND
+										Co.GuideNumber = AG.GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie,'FD'), AG.GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
 								AND
-								DOPD.GuideNumber = AG.GuideNumber
-					WHERE 
-						TransaccionFAC IS NULL
-
-					UPDATE 
-						SP
-					SET 
-						SP.TransaccionFAC = @OrderNumber
-					FROM
-						DeliveryBackOffice.dbo.SchedulePickup SP WITH(NOLOCK)
+								Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
+						) CoAux
 						INNER JOIN
-							@SchedulePickups SPS
+							DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
 							ON
-								SP.SchedulePickupId = SPS.IdSchedulePickup
+								Co.IdCost = CoAux.IdCost
+
+					-- Generar CostDetail inexistentes
+					INSERT INTO [DeliveryBackOffice].[dbo].[CostDetail]
+						(IdCost, IdTypeOfMoney, Amount, Voucher, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+					SELECT
+						Cu.IdCost, 2, Cu.GuidePriceShipment, @OrderNumber, 1, @TransactionTokeCreated, GETDATE(), NULL, NULL
+					FROM
+						@CostUpdated CU
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+							ON
+								CD.IdCost = CU.IdCost
+					WHERE
+						CD.IdCostDetail IS NULL
+
+					-- Actualizar CostDetails
+					UPDATE
+						[DeliveryBackOffice].[dbo].[CostDetail]
+					SET
+						Amount = CU.GuidePriceShipment
+						,Voucher = @OrderNumber
+						,TokenUpdated = @TransactionTokenUpdated
+						,DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+						INNER JOIN
+							@CostUpdated CU
+							ON
+								CD.IdCost = CU.IdCost
+
+				END
+				ELSE
+				BEGIN
+					SET @IdProduct = 1
+					SET @Guia = @OrderNumber
+
+					IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
+						DROP TABLE #listGuides;
+
+					SELECT 
+						LTRIM(RTRIM(SUBSTRING(Item, 1,2))) ItemSerie
+						,LTRIM(RTRIM(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))))) ItemNumber 
+					INTO 
+						#listGuides
+					FROM 
+						DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@Guia)),',')
+
+					SELECT
+						TOP 1
+							@GuideSerie = LG.ItemSerie
+							,@GuideNumber = LG.ItemNumber
+					FROM
+						#listGuides LG
+		
+					IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
+						DROP TABLE #listGuides;
+
+					SELECT
+						@CostCount = ISNULL(Co.IdCost,0)
+					   ,@IdCost = ISNULL(Co.IdCost, 0)
+					   ,@Amount = ISNULL(Co.TotalAmount, 0)
+					FROM 
+						DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
+					WHERE
+						(
+							(
+								Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+								AND
+								Co.GuideNumber = @GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
+						AND
+						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
+
+					IF (@CostCount > 0)
+					BEGIN
+			
+						UPDATE Cost
+						SET TotalAmount = @TransactionAmount
+						   ,TokenUpdated = @TransactionTokenUpdated
+						   ,TotalAmountPaid = @TransactionAmount
+						   ,GuideSerie = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideSerie END)
+						   ,GuideNumber = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideNumber END)
+						WHERE IdCost = @IdCost
+
+					END
+					ELSE
+					IF (@CostCount = 0)
+					BEGIN
+		
+						INSERT INTO [dbo].[Cost] ([IdProduct]
+						, [ProductNumber]
+						, [IdTypeCharge]
+						, [TotalAmount]
+						, [PaymentDate]
+						, [IdModule]
+						, [RowStatus]
+						, [TokenCreated]
+						, [DateCreated]
+						, [TokenUpdated]
+						, [DateUpdated]
+						, [TotalAmountPaid]
+						, [GuideSerie]
+						, [GuideNumber])
+							VALUES (@IdProduct, @Guia, @IdProduct, @TransactionAmount, GETDATE(), 7, 1, @TransactionTokeCreated, GETDATE(), NULL, NULL, @TransactionAmount, (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideSerie END), (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideNumber END))
+
+					END
+					ELSE
+
+					IF (@CostCount > 0)
+					BEGIN
+		
+						UPDATE Cost
+						SET IdProduct = @IdProduct
+						   ,IdModule = 9
+						   ,IdTypeCharge = @IdProduct
+						   ,TotalAmount = @TransactionAmount
+						   ,TokenUpdated = @TransactionTokenUpdated
+						   ,DateUpdated = GETDATE()
+						   ,TotalAmountPaid = @TransactionAmount
+						   ,GuideSerie = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideSerie END)
+						   ,GuideNumber = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideNumber END)
+						WHERE IdCost = @IdCost
+					END
+
+					SET @CostDetailCount = (SELECT
+							COUNT(1)
+						FROM DeliveryBackOffice.dbo.CostDetail
+						WHERE Voucher = @OrderNumber)
+
+					IF (@CostDetailCount > 0 )
+					BEGIN
+						UPDATE CostDetail
+						SET Amount = @TransactionAmount
+						   ,Voucher = @OrderNumber
+						   ,TokenUpdated = @TransactionTokenUpdated
+						   ,DateUpdated = GETDATE()
+						WHERE Voucher = @OrderNumber
+
+					END
+					ELSE IF (@CostDetailCount = 0 )
+					BEGIN
+
+						INSERT INTO CostDetail (IdCost, IdTypeOfMoney, Amount, Voucher, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+							VALUES (@IdCost, 2, @TransactionAmount, @OrderNumber, 1, @TransactionTokeCreated, GETDATE(), NULL, NULL);
+					END
+
+				END
+
+				/*Actualiza el ID de transacción del pago realizado con tarjeta*/
+				--TransaccionFAC.INI
+
+				IF (@OrderNumber != '')
+				BEGIN
+					SET @IdHeaderRecolection = (SELECT top 1
+							do.IdHeaderRecolection
+						FROM DeliveryOrderPaymentDetail do
+						WHERE do.GuideNumber = CAST(STUFF(@Guia, 1, PATINDEX('%[0-9]%', @Guia) - 1, '')
+						AS INT)
+						AND GuideSerie = SUBSTRING(@Guia, 1, 2))
+
+					UPDATE DeliveryOrderPaymentDetail
+					SET TransaccionFAC = ISNULL(@OrderNumber, '')
+					WHERE GuideNumber = CAST(STUFF(@Guia, 1, PATINDEX('%[0-9]%', @Guia) - 1, '') AS INT)
+					AND GuideSerie = SUBSTRING(@Guia, 1, 2)
+					AND TransaccionFAC IS NULL
+
+					UPDATE SchedulePickup
+					SET TransaccionFAC = @OrderNumber
+					WHERE SchedulePickupId = @IdHeaderRecolection
 
 				END
 			--TransaccionFAC.FIN
@@ -894,6 +1000,11 @@ BEGIN
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
+
+		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+			(DateCreated, TokenCreated, ErrorLine, ErrorProcedure, ErrorDescription)
+		VALUES
+			(GETDATE(), ERROR_PROCEDURE(), ERROR_LINE(), ERROR_PROCEDURE(), ERROR_MESSAGE())
 
 		SET @jsonResult =  
 		( 
