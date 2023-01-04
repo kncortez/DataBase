@@ -23,6 +23,7 @@
     [Order]                     SMALLINT        DEFAULT ((1)) NOT NULL,
     [Amount]                    DECIMAL (16, 2) NULL,
     [CatPaymentTimeId]          INT             NULL,
+    [IsActiveService]           BIT             NULL,
     PRIMARY KEY CLUSTERED ([IdServiceManagement] ASC),
     CONSTRAINT [FK_ServiceManagement_CatPaymentTimeId] FOREIGN KEY ([CatPaymentTimeId]) REFERENCES [dbo].[CatPaymentTime] ([TimePlaId]),
     CONSTRAINT [fk_ServiceStatus] FOREIGN KEY ([ServiceStatusId]) REFERENCES [dbo].[CatServiceStatus] ([IdServiceStatus]),
@@ -33,6 +34,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 
@@ -65,4 +68,8 @@ CREATE NONCLUSTERED INDEX [idx_idpurrouteassigment]
 GO
 CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup]
     ON [dbo].[ServiceManagement]([IdSchedulePickup] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si el servicio esta siendo realizado por el courier asignado actualmente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'IsActiveService';
 

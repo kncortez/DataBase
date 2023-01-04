@@ -10,10 +10,14 @@
     [TokenUpdated]         NVARCHAR (50)  NULL,
     [DateUpdated]          DATETIME       NULL,
     [ServiceTypeId]        BIGINT         NULL,
+    [ServiceManagementId]  INT            NULL,
     CONSTRAINT [PK_DeliveryOrderAlert] PRIMARY KEY CLUSTERED ([IdDeliveryOrderAlert] ASC),
     CONSTRAINT [FK_DeliveryOrderAlert_SubTypeServiceManagment] FOREIGN KEY ([ServiceTypeId]) REFERENCES [dbo].[SubTypeServiceManagment] ([IdSubTypeServiceManagment]),
-    CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert])
+    CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert]),
+    CONSTRAINT [FK_DOA_ServiceManagement] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement])
 );
+
+
 
 
 
@@ -74,4 +78,33 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de ser
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideNumber_RowStatus_ServiceTypeId]
     ON [dbo].[DeliveryOrderAlert]([GuideNumber] ASC, [RowStatus] ASC, [ServiceTypeId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ServiceTypeId]
+    ON [dbo].[DeliveryOrderAlert]([ServiceTypeId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ServiceManagementId_RowStatus]
+    ON [dbo].[DeliveryOrderAlert]([ServiceManagementId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_serie_number_rowstatus]
+    ON [dbo].[DeliveryOrderAlert]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_IdDeliveryOrderAlert]
+    ON [dbo].[DeliveryOrderAlert]([IdDeliveryOrderAlert] ASC, [GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_guideserie_guidenumber]
+    ON [dbo].[DeliveryOrderAlert]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del servicio de la tabla ServiceManagement', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAlert', @level2type = N'COLUMN', @level2name = N'ServiceManagementId';
 

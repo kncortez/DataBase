@@ -25,12 +25,12 @@ BEGIN
         @current_BatchCODIdCommission = ISNULL(PGD.BatchCODIdCommission,BDCCM.BatchCODId),
         @dateBatchCOD = Date
     FROM 
-        DeliveryBackOffice.dbo.ProcessedGuideCOD PGD
-		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDC 		
+        DeliveryBackOffice.dbo.ProcessedGuideCOD PGD WITH(NOLOCK) 
+		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDC  WITH(NOLOCK) 		
 		ON BDC.GuideSerie = PGD.GuideSerie
         AND BDC.GuideNumber = PGD.GuideNumber
 		AND BDC.CatConceptCODId = 2
-		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDCCM 
+		LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD BDCCM  WITH(NOLOCK) 
 		ON BDCCM.GuideSerie = PGD.GuideSerie
         AND BDCCM.GuideNumber = PGD.GuideNumber
 		AND BDCCM.CatConceptCODId = 1
@@ -46,7 +46,7 @@ BEGIN
         SELECT 
             @currentState = StatusOrderId
         FROM 
-            DeliveryBackOffice.dbo.DeliveryOrder do
+            DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number
@@ -59,7 +59,7 @@ BEGIN
         UPDATE 
             DeliveryBackOffice.dbo.DeliveryOrder 
         SET 
-            StatusOrderId = @NewState
+            StatusOrderId = ISNULL(@NewState,@currentState)
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number
@@ -68,7 +68,7 @@ BEGIN
         UPDATE 
             DeliveryBackOffice.dbo.DeliveryOrderDetail 
         SET 
-            RowStatus = 0,
+            RowStatus = IIF(@NewState  = NULL,1,0),
             Observations = 'Guía revertida desde módulo de reversión de estados.'
         WHERE 
             Guide_Serie =  @Guide_Serie

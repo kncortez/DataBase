@@ -28,6 +28,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
     ON [dbo].[DeliverySettlementDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -121,4 +123,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora posible de arribo al servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'GuideETA';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
+    ON [dbo].[DeliverySettlementDetail]([Guide_Number] ASC);
 

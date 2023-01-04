@@ -40,20 +40,17 @@ BEGIN
 		   ,cr.CodeRoute 'CodeRoute'
 		   ,rp.IsSimpliRoute
 		   ,rp.CatRouteId 'IdRoute'
-		FROM /*RoutePreparationDetailPiece rpdp
-		JOIN */RoutePreparationDetail rpd WITH(NOLOCK)
-			--ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-		JOIN RoutePreparation rp WITH(NOLOCK)
+		   ,rp.DateRoutePreparation
+		   ,rpd.IsCustomerReschedule
+		FROM DeliveryBackOffice.dbo.RoutePreparationDetail rpd WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.RoutePreparation rp WITH(NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
-		JOIN CatRoute cr WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
 			ON rp.CatRouteId = cr.IdRoute
-		WHERE rp.DateRoutePreparation = @Date
+		WHERE rp.DateRoutePreparation >= @Date
 		AND rpd.RowStatus = 1
-		--AND rpdp.RowStatus = 1
 		AND Guide_Serie = @GuideSerie
 		AND Guide_Number = @GuideNumber
-		--AND PieceNumber = @GuidePiece
-		AND rp.DateRoutePreparation = CONVERT(DATE, GETDATE())
 		AND rp.RowStatus = 1
 		ORDER BY rpd.DateCreated DESC
 
@@ -69,8 +66,8 @@ BEGIN
 		   ,Pieces_Dry Pieces_Dry
 		   ,Pieces_Cold Pieces_Cold
 		   ,(CASE WHEN dop.IsDry = 1 THEN 1 ELSE 0 END) Piece_Type
-		FROM DeliveryOrder do WITH (NOLOCK)
-		JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+		FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 		ON do.Guide_Number = dop.GuideNumber and do.Guide_Serie = dop.GuideSerie
 		WHERE do.Guide_Serie = @GuideSerie
 		AND do.Guide_Number = @GuideNumber
@@ -80,7 +77,7 @@ BEGIN
 		--TABLE 2 Validar que la guía no este en un estado no permitido 
 		SET @StatusOrderId = (SELECT TOP 1
 				dod.StatusOrderId
-			FROM DeliveryOrderDetail dod WITH(NOLOCK)
+			FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK)
 			WHERE dod.Guide_Serie = @GuideSerie
 			AND dod.Guide_Number = @GuideNumber
 			ORDER BY dod.DateCreated DESC)
@@ -103,14 +100,14 @@ BEGIN
 			SELECT
 				0 StatusCode
 			   ,so.OrderDescription Description
-			FROM StatusOrder so WITH(NOLOCK)
+			FROM DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
 			WHERE so.StatusOrderId = @StatusOrderId
 		END
 	END TRY
 	BEGIN CATCH
 
 		--Insert en tabla de log
-		INSERT INTO [dbo].[RoutePreparationLogError]
+		INSERT INTO DeliveryBackOffice.dbo.[RoutePreparationLogError]
 					([ErrorDescription]
 					,[ErrorNumber]
 					,[ErrorProcedure]

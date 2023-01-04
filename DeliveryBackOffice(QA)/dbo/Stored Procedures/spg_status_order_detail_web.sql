@@ -40,6 +40,7 @@ BEGIN
            RES.[Latitude],
            RES.[Longitude],
 		   RES.Token
+		    ,RES.NextSteps
 	INTO #OrdChkpnt
     FROM
     (
@@ -71,6 +72,7 @@ BEGIN
 			ISNULL(da.Latitude,'')  [Latitude],
 			ISNULL(da.Longitude,'') [Longitude],
 			'' [Token]
+			,'' NextSteps
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 			ON da.Guide_Serie = do.Guide_Serie
@@ -111,7 +113,7 @@ BEGIN
 								   FROM dbo.SenderReceiver courier WHERE courier.ID = da.ID_Courier ) + ' ' + 
 								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
 							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
-								JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
+								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
 									ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
@@ -146,7 +148,7 @@ BEGIN
                                                   ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
                                               Date_Photo
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                           JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                                           INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
                                                   AND da.Guide_Number = dp.Guide_Number
                                                   AND da.Verified = 1
@@ -176,7 +178,7 @@ BEGIN
 			(SELECT TOP 1
 			IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                           JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                                         INNER  JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
                                                   AND da.Guide_Number = dp.Guide_Number
                                                   AND da.Verified = 1
@@ -187,7 +189,7 @@ BEGIN
 			(SELECT TOP 1
 			IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
                                        FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                           JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                                          INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                                ON da.Guide_Serie = dp.Guide_Serie
                                                   AND da.Guide_Number = dp.Guide_Number
                                                   AND da.Verified = 1
@@ -201,8 +203,9 @@ BEGIN
             '' AS Latitude,
             '' AS Longitude,
 			dod.UserCreated Token
+			,'' AS NextSteps
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
-            JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
+           INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
@@ -219,7 +222,7 @@ BEGIN
              RES.[EventID];
 
 
-	SELECT     OrdChkPnt.[EventID],
+	SELECT DISTINCT OrdChkPnt.[EventID],
 			   OrdChkPnt.[OrderId],
 			   OrdChkPnt.[CustomerFullname],
 			   OrdChkPnt.[OriginAdress],
@@ -257,6 +260,7 @@ BEGIN
 			   OrdChkPnt.[ManifestNumber],
 			   OrdChkPnt.[Latitude],
 			   OrdChkPnt.[Longitude]--,
+			   ,OrdChkPnt.NextSteps
 			   --OrdChkPnt.Token
 	FROM #OrdChkpnt OrdChkPnt
 		LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken

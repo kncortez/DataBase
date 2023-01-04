@@ -13,8 +13,11 @@
     [IdBank]                        INT          NULL,
     [NumberAccFavCOD]               VARCHAR (50) NULL,
     [VisitPointByClientPortfolioId] INT          NULL,
+    [IsDefault]                     BIT          CONSTRAINT [DF_DeliveryFavCOD_IsDefault] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_DeliveryFavCOD] PRIMARY KEY CLUSTERED ([IdDeliveryFavCOD] ASC)
 );
+
+
 
 
 GO
@@ -25,4 +28,8 @@ CREATE NONCLUSTERED INDEX [IX_DeliveryFavCOD_BankStatusList]
 GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryFavCOD_LoadList]
     ON [dbo].[DeliveryFavCOD]([VisitPointByClientPortfolioId] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para identificar la cuenta que se seleccionó como favorita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryFavCOD', @level2type = N'COLUMN', @level2name = N'IsDefault';
 

@@ -398,11 +398,25 @@ BEGIN
 					FROM
 						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 					WHERE
-						Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-						AND
-						Co.IdProduct = 1
+						(
+							(
+								Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+								AND
+								Co.GuideNumber = @GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
 						AND
 						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
 				), 0)
 
 				SET @PromoName = ISNULL((
@@ -1023,17 +1037,40 @@ BEGIN
 
 			INSERT INTO
 				DeliveryBackOffice.dbo.Cost
-				( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated )
+				( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
 			SELECT
-				1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TokenCreated, GETDATE()
+				1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TokenCreated, GETDATE(), AG.GuideSerie, AG.GuideNumber
 			FROM
 				@AcceptedGuides AG
-				LEFT JOIN
-					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
-					ON
-						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
+				OUTER APPLY (
+					SELECT
+						TOP 1
+							Co.IdCost
+					FROM
+						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+					WHERE
+						(
+							(
+								Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+								AND
+								Co.GuideNumber = @GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
+						AND
+						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
+				) CoAux
 			WHERE
-				Co.IdCost IS NULL
+				CoAux.IdCost IS NULL
 						
 			UPDATE
 				Co
@@ -1041,13 +1078,42 @@ BEGIN
 				Co.TotalAmountPaid = Co.TotalAmount,
 				Co.PaymentDate = GETDATE(),
 				Co.TokenUpdated = @TokenCreated,
-				Co.DateUpdated = GETDATE()
+				Co.DateUpdated = GETDATE(),
+				Co.GuideSerie = AG.GuideSerie,
+				Co.GuideNumber = AG.GuideNumber
 			FROM	
 				@AcceptedGuides AG
+				OUTER APPLY (
+					SELECT
+						TOP 1
+							Co.IdCost
+					FROM
+						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+					WHERE
+						(
+							(
+								Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+								AND
+								Co.GuideNumber = @GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
+						AND
+						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
+				) CoAux
 				INNER JOIN
 					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
 					ON
-						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
+						Co.IdCost = CoAux.IdCost
 
 		END
 

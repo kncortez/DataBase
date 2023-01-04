@@ -414,17 +414,31 @@ BEGIN
 						DECLARE @CostId INT = 0;
 
 						SET @CostId = ISNULL((
-							SELECT
+						SELECT
 								TOP 1
 									Co.IdCost
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-								AND
-								Co.IdProduct = 1
+								(
+									(
+										Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+										AND
+										Co.GuideNumber = @GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
 								AND
 								Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
 						), 0)
 
 						SET @PromoName = ISNULL((
@@ -814,32 +828,69 @@ BEGIN
 					SET @Guia = @OrderNumber
 				END
 
+				IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
+					DROP TABLE #listGuides;
+
+				SELECT 
+					LTRIM(RTRIM(SUBSTRING(Item, 1,2))) ItemSerie
+					,LTRIM(RTRIM(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))))) ItemNumber 
+				INTO 
+					#listGuides
+				FROM 
+					DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@Guia)),',')
+
 				SELECT
-					@CostCount = COUNT(1)
-				   ,@IdCost = c.IdCost
-				   ,@Amount = c.TotalAmount
-				FROM Cost c
-				WHERE c.ProductNumber = @Guia
-				GROUP BY IdCost
-						,TotalAmount
-						,TokenCreated
+					TOP 1
+						@GuideSerie = LG.ItemSerie
+						,@GuideNumber = LG.ItemNumber
+				FROM
+					#listGuides LG
+		
+				IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
+					DROP TABLE #listGuides;
 
-			
 
-				IF (@CostCount > 0
-					AND @IdProduct = 1)
+				SELECT
+					@CostCount = ISNULL(Co.IdCost,0)
+				   ,@IdCost = ISNULL(Co.IdCost, 0)
+				   ,@Amount = ISNULL(Co.TotalAmount, 0)
+				FROM 
+					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
+				WHERE
+					(
+						(
+							Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+							AND
+							Co.GuideNumber = @GuideNumber
+						)
+						OR
+						(
+							Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+							AND
+							Co.GuideSerie IS NULL
+							AND
+							Co.GuideNumber IS NULL
+						)
+					)
+					AND
+					Co.RowStatus = 1
+				ORDER BY
+					Co.DateCreated DESC
+
+				IF (@CostCount > 0)
 				BEGIN
 			
 					UPDATE Cost
 					SET TotalAmount = @TransactionAmount
 					   ,TokenUpdated = @TransactionTokenUpdated
 					   ,TotalAmountPaid = @TransactionAmount
-					WHERE ProductNumber = @Guia
+					   ,GuideSerie = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideSerie END)
+					   ,GuideNumber = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideNumber END)
+					WHERE IdCost = @IdCost
 
 				END
 				ELSE
-				IF (@CostCount = 0
-					AND @IdProduct = 1)
+				IF (@CostCount = 0)
 				BEGIN
 		
 					INSERT INTO [dbo].[Cost] ([IdProduct]
@@ -853,14 +904,16 @@ BEGIN
 					, [DateCreated]
 					, [TokenUpdated]
 					, [DateUpdated]
-					, [TotalAmountPaid])
-						VALUES (@IdProduct, @Guia, @IdProduct, @TransactionAmount, GETDATE(), 7, 1, @TransactionTokeCreated, GETDATE(), NULL, NULL, @TransactionAmount)
+					, [TotalAmountPaid]
+					, [GuideSerie]
+					, [GuideNumber])
+						VALUES (@IdProduct, @Guia, @IdProduct, @TransactionAmount, GETDATE(), 7, 1, @TransactionTokeCreated, GETDATE(), NULL, NULL, @TransactionAmount, (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideSerie END), (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideNumber END))
 
 
 				END
 				ELSE
-				IF (@CostCount > 0
-					AND @IdProduct = 2)
+
+				IF (@CostCount > 0)
 				BEGIN
 		
 					UPDATE Cost
@@ -871,7 +924,9 @@ BEGIN
 					   ,TokenUpdated = @TransactionTokenUpdated
 					   ,DateUpdated = GETDATE()
 					   ,TotalAmountPaid = @TransactionAmount
-					WHERE ProductNumber = @Guia
+					   ,GuideSerie = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideSerie END)
+					   ,GuideNumber = (CASE WHEN @GuideSerie != 'FD' THEN NULL ELSE @GuideNumber END)
+					WHERE IdCost = @IdCost
 				END
 
 
