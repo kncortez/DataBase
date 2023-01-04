@@ -93,13 +93,13 @@ BEGIN
 	-- Punto de visita por cuenta ingresada
 	SET @VisitPointClientIdByUser = (
 		SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-		JOIN VisitPointByUser VPU
+		INNER JOIN VisitPointByUser VPU
 			ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
 				AND VPU.RowStatus = 1
-		JOIN RegisterUser ru
+		INNER JOIN RegisterUser ru
 			ON VPU.RegisterUserID = ru.UsrIdUser
 				AND ru.UsrRowStatus = 1
-		JOIN [dbo].[RolByUserByAccount] rua
+		INNER JOIN [dbo].[RolByUserByAccount] rua
 			ON rua.RuaIdUser = ru.UsrIdUser
 		WHERE rua.RuaIdAccount = @AccountId
 	)
