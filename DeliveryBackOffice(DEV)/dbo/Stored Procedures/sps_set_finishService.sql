@@ -590,7 +590,41 @@ BEGIN
                                     ON lge.Guide_Number = dop.GuideNumber
                                        AND lge.Guide_Serie = dop.GuideSerie;
 
-							
+							DECLARE @CartGuides AS TABLE (
+								GuideSerie NVARCHAR(2),
+								GuideNumber INT
+							);
+							UPDATE
+								ASCD
+							SET
+								RowStatus = 0
+								,TokenUpdated = @TokenP
+								,DateUpdated = GETDATE()
+							OUTPUT inserted.GuideSerie, inserted.GuideNumber INTO @CartGuides (GuideSerie, GuideNumber)
+							FROM
+								[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+								INNER JOIN
+									#listGuidesEnabled LGE WITH(NOLOCK)
+									ON
+										ASCD.GuideSerie = LGE.Guide_Serie
+										AND
+										ASCD.GuideNumber = LGE.Guide_Number
+										AND
+										ASCD.RowStatus = 1
+
+							UPDATE
+								DOPD
+							SET
+								DOPD.ShipmentCompleted = 1
+							FROM
+								[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+								INNER JOIN
+									@CartGuides CG
+									ON
+										DOPD.GuideSerie = CG.GuideSerie
+										AND
+										DOPD.GuideNumber = CG.GuideNumber
+
 							-----------------WEBHOOK.INI-----------------------		
 							IF (UPPER(@ServiceType) = 'DELIVERY')
                             BEGIN
