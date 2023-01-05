@@ -12,7 +12,10 @@
     [ModDateCreated]    DATETIME      NOT NULL,
     [ModTokenUpdated]   VARCHAR (50)  NULL,
     [ModDateUpdated]    DATETIME      NULL,
+    [ModGroup]          INT           CONSTRAINT [DF_CatModule_ModGroup] DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([ModIdModule] ASC),
     FOREIGN KEY ([ModIdModuleParent]) REFERENCES [dbo].[CatModule] ([ModIdModule])
 );
+
+
 

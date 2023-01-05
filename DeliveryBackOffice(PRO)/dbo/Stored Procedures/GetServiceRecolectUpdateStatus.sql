@@ -8,7 +8,6 @@
 
 CREATE PROCEDURE [dbo].[GetServiceRecolectUpdateStatus]
 --	-- Add the parameters for the stored procedure here
---DECLARE
 		@InGuides   NVARCHAR(400) = 'FD199242',--'FD22221,FD22361,FD22223,FD22359,FD22226',
     	@Iscollected bit = 'FALSE',
         @status int = 1,
@@ -42,45 +41,52 @@ BEGIN
 			select SUBSTRING(Item, 1,2) ItemSerie,SUBSTRING(Item,3,len(Item)) ItemNumber 
 				into #listGuides
 				from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
-
-		   --PRINT 'PASS'
-
-			update DeliveryOrder set  StatusOrderId = @status  --,IsCollect = @Iscollected,
+				
+			update DeliveryOrder set  StatusOrderId = @status
 			from #listGuides ls
 			inner join dbo.DeliveryOrder od on od.Guide_Serie =  ls.ItemSerie and od.Guide_Number = ls.ItemNumber
 
-			--PRINT 'PASD'
 			update DeliveryOrderPaymentDetail set ShipmentCompleted = @ShipmentCompleted
 			from #listGuides ls
 			inner join dbo.DeliveryOrderPaymentDetail od on od.GuideSerie =  ls.ItemSerie and od.GuideNumber = ls.ItemNumber
 
-			--PRINT 'PASH'
-
-			--SELECT * FROM DeliveryOrderDetail WHERE Guide_Number = 199242
-
 			---	 insertar checkpoint de Solicitado.	
-			insert into dbo.DeliveryOrderDetail
-			( [Guide_Serie]
-			  ,[Guide_Number]
-			  ,[StatusOrderId]
-			  ,[UserCreated]
-			  ,[DateCreated]
-			  ,[DateCreatedInSystem]
-			  ,[Observations]
-			  ,[Temperature_Celsius])
-			select ls.ItemSerie
-			,ls.ItemNumber
-			,1
-			,@Token
-			,GETDATE()
-			,GETDATE()
-			,null
-			,null
-			from #listGuides ls
+			insert into dbo.DeliveryOrderDetail ( 
+				[Guide_Serie]
+				,[Guide_Number]
+				,[StatusOrderId]
+				,[UserCreated]
+				,[DateCreated]
+				,[DateCreatedInSystem]
+				,[Observations]
+				,[Temperature_Celsius]
+			)
+			select 
+				DISTINCT
+					ls.ItemSerie
+					,ls.ItemNumber
+					,1
+					,@Token
+					,GETDATE()
+					,GETDATE()
+					,null
+					,null
+			from 
+				#listGuides ls
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+					ON
+						ls.ItemSerie = DOD.Guide_Serie
+						AND
+						ls.ItemNumber = DOD.Guide_Number
+						AND
+						DOD.StatusOrderId IN (1,21)
+						AND
+						DOD.RowStatus = 1
+			WHERE
+				DOD.DateCreated IS NULL
 	
 			DECLARE @jsonResult1 NVARCHAR(MAX) 
-
-
 
 			set @jsonResult1 = (SELECT STUFF(( 
 			select
