@@ -720,6 +720,7 @@ BEGIN
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
+				AND D.Guide_Serie = @GuideSerie
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
         WHERE D.Guide_Serie = @GuideSerie
