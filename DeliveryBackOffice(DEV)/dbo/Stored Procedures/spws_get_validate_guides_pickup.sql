@@ -32,6 +32,10 @@ BEGIN
         INTO #listGuides
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
 
+		--CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
+  --          ON #listGuides (ItemSerie, ItemNumber);
+
+	
         -- select * from #listGuides
 
         --Se inserta log de cambio de recolección a un servicio
@@ -58,10 +62,10 @@ BEGIN
                NULL,
                NULL
         FROM #listGuides g
-            JOIN DeliveryOrderPaymentDetail dopd
+            INNER JOIN DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
                 ON dopd.GuideSerie = g.ItemSerie
                    AND dopd.GuideNumber = g.ItemNumber
-            JOIN DeliveryOrder do
+            INNER JOIN DeliveryOrder do WITH(NOLOCK)
                 ON do.Guide_Serie = g.ItemSerie
                    AND do.Guide_Number = g.ItemNumber
         WHERE COALESCE(dopd.IdHeaderRecolection, 0) <> @IdPickup
@@ -70,11 +74,11 @@ BEGIN
         --Se asignan los servicios a la nueva recolección
         UPDATE dopd
         SET dopd.IdHeaderRecolection = @IdPickup
-        FROM DeliveryOrderPaymentDetail dopd
-            JOIN #listGuides g
+        FROM DeliveryOrderPaymentDetail dopd WITH(NOLOCK)
+            INNER JOIN #listGuides g
                 ON g.ItemSerie = dopd.GuideSerie
                    AND g.ItemNumber = dopd.GuideNumber
-            JOIN DeliveryOrder do
+            INNER JOIN DeliveryOrder do WITH(NOLOCK)
                 ON do.Guide_Serie = g.ItemSerie
                    AND do.Guide_Number = g.ItemNumber
         WHERE COALESCE(dopd.IdHeaderRecolection, 0) <> @IdPickup
@@ -90,14 +94,21 @@ BEGIN
         --, pyt.IdHeaderRecolection
         INTO #ErrorGuides
         FROM #listGuides lst
-            LEFT JOIN dbo.DeliveryOrder dr
+            LEFT JOIN dbo.DeliveryOrder dr WITH(NOLOCK)
                 ON dr.Guide_Serie = lst.ItemSerie
                    AND dr.Guide_Number = lst.ItemNumber
-            LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt
+            LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH(NOLOCK)
                 ON pyt.GuideSerie = dr.Guide_Serie
                    AND pyt.GuideNumber = dr.Guide_Number
-            LEFT JOIN dbo.StatusOrder st
+            LEFT JOIN dbo.StatusOrder st WITH(NOLOCK)
                 ON st.StatusOrderId = dr.StatusOrderId;
+
+		CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist
+            ON #ErrorGuides (exist);
+
+
+		CREATE NONCLUSTERED INDEX IX_ErrorGuides_status
+            ON #ErrorGuides (status);
 
         --select * from #ErrorGuides
 

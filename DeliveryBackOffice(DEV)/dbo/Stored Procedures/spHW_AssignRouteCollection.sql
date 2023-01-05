@@ -51,12 +51,12 @@ BEGIN TRANSACTION
 	
 
 	SELECT @NameCourrier = ISNULL(First_Name+' '+Last_Name,'N/D') 
-			FROM [dbo].[SenderReceiver] S 
+			FROM [dbo].[SenderReceiver] S WITH (NOLOCK)
 			WHERE S.ID = @IdCurrierMan 
 
 			SELECT @vehicleplates = ISNULL(CV.Plate,'N/D'),
 			       @UnitCode = ISNULL(CV.UnitNumber,0),
-				   @CodeOfRoute = CR.CodeRoute
+				   @CodeOfRoute = ISNULL(CR.CodeRoute,'N/D')
 			FROM RouteAssigment RA WITH (NOLOCK)
 		           INNER JOIN CatRoute CR WITH (NOLOCK)
 		           ON RA.IdRoute = CR.IdRoute
@@ -98,20 +98,28 @@ BEGIN TRANSACTION
 		  BEGIN 
 				SELECT Result=0, 
 				Descrip='Courierman no disponible',
-				CodeOfRoute=NULL, 
-				NameCourrier=NULL,
-				UnitCode=NULL, 
-				vehicleplates=NULL, 
+				CodeOfRoute='N/D', 
+				NameCourrier='N/D',
+				UnitCode='N/D', 
+				vehicleplates='N/D', 
 				IDRUTETYPE=NULL,
-				IdSchedulePickup=NULL
+				IdSchedulePickup=0
 		  END 
 	COMMIT TRANSACTION
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
 
-        SELECT  Result =2
+        SELECT Result=2, 
+				Descrip='Error al realizar la asignación',
+				CodeOfRoute='N/D', 
+				NameCourrier='N/D',
+				UnitCode='N/D', 
+				vehicleplates='N/D', 
+				IdSchedulePickup=0
              
+		
+		ROLLBACK TRANSACTION;
 	END CATCH
 	
 END

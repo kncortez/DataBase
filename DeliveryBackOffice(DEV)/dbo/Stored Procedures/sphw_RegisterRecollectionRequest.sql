@@ -26,10 +26,7 @@ BEGIN
 	SET NOCOUNT ON;
     DECLARE @TranCounter INT;  
     SET @TranCounter = @@TRANCOUNT;  
-    IF @TranCounter > 0  
-        SAVE TRANSACTION ProcedureSave;  
-    ELSE  
-        BEGIN TRANSACTION;  
+
 		
 
         BEGIN TRY
@@ -64,7 +61,13 @@ BEGIN
 		ELSE
 		BEGIN 
 
-			IF @Scheduled = 0
+
+			IF @TranCounter > 0  
+				SAVE TRANSACTION ProcedureSave;  
+			ELSE  
+				BEGIN TRANSACTION;  
+					IF @Scheduled = 0
+
 			BEGIN				
 				DECLARE @CURRENTDATE DATETIME= GETDATE();
 				SET @StartDate =DATEADD(mi,15,@CURRENTDATE);
