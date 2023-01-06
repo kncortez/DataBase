@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <05-09-2022>
@@ -84,6 +83,13 @@ BEGIN
 		AND
 		DO.Guide_Number = @Guide_Number;
 
+	--Control para mostrar imagenes
+	DECLARE @IsPhoneValid BIT = CASE WHEN @Receiver_Phone IS NOT NULL AND LTRIM(RTRIM(@Receiver_Phone)) = ( SELECT
+			Receiver_Phone
+		FROM @GuideOrderTemp) THEN 1
+		ELSE 0
+	END
+
 	IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL DROP TABLE #OrdChkpnt;
 
 	 SELECT RES.[EventID],
@@ -112,9 +118,8 @@ BEGIN
            RES.[Longitude],
 		   RES.Token,
 		   RES.Price,
-		   RES.COD,
-		   RES.NextSteps,
-		   RES.ReceiverPhone
+		   RES.COD,		   
+		   RES.NextSteps
 	INTO #OrdChkpnt
     FROM
     (
@@ -144,9 +149,8 @@ BEGIN
 			'' [Longitude],
 			'' [Token],
 			dor.PriceShippment [Price],
-			ISNULL(dor.Collect_OnDelivery, 0) [COD],
-			NULL [NextSteps],
-			do.Receiver_Phone [ReceiverPhone]
+			dor.Collect_OnDelivery [COD],
+			NULL [NextSteps]
 	FROM @GuideOrderTemp do
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 			ON da.Guide_Serie = do.Guide_Serie
@@ -199,7 +203,7 @@ BEGIN
 					ISNULL(so.StatusOrderTrackingDescription, '')
              END
             ) AS [StageDescription]
-            ,(CASE WHEN dod.StatusOrderId = 5 THEN
+            ,(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN
                      ISNULL(
                                ISNULL(
                                (
@@ -245,7 +249,7 @@ BEGIN
              END
             ) AS [ImagePath],
 
-			(CASE WHEN dod.StatusOrderId = 5 THEN 
+			(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN 
 				(SELECT TOP 1
 					IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
 						FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
@@ -257,7 +261,7 @@ BEGIN
 								AND dp.Guide_Number = @Guide_Number order By dp.Date_Photo desc)
 			ELSE '' END) AS [Dry],
 
-			(CASE WHEN dod.StatusOrderId = 5 THEN 
+			(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN 
 				(SELECT TOP 1
 					IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
                         FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
@@ -272,13 +276,12 @@ BEGIN
             (CASE WHEN dod.StatusOrderId = 5 THEN (SELECT TOP 1 NameOfReceiver FROM @GuideOrderTemp) ELSE '' END) AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
-            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
+            (CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
+            (CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
 			dod.UserCreated Token,
 			0 [Price],
 			0 [COD],
-			so.NextSteps NextSteps,
-			'' [ReceiverPhone]
+			so.NextSteps NextSteps
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
@@ -297,9 +300,9 @@ BEGIN
     ) RES
     ORDER BY RES.[StageDate] ASC,
              RES.[EventID];
-	
-	CREATE NONCLUSTERED INDEX ix_OrdChkpnt_Token_StageDate_EventID ON #OrdChkpnt ([Token],[StageDate],[EventID]);
 
+	CREATE NONCLUSTERED INDEX ix_OrdChkpnt_Token_StageDate_EventID ON #OrdChkpnt ([Token],[StageDate],[EventID]);
+			 
 	SELECT     OrdChkPnt.[EventID],
 			   OrdChkPnt.[OrderId],
 			   OrdChkPnt.[CustomerFullname],
@@ -334,9 +337,8 @@ BEGIN
 			   OrdChkPnt.[Latitude],
 			   OrdChkPnt.[Longitude]
 			   , OrdChkPnt.Price
-			   , OrdChkPnt.COD
-			   , OrdChkPnt.NextSteps
-			   , OrdChkPnt.ReceiverPhone
+			   , OrdChkPnt.COD		
+			   ,OrdChkPnt.[NextSteps]
 	FROM #OrdChkpnt OrdChkPnt
 	-- Obtener datos desde usuario Desktop
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
