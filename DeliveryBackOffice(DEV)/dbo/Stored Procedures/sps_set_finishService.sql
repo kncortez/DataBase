@@ -789,6 +789,11 @@ BEGIN
 							END TRY
 							BEGIN CATCH
 
+							END CATCH
+
+							IF( ISNULL(@IdCost, 0) = 0 )
+							BEGIN
+
 								SELECT
 									TOP 1
 										@IdCost = CoAux.IdCost
@@ -822,7 +827,8 @@ BEGIN
 											Co.DateCreated DESC
 									) CoAux
 
-							END CATCH
+							END
+
 
                             UPDATE ct
                             SET ct.[PaymentDate] = GETDATE(),
