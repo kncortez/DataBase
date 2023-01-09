@@ -123,59 +123,166 @@ BEGIN
 
 		CREATE NONCLUSTERED INDEX IX_ProductVendor_Guide ON #AccountFilteredGuides (GuideSerie, GuideNumber);
 		CREATE NONCLUSTERED INDEX IX_ProductVendor_Status ON #AccountFilteredGuides (StatusOrderId);
+		
+		IF(@CustomerTypeId = 3)
+		BEGIN
 
-		INSERT INTO #AccountFilteredGuides
-			(
-				GuideSerie
-				,GuideNumber
-				,StatusOrderId
-				,Pieces_Dry
-				,Pieces_Cold
-				,Ticket_Number
-				,Receiver_FirstName
-				,Receiver_LastName
-				,Receiver_Phone
-				,IsCollect
-				,PriceShippment
-				,Collect_OnDelivery
-				,TypeService
-				,DateCreated
-			)
-		SELECT
-			DISTINCT
-				DO.Guide_Serie
-				,DO.Guide_Number
-				,DO.StatusOrderId
-				,DO.Pieces_Dry
-				,DO.Pieces_Cold
-				,DO.Ticket_Number
-				,DO.Receiver_FirstName
-				,DO.Receiver_LastName
-				,DO.Receiver_Phone
-				,DO.IsCollect
-				,DO.PriceShippment
-				,DO.Collect_OnDelivery
-				,DO.TypeService
-				,DO.DateCreated
-		FROM
-			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			INNER JOIN
-				@FilteredStatus FS
-				ON
-					DO.StatusOrderId = FS.StatusOrderId
-		WHERE
-			-- Área de filtros
-			(
-				( @CustomerTypeId = 3 AND DO.IdCustomer = @CustomerId)
-				OR
-				( @CustomerTypeId = 2 AND (DO.Sender_ID = @VisitPointByAccount OR do.OriginSenderId = @VisitPointByAccount) )
-				OR
-				( @CustomerTypeId = 1 AND (DO.Sender_ID = @VisitPointByAccount)  )
-			)
-			AND
-			( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
-			AND
-			( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+			INSERT INTO #AccountFilteredGuides
+				(
+					GuideSerie
+					,GuideNumber
+					,StatusOrderId
+					,Pieces_Dry
+					,Pieces_Cold
+					,Ticket_Number
+					,Receiver_FirstName
+					,Receiver_LastName
+					,Receiver_Phone
+					,IsCollect
+					,PriceShippment
+					,Collect_OnDelivery
+					,TypeService
+					,DateCreated
+				)
+			SELECT
+				DISTINCT
+					DO.Guide_Serie
+					,DO.Guide_Number
+					,DO.StatusOrderId
+					,DO.Pieces_Dry
+					,DO.Pieces_Cold
+					,DO.Ticket_Number
+					,DO.Receiver_FirstName
+					,DO.Receiver_LastName
+					,DO.Receiver_Phone
+					,DO.IsCollect
+					,DO.PriceShippment
+					,DO.Collect_OnDelivery
+					,DO.TypeService
+					,DO.DateCreated
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+					@FilteredStatus FS
+					ON
+						DO.StatusOrderId = FS.StatusOrderId
+			WHERE
+				-- Área de filtros
+				(
+					( @CustomerTypeId = 3 AND DO.IdCustomer = @CustomerId)
+				)
+				AND
+				( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+				AND
+				( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+		END
+		ELSE IF (@CustomerTypeId = 2)
+		BEGIN
+
+			INSERT INTO #AccountFilteredGuides
+				(
+					GuideSerie
+					,GuideNumber
+					,StatusOrderId
+					,Pieces_Dry
+					,Pieces_Cold
+					,Ticket_Number
+					,Receiver_FirstName
+					,Receiver_LastName
+					,Receiver_Phone
+					,IsCollect
+					,PriceShippment
+					,Collect_OnDelivery
+					,TypeService
+					,DateCreated
+				)
+			SELECT
+				DISTINCT
+					DO.Guide_Serie
+					,DO.Guide_Number
+					,DO.StatusOrderId
+					,DO.Pieces_Dry
+					,DO.Pieces_Cold
+					,DO.Ticket_Number
+					,DO.Receiver_FirstName
+					,DO.Receiver_LastName
+					,DO.Receiver_Phone
+					,DO.IsCollect
+					,DO.PriceShippment
+					,DO.Collect_OnDelivery
+					,DO.TypeService
+					,DO.DateCreated
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+					@FilteredStatus FS
+					ON
+						DO.StatusOrderId = FS.StatusOrderId
+			WHERE
+				-- Área de filtros
+				(
+					( @CustomerTypeId = 2 AND (DO.Sender_ID = @VisitPointByAccount OR do.OriginSenderId = @VisitPointByAccount) )
+				)
+				AND
+				( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+				AND
+				( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+		END
+		ELSE IF (@CustomerTypeId = 1)
+		BEGIN
+
+			INSERT INTO #AccountFilteredGuides
+				(
+					GuideSerie
+					,GuideNumber
+					,StatusOrderId
+					,Pieces_Dry
+					,Pieces_Cold
+					,Ticket_Number
+					,Receiver_FirstName
+					,Receiver_LastName
+					,Receiver_Phone
+					,IsCollect
+					,PriceShippment
+					,Collect_OnDelivery
+					,TypeService
+					,DateCreated
+				)
+			SELECT
+				DISTINCT
+					DO.Guide_Serie
+					,DO.Guide_Number
+					,DO.StatusOrderId
+					,DO.Pieces_Dry
+					,DO.Pieces_Cold
+					,DO.Ticket_Number
+					,DO.Receiver_FirstName
+					,DO.Receiver_LastName
+					,DO.Receiver_Phone
+					,DO.IsCollect
+					,DO.PriceShippment
+					,DO.Collect_OnDelivery
+					,DO.TypeService
+					,DO.DateCreated
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+					@FilteredStatus FS
+					ON
+						DO.StatusOrderId = FS.StatusOrderId
+			WHERE
+				-- Área de filtros
+				(
+					( @CustomerTypeId = 1 AND (DO.Sender_ID = @VisitPointByAccount)  )
+				)
+				AND
+				( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+				AND
+				( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+		END
 
 		IF( EXISTS(SELECT TOP 1 1 FROM #AccountFilteredGuides) )
 		BEGIN

@@ -74,7 +74,7 @@ BEGIN
     CREATE NONCLUSTERED INDEX IX_LGNE_NUMBER
     ON #listGuidesNotExist (Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
-
+	
     ---- Obtener guias que si se pueden procesar con el modulo indicado ------------------------------------
     SELECT lg.Guide_Serie,
            lg.Guide_Number
@@ -99,6 +99,8 @@ BEGIN
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
           );
+
+	--Select *from #listGuides;
 
     /*SELECT lg.Guide_Serie,
 			lg.Guide_Number
@@ -297,7 +299,7 @@ BEGIN
                                                                @CodeApp = '',
                                                                @IdModule = @IdModuleP,
                                                                @Token = @TokenP;
-
+	
     SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
            CONCAT(ppt.GuideSerie, CAST(ppt.GuideNumber AS VARCHAR)) Guide,
            ppt.GuideSerie,

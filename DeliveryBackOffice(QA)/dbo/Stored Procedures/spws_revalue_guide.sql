@@ -400,7 +400,24 @@ BEGIN
 
     END;
     --- Fin de validaciónes de tarifa y tipo de pieza vacio
-
+	-- Verificar si la guía uso membresia
+	IF(ISNULL(@UseMembership, 0) = 0) -- Se indica no usar membresia
+	BEGIN
+		-- Corroborar si guía si utilizo una membresia al ser generada
+		SELECT
+			@UseMembership = 1
+		FROM
+			[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
+		WHERE
+			MSL.LogGuideNumber = @GuideNumber
+			AND
+			MSL.LogGuideSerie = @GuideSerie
+			AND
+			MSL.RowStatus = 1
+		-- Se considera que no se usa membresia
+		IF(ISNULL(@UseMembership, 0) = 0)
+			SET @UseMembership = 0;
+	END
     --select @Pesos , @Parcel
     INSERT INTO @TempRate
     EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp,
@@ -979,14 +996,14 @@ BEGIN
 			[BreakdownOfPaymentTypeId]
         )
         VALUES
-        (1, 'Servicio', (@BaseRate + @IrregularPiece), @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'Servicio') ),
-        (2, 'Frágil', @FragilRate, @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'Frágil')),
-        (3, 'Seguro', @InsuranceRate, @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'Seguro')),
-        (4, 'Pago en Destino', @CollectedRate, @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'Pago en Destino')),
-        (5, 'Recargo por Peso', @OverWeightRate, @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'Recargo por Peso')),
-        (6, 'Otros cargos', @CreditCardRate, @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'Otros cargos')),
+        (1, 'Servicio', (@BaseRate + @IrregularPiece), @IdModule, 'true', @Token, 1 ),
+        (2, 'Frágil', @FragilRate, @IdModule, 'true', @Token, 2 ),
+        (3, 'Seguro', @InsuranceRate, @IdModule, 'true', @Token, 3 ),
+        (4, 'Pago en Destino', @CollectedRate, @IdModule, 'true', @Token, 4 ),
+        (5, 'Recargo por Peso', @OverWeightRate, @IdModule, 'true', @Token, 5 ),
+        (6, 'Otros cargos', @CreditCardRate, @IdModule, 'true', @Token, 6 ),
         (7, @DiscountDescription, @Discount, @IdModule, 'true', @Token, NULL),
-        (8, 'IVA', @Taxes, @IdModule, 'true', @Token, (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = 'IVA'));
+        (8, 'IVA', @Taxes, @IdModule, 'true', @Token, 7 );
 
         DECLARE @ProdctNumber VARCHAR(49) = @GuideSerie + CONVERT(VARCHAR, @GuideNumber);
         --select * from @TblCost	

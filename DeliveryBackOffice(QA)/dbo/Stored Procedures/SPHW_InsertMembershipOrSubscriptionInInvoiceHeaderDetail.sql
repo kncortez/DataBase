@@ -73,7 +73,7 @@ BEGIN TRY
 		        @inv_amount     = M.MembershipCost,
 		        @inv_cli_email  = M.InvoiceEmail,
 				@inv_cli_adress = M.FiscalAddress ,
-				@inv_cli_nit    = M.TaxIdNumber,
+				@inv_cli_nit    = REPLACE(M.TaxIdNumber,'-',''),
 				@inv_cli_name   = M.InvoiceName,
 				@inv_IVA  =   M.MembershipCost - (M.MembershipCost / 1.12),
 				@Descriptionp = CM.MembershipName
@@ -85,7 +85,7 @@ BEGIN TRY
 				 CM.IdCatMembership = @IdSalePackage
 
 				
-		 
+		
 
 		END
 		ELSE
@@ -97,7 +97,7 @@ BEGIN TRY
 			    @inv_amount     = S.SubscriptionCost,
 		        @inv_cli_email  = M.InvoiceEmail,
 				@inv_cli_adress = M.FiscalAddress ,
-				@inv_cli_nit    = M.TaxIdNumber,
+				@inv_cli_nit    = REPLACE(M.TaxIdNumber,'-',''),
 				@inv_cli_name   = M.InvoiceName,
 				@inv_IVA  =   S.SubscriptionCost - (S.SubscriptionCost / 1.12),
 				@Descriptionp = CS.SubscriptionName

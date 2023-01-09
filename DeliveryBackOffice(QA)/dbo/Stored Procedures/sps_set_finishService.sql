@@ -589,11 +589,27 @@ BEGIN
                                 INNER JOIN #listGuidesEnabled lge WITH (NOLOCK)
                                     ON lge.Guide_Number = dop.GuideNumber
                                        AND lge.Guide_Serie = dop.GuideSerie;
+									   
+							UPDATE
+								ASCD
+							SET
+								RowStatus = 0
+								,TokenUpdated = @TokenP
+								,DateUpdated = GETDATE()
+							FROM
+								[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+								INNER JOIN
+									#listGuidesEnabled LGE WITH(NOLOCK)
+									ON
+										ASCD.GuideSerie = LGE.Guide_Serie
+										AND
+										ASCD.GuideNumber = LGE.Guide_Number
+										AND
+										ASCD.RowStatus = 1
 
-							
 							-----------------WEBHOOK.INI-----------------------		
-							IF (UPPER(@ServiceType) = 'DELIVERY')
-                            BEGIN
+							--IF (UPPER(@ServiceType) = 'DELIVERY')
+       --                     BEGIN
 								DECLARE @WebhookCustomerTable AS TABLE(
 									CustomerId INT,
 									CustomerEndpointId BIGINT,
@@ -694,7 +710,7 @@ BEGIN
 								BEGIN CATCH
 
 								END CATCH
-							END
+							--END
 							-------------------WEBHOOK.FIN------------------------------	
 
                             -------GUARDAR COSTO--------------------
@@ -755,6 +771,11 @@ BEGIN
 							END TRY
 							BEGIN CATCH
 
+							END CATCH
+
+							IF( ISNULL(@IdCost, 0) = 0 )
+							BEGIN
+
 								SELECT
 									TOP 1
 										@IdCost = CoAux.IdCost
@@ -788,7 +809,7 @@ BEGIN
 											Co.DateCreated DESC
 									) CoAux
 
-							END CATCH
+							END
 
                             UPDATE ct
                             SET ct.[PaymentDate] = GETDATE(),

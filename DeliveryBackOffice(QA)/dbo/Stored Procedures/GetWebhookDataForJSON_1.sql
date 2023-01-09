@@ -227,7 +227,9 @@ BEGIN
 								AND 
 								GSRT.GuideNumber =DA.Guide_Number
 								AND
-								DA.Delivered = 1
+								DA.Delivered = 0
+								AND
+								DA.ID_Incident IS NOT NULL
 							ORDER BY
 								DA.Date_Created DESC
 						) DA
