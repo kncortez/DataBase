@@ -273,7 +273,13 @@ BEGIN
 				WHERE ca.Name = @NameArticleSecure
 		END
 
-	SELECT * FROM @GuideDetail;
+	SELECT	SAPCode,
+			Name ,
+			Description ,
+			Price,
+			Category,
+			SendToInvoice
+	FROM @GuideDetail;
 
 	SET NOCOUNT OFF;
 END	
