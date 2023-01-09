@@ -80,7 +80,7 @@ BEGIN
 									   
 										'"Costo":"' + CAST(CM.MembershipCost AS VARCHAR)+'"'+  ',' +
 										'"Tiempo de validez":"'+CAST(CM.MembershipValidity AS VARCHAR)+'"'+   ',' +
-										'"ActiveClienteHasSalesPackage":' + (CASE WHEN ISNULL(MMBRSHP.IdMembership, 0) = 0 THEN 0 ELSE 1 END) +
+										'"ActiveClienteHasSalesPackage":' + CAST((CASE WHEN ISNULL(MMBRSHP.IdMembership, 0) = 0 THEN 0 ELSE 1 END)AS VARCHAR) +
 							         '}]' +
 						  '}'
 			
@@ -159,7 +159,7 @@ BEGIN
 									   
 											'"Costo":"' + CAST(CS.SubscriptionCost AS VARCHAR)+'"'+  ',' +
 											'"Tiempo de validez":"'+CAST(CS.SubscriptionValidity AS VARCHAR)+'"'+     ',' +
-											'"ActiveClienteHasSalesPackage":' + (CASE WHEN ISNULL(SBSCRPTN.IdSubscription, 0) = 0 THEN 0 ELSE 1 END) +
+											'"ActiveClienteHasSalesPackage":' + CAST( (CASE WHEN ISNULL(SBSCRPTN.IdSubscription, 0) = 0 THEN 0 ELSE 1 END)AS VARCHAR) +
 										 '}]' +
 							  '}'
 			
