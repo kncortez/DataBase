@@ -218,11 +218,24 @@ BEGIN
 						FROM
 							[DeliveryBackOffice].[dbo].[cost] Co WITH(NOLOCK)
 						WHERE 
-							Co.productnumber = Concat(@GuideSerie, @GuideNumber) COLLATE latin1_general_CI_AI
-							AND 
-							Co.idproduct = 1
-							AND 
-							Co.rowstatus = 1
+							(
+								(
+									Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+									AND
+									CO.GuideNumber = @GuideNumber
+								)
+								OR
+								(
+									Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+									AND
+									Co.GuideSerie IS NULL
+									AND
+									Co.GuideNumber IS NULL
+								)
+							)
+							AND Co.RowStatus = 1
+						ORDER BY
+							Co.DateCreated DESC
 					)
 				, 0)
 
@@ -389,11 +402,24 @@ BEGIN
 							FROM
 								[DeliveryBackOffice].[dbo].[cost] Co WITH(NOLOCK)
 							WHERE 
-								Co.productnumber = Concat(@GuideSerie, @GuideNumber) COLLATE latin1_general_CI_AI
-								AND 
-								Co.idproduct = 1
-								AND 
-								Co.rowstatus = 1
+								(
+									(
+										Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+										AND
+										CO.GuideNumber = @GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
+								AND Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
 						)
 					, 0)
 

@@ -206,7 +206,7 @@ BEGIN
                               GROUP BY DOD.Guide_Number
                           --y sobre esa fecha buscar si hay un retornado a forza
                           ) tbl1
-                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3
+                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3 WITH(NOLOCK)
                                   ON DOD3.Guide_Number = tbl1.Guide_Number
                                      AND DOD3.StatusOrderId = 8 --retornado a forza
                                      AND DOD3.DateCreatedInSystem > tbl1.MaxDeliveryDate
@@ -445,21 +445,21 @@ BEGIN
             GROUP BY CSD.IdCost
         ) CSD
             ON CST.IdCost = CSD.IdCost
-        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO
+        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO WITH (NOLOCK)
             ON CTO.tio_pk_id = CSD.IdTypeOfMoney
-        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON VPC.CodeOfReference = DOR.Sender_ID
-        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient KVP
+        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient KVP WITH (NOLOCK)
             ON KVP.IdKindOfVPClient = VPC.IdKindOfVPClient
-        LEFT JOIN DeliveryBackOffice.dbo.Customer CTM
+        LEFT JOIN DeliveryBackOffice.dbo.Customer CTM WITH (NOLOCK)
             ON CTM.IdCustomer = DOR.IdCustomer
-        LEFT JOIN DeliveryBackOffice.dbo.Customer CTV
+        LEFT JOIN DeliveryBackOffice.dbo.Customer CTV WITH (NOLOCK)
             ON CTV.IdCustomer = VPC.CustomerID
-		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB
+		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH (NOLOCK)
 			ON ISNULL(CTV.TypeOfBusinessID, CTM.TypeOfBusinessID) = CTOB.IdTypeOfBusiness
-        LEFT JOIN DeliveryBackOffice.dbo.CustomerType CTT
+        LEFT JOIN DeliveryBackOffice.dbo.CustomerType CTT WITH (NOLOCK)
             ON CTT.IdCustomerType = CTM.IdCustomerType --45STEBNHL
-        LEFT JOIN #TransactionFAC1 FAC
+        LEFT JOIN #TransactionFAC1 FAC 
             ON FAC.GuideSerie = DOR.Guide_Serie
                AND FAC.OrderNumber = DOR.Guide_Number
         LEFT JOIN
@@ -528,5 +528,5 @@ BEGIN
 	AND
 	INH.IsManualInvoice = 1; */
 
-	IF OBJECT_ID('tempdb.dbo.#TransactionFAC1', 'U') IS NOT NULL DROP TABLE #TransactionFAC1;
+	DROP TABLE #TransactionFAC1;
 END;

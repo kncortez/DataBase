@@ -58,3 +58,11 @@ GO
 CREATE UNIQUE NONCLUSTERED INDEX [UQ_GuideSerie_GuideNumber]
     ON [dbo].[Cost]([GuideSerie] ASC, [GuideNumber] ASC) WHERE ([GuideSerie] IS NOT NULL AND [GuideNumber] IS NOT NULL);
 
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Serie de la guía de la tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'GuideSerie';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de la guía de la tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'GuideNumber';
+

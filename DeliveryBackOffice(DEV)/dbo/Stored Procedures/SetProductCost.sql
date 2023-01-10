@@ -46,16 +46,24 @@ BEGIN
 
     -- verificar si el registro existe o esta pagado
 
-    IF OBJECT_ID('tempdb.dbo.#TblExist', 'U') IS NOT NULL
-        DROP TABLE #TblExist;
-	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
-		DROP TABLE #listGuides;
+	DECLARE @TblExists TABLE (
+        IdCost INT,
+        TotalAmountPaid DECIMAL(12, 2)
+	)
+	DECLARE @ListGuides TABLE (
+		ItemSerie NVARCHAR(2),
+		ItemNumber INT
+	)
 
+	INSERT INTO
+		@ListGuides
+		(
+			ItemSerie
+			,ItemNumber
+		)
 	SELECT 
-		LTRIM(RTRIM(SUBSTRING(Item, 1,2))) ItemSerie
-		,LTRIM(RTRIM(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))))) ItemNumber 
-	INTO 
-		#listGuides
+		CONVERT(NVARCHAR(2), LTRIM(RTRIM(SUBSTRING(Item, 1,2)))) ItemSerie
+		,CAST(LTRIM(RTRIM(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))))) AS INT) ItemNumber 
 	FROM 
 		DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@ProductNumber)),',')
 
@@ -64,21 +72,10 @@ BEGIN
 			@GuideSerie = LG.ItemSerie
 			,@GuideNumber = LG.ItemNumber
 	FROM
-		#listGuides LG
+		@ListGuides LG
 		
-	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
-		DROP TABLE #listGuides;
-
-    CREATE TABLE #TblExist
-    (
-        IdCost INT,
-        TotalAmountPaid DECIMAL(12, 2)
-    );
-    CREATE NONCLUSTERED INDEX TempTblExistIdCost ON #TblExist (IdCost);
-
-
     DECLARE @jsonResult NVARCHAR(MAX);
-    INSERT INTO #TblExist
+    INSERT INTO @TblExists
     (
         IdCost,
         TotalAmountPaid
@@ -86,7 +83,7 @@ BEGIN
     SELECT TOP 1
            cst.IdCost,
            cst.TotalAmountPaid
-    --  INTO #TblExist
+
     FROM dbo.Cost cst WITH (NOLOCK)
     WHERE 
 		(
@@ -112,12 +109,12 @@ BEGIN
 
     DECLARE @IdCost INT =
             (
-                SELECT ISNULL(xd.IdCost, 0)FROM #TblExist xd
+                SELECT ISNULL(xd.IdCost, 0)FROM @TblExists xd
             );
 
     DECLARE @IsPaid DECIMAL(12, 2) =
             (
-                SELECT ISNULL(xd.TotalAmountPaid, 0)FROM #TblExist xd
+                SELECT ISNULL(xd.TotalAmountPaid, 0)FROM @TblExists xd
             );
 
     DECLARE @CostCount INT;
@@ -501,7 +498,6 @@ BEGIN
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
-            -- select * from #TblExist
             IF (@IdCost > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
             BEGIN
 

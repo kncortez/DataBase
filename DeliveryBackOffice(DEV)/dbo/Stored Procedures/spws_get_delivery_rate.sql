@@ -96,6 +96,13 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
+    DECLARE @NewMainRates2 INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifario de servicio estandar de pruebas' COLLATE Latin1_General_CI_AI
+            );
 
     DECLARE @IdRate AS INT;
     DECLARE @IdTypeRate AS INT;
@@ -205,7 +212,7 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
             WHERE ARC.CustomerId = @IdCustomer
                   AND ARC.RowStatus = 1
-                  AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+                  AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates, @NewMainRates2 );
 
             SET @IdRate = @RateId;
 
@@ -556,65 +563,57 @@ BEGIN
     ORDER BY cov.Hub DESC;
 
     --------------- Fin determinar Hub Origen y Destino ---------------------------------------------------------------------------------------------------
+	
+---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
+--PRINT 'determinar segmento LOC/MET/FOR '
+		if @CodeOfReferenceSource <=0 -- si no viene el codeOfReference tomar el primero de cada cliente
+		begin
+			select top 1 @CodeOfReferenceSource = vp.CodeOfReference from dbo.VisitPointClient vp WITH(NOLOCK)
+			where vp.CustomerID = @IdCustomer
+		end
+	DECLARE @IdSegment int
 
-    ---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
-    --PRINT 'determinar segmento LOC/MET/FOR '
-    IF @CodeOfReferenceSource <= 0 -- si no viene el codeOfReference tomar el primero de cada cliente
-    BEGIN
-        SELECT TOP 1
-               @CodeOfReferenceSource = vp.CodeOfReference
-        FROM dbo.VisitPointClient vp WITH (NOLOCK)
-        WHERE vp.CustomerID = @IdCustomer;
-    END;
-    DECLARE @IdSegment INT;
+	--PRINT 'CodeOfReference'
+	--PRINT @CodeOfReferenceSource
 
-    --PRINT 'CodeOfReference'
-    --PRINT @CodeOfReferenceSource
+	--PRINT '@IdHubDestiny'
+	--PRINT @IdHubDestiny
+	select  top 1  @IdSegment = cov.SegmentId 
+	from dbo.VisitPointCoverage cov
+	where cov.RowStatus ='true'
+	and cov.HublogisticId = @IdHubDestiny
+	and cov.VisitPointId = @CodeOfReferenceSource
 
-    --PRINT '@IdHubDestiny'
-    --PRINT @IdHubDestiny
-    SELECT TOP 1
-           @IdSegment = cov.SegmentId
-    FROM dbo.VisitPointCoverage cov
-    WHERE cov.RowStatus = 'true'
-          AND cov.HubLogisticId = @IdHubDestiny
-          AND cov.VisitPointId = @CodeOfReferenceSource;
+	--PRINT 'segmento'
+	--PRINT @IdSegment
+	if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
+		BEGIN
+		--PRINT 'segmento nulo'
+			IF @IdHubSource = @IdHubDestiny 
+				BEGIN
+				--PRINT 'hubs iguales'
+					SELECT top 1   @IdSegment = sg.CrsId 
+					FROM dbo.CatRateSegment sg  WITH(NOLOCK) WHERE sg.CrsShortName ='LOC'
+				END
+			ELSE 
+				BEGIN
+				--PRINT 'hubs default'
+					select  top 1  @IdSegment = cov.SegmentId  -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
+						from dbo.VisitPointCoverage cov WITH(NOLOCK)
+					where cov.RowStatus ='true'
+						and cov.HublogisticId = @IdHubDestiny
+						and @IdHubSource IN(1,22)
+				END
+		END
+        
+		if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
+		BEGIN
+			
+					SELECT top 1   @IdSegment = sg.CrsId 
+			from dbo.CatRateSegment sg WITH(NOLOCK) where sg.CrsShortName ='FOR'
+		END
 
-    --PRINT 'segmento'
-    --PRINT @IdSegment
-    IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
-    BEGIN
-        --PRINT 'segmento nulo'
-        IF @IdHubSource = @IdHubDestiny
-        BEGIN
-            --PRINT 'hubs iguales'
-            SELECT TOP 1
-                   @IdSegment = sg.CrsId
-            FROM dbo.CatRateSegment sg WITH (NOLOCK)
-            WHERE sg.CrsShortName = 'LOC';
-        END;
-        ELSE
-        BEGIN
-            --PRINT 'hubs default'
-            SELECT TOP 1
-                   @IdSegment = cov.SegmentId -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
-            FROM dbo.VisitPointCoverage cov WITH (NOLOCK)
-            WHERE cov.RowStatus = 'true'
-                  AND cov.HubLogisticId = @IdHubDestiny
-                  AND @IdHubSource IN ( 1, 22 );
-        END;
-    END;
-
-    IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
-    BEGIN
-
-        SELECT TOP 1
-               @IdSegment = sg.CrsId
-        FROM dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'FOR';
-    END;
-
-    --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
+--------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
     -------------------------------Obtener descuento --------------------------------------------------------------------------
 
     DECLARE @IdTypeCustomer INT =
@@ -996,7 +995,7 @@ BEGIN
         --select * from #ListCode
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;
 
-        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates ))
+        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewMainRates2 ))
         BEGIN
 
             SET @IdSegment = NULL;
@@ -1697,7 +1696,7 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewMainRates2 )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
@@ -2033,7 +2032,7 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewMainRates2 )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';

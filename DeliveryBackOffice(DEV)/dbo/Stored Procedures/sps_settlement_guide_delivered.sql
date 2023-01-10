@@ -147,6 +147,29 @@ BEGIN
 				0 AS RetriesMade,
 				0 AS RetriesAllowed
 			ROLLBACK TRANSACTION
+
+
+			INSERT INTO dbo.RoutePreparationLogError
+			(
+			    ErrorDescription,
+			    ErrorNumber,
+			    ErrorProcedure,
+			    ErrorLine,
+			    GuideSerie,
+			    GuideNumber,
+			    TokenCreated,
+			    DateCreated
+			)
+			VALUES
+			(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+			    ERROR_NUMBER(),     -- ErrorNumber - int
+			    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+			    ERROR_LINE(),     -- ErrorLine - int
+			    @GuideSerie,     -- GuideSerie - nvarchar(2)
+			    @GuideNumber,     -- GuideNumber - int
+			    @Token,       -- TokenCreated - varchar(50)
+			    GETDATE() -- DateCreated - datetime
+			    )
 		END CATCH;
 
 		IF @@TRANCOUNT > 0

@@ -46,3 +46,7 @@ GO
 CREATE NONCLUSTERED INDEX [idx_IdCost_RowStatus_Amount]
     ON [dbo].[BreakdownOfPayment]([IdCost] ASC, [RowStatus] ASC, [Amount] ASC);
 
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del tipo de detalle de la tabla CatBreakdownOfPaymentType', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BreakdownOfPayment', @level2type = N'COLUMN', @level2name = N'BreakdownOfPaymentTypeId';
+

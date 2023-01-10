@@ -97,7 +97,7 @@
     [Receiver_Lng]                         VARCHAR (50)    NULL,
     [CatSystemId]                          INT             NULL,
     [CatModuleId]                          INT             NULL,
-    [IsLastMileReturn]                     BIT             NULL,
+    [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -114,6 +114,8 @@
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 

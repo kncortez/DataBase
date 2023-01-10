@@ -59,7 +59,7 @@ BEGIN
         UPDATE 
             DeliveryBackOffice.dbo.DeliveryOrder 
         SET 
-            StatusOrderId = @NewState
+            StatusOrderId = ISNULL(@NewState,@currentState)
         WHERE 
             Guide_Serie =  @Guide_Serie
             AND Guide_Number = @Guide_Number
@@ -68,7 +68,7 @@ BEGIN
         UPDATE 
             DeliveryBackOffice.dbo.DeliveryOrderDetail 
         SET 
-            RowStatus = 0,
+            RowStatus = IIF(@NewState  = NULL,1,0),
             Observations = 'Guía revertida desde módulo de reversión de estados.'
         WHERE 
             Guide_Serie =  @Guide_Serie

@@ -92,15 +92,18 @@ BEGIN
 
 	-- Punto de visita por cuenta ingresada
 	SET @VisitPointClientIdByUser = (
-		SELECT CodeOfReference FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-		JOIN VisitPointByUser VPU
-			ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-				AND VPU.RowStatus = 1
-		JOIN RegisterUser ru
-			ON VPU.RegisterUserID = ru.UsrIdUser
-				AND ru.UsrRowStatus = 1
-		JOIN [dbo].[RolByUserByAccount] rua
-			ON rua.RuaIdUser = ru.UsrIdUser
+		SELECT
+			TOP 1 
+				CodeOfReference 
+		FROM DeliveryBackOffice.dbo.VisitPointClient VPC
+			INNER JOIN VisitPointByUser VPU
+				ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
+					AND VPU.RowStatus = 1
+			INNER JOIN RegisterUser ru
+				ON VPU.RegisterUserID = ru.UsrIdUser
+					AND ru.UsrRowStatus = 1
+			INNER JOIN [dbo].[RolByUserByAccount] rua
+				ON rua.RuaIdUser = ru.UsrIdUser
 		WHERE rua.RuaIdAccount = @AccountId
 	)
 
@@ -113,633 +116,545 @@ BEGIN
 	IF	(@Type = 1)
 	BEGIN
 	
-		-- Si es posible generar o redimir un cupon
-		IF(EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
-		BEGIN
+		BEGIN TRY
+			-- Si es posible generar o redimir un cupon
+			IF(EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
+			BEGIN
 
-			-- Obtener serie y numero de guía
-			SELECT
-				TOP 1
-					@GuideSerie = TDOL.Guide_Serie
-					,@GuideNumber = TDOL.Guide_Number
-			FROM
-				@TblDeliveryOrdersList TDOL
+				-- Obtener serie y numero de guía
+				SELECT
+					TOP 1
+						@GuideSerie = TDOL.Guide_Serie
+						,@GuideNumber = TDOL.Guide_Number
+				FROM
+					@TblDeliveryOrdersList TDOL
 		
-			-- Obtener valor anterior y valor con descuento aplicado
-			SET @OldPriceshipment = (
-				SELECT TOP 1 DO.PriceShippment FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-			)
-
-			SET @UpdatedValue = (
-				SELECT TOP 1 TDOL.PriceShippment FROM @TblDeliveryOrdersList TDOL WHERE TDOL.Guide_Serie = @GuideSerie AND TDOL.Guide_Number = @GuideNumber
-			)
-
-		END
-
-		IF( LTRIM(RTRIM(ISNULL(@CouponSerie, ''))) = '' AND EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
-		BEGIN
-			
-			-- SE debe generar un cupon
-			DECLARE @NewCouponData AS TABLE (
-				PromoId INT,
-				CouponFinalDate DATETIME,
-				CouponDiscountType INT,
-				CouponValueType INT,
-				CouponValue DECIMAL(5,2),
-				PromoName NVARCHAR(200)
-			)
-
-			IF(EXISTS (
-				SELECT 
-					TOP 1 
-						1 
-				FROM 
-					[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) 
-				WHERE 
-					PC.GuideSerieOrigin = @GuideSerie 
-					AND 
-					PC.GuideNumberOrigin = @GuideNumber 
-					AND 
-					PC.RowStatus = 1
+				-- Obtener valor anterior y valor con descuento aplicado
+				SET @OldPriceshipment = (
+					SELECT TOP 1 DO.PriceShippment FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 				)
-			)
-			BEGIN
 
-				INSERT INTO 
-					@CouponDataReponse
-					(CouponSerie, CouponFinalDate, CouponPromo, PromoId)
-				SELECT
-					-- Top 1 para generar cupon de promo con mayor peso
-					TOP 1
-						PromoC.PromoCouponSerie,
-						PromoC.FinalActiveDate,
-						CPromo.PromoDescription,
-						PromoC.CatPromoId
-				FROM
-					[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK)
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[CatPromo] CPromo WITH(NOLOCK)
-						ON
-							PromoC.CatPromoId = CPromo.IdPromo
-				WHERE
-					PromoC.GuideSerieOrigin = @GuideSerie 
-					AND 
-					PromoC.GuideNumberOrigin = @GuideNumber 
-					AND 
-					PromoC.RowStatus = 1
+				SET @UpdatedValue = (
+					SELECT TOP 1 TDOL.PriceShippment FROM @TblDeliveryOrdersList TDOL WHERE TDOL.Guide_Serie = @GuideSerie AND TDOL.Guide_Number = @GuideNumber
+				)
 
 			END
-			ELSE
+
+			IF( LTRIM(RTRIM(ISNULL(@CouponSerie, ''))) = '' AND EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
 			BEGIN
+			
+				-- SE debe generar un cupon
+				DECLARE @NewCouponData AS TABLE (
+					PromoId INT,
+					CouponFinalDate DATETIME,
+					CouponDiscountType INT,
+					CouponValueType INT,
+					CouponValue DECIMAL(5,2),
+					PromoName NVARCHAR(200)
+				)
 
-				-- Insertar datos de promo valida
-				INSERT INTO 
-					@NewCouponData
-					(PromoId, CouponFinalDate, CouponDiscountType, CouponValueType, CouponValue, PromoName)
-				SELECT
-					-- Top 1 para generar cupon de promo con mayor peso
-					TOP 1
-						CPromo.IdPromo,
-						(
-							CASE
-								WHEN CPromo.LimitPromoTime = 24.00 THEN DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(GETDATE() AS DATE)) AS DATETIME))
-								ELSE DATEADD(MINUTE,(ISNULL(CPromo.LimitPromoTime,1) * 60),GETDATE())
-							END
-						),
-						CPromo.CatDiscountTypeId,
-						CPromo.CatValueTypeId,
-						CPromo.PromoValue,
-						CPromo.PromoDescription
-				FROM
-					[DeliveryBackOffice].[dbo].[CatPromo] CPromo WITH(NOLOCK)
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[PromoCoverage] PCov WITH(NOLOCK)
-						ON
-							CPromo.IdPromo = PCov.CatPromoId
-				WHERE
-					-- Validación de día de la semana correcta
-					(
-							( CPromo.Monday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 2 )
-						OR
-							( CPromo.Tuesday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 3 )
-						OR
-							( CPromo.Wednesday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 4 )
-						OR
-							( CPromo.Thursday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 5 )
-						OR
-							( CPromo.Friday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 6 )
-						OR
-							( CPromo.Saturday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 7 )
-						OR
-							( CPromo.Sunday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 1 )
+				IF(EXISTS (
+					SELECT 
+						TOP 1 
+							1 
+					FROM 
+						[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK) 
+					WHERE 
+						PC.GuideSerieOrigin = @GuideSerie 
+						AND 
+						PC.GuideNumberOrigin = @GuideNumber 
+						AND 
+						PC.RowStatus = 1
 					)
-					-- Validación de rango de fechas correcto para la promo
-					AND
-						( GETDATE() BETWEEN CPromo.StartPromoDate AND CPromo.FinishPromoDate )
-					-- Validación de cobertura de promo
-					AND
-						(
-							PCov.CustomerId = @CustomerId
-							OR
-							PCov.CustomerTypeId = @CustomerType
-							OR
-							PCov.VisitPointClientId = ISNULL(@VisitPointClientId, @VisitPointClientIdByUser)
-						)
-					--- Promo esta activa
-					AND
-						CPromo.RowStatus = 1
-				ORDER BY
-					-- Aplicar promoción de mayor peso
-					CPromo.PromoWeight DESC
-
-				IF(EXISTS( SELECT TOP 1 1 FROM @NewCouponData ))
+				)
 				BEGIN
 
-					-- Insertar nuevo cupon
-					INSERT INTO
-						[DeliveryBackOffice].[dbo].[PromoCoupon]
-						(CatPromoId, PromoCouponSerie, GuideSerieOrigin, GuideNumberOrigin, CustomerOrigin, VisitPointClientOrigin, SystemOrigin, CatDiscountTypeId, CatValueTypeId, CouponValue, StartActiveDate, FinalActiveDate, RowStatus, DateCreated, TokenCreated)
-					OUTPUT
-						inserted.PromoCouponSerie, inserted.FinalActiveDate, inserted.CatPromoId INTO @CouponDataReponse (CouponSerie, CouponFinalDate, PromoId)
-					SELECT
-						NCD.PromoId
-						,CONCAT(@GuideSerie, @GuideNumber) + RIGHT('000' + CAST(CEILING(RAND()*100) AS NVARCHAR), 2)
-						,@GuideSerie
-						,@GuideNumber
-						,@CustomerId
-						,ISNULL(@VisitPointClientId, @VisitPointClientIdByUser)
-						,@System
-						,NCD.CouponDiscountType
-						,NCD.CouponValueType
-						,NCD.CouponValue
-						,GETDATE()
-						,NCD.CouponFinalDate
-						,1
-						,GETDATE()
-						,@TokenCreated
-					FROM
-						@NewCouponData NCD
-
-					SET @CouponCreated = (
-						CASE
-							WHEN (SELECT TOP 1 1 FROM @CouponDataReponse) > 0 THEN 1
-							ELSE 0
-						END
-					)
-
-					-- Actualizar nombre de promo en cupon a devolver
-					UPDATE
+					INSERT INTO 
 						@CouponDataReponse
-					SET
-						CouponPromo = NCD.PromoName
-					FROM
-						@NewCouponData NCD
-						INNER JOIN
-							@CouponDataReponse CD
-							ON
-								NCD.PromoId = CD.PromoId
-
-				END
-
-			END
-				
-		END
-		-- Redención de cupon
-		ELSE IF (LTRIM(RTRIM(ISNULL(@CouponSerie, ''))) != '' AND EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
-		BEGIN
-
-			SET @CouponIsValid = ISNULL((
-				SELECT
-					TOP 1
-						1
-				FROM
-					[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
-				WHERE
-					PC.RedeemedDate IS NULL
-					AND
-					PC.PromoCouponSerie = @CouponSerie
-					AND
-					PC.FinalActiveDate >= GETDATE()
-					AND
-					PC.RowStatus = 1
-			),0)
-
-			IF(@CouponIsValid = 1)
-			BEGIN
-
-
-				-- Registrar consumo de cupon y valores originales
-				UPDATE
-					[DeliveryBackOffice].[dbo].[PromoCoupon]
-				SET
-					SystemDestination = @System,
-					GuideSerieDestination = @GuideSerie,
-					GuideNumberDestination = @GuideNumber,
-					CustomerDestination = @CustomerId,
-					VisitPointClientDestination = ISNULL(@VisitPointClientId, @VisitPointClientIdByUser),
-					VisitPointClientPortfolioDestination = @VisitPointClientPortfolioId,
-					OriginalAmount = @OldPriceshipment,
-					DiscountAmount = IIF(@UpdatedValue <= 0, @OldPriceshipment, (@OldPriceshipment - @UpdatedValue)),
-					FinalAmount = IIF(@UpdatedValue <= 0, 0, @UpdatedValue),
-					RedeemedDate = GETDATE(),
-					DateUpdated = GETDATE(),
-					TokenUpdated = @TokenCreated
-				WHERE
-					PromoCouponSerie = @CouponSerie
-					AND
-					RowStatus = 1
-
-				IF(@@ROWCOUNT > 0)
-				BEGIN
-					SET @CouponUpdated = 1;
-				END
-
-				UPDATE 
-					dbo.DeliveryOrder 
-				SET 
-					PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
-					, StatusOrderId = 15
-					, IsCollect = t.IsCollect
-				FROM 
-					dbo.DeliveryOrder ord
-					INNER JOIN 
-						@TblDeliveryOrdersList t 
-						ON 
-							t.Guide_Number = ord.Guide_Number 
-							AND 
-							t.Guide_Serie = ord.Guide_Serie
-						
-
-				IF(@@ROWCOUNT > 0)
-				BEGIN
-					SET @DOAlreadyUpdated = 1;
-				END
-			
-
-				update  dbo.DeliveryOrderPaymentDetail 
-				set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
-				, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-				from dbo.DeliveryOrderPaymentDetail pay
-						inner join @TblDeliveryOrdersList t 
-						on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
-
-				IF(@@ROWCOUNT > 0)
-				BEGIN
-					SET @DOPDAlreadyUpdated = 1;
-				END
-
-				DECLARE @PromoName NVARCHAR(50) = '';
-				DECLARE @CostId INT = 0;
-
-				SET @CostId = ISNULL((
+						(CouponSerie, CouponFinalDate, CouponPromo, PromoId)
 					SELECT
+						-- Top 1 para generar cupon de promo con mayor peso
 						TOP 1
-							Co.IdCost
+							PromoC.PromoCouponSerie,
+							PromoC.FinalActiveDate,
+							CPromo.PromoDescription,
+							PromoC.CatPromoId
 					FROM
-						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
-					WHERE
-						Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-						AND
-						Co.IdProduct = 1
-						AND
-						Co.RowStatus = 1
-				), 0)
-
-				SET @PromoName = ISNULL((
-					SELECT
-						TOP 1
-							IIF(LEN(CP.PromoDescription) > 100, SUBSTRING(CP.PromoDescription,1,99), CP.PromoDescription)
-					FROM
-						[DeliveryBackOffice].[dbo].[CatPromo] CP WITH(NOLOCK)
+						[DeliveryBackOffice].[dbo].[PromoCoupon] PromoC WITH(NOLOCK)
 						INNER JOIN
-							[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
+							[DeliveryBackOffice].[dbo].[CatPromo] CPromo WITH(NOLOCK)
 							ON
-								CP.IdPromo = PC.CatPromoId
+								PromoC.CatPromoId = CPromo.IdPromo
 					WHERE
-						PC.PromoCouponSerie = @CouponSerie
-				), 0)
-
-				IF(ISNULL(@CostId, 0) > 0)
-				BEGIN
-					-- Actuaizar nuevo valor a Cost
-					UPDATE
-						[DeliveryBackOffice].[dbo].[Cost] 
-					SET
-						TotalAmount = @UpdatedValue
-						,TotalAmountPaid = @UpdatedValue
-					WHERE
-						IdCost = @CostId
-
-					-- Actuaizar nuevo valor a Cost
-					UPDATE
-						[DeliveryBackOffice].[dbo].[CostDetail] 
-					SET
-						Amount = @UpdatedValue
-					WHERE
-						IdCost = @CostId
-				END
-
-				IF(
-					EXISTS( 
-						SELECT TOP 1 1 
-						FROM 
-							[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP 
-						WHERE 
-							BOP.IdCost = @CostId 
-							AND 
-							BOP.Description = @PromoName COLLATE Latin1_General_CI_AI AND BOP.RowStatus = 1)
-				)
-				BEGIN
-
-					UPDATE
-						[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
-					SET
-						RowStatus = 1,
-						Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
-						DateUpdated = GETDATE(),
-						TokenUpdated = @TokenCreated,
-						PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
-					WHERE
-						IdCost = @CostId
-						AND
-						Description = @PromoName COLLATE Latin1_General_CI_AI
-
-					IF(SCOPE_IDENTITY() > 0)
-						SET @CoUpdated = 1;
+						PromoC.GuideSerieOrigin = @GuideSerie 
+						AND 
+						PromoC.GuideNumberOrigin = @GuideNumber 
+						AND 
+						PromoC.RowStatus = 1
 
 				END
 				ELSE
 				BEGIN
 
-					INSERT INTO
-						[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
-						(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
-					VALUES
-						(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @TokenCreated, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie))
+					-- Insertar datos de promo valida
+					INSERT INTO 
+						@NewCouponData
+						(PromoId, CouponFinalDate, CouponDiscountType, CouponValueType, CouponValue, PromoName)
+					SELECT
+						-- Top 1 para generar cupon de promo con mayor peso
+						TOP 1
+							CPromo.IdPromo,
+							(
+								CASE
+									WHEN CPromo.LimitPromoTime = 24.00 THEN DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(GETDATE() AS DATE)) AS DATETIME))
+									ELSE DATEADD(MINUTE,(ISNULL(CPromo.LimitPromoTime,1) * 60),GETDATE())
+								END
+							),
+							CPromo.CatDiscountTypeId,
+							CPromo.CatValueTypeId,
+							CPromo.PromoValue,
+							CPromo.PromoDescription
+					FROM
+						[DeliveryBackOffice].[dbo].[CatPromo] CPromo WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[PromoCoverage] PCov WITH(NOLOCK)
+							ON
+								CPromo.IdPromo = PCov.CatPromoId
+					WHERE
+						-- Validación de día de la semana correcta
+						(
+								( CPromo.Monday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 2 )
+							OR
+								( CPromo.Tuesday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 3 )
+							OR
+								( CPromo.Wednesday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 4 )
+							OR
+								( CPromo.Thursday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 5 )
+							OR
+								( CPromo.Friday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 6 )
+							OR
+								( CPromo.Saturday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 7 )
+							OR
+								( CPromo.Sunday = 1 AND DATEPART(WEEKDAY, GETDATE()) = 1 )
+						)
+						-- Validación de rango de fechas correcto para la promo
+						AND
+							( GETDATE() BETWEEN CPromo.StartPromoDate AND CPromo.FinishPromoDate )
+						-- Validación de cobertura de promo
+						AND
+							(
+								PCov.CustomerId = @CustomerId
+								OR
+								PCov.CustomerTypeId = @CustomerType
+								OR
+								PCov.VisitPointClientId = ISNULL(@VisitPointClientId, @VisitPointClientIdByUser)
+							)
+						--- Promo esta activa
+						AND
+							CPromo.RowStatus = 1
+					ORDER BY
+						-- Aplicar promoción de mayor peso
+						CPromo.PromoWeight DESC
 
-					IF(@@ROWCOUNT > 0)
-						SET @CoUpdated = 1;
+					IF(EXISTS( SELECT TOP 1 1 FROM @NewCouponData ))
+					BEGIN
+
+						-- Insertar nuevo cupon
+						INSERT INTO
+							[DeliveryBackOffice].[dbo].[PromoCoupon]
+							(CatPromoId, PromoCouponSerie, GuideSerieOrigin, GuideNumberOrigin, CustomerOrigin, VisitPointClientOrigin, SystemOrigin, CatDiscountTypeId, CatValueTypeId, CouponValue, StartActiveDate, FinalActiveDate, RowStatus, DateCreated, TokenCreated)
+						OUTPUT
+							inserted.PromoCouponSerie, inserted.FinalActiveDate, inserted.CatPromoId INTO @CouponDataReponse (CouponSerie, CouponFinalDate, PromoId)
+						SELECT
+							NCD.PromoId
+							,CONCAT(@GuideSerie, @GuideNumber) + RIGHT('000' + CAST(CEILING(RAND()*100) AS NVARCHAR), 2)
+							,@GuideSerie
+							,@GuideNumber
+							,@CustomerId
+							,ISNULL(@VisitPointClientId, @VisitPointClientIdByUser)
+							,@System
+							,NCD.CouponDiscountType
+							,NCD.CouponValueType
+							,NCD.CouponValue
+							,GETDATE()
+							,NCD.CouponFinalDate
+							,1
+							,GETDATE()
+							,@TokenCreated
+						FROM
+							@NewCouponData NCD
+
+						SET @CouponCreated = (
+							CASE
+								WHEN (SELECT TOP 1 1 FROM @CouponDataReponse) > 0 THEN 1
+								ELSE 0
+							END
+						)
+
+						-- Actualizar nombre de promo en cupon a devolver
+						UPDATE
+							@CouponDataReponse
+						SET
+							CouponPromo = NCD.PromoName
+						FROM
+							@NewCouponData NCD
+							INNER JOIN
+								@CouponDataReponse CD
+								ON
+									NCD.PromoId = CD.PromoId
+
+					END
 
 				END
+				
 			END
-
-		END
-
-		IF(EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
-		BEGIN
-			-- Flujo de SetServiceRecoelct de filtro 2
-			DECLARE @ValidateTransaction INT = (
-				SELECT 
-					DopId 
-				FROM 
-					[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
-					INNER JOIN @TblDeliveryOrdersList tpo
-						ON do.GuideNumber = tpo.Guide_Number
-							AND do.GuideSerie = tpo.Guide_Serie
-							AND do.TypeServiceId = tpo.IdTypeService
-			)
-
-			IF (@ValidateTransaction IS NULL)
+			-- Redención de cupon
+			ELSE IF (LTRIM(RTRIM(ISNULL(@CouponSerie, ''))) != '' AND EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
 			BEGIN
 
-					IF(@DOAlreadyUpdated = 0)
-					BEGIN
+				SET @CouponIsValid = ISNULL((
+					SELECT
+						TOP 1
+							1
+					FROM
+						[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
+					WHERE
+						PC.RedeemedDate IS NULL
+						AND
+						PC.PromoCouponSerie = @CouponSerie
+						AND
+						PC.FinalActiveDate >= GETDATE()
+						AND
+						PC.RowStatus = 1
+				),0)
 
-						update 
-							dbo.DeliveryOrder 
-						set 
-							PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
-							, StatusOrderId = 15
-							, IsCollect = t.IsCollect
-						from 
-							dbo.DeliveryOrder ord
-						inner join 
+				IF(@CouponIsValid = 1)
+				BEGIN
+
+
+					-- Registrar consumo de cupon y valores originales
+					UPDATE
+						[DeliveryBackOffice].[dbo].[PromoCoupon]
+					SET
+						SystemDestination = @System,
+						GuideSerieDestination = @GuideSerie,
+						GuideNumberDestination = @GuideNumber,
+						CustomerDestination = @CustomerId,
+						VisitPointClientDestination = ISNULL(@VisitPointClientId, @VisitPointClientIdByUser),
+						VisitPointClientPortfolioDestination = @VisitPointClientPortfolioId,
+						OriginalAmount = @OldPriceshipment,
+						DiscountAmount = IIF(@UpdatedValue <= 0, @OldPriceshipment, (@OldPriceshipment - @UpdatedValue)),
+						FinalAmount = IIF(@UpdatedValue <= 0, 0, @UpdatedValue),
+						RedeemedDate = GETDATE(),
+						DateUpdated = GETDATE(),
+						TokenUpdated = @TokenCreated
+					WHERE
+						PromoCouponSerie = @CouponSerie
+						AND
+						RowStatus = 1
+
+					IF(@@ROWCOUNT > 0)
+					BEGIN
+						SET @CouponUpdated = 1;
+					END
+
+					UPDATE 
+						dbo.DeliveryOrder 
+					SET 
+						PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
+						, StatusOrderId = 15
+						, IsCollect = t.IsCollect
+					FROM 
+						dbo.DeliveryOrder ord
+						INNER JOIN 
 							@TblDeliveryOrdersList t 
-							on 
+							ON 
 								t.Guide_Number = ord.Guide_Number 
-								and 
+								AND 
 								t.Guide_Serie = ord.Guide_Serie
+						
 
-					END
-
-					IF(@DOPDAlreadyUpdated = 0)
+					IF(@@ROWCOUNT > 0)
 					BEGIN
-
-						update  dbo.DeliveryOrderPaymentDetail 
-						set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
-						, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-						from dbo.DeliveryOrderPaymentDetail pay
-								inner join @TblDeliveryOrdersList t 
-								on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
-
-					END
-
-					IF (@AccountId != 0)
-					BEGIN
-
-						IF(@UpdatedValue > 0)
-						BEGIN
-
-							INSERT INTO 
-								dbo.DeliveryOrderPaymentTransaction
-								(  
-									[GuideNumber]
-									,[GuideSerie]
-									,[PayTypeId]
-									,[TypeofInOutMoneyId]
-									,[TimePlaId]
-									,[amount]
-									,[PaymentRecollections]
-									,[PaymentNow]
-									,[PaymentDelivery]
-									,[StartDate]
-									,[EndDate]
-									,[ShipmentCompleted]
-									,[RecollectionCompleted]
-									,[PaidGuide]
-									,[TokenCreated]
-									,[DateCreated]
-									,[TokenUpdated]
-									,[DateUpdated]
-									,[TransaccionFAC]
-									,[IdHeaderRecolection]
-									,[TypeServiceId]
-									,[AccountId]
-									,[CODAmountProcess]
-									,[Fel]
-									,[VisitPoint]
-								)
-							SELECT
-									Guide_Number 
-									,Guide_Serie
-									,IdTypePayment
-									,IdWayToPayment
-									,IdTimePayment
-									,tdop.PriceShippment
-									,tdop.PaymentRecollections
-									,tdop.PaymentNow
-									,tdop.PaymentDelivery
-									,null
-									,null
-									,tdop.ShipmentCompleted
-									,tdop.RecollectionCompleted
-									,tdop.PaidGuide
-									,@TokenCreated
-									,getdate()
-									,null
-									,null
-									,null
-									,null
-									,tdop.IdTypeService
-									,IIF(@AccountId=0,null, @AccountId)
-									,tdop.CODAmountProccess
-									,null
-									,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-							FROM 
-								@TblDeliveryOrdersList tdop
-							WHERE 
-								tdop.PriceShippment != 0
-								OR
-								tdop.CODAmountProccess != 0
-
-							END
-							--ELSE IF ( (@OldPriceshipment - @UpdatedValue) <= 0 )
-							--BEGIN
-
-							--INSERT INTO 
-							--	dbo.DeliveryOrderPaymentTransaction
-							--	(  
-							--		[GuideNumber]
-							--		,[GuideSerie]
-							--		,[PayTypeId]
-							--		,[TypeofInOutMoneyId]
-							--		,[TimePlaId]
-							--		,[amount]
-							--		,[PaymentRecollections]
-							--		,[PaymentNow]
-							--		,[PaymentDelivery]
-							--		,[StartDate]
-							--		,[EndDate]
-							--		,[ShipmentCompleted]
-							--		,[RecollectionCompleted]
-							--		,[PaidGuide]
-							--		,[TokenCreated]
-							--		,[DateCreated]
-							--		,[TokenUpdated]
-							--		,[DateUpdated]
-							--		,[TransaccionFAC]
-							--		,[IdHeaderRecolection]
-							--		,[TypeServiceId]
-							--		,[AccountId]
-							--		,[CODAmountProcess]
-							--		,[Fel]
-							--		,[VisitPoint]
-							--	)
-							--SELECT
-							--		Guide_Number 
-							--		,Guide_Serie
-							--		,IdTypePayment
-							--		,IdWayToPayment
-							--		,IdTimePayment
-							--		,@OldPriceshipment
-							--		,tdop.PaymentRecollections
-							--		,tdop.PaymentNow
-							--		,tdop.PaymentDelivery
-							--		,null
-							--		,null
-							--		,tdop.ShipmentCompleted
-							--		,tdop.RecollectionCompleted
-							--		,tdop.PaidGuide
-							--		,@TokenCreated
-							--		,getdate()
-							--		,null
-							--		,null
-							--		,null
-							--		,null
-							--		,tdop.IdTypeService
-							--		,IIF(@AccountId=0,null, @AccountId)
-							--		,tdop.CODAmountProccess
-							--		,null
-							--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-							--FROM 
-							--	@TblDeliveryOrdersList tdop
-							--WHERE 
-							--	tdop.CODAmountProccess != 0
-
-							--INSERT INTO 
-							--	dbo.DeliveryOrderPaymentTransaction
-							--	(  
-							--		[GuideNumber]
-							--		,[GuideSerie]
-							--		,[PayTypeId]
-							--		,[TypeofInOutMoneyId]
-							--		,[TimePlaId]
-							--		,[amount]
-							--		,[PaymentRecollections]
-							--		,[PaymentNow]
-							--		,[PaymentDelivery]
-							--		,[StartDate]
-							--		,[EndDate]
-							--		,[ShipmentCompleted]
-							--		,[RecollectionCompleted]
-							--		,[PaidGuide]
-							--		,[TokenCreated]
-							--		,[DateCreated]
-							--		,[TokenUpdated]
-							--		,[DateUpdated]
-							--		,[TransaccionFAC]
-							--		,[IdHeaderRecolection]
-							--		,[TypeServiceId]
-							--		,[AccountId]
-							--		,[CODAmountProcess]
-							--		,[Fel]
-							--		,[VisitPoint]
-							--	)
-							--SELECT
-							--		Guide_Number 
-							--		,Guide_Serie
-							--		,IdTypePayment
-							--		,IdWayToPayment
-							--		,IdTimePayment
-							--		,IIF(@OldPriceshipment > 0, -@OldPriceshipment, @OldPriceshipment)
-							--		,tdop.PaymentRecollections
-							--		,tdop.PaymentNow
-							--		,tdop.PaymentDelivery
-							--		,null
-							--		,null
-							--		,tdop.ShipmentCompleted
-							--		,tdop.RecollectionCompleted
-							--		,tdop.PaidGuide
-							--		,@TokenCreated
-							--		,getdate()
-							--		,null
-							--		,null
-							--		,null
-							--		,null
-							--		,tdop.IdTypeService
-							--		,IIF(@AccountId=0,null, @AccountId)
-							--		,tdop.CODAmountProccess
-							--		,null
-							--		,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
-							--FROM 
-							--	@TblDeliveryOrdersList tdop
-							--WHERE 
-							--	tdop.CODAmountProccess != 0
-
-							--END
-
+						SET @DOAlreadyUpdated = 1;
 					END
 			
-			END
-		END
 
-			-- Flujo normal de spws_set_facapidelcreditcardtransaction
-			SELECT @IdTransaction 	= isnull([IdTransaction],0)			
-			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
-			WHERE OrderNumber = @OrderNumber
-			and  cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE) 
-			if (@IdTransaction = 0)
-			Begin 
+					update  dbo.DeliveryOrderPaymentDetail 
+					set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
+					, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
+					from dbo.DeliveryOrderPaymentDetail pay
+							inner join @TblDeliveryOrdersList t 
+							on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+
+					IF(@@ROWCOUNT > 0)
+					BEGIN
+						SET @DOPDAlreadyUpdated = 1;
+					END
+
+					DECLARE @PromoName NVARCHAR(50) = '';
+					DECLARE @CostId INT = 0;
+
+					SET @CostId = ISNULL((
+						SELECT
+							TOP 1
+								Co.IdCost
+						FROM
+							[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+						WHERE
+							(
+								(
+									Co.GuideSerie = ISNULL(@GuideSerie,'FD')
+									AND
+									Co.GuideNumber = @GuideNumber
+								)
+								OR
+								(
+									Co.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
+									AND
+									Co.GuideSerie IS NULL
+									AND
+									Co.GuideNumber IS NULL
+								)
+							)
+							AND
+							Co.RowStatus = 1
+						ORDER BY
+							Co.DateCreated DESC
+					), 0)
+
+					SET @PromoName = ISNULL((
+						SELECT
+							TOP 1
+								IIF(LEN(CP.PromoDescription) > 100, SUBSTRING(CP.PromoDescription,1,99), CP.PromoDescription)
+						FROM
+							[DeliveryBackOffice].[dbo].[CatPromo] CP WITH(NOLOCK)
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
+								ON
+									CP.IdPromo = PC.CatPromoId
+						WHERE
+							PC.PromoCouponSerie = @CouponSerie
+					), 0)
+
+					IF(ISNULL(@CostId, 0) > 0)
+					BEGIN
+						-- Actuaizar nuevo valor a Cost
+						UPDATE
+							[DeliveryBackOffice].[dbo].[Cost] 
+						SET
+							TotalAmount = @UpdatedValue
+							,TotalAmountPaid = @UpdatedValue
+						WHERE
+							IdCost = @CostId
+
+						-- Actuaizar nuevo valor a Cost
+						UPDATE
+							[DeliveryBackOffice].[dbo].[CostDetail] 
+						SET
+							Amount = @UpdatedValue
+						WHERE
+							IdCost = @CostId
+					END
+
+					IF(
+						EXISTS( 
+							SELECT TOP 1 1 
+							FROM 
+								[DeliveryBackOffice].[dbo].[BreakdownOfPayment] BOP 
+							WHERE 
+								BOP.IdCost = @CostId 
+								AND 
+								BOP.Description = @PromoName COLLATE Latin1_General_CI_AI AND BOP.RowStatus = 1)
+					)
+					BEGIN
+
+						UPDATE
+							[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
+						SET
+							RowStatus = 1,
+							Amount = IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)),
+							DateUpdated = GETDATE(),
+							TokenUpdated = @TokenCreated,
+							PromoCouponId = (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie)
+						WHERE
+							IdCost = @CostId
+							AND
+							Description = @PromoName COLLATE Latin1_General_CI_AI
+
+						IF(SCOPE_IDENTITY() > 0)
+							SET @CoUpdated = 1;
+
+					END
+					ELSE
+					BEGIN
+
+						INSERT INTO
+							[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
+							(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
+						VALUES
+							(@CostId, @PromoName, IIF(@UpdatedValue <= 0, -@OldPriceshipment, -(@OldPriceshipment - @UpdatedValue)), 1, GETDATE(), @TokenCreated, (SELECT TOP 1 PC.IdPromoCoupon FROM [DeliveryBackOffice].[dbo].[PromoCoupon] PC WHERE PC.PromoCouponSerie = @CouponSerie))
+
+						IF(@@ROWCOUNT > 0)
+							SET @CoUpdated = 1;
+
+					END
+				END
+
+			END
+		END TRY
+		BEGIN CATCH 
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+				(DateCreated, TokenCreated, ErrorLine, ErrorDescription, ErrorProcedure)
+			VALUES
+				(GETDATE(), 'ERROR COUPON', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE())
+		
+			
+		END CATCH
+
+		BEGIN TRY
+
+			IF(EXISTS(SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
+			BEGIN
+				-- Flujo de SetServiceRecoelct de filtro 2
+				DECLARE @ValidateTransaction INT = (
+					SELECT 
+						DopId 
+					FROM 
+						[DeliveryBackOffice].[dbo].DeliveryOrderPaymentTransaction do
+						INNER JOIN @TblDeliveryOrdersList tpo
+							ON do.GuideNumber = tpo.Guide_Number
+								AND do.GuideSerie = tpo.Guide_Serie
+								AND do.TypeServiceId = tpo.IdTypeService
+				)
+
+				IF (@ValidateTransaction IS NULL)
+				BEGIN
+
+						IF(@DOAlreadyUpdated = 0)
+						BEGIN
+
+							update 
+								dbo.DeliveryOrder 
+							set 
+								PriceShippment = IIF(t.PriceShippment <= 0, 0, t.PriceShippment)
+								, StatusOrderId = 15
+								, IsCollect = t.IsCollect
+							from 
+								dbo.DeliveryOrder ord
+							inner join 
+								@TblDeliveryOrdersList t 
+								on 
+									t.Guide_Number = ord.Guide_Number 
+									and 
+									t.Guide_Serie = ord.Guide_Serie
+
+						END
+
+						IF(@DOPDAlreadyUpdated = 0)
+						BEGIN
+
+							update  dbo.DeliveryOrderPaymentDetail 
+							set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
+							, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
+							from dbo.DeliveryOrderPaymentDetail pay
+									inner join @TblDeliveryOrdersList t 
+									on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+
+						END
+
+						IF (@AccountId != 0)
+						BEGIN
+
+							IF(@UpdatedValue > 0)
+							BEGIN
+
+								INSERT INTO 
+									dbo.DeliveryOrderPaymentTransaction
+									(  
+										[GuideNumber]
+										,[GuideSerie]
+										,[PayTypeId]
+										,[TypeofInOutMoneyId]
+										,[TimePlaId]
+										,[amount]
+										,[PaymentRecollections]
+										,[PaymentNow]
+										,[PaymentDelivery]
+										,[StartDate]
+										,[EndDate]
+										,[ShipmentCompleted]
+										,[RecollectionCompleted]
+										,[PaidGuide]
+										,[TokenCreated]
+										,[DateCreated]
+										,[TokenUpdated]
+										,[DateUpdated]
+										,[TransaccionFAC]
+										,[IdHeaderRecolection]
+										,[TypeServiceId]
+										,[AccountId]
+										,[CODAmountProcess]
+										,[Fel]
+										,[VisitPoint]
+									)
+								SELECT
+										Guide_Number 
+										,Guide_Serie
+										,IdTypePayment
+										,IdWayToPayment
+										,IdTimePayment
+										,tdop.PriceShippment
+										,tdop.PaymentRecollections
+										,tdop.PaymentNow
+										,tdop.PaymentDelivery
+										,null
+										,null
+										,tdop.ShipmentCompleted
+										,tdop.RecollectionCompleted
+										,tdop.PaidGuide
+										,@TokenCreated
+										,getdate()
+										,null
+										,null
+										,null
+										,null
+										,tdop.IdTypeService
+										,IIF(@AccountId=0,null, @AccountId)
+										,tdop.CODAmountProccess
+										,null
+										,IIF(@VisitPointClientIdByUser=0,null, @VisitPointClientIdByUser)
+								FROM 
+									@TblDeliveryOrdersList tdop
+								WHERE 
+									tdop.PriceShippment != 0
+									OR
+									tdop.CODAmountProccess != 0
+
+								END
+						END
+			
+				END
+			END
+		END TRY
+		BEGIN CATCH
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+				(DateCreated, TokenCreated, ErrorLine, ErrorDescription, ErrorProcedure)
+			VALUES
+				(GETDATE(), 'ERROR FILTER 2', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE())
+		
+		END CATCH
+		
+		-- Flujo normal de spws_set_facapidelcreditcardtransaction
+		SELECT @IdTransaction 	= isnull([IdTransaction],0)			
+		FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+		WHERE OrderNumber = @OrderNumber
+		and  cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE) 
+
+		if (@IdTransaction = 0)
+		Begin 
 
 			insert into DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 			(
@@ -792,69 +707,40 @@ BEGIN
 			--,@Token
 			)
 			SET @IdTransaction = isnull(@@Identity,0)
-			end 
-			else if (@IdTransaction > 0 )
-			begin 
-				update DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-				 SET 
-					[System]				= @System					
-			,		CardNumber				= @CardNumber				
-			,		TypeCardNumber			= @TypeCardNumber
-			,		Currency				= @Currency
-			,		Ammount					= @Ammount
-			,		OrderNumber				= @OrderNumber			
-			,		[Signature]				= @Signature				
-			,		CustomerReference		= @CustomerReference		
-			,		ReferenceNumber			= @ReferenceNumber		
-			,		ECIIndicator			= @ECIIndicator			
-			,		Authenticationresult	= @Authenticationresult	
-			,		TransactionStain		= @TransactionStain		
-			,		CAVV					= @CAVV					
-			,		ReasonCode				= @ReasonCode				
-			,		ReasonDescription		= @ReasonDescription		
-			,		StatusSend				= @StatusSend				
-			,		RowStatus				= @RowStatus				
-			,		TokenCreated			= @TokenCreated			
-			,		DateCreated				= @DateCreated			
-			,		TokenUpdated			= @TokenUpdated			
-			,		DateUpdated				= @DateUpdated
-				 where IdTransaction = @IdTransaction
-				 AND OrderNumber = @OrderNumber
-				 And StatusSend <> 1
-				 AND cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE)
+		end 
+		else if (@IdTransaction > 0 )
+		begin 
+			update DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				SET 
+				[System]				= @System					
+		,		CardNumber				= @CardNumber				
+		,		TypeCardNumber			= @TypeCardNumber
+		,		Currency				= @Currency
+		,		Ammount					= @Ammount
+		,		OrderNumber				= @OrderNumber			
+		,		[Signature]				= @Signature				
+		,		CustomerReference		= @CustomerReference		
+		,		ReferenceNumber			= @ReferenceNumber		
+		,		ECIIndicator			= @ECIIndicator			
+		,		Authenticationresult	= @Authenticationresult	
+		,		TransactionStain		= @TransactionStain		
+		,		CAVV					= @CAVV					
+		,		ReasonCode				= @ReasonCode				
+		,		ReasonDescription		= @ReasonDescription		
+		,		StatusSend				= @StatusSend				
+		,		RowStatus				= @RowStatus				
+		,		TokenCreated			= @TokenCreated			
+		,		DateCreated				= @DateCreated			
+		,		TokenUpdated			= @TokenUpdated			
+		,		DateUpdated				= @DateUpdated
+				where IdTransaction = @IdTransaction
+				AND OrderNumber = @OrderNumber
+				And StatusSend <> 1
+				AND cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE)
 
-			end 
+		end 
 
-		-- 17-02-2022 Insert into CostDetail so we can save transaction data for Brain
-
-		DECLARE @PaymentTable AS TblPaymentList
-
-		INSERT INTO @PaymentTable
-		(
-			RowNumber,
-			IdTypeOfMoney,
-			Voucher,
-			Amount,
-			Responsible
-		)
-		VALUES
-		(   
-		0,    -- RowNumber - int
-		2, -- IdTypeOfMoney - int
-		@OrderNumber, -- Voucher - varchar(100)
-		@Ammount, -- Amount - decimal(18, 2)
-		@Signature  -- Responsible - nvarchar(100)
-		)
-
-		EXEC dbo.SetPaymentCost @TypeProduct = 1,    -- int
-							@ProductNumber = @OrderNumber, -- varchar(20)
-							@TblDetail = @PaymentTable,   -- TblPaymentList
-							@FullPayment = @Ammount, -- decimal(12, 2)
-							@TypeCharge = 1,     -- int
-							@Token = @TokenCreated,         -- varchar(50)
-							@CODPayment = NULL,  -- decimal(12, 2)
-							@Responsible = @Signature    -- varchar(100)
-		-- end 17-02-2022  ------------------------------------------------------------
+		BEGIN TRY
 
 		INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor 
 			([TypeOfUse], 
@@ -912,10 +798,20 @@ BEGIN
 			,@TokenUpdated														
 			)
 
+		END TRY
+		BEGIN CATCH
+		
+		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+			(DateCreated, TokenCreated, ErrorLine, ErrorDescription, ErrorProcedure)
+		VALUES
+			(GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE())
+		
+		END CATCH
+
 		END
 		ELSE IF (@Type = 2)
 		BEGIN
-
+		
 			SELECT 
 			@IdTransaction 		= [IdTransaction]			
 			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
@@ -935,6 +831,8 @@ BEGIN
 			 AND OrderNumber = @OrderNumber
 			 AND StatusSend <> 1
 			 AND cast(@DateUpdated AS DATE)  = CAST(DateCreated AS DATE)
+
+			 BEGIN TRY
 
 			INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor 
 			([TypeOfUse], 
@@ -992,8 +890,20 @@ BEGIN
 			,@TokenUpdated													
 			)
 
-		END
+			END TRY
+			BEGIN CATCH
 
+			
+			INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+				(DateCreated, TokenCreated, ErrorLine, ErrorDescription, ErrorProcedure)
+			VALUES
+				(GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE())
+		
+
+			END CATCH
+
+		END
+		
 		IF(@ReasonCode IN ('1','40','00'))
 		BEGIN
 
@@ -1002,6 +912,13 @@ BEGIN
 				GuideNumber INT,
 				GuidePriceShipment DECIMAL(14,2)
 			);
+			
+			DECLARE @CostUpdated AS TABLE (
+				IdCost INT,
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT,
+				GuidePriceShipment DECIMAL(14,2)
+			)
 
 			INSERT INTO @AcceptedGuides
 				(GuideSerie, GuideNumber, GuidePriceShipment)
@@ -1020,39 +937,155 @@ BEGIN
 						CCTBCD.SerieNumber = DO.Guide_Serie
 			WHERE
 				CCTBCD.OrderNumber = @OrderNumber
+				
+			IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
+			BEGIN
 
+				IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
+					DROP TABLE #listGuides;
+
+				SELECT 
+					LTRIM(RTRIM(SUBSTRING(Item, 1,2))) ItemSerie
+					,LTRIM(RTRIM(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))))) ItemNumber 
+				INTO 
+					#listGuides
+				FROM 
+					DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@OrderNumber)),',')
+
+				INSERT INTO @AcceptedGuides
+					(GuideSerie, GuideNumber, GuidePriceShipment)
+				SELECT
+					TOP 1
+						LG.ItemSerie
+						,LG.ItemNumber
+						,DO.PriceShippment
+				FROM
+					#listGuides LG
+					INNER JOIN
+						DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+						ON
+							LG.ItemSerie = DO.Guide_Serie
+							AND
+							LG.ItemNumber = DO.Guide_Number
+					
+				IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL 
+					DROP TABLE #listGuides;
+
+			END
+			
 			INSERT INTO
 				DeliveryBackOffice.dbo.Cost
-				( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated )
+				( IdProduct, IdTypeCharge, IdModule, ProductNumber, TotalAmount , RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
 			SELECT
-				1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TokenCreated, GETDATE()
+				1, 1, NULL, CONCAT(AG.GuideSerie, AG.GuideNumber), AG.GuidePriceShipment, 1, @TokenUpdated, GETDATE(), AG.GuideSerie, AG.GuideNumber
 			FROM
 				@AcceptedGuides AG
-				LEFT JOIN
-					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
-					ON
-						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
+				OUTER APPLY (
+					SELECT
+						TOP 1
+							Co.IdCost
+					FROM
+						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+					WHERE
+						(
+							(
+								Co.GuideSerie = ISNULL(AG.GuideSerie,'FD')
+								AND
+								Co.GuideNumber = AG.GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie,'FD'), AG.GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
+						AND
+						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
+				) CoAux
 			WHERE
-				Co.IdCost IS NULL
-						
+				CoAux.IdCost IS NULL
+					
 			UPDATE
 				Co
 			SET
 				Co.TotalAmountPaid = Co.TotalAmount,
 				Co.PaymentDate = GETDATE(),
-				Co.TokenUpdated = @TokenCreated,
-				Co.DateUpdated = GETDATE()
+				Co.TokenUpdated = @TokenUpdated,
+				Co.DateUpdated = GETDATE(),
+				Co.GuideSerie = AG.GuideSerie,
+				Co.GuideNumber = AG.GuideNumber
+			OUTPUT inserted.IdCost, inserted.TotalAmount, inserted.GuideSerie, inserted.GuideNumber INTO @CostUpdated (IdCost, GuidePriceShipment, GuideSerie, GuideNumber)
 			FROM	
 				@AcceptedGuides AG
+				OUTER APPLY (
+					SELECT
+						TOP 1
+							Co.IdCost
+					FROM
+						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+					WHERE
+						(
+							(
+								Co.GuideSerie = ISNULL(AG.GuideSerie,'FD')
+								AND
+								Co.GuideNumber = AG.GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie,'FD'), AG.GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
+						AND
+						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
+				) CoAux
 				INNER JOIN
 					DeliveryBackOffice.dbo.Cost Co WITH(NOLOCK)
 					ON
-						CONCAT(AG.GuideSerie, AG.GuideNumber) = Co.ProductNumber
+						Co.IdCost = CoAux.IdCost
+						
+				-- Generar CostDetail inexistentes
+				INSERT INTO [DeliveryBackOffice].[dbo].[CostDetail]
+					(IdCost, IdTypeOfMoney, Amount, Voucher, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+				SELECT
+					Cu.IdCost, 2, Cu.GuidePriceShipment, @OrderNumber, 1, @TokenUpdated, GETDATE(), NULL, NULL
+				FROM
+					@CostUpdated CU
+					LEFT JOIN
+						[DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+						ON
+							CD.IdCost = CU.IdCost
+				WHERE
+					CD.IdCostDetail IS NULL
+
+				-- Actualizar CostDetails
+				UPDATE
+					[DeliveryBackOffice].[dbo].[CostDetail]
+				SET
+					Amount = CU.GuidePriceShipment
+					,Voucher = @OrderNumber
+					,TokenUpdated = @TokenUpdated
+					,DateUpdated = GETDATE()
+				FROM
+					[DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
+					INNER JOIN
+						@CostUpdated CU
+						ON
+							CD.IdCost = CU.IdCost
 
 		END
 
-		IF(@@TRANCOUNT > 0)
-			COMMIT TRANSACTION;
+		COMMIT TRANSACTION;
 
 		select 200 Code,'Success' Description
 		, (SELECT TOP 1 CouponSerie FROM @CouponDataReponse) coupSerie
@@ -1062,12 +1095,12 @@ BEGIN
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
-		
-		--select 401 Code,'Error' Description
-		--, null coupSerie
-		--, null coupDate
-		--, null coupPromo
 
+		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+			(DateCreated, TokenCreated, ErrorLine, ErrorDescription, ErrorProcedure)
+		VALUES
+			(GETDATE(), 'ERROR TC', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE())
+		
 		SELECT 'Error al procesar transacción' AS message,
 			'FALSE'	blnResult,
 			CAST(-1 AS VARCHAR(5)) IdResult,

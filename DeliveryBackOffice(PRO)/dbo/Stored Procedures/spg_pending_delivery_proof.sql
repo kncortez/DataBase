@@ -25,11 +25,11 @@ BEGIN
            SO.OrderDescription AS Status_Name,
            SUM(CAST(DATT.Dry AS INT)) AS Pieces_Dry,
            SUM(CAST(DATT.Cold AS INT)) AS Pieces_Cold
-    FROM DeliveryBackOffice.dbo.DeliveryOrder DO
-        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DATT
+    FROM DeliveryBackOffice.dbo.DeliveryOrder DO  --WITH(NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DATT --WITH(NOLOCK)
             ON DO.Guide_Serie = DATT.Guide_Serie
                AND DO.Guide_Number = DATT.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.StatusOrder SO
+        LEFT JOIN DeliveryBackOffice.dbo.StatusOrder SO  --WITH(NOLOCK)
             ON SO.StatusOrderId = DO.StatusOrderId
     WHERE (
               DATT.Delivered = 1

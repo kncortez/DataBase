@@ -22,7 +22,7 @@ BEGIN
 	DECLARE @ValidaUsuario			INT
 	DECLARE @ValidarCuenta			INT
 	DECLARE @TokensActivos			INT
-	DECLARE @MinutosExpToken		INT = 12; --Modificación para expirar el token al superar los 12 minutos de haber sido generado.
+	DECLARE @MinutosExpToken		INT = 1440; --Modificación para expirar el token al superar los 12 minutos de haber sido generado.
 
 
 	-- insertar en tabla temporal posbibles mensajes de error
