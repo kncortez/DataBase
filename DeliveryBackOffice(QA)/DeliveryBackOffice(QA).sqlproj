@@ -1356,7 +1356,6 @@
     <Build Include="dbo\User Defined Types\TblConfigWarehouseByRouteAssignment.sql" />
     <Build Include="dbo\Tables\WebhookEndpointHeader.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetListofWebHookHeaders.sql" />
-    <Build Include="Security\ECS-DB-DENARIUS_deliveryreport.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
