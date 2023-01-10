@@ -32,10 +32,10 @@ BEGIN
 	DECLARE @Guide INT = 0;
 
 	SET @Guide =(SELECT Count (ind.dti_fk_orderNumber)
-				 FROM invoiceDetail ind
-				 INNER JOIN @TblLstDetail tbd
+				 FROM invoiceDetail ind WITH (NOLOCK)
+				 INNER JOIN @TblLstDetail tbd 
 				 ON ind.dti_fk_orderNumber = tbd.orderNumber
-				 INNER JOIN invoiceHeader inh
+				 INNER JOIN invoiceHeader inh WITH (NOLOCK)
 				 ON ind.dti_fk_header = inh.inv_pk_id
 				 WHERE inh.inv_certificationFEL IS NULL
 				);
@@ -170,10 +170,10 @@ BEGIN
      END
           ELSE
 			BEGIN
-			SET @invoiceHeaderId = (SELECT TOP 1 dti_fk_header FROM invoiceDetail indt
+			SET @invoiceHeaderId = (SELECT TOP 1 dti_fk_header FROM invoiceDetail indt WITH (NOLOCK)
 									INNER JOIN @TblLstDetail tbld
 									ON indt.dti_fk_orderNumber = tbld.orderNumber
-									INNER JOIN invoiceHeader inh
+									INNER JOIN invoiceHeader inh WITH (NOLOCK)
 									ON indt.dti_fk_header = inh.inv_pk_id
 								    WHERE inh.inv_certificationFEL IS NULL)
 			SELECT @invoiceHeaderId 'IDENTITY'

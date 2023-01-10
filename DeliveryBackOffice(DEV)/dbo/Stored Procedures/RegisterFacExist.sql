@@ -13,8 +13,8 @@ BEGIN
 	DECLARE @invoiceHeaderId bigint=-1;
 
 	SET @invoiceHeaderId =(SELECT TOP 1 ivhd.inv_pk_id
-				 FROM invoiceDetail ind
-				 INNER JOIN invoiceHeader ivhd
+				 FROM invoiceDetail ind WITH (NOLOCK)
+				 INNER JOIN invoiceHeader ivhd WITH (NOLOCK)
 				 ON ind.dti_fk_header = ivhd.inv_pk_id
 				 WHERE ind.dti_fk_orderSerie = @serie
 				 AND ind.dti_fk_orderNumber = @guide
