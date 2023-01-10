@@ -72,7 +72,8 @@ BEGIN
 				   ,[dti_IVA]
 				   ,[dti_amount]
 				   ,[dti_dateRegister]
-				   ,[dti_tokenRegister])
+				   ,[dti_tokenRegister]
+				   ,[SAPCode])   
 				SELECT @idNotaCredito
 				   ,[dti_fk_orderSerie]
 				   ,[dti_fk_orderNumber]
@@ -86,6 +87,7 @@ BEGIN
 				   ,[dti_amount]
 				   ,GETDATE()
 				   ,@token
+				   ,[SAPCode]
 				FROM [DeliveryBackOffice].[dbo].[invoiceDetail] WITH (NOLOCK)
 				WHERE [dti_fk_header] = @idInvoice
 
