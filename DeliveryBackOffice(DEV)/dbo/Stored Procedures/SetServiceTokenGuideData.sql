@@ -8,6 +8,11 @@
 -- Create date: <2022-01-03>
 -- Description:	< Se remueve el poder modificar departamento y municipio ya que puede causar revalorizaciones. >
 -- =============================================
+-- =============================================
+-- Author:		<Jerson Ochoa>
+-- Create date: <2023-01-10>
+-- Description:	< Manejo de parámetro para marcar como devolución de última milla las incidencias. >
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
 	@GuideNumber INT = -1,
@@ -33,7 +38,9 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 
 	@SetReschedule BIT = 0,
 	@RescheduleDate DATE = NULL,
-	@IsConfirmed BIT = 1
+
+	@IsConfirmed BIT = 1,
+	@CancelOrder BIT = 0
 AS
 BEGIN
 
@@ -516,7 +523,7 @@ BEGIN
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderDetail dod
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da
 					ON dod.Guide_Serie = da.Guide_Serie
 					AND dod.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -527,9 +534,10 @@ BEGIN
 				AND dod.DateCreated = coi.DateStatusOrder
 
 				UPDATE do
-				SET StatusOrderId = @StatusOrderId 
+				SET StatusOrderId = @StatusOrderId,
+				IsLastMileReturn = 1 --IIF((@CancelOrder = 1), 0, 1)
 				FROM DeliveryOrder do
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -540,7 +548,7 @@ BEGIN
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderPiece dop
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da
 					ON dop.GuideSerie = da.Guide_Serie
 					AND dop.GuideNumber = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -549,8 +557,21 @@ BEGIN
 				AND coi.RowStatus = 1
 			
 
+			END 
+			ELSE 
+			BEGIN 
+				-- UDPATE ONLY ISLASTMILERETURN IN DELIVERY ORDER
+				UPDATE do
+				SET IsLastMileReturn = IIF((@CancelOrder = 1), 0, 1)
+				FROM DeliveryOrder do
+				INNER JOIN DeliveryAttempt da
+					ON do.Guide_Serie = da.Guide_Serie
+					AND do.Guide_Number = da.Guide_Number
+				INNER JOIN ConfirmationOfIncidence coi 
+					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+				AND coi.RowStatus = 1
 			END
-		
 
 			UPDATE ConfirmationOfIncidence
 			SET IsConfirmed = 1
@@ -580,7 +601,7 @@ BEGIN
 								).value('.', 'varchar(max)'),1,1,'') )
 			select ('[' + @jsonResult +  ']') jsonResultError 
 		END CATCH
-	END	
+	END
 	ELSE
 	BEGIN
 
