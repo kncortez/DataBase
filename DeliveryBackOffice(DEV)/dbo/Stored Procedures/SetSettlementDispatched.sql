@@ -61,7 +61,7 @@ BEGIN
 			SET rpdp.RowStatus = 0
 				,rpdp.TokenUpdated = @Token
 				,rpdp.DateUpdated = GETDATE()
-			FROM RoutePreparationDetailPiece rpdp
+			FROM RoutePreparationDetailPiece rpdp 
 			inner JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				and rpd.RowStatus = 1
@@ -504,7 +504,7 @@ BEGIN
 					AND RPD.Guide_Number=LG.Guide_Number
 				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK)
 					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
-				INNER JOIN DBO.ServiceManagement SM
+				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
 					ON SM.IdServiceManagement=SMD.ServiceManagement
 				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 							
 					URSD.GuideSerie=RPD.Guide_Serie
@@ -517,6 +517,7 @@ BEGIN
 					RA.IdRouteAssigment= URS.RouteAssignmentId
 			WHERE URS.UserSettlement IS NULL AND RA.DateOfRoute=CONVERT(DATE,GETDATE()) AND RA.IdCurrierMan=@IdCourier
 			-----------------------------------------------------------------------------------------------------------------
+
 		END TRY
 		BEGIN CATCH
 			SELECT 

@@ -741,63 +741,139 @@ BEGIN
                             DECLARE @Number VARCHAR(20);
 
 
+							BEGIN TRY
+								-- si no existe insertar registro en tabla cost
 
-                            -- si no existe insertar registro en tabla cost
+								INSERT INTO [dbo].[Cost]
+								(
+									[IdProduct],
+									[ProductNumber],
+									[IdTypeCharge],
+									[TotalAmount],
+									[PaymentDate],
+									[IdModule],
+									[RowStatus],
+									[TokenCreated],
+									[DateCreated],
+									[TotalAmountPaid],
+									[CODAmount],
+									[GuideSerie],
+									[GuideNumber]
+								)
+								SELECT 1 IdProduct,
+									   CONCAT(ti.Guide_Serie, ti.Guide_Number) ProductNumber,
+									   1 IdTypeCharge,
+									   IIF(((pgt.AmountToPay = 0) AND (@ServiceType = 'PICKUP')), NULL, pgt.AmountToPay) TotalAmount,
+									   GETDATE() PaymentDate,
+									   @IdModuleP IdModule,
+									   1 RowStatus,
+									   @TokenP TokenCreated,
+									   GETDATE() DateCreated,
+									   IIF(((pgt.AmountToPay = 0) AND (@ServiceType = 'PICKUP')), NULL, pgt.AmountToPay) TotalAmountPaid,
+									   IIF(((pgt.CODAmount = 0) AND (@ServiceType = 'PICKUP')), NULL, pgt.CODAmount) CODAmount,
+									   ti.Guide_Serie,
+									   ti.Guide_Number
+								FROM #TblInclude ti
+									INNER JOIN #PendingPaymentTemp pgt
+										ON ti.Guide_Number = pgt.GuideNumber
+										   AND ti.Guide_Serie = pgt.GuideSerie
+								WHERE NOT EXISTS
+								(
+									SELECT 1
+									FROM dbo.Cost ct WITH (NOLOCK)
+									WHERE ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+								);
 
-                            INSERT INTO [dbo].[Cost]
-                            (
-                                [IdProduct],
-                                [ProductNumber],
-                                [IdTypeCharge],
-                                [TotalAmount],
-                                [PaymentDate],
-                                [IdModule],
-                                [RowStatus],
-                                [TokenCreated],
-                                [DateCreated],
-                                [TotalAmountPaid],
-                                [CODAmount]
-                            )
-                            SELECT 1 IdProduct,
-                                   CONCAT(ti.Guide_Serie, ti.Guide_Number) ProductNumber,
-                                   1 IdTypeCharge,
-                                   IIF(((pgt.AmountToPay = 0) AND (@ServiceType = 'PICKUP')), NULL, pgt.AmountToPay) TotalAmount,
-                                   GETDATE() PaymentDate,
-                                   @IdModuleP IdModule,
-                                   1 RowStatus,
-                                   @TokenP TokenCreated,
-                                   GETDATE() DateCreated,
-                                   IIF(((pgt.AmountToPay = 0) AND (@ServiceType = 'PICKUP')), NULL, pgt.AmountToPay) TotalAmountPaid,
-                                   IIF(((pgt.CODAmount = 0) AND (@ServiceType = 'PICKUP')), NULL, pgt.CODAmount) CODAmount
-                            FROM #TblInclude ti
-                                INNER JOIN #PendingPaymentTemp pgt
-                                    ON ti.Guide_Number = pgt.GuideNumber
-                                       AND ti.Guide_Serie = pgt.GuideSerie
-                            WHERE NOT EXISTS
-                            (
-                                SELECT 1
-                                FROM dbo.Cost ct WITH (NOLOCK)
-                                WHERE ct.IdProduct = 1
-                                      AND ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
-                            );
+								SET @IdCost = SCOPE_IDENTITY();
 
-                            SET @IdCost = SCOPE_IDENTITY();
+							END TRY
+							BEGIN CATCH
+
+							END CATCH
+
+							IF( ISNULL(@IdCost, 0) = 0 )
+							BEGIN
+
+								SELECT
+									TOP 1
+										@IdCost = CoAux.IdCost
+								FROM
+									#TblInclude ti
+									OUTER APPLY (
+										SELECT
+											TOP 1
+												Co.IdCost
+										FROM
+											[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+										WHERE
+											(
+												(
+													Co.GuideSerie = ti.Guide_Serie
+													AND
+													Co.GuideNumber = ti.Guide_Number
+												)
+												OR
+												(
+													Co.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+													AND
+													Co.GuideSerie IS NULL
+													AND
+													Co.GuideNumber IS NULL
+												)
+											)
+											AND
+											Co.RowStatus = 1
+										ORDER BY
+											Co.DateCreated DESC
+									) CoAux
+
+							END
+
 
                             UPDATE ct
-                            SET [PaymentDate] = GETDATE(),
-                                [TokenUpdated] = @TokenP,
-                                [DateUpdated] = GETDATE(),
-                                [TotalAmountPaid] = IIF(((ppt.AmountToPay = 0) AND (@ServiceType = 'PICKUP')),
+                            SET ct.[PaymentDate] = GETDATE(),
+                                ct.[TokenUpdated] = @TokenP,
+                                ct.[DateUpdated] = GETDATE(),
+                                ct.[TotalAmountPaid] = IIF(((ppt.AmountToPay = 0) AND (@ServiceType = 'PICKUP')),
                                                         NULL,
                                                         ppt.AmountToPay),
-                                [CODAmount] = IIF(((ppt.CODAmount = 0) AND (@ServiceType = 'PICKUP')),
+                                ct.[CODAmount] = IIF(((ppt.CODAmount = 0) AND (@ServiceType = 'PICKUP')),
                                                   NULL,
-                                                  ppt.CODAmount)
+                                                  ppt.CODAmount),
+								ct.[GuideSerie] = (CASE WHEN ct.IdCost = CoAux.IdCost THEN ti.Guide_Serie ELSE NULL END),
+								ct.[GuideNumber] = (CASE WHEN ct.IdCost = CoAux.IdCost THEN ti.Guide_Number ELSE NULL END)
                             FROM Cost ct WITH (NOLOCK)
                                 INNER JOIN #PendingPaymentTemp ppt
                                     ON ct.ProductNumber = CONCAT(ppt.GuideSerie, ppt.GuideNumber)
                                 INNER JOIN #TblInclude ti
                                     ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+								OUTER APPLY (
+									SELECT
+										TOP 1
+											Co.IdCost
+									FROM
+										[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+									WHERE
+										(
+											(
+												Co.GuideSerie = ti.Guide_Serie
+												AND
+												Co.GuideNumber = ti.Guide_Number
+											)
+											OR
+											(
+												Co.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+												AND
+												Co.GuideSerie IS NULL
+												AND
+												Co.GuideNumber IS NULL
+											)
+										)
+										AND
+										Co.RowStatus = 1
+									ORDER BY
+										Co.DateCreated DESC
+								) CoAux
                             WHERE ISNULL(ct.TotalAmountPaid, 0) = 0;
 
                             IF (@Amount > 0)

@@ -15,11 +15,16 @@
     [CODAmount]       DECIMAL (12, 2) NULL,
     [ReturnAmount]    DECIMAL (12, 2) NULL,
     [ReturnPaid]      DECIMAL (12, 2) NULL,
+    [GuideSerie]      NVARCHAR (2)    NULL,
+    [GuideNumber]     INT             NULL,
     PRIMARY KEY CLUSTERED ([IdCost] ASC),
+    CONSTRAINT [FK_Cost_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FKCostCharge] FOREIGN KEY ([IdTypeCharge]) REFERENCES [dbo].[CatTypeCharge] ([IdTypeCharge]),
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct])
 );
+
+
 
 
 
@@ -47,4 +52,17 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_ProductNumber]
     ON [dbo].[Cost]([ProductNumber] ASC)
     INCLUDE([TotalAmountPaid], [CODAmount]);
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UQ_GuideSerie_GuideNumber]
+    ON [dbo].[Cost]([GuideSerie] ASC, [GuideNumber] ASC) WHERE ([GuideSerie] IS NOT NULL AND [GuideNumber] IS NOT NULL);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Serie de la guía de la tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'GuideSerie';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de la guía de la tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'GuideNumber';
 

@@ -24,16 +24,34 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#ErrorGuides', 'U') IS NOT NULL
             DROP TABLE #ErrorGuides;
 
+
+
+			 CREATE TABLE #listGuides
+                (
+                    ItemSerie NVARCHAR(2),
+                    ItemNumber INT,
+                    ItemPiece INT,
+					charinde NVARCHAR(10),
+					Item INT
+                );
+
+				INSERT INTO #listGuides
+				(
+				    ItemSerie,
+				    ItemNumber,
+				    ItemPiece,
+					charinde,
+					Item
+				)
         SELECT SUBSTRING(Item, 1, 2) ItemSerie,
                SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
                SUBSTRING(Item, CHARINDEX('-', Item), LEN(Item)) ItemPiece,
                CHARINDEX('-', Item) charinde,
                LEN(Item) len
-        INTO #listGuides
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
 
-		--CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
-  --          ON #listGuides (ItemSerie, ItemNumber);
+		CREATE NONCLUSTERED INDEX IX_listGuides_Pickup
+            ON #listGuides (ItemSerie, ItemNumber);
 
 	
         -- select * from #listGuides

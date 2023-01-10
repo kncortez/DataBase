@@ -46,17 +46,16 @@ BEGIN
 							'"Latitude":"' +  ISNULL(vp.Latitude,'') + '",' +
 							'"Longitude":"' +  ISNULL(vp.Longitude,'') +'",' +
 							'"Zone":"' +  ISNULL(CAST(conf.Zone as varchar(2)),'')+'",' +
-							'"Neighborhood":"' +  ISNULL(conf.Neighborhood,'') + '",' +
+							'"Neighborhood":"' +  ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood),'') + '",' +
 							'"IsOrigin":' +  CAST(ISNULL(vp.IsOriginVisitPoint,1) AS NVARCHAR) + ''
 							+ '}'
-
-					from dbo.RolByUserByAccount  rua
-						inner join dbo.UserAddress ua on ua.UadIdAccount = rua.RuaIdAccount
-						join dbo.Township twn on twn.IdTownship = ua.UadIdTownship
-						join dbo.Province prv on prv.IdProvince = twn.IdProvince
-						join dbo.CatCityPlace ctp on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
-						left join dbo.VisitPointClient vp on vp.CodeOfReference=ua.CodeOfReference
-						left join dbo.ConfirmedAddress conf on 
+					from dbo.RolByUserByAccount  rua WITH(NOLOCK)
+						inner join dbo.UserAddress ua WITH(NOLOCK) on ua.UadIdAccount = rua.RuaIdAccount
+						inner join dbo.Township twn WITH(NOLOCK) on twn.IdTownship = ua.UadIdTownship
+						inner join dbo.Province prv WITH(NOLOCK) on prv.IdProvince = twn.IdProvince
+						inner join dbo.CatCityPlace ctp WITH(NOLOCK) on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
+						left join dbo.VisitPointClient vp WITH(NOLOCK) on vp.CodeOfReference=ua.CodeOfReference
+						left join dbo.ConfirmedAddress conf WITH(NOLOCK) on 
 								conf.NirPhone=ua.UadNirPhone
 								AND conf.Phone=ua.UadPhone
 								AND conf.TownshipId = VP.IdTownship
