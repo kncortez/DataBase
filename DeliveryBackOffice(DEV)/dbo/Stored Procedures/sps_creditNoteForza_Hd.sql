@@ -91,6 +91,27 @@ BEGIN
 				FROM [DeliveryBackOffice].[dbo].[invoiceDetail] WITH (NOLOCK)
 				WHERE [dti_fk_header] = @idInvoice
 
+		
+				INSERT INTO [dbo].[InOutOfMoneyDetail]
+				   ([io_type]
+				   ,[io_vpCodeOfReferences]
+				   ,[io_ticket]
+				   ,[io_amount]
+				   ,[io_status]
+				   ,[io_invoice]
+				   ,[io_registryToken]
+				   ,[io_registryDate])   
+				SELECT [io_type]
+				   ,[io_vpCodeOfReferences]
+				   ,[io_ticket]
+				   ,[io_amount]
+				   ,[io_status]
+				   ,@idNotaCredito
+				   ,@token
+				   ,GETDATE()	   
+				FROM [DeliveryBackOffice].[dbo].[InOutOfMoneyDetail] WITH (NOLOCK)
+				WHERE [io_invoice] = @idInvoice
+
 				declare @detalles as int = @@rowcount
 				Set @vpCodeOfReferences =(Select inv_vpCodeOfReferences from invoiceHeader WITH (NOLOCK) where inv_pk_id = @idNotaCredito)
 
