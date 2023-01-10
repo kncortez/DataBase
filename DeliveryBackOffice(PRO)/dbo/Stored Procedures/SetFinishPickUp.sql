@@ -152,25 +152,46 @@ BEGIN
                 IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
                     DROP TABLE #listGuides;
 
-                SELECT SUBSTRING(Item, 1, 2) ItemSerie,
-                       SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
-                       CASE
-                           WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
-                               1
-                           ELSE
-                               SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
-                       END ItemPiece
-                INTO #listGuides
-                FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+                CREATE TABLE #listGuides
+                (
+                    ItemSerie NVARCHAR(2),
+                    ItemNumber INT,
+                    ItemPiece INT
+                );
 
-                ---SELECT * FROM #listGuides
-
-
-                CREATE NONCLUSTERED INDEX templistGuides_4444
+                CREATE NONCLUSTERED INDEX templistGuides_Piece495
                 ON #listGuides (
                                    ItemSerie,
                                    ItemNumber
                                );
+
+                CREATE NONCLUSTERED INDEX templistGuides_4444
+                ON #listGuides (
+                                   ItemSerie,
+                                   ItemNumber,
+                                   ItemPiece
+                               );
+
+                INSERT INTO #listGuides
+                (
+                    ItemSerie,
+                    ItemNumber,
+                    ItemPiece
+                )
+                SELECT SUBSTRING(Item, 1, 2) ItemSerie,
+                       SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
+                       ISNULL(   (CASE
+                                      WHEN LEN(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))) > 1 THEN
+                                          1
+                                      ELSE
+                                          SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(Item))
+                                  END
+                                 ),
+                                 0
+                             ) ItemPiece
+                FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+
+                ---SELECT * FROM #listGuides
 
 
                 ---declare @IdCustomer int = (select IdCustomer from Account where AccIdAccount =@IdAccount)
@@ -220,7 +241,7 @@ BEGIN
                                )
                     WHERE ord.Guide_Number IN
                           (
-                              SELECT ItemNumber FROM #listGuides WHERE ItemSerie = 'fd'
+                              SELECT ItemNumber FROM #listGuides -- WHERE ItemSerie = 'fd'
                           )
                           AND ord.StatusOrderId IN ( 15, 1, 16 )
                           AND dop.GuideNumber IS NULL
@@ -470,10 +491,11 @@ BEGIN
                                ord.Guide_Number = dop.GuideNumber
                                AND ord.Guide_Serie = dop.GuideSerie
                            )
-                WHERE GuideNumber IN
-                      (
-                          SELECT ItemNumber FROM #listGuides
-                      )
+                WHERE dop.GuideSerie = 'fd'
+                      AND dop.GuideNumber IN
+                          (
+                              SELECT ItemNumber FROM #listGuides
+                          )
                       AND ord.StatusOrderId IN ( 15, 1, 16 )
                       AND
                       (
@@ -489,7 +511,8 @@ BEGIN
                         ON dop.GuideNumber = LG.ItemNumber
                            AND dop.GuideSerie = LG.ItemSerie
                 WHERE dop.IdHeaderRecolection = @IdPickup
-                      AND LG.ItemNumber IS NULL;
+                      AND LG.ItemNumber IS NULL
+                      AND LG.ItemSerie IS NULL;
 
                 ------------------------------------------------- Actualiza su StatusId a 2 = Recoleccion todas las guias del lote -------------------------------------
 
@@ -667,7 +690,7 @@ BEGIN
                         GuideSerie,
                         GuideNumber
                     ) -- Control de guías pagadas
-                    FROM [DeliveryBackOffice].[dbo].[Cost] C
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
                         INNER JOIN #listGuides LG
                             ON C.ProductNumber = CONCAT(LG.ItemSerie, LG.ItemNumber)
                         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
@@ -726,7 +749,7 @@ BEGIN
                     SELECT TOP 1
                            sr.ID
                     FROM DeliveryBackOffice.dbo.SenderReceiver sr
-                        INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp WITH(NOLOCK)
+                        INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp WITH (NOLOCK)
                             ON ltp.LogTokenPOD = @Token
                                --AND ltp.RowStatus = 1
                                AND ltp.IdCourierman = sr.ID
@@ -923,8 +946,8 @@ BEGIN
                    ISNULL(vpc.Department, '') AS 'Sender_Department',
                    0 AS 'Consolidated_Number',
                    ISNULL(vpc.Email, '') AS 'Sender_Email'
-            FROM DeliveryBackOffice.dbo.SchedulePickup slp
-                RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc
+            FROM DeliveryBackOffice.dbo.SchedulePickup slp WITH (NOLOCK)
+                RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = slp.SenderId
             WHERE slp.SchedulePickupId = @IdPickup;
             WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
