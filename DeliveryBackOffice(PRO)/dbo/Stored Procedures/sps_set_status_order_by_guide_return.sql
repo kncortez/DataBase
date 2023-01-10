@@ -58,6 +58,7 @@ BEGIN
         INTO #listGuides
         FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@Guide_Number, ',');
 
+		CREATE NONCLUSTERED INDEX TMP_IDX_ListGuides_Guide ON #listGuides(ItemSerie, ItemNumber);
 
         SET @ExisteRuta =
         (
@@ -126,15 +127,15 @@ BEGIN
             SET @ExisteServicio =
             (
                 SELECT COUNT(1)
-                FROM ServiceManagement sm
-                    INNER JOIN RouteAssigment ra
+                FROM ServiceManagement sm WITH(NOLOCK)
+                    INNER JOIN RouteAssigment ra WITH(NOLOCK)
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
                            AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
-                    INNER JOIN PieceByService pbs
+                    INNER JOIN PieceByService pbs WITH(NOLOCK)
                         ON pbs.ServiceManagmentId = sm.IdServiceManagement
-                    INNER JOIN DeliveryOrderPiece dop
+                    INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
                         ON dop.GuidePiece = pbs.GuidePieceId
-                    INNER JOIN DeliveryOrder do
+                    INNER JOIN DeliveryOrder do WITH(NOLOCK)
                         ON dop.GuideNumber = do.Guide_Number
                            AND dop.GuideSerie = do.Guide_Serie
                 WHERE do.Sender_Address = @Addres
@@ -226,7 +227,7 @@ BEGIN
             SET @ExistePiezaPorServicio =
             (
                 SELECT COUNT(1)
-                FROM dbo.PieceByService pbs
+                FROM dbo.PieceByService pbs WITH(NOLOCK)
                     INNER JOIN DeliveryOrderPiece pc WITH (NOLOCK)
                         ON pc.GuidePiece = pbs.GuidePieceId
                 WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number
@@ -259,7 +260,7 @@ BEGIN
                        GETDATE(),
                        NULL,
                        NULL
-                FROM DeliveryOrderPiece pc
+                FROM DeliveryOrderPiece pc WITH(NOLOCK)
                 WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
 
             END;
@@ -375,7 +376,7 @@ BEGIN
                    serv.Sender_Address AS HUB_DESTINO,
                    (
                        SELECT ISNULL(COUNT(1), 0)
-                       FROM dbo.PieceByService pbs
+                       FROM dbo.PieceByService pbs WITH(NOLOCK)
                            INNER JOIN DeliveryOrderPiece pci WITH (NOLOCK)
                                ON pci.GuidePiece = pbs.GuidePieceId
                        WHERE CONCAT(pci.GuideSerie, CAST(pci.GuideNumber AS VARCHAR)) = CONCAT(
