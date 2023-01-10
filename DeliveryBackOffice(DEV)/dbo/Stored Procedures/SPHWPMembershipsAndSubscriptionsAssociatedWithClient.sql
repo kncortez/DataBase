@@ -35,6 +35,7 @@ BEGIN
 					'"IdPayment": "' + CAST(ISNULL(M.CustomerPaymentid,0) AS VARCHAR), +'"'+  ',' +
 					'"IdMembership":     "' + CAST(M.IdMembership AS VARCHAR),  +'"'+  ',' +
 					'"Name": "' + CM.MembershipName, +'"'+  ',' +
+					'"AutoRenewable": ' + CONVERT(NVARCHAR, ISNULL(M.IsAutoRenewable, 0)) +''+  ',' +
 					'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(M.LastPaymentDate, M.DateCreated), 103) +'"'+  ',' +
 					'"ExpirationDate": "' + CONVERT(NVARCHAR, M.ExpirationDate, 103) +'"'+  ',' +
 					'"Attibutos": [' + 
@@ -81,6 +82,7 @@ BEGIN
 										'"IdCard": "' + CAST(ISNULL(S.CustomerPaymentId,0) AS VARCHAR),  +'"'+  ',' +
 										'"IdSubscription":   "' + CAST(S.IdSubscription AS VARCHAR), +'"'+  ',' +
 										'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
+										'"AutoRenewable": ' + CONVERT(NVARCHAR, ISNULL(S.IsAutoRenewable, 0)) +''+  ',' +
 										'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(S.LastPaymentDate, S.DateCreated), 103) +'"'+  ',' +
 										'"ExpirationDate": "' + CONVERT(NVARCHAR, S.ExpirationDate, 103) +'"'+  ',' +
 										'"Attibutos": ['+
