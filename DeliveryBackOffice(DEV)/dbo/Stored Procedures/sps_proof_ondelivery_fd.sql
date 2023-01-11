@@ -229,7 +229,7 @@ BEGIN
 
 
 
-            IF @StatusId NOT IN ( 5, 14, 22 ) -- estado etregado
+            IF @StatusId NOT IN ( 5, 22 ) -- estado etregado
             BEGIN
 
                 PRINT 'ACUTALIZADO DELIVERYORDER';
@@ -299,30 +299,56 @@ BEGIN
 							InsertedId BIGINT
 						);
 
-						INSERT INTO 
-							[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-							(
-								[GuideSerie]
-								,[GuideNumber]
-								,[CustomerId]
-								,[StatusOrderId]
-								,[WebhookEndpointId]
-								,[HasNotified]
-								,[TokenCreated]
-								,[DateCreated]
-							)
-						OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-						VALUES
-							(
-								@GuideSerie
-								,@GuideNumber
-								,@WebhookCustomerId
-								,@GuideCurrentStatus
-								,@CustomerEndpointId
-								,0
-								,@Token
-								,GETDATE()
-							)
+						IF( 
+								NOT EXISTS (
+									SELECT 
+										TOP 1 
+											1 
+									FROM 
+										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK) 
+									WHERE 
+										WTQ.GuideSerie = @GuideSerie 
+										AND 
+										WTQ.GuideNumber = @GuideNumber 
+										AND
+										WTQ.RowStatus = 1
+										AND 
+										WTQ.StatusOrderId IN (
+											SELECT
+												WRBU.StatusOrderId 
+											FROM 
+												[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
+											WHERE 
+												WRBU.CustomerId = @WebhookCustomerId 
+												AND 
+												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+								) ) )
+							BEGIN
+								INSERT INTO 
+									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+									(
+										[GuideSerie]
+										,[GuideNumber]
+										,[CustomerId]
+										,[StatusOrderId]
+										,[WebhookEndpointId]
+										,[HasNotified]
+										,[TokenCreated]
+										,[DateCreated]
+									)
+								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+								VALUES
+									(
+										@GuideSerie
+										,@GuideNumber
+										,@WebhookCustomerId
+										,@GuideCurrentStatus
+										,@CustomerEndpointId
+										,0
+										,@Token
+										,GETDATE()
+									)
+							END
 
 					END
 				END TRY

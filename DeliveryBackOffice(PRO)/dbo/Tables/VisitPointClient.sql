@@ -41,6 +41,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_CustomerID]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -64,4 +66,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para indicar si se excluye la comision.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'ExcludeCommissionCOD';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
+    ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
 

@@ -29,6 +29,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_number_cost]
     ON [dbo].[Cost]([IdProduct] ASC, [ProductNumber] ASC);
@@ -65,4 +67,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Serie de la
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de la guía de la tabla DeliveryOrder', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'GuideNumber';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_Included]
+    ON [dbo].[Cost]([RowStatus] ASC)
+    INCLUDE([IdCost], [ProductNumber], [DateCreated], [GuideSerie], [GuideNumber]);
 

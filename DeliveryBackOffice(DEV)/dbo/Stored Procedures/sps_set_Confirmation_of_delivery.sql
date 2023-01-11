@@ -139,30 +139,56 @@ BEGIN
 								InsertedId BIGINT
 							);
 
-							INSERT INTO 
-								[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-								(
-									[GuideSerie]
-									,[GuideNumber]
-									,[CustomerId]
-									,[StatusOrderId]
-									,[WebhookEndpointId]
-									,[HasNotified]
-									,[TokenCreated]
-									,[DateCreated]
-								)
-							OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-							VALUES
-								(
-									@Guide_Serie
-									,@Guide_Number
-									,@WebhookCustomerId
-									,@GuideCurrentStatus
-									,@CustomerEndpointId
-									,0
-									,@TokenId
-									,GETDATE()
-								)
+							IF( 
+								NOT EXISTS (
+									SELECT 
+										TOP 1 
+											1 
+									FROM 
+										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK) 
+									WHERE 
+										WTQ.GuideSerie = @Guide_Serie 
+										AND 
+										WTQ.GuideNumber = @Guide_Number 
+										AND
+										WTQ.RowStatus = 1
+										AND 
+										WTQ.StatusOrderId IN (
+											SELECT
+												WRBU.StatusOrderId 
+											FROM 
+												[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
+											WHERE 
+												WRBU.CustomerId = @WebhookCustomerId 
+												AND 
+												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+								) ) )
+							BEGIN
+								INSERT INTO 
+									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+									(
+										[GuideSerie]
+										,[GuideNumber]
+										,[CustomerId]
+										,[StatusOrderId]
+										,[WebhookEndpointId]
+										,[HasNotified]
+										,[TokenCreated]
+										,[DateCreated]
+									)
+								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+								VALUES
+									(
+										@Guide_Serie
+										,@Guide_Number
+										,@WebhookCustomerId
+										,@GuideCurrentStatus
+										,@CustomerEndpointId
+										,0
+										,@TokenId
+										,GETDATE()
+									)
+							END
 						END
 
 					END TRY

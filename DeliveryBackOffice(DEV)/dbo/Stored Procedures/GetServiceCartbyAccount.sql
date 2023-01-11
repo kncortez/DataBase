@@ -23,7 +23,7 @@ BEGIN
 		AND IsPending = 1
 		AND RowStatus = 1
 		ORDER BY DateCreated DESC
-		
+
 		IF @AccountServiceCartId IS NOT NULL
 		BEGIN
 			
@@ -57,17 +57,16 @@ BEGIN
 				GuideSerie NVARCHAR(2),
 				GuideNumber INT
 			);
-			
 			UPDATE ascd
 			SET ascd.RowStatus = 0
 			   ,ascd.TokenUpdated = @Token
 			   ,ascd.DateUpdated = GETDATE()
 			OUTPUT inserted.GuideSerie, inserted.GuideNumber INTO @PaidGuides(GuideSerie, GuideNumber)
-			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd WITH (NOLOCK)
+			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 				ON do.Guide_Serie = ascd.GuideSerie
 				AND do.Guide_Number = ascd.GuideNumber
-			LEFT JOIN DeliveryBackOffice.dbo.Cost Co WITH (NOLOCK)
+			LEFT JOIN DeliveryBackOffice.dbo.Cost Co with (nolock)
 				ON Co.ProductNumber = CONCAT(do.Guide_Serie, Guide_Number)
 			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 			AND ISNULL(co.TotalAmountPaid,0) > 0
@@ -138,7 +137,7 @@ BEGIN
 			END
 			ELSE
 			BEGIN 
-
+				
 				--Deshabilitar carrito sin servicios
 				UPDATE AccountServiceCart
 				SET IsPending = 0

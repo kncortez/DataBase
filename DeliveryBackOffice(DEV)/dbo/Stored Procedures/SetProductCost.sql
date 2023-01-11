@@ -368,7 +368,7 @@ BEGIN
 
             SELECT @IdCost = cst.IdCost,
                    @IsPaid = ISNULL(cst.TotalAmountPaid, 0)
-            FROM [DeliveryBackOffice].[dbo].[Cost] cst
+            FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH(NOLOCK)
             WHERE 
 				(
 					(
@@ -498,6 +498,7 @@ BEGIN
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
+
             IF (@IdCost > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
             BEGIN
 
@@ -665,7 +666,7 @@ BEGIN
 
             SELECT @IdCost = cst.IdCost,
                    @IsPaid = ISNULL(cst.TotalAmountPaid, 0)
-            FROM [DeliveryBackOffice].[dbo].[Cost] cst
+            FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH(NOLOCK)
             WHERE 
 				(
 					(
