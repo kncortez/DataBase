@@ -1409,6 +1409,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetListofWebHookHeaders.sql" />
     <Build Include="dbo\User Defined Types\TblNewChangeList.sql" />
     <Build Include="dbo\Stored Procedures\RegisterFacExist.sql" />
+    <Build Include="dbo\Stored Procedures\GetVisitPointPortfolioByClient.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
