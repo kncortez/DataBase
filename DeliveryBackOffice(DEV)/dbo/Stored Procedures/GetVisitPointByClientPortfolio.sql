@@ -386,9 +386,9 @@ BEGIN
                                                           + ISNULL(CONVERT(VARCHAR, SUB.VisitPointByClientPortfolioId), ' ')
                                                           + '"}'
                                                    FROM DeliveryBackOffice.dbo.UserAddress SUB WITH (NOLOCK)
-                                                       RIGHT JOIN DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)
+                                                       LEFT JOIN DeliveryBackOffice.dbo.Township tw WITH (NOLOCK)
                                                            ON tw.IdTownship = SUB.UadIdTownship
-                                                       RIGHT JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)
+                                                       LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH (NOLOCK)
                                                            ON pr.IdProvince = tw.IdProvince
                                                        LEFT JOIN DeliveryBackOffice.dbo.Settlement st WITH (NOLOCK)
                                                            ON st.IdSettlement = SUB.UadIdSettlement
