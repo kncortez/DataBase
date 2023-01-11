@@ -46,10 +46,13 @@ BEGIN
 	-- Membership data
 	SELECT		[M].[IdMembership],
 				[M].[CustomerId],
+				[CM].[MembershipName],
 				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) < 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipRemainingUses],
 				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage],
 				[M].[IsAutoRenewable],
-				ISNULL([CM].[Icon], '') [Icon]
+				ISNULL([CM].[Icon], '') [Icon],
+				[M].[DateCreated],
+				[M].[ExpirationDate]
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
