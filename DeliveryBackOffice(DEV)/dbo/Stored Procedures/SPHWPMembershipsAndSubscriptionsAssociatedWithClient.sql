@@ -6,6 +6,7 @@
 /*
 	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
 	Actualización: Agregar campo de ícono en información de membresía y suscripción - 11-01-2023
+	Actualización: Validar rowStatus de atributos - 11-01-2023
 	Autor: Jerson Ochoa
 */
 CREATE PROCEDURE [dbo].[SPHWPMembershipsAndSubscriptionsAssociatedWithClient]
@@ -50,6 +51,7 @@ BEGIN
 											FROM [dbo].[Membership] Maux WITH(NOLOCK)
 											INNER JOIN [dbo].[CatMembershipAttribute] CMA WITH (NOLOCK)
 											ON Maux.CatMembershipId = CMA.CatMembershipId
+											AND CMA.RowStatus = 1
 											WHERE Maux.IdMembership = M.IdMembership
 											ORDER BY [CMA].[MembershipAttributePosition]
 											FOR XML PATH(''), TYPE
@@ -98,6 +100,7 @@ BEGIN
 																FROM [dbo].[Subscription] Saux WITH(NOLOCK)
 																INNER JOIN [dbo].[CatSubscriptionAtribute] CSA WITH (NOLOCK)
 																ON Saux.CatSubscriptionId = CSA.CatSubscriptionId
+																AND CSA.RowStatus = 1
 																WHERE Saux.IdSubscription = S.IdSubscription
 																ORDER BY [CSA].[SubscriptionAttributePosition]
 																FOR XML PATH(''), TYPE
