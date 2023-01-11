@@ -4,8 +4,9 @@
 -- Description:	<Description, lista de membresias y suscripciones asociadas al cliente>
 -- =============================================
 /*
-	Actualización: Ordenar atributos de acuerdo a campo AttributePosition
-	Autor: Jerson Ochoa - 30-12-2022
+	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
+	Actualización: Agregar campo de ícono en información de membresía y suscripción - 11-01-2023
+	Autor: Jerson Ochoa
 */
 CREATE PROCEDURE [dbo].[SPHWPMembershipsAndSubscriptionsAssociatedWithClient]
 	-- Add the parameters for the stored procedure here
@@ -35,8 +36,10 @@ BEGIN
 					'"IdPayment": "' + CAST(ISNULL(M.CustomerPaymentid,0) AS VARCHAR), +'"'+  ',' +
 					'"IdMembership":     "' + CAST(M.IdMembership AS VARCHAR),  +'"'+  ',' +
 					'"Name": "' + CM.MembershipName, +'"'+  ',' +
+					'"AutoRenewable": ' + CONVERT(NVARCHAR, ISNULL(M.IsAutoRenewable, 0)) +''+  ',' +
 					'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(M.LastPaymentDate, M.DateCreated), 103) +'"'+  ',' +
 					'"ExpirationDate": "' + CONVERT(NVARCHAR, M.ExpirationDate, 103) +'"'+  ',' +
+					'"Icon": "' + CM.Icon, +'"'+  ',' +
 					'"Attibutos": [' + 
 					(
 						SELECT STUFF(
@@ -81,8 +84,10 @@ BEGIN
 										'"IdCard": "' + CAST(ISNULL(S.CustomerPaymentId,0) AS VARCHAR),  +'"'+  ',' +
 										'"IdSubscription":   "' + CAST(S.IdSubscription AS VARCHAR), +'"'+  ',' +
 										'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
+										'"AutoRenewable": ' + CONVERT(NVARCHAR, ISNULL(S.IsAutoRenewable, 0)) +''+  ',' +
 										'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(S.LastPaymentDate, S.DateCreated), 103) +'"'+  ',' +
 										'"ExpirationDate": "' + CONVERT(NVARCHAR, S.ExpirationDate, 103) +'"'+  ',' +
+										'"Icon": "' + CS.Icon, +'"'+  ',' +
 										'"Attibutos": ['+
 										(
 											SELECT STUFF(

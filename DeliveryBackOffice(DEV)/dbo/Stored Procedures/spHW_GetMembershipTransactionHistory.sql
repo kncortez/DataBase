@@ -47,7 +47,9 @@ BEGIN
 	SELECT		[M].[IdMembership],
 				[M].[CustomerId],
 				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) < 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipRemainingUses],
-				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage]
+				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage],
+				[M].[IsAutoRenewable],
+				ISNULL([CM].[Icon], '') [Icon]
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
@@ -56,6 +58,19 @@ BEGIN
 	WHERE		[M].[AccountId] = @AccountId
 		AND		[M].[RowStatus] = 1
 		AND		[M].[CatMembershipStatusId] IN (@MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID);
+
+	-- Membership attributes
+	SELECT		[CMA].[IdCatMembershipAttribute],
+				[CMA].[MembershipAttributeDescription],
+				[CMA].[MembershipAttributePosition]
+	FROM		[dbo].[CatMembershipAttribute] CMA
+	INNER JOIN	[dbo].[CatMembership] CM
+		ON		[CMA].[CatMembershipId] = [CM].[IdCatMembership]
+	INNER JOIN	[dbo].[Membership] M
+		ON		[CM].[IdCatMembership] = [M].[CatMembershipId]
+		AND		[M].[IdMembership] = @MEMBERSHIP_ID
+	WHERE		[CMA].[RowStatus] = 1
+	ORDER BY	[CMA].[MembershipAttributePosition] ASC;
 
 	-- Membership history
 	SELECT		[MSL].[IdMembershipSubscriptionLog],
@@ -90,7 +105,8 @@ BEGIN
 				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) < 0, 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionRemainingUses],
 				IIF((([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) > 100, 100, (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue])) [SubscriptionUsagePercentage],
 				[S].[DateCreated],
-				[S].[ExpirationDate]
+				[S].[ExpirationDate],
+				ISNULL([CS].[Icon], '') [Icon]
 	FROM		[dbo].[Subscription] S
 	INNER JOIN  [dbo].[CatSubscription] CS
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]

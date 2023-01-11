@@ -4,14 +4,16 @@
 -- Description:	<Description,muestra las membresias y credenciales disponibles con su respectivo detalle>
 -- =============================================
 /*
-	Actualización: Ordenar atributos de acuerdo a campo AttributePosition
-	Autor: Jerson Ochoa - 30-12-2022
+	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
+	Actualización: Agregar campo de ícono a estructura de membresías y suscripciones - 11-01-2023
+	Autor: Jerson Ochoa
 */
 CREATE PROCEDURE [dbo].[SPHWPMembershipOrSubscriptions]
 -- Add the parameters for the stored procedure here
   
     @Type  AS NVARCHAR(50),
-	@Token AS NVARCHAR(50)
+	@Token AS NVARCHAR(50),
+	@AccountId AS BIGINT = NULL
  
      
   
@@ -23,6 +25,20 @@ BEGIN
 	DECLARE @JsonResponse NVARCHAR(MAX) = '';
     -- Insert statements for procedure here 
 
+	DECLARE @CustomerId INT;
+	IF(@AccountId IS NOT NULL)
+	BEGIN
+		SET @CustomerId = (
+			SELECT
+				TOP 1
+					Acc.IdCustomer
+			FROM
+				[DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
+			WHERE
+				Acc.AccIdAccount = @AccountId
+		);
+	END
+
 	IF (@Type = 'MEMBERSHIP')
 	BEGIN
 				SET @JsonResponse =  
@@ -33,6 +49,7 @@ BEGIN
 							 '"Data" : [{'+
 										'"Id":   "' + CAST(CM.IdCatMembership AS VARCHAR), +'"'+  ',' +
 										'"Name": "' + CM.MembershipName, +'"'+  ',' +
+										'"Icon": "' + CM.Icon, +'"'+  ',' +
 										'"Attibutos": ['+
 														 
 														 											( 
@@ -64,7 +81,8 @@ BEGIN
 													']'+  ',' +
 									   
 										'"Costo":"' + CAST(CM.MembershipCost AS VARCHAR)+'"'+  ',' +
-										'"Tiempo de validez":"'+CAST(CM.MembershipValidity AS VARCHAR)+'"'+  
+										'"Tiempo de validez":"'+CAST(CM.MembershipValidity AS VARCHAR)+'"'+   ',' +
+										'"ActiveClienteHasSalesPackage":' + CAST((CASE WHEN ISNULL(MMBRSHP.IdMembership, 0) = 0 THEN 0 ELSE 1 END)AS VARCHAR) +
 							         '}]' +
 						  '}'
 			
@@ -72,8 +90,29 @@ BEGIN
 					 [dbo].[CatMembership] CM                  WITH (NOLOCK)
 				INNER JOIN
 					 [dbo].[CatMembershipAttribute] CMA 	   WITH (NOLOCK)
-				ON CM.IdCatMembership = CMA.CatMembershipId
-				
+					ON CM.IdCatMembership = CMA.CatMembershipId
+				OUTER APPLY (
+					SELECT
+						TOP 1
+							MMBRSHP.IdMembership
+					FROM
+						[dbo].[Membership] MMBRSHP WITH(NOLOCK)
+					WHERE 
+						MMBRSHP.CatMembershipId = CM.IdCatMembership
+						AND 
+							(
+								(
+									MMBRSHP.AccountId = @AccountId 
+									AND
+									MMBRSHP.CustomerId = @CustomerId
+								)
+								-- En caso no se encuentre el AccoundId registrado en la membresía
+								OR 
+								MMBRSHP.CustomerId = @CustomerId
+							)
+						AND 
+						MMBRSHP.RowStatus = 1
+				) MMBRSHP
 			--	ORDER BY CM.IdCatMembership Desc
 				FOR XML PATH(''), TYPE 
 				) 
@@ -93,6 +132,7 @@ BEGIN
 								 '"Data" : [{'+
 											'"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR), +'"'+  ',' +
 											'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
+											'"Icon": "' + CS.Icon, +'"'+  ',' +
 											'"Attibutos": ['+
 															
 
@@ -121,7 +161,8 @@ BEGIN
 														']'+  ',' +
 									   
 											'"Costo":"' + CAST(CS.SubscriptionCost AS VARCHAR)+'"'+  ',' +
-											'"Tiempo de validez":"'+CAST(CS.SubscriptionValidity AS VARCHAR)+'"'+  
+											'"Tiempo de validez":"'+CAST(CS.SubscriptionValidity AS VARCHAR)+'"'+     ',' +
+											'"ActiveClienteHasSalesPackage":' + CAST( (CASE WHEN ISNULL(SBSCRPTN.IdSubscription, 0) = 0 THEN 0 ELSE 1 END)AS VARCHAR) +
 										 '}]' +
 							  '}'
 			
@@ -130,6 +171,28 @@ BEGIN
 					INNER JOIN
 						 [dbo].[CatSubscriptionAtribute] CSA  	    WITH (NOLOCK)
 					ON CS.IdCatSubscription = CSA.CatSubscriptionId
+					OUTER APPLY (
+						SELECT
+							TOP 1
+								SBSCRPTN.IdSubscription
+						FROM
+							[dbo].[Subscription] SBSCRPTN WITH(NOLOCK)
+						WHERE 
+							SBSCRPTN.CatSubscriptionId = CS.IdCatSubscription
+							AND 
+								(
+									(
+										SBSCRPTN.AccountId = @AccountId 
+										AND
+										SBSCRPTN.CustomerId = @CustomerId
+									)
+									-- En caso no se encuentre el AccoundId registrado en la membresía
+									OR 
+									SBSCRPTN.CustomerId = @CustomerId
+								)
+							AND 
+							SBSCRPTN.RowStatus = 1
+					) SBSCRPTN
 					--ORDER BY CS.IdCatSubscription Desc
 
 					FOR XML PATH(''), TYPE 
