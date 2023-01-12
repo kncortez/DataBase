@@ -27,9 +27,9 @@ BEGIN
 		   smt.[Order] [Order],
 		   spu.IsScheduled IsScheduled
     FROM [DeliveryBackOffice].[dbo].[SchedulePickup] AS spu WITH (NOLOCK)
-        INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] AS smt WITH (NOLOCK)
+        JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] AS smt WITH (NOLOCK)
             ON spu.SchedulePickupId = smt.IdSchedulePickup
-        INNER JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] AS rat WITH (NOLOCK)
+        JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] AS rat WITH (NOLOCK)
             ON smt.IdPuRouteAssigment = rat.IdRouteAssigment
         LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] AS snr WITH (NOLOCK)
             ON rat.IdCurrierMan = snr.ID

@@ -20,7 +20,7 @@ CREATE PROCEDURE [dbo].[CompleteGuideGenerationExpressCenter]
 	@TblDeliveryOrdersList [TblDeliveryOrdersList2] READONLY
 AS
 BEGIN
-
+set arithabort on
 	-- Variables "globales"
 	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
 	DECLARE @IdDatafonoPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'Datafono' COLLATE Latin1_General_CI_AI);
@@ -403,25 +403,11 @@ BEGIN
 					FROM
 						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 					WHERE
-						(
-							(
-								Co.GuideSerie = @GuideSerie
-								AND
-								Co.GuideNumber = @GuideNumber
-							)
-							OR
-							(
-								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-								AND
-								Co.GuideSerie IS NULL
-								AND
-								Co.GuideNumber IS NULL
-							)
-						)
+						Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+						AND
+						Co.IdProduct = 1
 						AND
 						Co.RowStatus = 1
-					ORDER BY
-						Co.DateCreated DESC
 				), 0)
 
 				SET @PromoName = ISNULL((
@@ -450,8 +436,6 @@ BEGIN
 						,PaymentDate = GETDATE()
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
-						,GuideSerie = @GuideSerie
-						,GuideNumber = @GuideNumber
 					WHERE
 						IdCost = @CostId
 
@@ -527,7 +511,8 @@ BEGIN
 				END
 				ELSE
 				BEGIN
-
+				IF(ISNULL(@CostId, 0) > 0) 
+				BEGIN
 					INSERT INTO
 						[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
 						(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
@@ -536,6 +521,7 @@ BEGIN
 
 					IF(@@ROWCOUNT > 0)
 						SET @CoUpdated = 1;
+				end
 
 				END
 			END
@@ -665,25 +651,11 @@ BEGIN
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								(
-									(
-										Co.GuideSerie = @GuideSerie
-										AND
-										Co.GuideNumber = @GuideNumber
-									)
-									OR
-									(
-										Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-										AND
-										Co.GuideSerie IS NULL
-										AND
-										Co.GuideNumber IS NULL
-									)
-								)
+								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+								AND
+								Co.IdProduct = 1
 								AND
 								Co.RowStatus = 1
-							ORDER BY
-								Co.DateCreated DESC
 						), 0)
 
 						IF(@CostId > 0)
@@ -697,8 +669,6 @@ BEGIN
 								,PaymentDate = GETDATE()
 								,TokenUpdated = @Token
 								,DateUpdated = GETDATE()
-								,GuideSerie = @GuideSerie
-								,GuideNumber = @GuideNumber
 							WHERE
 								IdCost = @CostId
 
@@ -737,27 +707,13 @@ BEGIN
 									TOP 1
 										Co.IdCost
 								FROM
-									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+									[DeliveryBackOffice].[dbo].[Cost] Co --WITH(NOLOCK)
 								WHERE
-									(
-										(
-											Co.GuideSerie = @GuideSerie
-											AND
-											Co.GuideNumber = @GuideNumber
-										)
-										OR
-										(
-											Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-											AND
-											Co.GuideSerie IS NULL
-											AND
-											Co.GuideNumber IS NULL
-										)
-									)
+									Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+									AND
+									Co.IdProduct = 1
 									AND
 									Co.RowStatus = 1
-								ORDER BY
-									Co.DateCreated DESC
 							), 0)
 							
 							UPDATE
@@ -768,8 +724,6 @@ BEGIN
 								,PaymentDate = GETDATE()
 								,TokenUpdated = @Token
 								,DateUpdated = GETDATE()
-								,GuideSerie = @GuideSerie
-								,GuideNumber = @GuideNumber
 							WHERE
 								IdCost = @CostId
 
@@ -1021,8 +975,8 @@ BEGIN
 					,ERROR_NUMBER()
 					,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
 					,ERROR_LINE()
-					,''
-					,0
+					,@GuideSerie
+					,@GuideNumber
 					,''
 					,GETDATE())
 			

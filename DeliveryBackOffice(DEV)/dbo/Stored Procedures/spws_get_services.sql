@@ -288,7 +288,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId 
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -306,7 +306,6 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -561,8 +560,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
-												AND ord.Guide_Serie = paydord.GuideSerie
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -580,7 +578,6 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 										WHERE
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
@@ -826,7 +823,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -835,7 +832,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1045,7 +1041,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON ord.Guide_Number = paydord.GuideNumber  AND ord.Guide_Serie = paydord.GuideSerie
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1053,8 +1049,7 @@ BEGIN
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
-
+												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 										WHERE
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
@@ -1315,7 +1310,7 @@ BEGIN
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
+												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1542,7 +1537,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1784,7 +1779,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1793,7 +1788,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-													AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1999,7 +1993,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-											ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -2008,7 +2002,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
@@ -2248,7 +2241,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2265,7 +2258,6 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2466,7 +2458,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2483,7 +2475,6 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
@@ -2688,7 +2679,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2697,7 +2688,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2875,7 +2865,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2884,7 +2874,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
@@ -3110,7 +3099,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3119,7 +3108,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3322,7 +3310,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3331,7 +3319,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
@@ -3535,7 +3522,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3544,7 +3531,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3725,7 +3711,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												ON (ord.Guide_Number = paydord.GuideNumber)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3734,7 +3720,6 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
-												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate

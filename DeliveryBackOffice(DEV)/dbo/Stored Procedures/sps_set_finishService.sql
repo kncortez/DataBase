@@ -50,9 +50,9 @@ BEGIN
 
 
         CREATE NONCLUSTERED INDEX IX_TLGT_SERIE
-        ON #TblListGuidesTwo (Guide_Serie,Guide_Number);
-        --CREATE NONCLUSTERED INDEX IX_TLGT_NUMBER
-        --ON #TblListGuidesTwo (Guide_Number);
+        ON #TblListGuidesTwo (Guide_Serie);
+        CREATE NONCLUSTERED INDEX IX_TLGT_NUMBER
+        ON #TblListGuidesTwo (Guide_Number);
         CREATE NONCLUSTERED INDEX IX_TLGT_EXCLUDE
         ON #TblListGuidesTwo (ExcludeCOD);
 
@@ -72,9 +72,9 @@ BEGIN
         );
 
         CREATE NONCLUSTERED INDEX IX_LGNE_SERIE
-        ON #listGuidesNotExist (Guide_Serie,Guide_Number);
-        --CREATE NONCLUSTERED INDEX IX_LGNE_NUMBER
-        --ON #listGuidesNotExist (Guide_Number);
+        ON #listGuidesNotExist (Guide_Serie);
+        CREATE NONCLUSTERED INDEX IX_LGNE_NUMBER
+        ON #listGuidesNotExist (Guide_Number);
 
         --SELECT COUNT(1) FROM #listGuidesNotExist;
         IF ((SELECT COUNT(1)FROM #listGuidesNotExist) <= 0)
@@ -116,12 +116,6 @@ BEGIN
                       AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
                   );
 
-
-CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
-        ON #listGuidesEnabled (Guide_Serie,Guide_Number);
-
-		CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable_excludeCOD
-        ON #listGuidesEnabled (ExcludeCOD);
 
             -- OBTENER GUIAS DESHABILITADAS ---------------------------------------------------------------------
             SELECT lg.Guide_Serie,
@@ -205,7 +199,8 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
                 ReturnRates DECIMAL(14, 2) NULL
             );
 
-            CREATE NONCLUSTERED INDEX IX_PPT_GS ON #PendingPaymentTemp (GuideSerie, GuideNumber);
+            CREATE NONCLUSTERED INDEX IX_PPT_GS ON #PendingPaymentTemp (GuideSerie);
+            CREATE NONCLUSTERED INDEX IX_PPT_GN ON #PendingPaymentTemp (GuideNumber);
 
             INSERT INTO #PendingPaymentTemp
             (
@@ -237,76 +232,76 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
                                                                        @IdModule = @IdModuleP,
                                                                        @Token = @TokenP;
 
-            --SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
-            --       ppt.GuideSerie,
-            --       ppt.GuideNumber,
-            --       ppt.IsCollect,
-            --       ppt.Price,
-            --       ppt.COD,
-            --       ppt.AmountPaid,
-            --       ppt.CODPaid,
-            --       ppt.CODIsPaid,
-            --       ppt.PaymentTime,
-            --       ppt.TimeSequence,
-            --       ppt.FelNumber,
-            --       ppt.IsPaid,
-            --       ppt.IsCustomer,
-            --       ppt.ConditionPayment,
-            --       ppt.HaveCredit,
-            --       ppt.CollectCOD,
-            --       ppt.ReturnRate,
-            --       ppt.AmountToPay,
-            --       ppt.CODAmount,
-            --       ppt.ReturnRates,
-            --       CONCAT(
-            --                 do.Sender_Department,
-            --                 ', ',
-            --                 do.Sender_Town,
-            --                 ', ',
-            --                 'Zona ',
-            --                 do.Sender_Zone,
-            --                 ', ',
-            --                 do.Sender_Address
-            --             ) SenderAddress,
-            --       CONCAT(
-            --                 do.Receiver_Department,
-            --                 ', ',
-            --                 do.Receiver_Town,
-            --                 ', ',
-            --                 'Zona ',
-            --                 do.Receiver_Zone,
-            --                 ', ',
-            --                 do.Receiver_Address
-            --             ) ReceiverAddress,
-            --       IIF(LTRIM(RTRIM(ISNULL(do.Sender_FirstName, ''))) = '',
-            --           LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))),
-            --           IIF(LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))) = '',
-            --               LTRIM(RTRIM(do.Sender_FirstName)),
-            --               CONCAT(LTRIM(RTRIM(do.Sender_FirstName)), ' ', LTRIM(RTRIM(do.Sender_LastName))))) SenderName,
-            --       CONCAT(
-            --                 IIF(LTRIM(RTRIM(ISNULL(do.Receiver_FirstName, ''))) = '',
-            --                     LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))),
-            --                     IIF(LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))) = '',
-            --                         LTRIM(RTRIM(do.Receiver_FirstName)),
-            --                         CONCAT(
-            --                                   LTRIM(RTRIM(do.Receiver_FirstName)),
-            --                                   ' ',
-            --                                   LTRIM(RTRIM(do.Receiver_LastName))
-            --                               ))),
-            --                 IIF(LTRIM(RTRIM(ISNULL(do.Receiver_Alternant_FullName, ''))) = '',
-            --                     '',
-            --                     CONCAT(' / ', LTRIM(RTRIM(do.Sender_FirstName))))
-            --             ) ReceiverName,
-            --       IIF(UPPER(@ServiceType) = 'DELIVERY',
-            --           LTRIM(RTRIM(ISNULL(do.IndicationsToSendDestination, ''))),
-            --           LTRIM(RTRIM(ISNULL(do.IndicationsToSendOrigin, '')))) Indications,
-            --       (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
-            --       IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
-            --INTO #PendingPaymentTempId
-            --FROM #PendingPaymentTemp ppt
-            --    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-            --        ON ppt.GuideSerie = do.Guide_Serie
-            --           AND ppt.GuideNumber = do.Guide_Number;
+            SELECT ROW_NUMBER() OVER (ORDER BY ppt.GuideNumber ASC) AS Id,
+                   ppt.GuideSerie,
+                   ppt.GuideNumber,
+                   ppt.IsCollect,
+                   ppt.Price,
+                   ppt.COD,
+                   ppt.AmountPaid,
+                   ppt.CODPaid,
+                   ppt.CODIsPaid,
+                   ppt.PaymentTime,
+                   ppt.TimeSequence,
+                   ppt.FelNumber,
+                   ppt.IsPaid,
+                   ppt.IsCustomer,
+                   ppt.ConditionPayment,
+                   ppt.HaveCredit,
+                   ppt.CollectCOD,
+                   ppt.ReturnRate,
+                   ppt.AmountToPay,
+                   ppt.CODAmount,
+                   ppt.ReturnRates,
+                   CONCAT(
+                             do.Sender_Department,
+                             ', ',
+                             do.Sender_Town,
+                             ', ',
+                             'Zona ',
+                             do.Sender_Zone,
+                             ', ',
+                             do.Sender_Address
+                         ) SenderAddress,
+                   CONCAT(
+                             do.Receiver_Department,
+                             ', ',
+                             do.Receiver_Town,
+                             ', ',
+                             'Zona ',
+                             do.Receiver_Zone,
+                             ', ',
+                             do.Receiver_Address
+                         ) ReceiverAddress,
+                   IIF(LTRIM(RTRIM(ISNULL(do.Sender_FirstName, ''))) = '',
+                       LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))),
+                       IIF(LTRIM(RTRIM(ISNULL(do.Sender_LastName, ''))) = '',
+                           LTRIM(RTRIM(do.Sender_FirstName)),
+                           CONCAT(LTRIM(RTRIM(do.Sender_FirstName)), ' ', LTRIM(RTRIM(do.Sender_LastName))))) SenderName,
+                   CONCAT(
+                             IIF(LTRIM(RTRIM(ISNULL(do.Receiver_FirstName, ''))) = '',
+                                 LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))),
+                                 IIF(LTRIM(RTRIM(ISNULL(do.Receiver_LastName, ''))) = '',
+                                     LTRIM(RTRIM(do.Receiver_FirstName)),
+                                     CONCAT(
+                                               LTRIM(RTRIM(do.Receiver_FirstName)),
+                                               ' ',
+                                               LTRIM(RTRIM(do.Receiver_LastName))
+                                           ))),
+                             IIF(LTRIM(RTRIM(ISNULL(do.Receiver_Alternant_FullName, ''))) = '',
+                                 '',
+                                 CONCAT(' / ', LTRIM(RTRIM(do.Sender_FirstName))))
+                         ) ReceiverName,
+                   IIF(UPPER(@ServiceType) = 'DELIVERY',
+                       LTRIM(RTRIM(ISNULL(do.IndicationsToSendDestination, ''))),
+                       LTRIM(RTRIM(ISNULL(do.IndicationsToSendOrigin, '')))) Indications,
+                   (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
+                   IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
+            INTO #PendingPaymentTempId
+            FROM #PendingPaymentTemp ppt
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                    ON ppt.GuideSerie = do.Guide_Serie
+                       AND ppt.GuideNumber = do.Guide_Number;
 
 
             DECLARE @TotalAmountBD DECIMAL(18, 2);
@@ -382,8 +377,6 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
                             ExcludeCOD BIT NULL
                         );
 
-						CREATE NONCLUSTERED INDEX TMP_IDX_TblInclude_Guide ON #TblInclude(Guide_Serie, Guide_Number)
-
                         INSERT INTO #TblInclude
                         (
                             Guide_Serie,
@@ -403,7 +396,6 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
                             FROM #PendingPaymentTemp pd
                                 INNER JOIN #TblInclude ti
                                     ON pd.GuideNumber = ti.Guide_Number
-									AND pd.GuideSerie = ti.Guide_Serie
                         );
 
 
@@ -792,14 +784,52 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
 									WHERE ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
 								);
 
-								--SET @IdCost = SCOPE_IDENTITY();
+								SET @IdCost = SCOPE_IDENTITY();
 
 							END TRY
 							BEGIN CATCH
 
 							END CATCH
 
-							PRINT (CONVERT( VARCHAR(24), GETDATE(), 121))
+							IF( ISNULL(@IdCost, 0) = 0 )
+							BEGIN
+
+								SELECT
+									TOP 1
+										@IdCost = CoAux.IdCost
+								FROM
+									#TblInclude ti
+									OUTER APPLY (
+										SELECT
+											TOP 1
+												Co.IdCost
+										FROM
+											[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+										WHERE
+											(
+												(
+													Co.GuideSerie = ti.Guide_Serie
+													AND
+													Co.GuideNumber = ti.Guide_Number
+												)
+												OR
+												(
+													Co.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+													AND
+													Co.GuideSerie IS NULL
+													AND
+													Co.GuideNumber IS NULL
+												)
+											)
+											AND
+											Co.RowStatus = 1
+										ORDER BY
+											Co.DateCreated DESC
+									) CoAux
+
+							END
+
+
                             UPDATE ct
                             SET ct.[PaymentDate] = GETDATE(),
                                 ct.[TokenUpdated] = @TokenP,
@@ -845,7 +875,7 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
 										Co.DateCreated DESC
 								) CoAux
                             WHERE ISNULL(ct.TotalAmountPaid, 0) = 0;
-							PRINT (CONVERT( VARCHAR(24), GETDATE(), 121))
+
                             IF (@Amount > 0)
                             BEGIN
                                 INSERT INTO [dbo].[CostDetail]
@@ -889,6 +919,7 @@ CREATE NONCLUSTERED INDEX IX_TLGT_SERIE_enable
                                 WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
                             END;
                             -----------------------------------------
+
 
                             -----------------------------------------
 

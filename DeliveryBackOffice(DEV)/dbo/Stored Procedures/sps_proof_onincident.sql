@@ -254,65 +254,6 @@ BEGIN
             VALUES
             (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder, NULL, NULL);
             SET @RInserted = @@ROWCOUNT;
-
-			
-
-   -----------------WEBHOOK.INI-----------------------		
-				DECLARE @WebhookCustomerId INT = -1;
-				DECLARE @CustomerEndpointId INT = -1;
-				-- Debido a que se procesa únicamente 1 guía
-				DECLARE @GuideCurrentStatus INT = -1;
-
-				BEGIN TRY
-					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
-
-					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
-					SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
-
-					SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie);
-
-					-- Cliente tiene webhook configurado para el tipo especificado
-					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
-					IF ( @WebhookCustomerId > 0 AND @CustomerEndpointId > 0 AND @GuideCurrentStatus IN (SELECT WRBU.StatusOrderId FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) WHERE WRBU.CustomerId = @WebhookCustomerId AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook) )
-					BEGIN 
-
-						DECLARE @ResponseTable AS TABLE (
-							InsertedId BIGINT
-						);
-
-						INSERT INTO 
-							[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-							(
-								[GuideSerie]
-								,[GuideNumber]
-								,[CustomerId]
-								,[StatusOrderId]
-								,[WebhookEndpointId]
-								,[HasNotified]
-								,[TokenCreated]
-								,[DateCreated]
-							)
-						OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-						VALUES
-							(
-								@GuideSerie
-								,@GuideNumber
-								,@WebhookCustomerId
-								,@GuideCurrentStatus
-								,@CustomerEndpointId
-								,0
-								,'sps_proof_onincident'
-								,GETDATE()
-							)
-
-					END
-
-				END TRY
-				BEGIN CATCH
-
-				END CATCH
-				-------------------WEBHOOK.FIN------------------------------
-
         END
 		ELSE
 		BEGIN

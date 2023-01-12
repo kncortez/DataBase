@@ -124,8 +124,6 @@
 
 
 
-
-
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -319,15 +317,4 @@ CREATE NONCLUSTERED INDEX [idx_ReceiverIdTownship]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la guía va a proceso devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'IsLastMileReturn';
-
-
-GO
-CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_IdCustomer]
-    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC, [IdCustomer] ASC);
-
-
-GO
-CREATE NONCLUSTERED INDEX [IDX_IdCustomer_INCLUDE]
-    ON [dbo].[DeliveryOrder]([IdCustomer] ASC)
-    INCLUDE([StatusOrderId]);
 

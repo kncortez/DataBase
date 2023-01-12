@@ -368,7 +368,7 @@ BEGIN
 
             SELECT @IdCost = cst.IdCost,
                    @IsPaid = ISNULL(cst.TotalAmountPaid, 0)
-            FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH(NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].[Cost] cst
             WHERE 
 				(
 					(
@@ -666,7 +666,7 @@ BEGIN
 
             SELECT @IdCost = cst.IdCost,
                    @IsPaid = ISNULL(cst.TotalAmountPaid, 0)
-            FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH(NOLOCK)
+            FROM [DeliveryBackOffice].[dbo].[Cost] cst
             WHERE 
 				(
 					(

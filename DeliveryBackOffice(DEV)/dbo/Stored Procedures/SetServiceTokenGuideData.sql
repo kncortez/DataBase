@@ -427,7 +427,7 @@ BEGIN
 				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
-			FROM [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+			FROM [dbo].[ServiceDataForGuide] SDFG
 			INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 			WHERE SDFG.GuideToken = @GuideToken
@@ -445,7 +445,7 @@ BEGIN
 				SET 
 					Receiver_Address = @NewAddress
 					,Receiver_Zone = IIF( ISNULL(@NewZone,'')!='', @NewZone, Receiver_Zone )
-				FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
+				FROM [dbo].[ServiceDataForGuide] SDFG
 				INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 				WHERE SDFG.GuideToken = @GuideToken

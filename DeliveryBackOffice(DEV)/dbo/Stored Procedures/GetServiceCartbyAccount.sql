@@ -66,7 +66,7 @@ BEGIN
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 				ON do.Guide_Serie = ascd.GuideSerie
 				AND do.Guide_Number = ascd.GuideNumber
-			LEFT JOIN DeliveryBackOffice.dbo.Cost Co with (nolock)
+			LEFT JOIN DeliveryBackOffice.dbo.Cost Co
 				ON Co.ProductNumber = CONCAT(do.Guide_Serie, Guide_Number)
 			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 			AND ISNULL(co.TotalAmountPaid,0) > 0

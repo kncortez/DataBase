@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-11-25>
@@ -20,65 +19,64 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	--IF(@RequestDateTime IS NULL)
-	--	SET @RequestDateTime = GETDATE()
+	IF(@RequestDateTime IS NULL)
+		SET @RequestDateTime = GETDATE()
 
-	--DECLARE @InsertedLog AS TABLE (
-	--	IdInsert BIGINT
-	--);
+	DECLARE @InsertedLog AS TABLE (
+		IdInsert BIGINT
+	);
 
-	--BEGIN TRANSACTION
-	--BEGIN TRY
+	BEGIN TRANSACTION
+	BEGIN TRY
 
-		--INSERT INTO [DeliveryBackOffice].[dbo].[APIMobileLog]
-		--	(
-		--		[PetitionMethod]
-		--		,[PetitionUrl]
-		--		,[RequestHeader]
-		--		,[RequestBody]
-		--		,[RequestDateTime]
-		--		,[RequestLauValue]
-		--	)
-		--OUTPUT inserted.IdAPIMobileLog INTO @InsertedLog(IdInsert)
-		--VALUES
-		--(
-		--	@PetitionMethod
-		--	,@PetitionUrl
-		--	,@RequestHeader
-		--	,@RequestBody
-		--	,@RequestDateTime
-		--	,@RequestLauValue
-		--)
+		INSERT INTO [DeliveryBackOffice].[dbo].[APIMobileLog]
+			(
+				[PetitionMethod]
+				,[PetitionUrl]
+				,[RequestHeader]
+				,[RequestBody]
+				,[RequestDateTime]
+				,[RequestLauValue]
+			)
+		OUTPUT inserted.IdAPIMobileLog INTO @InsertedLog(IdInsert)
+		VALUES
+		(
+			@PetitionMethod
+			,@PetitionUrl
+			,@RequestHeader
+			,@RequestBody
+			,@RequestDateTime
+			,@RequestLauValue
+		)
 
-		--IF(EXISTS (SELECT TOP 1 1 FROM @InsertedLog))
-		--BEGIN
+		IF(EXISTS (SELECT TOP 1 1 FROM @InsertedLog))
+		BEGIN
 
-		--	COMMIT TRANSACTION;
+			COMMIT TRANSACTION;
 
 			SELECT
 				TOP 1
 					200 'ResultCode',
-					1 'ResultLog'
-			--		IL.IdInsert 'ResultLog'
-			--FROM
-			--	@InsertedLog IL
+					IL.IdInsert 'ResultLog'
+			FROM
+				@InsertedLog IL
 
-	--	END
-	--	ELSE
-	--	BEGIN
+		END
+		ELSE
+		BEGIN
 
-	--		ROLLBACK TRANSACTION;
+			ROLLBACK TRANSACTION;
 
-	--		SELECT
-	--			204 'ResultCode'
+			SELECT
+				204 'ResultCode'
 
-	--	END
-	--END TRY
-	--BEGIN CATCH
-	--	ROLLBACK TRANSACTION;
+		END
+	END TRY
+	BEGIN CATCH
+		ROLLBACK TRANSACTION;
 
-	--	SELECT
-	--		500 'ResultCode'
+		SELECT
+			500 'ResultCode'
 
-	--END CATCH
+	END CATCH
 END

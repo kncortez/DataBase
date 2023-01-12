@@ -127,16 +127,16 @@ BEGIN
 										   ,abc.Length
 										   ,abc.MassWeight
 										   ,IIF(ra.RateId IN (@NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates), IIF(ra.TypeServiceId IS NOT NULL AND ra.TypeSegmentId IS NOT NULL, 1, 0), NULL) 'IsMainPackage'
-										FROM dbo.CatArticle art WITH(NOLOCK)
-										INNER JOIN dbo.ArticleByCustomer abc WITH(NOLOCK)
+										FROM dbo.CatArticle art
+										INNER JOIN dbo.ArticleByCustomer abc
 											ON abc.AbcIdArticle = art.ArtId
-										LEFT JOIN CatTypeArticle ta WITH(NOLOCK)
+										LEFT JOIN CatTypeArticle ta
 											ON ta.TarId = art.ArtIdTypeArticle
-										INNER JOIN RateData ra WITH(NOLOCK)
+										INNER JOIN RateData ra
 											ON ra.ArticleId = abc.AbcId
-										INNER JOIN RatebyCustomer rbc WITH(NOLOCK)
+										INNER JOIN RatebyCustomer rbc
 											ON rbc.RbcIdRate = ra.RateId
-										INNER JOIN Account ac WITH(NOLOCK)
+										INNER JOIN Account ac
 											ON ac.IdCustomer = rbc.RbcIdCustomer
 										WHERE ac.AccIdAccount = @IdAccount
 										AND art.ArtRowStatus = 'TRUE'
