@@ -238,6 +238,8 @@ BEGIN
 
     IF (@AppliedCoupon > 0)
     BEGIN
+
+		PRINT 'APPLIED COUPON'
         SELECT TOP 1
                @Amount = PromoC.OriginalAmount,
                @DiscountType = CTD.ShortName,
@@ -273,30 +275,91 @@ BEGIN
         (
             SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%PESO%'
         );
+		
+		IF @AmountWeight IS NOT NULL AND @AmountWeight > 0
+		BEGIN
+			SET @AmountWeight = @AmountWeight * 1.12
+					
+			SET @Amount = @Amount - @AmountWeight
+					
+			IF(@AmountWeight IS NOT NULL AND @AmountWeight > 0 AND (@AppliedCoupon > 0 OR ((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
+			BEGIN
 
-        IF @AmountWeight IS NOT NULL
-           AND @AmountWeight > 0
-        BEGIN
-            SET @Amount = @Amount - @AmountWeight;
+				SET @AmountWeight = (
+					SELECT
+						(
+							CASE
+								WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+									CASE
+										WHEN @DiscountType = 'TOT' THEN
+											@AmountWeight - ROUND(((@AmountWeight * @PromoValue) / 100), 1)
+										ELSE 
+											@AmountWeight
+									END
+								ELSE @AmountWeight
+							END
+						)
+				)
 
-        --SET @AmountWeight = @AmountWeight * 1.12; -- ADD TAXES
+			END
 
-        END;
+		END
 
         -- Seguro
         SET @AmountSecure =
         (
             SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%SEGURO%'
         );
+		
+		
+		IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
+		BEGIN
+			SET @AmountSecure = @AmountSecure * 1.12
 
-        IF @AmountSecure IS NOT NULL
-           AND @AmountSecure > 0
-        BEGIN
-            SET @Amount = @Amount - @AmountSecure;
+			SET @Amount = @Amount - @AmountSecure
 
-        --SET @AmountSecure = @AmountSecure * 1.12; -- ADD TAXES
+			IF(@AmountSecure IS NOT NULL AND @AmountSecure > 0 AND (@AppliedCoupon > 0 OR ((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
+			BEGIN
 
-        END;
+				SET @AmountSecure = (
+					SELECT
+						(
+							CASE
+								WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+									CASE
+										WHEN @DiscountType = 'TOT' THEN
+											@AmountSecure - ROUND(((@AmountSecure * @PromoValue) / 100), 1)
+										ELSE 
+											@AmountSecure
+									END
+								ELSE @AmountSecure
+							END
+						)
+				)
+
+			END
+		END
+		
+		IF(@Amount IS NOT NULL AND @Amount > 0 AND (@AppliedCoupon > 0 OR ((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
+		BEGIN
+
+			SET @Amount = (
+				SELECT
+					(
+						CASE
+							WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN @DiscountType = 'TOT' THEN
+										@Amount - ROUND(((@Amount * @PromoValue) / 100), 1)
+									ELSE 
+										@Amount
+								END
+							ELSE @Amount
+						END
+					)
+			)
+
+		END
 
         IF @Amount IS NOT NULL
            AND @Amount > 0
@@ -344,4 +407,4 @@ BEGIN
     FROM @GuideDetail;
 
     SET NOCOUNT OFF;
-END;	
+END;
