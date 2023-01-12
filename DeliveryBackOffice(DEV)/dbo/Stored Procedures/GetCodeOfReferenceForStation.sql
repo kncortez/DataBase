@@ -30,7 +30,7 @@ BEGIN
 		BEGIN
 
 			SELECT
-				CodeOfRefrence = 999
+				CodeOfReference = 999
 
 		END
 		ELSE
