@@ -1156,6 +1156,7 @@
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes_guides.sql" />
     <Build Include="dbo\Stored Procedures\spg_detail_linehaul_routes.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidateGuideStatus.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
