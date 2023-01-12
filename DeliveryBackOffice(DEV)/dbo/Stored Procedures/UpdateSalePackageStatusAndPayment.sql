@@ -78,7 +78,7 @@ BEGIN
 						Mmshp
 					SET
 						Mmshp.LastPaymentDate = @FixedDate
-						,Mmshp.ExpirationDate = (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 1, @FixedDate) )) <= Mmshp.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 1, @FixedDate) ) ELSE DATEADD(MONTH, 1, @FixedDate) END)
+						,Mmshp.ExpirationDate = (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 12, @FixedDate) )) <= Mmshp.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 12, @FixedDate) ) ELSE DATEADD(MONTH, 12, @FixedDate) END)
 						,Mmshp.CatMembershipStatusId = @ActiveStatus
 						,Mmshp.ActualServiceCount = 0
 						,Mmshp.RowStatus = 1

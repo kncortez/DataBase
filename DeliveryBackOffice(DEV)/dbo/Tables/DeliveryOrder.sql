@@ -126,6 +126,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -322,12 +324,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_IdCustomer]
-    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC, [IdCustomer] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_IdCustomer_INCLUDE]
-    ON [dbo].[DeliveryOrder]([IdCustomer] ASC)
-    INCLUDE([StatusOrderId]);
+
 
