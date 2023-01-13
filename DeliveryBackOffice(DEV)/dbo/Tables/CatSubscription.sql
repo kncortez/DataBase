@@ -12,6 +12,13 @@
     [DateCreated]                      DATETIME        NOT NULL,
     [TokenUpdated]                     NVARCHAR (50)   NULL,
     [DateUpdated]                      DATETIME        NULL,
+    [Icon]                             NVARCHAR (50)   NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC)
 );
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de ícono configurable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'Icon';
 

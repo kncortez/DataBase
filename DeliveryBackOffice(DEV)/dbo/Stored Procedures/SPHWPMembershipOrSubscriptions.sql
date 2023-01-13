@@ -4,8 +4,10 @@
 -- Description:	<Description,muestra las membresias y credenciales disponibles con su respectivo detalle>
 -- =============================================
 /*
-	Actualización: Ordenar atributos de acuerdo a campo AttributePosition
-	Autor: Jerson Ochoa - 30-12-2022
+	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
+	Actualización: Agregar campo de ícono a estructura de membresías y suscripciones - 11-01-2023
+	Actualización: Validar rowStatus para atributos - 11-01-2023
+	Autor: Jerson Ochoa
 */
 CREATE PROCEDURE [dbo].[SPHWPMembershipOrSubscriptions]
 -- Add the parameters for the stored procedure here
@@ -48,6 +50,7 @@ BEGIN
 							 '"Data" : [{'+
 										'"Id":   "' + CAST(CM.IdCatMembership AS VARCHAR), +'"'+  ',' +
 										'"Name": "' + CM.MembershipName, +'"'+  ',' +
+										'"Icon": "' + CM.Icon, +'"'+  ',' +
 										'"Attibutos": ['+
 														 
 														 											( 
@@ -132,6 +135,7 @@ BEGIN
 								 '"Data" : [{'+
 											'"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR), +'"'+  ',' +
 											'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
+											'"Icon": "' + CS.Icon, +'"'+  ',' +
 											'"Attibutos": ['+
 															
 
