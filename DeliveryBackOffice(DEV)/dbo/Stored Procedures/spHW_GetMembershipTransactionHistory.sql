@@ -168,12 +168,29 @@ BEGIN
 				[MSL].[LogGuideOriginalValue] [OriginalAmount],
 				[MSL].[LogGuideNewValue] [NewAmount],
 				([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied],
-				[MSL].[DateCreated] [Date]
+				[MSL].[DateCreated] [Date],
+				CASE 
+					WHEN	[SO].[OrderDescription] = 'Generado' 
+					THEN 'Generado'
+					WHEN	[SO].[OrderDescription] = 'Entregado' 
+						OR	[SO].[OrderDescription] = 'Entregado En Express Center' 
+						OR	[SO].[OrderDescription] = 'COD liquidado' 
+						OR	[SO].[OrderDescription] = 'COD pagado' 
+					THEN 'Entregado'
+					WHEN	[SO].[OrderDescription] = 'Devuelto' 
+						OR	[SO].[OrderDescription] = 'Devuelto en Express Center' 
+					THEN 'Devuelto'
+					WHEN [SO].[OrderDescription] = 'Anulado' 
+					THEN 'Cancelado'
+					ELSE 'En proceso'
+				END [OrderStatus]
 	FROM		[dbo].[MembershipSubscriptionLog] MSL
 	INNER JOIN	[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		ON		[MSL].[LogGuideSerie] = [DO].[Guide_Serie]
 		AND		[MSL].[LogGuideNumber] = [DO].[Guide_Number]
 		AND		[DO].[StatusOrderId] NOT IN (@NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER)
+	INNER JOIN	[dbo].[StatusOrder] SO
+		ON		[DO].[StatusOrderId] = [SO].[StatusOrderId]
 	WHERE		[MSL].[MembershipId] = @MEMBERSHIP_ID
 		AND		[MSL].[SubscriptionId] IS NOT NULL
 		AND		[MSL].[RowStatus] = 1
