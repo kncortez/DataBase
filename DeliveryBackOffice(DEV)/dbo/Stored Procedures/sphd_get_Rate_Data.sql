@@ -158,6 +158,7 @@ BEGIN
                SUM(dt1.LOCRate) LocRate,
                SUM(dt1.METRate) MetRate,
                SUM(dt1.FORRate) ForRate,
+			   SUM(dt1.ESPRate) EspRate,
                1 'Status'
         FROM
         (
@@ -167,7 +168,8 @@ BEGIN
                    --,sg.CrsShortName
                    IIF(sg.CrsShortName = 'FOR', SUM(ISNULL(rd.RateValue, 0)), 0) FORRate,
                    IIF(sg.CrsShortName = 'MET', SUM(ISNULL(rd.RateValue, 0)), 0) METRate,
-                   IIF(sg.CrsShortName = 'LOC', SUM(ISNULL(rd.RateValue, 0)), 0) LOCRate
+                   IIF(sg.CrsShortName = 'LOC', SUM(ISNULL(rd.RateValue, 0)), 0) LOCRate,
+				   IIF(sg.CrsShortName = 'ESP', SUM(ISNULL(rd.RateValue, 0)), 0) ESPRate
             FROM dbo.RateData rd
                 LEFT JOIN dbo.CatTypeService ct
                     ON ct.CtsId = rd.TypeServiceId

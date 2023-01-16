@@ -840,10 +840,13 @@ BEGIN
             FROM @TblArticleRate ar
                 LEFT JOIN dbo.CatRateSegment sg
                     ON sg.CrsShortName = ar.Segment
+				LEFT JOIN CatTypeService ts
+					ON ts.CtsShortName = ar.TypeRate
                 LEFT JOIN dbo.RateData rd
                     ON rd.RateId = @IdRate
                        AND rd.ArticleId = ar.IdArticle
                        AND rd.TypeSegmentId = sg.CrsId
+					   AND rd.TypeServiceId = ts.CtsId
             WHERE ar.Rate > 0
                   AND ar.Status = 1
                   AND rd.RateId IS NOT NULL;
@@ -854,6 +857,7 @@ BEGIN
             (
                 RateId,
                 TypeSegmentId,
+				TypeServiceId,
                 ArticleId,
                 RateValue,
                 RowStatus,
@@ -862,6 +866,7 @@ BEGIN
             )
             SELECT @IdRate,
                    sg.CrsId,
+				   ts.CtsId,
                    ar.IdArticle,
                    ar.Rate,
                    1, -- crear como activo
@@ -870,10 +875,13 @@ BEGIN
             FROM @TblArticleRate ar
                 LEFT JOIN dbo.CatRateSegment sg
                     ON sg.CrsShortName = ar.Segment
+				LEFT JOIN CatTypeService ts
+                    ON ts.CtsShortName = ar.TypeRate
                 LEFT JOIN dbo.RateData rd
                     ON rd.RateId = @IdRate
                        AND rd.ArticleId = ar.IdArticle
                        AND rd.TypeSegmentId = sg.CrsId
+					   AND rd.TypeServiceId = ts.CtsId
             WHERE ar.Rate > 0
                   AND ar.Status = 1
                   AND rd.RateId IS NULL;
