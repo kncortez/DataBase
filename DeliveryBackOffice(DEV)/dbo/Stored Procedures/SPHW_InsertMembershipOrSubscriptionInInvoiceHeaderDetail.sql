@@ -65,8 +65,8 @@ BEGIN
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
     DECLARE @SuscriptionDesc AS NVARCHAR(200);
-	DECLARE @Authorizacion AS INT
-	DECLARE @IdMemberOrSuscription AS INT
+	DECLARE @Authorizacion AS NVARCHAR(20);
+	DECLARE @IdMemberOrSuscription AS  NVARCHAR(200)
 
     SET @SuscriptionDesc =
     (
@@ -129,7 +129,8 @@ BEGIN
         IF (@TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI)
         BEGIN
 
-            SELECT @inv_amount = M.MembershipCost,
+            SELECT TOP 1
+			       @inv_amount = M.MembershipCost,
                    @inv_cli_email = M.InvoiceEmail,
                    @inv_cli_adress = M.FiscalAddress,
                    @inv_cli_nit = REPLACE(M.TaxIdNumber, '-', ''),
@@ -142,12 +143,14 @@ BEGIN
                     ON M.CatMembershipId = CM.IdCatMembership
             WHERE AccountId = @IdAccount
                   AND M.RowStatus = 1
-                  AND CM.IdCatMembership = @IdSalePackage;
+                  AND CM.IdCatMembership = @IdSalePackage
+				  ORDER BY M.DateCreated DESC
 
                SELECT  
 					@Authorizacion = MOL.[Authorization],
 					@typeMoneyId = MOL.TypeOfInOutOfMoneyId
 				  FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK) Where MembershipId =  @IdMemberOrSuscription
+				  ORDER BY MOL.DateCreated DESC
 
 
         END;
@@ -156,7 +159,7 @@ BEGIN
 
 
 
-        Select  
+        Select  TOP 1
 			    @inv_amount     = S.SubscriptionCost,
 		        @inv_cli_email  = M.InvoiceEmail,
 				@inv_cli_adress = M.FiscalAddress ,
@@ -173,13 +176,15 @@ BEGIN
 				WHERE M.AccountId =   @IdAccount AND 
 					  M.RowStatus = 1 AND 
 				      CS.IdCatSubscription = @IdSalePackage
+					  ORDER BY S.DateCreated DESC
 
 				SET @dti_description = @dti_description +' '+   @Descriptionp
 
-		  SELECT  
+		  SELECT  TOP 1
 		    @Authorizacion = SOL.[Authorization],
 			@typeMoneyId = SOL.TypeOfInOutOfMoneyId
 		  FROM [dbo].[SubscriptionPaymentLog]  SOL WITH (NOLOCK) Where SubscriptionId =  @IdMemberOrSuscription
+		  ORDER BY SOL.DateCreated DESC
 
 
         END;
