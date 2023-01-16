@@ -18,6 +18,12 @@
 -- Create date: <2022-02-10>
 -- Description:	< Integracion de logica que permitira generar un manifiesto de piezas escaneada >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2022-06-20>
+-- Description:	<Agregar filtro para validar que no tiene pagos de TC o Datafono, en dbo.CostDetail>
+-- =============================================
+
 
 CREATE PROCEDURE [dbo].[SetFinishPickUp]
     -- Add the parameters for the stored procedure here
@@ -30,15 +36,15 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @Amount DECIMAL(12, 2) = 0,
     @Voucher NVARCHAR(200) = ' ',
     @PuSignaturePath NVARCHAR(250) = ' ',
-    @StartDate DATETIME = NULL,
-    @EndDate DATETIME = NULL
+	@StartDate DATETIME = NULL,
+	@EndDate DATETIME = NULL,
+	@PickupLatitude NVARCHAR(20) = NULL,
+	@PickupLongitude NVARCHAR(20) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
-
-
 
     DECLARE @jsonResult NVARCHAR(MAX);
     DECLARE @jsonResult1 NVARCHAR(MAX);
@@ -46,7 +52,8 @@ BEGIN
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
     DECLARE @ManifestSerie VARCHAR(10) = 'FM';
-    DECLARE @ManifestNumber BIGINT;
+	DECLARE @ManifestNumber BIGINT;
+
     DECLARE @CodeOfReference INT;
     DECLARE @CourierID INT;
 
@@ -101,6 +108,84 @@ BEGIN
                 FROM LogTokenPOD
                 WHERE LogTokenPOD LIKE '%' + @Token + '%'
             );
+
+	
+    -- Variables para verificar ubicación en geocerca
+    DECLARE @FixedLatitude NVARCHAR(20) = @PickupLatitude;
+    DECLARE @FixedLongitude NVARCHAR(20) = @PickupLongitude;
+
+    BEGIN TRY
+
+        IF (
+               RTRIM(LTRIM(ISNULL(@PickupLatitude, ''))) <> ''
+               AND RTRIM(LTRIM(ISNULL(@PickupLongitude, ''))) <> ''
+           )
+        BEGIN
+            DECLARE @TargetGeofence GEOMETRY;
+            DECLARE @TargetGeofenceAsText NVARCHAR(MAX);
+
+            DECLARE @TargetPoint GEOMETRY;
+            DECLARE @TargetPointAsText NVARCHAR(MAX) = CONCAT('POINT (', @PickupLongitude, ' ', @PickupLatitude, ')');
+
+            SET @TargetGeofenceAsText
+                = (CONCAT(
+                             'POLYGON ((',
+                   (
+                       SELECT STUFF(
+                                       (
+                                           SELECT ', '
+                                                  + CONCAT(
+                                                              CAST(P.PointLongitude AS DECIMAL(9, 6)),
+                                                              ' ',
+                                                              CAST(P.PointLatitude AS DECIMAL(9, 6))
+                                                          )
+                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
+                                             INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                                   ON G.IdGeofence = GP.IdGeofence
+                                                      AND GP.RowStatus = 1
+                                             INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                                   ON GP.IdPoint = P.IdPoint
+                                                      AND P.RowStatus = 1
+                                           WHERE G.RowStatus = 1
+                                                 AND G.IdGeofence = 1 -- Geocerca de GT
+                                           ORDER BY GP.GeofencePointOrder ASC
+                                           FOR XML PATH(''), TYPE
+                                       ).value('.', 'varchar(max)'),
+                                       1,
+                                       1,
+                                       ''
+                                   )
+                   ),
+                             '))'
+                         )
+                  );
+
+            SET @TargetGeofence = geometry::STGeomFromText(@TargetGeofenceAsText, 0);
+
+            SET @TargetPoint = geometry::STGeomFromText(@TargetPointAsText, 0);
+
+            DECLARE @IsValidLocation BIT
+                = CASE
+                      WHEN @TargetPoint.STIntersection(@TargetGeofence).ToString() = 'GEOMETRYCOLLECTION EMPTY' THEN
+                          0
+                      ELSE
+                          1
+                  END;
+
+            IF (@IsValidLocation = 0)
+            BEGIN
+                SET @FixedLatitude = NULL;
+                SET @FixedLongitude = NULL;
+            END;
+        END;
+
+    END TRY
+    BEGIN CATCH
+        PRINT 'ERROR IN GEOLOCATION';
+
+        SET @FixedLatitude = NULL;
+        SET @FixedLongitude = NULL;
+    END CATCH;
 
     PRINT 'validando token';
     IF ((@TokenAct = 1 AND @hourtoken <= 8) OR 1 = 1)
