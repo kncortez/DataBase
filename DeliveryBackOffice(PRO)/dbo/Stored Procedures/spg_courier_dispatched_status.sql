@@ -30,10 +30,10 @@ BEGIN
                 ) AS Delivered,
            COUNT(DATT.Verified) AS Verified,
            (SUM(CAST(ISNULL(DATT.Verified, 0) AS INT)) - SUM(CAST(ISNULL(DATT.Accepted, 0) AS INT))) AS Failed
-    FROM dbo.DeliveryAttempt DATT
-        LEFT JOIN dbo.SenderReceiver SR
+    FROM dbo.DeliveryAttempt DATT --WITH(NOLOCK)
+        LEFT JOIN dbo.SenderReceiver SR --WITH(NOLOCK)
             ON DATT.ID_Courier = SR.ID
-        LEFT JOIN dbo.HubLogistics HL
+        LEFT JOIN dbo.HubLogistics HL ---WITH(NOLOCK)
             ON SR.HubLogisticId = HL.IdHubLogistic
     WHERE CONVERT(DATE, DATT.Date_Created) = @DispatchedDate
     GROUP BY SR.ID,

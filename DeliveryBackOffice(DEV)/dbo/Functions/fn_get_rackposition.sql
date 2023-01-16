@@ -1,4 +1,4 @@
-﻿
+
 
 CREATE FUNCTION [dbo].[fn_get_rackposition]
     (
@@ -24,9 +24,7 @@ END
 
 
 GO
-
-
-
-
-
+GRANT EXECUTE
+    ON OBJECT::[dbo].[fn_get_rackposition] TO [ECS-DB-DENARIUS\deliveryreport]
+    AS [dbo];
 

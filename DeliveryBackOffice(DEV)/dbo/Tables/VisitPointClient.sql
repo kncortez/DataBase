@@ -43,6 +43,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -74,4 +76,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Correo del 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere al número de sucursal de la agencia, tienda u oficina identificada por cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'BranchCode';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
+    ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
 

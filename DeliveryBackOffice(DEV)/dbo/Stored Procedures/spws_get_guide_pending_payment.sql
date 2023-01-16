@@ -118,7 +118,7 @@ PRINT '*************************************************************************
     FROM DeliveryBackOffice.dbo.SplitUnlimited(@_InGuides, ',');
 
 	CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN ON #listGuidesBrain (ItemNumber, ItemSerie)
-	CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN2 ON #listGuidesBrain (ItemNumber)
+	--CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN2 ON #listGuidesBrain (ItemNumber)
 	--SELECT --l.ItemSerie,
  --         --l.ItemNumber 
 	--	  *
@@ -158,7 +158,7 @@ PRINT '*************************************************************************
             ON ord.Guide_Number = lg.ItemNumber
 			AND ord.Guide_Serie = lg.ItemSerie               
         LEFT JOIN dbo.Cost cst WITH (NOLOCK)
-            ON cst.ProductNumber = lg.GuideNumber--CONCAT(lg.ItemSerie, lg.ItemNumber)
+            ON cst.ProductNumber = CONCAT(lg.ItemSerie, lg.ItemNumber)
                AND cst.RowStatus = 1
         LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
             ON pyt.GuideSerie = lg.ItemSerie

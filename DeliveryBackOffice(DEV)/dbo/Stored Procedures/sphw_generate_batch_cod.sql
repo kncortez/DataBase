@@ -111,18 +111,18 @@ BEGIN
                 SELECT STUFF(
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
-                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg WITH(NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
-                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH(NOLOCK)
                                    ON dcba.DCBA_Id = do.DCBA_ID
                                       AND dcba.DCBA_Id_estado = 1
-                               LEFT JOIN dbo.VisitPointClient vpc
+                               LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                                    ON vpc.CodeOfReference = do.Sender_ID
-                               LEFT JOIN dbo.Customer cus
+                               LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                               LEFT JOIN dbo.VisitPointConfiguration VPO
+                               LEFT JOIN dbo.VisitPointConfiguration VPO WITH(NOLOCK)
                                    ON VPO.VisitPointID = vpc.CodeOfReference
                            WHERE pg.BatchCODId IS NULL
                                  AND pg.BatchCODIdCommission IS NULL
@@ -150,18 +150,18 @@ BEGIN
                 SELECT STUFF(
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
-                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg WITH(NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
-                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH(NOLOCK)
                                    ON dcba.DCBA_Id = do.DCBA_ID
                                       AND dcba.DCBA_Id_estado = 1
-                               LEFT JOIN dbo.VisitPointClient vpc
+                               LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                                    ON vpc.CodeOfReference = do.Sender_ID
-                               LEFT JOIN dbo.Customer cus
+                               LEFT JOIN dbo.Customer cus WITH(NOLOCK)
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                               LEFT JOIN dbo.VisitPointConfiguration VPO
+                               LEFT JOIN dbo.VisitPointConfiguration VPO WITH(NOLOCK)
                                    ON VPO.VisitPointID = vpc.CodeOfReference
                            WHERE pg.BatchCODId IS NULL
                                  AND pg.BatchCODIdCommission IS NULL
@@ -171,7 +171,7 @@ BEGIN
                                      COALESCE(VPO.CODAccountBankID, cus.CODAccountBankID, dcba.DCBA_Bank_Id) NOT IN
             (
                 SELECT PayingBank
-                FROM DeliveryBackOffice.dbo.DeliveryBank
+                FROM DeliveryBackOffice.dbo.DeliveryBank WITH(NOLOCK)
                 WHERE Id_country = @IdCountry
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
@@ -231,8 +231,8 @@ BEGIN
                 Guide_Serie NVARCHAR(2),
                 Guide_Number INT
             );
-            CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
-            CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
+            CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie,Guide_Number);
+            --CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
             CREATE TABLE #RevalueGuides
             (
                 fila INT,
@@ -288,7 +288,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #listGuides lst
-                JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
 				LEFT JOIN
@@ -438,60 +438,60 @@ BEGIN
 
             INTO #TableAmountCOD
             FROM #listGuides lst
-                JOIN dbo.DeliveryOrder ord
+                INNER JOIN dbo.DeliveryOrder ord WITH(NOLOCK)
                     ON ord.Guide_Serie = lst.Guide_Serie
                        AND ord.Guide_Number = lst.Guide_Number
-                LEFT JOIN dbo.VisitPointClient vpc
+                LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                     ON vpc.CodeOfReference = ord.Sender_ID
-                LEFT JOIN dbo.RatebyCustomer rc
+                LEFT JOIN dbo.RatebyCustomer rc WITH(NOLOCK)
 					ON rc.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID) AND rc.RbcRowStatus = 1 AND rc.RbcCodeOfReference  IS NULL
-					LEFT JOIN dbo.RatebyCustomer rcv ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID) AND rcv.RbcRowStatus = 1 AND rcv.RbcCodeOfReference  = ord.Sender_ID
-                LEFT JOIN dbo.Township twn
+					LEFT JOIN dbo.RatebyCustomer rcv WITH(NOLOCK) ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID) AND rcv.RbcRowStatus = 1 AND rcv.RbcCodeOfReference  = ord.Sender_ID
+                LEFT JOIN dbo.Township twn WITH(NOLOCK)
                     ON twn.IdTownship = ord.ReceiverIdTownship
-                LEFT JOIN dbo.Township twnm
+                LEFT JOIN dbo.Township twnm WITH(NOLOCK)
                     ON twnm.TownshipName = ord.Receiver_Town
                 LEFT JOIN
                 (
                     SELECT HeaderCode,
                            MAX(Hub) Hub
-                    FROM dbo.DumpServiceCoverage
+                    FROM dbo.DumpServiceCoverage WITH(NOLOCK)
                     WHERE RowStatus = 'true'
                     GROUP BY HeaderCode
                 ) hub
                     ON hub.HeaderCode = ISNULL(twn.HeaderCode, twnm.HeaderCode)
-                LEFT JOIN dbo.HubLogistics hbl
+                LEFT JOIN dbo.HubLogistics hbl WITH(NOLOCK)
                     ON hbl.HubAbbreviation = hub.Hub
-                LEFT JOIN dbo.VisitPointConfiguration VPO
+                LEFT JOIN dbo.VisitPointConfiguration VPO WITH(NOLOCK)
                     ON VPO.VisitPointID = vpc.CodeOfReference
-                LEFT JOIN dbo.CatTypeService csv
+                LEFT JOIN dbo.CatTypeService csv WITH(NOLOCK)
                     ON csv.CtsShortName = IIF(ord.TypeService = 'EXP', 'NDD', ISNULL(ord.TypeService, 'NDD'))
                        AND csv.CtsRowStatus = 'true'
-                LEFT JOIN dbo.CatRateSegment csg
+                LEFT JOIN dbo.CatRateSegment csg WITH(NOLOCK)
                     ON csg.CrsShortName = dbo.fn_get_segment(ord.Guide_Serie, ord.Guide_Number)
                        AND csg.CrsRowStatus = 'true'
                 --LEFT JOIN dbo.VisitPointCoverage cv
                 --	ON cv.VisitPointId = ord.Sender_ID
                 --	   AND cv.HubLogisticId  = hbl.IdHubLogistic
                 --	   AND cv.RowStatus = 'true'
-                LEFT JOIN dbo.RateCOD rco
+                LEFT JOIN dbo.RateCOD rco WITH(NOLOCK)
                     ON rco.RateId = ISNULL(rcv.RbcIdRate, rc.RbcIdRate)
                        AND rco.TypeServiceId = csv.CtsId
                        AND rco.TypeSegmentId = ISNULL(csg.CrsId, @IdSegmentDefault)
                        AND rco.RowStatus = 1
-                LEFT JOIN dbo.Customer cus
+                LEFT JOIN dbo.Customer cus WITH(NOLOCK)
                     ON cus.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
-                LEFT JOIN dbo.DeliveryOrderPaid op
+                LEFT JOIN dbo.DeliveryOrderPaid op WITH(NOLOCK)
                     ON op.Guide_Serie = ord.Guide_Serie
                        AND op.Guide_Number = ord.Guide_Number
                        AND op.IdStatus = 'true'
-                LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                     ON dc.DCBA_Id = ord.DCBA_ID
                        AND dc.DCBA_Id_estado = 1
-                LEFT JOIN dbo.DeliveryBank bk
+                LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                     ON bk.Id_bank = ISNULL(VPO.CODAccountBankID, ISNULL(cus.CODAccountBankID, dc.DCBA_Bank_Id))
-                LEFT JOIN dbo.CatBankAccountType btp
+                LEFT JOIN dbo.CatBankAccountType btp WITH(NOLOCK)
                     ON btp.IdBankAccountType = ISNULL(VPO.CODAccountBankTypeID, cus.CODAccountTypeID)
-                LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt
+                LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH(NOLOCK)
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ord.Collect_OnDelivery > 0
@@ -709,6 +709,13 @@ BEGIN
                                              [GuideNumber],
                                              [CreditAccountId],
                                              [BankId]
+                                         );
+
+
+			  CREATE NONCLUSTERED INDEX IX_TCPT_GSGNCABIPayment
+            ON #TableCustomerPaymentTemp (
+                                             [GuideSerie],
+                                             [GuideNumber]
                                          );
 
             IF (@IdBankParam = @BankBAC)
