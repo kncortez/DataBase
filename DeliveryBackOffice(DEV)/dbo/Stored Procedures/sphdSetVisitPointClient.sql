@@ -389,7 +389,6 @@ BEGIN
                             [CODAccountNumber] = @CODAccountNumber,
                             [CODAccountBankTypeID] = @CODAccountBankTypeID,
                             [CODAccountCurrencyID] = @CODAccountCurrencyID,
-                            --[RowStatus] =  @RowStatus,
                             [TokenUpdated] = @Token,
                             [DateUpdated] = GETDATE(),
                             [AveragePackageDaily] = @AveragePackageDaily,
@@ -476,7 +475,7 @@ BEGIN
                                 Freq.[VisitsOnFriday] = tblfreq.[VisitsOnFriday],
                                 Freq.[VisitsOnSaturday] = tblfreq.[VisitsOnSaturday],
                                 Freq.[HubLogisticID] = tblfreq.[HubLogisticID],
-                                Freq.[RowStatus] = tblfreq.[RowStatus],
+                                Freq.[RowStatus] = IIF(@RowStatus = 0, 0, tblfreq.[RowStatus]),
                                 Freq.[TokenUpdated] = @Token,
                                 Freq.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointFrequency Freq
@@ -569,7 +568,7 @@ BEGIN
 								--Edicion de la ruta inhabilitada
                                 --VPIti.[RouteCodeID] = CASE WHEN tblIti.RouteCodeID <= 0 THEN VPIti.[RouteCodeID] ELSE tblIti.RouteCodeID END ,
                                 VPIti.[HubLogisticID] = tblIti.HubLogisticID,
-                                VPIti.[RowStatus] = tblIti.RowStatus,
+                                VPIti.[RowStatus] = IIF(@RowStatus = 0, 0, tblIti.RowStatus),
                                 VPIti.[TokenUpdated] = @Token,
                                 VPIti.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointItinerary VPIti
@@ -578,11 +577,30 @@ BEGIN
 									AND tblIti.IdVPItinerary = VPIti.IdVPItinerary
                             WHERE tblIti.VPFrequencyID = @IDROWFREQ
 							AND tblIti.IdVPItinerary > 0
-										PRINT @@ROWCOUNT
-										PRINT 'Se actualizaron VisitPointItinerary -  @@ROWCOUNT'
+							AND ISNULL(tblIti.InitializationTimeOfVisit, '__:__') != '__:__'
+							AND ISNULL(tblIti.FinalizationTimeOfVisit, '__:__') != '__:__'
+							
+								PRINT @@ROWCOUNT
+								PRINT 'Se actualizaron VisitPointItinerary -  @@ROWCOUNT'
 										
-										PRINT 'Paso 5 se insertaran VisitPointItinerary - @IDROWFREQ'
-										PRINT  @IDROWFREQ
+                            UPDATE VPIti
+                            SET VPIti.[RowStatus] = IIF(@RowStatus = 0, 0, tblIti.RowStatus),
+                                VPIti.[TokenUpdated] = @Token,
+                                VPIti.[DateUpdated] = GETDATE()
+                            FROM dbo.VisitPointItinerary VPIti
+                                INNER JOIN @TblVPItinerary tblIti
+                                    ON VPIti.VPFrequencyID = tblIti.VPFrequencyID
+									AND tblIti.IdVPItinerary = VPIti.IdVPItinerary
+                            WHERE tblIti.VPFrequencyID = @IDROWFREQ
+							AND tblIti.IdVPItinerary > 0
+							AND ISNULL(tblIti.InitializationTimeOfVisit, '__:__') = '__:__'
+							AND ISNULL(tblIti.FinalizationTimeOfVisit, '__:__') = '__:__'
+							
+								PRINT @@ROWCOUNT
+								PRINT 'Se inactivaron VisitPointItinerary -  @@ROWCOUNT'
+										
+								PRINT 'Paso 5 se insertaran VisitPointItinerary - @IDROWFREQ'
+								PRINT  @IDROWFREQ
 							--creo los registros que no estan en la tabla 
 							INSERT INTO dbo.VisitPointItinerary
                             (
@@ -590,7 +608,7 @@ BEGIN
                                 DayOfVisit,
                                 InitializationTimeOfVisit,
                                 FinalizationTimeOfVisit,
-                                OrderSequence,
+                                OrderSequence,								
 								--Edicion de la ruta inhabilitada
                                 --RouteCodeID,
                                 HubLogisticID,
@@ -617,6 +635,8 @@ BEGIN
 								FROM @TblVPItinerary tblIti
                                     --WHERE tblIti.VPFrequencyID = @IDROWFREQ
 								WHERE tblIti.IdVPItinerary <= 0
+								AND ISNULL(tblIti.InitializationTimeOfVisit, '__:__') != '__:__'
+								AND ISNULL(tblIti.FinalizationTimeOfVisit, '__:__') != '__:__'
 							)
 										PRINT @@ROWCOUNT			
 										PRINT 'Se insertaron VisitPointItinerary -  @@ROWCOUNT'

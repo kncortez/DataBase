@@ -371,21 +371,6 @@ BEGIN
 
 					-- Inactivar puntos de visita
 					UPDATE
-						VPConf -- Configuración de los puntos de visita
-					SET
-						RowStatus = 0
-						,TokenUpdated = @Token
-						,DateUpdated = GETDATE()
-					FROM
-						[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[VisitPointConfiguration] VPConf WITH(NOLOCK)
-							ON
-								VPC.CodeOfReference = VPConf.VisitPointID
-					WHERE
-						VPC.CustomerID = @IdCustomer;
-						
-					UPDATE
 						VPC -- Puntos de visita
 					SET
 						StatusClient = 0
