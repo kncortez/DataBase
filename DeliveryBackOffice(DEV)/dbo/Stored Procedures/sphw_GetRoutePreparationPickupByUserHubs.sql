@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-10-21>
@@ -58,27 +57,26 @@ BEGIN
 		ISNULL(QuantityRegularPackages, 0) 'QuantityRegularPackages',
 		ISNULL(QuantityOverDimensionedPackage, 0) 'QuantityOverDimensionedPackage',
 		css.[Name] StatusName,
-		ISNULL(shp.AddressPickup, vpc.Address) 'OriginAddress',
-		ISNULL(vpc.DescriptionOfClient, shp.SenderName) 'OriginAddressName',
+		ISNULL(vpc.Address, shp.AddressPickup) 'OriginAddress',
+		vpc.DescriptionOfClient 'OriginAddressName',
 		vpc.Department 'OriginAddressProvince',
 		vpc.Town 'OriginAddressTown',
 		CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour'
-	FROM dbo.RouteAssigment ra WITH(NOLOCK)
-		INNER JOIN dbo.SenderReceiver sr WITH(NOLOCK)
+	FROM dbo.RouteAssigment ra
+		INNER JOIN dbo.SenderReceiver sr
 			ON sr.ID = ra.IdCurrierMan
-		INNER JOIN dbo.HubLogisticByUser hlbu WITH(NOLOCK)
+		INNER JOIN dbo.HubLogisticByUser hlbu 
 			ON sr.HubLogisticId = hlbu.HubLogisticId
 				AND hlbu.UserId = @userId
-		INNER JOIN dbo.ServiceManagement srv WITH(NOLOCK)
+		INNER JOIN dbo.ServiceManagement srv
 			ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
 			   AND srv.RowStatus = 1
-		INNER JOIN dbo.SchedulePickup shp WITH(NOLOCK)
+		INNER JOIN dbo.SchedulePickup shp
 			ON shp.SchedulePickupId = srv.IdSchedulePickup
-		LEFT JOIN dbo.HubLogistics hl WITH(NOLOCK)
+		LEFT JOIN dbo.HubLogistics hl
 			ON hl.IdHubLogistic = shp.IdHubLogistics
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 			ON shp.SenderId = vpc.CodeOfReference
-				AND shp.SenderId != 0
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 			ON shp.TypeVehicleId = ctv.IdTypeVehicle
 		LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)

@@ -3,12 +3,6 @@
 -- Create date: <Create Date,2022-07-20>
 -- Description:	<Description, lista de membresias y suscripciones asociadas al cliente>
 -- =============================================
-/*
-	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
-	Actualización: Agregar campo de ícono en información de membresía y suscripción - 11-01-2023
-	Actualización: Validar rowStatus de atributos - 11-01-2023
-	Autor: Jerson Ochoa
-*/
 CREATE PROCEDURE [dbo].[SPHWPMembershipsAndSubscriptionsAssociatedWithClient]
 	-- Add the parameters for the stored procedure here
 	@IdAcount AS BIGINT,
@@ -37,10 +31,8 @@ BEGIN
 					'"IdPayment": "' + CAST(ISNULL(M.CustomerPaymentid,0) AS VARCHAR), +'"'+  ',' +
 					'"IdMembership":     "' + CAST(M.IdMembership AS VARCHAR),  +'"'+  ',' +
 					'"Name": "' + CM.MembershipName, +'"'+  ',' +
-					'"AutoRenewable": ' + CONVERT(NVARCHAR, ISNULL(M.IsAutoRenewable, 0)) +''+  ',' +
 					'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(M.LastPaymentDate, M.DateCreated), 103) +'"'+  ',' +
 					'"ExpirationDate": "' + CONVERT(NVARCHAR, M.ExpirationDate, 103) +'"'+  ',' +
-					'"Icon": "' + CM.Icon, +'"'+  ',' +
 					'"Attibutos": [' + 
 					(
 						SELECT STUFF(
@@ -51,9 +43,7 @@ BEGIN
 											FROM [dbo].[Membership] Maux WITH(NOLOCK)
 											INNER JOIN [dbo].[CatMembershipAttribute] CMA WITH (NOLOCK)
 											ON Maux.CatMembershipId = CMA.CatMembershipId
-											AND CMA.RowStatus = 1
 											WHERE Maux.IdMembership = M.IdMembership
-											ORDER BY [CMA].[MembershipAttributePosition]
 											FOR XML PATH(''), TYPE
 										).value('.', 'varchar(max)'),
 										1,
@@ -86,10 +76,8 @@ BEGIN
 										'"IdCard": "' + CAST(ISNULL(S.CustomerPaymentId,0) AS VARCHAR),  +'"'+  ',' +
 										'"IdSubscription":   "' + CAST(S.IdSubscription AS VARCHAR), +'"'+  ',' +
 										'"Name": "' + CS.SubscriptionName, +'"'+  ',' +
-										'"AutoRenewable": ' + CONVERT(NVARCHAR, ISNULL(S.IsAutoRenewable, 0)) +''+  ',' +
 										'"DateCreated": "' + CONVERT(NVARCHAR, ISNULL(S.LastPaymentDate, S.DateCreated), 103) +'"'+  ',' +
 										'"ExpirationDate": "' + CONVERT(NVARCHAR, S.ExpirationDate, 103) +'"'+  ',' +
-										'"Icon": "' + CS.Icon, +'"'+  ',' +
 										'"Attibutos": ['+
 										(
 											SELECT STUFF(
@@ -100,9 +88,7 @@ BEGIN
 																FROM [dbo].[Subscription] Saux WITH(NOLOCK)
 																INNER JOIN [dbo].[CatSubscriptionAtribute] CSA WITH (NOLOCK)
 																ON Saux.CatSubscriptionId = CSA.CatSubscriptionId
-																AND CSA.RowStatus = 1
 																WHERE Saux.IdSubscription = S.IdSubscription
-																ORDER BY [CSA].[SubscriptionAttributePosition]
 																FOR XML PATH(''), TYPE
 															).value('.', 'varchar(max)'),
 															1,

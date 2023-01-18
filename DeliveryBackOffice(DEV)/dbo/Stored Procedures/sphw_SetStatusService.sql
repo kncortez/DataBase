@@ -1,10 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <23-09-2022>
 -- Description:	<Método que modifica el estado de un servicio>
 -- =============================================
-CREATE PROCEDURE [dbo].[sphw_SetStatusService]
+CREATE PROCEDURE sphw_SetStatusService
 	-- Add the parameters for the stored procedure here
 	@ServiceManagementId INT,
 	@StateId INT,

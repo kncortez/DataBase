@@ -3,7 +3,7 @@
 -- Create date: <Create Date,2022-07-25>
 -- Description:	<Description,Modifiar Autorenovación automatica y tipo de pago (en usuarios corporativos se puede cambiar a credito)>
 -- =============================================
-CREATE  PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
+CREATE PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
 	-- Add the parameters for the stored procedure here
 	@IdCard AS INT,
 	@TypeSalePackage AS NVARCHAR(50), -- membership or subscription
@@ -58,7 +58,7 @@ BEGIN
 					
 						UPDATE  [dbo].[Membership] 
 						   SET IsAutoRenewable   = @IsAutoRenewable,
-						       CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, ISNULL(@IdCard, CustomerPaymentId))
+						       CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
 						WHERE AccountId = @IdAccount AND IdMembership = @IdSalePackage
 
 					
@@ -92,7 +92,7 @@ BEGIN
 				
 					UPDATE  [dbo].[Subscription] 
 								   SET IsAutoRenewable   = @IsAutoRenewable,
-									   CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, ISNULL(@IdCard, CustomerPaymentId))
+									   CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
 								WHERE AccountId = @IdAccount AND IdSubscription = @IdSalePackage
 
 			

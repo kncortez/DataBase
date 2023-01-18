@@ -33,6 +33,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_GuidePieceNumber]
     ON [dbo].[DeliveryOrderPiece]([GuidePiece] ASC)
@@ -40,8 +42,7 @@ CREATE NONCLUSTERED INDEX [IX_GuidePieceNumber]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_ParcelCode]
-    ON [dbo].[DeliveryOrderPiece]([ParcelCode] ASC);
+
 
 
 GO

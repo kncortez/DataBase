@@ -33,9 +33,6 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-
-	DECLARE @GuideSerie NVARCHAR(2)
-	DECLARE @GuideNumber INT
     -- ================================================================
     -- verificar si ya existe un registro del producto
     -- si existe el registro, verficar si ya tiene un pago asociado
@@ -46,36 +43,20 @@ BEGIN
 
     -- verificar si el registro existe o esta pagado
 
-	DECLARE @TblExists TABLE (
+    IF OBJECT_ID('tempdb.dbo.#TblExist', 'U') IS NOT NULL
+        DROP TABLE #TblExist;
+
+
+    CREATE TABLE #TblExist
+    (
         IdCost INT,
         TotalAmountPaid DECIMAL(12, 2)
-	)
-	DECLARE @ListGuides TABLE (
-		ItemSerie NVARCHAR(2),
-		ItemNumber INT
-	)
+    );
+    CREATE NONCLUSTERED INDEX TempTblExistIdCost ON #TblExist (IdCost);
 
-	INSERT INTO
-		@ListGuides
-		(
-			ItemSerie
-			,ItemNumber
-		)
-	SELECT 
-		CONVERT(NVARCHAR(2), LTRIM(RTRIM(SUBSTRING(Item, 1,2)))) ItemSerie
-		,CAST(LTRIM(RTRIM(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))))) AS INT) ItemNumber 
-	FROM 
-		DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@ProductNumber)),',')
 
-	SELECT
-		TOP 1
-			@GuideSerie = LG.ItemSerie
-			,@GuideNumber = LG.ItemNumber
-	FROM
-		@ListGuides LG
-		
     DECLARE @jsonResult NVARCHAR(MAX);
-    INSERT INTO @TblExists
+    INSERT INTO #TblExist
     (
         IdCost,
         TotalAmountPaid
@@ -83,39 +64,23 @@ BEGIN
     SELECT TOP 1
            cst.IdCost,
            cst.TotalAmountPaid
-
+    --  INTO #TblExist
     FROM dbo.Cost cst WITH (NOLOCK)
-    WHERE 
-		(
-			(
-				cst.GuideSerie = @GuideSerie
-				AND
-				cst.GuideNumber = @GuideNumber
-			)
-			OR
-			(
-				cst.ProductNumber = @ProductNumber
-				AND
-				cst.GuideSerie IS NULL
-				AND
-				cst.GuideNumber IS NULL
-			)
-		)
-		AND
-		cst.RowStatus = 1
-	ORDER BY
-		cst.DateCreated DESC;
+    WHERE cst.IdProduct = @IdProduct
+          AND cst.ProductNumber = @ProductNumber;
     --	and cst.TotalAmountPaid is not null or cst.TotalAmountPaid =0
 
-    DECLARE @IdCost INT =
+    DECLARE @Exist INT =
             (
-                SELECT ISNULL(xd.IdCost, 0)FROM @TblExists xd
+                SELECT COUNT(*)FROM #TblExist
             );
 
     DECLARE @IsPaid DECIMAL(12, 2) =
             (
-                SELECT ISNULL(xd.TotalAmountPaid, 0)FROM @TblExists xd
+                SELECT ISNULL(xd.TotalAmountPaid, 0)FROM #TblExist xd
             );
+
+    DECLARE @IdCost INT = 0;
 
     DECLARE @CostCount INT;
 
@@ -126,8 +91,8 @@ BEGIN
           (
               SELECT DOPD.TimePlaId
               FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
-              WHERE DOPD.GuideSerie = @GuideSerie
-                    AND DOPD.GuideNumber = @GuideNumber
+              WHERE DOPD.GuideSerie = SUBSTRING(LTRIM(@ProductNumber), 0, 3)
+                    AND DOPD.GuideNumber = CAST(SUBSTRING(LTRIM(@ProductNumber), 3, LEN(@ProductNumber)) AS INT)
           ),
           0
                 );
@@ -145,10 +110,26 @@ BEGIN
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
-            IF (@IdCost > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
+            IF (@Exist > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
             BEGIN
-
                 -- actualizar registro
+
+                UPDATE dbo.Cost
+                SET TotalAmount = @Amount,
+                    TotalAmountPaid = @AmountPaid,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE(),
+                    ReturnAmount = @ReturnAmount
+                WHERE IdProduct = @IdProduct
+                      AND ProductNumber = @ProductNumber
+                      AND TotalAmountPaid IS NULL
+                      OR TotalAmountPaid = 0;
+
+                SET @IdCost =
+                (
+                    SELECT tb.IdCost FROM #TblExist tb
+                );
+
                 IF (@Voucher != '' OR @Voucher IS NOT NULL)
                 BEGIN
                     SELECT @CostCount = COUNT(1)
@@ -192,8 +173,7 @@ BEGIN
                     [ModIdModule],
                     [RowStatus],
                     [TokenCreated],
-                    [DateCreated],
-					[BreakdownOfPaymentTypeId]
+                    [DateCreated]
                 )
                 SELECT @IdCost,
                        det.Description,
@@ -201,8 +181,7 @@ BEGIN
                        det.ModIdModule,
                        1, -- crear registro activo por default
                        det.TokenCreated,
-                       GETDATE(),
-					   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+                       GETDATE()
                 FROM @TblDetail det
                     LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
@@ -235,38 +214,22 @@ BEGIN
                 SET TotalAmount = @Amount,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE(),
-                    ReturnAmount = @ReturnAmount,
-					GuideSerie = @GuideSerie,
-					GuideNumber = @GuideNumber
-                WHERE IdCost = @IdCost;
+                    ReturnAmount = @ReturnAmount
+                WHERE IdProduct = @IdProduct
+                      AND ProductNumber = @ProductNumber;
 
             END;
-            ELSE IF (@IdCost IS NULL OR @IdCost = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
+            ELSE IF (@Exist IS NULL OR @Exist = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
             BEGIN
 
                 IF (NOT EXISTS
                 (
                     SELECT TOP 1
                            1
-                    FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH (NOLOCK)
-                    WHERE 
-					(
-						(
-							cst.GuideSerie = @GuideSerie
-							AND
-							cst.GuideNumber = @GuideNumber
-						)
-						OR
-						(
-							cst.ProductNumber = @ProductNumber
-							AND
-							cst.GuideSerie IS NULL
-							AND
-							cst.GuideNumber IS NULL
-						)
-					)
-					AND
-					cst.RowStatus = 1
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                    WHERE C.IdProduct = @IdProduct
+                          AND C.IdTypeCharge = @IdTypeCharge
+                          AND C.ProductNumber = @ProductNumber
                 )
                    )
                 BEGIN
@@ -284,14 +247,12 @@ BEGIN
                         DateCreated,
                         TokenUpdated,
                         DateUpdated,
-                        ReturnAmount,
-						GuideSerie,
-						GuideNumber
+                        ReturnAmount
                     )
                     VALUES
                     (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
                         1, -- guardar los registros como activos 
-                        @Token, GETDATE(), NULL, NULL, @ReturnAmount, @GuideSerie, @GuideNumber);
+                        @Token, GETDATE(), NULL, NULL, @ReturnAmount);
 
                     SET @IdCost = SCOPE_IDENTITY();
 
@@ -341,8 +302,7 @@ BEGIN
                         [ModIdModule],
                         [RowStatus],
                         [TokenCreated],
-                        [DateCreated],
-						[BreakdownOfPaymentTypeId]
+                        [DateCreated]
                     )
                     SELECT @IdCost,
                            det.Description,
@@ -350,8 +310,7 @@ BEGIN
                            det.ModIdModule,
                            1, -- crear registro activo por default
                            det.TokenCreated,
-                           GETDATE(),
-						(SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+                           GETDATE()
                     FROM @TblDetail det;
 
                 END;
@@ -366,39 +325,20 @@ BEGIN
 					Y que el pago sea inmediato (Pago en portal)
 				*/
 
-            SELECT @IdCost = cst.IdCost,
-                   @IsPaid = ISNULL(cst.TotalAmountPaid, 0)
-            FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH(NOLOCK)
-            WHERE 
-				(
-					(
-						cst.GuideSerie = @GuideSerie
-						AND
-						cst.GuideNumber = @GuideNumber
-					)
-					OR
-					(
-						cst.ProductNumber = @ProductNumber
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
-				)
-				AND
-				cst.RowStatus = 1
-			ORDER BY
-				cst.DateCreated DESC;
+            SELECT @Exist = 1,
+                   @IsPaid = ISNULL(C.TotalAmountPaid, 0)
+            FROM [DeliveryBackOffice].[dbo].[Cost] C
+            WHERE C.IdProduct = @IdProduct
+                  AND C.IdTypeCharge = @IdTypeCharge
+                  AND C.ProductNumber = @ProductNumber;
 
-            IF (@IdCost > 0 AND @IsPaid = 0 AND @PaymentType = 6 AND @TimeOfPayment = 1)
+            IF (@Exist > 0 AND @IsPaid = 0 AND @PaymentType = 6 AND @TimeOfPayment = 1)
             BEGIN
                 --- REGISTRO DE PAGO DE LAS GUÍAS
                 UPDATE C
                 SET C.TotalAmountPaid = C.TotalAmount,
                     C.TokenUpdated = @Token,
-                    C.DateUpdated = GETDATE(),
-					C.GuideSerie = @GuideSerie,
-					C.GuideNumber = @GuideNumber
+                    C.DateUpdated = GETDATE()
                 OUTPUT inserted.IdCost,
                        SUBSTRING(LTRIM(@ProductNumber), 0, 3),
                        CAST(SUBSTRING(LTRIM(@ProductNumber), 3, LEN(@ProductNumber)) AS INT)
@@ -409,7 +349,9 @@ BEGIN
                     GuideNumber
                 )
                 FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
-                WHERE C.IdCost = @IdCost
+                WHERE C.ProductNumber = @ProductNumber
+                      AND C.IdProduct = @IdProduct
+                      AND C.IdTypeCharge = @IdTypeCharge
                       AND
                       (
                           C.TotalAmountPaid IS NULL
@@ -498,9 +440,23 @@ BEGIN
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
-
-            IF (@IdCost > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
+            -- select * from #TblExist
+            IF (@Exist > 0 AND @IsPaid = 0) -- si el registro existe y esta pendiente de pago	
             BEGIN
+                -- actualizar registro
+
+                UPDATE dbo.Cost
+                SET TotalAmount = @Amount,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE(),
+                    ReturnAmount = @ReturnAmount
+                WHERE IdProduct = @IdProduct
+                      AND ProductNumber = @ProductNumber;
+
+                SET @IdCost =
+                (
+                    SELECT tb.IdCost FROM #TblExist tb
+                );
 
                 -- insertar costos que no existen
                 INSERT INTO [dbo].[BreakdownOfPayment]
@@ -511,8 +467,7 @@ BEGIN
                     [ModIdModule],
                     [RowStatus],
                     [TokenCreated],
-                    [DateCreated],
-					[BreakdownOfPaymentTypeId]
+                    [DateCreated]
                 )
                 SELECT @IdCost,
                        det.Description,
@@ -520,8 +475,7 @@ BEGIN
                        det.ModIdModule,
                        1, -- crear registro activo por default
                        det.TokenCreated,
-                       GETDATE(),
-					   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+                       GETDATE()
                 FROM @TblDetail det
                     LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
@@ -549,43 +503,25 @@ BEGIN
                     WHERE bk.IdCost = @IdCost
                           AND bk.RowStatus = 1
                 );
-
                 UPDATE dbo.Cost
                 SET TotalAmount = @Amount,
                     TokenUpdated = @Token,
                     DateUpdated = GETDATE(),
-                    ReturnAmount = @ReturnAmount,
-					GuideSerie = @GuideSerie,
-					GuideNumber = @GuideNumber
-                WHERE IdCost = @IdCost;
-
+                    ReturnAmount = @ReturnAmount
+                WHERE IdProduct = @IdProduct
+                      AND ProductNumber = @ProductNumber;
             END;
-            ELSE IF (@IdCost IS NULL OR @IdCost = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
+            ELSE IF (@Exist IS NULL OR @Exist = 0) -- si el registro no existe crear uno nuevo o registro ya esta pagado
             BEGIN
 
                 IF (NOT EXISTS
                 (
                     SELECT TOP 1
                            1
-                    FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH (NOLOCK)
-                    WHERE 
-						(
-							(
-								cst.GuideSerie = @GuideSerie
-								AND
-								cst.GuideNumber = @GuideNumber
-							)
-							OR
-							(
-								cst.ProductNumber = @ProductNumber
-								AND
-								cst.GuideSerie IS NULL
-								AND
-								cst.GuideNumber IS NULL
-							)
-						)
-						AND
-						cst.RowStatus = 1
+                    FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+                    WHERE C.IdProduct = @IdProduct
+                          AND C.IdTypeCharge = @IdTypeCharge
+                          AND C.ProductNumber = @ProductNumber
                 )
                    )
                 BEGIN
@@ -602,14 +538,12 @@ BEGIN
                         TokenCreated,
                         DateCreated,
                         TokenUpdated,
-                        DateUpdated,
-						GuideSerie,
-						GuideNumber
+                        DateUpdated
                     )
                     VALUES
                     (   @IdProduct, @ProductNumber, @IdTypeCharge, @Amount, @PaymentDate, @IdModule,
                         1, -- guardar los registros como activos 
-                        @Token, GETDATE(), NULL, NULL, @GuideSerie, @GuideNumber);
+                        @Token, GETDATE(), NULL, NULL);
 
                     SET @IdCost = SCOPE_IDENTITY();
 
@@ -621,8 +555,7 @@ BEGIN
                         [ModIdModule],
                         [RowStatus],
                         [TokenCreated],
-                        [DateCreated],
-						[BreakdownOfPaymentTypeId]
+                        [DateCreated]
                     )
                     SELECT @IdCost,
                            det.Description,
@@ -630,13 +563,11 @@ BEGIN
                            det.ModIdModule,
                            1, -- crear registro activo por default
                            det.TokenCreated,
-                           GETDATE(),
-						   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+                           GETDATE()
                     FROM @TblDetail det;
 
                 END;
             END;
-
             -- actualizar precios de producto
             IF (@IdTypeCharge = 1) -- consto de envio (flete)
             BEGIN
@@ -664,39 +595,20 @@ BEGIN
 					Y que el pago sea inmediato (Pago en portal)
 				*/
 
-            SELECT @IdCost = cst.IdCost,
-                   @IsPaid = ISNULL(cst.TotalAmountPaid, 0)
-            FROM [DeliveryBackOffice].[dbo].[Cost] cst WITH(NOLOCK)
-            WHERE 
-				(
-					(
-						cst.GuideSerie = @GuideSerie
-						AND
-						cst.GuideNumber = @GuideNumber
-					)
-					OR
-					(
-						cst.ProductNumber = @ProductNumber
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
-				)
-				AND
-				cst.RowStatus = 1
-			ORDER BY
-				cst.DateCreated DESC;
+            SELECT @Exist = 1,
+                   @IsPaid = ISNULL(C.TotalAmountPaid, 0)
+            FROM [DeliveryBackOffice].[dbo].[Cost] C
+            WHERE C.IdProduct = @IdProduct
+                  AND C.IdTypeCharge = @IdTypeCharge
+                  AND C.ProductNumber = @ProductNumber;
 
-            IF (@IdCost > 0 AND @IsPaid = 0 AND @PaymentType = 1 AND @TimeOfPayment = 1)
+            IF (@Exist > 0 AND @IsPaid = 0 AND @PaymentType = 1 AND @TimeOfPayment = 1)
             BEGIN
                 --- REGISTRO DE PAGO DE LAS GUÍAS
                 UPDATE C
                 SET C.TotalAmountPaid = C.TotalAmount,
                     C.TokenUpdated = @Token,
-                    C.DateUpdated = GETDATE(),
-					C.GuideSerie = @GuideSerie,
-					C.GuideNumber = @GuideNumber
+                    C.DateUpdated = GETDATE()
                 OUTPUT inserted.IdCost,
                        SUBSTRING(LTRIM(@ProductNumber), 0, 3),
                        CAST(SUBSTRING(LTRIM(@ProductNumber), 3, LEN(@ProductNumber)) AS INT)
@@ -707,7 +619,9 @@ BEGIN
                     GuideNumber
                 )
                 FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
-                WHERE C.IdCost = @IdCost
+                WHERE C.ProductNumber = @ProductNumber
+                      AND C.IdProduct = @IdProduct
+                      AND C.IdTypeCharge = @IdTypeCharge
                       AND
                       (
                           C.TotalAmountPaid IS NULL
@@ -813,7 +727,6 @@ BEGIN
 
     IF @Format != 'Non'
         SELECT ('[' + @jsonResult + ']') jsonResult;
-
 END;
 
 

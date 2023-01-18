@@ -106,10 +106,10 @@ BEGIN
 			LEFT JOIN DBO.RoutePreparationDetail RPD 
 				ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
 				AND RPD.RowStatus=1
-			LEFT JOIN DBO.DeliveryOrderPiece  DOP WITH(NOLOCK) ON
+			LEFT JOIN DBO.DeliveryOrderPiece DOP ON
 				DOP.GuideSerie=RPD.Guide_Serie
 				AND DOP.GuideNumber= RPD .Guide_Number
-			LEFT JOIN DBO.DeliveryOrder  DO  WITH(NOLOCK) ON  
+			LEFT JOIN DBO.DeliveryOrder DO ON 
 				DO.Guide_Serie=DOP.GuideSerie
 				AND DO.Guide_Number=DOP.GuideNumber				
 			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.RouteAssignmentId=RA.IdRouteAssigment
@@ -120,7 +120,7 @@ BEGIN
 				AND URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
 			OUTER APPLY (
 				SELECT TOP 1 1 'IsTraslate' 
-				FROM DBO.DeliveryOrderDetail  DOD WITH(NOLOCK)
+				FROM DBO.DeliveryOrderDetail DOD
 				WHERE DOD.Guide_Serie= RPD.Guide_Serie
 					AND DOD.Guide_Number =RPD.Guide_Number
 					AND DOD.StatusOrderId IN (@ORDERSTATUS_TRASLATE,@ORDERSTATUS_TRASLATE_Del,@ORDERSTATUS_TRASLATE_Ret)
@@ -128,7 +128,7 @@ BEGIN
 			) TransferGuide
 			OUTER APPLY (
 				SELECT TOP 1 1 'IsDelivered' 
-				FROM DBO.DeliveryOrderDetail DOD WITH(NOLOCK)
+				FROM DBO.DeliveryOrderDetail DOD
 				WHERE DOD.Guide_Serie= RPD.Guide_Serie
 					AND DOD.Guide_Number =RPD.Guide_Number
 					AND DOD.StatusOrderId IN (@ORDERSTATUS_DELIVERED, @ORDERSTATUS_RETURNED)
@@ -660,12 +660,12 @@ BEGIN
 			INNER JOIN DBO.SchedulePickup SP
 				ON SM.IdSchedulePickup= SP.SchedulePickupId
 				AND SP.RowStatus=1
-			INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
+			INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD
 				ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
 			INNER JOIN DBO.DeliveryOrderPiece DOP WITH (NOLOCK)
 				ON DOP.GuideSerie=DOPD.GuideSerie
 				AND DOP.GuideNumber=DOPD.GuideNumber
-			INNER JOIN DBO.DeliveryOrder DO WITH(NOLOCK) 
+			INNER JOIN DBO.DeliveryOrder DO 
 				ON DO.Guide_Serie=DOPD.GuideSerie
 				AND DO.Guide_Number=DOPD.GuideNumber
 			LEFT JOIN DBO.UnifiedRouteSettlement URS ON URS.RouteAssignmentId=RA.IdRouteAssigment
@@ -726,7 +726,7 @@ BEGIN
 			INNER JOIN DBO.DeliveryOrderPiece DOP WITH (NOLOCK)
 				ON DOP.GuideSerie=RPD.Guide_Serie
 				AND DOP.GuideNumber=RPD.Guide_Number
-			INNER JOIN DBO.DeliveryOrder DO  WITH (NOLOCK)
+			INNER JOIN DBO.DeliveryOrder DO 
 				ON DO.Guide_Serie=RPD.Guide_Serie
 				AND DO.Guide_Number=RPD.Guide_Number
 			OUTER APPLY (
@@ -818,7 +818,7 @@ BEGIN
 				IIF(ADP.IdActDetailPiece IS NOT NULL,AD.ActId,0) 'ActId'
 				--NUM
 			FROM @GuidesListed GL
-			LEFT JOIN DBO.DeliveryOrderPiece DOP WITH (NOLOCK)
+			LEFT JOIN DBO.DeliveryOrderPiece DOP 
 				ON DOP.GuideSerie=GL.GuideSerie
 				AND DOP.GuideNumber=GL.GuideNumber
 			LEFT JOIN DBO.ActDetail AD 

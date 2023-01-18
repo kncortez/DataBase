@@ -32,6 +32,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
     ON [dbo].[DeliverySettlementDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -128,6 +130,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora posibl
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
-    ON [dbo].[DeliverySettlementDetail]([Guide_Number] ASC);
+
 

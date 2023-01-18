@@ -38,7 +38,6 @@ BEGIN
 	DECLARE @ALLOK BIT =1;--Bandera que indica que todas las validaciones son correctas
 
 	--ID STATUS VARIABLES
-	DECLARE @STATUSSCHCOLLECTED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Programado para recolección');
 	DECLARE @STATUSCOLLECTED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Recolectado');
 	DECLARE @STATUSINCIDENCE_SM INT = (SELECT IdServiceStatus FROM DBO.CatServiceStatus CS WHERE CS.Name= 'Incidencia');
 	DECLARE @STATUSDELIVERED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Entregado');
@@ -61,8 +60,8 @@ BEGIN
 
 	
 	DECLARE @HasSettled BIT =NULL;
-	SELECT TOP 1 @HasSettled= IIF(URS.UserSettlement IS NULL,0,1) FROM DBO.RouteAssigment RA WITH(NOLOCK) 
-		LEFT JOIN DBO.UnifiedRouteSettlement URS WITH(NOLOCK)
+	SELECT TOP 1 @HasSettled= IIF(URS.UserSettlement IS NULL,0,1) FROM DBO.RouteAssigment RA
+		LEFT JOIN DBO.UnifiedRouteSettlement URS
 			ON URS.RouteAssignmentId=RA.IdRouteAssigment
 	WHERE RA.IdCurrierMan=@IDCOURIER
 	AND RA.DateOfRoute = @Date
@@ -85,8 +84,8 @@ BEGIN
 				'La liquidación ya fue cerrada' AS 'Description';	
 			--TABLA 1
 			--Listando los manifiestos del todos los cierres realizados
-			SELECT URS.IdUnifiedRouteSettlement 'URSID' FROM DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) 
-				INNER JOIN DBO.RouteAssigment RA  WITH(NOLOCK) ON 
+			SELECT URS.IdUnifiedRouteSettlement 'URSID' FROM DBO.UnifiedRouteSettlement URS 
+				INNER JOIN DBO.RouteAssigment RA ON 
 					RA.IdRouteAssigment=URS.RouteAssignmentId
 			WHERE RA.IdCurrierMan=@IDCOURIER AND RA.DateOfRoute=@Date;
 
@@ -109,8 +108,8 @@ BEGIN
 			URSID INT
 		);
 		INSERT INTO @ManifestList
-			SELECT URS.IdUnifiedRouteSettlement 'URSID' FROM DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) 
-				INNER JOIN DBO.RouteAssigment RA WITH(NOLOCK)  ON 
+			SELECT URS.IdUnifiedRouteSettlement 'URSID' FROM DBO.UnifiedRouteSettlement URS 
+				INNER JOIN DBO.RouteAssigment RA ON 
 					RA.IdRouteAssigment=URS.RouteAssignmentId
 			WHERE RA.IdCurrierMan=@IDCOURIER AND RA.DateOfRoute=@Date
 			AND URS.UserSettlement IS NULL;
@@ -122,26 +121,26 @@ BEGIN
 	
 		SELECT 
 			@COUNTGUIDESNOTLIQUIDED_PU=COUNT(DISTINCT CASE WHEN URSD.UnifiedRouteSettlementId IS NULL  OR NOT(URSD.RowStatus=1 AND URSD.IsOpenProcess IN (0,NULL)) THEN DO.Guide_Number ELSE NULL END)--CANTIDAD DE GUÍAS SIN LIQUIDAR
-			,@COUNTGUIDESNOTRECOLECTED_PU=SUM(CASE WHEN DO.StatusOrderId NOT IN (@STATUSCOLLECTED_DO,@STATUSSCHCOLLECTED_DO) THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE RECOLECCIÓN QUE NO ESTAN EN ESTADO RECOLECTADO
+			,@COUNTGUIDESNOTRECOLECTED_PU=SUM(CASE WHEN DO.StatusOrderId<>@STATUSCOLLECTED_DO THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE RECOLECCIÓN QUE NO ESTAN EN ESTADO RECOLECTADO
 			,@COUNTSERVICESWITHINCIDENCE_PU=SUM(CASE WHEN SM.ServiceStatusId=@STATUSINCIDENCE_SM THEN 1 ELSE 0 END) --CANTIDAD DE SERVICIOS CON INCIDENCIA
 			,@TOTALGUIDESRECO = COUNT(DISTINCT CHECKSUM(DO.Guide_Number,DO.Guide_Serie))
-		FROM RouteAssigment RA WITH(NOLOCK) 
-		INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+		FROM RouteAssigment RA
+		INNER JOIN DBO.ServiceManagement SM 
 			ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 			AND SM .RowStatus=1
 		--INNER JOIN DBO.ServiceManagementDetail SMD
 			--ON SMD.ServiceManagement=SM.IdServiceManagement
-		INNER JOIN DBO.SchedulePickup SP WITH(NOLOCK) 
+		INNER JOIN DBO.SchedulePickup SP
 			ON SM.IdSchedulePickup= SP.SchedulePickupId
 			AND SP.RowStatus=1
-		INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK) 
+		INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD
 			ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
 		INNER JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
 			ON DO.Guide_Serie=DOPD.GuideSerie
 			AND DO.Guide_Number=DOPD.GuideNumber
-		LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+		LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
 			URS.RouteAssignmentId=RA.IdRouteAssigment
-		LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+		LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 			URSD.GuideSerie=DOPD.GuideSerie
 			AND URSD.GuideNumber=DOPD.GuideNumber
 			AND URSD.RowStatus=1
@@ -153,7 +152,6 @@ BEGIN
 			AND RA.IdCurrierMan=@IDCOURIER--@CUI
 			AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 			AND RA.DateOfRoute=@Date
-			AND DO.Guide_Number NOT IN (3698645,3701496)
 	
 		IF @TOTALGUIDESRECO IS NOT NULL AND @TOTALGUIDESRECO>0
 		BEGIN
@@ -201,31 +199,31 @@ BEGIN
 			,@SERVICESCOUNTWITHINCIDENCE_DL=SUM(CASE WHEN SM.ServiceStatusId=@STATUSINCIDENCE_SM THEN 1 ELSE 0 END) --CANTIDAD DE SERVICIOS CON INCIDENCIA
 			--,@DELIVERYFAILEDCOUNT_DL=COUNT(DISTINCT CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN CHECKSUM(DOD.StatusCheckpoint,DO.Guide_Number,DO.Guide_Serie) ELSE NULL END)--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
 			,@TOTALGUIDESDL = COUNT(DISTINCT CHECKSUM(DO.Guide_Number,DO.Guide_Serie))
-		FROM RouteAssigment RA  WITH(NOLOCK) 
-		INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+		FROM RouteAssigment RA 
+		INNER JOIN DBO.ServiceManagement SM 
 			ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
-		INNER JOIN DBO.ServiceManagementDetail SMD  WITH(NOLOCK) 
+		INNER JOIN DBO.ServiceManagementDetail SMD 
 			ON SMD.ServiceManagement=SM.IdServiceManagement		
-		INNER JOIN DBO.RoutePreparationDetail RPD  WITH(NOLOCK) 
+		INNER JOIN DBO.RoutePreparationDetail RPD 
 			ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
 			AND RPD.RowStatus=1
 		LEFT JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
 			ON DO.Guide_Serie=RPD.Guide_Serie
 			AND DO.Guide_Number=RPD.Guide_Number
 		OUTER APPLY (
-			SELECT TOP 1 StatusOrderId 'StatusCheckpoint'  FROM DBO.DeliveryOrderDetail WITH(NOLOCK) 
+			SELECT TOP 1 StatusOrderId 'StatusCheckpoint'  FROM DBO.DeliveryOrderDetail
 			WHERE Guide_Serie=RPD.Guide_Serie
 			AND Guide_Number=RPD.Guide_Number
 			ORDER BY DateCreated DESC
 		) DOD		
-		LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+		LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
 			URS.RouteAssignmentId=RA.IdRouteAssigment
-		LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+		LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 			URSD.GuideSerie=RPD.Guide_Serie
 			AND URSD.GuideNumber=RPD.Guide_Number
 			AND URSD.RowStatus=1
 			AND URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
-		LEFT JOIN DBO.DeliverySettlementDetail DSETTD  WITH(NOLOCK) ON 
+		LEFT JOIN DBO.DeliverySettlementDetail DSETTD ON 
 					DSETTD.Guide_Serie=RPD.Guide_Serie
 					AND DSETTD.Guide_Number=RPD.Guide_Number
 					AND DSETTD.RowStatus=1
@@ -293,17 +291,16 @@ BEGIN
 				[IdUnifiedRouteSettlementDetail],
 				[IdUnifiedRouteSettlementDetailPiece],			
 				SMD.SubTypeServiceManagmentId
-			FROM DBO.UnifiedRouteSettlement URS WITH(NOLOCK) 
-				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD WITH(NOLOCK) 
+			FROM DBO.UnifiedRouteSettlement URS
+				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
 					ON URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
-				INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSDP WITH(NOLOCK) 
+				INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSDP
 					ON URSDP.UnifiedRouteSettlementDetailId=URSD.IdUnifiedRouteSettlementDetail
-				INNER JOIN ServiceManagementDetail SMD  WITH(NOLOCK) ON SMD.ServiceManagement = URSD.ServiceManagementId
-				INNER JOIN DBO.RouteAssigment RA  WITH(NOLOCK) ON URS.RouteAssignmentId=RA.IdRouteAssigment
+				INNER JOIN ServiceManagementDetail SMD ON SMD.ServiceManagement = URSD.ServiceManagementId
+				INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment
 			WHERE RA.IdCurrierMan=@IDCOURIER
 			AND RA.DateOfRoute=@Date	
 			AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR;
-			AND GuideNumber NOT IN (3701336,3701496,3698645,3701496)
 			UNION
 			SELECT  
 				URSD.GuideSerie,
@@ -313,26 +310,25 @@ BEGIN
 				[IdUnifiedRouteSettlementDetail],
 				[IdUnifiedRouteSettlementDetailPiece],			
 				@IdSubTypeRecollection
-			FROM DBO.UnifiedRouteSettlement URS WITH(NOLOCK) 
-				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD WITH(NOLOCK) 
+			FROM DBO.UnifiedRouteSettlement URS
+				INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
 					ON URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
-				INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSDP WITH(NOLOCK) 
+				INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSDP
 					ON URSDP.UnifiedRouteSettlementDetailId=URSD.IdUnifiedRouteSettlementDetail
 				--INNER JOIN ServiceManagementDetail SMD ON SMD.ServiceManagement = URSD.ServiceManagementId
-				INNER JOIN DBO.RouteAssigment RA  WITH(NOLOCK) ON URS.RouteAssignmentId=RA.IdRouteAssigment
-				LEFT JOIN DBO.ServiceManagement SM WITH(NOLOCK)  ON URSD.ServiceManagementId=SM.IdServiceManagement
+				INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment
+				LEFT JOIN DBO.ServiceManagement SM ON URSD.ServiceManagementId=SM.IdServiceManagement
 				-----------------------------------------------------------------------------
 				--RECOLECCIÓN
-				LEFT JOIN DBO.SchedulePickup SP WITH(NOLOCK) 
+				LEFT JOIN DBO.SchedulePickup SP
 					ON SM.IdSchedulePickup= SP.SchedulePickupId
 					AND SP.RowStatus=1
-				LEFT JOIN DBO.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK) 
+				LEFT JOIN DBO.DeliveryOrderPaymentDetail DOPD
 					ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
 				-----------------------------------------------------------------------------
 			WHERE RA.IdCurrierMan=@IDCOURIER
 			AND RA.DateOfRoute=@Date	
 			AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR;		
-			AND DOPD.GuideNumber NOT IN (3701336,3701496,3698645,3701496)
 
 
 
@@ -344,23 +340,23 @@ BEGIN
 			INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, PieceId, RowStatus)			
 			SELECT 
 				DO.Guide_Serie, DO.Guide_Number, @STATUSARRIVAL_DO, @Token, GETDATE(), GETDATE(), NULL, NULL, NULL, 1
-				FROM RouteAssigment RA WITH(NOLOCK) 
-				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+				FROM RouteAssigment RA
+				INNER JOIN DBO.ServiceManagement SM 
 					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 					AND SM .RowStatus=1
 				--INNER JOIN DBO.ServiceManagementDetail SMD
 					--ON SMD.ServiceManagement=SM.IdServiceManagement
-				INNER JOIN DBO.SchedulePickup SP WITH(NOLOCK) 
+				INNER JOIN DBO.SchedulePickup SP
 					ON SM.IdSchedulePickup= SP.SchedulePickupId
 					AND SP.RowStatus=1
-				INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK) 
+				INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD
 					ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
 				INNER JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
 					ON DO.Guide_Serie=DOPD.GuideSerie
 					AND DO.Guide_Number=DOPD.GuideNumber
-				LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
 					URS.RouteAssignmentId=RA.IdRouteAssigment
-				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD WITH(NOLOCK)  ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 					URSD.GuideSerie=DOPD.GuideSerie
 					AND URSD.GuideNumber=DOPD.GuideNumber
 					AND URSD.RowStatus=1
@@ -376,27 +372,26 @@ BEGIN
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
 					AND URSD.IsOpenProcess IN (0,NULL)
 					AND DO.StatusOrderId=@STATUSCOLLECTED_DO
-					AND DO.Guide_Number NOT IN (3701336,3701496,3698645,3701496)
 
 
 			UPDATE DO SET DO.StatusOrderId = @STATUSARRIVAL_DO
-				FROM RouteAssigment RA WITH(NOLOCK) 
-				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+				FROM RouteAssigment RA
+				INNER JOIN DBO.ServiceManagement SM 
 					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 					AND SM .RowStatus=1
 				--INNER JOIN DBO.ServiceManagementDetail SMD
 					--ON SMD.ServiceManagement=SM.IdServiceManagement
-				INNER JOIN DBO.SchedulePickup SP WITH(NOLOCK) 
+				INNER JOIN DBO.SchedulePickup SP
 					ON SM.IdSchedulePickup= SP.SchedulePickupId
 					AND SP.RowStatus=1
-				INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD WITH(NOLOCK) 
+				INNER JOIN DBO.DeliveryOrderPaymentDetail DOPD
 					ON DOPD.IdHeaderRecolection=SP.SchedulePickupId
 				INNER JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
 					ON DO.Guide_Serie=DOPD.GuideSerie
 					AND DO.Guide_Number=DOPD.GuideNumber
-				LEFT JOIN DBO.UnifiedRouteSettlement URS WITH(NOLOCK)  ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
 					URS.RouteAssignmentId=RA.IdRouteAssigment
-				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 					URSD.GuideSerie=DOPD.GuideSerie
 					AND URSD.GuideNumber=DOPD.GuideNumber
 					AND URSD.RowStatus=1
@@ -412,7 +407,6 @@ BEGIN
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
 					AND URSD.IsOpenProcess IN (0,NULL)
 					AND DO.StatusOrderId=@STATUSCOLLECTED_DO
-					AND DO.Guide_Number NOT IN (3701336,3701496,3698645,3701496)
 
 
 		--FIN ACTUALIZACIÓN GUÍAS EN RUTA QUE FUERON RECOLECTADOS 
@@ -421,21 +415,21 @@ BEGIN
 			INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, PieceId, RowStatus)			
 			SELECT 
 				DO.Guide_Serie, DO.Guide_Number, @RETURNEDTOFORZA_DO, @Token, GETDATE(), GETDATE(), NULL, NULL, NULL, 1
-				FROM RouteAssigment RA WITH(NOLOCK) 
-				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+				FROM RouteAssigment RA
+				INNER JOIN DBO.ServiceManagement SM 
 					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 					AND SM .RowStatus=1
-				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK) 
+				INNER JOIN DBO.ServiceManagementDetail SMD
 					ON SMD.ServiceManagement=SM.IdServiceManagement
-				INNER JOIN DBO.RoutePreparationDetail RPD  WITH(NOLOCK) 
+				INNER JOIN DBO.RoutePreparationDetail RPD 
 					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
 					AND RPD.RowStatus=1
 				LEFT JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
 					ON DO.Guide_Serie=RPD.Guide_Serie
 					AND DO.Guide_Number=RPD.Guide_Number
-				LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
 					URS.RouteAssignmentId=RA.IdRouteAssigment
-				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 					URSD.GuideSerie=RPD.Guide_Serie
 					AND URSD.GuideNumber=RPD.Guide_Number
 					AND URSD.RowStatus=1
@@ -450,24 +444,23 @@ BEGIN
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
 					AND URSD.IsOpenProcess IN (0,NULL)
 					AND DO.StatusOrderId=@STATUSFAILED_DO
-					AND GuideNumber NOT IN (3701336,3701496,3698645,3701496)
 
 			UPDATE DO SET DO.StatusOrderId = @RETURNEDTOFORZA_DO
-				FROM RouteAssigment RA WITH(NOLOCK) 
-				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+				FROM RouteAssigment RA
+				INNER JOIN DBO.ServiceManagement SM 
 					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 					AND SM .RowStatus=1
-				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK) 
+				INNER JOIN DBO.ServiceManagementDetail SMD
 					ON SMD.ServiceManagement=SM.IdServiceManagement
-				INNER JOIN DBO.RoutePreparationDetail RPD  WITH(NOLOCK) 
+				INNER JOIN DBO.RoutePreparationDetail RPD 
 					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
 					AND RPD.RowStatus=1
 				LEFT JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
 					ON DO.Guide_Serie=RPD.Guide_Serie
 					AND DO.Guide_Number=RPD.Guide_Number
-				LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlement URS ON 		
 					URS.RouteAssignmentId=RA.IdRouteAssigment
-				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD ON 		
 					URSD.GuideSerie=RPD.Guide_Serie
 					AND URSD.GuideNumber=RPD.Guide_Number
 					AND URSD.RowStatus=1
@@ -482,7 +475,6 @@ BEGIN
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
 					AND URSD.IsOpenProcess IN (0,NULL)
 					AND DO.StatusOrderId=@STATUSFAILED_DO
-					AND DO.Guide_Number NOT IN (3701336,3701496,3698645,3701496)
 		------------------------------------------------------
 
 			DECLARE @CURRENTDATE DATETIME = GETDATE();
@@ -493,7 +485,7 @@ BEGIN
 				,URS.TokenUpdated=@CURRENTDATE 
 				,URS.TotalPiecesSettled=SUB1.TotalPieces
 				,URS.UserSettlement=@Token
-			FROM DBO.UnifiedRouteSettlement URS WITH(NOLOCK) 
+			FROM DBO.UnifiedRouteSettlement URS
 			INNER JOIN 
 				(SELECT
 					AGS.IdUnifiedRouteSettlement 'IdUnifiedRouteSettlement'
@@ -530,7 +522,7 @@ BEGIN
 					FROM
 						@AllGuidesSettled AGSaux
 				) AGS
-				INNER JOIN UnifiedRouteSettlementDetail URSD WITH(NOLOCK) 
+				INNER JOIN UnifiedRouteSettlementDetail URSD
 					ON URSD.GuideNumber = AGS.GuideNumber
 					AND URSD.GuideSerie = AGS.GuideSerie
 					AND URSD.RowStatus=1
@@ -587,9 +579,9 @@ BEGIN
 				,RA.IdCurrierMan
 			FROM 
 				@AllGuidesSettled AGS
-				INNER JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON URS.IdUnifiedRouteSettlement=AGS.IdUnifiedRouteSettlement			
-				INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSP WITH(NOLOCK) ON AGS.IdUnifiedRouteSettlementDetailPiece=URSP.IdUnifiedRouteSettlementDetailPiece
-				INNER JOIN DBO.RouteAssigment RA  WITH(NOLOCK) ON URS.RouteAssignmentId=RA.IdRouteAssigment			
+				INNER JOIN DBO.UnifiedRouteSettlement URS ON URS.IdUnifiedRouteSettlement=AGS.IdUnifiedRouteSettlement			
+				INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSP ON AGS.IdUnifiedRouteSettlementDetailPiece=URSP.IdUnifiedRouteSettlementDetailPiece
+				INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment			
 			WHERE AGS.SubTypeServiceManagmentId=@TYPERECOLLECTID
 			GROUP BY 
 				URS.RouteAssignmentId
@@ -647,14 +639,14 @@ BEGIN
 				,Guides_Received=SUB_1.TotalGuides
 				,Route_Received=GETDATE()
 				,SettlementStationId=NULL
-			FROM DeliveryOrderBySettlement DOBS WITH(NOLOCK) 
+			FROM DeliveryOrderBySettlement DOBS
 			INNER JOIN 
 			(
 				SELECT 
 					DOBS.ID,
 					COUNT(DISTINCT AGS.GuideNumber) 'TotalGuides'		
-				FROM DBO.DeliveryOrderBySettlement DOBS WITH(NOLOCK) 
-				INNER JOIN DBO.DeliverySettlementDetail DSD  WITH(NOLOCK)
+				FROM DBO.DeliveryOrderBySettlement DOBS
+				INNER JOIN DBO.DeliverySettlementDetail DSD WITH(NOLOCK)
 					ON DSD.ID_DeliveryOrderBySettlement=DOBS.ID
 				INNER JOIN @AllGuidesSettled AGS 
 					ON AGS.GuideSerie =DSD.Guide_Serie
@@ -669,15 +661,15 @@ BEGIN
 				RP.RowStatus=0,
 				RP.DateUpdated=GETDATE(),
 				RP.TokenUpdated=@Token
-			FROM DBO.RoutePreparation RP  WITH(NOLOCK) 
-			INNER JOIN DBO.DeliveryOrderBySettlement DOBS WITH(NOLOCK) 
+			FROM DBO.RoutePreparation RP 
+			INNER JOIN DBO.DeliveryOrderBySettlement DOBS
 				ON RP.DeliveryOrderBySettlementId=DOBS.ID
 			INNER JOIN 
 			(
 				SELECT 
 					DOBS.ID,
 					COUNT(DISTINCT AGS.GuideNumber) 'TotalGuides'		
-				FROM DBO.DeliveryOrderBySettlement DOBS WITH(NOLOCK) 
+				FROM DBO.DeliveryOrderBySettlement DOBS
 				INNER JOIN DBO.DeliverySettlementDetail DSD WITH(NOLOCK)
 					ON DSD.ID_DeliveryOrderBySettlement=DOBS.ID
 				INNER JOIN @AllGuidesSettled AGS 
@@ -699,7 +691,7 @@ BEGIN
 					TokenUpdated = @Token,
 					DateUpdated = GETDATE(),
 					GuidesQuantityReceived = SUB_1.TotalGuides
-			from dbo.SettlementByPickup sbp WITH(NOLOCK) 
+			from dbo.SettlementByPickup sbp
 			INNER JOIN 
 			(	SELECT 
 					RA.IdRouteAssigment
@@ -707,9 +699,9 @@ BEGIN
 			
 				FROM 
 					@AllGuidesSettled AGS
-					INNER JOIN DBO.UnifiedRouteSettlement URS WITH(NOLOCK)  ON URS.IdUnifiedRouteSettlement=AGS.IdUnifiedRouteSettlement			
-					INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSP WITH(NOLOCK)  ON AGS.IdUnifiedRouteSettlementDetailPiece=URSP.IdUnifiedRouteSettlementDetailPiece
-					INNER JOIN DBO.RouteAssigment RA WITH(NOLOCK)  ON URS.RouteAssignmentId=RA.IdRouteAssigment			
+					INNER JOIN DBO.UnifiedRouteSettlement URS ON URS.IdUnifiedRouteSettlement=AGS.IdUnifiedRouteSettlement			
+					INNER JOIN DBO.UnifiedRouteSettlementDetailPiece URSP ON AGS.IdUnifiedRouteSettlementDetailPiece=URSP.IdUnifiedRouteSettlementDetailPiece
+					INNER JOIN DBO.RouteAssigment RA ON URS.RouteAssignmentId=RA.IdRouteAssigment			
 				WHERE AGS.SubTypeServiceManagmentId=@TYPERECOLLECTID
 				GROUP BY 
 				RA.IdRouteAssigment
@@ -737,9 +729,9 @@ BEGIN
 						ELSE SM.ServiceStatusId
 					END
 					FROM @AllGuidesSettled AGS
-					INNER JOIN DBO.UnifiedRouteSettlementDetail URSD WITH(NOLOCK) 
+					INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
 						ON URSD.IdUnifiedRouteSettlementDetail = AGS.IdUnifiedRouteSettlementDetail
-					INNER JOIN DBO.ServiceManagement SM WITH(NOLOCK) 
+					INNER JOIN DBO.ServiceManagement SM
 						ON URSD.ServiceManagementId = SM.IdServiceManagement
 					LEFT JOIN SubTypeServiceManagment stsm WITH (NOLOCK)
 						ON SM.SubTypeServiceManagmentId = stsm.IdSubTypeServiceManagment
@@ -762,10 +754,10 @@ BEGIN
 							   ,GETDATE()
 							   ,'Actualización de estado desde spHM_GetSettlementUnifiedRoutes'
 					FROM @AllGuidesSettled	AGS
-					INNER JOIN DBO.UnifiedRouteSettlementDetail URSD WITH(NOLOCK) 
+					INNER JOIN DBO.UnifiedRouteSettlementDetail URSD
 						ON URSD.IdUnifiedRouteSettlementDetail=AGS.IdUnifiedRouteSettlementDetail
-					INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) ON URSD.ServiceManagementId=SM.IdServiceManagement
-					INNER JOIN DBO.ServiceManagementDetail SMD  WITH(NOLOCK) ON SMD.ServiceManagement=SM.IdServiceManagement				
+					INNER JOIN DBO.ServiceManagement SM ON URSD.ServiceManagementId=SM.IdServiceManagement
+					INNER JOIN DBO.ServiceManagementDetail SMD ON SMD.ServiceManagement=SM.IdServiceManagement				
 					GROUP BY SM.IdServiceManagement,SMD.SubTypeServiceManagmentId;
 
 
@@ -797,7 +789,7 @@ BEGIN
 
 
 
-	
+	IF @TranCounter = 0  
 		COMMIT TRANSACTION; 
 
 	END TRY

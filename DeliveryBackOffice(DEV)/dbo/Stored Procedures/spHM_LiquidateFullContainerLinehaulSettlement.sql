@@ -65,7 +65,7 @@ BEGIN
 
 	SET @SETTLEMENT_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
 										FROM	[dbo].[StatusOrder] SO
-										WHERE	[SO].[OrderDescription] = 'En escala');
+										WHERE	[SO].[OrderDescription] = 'Arribó a las instalaciones');
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -228,8 +228,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
-			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
-			AND		[LRPCD].[RowStatus] = 1 ;
+			AND		[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC;
 
 		-- INSERT LOG IN DELIVERY ORDER DETAIL
 		INSERT INTO [dbo].[DeliveryOrderDetail]
@@ -246,8 +245,7 @@ BEGIN
 					SYSDATETIME(),
 					SYSDATETIME()
 			FROM	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-			WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC
-				AND [LRPCD].[RowStatus] = 1;
+			WHERE	[LRPCD].[LinehaulRoutePreparationContainerId] = @EXISTING_CONTAINER_LRPC;
 		
 		-- UPDATE LINEHAUL ROUTE PREPARATION CONTAINER
 		UPDATE	[dbo].[LinehaulRoutePreparationContainer]

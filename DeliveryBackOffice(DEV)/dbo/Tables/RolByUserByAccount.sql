@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_RuaIdUser]
     ON [dbo].[RolByUserByAccount]([RuaIdUser] ASC);
@@ -31,4 +33,9 @@ CREATE NONCLUSTERED INDEX [idx_RuaIdAccount_RuaRowStatus]
 GO
 CREATE NONCLUSTERED INDEX [idx_RuaIdAccount]
     ON [dbo].[RolByUserByAccount]([RuaIdAccount] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_RolByUserByAccount_UserStatus]
+    ON [dbo].[RolByUserByAccount]([RuaIdUser] ASC, [RuaRowStatus] ASC);
 

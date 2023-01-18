@@ -563,57 +563,68 @@ BEGIN
     ORDER BY cov.Hub DESC;
 
     --------------- Fin determinar Hub Origen y Destino ---------------------------------------------------------------------------------------------------
-	
----------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
---PRINT 'determinar segmento LOC/MET/FOR '
-		if @CodeOfReferenceSource <=0 -- si no viene el codeOfReference tomar el primero de cada cliente
-		begin
-			select top 1 @CodeOfReferenceSource = vp.CodeOfReference from dbo.VisitPointClient vp WITH(NOLOCK)
-			where vp.CustomerID = @IdCustomer
-		end
-	DECLARE @IdSegment int
 
-	--PRINT 'CodeOfReference'
-	--PRINT @CodeOfReferenceSource
+    ---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
+    --PRINT 'determinar segmento LOC/MET/FOR '
+    IF @CodeOfReferenceSource <= 0 -- si no viene el codeOfReference tomar el primero de cada cliente
+    BEGIN
+        SELECT TOP 1
+               @CodeOfReferenceSource = vp.CodeOfReference
+        FROM dbo.VisitPointClient vp WITH (NOLOCK)
+        WHERE vp.CustomerID = @IdCustomer;
+    END;
+    DECLARE @IdSegment INT;
 
-	--PRINT '@IdHubDestiny'
-	--PRINT @IdHubDestiny
-	select  top 1  @IdSegment = cov.SegmentId 
-	from dbo.VisitPointCoverage cov
-	where cov.RowStatus ='true'
-	and cov.HublogisticId = @IdHubDestiny
-	and cov.VisitPointId = @CodeOfReferenceSource
+    -- HeaderCodes Iguales - LOC
+    IF (@HeaderCodeSource = @HeaderCodeDestiny)
+    BEGIN
+        SELECT TOP 1
+               @IdSegment = sg.CrsId
+        FROM dbo.CatRateSegment sg WITH (NOLOCK)
+        WHERE sg.CrsShortName = 'LOC';
+    END;
+    -- HeaderCodes diferentes - revisar tabla
+    ELSE
+    BEGIN
+        IF (@CustomerType != 1)
+        BEGIN
+            SELECT TOP 1
+                   @IdSegment = RTC.SegmentTypeId
+            FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
+                    ON RTC.TownshipSourceId = TwnSource.IdTownship
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnDestiny WITH (NOLOCK)
+                    ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
+            WHERE RTC.RateId = @IdRate
+                  AND (TwnSource.HeaderCode = @HeaderCodeSource)
+                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+                  AND RTC.RowStatus = 1;
+        END;
+        ELSE
+        BEGIN
+            SELECT TOP 1
+                   @IdSegment = CTC.SegmentTypeId
+            FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
+                    ON CTC.TownshipSourceId = TwnSource.IdTownship
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnDestiny WITH (NOLOCK)
+                    ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
+            WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
+                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+                  AND CTC.RowStatus = 1;
+        END;
 
-	--PRINT 'segmento'
-	--PRINT @IdSegment
-	if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
-		BEGIN
-		--PRINT 'segmento nulo'
-			IF @IdHubSource = @IdHubDestiny 
-				BEGIN
-				--PRINT 'hubs iguales'
-					SELECT top 1   @IdSegment = sg.CrsId 
-					FROM dbo.CatRateSegment sg  WITH(NOLOCK) WHERE sg.CrsShortName ='LOC'
-				END
-			ELSE 
-				BEGIN
-				--PRINT 'hubs default'
-					select  top 1  @IdSegment = cov.SegmentId  -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
-						from dbo.VisitPointCoverage cov WITH(NOLOCK)
-					where cov.RowStatus ='true'
-						and cov.HublogisticId = @IdHubDestiny
-						and @IdHubSource IN(1,22)
-				END
-		END
-        
-		if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
-		BEGIN
-			
-					SELECT top 1   @IdSegment = sg.CrsId 
-			from dbo.CatRateSegment sg WITH(NOLOCK) where sg.CrsShortName ='FOR'
-		END
+    END;
 
---------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
+    IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
+    BEGIN
+        SELECT TOP 1
+               @IdSegment = sg.CrsId
+        FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
+        WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
+    END;
+
+    --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
     -------------------------------Obtener descuento --------------------------------------------------------------------------
 
     DECLARE @IdTypeCustomer INT =
@@ -1113,8 +1124,10 @@ BEGIN
                     GROUP BY rd.TypeSegmentId,
                              rd.TypeServiceId
                 ) TempValues
-                WHERE TempValues.AddedSegmentType = #ParcelAmountPerType.SegmentType
-                      AND TempValues.AddedServiceType = #ParcelAmountPerType.ServiceType;
+				INNER JOIN #ParcelAmountPerType PAPT
+				ON
+					TempValues.AddedSegmentType = PAPT.SegmentType
+					AND TempValues.AddedServiceType = PAPT.ServiceType;
 
                 -- Actualizar con los que NO esten dentro del tarifario por tipo de servicio y tipo de segmento
                 UPDATE #ParcelAmountPerType
@@ -1133,7 +1146,9 @@ BEGIN
                           AND rd.RateId = @IdRate
                     GROUP BY rd.TypeSegmentId
                 ) TempValues
-                WHERE TempValues.AddedSegmentType = SegmentType;
+				INNER JOIN #ParcelAmountPerType PAPT
+				ON
+					TempValues.AddedSegmentType = PAPT.SegmentType;
 
                 -- Tarifas finales
                 INSERT INTO @TempRate

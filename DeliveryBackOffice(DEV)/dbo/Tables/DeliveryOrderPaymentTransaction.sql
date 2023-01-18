@@ -38,6 +38,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del tipo de servicio de tabla CatTypeServiceClosure', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderPaymentTransaction', @level2type = N'COLUMN', @level2name = N'TypeServiceId';
 
@@ -53,4 +55,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Express cen
 GO
 CREATE NONCLUSTERED INDEX [IDX_GuideNumber_GuideSerie]
     ON [dbo].[DeliveryOrderPaymentTransaction]([GuideNumber] ASC, [GuideSerie] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderPaymentTransaction_GuideTypeService]
+    ON [dbo].[DeliveryOrderPaymentTransaction]([GuideSerie] ASC, [GuideNumber] ASC, [TypeServiceId] ASC);
 

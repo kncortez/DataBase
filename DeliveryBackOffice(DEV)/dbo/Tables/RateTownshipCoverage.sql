@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateTownshipCoverage', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -64,22 +66,17 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de co
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222318]
-    ON [dbo].[RateTownshipCoverage]([RateId] ASC, [TownshipSourceId] ASC, [TownshipDestinyId] ASC);
 
-
-GO
-CREATE NONCLUSTERED INDEX [idx_TownshipSourceId]
-    ON [dbo].[RateTownshipCoverage]([TownshipSourceId] ASC)
-    INCLUDE([TownshipDestinyId], [SegmentTypeId]);
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_TownshipDestinyId]
-    ON [dbo].[RateTownshipCoverage]([TownshipDestinyId] ASC);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_SegmentTypeId]
-    ON [dbo].[RateTownshipCoverage]([SegmentTypeId] ASC);
+
+
+
+GO
+
 

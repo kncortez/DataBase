@@ -69,7 +69,7 @@ BEGIN
 	FROM UnifiedRouteSettlement urs WITH (NOLOCK)
 	INNER JOIN @RouteAssigment ra
 		ON urs.RouteAssignmentId = ra.IdRouteAssigment
-	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt WITH (NOLOCK)
+	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt
 		ON urs.UserCODSettlement = lbt.SSN_IdToken
 	LEFT JOIN TokenLog tl WITH (NOLOCK)
 		ON urs.UserCODSettlement = tl.TknIdToken

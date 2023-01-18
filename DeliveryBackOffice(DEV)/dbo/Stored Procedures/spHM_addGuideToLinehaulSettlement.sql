@@ -246,24 +246,18 @@ BEGIN
 													WHERE	[LRPCDP].[PieceNumber] = @GuidePiece;
 
 													-- RETURN DATA
-													SELECT		[LRSCD].[GuideSerie],
-																[LRSCD].[GuideNumber],
-																[LRSCD].[UserProcess],
-																[LRSCD].[IsOpenProcess],
-																[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-																[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-																[LRSCDP].[PieceNumber],
-																[LRSCDP].[IsDryPiece],
-																COALESCE([LRSCDP].[ActCode], 0) AS ActCode
-													FROM		[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-													INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-														ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-														AND		[LRSCD].[GuideSerie] = @GuideSerie
-														AND		[LRSCD].[GuideNumber] = @GuideNumber
-														AND		[LRSCD].[UserProcess] = @TknUser
-														AND		[LRSCD].[IsOpenProcess] = 1
-													WHERE		[LRSCDP].[RowStatus] = 1;
-
+													SELECT	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
+															[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
+															[LRSCDP].[PieceNumber],
+															[LRSCDP].[IsDryPiece],
+															COALESCE([LRSCDP].[ActCode], 0) AS ActCode
+													FROM	[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
+													WHERE	[LRSCDP].[LinehaulRouteSettlementContainerDetailId]  = (SELECT		[LRSCD].[IdLinehaulRouteSettlementContainerDetail]
+																													FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
+																													WHERE		[LRSCD].[GuideSerie] = @GuideSerie
+																														AND		[LRSCD].[GuideNumber] = @GuideNumber
+																														AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId)
+														AND [PieceNumber] = @GuidePiece;
 												END
 											ELSE
 												BEGIN
@@ -313,23 +307,13 @@ BEGIN
 													WHERE	[LRPCDP].[PieceNumber] = @GuidePiece;
 
 													-- RETURN PIECE DATA
-													SELECT		[LRSCD].[GuideSerie],
-																[LRSCD].[GuideNumber],
-																[LRSCD].[UserProcess],
-																[LRSCD].[IsOpenProcess],
-																[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-																[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-																[LRSCDP].[PieceNumber],
-																[LRSCDP].[IsDryPiece],
-																COALESCE([LRSCDP].[ActCode], 0) AS ActCode
-													FROM		[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-													INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-														ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-														AND		[LRSCD].[GuideSerie] = @GuideSerie
-														AND		[LRSCD].[GuideNumber] = @GuideNumber
-														AND		[LRSCD].[UserProcess] = @TknUser
-														AND		[LRSCD].[IsOpenProcess] = 1
-													WHERE		[LRSCDP].[RowStatus] = 1;
+													SELECT	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
+															[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
+															[LRSCDP].[PieceNumber],
+															[LRSCDP].[IsDryPiece],
+															COALESCE([LRSCDP].[ActCode], 0) AS ActCode
+													FROM	[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
+													WHERE	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece] = @INSERTED_DOC;
 
 												END
 										END
@@ -389,24 +373,18 @@ BEGIN
 										WHERE	[LRPCDP].[PieceNumber] = @GuidePiece;
 
 										-- RETURN DATA
-										SELECT		[LRSCD].[GuideSerie],
-													[LRSCD].[GuideNumber],
-													[LRSCD].[UserProcess],
-													[LRSCD].[IsOpenProcess],
-													[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-													[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-													[LRSCDP].[PieceNumber],
-													[LRSCDP].[IsDryPiece],
-													COALESCE([LRSCDP].[ActCode], 0) AS ActCode
-										FROM		[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-										INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-											ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-											AND		[LRSCD].[GuideSerie] = @GuideSerie
-											AND		[LRSCD].[GuideNumber] = @GuideNumber
-											AND		[LRSCD].[UserProcess] = @TknUser
-											AND		[LRSCD].[IsOpenProcess] = 1
-										WHERE		[LRSCDP].[RowStatus] = 1;
-
+										SELECT	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
+												[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
+												[LRSCDP].[PieceNumber],
+												[LRSCDP].[IsDryPiece],
+												COALESCE([LRSCDP].[ActCode], 0) AS ActCode
+										FROM	[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
+										WHERE	[LRSCDP].[LinehaulRouteSettlementContainerDetailId]  = (SELECT		[LRSCD].[IdLinehaulRouteSettlementContainerDetail]
+																										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
+																										WHERE		[LRSCD].[GuideSerie] = @GuideSerie
+																											AND		[LRSCD].[GuideNumber] = @GuideNumber
+																											AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId)
+											AND [PieceNumber] = @GuidePiece;
 									END
 								ELSE
 									BEGIN
@@ -456,23 +434,13 @@ BEGIN
 										WHERE		[LRPCDP].[PieceNumber] = @GuidePiece;
 
 										-- RETURN PIECE DATA
-										SELECT		[LRSCD].[GuideSerie],
-													[LRSCD].[GuideNumber],
-													[LRSCD].[UserProcess],
-													[LRSCD].[IsOpenProcess],
-													[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-													[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-													[LRSCDP].[PieceNumber],
-													[LRSCDP].[IsDryPiece],
-													COALESCE([LRSCDP].[ActCode], 0) AS ActCode
-										FROM		[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-										INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-											ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-											AND		[LRSCD].[GuideSerie] = @GuideSerie
-											AND		[LRSCD].[GuideNumber] = @GuideNumber
-											AND		[LRSCD].[UserProcess] = @TknUser
-											AND		[LRSCD].[IsOpenProcess] = 1
-										WHERE		[LRSCDP].[RowStatus] = 1;
+										SELECT	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
+												[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
+												[LRSCDP].[PieceNumber],
+												[LRSCDP].[IsDryPiece],
+												COALESCE([LRSCDP].[ActCode], 0) AS ActCode
+										FROM	[dbo].[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
+										WHERE	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece] = @INSERTED_DOC;
 
 									END
 							END
@@ -538,22 +506,18 @@ BEGIN
 							WHERE		[LRPCDP].[PieceNumber] = @GuidePiece;
 
 							-- RETURN DATA
-							SELECT		[LRSCD].[GuideSerie],
-										[LRSCD].[GuideNumber],
-										[LRSCD].[UserProcess],
-										[LRSCD].[IsOpenProcess],
-										[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-										[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-										[LRSCDP].[PieceNumber],
-										[LRSCDP].[IsDryPiece],
-										COALESCE([LRSCDP].[ActCode], 0) AS ActCode
-							FROM		[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-							INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-								ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-								AND		[LRSCD].[GuideSerie] = @GuideSerie
-								AND		[LRSCD].[GuideNumber] = @GuideNumber
-								AND		[LRSCD].[UserProcess] = @TknUser
-							WHERE		[LRSCDP].[RowStatus] = 1;
+							SELECT	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
+									[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
+									[LRSCDP].[PieceNumber],
+									[LRSCDP].[IsDryPiece],
+									COALESCE([LRSCDP].[ActCode], 0) AS ActCode
+							FROM	[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
+							WHERE	[LRSCDP].[LinehaulRouteSettlementContainerDetailId]  = (SELECT		[LRSCD].[IdLinehaulRouteSettlementContainerDetail]
+																							FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
+																							WHERE		[LRSCD].[GuideSerie] = @GuideSerie
+																								AND		[LRSCD].[GuideNumber] = @GuideNumber
+																								AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId)
+								AND [PieceNumber] = @GuidePiece;
 						END
 					ELSE
 						BEGIN
@@ -631,22 +595,18 @@ BEGIN
 									AND [LRPCD].[RowStatus] = 1;
 
 							-- RETURN DATA
-							SELECT		[LRSCD].[GuideSerie],
-										[LRSCD].[GuideNumber],
-										[LRSCD].[UserProcess],
-										[LRSCD].[IsOpenProcess],
-										[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
-										[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
-										[LRSCDP].[PieceNumber],
-										[LRSCDP].[IsDryPiece],
-										COALESCE([LRSCDP].[ActCode], 0) AS ActCode
-							FROM		[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
-							INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-								ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
-								AND		[LRSCD].[GuideSerie] = @GuideSerie
-								AND		[LRSCD].[GuideNumber] = @GuideNumber
-								AND		[LRSCD].[UserProcess] = @TknUser
-							WHERE		[LRSCDP].[RowStatus] = 1;
+							SELECT	[LRSCDP].[IdLinehaulRouteSettlementContainerDetailPiece],
+									[LRSCDP].[LinehaulRouteSettlementContainerDetailId],
+									[LRSCDP].[PieceNumber],
+									[LRSCDP].[IsDryPiece],
+									COALESCE([LRSCDP].[ActCode], 0) AS ActCode
+							FROM	[LinehaulRouteSettlementContainerDetailPiece] LRSCDP
+							WHERE	[LRSCDP].[LinehaulRouteSettlementContainerDetailId]  = (SELECT		[LRSCD].[IdLinehaulRouteSettlementContainerDetail]
+																							FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
+																							WHERE		[LRSCD].[GuideSerie] = @GuideSerie
+																								AND		[LRSCD].[GuideNumber] = @GuideNumber
+																								AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId)
+								AND [PieceNumber] = @GuidePiece;
 						END
 				END
 		END
@@ -661,8 +621,6 @@ BEGIN
 											AND		[LRSCD].[GuideSerie] = @GuideSerie
 											AND		[LRSCD].[GuideNumber] = @GuideNumber
 											AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-											AND		[LRSCD].[RowStatus] = 1
-											AND		[LRSCD].[IsOpenProcess] = 0
 										WHERE		[LRSCDP].[ActCode] IS NULL
 											AND		[LRSCDP].[RowStatus] = 1);
 
@@ -689,8 +647,6 @@ BEGIN
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 											ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
 											AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-											AND		[LRSCD].[RowStatus] = 1
-											AND		[LRSCD].[IsOpenProcess] = 0
 										WHERE		[LRSCDP].[IsDryPiece] = 1
 											AND		[LRSCDP].[ActCode] IS NULL
 											AND		[LRSCDP].[RowStatus] = 1);
@@ -700,8 +656,6 @@ BEGIN
 										INNER JOIN	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 											ON		[LRSCDP].[LinehaulRouteSettlementContainerDetailId] = [LRSCD].[IdLinehaulRouteSettlementContainerDetail]
 											AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId
-											AND		[LRSCD].[RowStatus] = 1
-											AND		[LRSCD].[IsOpenProcess] = 0
 										WHERE		[LRSCDP].[IsDryPiece] = 0
 											AND		[LRSCDP].[ActCode] IS NULL
 											AND		[LRSCDP].[RowStatus] = 1);
@@ -709,7 +663,6 @@ BEGIN
 			SET @COUNT_GUIDE_QUANTITY = (SELECT  COUNT([LRSCD].[IdLinehaulRouteSettlementContainerDetail]) AS CONT
 										FROM	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
 										WHERE	[LRSCD].[RowStatus] = 1
-											AND	[LRSCD].[IsOpenProcess] = 0
 											AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId);
 									
 			UPDATE	[LinehaulRouteSettlementContainer]
@@ -729,8 +682,7 @@ BEGIN
 											INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 												ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 												AND		[LRSC].[RowStatus] = 1
-												AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId
-											WHERE		[LRSCD].[RowStatus] = 1);
+												AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 			SET @COUNT_PIECES_RECEIVED = (SELECT		SUM([LRSCD].[PiecesReceived]) AS CONT
 											FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD

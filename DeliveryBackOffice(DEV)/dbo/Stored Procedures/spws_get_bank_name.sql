@@ -5,11 +5,6 @@
 -- Description:	<Devuelve el nombre de un banco
 --				basado en coincidencia de  nombre>
 -- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2023-01-05>
--- Description:	<Ordenar nombre de bancos de forma Ascendente>
--- =============================================
 CREATE PROCEDURE  [dbo].[spws_get_bank_name]
 	-- Add the parameters for the stored procedure here
 	@ValName as nvarchar(100),
@@ -31,6 +26,5 @@ BEGIN
 	and (Name like '%' + @ValName + '%' or @ValName = '-1')
 	and Id_country = @IdCountry
 	and Id_status = 1
-	ORDER BY [Name] ASC
 
 END

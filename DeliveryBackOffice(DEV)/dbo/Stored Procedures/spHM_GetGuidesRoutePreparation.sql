@@ -1,10 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <08-09-2022>
 -- Description:	<Busca una guía dentro de una preparación de ruta de entrega>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_GetGuidesRoutePreparation]
+CREATE PROCEDURE spHM_GetGuidesRoutePreparation
 	-- Add the parameters for the stored procedure here
 	@Serie	NVARCHAR(2)
 	,@Number INT

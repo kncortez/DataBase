@@ -1,6 +1,4 @@
-﻿
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Oscar Morales>
 -- Create date: <2022-09-20>
 -- Description:	<Guarda/Modifica/Elimina un punto de visita para cliente referenciado y clientes existentes>
@@ -17,7 +15,7 @@ CREATE PROCEDURE [dbo].[sphw_SetVisitPointClient]
 	@Address2 NVARCHAR(250),
 	@NirPhone  NVARCHAR(10) ,
 	@Phone  NVARCHAR(50) ,
-	@AdditionalInstructions  NVARCHAR(250) = '' ,
+	@AdditionalInstructions  NVARCHAR(250) ,
 	@Status BIT = 1,
 	@Token NVARCHAR(50),
 	@IdCityPlace INT = 31,

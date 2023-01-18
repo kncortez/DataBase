@@ -20,7 +20,7 @@ BEGIN
     SELECT ra.IdRouteAssigment,
            (
                SELECT COUNT(1)
-               FROM RouteAssigment ra WITH(NOLOCK)
+               FROM RouteAssigment ra
                    INNER JOIN ServiceManagement sm WITH (NOLOCK)
                        ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
                    INNER JOIN PieceByService pbs WITH (NOLOCK)
@@ -38,7 +38,7 @@ BEGIN
            ) PiecesDry,
            (
                SELECT COUNT(1)
-               FROM RouteAssigment ra WITH(NOLOCK)
+               FROM RouteAssigment ra
                    INNER JOIN ServiceManagement sm WITH (NOLOCK)
                        ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
                    INNER JOIN PieceByService pbs WITH (NOLOCK)

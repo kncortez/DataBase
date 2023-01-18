@@ -3,7 +3,7 @@
 -- Create date: <26-09-2022>
 -- Description:	<Inicia un servicio de recolección>
 -- =============================================
-CREATE PROCEDURE [dbo].[sphw_StartServiceRecollection]
+create PROCEDURE sphw_StartServiceRecollection
 	-- Add the parameters for the stored procedure here	
 	@CourierId INT,
 	@ServiceManagementId INT,

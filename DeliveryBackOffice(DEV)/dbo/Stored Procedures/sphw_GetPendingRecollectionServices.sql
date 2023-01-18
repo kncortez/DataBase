@@ -156,8 +156,6 @@ BEGIN
 				AND
 				INSRV.ServiceManagementId IS NULL--No posee ninguna incidencia registrada
 			------------------------------------------------------------------------
-			AND
-				srv.IdPuRouteAssigment IS NULL
 		ORDER BY
 			ISNULL(SA.IsAlerted, 0) DESC,
 			CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108)) DESC

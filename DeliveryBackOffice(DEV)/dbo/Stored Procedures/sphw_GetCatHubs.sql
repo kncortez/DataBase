@@ -1,10 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto, Ixchop>
 -- Create date: <22-09-2022>
 -- Description:	<Método que obitene el catálogo de hubs activos>
 -- =============================================
-CREATE PROCEDURE [dbo].[sphw_GetCatHubs]
+CREATE PROCEDURE sphw_GetCatHubs
 	-- Add the parameters for the stored procedure here
 AS
 BEGIN

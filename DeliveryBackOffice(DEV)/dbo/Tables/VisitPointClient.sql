@@ -45,6 +45,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -79,6 +81,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
-    ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
+
 

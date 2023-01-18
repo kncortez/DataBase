@@ -115,10 +115,10 @@ BEGIN
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
-                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                               JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                               JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -178,7 +178,7 @@ BEGIN
         INSERT INTO @Table
         SELECT da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
-            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
+            JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
                 ON sr.ID = da.ID_Courier
         WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -222,7 +222,7 @@ BEGIN
                     (
                         SELECT TOP 1
                                ISNULL(StatusOrderId, 1)
-                        FROM dbo.DeliveryOrder WITH(NOLOCK)
+                        FROM dbo.DeliveryOrder
                         WHERE Guide_Serie = @GuideSerie
                               AND Guide_Number = @GuideNumber
                     );

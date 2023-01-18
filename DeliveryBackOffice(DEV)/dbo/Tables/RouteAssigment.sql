@@ -20,6 +20,8 @@
 
 
 
+
+
 GO
 
 
@@ -35,7 +37,5 @@ CREATE NONCLUSTERED INDEX [IDX_IdRoute_DateOfRoute]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_DateOfRoute]
-    ON [dbo].[RouteAssigment]([DateOfRoute] ASC)
-    INCLUDE([IdCurrierMan], [DateCreated]);
+
 

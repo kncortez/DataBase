@@ -221,112 +221,36 @@ BEGIN
 						update DeliveryOrder set StatusOrderId = 14
 						from DeliveryOrder
 						where Guide_Number in (select NumberGuide from @TblGuidesReturns) and Guide_Serie in (select Serie from @TblGuidesReturns)
-						
--------------------WEBHOOK.INI-----------------------	
 
-								DECLARE @WebhookCustomerTable AS TABLE(
-									CustomerId INT,
-									CustomerEndpointId BIGINT,
-									WebhookType INT,
-									GuideSerie NVARCHAR(2),
-									GuideNumber INT,
-									GuideStatusId TINYINT
-								)
-								BEGIN TRY
-									DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
-
-									-- Clientes de las guías por procesar
-									INSERT INTO 
-										@WebhookCustomerTable
-										(CustomerId, GuideSerie, GuideNumber, GuideStatusId)
-									SELECT
-										DISTINCT
-											DO.IdCustomer,
-											TLG.Serie,
-											TLG.NumberGuide,
-											DO.StatusOrderId
-									FROM
-										@TblGuidesReturns TLG
-										INNER JOIN
-											[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-											ON
-												TLG.RowNumber = DO.Guide_Number
-												AND
-												TLG.Serie = DO.Guide_Serie;
-
-									-- Ingresar endpoints de cliente
-									UPDATE
-										@WebhookCustomerTable
-									SET
-										CustomerEndpointId = WE.IdWebhookEndpoint
-										,WebhookType = @GuideStatusChangeWebhook
-									FROM
-										[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
-										INNER JOIN
-											@WebhookCustomerTable WCT
-											ON
-												WE.CustomerId = WCT.CustomerId
-												AND
-												WE.WebhookTypeId = @GuideStatusChangeWebhook;
-
-									DECLARE @ResponseTable AS TABLE (
-										InsertedId BIGINT
-									);
-
-									INSERT INTO 
-										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-										(
-											[GuideSerie]
-											,[GuideNumber]
-											,[CustomerId]
-											,[StatusOrderId]
-											,[WebhookEndpointId]
-											,[HasNotified]
-											,[TokenCreated]
-											,[DateCreated]
-										)
-									OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-									SELECT
-										WCT.GuideSerie
-										,WCT.GuideNumber
-										,WCT.CustomerId
-										,WCT.GuideStatusId
-										,WCT.CustomerEndpointId
-										,0
-										,@Token
-										,GETDATE()
-									FROM
-										@WebhookCustomerTable WCT
-										LEFT JOIN
-											[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK)
-											ON
-												WCT.CustomerId = WRBU.CustomerId
-												AND
-												WCT.GuideStatusId = WRBU.StatusOrderId
-												AND
-												WCT.WebhookType = WRBU.WebhookTypeId
-										LEFT JOIN
-											[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
-											ON
-												WCT.GuideSerie = WTQ.GuideSerie
-												AND
-												WCT.GuideNumber = WTQ.GuideNumber
-												AND
-												WCT.GuideStatusId = WTQ.StatusOrderId
-									WHERE
-										WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-										AND
-										WTQ.IdWebhookTrackingQueue IS NULL
-
-								END TRY
-								BEGIN CATCH
-
-								END CATCH
-						
-
-
-
--------------------WEBHOOK.FIN------------------------------
+						-------------------WEBHOOK.INI-----------------------			
+	--		IF ( SELECT ISNULL(WebhookEndpointId,0) 
+	--	FROM WebhookEndpoint wep
+	--	WHERE wep.IdCustomer  IN (
+	--						select od.IdCustomer
+	--						from   @TblGuidesReturns ls
+	--							  INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.Serie AND od.Guide_Number = ls.NumberGuide
+	--							)
+	--	) > 0
+	--BEGIN 
+	--					INSERT INTO [dbo].[WebhookTrackingQueue]
+	--					       ([Guide_Serie]
+	--					       ,[Guide_Number]
+	--					       ,[IdCustomer]
+	--					       ,[Status]
+	--					       ,[WebhookEndpointId]
+	--					       ,[HasNotified]
+	--					       ,[ChangedDate])
+	--					SELECT  od.[Guide_Serie]
+	--					       ,od.[Guide_Number]
+	--					       ,od.[IdCustomer]
+	--					       ,od.[StatusOrderId]
+	--					       ,(SELECT WebhookEndpointId FROM WebhookEndpoint WHERE IdCustomer = od.IdCustomer)
+	--					       ,0
+	--					       ,GETDATE()
+	--					FROM   @TblGuidesReturns ls
+	--						   INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.Serie AND od.Guide_Number = ls.NumberGuide
+	--	END
+						-------------------WEBHOOK.FIN------------------------------	
 						
 		---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
 						

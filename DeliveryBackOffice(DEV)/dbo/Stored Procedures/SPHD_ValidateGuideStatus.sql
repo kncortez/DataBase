@@ -34,12 +34,7 @@ SELECT
 FROM [dbo].[DeliveryOrder] WITH (NOLOCK) 
 WHERE Guide_Serie+CAST(Guide_Number AS nvarchar) = @Guide
 
-IF (EXISTS(SELECT TOP 1 1 
-		   FROM [dbo].[DeliveryOrder] DDO WITH (NOLOCK)
-           INNER JOIN 
-               [dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
-           ON  DDO.Guide_Number = DOP.GuideNumber  
-           WHERE DDO.Guide_Serie+CAST(DDO.Guide_Number AS nvarchar)  = @Guide))
+IF (EXISTS(SELECT TOP 1 1 FROM dbo.DeliveryOrder DDO WITH (NOLOCK) WHERE   DDO.Guide_Serie+CAST(DDO.Guide_Number AS nvarchar) = @Guide))
 BEGIN
 
 

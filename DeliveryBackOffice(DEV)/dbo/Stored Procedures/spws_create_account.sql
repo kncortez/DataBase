@@ -233,7 +233,7 @@ BEGIN
 						,TokenUpdated
 						,DateUpdated
 						)
-					VALUES((SELECT TOP 1 IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1 AND Name = 'New Termns And Conditions' ORDER BY DateCreated DESC)
+					VALUES((SELECT IdTAC FROM [dbo].[TermsAndConditions] WHERE RowStatus = 1 AND Name = 'New Termns And Conditions')
 							,@IdAccount
 							,1
 							,1
@@ -320,7 +320,20 @@ BEGIN
 						   ,'SYS-ADMIN'
 						FROM Tutorial t
 						WHERE t.RowStatus = 1
-					-- Fin Agregar registros de los tutoriales			
+					-- Fin Agregar registros de los tutoriales
+				
+					-- Promo del mundial al crear usuario
+					DECLARE @CheckFifaWorldCup BIT = ISNULL((SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK) WHERE CP.[Name] = 'MundialPromo' COLLATE Latin1_General_CI_AI AND CP.[Status] = 1),0);
+					IF(@CheckFifaWorldCup = 1 AND @AddedField IS NOT NULL)
+					BEGIN
+
+						INSERT INTO [DeliveryBackOffice].[dbo].[WorldCupCandidateByAccount]
+							(AccountId, WorldCupCandidateId, TokenCreated, DateCreated)
+						SELECT
+							TOP 1
+								@IdAccount, CAST(@AddedField AS INT), 'SYS-ADMIN' , GETDATE()
+
+					END
 					-- 
 
 				END TRY

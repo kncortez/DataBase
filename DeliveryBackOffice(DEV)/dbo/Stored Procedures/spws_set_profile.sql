@@ -4,11 +4,6 @@
 -- Create date: <2021-01-11>
 -- Description:	<Actualizacion de datos de perfil de usuario>
 -- =============================================
--- =============================================
--- Author:		<Jerson Ochoa>
--- Create date: <2023-01-09>
--- Description:	<Manejo de imagen de perfil | Sustituir tablas temporales por variables tipo tabla>
--- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_profile]
     -- Add the parameters for the stored procedure here
@@ -39,15 +34,31 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
-	DECLARE @TblErrorMessage AS TABLE (	IdResult INT,
-										Message NVARCHAR(50), 
-										Id NVARCHAR(25));
+
+    --select * from Person
 
     -- insertar en tabla temporal posbibles mensajes de error
-    
-	INSERT INTO @TblErrorMessage (IdResult, Message, Id) VALUES (500, 'Token Inválido', 'Token');
-	INSERT INTO @TblErrorMessage (IdResult, Message, Id) VALUES (500, 'Error fatal intente de nuevo mas tarde', 'Transaction');
-	INSERT INTO @TblErrorMessage (IdResult, Message, Id) VALUES (200, 'Perfil Actualizado correctamente', 'Ok');
+
+    IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
+        DROP TABLE #errormessage;
+    SELECT *
+    INTO #errormessage
+    FROM
+    (
+        SELECT 500 AS IdResult,
+               'Token Inválido' AS Message,
+               'Token' AS Id
+        UNION
+        SELECT 500 AS IdResult,
+               'Error fatal intente de nuevo mas tarde' AS Message,
+               'Transaction' AS Id
+        UNION
+        SELECT 200 AS IdResult,
+               'Perfil Actualizado correctamente' AS Message,
+               'Ok' AS Id
+    ) AS errror;
+
+
 
     DECLARE @jsonResult NVARCHAR(MAX);
 
@@ -115,7 +126,7 @@ BEGIN
                                 (
                                     SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message
                                            + '"}'
-                                    FROM @TblErrorMessage
+                                    FROM #errormessage
                                     WHERE Id = 'Transaction'
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
@@ -136,7 +147,7 @@ BEGIN
                                 (
                                     SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message
                                            + '"}'
-                                    FROM @TblErrorMessage
+                                    FROM #errormessage
                                     WHERE Id = 'Ok'
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
@@ -156,7 +167,7 @@ BEGIN
                             (
                                 SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message
                                        + '"}'
-                                FROM @TblErrorMessage
+                                FROM #errormessage
                                 WHERE Id = 'Token'
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
@@ -166,6 +177,8 @@ BEGIN
                         )
         );
     END;
+    IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
+        DROP TABLE #errormessage;
 
     -- retornar resultado en formato json
 

@@ -57,8 +57,8 @@ BEGIN
 */
         UPDATE ord
         SET SenderIdTownship = TW.IdTownship
-        FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
-            INNER JOIN DeliveryBackOffice.dbo.Township TW WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryOrder ord
+            INNER JOIN DeliveryBackOffice.dbo.Township TW
                 ON CONVERT(VARCHAR, UPPER(ord.Sender_Town)) = CONVERT(VARCHAR, UPPER(TW.TownshipName))COLLATE SQL_Latin1_General_CP1251_CS_AS
         WHERE ord.Guide_Number = @GuideNumber
               AND ord.Guide_Serie = @Guide_Serie
@@ -66,7 +66,7 @@ BEGIN
               AND EXISTS
         (
             SELECT COUNT(1)
-            FROM DeliveryBackOffice.dbo.Township TW WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.Township TW
             WHERE UPPER(ord.Sender_Town) = UPPER(TW.TownshipName)
         );
         --===========SenderIdTownship NULL.FIN ===========
@@ -80,8 +80,8 @@ BEGIN
 */
         UPDATE ord
         SET ReceiverIdTownship = TW.IdTownship
-        FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
-            INNER JOIN DeliveryBackOffice.dbo.Township TW WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryOrder ord
+            INNER JOIN DeliveryBackOffice.dbo.Township TW
                 ON UPPER(ord.Receiver_Town) = UPPER(TW.TownshipName)
         WHERE ord.Guide_Number = @GuideNumber
               AND ord.Guide_Serie = @Guide_Serie
@@ -89,7 +89,7 @@ BEGIN
               AND EXISTS
         (
             SELECT COUNT(1)
-            FROM DeliveryBackOffice.dbo.Township TW WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.Township TW
             WHERE UPPER(ord.Receiver_Town) = UPPER(TW.TownshipName)
         );
         --===========ReceiverIdTownship NULL.FIN ===========
@@ -107,17 +107,17 @@ BEGIN
             FROM
             (
                 SELECT COALESCE(hl_destino.IdHubLogistic, serv.HubDestinationId, 0) AS ID_HUB_DESTINO
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-                    INNER JOIN DeliveryBackOffice.dbo.Township tw WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+                    INNER JOIN DeliveryBackOffice.dbo.Township tw
                         ON serv.ReceiverIdTownship = tw.IdTownship
                            AND tw.TownshipStatus = 1
-                    INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino WITH(NOLOCK)
+                    INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino
                         ON tw.HeaderCode = dsc_destino.HeaderCode
                            --AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
                            AND dsc_destino.RowStatus = 1
-                    LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino WITH(NOLOCK)
+                    LEFT JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
                         ON RTRIM(LTRIM(dsc_destino.Hub)) = RTRIM(LTRIM(hl_destino.HubAbbreviation))
-                    INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+                    INNER JOIN DeliveryOrderPiece pc
                         ON serv.Guide_Number = pc.GuideNumber
                            AND serv.Guide_Serie = pc.GuideSerie
                 WHERE pc.GuideSerie = @Guide_Serie
@@ -125,12 +125,12 @@ BEGIN
                       AND pc.NoPiece = @GuidePiece
                       AND hl_destino.IdHubLogistic IN
                           (
-                              SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+                              SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
                           )
                 UNION
                 SELECT ISNULL(serv.HubDestinationId, 0) AS ID_HUB_DESTINO
-                FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-                    INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+                    JOIN DeliveryOrderPiece pc
                         ON serv.Guide_Number = pc.GuideNumber
                            AND serv.Guide_Serie = pc.GuideSerie
                 WHERE pc.GuideSerie = @Guide_Serie
@@ -138,7 +138,7 @@ BEGIN
                       AND pc.NoPiece = @GuidePiece
                       AND serv.HubDestinationId IN
                           (
-                              SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+                              SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
                           )
             ) X
         );
@@ -147,8 +147,8 @@ BEGIN
         SET @ReceiverIdTownship =
         (
             SELECT ISNULL(serv.ReceiverIdTownship, 0)
-            FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-                INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+                INNER JOIN DeliveryOrderPiece pc
                     ON serv.Guide_Number = pc.GuideNumber
                        AND serv.Guide_Serie = pc.GuideSerie
             WHERE pc.GuideSerie = @Guide_Serie
@@ -164,7 +164,7 @@ BEGIN
             SET @IdRouteASG =
             (
                 SELECT ra.IdRouteAssigment
-                FROM RouteAssigment ra WITH(NOLOCK)
+                FROM RouteAssigment ra
                 WHERE ra.IdRoute = @IdRoute
                       AND ra.DateOfRoute = @DateOfRoute
                 GROUP BY ra.IdRouteAssigment
@@ -173,8 +173,8 @@ BEGIN
             SET @IdServiceManagement =
             (
                 SELECT sm.IdServiceManagement
-                FROM ServiceManagement sm WITH(NOLOCK)
-                    INNER JOIN RouteAssigment ra WITH(NOLOCK)
+                FROM ServiceManagement sm
+                    INNER JOIN RouteAssigment ra
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
                            AND ra.DateOfRoute = @DateOfRoute
                 WHERE sm.IdPuRouteAssigment = @IdRouteASG
@@ -185,8 +185,8 @@ BEGIN
             SET @ExistePiezaPorServicio =
             (
                 SELECT COUNT(1)
-                FROM dbo.PieceByService pbs WITH(NOLOCK)
-                    INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+                FROM dbo.PieceByService pbs
+                    INNER JOIN DeliveryOrderPiece dop
                         ON pbs.GuidePieceId = dop.GuidePiece
                 WHERE pbs.ServiceManagmentId = @IdServiceManagement
                       AND dop.GuideSerie = @Guide_Serie
@@ -199,7 +199,7 @@ BEGIN
             SET @IdSettlementByPickup =
             (
                 SELECT Id
-                FROM SettlementByPickup WITH(NOLOCK)
+                FROM SettlementByPickup
                 WHERE RouteAssigmentId = @IdRouteASG
                       AND ServiceManagmentId = @IdServiceManagement
             );
@@ -264,7 +264,7 @@ BEGIN
                        1,
                        @TokenId,
                        GETDATE()
-                FROM DeliveryOrderPiece dop WITH(NOLOCK)
+                FROM DeliveryOrderPiece dop
                 WHERE dop.GuideSerie = @Guide_Serie
                       AND dop.GuideNumber = @GuideNumber
                       AND dop.NoPiece = @GuidePiece;
@@ -298,8 +298,8 @@ BEGIN
                                FROM
                                (
                                    SELECT dop2.GuideNumber
-                                   FROM PieceByService pbs WITH(NOLOCK)
-                                       INNER JOIN DeliveryOrderPiece dop2 WITH(NOLOCK)
+                                   FROM PieceByService pbs
+                                       INNER JOIN DeliveryOrderPiece dop2
                                            ON dop2.GuidePiece = pbs.GuidePieceId
                                    WHERE pbs.ServiceManagmentId = @IdServiceManagement
                                    GROUP BY dop2.GuideNumber
@@ -329,8 +329,8 @@ BEGIN
                             FROM
                             (
                                 SELECT dop2.GuideNumber
-                                FROM PieceByService pbs WITH(NOLOCK)
-                                    INNER JOIN DeliveryOrderPiece dop2 WITH(NOLOCK)
+                                FROM PieceByService pbs
+                                    INNER JOIN DeliveryOrderPiece dop2
                                         ON dop2.GuidePiece = pbs.GuidePieceId
                                 WHERE pbs.ServiceManagmentId = @IdServiceManagement
                                 GROUP BY dop2.GuideNumber
@@ -468,7 +468,7 @@ BEGIN
                 IF (
                    (
                        SELECT COUNT(1)
-                       FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
+                       FROM DeliveryBackOffice.dbo.DeliveryOrder ord
                        WHERE Guide_Serie = @Guide_Serie
                              AND Guide_Number = @GuideNumber
                              AND ord.ReceiverIdTownship IS NULL
@@ -485,8 +485,8 @@ BEGIN
                            hl_destino.HubAbbreviation AS HUB_DESTINO,
                            (
                                SELECT ISNULL(COUNT(1), 0)
-                               FROM dbo.PieceByService pbs WITH(NOLOCK)
-                                   INNER JOIN DeliveryOrderPiece pci WITH(NOLOCK)
+                               FROM dbo.PieceByService pbs
+                                   INNER JOIN DeliveryOrderPiece pci
                                        ON pci.GuidePiece = pbs.GuidePieceId
                                WHERE pci.GuideSerie = @Guide_Serie
                                      AND pci.GuideNumber = @GuideNumber
@@ -497,8 +497,8 @@ BEGIN
                                WHEN (CAST(
                                      (
                                          SELECT ISNULL(COUNT(1), 0)
-                                         FROM dbo.PieceByService pbs WITH(NOLOCK)
-                                             INNER JOIN DeliveryOrderPiece pci WITH(NOLOCK)
+                                         FROM dbo.PieceByService pbs
+                                             INNER JOIN DeliveryOrderPiece pci
                                                  ON pci.GuidePiece = pbs.GuidePieceId
                                          WHERE pci.GuideSerie = @Guide_Serie
                                                AND pci.GuideNumber = @GuideNumber
@@ -512,8 +512,8 @@ BEGIN
                            CAST(
                            (
                                SELECT ISNULL(COUNT(1), 0)
-                               FROM dbo.PieceByService pbs WITH(NOLOCK)
-                                   INNER JOIN DeliveryOrderPiece pci WITH(NOLOCK)
+                               FROM dbo.PieceByService pbs
+                                   INNER JOIN DeliveryOrderPiece pci
                                        ON pci.GuidePiece = pbs.GuidePieceId
                                WHERE pci.GuideSerie = @Guide_Serie
                                      AND pci.GuideNumber = @GuideNumber
@@ -525,12 +525,12 @@ BEGIN
                     -- ,1 as RUTA
                     -- ,getdate() as FechaRuta
                     --,200 as StatusCode
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-                        INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen WITH(NOLOCK)
+                    FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+                        JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
                             ON serv.HubOriginId = hl_origen.IdHubLogistic
-                        INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino WITH(NOLOCK)
+                        JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
                             ON serv.HubDestinationId = hl_destino.IdHubLogistic
-                        INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+                        INNER JOIN DeliveryOrderPiece pc
                             ON serv.Guide_Number = pc.GuideNumber
                                AND serv.Guide_Serie = pc.GuideSerie
                     WHERE pc.GuideSerie = @Guide_Serie
@@ -538,7 +538,7 @@ BEGIN
                           AND pc.NoPiece = @GuidePiece
                           AND hl_destino.IdHubLogistic IN
                               (
-                                  SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+                                  SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
                               );
                 END;
                 ELSE
@@ -554,8 +554,8 @@ BEGIN
                            hl_destino.HubAbbreviation AS HUB_DESTINO,
                            (
                                SELECT ISNULL(COUNT(1), 0)
-                               FROM dbo.PieceByService pbs WITH(NOLOCK)
-                                   INNER JOIN DeliveryOrderPiece pci WITH(NOLOCK)
+                               FROM dbo.PieceByService pbs
+                                   INNER JOIN DeliveryOrderPiece pci
                                        ON pci.GuidePiece = pbs.GuidePieceId
                                WHERE pci.GuideSerie = @Guide_Serie
                                      AND pci.GuideNumber = @GuideNumber
@@ -565,8 +565,8 @@ BEGIN
                                WHEN (CAST(
                                      (
                                          SELECT ISNULL(COUNT(1), 0)
-                                         FROM dbo.PieceByService pbs WITH(NOLOCK)
-                                             INNER JOIN DeliveryOrderPiece pci WITH(NOLOCK)
+                                         FROM dbo.PieceByService pbs
+                                             INNER JOIN DeliveryOrderPiece pci
                                                  ON pci.GuidePiece = pbs.GuidePieceId
                                          WHERE pci.GuideSerie = @Guide_Serie
                                                AND pci.GuideNumber = @GuideNumber
@@ -580,8 +580,8 @@ BEGIN
                            CAST(
                            (
                                SELECT ISNULL(COUNT(1), 0)
-                               FROM dbo.PieceByService pbs WITH(NOLOCK)
-                                   INNER JOIN DeliveryOrderPiece pci WITH(NOLOCK)
+                               FROM dbo.PieceByService pbs
+                                   INNER JOIN DeliveryOrderPiece pci
                                        ON pci.GuidePiece = pbs.GuidePieceId
                                WHERE pci.GuideSerie = @Guide_Serie
                                      AND pci.GuideNumber = @GuideNumber
@@ -592,28 +592,28 @@ BEGIN
                     -- ,1 as RUTA
                     -- ,getdate() as FechaRuta
                     --,200 as StatusCode
-                    FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-                        LEFT JOIN DeliveryBackOffice.dbo.Township tw_origen WITH(NOLOCK)
+                    FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+                        LEFT JOIN DeliveryBackOffice.dbo.Township tw_origen
                             ON serv.SenderIdTownship = tw_origen.IdTownship
                                AND tw_origen.TownshipStatus = 1
-                        LEFT JOIN DeliveryBackOffice.dbo.Settlement st_origen WITH(NOLOCK)
+                        LEFT JOIN DeliveryBackOffice.dbo.Settlement st_origen
                             ON tw_origen.IdTownship = st_origen.IdTownship
-                        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_origen WITH(NOLOCK)
+                        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_origen
                             ON tw_origen.HeaderCode = dsc_origen.HeaderCode
                                AND dsc_origen.IdSettlement = st_origen.IdSettlement
                                AND dsc_origen.RowStatus = 1
-                        LEFT JOIN DeliveryBackOffice.dbo.Township tw_destino WITH(NOLOCK)
+                        LEFT JOIN DeliveryBackOffice.dbo.Township tw_destino
                             ON serv.ReceiverIdTownship = tw_destino.IdTownship
                                AND tw_destino.TownshipStatus = 1
-                        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino WITH(NOLOCK)
+                        LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino
                             ON tw_destino.HeaderCode = dsc_destino.HeaderCode
                                --AND dsc_destino.IdSettlement = serv.ReceiverIdSettlement
                                AND dsc_destino.RowStatus = 1
-                        INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen WITH(NOLOCK)
+                        JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen
                             ON RTRIM(LTRIM(dsc_origen.Hub)) = RTRIM(LTRIM(hl_origen.HubAbbreviation))
-                        INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino WITH(NOLOCK)
+                        JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino
                             ON RTRIM(LTRIM(dsc_destino.Hub)) = RTRIM(LTRIM(hl_destino.HubAbbreviation))
-                        INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+                        JOIN DeliveryOrderPiece pc
                             ON serv.Guide_Number = pc.GuideNumber
                                AND serv.Guide_Serie = pc.GuideSerie
                     WHERE pc.GuideSerie = @Guide_Serie
@@ -621,7 +621,7 @@ BEGIN
                           AND pc.NoPiece = @GuidePiece
                           AND hl_destino.IdHubLogistic IN
                               (
-                                  SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+                                  SELECT cl.IdHubDestination FROM CatLinehaul cl WHERE cl.IdRoute = @IdRoute
                               );
                 --AND @ExistePiezaPorServicio = 0
                 END;
@@ -649,8 +649,8 @@ BEGIN
             -- ,1 as RUTA
             -- ,getdate() as FechaRuta
             --,200 as StatusCode
-            FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-                INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+            FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+                JOIN DeliveryOrderPiece pc
                     ON serv.Guide_Number = pc.GuideNumber
                        AND serv.Guide_Serie = pc.GuideSerie
             WHERE pc.GuideSerie = @Guide_Serie
@@ -678,8 +678,8 @@ BEGIN
         -- ,1 as RUTA
         -- ,getdate() as FechaRuta
         --,200 as StatusCode
-        FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
-            INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryOrder serv
+            JOIN DeliveryOrderPiece pc
                 ON serv.Guide_Number = pc.GuideNumber
                    AND serv.Guide_Serie = pc.GuideSerie
         WHERE pc.GuideSerie = @Guide_Serie

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[RoutePreparationDetail] (
+CREATE TABLE [dbo].[RoutePreparationDetail] (
     [IdRoutePreparationDetail]  INT            IDENTITY (1, 1) NOT NULL,
     [RoutePreparationId]        INT            NOT NULL,
     [Guide_Serie]               NVARCHAR (2)   NOT NULL,
@@ -13,12 +13,13 @@
     [UserProcess]               NVARCHAR (50)  NULL,
     [IsOpenProcess]             BIT            CONSTRAINT [DF_RoutePreparationDetail_IsOpenProcess] DEFAULT ((0)) NOT NULL,
     [ServiceManagementDetailId] BIGINT         NULL,
-    [IsCustomerReschedule]      BIT            CONSTRAINT [DF_RoutePreparationDetail_IsCustomerReschedule] DEFAULT ((0)) NULL,
     CONSTRAINT [PK_RoutePreparationDetail_IdRoutePreparationDetail] PRIMARY KEY CLUSTERED ([IdRoutePreparationDetail] ASC),
     CONSTRAINT [FK_RoutePreparationDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_RoutePreparationDetail_RoutePreparationId] FOREIGN KEY ([RoutePreparationId]) REFERENCES [dbo].[RoutePreparation] ([IdRoutePreparation]),
     CONSTRAINT [FK_RoutePreparationDetail_ServiceManagementDetail] FOREIGN KEY ([ServiceManagementDetailId]) REFERENCES [dbo].[ServiceManagementDetail] ([IdServiceManagementDetail])
 );
+
+
 
 
 
@@ -85,8 +86,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora estima
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_ServiceManagementDetailId_RowStatus]
-    ON [dbo].[RoutePreparationDetail]([ServiceManagementDetailId] ASC, [RowStatus] ASC);
+
 
 
 GO
@@ -102,5 +102,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la guía fue reprogramada por el cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'IsCustomerReschedule';
+CREATE NONCLUSTERED INDEX [idx_Guide_Serie_Guide_Number_RowStatus]
+    ON [dbo].[RoutePreparationDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [RowStatus] ASC);
 

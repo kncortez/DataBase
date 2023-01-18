@@ -1,10 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <16-09-2022>
 -- Description:	<Activa o desactiva un servicio de recolección (servicemanagement) y su respectiva recoleccion programada(schedulepickup) >
 -- =============================================
-CREATE PROCEDURE [dbo].[spwh_SetPickupStatus]
+CREATE PROCEDURE spwh_SetPickupStatus
 	@ServiceManagementId INT,
 	@Status BIT,
 	@Token NVARCHAR(50),

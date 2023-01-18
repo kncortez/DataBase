@@ -290,11 +290,11 @@ BEGIN
                                                           + ISNULL(
                                                                       ISNULL(
                                                                                 COALESCE(
-                                                                                            dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Receiver_FirstName, DOR.Sender_FirstName)),
+                                                                                            dbo.fn_ReplaceSpecialCharsForJSON(DOR.Sender_FirstName),
                                                                                             ''
                                                                                         ) + ' '
                                                                                 + COALESCE(
-                                                                                              dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Receiver_FirstName, DOR.Sender_FirstName)),
+                                                                                              dbo.fn_ReplaceSpecialCharsForJSON(DOR.Sender_LastName),
                                                                                               ''
                                                                                           ),
                                                                                 dbo.fn_ReplaceSpecialCharsForJSON(VPC.DescriptionOfClient)
@@ -304,7 +304,7 @@ BEGIN
                                                           + IIF(kvp.KindOfVPName = 'Express Center',
                                                                 ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(VPr.Address), ''),
                                                                 dbo.fnt_String_Escape(/*concat(*/
-                                                                                         ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Sender_Address, DOR.Receiver_Address)), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(VPC.Address), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/
+                                                                                         ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(DOR.Receiver_Address), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(VPC.Address), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/
                                                                                          'json'
                                                                                      )) + '",' + '"Phone":"'
                                                           + ISNULL(
@@ -395,7 +395,7 @@ BEGIN
                                                                        '0',
                                                                        CONVERT(
                                                                               VARCHAR,
-                                                                              IIF(dor.IsLastMileReturn = 1, 0, ISNULL(DOR.Collect_OnDelivery, 0))
+                                                                              ISNULL(DOR.Collect_OnDelivery, 0)
                                                                               )) + '",'
                                                             END
                                                           + CASE
@@ -463,7 +463,7 @@ BEGIN
                                                                             ),
                                                                       'N/A'
                                                                   ) + '",' + '"Status":"'
-                                                          + CONVERT(VARCHAR,ISNULL(CASE WHEN DOR.StatusOrderId = 45 THEN 12 ELSE DOR.StatusOrderId END,4)) + '"'
+                                                          + CONVERT(VARCHAR, ISNULL(DOR.StatusOrderId, 4)) + '"'
                                                           + IIF(doa.GuideNumber IS NOT NULL,
                                                                 ',"HighPriority":'
                                                                 + CONVERT(
@@ -542,7 +542,7 @@ BEGIN
                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                                                 ON DAT.Guide_Serie = DOR.Guide_Serie
                                                    AND DAT.Guide_Number = DOR.Guide_Number
-                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
                                             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
                                                 ON DSD.Guide_Serie = DAT.Guide_Serie
                                                    AND DSD.Guide_Number = DAT.Guide_Number
@@ -552,6 +552,10 @@ BEGIN
                                                    AND DOS.ID_Courier = DAT.ID_Courier
                                             LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                                                 ON VPC.CodeOfReference = DOR.Sender_ID
+                                            LEFT JOIN DeliveryBackOffice.dbo.ServiceDataForGuide SDFG WITH (NOLOCK)
+                                                ON DOR.Guide_Serie = SDFG.GuideSerie
+                                                   AND DOR.Guide_Number = SDFG.GuideNumber
+                                                   AND SDFG.IsDelivery = 1
                                             LEFT JOIN
                                             (
                                                 SELECT EPSA.GuideSerie,
@@ -584,19 +588,6 @@ BEGIN
                                                    AND doa.GuideSerie = DAT.Guide_Serie
                                                    AND doa.RowStatus = 1
                                                    AND doa.ServiceTypeId = @DeliveryTypeId
-											OUTER APPLY (
-												SELECT
-													MAX(ISNULL(SDFG.Latitude, 0)) 'Latitude',
-													MAX(ISNULL(SDFG.Longitude, 0)) 'Longitude'
-												FROM
-													DeliveryBackOffice.dbo.ServiceDataForGuide SDFG WITH (NOLOCK)
-												WHERE DOR.Guide_Serie = SDFG.GuideSerie
-                                                   AND DOR.Guide_Number = SDFG.GuideNumber
-                                                   AND SDFG.IsDelivery = 1
-												GROUP BY
-													SDFG.GuideSerie
-													,SDFG.GuideNumber
-											) SDFG
                                         WHERE DAT.ID_Courier = @IdCourier
                                         ORDER BY ISNULL('ShownOrder', 999) ASC
                                     ) JDRS

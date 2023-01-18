@@ -180,7 +180,7 @@ BEGIN
 					AND [Guide_Number] = @GuideNumber;
 			END
 
-	
+		IF (@@TRANCOUNT > 0)
 			COMMIT TRANSACTION;
 	END TRY
 	BEGIN CATCH
@@ -193,20 +193,5 @@ BEGIN
 				ERROR_MESSAGE() AS [ErrorMessage];
 
 		ROLLBACK TRANSACTION
-
-		 INSERT INTO dbo.RoutePreparationLogError
-        (
-            ErrorDescription,
-            ErrorNumber,
-            ErrorProcedure,
-            ErrorLine,
-            GuideSerie,
-            GuideNumber,
-            TokenCreated,
-            DateCreated
-        )
-        VALUES
-        (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)), ERROR_LINE(),
-         @GuideSerie  , @GuideNumber, 'spHM_updateOpenProcessInLinehaulRoutePreparationContainerDetail', GETDATE());
 	END CATCH
 END

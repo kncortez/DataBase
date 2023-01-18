@@ -14,8 +14,8 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IDX_RegisterUserID_Included_Rows]
-    ON [dbo].[VisitPointByUser]([RegisterUserID] ASC)
-    INCLUDE([IdVisitPointClient]);
+
 

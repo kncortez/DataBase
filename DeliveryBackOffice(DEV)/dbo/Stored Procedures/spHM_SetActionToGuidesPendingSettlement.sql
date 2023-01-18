@@ -184,7 +184,7 @@ BEGIN
 					   ,@COLLECT = IIF(do.IsCollect = 1 AND NOT EXISTS (SELECT
 								1
 							FROM Cost C WITH (NOLOCK)
-							INNER JOIN CostDetail CD WITH (NOLOCK)
+							JOIN CostDetail CD WITH (NOLOCK)
 								ON CD.IdCost = C.IdCost
 								AND CD.IdTypeOfMoney IN (2, 6)
 							WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50))))
@@ -245,7 +245,7 @@ BEGIN
 							AND NOT EXISTS (SELECT
 									1
 								FROM Cost C WITH (NOLOCK)
-								INNER JOIN CostDetail CD WITH (NOLOCK)
+								JOIN CostDetail CD WITH (NOLOCK)
 									ON CD.IdCost = C.IdCost
 									AND CD.IdTypeOfMoney IN (2, 6)
 								WHERE C.ProductNumber = CONCAT(ord.Guide_Serie, CAST(ord.Guide_Number AS VARCHAR(50))))
@@ -322,7 +322,7 @@ BEGIN
 					   ,@COLLECT = IIF(do.IsCollect = 1 AND NOT EXISTS (SELECT
 								1
 							FROM Cost C WITH (NOLOCK)
-							INNER JOIN CostDetail CD WITH (NOLOCK)
+							JOIN CostDetail CD WITH (NOLOCK)
 								ON CD.IdCost = C.IdCost
 								AND CD.IdTypeOfMoney IN (2, 6)
 							WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50))))
@@ -382,7 +382,7 @@ BEGIN
 							AND NOT EXISTS (SELECT
 									1
 								FROM Cost C WITH (NOLOCK)
-								INNER JOIN CostDetail CD WITH (NOLOCK)
+								JOIN CostDetail CD WITH (NOLOCK)
 									ON CD.IdCost = C.IdCost
 									AND CD.IdTypeOfMoney IN (2, 6)
 								WHERE C.ProductNumber = CONCAT(ord.Guide_Serie, CAST(ord.Guide_Number AS VARCHAR(50))))
@@ -495,8 +495,7 @@ BEGIN
 
 						INSERT INTO DeliveryAttempt (Guide_Serie, Guide_Number, Dry, Cold, Latitude, Longitude, Delivered, ID_Courier, ID_DeliveryOrderBySettlement, User_Created, Date_Created, ID_Proof, Verified, Accepted, User_Verified, Date_Verified, Accuracy, ID_Incident, Guide_Piece, LogLatitude, LogLongitude)
 							VALUES (@GuideSerie, @GuideNumber, 1, 0, NULL, NULL, 0, @CourierId, NULL, @Token, GETDATE(), NULL, NULL, NULL, NULL, NULL, NULL, @IncidenceTypeId, NULL, NULL, NULL);
-							
-						SET @Register = 1
+
 					END
 					ELSE 
 					BEGIN
@@ -716,7 +715,7 @@ BEGIN
 									, CASE WHEN @Action IN (1, 2) THEN IIF(@IsCollect = 1, @ServiceAmount, 0) ELSE 0 END
 									, CASE WHEN @Action IN (5) AND @HasInsurance = 1 THEN @InsuranceAmount WHEN @Action = 1 AND @IsLastMileReturn = 0 THEN @CODAmount ELSE 0 END
 									, 0
-									, CASE WHEN @Action IN (4) THEN 1 ELSE 0 END
+									, 0
 									, CASE WHEN @Action IN (1, 2) THEN 1 ELSE 0 END
 									, CASE WHEN @Action IN (3) THEN 1 ELSE 0 END
 									, 1

@@ -15,3 +15,10 @@
     CONSTRAINT [PK_ResetPasswordVerification] PRIMARY KEY CLUSTERED ([TokenId] ASC)
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_GeneratedTokens_Token]
+    ON [dbo].[GeneratedTokens]([GeneratedToken] ASC);
+

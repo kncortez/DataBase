@@ -170,24 +170,12 @@ BEGIN
 					@FirstPieceEntered = IIF(RPD.IdRoutePreparationDetail IS NULL,1,0)
 				FROM
 					[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-					INNER JOIN
+					JOIN
 						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
 						AND
 						RPD.RowStatus = 1
-					OUTER APPLY
-						(
-							SELECT
-								RPDP.RoutePreparationDetailId,
-								ISNULL(COUNT(1), NULL) 'PieceCount'
-							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
-							WHERE
-								RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-							GROUP BY
-								RPDP.RoutePreparationDetailId
-						) RPDP
 				WHERE
 					RPD.Guide_Serie = @GuideSerie
 					AND
@@ -263,11 +251,11 @@ BEGIN
 							@IdRoutePreparationDetailPiece = RPDP.PieceNumber
 						FROM
 							[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-							INNER JOIN
+							JOIN
 								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 								ON
 								RP.IdRoutePreparation = RPD.RoutePreparationId
-							INNER JOIN
+							JOIN
 								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
 								ON
 								RPD.IdRoutePreparationDetail = RPDP.RoutePreparationDetailId
@@ -381,15 +369,15 @@ BEGIN
 								RPDP.TokenUpdated = @Token,
 								RPDP.DateUpdated = GETDATE()
 							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK) 
-								INNER JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP
+								JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
 									ON
 									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
 									AND
 									RPD.RowStatus = 1
-								INNER JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
+								JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparation] RP
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
 									AND
@@ -411,9 +399,9 @@ BEGIN
 								RPD.TokenUpdated = @Token,
 								RPD.DateUpdated = GETDATE()
 							FROM
-								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
-								INNER JOIN
-									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								JOIN
+									[DeliveryBackOffice].[dbo].[RoutePreparation] RP
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
 									AND
@@ -552,13 +540,18 @@ BEGIN
 			IF @IdRoutePreparationDetail IS NOT NULL--VERIFICACION DE EXISTENCIA DE ROUTE PREPARATION 
 			   AND @FirstPieceEntered = 1 --VERIFICACIÓN DE PRIMERA PIEZA DE LA GUÍA INGRESADA, ESTO PERMITE QUE SE EJECUTE EL PROCESO POR GUIA Y NO POR PIEZA
 			BEGIN
-				SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment 	WITH(NOLOCK) WHERE Name = 'Entrega')
+				SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment WHERE Name = 'Entrega')
 				--PROCESO PARA SOPORTAR GUIAS CON DEVOLUCIÓN
 				IF @IsReturn =1
 				BEGIN 
 
-					SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment 	WITH(NOLOCK) WHERE Name = 'Devolución')
 
+
+
+					--SELECT @AmountToPay  = bpg.AmountToPay
+					--FROM  @BrainProcessedGuides bpg
+
+					SET @subtypeservicemanagment = (SELECT IdSubTypeServiceManagment FROM DBO.SubTypeServiceManagment WHERE Name = 'Devolución')
 				END
 				ELSE
 				BEGIN
@@ -592,15 +585,16 @@ BEGIN
 																'',           -- Codeapp
 																1,            -- Identificador de modulo donde proviene
 																@Token;       -- Token de courier
-					SELECT @AmountToPay  = bpg.AmountToPay,
-						   @AmountToPayCOD  = bpg.CODAmount
+					SELECT @AmountToPay  = bpg.AmountToPay
+					FROM  @BrainProcessedGuides bpg
+					SELECT @AmountToPayCOD  = bpg.CODAmount
 					FROM  @BrainProcessedGuides bpg
 				END
 
 
 				SELECT 
 					@ServiceManagementDetailId=ServiceManagementDetailId
-				FROM DBO.RoutePreparationDetail WITH(NOLOCK)
+				FROM DBO.RoutePreparationDetail 
 				WHERE RoutePreparationId = @IdRoutePreparationDetail;
 			
 				IF @ServiceManagementDetailId IS NULL
@@ -625,24 +619,24 @@ BEGIN
 						@LastName=IIF(@IsReturn = 1,RT.GuideSenderLastName,RT.GuideReceiverLastName ),
 						@CodeOfReference = IIF(@IsReturn = 1, RT.SenderId, RT.ReceiverId)
 					FROM @ResponseTable RT
-					LEFT JOIN  DBO.Township PRV_Receiver WITH(NOLOCK) ON 
+					LEFT JOIN  DBO.Township PRV_Receiver ON 
 						RT.GuideReceiverIdTownShip=PRV_Receiver.IdTownship
-					LEFT JOIN  DBO.Township PRV_Sender 	WITH(NOLOCK) ON 
+					LEFT JOIN  DBO.Township PRV_Sender ON 
 						RT.GuideSenderIdTownShip=PRV_Sender.IdTownship;
 
 					SELECT 
 						TOP 1 
 							@ServiceManagementDetailId=SMD.IdServiceManagementDetail
 					FROM 
-						DeliveryBackOffice.dbo.ServiceManagementDetail SMD WITH(NOLOCK)
+						DeliveryBackOffice.dbo.ServiceManagementDetail SMD 	
 						LEFT JOIN
-							DeliveryBackOffice.dbo.RoutePreparationDetail RPD WITH(NOLOCK)
+							DeliveryBackOffice.dbo.RoutePreparationDetail RPD
 							ON
 								SMD.IdServiceManagementDetail = RPD.ServiceManagementDetailId
 								AND
 								RPD.RowStatus = 1
 						LEFT JOIN
-							DeliveryBackOffice.dbo.RoutePreparation RP WITH(NOLOCK)
+							DeliveryBackOffice.dbo.RoutePreparation RP
 							ON
 								RPD.RoutePreparationId = RP.IdRoutePreparation
 								AND
@@ -661,22 +655,9 @@ BEGIN
 						AND SMD.RowStatus=1
 						AND RP.IdRoutePreparation IS NOT NULL;
 
-					IF(@ProvinceId IS NULL)
-					BEGIN
-
-						SELECT
-							TOP 1
-								@ProvinceId = Twn.IdProvince
-						FROM
-							[DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
-						WHERE
-							Twn.IdTownship = @TonwShipId
-
-					END
-
 					IF @ServiceManagementDetailId IS NULL
 					BEGIN
-						SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WITH(NOLOCK) WHERE IdRoute = @IdRoute AND DateOfRoute=@Date);
+						SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM dbo.RouteAssigment WHERE IdRoute = @IdRoute AND DateOfRoute=@Date);
 						IF @RouteAssigmentId IS NULL
 						BEGIN
 							INSERT INTO [dbo].[RouteAssigment]
@@ -702,7 +683,6 @@ BEGIN
 
 							SET @RouteAssigmentId = SCOPE_IDENTITY();
 						END
-
 						INSERT INTO [dbo].[ServiceManagement]
 							([IdPuCourrier]
 							,[IdDlCourrier]
@@ -751,9 +731,7 @@ BEGIN
 							,1
 							,0
 							,NULL);
-
-						SET @IdServiceManagement = SCOPE_IDENTITY();
-
+						SET @IdServiceManagement = SCOPE_IDENTITY();						
 						INSERT INTO [dbo].[ServiceManagementDetail]
 							([ServiceManagement]
 							,[ServiceStartDate]
@@ -783,24 +761,23 @@ BEGIN
 							,DATEADD(hh,20,cast(CONVERT(DATE,GETDATE()) as datetime))--HORA FIN 8PM
 							,@CodeOfReference
 							,NULL
-							,CAST(CONCAT(@FirstName,' ',@LastName) AS NVARCHAR(100))
-							,ISNULL(@ProvinceId, 7)
-							,ISNULL(@TonwShipId, 73)
+							,CONCAT(@FirstName,' ',@LastName)
+							,@ProvinceId
+							,@TonwShipId
 							,NULL
-							,CAST(@ServiceAddress AS NVARCHAR(500))
+							,@ServiceAddress
 							,NULL
-							,CAST(@ServicePhone AS NVARCHAR(20))
+							,@ServicePhone
 							,NULL
 							,0
 							,0
 							,NULL
 							,@subtypeservicemanagment--<SubTypeServiceManagmentId, bigint,>
 							,1
-							,CAST(@Token AS NVARCHAR(50))
+							,@Token
 							,GETDATE()
 							,NULL
 							,NULL);
-
 						SET @ServiceManagementDetailId = SCOPE_IDENTITY();
 
 						UPDATE RD SET
@@ -817,10 +794,10 @@ BEGIN
 						WHERE IdRoutePreparationDetail=@IdRoutePreparationDetail
 
 					END
-
+					
 					UPDATE ServiceManagementDetail SET
-						ServiceAmount = IIF(@IsReturn=1,ServiceAmount,ServiceAmount+ISNULL(@AmountToPay,0)),
-						ServiceExtraAmount = IIF(@IsReturn=1,0,(ServiceExtraAmount +ISNULL(@AmountToPayCOD,0))),
+						ServiceAmount = ServiceAmount+ISNULL(@AmountToPay,0),
+						ServiceExtraAmount = IIF(@IsReturn=1,0,(ServiceExtraAmount +ISNULL(@AmountToPayCOD,0) )),
 						TokenUpdated=@Token,
 						DateUpdated=GETDATE()
 					WHERE IdServiceManagementDetail = @ServiceManagementDetailId;							
@@ -856,8 +833,7 @@ BEGIN
 			SELECT 
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
-				CONVERT(BIGINT, 0) AS 'NumTransferID',
-				ERROR_LINE() AS 'ErrorLine'
+				CONVERT(BIGINT, 0) AS 'NumTransferID'
 			
 		END CATCH;
 	--- END TRANSACTION
@@ -936,7 +912,6 @@ BEGIN
 		SELECT 
 			0 AS 'StatusCode', 
 			ERROR_MESSAGE() AS 'Description', 
-			CONVERT(BIGINT, 0) AS 'NumTransferID',
-			ERROR_LINE() AS 'ErrorLine'
+			CONVERT(BIGINT, 0) AS 'NumTransferID'
 	END
 END;

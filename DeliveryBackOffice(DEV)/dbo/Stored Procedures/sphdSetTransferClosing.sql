@@ -78,7 +78,7 @@ BEGIN
                        SELECT TOP 1
                               TimePlaId
                        FROM dbo.DeliveryOrderPaymentDetail WITH (NOLOCK)
-                       WHERE GuideSerie = 'FD' AND GuideNumber = tdop.Guide_Number
+                       WHERE GuideNumber = tdop.Guide_Number
                    ),
                    1
                          ),

@@ -445,8 +445,6 @@ BEGIN
                                      + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
 									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
-									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
-                                     + '"Pieces_Cold": ' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'') + ','
 									 + '"Icon": "' + (CASE
 															WHEN 
 																(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )

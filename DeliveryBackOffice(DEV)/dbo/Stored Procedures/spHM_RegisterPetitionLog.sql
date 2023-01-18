@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-11-25>
@@ -7,21 +6,22 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_RegisterPetitionLog] 
 	-- Add the parameters for the stored procedure here
-	@PetitionMethod nvarchar(10),
-	@PetitionUrl nvarchar(MAX),
-	@RequestHeader nvarchar(4000),
-	@RequestBody nvarchar(MAX) = '',
-	@RequestDateTime datetime = NULL,
-	@RequestLauValue nvarchar(500)
+	@PetitionMethod nvarchar(10) = '',			    --GET → Uso de api rest full ; POST → Uso de api rest full ; SOAP → Uso de apisoap  [Val Esperado: GetProvince]
+	@PetitionUrl nvarchar(MAX) = '' ,			    --URL consumida  [Val Esperado:  htpp:sandbox.forza.systems:40467/api.forzadelivery/ecommerce]
+	@RequestHeader nvarchar(4000) = '',			    --Datos de conforman la cabezera del mensaje
+	@RequestBody nvarchar(MAX) = '',			    --Datos que conforman el cuerpo del mensaje
+	@RequestDateTime datetime = '2020-08-19',	    --Fecha de envío de solicitud
+	@RequestLauValue nvarchar(500) = '',		    --Llave local de autenticación
+	@ResponseHeader nvarchar(4000) = '',				--Respuesta de la solicitud encabezado
+	@ResponseBody nvarchar(MAX) = '',				--Respuesta de la solicitud Cuerpo
+	@ResponseDateTime datetime  = '2020-08-19',		--Fecha hora de respuesta de solicitud
+	@ResponseCode int = 500				    --Código de respuesta standard de solicitud Http request method  200 de Success, 500 de Error, 400 de BarRequest ;  1 de Aprobado ; 2 de Declinado ; 3 Error
 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
-	IF(@RequestDateTime IS NULL)
-		SET @RequestDateTime = GETDATE()
 
 	DECLARE @InsertedLog AS TABLE (
 		IdInsert BIGINT
@@ -30,7 +30,7 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-		INSERT INTO [DeliveryBackOffice].[dbo].[APIMobileLog]
+		INSERT INTO [DeliveryBackOffice].[dbo].[APIMobileLogs]
 			(
 				[PetitionMethod]
 				,[PetitionUrl]
@@ -38,8 +38,12 @@ BEGIN
 				,[RequestBody]
 				,[RequestDateTime]
 				,[RequestLauValue]
+				,[ResponseHeader]
+				,[ResponseBody]
+				,[ResponseDateTime]
+				,[ResponseCode]
 			)
-		OUTPUT inserted.IdAPIMobileLog INTO @InsertedLog(IdInsert)
+		OUTPUT inserted.IdAPIMobileLogs INTO @InsertedLog(IdInsert)
 		VALUES
 		(
 			@PetitionMethod
@@ -48,6 +52,10 @@ BEGIN
 			,@RequestBody
 			,@RequestDateTime
 			,@RequestLauValue
+			,@ResponseHeader
+			,@ResponseBody
+			,@ResponseDateTime
+			,@ResponseCode
 		)
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @InsertedLog))
@@ -56,11 +64,7 @@ BEGIN
 			COMMIT TRANSACTION;
 
 			SELECT
-				TOP 1
-					200 'ResultCode',
-					IL.IdInsert 'ResultLog'
-			FROM
-				@InsertedLog IL
+				200 'ResultCode'
 
 		END
 		ELSE

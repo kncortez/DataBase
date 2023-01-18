@@ -2,18 +2,19 @@
     [IdCatActionByServiceType] INT           IDENTITY (1, 1) NOT NULL,
     [ActionName]               NVARCHAR (50) NOT NULL,
     [ServiceType]              NVARCHAR (50) NOT NULL,
-    [RowStatus]                BIT           CONSTRAINT [DF__CatAction__RowSt__4436D141] DEFAULT ((1)) NOT NULL,
+    [RowStatus]                BIT           DEFAULT ((1)) NOT NULL,
     [DateCreatead]             DATETIME      NOT NULL,
     [TokenCreated]             NVARCHAR (50) NOT NULL,
     [DateUpdated]              DATETIME      NULL,
     [TokenUpdated]             NVARCHAR (50) NULL,
-    CONSTRAINT [PK__CatActio__F8540633E86F33ED] PRIMARY KEY CLUSTERED ([IdCatActionByServiceType] ASC)
+    PRIMARY KEY CLUSTERED ([IdCatActionByServiceType] ASC)
 );
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [INDX_CatActionByServiceType_ServiceType]
-    ON [dbo].[CatActionByServiceType]([ServiceType] ASC);
+
 
 
 GO

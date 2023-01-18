@@ -19,7 +19,6 @@ BEGIN
 						FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 						INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 							ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-							AND		[LRPCD].[RowStatus] = 1
 						INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 							ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 						INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP

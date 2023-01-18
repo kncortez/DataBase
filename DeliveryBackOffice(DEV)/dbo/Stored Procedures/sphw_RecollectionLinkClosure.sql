@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <21-09-2022>
 -- Description:	<Cierra un link de recolección y genera una solciitud de recolección agrupado por codigo de referencia>
@@ -21,7 +20,7 @@ CREATE PROCEDURE [dbo].[sphw_RecollectionLinkClosure]
 	@IdCountry  nvarchar(10) = 'GT',
 	@NameVP  nvarchar(200) =NULL,
 	@Address1  nvarchar(600)=NULL,
-	@NirPhone  nvarchar(10)= '+502',
+	@NirPhone  nvarchar(10) =NULL,
 	@Phone  nvarchar(50) =NULL,
 	@AdditionalInstructions  nvarchar(250) =NULL,
 	@IdCityPlace int = NULL,

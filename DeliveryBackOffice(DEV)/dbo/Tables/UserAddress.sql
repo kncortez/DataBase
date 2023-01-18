@@ -31,6 +31,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_UserAddress_LoadList]
     ON [dbo].[UserAddress]([VisitPointByClientPortfolioId] ASC, [UadRowStatus] ASC);
@@ -60,6 +62,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Motivo por 
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_UadIdAccount_CodeOfReference]
-    ON [dbo].[UserAddress]([UadIdAccount] ASC, [CodeOfReference] ASC);
+
 

@@ -180,31 +180,30 @@ BEGIN
                        btd.CODCommissionPercentage AS PorcentajeComision,
                        btd.[Amount] + btd.[Commission] AS ChargedAmount,
                        btd.[Amount] AS TotalAmount,
-                       IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0) FlagImmediateOrAch,
-                       btd.[AuthorizationDate],
-					   CONVERT(varchar(10), @StarDate,103) +' - ' +  CONVERT(varchar(10),    @EndDate ,103) AS DateDelivery
-                FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
-                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
+                       IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
+                       btd.[AuthorizationDate]
+                FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
+                    INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]
                            AND btd.[GuideNumber] = pg.[GuideNumber]
-                    INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
+                    INNER JOIN [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
                         ON btd.[GuideSerie] = do.[Guide_Serie]
                            AND btd.[GuideNumber] = do.[Guide_Number]
-                    LEFT JOIN dbo.Township twn WITH (NOLOCK)
+                    LEFT JOIN dbo.Township twn WITH(NOLOCK)
                         ON twn.IdTownship = do.ReceiverIdTownship
-                    LEFT JOIN dbo.Township tw WITH (NOLOCK)
+                    LEFT JOIN dbo.Township tw WITH(NOLOCK)
                         ON tw.TownshipName = do.Receiver_Town
-                    LEFT JOIN dbo.Province prv WITH (NOLOCK)
+                    LEFT JOIN dbo.Province prv WITH(NOLOCK)
                         ON prv.IdProvince = twn.IdProvince
-                    LEFT JOIN dbo.Province pr WITH (NOLOCK)
+                    LEFT JOIN dbo.Province pr WITH(NOLOCK)
                         ON pr.IdProvince = tw.IdProvince
-                    LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cu WITH (NOLOCK)
+                    LEFT JOIN dbo.Customer cu WITH(NOLOCK)
                         ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH (NOLOCK)
+                    LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                         ON dc.DCBA_Id = do.DCBA_ID
-                    LEFT JOIN dbo.DeliveryBank bk WITH (NOLOCK)
+                    LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                         ON bk.Id_bank = dc.DCBA_Bank_Id
                 WHERE btd.[AuthorizationNumber] IS NOT NULL
                       AND pg.BatchCODId IS NOT NULL

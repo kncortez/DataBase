@@ -17,7 +17,7 @@
     [Longitude]              VARCHAR (20)   NULL,
     [CatModuleId]            INT            NULL,
     [StatusAddressId]        INT            NOT NULL,
-    [RowStatus]              BIT            DEFAULT ((1)) NOT NULL,
+    [RowStatus]              BIT            CONSTRAINT [DF__tmp_ms_xx__RowSt__04908221] DEFAULT ((1)) NOT NULL,
     [DateCreated]            DATETIME       NOT NULL,
     [TokenCreated]           VARCHAR (50)   NOT NULL,
     [DateUpdate]             DATETIME       NULL,
@@ -31,6 +31,8 @@
     CONSTRAINT [FK_CADD_Township] FOREIGN KEY ([TownshipId]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FK_CADD_VP] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO

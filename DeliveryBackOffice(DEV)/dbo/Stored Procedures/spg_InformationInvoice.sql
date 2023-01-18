@@ -29,6 +29,8 @@ BEGIN
 	io_SAPDocEntryPaymentDetail 'docEntry',
 	(select del.dpf_WarehouseCode from del_ParametrosFactura del WITH(NOLOCK)  
 	where 
+	--del.dpf_SAParticulo = cts.SAPCode 
+	--AND 
 	inh.inv_vpCodeOfReferences = del.dpf_VpCodeOfReference 
 	AND cts.SendAlmacenExp = 1) 'WarehouseCode'
 	from InOutOfMoneyDetail iod WITH(NOLOCK)

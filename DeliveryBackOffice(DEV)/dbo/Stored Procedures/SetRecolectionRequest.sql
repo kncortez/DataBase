@@ -351,17 +351,12 @@ BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
 
-            IF @EndDate IS NULL
-                SET @EndDate = CONCAT(CAST(@StartDate AS DATE), ' 19:00:00');
-            ELSE IF CAST(@EndDate AS TIME) = '00:00:00:000'
-                SET @EndDate = CONCAT(CAST(@EndDate AS DATE), ' 19:00:00');
-
             IF OBJECT_ID('tempdb.dbo.#Sender', 'U') IS NOT NULL
                 DROP TABLE #Sender;
 
 
 
-            CREATE TABLE #Sender
+  CREATE TABLE #Sender
             (
                 [Sender_ID] INT,
                 [SenderName] NVARCHAR(300),
@@ -376,25 +371,23 @@ BEGIN
                 IdServiceManagement INT
             );
             CREATE NONCLUSTERED INDEX Senderserie ON #Sender (Serie, Number);
-            CREATE NONCLUSTERED INDEX SchedulePickupIdtempGuide
-            ON #Sender (SchedulePickupId);
-            CREATE NONCLUSTERED INDEX IdServiceManagementtrempGuide
-            ON #Sender (IdServiceManagement);
+            CREATE NONCLUSTERED INDEX SchedulePickupIdtempGuide ON #Sender (SchedulePickupId);
+            CREATE NONCLUSTERED INDEX IdServiceManagementtrempGuide ON #Sender (IdServiceManagement);
 
-            INSERT INTO #Sender
-            (
-                Sender_ID,
-                SenderName,
-                Sender_Phone,
-                Hub,
-                AmountPickup,
-                AddressPickup,
-                Number,
-                Serie,
-                SchedulePickupId,
-                AssigmentStatus,
-                IdServiceManagement
-            )
+			INSERT INTO #Sender
+			(
+			    Sender_ID,
+			    SenderName,
+			    Sender_Phone,
+			    Hub,
+			    AmountPickup,
+			    AddressPickup,
+			    Number,
+			    Serie,
+			    SchedulePickupId,
+			    AssigmentStatus,
+			    IdServiceManagement
+			)
             SELECT sub_do.[Sender_ID],
                    sub_do.[SenderName],
                    [Sender_Phone],
@@ -413,25 +406,31 @@ BEGIN
                        ord.Guide_Number AS Number,
                        ord.Guide_Serie AS Serie,
                        Sender_Phone,
-                       HL.IdHubLogistic AS Hub,
+                       HL.IdHublogistic AS Hub,
                        (SUM(dop.PaymentRecollections) + SUM(dop.RecolectPayment)) AS AmountPickup,
                        Sender_Address AS AddressPickup,
                        TypeService,
-                       ord.IdCustomer
-                FROM DeliveryOrder ord WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH (NOLOCK)
-                        ON ord.SenderIdTownship = Twn.IdTownship
-                    INNER JOIN
-                    (
-                        SELECT DSC.HeaderCode,
-                               MAX(DSC.Hub) 'hub'
-                        FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH (NOLOCK)
-                        GROUP BY DSC.HeaderCode
-                    ) hubcov
+					   ord.IdCustomer
+                FROM DeliveryOrder ord WITH(NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
+						ON
+							ord.SenderIdTownship = Twn.IdTownship
+                    INNER JOIN (
+						SELECT
+							DSC.HeaderCode
+							,MAX(DSC.Hub) 'hub'
+						FROM
+							[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
+						GROUP BY
+							DSC.HeaderCode
+					) hubcov
                         ON (Twn.HeaderCode = hubcov.HeaderCode)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] HL WITH (NOLOCK)
-                        ON hubcov.hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
-                    INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
+						ON
+							hubcov.hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
+                    INNER JOIN DeliveryOrderPaymentDetail dop with(nolock)
                         ON (
                                dop.GuideNumber = ord.Guide_Number
                                AND dop.GuideSerie = ord.Guide_Serie
@@ -443,11 +442,11 @@ BEGIN
                            )
                 WHERE ord.Guide_Number IN ( t.Guide_Number )
                 GROUP BY Sender_ID,
-                         IdCustomer,
+						 IdCustomer,
                          Sender_Phone,
                          ord.Guide_Number,
                          ord.Guide_Serie,
-                         HL.IdHubLogistic,
+                         HL.IdHublogistic,
                          Sender_Address,
                          Sender_FirstName,
                          Sender_LastName,
@@ -460,9 +459,9 @@ BEGIN
                            SchedulePickupId,
                            SP.AssigmentStatus,
                            SM.IdServiceManagement,
-                           DOR.IdCustomer
-                    FROM dbo.SchedulePickup SP WITH (NOLOCK)
-                        LEFT JOIN dbo.ServiceManagement SM WITH (NOLOCK)
+						   DOR.IdCustomer
+                    FROM dbo.SchedulePickup SP with(nolock)
+                        LEFT JOIN dbo.ServiceManagement SM with(nolock)
                             ON SM.IdSchedulePickup = SP.SchedulePickupId
                         LEFT JOIN dbo.DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                             ON dop.IdHeaderRecolection = SP.SchedulePickupId
@@ -489,7 +488,7 @@ BEGIN
                              SchedulePickupId,
                              SP.AssigmentStatus,
                              SM.IdServiceManagement,
-                             DOR.IdCustomer
+							 DOR.IdCustomer
                 ) sub_sp
                     ON (
                            sub_do.Sender_ID = sub_sp.Sender_ID
@@ -503,8 +502,10 @@ BEGIN
                                sub_do.Sender_ID <= 0
                                OR sub_do.Sender_ID IS NULL
                            )
-                           AND sub_do.IdCustomer = sub_sp.IdCustomer
-                       );
+						   AND
+                           sub_do.IdCustomer = sub_sp.IdCustomer
+                       )
+					   ;
 
             INSERT INTO dbo.SchedulePickup
             (
@@ -553,15 +554,19 @@ BEGIN
                    @TypeVehicleId
             FROM #Sender sd
             WHERE sd.SchedulePickupId IS NULL
-                  AND NOT EXISTS
-            (
-                SELECT TOP 1
-                       1
-                FROM [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
-                WHERE SP.SenderId = sd.Sender_ID
-                      AND SP.AddressPickup = sd.AddressPickup
-                      AND CAST(SP.StartDate AS DATE) = CAST(GETDATE() AS DATE)
-            )
+				AND NOT EXISTS (
+					SELECT
+						TOP 1
+							1
+					FROM
+						[DeliveryBackOffice].[dbo].[SchedulePickup] SP with(nolock)
+					WHERE
+						SP.SenderId = sd.Sender_ID
+						AND
+						SP.AddressPickup = sd.AddressPickup
+						AND
+						CAST(SP.StartDate AS DATE) = CAST(GETDATE() AS DATE)
+				)
             GROUP BY sd.Sender_ID,
                      sd.AddressPickup;
 
@@ -686,123 +691,114 @@ BEGIN
                                                         @IdModule = 1,
                                                         @Token = 'SYSTEM';
             UPDATE SMT
-            SET Amount = SUB.NewTotal,
-                CatPaymentTimeId = SUB.TimePlaId
+            SET Amount = SUB.NewTotal
+				,CatPaymentTimeId = SUB.TimePlaId
             FROM dbo.ServiceManagement SMT
                 INNER JOIN
                 (
                     SELECT SM.IdServiceManagement,
                            SM.Amount + SUM(TP.AmountToPay) AS NewTotal,
-                           dopd.TimePlaId
-                    FROM dbo.ServiceManagement SM WITH (NOLOCK)
+						   dopd.TimePlaId
+                    FROM dbo.ServiceManagement SM with (nolock)
                         INNER JOIN dbo.#Sender SD
                             ON SM.IdServiceManagement = SD.IdServiceManagement
                         INNER JOIN @TempPrice TP
                             ON TP.GuideSerie = SD.Serie
                                AND TP.GuideNumber = SD.Number
-                        INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-                            ON dopd.GuideSerie = SD.Serie
-                               AND dopd.GuideNumber = SD.Number
+						INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+							ON dopd.GuideSerie = SD.Serie 
+								AND dopd.GuideNumber = SD.Number
                     GROUP BY SM.IdServiceManagement,
                              SM.Amount,
-                             dopd.TimePlaId
+						     dopd.TimePlaId
                 ) SUB
                     ON SMT.IdServiceManagement = SUB.IdServiceManagement;
 
-            DECLARE @TblServiceManagement TABLE
-            (
-                IdServiceManagement INT,
-                IdSchedulePickup BIGINT,
-                Amount DECIMAL(16, 2),
-                CatPaymentTimeId INT
-            );
+			DECLARE @TblServiceManagement TABLE(
+				IdServiceManagement INT,
+				IdSchedulePickup BIGINT,
+				Amount DECIMAL(16,2),
+				CatPaymentTimeId INT
+			)
+			
+			INSERT INTO @TblServiceManagement
+			SELECT
+				sm.IdServiceManagement,
+				sp.SchedulePickupId,
+				tp.AmountToPay,
+				dopd.TimePlaId
+			FROM #Sender sd
+			INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+				ON dopd.GuideSerie = sd.Serie
+				AND dopd.GuideNumber = sd.Number
+			INNER JOIN SchedulePickup sp
+				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
+			LEFT JOIN ServiceManagement sm
+				ON sm.IdSchedulePickup = sp.SchedulePickupId
+			INNER JOIN @TempPrice tp 
+			ON tp.GuideSerie=sd.Serie 
+			AND tp.GuideNumber=sd.Number
 
-            INSERT INTO @TblServiceManagement
-            SELECT sm.IdServiceManagement,
-                   sp.SchedulePickupId,
-                   tp.AmountToPay,
-                   dopd.TimePlaId
-            FROM #Sender sd
-                INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-                    ON dopd.GuideSerie = sd.Serie
-                       AND dopd.GuideNumber = sd.Number
-                INNER JOIN SchedulePickup sp
-                    ON sp.SchedulePickupId = dopd.IdHeaderRecolection
-                LEFT JOIN ServiceManagement sm
-                    ON sm.IdSchedulePickup = sp.SchedulePickupId
-                INNER JOIN @TempPrice tp
-                    ON tp.GuideSerie = sd.Serie
-                       AND tp.GuideNumber = sd.Number;
-
-            INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagement]
-            (
-                IdSchedulePickup,
-                RowStatus,
-                TokenCreated,
-                DateCreated,
-                ServiceStatusId,
-                Amount,
-                CatPaymentTimeId
-            )
-            SELECT DISTINCT
-                   IdSchedulePickup,
-                   1,
-                   @Token,
-                   GETDATE(),
-                   1,
-                   Amount,
-                   CatPaymentTimeId
-            FROM @TblServiceManagement
-            WHERE IdServiceManagement IS NULL;
+			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceManagement] (IdSchedulePickup, RowStatus, TokenCreated, DateCreated, ServiceStatusId, Amount, CatPaymentTimeId)
+				SELECT
+					IdSchedulePickup
+				   ,1
+				   ,@token
+				   ,GETDATE()
+				   ,1
+				   ,Amount
+				   ,CatPaymentTimeId
+				FROM @TblServiceManagement
+				WHERE IdServiceManagement IS NULL
 
 
-            INSERT INTO [DeliveryBackOffice].[dbo].[EventService]
-            (
-                ServiceManagementId,
-                ServiceStatusId,
-                RowStauts,
-                TokenCreated,
-                DateCreated
-            )
-            SELECT DISTINCT
-                   sm.IdServiceManagement,
-                   1,
-                   1,
-                   @Token,
-                   GETDATE()
-            FROM @TblServiceManagement tsm
-                INNER JOIN ServiceManagement sm
-                    ON sm.IdSchedulePickup = tsm.IdSchedulePickup
-            WHERE tsm.IdServiceManagement IS NULL;
+			INSERT INTO [DeliveryBackOffice].[dbo].[EventService] (ServiceManagementId,ServiceStatusId,RowStauts,TokenCreated,DateCreated)
+				SELECT
+					sm.IdServiceManagement
+				   ,1
+				   ,1
+				   ,@token
+				   ,GETDATE()
+				FROM @TblServiceManagement tsm
+				INNER JOIN ServiceManagement sm
+					ON sm.IdSchedulePickup = tsm.IdSchedulePickup
+				WHERE tsm.IdServiceManagement IS NULL
 
-            ---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
-            INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
-            (
-                [Guide_Serie],
-                [Guide_Number],
-                [StatusOrderId],
-                [UserCreated],
-                [DateCreated],
-                [DateCreatedInSystem],
-                [Observations],
-                [Temperature_Celsius]
-            )
-            SELECT DISTINCT
-                   ls.Guide_Serie,
-                   ls.Guide_Number,
-                   1,
-                   @Token,
-                   GETDATE(),
-                   GETDATE(),
-                   NULL,
-                   NULL
-            FROM @TblDeliveryOrdersList ls
-                LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
-                    ON ls.Guide_Serie = DOD.Guide_Serie
-                       AND ls.Guide_Number = DOD.Guide_Number
-                       AND DOD.StatusOrderId IN ( 1, 21 )
-                       AND DOD.RowStatus = 1
-            WHERE DOD.DateCreated IS NULL;
+			---	 insertar checkpoint de Solicitado, siempre que no exista y sea posible
+			insert into DeliveryBackOffice.dbo.DeliveryOrderDetail ( 
+				[Guide_Serie]
+				,[Guide_Number]
+				,[StatusOrderId]
+				,[UserCreated]
+				,[DateCreated]
+				,[DateCreatedInSystem]
+				,[Observations]
+				,[Temperature_Celsius]
+			)
+			select 
+				DISTINCT
+					ls.Guide_Serie
+					,ls.Guide_Number
+					,1
+					,@Token
+					,GETDATE()
+					,GETDATE()
+					,null
+					,null
+			from 
+				@TblDeliveryOrdersList ls
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+					ON
+						ls.Guide_Serie = DOD.Guide_Serie
+						AND
+						ls.Guide_Number = DOD.Guide_Number
+						AND
+						DOD.StatusOrderId IN (1,21)
+						AND
+						DOD.RowStatus = 1
+			WHERE
+				DOD.DateCreated IS NULL
 
             DROP TABLE #Sender;
 
@@ -824,21 +820,6 @@ BEGIN
 
             SELECT ('[' + @jsonOutput4 + ']') jsonOutput4;
             ROLLBACK TRANSACTION;
-            INSERT INTO dbo.RoutePreparationLogError
-            (
-                ErrorDescription,
-                ErrorNumber,
-                ErrorProcedure,
-                ErrorLine,
-                GuideSerie,
-                GuideNumber,
-                TokenCreated,
-                DateCreated
-            )
-            VALUES
-            (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
-             ERROR_LINE(), 0, 0, 'Error en SetRecolectionRequest filtro 3', GETDATE());
-
 
         END CATCH;
 
@@ -961,7 +942,7 @@ BEGIN
                     (
                         SELECT CodeOfReference
                         FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-                            INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
+                            INNER JOIN VisitPointByUser VPU with(nolock)
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
                                    AND VPU.RowStatus = 1
                             INNER JOIN RegisterUser ru

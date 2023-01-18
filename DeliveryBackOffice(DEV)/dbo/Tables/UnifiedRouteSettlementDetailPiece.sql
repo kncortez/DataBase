@@ -10,8 +10,11 @@
     [TokenUpdated]                        NVARCHAR (50) NULL,
     [DateUpdated]                         DATETIME      NULL,
     PRIMARY KEY CLUSTERED ([IdUnifiedRouteSettlementDetailPiece] ASC),
-    CONSTRAINT [FK_UnifiedRouteSettlementDetailPiece_Act] FOREIGN KEY ([ActCode]) REFERENCES [dbo].[Act] ([IdAct])
+    CONSTRAINT [FK_UnifiedRouteSettlementDetailPiece_Act] FOREIGN KEY ([ActCode]) REFERENCES [dbo].[Act] ([IdAct]),
+    CONSTRAINT [FK_UnifiedRouteSettlementDetailPiece_UnifiedRouteSettlementDetail] FOREIGN KEY ([UnifiedRouteSettlementDetailId]) REFERENCES [dbo].[UnifiedRouteSettlementDetail] ([IdUnifiedRouteSettlementDetail])
 );
+
+
 
 
 GO

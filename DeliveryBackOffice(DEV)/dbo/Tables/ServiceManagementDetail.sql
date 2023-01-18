@@ -35,9 +35,10 @@
 );
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [idx_ServiceManagement_RowStatus]
-    ON [dbo].[ServiceManagementDetail]([ServiceManagement] ASC, [RowStatus] ASC);
+
 
 
 GO

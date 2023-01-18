@@ -1,10 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto, Ixchop>
 -- Create date: <09-09-2022>
 -- Description:	<Extrae una guía de una preparación de ruta vigente>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_ExtractGuidePreparation]
+CREATE PROCEDURE spHM_ExtractGuidePreparation
 	-- Add the parameters for the stored procedure here
 	@GuideSerie AS NVARCHAR(2),
 	@GuideNumber AS INT,

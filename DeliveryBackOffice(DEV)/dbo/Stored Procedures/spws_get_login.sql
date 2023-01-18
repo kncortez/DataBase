@@ -261,6 +261,7 @@ BEGIN
 
                         SELECT @CHILDSMENU = COUNT(1)
                         FROM @TBSUBMODULES2;
+						PRINT 'CHILDSMENU';
                         PRINT @CHILDSMENU;
                         WHILE @CHILDSMENU > 0
                         BEGIN
@@ -288,7 +289,7 @@ BEGIN
                         SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
                         SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
                     END;
-
+					PRINT 'END SUBMODULOES'
                     /*END SUBMODULOES*/
                     SET @JsonModules =
                     (
@@ -383,7 +384,7 @@ BEGIN
 					-- Valida el valor en la tabla; 1 = TRUE, si fuera 0 o NULL devuelve FALSE
 					DECLARE @TAC VARCHAR(5) = CASE WHEN @ValTAC = 1 THEN 'TRUE' ELSE 'FALSE' END
 					-- FIN MODIFICACIÓN
-
+					PRINT 'jsonprofile line 394'
                     SET @JsonProfile =
                     (
                         SELECT STUFF(
@@ -436,6 +437,7 @@ BEGIN
 
                     IF (@VERIFYUSER > 0)
                     BEGIN
+					PRINT '@JsonProfileEXP line 447'
                         SET @JsonProfileEXP =
                         (
                             SELECT STUFF(

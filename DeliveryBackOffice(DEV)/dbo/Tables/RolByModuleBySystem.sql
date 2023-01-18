@@ -10,10 +10,13 @@
     [RmsModuleMenu]     INT          NULL,
     [RmsHasNewFunction] BIT          NULL,
     PRIMARY KEY CLUSTERED ([RmsIdRol] ASC, [RmsIdSystem] ASC, [RmsIdModule] ASC),
+    CONSTRAINT [FKModulerdds] FOREIGN KEY ([RmsIdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKModulers] FOREIGN KEY ([RmsIdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKRolms] FOREIGN KEY ([RmsIdRol]) REFERENCES [dbo].[CatRol] ([RolIdRol]),
     CONSTRAINT [FKSystemrm] FOREIGN KEY ([RmsIdSystem]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 

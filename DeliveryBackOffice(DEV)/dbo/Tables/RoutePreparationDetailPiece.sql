@@ -17,6 +17,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar el detalle de piezas de las guías de la preparación de entregas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetailPiece';
 
@@ -69,6 +71,5 @@ CREATE NONCLUSTERED INDEX [IDX_PieceNumber_RowStatus]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_RoutePreparationDetailId_PieceNumber]
-    ON [dbo].[RoutePreparationDetailPiece]([RoutePreparationDetailId] ASC, [PieceNumber] ASC);
+
 

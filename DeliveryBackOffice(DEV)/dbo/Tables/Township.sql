@@ -19,7 +19,8 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222011]
-    ON [dbo].[Township]([TownshipName] ASC);
+
 

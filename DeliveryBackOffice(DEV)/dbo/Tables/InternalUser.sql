@@ -15,7 +15,8 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [idx_ RegisterUserID]
-    ON [dbo].[InternalUser]([RegisterUserID] ASC);
+
 

@@ -1413,6 +1413,10 @@
     <Build Include="dbo\Stored Procedures\GetCodeOfReferenceForStation.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spHM_completeOpenProcessLinehaulDispatch.sql" />
+    <Build Include="dbo\Tables\WorldCupPromoCandidate.sql" />
+    <Build Include="dbo\Tables\WorldCupCandidateByAccount.sql" />
+    <Build Include="dbo\Stored Procedures\StateCatalogforServices_JARP.sql" />
+    <Build Include="dbo\Stored Procedures\GetDetailedTrackingDataOfGuide_CRAS.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

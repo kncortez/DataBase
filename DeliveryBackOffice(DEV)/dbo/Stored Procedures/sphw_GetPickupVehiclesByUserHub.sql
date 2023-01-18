@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Oscar Morales>
 -- Create date: <2022-09-22>
 -- Description:	<Obtiene datos de vehículos asignados a hub de usuario>
@@ -14,8 +13,6 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
-	DECLARE @PickupServiceTypeId INT = (SELECT TOP 1 CTR.IdTypeRoute FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH(NOLOCK) WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI)
 
 	DECLARE @ResponseTable AS TABLE(
 		CourierId INT,
@@ -115,17 +112,15 @@ BEGIN
 
 	FROM @UbicaCourierLocations ucl
 	INNER JOIN CatVehicle cv WITH (NOLOCK)
-		ON  UPPER(REPLACE(REPLACE(ucl.VehicleTypeDescription,' ',''),'-','')) = UPPER(REPLACE(REPLACE(cv.Plate,' ',''),'-',''))
+		ON  REPLACE(ucl.VehicleTypeDescription,' ','') = REPLACE(cv.Plate,' ','') 
 	INNER JOIN RouteAssigment ra WITH (NOLOCK)
 		ON ra.IdVehicle = cv.IdVehicle
-		AND ra.RowStatus = 1
 	INNER JOIN SenderReceiver sr WITH (NOLOCK)
 		ON ra.IdCurrierMan = sr.ID
 	LEFT JOIN CatTypeVehicle ctv WITH (NOLOCK)
 		ON ctv.IdTypeVehicle = cv.IdTypeVehicle
 	INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON ra.IdRoute = cr.IdRoute
-		AND cr.IdTypeRoute = @PickupServiceTypeId
 	WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
 	AND (
 	 (CV.HubLogisticId) IN
@@ -136,6 +131,10 @@ BEGIN
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
 		WHERE UserId = @IdUser)
 	)
+	--AND sr.Estatus = 1
+	--AND ra.RowStatus = 1
+	--AND cr.IdTypeRoute = 1
+	--AND cr.RowStatus = 1
 	
 	INSERT INTO @ResponseTable
 	SELECT
@@ -211,12 +210,10 @@ BEGIN
 		ON ctv.IdTypeVehicle = cfdvt.CatTypeVehicleId
 	INNER JOIN RouteAssigment ra WITH (NOLOCK)
 		ON ra.IdCurrierMan = sr.ID
-		AND ra.RowStatus = 1
 	INNER JOIN CatVehicle cv WITH (NOLOCK)
 		ON cv.IdVehicle = ra.IdVehicle
 	INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON ra.IdRoute = cr.IdRoute
-		AND cr.IdTypeRoute = @PickupServiceTypeId
 	LEFT JOIN @ResponseTable RT
 		ON RT.CourierId = SR.ID
 	WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
@@ -229,6 +226,10 @@ BEGIN
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
 		WHERE UserId = @IdUser)
 	)
+	--AND sr.Estatus = 1
+	--AND ra.RowStatus = 1
+	--AND cr.IdTypeRoute = 1
+	--AND cr.RowStatus = 1
 	AND RT.CourierId IS NULL
 
 	SELECT

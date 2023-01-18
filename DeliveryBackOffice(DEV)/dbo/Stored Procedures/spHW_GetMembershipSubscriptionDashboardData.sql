@@ -67,7 +67,6 @@ BEGIN
 				[CS].[SubscriptionName],
 				[S].[CatSubscriptionStatusId],
 				[S].[SubscriptionCost],
-				[S].[IsAutoRenewable],
 				[S].[SubscriptionMaxServiceFixedValue],
 				[S].[ActualServiceCount],
 				[S].[ExpirationDate] [SubscriptionExpirationDate]
