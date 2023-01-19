@@ -636,99 +636,6 @@ BEGIN
                            AND DOPD.GuideNumber = CG.GuideNumber;
 
 				
-				---------------------UPDATE VISIT POINT-------------------------
-
-				IF( ISNULL(@CodeOfReference, 0) != 0 )
-				BEGIN
-
-					DECLARE @VPLatitude NVARCHAR(20)
-					DECLARE @VPLongitude NVARCHAR(20)
-				
-					SELECT 
-						@VPLatitude = vpc.Latitude
-						,@VPLongitude = vpc.Longitude
-					FROM VisitPointClient vpc WITH (NOLOCK)
-					WHERE 
-						vpc.CodeOfReference = @CodeOfReference
-
-					IF 
-						(RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
-					BEGIN
-					
-						-- Punto de visita con ubicación existente
-						IF 
-							(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
-						BEGIN
-						
-							-- Si existe una ubicación para registrar
-							-- Distancia (en metros) entre recolección y el punto de visita
-							-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
-							IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @FixedLongitude, ' ', @FixedLatitude, ')'), 4326)) ) > 10)
-							BEGIN
-								-- Si la distancia es mayor a 10 metros
-								-- Guardar última ubicación
-								UPDATE
-									[DeliveryBackOffice].[dbo].[VisitPointClient]
-								SET
-									LogLatitude = Latitude
-									,LogLongitude = Longitude
-									,TokenUpdated = @Token
-									,DateUpdated = GETDATE()
-								WHERE
-									CodeOfReference = @CodeOfReference
-
-								-- Guardar nueva ubicación de recolección
-								UPDATE
-									[DeliveryBackOffice].[dbo].[VisitPointClient]
-								SET
-									Latitude = @FixedLatitude
-									,Longitude = @FixedLongitude
-									,TokenUpdated = @Token
-									,DateUpdated = GETDATE()
-								WHERE
-									CodeOfReference = @CodeOfReference
-
-							END
-							ELSE
-							BEGIN
-									-- Guardar nueva ubicación de recolección en "bitácora" para revisión
-									UPDATE
-										[DeliveryBackOffice].[dbo].[VisitPointClient]
-									SET
-										LogLatitude = @FixedLatitude
-										,LogLongitude = @FixedLongitude
-										,TokenUpdated = @Token
-										,DateUpdated = GETDATE()
-									WHERE
-										CodeOfReference = @CodeOfReference
-
-							END
-						END
-
-					END
-					ELSE
-					BEGIN
-					
-						-- Punto de visita sin ubicación registrada
-						IF 
-							(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
-						BEGIN
-
-							-- Si existe una ubicación para registrar
-							UPDATE
-								[DeliveryBackOffice].[dbo].[VisitPointClient]
-							SET
-								Latitude = @FixedLatitude
-								,Longitude = @FixedLongitude
-								,TokenUpdated = @Token
-								,DateUpdated = GETDATE()
-							WHERE
-								CodeOfReference = @CodeOfReference
-
-						END
-					END
-				END
-				----------------------------------------------------------------
 				---------------------WEBHOOK.INI--------------------------------
 
 
@@ -1056,6 +963,100 @@ BEGIN
                     ORDER BY schp.DateCreated ASC
                 );
 
+				
+				---------------------UPDATE VISIT POINT-------------------------
+
+				IF( ISNULL(@CodeOfReference, 0) != 0 )
+				BEGIN
+
+					DECLARE @VPLatitude NVARCHAR(20)
+					DECLARE @VPLongitude NVARCHAR(20)
+				
+					SELECT 
+						@VPLatitude = vpc.Latitude
+						,@VPLongitude = vpc.Longitude
+					FROM VisitPointClient vpc WITH (NOLOCK)
+					WHERE 
+						vpc.CodeOfReference = @CodeOfReference
+
+					IF 
+						(RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
+					BEGIN
+					
+						-- Punto de visita con ubicación existente
+						IF 
+							(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
+						BEGIN
+						
+							-- Si existe una ubicación para registrar
+							-- Distancia (en metros) entre recolección y el punto de visita
+							-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
+							IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @FixedLongitude, ' ', @FixedLatitude, ')'), 4326)) ) > 10)
+							BEGIN
+								-- Si la distancia es mayor a 10 metros
+								-- Guardar última ubicación
+								UPDATE
+									[DeliveryBackOffice].[dbo].[VisitPointClient]
+								SET
+									LogLatitude = Latitude
+									,LogLongitude = Longitude
+									,TokenUpdated = @Token
+									,DateUpdated = GETDATE()
+								WHERE
+									CodeOfReference = @CodeOfReference
+
+								-- Guardar nueva ubicación de recolección
+								UPDATE
+									[DeliveryBackOffice].[dbo].[VisitPointClient]
+								SET
+									Latitude = @FixedLatitude
+									,Longitude = @FixedLongitude
+									,TokenUpdated = @Token
+									,DateUpdated = GETDATE()
+								WHERE
+									CodeOfReference = @CodeOfReference
+
+							END
+							ELSE
+							BEGIN
+									-- Guardar nueva ubicación de recolección en "bitácora" para revisión
+									UPDATE
+										[DeliveryBackOffice].[dbo].[VisitPointClient]
+									SET
+										LogLatitude = @FixedLatitude
+										,LogLongitude = @FixedLongitude
+										,TokenUpdated = @Token
+										,DateUpdated = GETDATE()
+									WHERE
+										CodeOfReference = @CodeOfReference
+
+							END
+						END
+
+					END
+					ELSE
+					BEGIN
+					
+						-- Punto de visita sin ubicación registrada
+						IF 
+							(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
+						BEGIN
+
+							-- Si existe una ubicación para registrar
+							UPDATE
+								[DeliveryBackOffice].[dbo].[VisitPointClient]
+							SET
+								Latitude = @FixedLatitude
+								,Longitude = @FixedLongitude
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								CodeOfReference = @CodeOfReference
+
+						END
+					END
+				END
+				----------------------------------------------------------------
                 --------------PROCESSGUIDECOD.INI
                 --HW-67
                 -- variable para obtener el módulo de origen de los datos
