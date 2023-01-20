@@ -25,6 +25,7 @@
     [ReturnRate]           DECIMAL (12, 2) NULL,
     [CollectRate]          DECIMAL (12, 2) NULL,
     [PiecesIncluded]       DECIMAL (12, 2) NULL,
+    [CutOffDate]           TINYINT         NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
@@ -34,8 +35,14 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_RheDefault]
     ON [dbo].[RateHeader]([RheDefault] ASC)
     INCLUDE([ReturnRate]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de corte para tarifario por paquetes 1=Inicio de mes, 2=Quincena, 3=Fin de mes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'CutOffDate';
 
