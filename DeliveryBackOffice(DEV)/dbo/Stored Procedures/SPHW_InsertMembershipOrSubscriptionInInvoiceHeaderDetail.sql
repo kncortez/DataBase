@@ -3,6 +3,10 @@
 -- Create date: <2022-12-29>
 -- Description:	<SP para insertar datos de cabecera de facturación de membresías o suscripciones>
 -- =============================================
+-- Actualizaciones: 
+-- Author: Jerson Ochoa
+-- Guardar identificador de membresía o suscripción en invoiceDetail - 16-01-2023
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail]
     @TypeSalePackage AS NVARCHAR(50),
     @IdSalePackage INT,
@@ -11,7 +15,8 @@ CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail
 AS
 BEGIN
 
-    -- Datos cliente Cabecera de factura 
+    -- Datos cliente Cabecera de factura   
+	
 
     DECLARE @inv_vpCodeOfReferences AS INT = 999;
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
@@ -30,6 +35,7 @@ BEGIN
     DECLARE @inv_status AS INT = 1;
     DECLARE @inv_dateRegister DATETIME = GETDATE();
     DECLARE @inv_tokenRegister VARCHAR(200) = @Token;
+	DECLARE @typeMoneyId AS INT
     ------------------------------------------------------------------------------------
     ------------------------------------------------------------------------------------
 
@@ -64,6 +70,10 @@ BEGIN
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
     DECLARE @SuscriptionDesc AS NVARCHAR(200);
+	DECLARE @Authorizacion AS NVARCHAR(20);
+	DECLARE @IdMemberOrSuscription AS  NVARCHAR(200)
+	DECLARE @MembershipId AS INT = 0;
+	DECLARE @SubscriptionId AS INT = NULL;
 
     SET @SuscriptionDesc =
     (
@@ -126,21 +136,29 @@ BEGIN
         IF (@TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI)
         BEGIN
 
-            SELECT @inv_amount = M.MembershipCost,
+            SELECT TOP 1
+			       @inv_amount = M.MembershipCost,
                    @inv_cli_email = M.InvoiceEmail,
                    @inv_cli_adress = M.FiscalAddress,
                    @inv_cli_nit = REPLACE(M.TaxIdNumber, '-', ''),
                    @inv_cli_name = M.InvoiceName,
                    @inv_IVA = M.MembershipCost - (M.MembershipCost / 1.12),
-                   @Descriptionp = CM.MembershipName
+                   @Descriptionp = CM.MembershipName,
+				   @IdMemberOrSuscription = M.IdMembership,
+				   @MembershipId = ISNULL(M.IdMembership, 0)
             FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
                 INNER JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
                     ON M.CatMembershipId = CM.IdCatMembership
             WHERE AccountId = @IdAccount
                   AND M.RowStatus = 1
-                  AND CM.IdCatMembership = @IdSalePackage;
+                  AND CM.IdCatMembership = @IdSalePackage
+				  ORDER BY M.DateCreated DESC
 
-
+               SELECT  
+					@Authorizacion = MOL.[Authorization],
+					@typeMoneyId = MOL.TypeOfInOutOfMoneyId
+				  FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK) Where MembershipId =  @IdMemberOrSuscription
+				  ORDER BY MOL.DateCreated DESC
 
 
         END;
@@ -149,23 +167,33 @@ BEGIN
 
 
 
-            SELECT @inv_amount = S.SubscriptionCost,
-                   @inv_cli_email = M.InvoiceEmail,
-                   @inv_cli_adress = M.FiscalAddress,
-                   @inv_cli_nit = REPLACE(M.TaxIdNumber, '-', ''),
-                   @inv_cli_name = M.InvoiceName,
-                   @inv_IVA = S.SubscriptionCost - (S.SubscriptionCost / 1.12),
-                   @Descriptionp = CS.SubscriptionName
-            FROM dbo.Membership M WITH (NOLOCK)
-                INNER JOIN [dbo].[Subscription] S WITH (NOLOCK)
-                    ON M.IdMembership = S.MembershipId
-                INNER JOIN dbo.CatSubscription CS
-                    ON S.CatSubscriptionId = CS.IdCatSubscription
-            WHERE M.AccountId = @IdAccount
-                  AND M.RowStatus = 1
-                  AND CS.IdCatSubscription = @IdSalePackage;
+        Select  TOP 1
+			    @inv_amount     = S.SubscriptionCost,
+		        @inv_cli_email  = M.InvoiceEmail,
+				@inv_cli_adress = M.FiscalAddress ,
+				@inv_cli_nit    = REPLACE(M.TaxIdNumber,'-',''),
+				@inv_cli_name   = M.InvoiceName,
+				@inv_IVA  =   S.SubscriptionCost - (S.SubscriptionCost / 1.12),
+				@Descriptionp = CS.SubscriptionName,
+				@IdMemberOrSuscription = S.IdSubscription,
+				@SubscriptionId = [S].[IdSubscription]
+				From dbo.Membership M WITH (NOLOCK)
+					Inner Join [dbo].[Subscription] S WITH (NOLOCK)
+				ON M.IdMembership = s.MembershipId
+					Inner Join dbo.CatSubscription CS
+				ON s.CatSubscriptionId= cs.IdCatSubscription
+				WHERE M.AccountId =   @IdAccount AND 
+					  M.RowStatus = 1 AND 
+				      CS.IdCatSubscription = @IdSalePackage
+					  ORDER BY S.DateCreated DESC
 
-            SET @dti_description = @dti_description + ' ' + @Descriptionp;
+				SET @dti_description = @dti_description +' '+   @Descriptionp
+
+		  SELECT  TOP 1
+		    @Authorizacion = SOL.[Authorization],
+			@typeMoneyId = SOL.TypeOfInOutOfMoneyId
+		  FROM [dbo].[SubscriptionPaymentLog]  SOL WITH (NOLOCK) Where SubscriptionId =  @IdMemberOrSuscription
+		  ORDER BY SOL.DateCreated DESC
 
 
         END;
@@ -209,13 +237,37 @@ BEGIN
             dti_dateRegister,
             dti_tokenRegister,
             SAPCode,
-            SendToInvoice
+            SendToInvoice,
+			MembershipId, 
+			SubscriptionId
         )
         VALUES
         (@dti_fk_header, @dti_identification, @dti_category, @dti_quantity, @dti_measurement, @inv_amount,
-         @dti_description, @inv_IVA, @inv_amount, @dti_dateRegister, @dti_tokenRegister, @SAPCode, @SendToInvoice);
+         @dti_description, @inv_IVA, @inv_amount, @dti_dateRegister, @dti_tokenRegister, @SAPCode, @SendToInvoice,
+		 @MembershipId,
+		 @SubscriptionId);
 
-
+		 INSERT INTO [dbo].[InOutOfMoneyDetail]
+			   (
+				[io_type],
+				[io_vpCodeOfReferences],
+				[io_ticket],
+				[io_amount],
+				[io_status],
+				[io_invoice],
+				[io_registryToken],
+				[io_registryDate]
+			   )
+		 VALUES
+			   (@typeMoneyId
+			   ,@inv_vpCodeOfReferences
+			   ,@Authorizacion
+			   ,@inv_amount
+			   ,@inv_status
+			   ,@dti_fk_header
+			   ,@token
+			   ,GETDATE()
+			   )
 
         COMMIT TRANSACTION;
 
