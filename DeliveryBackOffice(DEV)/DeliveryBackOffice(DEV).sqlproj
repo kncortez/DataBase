@@ -1411,6 +1411,7 @@
     <Build Include="dbo\Stored Procedures\RegisterFacExist.sql" />
     <Build Include="dbo\Stored Procedures\GetVisitPointPortfolioByClient.sql" />
     <Build Include="dbo\Stored Procedures\GetCodeOfReferenceForStation.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetUserTransactionPaymentsHistory.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
