@@ -14,7 +14,7 @@ CREATE TABLE CatTMSalesPerson(
 	DateCreated DateTime NOT NULL,
 	TokenCreated NVARCHAR(50) NOT NULL,
 	DateUpdated DateTime NULL,
-	TokenUpdated NVARCHAR(50) NOT NULL
+	TokenUpdated NVARCHAR(50) NULL
 
 	PRIMARY KEY(IdCatTMSalesPerson),
 	CONSTRAINT FK_CatTMSalesPerson_RegisterUser FOREIGN KEY (RegisterUserId) REFERENCES RegisterUser(UsrIdUser),
