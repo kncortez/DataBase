@@ -3,6 +3,10 @@
 -- Create date: <2022-12-29>
 -- Description:	<SP para insertar datos de cabecera de facturación de membresías o suscripciones>
 -- =============================================
+-- Actualizaciones: 
+-- Author: Jerson Ochoa
+-- Guardar identificador de membresía o suscripción en invoiceDetail - 16-01-2023
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail]
     @TypeSalePackage AS NVARCHAR(50),
     @IdSalePackage INT,
@@ -11,7 +15,8 @@ CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail
 AS
 BEGIN
 
-    -- Datos cliente Cabecera de factura 
+    -- Datos cliente Cabecera de factura   
+	
 
     DECLARE @inv_vpCodeOfReferences AS INT = 999;
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
@@ -67,6 +72,8 @@ BEGIN
     DECLARE @SuscriptionDesc AS NVARCHAR(200);
 	DECLARE @Authorizacion AS NVARCHAR(20);
 	DECLARE @IdMemberOrSuscription AS  NVARCHAR(200)
+	DECLARE @MembershipId AS INT = 0;
+	DECLARE @SubscriptionId AS INT = NULL;
 
     SET @SuscriptionDesc =
     (
@@ -137,7 +144,8 @@ BEGIN
                    @inv_cli_name = M.InvoiceName,
                    @inv_IVA = M.MembershipCost - (M.MembershipCost / 1.12),
                    @Descriptionp = CM.MembershipName,
-				   @IdMemberOrSuscription = M.IdMembership
+				   @IdMemberOrSuscription = M.IdMembership,
+				   @MembershipId = ISNULL(M.IdMembership, 0)
             FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
                 INNER JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
                     ON M.CatMembershipId = CM.IdCatMembership
@@ -167,7 +175,8 @@ BEGIN
 				@inv_cli_name   = M.InvoiceName,
 				@inv_IVA  =   S.SubscriptionCost - (S.SubscriptionCost / 1.12),
 				@Descriptionp = CS.SubscriptionName,
-				@IdMemberOrSuscription = S.IdSubscription
+				@IdMemberOrSuscription = S.IdSubscription,
+				@SubscriptionId = [S].[IdSubscription]
 				From dbo.Membership M WITH (NOLOCK)
 					Inner Join [dbo].[Subscription] S WITH (NOLOCK)
 				ON M.IdMembership = s.MembershipId
@@ -228,11 +237,15 @@ BEGIN
             dti_dateRegister,
             dti_tokenRegister,
             SAPCode,
-            SendToInvoice
+            SendToInvoice,
+			MembershipId, 
+			SubscriptionId
         )
         VALUES
         (@dti_fk_header, @dti_identification, @dti_category, @dti_quantity, @dti_measurement, @inv_amount,
-         @dti_description, @inv_IVA, @inv_amount, @dti_dateRegister, @dti_tokenRegister, @SAPCode, @SendToInvoice);
+         @dti_description, @inv_IVA, @inv_amount, @dti_dateRegister, @dti_tokenRegister, @SAPCode, @SendToInvoice,
+		 @MembershipId,
+		 @SubscriptionId);
 
 		 INSERT INTO [dbo].[InOutOfMoneyDetail]
 			   (
