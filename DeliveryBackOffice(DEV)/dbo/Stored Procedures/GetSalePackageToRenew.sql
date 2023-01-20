@@ -29,7 +29,7 @@ BEGIN
 		SELECT
 			Mmshp.IdMembership 'SalePackageId'
 			,CM.MembershipName 'CatalogSalePackageId'
-			,CONCAT('MP', RIGHT(CONCAT('000000000000000000',Mmshp.IdMembership,CONCAT(FORMAT(Mmshp.LastPaymentDate,'MMyy'),FORMAT(DATEADD(DAY,CM.MembershipValidity,Mmshp.LastPaymentDate),'MMyy'),RIGHT(CONCAT('00',ISNULL((
+			,CONCAT('MP', RIGHT(CONCAT('000000000000000000',RIGHT(YEAR(GETDATE()), 2), RIGHT(CONCAT('00',DATEPART(DAY, GETDATE())),2),Mmshp.IdMembership,RIGHT(CONCAT('00',ISNULL((
 				SELECT
 					COUNT(1)
 				FROM
@@ -37,12 +37,12 @@ BEGIN
 				WHERE
 					MPLRejects.MembershipId = Mmshp.IdMembership
 					AND
-					MPLRejects.DateCreated >= Mmshp.LastPaymentDate
+					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
-			),0)),2))),18)) 'SalePackageReference'
+			),0)),1)),12)) 'SalePackageReference'
 			,Mmshp.MembershipCost 'SalePackageCost'
 			,Mmshp.InvoiceEmail 'LinkedEmail'
 			,Mmshp.CustomerId 'CustomerId'
@@ -65,15 +65,16 @@ BEGIN
 				WHERE
 					MPLRejects.MembershipId = Mmshp.IdMembership
 					AND
-					MPLRejects.DateCreated >= Mmshp.LastPaymentDate
+					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
 			),0) 'RenewalAttempts'
 			,FORMAT(Mmshp.LastPaymentDate,'MMyy') 'LastMonth'
 			,FORMAT(DATEADD(DAY,CM.MembershipValidity,Mmshp.LastPaymentDate),'MMyy') 'RecentMonth'
 			,@SystemId 'System'
+			,Mmshp.CatMembershipId 'CatalogSalePackageAsInt'
 		FROM
 			[DeliveryBackOffice].[dbo].[Membership] Mmshp WITH(NOLOCK)
 			INNER JOIN
@@ -85,9 +86,9 @@ BEGIN
 				ON
 					Mmshp.IdMembership = MPLPaid.MembershipId
 					AND
-					MPLPaid.DateCreated BETWEEN Mmshp.LastPaymentDate AND Mmshp.ExpirationDate
+					MPLPaid.DateCreated BETWEEN ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated) AND Mmshp.ExpirationDate
 					AND
-					LTRIM(RTRIM(ISNULL(MPLPaid.[Authorization],''))) <> 'REJECTED'
+					LTRIM(RTRIM(ISNULL(MPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
 					MPLPaid.RowStatus = 1
 			INNER JOIN
@@ -129,7 +130,7 @@ BEGIN
 		SELECT
 			Mmshp.IdMembership 'SalePackageId'
 			,CM.MembershipName 'CatalogSalePackageId'
-			,CONCAT('MP', RIGHT(CONCAT('000000000000000000',Mmshp.IdMembership,CONCAT(FORMAT(Mmshp.LastPaymentDate,'MMyy'),FORMAT(DATEADD(DAY,CM.MembershipValidity,Mmshp.LastPaymentDate),'MMyy'),RIGHT(CONCAT('00',ISNULL((
+			,CONCAT('MP', RIGHT(CONCAT('000000000000000000',RIGHT(YEAR(GETDATE()), 2), RIGHT(CONCAT('00',DATEPART(DAY, GETDATE())),2),Mmshp.IdMembership,RIGHT(CONCAT('00',ISNULL((
 				SELECT
 					COUNT(1)
 				FROM
@@ -137,12 +138,12 @@ BEGIN
 				WHERE
 					MPLRejects.MembershipId = Mmshp.IdMembership
 					AND
-					MPLRejects.DateCreated >= Mmshp.LastPaymentDate
+					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
-			),0)),2))),18)) 'SalePackageReference'
+			),0)),1)),12)) 'SalePackageReference'
 			,Mmshp.MembershipCost 'SalePackageCost'
 			,Mmshp.InvoiceEmail 'LinkedEmail'
 			,Mmshp.CustomerId 'CustomerId'
@@ -165,15 +166,16 @@ BEGIN
 				WHERE
 					MPLRejects.MembershipId = Mmshp.IdMembership
 					AND
-					MPLRejects.DateCreated >= Mmshp.LastPaymentDate
+					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
 			),0) 'RenewalAttempts'
 			,FORMAT(Mmshp.LastPaymentDate,'MMyy') 'LastMonth'
 			,FORMAT(DATEADD(DAY,CM.MembershipValidity,Mmshp.LastPaymentDate),'MMyy') 'RecentMonth'
 			,@SystemId 'System'
+			,Mmshp.CatMembershipId 'CatalogSalePackageAsInt'
 		FROM
 			[DeliveryBackOffice].[dbo].[Membership] Mmshp WITH(NOLOCK)
 			INNER JOIN
@@ -185,9 +187,9 @@ BEGIN
 				ON
 					Mmshp.IdMembership = MPLPaid.MembershipId
 					AND
-					MPLPaid.DateCreated BETWEEN Mmshp.LastPaymentDate AND Mmshp.ExpirationDate
+					MPLPaid.DateCreated BETWEEN ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated) AND Mmshp.ExpirationDate
 					AND
-					LTRIM(RTRIM(ISNULL(MPLPaid.[Authorization],''))) <> 'REJECTED'
+					LTRIM(RTRIM(ISNULL(MPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
 					MPLPaid.RowStatus = 1
 			INNER JOIN
@@ -240,7 +242,7 @@ BEGIN
 		SELECT
 			Sbsctptn.IdSubscription 'SalePackageId'
 			,CS.SubscriptionName 'CatalogSalePackageId'
-			,CONCAT('SP', RIGHT(CONCAT('000000000000000000',Sbsctptn.IdSubscription,CONCAT(FORMAT(Sbsctptn.LastPaymentDate,'MMyy'),FORMAT(DATEADD(DAY,CS.SubscriptionValidity,Sbsctptn.LastPaymentDate),'MMyy'),RIGHT(CONCAT('00',ISNULL((
+			,CONCAT('SP', RIGHT(CONCAT('000000000000000000',RIGHT(YEAR(GETDATE()), 2), RIGHT(CONCAT('00',DATEPART(DAY, GETDATE())),2),Sbsctptn.IdSubscription,RIGHT(CONCAT('00',ISNULL((
 				SELECT
 					COUNT(1)
 				FROM
@@ -248,12 +250,12 @@ BEGIN
 				WHERE
 					SPLRejects.SubscriptionId = Sbsctptn.IdSubscription
 					AND
-					SPLRejects.DateCreated >= Sbsctptn.LastPaymentDate 
+					SPLRejects.DateCreated >= ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) 
 					AND
-					LTRIM(RTRIM(ISNULL(SPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(SPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					SPLRejects.RowStatus = 1
-			),0)),2))),18)) 'SalePackageReference'
+			),0)),1)),12)) 'SalePackageReference'
 			,Sbsctptn.SubscriptionCost 'SalePackageCost'
 			,Mmbrshp.InvoiceEmail 'LinkedEmail'
 			,Sbsctptn.CustomerId 'CustomerId'
@@ -276,15 +278,16 @@ BEGIN
 				WHERE
 					SPLRejects.SubscriptionId = Sbsctptn.IdSubscription
 					AND
-					SPLRejects.DateCreated >= Sbsctptn.LastPaymentDate
+					SPLRejects.DateCreated >= ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(SPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(SPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					SPLRejects.RowStatus = 1
 			),0) 'RenewalAttempts'
 			,FORMAT(Sbsctptn.LastPaymentDate,'MMyy') 'LastMonth'
 			,FORMAT(DATEADD(DAY,CS.SubscriptionValidity,Sbsctptn.LastPaymentDate),'MMyy') 'RecentMonth'
 			,@SystemId 'System'
+			,Sbsctptn.CatSubscriptionId 'CatalogSalePackageAsInt'
 		FROM
 			[DeliveryBackOffice].[dbo].[Subscription] Sbsctptn WITH(NOLOCK)
 			INNER JOIN
@@ -304,9 +307,9 @@ BEGIN
 				ON
 					Sbsctptn.IdSubscription = SPLPaid.SubscriptionId
 					AND
-					SPLPaid.DateCreated BETWEEN Sbsctptn.LastPaymentDate AND Sbsctptn.ExpirationDate
+					SPLPaid.DateCreated BETWEEN ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) AND Sbsctptn.ExpirationDate
 					AND
-					LTRIM(RTRIM(ISNULL(SPLPaid.[Authorization],''))) <> 'REJECTED'
+					LTRIM(RTRIM(ISNULL(SPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
 					SPLPaid.RowStatus = 1
 			INNER JOIN
@@ -350,7 +353,7 @@ BEGIN
 		SELECT
 			Sbsctptn.IdSubscription 'SalePackageId'
 			,CS.SubscriptionName 'CatalogSalePackageId'
-			,CONCAT('SP', RIGHT(CONCAT('000000000000000000',Sbsctptn.IdSubscription,CONCAT(FORMAT(Sbsctptn.LastPaymentDate,'MMyy'),FORMAT(DATEADD(DAY,CS.SubscriptionValidity,Sbsctptn.LastPaymentDate),'MMyy'),RIGHT(CONCAT('00',ISNULL((
+			,CONCAT('SP', RIGHT(CONCAT('000000000000000000',RIGHT(YEAR(GETDATE()), 2), RIGHT(CONCAT('00',DATEPART(DAY, GETDATE())),2),Sbsctptn.IdSubscription,RIGHT(CONCAT('00',ISNULL((
 				SELECT
 					COUNT(1)
 				FROM
@@ -358,12 +361,12 @@ BEGIN
 				WHERE
 					SPLRejects.SubscriptionId = Sbsctptn.IdSubscription
 					AND
-					SPLRejects.DateCreated >= Sbsctptn.LastPaymentDate 
+					SPLRejects.DateCreated >= ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) 
 					AND
-					LTRIM(RTRIM(ISNULL(SPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(SPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					SPLRejects.RowStatus = 1
-			),0)),2))),18)) 'SalePackageReference'
+			),0)),1)),12)) 'SalePackageReference'
 			,Sbsctptn.SubscriptionCost 'SalePackageCost'
 			,Mmbrshp.InvoiceEmail 'LinkedEmail'
 			,Sbsctptn.CustomerId 'CustomerId'
@@ -386,15 +389,16 @@ BEGIN
 				WHERE
 					SPLRejects.SubscriptionId = Sbsctptn.IdSubscription
 					AND
-					SPLRejects.DateCreated >= Sbsctptn.LastPaymentDate 
+					SPLRejects.DateCreated >= ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) 
 					AND
-					LTRIM(RTRIM(ISNULL(SPLRejects.[Authorization],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
+					LTRIM(RTRIM(ISNULL(SPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					SPLRejects.RowStatus = 1
 			),0) 'RenewalAttempts'
 			,FORMAT(Sbsctptn.LastPaymentDate,'MMyy') 'LastMonth'
 			,FORMAT(DATEADD(DAY,CS.SubscriptionValidity,Sbsctptn.LastPaymentDate),'MMyy') 'RecentMonth'
 			,@SystemId 'System'
+			,Sbsctptn.CatSubscriptionId 'CatalogSalePackageAsInt'
 		FROM
 			[DeliveryBackOffice].[dbo].[Subscription] Sbsctptn WITH(NOLOCK)
 			INNER JOIN
@@ -414,9 +418,9 @@ BEGIN
 				ON
 					Sbsctptn.IdSubscription = SPLPaid.SubscriptionId
 					AND
-					SPLPaid.DateCreated BETWEEN Sbsctptn.LastPaymentDate AND Sbsctptn.ExpirationDate
+					SPLPaid.DateCreated BETWEEN ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) AND Sbsctptn.ExpirationDate
 					AND
-					LTRIM(RTRIM(ISNULL(SPLPaid.[Authorization],''))) <> 'REJECTED'
+					LTRIM(RTRIM(ISNULL(SPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
 					SPLPaid.RowStatus = 1
 			INNER JOIN
