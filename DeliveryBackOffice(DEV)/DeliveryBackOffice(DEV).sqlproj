@@ -1406,6 +1406,7 @@
     <Build Include="dbo\Stored Procedures\spHW_CreateTMCustomerAccount.sql" />
     <Build Include="dbo\Tables\CatSubscriptionDescription.sql" />
     <Build Include="dbo\Tables\CatMembershipDescription.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_TMBuyMembership.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
