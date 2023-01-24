@@ -152,7 +152,8 @@ BEGIN
 				ERROR_STATE() AS [ErrorState],
 				ERROR_PROCEDURE() AS [ErrorProcedure],
 				ERROR_LINE() AS [ErrorLine],
-				ERROR_MESSAGE() AS [spMessage];
+				ERROR_MESSAGE() AS [ErrorMessage],
+				'No se pudo completar la transacción, intente nuevamente o comuníquese con soporte técnico.' [spMessage];
 		ROLLBACK TRANSACTION
 	END CATCH
 END
