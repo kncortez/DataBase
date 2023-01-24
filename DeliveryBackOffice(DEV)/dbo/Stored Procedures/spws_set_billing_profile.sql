@@ -5,6 +5,8 @@
 -- Description:	<Administracion de perfiles de facturación >
 -- ===========================================
 
+--	Cambiar tabla temporal messagelist a variable tipo tabla @TblMessageList
+--	Author: Jerson Ochoa - <05-01-2023>
 
 CREATE PROCEDURE [dbo].[spws_set_billing_profile]
 	-- Add the parameters for the stored procedure here
@@ -23,32 +25,17 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @jsonResult NVARCHAR(MAX) 
+	DECLARE @TelemarketingRole INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Ventas telemercadeo' COLLATE Latin1_General_CI_AI)
 
-		-- insertar en tabla temporal posbibles mensajes de respuesta
+	DECLARE @jsonResult NVARCHAR(MAX);
+	DECLARE @TblMessageList TABLE(IdResult INT, Message NVARCHAR(150), Id NVARCHAR(50));
 
-		IF OBJECT_ID('tempdb.dbo.#messagelist', 'U') IS NOT NULL DROP TABLE messagelist;
-			select messagess.IdResult, messagess.Message, messagess.Id INTO #messagelist 
-			from (SELECT  200 AS IdResult
-					,'Registro creado correctamente' AS Message
-					,'Insert' as Id 
-			union
-			SELECT  500 AS IdResult
-					,'Usuario no asociado a cuenta' AS Message
-					,'Access' as Id 
-			union
-			SELECT  200 AS IdResult
-					,'Registro actualizado correctamente' AS Message
-					,'Update' as Id 
-			union
-			SELECT  200 AS IdResult
-					,'Registro Eliminado' AS Message
-					,'Delete' as Id 
-			UNION
-			SELECT 501 IdResult
-					, 'Ocurrió una excepción' Message
-					,'Exception' Id)  as messagess
-			
+	-- insertar en variable tipo tabla posibles mensajes de respuesta
+	INSERT INTO @TblMessageList (IdResult, Message, Id) VALUES (200, 'Registro creado correctamente', 'Insert');
+	INSERT INTO @TblMessageList (IdResult, Message, Id) VALUES (500, 'Usuario no asociado a cuenta', 'Access');
+	INSERT INTO @TblMessageList (IdResult, Message, Id) VALUES (200, 'Registro actualizado correctamente', 'Update');
+	INSERT INTO @TblMessageList (IdResult, Message, Id) VALUES (200, 'Registro eliminado', 'Delete');
+	INSERT INTO @TblMessageList (IdResult, Message, Id) VALUES (501, 'Ocurrió una excepción', 'Exception');
 
 	BEGIN TRY
 		BEGIN TRANSACTION
@@ -56,8 +43,9 @@ BEGIN
 
 		declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t
 						where t.TknIdToken = @Token)
+		declare @IdUserTokenIsTelemarketing bit = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK) WHERE RBUBA.RusIdUser = @IdUser AND RBUBA.RusIdRol = @TelemarketingRole AND RBUBA.RusRowStatus = 1)
 
-		if EXISTS (SELECT TOP 1 1 FROM RolByUserByAccount WHERE RuaIdAccount = @IdAccount AND RuaIdUser = @IdUser AND RuaRowStatus = 1) -- el usuario tiene acceso  a la cuenta indicada
+		if ((EXISTS (SELECT TOP 1 1 FROM RolByUserByAccount WHERE RuaIdAccount = @IdAccount AND RuaIdUser = @IdUser AND RuaRowStatus = 1)) OR (@IdUserTokenIsTelemarketing = 1)) -- el usuario tiene acceso  a la cuenta indicada
 		begin
 
 			select top 1 blp.BlpIdBilling
@@ -82,7 +70,7 @@ BEGIN
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 						+ '"IdBilling":' + convert(varchar,@IdBilling)    +',' 
-						+ '"Message":"' + Message + '"}' from #messagelist where Id ='Delete'
+						+ '"Message":"' + Message + '"}' from @TblMessageList where Id ='Delete'
 		
 						FOR XML PATH(''), TYPE
 						).value('.', 'varchar(max)'),1,1,''
@@ -117,7 +105,7 @@ BEGIN
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 						+ '"IdBilling":' + convert(varchar,@IdBilling)    +',' 
-						+ '"Message":"' + Message + '"}' from #messagelist where Id ='Update'
+						+ '"Message":"' + Message + '"}' from @TblMessageList where Id ='Update'
 		
 						FOR XML PATH(''), TYPE
 						).value('.', 'varchar(max)'),1,1,''
@@ -170,7 +158,7 @@ BEGIN
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 						+ '"IdBilling":' + convert(varchar,@IdBilling)    +',' 
-						+ '"Message":"' + Message + '"}' from #messagelist where Id ='Insert'
+						+ '"Message":"' + Message + '"}' from @TblMessageList where Id ='Insert'
 		
 						FOR XML PATH(''), TYPE
 						).value('.', 'varchar(max)'),1,1,''
@@ -184,7 +172,7 @@ BEGIN
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 						+ '"IdBilling":' + convert(varchar,@IdBilling)    +',' 
-						+ '"Message":"' + Message + '"}' from #messagelist where Id ='Access'
+						+ '"Message":"' + Message + '"}' from @TblMessageList where Id ='Access'
 		
 						FOR XML PATH(''), TYPE
 						).value('.', 'varchar(max)'),1,1,''
@@ -203,7 +191,7 @@ BEGIN
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 						+ '"IdBilling":' + convert(varchar,@IdBilling)    +',' 
-						+ '"Message":"' + Message + '"}' from #messagelist where Id ='Exception'
+						+ '"Message":"' + Message + '"}' from @TblMessageList where Id ='Exception'
 		
 						FOR XML PATH(''), TYPE
 						).value('.', 'varchar(max)'),1,1,''
@@ -215,7 +203,6 @@ BEGIN
 	-- destruir tablas temporales
 
 		IF OBJECT_ID('tempdb.dbo.#Billing', 'U') IS NOT NULL DROP TABLE #Billing;
-		IF OBJECT_ID('tempdb.dbo.#messagelist', 'U') IS NOT NULL DROP TABLE #messagelist;
 
 	-- retornar resultado en formato json
 
