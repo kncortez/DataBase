@@ -110,7 +110,7 @@ BEGIN
 	-- Validación de correo
 	IF (@EmailExisting > 0)
 		BEGIN 
-			SELECT 0 [spResult], 'Este correo ya fué registrado' [spMessage];
+			SELECT 0 [spResult], 'Este correo ya fue registrado' [spMessage];
 			RETURN;
 		END
 
