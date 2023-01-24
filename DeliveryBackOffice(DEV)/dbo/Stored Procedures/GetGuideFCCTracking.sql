@@ -62,24 +62,6 @@ BEGIN
 			CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
 	)
 	
-	SET @Exc= (SELECT
-				TOP 1
-				DescriptionOfClient
-			FROM
-				[DeliveryBackOffice].[dbo].[TokenLog] TL WITH (NOLOCK)
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[RegisterUser] RU WITH (NOLOCK)
-					ON
-						TL.TknIdUser = RU.UsrIdUser
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[VisitPointByUser] VPU WITH (NOLOCK)
-					ON
-						RU.UsrIdUser = VPU.RegisterUserID
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
-					ON
-						VPU.IdVisitPointClient = VPC.IdVisitPointClient
-						WHERE VPC.CodeOfReference=(SELECT  TOP 1 ISNULL(a.Sender_ID, a.Receiver_ID)  FROM dbo.DeliveryOrder a WITH(NOLOCK)  WHERE a.Guide_Number=@GuideNumber))
 	BEGIN TRY
 		INSERT INTO
 		@ResponseTable
@@ -110,7 +92,27 @@ BEGIN
 				,TS.TownshipName
 				,DO.Sender_Department
 				,HL.HubName
-				,@Exc
+				,(
+					SELECT
+						TOP 1
+							DescriptionOfClient
+					FROM
+						[DeliveryBackOffice].[dbo].[TokenLog] TL WITH (NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[RegisterUser] RU WITH (NOLOCK)
+							ON
+								TL.TknIdUser = RU.UsrIdUser
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointByUser] VPU WITH (NOLOCK)
+							ON
+								RU.UsrIdUser = VPU.RegisterUserID
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
+							ON
+								VPU.IdVisitPointClient = VPC.IdVisitPointClient
+					WHERE
+						TL.TknIdToken = DOD.UserCreated
+				) DescriptionOfClient
 				,I.NameIncidence AS Incidence
 				,COALESCE(DO.Receiver_FirstName,'') +' '+COALESCE(DO.Receiver_LastName,'') 
 				,DO.Sender_Department
@@ -169,6 +171,7 @@ BEGIN
 			CST.IdCatStatusType = @ExternalTypeId
 		ORDER BY
 			DOD.DateCreated DESC
+
 		IF( EXISTS (SELECT TOP 1 1 FROM @ResponseTable) )
 		BEGIN
 		   SET LANGUAGE Spanish
