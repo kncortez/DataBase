@@ -12,7 +12,7 @@ CREATE TABLE [dbo].[CatSubscription] (
     [DateCreated]                      DATETIME        NOT NULL,
     [TokenUpdated]                     NVARCHAR (50)   NULL,
     [DateUpdated]                      DATETIME        NULL,
-    [Icon]                             NVARCHAR (50)   NULL,    
+    [Icon]                             NVARCHAR (50)   NULL,
     [RateHeaderId]                     INT             NULL,
     [AlternativeRateHeaderId]          INT             NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
@@ -24,6 +24,9 @@ CREATE TABLE [dbo].[CatSubscription] (
 
 
 
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de ícono configurable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'Icon';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'RateHeaderId';
