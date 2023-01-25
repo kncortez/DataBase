@@ -54,7 +54,7 @@ BEGIN TRY
 			(ModName, ModIdModuleParent, ModPath, ModDescription, ModOrder, ModMetadata, ModVisible, ModRowStatus, ModTokenCreated, ModDateCreated, ModGroup)
 		OUTPUT inserted.ModIdModule INTO @NewTelemarketingModules (NewModuleId)
 		VALUES
-			('Registro de clientes', (SELECT TOP 1 NTHM.NewHeadModuleId FROM @NewTelemarketingHeadModule NTHM), '/telemercadeo/crear-cuenta', 'Módulo para registro de usuarios individuales', 10, 'bi bi-person-fill-add', 1, 1, 'SYS-ARUIZ', GETDATE(), NULL)
+			('Registro de clientes', (SELECT TOP 1 NTHM.NewHeadModuleId FROM @NewTelemarketingHeadModule NTHM), '/telemercadeo/crear-cuenta', 'Módulo para registro de usuarios individuales', 10, 'bi bi-person-plus', 1, 1, 'SYS-ARUIZ', GETDATE(), NULL)
 
 	END
 	IF(NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH(NOLOCK) WHERE CM.ModName = 'Venta de membresías' COLLATE Latin1_General_CI_AI))
@@ -74,7 +74,7 @@ BEGIN TRY
 			(ModName, ModIdModuleParent, ModPath, ModDescription, ModOrder, ModMetadata, ModVisible, ModRowStatus, ModTokenCreated, ModDateCreated, ModGroup)
 		OUTPUT inserted.ModIdModule INTO @NewTelemarketingModules (NewModuleId)
 		VALUES
-			('Monitoreo de clientes', (SELECT TOP 1 NTHM.NewHeadModuleId FROM @NewTelemarketingHeadModule NTHM), '/telemercadeo/reporte-clientes-cartera', 'Módulo de seguimiento de clientes para telemercadeo', 30, 'bi bi-file-text-fill', 1, 1, 'SYS-ARUIZ', GETDATE(), NULL)
+			('Monitoreo de clientes', (SELECT TOP 1 NTHM.NewHeadModuleId FROM @NewTelemarketingHeadModule NTHM), '/telemercadeo/reporte-clientes-cartera', 'Módulo de seguimiento de clientes para telemercadeo', 30, 'bi bi-people-fill', 1, 1, 'SYS-ARUIZ', GETDATE(), NULL)
 
 	END
 
