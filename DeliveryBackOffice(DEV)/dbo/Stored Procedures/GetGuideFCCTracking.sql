@@ -61,6 +61,13 @@ BEGIN
 		WHERE
 			CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
 	)
+	DECLARE @DescriptionOfClient AS NVARCHAR(500)  = (SELECT 
+															DOS.DescriptionOfClient 
+													  FROM DeliveryBackOffice.dbo.DeliveryOrder UNO WITH(NOLOCK)
+																	 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient DOS WITH(NOLOCK)
+																	   ON DOS.CodeOfReference = UNO.Sender_ID
+																	 AND DOS.IdKindOfVPClient = 1
+														WHERE UNO.OriginSenderId IS NOT NULL AND UNO.Guide_Number = @GuideNumber)
 	
 	BEGIN TRY
 		INSERT INTO
@@ -92,7 +99,10 @@ BEGIN
 				,TS.TownshipName
 				,DO.Sender_Department
 				,HL.HubName
-				,(
+				,
+                CASE 
+				     WHEN @DescriptionOfClient IS NULL OR @DescriptionOfClient ='' THEN 				
+				  (
 					SELECT
 						TOP 1
 							DescriptionOfClient
@@ -112,7 +122,10 @@ BEGIN
 								VPU.IdVisitPointClient = VPC.IdVisitPointClient
 					WHERE
 						TL.TknIdToken = DOD.UserCreated
-				) DescriptionOfClient
+				) ELSE
+				@DescriptionOfClient 
+				END
+				DescriptionOfClient
 				,I.NameIncidence AS Incidence
 				,COALESCE(DO.Receiver_FirstName,'') +' '+COALESCE(DO.Receiver_LastName,'') 
 				,DO.Sender_Department
@@ -242,7 +255,8 @@ BEGIN
 	BEGIN CATCH
 	
 		SELECT
-			0 [blnResult] -- Indica que no existe un último estado publico posible de retornar
+			0 [blnResult]  -- Indica que no existe un último estado publico posible de retornar
 			,@FailureResponseMessage [messageResult]
+			,ERROR_MESSAGE() AS 'Description'
 	END CATCH
 END
