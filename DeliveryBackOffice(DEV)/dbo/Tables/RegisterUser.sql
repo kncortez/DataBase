@@ -25,9 +25,12 @@
     [IdentificationImageA]    NVARCHAR (500) NULL,
     [IdentificationImageB]    NVARCHAR (500) NULL,
     [VerifiedPhone]           BIT            CONSTRAINT [DF__RegisterU__Verif__2E51B1C3] DEFAULT ('false') NULL,
+    [ChangePassword]          BIT            NULL,
     PRIMARY KEY CLUSTERED ([UsrIdUser] ASC),
     FOREIGN KEY ([UsrIdPerson]) REFERENCES [dbo].[Person] ([PerIdPerson])
 );
+
+
 
 
 
