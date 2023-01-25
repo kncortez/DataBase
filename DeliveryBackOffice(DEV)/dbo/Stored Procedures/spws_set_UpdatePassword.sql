@@ -4,6 +4,10 @@
 -- Update date: <2021-02-01>
 -- Description:	<spws_set_UpdatePassword>
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <2023-01-25>
+-- Description: <Set changePassword field to 0 when it is a successfull update>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_UpdatePassword]
 -- Add the parameters for the stored procedure here	
@@ -23,7 +27,7 @@ AS
         );
         DECLARE @IdUser					AS BIGINT;
         DECLARE @Email					AS VARCHAR(200);
-        DECLARE @UserName				AS VARCHAR(200);
+		DECLARE @UserName				AS VARCHAR(200);
         DECLARE @PasswordVerification	AS NVARCHAR(MAX);
         DECLARE @IdUserUPDATE			AS BIGINT;
         DECLARE @IdResult				AS INT;
@@ -133,22 +137,23 @@ AS
                                         ELSE
                                         BEGIN
                                             SELECT 
-                                                @IdUserUPDATE = us.UsrIdUser,
+												@IdUserUPDATE = us.UsrIdUser,
 												@UserName = prs.PerFirstName,
 												@Email = us.UsrEmail
-                                                FROM RegisterUser us
-                                                     INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
-                                                        AND rua.RuaRowStatus = 1
-                                                     INNER JOIN [dbo].Account ac ON ac.AccIdAccount = rua.RuaIdAccount
-                                                        AND ac.AccRowStatus = 1
-                                                     LEFT JOIN [dbo].Person prs ON us.UsrIdPerson= prs.PerIdPerson
-                                                WHERE ac.AccIdAccount = @IdAccount
-
+                                            FROM RegisterUser us
+												INNER JOIN [dbo].[RolByUserByAccount] rua ON rua.RuaIdUser = us.UsrIdUser
+													AND rua.RuaRowStatus = 1
+												INNER JOIN [dbo].Account ac ON ac.AccIdAccount = rua.RuaIdAccount
+													AND ac.AccRowStatus = 1
+												LEFT JOIN [dbo].Person prs ON us.UsrIdPerson= prs.PerIdPerson
+                                                                                    
+                                            WHERE ac.AccIdAccount = @IdAccount
                                             UPDATE RegisterUser
                                               SET 
                                                   UsrLastPassword = @Password, 
                                                   UsrPasswordExpiration = @ExpirationDate, 
-                                                  UsrDateUpdated = GETDATE()
+                                                  UsrDateUpdated = GETDATE(),
+												  ChangePassword = 0
                                             WHERE RegisterUser.UsrIdUser = @IdUserUPDATE;
 
                                             --Almacenar en el log de contraseñas
@@ -203,5 +208,5 @@ AS
 
         SELECT @IdResult AS IdResult, 
                ('[{' + @jsonResult + ']') jsonResult,
-               @Email email, @UserName username;
+			   @Email email, @UserName username;
     END;
