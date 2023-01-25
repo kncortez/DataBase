@@ -162,11 +162,11 @@ BEGIN
 		BEGIN
 		
 			  SELECT 
-					 @RateId = ISNULL(ARC.RateId, @IdRate )
+					 @RateId = ARC.RateId
 			  FROM [DeliveryBackOffice].[dbo].[AlternativeRatebyCustomer] ARC WITH(NOLOCK)
 			  WHERE ARC.CustomerId = @IdCustomer AND ARC.RowStatus = 1  AND @IdRate IN (@NewMainRates,@NewAutoSalesMainRates)
 
-				SET @IdRate = @RateId ;
+				SET @IdRate = ISNULL(@RateId, @IdRate);
    
 		 END
      END
@@ -846,16 +846,24 @@ BEGIN
 		ELSE
 		BEGIN
         
-
-			set @ParcelPrice =(
-			select sum( isnull( ra.RateValue , isnull(ar.PriceDefault ,0) )) 
-			from #ListCode ls
-				join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
-				join dbo.RateData ra WITH(NOLOCK) ON ra.ArticleId = ar.AbcId and ra.TypeSegmentId = @IdSegment AND ra.RateId = @IdRate
-				)
-			--select @ParcelPrice as price
 	-------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
 				insert into @TempRate
+				SELECT x.TypeRate
+					,x.Segment
+					,x.Service
+					,SUM(x.BaseRate)
+					,x.DiscountName
+					,SUM(x.DiscountValue)
+					,x.fragilRate
+					,x.CollectedRate
+					,SUM(x.InsuranceRate)
+					,x.CreditCardRate
+					,x.OverWeightRate
+					,SUM(x.IrregularParcelRate)
+					,x.CtsName
+					,x.CtsDescription
+					,x.ReturnRate
+				FROM (
 				select isnull(cr.Name,'') TypeRate 
 				, isnull(sg.CrsShortName,'') Segment
 				, isnull(sv.CtsShortName,'') Service
@@ -864,23 +872,23 @@ BEGIN
 				, 0 DiscountValue
 				, iif(@IsFragile ='true', isnull(rh.FragilRate,0),0) as fragilRate
 				, iif(@IsCollected ='true', isnull(rh.CollectRate,0),0) as CollectedRate
-				, iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast((@InsuranceAmount * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
+				, iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount ) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
 				, iif(@IsCreditCardPayment ='true', isnull(rh.CreditCardRate,0) ,0 ) as CreditCardRate
 				, iif(@OverWeight > 0, @OverWeight * isnull(rh.AdditionalWeightRate,0),0) OverWeightRate
-				, isnull(@ParcelPrice,0) as IrregularParcelRate
+				, isnull( rd.RateValue, isnull(ar.PriceDefault, 0)) as IrregularParcelRate
 				, isnull(sv.CtsName,'') as CtsName 
 				, isnull(sv.CtsDescription,'') as CtsDescription
 				, isnull(rh.ReturnRate,0) as ReturnRate
-				from dbo.RateHeader rh WITH(NOLOCK)
-					 join dbo.RateData rd WITH(NOLOCK) ON rd.RateId = rh.RheId and rd.RowStatus ='true'
+				from #ListCode ls
+					INNER join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
+					INNER JOIN dbo.RateHeader rh WITH(NOLOCK) ON rh.RheId = @IdRate
+					 INNER join dbo.RateData rd WITH(NOLOCK) ON rd.ArticleId = ar.AbcId and rd.RateId = rh.RheId and rd.RowStatus ='true'
 					 left join dbo.CatRateSegment sg WITH(NOLOCK) on sg.CrsId = rd.TypeSegmentId
 					 left join dbo.CatTypeService sv WITH(NOLOCK) on sv.CtsId = rd.TypeServiceId
 					 left join dbo.CatTypeRate cr WITH(NOLOCK) ON cr.IdTypeRate = rh.RateTypeId
-				where rh.RheId = @IdRate
-					and rd.ArticleId is null
-					and rd.TypeSegmentId = @IdSegment
+				where rd.TypeSegmentId = @IdSegment
 					and  (rd.TypeServiceId in(select CtsId from dbo.CatTypeService WITH(NOLOCK)  where RateGroup = @IdRateGroup and CtsRowStatus = 1) )
-					and  convert(datetime, @Time, 108)<=isnull(convert(datetime, ISNULL(rd.LimitHourPickup, sv.LimitHourPickup), 108) ,convert(datetime, '23:59:59', 108))
+				) x GROUP BY x.TypeRate, x.Segment, x.Service, x.DiscountName, x.fragilRate, x.CollectedRate, x.CtsName, x.CreditCardRate, x.OverWeightRate, x.CtsDescription, x.ReturnRate
 			
         END
             --print 'rate'
