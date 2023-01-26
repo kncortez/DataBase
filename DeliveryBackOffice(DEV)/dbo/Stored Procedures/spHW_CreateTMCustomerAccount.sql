@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[spHW_CreateTMCustomerAccount]
 	@Currency NVARCHAR(20),
 	@Phone NVARCHAR(30),
 	@SystemId INT = 1,
-	@CatTMSalesPersonId INT = 0
+	@RegisterUserId INT = 0
 
 AS
 BEGIN
@@ -44,6 +44,7 @@ BEGIN
 	DECLARE @TacId INT = 0;
 	DECLARE @RolId INT = 0;
 	DECLARE @PackagesGoal INT = 0;
+	DECLARE @CatTMSalesPersonId INT = 0;
 
 	SET @NewMainRates = (SELECT TOP 1 RH.RheId 
 						FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
@@ -102,10 +103,14 @@ BEGIN
 						FROM	[dbo].[ConfigParams] CP
 						WHERE	[CP].[Name] = 'PymesPackagesGoal');
 
+	SET @CatTMSalesPersonId = ( SELECT	[CTSP].[IdCatTMSalesPerson]
+								FROM	[dbo].[CatTMSalesPerson] CTSP
+								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
+
 	-- Validación de correo
 	IF (@EmailExisting > 0)
 		BEGIN 
-			SELECT 0 [spResult], 'Este correo ya fué registrado' [spMessage];
+			SELECT 0 [spResult], 'Este correo ya fue registrado' [spMessage];
 			RETURN;
 		END
 
