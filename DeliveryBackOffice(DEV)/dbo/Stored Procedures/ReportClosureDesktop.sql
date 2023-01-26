@@ -37,6 +37,7 @@ BEGIN
 
 		GROUP BY IND.dti_fk_orderSerie
 				,IND.dti_fk_orderNumber;
+				Select *from @TEMPLATEDETAIL
 
 	DECLARE @tblVisitPointId TABLE(
 		CodeOfReference int

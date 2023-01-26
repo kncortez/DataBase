@@ -1414,6 +1414,8 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetUserTransactionPaymentsHistory.sql" />
     <Build Include="dbo\Stored Procedures\spHM_completeOpenProcessLinehaulDispatch.sql" />
+    <Build Include="dbo\Tables\TagsVariables.sql" />
+    <Build Include="dbo\Stored Procedures\GetGuideFCCTracking_EGVR.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

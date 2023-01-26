@@ -47,6 +47,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -83,4 +85,12 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere 
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
     ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Ubicación (longitud) anterior o para revisión del punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'LogLongitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Ubicación (latitud) anterior o para revisión del punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'LogLatitude';
 

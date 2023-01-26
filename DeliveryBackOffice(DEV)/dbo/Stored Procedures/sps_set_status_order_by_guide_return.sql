@@ -58,7 +58,7 @@ BEGIN
         INTO #listGuides
         FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@Guide_Number, ',');
 
-		CREATE NONCLUSTERED INDEX TMP_IDX_ListGuides_Guide ON #listGuides(ItemSerie, ItemNumber);
+		--CREATE NONCLUSTERED INDEX TMP_IDX_ListGuides_Guide ON #listGuides(ItemSerie, ItemNumber);
 
         SET @ExisteRuta =
         (
