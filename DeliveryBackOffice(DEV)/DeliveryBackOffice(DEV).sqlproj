@@ -1413,6 +1413,7 @@
     <Build Include="dbo\Stored Procedures\GetCodeOfReferenceForStation.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetUserTransactionPaymentsHistory.sql" />
     <Build Include="dbo\Stored Procedures\spHM_completeOpenProcessLinehaulDispatch.sql" />
+    <Build Include="dbo\Stored Procedures\SPHAW_GetDashboardData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
