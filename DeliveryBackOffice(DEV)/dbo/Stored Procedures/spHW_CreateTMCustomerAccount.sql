@@ -45,6 +45,9 @@ BEGIN
 	DECLARE @RolId INT = 0;
 	DECLARE @PackagesGoal INT = 0;
 	DECLARE @CatTMSalesPersonId INT = 0;
+	DECLARE @TMSalesPersonName NVARCHAR(600) = '';
+	DECLARE @TMSalesPersonPhone NVARCHAR(200) = '';
+	DECLARE @TMSalesPersonEmail NVARCHAR(200) = '';
 
 	SET @NewMainRates = (SELECT TOP 1 RH.RheId 
 						FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
@@ -106,6 +109,18 @@ BEGIN
 	SET @CatTMSalesPersonId = ( SELECT	[CTSP].[IdCatTMSalesPerson]
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
+
+	SET @TMSalesPersonName  = ( SELECT	CONCAT([CTSP].[FirstName], [CTSP].[LastName])
+								FROM	[dbo].[CatTMSalesPerson] CTSP
+								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
+
+	SET @TMSalesPersonPhone = ( SELECT [RU].[Phone]
+								FROM [dbo].[RegisterUser] RU WITH(NOLOCK)
+								WHERE RU.UsrIdUser = @RegisterUserId);
+
+	SET @TMSalesPersonEmail = ( SELECT [RU].[UsrEmail]
+								FROM [dbo].[RegisterUser] RU WITH(NOLOCK)
+								WHERE RU.UsrIdUser = @RegisterUserId);
 
 	-- Validación de correo
 	IF (@EmailExisting > 0)
@@ -367,7 +382,12 @@ BEGIN
 
 		IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;
 
-		SELECT 1 [spResult], 'Cuenta creada exitósamente.' [spMessage];
+		SELECT 
+			1 [spResult]
+			, 'Cuenta creada exitósamente.' [spMessage]
+			,@TMSalesPersonName [spTMSPName]
+			,@TMSalesPersonPhone [spTMSPPhone]
+			,@TMSalesPersonEmail [spTMSPEmail];
 	END TRY
 	BEGIN CATCH
 		SELECT 0 [spResult],
