@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[VisitPointClient] (
+﻿CREATE TABLE [dbo].[VisitPointClient] (
     [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
     [DescriptionOfClient]     NVARCHAR (100) NULL,
@@ -28,7 +28,9 @@ CREATE TABLE [dbo].[VisitPointClient] (
     [SaleChannelId]           INT            NULL,
     [ExcludePriceShippingCOD] BIT            NULL,
     [ExcludeCommissionCOD]    BIT            NULL,
+    [CatBusinessSegmentId]    INT            NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
+    CONSTRAINT [FK_VisitPointClient_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPBusiness] FOREIGN KEY ([IdKindOfVPBusiness]) REFERENCES [dbo].[KindOfVPBusiness] ([IdKindOfVPBusiness]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPClient] FOREIGN KEY ([IdKindOfVPClient]) REFERENCES [dbo].[KindOfVPClient] ([IdKindOfVPClient]),
@@ -36,6 +38,8 @@ CREATE TABLE [dbo].[VisitPointClient] (
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 
@@ -71,4 +75,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Correo del 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere al número de sucursal de la agencia, tienda u oficina identificada por cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'BranchCode';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de negocio al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CatBusinessSegmentId';
 

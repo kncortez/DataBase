@@ -1154,6 +1154,8 @@
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\sphd_get_config_type_rate.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRate.sql" />
+    <Build Include="dbo\Tables\PackagesRangeDetail.sql" />
+    <Build Include="dbo\Tables\PackagesRange.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
