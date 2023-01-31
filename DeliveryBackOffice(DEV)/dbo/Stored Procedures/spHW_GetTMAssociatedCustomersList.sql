@@ -39,7 +39,7 @@ BEGIN
 		ON		[RU].[UsrIdPerson] = [P].[PerIdPerson]
 	LEFT JOIN	[dbo].[Membership] M
 		ON		[C].[IdCustomer] = [M].[CustomerId]
-		AND		[M].[ExpirationDate] <= SYSDATETIME()
+		AND		[M].[ExpirationDate] >= SYSDATETIME()
 	LEFT JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId;
