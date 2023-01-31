@@ -39,7 +39,7 @@ BEGIN TRY
 
 		Insert into [DeliveryBackOffice].[dbo].CatRol 
 			(RolIdSystem,RolName,RolDescription,RolAdminClient, RolRowStatus, RolTokenCreated, RolDateCreated) 
-		OUTPUT inserted.RolIdSystem INTO @NewRole(RoleId)
+		OUTPUT inserted.RolIdRol INTO @NewRole(RoleId)
 		values
 			(2,'Notas Crédito','Rol para uso de módulo de notas de crédito',0,1,'ELOPEZ',GETDATE())
 
