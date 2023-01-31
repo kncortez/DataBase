@@ -109,12 +109,13 @@ BEGIN
 	-- Puntos FORZA
 	DECLARE @MembershipId INT = 0;
 	DECLARE @PointsGenerated INT = 0;
-	DECLARE @PointsPromoGenerated INT = 0;
 	DECLARE @ForzaPointsGenerationValue DECIMAL = 0;
 	DECLARE @ForzaPointsGenerationType NVARCHAR(50) = '';
 	DECLARE @DayName NVARCHAR(20) = '';
 	DECLARE @IsValidDay BIT = 0;
 	DECLARE @ServiceAmmount DECIMAL = 0;
+	DECLARE @CatSalesPackageStatusId INT = 0;
+	DECLARE @MaxServiceMembership INT = 0;
 	DECLARE @CatPointPromoTbl TABLE (	IdPointPromo INT, 
 									PointPromoDescription NVARCHAR(400),
 									Monday BIT,
@@ -135,6 +136,11 @@ BEGIN
 										FROM	[dbo].[ConfigParams] CP
 										WHERE	[CP].[Name] = 'ForzaPointsGenerationValue'
 											AND [CP].[Status] = 1);
+
+	SET @CatSalesPackageStatusId = (	SELECT	[CSPS].[IdCatSalesPackageStatus]
+										FROM	[dbo].[CatSalesPackageStatus] CSPS
+										WHERE	[CSPS].[SalesPackageStatusName] = 'Activa' 
+											AND [CSPS].[RowStatus] = 1 )
 
 	INSERT INTO @CatPointPromoTbl
 	SELECT	TOP 1	[CPP].[IdPointPromo],
@@ -1156,7 +1162,8 @@ BEGIN
                 GuideSerie NVARCHAR(2),
                 GuideNumber INT,
                 GuidePriceShipment DECIMAL(14, 2),
-				CustomerID INT
+				CustomerID INT,
+				LogServiceNumber INT
             );
 
             DECLARE @CostUpdated AS TABLE
@@ -1172,18 +1179,27 @@ BEGIN
                 GuideSerie,
                 GuideNumber,
                 GuidePriceShipment,
-				CustomerID
+				CustomerID,
+				LogServiceNumber
             )
             SELECT DISTINCT
-                CCTBCD.SerieNumber,
-                CCTBCD.ProductNumber,
-                DO.PriceShippment,
-				DO.IdCustomer
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH (NOLOCK)
-                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-                    ON CCTBCD.ProductNumber = DO.Guide_Number
-                       AND CCTBCD.SerieNumber = DO.Guide_Serie
-            WHERE CCTBCD.OrderNumber = @OrderNumber;
+						CCTBCD.SerieNumber,
+						CCTBCD.ProductNumber,
+						DO.PriceShippment,
+						DO.IdCustomer,
+						ISNULL([MSL].[LogServiceNumber], 0)
+            FROM		DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH (NOLOCK)
+            INNER JOIN	DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+				ON		CCTBCD.ProductNumber = DO.Guide_Number
+                AND		CCTBCD.SerieNumber = DO.Guide_Serie
+			LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
+				ON		[CCTBCD].[ProductNumber] = [MSL].[LogGuideNumber]
+				AND		[CCTBCD].[SerieNumber] = [MSL].[LogGuideSerie]
+				AND		[MSL].[RowStatus] = 1
+				AND		[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
+			LEFT JOIN	[dbo].[Membership] M
+				ON		[MSL].[MembershipId] = [M].[IdMembership]
+            WHERE		CCTBCD.OrderNumber = @OrderNumber;
 
             IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
             BEGIN
@@ -1207,17 +1223,26 @@ BEGIN
                     GuideSerie,
                     GuideNumber,
                     GuidePriceShipment,
-					CustomerID
+					CustomerID,
+					LogServiceNumber
                 )
                 SELECT TOP 1
                     LG.ItemSerie,
                     LG.ItemNumber,
                     DO.PriceShippment,
-					DO.IdCustomer
+					DO.IdCustomer,
+					ISNULL([MSL].[LogServiceNumber], 0)
                 FROM #listGuides LG
-                    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-                        ON LG.ItemSerie = DO.Guide_Serie
-                           AND LG.ItemNumber = DO.Guide_Number
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+					ON LG.ItemSerie = DO.Guide_Serie
+					AND LG.ItemNumber = DO.Guide_Number
+				LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
+					ON		[LG].[ItemNumber] = [MSL].[LogGuideNumber]
+					AND		[LG].[ItemSerie] = [MSL].[LogGuideSerie]
+					AND		[MSL].[RowStatus] = 1
+					AND		[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
+				LEFT JOIN	[dbo].[Membership] M
+				ON		[MSL].[MembershipId] = [M].[IdMembership];
 
                 IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
                     DROP TABLE #listGuides;
@@ -1357,11 +1382,12 @@ BEGIN
 								FROM	[dbo].[Account] A
 								WHERE	[A].[IdCustomer] = @CustomerId );
 
-			SET @MembershipId = (SELECT [M].[IdMembership]
-						FROM	[dbo].[Membership] M
-						WHERE	[M].[AccountId] = @AccountId
-							AND	[M].[RowStatus] = 1
-							AND [M].[ExpirationDate] >= SYSDATETIME());
+			SELECT	@MembershipId = [M].[IdMembership],
+					@MaxServiceMembership = [M].[MembershipMaxServiceFixedValue]
+					FROM	[dbo].[Membership] M
+					WHERE	[M].[AccountId] = @AccountId
+						AND	[M].[RowStatus] = 1
+						AND [M].[ExpirationDate] >= SYSDATETIME();
 
 			IF (@MembershipId > 0)
 				BEGIN
@@ -1393,7 +1419,8 @@ BEGIN
 															1,
 															SYSDATETIME(),
 															@TokenCreated
-					FROM									@AcceptedGuides;
+					FROM									@AcceptedGuides
+					WHERE									(LogServiceNumber > @MaxServiceMembership OR LogServiceNumber = 0);
 
 					-- Acumulación adicional por promoción
 					
@@ -1423,19 +1450,20 @@ BEGIN
 									FROM		[dbo].[PointsByServiceLog] PSL
 									INNER JOIN	@AcceptedGuides AG
 										ON		[PSL].[GuideSerie] = [AG].[GuideSerie]
-										AND		[PSL].[GuideNumber] = [AG].[GuideNumber];
+										AND		[PSL].[GuideNumber] = [AG].[GuideNumber]
+										AND		([AG].[LogServiceNumber] > @MaxServiceMembership OR [AG].[LogServiceNumber] = 0);
 								END
 						END
 
 					-- Agregar puntos a membresía
-					SET @PointsGenerated = (SELECT	SUM([PSL].[PointsReceived])
+					SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
 											FROM	[dbo].[PointsByServiceLog] PSL
 											WHERE	[PSL].[GuideSerie] IN (SELECT GuideSerie FROM @AcceptedGuides)
-												AND [PSL].[GuideNumber] IN (SELECT GuideNumber FROM @AcceptedGuides));
+												AND [PSL].[GuideNumber] IN (SELECT GuideNumber FROM @AcceptedGuides)), 0);
 					
 					UPDATE	[dbo].[Membership] 
-					SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated + @PointsPromoGenerated),
-							[AvailablePoints] = ISNULL([AvailablePoints], 0) + (@PointsGenerated + @PointsPromoGenerated)
+					SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
+							[AvailablePoints] = ISNULL([AvailablePoints], 0) + (@PointsGenerated)
 					WHERE	[IdMembership] = @MembershipId;
 
 				END
