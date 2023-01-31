@@ -99,7 +99,8 @@ BEGIN
                HL.HubName,
                (
                    SELECT TOP 1
-                          DescriptionOfClient
+                          --DescriptionOfClient
+						  DescriptionCC
                    FROM [DeliveryBackOffice].[dbo].[TokenLog] TL WITH (NOLOCK)
                        INNER JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH (NOLOCK)
                            ON TL.TknIdUser = RU.UsrIdUser
