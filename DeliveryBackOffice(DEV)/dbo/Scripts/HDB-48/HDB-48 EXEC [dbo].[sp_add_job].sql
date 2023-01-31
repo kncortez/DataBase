@@ -17,6 +17,7 @@ EXEC dbo.sp_add_schedule
     @schedule_name = N'CheckTelemarketingClientCutoffSchedule',  
     @freq_type = 16,				-- Mensualmente
     @freq_interval = 1,				-- Cada día 1
+	@freq_recurrence_factor = 1,	-- Recurrencia 1 cada mes
     @active_start_time = 070000 ;	-- 07:00:00
 GO  
 EXEC sp_attach_schedule  
