@@ -7,6 +7,7 @@
 	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
 	Actualización: Agregar campo de ícono a estructura de membresías y suscripciones - 11-01-2023
 	Actualización: Validar rowStatus para atributos - 11-01-2023
+	Actualización: Agregar objeto de descripciones para membresías - 20-01-2023
 	Autor: Jerson Ochoa
 */
 CREATE PROCEDURE [dbo].[SPHWPMembershipOrSubscriptions]
@@ -51,21 +52,16 @@ BEGIN
 										'"Id":   "' + CAST(CM.IdCatMembership AS VARCHAR), +'"'+  ',' +
 										'"Name": "' + CM.MembershipName, +'"'+  ',' +
 										'"Icon": "' + CM.Icon, +'"'+  ',' +
-										'"Attibutos": ['+
-														 
-														 											( 
+										'"Attibutos": ['+			 
+											( 
 												SELECT STUFF((
 															SELECT ','+ 
 					
 																	'{'+
-								
-
-
 																		 '"Id":"' + CAST(CMA.IdCatMembershipAttribute AS VARCHAR) +'"'+  ',' +
 																		 '"Descripcion":"' + CMA.MembershipAttributeDescription+'"'+ ',' +
 																		 '"Valor":"' + CAST(CMA.MembershipAttributeValue AS VARCHAR)+'"'+  ',' +
 																		 '"Posicion":"' +CAST(CMA.MembershipAttributePosition AS VARCHAR)+'"'+ 
-											
 																		'}' 
 							  
 			
@@ -74,14 +70,29 @@ BEGIN
 																AND [CMA].[RowStatus] = 1
 																order by [CMA].[MembershipAttributePosition]
 																FOR XML PATH(''), TYPE 
-													) 
+																) 
 																.value('.', 'varchar(max)'),1,1,'' 
-													)
-												) +
-
-
-
-													']'+  ',' +
+															)
+											) + ']'+  ',' +
+										'"Descriptions":[' +
+										ISNULL((
+											SELECT STUFF((
+												SELECT ',' +
+												ISNULL('{'+
+														'"Id":"' + CAST(CMD.IdCatMembershipDescription AS VARCHAR) +'"'+  ',' +
+														'"Título":"' + CMD.Title +'"'+ ',' +
+														'"Descripción":"' + CAST(CMD.Description AS NVARCHAR(500))+'"'+  ',' +
+														'"Tipo":"' +CAST(CMD.Type AS VARCHAR)+'"'+ ',' +
+														'"Posición":"' +CAST(CMD.Position AS VARCHAR)+'"'+ 
+													'}', '') 
+											FROM	[dbo].[CatMembershipDescription] CMD     
+											WHERE	[CMD].[CatMembershipId] = [CM].[IdCatMembership]
+												AND [CMD].[RowStatus] = 1
+											ORDER BY [CMD].[Position], [CMD].[Type]
+											FOR XML PATH(''), TYPE 
+											).value('.', 'varchar(max)') , 1, 1, '')
+										), '')
+										+ ']' + ',' +
 									   
 										'"Costo":"' + CAST(CM.MembershipCost AS VARCHAR)+'"'+  ',' +
 										'"Tiempo de validez":"'+CAST(CM.MembershipValidity AS VARCHAR)+'"'+   ',' +
@@ -164,6 +175,25 @@ BEGIN
 																+
 
 														']'+  ',' +
+											'"Descriptions":[' +
+												ISNULL((
+													SELECT STUFF((
+														SELECT ',' +
+														ISNULL('{'+
+																'"Id":"' + CAST(CSD.IdCatSubscriptionDescription AS VARCHAR) +'"'+  ',' +
+																'"Título":"' + CSD.Title +'"'+ ',' +
+																'"Descripción":"' + CAST(CSD.Description AS VARCHAR(500))+'"'+  ',' +
+																'"Tipo":"' +CAST(CSD.Type AS VARCHAR)+'"'+ ',' +
+																'"Posición":"' +CAST(CSD.Position AS VARCHAR)+'"'+ 
+															'}', '') 
+													FROM	[dbo].[CatSubscriptionDescription] CSD     
+													WHERE	[CSD].[CatSubscriptionId] = [CS].[IdCatSubscription]
+														AND [CSD].[RowStatus] = 1
+													ORDER BY [CSD].[Position], [CSD].[Type]
+													FOR XML PATH(''), TYPE 
+													).value('.', 'varchar(max)') , 1, 1, '')
+												), '')
+												+ ']' + ',' +
 									   
 											'"Costo":"' + CAST(CS.SubscriptionCost AS VARCHAR)+'"'+  ',' +
 											'"Tiempo de validez":"'+CAST(CS.SubscriptionValidity AS VARCHAR)+'"'+     ',' +
