@@ -49,7 +49,7 @@ BEGIN
 				[M].[IsAutoRenewable],
 				[M].[MembershipMaxServiceFixedValue],
 				[M].[ActualServiceCount],
-				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) > [M].[MembershipMaxServiceFixedValue], 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService],
+				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService],
 				[M].[ExpirationDate] [MembershipExpirationDate],
 				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage],
 				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
@@ -78,7 +78,7 @@ BEGIN
 				[S].[IsAutoRenewable],
 				[S].[SubscriptionMaxServiceFixedValue],
 				[S].[ActualServiceCount],
-				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > [S].[SubscriptionMaxServiceFixedValue], 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionAvailableFixedService],
+				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0, 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionAvailableFixedService],
 				IIF((([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) > 100, 100, (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue])) [SubscriptionUsagePercentage],
 				[S].[ExpirationDate] [SubscriptionExpirationDate],
 				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
