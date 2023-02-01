@@ -32,7 +32,7 @@ BEGIN
                     ' se encuentra en el estado <STATUS> desde el <DATE>, gracias por usar nuestros servicios.'
                 );
     DECLARE @FailureResponseMessage NVARCHAR(300)
-        = N'Estimado cliente, ha ocurrido un error al procesar su solicitud, por favor, intente de nuevo más tarde.';
+        = N'Ocurrió un inconveniente al consultar la información, por favor intente de nuevo más tarde';
 
 
     DECLARE @ResponseTable AS TABLE
@@ -66,10 +66,23 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
                 WHERE CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
             );
-			
+
+			PRINT @ExternalTypeId
+	
+	--validar si el último estado es externo en caso contrario tomar el estado anterior
+	DECLARE @GuideTypeId INT
+	SELECT @GuideTypeId = sto.CatStatusTypeId FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH(NOLOCK) 
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK) ON DOR.StatusOrderId = STO.StatusOrderId
+	AND STO.CatStatusTypeId = 2
+	WHERE DOR.Guide_Serie = @GuideSerie AND DOR.Guide_Number = @GuideNumber
+	
+		
 
     BEGIN TRY
-        INSERT INTO @ResponseTable
+	IF (@GuideTypeId = @ExternalTypeId) --último estado es externo
+	BEGIN 
+	    PRINT 'ÚLTIMO ESTADO EXTERNO'
+		INSERT INTO @ResponseTable
         (
             GuideNumber,
             GuideStatus,
@@ -96,8 +109,9 @@ BEGIN
                SO.StatusMessage,
                TS.TownshipName,
                DO.Sender_Department,
-               HL.HubName,
-               (
+               --HL.HubName,
+               HL.DescriptionCC,               
+			   (
                    SELECT TOP 1
                           --DescriptionOfClient
 						  DescriptionCC
@@ -156,6 +170,113 @@ BEGIN
               AND DOD.Guide_Serie = @GuideSerie
               AND CST.IdCatStatusType = @ExternalTypeId
         ORDER BY DOD.DateCreated DESC;
+	END
+	ELSE
+	BEGIN
+	PRINT 'ÚLTIMO ESTADO INTERNO'
+	--Obtener último estado externo
+	DECLARE @LastStatus INT
+	SELECT TOP 1 @LastStatus=DOD.StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
+	 ON STO.StatusOrderId = DOD.StatusOrderId
+	  AND STO.CatStatusTypeId = 2
+	WHERE DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber
+	ORDER BY DOD.DateCreated DESC
+
+	PRINT '@LastStatus'
+	PRINT @LastStatus
+
+		INSERT INTO @ResponseTable
+        (
+            GuideNumber,
+            GuideStatus,
+            GuideStatusDescription,
+            GuideStatusDate,
+            GuideStatusMesseage,
+            TownShipName,
+            ProvidencePickup,
+            HUB,
+            EXC,
+            Incidence,
+            ReceiverName,
+            ProvidenceDelivery,
+            NamePersonSending,
+            TownshipDelivery,
+            GuideSerie,
+            Client --NUEVO BNHL
+        )
+        SELECT TOP 1
+               DOD.Guide_Number,
+               DOD.StatusOrderId,
+               SO.OrderDescription,
+               DOD.DateCreated,
+               SO.StatusMessage,
+               TS.TownshipName,
+               DO.Sender_Department,
+               --HL.HubName,
+			   HL.DescriptionCC,
+               (
+                   SELECT TOP 1
+                          --DescriptionOfClient
+						  DescriptionCC
+                   FROM [DeliveryBackOffice].[dbo].[TokenLog] TL WITH (NOLOCK)
+                       INNER JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH (NOLOCK)
+                           ON TL.TknIdUser = RU.UsrIdUser
+                       INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointByUser] VPU WITH (NOLOCK)
+                           ON RU.UsrIdUser = VPU.RegisterUserID
+                       INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
+                           ON VPU.IdVisitPointClient = VPC.IdVisitPointClient
+                   WHERE TL.TknIdToken = DOD.UserCreated
+               ) DescriptionOfClient,
+               I.NameIncidence AS Incidence,
+               COALESCE(DO.Receiver_FirstName, '') + ' ' + COALESCE(DO.Receiver_LastName, ''),
+               DO.Sender_Department,
+               COALESCE(Sender_FirstName, '') + ' ' + COALESCE(DO.Sender_LastName, ''),
+               (
+                   SELECT TownshipName
+                   FROM [dbo].[Township] WITH (NOLOCK)
+                   WHERE IdTownship = DO.ReceiverIdTownship
+               ),
+               DO.Guide_Serie,
+               COALESCE(DO.Sender_FirstName, '') + COALESCE(DO.Sender_LastName, '') Client --NUEVO BNHL
+        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
+                ON DO.Guide_Serie = DOD.Guide_Serie
+                   AND DO.Guide_Number = DOD.Guide_Number
+				   AND DOD.StatusOrderId = @LastStatus --Último estado externo
+            LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
+                ON DOD.StatusOrderId = SO.StatusOrderId
+            LEFT JOIN [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
+                ON SO.CatStatusTypeId = CST.IdCatStatusType
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TS WITH (NOLOCK)
+                ON DO.SenderIdTownship = TS.IdTownship
+            LEFT JOIN
+            (
+                SELECT HeaderCode,
+                       MAX(DSC.Hub) 'Hub'
+                FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH (NOLOCK)
+                GROUP BY DSC.HeaderCode
+            ) DSC
+                ON TS.HeaderCode = DSC.HeaderCode
+            LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] HL WITH (NOLOCK)
+                ON DSC.Hub = HL.HubAbbreviation
+            OUTER APPLY
+        (
+            SELECT TOP 1
+                   I.NameIncidence
+            FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] I WITH (NOLOCK)
+                    ON DA.ID_Incident = I.IdIncidenceType
+            WHERE DA.Guide_Serie = DO.Guide_Serie
+                  AND DA.Guide_Number = DO.Guide_Number
+            ORDER BY DA.Date_Created DESC
+        ) I
+        WHERE DOD.Guide_Number = @GuideNumber
+              AND DOD.Guide_Serie = @GuideSerie
+              --AND CST.IdCatStatusType = @ExternalTypeId
+        ORDER BY DOD.DateCreated DESC;
+	END
+        
 
         IF (EXISTS (SELECT TOP 1 1 FROM @ResponseTable))
         BEGIN
