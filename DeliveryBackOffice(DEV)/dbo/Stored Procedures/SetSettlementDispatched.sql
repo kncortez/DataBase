@@ -61,7 +61,7 @@ BEGIN
 			SET rpdp.RowStatus = 0
 				,rpdp.TokenUpdated = @Token
 				,rpdp.DateUpdated = GETDATE()
-			FROM RoutePreparationDetailPiece rpdp 
+			FROM RoutePreparationDetailPiece rpdp WITH(NOLOCK) 
 			inner JOIN RoutePreparationDetail rpd WITH(NOLOCK) 
 				ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
 				and rpd.RowStatus = 1
@@ -78,7 +78,7 @@ BEGIN
 			SET rpd.RowStatus = 0
 				,rpd.TokenUpdated = @Token
 				,rpd.DateUpdated = GETDATE()
-			FROM RoutePreparationDetail rpd
+			FROM RoutePreparationDetail rpd WITH(NOLOCK) 
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation
 			AND NOT EXISTS (
 				SELECT 1 
@@ -92,7 +92,7 @@ BEGIN
 			SET wh.Active = 0
 				,wh.UserUpdated = @Token
 				,wh.DateUpdated = GETDATE()
-			FROM Warehouse wh
+			FROM Warehouse wh WITH(NOLOCK) 
 			INNER JOIN @ListGuides lg
 				ON wh.Guide_Serie = lg.Guide_Serie AND wh.Guide_Number = lg.Guide_Number
 			WHERE wh.Active = 1  
@@ -101,7 +101,7 @@ BEGIN
 			UPDATE dop
 			SET
 				StatusOrderId = 4
-			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] dop WITH(NOLOCK) 
 			INNER JOIN @ListGuides lg
 				ON dop.GuideSerie = lg.Guide_Serie AND dop.GuideNumber = lg.Guide_Number
 				
@@ -112,7 +112,7 @@ BEGIN
 				,Dispatched_Date = GETDATE()
 				,TokenUpdated = @Token
 				,DateUpdated = GETDATE()
-			FROM DeliveryOrder do
+			FROM DeliveryOrder do WITH(NOLOCK) 
 			INNER JOIN @ListGuides lg
 				ON do.Guide_Serie = lg.Guide_Serie AND do.Guide_Number = lg.Guide_Number
 			
@@ -122,7 +122,7 @@ BEGIN
 
 			-- Activar bandera de proceso de SMS
 			IF((select top 1 ue.UpdateStatus
-						from [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue
+						from [DeliveryBackOffice].[dbo].[SMS_UpdatedElements] ue WITH(NOLOCK) 
 						where ue.RowStatus=1
 						and ue.ElementId=1001)=0)
 			BEGIN
@@ -308,7 +308,7 @@ BEGIN
 			SET dsd.RowStatus = 0,
 				dsd.TokenUpdated = @Token,
 				dsd.DateUpdated = GETDATE()
-			FROM  DeliverySettlementDetail dsd
+			FROM  DeliverySettlementDetail dsd WITH(NOLOCK) 
 			INNER JOIN DeliveryOrderBySettlement dobs  WITH(NOLOCK) 
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 			INNER JOIN @ListGuides lg
@@ -319,7 +319,7 @@ BEGIN
 			-- Actualizar orden de guías en preparación
 			UPDATE rpd
 			SET rpd.GuideOrder = IIF(lg.Guide_Order IS NULL, rpd.GuideOrder, lg.Guide_Order), rpd.DateUpdated = GETDATE(), rpd.TokenUpdated = @Token, rpd.ETAGuide = IIF(lg.Guide_ETA IS NULL, rpd.ETAGuide, lg.Guide_ETA)
-			FROM RoutePreparationDetail rpd
+			FROM RoutePreparationDetail rpd WITH(NOLOCK) 
 			INNER JOIN @ListGuides lg
 			ON rpd.Guide_Serie = lg.Guide_Serie AND rpd.Guide_Number = lg.Guide_Number
 			WHERE rpd.RoutePreparationId = @IdRoutePreparation AND rpd.RowStatus = 1
@@ -360,7 +360,7 @@ BEGIN
 			UPDATE do 
 			SET do.Courier_Route = @CodeRoute
 				,do.Dispatched_Date = @DateTime
-			FROM DeliveryOrder do
+			FROM DeliveryOrder do WITH(NOLOCK) 
 			INNER JOIN @ListGuides lg
 				ON lg.Guide_Serie = do.Guide_Serie
 				AND lg.Guide_Number = do.Guide_Number
@@ -484,11 +484,11 @@ BEGIN
 				RA.TokenUpdated=@Token,
 				RA.DateUpdated=GETDATE()
 			FROM DBO.RoutePreparationDetail RPD WITH(NOLOCK)
-				INNER JOIN DBO.ServiceManagementDetail SMD
+				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK) 
 					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
 				INNER JOIN DBO.ServiceManagement SM WITH(NOLOCK)
 					ON SM.IdServiceManagement=SMD.ServiceManagement
-				INNER JOIN DBO.RouteAssigment RA
+				INNER JOIN DBO.RouteAssigment RA WITH(NOLOCK) 
 					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
 			WHERE
 				RPD.RoutePreparationId = @IdRoutePreparation;

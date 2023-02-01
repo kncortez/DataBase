@@ -72,7 +72,7 @@ BEGIN
     DECLARE @SuscriptionDesc AS NVARCHAR(200);
 	DECLARE @Authorizacion AS NVARCHAR(20);
 	DECLARE @IdMemberOrSuscription AS  NVARCHAR(200)
-	DECLARE @MembershipId AS INT = 0;
+	DECLARE @MembershipId AS INT = NULL;
 	DECLARE @SubscriptionId AS INT = NULL;
 
     SET @SuscriptionDesc =
@@ -145,7 +145,7 @@ BEGIN
                    @inv_IVA = M.MembershipCost - (M.MembershipCost / 1.12),
                    @Descriptionp = CM.MembershipName,
 				   @IdMemberOrSuscription = M.IdMembership,
-				   @MembershipId = ISNULL(M.IdMembership, 0)
+				   @MembershipId = M.IdMembership
             FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
                 INNER JOIN [dbo].[CatMembership] CM WITH (NOLOCK)
                     ON M.CatMembershipId = CM.IdCatMembership

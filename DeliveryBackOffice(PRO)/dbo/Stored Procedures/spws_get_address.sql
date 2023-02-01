@@ -28,6 +28,7 @@ BEGIN
 							 ',{"IdAccount":"' +   convert(varchar,ua.UadIdAccount) + '",' +
 							'"IdAddress":"' +  convert(varchar,ua.UadIdAddress)  + '",' +
 							'"FullName":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadFullName,'json') ,'"','')  + '",' +
+							'"ContactName":"' +  REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadFullName,''),'json') ,'"','')  + '",' +
 							'"Address1":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAddress1,'json') ,'"','') + '",' +
 							'"Address2":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAddress2,'json') ,'"','')  + '",' +
 							'"NirPhone":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadNirPhone,'json') ,'"','')  + '",' +

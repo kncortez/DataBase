@@ -58,7 +58,7 @@ BEGIN
 					
 						UPDATE  [dbo].[Membership] 
 						   SET IsAutoRenewable   = @IsAutoRenewable,
-						       CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
+						       CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, ISNULL(@IdCard, CustomerPaymentId))
 						WHERE AccountId = @IdAccount AND IdMembership = @IdSalePackage
 
 					
@@ -92,7 +92,7 @@ BEGIN
 				
 					UPDATE  [dbo].[Subscription] 
 								   SET IsAutoRenewable   = @IsAutoRenewable,
-									   CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, @IdCard)
+									   CustomerPaymentId = IIF(@IdCard = 0 AND @ClientType = 1 AND @HasCredit = 1, NULL, ISNULL(@IdCard, CustomerPaymentId))
 								WHERE AccountId = @IdAccount AND IdSubscription = @IdSalePackage
 
 			

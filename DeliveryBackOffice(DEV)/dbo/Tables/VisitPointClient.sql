@@ -50,8 +50,6 @@
 
 
 
-
-
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);

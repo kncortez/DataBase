@@ -498,7 +498,7 @@ BEGIN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
 			IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
-			CONCAT('https://develop.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			(CASE
 				WHEN 
 					(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )

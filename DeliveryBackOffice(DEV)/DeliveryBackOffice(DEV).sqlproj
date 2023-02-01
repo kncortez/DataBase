@@ -1424,6 +1424,13 @@
     <Build Include="dbo\Stored Procedures\spHW_TMBuyMembership.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetTMAssociatedCustomersList.sql" />
     <Build Include="dbo\Stored Procedures\GetClientDataByEmail.sql" />
+    <Build Include="dbo\Tables\TagsVariables.sql" />
+    <Build Include="dbo\Stored Procedures\spws_revalue_guide_JARP.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_bank_name_JRP.sql" />
+    <Build Include="dbo\Stored Procedures\sps_set_status_order_by_guide_return_TEMP.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
+    <Build Include="dbo\Stored Procedures\RDL_CODReport_temp.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

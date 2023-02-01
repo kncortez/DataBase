@@ -64,13 +64,13 @@ BEGIN
 					WHERE rba.RuaIdUser = @IdUser
             );
 
-    PRINT @@TRANCOUNT;
+
 
     IF @IdUser > 0
     BEGIN
         BEGIN TRANSACTION;
         BEGIN TRY
-            PRINT @@TRANCOUNT;
+
             UPDATE dbo.Person
             SET PerFirstName = @FirstName,
                 PerLastName = @LastName,
@@ -171,7 +171,7 @@ BEGIN
 
     SELECT ('[{' + @jsonResult + ']') jsonResult;
 
-END;
+END
 
 
 

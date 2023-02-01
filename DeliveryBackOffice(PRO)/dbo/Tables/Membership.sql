@@ -24,6 +24,7 @@
     [InvoiceEmail]                   NVARCHAR (50)   NULL,
     [FiscalAddress]                  NVARCHAR (200)  NULL,
     [RenewalFixedDay]                INT             NULL,
+    [CatTMSalesPersonId]             INT             NULL,
     CONSTRAINT [PK_Membership] PRIMARY KEY CLUSTERED ([IdMembership] ASC),
     CONSTRAINT [FK_Membership_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_Membership_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
@@ -32,6 +33,8 @@
     CONSTRAINT [FK_Membership_MembershipStatus] FOREIGN KEY ([CatMembershipStatusId]) REFERENCES [dbo].[CatSalesPackageStatus] ([IdCatSalesPackageStatus]),
     CONSTRAINT [FK_Membership_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO
@@ -44,4 +47,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la ta
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla Membership.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'IdMembership';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado a la membresía vendida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
 

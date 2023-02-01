@@ -330,3 +330,8 @@ GO
 GO
 
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Sender_Address]
+    ON [dbo].[DeliveryOrder]([Sender_Address] ASC);
+

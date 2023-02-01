@@ -1194,18 +1194,43 @@ BEGIN
         ELSE
         BEGIN
 
-
-            SET @ParcelPrice =
+			-- Codigos de artículos reconocidos en tarifario
+            set @ParcelPrice =
             (
-                SELECT SUM(ISNULL(ra.RateValue, ISNULL(ar.PriceDefault, 0)))
-                FROM #ListCode ls
-                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                select sum(isnull(ra.RateValue, isnull(ar.PriceDefault, 0)))
+                from #ListCode ls
+                    INNER join dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
-                    INNER JOIN dbo.RateData ra WITH (NOLOCK)
+                    INNER join dbo.RateData ra WITH (NOLOCK)
                         ON ra.ArticleId = ar.AbcId
-                           AND ra.TypeSegmentId = @IdSegment
+                           and ra.TypeSegmentId = @IdSegment
                            AND ra.RateId = @IdRate
-            );
+            )
+
+			-- Codigos de artículos no reconocidos en tarifa, tomar precios "base" por tipo de servicio
+            set @ParcelPrice = ISNULL(@ParcelPrice, 0) +
+            ISNULL((
+                select sum(isnull(raser.RateValue, isnull(ar.PriceDefault, 0)))
+                from #ListCode ls
+                    INNER join dbo.ArticleByCustomer ar WITH (NOLOCK)
+                        ON ar.Code = ls.Item
+                    LEFT join dbo.RateData raart WITH (NOLOCK)
+                        ON raart.ArticleId = ar.AbcId
+                           and raart.TypeSegmentId = @IdSegment
+                           AND raart.RateId = @IdRate
+					LEFT JOIN dbo.RateData raser WITH(NOLOCK)
+						ON raser.TypeSegmentId = @IdSegment
+					    and (
+							(@IsSDD = 1 AND raser.TypeServiceId = 1)
+							OR
+							(@IsTDA = 1 AND raser.TypeServiceId = 3)
+							OR
+							(@IsSDD != 1 AND @IsTDA != 1 AND raser.TypeServiceId = 2)
+						)
+						AND raser.RateId = @IdRate
+				WHERE
+					raart.IdRateData IS NULL -- Artículos no detectados en tarifario
+            ), 0)
             --select @ParcelPrice as price
             -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
             INSERT INTO @TempRate
