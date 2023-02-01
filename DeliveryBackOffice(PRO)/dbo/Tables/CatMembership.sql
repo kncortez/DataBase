@@ -11,8 +11,11 @@
     [DateCreated]                    DATETIME        NOT NULL,
     [TokenUpdated]                   NVARCHAR (50)   NULL,
     [DateUpdated]                    DATETIME        NULL,
+    [Icon]                           NVARCHAR (50)   NULL,
     CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
 );
+
+
 
 
 GO

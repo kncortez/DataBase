@@ -11,7 +11,7 @@ AS
 
 BEGIN
 
-	SELECT Name FROM Customer
+	SELECT Name FROM Customer WITH(NOLOCK)
 			WHERE IdCustomer = @IdCustomer
 
 END

@@ -47,6 +47,25 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
             DROP TABLE #listGuides;
 
+        CREATE TABLE #listGuides
+        (
+            ItemSerie NVARCHAR(2),
+            ItemNumber INT,
+            ItemPiece INT
+        );
+
+        CREATE NONCLUSTERED INDEX TMP_IDX_ListGuides_Guide
+        ON #listGuides (
+                           ItemSerie,
+                           ItemNumber
+                       );
+
+        INSERT INTO #listGuides
+        (
+            ItemSerie,
+            ItemNumber,
+            ItemPiece
+        )
         -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
         SELECT SUBSTRING(Item, 1, 2) ItemSerie,
                SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))) ItemNumber,
@@ -55,15 +74,15 @@ BEGIN
         --SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
         --CHARINDEX('-',Item) charinde,  
         --len(Item) len
-        INTO #listGuides
-        FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@Guide_Number, ',');
+        --       INTO #listGuides
+        FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
 
-		CREATE NONCLUSTERED INDEX TMP_IDX_ListGuides_Guide ON #listGuides(ItemSerie, ItemNumber);
+
 
         SET @ExisteRuta =
         (
             SELECT COUNT(1)
-            FROM RouteAssigment ra
+            FROM RouteAssigment ra WITH (NOLOCK)
             WHERE ra.IdRoute = @IdRoute
                   AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
         );
@@ -95,7 +114,7 @@ BEGIN
             SET @IdRouteASG =
             (
                 SELECT ra.IdRouteAssigment
-                FROM RouteAssigment ra
+                FROM RouteAssigment ra WITH (NOLOCK)
                 WHERE ra.IdRoute = @IdRoute
                       AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
             );
@@ -127,19 +146,20 @@ BEGIN
             SET @ExisteServicio =
             (
                 SELECT COUNT(1)
-                FROM ServiceManagement sm WITH(NOLOCK)
-                    INNER JOIN RouteAssigment ra WITH(NOLOCK)
+                FROM ServiceManagement sm WITH (NOLOCK)
+                    INNER JOIN RouteAssigment ra WITH (NOLOCK)
                         ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
                            AND ra.DateOfRoute = CONVERT(CHAR(10), GETDATE(), 126)
-                    INNER JOIN PieceByService pbs WITH(NOLOCK)
+                    INNER JOIN PieceByService pbs WITH (NOLOCK)
                         ON pbs.ServiceManagmentId = sm.IdServiceManagement
-                    INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+                    INNER JOIN DeliveryOrderPiece dop WITH (NOLOCK)
                         ON dop.GuidePiece = pbs.GuidePieceId
-                    INNER JOIN DeliveryOrder do WITH(NOLOCK)
+                    INNER JOIN DeliveryOrder do WITH (NOLOCK)
                         ON dop.GuideNumber = do.Guide_Number
                            AND dop.GuideSerie = do.Guide_Serie
                 WHERE do.Sender_Address = @Addres
-                      AND sm.IdPuRouteAssigment = @IdRouteASG
+                      AND 
+					  sm.IdPuRouteAssigment = @IdRouteASG
             );
 
 
@@ -227,7 +247,7 @@ BEGIN
             SET @ExistePiezaPorServicio =
             (
                 SELECT COUNT(1)
-                FROM dbo.PieceByService pbs WITH(NOLOCK)
+                FROM dbo.PieceByService pbs WITH (NOLOCK)
                     INNER JOIN DeliveryOrderPiece pc WITH (NOLOCK)
                         ON pc.GuidePiece = pbs.GuidePieceId
                 WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number
@@ -260,8 +280,20 @@ BEGIN
                        GETDATE(),
                        NULL,
                        NULL
-                FROM DeliveryOrderPiece pc WITH(NOLOCK)
-                WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
+                FROM DeliveryOrderPiece pc WITH (NOLOCK)
+               -- WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
+
+				WHERE PC.GuideSerie = SUBSTRING(@Guide_Number, 1, 2)
+			AND pc.GuideNumber = SUBSTRING(@Guide_Number, 3, IIF(CHARINDEX('-', @Guide_Number) = 0, (LEN(@Guide_Number)), (CHARINDEX('-', @Guide_Number) - 3)))
+			AND pc.NoPiece = ISNULL(   (CASE
+                                      WHEN LEN(SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))) > 1 THEN
+                                          1
+                                      ELSE
+                                          SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))
+                                  END
+                                 ),
+                                 0
+                             ) 
 
             END;
 
@@ -362,6 +394,9 @@ BEGIN
         ROLLBACK TRANSACTION;
     END CATCH;
 
+	print '@ValidateOperation'
+	PRINT @ValidateOperation
+
     IF @@trancount > 0
     BEGIN
 
@@ -376,7 +411,7 @@ BEGIN
                    serv.Sender_Address AS HUB_DESTINO,
                    (
                        SELECT ISNULL(COUNT(1), 0)
-                       FROM dbo.PieceByService pbs WITH(NOLOCK)
+                       FROM dbo.PieceByService pbs WITH (NOLOCK)
                            INNER JOIN DeliveryOrderPiece pci WITH (NOLOCK)
                                ON pci.GuidePiece = pbs.GuidePieceId
                        WHERE CONCAT(pci.GuideSerie, CAST(pci.GuideNumber AS VARCHAR)) = CONCAT(
@@ -422,7 +457,18 @@ BEGIN
                 INNER JOIN DeliveryOrderPiece pc WITH (NOLOCK)
                     ON serv.Guide_Number = pc.GuideNumber
                        AND serv.Guide_Serie = pc.GuideSerie
-            WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
+            WHERE PC.GuideSerie = SUBSTRING(@Guide_Number, 1, 2)
+			AND pc.GuideNumber = SUBSTRING(@Guide_Number, 3, IIF(CHARINDEX('-', @Guide_Number) = 0, (LEN(@Guide_Number)), (CHARINDEX('-', @Guide_Number) - 3)))
+			AND pc.NoPiece = ISNULL(   (CASE
+                                      WHEN LEN(SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))) > 1 THEN
+                                          1
+                                      ELSE
+                                          SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))
+                                  END
+                                 ),
+                                 0
+                             ) 
+			--WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
         --AND @ExistePiezaPorServicio = 0
 
 

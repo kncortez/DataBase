@@ -12,6 +12,9 @@
     [DateCreated]                      DATETIME        NOT NULL,
     [TokenUpdated]                     NVARCHAR (50)   NULL,
     [DateUpdated]                      DATETIME        NULL,
+    [Icon]                             NVARCHAR (50)   NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC)
 );
+
+
 

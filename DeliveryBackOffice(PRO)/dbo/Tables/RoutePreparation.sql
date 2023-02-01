@@ -20,6 +20,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar la información de la preparación de entregas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparation';
 
@@ -74,4 +76,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la ta
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la preparación de ruta fue generada desde Simpliroute.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparation', @level2type = N'COLUMN', @level2name = N'IsSimpliRoute';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatRouteId_DateRoutePreparation_RowStatus]
+    ON [dbo].[RoutePreparation]([CatRouteId] ASC, [DateRoutePreparation] ASC, [RowStatus] ASC);
 

@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 
 
@@ -103,4 +105,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 GO
 CREATE NONCLUSTERED INDEX [idx_ServiceManagementDetailId_RowStatus]
     ON [dbo].[RoutePreparationDetail]([ServiceManagementDetailId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RoutePreparationId_include]
+    ON [dbo].[RoutePreparationDetail]([RoutePreparationId] ASC)
+    INCLUDE([ServiceManagementDetailId]);
 
