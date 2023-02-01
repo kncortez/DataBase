@@ -14,7 +14,7 @@ CREATE PROCEDURE [dbo].[SPHWPMembershipOrSubscriptions]
 -- Add the parameters for the stored procedure here
   
     @Type  AS NVARCHAR(50),
-	@Token AS NVARCHAR(50),
+	--@Token AS NVARCHAR(50),
 	@AccountId AS BIGINT = NULL
  
      
