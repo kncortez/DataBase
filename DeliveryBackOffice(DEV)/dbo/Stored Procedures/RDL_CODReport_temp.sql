@@ -4,7 +4,7 @@
 -- Description:	<Reporte completo de COD>
 -- =============================================
 --EXEC [RDL_CODReport] @StartDate = '2022-02-01',@EndDate='2022-02-24'
-CREATE PROCEDURE [dbo].[RDL_CODReport]
+CREATE PROCEDURE [dbo].[RDL_CODReport_temp]
     @StartDate DATETIME,
     @EndDate DATETIME
 AS

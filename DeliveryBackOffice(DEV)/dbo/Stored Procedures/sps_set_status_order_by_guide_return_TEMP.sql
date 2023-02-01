@@ -12,7 +12,7 @@
 -- Description:	<Agregar Update para liberar ubicación de rack de guía>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide_return]
+CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide_return_TEMP]
     @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
     @Guide_Number AS VARCHAR(MAX),      -- a list of guides separated by comma
     @StatusId AS INT,                   -- status from StatusOrder
@@ -27,6 +27,7 @@ CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide_return]
     @OPTION AS INT = 2
 AS
 BEGIN
+set statistics time on 
     DECLARE @ValidateOperation BIGINT = 0;
     DECLARE @RowUpdated INT;
     DECLARE @ExisteRuta INT;
@@ -75,7 +76,7 @@ BEGIN
         --CHARINDEX('-',Item) charinde,  
         --len(Item) len
         --       INTO #listGuides
-        FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
+        FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@Guide_Number, ',');
 
 
 
@@ -158,8 +159,7 @@ BEGIN
                         ON dop.GuideNumber = do.Guide_Number
                            AND dop.GuideSerie = do.Guide_Serie
                 WHERE do.Sender_Address = @Addres
-                      AND 
-					  sm.IdPuRouteAssigment = @IdRouteASG
+                      AND sm.IdPuRouteAssigment = @IdRouteASG
             );
 
 
@@ -281,19 +281,7 @@ BEGIN
                        NULL,
                        NULL
                 FROM DeliveryOrderPiece pc WITH (NOLOCK)
-               -- WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
-
-				WHERE PC.GuideSerie = SUBSTRING(@Guide_Number, 1, 2)
-			AND pc.GuideNumber = SUBSTRING(@Guide_Number, 3, IIF(CHARINDEX('-', @Guide_Number) = 0, (LEN(@Guide_Number)), (CHARINDEX('-', @Guide_Number) - 3)))
-			AND pc.NoPiece = ISNULL(   (CASE
-                                      WHEN LEN(SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))) > 1 THEN
-                                          1
-                                      ELSE
-                                          SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))
-                                  END
-                                 ),
-                                 0
-                             ) 
+                WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
 
             END;
 
@@ -394,15 +382,12 @@ BEGIN
         ROLLBACK TRANSACTION;
     END CATCH;
 
-	print '@ValidateOperation'
-	PRINT @ValidateOperation
-
     IF @@trancount > 0
     BEGIN
 
         IF (@ValidateOperation > 0)
         BEGIN
-
+		PRINT 'HOLA'
             SELECT CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR)) AS NUMGUIA,
                    CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) GUIA,
                    ISNULL(serv.Ticket_Number, ' ') AS Ticket_Number,
@@ -468,9 +453,24 @@ BEGIN
                                  ),
                                  0
                              ) 
-			--WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number;
-        --AND @ExistePiezaPorServicio = 0
 
+			PRINT SUBSTRING(@Guide_Number, 1, 2)
+			PRINT  SUBSTRING(@Guide_Number, 3, IIF(CHARINDEX('-', @Guide_Number) = 0, (LEN(@Guide_Number)), (CHARINDEX('-', @Guide_Number) - 3)))
+			print ISNULL(   (CASE
+                                      WHEN LEN(SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))) > 1 THEN
+                                          1
+                                      ELSE
+                                          SUBSTRING(@Guide_Number, CHARINDEX('-', @Guide_Number) + 1, LEN(@Guide_Number))
+                                  END
+                                 ),
+                                 0
+                             ) 
+
+			--WHERE CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) = @Guide_Number
+			--option (optimize for unknown)
+			;
+        --AND @ExistePiezaPorServicio = 0
+		PRINT 'HOLA2'
 
 
         END;
@@ -494,4 +494,3 @@ BEGIN
         COMMIT TRANSACTION;
     END;
 END;
-

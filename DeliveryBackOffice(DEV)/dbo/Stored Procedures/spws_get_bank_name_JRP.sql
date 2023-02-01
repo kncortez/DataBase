@@ -20,7 +20,7 @@
 -- Create date: <2023-01-2>4
 -- Description:	<Devolver tipo de cuenta y mensaje de estructura de cuenta en arreglo dentro del json>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_bank_name]
+CREATE PROCEDURE [dbo].[spws_get_bank_name_JRP]
     -- Add the parameters for the stored procedure here
     @ValName AS NVARCHAR(100),
     @IdCountry AS NVARCHAR(2) = 'GT'

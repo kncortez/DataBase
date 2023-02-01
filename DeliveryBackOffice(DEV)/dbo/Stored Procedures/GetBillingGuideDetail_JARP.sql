@@ -14,7 +14,7 @@
 -- Create date: <2022-05-31>
 -- Description:	< Actualización para manejo de membresías y suscripciones >
 -- =============================================
-CREATE PROCEDURE [dbo].[GetBillingGuideDetail]
+CREATE PROCEDURE [dbo].[GetBillingGuideDetail_JARP]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT
 AS
@@ -407,4 +407,4 @@ BEGIN
     FROM @GuideDetail;
 
     SET NOCOUNT OFF;
-END;	
+END;

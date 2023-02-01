@@ -18,6 +18,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -71,5 +73,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de ca
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de ícono configurable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'Icon';
+
 
