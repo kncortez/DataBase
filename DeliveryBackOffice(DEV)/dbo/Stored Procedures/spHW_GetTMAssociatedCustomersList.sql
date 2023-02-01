@@ -11,6 +11,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	DECLARE @CatTMSalesPersonId INT = 0;
+	DECLARE @VoidStatus INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI);
 
 	SET @CatTMSalesPersonId = (	SELECT  [CTSP].[IdCatTMSalesPerson]
 								FROM	[dbo].[CatTMSalesPerson] CTSP 
@@ -23,7 +24,7 @@ BEGIN
 				[RU].[UsrDateCreated] [DateCreated],
 				[C].[CutOffDate] [CutOffDate],
 				[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
-				ISNULL([M].[ActualServiceCount], 0) [ActualServiceCount],
+				ISNULL([GuideAmountBeforeCut].[TotalGuides], 0) [ActualServiceCount],
 				ISNULL([M].[IdMembership], 0) [MembershipId],
 				ISNULL([CM].[MembershipName], '') [MembershipName], 
 				ISNULL([CM].[MembershipCost], 0) [MembershipCost]
@@ -39,9 +40,24 @@ BEGIN
 		ON		[RU].[UsrIdPerson] = [P].[PerIdPerson]
 	LEFT JOIN	[dbo].[Membership] M
 		ON		[C].[IdCustomer] = [M].[CustomerId]
-		AND		[M].[ExpirationDate] <= SYSDATETIME()
+		AND		[M].[ExpirationDate] >= SYSDATETIME()
 	LEFT JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
+	OUTER APPLY (
+		SELECT
+			TOP 1
+				COUNT(DISTINCT DO.Guide_Number) 'TotalGuides'
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		WHERE
+			DO.IdCustomer = [C].[IdCustomer]
+			AND
+			DO.StatusOrderId NOT IN (@VoidStatus)
+			AND
+			DO.DateCreated <= [C].[CutOffDate]
+		GROUP BY
+			DO.IdCustomer
+	) GuideAmountBeforeCut
 	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId;
 
 END

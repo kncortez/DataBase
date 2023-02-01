@@ -110,7 +110,7 @@ BEGIN
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
 
-	SET @TMSalesPersonName  = ( SELECT	CONCAT([CTSP].[FirstName], [CTSP].[LastName])
+	SET @TMSalesPersonName  = ( SELECT	CONCAT([CTSP].[FirstName], ' ', [CTSP].[LastName])
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
 
