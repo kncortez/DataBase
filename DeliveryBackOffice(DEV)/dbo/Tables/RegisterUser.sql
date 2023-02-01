@@ -25,9 +25,14 @@
     [IdentificationImageA]    NVARCHAR (500) NULL,
     [IdentificationImageB]    NVARCHAR (500) NULL,
     [VerifiedPhone]           BIT            CONSTRAINT [DF__RegisterU__Verif__2E51B1C3] DEFAULT ('false') NULL,
+    [ChangePassword]          BIT            NULL,
     PRIMARY KEY CLUSTERED ([UsrIdUser] ASC),
     FOREIGN KEY ([UsrIdPerson]) REFERENCES [dbo].[Person] ([PerIdPerson])
 );
+
+
+
+
 
 
 
@@ -60,4 +65,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar url de imagen parte frontal de dpi del usuario.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RegisterUser', @level2type = N'COLUMN', @level2name = N'IdentificationImageA';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicador booleano de cambio de contraseña', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RegisterUser', @level2type = N'COLUMN', @level2name = N'ChangePassword';
 
