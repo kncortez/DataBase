@@ -350,6 +350,7 @@ BEGIN
 												   + '"ImageProfile":"' + ISNULL(ac.ImageProfile,'') + '",' 
 												   + '"StarRating":"' + CONVERT( VARCHAR(1),ISNULL(ac.StarRating,0)) + '",' 
 												   + '"VerifiedEmail.":"' + IIF(ac.AccConfirm ='C','1','0') + '",' 
+												   + '"ChangePassword":"' + CONVERT(VARCHAR, ISNULL(us.ChangePassword, 0)) + '",' 
 												   + '"AdminInternal":"' + CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) +' "}'
                                             FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
