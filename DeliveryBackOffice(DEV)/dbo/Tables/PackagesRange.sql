@@ -4,14 +4,18 @@
     [DiscountPercentage]   DECIMAL (18, 2) NOT NULL,
     [Order]                INT             NOT NULL,
     [CatBusinessSegmentId] INT             NOT NULL,
+    [CatTypeRateId]        INT             NOT NULL,
     [RowStatus]            BIT             CONSTRAINT [DF_PackagesRange_RowStatus] DEFAULT ((1)) NOT NULL,
     [TokenCreated]         NVARCHAR (50)   NOT NULL,
     [DateCreated]          DATETIME        NOT NULL,
     [TokenUpdated]         NVARCHAR (50)   NULL,
     [DateUpdated]          DATETIME        NULL,
     CONSTRAINT [PK_PackagesRange] PRIMARY KEY CLUSTERED ([IdPackagesRange] ASC),
-    CONSTRAINT [FK_PackagesRange_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment])
+    CONSTRAINT [FK_PackagesRange_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
+    CONSTRAINT [FK_PackagesRange_CatTypeRate] FOREIGN KEY ([CatTypeRateId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 GO
@@ -52,4 +56,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Rango de pa
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar los rango de paquetes para las tarifas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRange';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de tarifa', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRange', @level2type = N'COLUMN', @level2name = N'CatTypeRateId';
 

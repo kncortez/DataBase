@@ -531,6 +531,35 @@ BEGIN
                   AND db.[Id_country] = @IdFilter
                   AND abfr.RowStatus = 1;
         END;
+		---------------------------------------------------------------------------
+
+			--Rango de paquetes
+			IF (@NameOfCatalog = 'PackagesRange')
+			BEGIN
+				SELECT
+					cbs.IdBusinessSegment [IdBusinessSegment]
+				   ,cbs.BusinessSegmentName [BusinessSegmentName]
+				   ,pr.CatTypeRateId [IdTypeRate]
+				   ,pr.IdPackagesRange [IdPackagesRange]
+				   ,pr.[Range] [Range]
+				   ,cts.CtsShortName [TypeService]
+				   ,crs.CrsShortName [RateSegment]
+				   ,prd.IsPercent [IsPercent]
+				   ,prd.[Value] [Value]
+				   ,'PackagesRange' [Catalog]
+				FROM PackagesRange pr
+				INNER JOIN PackagesRangeDetail prd
+					ON pr.IdPackagesRange = prd.PackagesRangeId
+				INNER JOIN CatBusinessSegment cbs
+					ON pr.CatBusinessSegmentId = cbs.IdBusinessSegment
+				INNER JOIN CatTypeService cts
+					ON prd.CatTypeServiceId = cts.CtsId
+				INNER JOIN CatRateSegment crs
+					ON prd.CatRateSegmentId = crs.CrsId
+				WHERE pr.RowStatus = 1
+				AND prd.RowStatus = 1
+				ORDER BY cts.CtsShortName DESC, pr.[Order]
+			END
 
         SET @count = @count + 1;
         DELETE TOP (1)

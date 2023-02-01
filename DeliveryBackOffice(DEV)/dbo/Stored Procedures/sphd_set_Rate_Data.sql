@@ -26,6 +26,8 @@ CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @CollectRate DECIMAL(12, 2) = 3,
     @PiecesIncluded INT = 1,
 	@CutOffDate TINYINT = NULL,
+	@CatBusinessSegmentId INT = NULL,
+	@PackagesRangeId INT = NULL,
     @STDLoc DECIMAL(12, 2) = 0,
     @STDMet DECIMAL(12, 2) = 0,
     @STDFor DECIMAL(12, 2) = 0,
@@ -130,12 +132,14 @@ BEGIN
                 CountryId,
                 CurrencyId,
                 IsTemplate,
-				CutOffDate
+				CutOffDate,
+				CatBusinessSegmentId,
+				PackagesRangeId
             )
             VALUES
             (@RateName, @RateShortName, @RateDescription, 1, @Token, GETDATE(), @IdTypeRate, 0, @FragilRate,
              @InsuranceRate, @InsuranceExempt, @AdditionalWeightRate, @WeightLimit, @CreditCardRate, @Attempt,
-             @ReturnRate, @CollectRate, @PiecesIncluded, @CountryId, @CurrencyId, @IsTemplate, @CutOffDate);
+             @ReturnRate, @CollectRate, @PiecesIncluded, @CountryId, @CurrencyId, @IsTemplate, @CutOffDate, @CatBusinessSegmentId, @PackagesRangeId);
 
             SET @IdRate = SCOPE_IDENTITY();
             PRINT 'se inserto el tarifario';
@@ -161,7 +165,9 @@ BEGIN
                 CollectRate = @CollectRate,
                 PiecesIncluded = @PiecesIncluded,
                 CurrencyId = @CurrencyId,
-				CutOffDate = @CutOffDate
+				CutOffDate = @CutOffDate,
+				CatBusinessSegmentId = @CatBusinessSegmentId,
+				PackagesRangeId = @PackagesRangeId
             WHERE RheId = @IdRate;
         END;
 

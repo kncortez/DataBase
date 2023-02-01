@@ -26,7 +26,9 @@ BEGIN
            rd.CollectRate [CollectRate],
            cr.Currency_Name [Currency],
            rd.PiecesIncluded [PiecesIncluded],
-		   rd.CutOffDate [CutOffDate]
+		   rd.CutOffDate [CutOffDate],
+		   ISNULL(rd.CatBusinessSegmentId, -1) [CatBusinessSegmentId],
+		   ISNULL(rd.PackagesRangeId, -1) [PackagesRangeId]
     FROM dbo.RateHeader rd
         LEFT JOIN dbo.DeliveryCurrency cr
             ON cr.Currency_Id = rd.CurrencyId
