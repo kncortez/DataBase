@@ -5,6 +5,10 @@
 -- Create date: <2022-05-26>
 -- Description:	< Metodo para finalizar el proceso de generación de guías en express center tomando en cuenta cupones >
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <2023-02-01>
+-- Description: <Agregar acumulación de puntos FORZA>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[CompleteGuideGenerationExpressCenter]
 	@IdStatus int = 15,
@@ -20,7 +24,7 @@ CREATE PROCEDURE [dbo].[CompleteGuideGenerationExpressCenter]
 	@TblDeliveryOrdersList [TblDeliveryOrdersList2] READONLY
 AS
 BEGIN
-set arithabort on
+
 	-- Variables "globales"
 	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
 	DECLARE @IdDatafonoPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'Datafono' COLLATE Latin1_General_CI_AI);
@@ -63,6 +67,70 @@ set arithabort on
 	-- Variables de valores
 	DECLARE @OldPriceshipment DECIMAL(14,2) = 0;
 	DECLARE @UpdatedValue DECIMAL(14,2) = 0;
+
+	-- Puntos FORZA
+	DECLARE @MembershipId INT = 0;
+	DECLARE @PointsGenerated INT = 0;
+	DECLARE @ForzaPointsGenerationValue DECIMAL = 0;
+	DECLARE @ForzaPointsGenerationType NVARCHAR(50) = '';
+	DECLARE @DayName NVARCHAR(20) = '';
+	DECLARE @IsValidDay BIT = 0;
+	DECLARE @ServiceAmmount DECIMAL = 0;
+	DECLARE @CatSalesPackageStatusId INT = 0;
+	DECLARE @MaxServiceMembership INT = 0;
+	DECLARE @CatTimePayment INT = 0;
+	DECLARE @CatPointPromoTbl TABLE (	IdPointPromo INT, 
+									PointPromoDescription NVARCHAR(400),
+									Monday BIT,
+									Tuesday BIT,
+									Wednesday BIT,
+									Thursday BIT,
+									Friday BIT,
+									Saturday BIT,
+									Sunday BIT,
+									PointPromoFactor DECIMAL);
+	DECLARE @AcceptedGuides AS TABLE
+    (
+        GuideSerie NVARCHAR(2),
+        GuideNumber INT,
+        GuidePriceShipment DECIMAL(14, 2),
+		CustomerID INT,
+		LogServiceNumber INT
+    );
+
+	SET @ForzaPointsGenerationType = (	SELECT	[CP].[Value]
+										FROM	[dbo].[ConfigParams] CP
+										WHERE	[CP].[Name] = 'ForzaPointsGenerationType'
+											AND [CP].[Status] = 1);
+
+	SET @ForzaPointsGenerationValue = ( SELECT	[CP].[Value]
+										FROM	[dbo].[ConfigParams] CP
+										WHERE	[CP].[Name] = 'ForzaPointsGenerationValue'
+											AND [CP].[Status] = 1);
+
+	SET @CatSalesPackageStatusId = (	SELECT	[CSPS].[IdCatSalesPackageStatus]
+										FROM	[dbo].[CatSalesPackageStatus] CSPS
+										WHERE	[CSPS].[SalesPackageStatusName] = 'Activa' 
+											AND [CSPS].[RowStatus] = 1 )
+
+	INSERT INTO @CatPointPromoTbl
+	SELECT	TOP 1	[CPP].[IdPointPromo],
+					[CPP].[PointPromoDescription],
+					[CPP].[Monday],
+					[CPP].[Tuesday],
+					[CPP].[Wednesday],
+					[CPP].[Thursday],
+					[CPP].[Friday],
+					[CPP].[Saturday],
+					[CPP].[Sunday],
+					[CPP].[PointPromoFactor]
+	FROM	[dbo].[CatPointPromo] CPP
+	WHERE	[CPP].[RowStatus] = 1
+		AND [CPP].[InPointGeneration] = 1
+		AND SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+	ORDER BY [CPP].[PointPromoWeight] DESC;
+
+	SET @CatTimePayment = (SELECT [CPT].[TimePlaId] FROM [dbo].[CatPaymentTime] CPT WHERE [CPT].[TimePlaName] = 'Ahora');
 
 	-- Datos del cliente para promo (Nos basamos en la guía para averiguar si fue impersonada o no)
 	SELECT
@@ -403,11 +471,25 @@ set arithabort on
 					FROM
 						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 					WHERE
-						Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-						AND
-						Co.IdProduct = 1
+						(
+							(
+								Co.GuideSerie = @GuideSerie
+								AND
+								Co.GuideNumber = @GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
 						AND
 						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
 				), 0)
 
 				SET @PromoName = ISNULL((
@@ -436,6 +518,8 @@ set arithabort on
 						,PaymentDate = GETDATE()
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
+						,GuideSerie = @GuideSerie
+						,GuideNumber = @GuideNumber
 					WHERE
 						IdCost = @CostId
 
@@ -511,8 +595,7 @@ set arithabort on
 				END
 				ELSE
 				BEGIN
-				IF(ISNULL(@CostId, 0) > 0) 
-				BEGIN
+
 					INSERT INTO
 						[DeliveryBackOffice].[dbo].[BreakdownOfPayment]
 						(IdCost, Description, Amount, RowStatus, DateCreated, TokenCreated, PromoCouponId)
@@ -521,7 +604,6 @@ set arithabort on
 
 					IF(@@ROWCOUNT > 0)
 						SET @CoUpdated = 1;
-				end
 
 				END
 			END
@@ -651,11 +733,25 @@ set arithabort on
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-								AND
-								Co.IdProduct = 1
+								(
+									(
+										Co.GuideSerie = @GuideSerie
+										AND
+										Co.GuideNumber = @GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
 								AND
 								Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
 						), 0)
 
 						IF(@CostId > 0)
@@ -669,6 +765,8 @@ set arithabort on
 								,PaymentDate = GETDATE()
 								,TokenUpdated = @Token
 								,DateUpdated = GETDATE()
+								,GuideSerie = @GuideSerie
+								,GuideNumber = @GuideNumber
 							WHERE
 								IdCost = @CostId
 
@@ -707,13 +805,27 @@ set arithabort on
 									TOP 1
 										Co.IdCost
 								FROM
-									[DeliveryBackOffice].[dbo].[Cost] Co --WITH(NOLOCK)
+									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 								WHERE
-									Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-									AND
-									Co.IdProduct = 1
+									(
+										(
+											Co.GuideSerie = @GuideSerie
+											AND
+											Co.GuideNumber = @GuideNumber
+										)
+										OR
+										(
+											Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+											AND
+											Co.GuideSerie IS NULL
+											AND
+											Co.GuideNumber IS NULL
+										)
+									)
 									AND
 									Co.RowStatus = 1
+								ORDER BY
+									Co.DateCreated DESC
 							), 0)
 							
 							UPDATE
@@ -724,6 +836,8 @@ set arithabort on
 								,PaymentDate = GETDATE()
 								,TokenUpdated = @Token
 								,DateUpdated = GETDATE()
+								,GuideSerie = @GuideSerie
+								,GuideNumber = @GuideNumber
 							WHERE
 								IdCost = @CostId
 
@@ -774,6 +888,132 @@ set arithabort on
 						END
 
 					 END
+				
+					-- Acumulación de puntos FORZA
+					-- Author: Jerson Ochoa - 01-02-2023
+
+					IF ((SELECT TOP 1 IdTimePayment FROM @TblDeliveryOrdersList) = @CatTimePayment)
+						 BEGIN 
+						 -- Solo aplican guías con tiempo de pago inmediato
+							INSERT INTO @AcceptedGuides
+							(
+								GuideSerie,
+								GuideNumber,
+								GuidePriceShipment,
+								CustomerID,
+								LogServiceNumber
+							)
+							SELECT		[TDOL].[Guide_Serie],
+										[TDOL].[Guide_Number],
+										[DO].[PriceShippment],
+										[DO].[IdCustomer],
+										ISNULL([MSL].[LogServiceNumber], 0)
+							FROM		@TblDeliveryOrdersList TDOL
+							INNER JOIN	DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+								ON		[TDOL].[Guide_Serie] = DO.Guide_Serie
+								AND		[TDOL].[Guide_Number] = DO.Guide_Number
+							LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
+								ON		[TDOL].[Guide_Number] = [MSL].[LogGuideNumber]
+								AND		[TDOL].[Guide_Serie] = [MSL].[LogGuideSerie]
+								AND		[MSL].[RowStatus] = 1
+								AND		[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
+							LEFT JOIN	[dbo].[Membership] M
+								ON		[MSL].[MembershipId] = [M].[IdMembership];
+
+							SET @CustomerId = (	SELECT TOP 1 CustomerID
+										FROM @AcceptedGuides);
+
+							SET @AccountId = (	SELECT [A].[AccIdAccount]
+												FROM	[dbo].[Account] A
+												WHERE	[A].[IdCustomer] = @CustomerId );
+
+							SELECT	@MembershipId = [M].[IdMembership],
+									@MaxServiceMembership = [M].[MembershipMaxServiceFixedValue]
+									FROM	[dbo].[Membership] M
+									WHERE	[M].[AccountId] = @AccountId
+										AND	[M].[RowStatus] = 1
+										AND [M].[ExpirationDate] >= SYSDATETIME();
+
+							IF (@MembershipId > 0)
+							BEGIN
+
+								-- Agregar Log de puntos 
+								INSERT INTO [dbo].[PointsByServiceLog] ([MembershipId],
+																		[GuideSerie],
+																		[GuideNumber],
+																		[GuidePrice],
+																		[PointsReceived],
+																		[PointsConsumed],
+																		[TypeTransaction],
+																		[CatPointPromoId],
+																		[RowStatus],
+																		[DateCreated],
+																		[TokenCreated])
+								SELECT									@MembershipId,
+																		GuideSerie,
+																		GuideNumber, 
+																		GuidePriceShipment,
+																		(CASE
+																			WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST(@ForzaPointsGenerationValue AS INT)
+																			WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST((GuidePriceShipment / @ForzaPointsGenerationValue) AS INT)
+																			ELSE 0
+																		END),	 -- POINTS RECEIVED
+																		0,		-- POINTS CONSUMED
+																		@ForzaPointsGenerationType,
+																		NULL,
+																		1,
+																		SYSDATETIME(),
+																		@Token
+								FROM									@AcceptedGuides
+								WHERE									(LogServiceNumber > @MaxServiceMembership OR LogServiceNumber = 0);
+
+								-- Acumulación adicional por promoción
+					
+								IF ((SELECT COUNT(IdPointPromo) FROM @CatPointPromoTbl) > 0)
+									BEGIN
+										SET @DayName = (SELECT DATENAME(dw, SYSDATETIME()));
+										SET @IsValidDay =	CASE 
+																WHEN @DayName = 'Monday'	THEN (SELECT TOP 1 Monday FROM @CatPointPromoTbl)
+																WHEN @DayName = 'Tuesday'	THEN (SELECT TOP 1 Tuesday FROM @CatPointPromoTbl)
+																WHEN @DayName = 'Wednesday' THEN (SELECT TOP 1 Wednesday FROM @CatPointPromoTbl)
+																WHEN @DayName = 'Thursday'	THEN (SELECT TOP 1 Thursday FROM @CatPointPromoTbl)
+																WHEN @DayName = 'Friday'	THEN (SELECT TOP 1 Friday FROM @CatPointPromoTbl)
+																WHEN @DayName = 'Saturday'	THEN (SELECT TOP 1 Saturday FROM @CatPointPromoTbl)
+																WHEN @DayName = 'Sunday'	THEN (SELECT TOP 1 Sunday FROM @CatPointPromoTbl)
+																ELSE 0
+															END
+										IF (@IsValidDay = 1)
+											BEGIN
+
+												UPDATE		PSL
+												SET			[PSL].[CatPointPromoId] = (SELECT IdPointPromo FROM @CatPointPromoTbl),
+															[PSL].[PointsReceived] = [PSL].[PointsReceived] +	CASE 
+																													WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST((SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
+																													WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST([PSL].[PointsReceived] / (SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
+																													ELSE 0
+																												END
+												FROM		[dbo].[PointsByServiceLog] PSL
+												INNER JOIN	@AcceptedGuides AG
+													ON		[PSL].[GuideSerie] = [AG].[GuideSerie]
+													AND		[PSL].[GuideNumber] = [AG].[GuideNumber]
+													AND		([AG].[LogServiceNumber] > @MaxServiceMembership OR [AG].[LogServiceNumber] = 0);
+											END
+									END
+
+								-- Agregar puntos a membresía
+								SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
+														FROM	[dbo].[PointsByServiceLog] PSL
+														WHERE	[PSL].[GuideSerie] IN (SELECT GuideSerie FROM @AcceptedGuides)
+															AND [PSL].[GuideNumber] IN (SELECT GuideNumber FROM @AcceptedGuides)), 0);
+					
+								UPDATE	[dbo].[Membership] 
+								SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
+										[AvailablePoints] = ISNULL([AvailablePoints], 0) + (@PointsGenerated)
+								WHERE	[IdMembership] = @MembershipId;
+
+							END
+						 END
+				-- FIN Acumulación de puntos FORZA
 				END
 			
 		END
@@ -975,8 +1215,8 @@ set arithabort on
 					,ERROR_NUMBER()
 					,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
 					,ERROR_LINE()
-					,@GuideSerie
-					,@GuideNumber
+					,''
+					,0
 					,''
 					,GETDATE())
 			
