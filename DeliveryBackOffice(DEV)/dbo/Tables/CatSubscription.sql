@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatSubscription] (
+CREATE TABLE [dbo].[CatSubscription] (
     [IdCatSubscription]                INT             IDENTITY (1, 1) NOT NULL,
     [SubscriptionName]                 NVARCHAR (50)   NOT NULL,
     [SubscriptionDescription]          NVARCHAR (300)  NULL,
@@ -13,7 +13,11 @@
     [TokenUpdated]                     NVARCHAR (50)   NULL,
     [DateUpdated]                      DATETIME        NULL,
     [Icon]                             NVARCHAR (50)   NULL,
-    CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC)
+    [RateHeaderId]                     INT             NULL,
+    [AlternativeRateHeaderId]          INT             NULL,
+    CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
+    CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
+    CONSTRAINT [FK_CatSubscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
 
 
@@ -23,13 +27,23 @@
 
 
 
-GO
 
 
 GO
 
 
-
 GO
 
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de ícono configurable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'Icon';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'RateHeaderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario alterno a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'AlternativeRateHeaderId';
 
