@@ -15,6 +15,7 @@ CREATE TABLE [dbo].[CatSubscription] (
     [Icon]                             NVARCHAR (50)   NULL,
     [RateHeaderId]                     INT             NULL,
     [AlternativeRateHeaderId]          INT             NULL,
+    [NextSalesPackageBanner]           NVARCHAR (200)  NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
     CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_CatSubscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
@@ -35,3 +36,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario alterno a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'AlternativeRateHeaderId';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
