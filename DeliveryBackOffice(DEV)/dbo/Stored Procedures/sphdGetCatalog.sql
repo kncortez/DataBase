@@ -227,6 +227,7 @@ BEGIN
             SELECT RheId [IdValue],
                    UPPER(RheName) [NameValue],
                    hr.RateTypeId [IdFilter],
+				   hr.CatBusinessSegmentId [CatBusinessSegmentId],
                    'RateCatalog' [Catalog]
             FROM dbo.RateHeader hr
             WHERE hr.RheRowStatus = 'TRUE'
@@ -523,6 +524,8 @@ BEGIN
                    abfr.StartsWith [StartsWith],
                    abfr.Complete [Complete],
                    db.[Id_country] [IdFilter],
+				   db.Id_bank [IdValue],
+				   db.[Name] [NameValue],
                    'AccountBankFormatRule' [Catalog]
             FROM AccountBankFormatRule abfr
                 JOIN DeliveryBank db
@@ -546,6 +549,8 @@ BEGIN
 				   ,crs.CrsShortName [RateSegment]
 				   ,prd.IsPercent [IsPercent]
 				   ,prd.[Value] [Value]
+				   ,cbs.IdBusinessSegment [IdValue]
+				   ,cbs.BusinessSegmentName [NameValue]
 				   ,'PackagesRange' [Catalog]
 				FROM PackagesRange pr
 				INNER JOIN PackagesRangeDetail prd

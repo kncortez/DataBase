@@ -43,7 +43,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @TblVPCoverage AS TblVPCoverage READONLY,
     @TblVPDestination AS TblVPDestination READONLY,
     @IdVPConfiguration AS BIGINT = NULL,
-    @Option AS INT --1 Insert Into , 2 Update
+    @Option AS INT, --1 Insert Into , 2 Update,
+	@CatBusinessSegmentId INT = NULL
 
 AS
 BEGIN
@@ -101,7 +102,8 @@ BEGIN
                         BranchCode,
 						SaleChannelId,
 						ExcludePriceShippingCOD,
-						ExcludeCommissionCOD
+						ExcludeCommissionCOD,
+						CatBusinessSegmentId
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -131,7 +133,8 @@ BEGIN
                         @BranchCode           -- BranchCode - nvarchar(50)
 						,@IdKindOfVPClient,
 						@CODExcludedPriceShipping,
-						@CODExcludedCommission
+						@CODExcludedCommission,
+						@CatBusinessSegmentId
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -369,7 +372,8 @@ BEGIN
                         [BranchCode] = @BranchCode,
 						[SaleChannelId] = @IdKindOfVPClient,
 						[ExcludePriceShippingCOD] = @CODExcludedPriceShipping,
-						[ExcludeCommissionCOD] = @CODExcludedCommission
+						[ExcludeCommissionCOD] = @CODExcludedCommission,
+						[CatBusinessSegmentId] = @CatBusinessSegmentId
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
