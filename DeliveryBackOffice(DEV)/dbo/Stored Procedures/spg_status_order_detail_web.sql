@@ -218,7 +218,7 @@ BEGIN
                  dod.Observations,
                  so.OrderDescription
     ) RES
-    ORDER BY RES.[StageDate] ASC,
+    ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
 
 
@@ -267,7 +267,7 @@ BEGIN
 		LEFT JOIN DenariusUser_Dev.dbo.LGN_User duser  WITH (NOLOCK) ON duser.USR_IdUser = token.SSN_IdUser AND duser.USR_Username = token.SSN_Username
 		LEFT JOIN DenariusDesktop_Dev.dbo.LGT_INF_Employee epl  WITH (NOLOCK) ON epl.IdEmployee = duser.USR_IdEmployee 
 		LEFT JOIN DeliveryBackOffice.dbo.InternalUser IU WITH(NOLOCK) ON epl.CodeEmployee = IU.IdUser
-	ORDER BY OrdChkPnt.[StageDate] ASC,
+	ORDER BY OrdChkPnt.[StageDate] DESC,
 			 OrdChkPnt.[EventID];
 
 END;
