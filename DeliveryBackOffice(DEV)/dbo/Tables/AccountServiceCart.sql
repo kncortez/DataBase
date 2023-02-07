@@ -12,6 +12,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountServiceCart', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -46,4 +48,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de carrito de compras por cuenta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountServiceCart';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountId_IsPending_RowStatus_IdAccountServiceCart]
+    ON [dbo].[AccountServiceCart]([AccountId] ASC, [IsPending] ASC, [RowStatus] ASC, [IdAccountServiceCart] ASC);
 

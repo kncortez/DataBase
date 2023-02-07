@@ -56,6 +56,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena el motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'Comments';
 
@@ -201,4 +203,9 @@ CREATE NONCLUSTERED INDEX [IDX_GuideNumber]
 GO
 CREATE NONCLUSTERED INDEX [IDX_GUIDE_SERIE]
     ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AuthorizationDate]
+    ON [dbo].[BatchDetailCOD]([AuthorizationDate] ASC);
 
