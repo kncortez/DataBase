@@ -17,71 +17,33 @@ BEGIN
 	Set @idinvoice = (select inv_pk_id from [dbo].[invoiceHeader] WITH(NOLOCK)
 	where inv_certificationFEL = @fel)
     -- Insert statements for procedure here
-	select [inv_pk_id]
-      ,[inv_vpCodeOfReferences]
-      ,[inv_cmp_name]
-      ,[inv_cmp_nameComercial]
-      ,[inv_cmp_adress]
-      ,[inv_cmp_nit]
-      ,[inv_cli_name]
-      ,[inv_cli_adress]
-      ,[inv_cli_nit]
-      ,[inv_cli_email]
-      ,[inv_date]
-      ,[inv_documentSend]
-      ,[inv_documentRecieved]
-      ,[inv_certificationFEL]
-      ,[inv_serieFEL]
-      ,[inv_numberFEL]
-      ,[inv_descriptionFEL]
-      ,[inv_RequestorFEL]
-      ,[inv_TransactionFEL]
-      ,[inv_CountryFEL]
-      ,[inv_EntityFEL]
-      ,[inv_UserFEL]
-      ,[inv_UserName]
-      ,[inv_Data1FEL]
-      ,[inv_Data3FEL]
-      ,[inv_MailSendFEL]
-      ,[inv_subjectFEL]
-      ,[inv_IVA]
-      ,[inv_amount]
-      ,[inv_status]
-      ,[inv_dateRegister]
-      ,[inv_tokenRegister]
-      ,[inv_dateUpdate]
-      ,[inv_tokenUpdate]
-      ,[inv_type]
-      ,[inv_invoiceOfCreditNote]
-      ,[inv_motiveCreditNote]
-      ,[inv_dateOriginDocument]
-      ,[inv_documentOriginFEL]
-      ,[inv_creditNote]
-      ,[inv_establecimientoFEL]
-      ,[inv_cmp_nameFEL]
-      ,[inv_FechaHoraFEL]
-      ,[inv_SAPDocEntry]
-      ,[inv_SAPError]
-      ,[systemOperation]
-      ,[IsManualInvoice]
-      ,[inv_dateFEL] from [dbo].[invoiceHeader] WITH(NOLOCK)
+	select * from [dbo].[invoiceHeader] WITH(NOLOCK)
 	where inv_pk_id = @idinvoice
 
-	select [dti_fk_header]
-      ,[dti_fk_orderSerie]
-      ,[dti_fk_orderNumber]
-      ,[dti_identification]
-      ,[dti_category]
-      ,[dti_quantity]
-      ,[dti_measurement]
-      ,[dti_priceUnit]
-      ,[dti_description]
-      ,[dti_IVA]
-      ,[dti_amount]
-      ,[dti_dateRegister]
-      ,[dti_tokenRegister]
-      ,[SAPCode]
-      ,[SendToInvoice] from [dbo].[invoiceDetail] WITH(NOLOCK)
+	--select * from [dbo].[invoiceDetail] WITH(NOLOCK)
+	--where dti_fk_header = @idinvoice
+	--ORDER BY dti_dateRegister
+
+	select
+	  ivd.[dti_fk_header]
+      ,ivd.[dti_fk_orderSerie]
+      ,ISNULL(ivd.dti_fk_orderNumber, 0) as dti_fk_orderNumber
+      ,ivd.[dti_identification]
+      ,ivd.[dti_category]
+      ,ivd.[dti_quantity]
+      ,ivd.[dti_measurement]
+      ,ivd.[dti_priceUnit]
+      ,ivd.[dti_description]
+      ,ivd.[dti_IVA]
+      ,ivd.[dti_amount]
+      ,ivd.[dti_dateRegister]
+      ,ivd.[dti_tokenRegister]
+      ,ivd.[SAPCode]
+      ,ivd.[SendToInvoice]
+	  ,ISNULL(do.StatusOrderId, 0) as StatusOrderId
+	from [dbo].[invoiceDetail] ivd WITH(NOLOCK)
+	LEFT JOIN DeliveryOrder do WITH(NOLOCK)
+	ON ivd.dti_fk_orderNumber = do.Guide_Number
 	where dti_fk_header = @idinvoice
 	ORDER BY dti_dateRegister
 
