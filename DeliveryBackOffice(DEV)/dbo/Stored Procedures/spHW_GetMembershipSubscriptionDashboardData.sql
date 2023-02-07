@@ -58,13 +58,15 @@ BEGIN
 					AND [MSL].[MembershipId] = [M].[IdMembership]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [MembershipDeliveriesCount],
-				CAST(IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 0, 1) AS BIT) [IsMembershipFixedActive],
+				CAST(IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[MembershipId] = [M].[IdMembership]
+					AND [MSL].[SubscriptionId] = NULL
 					AND [MSL].[RowStatus] = 1
-					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven]
+					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven],
+				[CM].[NextSalesPackageBanner] 
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
@@ -93,13 +95,14 @@ BEGIN
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [SubscriptionDeliveriesCount],
-				CAST(IIF((([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) > 100, 0, 1) AS BIT) [IsSubscriptionFixedActive],
+				CAST(IIF((([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) >= 100, 0, 1) AS BIT) [IsSubscriptionFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [S].[CustomerId]
-					AND [MSL].[MembershipId] = [S].[IdSubscription]
+					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
-					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [SubscriptionDeliveriesTotalDiscountGiven]
+					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [SubscriptionDeliveriesTotalDiscountGiven],
+				[CS].[NextSalesPackageBanner] 
 	FROM		[dbo].[Subscription] S
 	INNER JOIN	[dbo].[CatSubscription] CS
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
