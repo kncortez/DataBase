@@ -128,6 +128,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -334,4 +336,14 @@ GO
 GO
 CREATE NONCLUSTERED INDEX [IDX_Sender_Address]
     ON [dbo].[DeliveryOrder]([Sender_Address] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Sender_Mail]
+    ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DCBA_ID]
+    ON [dbo].[DeliveryOrder]([DCBA_ID] ASC);
 

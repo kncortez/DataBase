@@ -27,10 +27,72 @@ BEGIN
     --IF((ISNULL(@IdCustomer,0) != 0  OR @IdCustomer != -1) AND (ISNULL(@SenderEmail,'0') = '0' OR @SenderEmail = '-1' OR @SenderEmail = '1'))
     IF (@IdCustomer != -1)
     BEGIN
+
+		IF OBJECT_ID('tempdb.dbo.#TempBatchDetailCOD', 'U') IS NOT NULL
+			DROP TABLE #TempBatchDetailCOD;
+
+		CREATE TABLE #TempBatchDetailCOD (
+			IdBatchDetailCOD INT,
+			AuthorizationDate DATETIME
+		);
+
+		CREATE NONCLUSTERED INDEX TMP_IDX_TempBatchDetailCOD_IdBatch ON #TempBatchDetailCOD (IdBatchDetailCOD)
+
+		INSERT INTO #TempBatchDetailCOD
+			(IdBatchDetailCOD, AuthorizationDate)
+		SELECT
+			btd.IdBatchDetailCOD,
+			btd.AuthorizationDate
+		FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
+                ON btd.[GuideSerie] = pg.[GuideSerie]
+                    AND btd.[GuideNumber] = pg.[GuideNumber]
+            INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
+                ON btd.[GuideSerie] = do.[Guide_Serie]
+                    AND btd.[GuideNumber] = do.[Guide_Number]
+            LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
+                ON vpc.CodeOfReference = do.Sender_ID
+            LEFT JOIN dbo.Customer cu WITH (NOLOCK)
+                ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
+        WHERE pg.[Notificated] = 0
+                AND btd.[AuthorizationNumber] IS NOT NULL
+                AND pg.BatchCODId IS NOT NULL
+                AND (cu.IdCustomer = @IdCustomer)
+                AND
+                (
+                    btd.BankId = @IdBank
+                    OR @IdBank = -1
+                )
+
         PRINT 'OPCION 1A';
-        SELECT s1.*,
-               ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega,
-               ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
+        SELECT 
+				s1.IdCliente
+				,s1.Cliente
+				,s1.Correo
+				,s1.Banco
+				,s1.Cuenta
+				,s1.GuideNumber
+				,s1.Piezas
+				,s1.Peso
+				,s1.Departamento
+				,s1.Municipio
+				,s1.Receiver
+				,FORMAT(s1.FechaArribo, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaArribo'
+				,FORMAT(s1.FechaEntrega, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaEntrega'
+				,FORMAT(s1.FechaPago, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaPago'
+				,s1.NoDeposito
+				,s1.CODAmount
+				,s1.TypeService
+				,s1.TipodePago
+				,s1.ShippmentAmount
+				,s1.CommissionAmount
+				,s1.PorcentajeComision
+				,s1.ChargedAmount
+				,s1.TotalAmount
+				,s1.FlagImmediateOrAch
+				,s1.AuthorizationDate
+               ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
+               ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
         FROM
         (
             SELECT cu.[IdCustomer] IdCliente,
@@ -49,7 +111,7 @@ BEGIN
                    ISNULL(prv.ProvinceName, pr.ProvinceName) Departamento,
                    ISNULL(twn.TownshipName, tw.TownshipName) Municipio,
                    CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver,
-                   FORMAT(
+                   
                    (
                        SELECT TOP 1
                               dt.DateCreated
@@ -57,10 +119,8 @@ BEGIN
                        WHERE dt.Guide_Serie = do.Guide_Serie
                              AND dt.Guide_Number = do.Guide_Number
                              AND dt.StatusOrderId IN ( 11, 2 )
-                   ),
-                   'dd/MM/yyyy hh:mm:ss tt'
-                         ) FechaArribo,
-                   FORMAT(
+                   ) FechaArribo,
+                   
                    (
                        SELECT TOP 1
                               dt.DateCreated
@@ -68,10 +128,8 @@ BEGIN
                        WHERE dt.Guide_Serie = do.Guide_Serie
                              AND dt.Guide_Number = do.Guide_Number
                              AND dt.StatusOrderId = 5
-                   ),
-                   'dd/MM/yyyy hh:mm:ss tt'
-                         ) FechaEntrega,
-                   FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
+                   ) FechaEntrega,
+                   TBDC.[AuthorizationDate] FechaPago,
                    btd.[AuthorizationNumber] NoDeposito,
                    do.[Collect_OnDelivery] AS CODAmount,
                    IIF(do.[TypeService] = 'EXP', 'NDD', ISNULL(do.[TypeService], 'NDD')) TypeService,
@@ -84,8 +142,10 @@ BEGIN
                    btd.[Amount] + btd.[Commission] AS ChargedAmount,
                    btd.[Amount] AS TotalAmount,
                    IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
-                   btd.[AuthorizationDate]
+                   TBDC.[AuthorizationDate]
             FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
+				LEFT JOIN #TempBatchDetailCOD TBDC
+					ON btd.IdBatchDetailCOD = TBDC.IdBatchDetailCOD
                 INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                     ON btd.[GuideSerie] = pg.[GuideSerie]
                        AND btd.[GuideNumber] = pg.[GuideNumber]
@@ -123,14 +183,75 @@ BEGIN
         ) s1
         ORDER BY s1.[AuthorizationDate] ASC
 		OPTION (OPTIMIZE FOR UNKNOWN)
+		
+		IF OBJECT_ID('tempdb.dbo.#TempBatchDetailCOD', 'U') IS NOT NULL
+			DROP TABLE #TempBatchDetailCOD;
 
     END;
     ELSE IF (@SenderEmail != '-1')
     BEGIN
+
+		IF OBJECT_ID('tempdb.dbo.#TempBatchDetailCOD_opt2', 'U') IS NOT NULL
+			DROP TABLE #TempBatchDetailCOD_opt2;
+
+		CREATE TABLE #TempBatchDetailCOD_opt2 (
+			IdBatchDetailCOD INT,
+			AuthorizationDate DATETIME
+		);
+
+		CREATE NONCLUSTERED INDEX TMP_IDX_TempBatchDetailCODopt2_IdBatch ON #TempBatchDetailCOD_opt2 (IdBatchDetailCOD)
+
+		INSERT INTO #TempBatchDetailCOD_opt2
+			(IdBatchDetailCOD, AuthorizationDate)
+		SELECT
+			btd.IdBatchDetailCOD,
+			btd.AuthorizationDate
+		FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
+                ON btd.[GuideSerie] = pg.[GuideSerie]
+                    AND btd.[GuideNumber] = pg.[GuideNumber]
+            INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
+                ON btd.[GuideSerie] = do.[Guide_Serie]
+                    AND btd.[GuideNumber] = do.[Guide_Number]
+        WHERE pg.[Notificated] = 0
+                AND btd.[AuthorizationNumber] IS NOT NULL
+                AND pg.BatchCODId IS NOT NULL
+                AND LTRIM(RTRIM(do.Sender_Mail)) = @SenderEmail
+                AND
+                (
+                    btd.BankId = @IdBank
+                    OR @IdBank = -1
+                )
+
         PRINT 'OPCION 2';
-        SELECT s1.*,
-               ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega,
-               ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
+        SELECT 
+				s1.IdCliente
+				,s1.Cliente
+				,s1.Correo
+				,s1.Banco
+				,s1.Cuenta
+				,s1.GuideNumber
+				,s1.Piezas
+				,s1.Peso
+				,s1.Departamento
+				,s1.Municipio
+				,s1.Receiver
+				,FORMAT(s1.FechaArribo, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaArribo'
+				,FORMAT(s1.FechaEntrega, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaEntrega'
+				,FORMAT(s1.FechaPago, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaPago'
+				,s1.NoDeposito
+				,s1.CODAmount
+				,s1.TypeService
+				,s1.TipodePago
+				,s1.ShippmentAmount
+				,s1.CommissionAmount
+				,s1.PorcentajeComision
+				,s1.ChargedAmount
+				,s1.TotalAmount
+				,s1.FlagImmediateOrAch
+				,s1.AuthorizationDate
+               ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
+               ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
         FROM
         (
             SELECT cu.[IdCustomer] IdCliente,
@@ -171,7 +292,7 @@ BEGIN
                    ),
                    'dd/MM/yyyy hh:mm:ss tt'
                          ) FechaEntrega,
-                   FORMAT(btd.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
+                   FORMAT(TBDC.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
                    btd.[AuthorizationNumber] NoDeposito,
                    do.[Collect_OnDelivery] AS CODAmount,
                    IIF(do.[TypeService] = 'EXP', 'NDD', ISNULL(do.[TypeService], 'NDD')) TypeService,
@@ -184,8 +305,10 @@ BEGIN
                    btd.[Amount] + btd.[Commission] AS ChargedAmount,
                    btd.[Amount] AS TotalAmount,
                    IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
-                   btd.[AuthorizationDate]
+                   TBDC.[AuthorizationDate]
             FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
+				LEFT JOIN #TempBatchDetailCOD_opt2 TBDC 
+					ON btd.IdBatchDetailCOD = TBDC.IdBatchDetailCOD
                 INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                     ON btd.[GuideSerie] = pg.[GuideSerie]
                        AND btd.[GuideNumber] = pg.[GuideNumber]
@@ -222,5 +345,9 @@ BEGIN
         -- BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
         ) s1
         ORDER BY s1.[AuthorizationDate] ASC;
+		
+		IF OBJECT_ID('tempdb.dbo.#TempBatchDetailCOD_opt2', 'U') IS NOT NULL
+			DROP TABLE #TempBatchDetailCOD_opt2;
+
     END;
 END;
