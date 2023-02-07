@@ -22,14 +22,17 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     DECLARE @ProductNumber VARCHAR(100) = CONCAT(@GuideSerie, @GuideNumber);
+	DECLARE @IsCOD BIT
     DECLARE @TypeService VARCHAR(3);
     DECLARE @Segment VARCHAR(MAX);
     DECLARE @NameArticle VARCHAR(100);
     DECLARE @NameArticleWeight VARCHAR(100);
     DECLARE @NameArticleSecure VARCHAR(100);
+    DECLARE @NameArticleCollect VARCHAR(100);
     DECLARE @Amount DECIMAL(18, 2);
     DECLARE @AmountWeight DECIMAL(18, 2);
     DECLARE @AmountSecure DECIMAL(18, 2);
+    DECLARE @AmountCollect DECIMAL(18, 2);
 
     DECLARE @CostId INT;
 
@@ -62,16 +65,13 @@ BEGIN
     );
 
 
-    SET @TypeService = COALESCE(
-                       (
-                           SELECT do.TypeService
-                           FROM DeliveryOrder do WITH (NOLOCK)
-                           WHERE do.Guide_Serie = @GuideSerie
-                                 AND do.Guide_Number = @GuideNumber
-                       ),
-                       'NDD'
-                               );
-
+    SELECT 
+		@TypeService = ISNULL(do.TypeService, 'STD')
+		,@IsCOD = (CASE WHEN do.Collect_OnDelivery > 0 THEN 1 ELSE 0 END)
+    FROM DeliveryOrder do WITH (NOLOCK)
+    WHERE do.Guide_Serie = @GuideSerie
+            AND do.Guide_Number = @GuideNumber
+			
     SET @Segment =
     (
         SELECT [dbo].[fn_get_segment](@GuideSerie, @GuideNumber)
@@ -85,30 +85,36 @@ BEGIN
         WHERE Co.ProductNumber = @ProductNumber
         ORDER BY IdCost DESC
     );
+	
+	IF @TypeService IS NULL
+		SET @TypeService = 'STD'
 
     IF @Segment IS NULL
         SET @Segment = 'LOC';
+		
+	SET @NameArticleSecure = 'GARANTIA MERCANCIAS';
 
-    IF @TypeService = 'SDD'
+	-- FRESH DELIVERY
+    IF (@TypeService = 'FDD')
     BEGIN
-        SET @NameArticleWeight = 'SAME DAY EXCEDENTE DE PESO';
-        SET @NameArticleSecure = 'SAME DAY SEGURO';
-
-        IF @Segment = 'FOR'
-            SET @NameArticle = 'SAME DAY DELIVERY FORANEO';
-        ELSE
-            SET @NameArticle = 'SAME DAY DELIVERY LOCAL';
+		SET @NameArticle = 'TARIFA DE ENVIO FRESH';
+		SET @NameArticleWeight = 'RECARGO POR PESO FRESH';
+		SET @NameArticleCollect = 'TARIFA COLLECT FRESH';
     END;
-    ELSE
+	-- COD
+    ELSE IF (@TypeService = 'COD' OR @IsCOD = 1)
     BEGIN
-        SET @NameArticleWeight = 'NEXT DAY EXCEDENTE DE PESO';
-        SET @NameArticleSecure = 'NEXT DAY SEGURO';
-
-        IF @Segment = 'FOR'
-            SET @NameArticle = 'NEXT DAY DELIVERY FORANEO';
-        ELSE
-            SET @NameArticle = 'NEXT DAY DELIVERY LOCAL';
+		SET @NameArticle = 'TARIFA DE ENVIO COD';
+		SET @NameArticleWeight = 'RECARGO POR PESO COD';
+		SET @NameArticleCollect = 'TARIFA COLLECT COD';
     END;
+	-- ESTANDAR
+	ELSE
+	BEGIN
+		SET @NameArticle = 'TARIFA DE ENVIO ESTANDAR';
+		SET @NameArticleWeight = 'RECARGO POR PESO ESTANDAR';
+		SET @NameArticleCollect = 'TARIFA COLLECT ESTANDAR';
+	END
 
     INSERT INTO @BreakdownOfPayment
     SELECT Description,
@@ -270,6 +276,40 @@ BEGIN
         SELECT COUNT(*)FROM @BreakdownOfPayment
     ) > 0
     BEGIN
+		-- Pago collect
+		SET @AmountCollect =
+		(
+			SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%PAGO%DESTINO%'
+		);
+
+		IF @AmountCollect IS NOT NULL AND @AmountCollect > 0
+		BEGIN
+		
+			SET @Amount = @Amount - @AmountCollect
+			
+			IF(@AmountCollect IS NOT NULL AND @AmountCollect > 0 AND @AppliedCoupon > 0)
+			BEGIN
+
+				SET @AmountCollect = (
+					SELECT
+						(
+							CASE
+								WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+									CASE
+										WHEN @DiscountType = 'TOT' THEN
+											@AmountCollect - ROUND(((@AmountCollect * @PromoValue) / 100), 1)
+										ELSE 
+											@AmountCollect
+									END
+								ELSE @AmountCollect
+							END
+						)
+				)
+
+			END
+
+		END
+
         -- Excendente de peso
         SET @AmountWeight =
         (
@@ -282,7 +322,7 @@ BEGIN
 					
 			SET @Amount = @Amount - @AmountWeight
 					
-			IF(@AmountWeight IS NOT NULL AND @AmountWeight > 0 AND (@AppliedCoupon > 0 OR ((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
+			IF(@AmountWeight IS NOT NULL AND @AmountWeight > 0 AND @AppliedCoupon > 0)
 			BEGIN
 
 				SET @AmountWeight = (
@@ -311,14 +351,13 @@ BEGIN
             SELECT Amount FROM @BreakdownOfPayment WHERE Description LIKE '%SEGURO%'
         );
 		
-		
 		IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
 		BEGIN
 			SET @AmountSecure = @AmountSecure * 1.12
 
 			SET @Amount = @Amount - @AmountSecure
 
-			IF(@AmountSecure IS NOT NULL AND @AmountSecure > 0 AND (@AppliedCoupon > 0 OR ((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
+			IF(@AmountSecure IS NOT NULL AND @AmountSecure > 0 AND @AppliedCoupon > 0)
 			BEGIN
 
 				SET @AmountSecure = (
@@ -372,6 +411,18 @@ BEGIN
                    1
             FROM CatArticleSAP ca
             WHERE ca.Name = @NameArticle;
+			
+        IF @AmountCollect IS NOT NULL
+           AND @AmountCollect > 0
+            INSERT INTO @GuideDetail
+            SELECT ca.SAPCode,
+                   ca.Name,
+                   CONCAT(ca.Description, '. ', @GuideSerie, @GuideNumber),
+                   @AmountCollect,
+                   ca.Category,
+                   1
+            FROM CatArticleSAP ca
+            WHERE ca.Name = @NameArticleCollect;
 
         IF @AmountWeight IS NOT NULL
            AND @AmountWeight > 0

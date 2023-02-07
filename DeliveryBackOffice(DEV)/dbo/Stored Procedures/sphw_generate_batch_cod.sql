@@ -371,7 +371,7 @@ BEGIN
 								IIF
 								(
 									-- Condición
-									(
+									
 										CONVERT
 										( DECIMAL(12, 2),
 											(
@@ -421,7 +421,7 @@ BEGIN
 												* ISNULL(rco.CODRate, @CODRateDefault) / 100
 											)
 										)
-									 > ord.Collect_OnDelivery),
+									 > ord.Collect_OnDelivery,
 									ord.Collect_OnDelivery,
 									(
 										CONVERT
@@ -520,7 +520,7 @@ BEGIN
 										IIF
 										(
 											-- Condición
-											(
+											
 												CONVERT
 												( DECIMAL(12, 2),
 													(
@@ -570,7 +570,7 @@ BEGIN
 														* ISNULL(rco.CODRate, @CODRateDefault) / 100
 													)
 												)
-											 > ord.Collect_OnDelivery),
+											 > ord.Collect_OnDelivery,
 											ord.Collect_OnDelivery,
 											(
 												CONVERT
@@ -1393,4 +1393,6 @@ BEGIN
     --END
     END;
 END;
+
+
 
