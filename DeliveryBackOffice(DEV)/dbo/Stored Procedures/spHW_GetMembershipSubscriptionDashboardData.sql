@@ -64,7 +64,8 @@ BEGIN
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[MembershipId] = [M].[IdMembership]
 					AND [MSL].[RowStatus] = 1
-					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven]
+					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven],
+				[CM].[NextSalesPackageBanner] 
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
@@ -99,7 +100,8 @@ BEGIN
 				WHERE	[MSL].[CustomerId] = [S].[CustomerId]
 					AND [MSL].[MembershipId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
-					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [SubscriptionDeliveriesTotalDiscountGiven]
+					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [SubscriptionDeliveriesTotalDiscountGiven],
+				[CS].[NextSalesPackageBanner] 
 	FROM		[dbo].[Subscription] S
 	INNER JOIN	[dbo].[CatSubscription] CS
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
