@@ -421,7 +421,7 @@ BEGIN
 												* ISNULL(rco.CODRate, @CODRateDefault) / 100
 											)
 										)
-									) > ord.Collect_OnDelivery,
+									 > ord.Collect_OnDelivery),
 									ord.Collect_OnDelivery,
 									(
 										CONVERT
@@ -570,7 +570,7 @@ BEGIN
 														* ISNULL(rco.CODRate, @CODRateDefault) / 100
 													)
 												)
-											) > ord.Collect_OnDelivery,
+											 > ord.Collect_OnDelivery),
 											ord.Collect_OnDelivery,
 											(
 												CONVERT
