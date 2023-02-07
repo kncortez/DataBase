@@ -28,9 +28,9 @@ BEGIN
                                      (
                                          SELECT COUNT(1)
                                          FROM GuideBatch GB1
-                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO1
+                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO1 WITH(NOLOCK)
                                                  ON GB1.GuideNumber = DO1.Guide_Number
-                                             LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT1
+                                             LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT1 WITH(NOLOCK)
                                                  ON DT1.Guide_Serie = DO1.Guide_Serie
                                                     AND DT1.Guide_Number = DO1.Guide_Number
                                          WHERE GB1.IdUser = @IdUser
@@ -63,31 +63,32 @@ BEGIN
                                          ELSE
                                              +'"Status":"' + ISNULL(SO.OrderDescription, '') + '"'
                                      END + '}'
-                            FROM GuideBatch GB
-                                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO
-                                    ON GB.GuideNumber = DO.Guide_Number
-                                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP
+                            FROM GuideBatch GB WITH(NOLOCK)
+                                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+                                    ON GB.GuideSeries = do.Guide_Serie 
+									AND GB.GuideNumber = DO.Guide_Number
+                                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
                                     ON DOP.GuideSerie = DO.Guide_Serie
                                        AND DOP.GuideNumber = DO.Guide_Number
-                                INNER JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio VCP
+                                INNER JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio VCP WITH(NOLOCK)
                                     ON GB.IdVisitPointByClientPortfolio = VCP.IdVisitPointByClientPortfolio
-                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT_ARRIBO
+                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT_ARRIBO WITH(NOLOCK)
                                     ON DT_ARRIBO.Guide_Serie = DO.Guide_Serie
                                        AND DT_ARRIBO.Guide_Number = DO.Guide_Number
                                        AND DT_ARRIBO.StatusOrderId IN ( 11, 2 )
-                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT_ENTREGA
+                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT_ENTREGA WITH(NOLOCK)
                                     ON DT_ENTREGA.Guide_Serie = DO.Guide_Serie
                                        AND DT_ENTREGA.Guide_Number = DO.Guide_Number
                                        AND DT_ENTREGA.StatusOrderId IN (5,12)
-                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT
+                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DT WITH(NOLOCK)
                                     ON DT.Guide_Serie = DO.Guide_Serie
                                        AND DT.Guide_Number = DO.Guide_Number
-                                LEFT JOIN StatusOrder SO
+                                LEFT JOIN DeliveryBackOffice.dbo.StatusOrder SO
                                     ON DT.StatusOrderId = SO.StatusOrderId
-                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt DA
+                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt DA WITH(NOLOCK)
                                     ON DO.Guide_Serie = DA.Guide_Serie
                                        AND DO.Guide_Number = DA.Guide_Number
-                                LEFT JOIN DeliveryBackOffice.dbo.Incident I
+                                LEFT JOIN DeliveryBackOffice.dbo.Incident I WITH(NOLOCK)
                                     ON DA.ID_Incident = I.ID
                             WHERE GB.IdUser = @IdUser
                                   AND GB.RowStatus = 1

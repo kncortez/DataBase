@@ -45,12 +45,12 @@ BEGIN
                 'COD liquidado',
                 'COD pagado'
 			) then 1 else 0 end AllowCreateAlert
-		FROM DeliveryBackOffice.DBO.DeliveryOrder serv
-			LEFT JOIN DBO.StatusOrder SO ON serv.StatusOrderId=SO.StatusOrderId 
-		    LEFT JOIN DBO.FinalStatusByModule FSBM ON FSBM.StatusOrderId=SERV.StatusOrderId
-			LEFT JOIN DBO.DeliveryOrderAlert Talert ON Talert.GuideSerie=serv.Guide_Serie AND Talert.GuideNumber=serv.Guide_Number AND Talert.RowStatus=1 
+		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH(NOLOCK)
+			LEFT JOIN DBO.StatusOrder SO WITH(NOLOCK) ON serv.StatusOrderId=SO.StatusOrderId 
+		    LEFT JOIN DBO.FinalStatusByModule FSBM  WITH(NOLOCK) ON FSBM.StatusOrderId=SERV.StatusOrderId
+			LEFT JOIN DBO.DeliveryOrderAlert Talert WITH(NOLOCK) ON Talert.GuideSerie=serv.Guide_Serie AND Talert.GuideNumber=serv.Guide_Number AND Talert.RowStatus=1 
 					AND FSBM.IdFinalStatusByModule IS  NULL			
-			LEFT JOIN DBO.CatTypeAlert Ttalert ON Ttalert.IdCatTypeAlert= Talert.AlertTypeId  
+			LEFT JOIN DBO.CatTypeAlert Ttalert WITH(NOLOCK) ON Ttalert.IdCatTypeAlert= Talert.AlertTypeId  
 			
 		WHERE 
 		(serv.Guide_Serie +  CAST(Guide_Number AS VARCHAR) = @GuideToSearch)

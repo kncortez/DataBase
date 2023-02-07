@@ -159,7 +159,7 @@ BEGIN
         DECLARE @ValidateTransaction INT =
                 (
                     SELECT DopId
-                    FROM dbo.DeliveryOrderPaymentTransaction do
+                    FROM dbo.DeliveryOrderPaymentTransaction do WITH (NOLOCK)
                         INNER JOIN @TblDeliveryOrdersList tpo
                             ON do.GuideNumber = tpo.Guide_Number
                                AND do.GuideSerie = tpo.Guide_Serie

@@ -1376,6 +1376,7 @@
     <Build Include="dbo\Stored Procedures\GetCodeOfReferenceForStation.sql" />
     <Build Include="dbo\Stored Procedures\GetClientDataByEmail.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
+    <Build Include="dbo\Stored Procedures\Reporte_de_membresías_y_suscripciones.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\120\SqlSchemas\master.dacpac">
