@@ -11,14 +11,14 @@ BEGIN TRANSACTION
 BEGIN TRY
 
 	-- Submodulos
-	IF(NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH(NOLOCK) WHERE CM.ModName = 'Registro de clientes' COLLATE Latin1_General_CI_AI))
+	IF(NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH(NOLOCK) WHERE CM.ModName = 'Gestion de bloqueos de usuario' COLLATE Latin1_General_CI_AI))
 	BEGIN
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[CatModule]
 			(ModName, ModIdModuleParent, ModPath, ModDescription, ModOrder, ModMetadata, ModVisible, ModRowStatus, ModTokenCreated, ModDateCreated, ModGroup)
 		OUTPUT inserted.ModIdModule INTO @NewTelemarketingModules (NewModuleId)
 		VALUES
-			('Gestion de bloqueos de usuario', @NewTelemarketingHeadModule, '/telemercadeo/administracion-usuarios', 'Módulo para administración de bloqueos de usuarios de sistemas web', 40, 'bi bi-person-plus', 1, 1, 'SYS-ARUIZ', GETDATE(), NULL)
+			('Gestion de bloqueos de usuario', @NewTelemarketingHeadModule, '/telemercadeo/administracion-usuarios', 'Módulo para administración de bloqueos de usuarios de sistemas web', 40, 'bi bi-gear', 1, 1, 'SYS-ARUIZ', GETDATE(), NULL)
 
 	END
 
