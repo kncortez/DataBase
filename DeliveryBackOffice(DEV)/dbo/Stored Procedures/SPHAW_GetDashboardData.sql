@@ -123,7 +123,8 @@ BEGIN
 			
 			-- Unique customer counter
 			SELECT
-				COUNT(DISTINCT MUBAD.CustomerId) 'UniqueCustomers'
+				COUNT(DISTINCT MUBAD.CustomerId) 'UniqueCustomers',
+				COUNT(MUBAD.IdMembershipUsageByAffiliate) 'Transactions'
 			FROM
 				@MembershipUsageByAffiliateData MUBAD
 
@@ -242,7 +243,8 @@ BEGIN
 			
 			-- Unique customer counter
 			SELECT
-				COUNT(DISTINCT MUBAD.CustomerId) 'UniqueCustomers'
+				COUNT(DISTINCT MUBAD.CustomerId) 'UniqueCustomers',
+				COUNT(MUBAD.IdMembershipUsageByAffiliate) 'Transactions'
 			FROM
 				@MembershipUsageByAffiliateData MUBAD
 				
