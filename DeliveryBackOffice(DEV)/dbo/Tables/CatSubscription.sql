@@ -13,6 +13,7 @@
     [TokenUpdated]                     NVARCHAR (50)   NULL,
     [DateUpdated]                      DATETIME        NULL,
     [Icon]                             NVARCHAR (50)   NULL,
+    [NextSalesPackageBanner]           NVARCHAR (200)  NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC)
 );
 
@@ -33,3 +34,5 @@ GO
 GO
 
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
