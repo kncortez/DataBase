@@ -183,6 +183,8 @@ BEGIN
 			ISNULL(@ForzaPointsWithPromotion, 0) [PointsWithPromotion],
 			ISNULL(@PointsNeededForExchange, 0) [PointsNeededForExchange],
 			@ProceedWithTransaction [ProceedWithTransaction],
-			ISNULL(@PromoDescription, '') [PromoDescription];
+			ISNULL(@PromoDescription, '') [PromoDescription],
+			1 [spResult],
+			'Consulta exitosa' [spMessage];
 
 END
