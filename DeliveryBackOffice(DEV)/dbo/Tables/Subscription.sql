@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Subscription] (
+CREATE TABLE [dbo].[Subscription] (
     [IdSubscription]                   INT             IDENTITY (1, 1) NOT NULL,
     [MembershipId]                     INT             NULL,
     [CatSubscriptionId]                INT             NOT NULL,
@@ -40,6 +40,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Día  el cu
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'RateHeaderId';
 
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario alterno a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'AlternativeRateHeaderId';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario alterno a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'AlternativeRateHeaderId';
