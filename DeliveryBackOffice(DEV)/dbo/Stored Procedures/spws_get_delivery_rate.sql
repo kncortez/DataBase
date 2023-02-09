@@ -209,13 +209,13 @@ BEGIN
            )
         BEGIN
 
-            SELECT @RateId = ISNULL(ARC.RateId, @IdRate)
+            SELECT @RateId = ARC.RateId
             FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
             WHERE ARC.CustomerId = @IdCustomer
                   AND ARC.RowStatus = 1
                   AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates, @NewMainRates2 );
 
-            SET @IdRate = @RateId;
+            SET @IdRate = ISNULL(@RateId, @IdRate);
 
         END;
     END;
@@ -1235,6 +1235,22 @@ BEGIN
             --select @ParcelPrice as price
             -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
             INSERT INTO @TempRate
+			SELECT x.TypeRate
+				,x.Segment
+				,x.Service
+				,SUM(x.BaseRate)
+				,x.DiscountName
+				,SUM(x.DiscountValue)
+				,x.fragilRate
+				,x.CollectedRate
+				,SUM(x.InsuranceRate)
+				,x.CreditCardRate
+				,x.OverWeightRate
+				,SUM(x.IrregularParcelRate)
+				,x.CtsName
+				,x.CtsDescription
+				,x.ReturnRate
+			FROM (            
             SELECT ISNULL(cr.Name, '') TypeRate,
                    ISNULL(sg.CrsShortName, '') Segment,
                    ISNULL(sv.CtsShortName, '') Service,
@@ -1243,31 +1259,26 @@ BEGIN
                    0 DiscountValue,
                    IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
                    IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
-                   IIF(@IsInsurance = 'true',
-                       (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
-                            CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
-                            0)
-                       ),
-                       0) AS InsuranceRate,
+                   iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount ) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
                    IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
                    IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
-                   ISNULL(@ParcelPrice, 0) AS IrregularParcelRate,
+                   isnull( rd.RateValue, isnull(ar.PriceDefault, 0)) as IrregularParcelRate,
                    ISNULL(sv.CtsName, '') AS CtsName,
                    ISNULL(sv.CtsDescription, '') AS CtsDescription,
                    ISNULL(rh.ReturnRate, 0) AS ReturnRate
-            FROM dbo.RateHeader rh WITH (NOLOCK)
-                INNER JOIN dbo.RateData rd WITH (NOLOCK)
-                    ON rd.RateId = rh.RheId
-                       AND rd.RowStatus = 'true'
+            from #ListCode ls
+					INNER join dbo.ArticleByCustomer ar WITH(NOLOCK) ON  ar.Code = ls.Item
+					INNER JOIN dbo.RateHeader rh WITH(NOLOCK) ON rh.RheId = @IdRate
+					 INNER join dbo.RateData rd WITH(NOLOCK) ON rd.ArticleId = ar.AbcId and rd.RateId = rh.RheId and rd.RowStatus ='true'
                 LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
                     ON sg.CrsId = rd.TypeSegmentId
                 LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
                     ON sv.CtsId = rd.TypeServiceId
                 LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId
-            WHERE rh.RheId = @IdRate
-                  AND rd.ArticleId IS NULL
-                  AND rd.TypeSegmentId = @IdSegment
+            where rh.RheId = @IdRate
+					and rd.ArticleId is null
+					and rd.TypeSegmentId = @IdSegment
                   AND (rd.TypeServiceId IN
                        (
                            SELECT CtsId
@@ -1276,17 +1287,7 @@ BEGIN
                                  AND CtsRowStatus = 1
                        )
                       )
-                  AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
-                                                                 CONVERT(
-                                                                            DATETIME,
-                                                                            ISNULL(
-                                                                                      rd.LimitHourPickup,
-                                                                                      sv.LimitHourPickup
-                                                                                  ),
-                                                                            108
-                                                                        ),
-                                                                 CONVERT(DATETIME, '23:59:59', 108)
-                                                             );
+			) x GROUP BY x.TypeRate, x.Segment, x.Service, x.DiscountName, x.fragilRate, x.CollectedRate, x.CtsName, x.CreditCardRate, x.OverWeightRate, x.CtsDescription, x.ReturnRate
 
         END;
     --print 'rate'
