@@ -109,6 +109,7 @@ BEGIN
     DECLARE @WeigthLimit AS DECIMAL(12, 2) = 0;
     DECLARE @Currency AS VARCHAR(10) = '';
     DECLARE @PiecesIncluded AS DECIMAL(12, 2) = 1;
+    DECLARE @PriceWithCreditCard AS INT = 0;
 
     IF EXISTS
     (
@@ -1606,14 +1607,26 @@ BEGIN
                     --Si es tarifa fija
                     IF @ServiceValue >= 0
                     BEGIN
-                        SET @Discount = @PriceShippment - @ServiceValue;
-                        SELECT @NewPriceShippment
-                            = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.CreditCardRate
-                               + tr.OverWeightRate
-                              )
-                        FROM @TempRate tr
-                        WHERE Id = @i;
-                    END;
+                        IF (@ServiceValue = 0)
+                        BEGIN
+                            SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
+                                   @NewPriceShippment
+                                       = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate)
+                            FROM @TempRate tr
+                            WHERE Id = @i;
+                            SET @PriceWithCreditCard = 1;
+                        END
+                        ELSE
+                        BEGIN
+                            SET @Discount = @PriceShippment - @ServiceValue
+                            SELECT @NewPriceShippment
+                                = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
+                                   + tr.CreditCardRate + tr.OverWeightRate
+                                  )
+                            FROM @TempRate tr
+                            WHERE Id = @i;
+                        END
+                    END
                     ELSE
                     BEGIN
                         --Si existe una suscripción
@@ -1621,15 +1634,27 @@ BEGIN
                         BEGIN
                             --Si es tarifa fija
                             IF @ServiceValueSubscription >= 0
-                            BEGIN
-                                SET @Discount = @PriceShippment - @ServiceValueSubscription;
-                                SELECT @NewPriceShippment
-                                    = (@ServiceValueSubscription + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
-                                       + tr.CreditCardRate + tr.OverWeightRate
-                                      )
-                                FROM @TempRate tr
-                                WHERE Id = @i;
-                            END;
+                                IF (@ServiceValueSubscription = 0)
+                                BEGIN
+                                    SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
+                                           @NewPriceShippment
+                                               = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
+                                                  + tr.OverWeightRate
+                                                 )
+                                    FROM @TempRate tr
+                                    WHERE Id = @i;
+                                    SET @PriceWithCreditCard = 1;
+                                END
+                                ELSE
+                                BEGIN
+                                    SET @Discount = @PriceShippment - @ServiceValueSubscription
+                                    SELECT @NewPriceShippment
+                                        = (@ServiceValueSubscription + tr.FragilRate + tr.CollectedRate
+                                           + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
+                                          )
+                                    FROM @TempRate tr
+                                    WHERE Id = @i;
+                                END
                             ELSE
                             BEGIN
                                 IF @DiscountValue IS NOT NULL
@@ -1737,122 +1762,24 @@ BEGIN
                                              ISNULL(tr.Segment, '')) + '",' + '"ServiceDescription":"'
                                        + ISNULL(tr.ServiceDescription, '') + '",' + '"ServiceShortName":"'
                                        + ISNULL(tr.Service, '') + '",' + '"DeliveryDate":"'
-                                       + CONVERT(VARCHAR(24), @FechaCompra, 120) + '",' + '"Price":"'
-                                       + CONVERT(
-                                                    VARCHAR(20),
-                                                    CONVERT(
-                                                               DECIMAL(12, 2),
-                                                               dbo.fnt_Iva_Calculator(
-                                                                                         @CalculateTaxes,
-                                                                                         'GT',
-                                                                                         tr.BaseRate
-                                                                                         + tr.IrregularPieceRate,
-                                                                                         'false'
-                                                                                     )
-                                                           )
-                                                    + CONVERT(
-                                                                 DECIMAL(12, 2),
-                                                                 (dbo.fnt_Iva_Calculator(
-                                                                                            @CalculateTaxes,
-                                                                                            'GT',
-                                                                                            (tr.Discount * -1),
-                                                                                            'false'
-                                                                                        )
-                                                                 )
-                                                             )
-                                                    + CONVERT(
-                                                                 DECIMAL(12, 2),
-                                                                 dbo.fnt_Iva_Calculator(
-                                                                                           @CalculateTaxes,
-                                                                                           'GT',
-                                                                                           tr.FragilRate,
-                                                                                           'false'
-                                                                                       )
-                                                             )
-                                                    + CONVERT(
-                                                                 DECIMAL(12, 2),
-                                                                 dbo.fnt_Iva_Calculator(
-                                                                                           @CalculateTaxes,
-                                                                                           'GT',
-                                                                                           tr.CollectedRate,
-                                                                                           'false'
-                                                                                       )
-                                                             )
-                                                    + CONVERT(
-                                                                 VARCHAR(20),
-                                                                 CONVERT(
-                                                                            DECIMAL(12, 2),
-                                                                            dbo.fnt_Iva_Calculator(
-                                                                                                      @CalculateTaxes,
-                                                                                                      'GT',
-                                                                                                      tr.InsuranceRate,
-                                                                                                      'false'
-                                                                                                  )
-                                                                        )
-                                                             )
-                                                    + CONVERT(
-                                                                 VARCHAR(20),
-                                                                 dbo.fnt_Iva_Calculator(
-                                                                                           @CalculateTaxes,
-                                                                                           'GT',
-                                                                                           tr.CreditCardRate,
-                                                                                           'false'
-                                                                                       )
-                                                             )
-                                                    + CONVERT(
-                                                                 VARCHAR(20),
-                                                                 CONVERT(
-                                                                            DECIMAL(12, 2),
-                                                                            dbo.fnt_Iva_Calculator(
-                                                                                                      @CalculateTaxes,
-                                                                                                      'GT',
-                                                                                                      tr.OverWeightRate,
-                                                                                                      'false'
-                                                                                                  )
-                                                                        )
-                                                             )
-                                                    + CONVERT(
-                                                                 DECIMAL(12, 2),
-                                                                 dbo.fnt_Iva_Calculator(
-                                                                                           @CalculateTaxes,
-                                                                                           'GT',
-                                                                                           (CONVERT(
-                                                                                                       DECIMAL(12, 2),
-                                                                                                       tr.BaseRate
-                                                                                                   )
-                                                                                            - CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.Discount
-                                                                                                     )
-                                                                                            + CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.FragilRate
-                                                                                                     )
-                                                                                            + CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.CollectedRate
-                                                                                                     )
-                                                                                            + CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.InsuranceRate
-                                                                                                     )
-                                                                                            + CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.CreditCardRate
-                                                                                                     )
-                                                                                            + CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.OverWeightRate
-                                                                                                     )
-                                                                                            + CONVERT(
-                                                                                                         DECIMAL(12, 2),
-                                                                                                         tr.IrregularPieceRate
-                                                                                                     )
-                                                                                           ),
-                                                                                           'true'
-                                                                                       )
-                                                             )
-                                                ) + '",' + '"Currency":"' + @Currency + '",'
+                                       + CONVERT(VARCHAR(24), @FechaCompra, 120) + '",' +
+									'"Price":"' + convert(varchar(20),  
+										CONVERT(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.BaseRate + tr.IrregularPieceRate, 'false') ) 
+									+	CONVERT(decimal(12,2),(dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,(tr.Discount * -1),'false')  ) )  
+									+	convert(decimal(12,2),  dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.FragilRate,'false')) 
+									+	convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CollectedRate, 'false')) 
+									+	convert(varchar(20), convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.InsuranceRate , 'false')))  
+									+	convert(varchar(20), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CreditCardRate, 'false') ) 
+									+	convert(varchar(20), convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.OverWeightRate, 'false'))) 
+									+	convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' , (	convert(decimal(12,2),tr.BaseRate) 
+																											-	convert(decimal(12,2),tr.Discount)  
+																											+	convert(decimal(12,2),tr.FragilRate) 
+																											+	convert(decimal(12,2),tr.CollectedRate) 
+																											+	convert(decimal(12,2),tr.InsuranceRate)  
+																											+	convert(decimal(12,2),tr.CreditCardRate) 
+																											+	convert(decimal(12,2),tr.OverWeightRate)  
+																											+	convert(decimal(12,2),tr.IrregularPieceRate) ), 'true')) ) + '",' +
+                                       + '"Currency":"' + @Currency + '",'
                                        + '"Integration":[{"Description":"' + 'Servicio' + '",' + '"Price":"'
                                        + CONVERT(
                                                     VARCHAR(20),
@@ -2065,7 +1992,9 @@ BEGIN
         SELECT tr.TypeRate,
                tr.Segment,
                tr.Service,
-               (tr.BaseRate - tr.Discount + tr.IrregularPieceRate) AS Price, --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
+               IIF(@PriceWithCreditCard = 1,
+                   (tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate),
+                   (tr.BaseRate - tr.Discount + tr.IrregularPieceRate)) as Price, --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
                dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.BaseRate, 'false') AS BaseRate,
                dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', (tr.Discount * -1), 'false') AS DiscountValue,
                tr.DiscountName,
