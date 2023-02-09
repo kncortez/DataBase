@@ -158,7 +158,7 @@ BEGIN
 	ORDER BY	[CPP].[PointPromoWeight] DESC;
 
 	-- Get points with promotion
-	SET @PromoPoints = (@AvailableForzaPoints / @PointPromoFactor);
+	SET @PromoPoints = (@AvailableForzaPoints * (@PointPromoFactor/100));
 	SET @ForzaPointsWithPromotion = @AvailableForzaPoints + @PromoPoints;
 
 	-- Get needed points for transaction
