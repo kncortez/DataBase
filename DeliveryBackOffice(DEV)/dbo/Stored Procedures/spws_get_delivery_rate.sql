@@ -1259,7 +1259,7 @@ BEGIN
                    0 DiscountValue,
                    IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
                    IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
-                   iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount ) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate
+                   iif (@IsInsurance ='true', ( iif( @InsuranceAmount> isnull(rh.InsuranceExempt,0) , cast(( (@InsuranceAmount ) * isnull(rh.InsuranceRate,0) /100 ) as decimal(12,2)) ,0)  ),0)  as InsuranceRate,
                    IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
                    IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
                    isnull( rd.RateValue, isnull(ar.PriceDefault, 0)) as IrregularParcelRate,
@@ -1276,9 +1276,7 @@ BEGIN
                     ON sv.CtsId = rd.TypeServiceId
                 LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId
-            where rh.RheId = @IdRate
-					and rd.ArticleId is null
-					and rd.TypeSegmentId = @IdSegment
+            where rd.TypeSegmentId = @IdSegment
                   AND (rd.TypeServiceId IN
                        (
                            SELECT CtsId
