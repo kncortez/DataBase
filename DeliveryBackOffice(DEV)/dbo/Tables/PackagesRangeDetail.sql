@@ -1,9 +1,7 @@
 ﻿CREATE TABLE [dbo].[PackagesRangeDetail] (
     [IdPackagesRangeDetail] INT             IDENTITY (1, 1) NOT NULL,
     [PackagesRangeId]       INT             NULL,
-    [CatTypeServiceId]      INT             NOT NULL,
     [CatRateSegmentId]      INT             NOT NULL,
-    [IsPercent]             BIT             CONSTRAINT [DF_PackagesRangeDetail_IsPercent] DEFAULT ((0)) NOT NULL,
     [Value]                 DECIMAL (18, 2) NOT NULL,
     [RowStatus]             BIT             CONSTRAINT [DF_PackagesRangeDetail_RowStatus] DEFAULT ((1)) NOT NULL,
     [TokenCreated]          NVARCHAR (50)   NOT NULL,
@@ -12,9 +10,10 @@
     [DateUpdated]           NCHAR (10)      NULL,
     CONSTRAINT [PK_PackagesRangeDetail] PRIMARY KEY CLUSTERED ([IdPackagesRangeDetail] ASC),
     CONSTRAINT [FK_PackagesRangeDetail_CatRateSegment] FOREIGN KEY ([CatRateSegmentId]) REFERENCES [dbo].[CatRateSegment] ([CrsId]),
-    CONSTRAINT [FK_PackagesRangeDetail_CatTypeService] FOREIGN KEY ([CatTypeServiceId]) REFERENCES [dbo].[CatTypeService] ([CtsId]),
     CONSTRAINT [FK_PackagesRangeDetail_PackagesRange] FOREIGN KEY ([PackagesRangeId]) REFERENCES [dbo].[PackagesRange] ([IdPackagesRange])
 );
+
+
 
 
 
@@ -44,7 +43,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valor de la
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Especificar si es un valor o un porcentaje', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail', @level2type = N'COLUMN', @level2name = N'IsPercent';
+
 
 
 GO
@@ -64,5 +63,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de servicio al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail', @level2type = N'COLUMN', @level2name = N'CatTypeServiceId';
+
 
