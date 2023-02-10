@@ -3,7 +3,7 @@
 -- Create date: <10-02-2023>
 -- Description:	< Función para determinar tipo de servicio en base a datos de una guía, o verificar si tipo de servicio de guía es valido para condiciones de la guía >
 -- =============================================
-CREATE FUNCTION  fn_GetGuideServiceType
+CREATE FUNCTION  [dbo].[fn_GetGuideServiceType]
 (
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
@@ -50,7 +50,8 @@ BEGIN
 
 	-- Obtener tarifario de punto de visita, si es posible
 	SELECT
-		@RateToSearch = RBC.RbcIdRate
+		TOP 1
+			@RateToSearch = RBC.RbcIdRate
 	FROM
 		[DeliveryBackOffice].[dbo].[RatebyCustomer] RBC WITH(NOLOCK)
 	WHERE
@@ -83,7 +84,8 @@ BEGIN
 
 	-- Si tipo de servicio existe dentro de tarifa
 	SELECT
-		@FinalTypeServiceFound = 1
+		TOP 1
+			@FinalTypeServiceFound = 1
 	FROM
 		[DeliveryBackOffice].[dbo].[RateData] RD WITH(NOLOCK)
 		INNER JOIN
