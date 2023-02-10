@@ -66,7 +66,16 @@ BEGIN
 					AND [MSL].[SubscriptionId] = NULL
 					AND [MSL].[RowStatus] = 1
 					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven],
-				[CM].[NextSalesPackageBanner] 
+				[CM].[NextSalesPackageBanner],
+				ISNULL([M].[AvailablePoints], 0) [AvailablePoints],
+				ISNULL([M].[AccumulatedPoints], 0) [AccumulatedPoints],
+				ISNULL((SELECT SUM([PBSL].[PointsReceived])
+				FROM	[dbo].[PointsByServiceLog] PBSL
+				WHERE	[PBSL].[MembershipId] = [M].[IdMembership]
+					AND [PBSL].[RowStatus] = 1
+					AND [PBSL].[PointsConsumed] = 0
+					AND [PBSL].[PointsReceived] > 0
+					AND [PBSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ), 0) [MembershipFilteredPoints]
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
