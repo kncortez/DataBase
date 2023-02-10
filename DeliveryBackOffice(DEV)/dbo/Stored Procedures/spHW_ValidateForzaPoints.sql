@@ -27,7 +27,8 @@ BEGIN
 	DECLARE @MembershipLock INT = 0;
 	DECLARE @GuidesProcessedList TABLE (GuideSerie NVARCHAR(5),
 										GuideNumber INT,
-										PriceShipment DECIMAL(12,2));
+										PriceShipment DECIMAL(12,2),
+										IsCollect BIT);
 	DECLARE @CustomerList TABLE (CustomerId INT,
 								AccountId INT);
 
@@ -119,13 +120,21 @@ BEGIN
 			-- Get data for each guide
 			INSERT INTO @GuidesProcessedList(GuideSerie, 
 											GuideNumber, 
-											PriceShipment)
+											PriceShipment,
+											IsCollect)
 			SELECT							[DO].[Guide_Serie],
 											[DO].[Guide_Number],
-											[DO].[PriceShippment]
+											[DO].[PriceShippment],
+											[DO].[IsCollect]
 			FROM							[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			WHERE							[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
 				AND							[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList);
+
+			IF ((SELECT COUNT(IsCollect) FROM @GuidesProcessedList WHERE IsCollect = 1) > 0)
+				BEGIN
+					SELECT 0 [spResult], 'El proceso no puede continuar debido a que se encontraron guías tipo COLLECT en el listado recibido' [spMessage];
+					RETURN;
+				END
 		END
 
 	-- Get available points
