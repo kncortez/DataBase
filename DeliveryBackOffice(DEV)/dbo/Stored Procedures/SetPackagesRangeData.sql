@@ -122,13 +122,10 @@ BEGIN
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'STD'
-		AND pr.CatTypeServiceId = @STD
+		AND prd.CatTypeServiceId = @STD
 		AND prd.CatRateSegmentId = @LOC
 
 		--Actualizar STD METRO
@@ -137,13 +134,10 @@ BEGIN
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'STD'
-		AND pr.CatTypeServiceId = @STD
+		AND prd.CatTypeServiceId = @STD
 		AND prd.CatRateSegmentId = @MET
 
 		--Actualizar STD FOR
@@ -152,13 +146,10 @@ BEGIN
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'STD'
-		AND pr.CatTypeServiceId = @STD
+		AND prd.CatTypeServiceId = @STD
 		AND prd.CatRateSegmentId = @FOR
 
 		--Actualizar STD ESP
@@ -167,33 +158,27 @@ BEGIN
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'STD'
-		AND pr.CatTypeServiceId = @STD
+		AND prd.CatTypeServiceId = @STD
 		AND prd.CatRateSegmentId = @ESP
 
 		--Actualizar COD LOC
 		UPDATE prd
-		SET prd.[Value] = tpr.[Local]
+		SET prd.[Value] = tpr.LocalCOD
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
-		AND pr.CatTypeServiceId = @COD
+		AND prd.CatTypeServiceId = @COD
 		AND prd.CatRateSegmentId = @LOC
 
 		--Actualizar COD METRO
 		UPDATE prd
-		SET prd.[Value] = tpr.Metro
+		SET prd.[Value] = tpr.MetroCOD
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
@@ -202,38 +187,31 @@ BEGIN
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
-		AND pr.CatTypeServiceId = @COD
+		AND prd.CatTypeServiceId = @COD
 		AND prd.CatRateSegmentId = @MET
 
 		--Actualizar COD FOR
 		UPDATE prd
-		SET prd.[Value] = tpr.Foraneo
+		SET prd.[Value] = tpr.ForaneoCOD
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
-		AND pr.CatTypeServiceId = @COD
+		AND prD.CatTypeServiceId = @COD
 		AND prd.CatRateSegmentId = @FOR
 
 		--Actualizar COD ESP
 		UPDATE prd
-		SET prd.[Value] = tpr.Especial
+		SET prd.[Value] = tpr.EspecialCOD
 		   ,prd.TokenUpdated = @Token
 		   ,prd.DateUpdated = GETDATE()
 		FROM PackagesRangeDetail prd
-		INNER JOIN PackagesRange pr
-			ON prd.PackagesRangeId = pr.IdPackagesRange
 		INNER JOIN @TblPackagesRange tpr
 			ON prd.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
-		AND pr.CatTypeServiceId = @COD
+		AND prD.CatTypeServiceId = @COD
 		AND prd.CatRateSegmentId = @ESP
 
 		--Actualizar COD data LOC
@@ -246,7 +224,6 @@ BEGIN
 		INNER JOIN @TblPackagesRange tpr
 			ON prCOD.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
 		AND prCOD.CatRateSegmentId = @LOC
 
 		--Actualizar COD data MET
@@ -259,7 +236,6 @@ BEGIN
 		INNER JOIN @TblPackagesRange tpr
 			ON prCOD.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
 		AND prCOD.CatRateSegmentId = @MET
 
 		--Actualizar COD data FOR
@@ -272,7 +248,6 @@ BEGIN
 		INNER JOIN @TblPackagesRange tpr
 			ON prCOD.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
 		AND prCOD.CatRateSegmentId = @FOR
 
 		--Actualizar COD data ESP
@@ -285,7 +260,6 @@ BEGIN
 		INNER JOIN @TblPackagesRange tpr
 			ON prCOD.PackagesRangeId = tpr.IdPackatesRange
 		WHERE tpr.[Status] = 2
-		AND tpr.CatTypeService = 'COD'
 		AND prCOD.CatRateSegmentId = @ESP
 
 		--Insertar rango
@@ -302,8 +276,11 @@ BEGIN
 			   ,tpr.Metro
 			   ,tpr.Foraneo
 			   ,tpr.Especial
+			   ,tpr.LocalCOD
+			   ,tpr.MetroCOD
+			   ,tpr.ForaneoCOD
+			   ,tpr.EspecialCOD
 			   ,tpr.IsPercent
-			   ,tpr.CatTypeService
 			   ,tpr.[Status]
 			   ,tpr.WeightLimit
 			   ,tpr.AdditionalWeightRate
@@ -339,7 +316,6 @@ BEGIN
 				, [Order]
 				, [CatBusinessSegmentId]
 				, [CatTypeRateId]
-				, [CatTypeServiceId]
 				, [IsPercent]
 				, [WeightLimit]
 				, [AdditionalWeightRate]
@@ -360,7 +336,6 @@ BEGIN
 					   ,tmp.[Order]
 					   ,@CatBusinessSegmentId
 					   ,@CatTypeRate
-					   ,IIF(tmp.CatTypeService = 'STD', @STD, @COD)
 					   ,tmp.IsPercent
 					   ,tmp.WeightLimit
 					   ,tmp.AdditionalWeightRate
@@ -382,6 +357,7 @@ BEGIN
 
 				--Insertar rango LOC
 				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
 				, [CatRateSegmentId]
 				, [Value]
 				, [RowStatus]
@@ -389,6 +365,7 @@ BEGIN
 				, [DateCreated])
 					SELECT
 						@IdPackagesRange
+					   ,@STD
 					   ,@LOC
 					   ,tmp.[Local]
 					   ,'TRUE'
@@ -399,6 +376,7 @@ BEGIN
 
 				--Insertar rango MET
 				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
 				, [CatRateSegmentId]
 				, [Value]
 				, [RowStatus]
@@ -406,6 +384,7 @@ BEGIN
 				, [DateCreated])
 					SELECT
 						@IdPackagesRange
+					   ,@STD
 					   ,@MET
 					   ,tmp.Metro
 					   ,'TRUE'
@@ -416,6 +395,7 @@ BEGIN
 
 				--Insertar rango FOR
 				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
 				, [CatRateSegmentId]
 				, [Value]
 				, [RowStatus]
@@ -423,6 +403,7 @@ BEGIN
 				, [DateCreated])
 					SELECT
 						@IdPackagesRange
+					   ,@STD
 					   ,@FOR
 					   ,tmp.Foraneo
 					   ,'TRUE'
@@ -433,6 +414,7 @@ BEGIN
 
 				--Insertar rango ESP
 				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
 				, [CatRateSegmentId]
 				, [Value]
 				, [RowStatus]
@@ -440,8 +422,85 @@ BEGIN
 				, [DateCreated])
 					SELECT
 						@IdPackagesRange
+					   ,@STD
 					   ,@ESP
 					   ,tmp.Especial
+					   ,'TRUE'
+					   ,@Token
+					   ,GETDATE()
+					FROM @temp tmp
+					WHERE tmp.IdPackatesRange = @iter
+
+				--Insertar rango LOC
+				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
+				, [CatRateSegmentId]
+				, [Value]
+				, [RowStatus]
+				, [TokenCreated]
+				, [DateCreated])
+					SELECT
+						@IdPackagesRange
+					   ,@COD
+					   ,@LOC
+					   ,tmp.LocalCOD
+					   ,'TRUE'
+					   ,@Token
+					   ,GETDATE()
+					FROM @temp tmp
+					WHERE tmp.IdPackatesRange = @iter
+
+				--Insertar rango MET
+				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
+				, [CatRateSegmentId]
+				, [Value]
+				, [RowStatus]
+				, [TokenCreated]
+				, [DateCreated])
+					SELECT
+						@IdPackagesRange
+					   ,@COD
+					   ,@MET
+					   ,tmp.MetroCOD
+					   ,'TRUE'
+					   ,@Token
+					   ,GETDATE()
+					FROM @temp tmp
+					WHERE tmp.IdPackatesRange = @iter
+
+				--Insertar rango FOR
+				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
+				, [CatRateSegmentId]
+				, [Value]
+				, [RowStatus]
+				, [TokenCreated]
+				, [DateCreated])
+					SELECT
+						@IdPackagesRange
+					   ,@COD
+					   ,@FOR
+					   ,tmp.ForaneoCOD
+					   ,'TRUE'
+					   ,@Token
+					   ,GETDATE()
+					FROM @temp tmp
+					WHERE tmp.IdPackatesRange = @iter
+
+				--Insertar rango ESP
+				INSERT INTO [dbo].[PackagesRangeDetail] ([PackagesRangeId]
+				, [CatTypeServiceId]
+				, [CatRateSegmentId]
+				, [Value]
+				, [RowStatus]
+				, [TokenCreated]
+				, [DateCreated])
+					SELECT
+						@IdPackagesRange
+					   ,@COD
+					   ,@ESP
+					   ,tmp.EspecialCOD
 					   ,'TRUE'
 					   ,@Token
 					   ,GETDATE()
@@ -466,7 +525,6 @@ BEGIN
 					   ,GETDATE()
 					FROM @temp tmp
 					WHERE tmp.IdPackatesRange = @iter
-					AND tmp.CatTypeService = 'COD'
            
 
 				--insertar COD data MET
@@ -487,7 +545,6 @@ BEGIN
 					   ,GETDATE()
 					FROM @temp tmp
 					WHERE tmp.IdPackatesRange = @iter
-					AND tmp.CatTypeService = 'COD'
 
 				--insertar COD data FOR
 				INSERT INTO [dbo].[PackagesRangeCOD] ([PackagesRangeId]
@@ -507,7 +564,6 @@ BEGIN
 					   ,GETDATE()
 					FROM @temp tmp
 					WHERE tmp.IdPackatesRange = @iter
-					AND tmp.CatTypeService = 'COD'
 
 				--insertar COD data ESP
 				INSERT INTO [dbo].[PackagesRangeCOD] ([PackagesRangeId]
@@ -527,9 +583,6 @@ BEGIN
 					   ,GETDATE()
 					FROM @temp tmp
 					WHERE tmp.IdPackatesRange = @iter
-					AND tmp.CatTypeService = 'COD'
-
-
 
 				DELETE FROM @temp WHERE IdPackatesRange = @iter
 			END

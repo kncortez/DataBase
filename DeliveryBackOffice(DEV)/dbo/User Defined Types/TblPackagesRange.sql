@@ -7,8 +7,11 @@
     [Metro]                DECIMAL (18, 2) NULL,
     [Foraneo]              DECIMAL (18, 2) NULL,
     [Especial]             DECIMAL (18, 2) NULL,
+    [LocalCOD]             DECIMAL (18, 2) NULL,
+    [MetroCOD]             DECIMAL (18, 2) NULL,
+    [ForaneoCOD]           DECIMAL (18, 2) NULL,
+    [EspecialCOD]          DECIMAL (18, 2) NULL,
     [IsPercent]            BIT             NULL,
-    [CatTypeService]       VARCHAR (4)     NULL,
     [Status]               INT             NULL,
     [WeightLimit]          DECIMAL (12, 2) NULL,
     [AdditionalWeightRate] DECIMAL (12, 2) NULL,
@@ -28,4 +31,6 @@
     [numCODExcentMet]      DECIMAL (12, 2) NULL,
     [numCODExcentFor]      DECIMAL (12, 2) NULL,
     [numCODExcentEsp]      DECIMAL (12, 2) NULL);
+
+
 

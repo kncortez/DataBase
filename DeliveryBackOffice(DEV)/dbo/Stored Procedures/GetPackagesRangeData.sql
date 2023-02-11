@@ -19,7 +19,6 @@ BEGIN
 		SELECT
 			pr.IdPackagesRange
 		   ,pr.[Range] [Range]
-		   ,cts.CtsShortName CatTypeService
 		   ,pr.IsPercent IsPercent
 		   ,pr.DiscountPercentage Discount
 		   ,pr.WeightLimit WeightLimit
@@ -33,21 +32,21 @@ BEGIN
 		   ,pr.Attempt Attempt
 		   ,pr.PiecesIncluded PiecesIncluded
 		FROM PackagesRange pr
-		INNER JOIN CatTypeService cts
-			ON pr.CatTypeServiceId = cts.CtsId
 		WHERE pr.CatBusinessSegmentId = @CatBusinessSegmentId
 		AND pr.CatTypeRateId = @CatTypeRate
 		AND pr.RowStatus = 1
-		ORDER BY pr.CatTypeServiceId, pr.[Order] 
+		ORDER BY pr.[Order] 
 
 		SELECT 
 			pr.IdPackagesRange IdPackagesRange
+			,cts.CtsShortName CatTypeService
 			,crs.CrsShortName CatRateSegment
 			,prd.[Value] [Value]
 		FROM PackagesRangeDetail prd
 		INNER JOIN PackagesRange pr
 			ON prd.PackagesRangeId = pr.IdPackagesRange
-		
+		INNER JOIN CatTypeService cts
+			ON prd.CatTypeServiceId = cts.CtsId
 		INNER JOIN CatRateSegment crs
 			ON prd.CatRateSegmentId = crs.CrsId
 		WHERE pr.CatBusinessSegmentId = @CatBusinessSegmentId

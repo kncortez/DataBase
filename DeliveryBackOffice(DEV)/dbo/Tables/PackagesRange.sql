@@ -5,7 +5,6 @@
     [Order]                INT             NOT NULL,
     [CatBusinessSegmentId] INT             NOT NULL,
     [CatTypeRateId]        INT             NOT NULL,
-    [CatTypeServiceId]     INT             NOT NULL,
     [IsPercent]            BIT             CONSTRAINT [DF_PackagesRange_IsPercent] DEFAULT ((0)) NOT NULL,
     [WeightLimit]          DECIMAL (12, 2) NULL,
     [AdditionalWeightRate] DECIMAL (12, 2) NULL,
@@ -24,9 +23,10 @@
     [DateUpdated]          DATETIME        NULL,
     CONSTRAINT [PK_PackagesRange] PRIMARY KEY CLUSTERED ([IdPackagesRange] ASC),
     CONSTRAINT [FK_PackagesRange_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
-    CONSTRAINT [FK_PackagesRange_CatTypeRate] FOREIGN KEY ([CatTypeRateId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate]),
-    CONSTRAINT [FK_PackagesRange_CatTypeService] FOREIGN KEY ([CatTypeServiceId]) REFERENCES [dbo].[CatTypeService] ([CtsId])
+    CONSTRAINT [FK_PackagesRange_CatTypeRate] FOREIGN KEY ([CatTypeRateId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 
@@ -114,7 +114,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cobro en de
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de servicio al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRange', @level2type = N'COLUMN', @level2name = N'CatTypeServiceId';
+
 
 
 GO
