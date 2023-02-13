@@ -64,6 +64,18 @@ BEGIN
 					RETURN;
 				END
 
+			IF (@VehicleKms IS NULL OR @VehicleKms = 0)
+				BEGIN
+					SELECT 0 [spResult], 'El kilometraje ingresado NO es válido.' [spMessage];
+					RETURN;
+				END
+
+			IF (@AUX_VEHICLE_KMS >= @VehicleKms)
+				BEGIN
+					SELECT 0 [spResult], 'Datos incorrectos: El kilometraje ingresado es menor al último registro.' [spMessage];
+					RETURN;
+				END
+
 			IF (@AUX_VEHICLE_KMS > 0 AND (@VehicleKms - @AUX_VEHICLE_KMS) > 1000)
 				BEGIN
 					SELECT 0 [spResult], 'El kilometraje ingresado supera el rango autorizado para transitar, comuníquese con el administrador de flota.' [spMessage];
