@@ -904,6 +904,91 @@ BEGIN
 
 		END
 		
+		ELSE IF (@Type = 3)
+		BEGIN
+
+			-- Pago de renovación de membresía o suscripción
+			
+			-- Flujo normal de spws_set_facapidelcreditcardtransaction
+			SELECT @IdTransaction 	= isnull([IdTransaction],0)			
+			FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH(NOLOCK)
+			WHERE OrderNumber = @OrderNumber
+			and  cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE) 
+			if (@IdTransaction = 0)
+			Begin 
+
+			insert into DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+			(
+				[System]					
+				,CardNumber				
+				,TypeCardNumber			
+				,Currency				
+				,Ammount				
+				,OrderNumber			
+				,[Signature]				
+				,CustomerReference		
+				,ReferenceNumber		
+				,ECIIndicator			
+				,Authenticationresult	
+				,TransactionStain		
+				,CAVV					
+				,ReasonCode				
+				,ReasonDescription		
+				,StatusSend				
+				,RowStatus				
+				,TokenCreated			
+				,DateCreated			
+				,TokenUpdated			
+				,DateUpdated	
+			--,Token
+			)
+			values
+			(
+				@System					
+				,@CardNumber				
+				,@TypeCardNumber			
+				,@Currency				
+				,@Ammount				
+				,@OrderNumber			
+				,@Signature				
+				,@CustomerReference		
+				,@ReferenceNumber		
+				,@ECIIndicator			
+				,@Authenticationresult	
+				,@TransactionStain		
+				,@CAVV					
+				,@ReasonCode				
+				,@ReasonDescription		
+				,@StatusSend				
+				,@RowStatus				
+				,@TokenCreated			
+				,@DateCreated			
+				,@TokenUpdated			
+				,@DateUpdated			 
+			--,@Token
+			)
+			SET @IdTransaction = isnull(@@Identity,0)
+			end 
+			else if (@IdTransaction > 0 )
+			begin 
+				update DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				 SET 
+					ECIIndicator			= @ECIIndicator			
+					,		Authenticationresult	= @Authenticationresult		
+					,		ReasonCode				= @ReasonCode				
+					,		ReasonDescription		= @ReasonDescription		
+					,		StatusSend				= @StatusSend				
+					,		TokenUpdated			= @TokenCreated			
+					,		DateUpdated				= @DateCreated
+				 where IdTransaction = @IdTransaction
+				 AND OrderNumber = @OrderNumber
+				 And StatusSend <> 1
+				 AND cast(@DateCreated AS DATE)  = CAST(DateCreated AS DATE)
+
+			end 
+
+		END
+		
 		IF(@ReasonCode IN ('1','40','00'))
 		BEGIN
 
