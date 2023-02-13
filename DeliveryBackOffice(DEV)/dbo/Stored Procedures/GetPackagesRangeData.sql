@@ -21,16 +21,16 @@ BEGIN
 		   ,pr.[Range] [Range]
 		   ,pr.IsPercent IsPercent
 		   ,pr.DiscountPercentage Discount
-		   ,pr.WeightLimit WeightLimit
-		   ,pr.AdditionalWeightRate AdditionalWeightRate
-		   ,pr.InsuranceRate InsuranceRate
-		   ,pr.InsuranceExempt InsuranceExempt
-		   ,pr.CreditCardRate CreditCardRate
-		   ,pr.ReturnRate ReturnRate
-		   ,pr.FragilRate FragilRate
-		   ,pr.CollectRate CollectRate
-		   ,pr.Attempt Attempt
-		   ,pr.PiecesIncluded PiecesIncluded
+		   ,ISNULL(pr.WeightLimit, 0) WeightLimit
+		   ,ISNULL(pr.AdditionalWeightRate, 0) AdditionalWeightRate
+		   ,ISNULL(pr.InsuranceRate, 0) InsuranceRate
+		   ,ISNULL(pr.InsuranceExempt, 0) InsuranceExempt
+		   ,ISNULL(pr.CreditCardRate, 0) CreditCardRate
+		   ,ISNULL(pr.ReturnRate, 0) ReturnRate
+		   ,ISNULL(pr.FragilRate, 0) FragilRate
+		   ,ISNULL(pr.CollectRate, 0) CollectRate
+		   ,ISNULL(pr.Attempt, 0) Attempt
+		   ,ISNULL(pr.PiecesIncluded, 0) PiecesIncluded
 		FROM PackagesRange pr
 		WHERE pr.CatBusinessSegmentId = @CatBusinessSegmentId
 		AND pr.CatTypeRateId = @CatTypeRate
