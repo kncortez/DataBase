@@ -5,6 +5,7 @@
     [CatRouteId]                   INT            NOT NULL,
     [SenderReceiverId]             INT            NULL,
     [CatVehicleId]                 INT            NULL,
+    [VehicleKms]                   INT            CONSTRAINT [DF_LinehaulRoutePreparation_VehicleKms] DEFAULT ((0)) NULL,
     [DriverCUI]                    NVARCHAR (50)  NULL,
     [DriverName]                   NVARCHAR (100) NULL,
     [DriverPhone]                  NVARCHAR (25)  NULL,
@@ -30,6 +31,8 @@
     CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Vehicle] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 
@@ -138,4 +141,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'CUI del piloto asignado (OPCIONAL)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DriverCUI';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de kilometraje de salida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'VehicleKms';
 

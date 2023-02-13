@@ -7,6 +7,7 @@ CREATE PROCEDURE [dbo].[spHM_setInTransitToLinehaulRoutePreparation]
 	@IdLinehaulRoutePreparation AS INT,
 	@SenderReceiverCUI AS NVARCHAR(50) = NULL,
 	@CatVehicleId AS INT = NULL,
+	@VehicleKms AS INT = 0,
 	@DriverCUI AS NVARCHAR(25),
 	@DriverName AS NVARCHAR(100),
 	@DriverPhone AS NVARCHAR(25),
@@ -33,6 +34,8 @@ BEGIN
 	DECLARE @STATUS_LINEHAUL_ID AS INT;			-- CatLinehaulStatus
 	DECLARE @STATUS_GENERATED AS INT;			-- CatLinehaulStatus
 	DECLARE @EXISTING_LRP_TRANSIT AS INT;		-- Linehaul Route Preparation
+	DECLARE @AUX_VEHICLE_COUNT AS INT;			-- CatVehicle
+	DECLARE @AUX_VEHICLE_KMS AS INT;			-- CatVehicle
 
 	SET @STATUS_GENERATED = (SELECT [CLS].[IdCatLinehaulStatus]
 							FROM	[dbo].[CatLinehaulStatus] CLS
@@ -45,6 +48,29 @@ BEGIN
 	SET @STATUS_LINEHAUL_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
 								FROM	[dbo].[CatLinehaulStatus] CLS
 								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
+
+	-- Vehicle validations
+	IF (@CatVehicleId IS NOT NULL)
+		BEGIN
+
+			SELECT	@AUX_VEHICLE_COUNT = [CV].[IdVehicle],
+					@AUX_VEHICLE_KMS = ISNULL([CV].[Kms], 0)
+			FROM	[dbo].[CatVehicle] CV
+			WHERE	[CV].[IdVehicle] = @CatVehicleId;
+
+			IF (@AUX_VEHICLE_COUNT IS NULL)
+				BEGIN
+					SELECT 0 [spResult], 'El vehículo seleccionado NO existe en la base de datos, intente nuevamente o comuníquese con soporte técnico.' [spMessage];
+					RETURN;
+				END
+
+			IF (@AUX_VEHICLE_KMS > 0 AND (@VehicleKms - @AUX_VEHICLE_KMS) > 1000)
+				BEGIN
+					SELECT 0 [spResult], 'El kilometraje ingresado supera el rango autorizado para transitar, comuníquese con el administrador de flota.' [spMessage];
+					RETURN;
+				END
+
+		END
 
 	-- Check if there is an active record in LinehaulRoutePreparation
 	SET @EXISTING_LRP = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS IdLinehaulRoutePreparation
@@ -153,16 +179,27 @@ BEGIN
 			RETURN;
 		END
 
-	SET @STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
-							FROM	[dbo].[StatusOrder] SO
-							WHERE	[SO].[OrderDescription] = 'En Tránsito');
-
-	SET @STATUS_LINEHAUL_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
-								FROM	[dbo].[CatLinehaulStatus] CLS
-								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
-
 	BEGIN TRANSACTION
 	BEGIN TRY
+
+		IF (@CatVehicleId IS NOT NULL)
+			BEGIN
+				-- Insert log for vehicles
+				INSERT INTO [dbo].[VehicleLog] ([Unidad],
+												[Kms],
+												[Observacion],
+												[TokenCreate],
+												[DateCreate])
+				VALUES						(	@CatVehicleId,
+												@VehicleKms,
+												'setInTransitToLinehaulRoutePreparation',
+												@TknUser,
+												SYSDATETIME());
+
+				UPDATE	[dbo].[CatVehicle]
+				SET		[Kms] = @VehicleKms
+				WHERE	[IdVehicle] = @CatVehicleId;
+			END
 
 		-- Insert Tag record in LinehaulRoutePreparationCustomsMark
 		INSERT INTO [LinehaulRoutePreparationCustomsMark]
@@ -181,6 +218,7 @@ BEGIN
 		UPDATE	[LinehaulRoutePreparation]
 		SET		[SenderReceiverId] = @EXISTING_SR,
 				[CatVehicleId] = @CatVehicleId,
+				[VehicleKms] = @VehicleKms,
 				[DriverCUI] = @DriverCUI,
 				[DriverName] = @DriverName,
 				[DriverPhone] = @DriverPhone,
