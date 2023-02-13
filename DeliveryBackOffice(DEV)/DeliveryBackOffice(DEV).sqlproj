@@ -1426,7 +1426,6 @@
     <Build Include="dbo\Stored Procedures\GetClientDataByEmail.sql" />
     <Build Include="dbo\Tables\TagsVariables.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
-    <Build Include="dbo\Stored Procedures\RDL_CODReport_temp.sql" />
     <Build Include="dbo\Stored Procedures\Reporte_de_membresías_y_suscripciones.sql" />
     <Build Include="dbo\Stored Procedures\sphd_get_config_type_rate.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRate.sql" />
