@@ -46,7 +46,7 @@ BEGIN
 					(MembershipId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdMembershipPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, @AuthorizationValue, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @AuthorizationValue)
 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
 				BEGIN
@@ -191,7 +191,7 @@ BEGIN
 					(MembershipId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdMembershipPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, 'REJECTED', @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, 'REJECTED')
 				
 				-- Ingresar a bitácora 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
@@ -267,7 +267,7 @@ BEGIN
 					(SubscriptionId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdSubscriptionPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, @AuthorizationValue, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @AuthorizationValue)
 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
 				BEGIN
@@ -412,7 +412,7 @@ BEGIN
 					(SubscriptionId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdSubscriptionPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, 'REJECTED', @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, 'REJECTED')
 				
 				-- Ingresar a bitácora 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
