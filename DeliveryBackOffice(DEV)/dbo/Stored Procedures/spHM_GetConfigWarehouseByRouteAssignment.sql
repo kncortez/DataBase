@@ -73,6 +73,8 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH(NOLOCK)
 							ON
 								RAtemp.IdVehicle = CV.IdVehicle
+					WHERE
+						(CV.Kms + 1000) >= @VehicleMileage
 
 					INSERT INTO [DeliveryBackOffice].[dbo].[VehicleLog]
 						(
@@ -84,7 +86,7 @@ BEGIN
 						)
 					SELECT
 						DISTINCT
-							CV.UnitNumber
+							CV.IdVehicle
 							,@VehicleMileage
 							,''
 							,@Token
@@ -95,6 +97,8 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH(NOLOCK)
 							ON
 								RAtemp.IdVehicle = CV.IdVehicle
+					WHERE
+						(CV.Kms + 1000) >= @VehicleMileage
 
 				END TRY
 				BEGIN CATCH
