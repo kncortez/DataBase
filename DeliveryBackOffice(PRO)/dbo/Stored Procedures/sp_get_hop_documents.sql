@@ -1,4 +1,14 @@
-ï»¿
+USE [DeliveryBackOffice]
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_get_hop_documents]    Script Date: 12/02/2023 13:02:26 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
 
 
 -- =============================================
@@ -6,7 +16,7 @@
 -- Create date: <04/Agosto/2020>
 -- Description:	<Listado de documentos digitalizados por sede y rango de fechas>
 -- =============================================
-CREATE PROCEDURE [dbo].[sp_get_hop_documents]
+ALTER PROCEDURE [dbo].[sp_get_hop_documents]
 	-- Add the parameters for the stored procedure here
 	 @IdSender INT
 	,@StartDate DATETIME
@@ -47,32 +57,32 @@ BEGIN
 		--,I.itemdate
 		--,I.itemdatestore
 		FROM 
-		HOP.HOP.DOCDATAPAGE P
-		INNER JOIN HOP.HOP.REPOSITORIESVOLUMES V ON V.VolumeNum = P.logicalfolder AND v.RepNum=p.repnum
+		[HOP_LINKEDSERVER].HOP.HOP.DOCDATAPAGE P
+		INNER JOIN [HOP_LINKEDSERVER].HOP.HOP.REPOSITORIESVOLUMES V ON V.VolumeNum = P.logicalfolder AND v.RepNum=p.repnum
 		INNER JOIN 
 		(
 		-- BUSCAR EN TABLA DE COMPROBANTES (KeyItem4)
 		SELECT D.*, ki4.*
-				FROM   HOP.HOP.DOCDATA d ,
-					HOP.HOP.KEYITEM4 ki4
+				FROM   [HOP_LINKEDSERVER].HOP.HOP.DOCDATA d ,
+					[HOP_LINKEDSERVER].HOP.HOP.KEYITEM4 ki4
 				WHERE  
 					(d.itemid = ki4.ITEMNUM AND ki4.KEYVALUECHAR IN (SELECT Guide_Delivery FROM @GuidesInDelivery))
 					AND d.status = 0
 					AND ( d.doctypeid IN ( 12 ) ) -- comprobantes de entrega
 		) AS I ON I.itemid = P.itemid
-		INNER JOIN HOP.HOP.DOCTYPES dt ON dt.DOCTYPEID = I.doctypeid 
-		and dt.DOCTYPEID IN ( 12 )
+		INNER JOIN [HOP_LINKEDSERVER].HOP.HOP.DOCTYPES dt ON dt.DOCTYPEID = I.doctypeid 
+		AND dt.DOCTYPEID IN ( 12 )
 
 	-- resultados
 	SELECT 
-		COUNT(Guide_Delivery) AS Guides_Found -- guÃ­as encontradas
+		COUNT(Guide_Delivery) AS Guides_Found -- guías encontradas
 	FROM @GuidesInDelivery
 	
 	SELECT 
-		COUNT(Guide_Hop) AS Guides_Digitalized -- guÃ­as digitalizadas
+		COUNT(Guide_Hop) AS Guides_Digitalized -- guías digitalizadas
 	FROM @GuidesInHop
 
-	SELECT -- detalle de guÃ­as
+	SELECT -- detalle de guías
 		D.*
 		,H.*
 	FROM @GuidesInDelivery D
@@ -80,5 +90,8 @@ BEGIN
 	ORDER BY D.Guide_Delivery
 
 END
+
+
+GO
 
 
