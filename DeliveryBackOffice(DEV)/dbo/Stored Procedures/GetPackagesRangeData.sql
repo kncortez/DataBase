@@ -31,6 +31,7 @@ BEGIN
 		   ,ISNULL(pr.CollectRate, 0) CollectRate
 		   ,ISNULL(pr.Attempt, 0) Attempt
 		   ,ISNULL(pr.PiecesIncluded, 0) PiecesIncluded
+		   ,pr.[Order]
 		FROM PackagesRange pr
 		WHERE pr.CatBusinessSegmentId = @CatBusinessSegmentId
 		AND pr.CatTypeRateId = @CatTypeRate
