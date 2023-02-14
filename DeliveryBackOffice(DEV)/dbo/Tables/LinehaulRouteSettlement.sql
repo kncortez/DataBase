@@ -1,6 +1,8 @@
 ﻿CREATE TABLE [dbo].[LinehaulRouteSettlement] (
     [IdLinehaulRouteSettlement]  INT           IDENTITY (1, 1) NOT NULL,
     [LinehaulRoutePreparationId] INT           NOT NULL,
+    [HubID]                      INT           NULL,
+    [CatLinehaulStatusId]        INT           NOT NULL,
     [UserReceived]               NVARCHAR (50) NOT NULL,
     [DateReceived]               DATETIME      NOT NULL,
     [ContainersReceived]         INT           NULL,
@@ -8,18 +10,19 @@
     [GuidesReceived]             INT           NULL,
     [GuidePiecesReceived]        INT           NULL,
     [GuidePiecesMissing]         INT           NULL,
-    [RowStatus]                  BIT           DEFAULT ((1)) NOT NULL,
+    [VehicleKms]                 INT           CONSTRAINT [DF_LinehaulRouteSettlement_VehicleKms] DEFAULT ((0)) NULL,
+    [RowStatus]                  BIT           CONSTRAINT [DF__LinehaulR__RowSt__02732F85] DEFAULT ((1)) NOT NULL,
     [TokenCreated]               NVARCHAR (50) NOT NULL,
     [DateCreated]                DATETIME      NOT NULL,
     [TokenUpdated]               NVARCHAR (50) NULL,
     [DateUpdated]                DATETIME      NULL,
-    [HubID]                      INT           NULL,
-    [CatLinehaulStatusId]        INT           NOT NULL,
-    PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlement] ASC),
+    CONSTRAINT [PK__Linehaul__6EB79E05F17E1868] PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlement] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlement_CatLinehaulStatus] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRouteSettlement_Hub] FOREIGN KEY ([HubID]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulRouteSettlement_LinehaulRoutePreparation] FOREIGN KEY ([LinehaulRoutePreparationId]) REFERENCES [dbo].[LinehaulRoutePreparation] ([IdLinehaulRoutePreparation])
 );
+
+
 
 
 
@@ -114,4 +117,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de HUB l
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de estado | Tabla CatLinehaulStatus', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'CatLinehaulStatusId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Kilometraje de vehículo asociado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'VehicleKms';
 
