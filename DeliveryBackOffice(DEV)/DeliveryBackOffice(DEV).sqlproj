@@ -1433,6 +1433,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_TMGetDataMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetConfirmationOfAccount.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetUnblockOfUserInSystem.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
