@@ -1,16 +1,16 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Edelman Vásquez>
 -- Create date: <2022-09-19>
 -- Description:	<Método para generación de Link de recolección y envíarlo vía Whatsaap>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_CollectionLinkGeneration]
 
-@VisitPointCodeOfReference AS INT,
-@AccountId AS BIGINT,
-@Token NVARCHAR(50),
-@VisitPointPhone NVARCHAR(50),
-@VisitPointName NVARCHAR(100)
+	@VisitPointCodeOfReference AS INT,
+	@AccountId AS BIGINT,
+	@Token NVARCHAR(50),
+	@VisitPointPhone NVARCHAR(50),
+	@VisitPointName NVARCHAR(100),
+	@IsOnlyVisitPoint BIT = 0
 
 AS
 BEGIN
@@ -141,6 +141,7 @@ BEGIN
 						, DateCreated
 						, VisitPointPhone
 						, VisitPointName
+						, IsOnlyVisitPoint
 					)
 				OUTPUT inserted.ServiceToken, inserted.IdVisitPointDataLink INTO @ResponseData (PickupToken, DataLinkId)
 				VALUES
@@ -154,6 +155,7 @@ BEGIN
 						, GETDATE()
 						, @VisitPointPhone
 						, @VisitPointName
+						, @IsOnlyVisitPoint
 					)
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @ResponseData))

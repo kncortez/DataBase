@@ -12,11 +12,14 @@
     [AccountId]              BIGINT         NULL,
     [VisitPointPhone]        NVARCHAR (50)  NULL,
     [VisitPointName]         NVARCHAR (100) NULL,
+    [IsOnlyVisitPoint]       BIT            DEFAULT ((0)) NULL,
     CONSTRAINT [PK__VisitPoi__074B3DC8E6B2A218] PRIMARY KEY CLUSTERED ([IdVisitPointDataLink] ASC),
     CONSTRAINT [FK_VisitPointDataLink_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_VisitPointDataLink_DataLinkStatus] FOREIGN KEY ([DataLinkStatusId]) REFERENCES [dbo].[CatDataLinkStatus] ([IdCatDataLinkStatus]),
     CONSTRAINT [FK_VisitPointDataLink_VisitPoint] FOREIGN KEY ([VisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO
@@ -73,4 +76,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de links para recolección.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointDataLink';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador si el token corresponde a un flujo el cual solo debe generar punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointDataLink', @level2type = N'COLUMN', @level2name = N'IsOnlyVisitPoint';
 
