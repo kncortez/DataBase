@@ -703,7 +703,13 @@ BEGIN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
                ) AS 'Attempts',
-			   IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			   (CASE 
+					WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+					WHEN D.SalePipeLineId=@IDCatBusinessB2B THEN 'P' 
+					ELSE 'E'
+					END) 'Priority',
+
+			  -- IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
 			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
 					WHEN 
@@ -722,6 +728,11 @@ BEGIN
                 ON C.Guide_Number = D.Guide_Number
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+				ON MMBSHP.CustomerId = ctm.IdCustomer
+				AND MMBSHP.CatMembershipStatusId = 3
+			    AND MMBSHP.ExpirationDate >= GETDATE()
+				AND MMBSHP.RowStatus = 1
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (

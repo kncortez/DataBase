@@ -443,6 +443,15 @@ BEGIN
                                      + '"BankAccountId":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') + '",'
                                      + '"Identification":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '')
                                      + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
+									  + '"Priority": "' + 
+										COALESCE(
+											(CASE 
+												WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+												WHEN dev.SalePipeLineId=@IDCatBusinessB2B THEN 'P' 
+												ELSE 'E'
+											END)
+										, '') + '",' 
+
 									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
@@ -492,6 +501,11 @@ BEGIN
                                   LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
                                       ON DOPD.TimePlaId = CPT.TimePlaId
                                          AND cov.RowStatus = 1
+								  LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+									    ON MMBSHP.CustomerId = ctm.IdCustomer
+										AND MMBSHP.CatMembershipStatusId = 3
+										AND MMBSHP.ExpirationDate >= GETDATE()
+										AND MMBSHP.RowStatus = 1
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
