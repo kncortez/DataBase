@@ -20,14 +20,9 @@ BEGIN
 	DECLARE @CatSalesPackageStatusId INT = 0;
 	DECLARE @PointPromoId INT = NULL;
 	DECLARE @PointPromoFactor DECIMAL(12,2) = 0;
-	DECLARE @PointPromoOperationValue DECIMAL(12,2) = 0;
 	DECLARE @AuxPointsToSubstract INT = 0;
-	DECLARE @AuxRealPointsToSubstract INT = 0;
-	DECLARE @AuxPromoPointsToSubstract INT = 0;
 	DECLARE @ValidationForzaPoints TABLE(AvailableForzaPoints INT,
 										PointPromoFactor DECIMAL(12,2),
-										PromoPoints INT,
-										PointsWithPromotion INT,
 										PointsNeededForExchange INT,
 										ProceedWithTransaction BIT,
 										PromoDescription NVARCHAR(200), 
@@ -150,9 +145,6 @@ BEGIN
 
 		-- CANJE DE PUNTOS FORZA
 		SET @AuxPointsToSubstract = (SELECT TOP 1 PointsNeededForExchange FROM @ValidationForzaPoints);
-		SET @PointPromoOperationValue = ISNULL((SELECT TOP 1 (PointPromoFactor / 100) FROM @ValidationForzaPoints), 0);
-		SET @AuxPromoPointsToSubstract = IIF(((@AuxPointsToSubstract * @PointPromoOperationValue) > 0 AND (@AuxPointsToSubstract * @PointPromoOperationValue) < 1) , 1, CAST((@AuxPointsToSubstract * @PointPromoOperationValue) AS INT));
-		SET @AuxRealPointsToSubstract = @AuxPointsToSubstract - @AuxPromoPointsToSubstract;
 
 		-- Get available memberships
 		INSERT INTO @MembershipList (	MembershipId,
@@ -160,7 +152,7 @@ BEGIN
 										PointsToSubstract)
 		SELECT							[M].[IdMembership],
 										[M].[AvailablePoints],
-										IIF(([M].[AvailablePoints] >= @AuxRealPointsToSubstract), (@AuxRealPointsToSubstract - ISNULL((SELECT SUM(PointsToSubstract) FROM	@MembershipList), 0)), [M].[AvailablePoints])
+										IIF(([M].[AvailablePoints] >= @AuxPointsToSubstract), (@AuxPointsToSubstract - ISNULL((SELECT SUM(PointsToSubstract) FROM	@MembershipList), 0)), [M].[AvailablePoints])
 		FROM							[dbo].[Membership] M
 		WHERE							[M].[CustomerId] = (SELECT TOP 1 CustomerId FROM @GuidesProcessedList)
 			AND							[M].[PointsExpirationDate] >= SYSDATETIME()
@@ -194,7 +186,7 @@ BEGIN
 												[GPL].[GuideNumber],
 												[GPL].[PriceShipment],
 												CASE 
-													WHEN (@ForzaPointsExchangeType = 'MONTO') THEN ([GPL].[PriceShipment] * @ForzaPointsExchangeValue)
+													WHEN (@ForzaPointsExchangeType = 'MONTO') THEN (([GPL].[PriceShipment] * @ForzaPointsExchangeValue) - CAST(([GPL].[PriceShipment] * (@PointPromoFactor/100)) AS INT))
 													WHEN (@ForzaPointsExchangeType = 'SERVICIO') THEN (@ForzaPointsExchangeValue)
 													ELSE 0
 												END,						-- PointsConsumed
