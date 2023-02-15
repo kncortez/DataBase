@@ -18,8 +18,7 @@ BEGIN
 	DECLARE @ForzaPointsExchangeType NVARCHAR(25) = '';
 	DECLARE @ForzaPointsExchangeValue INT = 0;
 	DECLARE @CatSalesPackageStatusId INT = 0;
-	DECLARE @PromoPoints INT = 0;
-	DECLARE @ForzaPointsWithPromotion INT = 0;
+	DECLARE @PromoDiscount INT = 0;
 	DECLARE @PointPromoFactor DECIMAL(12,2) = 0;
 	DECLARE @PointsNeededForExchange INT = 0;
 	DECLARE @ProceedWithTransaction BIT = 0;
@@ -166,10 +165,6 @@ BEGIN
 		AND		SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
 	ORDER BY	[CPP].[PointPromoWeight] DESC;
 
-	-- Get points with promotion
-	SET @PromoPoints = (@AvailableForzaPoints * (@PointPromoFactor/100));
-	SET @ForzaPointsWithPromotion = @AvailableForzaPoints + @PromoPoints;
-
 	-- Get needed points for transaction
 	IF (UPPER(@ForzaPointsExchangeType) = 'SERVICIO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
 		BEGIN
@@ -181,15 +176,17 @@ BEGIN
 			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT SUM(PriceShipment) FROM @GuidesProcessedList));
 		END
 
-	IF (@PointsNeededForExchange <= @ForzaPointsWithPromotion)
+	-- Get new points price with promotion
+	SET @PromoDiscount = (@PointsNeededForExchange * (@PointPromoFactor/100));
+	SET @PointsNeededForExchange = @PointsNeededForExchange - @PromoDiscount;
+
+	IF (@PointsNeededForExchange <= @AvailableForzaPoints)
 		BEGIN
 			SET @ProceedWithTransaction = 1;
 		END
 
 	SELECT	ISNULL(@AvailableForzaPoints, 0) [AvailableForzaPoints], 
 			ISNULL(@PointPromoFactor, 0) [PointPromoFactor], 
-			ISNULL(@PromoPoints, 0) [PromoPoints],
-			ISNULL(@ForzaPointsWithPromotion, 0) [PointsWithPromotion],
 			ISNULL(@PointsNeededForExchange, 0) [PointsNeededForExchange],
 			@ProceedWithTransaction [ProceedWithTransaction],
 			ISNULL(@PromoDescription, '') [PromoDescription],
