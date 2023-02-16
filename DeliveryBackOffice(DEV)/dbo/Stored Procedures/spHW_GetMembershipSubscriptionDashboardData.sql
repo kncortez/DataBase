@@ -20,6 +20,9 @@ BEGIN
 	DECLARE @MEMBERSHIP_ID AS INT;					-- Membership
 	DECLARE @MEMBERSHIP_STATUS_ACTIVE_ID AS INT;	-- CatSalesPackageStatus
 	DECLARE @MEMBERSHIP_STATUS_INACTIVE_ID AS INT;	-- CatSalesPackageStatus
+	DECLARE @SPECIALSUSCRIPTION AS INT;
+
+	SET @SPECIALSUSCRIPTION = (SELECT TOP 1 CS.IdCatSubscription FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.SubscriptionName = 'Plan Diamante' COLLATE Latin1_General_CI_AI)
 
 	SET @DateStart = DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(@DateStart AS DATE)) AS DATETIME));
 	SET @DateEnd = DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(@DateEnd AS DATE)) AS DATETIME));
@@ -84,6 +87,12 @@ BEGIN
 				[S].[CatSubscriptionStatusId],
 				[S].[SubscriptionCost],
 				[S].[IsAutoRenewable],
+				CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew],
 				[S].[SubscriptionMaxServiceFixedValue],
 				[S].[ActualServiceCount],
 				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0, 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionAvailableFixedService],
