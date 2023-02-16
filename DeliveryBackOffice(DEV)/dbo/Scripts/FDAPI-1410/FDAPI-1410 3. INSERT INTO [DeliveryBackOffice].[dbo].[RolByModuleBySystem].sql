@@ -1,7 +1,7 @@
 
 DECLARE @BaseSystem INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes web operaciones' COLLATE Latin1_General_CI_AI)
 DECLARE @TelemarketingRole INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Ventas telemercadeo' COLLATE Latin1_General_CI_AI)
-DECLARE @TelemarketingHeadModule INT = (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH(NOLOCK) WHERE CM.ModName = 'Telemercadeo' COLLATE Latin1_General_CI_AI AND CM.ModPath = '/telemercadeo' COLLATE Latin1_General_CI_AI)
+DECLARE @TelemarketingHeadModule INT = (SELECT TOP 1 CM.ModIdModule FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH(NOLOCK) WHERE CM.ModName = 'Telemercadeo' COLLATE Latin1_General_CI_AI AND CM.ModPath = '/telemercadeo' COLLATE Latin1_General_CI_AI)
 
 DECLARE @NewTelemarketingModules TABLE (
 	NewModuleId INT
