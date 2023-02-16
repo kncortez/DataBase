@@ -1441,6 +1441,8 @@
     <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetConfirmationOfAccount.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetUnblockOfUserInSystem.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_SetBusinessPartnerSegments.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetBusinessPartnerSegments.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
