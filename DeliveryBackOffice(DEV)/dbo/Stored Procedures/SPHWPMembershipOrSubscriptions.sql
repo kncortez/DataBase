@@ -239,6 +239,14 @@ BEGIN
                                           )
                                           AND SBSCRPTN.RowStatus = 1
                                 ) SBSCRPTN
+                                WHERE (
+                                          CS.IncludedMembershipId IS NULL
+                                          AND @AccountId IS NOT NULL
+                                      ) -- usuario individual
+                                      OR (
+                                             CS.IncludedMembershipId IS NOT NULL
+                                             AND @AccountId IS NULL
+                                         ) -- otros usuarios
                                 --ORDER BY CS.IdCatSubscription Desc
 
                                 FOR XML PATH(''), TYPE
