@@ -1436,6 +1436,8 @@
     <Build Include="dbo\Stored Procedures\SetPackagesRangeData.sql" />
     <Build Include="dbo\Stored Procedures\GetPackagesRangeData.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRange.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_SetBusinessPartnerSegments.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetBusinessPartnerSegments.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
