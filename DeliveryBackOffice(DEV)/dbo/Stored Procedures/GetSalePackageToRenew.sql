@@ -86,7 +86,7 @@ BEGIN
 				ON
 					Mmshp.IdMembership = MPLPaid.MembershipId
 					AND
-					MPLPaid.DateCreated BETWEEN ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated) AND Mmshp.ExpirationDate
+					MPLPaid.DateCreated BETWEEN CAST(CAST(ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated) AS DATE) AS DATETIME) AND Mmshp.ExpirationDate
 					AND
 					LTRIM(RTRIM(ISNULL(MPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
@@ -187,7 +187,7 @@ BEGIN
 				ON
 					Mmshp.IdMembership = MPLPaid.MembershipId
 					AND
-					MPLPaid.DateCreated BETWEEN ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated) AND Mmshp.ExpirationDate
+					MPLPaid.DateCreated BETWEEN CAST(CAST(ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated) AS DATE) AS DATETIME) AND Mmshp.ExpirationDate
 					AND
 					LTRIM(RTRIM(ISNULL(MPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
@@ -307,7 +307,7 @@ BEGIN
 				ON
 					Sbsctptn.IdSubscription = SPLPaid.SubscriptionId
 					AND
-					SPLPaid.DateCreated BETWEEN ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) AND Sbsctptn.ExpirationDate
+					SPLPaid.DateCreated BETWEEN CAST(CAST(ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) AS DATE) AS DATETIME) AND Sbsctptn.ExpirationDate
 					AND
 					LTRIM(RTRIM(ISNULL(SPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND
@@ -418,7 +418,7 @@ BEGIN
 				ON
 					Sbsctptn.IdSubscription = SPLPaid.SubscriptionId
 					AND
-					SPLPaid.DateCreated BETWEEN ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) AND Sbsctptn.ExpirationDate
+					SPLPaid.DateCreated BETWEEN CAST(CAST(ISNULL(Sbsctptn.LastPaymentDate, Sbsctptn.DateCreated) AS DATE) AS DATETIME) AND Sbsctptn.ExpirationDate
 					AND
 					LTRIM(RTRIM(ISNULL(SPLPaid.[TransactionOrder],''))) <> 'REJECTED'
 					AND

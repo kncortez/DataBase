@@ -980,9 +980,8 @@ BEGIN
         IF @NewPrice = 0
         BEGIN
             SELECT TOP 1
-                @NewPrice
-                    = ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-                      + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0),
+                @NewPrice = IIF(@PriceWithCreditCard = 1,	(ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)), 
+															(ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0))),
                 @BaseRate = ISNULL(tr.BaseRate, 0),
                 @Discount = ISNULL(tr.Discount, 0),
                 @DiscountDescription = ISNULL(tr.DiscountName, ''),
