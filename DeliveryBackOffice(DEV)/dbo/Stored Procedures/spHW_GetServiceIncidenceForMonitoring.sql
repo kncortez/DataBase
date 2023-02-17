@@ -242,6 +242,7 @@ BEGIN
 			,DA.Guide_Serie 'GuideSerie'
 			,DA.Guide_Number 'GuideNumber'
 			,ISNULL(COI.IsActionIssued, 0) 'IsActionIssued'
+			,COI.IdConfirmationOfIncidence 'ConfirmationOfIncidenceId'
 		FROM
 			[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 			INNER JOIN
