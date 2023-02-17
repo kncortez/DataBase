@@ -392,8 +392,7 @@ BEGIN
 			, 'Cuenta creada exitósamente.' [spMessage]
 			,@TMSalesPersonName [spTMSPName]
 			,@TMSalesPersonPhone [spTMSPPhone]
-			,@TMSalesPersonEmail [spTMSPEmail]
-			,@AccountId [spIdAccount];
+			,@TMSalesPersonEmail [spTMSPEmail];
 	END TRY
 	BEGIN CATCH
 		SELECT 0 [spResult],
