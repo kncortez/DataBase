@@ -48,6 +48,7 @@ BEGIN
 	DECLARE @DateStatusOrder DATETIME
 	DECLARE @CatTypeConfirmationOfIncidenceId INT
 	DECLARE @ConfirmationOfIncidenceId INT
+	DECLARE @MessageReturn NVARCHAR(100) = ''
 	
     BEGIN TRY
 
@@ -187,15 +188,119 @@ BEGIN
 			END
 			ELSE
 			BEGIN
-				-- Si no se puede validar
-				--SET @IsValidDistance = 0
-				--SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Incidencia en ruta')
-				--SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta')
-				-- de momento si no se puede validar se toma como intento de entrega fallida**
-				SET @IsValidDistance = 1
-				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Intento de entrega fallida')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida')
+			
+				--FDAPI-1374 <Oscar Morales 2023-02-16> 
+				--Validar por geocercas
+
+				--Se buscan las geocercas de acuerdo a la ubicación 
+				DECLARE @Geo TABLE (
+					Id INT NOT NULL
+				)
+
+				INSERT INTO @Geo
+				SELECT
+					g.IdGeofence
+				FROM DeliveryOrder do WITH (NOLOCK)
+				INNER JOIN Geofence g WITH (NOLOCK)
+					ON g.Deparment = (CASE
+							WHEN do.IsLastMileReturn = 1 THEN do.Sender_Department
+							ELSE do.Receiver_Department
+						END)
+						AND g.Town = (CASE
+							WHEN do.IsLastMileReturn = 1 THEN do.Sender_Town
+							ELSE do.Receiver_Town
+						END)
+						AND (g.Zone = (CASE
+								WHEN do.IsLastMileReturn = 1 THEN do.Sender_Zone
+								ELSE do.Receiver_Zone
+							END)
+							OR (do.IsLastMileReturn = 0
+								AND g.SettlementId = do.ReceiverIdSettlement))
+				WHERE do.Guide_Serie = @GuideSerie
+				AND do.Guide_Number = @GuideNumber
+				AND g.RowStatus = 1
+
+				-- Variables para verificar ubicación en geocerca
+				DECLARE @TargetGeofence2 GEOMETRY;
+				DECLARE @TargetGeofenceAsText2 NVARCHAR(MAX);
+
+				DECLARE @TargetPoint2 GEOMETRY;
+				DECLARE @TargetPointAsText2 NVARCHAR(MAX) = CONCAT('POINT (',@Longitude,' ',@Latitude,')');
+
+				DECLARE @IsValidLocation2 BIT = 0
+				DECLARE @GeofenceId INT
+
+				WHILE EXISTS (SELECT TOP 1 1 FROM @Geo)
+				BEGIN
+					SET @GeofenceId = (SELECT TOP 1 Id FROM @Geo)
+
+					SET @TargetGeofenceAsText2 = 
+					(
+						CONCAT(
+							'POLYGON (('
+							,(
+								SELECT STUFF(
+								( 
+									SELECT 
+										', '+CONCAT(CAST(P.PointLongitude AS DECIMAL(9,6)),' ',CAST(P.PointLatitude AS DECIMAL(9,6)))
+									FROM
+										[DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
+										INNER JOIN 
+											[DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+											ON
+												G.IdGeofence = GP.IdGeofence
+												AND
+												GP.RowStatus = 1
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+											ON
+												GP.IdPoint = P.IdPoint
+												AND
+												P.RowStatus = 1
+									WHERE
+										G.RowStatus = 1
+										AND
+										G.IdGeofence = @GeofenceId
+									ORDER BY
+										GP.GeofencePointOrder ASC
+									FOR XML PATH(''), TYPE
+								).value('.', 'varchar(max)'),1,1,'')
+							)
+							,'))'
+						)
+					)
+
+					SET @TargetGeofence2 = GEOMETRY::STGeomFromText(@TargetGeofenceAsText2, 0);
+					SET @TargetPoint2 = GEOMETRY::STGeomFromText(@TargetPointAsText2, 0);
+
+					IF @TargetPoint2.STIntersection(@TargetGeofence2).ToString() <> 'GEOMETRYCOLLECTION EMPTY'
+					BEGIN
+						SET @IsValidLocation2 = 1
+						BREAK
+					END
+
+					DELETE FROM @Geo WHERE Id = @GeofenceId
+				END
+
+				IF @IsValidLocation2 = 1
+				BEGIN
+					SET @IsValidDistance = 1
+					SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Intento de entrega fallida')
+					SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida')
+				END
+				ELSE
+				BEGIN
+					-- Si no se puede validar
+					SET @IsValidDistance = 0
+					SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Incidencia en ruta')
+					SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta')
+				END
 			END
+
+			IF @IsValidDistance = 0
+				SET @MessageReturn = 'Hemos detectado un comportamiento extraño y será investigado.'
+
+			-- FIN FDAPI-1374 <Oscar Morales 2023-02-16> 
 
 			SET @DateStatusOrder = GETDATE()
 
