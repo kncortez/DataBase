@@ -8,6 +8,11 @@
 -- Create date: <2022-01-03>
 -- Description:	< Se remueve el poder modificar departamento y municipio ya que puede causar revalorizaciones. >
 -- =============================================
+-- =============================================
+-- Author:		<Jerson Ochoa>
+-- Create date: <2023-01-10>
+-- Description:	< Manejo de parámetro para marcar como devolución de última milla las incidencias. >
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
 	@GuideNumber INT = -1,
@@ -23,6 +28,7 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@NewAddress NVARCHAR(600) = '',
 	@NewTownshipID INT = -1,
 	@NewSettlementID BIGINT = -1,
+	@Observations NVARCHAR(500) = '',
 
 	@DeliveryAttemptId INT = NULL,
 	@RoutePreparationId INT = NULL,
@@ -33,7 +39,9 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 
 	@SetReschedule BIT = 0,
 	@RescheduleDate DATE = NULL,
-	@IsConfirmed BIT = 1
+
+	@IsConfirmed BIT = 1,
+	@CancelOrder BIT = 0
 AS
 BEGIN
 
@@ -57,6 +65,7 @@ BEGIN
 
 	DECLARE @StatusOrderId TINYINT
 	DECLARE @CatTypeConfirmationOfIncidenceId INT
+	DECLARE @IsLastMileReturn BIT = 0;
 
 	-- Variables de respuesta
 	DECLARE @jsonResult NVARCHAR(MAX);
@@ -427,7 +436,7 @@ BEGIN
 				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
-			FROM [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+			FROM [dbo].[ServiceDataForGuide] SDFG
 			INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 			WHERE SDFG.GuideToken = @GuideToken
@@ -445,7 +454,7 @@ BEGIN
 				SET 
 					Receiver_Address = @NewAddress
 					,Receiver_Zone = IIF( ISNULL(@NewZone,'')!='', @NewZone, Receiver_Zone )
-				FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
+				FROM [dbo].[ServiceDataForGuide] SDFG
 				INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 				WHERE SDFG.GuideToken = @GuideToken
@@ -516,7 +525,7 @@ BEGIN
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderDetail dod
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da
 					ON dod.Guide_Serie = da.Guide_Serie
 					AND dod.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -527,9 +536,10 @@ BEGIN
 				AND dod.DateCreated = coi.DateStatusOrder
 
 				UPDATE do
-				SET StatusOrderId = @StatusOrderId 
+				SET StatusOrderId = @StatusOrderId,
+				IsLastMileReturn = 1 --IIF((@CancelOrder = 1), 0, 1)
 				FROM DeliveryOrder do
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -540,7 +550,7 @@ BEGIN
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderPiece dop
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da
 					ON dop.GuideSerie = da.Guide_Serie
 					AND dop.GuideNumber = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -549,17 +559,75 @@ BEGIN
 				AND coi.RowStatus = 1
 			
 
+			END 
+			ELSE 
+			BEGIN 
+				-- UDPATE ONLY ISLASTMILERETURN IN DELIVERY ORDER
+				UPDATE do
+				SET IsLastMileReturn = IIF((@CancelOrder = 1), 0, 1)
+				FROM DeliveryOrder do
+				INNER JOIN DeliveryAttempt da
+					ON do.Guide_Serie = da.Guide_Serie
+					AND do.Guide_Number = da.Guide_Number
+				INNER JOIN ConfirmationOfIncidence coi 
+					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+				AND coi.RowStatus = 1
 			END
-		
 
 			UPDATE ConfirmationOfIncidence
 			SET IsConfirmed = 1
 			   ,StatusOrderId = @StatusOrderId
 			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
+			   ,ActionObservation = @Observations
 			   ,TokenUpdated = 'SetServiceTokenGuideData'
 			   ,DateUpdated = GETDATE()
 			WHERE ConfirmationOfIncidentToken = @GuideToken
 			AND RowStatus = 1
+
+			SET @IsLastMileReturn = (SELECT [DO].[IsLastMileReturn]
+									FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+									INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+										ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
+										AND		[DO].[Guide_Number] = [DA].[Guide_Number]
+									INNER JOIN	[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
+										ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+									WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+										AND		[COI].[RowStatus] = 1 
+ 									);
+
+			IF (@IsLastMileReturn = 1)
+				BEGIN
+					UPDATE	[DO]
+					SET		[DO].[Sender_Address] = @NewAddress,
+							[DO].[Sender_Town] = @NewTown,
+							[DO].[Sender_Zone] = @NewZone,
+							[DO].[SenderIdTownship] = @NewTownshipID
+					FROM	[dbo].[DeliveryOrder] [DO]
+					INNER JOIN	[dbo].[DeliveryAttempt] DA
+						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
+						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
+					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
+						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+						AND		[COI].[RowStatus] = 1 
+				END
+			ELSE 
+				BEGIN
+					UPDATE	[DO]
+					SET		[DO].[Receiver_Address] = @NewAddress,
+							[DO].[Receiver_Town] = @NewTown,
+							[DO].[Receiver_Zone] = @NewZone,
+							[DO].[ReceiverIdTownship] = @NewTownshipID
+					FROM	[dbo].[DeliveryOrder] [DO]
+					INNER JOIN	[dbo].[DeliveryAttempt] DA
+						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
+						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
+					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
+						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+						AND		[COI].[RowStatus] = 1 
+				END
 
 			COMMIT TRANSACTION
 			set @jsonResult =(
@@ -580,7 +648,7 @@ BEGIN
 								).value('.', 'varchar(max)'),1,1,'') )
 			select ('[' + @jsonResult +  ']') jsonResultError 
 		END CATCH
-	END	
+	END
 	ELSE
 	BEGIN
 
