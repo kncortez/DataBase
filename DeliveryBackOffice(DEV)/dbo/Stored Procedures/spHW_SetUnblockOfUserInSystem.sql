@@ -76,7 +76,7 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[UserSystemRestriction]
 			SET
 				UstStatus = 'ACTIVE',
-				UstAccessRetries = 0
+				UstRetries = 0
 			OUTPUT inserted.UstIdRestriction INTO @UpdatedData (DataUpdated)
 			WHERE
 				UstIdUser = @TargetRegisterUserId
