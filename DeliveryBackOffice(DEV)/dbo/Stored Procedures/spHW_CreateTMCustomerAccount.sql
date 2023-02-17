@@ -30,7 +30,7 @@ BEGIN
 	DECLARE @EmailExisting INT;
 	DECLARE @TypeAccountId INT;
 	DECLARE @PersonId BIGINT = 0;
-	DECLARE @PasswordExpirationDate DATETIME = (SELECT DATEADD(DAY, 90, SYSDATETIME()));
+	DECLARE @PasswordExpirationDate DATETIME = (SELECT DATEADD(DAY, 1, SYSDATETIME()));
 	DECLARE @CutOffDate DATE = EOMONTH( SYSDATETIME(), 1 ); -- Último día del mes siguiente
 	DECLARE @UserId BIGINT = 0;
 	DECLARE @CustomerTypeId INT = 0;
