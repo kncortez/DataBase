@@ -599,10 +599,10 @@ BEGIN
 			IF (@IsLastMileReturn = 1)
 				BEGIN
 					UPDATE	[DO]
-					SET		[DO].[Sender_Address] = @NewAddress,
-							[DO].[Sender_Town] = @NewTown,
-							[DO].[Sender_Zone] = @NewZone,
-							[DO].[SenderIdTownship] = @NewTownshipID
+					SET		[DO].[Sender_Address] = @NewAddress
+							--[DO].[Sender_Town] = @NewTown,
+							--[DO].[Sender_Zone] = @NewZone,
+							--[DO].[SenderIdTownship] = @NewTownshipID
 					FROM	[dbo].[DeliveryOrder] [DO]
 					INNER JOIN	[dbo].[DeliveryAttempt] DA
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
@@ -615,10 +615,10 @@ BEGIN
 			ELSE 
 				BEGIN
 					UPDATE	[DO]
-					SET		[DO].[Receiver_Address] = @NewAddress,
-							[DO].[Receiver_Town] = @NewTown,
-							[DO].[Receiver_Zone] = @NewZone,
-							[DO].[ReceiverIdTownship] = @NewTownshipID
+					SET		[DO].[Receiver_Address] = @NewAddress
+							--[DO].[Receiver_Town] = @NewTown,
+							--[DO].[Receiver_Zone] = @NewZone,
+							--[DO].[ReceiverIdTownship] = @NewTownshipID
 					FROM	[dbo].[DeliveryOrder] [DO]
 					INNER JOIN	[dbo].[DeliveryAttempt] DA
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
