@@ -24,6 +24,7 @@ CREATE PROCEDURE [dbo].[CompleteGuideGenerationExpressCenter]
 	@TblDeliveryOrdersList [TblDeliveryOrdersList2] READONLY
 AS
 BEGIN
+	SET ARITHABORT ON
 
 	-- Variables "globales"
 	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
