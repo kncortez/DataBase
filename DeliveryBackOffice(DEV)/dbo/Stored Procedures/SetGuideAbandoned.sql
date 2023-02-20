@@ -7,7 +7,7 @@ CREATE PROCEDURE [dbo].[SetGuideAbandoned]
 	@IdUser INT,
 	@Username VARCHAR(50),
 	@Password VARCHAR(200),
-	@IdSystem INT,
+	@NameSystem VARCHAR(100),
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
 	@Token NVARCHAR(50)
@@ -25,19 +25,16 @@ BEGIN
 				AND ru.UsrRowStatus = 1
 			INNER JOIN RolByUserBySystem rus
 				ON ru.UsrIdUser = rus.RusIdUser
-				AND rus.RusIdSystem = @IdSystem
 				AND rus.RusRowStatus = 1
-			INNER JOIN UserSystemRestriction ust
-				ON ust.UstIdUser = rus.RusIdUser
-				AND ust.UstIdSystem = rus.RusIdSystem
-				AND ust.UstRowStatus = 1
 			INNER JOIN CatRol cr
 				ON rus.RusIdRol = cr.RolIdRol
+			INNER JOIN CatSystem cs
+				ON rus.RusIdSystem = cs.SysIdSystem
 			WHERE iu.IdUser = @IdUser
 			AND iu.Username = @Username
 			AND ru.UsrLastPassword = @Password
-			AND ust.UstStatus = 'ACTIVE'
 			AND cr.RolName = 'Supervisor'
+			AND cs.SysNameSystem = @NameSystem
 			AND iu.RowStatus = 1)
 		BEGIN
 
