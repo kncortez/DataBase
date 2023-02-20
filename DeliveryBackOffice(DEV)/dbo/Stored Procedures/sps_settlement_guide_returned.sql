@@ -62,6 +62,20 @@ BEGIN
 			-- registrar último checkpoint de devolución
 			UPDATE DeliveryBackOffice.dbo.DeliveryOrder SET StatusOrderId = 8 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 			
+			--FDD-1071 <Oscar Morales 2023-02-16> 
+			--Detectar desacatos courier
+			UPDATE coi
+			SET CourierContempt = 1
+			   ,TokenUpdated = @Token
+			   ,DateUpdated = GETDATE()
+			FROM ConfirmationOfIncidence coi
+			INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+				AND da.Guide_Serie = @GuideSerie
+				AND da.Guide_Number = @GuideNumber
+				AND da.ID_DeliveryOrderBySettlement = @IdManifest
+			WHERE coi.IsActionIssued = 1
+			--FIN FDD-1071 <Oscar Morales 2023-02-16> 
 		END TRY
 
 		BEGIN CATCH
