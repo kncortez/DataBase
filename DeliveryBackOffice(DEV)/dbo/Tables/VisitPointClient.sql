@@ -29,6 +29,9 @@
     [ExcludePriceShippingCOD] BIT            NULL,
     [ExcludeCommissionCOD]    BIT            NULL,
     [IsOriginVisitPoint]      BIT            CONSTRAINT [DF_VisitPointClient_IsOriginVisitPoint] DEFAULT ((1)) NOT NULL,
+    [LogLatitude]             NVARCHAR (20)  NULL,
+    [LogLongitude]            NVARCHAR (20)  NULL,
+    [DescriptionCC]           NVARCHAR (100) NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPBusiness] FOREIGN KEY ([IdKindOfVPBusiness]) REFERENCES [dbo].[KindOfVPBusiness] ([IdKindOfVPBusiness]),
@@ -37,6 +40,10 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
+
+
 
 
 
@@ -74,4 +81,21 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Correo del 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere al número de sucursal de la agencia, tienda u oficina identificada por cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'BranchCode';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
+    ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Ubicación (longitud) anterior o para revisión del punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'LogLongitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Ubicación (latitud) anterior o para revisión del punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'LogLatitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción para Contact Center', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'DescriptionCC';
 

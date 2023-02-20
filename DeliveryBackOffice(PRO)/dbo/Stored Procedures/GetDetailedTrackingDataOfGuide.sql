@@ -336,8 +336,8 @@ BEGIN
 			   OrdChkPnt.[ManifestNumber],
 			   OrdChkPnt.[Latitude],
 			   OrdChkPnt.[Longitude]
-			   , OrdChkPnt.Price
-			   , OrdChkPnt.COD		
+			   ,ISNULL(OrdChkPnt.Price,0) Price
+			   ,ISNULL(OrdChkPnt.COD,0) COD
 			   ,OrdChkPnt.[NextSteps]
 	FROM #OrdChkpnt OrdChkPnt
 	-- Obtener datos desde usuario Desktop

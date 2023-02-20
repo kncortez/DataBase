@@ -11,3 +11,11 @@
     CONSTRAINT [FK_VisitPointByUser_RegisterUser] FOREIGN KEY ([RegisterUserID]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RegisterUserID_Included_Rows]
+    ON [dbo].[VisitPointByUser]([RegisterUserID] ASC)
+    INCLUDE([IdVisitPointClient]);
+

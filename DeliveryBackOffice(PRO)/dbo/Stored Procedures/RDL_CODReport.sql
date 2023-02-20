@@ -81,7 +81,7 @@ BEGIN
 
 	
 	
-    SELECT 
+    SELECT DISTINCT
 	DOR.Guide_Serie + CAST(DOR.Guide_Number AS VARCHAR) 'Guía'
 	,
 	STO.OrderDescription 'Último estado'
@@ -206,7 +206,7 @@ BEGIN
                               GROUP BY DOD.Guide_Number
                           --y sobre esa fecha buscar si hay un retornado a forza
                           ) tbl1
-                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3
+                              INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD3 WITH(NOLOCK)
                                   ON DOD3.Guide_Number = tbl1.Guide_Number
                                      AND DOD3.StatusOrderId = 8 --retornado a forza
                                      AND DOD3.DateCreatedInSystem > tbl1.MaxDeliveryDate
@@ -242,7 +242,12 @@ BEGIN
               'NO') 'Confirmación liquidación COD',
            BatchCODId 'Confirmación Lote COD',
            DOP.Deposit_Number '# Referencia Banco',
-           HB.HUB 'Hub destino',
+           
+		   HBO.HUB 'Hub origen',
+           DOR.Sender_Department 'Departamento Origen',
+           DOR.Sender_Town 'Municipio Origen',
+
+		   HB.HUB 'Hub destino',
            DOR.Receiver_Department 'Departamento Destino',
            DOR.Receiver_Town 'Municipio Destino',
            COALESCE(DOR.Receiver_FirstName, '') + ' ' + COALESCE(DOR.Receiver_LastName, '') 'Destinatario',
@@ -445,21 +450,21 @@ BEGIN
             GROUP BY CSD.IdCost
         ) CSD
             ON CST.IdCost = CSD.IdCost
-        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO
+        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney CTO WITH (NOLOCK)
             ON CTO.tio_pk_id = CSD.IdTypeOfMoney
-        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON VPC.CodeOfReference = DOR.Sender_ID
-        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient KVP
+        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient KVP WITH (NOLOCK)
             ON KVP.IdKindOfVPClient = VPC.IdKindOfVPClient
-        LEFT JOIN DeliveryBackOffice.dbo.Customer CTM
+        LEFT JOIN DeliveryBackOffice.dbo.Customer CTM WITH (NOLOCK)
             ON CTM.IdCustomer = DOR.IdCustomer
-        LEFT JOIN DeliveryBackOffice.dbo.Customer CTV
+        LEFT JOIN DeliveryBackOffice.dbo.Customer CTV WITH (NOLOCK)
             ON CTV.IdCustomer = VPC.CustomerID
-		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB
+		LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH (NOLOCK)
 			ON ISNULL(CTV.TypeOfBusinessID, CTM.TypeOfBusinessID) = CTOB.IdTypeOfBusiness
-        LEFT JOIN DeliveryBackOffice.dbo.CustomerType CTT
+        LEFT JOIN DeliveryBackOffice.dbo.CustomerType CTT WITH (NOLOCK)
             ON CTT.IdCustomerType = CTM.IdCustomerType --45STEBNHL
-        LEFT JOIN #TransactionFAC1 FAC
+        LEFT JOIN #TransactionFAC1 FAC 
             ON FAC.GuideSerie = DOR.Guide_Serie
                AND FAC.OrderNumber = DOR.Guide_Number
         LEFT JOIN
@@ -498,7 +503,22 @@ BEGIN
             GROUP BY CV.HeaderCode
         ) HB
             ON HB.HeaderCode = ISNULL(TONW.HeaderCode, TWN.HeaderCode)
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCBA WITH (NOLOCK)
+        
+		--Info origen
+		LEFT JOIN dbo.Township TONWO WITH (NOLOCK)
+            ON TONWO.IdTownship = DOR.SenderIdTownship AND TONWO.TownshipStatus = 1
+		LEFT JOIN dbo.Township TWNO WITH (NOLOCK)
+            ON TWNO.TownshipName = DOR.Sender_Town AND TWNO.TownshipStatus = 1
+		LEFT JOIN
+        (
+            SELECT CV.HeaderCode,
+                   MAX(CV.Hub) HUB
+            FROM dbo.DumpServiceCoverage CV WITH (NOLOCK)
+            GROUP BY CV.HeaderCode
+        ) HBO
+            ON HBO.HeaderCode = ISNULL(TONWO.HeaderCode, TWNO.HeaderCode)
+
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCBA WITH (NOLOCK)
             ON DCBA.DCBA_Id = DOR.DCBA_ID
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank DBA WITH (NOLOCK)
             ON DBA.Id_bank = DCBA.DCBA_Bank_Id
@@ -528,5 +548,5 @@ BEGIN
 	AND
 	INH.IsManualInvoice = 1; */
 
-	IF OBJECT_ID('tempdb.dbo.#TransactionFAC1', 'U') IS NOT NULL DROP TABLE #TransactionFAC1;
+	DROP TABLE #TransactionFAC1;
 END;

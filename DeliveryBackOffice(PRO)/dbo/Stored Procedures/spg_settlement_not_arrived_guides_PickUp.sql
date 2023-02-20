@@ -37,10 +37,10 @@ BEGIN
            ISNULL(
            (
                SELECT COUNT(1)
-               FROM SettlementByPickup sbp
-                   JOIN SettlementByPickupDetail sbpd
+               FROM SettlementByPickup sbp WITH(NOLOCK)
+                   INNER JOIN SettlementByPickupDetail sbpd WITH(NOLOCK)
                        ON (sbp.Id = sbpd.SettlementByPickupId)
-                   JOIN DeliveryOrderPiece dop
+                   INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
                        ON dop.GuideSerie = sbpd.GuideSerie
                           AND dop.GuideNumber = sbpd.GuideNumber
                           AND dop.NoPiece = sbpd.NoPiece
@@ -57,10 +57,10 @@ BEGIN
            ISNULL(
            (
                SELECT COUNT(1)
-               FROM SettlementByPickup sbp
-                   JOIN SettlementByPickupDetail sbpd
+               FROM SettlementByPickup sbp WITH(NOLOCK)
+                   INNER JOIN SettlementByPickupDetail sbpd
                        ON (sbp.Id = sbpd.SettlementByPickupId)
-                   JOIN DeliveryOrderPiece dop
+                   INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
                        ON dop.GuideSerie = sbpd.GuideSerie
                           AND dop.GuideNumber = sbpd.GuideNumber
                           AND dop.NoPiece = sbpd.NoPiece
@@ -91,12 +91,12 @@ BEGIN
                SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)
            ) AS Rack_Position,
            Collect_OnDelivery
-    FROM [DeliveryBackOffice].[dbo].DeliveryOrder do
+    FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
         INNER JOIN
         (
             SELECT GuideSerie,
                    GuideNumber
-            FROM [DeliveryBackOffice].[dbo].SettlementByPickupDetail
+            FROM [DeliveryBackOffice].[dbo].SettlementByPickupDetail WITH(NOLOCK)
             WHERE SettlementByPickupId = @IdManifest
                   AND IsPieceLiquidaded = 0 -- Pieza de la guia no liquidada
             GROUP BY GuideSerie,
@@ -124,14 +124,14 @@ BEGIN
            vpc.Phone Receiver_Phone,
            '' Rack_Position,
            0 Collect_OnDelivery
-    FROM SettlementByPickup sbp
-        JOIN RouteAssigment ra
+    FROM SettlementByPickup sbp WITH(NOLOCK)
+        INNER JOIN RouteAssigment ra WITH(NOLOCK)
             ON ra.IdRouteAssigment = sbp.RouteAssigmentId
-        JOIN ServiceManagement sm
+        INNER JOIN ServiceManagement sm WITH(NOLOCK)
             ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
-        JOIN SchedulePickup sp
+        INNER JOIN SchedulePickup sp WITH(NOLOCK)
             ON sp.SchedulePickupId = sm.IdSchedulePickup
-        JOIN VisitPointClient vpc
+        INNER JOIN VisitPointClient vpc WITH(NOLOCK)
             ON vpc.CodeOfReference = sp.SenderId
         LEFT JOIN DeliveryOrderPaymentDetail dopd
             ON dopd.IdHeaderRecolection = sp.SchedulePickupId

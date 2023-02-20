@@ -12,9 +12,15 @@
     [TokenCreated]               NVARCHAR (50)  NOT NULL,
     [DateUpdated]                DATETIME       NULL,
     [TokenUpdated]               NVARCHAR (50)  NULL,
+    [IsPageURLExternal]          BIT            CONSTRAINT [DF_ContentDetail_IsPageURLExternal] DEFAULT ((0)) NULL,
+    [IsVideoURLExternal]         BIT            CONSTRAINT [DF_ContentDetail_IsVideoURLExternal] DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([IdContentDetail] ASC),
     CONSTRAINT [FK_ContentDetail_ContentTitle] FOREIGN KEY ([ContentTitleId]) REFERENCES [dbo].[ContentTitle] ([IdContentTitle])
 );
+
+
+
+
 
 
 GO

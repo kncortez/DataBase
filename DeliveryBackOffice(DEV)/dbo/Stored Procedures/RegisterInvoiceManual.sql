@@ -20,19 +20,19 @@ AS
 	DECLARE @sumFac money = 0.00
 	BEGIN
 		
-		SET @CountInvoice = (SELECT COUNT(inv_pk_id) FROM invoiceHeader 
+		SET @CountInvoice = (SELECT COUNT(inv_pk_id) FROM invoiceHeader with (nolock)
 				WHERE inv_certificationFEL = @Fel)
 		IF(@CountInvoice >=1)
 			BEGIN
-				SET @invoiceIdExist = (SELECT top 1 inv_pk_id FROM invoiceHeader WHERE inv_certificationFEL = @Fel)
-				SET @sumFac = ((SELECT top 1 inv_amount FROM invoiceHeader WHERE inv_pk_id = @invoiceIdExist)+@Amount)
+				SET @invoiceIdExist = (SELECT top 1 inv_pk_id FROM invoiceHeader with (nolock) WHERE inv_certificationFEL = @Fel)
+				SET @sumFac = ((SELECT top 1 inv_amount FROM invoiceHeader with (nolock) WHERE inv_pk_id = @invoiceIdExist)+@Amount)
 
 				UPDATE invoiceHeader
 				SET inv_amount = @sumFac
 				WHERE inv_pk_id = @invoiceIdExist
-				PRINT (@CountInvoice)
-				PRINT(@invoiceIdExist)
-				PRINT (@sumFac)
+				--PRINT (@CountInvoice)
+				--PRINT(@invoiceIdExist)
+				--PRINT (@sumFac)
 				INSERT INTO invoiceDetail (
 									dti_fk_header,
 									dti_fk_orderSerie, 

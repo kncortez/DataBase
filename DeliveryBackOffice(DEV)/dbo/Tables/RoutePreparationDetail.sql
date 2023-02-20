@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar el detalle de guías de la preparación de entregas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail';
 
@@ -103,4 +105,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la guía fue reprogramada por el cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'IsCustomerReschedule';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RoutePreparationId_include]
+    ON [dbo].[RoutePreparationDetail]([RoutePreparationId] ASC)
+    INCLUDE([ServiceManagementDetailId]);
 

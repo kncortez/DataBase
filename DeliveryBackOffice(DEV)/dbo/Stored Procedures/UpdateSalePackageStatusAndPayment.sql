@@ -46,7 +46,7 @@ BEGIN
 					(MembershipId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdMembershipPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, @AuthorizationValue, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @AuthorizationValue)
 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
 				BEGIN
@@ -78,7 +78,7 @@ BEGIN
 						Mmshp
 					SET
 						Mmshp.LastPaymentDate = @FixedDate
-						,Mmshp.ExpirationDate = (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 1, @FixedDate) )) <= Mmshp.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 1, @FixedDate) ) ELSE DATEADD(MONTH, 1, @FixedDate) END)
+						,Mmshp.ExpirationDate = (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 12, @FixedDate) )) <= Mmshp.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 12, @FixedDate) ) ELSE DATEADD(MONTH, 12, @FixedDate) END)
 						,Mmshp.CatMembershipStatusId = @ActiveStatus
 						,Mmshp.ActualServiceCount = 0
 						,Mmshp.RowStatus = 1
@@ -191,7 +191,7 @@ BEGIN
 					(MembershipId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdMembershipPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, 'REJECTED', @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, 'REJECTED')
 				
 				-- Ingresar a bitácora 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
@@ -267,7 +267,7 @@ BEGIN
 					(SubscriptionId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdSubscriptionPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, @AuthorizationValue, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @AuthorizationValue)
 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )
 				BEGIN
@@ -412,7 +412,7 @@ BEGIN
 					(SubscriptionId, [Authorization], TypeOfInOutOfMoneyId, RowStatus, DateCreated, TokenCreated, TransactionOrder)
 				OUTPUT inserted.IdSubscriptionPaymentLog INTO @RenewedPayment(IdPaymentLog)
 				VALUES
-					(@SalePackageToRenew, 'REJECTED', @TypeOfInOutMoneyId, 1, GETDATE(), @Token, @TransactionOrder)
+					(@SalePackageToRenew, @TransactionOrder, @TypeOfInOutMoneyId, 1, GETDATE(), @Token, 'REJECTED')
 				
 				-- Ingresar a bitácora 
 				IF( EXISTS(SELECT TOP 1 1 FROM @RenewedPayment) )

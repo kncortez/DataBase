@@ -4,75 +4,93 @@
 -- Description:	<Devuelve información para mostrar listado de guías seleccionadas>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_set_AssignedReturns]
-		@Token AS VARCHAR(50)    = 'ad1a2328ed27ea99622f68deae5d9976',
-		@Rol AS BIGINT 			 =  1,
-		@ListGuides AS VARCHAR(MAX) = '',
-		@Route AS VARCHAR(100) = '',
-		@Courier AS VARCHAR(100) = '',
-		@DateAssigned AS VARCHAR(50) = ''--dd/MM/yyyy
-				
+    @Token AS VARCHAR(50) = 'ad1a2328ed27ea99622f68deae5d9976',
+    @Rol AS BIGINT = 1,
+    @ListGuides AS VARCHAR(MAX) = '',
+    @Route AS VARCHAR(100) = '',
+    @Courier AS VARCHAR(100) = '',
+    @DateAssigned AS VARCHAR(50) = '' --dd/MM/yyyy
+
 AS
 BEGIN
 
-select SUBSTRING(Item, 1,2) ItemSerie,SUBSTRING(Item,3,len(Item)) ItemNumber 
-into #listGuides
-from DenariusDesktop_Dev.dbo.SplitUnlimited(@ListGuides,',')
 
-UPDATE
-    Table_A
-SET
-    Table_A.Courier_Route = @Route,
-	Table_A.Courier_Name = @Courier,
-	Table_A.Dispatched_Date = GETDATE() ,
-	Table_A.Dispatched_Token = @Token,
-	Table_A.StatusOrderId = 17 --Fuera para entrega
-FROM
-    DeliveryBackOffice.dbo.DeliveryOrder AS Table_A
-    INNER JOIN #listGuides AS Table_B
-        ON Table_A.Guide_Serie = Table_B.ItemSerie 
-		and Table_A.Guide_Number = Table_B.ItemNumber	
+CREATE TABLE  #listGuides (ItemSerie NVARCHAR(2),ItemNumber int )
 
-
----Update a la tabla de piezas del status de todas las piezas de la guia.
-	declare @validate int  = (select COUNT(NoPiece) from DeliveryOrderPiece 
-								where GuideNumber in (select GuideNumber from #listGuides) and GuideSerie in (select GuideSerie from #listGuides)
-								) 
-
-		if(@validate > 0)
-		begin
-			update DeliveryOrderPiece set StatusOrderId = 17
-			FROM
-			    DeliveryBackOffice.dbo.DeliveryOrderPiece Dop
-			    INNER JOIN #listGuides AS Table_B
-			        ON Dop.GuideSerie  = Table_B.ItemSerie
-					and Dop.GuideNumber = Table_B.ItemNumber	
-		end
-
--- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
-
-INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
-[Guide_Serie], 
-[Guide_Number], 
-[StatusOrderId], 
-[UserCreated], 
-[DateCreated], 
-[DateCreatedInSystem]
+INSERT INTO #listGuides
+(
+    ItemSerie,
+    ItemNumber
 )
-SELECT 
-	Table_A.Guide_Serie,
-	Table_A.Guide_Number,
-	17,
-	@Token,
-	GETDATE(),
-	GETDATE()
-FROM
-    DeliveryBackOffice.dbo.DeliveryOrder Table_A
-    INNER JOIN #listGuides AS Table_B
-        ON Table_A.Guide_Serie  = Table_B.ItemSerie
-		and Table_A.Guide_Number = Table_B.ItemNumber	
+    SELECT SUBSTRING(Item, 1, 2) ItemSerie,
+           SUBSTRING(Item, 3, LEN(Item)) ItemNumber
+  --  INTO #listGuides
+    FROM DenariusDesktop_Dev.dbo.SplitUnlimited(@ListGuides, ',');
 
-IF @@ROWCOUNT > 0
-	SELECT 1 AS Result
+	 CREATE NONCLUSTERED INDEX IX_SettlementList_#listGuides
+            ON #listGuides (ItemSerie,ItemNumber);
 
-END
+    UPDATE Table_A
+    SET Table_A.Courier_Route = @Route,
+        Table_A.Courier_Name = @Courier,
+        Table_A.Dispatched_Date = GETDATE(),
+        Table_A.Dispatched_Token = @Token,
+        Table_A.StatusOrderId = 17 --Fuera para entrega
+    FROM DeliveryBackOffice.dbo.DeliveryOrder AS Table_A WITH(NOLOCK)
+        INNER JOIN #listGuides AS Table_B
+            ON Table_A.Guide_Serie = Table_B.ItemSerie
+               AND Table_A.Guide_Number = Table_B.ItemNumber;
+
+
+    ---Update a la tabla de piezas del status de todas las piezas de la guia.
+    DECLARE @validate INT =
+            (
+                SELECT COUNT(NoPiece)
+                FROM DeliveryOrderPiece WITH(NOLOCK)
+                WHERE GuideNumber IN
+                      (
+                          SELECT GuideNumber FROM #listGuides
+                      )
+                      AND GuideSerie IN
+                          (
+                              SELECT GuideSerie FROM #listGuides
+                          )
+            );
+
+    IF (@validate > 0)
+    BEGIN
+        UPDATE DeliveryOrderPiece
+        SET StatusOrderId = 17
+        FROM DeliveryBackOffice.dbo.DeliveryOrderPiece Dop WITH(NOLOCK)
+            INNER JOIN #listGuides AS Table_B
+                ON Dop.GuideSerie = Table_B.ItemSerie
+                   AND Dop.GuideNumber = Table_B.ItemNumber;
+    END;
+
+    -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
+
+    INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+    (
+        [Guide_Serie],
+        [Guide_Number],
+        [StatusOrderId],
+        [UserCreated],
+        [DateCreated],
+        [DateCreatedInSystem]
+    )
+    SELECT Table_A.Guide_Serie,
+           Table_A.Guide_Number,
+           17,
+           @Token,
+           GETDATE(),
+           GETDATE()
+    FROM DeliveryBackOffice.dbo.DeliveryOrder Table_A WITH(NOLOCK)
+        INNER JOIN #listGuides AS Table_B
+            ON Table_A.Guide_Serie = Table_B.ItemSerie
+               AND Table_A.Guide_Number = Table_B.ItemNumber;
+
+   IF @@ROWCOUNT > 0
+        SELECT 1 AS Result;
+
+END;
 

@@ -163,7 +163,7 @@ BEGIN
             ON ISNULL(ISNULL(twnT.HeaderCode, twnTdro.HeaderCode), TwnTvpc.HeaderCode) = hub.HeaderCode
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
             ON shp.TypeVehicleId = ctv.IdTypeVehicle
-        LEFT JOIN dbo.ServiceManagement srv
+        LEFT JOIN dbo.ServiceManagement srv WITH (NOLOCK)
             ON srv.IdSchedulePickup = shp.SchedulePickupId
         LEFT JOIN [DeliveryBackOffice].[dbo].[CatServiceStatus] AS css WITH (NOLOCK)
             ON css.IdServiceStatus = srv.ServiceStatusId

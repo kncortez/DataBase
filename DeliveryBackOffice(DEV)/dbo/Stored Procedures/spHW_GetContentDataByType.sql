@@ -158,6 +158,8 @@ BEGIN
 						.value('.', 'varchar(max)'),1,1,'' 
 					)
 				) 'ContentTags'
+				,ISNULL(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
+				,ISNULL(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
 			FROM
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 				INNER JOIN
@@ -303,6 +305,8 @@ BEGIN
 						.value('.', 'varchar(max)'),1,1,'' 
 					)
 				) 'ContentTags'
+				,ISNULL(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
+				,ISNULL(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
 			FROM
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 				INNER JOIN

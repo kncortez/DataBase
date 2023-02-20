@@ -97,7 +97,7 @@
     [Receiver_Lng]                         VARCHAR (50)    NULL,
     [CatSystemId]                          INT             NULL,
     [CatModuleId]                          INT             NULL,
-    [IsLastMileReturn]                     BIT             NULL,
+    [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -114,6 +114,12 @@
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
+
+
+
+
 
 
 
@@ -296,4 +302,30 @@ CREATE NONCLUSTERED INDEX [idx_ReceiverIdTownship]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la guía va a proceso devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'IsLastMileReturn';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_IdCustomer]
+    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC, [IdCustomer] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Sender_Address]
+    ON [dbo].[DeliveryOrder]([Sender_Address] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCustomer_INCLUDE]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC)
+    INCLUDE([StatusOrderId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Sender_Mail]
+    ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_DCBA_ID]
+    ON [dbo].[DeliveryOrder]([DCBA_ID] ASC);
 

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[AccountServiceCartDetail] (
+CREATE TABLE [dbo].[AccountServiceCartDetail] (
     [IdAccountServiceCartDetail] INT           IDENTITY (1, 1) NOT NULL,
     [AccountServiceCartId]       INT           NOT NULL,
     [GuideSerie]                 NVARCHAR (2)  NOT NULL,
@@ -12,6 +12,10 @@
     CONSTRAINT [FK_AccountServiceCartDetail_AccountServiceCart] FOREIGN KEY ([AccountServiceCartId]) REFERENCES [dbo].[AccountServiceCart] ([IdAccountServiceCart]),
     CONSTRAINT [FK_AccountServiceCartDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
+
+
 
 
 GO
@@ -52,4 +56,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de carrito de compras de guías.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountServiceCartDetail';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDED]
+    ON [dbo].[AccountServiceCartDetail]([RowStatus] ASC)
+    INCLUDE([IdAccountServiceCartDetail], [GuideSerie], [GuideNumber]);
 

@@ -1403,6 +1403,32 @@
     <Build Include="dbo\Stored Procedures\spHAW_GetDiscountForMembershipByAffiliate.sql" />
     <Build Include="dbo\Stored Procedures\GetAffiliateLogIn.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegistrationCustomerMembershipByAffiliates.sql" />
+    <Build Include="dbo\Tables\WebhookEndpointHeader.sql" />
+    <Build Include="dbo\Tables\CatBreakdownOfPaymentType.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetListofWebHookHeaders.sql" />
+    <Build Include="dbo\User Defined Types\TblNewChangeList.sql" />
+    <Build Include="dbo\Stored Procedures\RegisterFacExist.sql" />
+    <Build Include="dbo\Stored Procedures\GetVisitPointPortfolioByClient.sql" />
+    <Build Include="dbo\Stored Procedures\GetCodeOfReferenceForStation.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetUserTransactionPaymentsHistory.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_completeOpenProcessLinehaulDispatch.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_CreateTMCustomerAccount.sql" />
+    <Build Include="dbo\Tables\CatTMSalesPerson.sql" />
+    <Build Include="dbo\Stored Procedures\SPTM_UpdateRejectedClient.sql" />
+    <Build Include="dbo\Tables\CatSubscriptionDescription.sql" />
+    <Build Include="dbo\Tables\CatMembershipDescription.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_TMBuyMembership.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetTMAssociatedCustomersList.sql" />
+    <Build Include="dbo\Stored Procedures\GetClientDataByEmail.sql" />
+    <Build Include="dbo\Tables\TagsVariables.sql" />
+    <Build Include="dbo\Stored Procedures\spws_revalue_guide_JARP.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_bank_name_JRP.sql" />
+    <Build Include="dbo\Stored Procedures\sps_set_status_order_by_guide_return_TEMP.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
+    <Build Include="dbo\Stored Procedures\RDL_CODReport_temp.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
+    <Build Include="dbo\Stored Procedures\Reporte_de_membresías_y_suscripciones.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
