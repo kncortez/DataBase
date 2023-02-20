@@ -68,11 +68,12 @@ BEGIN
 			UPDATE coi
 			SET coi.ConfirmationOfIncidentToken += 'TIMEOUT'
 			FROM ConfirmationOfIncidence coi
-			INNER JOIN DeliveryAttempt da
+			INNER JOIN DeliveryAttempt da WITH (NOLOCK)
 				ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-			WHERE da.Guide_Serie = @GuideSerie
-			AND da.Guide_Number = @GuideNumber
-			-- FIN FDAPI-1374 <Oscar Morales 2023-02-16> 
+				AND da.Guide_Serie = @GuideSerie
+				AND da.Guide_Number = @GuideNumber
+				AND da.ID_DeliveryOrderBySettlement = @IdManifest
+			-- FIN FDAPI-1374 <Oscar Morales 2023-02-16>
 
 		END TRY
 
