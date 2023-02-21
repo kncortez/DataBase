@@ -4,6 +4,10 @@
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking para el cliente>
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <21-02-2023>
+-- Description: <Management for checkpoint icons>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT
@@ -31,6 +35,7 @@ BEGIN
            RES.[StageTitle],
            RES.[StageSource],
            RES.[StageDescription],
+		   RES.[CheckpointIcon],
            RES.[ImagePath],
 		   RES.[Dry],
 		   RES.[Cold],
@@ -60,6 +65,7 @@ BEGIN
 			'' [StageTitle], 
 			'web' [StageSource],
 			'' AS [StageDescription], 
+			'' AS [CheckpointIcon],
 			'' AS [ImagePath],
 			 --(Select top 1 Path_Dry from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Dry,
 			 --(Select top 1 Path_Cold from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Cold,
@@ -126,8 +132,9 @@ BEGIN
 				ELSE
 					ISNULL(dod.Observations, '')
              END
-            ) AS [StageDescription]
-            ,(CASE ROW_NUMBER() OVER (ORDER BY CONVERT(DATE, dod.DateCreated) ASC)
+            ) AS [StageDescription],
+			ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
+            (CASE ROW_NUMBER() OVER (ORDER BY CONVERT(DATE, dod.DateCreated) ASC)
                  WHEN 1 THEN
                      ISNULL(
                                ISNULL(
@@ -207,6 +214,8 @@ BEGIN
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
            INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
+			INNER JOIN [dbo].[CatCheckpointType] CCT
+				ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         --ORDER BY DateCreated
@@ -216,7 +225,8 @@ BEGIN
                  dod.StatusOrderId,
                  dod.UserCreated,
                  dod.Observations,
-                 so.OrderDescription
+                 so.OrderDescription,
+				 [CCT].[CheckpointIcon]
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -252,6 +262,7 @@ BEGIN
 					,'') 
 			   + '' + ISNULL(OrdChkPnt.StageDescription,'') 
 			   AS [StageDescription] ,
+			   OrdChkPnt.[CheckpointIcon],
 			   OrdChkPnt.[ImagePath],
 			   OrdChkPnt.[Dry],
 			   OrdChkPnt.[Cold],
