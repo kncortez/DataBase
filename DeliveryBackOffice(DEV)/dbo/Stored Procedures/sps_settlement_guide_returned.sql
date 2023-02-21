@@ -87,7 +87,7 @@ BEGIN
 					0 AS 'SubStatusCode'
 					, COUNT(*)		AS RetriesMade--Numero intentos de entrega fallidas
 					, (case when RH.Attempt is NULL then CASE WHEN DOR.IsLastMileReturn = 1 THEN 4 ELSE 2 END else CASE WHEN DOR.IsLastMileReturn = 1 THEN RH.Attempt + RH.AttemptReturn ELSE RH.Attempt END end) AS RetriesAllowed ---Numero de intentos permitidos
-					, CASE WHEN DOR.IsLastMileReturn = 1 THEN 1 ELSE 1 END ValidateAbandonedPackage
+					, CASE WHEN DOR.IsLastMileReturn = 1 THEN 1 ELSE 0 END ValidateAbandonedPackage
 				FROM DeliveryOrder DOR WITH(NOLOCK)
 					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK)  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
 					AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder WITH(NOLOCK) where OrderDescription ='Intento de entrega fallida')
