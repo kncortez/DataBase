@@ -33,23 +33,24 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Variables "estaticas"
-    DECLARE @NewMainRates INT = (
-                                    SELECT TOP 1
-                                        RH.RheId
-                                    FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                                    WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
-                                );
-    DECLARE @NewAlternativeRates INT
-        =   (
+    DECLARE @NewMainRates INT =
+            (
                 SELECT TOP 1
-                    RH.RheId
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @NewAlternativeRates INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
             );
-    DECLARE @NewAutoSalesMainRates INT
-        =   (
+    DECLARE @NewAutoSalesMainRates INT =
+            (
                 SELECT TOP 1
-                    RH.RheId
+                       RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
@@ -70,7 +71,7 @@ BEGIN
     DECLARE @DateCreated DATETIME;
 
     DECLARE @PiecesInOrder AS INT;
-	DECLARE @PriceWithCreditCard as INT = 0;
+    DECLARE @PriceWithCreditCard AS INT = 0;
 
 
     DECLARE @OldPrice DECIMAL(12, 2);
@@ -112,7 +113,7 @@ BEGIN
     IF @VisitPointClient IS NULL
     BEGIN
         SELECT TOP 1
-            vpc.CodeOfReference
+               vpc.CodeOfReference
         FROM dbo.VisitPointClient vpc WITH (NOLOCK)
         WHERE vpc.CustomerID = @IdCustomer;
     END;
@@ -179,10 +180,11 @@ BEGIN
     DECLARE @count INT;
     SET @count = 1;
 
-    DECLARE @PiecesCount AS INT = (
-                                      SELECT IIF(ISNULL(COUNT(*), 0) = 0, @PiecesInOrder, COUNT(*))
-                                      FROM #Pieces
-                                  );
+    DECLARE @PiecesCount AS INT =
+            (
+                SELECT IIF(ISNULL(COUNT(*), 0) = 0, @PiecesInOrder, COUNT(*))
+                FROM #Pieces
+            );
 
     DECLARE @Pesos AS NVARCHAR(MAX) = NULL;
     DECLARE @Parcel AS NVARCHAR(MAX) = NULL;
@@ -293,17 +295,19 @@ BEGIN
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR (
-                             cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                             AND cst.GuideSerie IS NULL
-                             AND cst.GuideNumber IS NULL
-                         )
-                  )
-                  AND (
-                          br.Description = 'Recargo por pago con tarjeta'
-                          OR br.Description = 'Otros recargos'
-                          OR br.Description = 'Otros cargos'
+                      OR
+                      (
+                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                          AND cst.GuideSerie IS NULL
+                          AND cst.GuideNumber IS NULL
                       )
+                  )
+                  AND
+                  (
+                      br.Description = 'Recargo por pago con tarjeta'
+                      OR br.Description = 'Otros recargos'
+                      OR br.Description = 'Otros cargos'
+                  )
                   AND br.RowStatus = 'true'
                   AND br.Amount > 0
         );
@@ -353,7 +357,7 @@ BEGIN
     --- Validar la tarifa del usuario antes de realizar cambios
     DECLARE @CustomerIdRate INT = 0;
     SELECT TOP 1
-        @CustomerIdRate = RBC.RbcIdRate
+           @CustomerIdRate = RBC.RbcIdRate
     FROM [DeliveryBackOffice].[dbo].[RatebyCustomer] RBC WITH (NOLOCK)
     WHERE RBC.RbcIdCustomer = @IdCustomer
           AND RBC.RbcRowStatus = 1;
@@ -401,11 +405,11 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
         WHERE MSL.LogGuideNumber = @GuideNumber
               AND MSL.LogGuideSerie = @GuideSerie
-              AND MSL.RowStatus = 1
+              AND MSL.RowStatus = 1;
         -- Se considera que no se usa membresia
         IF (ISNULL(@UseMembership, 0) = 0)
             SET @UseMembership = 0;
-    END
+    END;
     --select @Pesos , @Parcel
     INSERT INTO @TempRate
     EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp,
@@ -465,10 +469,10 @@ BEGIN
 
         --buscar si ya se aplicó un descuento
         SELECT TOP 1
-            @MembershipSubscriptionLogId = IdMembershipSubscriptionLog,
-            @MembershipId = MembershipId,
-            @SubscriptionId = SubscriptionId,
-            @ServiceAppliedCount = LogServiceNumber
+               @MembershipSubscriptionLogId = IdMembershipSubscriptionLog,
+               @MembershipId = MembershipId,
+               @SubscriptionId = SubscriptionId,
+               @ServiceAppliedCount = LogServiceNumber
         FROM MembershipSubscriptionLog
         WHERE LogGuideSerie = @GuideSerie
               AND LogGuideNumber = @GuideNumber
@@ -487,34 +491,35 @@ BEGIN
 
                 --Si es tarifa fija
                 IF @ServiceValue >= 0
-					BEGIN
-						SET @DiscountMembership = @PriceShippment - @ServiceValue;
-						SET @NewPriceShippment = @ServiceValue;
+                BEGIN
+                    SET @DiscountMembership = @PriceShippment - @ServiceValue;
+                    SET @NewPriceShippment = @ServiceValue;
 
-						IF (@ServiceValue = 0)
-							BEGIN
-								SET @PriceWithCreditCard = 1;
-							END
-					END;
+                    IF (@ServiceValue = 0)
+                    BEGIN
+                        SET @PriceWithCreditCard = 1;
+                    END;
+                END;
                 ELSE
                 BEGIN
                     --Se busca por rango de servicios
                     SELECT TOP 1
-                        @DiscountValue = DiscountValue,
-                        @Type = cvt.ValueTypeName
+                           @DiscountValue = DiscountValue,
+                           @Type = cvt.ValueTypeName
                     FROM MembershipDiscountRange mdr
                         INNER JOIN Membership ms
                             ON ms.IdMembership = mdr.MembershipId
                         INNER JOIN CatValueType cvt
                             ON mdr.ValueTypeId = cvt.IdCatValueType
                     WHERE mdr.MembershipId = @MembershipId
-                          AND (
-                                  (@ServiceAppliedCount
+                          AND
+                          (
+                              (@ServiceAppliedCount
                           BETWEEN mdr.DiscountLowServiceRange AND mdr.DiscountTopServiceRange
-                                  )
-                                  OR @ServiceAppliedCount >= mdr.DiscountLowServiceRange
-                                     AND mdr.DiscountTopServiceRange IS NULL
                               )
+                              OR @ServiceAppliedCount >= mdr.DiscountLowServiceRange
+                                 AND mdr.DiscountTopServiceRange IS NULL
+                          )
                           AND mdr.RowStatus = 1
                     ORDER BY mdr.DateCreated DESC;
 
@@ -547,8 +552,8 @@ BEGIN
             BEGIN
 
                 SELECT TOP 1
-                    @ServiceValueSubscription
-                        = IIF(@ServiceAppliedCount <= sc.SubscriptionMaxServiceFixedValue,
+                       @ServiceValueSubscription
+                           = IIF(@ServiceAppliedCount <= sc.SubscriptionMaxServiceFixedValue,
                               sc.SubscriptionFixedValue,
                               -1)
                 FROM Subscription sc
@@ -556,34 +561,35 @@ BEGIN
 
                 --Si es tarifa fija
                 IF @ServiceValueSubscription >= 0
-					BEGIN
-						SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
-						SET @NewPriceShippment = @ServiceValueSubscription;
+                BEGIN
+                    SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
+                    SET @NewPriceShippment = @ServiceValueSubscription;
 
-						IF (@ServiceValueSubscription = 0)
-							BEGIN
-								SET @PriceWithCreditCard = 1;
-							END
-					END;
+                    IF (@ServiceValueSubscription = 0)
+                    BEGIN
+                        SET @PriceWithCreditCard = 1;
+                    END;
+                END;
                 ELSE
                 BEGIN
                     --Se busca por rango de servicios
                     SELECT TOP 1
-                        @DiscountValue = DiscountValue,
-                        @Type = cvt.ValueTypeName
+                           @DiscountValue = DiscountValue,
+                           @Type = cvt.ValueTypeName
                     FROM SubscriptionDiscountRange sdr
                         INNER JOIN Subscription sc
                             ON sc.IdSubscription = sdr.SubscriptionId
                         INNER JOIN CatValueType cvt
                             ON sdr.ValueTypeId = cvt.IdCatValueType
                     WHERE sdr.SubscriptionId = @SubscriptionId
-                          AND (
-                                  (@ServiceAppliedCount
+                          AND
+                          (
+                              (@ServiceAppliedCount
                           BETWEEN sdr.DiscountLowServiceRange AND sdr.DiscountTopServiceRange
-                                  )
-                                  OR @ServiceAppliedCount >= sdr.DiscountLowServiceRange
-                                     AND sdr.DiscountTopServiceRange IS NULL
                               )
+                              OR @ServiceAppliedCount >= sdr.DiscountLowServiceRange
+                                 AND sdr.DiscountTopServiceRange IS NULL
+                          )
                           AND sdr.RowStatus = 1
                     ORDER BY sdr.DateCreated DESC;
 
@@ -640,10 +646,10 @@ BEGIN
         BEGIN
             --Se busca si existe una membresía activa
             SELECT TOP 1
-                @MembershipId = ms.IdMembership,
-                @CatMembershipStatusId = ms.CatMembershipStatusId,
-                @ServiceValue
-                    = IIF(ms.ActualServiceCount + 1 <= ms.MembershipMaxServiceFixedValue, ms.MembershipFixedValue, -1)
+                   @MembershipId = ms.IdMembership,
+                   @CatMembershipStatusId = ms.CatMembershipStatusId,
+                   @ServiceValue
+                       = IIF(ms.ActualServiceCount + 1 <= ms.MembershipMaxServiceFixedValue, ms.MembershipFixedValue, -1)
             FROM Membership ms
                 INNER JOIN CatSalesPackageStatus csps
                     ON csps.IdCatSalesPackageStatus = ms.CatMembershipStatusId
@@ -662,27 +668,27 @@ BEGIN
                 --Si es tarifa fija
                 IF @ServiceValue >= 0
                 BEGIN
-					SET @DiscountMembership = @PriceShippment - @ServiceValue;
-					IF (@ServiceValue = 0)
-						BEGIN
-							SET @PriceWithCreditCard = 1;
-						END
-					ELSE 
-						BEGIN
-							SET @PriceWithCreditCard = 0;
-						END
+                    SET @DiscountMembership = @PriceShippment - @ServiceValue;
+                    IF (@ServiceValue = 0)
+                    BEGIN
+                        SET @PriceWithCreditCard = 1;
+                    END;
+                    ELSE
+                    BEGIN
+                        SET @PriceWithCreditCard = 0;
+                    END;
 
-					SET @NewPriceShippment = @ServiceValue;
-					SET @DecriptionDiscount = CONCAT('Tarifa fija membresía a ', @ServiceValue);
-					SET @ServiceAppliedType = 1;
+                    SET @NewPriceShippment = @ServiceValue;
+                    SET @DecriptionDiscount = CONCAT('Tarifa fija membresía a ', @ServiceValue);
+                    SET @ServiceAppliedType = 1;
                 END;
                 ELSE
                 BEGIN
                     --Se busca suscripciones
                     SELECT TOP 1
-                        @SubscriptionId = sc.IdSubscription,
-                        @ServiceValueSubscription
-                            = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+                           @SubscriptionId = sc.IdSubscription,
+                           @ServiceValueSubscription
+                               = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
                                   sc.SubscriptionFixedValue,
                                   -1)
                     FROM Subscription sc
@@ -700,15 +706,15 @@ BEGIN
                         --Si es tarifa fija
                         IF @ServiceValueSubscription >= 0
                         BEGIN
-							SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
-							IF (@ServiceValueSubscription = 0)
-								BEGIN
-									SET @PriceWithCreditCard = 1;
-								END
-							ELSE 
-								BEGIN
-									SET @PriceWithCreditCard = 0;
-								END
+                            SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
+                            IF (@ServiceValueSubscription = 0)
+                            BEGIN
+                                SET @PriceWithCreditCard = 1;
+                            END;
+                            ELSE
+                            BEGIN
+                                SET @PriceWithCreditCard = 0;
+                            END;
 
                             SET @NewPriceShippment = @ServiceValueSubscription;
                             SET @DecriptionDiscount = CONCAT('Tarifa fija suscripción a ', @ServiceValueSubscription);
@@ -718,21 +724,22 @@ BEGIN
                         BEGIN
                             --Se busca por rango de servicios
                             SELECT TOP 1
-                                @DiscountValue = DiscountValue,
-                                @Type = cvt.ValueTypeName
+                                   @DiscountValue = DiscountValue,
+                                   @Type = cvt.ValueTypeName
                             FROM SubscriptionDiscountRange sdr
                                 INNER JOIN Subscription sc
                                     ON sc.IdSubscription = sdr.SubscriptionId
                                 INNER JOIN CatValueType cvt
                                     ON sdr.ValueTypeId = cvt.IdCatValueType
                             WHERE sdr.SubscriptionId = @SubscriptionId
-                                  AND (
-                                          (sc.ActualServiceCount + 1
+                                  AND
+                                  (
+                                      (sc.ActualServiceCount + 1
                                   BETWEEN sdr.DiscountLowServiceRange AND sdr.DiscountTopServiceRange
-                                          )
-                                          OR sc.ActualServiceCount + 1 >= sdr.DiscountLowServiceRange
-                                             AND sdr.DiscountTopServiceRange IS NULL
                                       )
+                                      OR sc.ActualServiceCount + 1 >= sdr.DiscountLowServiceRange
+                                         AND sdr.DiscountTopServiceRange IS NULL
+                                  )
                                   AND sdr.RowStatus = 1
                             ORDER BY sdr.DateCreated DESC;
 
@@ -779,21 +786,22 @@ BEGIN
 
                         --Se busca por rango de servicios
                         SELECT TOP 1
-                            @DiscountValue = DiscountValue,
-                            @Type = cvt.ValueTypeName
+                               @DiscountValue = DiscountValue,
+                               @Type = cvt.ValueTypeName
                         FROM MembershipDiscountRange mdr
                             INNER JOIN Membership ms
                                 ON ms.IdMembership = mdr.MembershipId
                             INNER JOIN CatValueType cvt
                                 ON mdr.ValueTypeId = cvt.IdCatValueType
                         WHERE mdr.MembershipId = @MembershipId
-                              AND (
-                                      (ms.ActualServiceCount + 1
+                              AND
+                              (
+                                  (ms.ActualServiceCount + 1
                               BETWEEN mdr.DiscountLowServiceRange AND mdr.DiscountTopServiceRange
-                                      )
-                                      OR ms.ActualServiceCount + 1 >= mdr.DiscountLowServiceRange
-                                         AND mdr.DiscountTopServiceRange IS NULL
                                   )
+                                  OR ms.ActualServiceCount + 1 >= mdr.DiscountLowServiceRange
+                                     AND mdr.DiscountTopServiceRange IS NULL
+                              )
                               AND mdr.RowStatus = 1
                         ORDER BY mdr.DateCreated DESC;
 
@@ -902,26 +910,10 @@ BEGIN
                             ),
                             (
                                 SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'Parser'
-                            ),
-                            @MembershipId,
-                            IIF(@ServiceAppliedType = 1, NULL, @SubscriptionId),
-                            @CatMembershipStatusId,
-                            NULL,
-                            @IdCustomer,
-                            NULL,
-                            NULL,
-                            @DecriptionDiscount,
-                            @GuideSerie,
-                            @GuideNumber,
-                            @PriceShippment,
-                            @NewPriceShippment,
-                            1,
-                            @Token,
-                            GETDATE(),
-                            NULL,
-                            NULL,
-                            @ServiceAppliedCount
-                        );
+                            ), @MembershipId, IIF(@ServiceAppliedType = 1, NULL, @SubscriptionId),
+                            @CatMembershipStatusId, NULL, @IdCustomer, NULL, NULL, @DecriptionDiscount, @GuideSerie,
+                            @GuideNumber, @PriceShippment, @NewPriceShippment, 1, @Token, GETDATE(), NULL, NULL,
+                            @ServiceAppliedCount);
                     END;
                 END;
             END;
@@ -955,8 +947,14 @@ BEGIN
         PRINT 'servicio';
         PRINT @ServiceShortName;
 
-        SELECT @NewPrice =		IIF(@PriceWithCreditCard = 1, (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)), 
-															  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0))),
+        SELECT @NewPrice
+            = IIF(@PriceWithCreditCard = 1,
+                  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+                   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)
+                  ),
+                  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+                   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)
+                  )),
                @BaseRate = ISNULL(tr.BaseRate, 0),
                @Discount = ISNULL(tr.Discount, 0),
                @DiscountDescription = ISNULL(tr.DiscountName, ''),
@@ -980,18 +978,24 @@ BEGIN
         IF @NewPrice = 0
         BEGIN
             SELECT TOP 1
-                @NewPrice = IIF(@PriceWithCreditCard = 1,	(ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)), 
-															(ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0))),
-                @BaseRate = ISNULL(tr.BaseRate, 0),
-                @Discount = ISNULL(tr.Discount, 0),
-                @DiscountDescription = ISNULL(tr.DiscountName, ''),
-                @FragilRate = ISNULL(tr.FragilRate, 0),
-                @CollectedRate = ISNULL(tr.CollectedRate, 0),
-                @InsuranceRate = ISNULL(tr.InsuranceRate, 0),
-                @OverWeightRate = ISNULL(tr.OverWeightRate, 0),
-                @IrregularPiece = ISNULL(tr.IrregularPieceRate, 0),
-                @CreditCardRate = ISNULL(tr.CreditCardRate, 0),
-                @Taxes = ISNULL(tr.Taxes, 0)
+                   @NewPrice
+					= IIF(@PriceWithCreditCard = 1,
+						  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+						   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)
+						  ),
+						  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+						   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)
+						  )),
+                   @BaseRate = ISNULL(tr.BaseRate, 0),
+                   @Discount = ISNULL(tr.Discount, 0),
+                   @DiscountDescription = ISNULL(tr.DiscountName, ''),
+                   @FragilRate = ISNULL(tr.FragilRate, 0),
+                   @CollectedRate = ISNULL(tr.CollectedRate, 0),
+                   @InsuranceRate = ISNULL(tr.InsuranceRate, 0),
+                   @OverWeightRate = ISNULL(tr.OverWeightRate, 0),
+                   @IrregularPiece = ISNULL(tr.IrregularPieceRate, 0),
+                   @CreditCardRate = ISNULL(tr.CreditCardRate, 0),
+                   @Taxes = ISNULL(tr.Taxes, 0)
             FROM @TempRate tr
             ORDER BY tr.Price ASC;
 
@@ -1036,7 +1040,10 @@ BEGIN
 
         DECLARE @ProdctNumber VARCHAR(49) = @GuideSerie + CONVERT(VARCHAR, @GuideNumber);
         --select * from @TblCost	
-        DECLARE @TBLRESULT TABLE (RESULT NVARCHAR(MAX));
+        DECLARE @TBLRESULT TABLE
+        (
+            RESULT NVARCHAR(MAX)
+        );
 
         --	INSERT INTO @TBLRESULT
 
@@ -1063,18 +1070,19 @@ BEGIN
         IF EXISTS
         (
             SELECT TOP 1
-                cst.ProductNumber
+                   cst.ProductNumber
             FROM dbo.Cost cst WITH (NOLOCK)
             WHERE (
                       (
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR (
-                             cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                             AND cst.GuideSerie IS NULL
-                             AND cst.GuideNumber IS NULL
-                         )
+                      OR
+                      (
+                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                          AND cst.GuideSerie IS NULL
+                          AND cst.GuideNumber IS NULL
+                      )
                   )
                   AND cst.RowStatus = 1
         )
@@ -1083,22 +1091,23 @@ BEGIN
             PRINT CONVERT(VARCHAR, GETDATE(), 9);
 
             SELECT TOP 1
-                @IdCost = cst.IdCost,
-                @CostPaid = cst.TotalAmountPaid
+                   @IdCost = cst.IdCost,
+                   @CostPaid = cst.TotalAmountPaid
             FROM dbo.Cost cst WITH (NOLOCK)
             WHERE (
                       (
                           cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
                           AND cst.GuideNumber = @GuideNumber
                       )
-                      OR (
-                             cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
-                             AND cst.GuideSerie IS NULL
-                             AND cst.GuideNumber IS NULL
-                         )
+                      OR
+                      (
+                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                          AND cst.GuideSerie IS NULL
+                          AND cst.GuideNumber IS NULL
+                      )
                   )
                   AND cst.RowStatus = 1
-            ORDER BY cst.DateCreated DESC
+            ORDER BY cst.DateCreated DESC;
 
             -- No ha sido pagado y es posible alterar el costo
             IF (ISNULL(@CostPaid, 0) = 0)
@@ -1156,7 +1165,7 @@ BEGIN
                         ON det.Description = bk.Description
                 WHERE cs.IdCost = @IdCost;
 
-            END
+            END;
         END;
         ELSE
         BEGIN
@@ -1175,17 +1184,9 @@ BEGIN
                 GuideNumber
             )
             VALUES
-            (   1,
-                @ProdctNumber,
-                1, -- costo de envio
-                @NewPrice,
-                @IdModule,
-                1, -- guardar los registros como activos 
-                @Token,
-                GETDATE(),
-                ISNULL(@GuideSerie, 'FD'),
-                @GuideNumber
-            );
+            (   1, @ProdctNumber, 1,     -- costo de envio
+                @NewPrice, @IdModule, 1, -- guardar los registros como activos 
+                @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber);
 
             SET @IdCost = SCOPE_IDENTITY();
 
@@ -1400,27 +1401,28 @@ BEGIN
         WHERE tr.Service = ISNULL(@ServiceShortName, 'NDD')
               OR @ServiceShortName = 'EXP';
 
-        DECLARE @HasData INT = (
-                                   SELECT COUNT(*) FROM #TempResult
-                               );
+        DECLARE @HasData INT =
+                (
+                    SELECT COUNT(*)FROM #TempResult
+                );
         PRINT 'precio';
         PRINT @HasData;
         IF @HasData = 0
         BEGIN
             SELECT TOP 1
-                ISNULL(tr.Price, 0) [Price],
-                ISNULL(tr.BaseRate, 0) [BaseRate],
-                ISNULL(tr.Discount, 0) [Dicount],
-                ISNULL(tr.DiscountName, '') [DiscountName],
-                ISNULL(tr.FragilRate, 0) [FragilRate],
-                ISNULL(tr.CollectedRate, 0) [CollectedRate],
-                ISNULL(tr.InsuranceRate, 0) [InsuranceRate],
-                ISNULL(tr.OverWeightRate, 0) [OverWeightRate],
-                ISNULL(tr.IrregularPieceRate, 0) [IrregularPieceRate],
-                ISNULL(tr.CreditCardRate, 0) [CreditCardRate],
-                ISNULL(tr.Taxes, 0) [Taxes],
-                ISNULL(@OldPrice, 0) [OldPrice],
-                ISNULL(tr.ReturnRate, 0) [ReturnRate]
+                   ISNULL(tr.Price, 0) [Price],
+                   ISNULL(tr.BaseRate, 0) [BaseRate],
+                   ISNULL(tr.Discount, 0) [Dicount],
+                   ISNULL(tr.DiscountName, '') [DiscountName],
+                   ISNULL(tr.FragilRate, 0) [FragilRate],
+                   ISNULL(tr.CollectedRate, 0) [CollectedRate],
+                   ISNULL(tr.InsuranceRate, 0) [InsuranceRate],
+                   ISNULL(tr.OverWeightRate, 0) [OverWeightRate],
+                   ISNULL(tr.IrregularPieceRate, 0) [IrregularPieceRate],
+                   ISNULL(tr.CreditCardRate, 0) [CreditCardRate],
+                   ISNULL(tr.Taxes, 0) [Taxes],
+                   ISNULL(@OldPrice, 0) [OldPrice],
+                   ISNULL(tr.ReturnRate, 0) [ReturnRate]
             FROM @TempRate tr
             ORDER BY tr.Price ASC;
         END;

@@ -49,7 +49,6 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @IdCustomer AS INT = 0;
-    --DECLARE @UseMembership AS bit=0
 
     DECLARE @FechaCompra AS DATETIME = GETDATE();
     DECLARE @Time AS TIME = CONVERT(TIME, @FechaCompra);
@@ -96,19 +95,75 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
-    DECLARE @NewMainRates2 INT =
-            (
-                SELECT TOP 1
-                       RH.RheId
-                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar de pruebas' COLLATE Latin1_General_CI_AI
-            );
+
+    --DECLARE @TarifaPlanBasico INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanBasicoPlus INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanGold INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanCorporativo INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
+    --        );
+
+    --DECLARE @TarifaPlanBasicoAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanBasicoPlusAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanGoldAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanCorporativoAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
 
     DECLARE @IdRate AS INT;
     DECLARE @IdTypeRate AS INT;
     DECLARE @WeigthLimit AS DECIMAL(12, 2) = 0;
     DECLARE @Currency AS VARCHAR(10) = '';
     DECLARE @PiecesIncluded AS DECIMAL(12, 2) = 1;
+    DECLARE @PriceWithCreditCard AS INT = 0;
 
     IF EXISTS
     (
@@ -208,13 +263,78 @@ BEGIN
            )
         BEGIN
 
-            SELECT @RateId = ISNULL(ARC.RateId, @IdRate)
+            SELECT @RateId = ARC.RateId
             FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
             WHERE ARC.CustomerId = @IdCustomer
                   AND ARC.RowStatus = 1
-                  AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates, @NewMainRates2 );
+                  AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
-            SET @IdRate = @RateId;
+            SET @IdRate = ISNULL(@RateId, @IdRate);
+
+        END;
+    END;
+
+    IF (@CalculateMembership = 1)
+    BEGIN
+
+        DECLARE @CustomerHasActiveSubscription INT;
+
+        SELECT @CustomerHasActiveSubscription = SC.IdSubscription
+        FROM [DeliveryBackOffice].[dbo].[Subscription] SC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
+            INNER JOIN [DeliveryBackOffice].[dbo].[Membership] MB WITH (NOLOCK)
+                ON SC.MembershipId = MB.IdMembership
+                   AND MB.CustomerId = @IdCustomer
+                   AND GETDATE() <= MB.ExpirationDate
+                   AND MB.RowStatus = 1
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
+                ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
+        WHERE SC.CustomerId = @IdCustomer
+              AND GETDATE() <= SC.ExpirationDate
+              AND SC.RowStatus = 1
+              AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+              AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+        ORDER BY SC.ExpirationDate ASC;
+
+        IF (ISNULL(@CustomerHasActiveSubscription, 0) > 0)
+        BEGIN
+
+            -- Destino es un express center activo, aplicar tarifa destino express center de suscripción
+            IF (EXISTS
+            (
+                SELECT TOP 1
+                       1
+                FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
+                WHERE VPC.CodeOfReference = @CodeOfReferenceDestiny
+                      AND VPC.StatusClient = 1
+                      AND VPC.DescriptionOfClient LIKE 'FD%EXC%' COLLATE Latin1_General_CI_AI
+            )
+               )
+            BEGIN
+
+                -- Si falla en encontrar tarifa "valida", defecto la tarifa actual
+                SELECT @RateId = ISNULL(ISNULL(SC.AlternativeRateHeaderId, CS.AlternativeRateHeaderId), @IdRate)
+                FROM [DeliveryBackOffice].[dbo].[Subscription] SC WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+                        ON SC.CatSubscriptionId = CS.IdCatSubscription
+                WHERE SC.IdSubscription = @CustomerHasActiveSubscription;
+
+                SET @IdRate = @RateId;
+            END;
+            ELSE
+            BEGIN
+                -- Destino no es express center activo, aplicar tarifa base de suscripción
+
+                -- Si falla en encontrar tarifa "valida", defecto la tarifa actual
+                SELECT @RateId = ISNULL(ISNULL(SC.RateHeaderId, CS.RateHeaderId), @IdRate)
+                FROM [DeliveryBackOffice].[dbo].[Subscription] SC WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+                        ON SC.CatSubscriptionId = CS.IdCatSubscription
+                WHERE SC.IdSubscription = @CustomerHasActiveSubscription;
+
+                SET @IdRate = @RateId;
+            END;
 
         END;
     END;
@@ -499,11 +619,7 @@ BEGIN
     DECLARE @IdRateGroup INT = (IIF(@IsTDA = 'false',
                                     1,
                                 (
-                                    SELECT TOP 1
-                                           RateGroup
-                                    FROM dbo.CatTypeService WITH (NOLOCK)
-                                    WHERE CtsShortName = 'TDA'
-                                          AND CtsRowStatus = 1
+                                    1
                                 ))
                                );
 
@@ -563,57 +679,69 @@ BEGIN
     ORDER BY cov.Hub DESC;
 
     --------------- Fin determinar Hub Origen y Destino ---------------------------------------------------------------------------------------------------
-	
----------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
---PRINT 'determinar segmento LOC/MET/FOR '
-		if @CodeOfReferenceSource <=0 -- si no viene el codeOfReference tomar el primero de cada cliente
-		begin
-			select top 1 @CodeOfReferenceSource = vp.CodeOfReference from dbo.VisitPointClient vp WITH(NOLOCK)
-			where vp.CustomerID = @IdCustomer
-		end
-	DECLARE @IdSegment int
 
-	--PRINT 'CodeOfReference'
-	--PRINT @CodeOfReferenceSource
+    ---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
+    --PRINT 'determinar segmento LOC/MET/FOR '
+    IF @CodeOfReferenceSource <= 0 -- si no viene el codeOfReference tomar el primero de cada cliente
+    BEGIN
+        SELECT TOP 1
+               @CodeOfReferenceSource = vp.CodeOfReference
+        FROM dbo.VisitPointClient vp WITH (NOLOCK)
+        WHERE vp.CustomerID = @IdCustomer;
+    END;
+    DECLARE @IdSegment INT;
 
-	--PRINT '@IdHubDestiny'
-	--PRINT @IdHubDestiny
-	select  top 1  @IdSegment = cov.SegmentId 
-	from dbo.VisitPointCoverage cov
-	where cov.RowStatus ='true'
-	and cov.HublogisticId = @IdHubDestiny
-	and cov.VisitPointId = @CodeOfReferenceSource
+    -- HeaderCodes Iguales - LOC
+    IF (@HeaderCodeSource = @HeaderCodeDestiny)
+    BEGIN
+        SELECT TOP 1
+               @IdSegment = sg.CrsId
+        FROM dbo.CatRateSegment sg WITH (NOLOCK)
+        WHERE sg.CrsShortName = 'LOC';
+    END;
+    -- HeaderCodes diferentes - revisar tabla
+    ELSE
+    BEGIN
+        IF (@CustomerType != 1)
+        BEGIN
+            SELECT TOP 1
+                   @IdSegment = RTC.SegmentTypeId
+            FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
+                    ON RTC.TownshipSourceId = TwnSource.IdTownship
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnDestiny WITH (NOLOCK)
+                    ON RTC.TownshipDestinyId = TwnDestiny.IdTownship
+            WHERE RTC.RateId = @IdRate
+                  AND (TwnSource.HeaderCode = @HeaderCodeSource)
+                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+                  AND RTC.RowStatus = 1;
+        END;
+        ELSE
+        BEGIN
+            SELECT TOP 1
+                   @IdSegment = CTC.SegmentTypeId
+            FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
+                    ON CTC.TownshipSourceId = TwnSource.IdTownship
+                INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnDestiny WITH (NOLOCK)
+                    ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
+            WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
+                  AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
+                  AND CTC.RowStatus = 1;
+        END;
 
-	--PRINT 'segmento'
-	--PRINT @IdSegment
-	if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar  LOCAL si el hub de origen es igual al hub de destino
-		BEGIN
-		--PRINT 'segmento nulo'
-			IF @IdHubSource = @IdHubDestiny 
-				BEGIN
-				--PRINT 'hubs iguales'
-					SELECT top 1   @IdSegment = sg.CrsId 
-					FROM dbo.CatRateSegment sg  WITH(NOLOCK) WHERE sg.CrsShortName ='LOC'
-				END
-			ELSE 
-				BEGIN
-				--PRINT 'hubs default'
-					select  top 1  @IdSegment = cov.SegmentId  -- si los hubs no son iguales verficar en la configuracion por default asignada el visit point 0
-						from dbo.VisitPointCoverage cov WITH(NOLOCK)
-					where cov.RowStatus ='true'
-						and cov.HublogisticId = @IdHubDestiny
-						and @IdHubSource IN(1,22)
-				END
-		END
-        
-		if @IdSegment is null -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
-		BEGIN
-			
-					SELECT top 1   @IdSegment = sg.CrsId 
-			from dbo.CatRateSegment sg WITH(NOLOCK) where sg.CrsShortName ='FOR'
-		END
+    END;
 
---------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
+    IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
+    BEGIN
+
+        SELECT TOP 1
+               @IdSegment = sg.CrsId
+        FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
+        WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
+    END;
+
+    --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
     -------------------------------Obtener descuento --------------------------------------------------------------------------
 
     DECLARE @IdTypeCustomer INT =
@@ -675,6 +803,29 @@ BEGIN
 
     ---------------------Fin obtener descuento -------------------------------------------------------------------------------------
     ---------------------Determinar si existe exceso de libras ---------------------------------------------------------------------
+
+	-- Hotfix - Andrés Ruíz - 17-02-2023
+	IF ((LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '' OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0') AND @IdTypeRate = 3)
+    BEGIN
+
+        DECLARE @DataCounter INT = 1;
+
+        SET @ParcelCode = N'EXP076';
+
+        IF (@DataCounter < @CountPiecesParams)
+        BEGIN
+            WHILE @DataCounter < @CountPiecesParams
+            BEGIN
+
+                SET @ParcelCode = CONCAT(@ParcelCode, ',EXP076');
+
+                SET @DataCounter = @DataCounter + 1;
+
+            END;
+        END;
+
+    END;
+	-- Fin hotfix
 
     IF OBJECT_ID('tempdb.dbo.#ParceCode', 'U') IS NOT NULL
         DROP TABLE #ParceCode;
@@ -995,7 +1146,7 @@ BEGIN
         --select * from #ListCode
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;
 
-        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewMainRates2 ))
+        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates ))
         BEGIN
 
             SET @IdSegment = NULL;
@@ -1135,6 +1286,34 @@ BEGIN
                 ) TempValues
                 WHERE TempValues.AddedSegmentType = SegmentType;
 
+                DECLARE @RealRateGroup AS TABLE
+                (
+                    ServiceTypeId INT NOT NULL,
+                    RowStatus BIT NOT NULL
+                        DEFAULT 1
+                );
+
+                INSERT INTO @RealRateGroup
+                (
+                    ServiceTypeId
+                )
+                SELECT CtsId
+                FROM [DeliveryBackOffice].dbo.CatTypeService CTS WITH (NOLOCK)
+                WHERE RateGroup = @IdRateGroup
+                      AND CtsRowStatus = 1;
+
+                DECLARE @SDDTypeId INT =
+                        (
+                            SELECT TOP 1
+                                   CTS.CtsId
+                            FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)
+                            WHERE CTS.CtsShortName = 'SDD' COLLATE Latin1_General_CI_AI
+                        );
+                IF (@IsSDD = 0)
+                    UPDATE @RealRateGroup
+                    SET RowStatus = 0
+                    WHERE ServiceTypeId = @SDDTypeId;
+
                 -- Tarifas finales
                 INSERT INTO @TempRate
                 SELECT DISTINCT
@@ -1148,7 +1327,7 @@ BEGIN
                        IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
                        IIF(@IsInsurance = 'true',
                            (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
-                                CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
+                                CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
                                 0)
                            ),
                            0) AS InsuranceRate,
@@ -1172,7 +1351,13 @@ BEGIN
                     LEFT JOIN dbo.CatTypeRate cr
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rh.RheId = @IdRate
+                      --and rd.ArticleId is null
                       AND rd.TypeSegmentId = @IdSegment
+                      AND (rd.TypeServiceId IN
+                           (
+                               SELECT RRG.ServiceTypeId FROM @RealRateGroup RRG WHERE RRG.RowStatus = 1
+                           )
+                          )
                       AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                                      CONVERT(
                                                                                 DATETIME,
@@ -1194,98 +1379,131 @@ BEGIN
         ELSE
         BEGIN
 
-			-- Codigos de artículos reconocidos en tarifario
-            set @ParcelPrice =
-            (
-                select sum(isnull(ra.RateValue, isnull(ar.PriceDefault, 0)))
-                from #ListCode ls
-                    INNER join dbo.ArticleByCustomer ar WITH (NOLOCK)
-                        ON ar.Code = ls.Item
-                    INNER join dbo.RateData ra WITH (NOLOCK)
-                        ON ra.ArticleId = ar.AbcId
-                           and ra.TypeSegmentId = @IdSegment
-                           AND ra.RateId = @IdRate
-            )
-
-			-- Codigos de artículos no reconocidos en tarifa, tomar precios "base" por tipo de servicio
-            set @ParcelPrice = ISNULL(@ParcelPrice, 0) +
-            ISNULL((
-                select sum(isnull(raser.RateValue, isnull(ar.PriceDefault, 0)))
-                from #ListCode ls
-                    INNER join dbo.ArticleByCustomer ar WITH (NOLOCK)
-                        ON ar.Code = ls.Item
-                    LEFT join dbo.RateData raart WITH (NOLOCK)
-                        ON raart.ArticleId = ar.AbcId
-                           and raart.TypeSegmentId = @IdSegment
-                           AND raart.RateId = @IdRate
-					LEFT JOIN dbo.RateData raser WITH(NOLOCK)
-						ON raser.TypeSegmentId = @IdSegment
-					    and (
-							(@IsSDD = 1 AND raser.TypeServiceId = 1)
-							OR
-							(@IsTDA = 1 AND raser.TypeServiceId = 3)
-							OR
-							(@IsSDD != 1 AND @IsTDA != 1 AND raser.TypeServiceId = 2)
-						)
-						AND raser.RateId = @IdRate
-				WHERE
-					raart.IdRateData IS NULL -- Artículos no detectados en tarifario
-            ), 0)
-            --select @ParcelPrice as price
             -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
             INSERT INTO @TempRate
-            SELECT ISNULL(cr.Name, '') TypeRate,
-                   ISNULL(sg.CrsShortName, '') Segment,
-                   ISNULL(sv.CtsShortName, '') Service,
-                   (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
-                   '' DiscountName,
-                   0 DiscountValue,
-                   IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
-                   IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
-                   IIF(@IsInsurance = 'true',
-                       (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
-                            CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
-                            0)
-                       ),
-                       0) AS InsuranceRate,
-                   IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-                   IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
-                   ISNULL(@ParcelPrice, 0) AS IrregularParcelRate,
-                   ISNULL(sv.CtsName, '') AS CtsName,
-                   ISNULL(sv.CtsDescription, '') AS CtsDescription,
-                   ISNULL(rh.ReturnRate, 0) AS ReturnRate
-            FROM dbo.RateHeader rh WITH (NOLOCK)
-                INNER JOIN dbo.RateData rd WITH (NOLOCK)
-                    ON rd.RateId = rh.RheId
-                       AND rd.RowStatus = 'true'
-                LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
-                    ON sg.CrsId = rd.TypeSegmentId
-                LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
-                    ON sv.CtsId = rd.TypeServiceId
-                LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
-                    ON cr.IdTypeRate = rh.RateTypeId
-            WHERE rh.RheId = @IdRate
-                  AND rd.ArticleId IS NULL
-                  AND rd.TypeSegmentId = @IdSegment
-                  AND (rd.TypeServiceId IN
-                       (
-                           SELECT CtsId
-                           FROM dbo.CatTypeService WITH (NOLOCK)
-                           WHERE RateGroup = @IdRateGroup
-                                 AND CtsRowStatus = 1
-                       )
-                      )
-                  AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
-                                                                 CONVERT(
-                                                                            DATETIME,
-                                                                            ISNULL(
-                                                                                      rd.LimitHourPickup,
-                                                                                      sv.LimitHourPickup
-                                                                                  ),
-                                                                            108
-                                                                        ),
-                                                                 CONVERT(DATETIME, '23:59:59', 108)
-                                                             );
+            SELECT x.TypeRate,
+                   x.Segment,
+                   x.Service,
+                   SUM(x.BaseRate),
+                   x.DiscountName,
+                   SUM(x.DiscountValue),
+                   x.fragilRate,
+                   x.CollectedRate,
+                   SUM(x.InsuranceRate),
+                   x.CreditCardRate,
+                   x.OverWeightRate,
+                   SUM(x.IrregularParcelRate),
+                   x.CtsName,
+                   x.CtsDescription,
+                   x.ReturnRate
+            FROM
+            (
+                SELECT ISNULL(cr.Name, '') TypeRate,
+                       ISNULL(sg.CrsShortName, '') Segment,
+                       ISNULL(sv.CtsShortName, '') Service,
+                       (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
+                       '' DiscountName,
+                       0 DiscountValue,
+                       IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
+                       IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
+                       IIF(@IsInsurance = 'true',
+                           (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
+                                CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
+                                0)
+                           ),
+                           0) AS InsuranceRate,
+                       IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
+                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
+                       ISNULL(sv.CtsName, '') AS CtsName,
+                       ISNULL(sv.CtsDescription, '') AS CtsDescription,
+                       ISNULL(rh.ReturnRate, 0) AS ReturnRate
+                FROM #ListCode ls
+                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                        ON ar.Code = ls.Item
+                    INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
+                        ON rh.RheId = @IdRate
+                    INNER JOIN dbo.RateData rd WITH (NOLOCK)
+                        ON rd.ArticleId = ar.AbcId
+                           AND rd.RateId = rh.RheId
+                           AND rd.RowStatus = 'true'
+                    LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
+                        ON sg.CrsId = rd.TypeSegmentId
+                    LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
+                        ON sv.CtsId = rd.TypeServiceId
+                    LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
+                        ON cr.IdTypeRate = rh.RateTypeId
+                WHERE rd.TypeSegmentId = @IdSegment
+                      AND (rd.TypeServiceId IN
+                           (
+                               SELECT CtsId
+                               FROM dbo.CatTypeService WITH (NOLOCK)
+                               WHERE RateGroup = @IdRateGroup
+                                     AND CtsRowStatus = 1
+                           )
+                          )
+                UNION ALL
+                SELECT ISNULL(cr.Name, '') TypeRate,
+                       ISNULL(sg.CrsShortName, '') Segment,
+                       ISNULL(sv.CtsShortName, '') Service,
+                       (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
+                       '' DiscountName,
+                       0 DiscountValue,
+                       IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
+                       IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
+                       IIF(@IsInsurance = 'true',
+                           (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
+                                CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
+                                0)
+                           ),
+                           0) AS InsuranceRate,
+                       IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
+                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
+                       ISNULL(sv.CtsName, '') AS CtsName,
+                       ISNULL(sv.CtsDescription, '') AS CtsDescription,
+                       ISNULL(rh.ReturnRate, 0) AS ReturnRate
+                FROM #ListCode ls
+                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                        ON ar.Code = ls.Item
+                    INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
+                        ON rh.RheId = @IdRate
+                    LEFT JOIN dbo.RateData rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
+                        ON rdignore.ArticleId = ar.AbcId
+                           AND rdignore.RateId = rh.RheId
+                           AND rdignore.RowStatus = 'true'
+                    LEFT JOIN dbo.RateData rd WITH (NOLOCK)
+                        ON rd.ArticleId IS NULL
+                           AND rd.RateId = rh.RheId
+                           AND rd.RowStatus = 'true'
+                    LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
+                        ON sg.CrsId = rd.TypeSegmentId
+                    LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
+                        ON sv.CtsId = rd.TypeServiceId
+                    LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
+                        ON cr.IdTypeRate = rh.RateTypeId
+                WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
+                      AND rd.TypeSegmentId = @IdSegment
+                      AND (rd.TypeServiceId IN
+                           (
+                               SELECT CtsId
+                               FROM dbo.CatTypeService WITH (NOLOCK)
+                               WHERE RateGroup = @IdRateGroup
+                                     AND CtsRowStatus = 1
+                           )
+                          )
+            ) x
+            GROUP BY x.TypeRate,
+                     x.Segment,
+                     x.Service,
+                     x.DiscountName,
+                     x.fragilRate,
+                     x.CollectedRate,
+                     x.CtsName,
+                     x.CreditCardRate,
+                     x.OverWeightRate,
+                     x.CtsDescription,
+                     x.ReturnRate;
 
         END;
     --print 'rate'
@@ -1482,6 +1700,61 @@ BEGIN
                  AdditionalWeightRate;
     END;
     -- FDD-671 FIN
+    ELSE IF @IdTypeRate = 6 -- tarifas coberturas
+    BEGIN
+        SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded);
+
+        INSERT INTO @TempRate
+        SELECT ISNULL(cr.Name, '') TypeRate,
+               ISNULL(sg.CrsShortName, '') Segment,
+               ISNULL(sv.CtsShortName, '') Service,
+               (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
+               '' DiscountName,
+               0 DiscountValue,
+               IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
+               IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
+               IIF(@IsInsurance = 'true',
+                   (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
+                        CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
+                        0)
+                   ),
+                   0) AS InsuranceRate,
+               IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
+               IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+               0 IrregularParcelRate,
+               ISNULL(sv.CtsName, '') AS CstName,
+               ISNULL(sv.CtsDescription, '') AS CstDescription,
+               ISNULL(rh.ReturnRate, 0) AS ReturnRate
+        FROM dbo.RateHeader rh WITH (NOLOCK)
+            INNER JOIN dbo.RateData rd WITH (NOLOCK)
+                ON rd.RateId = rh.RheId
+                   AND rd.RowStatus = 'true'
+            LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
+                ON sg.CrsId = rd.TypeSegmentId
+            LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
+                ON sv.CtsId = rd.TypeServiceId
+            LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
+                ON cr.IdTypeRate = rh.RateTypeId
+        WHERE rh.RheId = @IdRate
+              AND rd.ArticleId IS NULL
+              AND rd.TypeSegmentId = @IdSegment
+              AND (rd.TypeServiceId IN
+                   (
+                       SELECT CtsId
+                       FROM dbo.CatTypeService
+                       WHERE RateGroup = @IdRateGroup
+                             AND CtsRowStatus = 1
+                   )
+                  )
+              AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
+                                                             CONVERT(
+                                                                        DATETIME,
+                                                                        ISNULL(rd.LimitHourPickup, sv.LimitHourPickup),
+                                                                        108
+                                                                    ),
+                                                             CONVERT(DATETIME, '23:59:59', 108)
+                                                         );
+    END;
     ELSE
     BEGIN
         PRINT 'error no se encontro un tarifario';
@@ -1606,13 +1879,25 @@ BEGIN
                     --Si es tarifa fija
                     IF @ServiceValue >= 0
                     BEGIN
-                        SET @Discount = @PriceShippment - @ServiceValue;
-                        SELECT @NewPriceShippment
-                            = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.CreditCardRate
-                               + tr.OverWeightRate
-                              )
-                        FROM @TempRate tr
-                        WHERE Id = @i;
+                        IF (@ServiceValue = 0)
+                        BEGIN
+                            SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
+                                   @NewPriceShippment
+                                       = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate)
+                            FROM @TempRate tr
+                            WHERE Id = @i;
+                            SET @PriceWithCreditCard = 1;
+                        END;
+                        ELSE
+                        BEGIN
+                            SET @Discount = @PriceShippment - @ServiceValue;
+                            SELECT @NewPriceShippment
+                                = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
+                                   + tr.CreditCardRate + tr.OverWeightRate
+                                  )
+                            FROM @TempRate tr
+                            WHERE Id = @i;
+                        END;
                     END;
                     ELSE
                     BEGIN
@@ -1621,15 +1906,27 @@ BEGIN
                         BEGIN
                             --Si es tarifa fija
                             IF @ServiceValueSubscription >= 0
-                            BEGIN
-                                SET @Discount = @PriceShippment - @ServiceValueSubscription;
-                                SELECT @NewPriceShippment
-                                    = (@ServiceValueSubscription + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
-                                       + tr.CreditCardRate + tr.OverWeightRate
-                                      )
-                                FROM @TempRate tr
-                                WHERE Id = @i;
-                            END;
+                                IF (@ServiceValueSubscription = 0)
+                                BEGIN
+                                    SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
+                                           @NewPriceShippment
+                                               = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
+                                                  + tr.OverWeightRate
+                                                 )
+                                    FROM @TempRate tr
+                                    WHERE Id = @i;
+                                    SET @PriceWithCreditCard = 1;
+                                END;
+                                ELSE
+                                BEGIN
+                                    SET @Discount = @PriceShippment - @ServiceValueSubscription;
+                                    SELECT @NewPriceShippment
+                                        = (@ServiceValueSubscription + tr.FragilRate + tr.CollectedRate
+                                           + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
+                                          )
+                                    FROM @TempRate tr
+                                    WHERE Id = @i;
+                                END;
                             ELSE
                             BEGIN
                                 IF @DiscountValue IS NOT NULL
@@ -1721,7 +2018,12 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewMainRates2 )
+               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
+               --           )
+			     @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates
+                          )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
@@ -2057,7 +2359,11 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewMainRates2 )
+               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
+               --)
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
@@ -2065,7 +2371,9 @@ BEGIN
         SELECT tr.TypeRate,
                tr.Segment,
                tr.Service,
-               (tr.BaseRate - tr.Discount + tr.IrregularPieceRate) AS Price, --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
+               IIF(@PriceWithCreditCard = 1,
+                   (tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate),
+                   (tr.BaseRate - tr.Discount + tr.IrregularPieceRate)) AS Price, --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
                dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.BaseRate, 'false') AS BaseRate,
                dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', (tr.Discount * -1), 'false') AS DiscountValue,
                tr.DiscountName,

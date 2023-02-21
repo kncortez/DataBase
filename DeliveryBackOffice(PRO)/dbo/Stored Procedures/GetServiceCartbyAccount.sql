@@ -10,6 +10,8 @@ CREATE PROCEDURE [dbo].[GetServiceCartbyAccount]
 AS
 BEGIN
 	SET NOCOUNT ON;
+	SET ARITHABORT ON;
+
 	BEGIN TRANSACTION
 
 	BEGIN TRY
@@ -53,23 +55,45 @@ BEGIN
 			AND so.OrderDescription = 'Anulado'
 
 			--Eliminar guías pagadas
+			DECLARE @PaidCartGuides AS TABLE(
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT,
+				TotalAmountPaid DECIMAL(18,2)
+			);
 			DECLARE @PaidGuides AS TABLE(
 				GuideSerie NVARCHAR(2),
 				GuideNumber INT
 			);
+
+			INSERT INTO @PaidCartGuides
+				(GuideSerie, GuideNumber, TotalAmountPaid)
+			SELECT
+				ascd.GuideSerie, ascd.GuideNumber, co.TotalAmountPaid
+			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd with (nolock)
+			LEFT JOIN DeliveryBackOffice.dbo.Cost Co with (nolock)
+				ON 
+					(
+						(
+							Co.GuideSerie = ascd.GuideSerie
+							AND
+							Co.GuideNumber = ascd.GuideNumber
+						)
+					)
+			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
+			AND ISNULL(co.TotalAmountPaid,0) > 0
+			AND ascd.RowStatus = 1;
+			
 			UPDATE ascd
 			SET ascd.RowStatus = 0
 			   ,ascd.TokenUpdated = @Token
 			   ,ascd.DateUpdated = GETDATE()
 			OUTPUT inserted.GuideSerie, inserted.GuideNumber INTO @PaidGuides(GuideSerie, GuideNumber)
-			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd
-			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
-				ON do.Guide_Serie = ascd.GuideSerie
-				AND do.Guide_Number = ascd.GuideNumber
-			LEFT JOIN DeliveryBackOffice.dbo.Cost Co with (nolock)
-				ON Co.ProductNumber = CONCAT(do.Guide_Serie, Guide_Number)
-			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
-			AND ISNULL(co.TotalAmountPaid,0) > 0
+			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd with (nolock)
+			INNER JOIN @PaidCartGuides PCG
+				ON 
+					ascd.GuideSerie = PCG.GuideSerie
+					AND
+					ascd.GuideNumber = PCG.GuideNumber
 			
 			-- Actualizar guías validas que fueron procesadas
 			UPDATE DOPD
@@ -79,7 +103,7 @@ BEGIN
 			INNER JOIN @PaidGuides PG
 				ON PG.GuideSerie = DOPD.GuideSerie
 				AND PG.GuideNumber = DOPD.GuideNumber
-
+				
 			IF EXISTS (SELECT TOP 1
 					1
 				FROM AccountServiceCartDetail
@@ -116,7 +140,7 @@ BEGIN
 					AND MSL.RowStatus = 1
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 				AND ascd.RowStatus = 1
-
+				
 				SELECT
 					ascd.GuideSerie GuideSerie
 				   ,ascd.GuideNumber GuideNumber
@@ -133,7 +157,7 @@ BEGIN
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 				AND ascd.RowStatus = 1
 				ORDER BY bop.IdBreakdownOfPayment
-
+				
 			END
 			ELSE
 			BEGIN 

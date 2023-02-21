@@ -42,6 +42,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_RheDefault]
     ON [dbo].[RateHeader]([RheDefault] ASC)

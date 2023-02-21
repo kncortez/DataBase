@@ -165,32 +165,32 @@ BEGIN
                 CollectRate = @CollectRate,
                 PiecesIncluded = @PiecesIncluded,
                 CurrencyId = @CurrencyId,
-				CutOffDate = @CutOffDate,
-				CatBusinessSegmentId = @CatBusinessSegmentId,
-				PackagesRangeId = @PackagesRangeId
+                CutOffDate = @CutOffDate,
+                CatBusinessSegmentId = @CatBusinessSegmentId,
+                PackagesRangeId = @PackagesRangeId
             WHERE RheId = @IdRate;
         END;
 
         IF @IdTypeRate = 1 -- Tarifas standar
         BEGIN
             -- TODO  TARIFARIOS STANDAR
-            SELECT	'las tarifas standar aun no estan soportadas' AS message,
-                    @IdRate AS IdRate,
-                    @IdTypeRate AS IdTypeRate,
-					'FALSE' [blnResult],
-					CAST(@IdRate AS VARCHAR(50)) [IdResult],
-					CAST(412 AS VARCHAR(50)) [StatusResult],
-					'' AS [ErrorNumber],
-					'' AS [ErrorSeverity],
-					'' AS [ErrorState],
-					'' AS [ErrorProcedure],
-					'' AS [ErrorLine],
-					'Las tarifas standar aun no estan soportadas' AS [ResultMessage]
+            SELECT 'las tarifas standar aun no estan soportadas' AS message,
+                   @IdRate AS IdRate,
+                   @IdTypeRate AS IdTypeRate,
+                   'FALSE' [blnResult],
+                   CAST(@IdRate AS VARCHAR(50)) [IdResult],
+                   CAST(412 AS VARCHAR(50)) [StatusResult],
+                   '' AS [ErrorNumber],
+                   '' AS [ErrorSeverity],
+                   '' AS [ErrorState],
+                   '' AS [ErrorProcedure],
+                   '' AS [ErrorLine],
+                   'Las tarifas standar aun no estan soportadas' AS [ResultMessage];
 
         END;
         IF @IdTypeRate = 2
            OR @IdTypeRate = 3 -- tarifas todo destino y por articulo
-		   OR @IdTypeRate = 6 -- Cobertura
+           OR @IdTypeRate = 6 -- Cobertura
         BEGIN
 
             -- insertar tarifas todo destino y por articulo STD
@@ -198,7 +198,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @STD
@@ -246,7 +247,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @STD
@@ -294,7 +296,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @STD
@@ -338,11 +341,12 @@ BEGIN
                       AND TypeServiceId = @STD
                       AND TypeSegmentId = @FOR;
             END;
-			IF @STDEsp > 0
+            IF @STDEsp > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @STD
@@ -387,12 +391,13 @@ BEGIN
                       AND TypeSegmentId = @ESP;
             END;
 
-			-- insertar tarifas todo destino y por articulo COD
+            -- insertar tarifas todo destino y por articulo COD
             IF @CODLoc > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -440,7 +445,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -488,7 +494,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -532,11 +539,12 @@ BEGIN
                       AND TypeServiceId = @COD
                       AND TypeSegmentId = @FOR;
             END;
-			IF @CODEsp > 0
+            IF @CODEsp > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateData rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -585,7 +593,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -594,7 +603,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODLocCOD,
-						CODExempt = @CODExcentLoc,
+                        CODExempt = @CODExcentLoc,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -617,15 +626,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @LOC,             -- TypeSegmentId - int
-                        @CODLocCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @LOC,          -- TypeSegmentId - int
+                        @CODLocCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentLoc, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -645,7 +654,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -654,7 +664,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODMetCOD,
-						CODExempt = @CODExcentMet,
+                        CODExempt = @CODExcentMet,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -677,15 +687,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @MET,             -- TypeSegmentId - int
-                        @CODMetCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @MET,          -- TypeSegmentId - int
+                        @CODMetCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentMet, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -705,7 +715,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -714,7 +725,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODForCOD,
-						CODExempt = @CODExcentFor,
+                        CODExempt = @CODExcentFor,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -737,15 +748,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @FOR,             -- TypeSegmentId - int
-                        @CODForCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @FOR,          -- TypeSegmentId - int
+                        @CODForCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentFor, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -761,11 +772,12 @@ BEGIN
                       AND TypeServiceId = @COD
                       AND TypeSegmentId = @FOR;
             END;
-			IF @CODEspCOD > 0
+            IF @CODEspCOD > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -774,7 +786,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODEspCOD,
-						CODExempt = @CODExcentEsp,
+                        CODExempt = @CODExcentEsp,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -797,15 +809,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @ESP,             -- TypeSegmentId - int
-                        @CODEspCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @ESP,          -- TypeSegmentId - int
+                        @CODEspCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentEsp, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -844,19 +856,19 @@ BEGIN
 
             UPDATE dbo.RateData
             SET RateValue = ar.Rate,
-				RowStatus ='true',
+                RowStatus = 'true',
                 TokenUpdated = @Token,
                 DateUpdated = GETDATE()
             FROM @TblArticleRate ar
                 LEFT JOIN dbo.CatRateSegment sg
                     ON sg.CrsShortName = ar.Segment
-				LEFT JOIN CatTypeService ts
-					ON ts.CtsShortName = ar.TypeRate
+                LEFT JOIN CatTypeService ts
+                    ON ts.CtsShortName = ar.TypeRate
                 LEFT JOIN dbo.RateData rd
                     ON rd.RateId = @IdRate
                        AND rd.ArticleId = ar.IdArticle
                        AND rd.TypeSegmentId = sg.CrsId
-					   AND rd.TypeServiceId = ts.CtsId
+                       AND rd.TypeServiceId = ts.CtsId
             WHERE ar.Rate > 0
                   AND ar.Status = 1
                   AND rd.RateId IS NOT NULL;
@@ -867,7 +879,7 @@ BEGIN
             (
                 RateId,
                 TypeSegmentId,
-				TypeServiceId,
+                TypeServiceId,
                 ArticleId,
                 RateValue,
                 RowStatus,
@@ -876,7 +888,7 @@ BEGIN
             )
             SELECT @IdRate,
                    sg.CrsId,
-				   ts.CtsId,
+                   ts.CtsId,
                    ar.IdArticle,
                    ar.Rate,
                    1, -- crear como activo
@@ -885,27 +897,31 @@ BEGIN
             FROM @TblArticleRate ar
                 LEFT JOIN dbo.CatRateSegment sg
                     ON sg.CrsShortName = ar.Segment
-				LEFT JOIN CatTypeService ts
+                LEFT JOIN CatTypeService ts
                     ON ts.CtsShortName = ar.TypeRate
                 LEFT JOIN dbo.RateData rd
                     ON rd.RateId = @IdRate
                        AND rd.ArticleId = ar.IdArticle
                        AND rd.TypeSegmentId = sg.CrsId
-					   AND rd.TypeServiceId = ts.CtsId
+                       AND rd.TypeServiceId = ts.CtsId
             WHERE ar.Rate > 0
                   AND ar.Status = 1
                   AND rd.RateId IS NULL;
 
         END;
 
-		IF @IdTypeRate = (SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por Peso') -- insertar por rango de pesos
-        BEGIN			
-			
-			IF @CODLocCOD > 0
+        IF @IdTypeRate =
+        (
+            SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por Peso'
+        ) -- insertar por rango de pesos
+        BEGIN
+
+            IF @CODLocCOD > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -914,7 +930,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODLocCOD,
-						CODExempt = @CODExcentLoc,
+                        CODExempt = @CODExcentLoc,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -937,15 +953,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @LOC,             -- TypeSegmentId - int
-                        @CODLocCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @LOC,          -- TypeSegmentId - int
+                        @CODLocCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentLoc, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -965,7 +981,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -974,7 +991,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODMetCOD,
-						CODExempt = @CODExcentMet,
+                        CODExempt = @CODExcentMet,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -997,15 +1014,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @MET,             -- TypeSegmentId - int
-                        @CODMetCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @MET,          -- TypeSegmentId - int
+                        @CODMetCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentMet, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1025,7 +1042,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -1034,7 +1052,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODForCOD,
-						CODExempt = @CODExcentFor,
+                        CODExempt = @CODExcentFor,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -1057,15 +1075,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @FOR,             -- TypeSegmentId - int
-                        @CODForCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @FOR,          -- TypeSegmentId - int
+                        @CODForCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentFor, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1081,11 +1099,12 @@ BEGIN
                       AND TypeServiceId = @COD
                       AND TypeSegmentId = @FOR;
             END;
-			IF @CODEspCOD > 0
+            IF @CODEspCOD > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -1094,7 +1113,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODEspCOD,
-						CODExempt = @CODExcentEsp,
+                        CODExempt = @CODExcentEsp,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -1117,15 +1136,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @ESP,             -- TypeSegmentId - int
-                        @CODEspCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @ESP,          -- TypeSegmentId - int
+                        @CODEspCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentEsp, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1142,291 +1161,375 @@ BEGIN
                       AND TypeSegmentId = @ESP;
             END;
 
-			--rango de pesos
+            --rango de pesos
 
-			--Eliminar rango de pesos STD
-			UPDATE rd
-			SET rd.RowStatus = 'FALSE'
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE rd.RateId = @IdRate
-			AND twr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND twr.State = 3
+            --Eliminar rango de pesos STD
+            UPDATE rd
+            SET rd.RowStatus = 'FALSE',
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE rd.RateId = @IdRate
+                  AND twr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND twr.State = 3;
 
-			--Eliminar rango de pesos COD
-			UPDATE rd
-			SET rd.RowStatus = 'FALSE'
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE rd.RateId = @IdRate
-			AND twr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND twr.State = 3
+            --Eliminar rango de pesos COD
+            UPDATE rd
+            SET rd.RowStatus = 'FALSE',
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE rd.RateId = @IdRate
+                  AND twr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND twr.State = 3;
 
-			--Actualizar rango de pesos STD LOCAL
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Local
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @LOC
-			AND twr.State = 2
-			
-			--Actualizar rango de pesos STD MET
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Metro
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @MET
-			AND twr.State = 2
+            --Actualizar rango de pesos STD LOCAL
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Local,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @LOC
+                  AND twr.State = 2;
 
-			--Actualizar rango de pesos STD FOR
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Foraneo
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @FOR
-			AND twr.State = 2
+            --Actualizar rango de pesos STD MET
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Metro,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @MET
+                  AND twr.State = 2;
 
-			--Actualizar rango de pesos STD ESP
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Especial
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @ESP
-			AND twr.State = 2
+            --Actualizar rango de pesos STD FOR
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Foraneo,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @FOR
+                  AND twr.State = 2;
 
-			--Actualizar rango de pesos COD LOCAL
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Local
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @LOC
-			AND twr.State = 2
+            --Actualizar rango de pesos STD ESP
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Especial,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @ESP
+                  AND twr.State = 2;
 
-			--Actualizar rango de pesos COD MET
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Metro
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @MET
-			AND twr.State = 2
+            --Actualizar rango de pesos COD LOCAL
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Local,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @LOC
+                  AND twr.State = 2;
 
-			--Actualizar rango de pesos COD FOR
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Foraneo
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @FOR
-			AND twr.State = 2
+            --Actualizar rango de pesos COD MET
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Metro,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @MET
+                  AND twr.State = 2;
 
-			--Actualizar rango de pesos COD ESP
-			UPDATE rd
-			SET rd.WeightTo = twr.WeightTo
-			   ,rd.RateValue = twr.Especial
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblWeightRate twr
-				ON twr.WeightFrom = rd.WeightFrom
-			WHERE twr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.WeightFrom = twr.WeightFrom
-			AND rd.TypeSegmentId = @ESP
-			AND twr.State = 2
-			
-			--Insertar rango de pesos STD LOC
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@LOC
-				   ,Local
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Actualizar rango de pesos COD FOR
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Foraneo,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @FOR
+                  AND twr.State = 2;
 
-			--Insertar rango de pesos STD MET
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@MET
-				   ,Metro
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Actualizar rango de pesos COD ESP
+            UPDATE rd
+            SET rd.WeightTo = twr.WeightTo,
+                rd.RateValue = twr.Especial,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblWeightRate twr
+                    ON twr.WeightFrom = rd.WeightFrom
+            WHERE twr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.WeightFrom = twr.WeightFrom
+                  AND rd.TypeSegmentId = @ESP
+                  AND twr.State = 2;
 
-			--Insertar rango de pesos STD FOR
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@FOR
-				   ,Foraneo
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Insertar rango de pesos STD LOC
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @LOC,
+                   Local,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar rango de pesos STD ESP
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@ESP
-				   ,Especial
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Insertar rango de pesos STD MET
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @MET,
+                   Metro,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar rango de pesos COD LOC
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@LOC
-				   ,Local
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 2
-				AND State = 1
+            --Insertar rango de pesos STD FOR
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @FOR,
+                   Foraneo,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar rango de pesos COD MET
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@MET
-				   ,Metro
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 2
-				AND State = 1
+            --Insertar rango de pesos STD ESP
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @ESP,
+                   Especial,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar rango de pesos COD FOR
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@For
-				   ,Foraneo
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 2
-				AND State = 1
+            --Insertar rango de pesos COD LOC
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @LOC,
+                   Local,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
 
-			--Insertar rango de pesos COD Esp
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, WeightFrom, WeightTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@ESP
-				   ,Especial
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,WeightFrom
-				   ,WeightTo
-				FROM @TblWeightRate
-				WHERE CatTypeService = 2
-				AND State = 1
-		END
+            --Insertar rango de pesos COD MET
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @MET,
+                   Metro,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
 
-		IF @IdTypeRate = (SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por paquetes') -- insertar por paquetes
-        BEGIN			
-			
-			IF @CODLocCOD > 0
+            --Insertar rango de pesos COD FOR
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @FOR,
+                   Foraneo,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
+
+            --Insertar rango de pesos COD Esp
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                WeightFrom,
+                WeightTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @ESP,
+                   Especial,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   WeightFrom,
+                   WeightTo
+            FROM @TblWeightRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
+        END;
+
+        IF @IdTypeRate =
+        (
+            SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por paquetes'
+        ) -- insertar por paquetes
+        BEGIN
+
+            IF @CODLocCOD > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -1435,7 +1538,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODLocCOD,
-						CODExempt = @CODExcentLoc,
+                        CODExempt = @CODExcentLoc,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -1458,15 +1561,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @LOC,             -- TypeSegmentId - int
-                        @CODLocCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @LOC,          -- TypeSegmentId - int
+                        @CODLocCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentLoc, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1486,7 +1589,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -1495,7 +1599,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODMetCOD,
-						CODExempt = @CODExcentMet,
+                        CODExempt = @CODExcentMet,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -1518,15 +1622,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @MET,             -- TypeSegmentId - int
-                        @CODMetCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @MET,          -- TypeSegmentId - int
+                        @CODMetCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentMet, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1546,7 +1650,8 @@ BEGIN
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -1555,7 +1660,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODForCOD,
-						CODExempt = @CODExcentFor,
+                        CODExempt = @CODExcentFor,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -1578,15 +1683,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @FOR,             -- TypeSegmentId - int
-                        @CODForCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @FOR,          -- TypeSegmentId - int
+                        @CODForCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentFor, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1602,11 +1707,12 @@ BEGIN
                       AND TypeServiceId = @COD
                       AND TypeSegmentId = @FOR;
             END;
-			IF @CODEspCOD > 0
+            IF @CODEspCOD > 0
             BEGIN
                 IF EXISTS
                 (
-                    SELECT TOP 1 1
+                    SELECT TOP 1
+                           1
                     FROM dbo.RateCOD rd
                     WHERE rd.RateId = @IdRate
                           AND TypeServiceId = @COD
@@ -1615,7 +1721,7 @@ BEGIN
                 BEGIN
                     UPDATE dbo.RateCOD
                     SET CODRate = @CODEspCOD,
-						CODExempt = @CODExcentEsp,
+                        CODExempt = @CODExcentEsp,
                         RowStatus = 1,
                         TokenUpdated = @Token,
                         DateUpdated = GETDATE()
@@ -1638,15 +1744,15 @@ BEGIN
                         DateCreated
                     )
                     VALUES
-                    (   @IdRate,          -- RateId - int
-                        @COD,             -- TypeServiceId - int
-                        @ESP,             -- TypeSegmentId - int
-                        @CODEspCOD,       -- CODRate - decimal(12, 2)
+                    (   @IdRate,       -- RateId - int
+                        @COD,          -- TypeServiceId - int
+                        @ESP,          -- TypeSegmentId - int
+                        @CODEspCOD,    -- CODRate - decimal(12, 2)
                         @CODExcentEsp, -- CODExempt - decimal(12, 2)
-                        NULL,             -- CreditCardSurcharge - decimal(12, 2)
-                        1,                -- RowStatus - int
-                        @Token,           -- TokenCreated - varchar(50)
-                        GETDATE()         -- DateCreated - datetime
+                        NULL,          -- CreditCardSurcharge - decimal(12, 2)
+                        1,             -- RowStatus - int
+                        @Token,        -- TokenCreated - varchar(50)
+                        GETDATE()      -- DateCreated - datetime
                         );
                 END;
 
@@ -1663,297 +1769,377 @@ BEGIN
                       AND TypeSegmentId = @ESP;
             END;
 
-			--Cantidad de paquetes
+            --Cantidad de paquetes
 
-			--Eliminar por paquetes STD
-			UPDATE rd
-			SET rd.RowStatus = 'FALSE'
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE rd.RateId = @IdRate
-			AND tpr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND tpr.State = 3
+            --Eliminar por paquetes STD
+            UPDATE rd
+            SET rd.RowStatus = 'FALSE',
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE rd.RateId = @IdRate
+                  AND tpr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND tpr.State = 3;
 
-			--Eliminar por paquetes COD
-			UPDATE rd
-			SET rd.RowStatus = 'FALSE'
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE rd.RateId = @IdRate
-			AND tpr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND tpr.State = 3
+            --Eliminar por paquetes COD
+            UPDATE rd
+            SET rd.RowStatus = 'FALSE',
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE rd.RateId = @IdRate
+                  AND tpr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND tpr.State = 3;
 
-			--Actualizar por paquetes STD LOCAL
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Local
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @LOC
-			AND tpr.State = 2
-			
-			--Actualizar por paquetes STD MET
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Metro
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @MET
-			AND tpr.State = 2
+            --Actualizar por paquetes STD LOCAL
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Local,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @LOC
+                  AND tpr.State = 2;
 
-			--Actualizar por paquetes STD FOR
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Foraneo
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @FOR
-			AND tpr.State = 2
+            --Actualizar por paquetes STD MET
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Metro,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @MET
+                  AND tpr.State = 2;
 
-			--Actualizar por paquetes STD ESP
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Especial
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 1
-			AND rd.TypeServiceId = @STD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @ESP
-			AND tpr.State = 2
+            --Actualizar por paquetes STD FOR
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Foraneo,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @FOR
+                  AND tpr.State = 2;
 
-			--Actualizar por paquetes COD LOCAL
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Local
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @LOC
-			AND tpr.State = 2
+            --Actualizar por paquetes STD ESP
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Especial,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 1
+                  AND rd.TypeServiceId = @STD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @ESP
+                  AND tpr.State = 2;
 
-			--Actualizar por paquetes COD MET
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Metro
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @MET
-			AND tpr.State = 2
+            --Actualizar por paquetes COD LOCAL
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Local,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @LOC
+                  AND tpr.State = 2;
 
-			--Actualizar por paquetes COD FOR
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Foraneo
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @FOR
-			AND tpr.State = 2
+            --Actualizar por paquetes COD MET
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Metro,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @MET
+                  AND tpr.State = 2;
 
-			--Actualizar por paquetes COD ESP
-			UPDATE rd
-			SET rd.PackagesTo = tpr.PackagesTo
-			   ,rd.RateValue = tpr.Especial
-			   ,rd.TokenUpdated = @Token
-			   ,rd.DateUpdated = GETDATE()
-			FROM RateData rd
-			INNER JOIN @TblPackagesRate tpr
-				ON tpr.PackagesFrom = rd.PackagesFrom
-			WHERE tpr.CatTypeService = 2
-			AND rd.TypeServiceId = @COD
-			AND rd.PackagesFrom = tpr.PackagesFrom
-			AND rd.TypeSegmentId = @ESP
-			AND tpr.State = 2
-			
-			--Insertar por paquetes STD LOC
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@LOC
-				   ,Local
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Actualizar por paquetes COD FOR
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Foraneo,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @FOR
+                  AND tpr.State = 2;
 
-			--Insertar por paquetes STD MET
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@MET
-				   ,Metro
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Actualizar por paquetes COD ESP
+            UPDATE rd
+            SET rd.PackagesTo = tpr.PackagesTo,
+                rd.RateValue = tpr.Especial,
+                rd.TokenUpdated = @Token,
+                rd.DateUpdated = GETDATE()
+            FROM RateData rd
+                INNER JOIN @TblPackagesRate tpr
+                    ON tpr.PackagesFrom = rd.PackagesFrom
+            WHERE tpr.CatTypeService = 2
+                  AND rd.TypeServiceId = @COD
+                  AND rd.PackagesFrom = tpr.PackagesFrom
+                  AND rd.TypeSegmentId = @ESP
+                  AND tpr.State = 2;
 
-			--Insertar por paquetes STD FOR
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@FOR
-				   ,Foraneo
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Insertar por paquetes STD LOC
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @LOC,
+                   Local,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar por paquetes STD ESP
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@STD
-				   ,@ESP
-				   ,Especial
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 1
-				AND State = 1
+            --Insertar por paquetes STD MET
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @MET,
+                   Metro,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar por paquetes COD LOC
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@LOC
-				   ,Local
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 2
-				AND State = 1
+            --Insertar por paquetes STD FOR
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @FOR,
+                   Foraneo,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar por paquetes COD MET
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@MET
-				   ,Metro
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 2
-				AND State = 1
+            --Insertar por paquetes STD ESP
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @STD,
+                   @ESP,
+                   Especial,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 1
+                  AND State = 1;
 
-			--Insertar por paquetes COD FOR
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@For
-				   ,Foraneo
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 2
-				AND State = 1
+            --Insertar por paquetes COD LOC
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @LOC,
+                   Local,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
 
-			--Insertar por paquetes COD Esp
-			INSERT INTO RateData (RateId, TypeServiceId, TypeSegmentId, RateValue, RowStatus, TokenCreated, DateCreated, PackagesFrom, PackagesTo)
-				SELECT
-					@IdRate
-				   ,@COD
-				   ,@ESP
-				   ,Especial
-				   ,'TRUE'
-				   ,@Token
-				   ,GETDATE()
-				   ,PackagesFrom
-				   ,PackagesTo
-				FROM @TblPackagesRate
-				WHERE CatTypeService = 2
-				AND State = 1
-		END
+            --Insertar por paquetes COD MET
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @MET,
+                   Metro,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
+
+            --Insertar por paquetes COD FOR
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @FOR,
+                   Foraneo,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
+
+            --Insertar por paquetes COD Esp
+            INSERT INTO RateData
+            (
+                RateId,
+                TypeServiceId,
+                TypeSegmentId,
+                RateValue,
+                RowStatus,
+                TokenCreated,
+                DateCreated,
+                PackagesFrom,
+                PackagesTo
+            )
+            SELECT @IdRate,
+                   @COD,
+                   @ESP,
+                   Especial,
+                   'TRUE',
+                   @Token,
+                   GETDATE(),
+                   PackagesFrom,
+                   PackagesTo
+            FROM @TblPackagesRate
+            WHERE CatTypeService = 2
+                  AND State = 1;
+        END;
 
     END TRY
     BEGIN CATCH
-		SELECT 'RollBackTransaction' AS message,
-			    -1 AS IdRate,
-				-1 AS IdTypeRate,
-				'FALSE'	[blnResult]
-				,CAST(-1 AS VARCHAR(5)) [IdResult]
-				,CAST(500 AS VARCHAR(5)) [StatusResult]
-				,CAST(ERROR_NUMBER() AS VARCHAR) AS [ErrorNumber]
-				,CAST(ERROR_SEVERITY() AS VARCHAR) AS [ErrorSeverity]
-				,CAST(ERROR_STATE() AS VARCHAR) AS [ErrorState]
-				,CAST(ERROR_PROCEDURE() AS VARCHAR) AS [ErrorProcedure]
-				,CAST(ERROR_LINE() AS VARCHAR) AS [ErrorLine]  
-				,CAST(ERROR_MESSAGE() AS VARCHAR) AS [ResultMessage]
+        SELECT 'RollBackTransaction' AS message,
+               -1 AS IdRate,
+               -1 AS IdTypeRate,
+               'FALSE' [blnResult],
+               CAST(-1 AS VARCHAR(5)) [IdResult],
+               CAST(500 AS VARCHAR(5)) [StatusResult],
+               CAST(ERROR_NUMBER() AS VARCHAR) AS [ErrorNumber],
+               CAST(ERROR_SEVERITY() AS VARCHAR) AS [ErrorSeverity],
+               CAST(ERROR_STATE() AS VARCHAR) AS [ErrorState],
+               CAST(ERROR_PROCEDURE() AS VARCHAR) AS [ErrorProcedure],
+               CAST(ERROR_LINE() AS VARCHAR) AS [ErrorLine],
+               CAST(ERROR_MESSAGE() AS VARCHAR) AS [ResultMessage];
 
         ROLLBACK TRANSACTION;
 
@@ -1962,18 +2148,18 @@ BEGIN
     IF @@TRANCOUNT > 0
     BEGIN
 
-        SELECT		'Succesfull' AS message,
-			         @IdRate AS IdRate,
-					 @IdTypeRate AS IdTypeRate,
-					'TRUE' [blnResult],
-					CAST(@IdRate AS VARCHAR(50)) [IdResult],
-					CAST(200 AS VARCHAR(50)) [StatusResult],
-					'' AS [ErrorNumber],
-					'' AS [ErrorSeverity],
-					'' AS [ErrorState],
-					'' AS [ErrorProcedure],
-					'' AS [ErrorLine],
-					'Success' AS [ResultMessage]
+        SELECT 'Succesfull' AS message,
+               @IdRate AS IdRate,
+               @IdTypeRate AS IdTypeRate,
+               'TRUE' [blnResult],
+               CAST(@IdRate AS VARCHAR(50)) [IdResult],
+               CAST(200 AS VARCHAR(50)) [StatusResult],
+               '' AS [ErrorNumber],
+               '' AS [ErrorSeverity],
+               '' AS [ErrorState],
+               '' AS [ErrorProcedure],
+               '' AS [ErrorLine],
+               'Success' AS [ResultMessage];
 
         COMMIT TRANSACTION;
     END;

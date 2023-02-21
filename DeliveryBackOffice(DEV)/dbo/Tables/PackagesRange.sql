@@ -27,12 +27,6 @@
 );
 
 
-
-
-
-
-
-
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de modificación de la fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRange', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 

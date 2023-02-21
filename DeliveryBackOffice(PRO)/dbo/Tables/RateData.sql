@@ -16,6 +16,8 @@
     [LimitHourPickup]   TIME (7)        NULL,
     [WeightFrom]        DECIMAL (12, 2) NULL,
     [WeightTo]          DECIMAL (12, 2) NULL,
+    [PackagesFrom]      INT             NULL,
+    [PackagesTo]        INT             NULL,
     PRIMARY KEY CLUSTERED ([IdRateData] ASC),
     CONSTRAINT [FKRateArticuleId] FOREIGN KEY ([ArticleId]) REFERENCES [dbo].[ArticleByCustomer] ([AbcId]),
     CONSTRAINT [FKRateDetId] FOREIGN KEY ([RateId]) REFERENCES [dbo].[RateHeader] ([RheId]),
@@ -26,10 +28,20 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Peso desde en tarifario por peso.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'WeightFrom';
 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Peso hasta en tarifario por peso.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'WeightTo';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Paquetes hasta en tarifario por paquetes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'PackagesTo';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Paquetes desde en tarifario por paquetes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'PackagesFrom';
 

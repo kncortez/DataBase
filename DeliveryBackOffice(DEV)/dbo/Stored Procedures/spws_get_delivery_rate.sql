@@ -41,7 +41,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @IdSalePipeLine AS INT = 0,
     @FormatResponse AS NVARCHAR(10) = 'DataTable',
     @CalculateTaxes BIT = 'false',
-    @CalculateMembership bit = 'false'
+    @CalculateMembership BIT = 'false'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -95,61 +95,67 @@ BEGIN
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
 
-	DECLARE @TarifaPlanBasico INT = (
-                            SELECT TOP 1
-                                RH.RheId
-                            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                            WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
-                        );
-	DECLARE @TarifaPlanBasicoPlus INT
-		=   (
-				SELECT TOP 1
-					RH.RheId
-				FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-				WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
-			);
-	DECLARE @TarifaPlanGold INT = (
-									  SELECT TOP 1
-										  RH.RheId
-									  FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-									  WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
-								  );
-	DECLARE @TarifaPlanCorporativo INT
-		=   (
-				SELECT TOP 1
-					RH.RheId
-				FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-				WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
-			);
+    --DECLARE @TarifaPlanBasico INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanBasicoPlus INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanGold INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanCorporativo INT =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
+    --        );
 
-	DECLARE @TarifaPlanBasicoAlt INT
-		=   (
-				SELECT TOP 1
-					RH.RheId
-				FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-				WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
-			);
-	DECLARE @TarifaPlanBasicoPlusAlt INT
-		=   (
-				SELECT TOP 1
-					RH.RheId
-				FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-				WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
-			);
-	DECLARE @TarifaPlanGoldAlt INT
-		=   (
-				SELECT TOP 1
-					RH.RheId
-				FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-				WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
-			);
-	DECLARE @TarifaPlanCorporativoAlt INT
-		=   (
-				SELECT TOP 1
-					RH.RheId
-				FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-				WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
-			);
+    --DECLARE @TarifaPlanBasicoAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanBasicoPlusAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanGoldAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
+    --DECLARE @TarifaPlanCorporativoAlt INT
+    --    =
+    --        (
+    --            SELECT TOP 1
+    --                   RH.RheId
+    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
+    --        );
 
     DECLARE @IdRate AS INT;
     DECLARE @IdTypeRate AS INT;
@@ -161,7 +167,7 @@ BEGIN
     IF EXISTS
     (
         SELECT rbc.RbcIdRate
-        FROM dbo.RateByCustomer rbc WITH (NOLOCK)
+        FROM dbo.RatebyCustomer rbc WITH (NOLOCK)
         WHERE rbc.RbcIdCustomer = @IdCustomer
               AND rbc.RbcRowStatus = 'TRUE'
               AND rbc.RbcCodeOfReference = @CodeOfReferenceSource
@@ -264,13 +270,13 @@ BEGIN
 
             SET @IdRate = ISNULL(@RateId, @IdRate);
 
-        END
-    END
+        END;
+    END;
 
     IF (@CalculateMembership = 1)
     BEGIN
 
-        DECLARE @CustomerHasActiveSubscription INT
+        DECLARE @CustomerHasActiveSubscription INT;
 
         SELECT @CustomerHasActiveSubscription = SC.IdSubscription
         FROM [DeliveryBackOffice].[dbo].[Subscription] SC WITH (NOLOCK)
@@ -288,7 +294,7 @@ BEGIN
               AND SC.RowStatus = 1
               AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
               AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-        ORDER BY SC.ExpirationDate ASC
+        ORDER BY SC.ExpirationDate ASC;
 
         IF (ISNULL(@CustomerHasActiveSubscription, 0) > 0)
         BEGIN
@@ -311,10 +317,10 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[Subscription] SC WITH (NOLOCK)
                     INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
                         ON SC.CatSubscriptionId = CS.IdCatSubscription
-                WHERE SC.IdSubscription = @CustomerHasActiveSubscription
+                WHERE SC.IdSubscription = @CustomerHasActiveSubscription;
 
                 SET @IdRate = @RateId;
-            END
+            END;
             ELSE
             BEGIN
                 -- Destino no es express center activo, aplicar tarifa base de suscripción
@@ -324,13 +330,13 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[Subscription] SC WITH (NOLOCK)
                     INNER JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
                         ON SC.CatSubscriptionId = CS.IdCatSubscription
-                WHERE SC.IdSubscription = @CustomerHasActiveSubscription
+                WHERE SC.IdSubscription = @CustomerHasActiveSubscription;
 
                 SET @IdRate = @RateId;
-            END
+            END;
 
-        END
-    END
+        END;
+    END;
 
     IF (@IdCustomerParams = 0 AND @IdCustomer = 6)
     BEGIN
@@ -609,16 +615,7 @@ BEGIN
                  'false'
                        );
 
-    DECLARE @IdRateGroup INT = (IIF(@IsTDA = 'false',
-                                    1,
-                                (
-                                    SELECT TOP 1
-                                        RateGroup
-                                    FROM dbo.CatTypeService WITH (NOLOCK)
-                                    WHERE CtsShortName = 'TDA'
-                                          AND CtsRowStatus = 1
-                                ))
-                               );
+    DECLARE @IdRateGroup INT = (IIF(@IsTDA = 'false', 1, (1)));
 
 
     ---HOTFIX_SAMEDAY.INI	
@@ -694,8 +691,8 @@ BEGIN
         SELECT TOP 1
             @IdSegment = sg.CrsId
         FROM dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'LOC'
-    END
+        WHERE sg.CrsShortName = 'LOC';
+    END;
     -- HeaderCodes diferentes - revisar tabla
     ELSE
     BEGIN
@@ -711,8 +708,8 @@ BEGIN
             WHERE RTC.RateId = @IdRate
                   AND (TwnSource.HeaderCode = @HeaderCodeSource)
                   AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                  AND RTC.RowStatus = 1
-        END
+                  AND RTC.RowStatus = 1;
+        END;
         ELSE
         BEGIN
             SELECT TOP 1
@@ -724,10 +721,10 @@ BEGIN
                     ON CTC.TownshipDestinyId = TwnDestiny.IdTownship
             WHERE (TwnSource.HeaderCode = @HeaderCodeSource)
                   AND (TwnDestiny.HeaderCode = @HeaderCodeDestiny)
-                  AND CTC.RowStatus = 1
-        END
+                  AND CTC.RowStatus = 1;
+        END;
 
-    END
+    END;
 
     IF @IdSegment IS NULL -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
     BEGIN
@@ -735,8 +732,8 @@ BEGIN
         SELECT TOP 1
             @IdSegment = sg.CrsId
         FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI
-    END
+        WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
+    END;
 
     --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
     -------------------------------Obtener descuento --------------------------------------------------------------------------
@@ -796,6 +793,35 @@ BEGIN
     ---------------------Fin obtener descuento -------------------------------------------------------------------------------------
     ---------------------Determinar si existe exceso de libras ---------------------------------------------------------------------
 
+    -- Hotfix - Andrés Ruíz - 17-02-2023
+    IF (
+           (
+               LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = ''
+               OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0'
+           )
+           AND @IdTypeRate = 3
+       )
+    BEGIN
+
+        DECLARE @DataCounter INT = 1;
+
+        SET @ParcelCode = N'EXP076';
+
+        IF (@DataCounter < @CountPiecesParams)
+        BEGIN
+            WHILE @DataCounter < @CountPiecesParams
+            BEGIN
+
+                SET @ParcelCode = CONCAT(@ParcelCode, ',EXP076');
+
+                SET @DataCounter = @DataCounter + 1;
+
+            END;
+        END;
+
+    END;
+    -- Fin hotfix
+
     IF OBJECT_ID('tempdb.dbo.#ParceCode', 'U') IS NOT NULL
         DROP TABLE #ParceCode;
     IF OBJECT_ID('tempdb.dbo.#ParceWeigth', 'U') IS NOT NULL
@@ -846,7 +872,7 @@ BEGIN
 
     DECLARE @TempRate TABLE
     (
-        Id int IDENTITY(1, 1),
+        Id INT IDENTITY(1, 1),
         TypeRate VARCHAR(50),
         Segment VARCHAR(50),
         Service VARCHAR(50),
@@ -1157,8 +1183,8 @@ BEGIN
                     SELECT TOP 1
                         @IdSegment = sg.CrsId
                     FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI
-                END
+                    WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
+                END;
 
                 -- Cálculo de precios
                 IF OBJECT_ID('tempdb.dbo.#ParcelAmountPerType', 'U') IS NOT NULL
@@ -1217,16 +1243,16 @@ BEGIN
                     SELECT rd.TypeSegmentId AddedSegmentType,
                            rd.TypeServiceId AddedServiceType,
                            SUM(rd.RateValue) 'AddedTotalAmount'
-                    from dbo.RateHeader rh
-                        inner join dbo.RateData rd
-                            on rd.RateId = rh.RheId
-                               and rd.RowStatus = 'true'
-                        inner join dbo.ArticleByCustomer abc
-                            on rd.ArticleId = abc.AbcId
-                        inner join #ListCode LC
-                            on abc.Code = LC.Item
-                    where rh.RheId = @IdRate
-                          and rd.TypeSegmentId = @IdSegment
+                    FROM dbo.RateHeader rh
+                        INNER JOIN dbo.RateData rd
+                            ON rd.RateId = rh.RheId
+                               AND rd.RowStatus = 'true'
+                        INNER JOIN dbo.ArticleByCustomer abc
+                            ON rd.ArticleId = abc.AbcId
+                        INNER JOIN #ListCode LC
+                            ON abc.Code = LC.Item
+                    WHERE rh.RheId = @IdRate
+                          AND rd.TypeSegmentId = @IdSegment
                     GROUP BY rd.TypeSegmentId,
                              rd.TypeServiceId
                 ) TempValues
@@ -1405,55 +1431,55 @@ BEGIN
                                                          AND CtsRowStatus = 1
                                                )
                           )
-				UNION ALL
-				SELECT ISNULL(cr.Name, '') TypeRate,
-						   ISNULL(sg.CrsShortName, '') Segment,
-						   ISNULL(sv.CtsShortName, '') Service,
-						   (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
-						   '' DiscountName,
-						   0 DiscountValue,
-						   IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
-						   IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
-						   IIF(@IsInsurance = 'true',
-							   (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
-									CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
-									0)
-							   ),
-							   0) AS InsuranceRate,
-						   IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-						   IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
-						   ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
-						   ISNULL(sv.CtsName, '') AS CtsName,
-						   ISNULL(sv.CtsDescription, '') AS CtsDescription,
-						   ISNULL(rh.ReturnRate, 0) AS ReturnRate
-					FROM #ListCode ls
-						INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
-							ON ar.Code = ls.Item
-						INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
-							ON rh.RheId = @IdRate
-						LEFT JOIN dbo.RateData rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
-							ON rdignore.ArticleId = ar.AbcId
-							   AND rdignore.RateId = rh.RheId
-							   AND rdignore.RowStatus = 'true'
-						LEFT JOIN dbo.RateData rd WITH (NOLOCK)
-							ON rd.ArticleId IS NULL
-							   AND rd.RateId = rh.RheId
-							   AND rd.RowStatus = 'true'
-						LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
-							ON sg.CrsId = rd.TypeSegmentId
-						LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
-							ON sv.CtsId = rd.TypeServiceId
-						LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
-							ON cr.IdTypeRate = rh.RateTypeId
-					WHERE rdignore.IdRateData IS NULL  -- Ignorar artículos sin codigo dentro de tarifario
-						  AND rd.TypeSegmentId = @IdSegment
-						  AND (rd.TypeServiceId IN (
-													   SELECT CtsId
-													   FROM dbo.CatTypeService WITH (NOLOCK)
-													   WHERE RateGroup = @IdRateGroup
-															 AND CtsRowStatus = 1
-												   )
-							  )
+                UNION ALL
+                SELECT ISNULL(cr.Name, '') TypeRate,
+                       ISNULL(sg.CrsShortName, '') Segment,
+                       ISNULL(sv.CtsShortName, '') Service,
+                       (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
+                       '' DiscountName,
+                       0 DiscountValue,
+                       IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
+                       IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
+                       IIF(@IsInsurance = 'true',
+                           (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
+                                CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
+                                0)
+                           ),
+                           0) AS InsuranceRate,
+                       IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
+                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
+                       ISNULL(sv.CtsName, '') AS CtsName,
+                       ISNULL(sv.CtsDescription, '') AS CtsDescription,
+                       ISNULL(rh.ReturnRate, 0) AS ReturnRate
+                FROM #ListCode ls
+                    INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
+                        ON ar.Code = ls.Item
+                    INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
+                        ON rh.RheId = @IdRate
+                    LEFT JOIN dbo.RateData rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
+                        ON rdignore.ArticleId = ar.AbcId
+                           AND rdignore.RateId = rh.RheId
+                           AND rdignore.RowStatus = 'true'
+                    LEFT JOIN dbo.RateData rd WITH (NOLOCK)
+                        ON rd.ArticleId IS NULL
+                           AND rd.RateId = rh.RheId
+                           AND rd.RowStatus = 'true'
+                    LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
+                        ON sg.CrsId = rd.TypeSegmentId
+                    LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
+                        ON sv.CtsId = rd.TypeServiceId
+                    LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
+                        ON cr.IdTypeRate = rh.RateTypeId
+                WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
+                      AND rd.TypeSegmentId = @IdSegment
+                      AND (rd.TypeServiceId IN (
+                                                   SELECT CtsId
+                                                   FROM dbo.CatTypeService WITH (NOLOCK)
+                                                   WHERE RateGroup = @IdRateGroup
+                                                         AND CtsRowStatus = 1
+                                               )
+                          )
             ) x
             GROUP BY x.TypeRate,
                      x.Segment,
@@ -1661,64 +1687,64 @@ BEGIN
                  AdditionalWeightRate;
     END;
     -- FDD-671 FIN
-    else if @IdTypeRate = 6 -- tarifas coberturas
-    begin
-        set @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded)
+    ELSE IF @IdTypeRate = 6 -- tarifas coberturas
+    BEGIN
+        SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded);
 
-        insert into @TempRate
-        select isnull(cr.Name, '') TypeRate,
-               isnull(sg.CrsShortName, '') Segment,
-               isnull(sv.CtsShortName, '') Service,
-               (isnull(rd.RateValue, 0) * @CountPiece) BaseRate,
+        INSERT INTO @TempRate
+        SELECT ISNULL(cr.Name, '') TypeRate,
+               ISNULL(sg.CrsShortName, '') Segment,
+               ISNULL(sv.CtsShortName, '') Service,
+               (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
                '' DiscountName,
                0 DiscountValue,
-               iif(@IsFragile = 'true', isnull(rh.FragilRate, 0), 0) as fragilRate,
-               iif(@IsCollected = 'true', isnull(rh.CollectRate, 0), 0) as CollectedRate,
-               iif(@IsInsurance = 'true',
-                   (iif(@InsuranceAmount > isnull(rh.InsuranceExempt, 0),
-                        cast(((@InsuranceAmount) * isnull(rh.InsuranceRate, 0) / 100) as decimal(12, 2)),
+               IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
+               IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
+               IIF(@IsInsurance = 'true',
+                   (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
+                        CAST(((@InsuranceAmount) * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
                         0)
                    ),
-                   0) as InsuranceRate,
-               iif(@IsCreditCardPayment = 'true', isnull(rh.CreditCardRate, 0), 0) as CreditCardRate,
-               iif(@OverWeight > 0, @OverWeight * isnull(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                   0) AS InsuranceRate,
+               IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
+               IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
                0 IrregularParcelRate,
-               isnull(sv.CtsName, '') as CstName,
-               isnull(sv.CtsDescription, '') as CstDescription,
-               isnull(rh.ReturnRate, 0) as ReturnRate
-        from dbo.RateHeader rh WITH (NOLOCK)
-            INNER join dbo.RateData rd WITH (NOLOCK)
+               ISNULL(sv.CtsName, '') AS CstName,
+               ISNULL(sv.CtsDescription, '') AS CstDescription,
+               ISNULL(rh.ReturnRate, 0) AS ReturnRate
+        FROM dbo.RateHeader rh WITH (NOLOCK)
+            INNER JOIN dbo.RateData rd WITH (NOLOCK)
                 ON rd.RateId = rh.RheId
-                   and rd.RowStatus = 'true'
-            left join dbo.CatRateSegment sg WITH (NOLOCK)
+                   AND rd.RowStatus = 'true'
+            LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
                 ON sg.CrsId = rd.TypeSegmentId
-            left join dbo.CatTypeService sv WITH (NOLOCK)
+            LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
                 ON sv.CtsId = rd.TypeServiceId
-            left join dbo.CatTypeRate cr WITH (NOLOCK)
-                on cr.IdTypeRate = rh.RateTypeId
-        where rh.RheId = @IdRate
-              and rd.ArticleId is null
-              and rd.TypeSegmentId = @IdSegment
-              and (rd.TypeServiceId in (
-                                           select CtsId
-                                           from dbo.CatTypeService
-                                           where RateGroup = @IdRateGroup
-                                                 and CtsRowStatus = 1
+            LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
+                ON cr.IdTypeRate = rh.RateTypeId
+        WHERE rh.RheId = @IdRate
+              AND rd.ArticleId IS NULL
+              AND rd.TypeSegmentId = @IdSegment
+              AND (rd.TypeServiceId IN (
+                                           SELECT CtsId
+                                           FROM dbo.CatTypeService
+                                           WHERE RateGroup = @IdRateGroup
+                                                 AND CtsRowStatus = 1
                                        )
                   )
-              and convert(datetime, @Time, 108) <= isnull(
-                                                             convert(
-                                                                        datetime,
+              AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
+                                                             CONVERT(
+                                                                        DATETIME,
                                                                         ISNULL(rd.LimitHourPickup, sv.LimitHourPickup),
                                                                         108
                                                                     ),
-                                                             convert(datetime, '23:59:59', 108)
-                                                         )
-    end
-    else
-    begin
-        print 'error no se encontro un tarifario'
-    end
+                                                             CONVERT(DATETIME, '23:59:59', 108)
+                                                         );
+    END;
+    ELSE
+    BEGIN
+        PRINT 'error no se encontro un tarifario';
+    END;
 
     /* Membresías y Suscripciones */
     -- Oscar Morales 2022-07-18
@@ -1727,20 +1753,20 @@ BEGIN
 
     IF @CalculateMembership = 'true'
     BEGIN
-        DECLARE @PriceShippment DECIMAL(14, 2)
-        DECLARE @MembershipId INT
-        DECLARE @ServiceValue DECIMAL(14, 2) = 0
-        DECLARE @Discount DECIMAL(18, 2) = 0
-        DECLARE @NewPriceShippment DECIMAL(14, 2)
+        DECLARE @PriceShippment DECIMAL(14, 2);
+        DECLARE @MembershipId INT;
+        DECLARE @ServiceValue DECIMAL(14, 2) = 0;
+        DECLARE @Discount DECIMAL(18, 2) = 0;
+        DECLARE @NewPriceShippment DECIMAL(14, 2);
         --DECLARE @CatMembershipStatusId INT
-        DECLARE @SubscriptionId INT
-        DECLARE @ServiceValueSubscription DECIMAL(14, 2) = 0
-        DECLARE @DiscountValue DECIMAL(5, 2)
-        DECLARE @Type NVARCHAR(50)
-        DECLARE @DiscountValue2 DECIMAL(5, 2)
-        DECLARE @Type2 NVARCHAR(50)
+        DECLARE @SubscriptionId INT;
+        DECLARE @ServiceValueSubscription DECIMAL(14, 2) = 0;
+        DECLARE @DiscountValue DECIMAL(5, 2);
+        DECLARE @Type NVARCHAR(50);
+        DECLARE @DiscountValue2 DECIMAL(5, 2);
+        DECLARE @Type2 NVARCHAR(50);
 
-        DECLARE @i INT = 0
+        DECLARE @i INT = 0;
         DECLARE @total INT = ISNULL(
                              (
                                  SELECT MAX(Id) FROM @TempRate
@@ -1784,7 +1810,7 @@ BEGIN
                              AND mdr.DiscountTopServiceRange IS NULL
                       )
                   AND mdr.RowStatus = 1
-            ORDER BY mdr.DateCreated DESC
+            ORDER BY mdr.DateCreated DESC;
 
             --Se busca suscripciones 
             SELECT TOP 1
@@ -1796,7 +1822,7 @@ BEGIN
             FROM Subscription sc
                 INNER JOIN CatSalesPackageStatus csps
                     ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-            WHERE sc.CustomerId = @idcustomer
+            WHERE sc.CustomerId = @IdCustomer
                   AND GETDATE() <= sc.ExpirationDate
                   AND sc.RowStatus = 1
                   AND csps.SalesPackageStatusName = 'Activa'
@@ -1824,7 +1850,7 @@ BEGIN
 
             WHILE @i < @total
             BEGIN
-                SET @i = @i + 1
+                SET @i = @i + 1;
 
                 SELECT @PriceShippment = (tr.BaseRate + tr.IrregularPieceRate)
                 FROM @TempRate tr
@@ -1845,18 +1871,18 @@ BEGIN
                             FROM @TempRate tr
                             WHERE Id = @i;
                             SET @PriceWithCreditCard = 1;
-                        END
+                        END;
                         ELSE
                         BEGIN
-                            SET @Discount = @PriceShippment - @ServiceValue
+                            SET @Discount = @PriceShippment - @ServiceValue;
                             SELECT @NewPriceShippment
                                 = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
                                    + tr.CreditCardRate + tr.OverWeightRate
                                   )
                             FROM @TempRate tr
                             WHERE Id = @i;
-                        END
-                    END
+                        END;
+                    END;
                     ELSE
                     BEGIN
                         --Si existe una suscripción
@@ -1874,33 +1900,33 @@ BEGIN
                                     FROM @TempRate tr
                                     WHERE Id = @i;
                                     SET @PriceWithCreditCard = 1;
-                                END
+                                END;
                                 ELSE
                                 BEGIN
-                                    SET @Discount = @PriceShippment - @ServiceValueSubscription
+                                    SET @Discount = @PriceShippment - @ServiceValueSubscription;
                                     SELECT @NewPriceShippment
                                         = (@ServiceValueSubscription + tr.FragilRate + tr.CollectedRate
                                            + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
                                           )
                                     FROM @TempRate tr
                                     WHERE Id = @i;
-                                END
+                                END;
                             ELSE
                             BEGIN
                                 IF @DiscountValue IS NOT NULL
                                 BEGIN
                                     IF @Type = 'Porcentaje'
                                     BEGIN
-                                        SET @Discount = @PriceShippment * (@DiscountValue / 100)
-                                    END
+                                        SET @Discount = @PriceShippment * (@DiscountValue / 100);
+                                    END;
                                     ELSE IF @Type = 'Monto'
                                     BEGIN
-                                        SET @Discount = @DiscountValue
-                                    END
+                                        SET @Discount = @DiscountValue;
+                                    END;
                                     ELSE IF @Type = 'Servicio'
                                     BEGIN
-                                        SET @Discount = @PriceShippment
-                                    END
+                                        SET @Discount = @PriceShippment;
+                                    END;
 
                                     SELECT @NewPriceShippment
                                         = (@PriceShippment - @Discount)
@@ -1914,10 +1940,10 @@ BEGIN
                                     BEGIN
                                         SET @Discount = @PriceShippment;
                                         SET @NewPriceShippment = 0;
-                                    END
-                                END
-                            END
-                        END
+                                    END;
+                                END;
+                            END;
+                        END;
 
                         IF @SubscriptionId IS NULL
                            OR @Discount = 0
@@ -1927,16 +1953,16 @@ BEGIN
                             BEGIN
                                 IF @Type2 = 'Porcentaje'
                                 BEGIN
-                                    SET @Discount = @PriceShippment * (@DiscountValue2 / 100)
-                                END
+                                    SET @Discount = @PriceShippment * (@DiscountValue2 / 100);
+                                END;
                                 ELSE IF @Type2 = 'Monto'
                                 BEGIN
-                                    SET @Discount = @DiscountValue2
-                                END
+                                    SET @Discount = @DiscountValue2;
+                                END;
                                 ELSE IF @Type2 = 'Servicio'
                                 BEGIN
-                                    SET @Discount = @PriceShippment
-                                END
+                                    SET @Discount = @PriceShippment;
+                                END;
 
                                 SELECT @NewPriceShippment
                                     = (@PriceShippment - @Discount)
@@ -1950,22 +1976,22 @@ BEGIN
                                 BEGIN
                                     SET @Discount = @PriceShippment;
                                     SET @NewPriceShippment = 0;
-                                END
-                            END
-                        END
-                    END
+                                END;
+                            END;
+                        END;
+                    END;
 
                     IF @Discount > 0
                     BEGIN
                         UPDATE @TempRate
                         SET Discount = @Discount,
                             DiscountName = 'Descuento membresía'
-                        WHERE Id = @i
-                    END
-                END
-            END
-        END
-    END
+                        WHERE Id = @i;
+                    END;
+                END;
+            END;
+        END;
+    END;
     /* Termina membresías y suscripciones */
 
     --print 'Respuesta desde tabla temporal'
@@ -1975,50 +2001,143 @@ BEGIN
         DECLARE @jsonResult AS NVARCHAR(MAX);
 
         -- Desplegar valor base sin IVA
-			IF(@IdRate IN (
-				@NewMainRates
-				,@NewAlternativeRates
-				,@NewAutoSalesMainRates
-				,@TarifaPlanBasico
-				,@TarifaPlanBasicoPlus
-				,@TarifaPlanGold
-				,@TarifaPlanCorporativo
-				,@TarifaPlanBasicoAlt
-				,@TarifaPlanBasicoPlusAlt
-				,@TarifaPlanGoldAlt
-				,@TarifaPlanCorporativoAlt
-			) AND @IdCustomerParams != 0)
-				SET @CalculateTaxes = 'false';
+        IF (
+               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
+               --           )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               AND @IdCustomerParams != 0
+           )
+            SET @CalculateTaxes = 'false';
 
         SET @jsonResult =
         (
             SELECT STUFF(
                             (
-                                select ',{"Title":"' + isnull(tr.ServiceName, '') + '",' + '"UseMembership":"'
-                                       + Convert(varchar(1), @CalculateMembership) + '",' + '"Service":"'
+                                SELECT ',{"Title":"' + ISNULL(tr.ServiceName, '') + '",' + '"UseMembership":"'
+                                       + CONVERT(VARCHAR(1), @CalculateMembership) + '",' + '"Service":"'
                                        + IIF(@IdCustomerParams = 0 AND @IdCustomer = 6,
                                              ISNULL(tr.ServiceName, ''),
                                              ISNULL(tr.Segment, '')) + '",' + '"ServiceDescription":"'
                                        + ISNULL(tr.ServiceDescription, '') + '",' + '"ServiceShortName":"'
                                        + ISNULL(tr.Service, '') + '",' + '"DeliveryDate":"'
-                                       + CONVERT(VARCHAR(24), @FechaCompra, 120) + '",' +
-									'"Price":"' + convert(varchar(20),  
-										CONVERT(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.BaseRate + tr.IrregularPieceRate, 'false') ) 
-									+	CONVERT(decimal(12,2),(dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,(tr.Discount * -1),'false')  ) )  
-									+	convert(decimal(12,2),  dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.FragilRate,'false')) 
-									+	convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CollectedRate, 'false')) 
-									+	convert(varchar(20), convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.InsuranceRate , 'false')))  
-									+	convert(varchar(20), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.CreditCardRate, 'false') ) 
-									+	convert(varchar(20), convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' ,tr.OverWeightRate, 'false'))) 
-									+	convert(decimal(12,2), dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT' , (	convert(decimal(12,2),tr.BaseRate) 
-																											-	convert(decimal(12,2),tr.Discount)  
-																											+	convert(decimal(12,2),tr.FragilRate) 
-																											+	convert(decimal(12,2),tr.CollectedRate) 
-																											+	convert(decimal(12,2),tr.InsuranceRate)  
-																											+	convert(decimal(12,2),tr.CreditCardRate) 
-																											+	convert(decimal(12,2),tr.OverWeightRate)  
-																											+	convert(decimal(12,2),tr.IrregularPieceRate) ), 'true')) ) + '",' 
-                                       + '"Currency":"' + @Currency + '",'
+                                       + CONVERT(VARCHAR(24), @FechaCompra, 120) + '",' + '"Price":"'
+                                       + CONVERT(
+                                                    VARCHAR(20),
+                                                    CONVERT(
+                                                               DECIMAL(12, 2),
+                                                               dbo.fnt_Iva_Calculator(
+                                                                                         @CalculateTaxes,
+                                                                                         'GT',
+                                                                                         tr.BaseRate
+                                                                                         + tr.IrregularPieceRate,
+                                                                                         'false'
+                                                                                     )
+                                                           )
+                                                    + CONVERT(
+                                                                 DECIMAL(12, 2),
+                                                                 (dbo.fnt_Iva_Calculator(
+                                                                                            @CalculateTaxes,
+                                                                                            'GT',
+                                                                                            (tr.Discount * -1),
+                                                                                            'false'
+                                                                                        )
+                                                                 )
+                                                             )
+                                                    + CONVERT(
+                                                                 DECIMAL(12, 2),
+                                                                 dbo.fnt_Iva_Calculator(
+                                                                                           @CalculateTaxes,
+                                                                                           'GT',
+                                                                                           tr.FragilRate,
+                                                                                           'false'
+                                                                                       )
+                                                             )
+                                                    + CONVERT(
+                                                                 DECIMAL(12, 2),
+                                                                 dbo.fnt_Iva_Calculator(
+                                                                                           @CalculateTaxes,
+                                                                                           'GT',
+                                                                                           tr.CollectedRate,
+                                                                                           'false'
+                                                                                       )
+                                                             )
+                                                    + CONVERT(
+                                                                 VARCHAR(20),
+                                                                 CONVERT(
+                                                                            DECIMAL(12, 2),
+                                                                            dbo.fnt_Iva_Calculator(
+                                                                                                      @CalculateTaxes,
+                                                                                                      'GT',
+                                                                                                      tr.InsuranceRate,
+                                                                                                      'false'
+                                                                                                  )
+                                                                        )
+                                                             )
+                                                    + CONVERT(
+                                                                 VARCHAR(20),
+                                                                 dbo.fnt_Iva_Calculator(
+                                                                                           @CalculateTaxes,
+                                                                                           'GT',
+                                                                                           tr.CreditCardRate,
+                                                                                           'false'
+                                                                                       )
+                                                             )
+                                                    + CONVERT(
+                                                                 VARCHAR(20),
+                                                                 CONVERT(
+                                                                            DECIMAL(12, 2),
+                                                                            dbo.fnt_Iva_Calculator(
+                                                                                                      @CalculateTaxes,
+                                                                                                      'GT',
+                                                                                                      tr.OverWeightRate,
+                                                                                                      'false'
+                                                                                                  )
+                                                                        )
+                                                             )
+                                                    + CONVERT(
+                                                                 DECIMAL(12, 2),
+                                                                 dbo.fnt_Iva_Calculator(
+                                                                                           @CalculateTaxes,
+                                                                                           'GT',
+                                                                                           (CONVERT(
+                                                                                                       DECIMAL(12, 2),
+                                                                                                       tr.BaseRate
+                                                                                                   )
+                                                                                            - CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.Discount
+                                                                                                     )
+                                                                                            + CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.FragilRate
+                                                                                                     )
+                                                                                            + CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.CollectedRate
+                                                                                                     )
+                                                                                            + CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.InsuranceRate
+                                                                                                     )
+                                                                                            + CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.CreditCardRate
+                                                                                                     )
+                                                                                            + CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.OverWeightRate
+                                                                                                     )
+                                                                                            + CONVERT(
+                                                                                                         DECIMAL(12, 2),
+                                                                                                         tr.IrregularPieceRate
+                                                                                                     )
+                                                                                           ),
+                                                                                           'true'
+                                                                                       )
+                                                             )
+                                                ) + '",' + '"Currency":"' + @Currency + '",'
                                        + '"Integration":[{"Description":"' + 'Servicio' + '",' + '"Price":"'
                                        + CONVERT(
                                                     VARCHAR(20),
@@ -2078,12 +2197,12 @@ BEGIN
                                                                  )
                                                       ) + '",' + '"Currency":"' + @Currency + '"' + '}',
                                              ' ')
-                                       + iif((tr.OverWeightRate) > 0,
+                                       + IIF((tr.OverWeightRate) > 0,
                                              ',{"Description":"' + 'Recargo por Peso' + '",' + '"Price":"'
-                                             + convert(
-                                                          varchar(20),
-                                                          convert(
-                                                                     decimal(12, 2),
+                                             + CONVERT(
+                                                          VARCHAR(20),
+                                                          CONVERT(
+                                                                     DECIMAL(12, 2),
                                                                      dbo.fnt_Iva_Calculator(
                                                                                                @CalculateTaxes,
                                                                                                'GT',
@@ -2093,10 +2212,10 @@ BEGIN
                                                                  )
                                                       ) + '",' + '"Currency":"' + @Currency + '"' + '}',
                                              ' ')
-                                       + iif((tr.CreditCardRate) > 0,
+                                       + IIF((tr.CreditCardRate) > 0,
                                              ',{"Description":"' + 'Otros recargos' + '",' + '"Price":"'
-                                             + convert(
-                                                          varchar(20),
+                                             + CONVERT(
+                                                          VARCHAR(20),
                                                           dbo.fnt_Iva_Calculator(
                                                                                     @CalculateTaxes,
                                                                                     'GT',
@@ -2105,8 +2224,8 @@ BEGIN
                                                                                 )
                                                       ) + '",' + '"Currency":"' + COALESCE(@Currency, '') + '"' + '}',
                                              ' ')
-                                       + iif((isnull(tr.Discount, 0)) > 0,
-                                             ',{"Description":"' + isnull(tr.DiscountName, '') + '",' + '"Price":"'
+                                       + IIF((ISNULL(tr.Discount, 0)) > 0,
+                                             ',{"Description":"' + ISNULL(tr.DiscountName, '') + '",' + '"Price":"'
                                              + CONVERT(
                                                           VARCHAR,
                                                           CONVERT(
@@ -2223,27 +2342,22 @@ BEGIN
     BEGIN
 
         -- Desplegar valor base sin IVA
-			IF(@IdRate IN (
-				@NewMainRates
-				,@NewAlternativeRates
-				,@NewAutoSalesMainRates
-				,@TarifaPlanBasico
-				,@TarifaPlanBasicoPlus
-				,@TarifaPlanGold
-				,@TarifaPlanCorporativo
-				,@TarifaPlanBasicoAlt
-				,@TarifaPlanBasicoPlusAlt
-				,@TarifaPlanGoldAlt
-				,@TarifaPlanCorporativoAlt
-			) AND @IdCustomerParams != 0)
-				SET @CalculateTaxes = 'false';
+        IF (
+               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
+               --)
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               AND @IdCustomerParams != 0
+           )
+            SET @CalculateTaxes = 'false';
 
         SELECT tr.TypeRate,
                tr.Segment,
                tr.Service,
                IIF(@PriceWithCreditCard = 1,
                    (tr.BaseRate - tr.Discount + tr.IrregularPieceRate + tr.CreditCardRate),
-                   (tr.BaseRate - tr.Discount + tr.IrregularPieceRate)) as Price, --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
+                   (tr.BaseRate - tr.Discount + tr.IrregularPieceRate)) AS Price, --  + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate  +tr.CreditCardRate + tr.OverWeightRate  + tr.IrregularPieceRate ) as Price
                dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', tr.BaseRate, 'false') AS BaseRate,
                dbo.fnt_Iva_Calculator(@CalculateTaxes, 'GT', (tr.Discount * -1), 'false') AS DiscountValue,
                tr.DiscountName,

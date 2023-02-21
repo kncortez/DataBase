@@ -71,6 +71,7 @@ BEGIN
     DECLARE @DateCreated DATETIME;
 
     DECLARE @PiecesInOrder AS INT;
+    DECLARE @PriceWithCreditCard AS INT = 0;
 
 
     DECLARE @OldPrice DECIMAL(12, 2);
@@ -289,30 +290,26 @@ BEGIN
             FROM dbo.Cost cst WITH (NOLOCK)
                 LEFT JOIN dbo.BreakdownOfPayment br WITH (NOLOCK)
                     ON br.IdCost = cst.IdCost
-            WHERE 
-				(
-					(
-						cst.GuideSerie = ISNULL(@GuideSerie,'FD')
-						AND
-						cst.GuideNumber = @GuideNumber
-					)
-					OR
-					(
-						cst.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
-				)
-                AND
-                (
-                    br.Description = 'Recargo por pago con tarjeta'
-                    OR br.Description = 'Otros recargos'
-                    OR br.Description = 'Otros cargos'
-                )
-				AND br.RowStatus = 'true'
-				AND br.Amount > 0
+            WHERE (
+                      (
+                          cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                          AND cst.GuideNumber = @GuideNumber
+                      )
+                      OR
+                      (
+                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                          AND cst.GuideSerie IS NULL
+                          AND cst.GuideNumber IS NULL
+                      )
+                  )
+                  AND
+                  (
+                      br.Description = 'Recargo por pago con tarjeta'
+                      OR br.Description = 'Otros recargos'
+                      OR br.Description = 'Otros cargos'
+                  )
+                  AND br.RowStatus = 'true'
+                  AND br.Amount > 0
         );
     END;
     ELSE
@@ -400,24 +397,19 @@ BEGIN
 
     END;
     --- Fin de validaciónes de tarifa y tipo de pieza vacio
-	-- Verificar si la guía uso membresia
-	IF(ISNULL(@UseMembership, 0) = 0) -- Se indica no usar membresia
-	BEGIN
-		-- Corroborar si guía si utilizo una membresia al ser generada
-		SELECT
-			@UseMembership = 1
-		FROM
-			[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
-		WHERE
-			MSL.LogGuideNumber = @GuideNumber
-			AND
-			MSL.LogGuideSerie = @GuideSerie
-			AND
-			MSL.RowStatus = 1
-		-- Se considera que no se usa membresia
-		IF(ISNULL(@UseMembership, 0) = 0)
-			SET @UseMembership = 0;
-	END
+    -- Verificar si la guía uso membresia
+    IF (ISNULL(@UseMembership, 0) = 0) -- Se indica no usar membresia
+    BEGIN
+        -- Corroborar si guía si utilizo una membresia al ser generada
+        SELECT @UseMembership = 1
+        FROM [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH (NOLOCK)
+        WHERE MSL.LogGuideNumber = @GuideNumber
+              AND MSL.LogGuideSerie = @GuideSerie
+              AND MSL.RowStatus = 1;
+        -- Se considera que no se usa membresia
+        IF (ISNULL(@UseMembership, 0) = 0)
+            SET @UseMembership = 0;
+    END;
     --select @Pesos , @Parcel
     INSERT INTO @TempRate
     EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp,
@@ -449,8 +441,10 @@ BEGIN
     BEGIN
         /* Membresias y Suscripciones */
         -- Oscar Morales 2022-07-21
-        /* Actualización: Aplicar descuento únicamente a costo base 
-		   Autor: Jerson Ochoa 30-12-2022 */
+        /* Actualización: Aplicar descuento únicamente a costo base 30-12-2022
+		   Actualización: Aplicar descuento a (costo base + cobro por pago con tarjeta de crédito) cuando descuento por precio fijo sea = 0
+		   Autor: Jerson Ochoa 
+		   */
         DECLARE @PriceShippment DECIMAL(14, 2);
         DECLARE @MembershipId INT;
         DECLARE @ServiceValue DECIMAL(14, 2) = 0;
@@ -500,6 +494,11 @@ BEGIN
                 BEGIN
                     SET @DiscountMembership = @PriceShippment - @ServiceValue;
                     SET @NewPriceShippment = @ServiceValue;
+
+                    IF (@ServiceValue = 0)
+                    BEGIN
+                        SET @PriceWithCreditCard = 1;
+                    END;
                 END;
                 ELSE
                 BEGIN
@@ -565,6 +564,11 @@ BEGIN
                 BEGIN
                     SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
                     SET @NewPriceShippment = @ServiceValueSubscription;
+
+                    IF (@ServiceValueSubscription = 0)
+                    BEGIN
+                        SET @PriceWithCreditCard = 1;
+                    END;
                 END;
                 ELSE
                 BEGIN
@@ -665,6 +669,15 @@ BEGIN
                 IF @ServiceValue >= 0
                 BEGIN
                     SET @DiscountMembership = @PriceShippment - @ServiceValue;
+                    IF (@ServiceValue = 0)
+                    BEGIN
+                        SET @PriceWithCreditCard = 1;
+                    END;
+                    ELSE
+                    BEGIN
+                        SET @PriceWithCreditCard = 0;
+                    END;
+
                     SET @NewPriceShippment = @ServiceValue;
                     SET @DecriptionDiscount = CONCAT('Tarifa fija membresía a ', @ServiceValue);
                     SET @ServiceAppliedType = 1;
@@ -694,6 +707,15 @@ BEGIN
                         IF @ServiceValueSubscription >= 0
                         BEGIN
                             SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
+                            IF (@ServiceValueSubscription = 0)
+                            BEGIN
+                                SET @PriceWithCreditCard = 1;
+                            END;
+                            ELSE
+                            BEGIN
+                                SET @PriceWithCreditCard = 0;
+                            END;
+
                             SET @NewPriceShippment = @ServiceValueSubscription;
                             SET @DecriptionDiscount = CONCAT('Tarifa fija suscripción a ', @ServiceValueSubscription);
                             SET @ServiceAppliedType = 2;
@@ -926,8 +948,13 @@ BEGIN
         PRINT @ServiceShortName;
 
         SELECT @NewPrice
-            = ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-              + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0),
+            = IIF(@PriceWithCreditCard = 1,
+                  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+                   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)
+                  ),
+                  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+                   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)
+                  )),
                @BaseRate = ISNULL(tr.BaseRate, 0),
                @Discount = ISNULL(tr.Discount, 0),
                @DiscountDescription = ISNULL(tr.DiscountName, ''),
@@ -947,12 +974,18 @@ BEGIN
 
         PRINT 'precio';
         PRINT @NewPrice;
+
         IF @NewPrice = 0
         BEGIN
             SELECT TOP 1
                    @NewPrice
-                       = ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-                         + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0),
+					= IIF(@PriceWithCreditCard = 1,
+						  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+						   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)
+						  ),
+						  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
+						   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)
+						  )),
                    @BaseRate = ISNULL(tr.BaseRate, 0),
                    @Discount = ISNULL(tr.Discount, 0),
                    @DiscountDescription = ISNULL(tr.DiscountName, ''),
@@ -993,17 +1026,17 @@ BEGIN
             [ModIdModule],
             [RowStatus],
             [TokenCreated],
-			[BreakdownOfPaymentTypeId]
+            [BreakdownOfPaymentTypeId]
         )
         VALUES
-        (1, 'Servicio', (@BaseRate + @IrregularPiece), @IdModule, 'true', @Token, 1 ),
-        (2, 'Frágil', @FragilRate, @IdModule, 'true', @Token, 2 ),
-        (3, 'Seguro', @InsuranceRate, @IdModule, 'true', @Token, 3 ),
-        (4, 'Pago en Destino', @CollectedRate, @IdModule, 'true', @Token, 4 ),
-        (5, 'Recargo por Peso', @OverWeightRate, @IdModule, 'true', @Token, 5 ),
-        (6, 'Otros cargos', @CreditCardRate, @IdModule, 'true', @Token, 6 ),
+        (1, 'Servicio', (@BaseRate + @IrregularPiece), @IdModule, 'true', @Token, 1),
+        (2, 'Frágil', @FragilRate, @IdModule, 'true', @Token, 2),
+        (3, 'Seguro', @InsuranceRate, @IdModule, 'true', @Token, 3),
+        (4, 'Pago en Destino', @CollectedRate, @IdModule, 'true', @Token, 4),
+        (5, 'Recargo por Peso', @OverWeightRate, @IdModule, 'true', @Token, 5),
+        (6, 'Otros cargos', @CreditCardRate, @IdModule, 'true', @Token, 6),
         (7, @DiscountDescription, @Discount, @IdModule, 'true', @Token, NULL),
-        (8, 'IVA', @Taxes, @IdModule, 'true', @Token, 7 );
+        (8, 'IVA', @Taxes, @IdModule, 'true', @Token, 7);
 
         DECLARE @ProdctNumber VARCHAR(49) = @GuideSerie + CONVERT(VARCHAR, @GuideNumber);
         --select * from @TblCost	
@@ -1032,117 +1065,107 @@ BEGIN
         --	,@ReturnAmount = @ReturnAmount
         --	,@Format ='Non'
         DECLARE @IdCost INT;
-        DECLARE @CostPaid DECIMAL(18,2);
+        DECLARE @CostPaid DECIMAL(18, 2);
 
         IF EXISTS
         (
             SELECT TOP 1
                    cst.ProductNumber
             FROM dbo.Cost cst WITH (NOLOCK)
-            WHERE 
-				(
-					(
-						cst.GuideSerie = ISNULL(@GuideSerie,'FD')
-						AND
-						cst.GuideNumber = @GuideNumber
-					)
-					OR
-					(
-						cst.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
-				)
-				AND cst.RowStatus = 1
+            WHERE (
+                      (
+                          cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                          AND cst.GuideNumber = @GuideNumber
+                      )
+                      OR
+                      (
+                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                          AND cst.GuideSerie IS NULL
+                          AND cst.GuideNumber IS NULL
+                      )
+                  )
+                  AND cst.RowStatus = 1
         )
         BEGIN
             PRINT 'existe';
             PRINT CONVERT(VARCHAR, GETDATE(), 9);
 
-            SELECT 
-				TOP 1 
-					@IdCost = cst.IdCost,
-					@CostPaid = cst.TotalAmountPaid
+            SELECT TOP 1
+                   @IdCost = cst.IdCost,
+                   @CostPaid = cst.TotalAmountPaid
             FROM dbo.Cost cst WITH (NOLOCK)
-            WHERE 
-				(
-					(
-						cst.GuideSerie = ISNULL(@GuideSerie,'FD')
-						AND
-						cst.GuideNumber = @GuideNumber
-					)
-					OR
-					(
-						cst.ProductNumber = CONCAT(ISNULL(@GuideSerie,'FD'), @GuideNumber)
-						AND
-						cst.GuideSerie IS NULL
-						AND
-						cst.GuideNumber IS NULL
-					)
-				)
-				AND cst.RowStatus = 1
-			ORDER BY
-				cst.DateCreated DESC
+            WHERE (
+                      (
+                          cst.GuideSerie = ISNULL(@GuideSerie, 'FD')
+                          AND cst.GuideNumber = @GuideNumber
+                      )
+                      OR
+                      (
+                          cst.ProductNumber = CONCAT(ISNULL(@GuideSerie, 'FD'), @GuideNumber)
+                          AND cst.GuideSerie IS NULL
+                          AND cst.GuideNumber IS NULL
+                      )
+                  )
+                  AND cst.RowStatus = 1
+            ORDER BY cst.DateCreated DESC;
 
-			-- No ha sido pagado y es posible alterar el costo
-			IF(ISNULL(@CostPaid, 0) = 0)
-			BEGIN
-			
-				PRINT 'Actualizando costo';
-				PRINT CONVERT(VARCHAR, GETDATE(), 9);
-				UPDATE dbo.Cost
-				SET TotalAmount = @NewPrice,
-					TokenUpdated = @Token,
-					DateUpdated = GETDATE(),
-					GuideSerie = @GuideSerie,
-					GuideNumber = @GuideNumber
-				WHERE IdCost = @IdCost;
-				PRINT 'guardando en breackdown';
-				PRINT CONVERT(VARCHAR, GETDATE(), 9);
-				INSERT INTO [dbo].[BreakdownOfPayment]
-				(
-					[IdCost],
-					[Description],
-					[Amount],
-					[ModIdModule],
-					[RowStatus],
-					[TokenCreated],
-					[DateCreated],
-					[BreakdownOfPaymentTypeId]
-				)
-				SELECT @IdCost,
-					   det.Description,
-					   det.Amount,
-					   det.ModIdModule,
-					   1, -- crear registro activo por default
-					   det.TokenCreated,
-					   GETDATE(),
-					   det.BreakdownOfPaymentTypeId
-				FROM @TblCost det
-					LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
-						ON bk.IdCost = @IdCost
-						   AND bk.Description = det.Description
-				WHERE bk.IdBreakdownOfPayment IS NULL
-					  AND ABS(det.Amount) > 0;
+            -- No ha sido pagado y es posible alterar el costo
+            IF (ISNULL(@CostPaid, 0) = 0)
+            BEGIN
+
+                PRINT 'Actualizando costo';
+                PRINT CONVERT(VARCHAR, GETDATE(), 9);
+                UPDATE dbo.Cost
+                SET TotalAmount = @NewPrice,
+                    TokenUpdated = @Token,
+                    DateUpdated = GETDATE(),
+                    GuideSerie = @GuideSerie,
+                    GuideNumber = @GuideNumber
+                WHERE IdCost = @IdCost;
+                PRINT 'guardando en breackdown';
+                PRINT CONVERT(VARCHAR, GETDATE(), 9);
+                INSERT INTO [dbo].[BreakdownOfPayment]
+                (
+                    [IdCost],
+                    [Description],
+                    [Amount],
+                    [ModIdModule],
+                    [RowStatus],
+                    [TokenCreated],
+                    [DateCreated],
+                    [BreakdownOfPaymentTypeId]
+                )
+                SELECT @IdCost,
+                       det.Description,
+                       det.Amount,
+                       det.ModIdModule,
+                       1, -- crear registro activo por default
+                       det.TokenCreated,
+                       GETDATE(),
+                       det.BreakdownOfPaymentTypeId
+                FROM @TblCost det
+                    LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
+                        ON bk.IdCost = @IdCost
+                           AND bk.Description = det.Description
+                WHERE bk.IdBreakdownOfPayment IS NULL
+                      AND ABS(det.Amount) > 0;
 
 
-				PRINT 'actualizando en breackdown';
-				PRINT CONVERT(VARCHAR, GETDATE(), 9);
-				-- actualizar los registros que si existen 
-				UPDATE dbo.BreakdownOfPayment
-				SET Amount = det.Amount,
-					RowStatus = det.RowStatus,
-					DateUpdated = GETDATE()
-				FROM dbo.Cost cs
-					INNER JOIN dbo.BreakdownOfPayment bk
-						ON bk.IdCost = cs.IdCost
-					INNER JOIN @TblCost det
-						ON det.Description = bk.Description
-				WHERE cs.IdCost = @IdCost;
+                PRINT 'actualizando en breackdown';
+                PRINT CONVERT(VARCHAR, GETDATE(), 9);
+                -- actualizar los registros que si existen 
+                UPDATE dbo.BreakdownOfPayment
+                SET Amount = det.Amount,
+                    RowStatus = det.RowStatus,
+                    DateUpdated = GETDATE()
+                FROM dbo.Cost cs
+                    INNER JOIN dbo.BreakdownOfPayment bk
+                        ON bk.IdCost = cs.IdCost
+                    INNER JOIN @TblCost det
+                        ON det.Description = bk.Description
+                WHERE cs.IdCost = @IdCost;
 
-			END
+            END;
         END;
         ELSE
         BEGIN
@@ -1157,13 +1180,13 @@ BEGIN
                 RowStatus,
                 TokenCreated,
                 DateCreated,
-				GuideSerie,
-				GuideNumber
+                GuideSerie,
+                GuideNumber
             )
             VALUES
             (   1, @ProdctNumber, 1,     -- costo de envio
                 @NewPrice, @IdModule, 1, -- guardar los registros como activos 
-                @Token, GETDATE(),ISNULL(@GuideSerie,'FD'), @GuideNumber);
+                @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber);
 
             SET @IdCost = SCOPE_IDENTITY();
 
@@ -1176,7 +1199,7 @@ BEGIN
                 [RowStatus],
                 [TokenCreated],
                 [DateCreated],
-				[BreakdownOfPaymentTypeId]
+                [BreakdownOfPaymentTypeId]
             )
             SELECT @IdCost,
                    det.Description,
@@ -1185,7 +1208,7 @@ BEGIN
                    1, -- crear registro activo por default
                    det.TokenCreated,
                    GETDATE(),
-				   det.BreakdownOfPaymentTypeId
+                   det.BreakdownOfPaymentTypeId
             FROM @TblCost det
             WHERE ABS(det.Amount) > 0;
         END;
