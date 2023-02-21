@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Serie_Number VARCHAR(2) = 'FD'
 AS
 BEGIN
+	DECLARE @GuidePriority INT = 0;
     DECLARE @jsonOutput VARCHAR(MAX) = '',
             @parcels NVARCHAR(MAX) = N'',
             /*pieces*/
@@ -174,6 +175,15 @@ BEGIN
     BEGIN
         SET @integrationCost = LEFT(@integrationCost, LEN(@integrationCost) - 1);
     END;
+
+	SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
+		INNER JOIN Membership mb
+		ON do.IdCustomer = mb.CustomerId
+		WHERE do.Guide_Number = @Guide_Number
+		AND mb.CatMembershipStatusId = 3
+		AND mb.ExpirationDate >= GETDATE()
+		AND mb.RowStatus = 1)
+
 
     /*end integration cost*/
 
@@ -443,7 +453,7 @@ BEGIN
                                      + '"BankAccountId":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') + '",'
                                      + '"Identification":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '')
                                      + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
-									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
+									 + '"Priority": "' + COALESCE(IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E'), '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
                                      + '"Pieces_Cold": ' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'') + ','

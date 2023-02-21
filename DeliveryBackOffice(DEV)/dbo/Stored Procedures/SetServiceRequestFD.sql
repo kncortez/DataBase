@@ -497,7 +497,7 @@ BEGIN
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
-			IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E') 'Priority',
 			CONCAT('https://develop.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			(CASE
 				WHEN 
@@ -512,6 +512,7 @@ BEGIN
 			)'Icon'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
+										AND D.Guide_Serie = @GuideSerie
 		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 			ON ctm.IdCustomer = D.IdCustomer
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
