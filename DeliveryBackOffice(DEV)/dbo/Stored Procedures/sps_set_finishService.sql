@@ -1461,7 +1461,7 @@ BEGIN
 
             END;
 
-			if (@ServiceType='RETURN')
+			if (@ServiceType='RETURN' or @ServiceType='DELIVERY' )
 			Begin
 			
 			--- Borrado Logico de posición en la guía
