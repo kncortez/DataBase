@@ -5,7 +5,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_CollectionLinkGeneration]
 
-	@VisitPointCodeOfReference AS INT,
+	@VisitPointCodeOfReference AS INT=null,
 	@AccountId AS BIGINT,
 	@Token NVARCHAR(50),
 	@VisitPointPhone NVARCHAR(50),
