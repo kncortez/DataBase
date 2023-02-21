@@ -16,6 +16,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountServiceCartDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -60,4 +62,14 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_RowStatus_INCLUDED]
     ON [dbo].[AccountServiceCartDetail]([RowStatus] ASC)
     INCLUDE([IdAccountServiceCartDetail], [GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AccountServiceCartDetail_Guide]
+    ON [dbo].[AccountServiceCartDetail]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_AccountServiceCartId_RowStatus]
+    ON [dbo].[AccountServiceCartDetail]([AccountServiceCartId] ASC, [RowStatus] ASC);
 

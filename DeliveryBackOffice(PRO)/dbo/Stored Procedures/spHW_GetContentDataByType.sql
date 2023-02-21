@@ -159,6 +159,7 @@ BEGIN
 					)
 				) 'ContentTags'
 				,ISNULL(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
+				,ISNULL(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
 			FROM
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 				INNER JOIN
@@ -305,6 +306,7 @@ BEGIN
 					)
 				) 'ContentTags'
 				,ISNULL(CD.IsPageURLExternal, 0) 'IsPageURLExternal'
+				,ISNULL(CD.IsVideoURLExternal, 0) 'IsVideoURLExternal'
 			FROM
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 				INNER JOIN

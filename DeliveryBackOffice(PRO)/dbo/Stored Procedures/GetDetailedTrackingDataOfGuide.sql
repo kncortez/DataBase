@@ -203,7 +203,7 @@ BEGIN
 					ISNULL(so.StatusOrderTrackingDescription, '')
              END
             ) AS [StageDescription]
-            ,(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN
+            ,(CASE WHEN dod.StatusOrderId = 5 THEN
                      ISNULL(
                                ISNULL(
                                (
@@ -249,7 +249,7 @@ BEGIN
              END
             ) AS [ImagePath],
 
-			(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN 
+			(CASE WHEN dod.StatusOrderId = 5 THEN 
 				(SELECT TOP 1
 					IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
 						FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
@@ -261,7 +261,7 @@ BEGIN
 								AND dp.Guide_Number = @Guide_Number order By dp.Date_Photo desc)
 			ELSE '' END) AS [Dry],
 
-			(CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN 
+			(CASE WHEN dod.StatusOrderId = 5 THEN 
 				(SELECT TOP 1
 					IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
                         FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
@@ -276,8 +276,8 @@ BEGIN
             (CASE WHEN dod.StatusOrderId = 5 THEN (SELECT TOP 1 NameOfReceiver FROM @GuideOrderTemp) ELSE '' END) AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            (CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
-            (CASE WHEN dod.StatusOrderId = 5 AND @IsPhoneValid = 1 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
+            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
+            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
 			dod.UserCreated Token,
 			0 [Price],
 			0 [COD],
@@ -298,7 +298,7 @@ BEGIN
 				 so.StatusOrderTrackingDescription,
 				 so.NextSteps
     ) RES
-    ORDER BY RES.[StageDate] ASC,
+    ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
 
 	CREATE NONCLUSTERED INDEX ix_OrdChkpnt_Token_StageDate_EventID ON #OrdChkpnt ([Token],[StageDate],[EventID]);
@@ -349,7 +349,7 @@ BEGIN
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH(NOLOCK) ON tl.TknIdUser = ru.UsrIdUser
 	LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser vpbu WITH(NOLOCK) ON ru.UsrIdUser = vpbu.RegisterUserID
 	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK) ON vpbu.IdVisitPointClient = vpc.IdVisitPointClient and vpc.IdKindOfVPClient = 1 and vpc.DescriptionOfClient LIKE 'FD%EXC%'
-	ORDER BY OrdChkPnt.[StageDate] ASC,
+	ORDER BY OrdChkPnt.[StageDate] DESC,
 			 OrdChkPnt.[EventID];
 
 	IF OBJECT_ID('tempdb.dbo.#OrdChkpnt', 'U') IS NOT NULL DROP TABLE #OrdChkpnt;

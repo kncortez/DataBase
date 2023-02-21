@@ -52,7 +52,8 @@ BEGIN
 		   vpf.IdVPFrequency,
 		   vpc.SaleChannelId,
 		   IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
-		   IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission
+		   IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
+		   ISNULL(vpc.CatBusinessSegmentId, 0) CatBusinessSegmentId
     FROM DeliveryBackOffice.dbo.VisitPointClient vpc
         LEFT JOIN dbo.Township twn
             ON twn.IdTownship = vpc.IdTownship
