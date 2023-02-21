@@ -1,32 +1,34 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <21-09-2022>
 -- Description:	<Cierra un link de recolección y genera una solciitud de recolección agrupado por codigo de referencia>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphw_RecollectionLinkClosure]
 	@VisitPointDataLinkId BIGINT,
-	@TAC1 BIT,
-	@TAC2 BIT,
-	@TypeVehicleId int,
-	@Regularpiezer int,
-	@RecollectionLatitude varchar(50),
-	@RecollectionLongitude varchar(50),
+	@TAC1 BIT = NULL,
+	@TAC2 BIT = NULL,
+	@TAC3 BIT = NULL,
+	@TypeVehicleId int = 2,
+	@Regularpiezer int = 1,
+	@RecollectionLatitude varchar(50) = '',
+	@RecollectionLongitude varchar(50) = '',
 	@Token nvarchar(100),
 	@IdAccount int,
-	@Scheduled  bit,
+	@Scheduled  bit = 0,
 	@Startdate datetime = NULL,
 	--DATOS DEL VISITPOINT A MODIFICAR
 	@IdTownship INT = NULL,
 	@IdCountry  nvarchar(10) = 'GT',
 	@NameVP  nvarchar(200) =NULL,
 	@Address1  nvarchar(600)=NULL,
-	@NirPhone  nvarchar(10)= '+502',
+	@NirPhone  nvarchar(10) =NULL,
 	@Phone  nvarchar(50) =NULL,
 	@AdditionalInstructions  nvarchar(250) =NULL,
 	@IdCityPlace int = NULL,
 	@Latitude varchar(50)=NULL,
-	@Longitude varchar(50)=NULL
+	@Longitude varchar(50)=NULL,
+	@ContactName varchar(50)=NULL,
+	@IsOnlyVisitPoint BIT = 0
 
 AS
 BEGIN
@@ -101,6 +103,7 @@ BEGIN
 			, [IdTownship]
 			, [CountryId]
 			, [DescriptionOfClient]
+			, [ContactName]
 			, [Address]
 			, [Phone]
 			, [Town]
@@ -111,8 +114,9 @@ BEGIN
 			, [IdKindOfVPBusiness]
 			, [StatusClient]
 			, [TokenCreated]
-			, [DateCreated])
-				VALUES (@CodeOfReference, @IdCustomer, @IdTownship, @IdCountry, @NameVP, @Address1, @Phone, @TownShipName, @ProvinceName, @RecollectionLatitude, @RecollectionLongitude, 6, @IdKindOfVPBusiness, 1, @Token, GETDATE())
+			, [DateCreated]
+			, [IsOriginVisitPoint])
+				VALUES (@CodeOfReference, @IdCustomer, @IdTownship, @IdCountry, @NameVP, @ContactName, @Address1, @Phone, @TownShipName, @ProvinceName, @RecollectionLatitude, @RecollectionLongitude, 6, @IdKindOfVPBusiness, 1, @Token, GETDATE(), 1)
 				
 			--insertar nueva direccion
 			INSERT INTO [dbo].[UserAddress] ([UadIdTownship]
@@ -172,6 +176,7 @@ BEGIN
 			, [IdTownship]
 			, [CountryId]
 			, [DescriptionOfClient]
+			, [ContactName]
 			, [Address]
 			, [Phone]
 			, [Town]
@@ -182,8 +187,9 @@ BEGIN
 			, [IdKindOfVPBusiness]
 			, [StatusClient]
 			, [TokenCreated]
-			, [DateCreated])
-				VALUES (@CodeOfReference, @IdCustomer, @IdTownship, @IdCountry, @NameVP, @Address1, @Phone, @TownShipName, @ProvinceName, @RecollectionLatitude, @RecollectionLongitude, 6, @IdKindOfVPBusiness, 1, @Token, GETDATE())
+			, [DateCreated]
+			, [IsOriginVisitPoint])
+				VALUES (@CodeOfReference, @IdCustomer, @IdTownship, @IdCountry, @NameVP, @ContactName, @Address1, @Phone, @TownShipName, @ProvinceName, @RecollectionLatitude, @RecollectionLongitude, 6, @IdKindOfVPBusiness, 1, @Token, GETDATE(), 1)
 				
 			--insertar nueva direccion
 			INSERT INTO [dbo].[UserAddress] ([UadIdTownship]
@@ -216,35 +222,46 @@ BEGIN
 
 		END
 
-		--CREANDO SOLICITUD DE RECOLECCIÓN
-		INSERT INTO @RESULTREGISTERRECOLECTION
-		(
-			StatusCode,
-			Description,
-			ServiceId
-		)
-		EXECUTE [dbo].[sphw_RegisterRecollectionRequest] 
-			@TAC1
-			,@TAC2
-			,@Scheduled
-			,@CodeOfReference
-			,@TypeVehicleId
-			,@RecollectionLatitude
-			,@RecollectionLongitude
-			,@Regularpiezer
-			,@Startdate
-			,NULL
-			,@Token
-			,@IdAccount;
-
-		
-		IF (SELECT StatusCode FROM @RESULTREGISTERRECOLECTION) =1
+		IF(ISNULL(@IsOnlyVisitPoint, 1) = 0)
+		BEGIN
+			--CREANDO SOLICITUD DE RECOLECCIÓN
+			INSERT INTO @RESULTREGISTERRECOLECTION
+			(
+				StatusCode,
+				Description,
+				ServiceId
+			)
+			EXECUTE [dbo].[sphw_RegisterRecollectionRequest] 
+				@TAC1
+				,@TAC2
+				,@TAC3
+				,@Scheduled
+				,@CodeOfReference
+				,@TypeVehicleId
+				,@RecollectionLatitude
+				,@RecollectionLongitude
+				,@Regularpiezer
+				,@Startdate
+				,NULL
+				,@Token
+				,@IdAccount;
+		END
+	
+		IF ((SELECT StatusCode FROM @RESULTREGISTERRECOLECTION) = 1 OR ISNULL(@IsOnlyVisitPoint, 1) = 1)
 		BEGIN
 			--CERRANDO LINK
 			UPDATE DBO.VisitPointDataLink SET
 				DataLinkStatusId= (SELECT IdCatDataLinkStatus FROM DBO.CatDataLinkStatus WHERE DataLinkStatusName = 'Completado')
 			WHERE IdVisitPointDataLink=@VisitPointDataLinkId;
-			SELECT StatusCode 'StatusCode',Description 'Description',ServiceId 'ServiceId' FROM @RESULTrEGISTERRECOLECTION;		
+
+			IF(ISNULL(@IsOnlyVisitPoint, 1) = 1)
+			BEGIN
+				SELECT 1 'StatusCode', 'Punto de visita generado exitosamente' 'Description', 0 'ServiceId'
+			END
+			ELSE
+			BEGIN
+				SELECT StatusCode 'StatusCode', Description 'Description', ServiceId 'ServiceId' FROM @RESULTrEGISTERRECOLECTION;		
+			END
 
 			IF @IsUpdate = 1
 			BEGIN
@@ -275,6 +292,7 @@ BEGIN
 					SET VP.IdTownship = ISNULL(@IdTownship,VP.IdTownship)
 						,VP.CountryId = ISNULL(@IdCountry,VP.CountryId)
 						,VP.DescriptionOfClient =ISNULL(@NameVP,VP.DescriptionOfClient) 
+						,VP.ContactName =ISNULL(@ContactName,VP.ContactName) 
 						,VP.Address = ISNULL(@Address1,VP.Address)
 						,VP.Phone =ISNULL(@Phone,VP.Phone)
 						,VP.TokenUpdated = @Token

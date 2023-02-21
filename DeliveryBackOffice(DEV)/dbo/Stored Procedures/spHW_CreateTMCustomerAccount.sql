@@ -30,7 +30,7 @@ BEGIN
 	DECLARE @EmailExisting INT;
 	DECLARE @TypeAccountId INT;
 	DECLARE @PersonId BIGINT = 0;
-	DECLARE @PasswordExpirationDate DATETIME = (SELECT DATEADD(DAY, 90, SYSDATETIME()));
+	DECLARE @PasswordExpirationDate DATETIME = (SELECT DATEADD(DAY, 1, SYSDATETIME()));
 	DECLARE @CutOffDate DATE = EOMONTH( SYSDATETIME(), 1 ); -- Último día del mes siguiente
 	DECLARE @UserId BIGINT = 0;
 	DECLARE @CustomerTypeId INT = 0;
@@ -48,6 +48,7 @@ BEGIN
 	DECLARE @TMSalesPersonName NVARCHAR(600) = '';
 	DECLARE @TMSalesPersonPhone NVARCHAR(200) = '';
 	DECLARE @TMSalesPersonEmail NVARCHAR(200) = '';
+	DECLARE @CatSaleAdvisorId INT = 0;
 
 	SET @NewMainRates = (SELECT TOP 1 RH.RheId 
 						FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
@@ -121,6 +122,10 @@ BEGIN
 	SET @TMSalesPersonEmail = ( SELECT [RU].[UsrEmail]
 								FROM [dbo].[RegisterUser] RU WITH(NOLOCK)
 								WHERE RU.UsrIdUser = @RegisterUserId);
+
+	SET @CatSaleAdvisorId = ( SELECT	[CTSP].[CatSaleAdvisorId]
+								FROM	[dbo].[CatTMSalesPerson] CTSP
+								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
 
 	-- Validación de correo
 	IF (@EmailExisting > 0)
@@ -236,7 +241,7 @@ BEGIN
 										CAST((@FirstName + ' ' + @LastName) AS NVARCHAR(25)),									-- Abbreviation
 										@CustomerTypeId,																		-- IdCustomerType
 										@CatBusinessSegmentId,																	-- BusinessSegmentId
-										NULL,																					-- SaleAdvisorID
+										@CatSaleAdvisorId,																					-- SaleAdvisorID
 										@CatTypeOfBusiness,																		-- TypeOfBusinessID
 										@CatBusinessActivityId,																	-- BusinessActivityID
 										@CatCommercialSegmentId,																-- CommercialSegmentID
@@ -387,7 +392,8 @@ BEGIN
 			, 'Cuenta creada exitósamente.' [spMessage]
 			,@TMSalesPersonName [spTMSPName]
 			,@TMSalesPersonPhone [spTMSPPhone]
-			,@TMSalesPersonEmail [spTMSPEmail];
+			,@TMSalesPersonEmail [spTMSPEmail]
+			,@AccountId [spIdAccount];
 	END TRY
 	BEGIN CATCH
 		SELECT 0 [spResult],
