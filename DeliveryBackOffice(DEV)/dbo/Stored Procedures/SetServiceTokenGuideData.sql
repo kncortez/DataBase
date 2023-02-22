@@ -509,13 +509,13 @@ BEGIN
 		BEGIN TRY
 			IF @IsConfirmed = 1
 			BEGIN
-				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida') 
+				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida') 
 			END
 			ELSE
 			BEGIN
-				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
+				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
 			END
 
 			-- Si tiene diferente estado, actualizar 
@@ -537,7 +537,7 @@ BEGIN
 
 				UPDATE do
 				SET StatusOrderId = @StatusOrderId,
-				IsLastMileReturn = 1 --IIF((@CancelOrder = 1), 0, 1)
+					IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
 				FROM DeliveryOrder do
 				INNER JOIN DeliveryAttempt da
 					ON do.Guide_Serie = da.Guide_Serie
@@ -564,7 +564,7 @@ BEGIN
 			BEGIN 
 				-- UDPATE ONLY ISLASTMILERETURN IN DELIVERY ORDER
 				UPDATE do
-				SET IsLastMileReturn = IIF((@CancelOrder = 1), 0, 1)
+				SET IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
 				FROM DeliveryOrder do
 				INNER JOIN DeliveryAttempt da
 					ON do.Guide_Serie = da.Guide_Serie
@@ -580,12 +580,13 @@ BEGIN
 			   ,StatusOrderId = @StatusOrderId
 			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
 			   ,ActionObservation = @Observations
+			   ,ClientConfirmsReturn = @CancelOrder
 			   ,TokenUpdated = 'SetServiceTokenGuideData'
 			   ,DateUpdated = GETDATE()
 			WHERE ConfirmationOfIncidentToken = @GuideToken
 			AND RowStatus = 1
 
-			SET @IsLastMileReturn = (SELECT [DO].[IsLastMileReturn]
+			SET @IsLastMileReturn = (SELECT TOP 1 [DO].[IsLastMileReturn]
 									FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 									INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 										ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
@@ -596,13 +597,13 @@ BEGIN
 										AND		[COI].[RowStatus] = 1 
  									);
 
-			IF (@IsLastMileReturn = 1)
+			IF (@IsLastMileReturn = 1 AND LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != '')
 				BEGIN
 					UPDATE	[DO]
-					SET		[DO].[Sender_Address] = @NewAddress,
-							[DO].[Sender_Town] = @NewTown,
-							[DO].[Sender_Zone] = @NewZone,
-							[DO].[SenderIdTownship] = @NewTownshipID
+					SET		[DO].[Sender_Address] = @NewAddress
+							--[DO].[Sender_Town] = @NewTown,
+							--[DO].[Sender_Zone] = @NewZone,
+							--[DO].[SenderIdTownship] = @NewTownshipID
 					FROM	[dbo].[DeliveryOrder] [DO]
 					INNER JOIN	[dbo].[DeliveryAttempt] DA
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
@@ -612,13 +613,13 @@ BEGIN
 					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
 						AND		[COI].[RowStatus] = 1 
 				END
-			ELSE 
+			ELSE IF (@IsLastMileReturn = 0 AND LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != '')
 				BEGIN
 					UPDATE	[DO]
-					SET		[DO].[Receiver_Address] = @NewAddress,
-							[DO].[Receiver_Town] = @NewTown,
-							[DO].[Receiver_Zone] = @NewZone,
-							[DO].[ReceiverIdTownship] = @NewTownshipID
+					SET		[DO].[Receiver_Address] = @NewAddress
+							--[DO].[Receiver_Town] = @NewTown,
+							--[DO].[Receiver_Zone] = @NewZone,
+							--[DO].[ReceiverIdTownship] = @NewTownshipID
 					FROM	[dbo].[DeliveryOrder] [DO]
 					INNER JOIN	[dbo].[DeliveryAttempt] DA
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
