@@ -103,7 +103,7 @@ BEGIN
 				DateUsed = GETDATE(),
 				Latitude = @Latitude,
 				Longitude = @Longitude,
-				ProviderModule = (SELECT TOP 1 [ModIdModule] WITH(NOLOCK) FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
+				ProviderModule = (SELECT TOP 1 [ModIdModule] FROM [CatModule] WITH(NOLOCK) WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
 			FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
@@ -537,7 +537,7 @@ BEGIN
 
 				UPDATE do
 				SET StatusOrderId = @StatusOrderId,
-				IsLastMileReturn = 1 --IIF((@CancelOrder = 1), 0, 1)
+					IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
 				FROM DeliveryOrder do WITH(NOLOCK)
 				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
@@ -597,7 +597,7 @@ BEGIN
 										AND		[COI].[RowStatus] = 1 
  									);
 
-			IF (@IsLastMileReturn = 1)
+			IF (@IsLastMileReturn = 1 AND LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != '')
 				BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Sender_Address] = @NewAddress
@@ -613,7 +613,7 @@ BEGIN
 					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
 						AND		[COI].[RowStatus] = 1 
 				END
-			ELSE 
+			ELSE IF (@IsLastMileReturn = 0 AND LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != '')
 				BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Receiver_Address] = @NewAddress
