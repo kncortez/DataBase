@@ -11,11 +11,22 @@
     [TokenCreated]         NVARCHAR (50)   NOT NULL,
     [DateUpdated]          DATETIME        NULL,
     [TokenUpdated]         NVARCHAR (50)   NULL,
+    [TypeTransaction]      NVARCHAR (50)   NULL,
+    [CatPointPromoId]      BIGINT          NULL,
     PRIMARY KEY CLUSTERED ([IdPointsByServiceLog] ASC),
     CONSTRAINT [CHK_PointsByService_Points] CHECK (isnull([PointsReceived],(0))>(0) AND isnull([PointsConsumed],(0))=(0) OR isnull([PointsReceived],(0))=(0) AND isnull([PointsConsumed],(0))>(0)),
     CONSTRAINT [FK_PointsByService_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_PointsByService_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership])
+    CONSTRAINT [FK_PointsByService_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
+    CONSTRAINT [FK_PointsByServiceLog_CatPointPromo] FOREIGN KEY ([CatPointPromoId]) REFERENCES [dbo].[CatPointPromo] ([IdPointPromo])
 );
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la promoción de puntos adicionales aplicada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PointsByServiceLog', @level2type = N'COLUMN', @level2name = N'CatPointPromoId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de transacción aplicada (MONTO o SERVICIO)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PointsByServiceLog', @level2type = N'COLUMN', @level2name = N'TypeTransaction';
 
 
 GO
