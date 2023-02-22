@@ -56,7 +56,7 @@ BEGIN TRY
 		OUTPUT inserted.IdConfigExternalPlatform INTO @InsertedConfigs (IdConfigExternalPlatform)
 		SELECT
 			TOP 1
-				IdExternalPlatform, 'MsmReturnMessage', 'Estimado <DESTINY>, te saludamos de Forza Delivery. Nuestro Express Center <EXC> ha recibido un paquete para su devolución. Tienes un lapso de <DAYS> días para recolectarlo.', 1, GETDATE(), 'SYS-ARUIZ'
+				IdExternalPlatform, 'MsmReturnMessage', '<DESTINY> tienes 1 paquete en tienda <EXC> Tienes <DAYS> días para recogerlo', 1, GETDATE(), 'SYS-ARUIZ'
 		FROM
 			@TargetExternalPlatformId
 
@@ -73,7 +73,7 @@ BEGIN TRY
 		OUTPUT inserted.IdConfigExternalPlatform INTO @InsertedConfigs (IdConfigExternalPlatform)
 		SELECT
 			TOP 1
-				IdExternalPlatform, 'MsmDeliveryMessage', 'Estimado <DESTINY>, te saludamos de Forza Delivery. Nuestro Express Center <EXC> ha recibido un paquete que te ha enviado <ORIGIN>. Tienes un lapso de <DAYS> días para recolectarlo.', 1, GETDATE(), 'SYS-ARUIZ'
+				IdExternalPlatform, 'MsmDeliveryMessage', '<DESTINY> tienes 1 paquete en tienda <EXC> Tienes <DAYS> días para recogerlo', 1, GETDATE(), 'SYS-ARUIZ'
 		FROM
 			@TargetExternalPlatformId
 
