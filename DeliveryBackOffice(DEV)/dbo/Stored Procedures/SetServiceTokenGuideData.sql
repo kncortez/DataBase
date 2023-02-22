@@ -103,7 +103,7 @@ BEGIN
 				DateUsed = GETDATE(),
 				Latitude = @Latitude,
 				Longitude = @Longitude,
-				ProviderModule = (SELECT TOP 1 [ModIdModule] WITH(NOLOCK) FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
+				ProviderModule = (SELECT TOP 1 [ModIdModule] FROM [CatModule] WITH(NOLOCK) WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
 			FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
