@@ -70,7 +70,22 @@ BEGIN
                                    WHERE rh.RheId = rc.RbcIdRate
                                    ORDER BY rc.RbcCodeOfReference DESC
                                ) THEN
-                                   3 --'IsBazar'
+                                   CASE 
+										WHEN 
+										NOT EXISTS(
+											SELECT
+												1
+											FROM ConfirmationOfIncidence coi
+											INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+												ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+												AND da.Guide_Serie = dsd.Guide_Serie
+												AND da.Guide_Number = dsd.Guide_Number
+												AND da.ID_DeliveryOrderBySettlement = dsd.ID_DeliveryOrderBySettlement
+												WHERE coi.ClientConfirmsReturn = 1
+										) THEN
+											3 --'IsBazar'
+										ELSE 4 --'IsReturn'
+									END
                                ELSE
                                    4 --'IsReturn'
                            END

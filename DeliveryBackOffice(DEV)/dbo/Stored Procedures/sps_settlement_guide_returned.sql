@@ -16,6 +16,7 @@ AS
 BEGIN
 	DECLARE @RModified INT
 	DECLARE @Amount DECIMAL (14,2)
+	DECLARE @IsMarkedReturn BIT = 0
 
 	BEGIN TRANSACTION
 
@@ -62,6 +63,41 @@ BEGIN
 			-- registrar último checkpoint de devolución
 			UPDATE DeliveryBackOffice.dbo.DeliveryOrder SET StatusOrderId = 8 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 
+			--FDD-1071 <Oscar Morales 2023-02-22> 
+			--Detectar marcado como devolución por cliente
+			
+			IF EXISTS (SELECT
+					1
+				FROM ConfirmationOfIncidence coi
+				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+					ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+					AND da.Guide_Serie = @GuideSerie
+					AND da.Guide_Number = @GuideNumber
+					AND da.ID_DeliveryOrderBySettlement = @IdManifest
+				WHERE coi.ClientConfirmsReturn = 1)
+			BEGIN
+				DECLARE @StatusReturn TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Declarado para Devolución' AND RowStatus = 1)
+				SET @IsMarkedReturn = 1
+
+				-- registrar checkpoint histórico de devolución
+				INSERT INTO [dbo].[DeliveryOrderDetail] ([Guide_Serie]
+				, [Guide_Number]
+				, [StatusOrderId]
+				, [UserCreated]
+				, [DateCreated]
+				, [DateCreatedInSystem]
+				, [Observations]
+				, [Temperature_Celsius])
+					VALUES (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL)
+
+				-- registrar último checkpoint de devolución
+				UPDATE DeliveryOrder
+				SET StatusOrderId = @StatusReturn
+				WHERE Guide_Serie = @GuideSerie
+				AND Guide_Number = @GuideNumber
+			
+			END
+			--FDD-1071 <Oscar Morales 2023-02-22> 
 		END TRY
 
 		BEGIN CATCH
@@ -87,7 +123,9 @@ BEGIN
 					0 AS 'SubStatusCode'
 					, COUNT(*)		AS RetriesMade--Numero intentos de entrega fallidas
 					, (case when RH.Attempt is NULL then CASE WHEN DOR.IsLastMileReturn = 1 THEN 4 ELSE 2 END else CASE WHEN DOR.IsLastMileReturn = 1 THEN RH.Attempt + RH.AttemptReturn ELSE RH.Attempt END end) AS RetriesAllowed ---Numero de intentos permitidos
+					, '' 'Retries'
 					, CASE WHEN DOR.IsLastMileReturn = 1 THEN 1 ELSE 0 END ValidateAbandonedPackage
+					, CASE WHEN @IsMarkedReturn = 1 THEN 1 ELSE 0 END IsMarkedReturn
 				FROM DeliveryOrder DOR WITH(NOLOCK)
 					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK)  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
 					AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder WITH(NOLOCK) where OrderDescription ='Intento de entrega fallida')
@@ -107,7 +145,9 @@ BEGIN
 					0 AS 'SubStatusCode',
 					0 AS RetriesMade,
 					0 AS RetriesAllowed,
-					0 AS ValidateAbandonedPackage
+					'' AS 'Retries',
+					0 AS ValidateAbandonedPackage,
+					0 AS IsMarkedReturn
 
 				
 
@@ -123,5 +163,7 @@ BEGIN
 				0 AS 'SubStatusCode',
 				0 AS RetriesMade,
 				0 AS RetriesAllowed,
-				0 AS ValidateAbandonedPackage
+				'' AS 'Retries',
+					0 AS ValidateAbandonedPackage,
+					0 AS IsMarkedReturn
 END
