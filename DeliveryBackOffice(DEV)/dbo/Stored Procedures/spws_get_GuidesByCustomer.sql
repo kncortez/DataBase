@@ -25,9 +25,9 @@ IF (@Email='')
 
 BEGIN
 
-SELECT TOP 1 @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.Person 
-JOIN dbo.RegisterUser ru ON ru.UsrIdPerson = PerIdPerson
-JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
+SELECT TOP 1 @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.Person WITH(NOLOCK)
+INNER JOIN dbo.RegisterUser ru WITH(NOLOCK) ON ru.UsrIdPerson = PerIdPerson
+INNER JOIN dbo.RolByUserByAccount rub WITH(NOLOCK) ON rub.RuaIdUser = UsrIdUser
 WHERE PerIdentification= @DPI
 
 END
@@ -36,8 +36,8 @@ ELSE
 
 BEGIN
 
-SELECT @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.RegisterUser 
-JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
+SELECT @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.RegisterUser WITH(NOLOCK)
+INNER JOIN dbo.RolByUserByAccount rub WITH(NOLOCK) ON rub.RuaIdUser = UsrIdUser
 WHERE UsrEmail = @Email
 
 END
@@ -94,6 +94,7 @@ SET @jsonResult =
                                              'PENDIENTE',
                                              (ISNULL(CONVERT(   VARCHAR,
                                                                 CASE
+																	WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
                                                                     WHEN paydord.TypeofInOutMoneyId = 1 THEN
                                                                         UPPER(catpay.PayTypeName)
                                                                     WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -126,6 +127,7 @@ SET @jsonResult =
                                                    CONVERT(
                                                               VARCHAR,
                                                               CASE
+																  WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
                                                                   WHEN paydord.TypeofInOutMoneyId = 1 THEN
                                                                       UPPER(ctgmon.tio_pk_name)
                                                                   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -144,7 +146,7 @@ SET @jsonResult =
                                                                                   (
                                                                                       SELECT COUNT(*)
                                                                                       FROM Cost C
-                                                                                          JOIN CostDetail CD
+                                                                                          INNER JOIN CostDetail CD WITH(NOLOCK)
                                                                                               ON C.IdCost = CD.IdCost
                                                                                                  AND C.RowStatus = 1
                                                                                       WHERE ProductNumber = CONCAT(
@@ -177,33 +179,43 @@ SET @jsonResult =
                                                 'N/A'
                                                ) + '",' + +'"TypeService":"'
                                        + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
-                                FROM dbo.DeliveryOrder ord
-                                    JOIN dbo.StatusOrder sto
+                                FROM dbo.DeliveryOrder ord WITH(NOLOCK)
+                                    INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
                                         ON sto.StatusOrderId = ord.StatusOrderId
-                                    LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord
+                                    LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
                                         ON (ord.Guide_Number = paydord.GuideNumber)
-                                    LEFT JOIN [dbo].[CatPaymentType] catpay
+                                    LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
                                         ON (catpay.PayTypeId = paydord.PayTypeId)
-                                    LEFT JOIN [dbo].[CatPaymentTime] cattime
+                                    LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
                                         ON (cattime.TimePlaId = paydord.TimePlaId)
-                                    LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon
+                                    LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
                                         ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
                                     --LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
-                                    LEFT JOIN dbo.Township twn
+                                    LEFT JOIN dbo.Township twn WITH(NOLOCK)
                                         ON twn.IdTownship = ord.SenderIdTownship
-                                    LEFT JOIN dbo.Province pr
+                                    LEFT JOIN dbo.Province pr WITH(NOLOCK)
                                         ON pr.IdProvince = twn.IdProvince
-                                    LEFT JOIN dbo.Township twd
+                                    LEFT JOIN dbo.Township twd WITH(NOLOCK)
                                         ON twd.IdTownship = ord.ReceiverIdTownship
-                                    LEFT JOIN dbo.Province prd
+                                    LEFT JOIN dbo.Province prd WITH(NOLOCK)
                                         ON prd.IdProvince = twd.IdProvince
+									LEFT JOIN
+										[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+										ON
+											ord.Guide_Serie = PBSL.GuideSerie
+											AND
+											ord.Guide_Number = PBSL.GuideNumber
+											AND
+											PBSL.PointsConsumed > 0
+											AND
+											PBSL.PointsReceived = 0
                                 --select convert(varchar ,cast(2000 as money),1) from
 
                                 WHERE CONVERT(DATE , ord.DateCreated) BETWEEN @InitialDate AND  @EndDate AND ( ord.Sender_ID IN
                                       (
                                           SELECT ua.CodeOfReference
-                                          FROM dbo.RolByUserByAccount rua
-                                              INNER JOIN dbo.UserAddress ua
+                                          FROM dbo.RolByUserByAccount rua WITH(NOLOCK)
+                                              INNER JOIN dbo.UserAddress ua WITH(NOLOCK)
                                                   ON ua.UadIdAccount = rua.RuaIdAccount
                                           WHERE rua.RuaIdAccount = @IdAccount
                                                 AND rua.RuaIdUser = @IdUser
