@@ -120,42 +120,6 @@ BEGIN
                   AND dsd.Guide_Returned = 1;
 
 
-
-            -- Marcar las que ya no tienen intentos disponibles de devolución a paquetes destruidos
-            UPDATE do
-            SET StatusOrderId = @StatusOrderDestroyed
-            FROM DeliveryOrder do
-                INNER JOIN @TblGuides tg
-                    ON do.Guide_Serie = tg.GuideSerie
-                       AND do.Guide_Number = tg.GuideNumber
-            WHERE tg.FlowGuide = 3;
-
-            INSERT INTO [dbo].[DeliveryOrderDetail]
-            (
-                [Guide_Serie],
-                [Guide_Number],
-                [StatusOrderId],
-                [UserCreated],
-                [DateCreated],
-                [DateCreatedInSystem],
-                [Observations],
-                [Temperature_Celsius],
-                [PieceId],
-                [RowStatus]
-            )
-            SELECT tg.GuideSerie,
-                   tg.GuideNumber,
-                   @StatusOrderDestroyed,
-                   'spHD_ValidateDeliveryAttemps',
-                   GETDATE(),
-                   GETDATE(),
-                   NULL,
-                   NULL,
-                   NULL,
-                   1
-            FROM @TblGuides tg
-            WHERE tg.FlowGuide = 3;
-
             -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
             UPDATE do
             SET do.IsLastMileReturn = 1,

@@ -61,7 +61,7 @@ BEGIN
 
 			-- registrar último checkpoint de devolución
 			UPDATE DeliveryBackOffice.dbo.DeliveryOrder SET StatusOrderId = 8 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
-			
+
 		END TRY
 
 		BEGIN CATCH
@@ -86,15 +86,16 @@ BEGIN
 					@Amount AS 'Amount',
 					0 AS 'SubStatusCode'
 					, COUNT(*)		AS RetriesMade--Numero intentos de entrega fallidas
-					, (case when RH.Attempt is NULL then 2 else RH.Attempt end)		AS RetriesAllowed ---Numero de intentos permitidos
+					, (case when RH.Attempt is NULL then CASE WHEN DOR.IsLastMileReturn = 1 THEN 4 ELSE 2 END else CASE WHEN DOR.IsLastMileReturn = 1 THEN RH.Attempt + RH.AttemptReturn ELSE RH.Attempt END end) AS RetriesAllowed ---Numero de intentos permitidos
+					, CASE WHEN DOR.IsLastMileReturn = 1 THEN 1 ELSE 0 END ValidateAbandonedPackage
 				FROM DeliveryOrder DOR WITH(NOLOCK)
-					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK) ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
+					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK)  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
 					AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder WITH(NOLOCK) where OrderDescription ='Intento de entrega fallida')
 					LEFT JOIN DBO.Customer CU WITH(NOLOCK) ON DOR.IdCustomer=CU.IdCustomer
 					LEFT JOIN DBO.RatebyCustomer RC WITH(NOLOCK) ON CU.IdCustomer=RC.RbcIdCustomer
 					LEFT JOIN RateHeader RH WITH(NOLOCK) ON RC.RbcIdRate=RH.RheId								
 				WHERE DOR.Guide_Serie=@GuideSerie AND DOR.Guide_Number=@GuideNumber
-				GROUP BY DOR.Guide_Serie,DOR.Guide_Number,CU.IdCustomer,RH.Attempt,DORD.StatusOrderId
+				GROUP BY DOR.Guide_Serie,DOR.Guide_Number,CU.IdCustomer,RH.Attempt,DORD.StatusOrderId, DOR.IsLastMileReturn, RH.AttemptReturn
 
 			ELSE
 				SELECT			  
@@ -105,7 +106,8 @@ BEGIN
 					@Amount AS 'Amount',
 					0 AS 'SubStatusCode',
 					0 AS RetriesMade,
-					0 AS RetriesAllowed
+					0 AS RetriesAllowed,
+					0 AS ValidateAbandonedPackage
 
 				
 
@@ -120,5 +122,6 @@ BEGIN
 				@Amount AS 'Amount',
 				0 AS 'SubStatusCode',
 				0 AS RetriesMade,
-				0 AS RetriesAllowed
+				0 AS RetriesAllowed,
+				0 AS ValidateAbandonedPackage
 END
