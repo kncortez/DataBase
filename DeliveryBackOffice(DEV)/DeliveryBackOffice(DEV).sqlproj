@@ -1430,6 +1430,7 @@
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
     <Build Include="dbo\Stored Procedures\Reporte_de_membresías_y_suscripciones.sql" />
     <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspection.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspectionDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
