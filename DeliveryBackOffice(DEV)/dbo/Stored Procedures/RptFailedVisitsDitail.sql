@@ -33,7 +33,7 @@ BEGIN
 				  CASE 
 				      WHEN CI.CourierContempt = 1  THEN 'Desacato'
 				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) THEN 'Visita Falsa'
-				  ELSE 'N/D' end TypeIncidence
+				  ELSE 'Incidencia Sospechosa' end TypeIncidence
 			From [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
 			INNER JOIN [dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
 			 ON CI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
@@ -70,7 +70,7 @@ BEGIN
 				  CASE 
 				      WHEN CI.CourierContempt = 1  THEN 'Desacato'
 				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) THEN 'Visita Falsa'
-				  ELSE 'N/D' end TypeIncidence
+				  ELSE 'Incidencia Sospechosa' end TypeIncidence
 			From [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
 			INNER JOIN [dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
 			 ON CI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
