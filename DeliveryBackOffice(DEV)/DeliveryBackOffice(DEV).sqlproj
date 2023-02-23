@@ -1431,6 +1431,7 @@
     <Build Include="dbo\Stored Procedures\Reporte_de_membresías_y_suscripciones.sql" />
     <Build Include="dbo\Stored Procedures\RptFailedVisitsHeader.sql" />
     <Build Include="dbo\Stored Procedures\RptFailedVisitsDitail.sql" />
+    <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
