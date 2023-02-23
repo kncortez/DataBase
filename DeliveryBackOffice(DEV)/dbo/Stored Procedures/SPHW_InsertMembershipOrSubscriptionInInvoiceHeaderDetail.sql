@@ -127,6 +127,17 @@ BEGIN
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'SUSCRIPCION MENSUAL D' COLLATE Latin1_General_CI_AI
     )   ;
+    ELSE IF (
+                @SuscriptionDesc = 'Plan Diamante'
+                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+            )
+        SET @dti_description =
+    (
+        SELECT TOP 1
+               [Description]
+        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        WHERE [Name] = 'MEMBRESIA DIAMANTE' COLLATE Latin1_General_CI_AI
+    )   ;
 
 
 
