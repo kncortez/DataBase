@@ -1440,6 +1440,8 @@
     <Build Include="dbo\Stored Procedures\GetPackagesRangeData.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRate.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRange.sql" />
+    <Build Include="dbo\Stored Procedures\SetMicroZones.sql" />
+    <Build Include="dbo\User Defined Types\TblMicroZones.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

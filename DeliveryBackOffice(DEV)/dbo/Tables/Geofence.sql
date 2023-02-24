@@ -7,9 +7,12 @@
     [DateCreated]         DATETIME      NOT NULL,
     [TokenUpdated]        NVARCHAR (50) NULL,
     [DateUpdated]         DATETIME      NULL,
+    [UpdateFlag]          BIT           DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([IdGeofence] ASC),
     CONSTRAINT [FK_Geofence_Country] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO
@@ -46,4 +49,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Geofence', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para indicar si una Geocerca es actualizable.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Geofence', @level2type = N'COLUMN', @level2name = N'UpdateFlag';
 
