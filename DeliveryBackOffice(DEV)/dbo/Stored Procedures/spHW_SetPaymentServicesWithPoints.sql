@@ -95,8 +95,9 @@ BEGIN
 										[DO].[PriceShippment],
 										[DO].[IdCustomer]
 		FROM							[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-		WHERE							[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
-			AND							[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList); 
+		INNER JOIN						@GuidesList GL
+			ON							[DO].[Guide_Serie] = [GL].[Guide_Serie]
+			AND							[DO].[Guide_Number] = [GL].[Guide_Number]; 
 
 		SET @TypeOfInOutMoneyId = (	SELECT	TOP 1 [TIO].[tio_pk_id] 
 									FROM	[dbo].[ctgTypeOfInOutOfMoney] TIO

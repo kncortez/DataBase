@@ -76,7 +76,7 @@ BEGIN
 				[COI].[IsConfirmed],
 				[COI].[StatusOrderId],
 				[SOR].[OrderDescription]
-	FROM		[dbo].[DeliveryAttempt] DAT
+	FROM		[dbo].[DeliveryAttempt] DAT WITH(NOLOCK)
 	INNER JOIN	[dbo].[SenderReceiver] SRE 
 		ON		[DAT].[ID_Courier] = [SRE].[ID]
 		AND		[SRE].[HubLogisticId] IN (SELECT ID FROM @UserHubsList)
