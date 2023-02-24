@@ -17,10 +17,10 @@ BEGIN
 		      Select COUNT(DO.Guide_Number)
 				 From [dbo].[DeliveryOrderBySettlement] DOS 
                 Inner Join
-              [dbo].[DeliverySettlementDetail] DSD
+              [dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
                 ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
 				Inner Join 
-			 [dbo].[DeliveryOrder] DO
+			 [dbo].[DeliveryOrder] DO WITH (NOLOCK)
 			   ON DSD.Guide_Serie = DO.Guide_Serie AND DSD.Guide_Number = DO.Guide_Number
  Where  DO.StatusOrderId=@IdStatus and DSD.ID_DeliveryOrderBySettlement=@IdManifest
 		
@@ -33,16 +33,16 @@ BEGIN
 					@GuideCount as Guides_Received,
 			       isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,'') as Courier_Name,
 				   DOS.Route_Received
-			 From [dbo].[DeliveryOrderBySettlement] DOS 
+			 From [dbo].[DeliveryOrderBySettlement] DOS WITH (NOLOCK)
 					 Inner Join
-                  [dbo].[DeliverySettlementDetail] DSD
+                  [dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
                 ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
 					Inner Join 
-				  [dbo].[DeliveryOrder] DO
+				  [dbo].[DeliveryOrder] DO WITH (NOLOCK)
 			   ON DSD.Guide_Serie = DO.Guide_Serie AND DSD.Guide_Number = DO.Guide_Number
-					Inner JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] sr 
+					Inner JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] sr  WITH (NOLOCK)
 		       ON sr.ID = DOS.ID_Courier
-			 Where  DO.StatusOrderId=@IdStatus and DSD.ID_DeliveryOrderBySettlement=@IdManifest
+			 Where   DSD.ID_DeliveryOrderBySettlement=@IdManifest
 
 		
   
