@@ -15,7 +15,8 @@ CREATE PROCEDURE [dbo].[spHW_TMBuyMembership]
 	@TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL',
 	@InvoiceEmail NVARCHAR(50) = '',
 	@RegisterUserId INT,
-	@IsAutoRenewable BIT = 0
+	@IsAutoRenewable BIT = 0,
+	@ImageURL NVARCHAR(600) = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -133,13 +134,15 @@ BEGIN
 													[TransactionOrder], 
 													[RowStatus], 
 													[TokenCreated], 
-													[DateCreated])
+													[DateCreated],
+													[PaymentImageURL])
 		VALUES										(@MembershipId,
 													@TypeOfInOutMoney,
 													@Voucher,
 													1,
 													@Token,
-													SYSDATETIME());
+													SYSDATETIME(),
+													@ImageURL);
 
 		SELECT 1 [spResult], 'Membresía ha sido asociada con éxito' [spMessage];
 		IF (@@TRANCOUNT > 0) 
