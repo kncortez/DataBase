@@ -70,7 +70,22 @@ BEGIN
                                    WHERE rh.RheId = rc.RbcIdRate
                                    ORDER BY rc.RbcCodeOfReference DESC
                                ) THEN
-                                   3 --'IsBazar'
+                                   CASE 
+										WHEN 
+										NOT EXISTS(
+											SELECT
+												1
+											FROM ConfirmationOfIncidence coi
+											INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+												ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+												AND da.Guide_Serie = dsd.Guide_Serie
+												AND da.Guide_Number = dsd.Guide_Number
+												AND da.ID_DeliveryOrderBySettlement = dsd.ID_DeliveryOrderBySettlement
+												WHERE coi.ClientConfirmsReturn = 1
+										) THEN
+											3 --'IsBazar'
+										ELSE 4 --'IsReturn'
+									END
                                ELSE
                                    4 --'IsReturn'
                            END
@@ -119,42 +134,6 @@ BEGIN
                   AND dsd.RowStatus = 1
                   AND dsd.Guide_Returned = 1;
 
-
-
-            -- Marcar las que ya no tienen intentos disponibles de devolución a paquetes destruidos
-            UPDATE do
-            SET StatusOrderId = @StatusOrderDestroyed
-            FROM DeliveryOrder do
-                INNER JOIN @TblGuides tg
-                    ON do.Guide_Serie = tg.GuideSerie
-                       AND do.Guide_Number = tg.GuideNumber
-            WHERE tg.FlowGuide = 3;
-
-            INSERT INTO [dbo].[DeliveryOrderDetail]
-            (
-                [Guide_Serie],
-                [Guide_Number],
-                [StatusOrderId],
-                [UserCreated],
-                [DateCreated],
-                [DateCreatedInSystem],
-                [Observations],
-                [Temperature_Celsius],
-                [PieceId],
-                [RowStatus]
-            )
-            SELECT tg.GuideSerie,
-                   tg.GuideNumber,
-                   @StatusOrderDestroyed,
-                   'spHD_ValidateDeliveryAttemps',
-                   GETDATE(),
-                   GETDATE(),
-                   NULL,
-                   NULL,
-                   NULL,
-                   1
-            FROM @TblGuides tg
-            WHERE tg.FlowGuide = 3;
 
             -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
             UPDATE do

@@ -14,6 +14,7 @@
     [IsActionIssued]                   BIT            DEFAULT ((0)) NULL,
     [ActionObservation]                NVARCHAR (600) NULL,
     [CourierContempt]                  BIT            DEFAULT ((0)) NULL,
+    [ClientConfirmsReturn]             BIT            DEFAULT ((0)) NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
