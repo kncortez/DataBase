@@ -436,7 +436,7 @@ BEGIN
 				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
-			FROM [dbo].[ServiceDataForGuide] SDFG
+			FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
 			INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 			WHERE SDFG.GuideToken = @GuideToken
@@ -454,7 +454,7 @@ BEGIN
 				SET 
 					Receiver_Address = @NewAddress
 					,Receiver_Zone = IIF( ISNULL(@NewZone,'')!='', @NewZone, Receiver_Zone )
-				FROM [dbo].[ServiceDataForGuide] SDFG
+				FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
 				INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 				ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 				WHERE SDFG.GuideToken = @GuideToken
@@ -525,7 +525,7 @@ BEGIN
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderDetail dod
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON dod.Guide_Serie = da.Guide_Serie
 					AND dod.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -539,7 +539,7 @@ BEGIN
 				SET StatusOrderId = @StatusOrderId,
 					IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
 				FROM DeliveryOrder do
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -550,7 +550,7 @@ BEGIN
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderPiece dop
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON dop.GuideSerie = da.Guide_Serie
 					AND dop.GuideNumber = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -566,7 +566,7 @@ BEGIN
 				UPDATE do
 				SET IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
 				FROM DeliveryOrder do
-				INNER JOIN DeliveryAttempt da
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -605,7 +605,7 @@ BEGIN
 							--[DO].[Sender_Zone] = @NewZone,
 							--[DO].[SenderIdTownship] = @NewTownshipID
 					FROM	[dbo].[DeliveryOrder] [DO]
-					INNER JOIN	[dbo].[DeliveryAttempt] DA
+					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
 						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
 					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
@@ -621,7 +621,7 @@ BEGIN
 							--[DO].[Receiver_Zone] = @NewZone,
 							--[DO].[ReceiverIdTownship] = @NewTownshipID
 					FROM	[dbo].[DeliveryOrder] [DO]
-					INNER JOIN	[dbo].[DeliveryAttempt] DA
+					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
 						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
 					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
