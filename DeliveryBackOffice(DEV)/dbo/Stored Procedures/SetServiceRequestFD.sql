@@ -341,6 +341,47 @@ BEGIN
 		);
 		-- FIN DE MODIFICACION
 			
+		-- FDAPI-1418 Oscar Morales 2023-02-23
+		-- Insertar data para manejo de inténtos de entrega/devolución
+		INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+		, [GuideNumber]
+		, [GuideDeliveryAttemptCount]
+		, [GuideDeliveryMaxAttemptCount]
+		, [GuideReturnAttemptCount]
+		, [GuideReturnMaxAttemptCount]
+		, [RowStatus]
+		, [DateCreated]
+		, [TokenCreated]
+		, [DateUptaded]
+		, [TokenUpdated])
+			SELECT
+				GT.Guide_Serie
+			   ,GT.Guide_Number
+			   ,0
+			   ,rh.Attempt
+			   ,0
+			   ,rh.AttemptReturn
+			   ,1
+			   ,GETDATE()
+			   ,'SYSTEM'
+			   ,NULL
+			   ,NULL
+			FROM #GuideTable GT
+			INNER JOIN RateByCustomer rc WITH (NOLOCK)
+				ON rc.RbcId = (SELECT TOP 1
+							rbc.RbcId
+						FROM RatebyCustomer rbc WITH (NOLOCK)
+						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+							ON GT.Sender_ID = vpc.CodeOfReference
+						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
+						AND rbc.RbcRowStatus = 1
+						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+						OR rbc.RbcCodeOfReference IS NULL)
+						ORDER BY rbc.RbcCodeOfReference DESC)
+			INNER JOIN RateHeader rh WITH (NOLOCK)
+				ON rc.RbcIdRate = rh.RheId
+        -- Fin FDAPI-1418 Oscar Morales 2023-02-23
+
 		-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
 		INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
 			[Guide_Serie],
