@@ -31,6 +31,7 @@ BEGIN
 	DECLARE @TypeOfInOutMoney INT = 0;
 	DECLARE @MembershipId INT = 0;
 	DECLARE @CatTMSalesPersonId INT = 0;
+	DECLARE @AddedPointExpirationDate INT = 0;
 	
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
@@ -53,6 +54,18 @@ BEGIN
 	SET @CatTMSalesPersonId = ( SELECT TOP 1 [CTSP].[IdCatTMSalesPerson]
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
+
+    SET @AddedPointExpirationDate
+        = CAST(ISNULL(
+               (
+                   SELECT TOP 1
+                          [CP].[Value]
+                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
+                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
+               ),
+               0
+            ) AS INT);
+
 
 	IF (@ActiveMembership > 0) 
 		BEGIN
@@ -82,7 +95,11 @@ BEGIN
 										[InvoiceName], 
 										[InvoiceEmail], 
 										[FiscalAddress],
-										[CatTMSalesPersonId] )
+										[CatTMSalesPersonId],
+										[AvailablePoints],
+										[AccumulatedPoints],
+										[PointsExpirationDate]
+										)
 		SELECT							[CM].[IdCatMembership],								-- CatMembershipId
 										@StartingStatus,									-- CatMembershipStatusId
 										[CM].[MembershipCost],								-- MembershipCost
@@ -102,7 +119,10 @@ BEGIN
 										@TaxName,											-- InvoiceName
 										@InvoiceEmail,										-- InvoiceEmail
 										@FiscalAddress,										-- FiscalAddress
-										@CatTMSalesPersonId									-- CatTMSalesPersonId
+										@CatTMSalesPersonId,								-- CatTMSalesPersonId
+										0,													-- AvailablePoints
+										0,													-- AccumulatedPoints
+										DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE())) -- PointsExpirationDate
 		FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
 		WHERE							[CM].[IdCatMembership] = @CatMembershipId;
 

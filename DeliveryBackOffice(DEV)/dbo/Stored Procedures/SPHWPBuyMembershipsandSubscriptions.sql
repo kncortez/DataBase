@@ -35,9 +35,20 @@ BEGIN
 	DECLARE @StatusMembershipt INT = 0
 	DECLARE @CustomerType INT = 0; 
 	DECLARE @HasCredit BIT = 0;
+	DECLARE @AddedPointExpirationDate INT = 0;
 	DECLARE @Idcustumer  AS INT;
 	DECLARE @JsonResponse NVARCHAR(MAX) = '';
-
+	
+    SET @AddedPointExpirationDate
+        = CAST(ISNULL(
+               (
+                   SELECT TOP 1
+                          [CP].[Value]
+                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
+                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
+               ),
+               0
+            ) AS INT);
 	--- Estado de membresia
 	SELECT
 		TOP 1
@@ -80,7 +91,7 @@ BEGIN
 			​
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Membership]
-				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress, RenewalFixedDay)
+				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress, RenewalFixedDay, AvailablePoints, AccumulatedPoints, PointsExpirationDate)
 			OUTPUT inserted.IdMembership INTO @AuxNewMEmbership(IdNewMembership)
 			SELECT
 				CM.IdCatMembership
@@ -109,6 +120,9 @@ BEGIN
 				,@InvoiceEmail
 				,@FiscalAddress
 				,DAY(GETDATE())
+				,0
+				,0
+				,DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE()))
 			FROM
 				[DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			WHERE
