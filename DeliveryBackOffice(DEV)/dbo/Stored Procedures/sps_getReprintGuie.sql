@@ -445,6 +445,7 @@ BEGIN
                                      + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
 									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
+									 + '"UseMembership": ' + CONVERT(VARCHAR, CAST(ISNULL((CASE WHEN [MSL].[IdMembershipSubscriptionLog] IS NOT NULL THEN 1 ELSE 0 END), 0) AS BIT)) + ',' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
                                      + '"Pieces_Cold": ' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'') + ','
 									 + '"Icon": "' + (CASE
@@ -492,6 +493,10 @@ BEGIN
                                   LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
                                       ON DOPD.TimePlaId = CPT.TimePlaId
                                          AND cov.RowStatus = 1
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL  WITH(NOLOCK) 
+									  ON [MSL].[LogGuideSerie] = [dev].[Guide_Serie] 
+									  AND [MSL].[LogGuideNumber] = [dev].[Guide_Number]
+									  AND [MSL].[RowStatus] = 1
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
