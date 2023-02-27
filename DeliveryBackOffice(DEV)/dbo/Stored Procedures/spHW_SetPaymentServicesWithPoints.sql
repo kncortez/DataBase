@@ -107,6 +107,7 @@ BEGIN
 		SET			[DOPD].[TypeofInOutMoneyId] = @TypeOfInOutMoneyId,
 					[DOPD].[amount] = [GL].[PriceShipment],
 					[DOPD].[TimePlaId] = @TimePlaId,
+					[DOPD].[ShipmentCompleted] = 1,
 					[DOPD].[TokenUpdated] = @Token,
 					[DOPD].[DateUpdated] = SYSDATETIME()
 		FROM		[dbo].[DeliveryOrderPaymentDetail] DOPD
