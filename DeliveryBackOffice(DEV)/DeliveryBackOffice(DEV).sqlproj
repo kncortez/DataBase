@@ -1440,6 +1440,11 @@
     <Build Include="dbo\Stored Procedures\GetPackagesRangeData.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRate.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRange.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetStatusAccountData.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_TMGetDataMembershipOrSubscription.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetConfirmationOfAccount.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetUnblockOfUserInSystem.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
