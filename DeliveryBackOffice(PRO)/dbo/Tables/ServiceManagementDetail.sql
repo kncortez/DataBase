@@ -5,13 +5,13 @@
     [ServiceEndDate]               DATETIME        NOT NULL,
     [ServiceVisitPointId]          INT             NULL,
     [ServiceVisitPointPortfolioId] BIGINT          NULL,
-    [ServiceCustomerName]          NVARCHAR (100)  NOT NULL,
+    [ServiceCustomerName]          NVARCHAR (250)  NOT NULL,
     [ProvinceId]                   INT             NOT NULL,
     [TownshipId]                   INT             NOT NULL,
     [SettlementId]                 BIGINT          NULL,
     [ServiceAddress]               NVARCHAR (600)  NOT NULL,
     [ServiceSpecialInstructions]   NVARCHAR (600)  NULL,
-    [ServicePhone]                 NVARCHAR (20)   NULL,
+    [ServicePhone]                 NVARCHAR (100)  NULL,
     [HubLogisticsId]               INT             NULL,
     [ServiceAmount]                DECIMAL (18, 2) CONSTRAINT [DF_ServiceManagementDetail_ServiceAmount] DEFAULT ((0)) NOT NULL,
     [ServiceExtraAmount]           DECIMAL (18, 2) CONSTRAINT [DF_ServiceManagementDetail_ServiceExtraAmount] DEFAULT ((0)) NOT NULL,
@@ -33,6 +33,8 @@
     CONSTRAINT [FK_ServiceManagementDetail_VisitPointByClientPortfolio] FOREIGN KEY ([ServiceVisitPointPortfolioId]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio]),
     CONSTRAINT [FK_ServiceManagementDetail_VisitPointClient] FOREIGN KEY ([ServiceVisitPointId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
