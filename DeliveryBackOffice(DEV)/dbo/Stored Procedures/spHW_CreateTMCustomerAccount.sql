@@ -62,9 +62,9 @@ BEGIN
 							FROM [dbo].[CatRol] CR
 							WHERE [CR].[RolName] = 'Nuevo estándar' COLLATE Latin1_General_CI_AI );
 
-	SET @EmailExisting =	(SELECT [RU].[UsrIdUser]
+	SET @EmailExisting =	(SELECT TOP 1 [RU].[UsrIdUser]
 							FROM	[dbo].[RegisterUser] RU 
-							WHERE	[RU].[UsrEmail] = @Email);
+							WHERE	[RU].[UsrEmail] = @Email COLLATE Latin1_General_CI_AI);
 
 	SET @CustomerTypeId =	(SELECT TOP 1 [CT].[IdCustomerType]
 							FROM	[dbo].[CustomerType] CT
