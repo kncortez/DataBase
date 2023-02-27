@@ -8,6 +8,12 @@
 -- Create date: <2022-01-03>
 -- Description:	< Cambio de flujo para retornar enlace de tracking y mejora de mensaje cuando guía esta en estado no actualizable.>
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <2023-02-23>
+-- Description:	< Manejo para decidir si mostrar mapa o no de acuerdo a radio máximo en base a georeferencia.>
+-- Update date: <2023-02-27>
+-- Description:	< Manejo de campos editables y textos dinamicos para landing page de incidencias.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetServiceTokenGuide]
 	@GuideSerie NVARCHAR(2) = '',
@@ -21,6 +27,9 @@ BEGIN
 	DECLARE @IsPickup AS BIT = 0;
 	DECLARE @IsVisitPoint AS BIT = 0;
 	DECLARE @VisitPointExists AS BIT = 0;
+	DECLARE @MaxDistance FLOAT = 7000; --Distancia en metros
+	DECLARE @VPLatitude NVARCHAR(50)
+	DECLARE @VPLongitude NVARCHAR(50)
 
 	-- Variables de respuesta
 	DECLARE @jsonResult NVARCHAR(MAX);
@@ -235,6 +244,21 @@ BEGIN
 	ELSE IF EXISTS (SELECT TOP 1 1 FROM ConfirmationOfIncidence coi WITH (NOLOCK) WHERE coi.ConfirmationOfIncidentToken = @GuideToken AND coi.RowStatus = 1)
 	BEGIN
 		BEGIN TRY
+
+			-- Buscar ubicación del VP
+			SELECT		@VPLatitude = ISNULL([VPC].[Latitude], ''),
+						@VPLongitude = ISNULL([VPC].[Longitude], '')
+			FROM		[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+				ON		[COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
+			INNER JOIN	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+				ON		[DA].[Guide_Serie] = [DO].[Guide_Serie] AND [DA].[Guide_Number] = [DO].[Guide_Number]
+			INNER JOIN	[dbo].[VisitPointClient] VPC WITH (NOLOCK)
+				ON		[VPC].[CodeOfReference] = (CASE WHEN [DO].[IsLastMileReturn] = 1 THEN [DO].[Sender_ID] ELSE [DO].[Receiver_ID] END)
+			WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+				AND		[COI].[RowStatus] = 1
+				AND		[COI].[IsConfirmed] <> 1;
+
 			set @jsonResult = (SELECT STUFF(( 
 								SELECT  
 								',{"IdResult":200,"receiverAddress":"' +  (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Address ELSE do.Receiver_Address END) + '",' +
@@ -243,9 +267,41 @@ BEGIN
 								'"Province":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Department ELSE do.Receiver_Department END) + '",' +
 								'"Township":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Town ELSE do.Receiver_Town END) + '",' +
 								'"confirmationOfIncidenceId":"'+ CAST(coi.IdConfirmationOfIncidence AS VARCHAR) + '",' +
-								'"courierLatitude":"'+ ISNULL(da.Latitude, '') + '",' +
-								'"courierLongitude":"'+ ISNULL(da.Longitude, '') + '",' +
+								IIF((ISNULL([DA].[Longitude], '') <> '' AND ISNULL([DA].[Latitude], '') <> '' AND @VPLongitude <> '' AND @VPLatitude <> ''), 
+									IIF(((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', ISNULL([DA].[Longitude], '0'), ' ', ISNULL([DA].[Latitude], '0'), ')'), 4326)) ) <= @MaxDistance), 
+									('"courierLatitude":"'+ ISNULL(da.Latitude, '') + '",' +
+									 '"courierLongitude":"'+ ISNULL(da.Longitude, '') + '",'), '') , '') +
 								'"incidenceDescription":"'+ ISNULL(cti.DescriptionIncidence, '') + '",' +
+								'"dynamicFields": ['+ 
+								(
+									SELECT STUFF(
+										(
+											SELECT ',{' +	'"FieldName":"' + CAST([IDI].[FieldName] AS VARCHAR) +'"'+ ',' +
+															'"FieldType":"' + [IDI].[FieldType] +'"'+ ',' +
+															'"IsEditable":"' + CAST(CAST([IDI].[IsEditable] AS INT) AS VARCHAR) +'"'+ '}'
+											FROM	[dbo].[IncidenceDynamicInput] IDI
+											WHERE	[IDI].[CatTypeIncidenceId] = [CTI].[IdIncidenceType]
+												AND [IDI].[RowStatus] = 1
+											ORDER BY [IDI].[IdIncidenceDynamicInput]
+											FOR XML PATH(''), TYPE
+										).value('.', 'varchar(max)'),1,1,''
+									)
+								) + '],' +
+								'"dynamicTexts": ['+ 
+								(
+									SELECT STUFF(
+										(
+											SELECT TOP 1 ',{' +	'"QuestionTrue":"' +	[IDQ].[QuestionTrue] +'"'+ ',' +
+																'"QuestionFalse":"' + [IDQ].[QuestionFalse] +'"'+ ',' +
+																'"SpecialInstructions":"' + [IDQ].[SpecialInstructions] +'"'+ '}'
+											FROM	[dbo].[IncidenceDynamicQuestion] IDQ
+											WHERE	[IDQ].[CatTypeIncidenceId] = [CTI].[IdIncidenceType]
+												AND [IDQ].[RowStatus] = 1
+											ORDER BY [IDQ].[IdIncidenceDynamicQuestion]
+											FOR XML PATH(''), TYPE
+										).value('.', 'varchar(max)'),1,1,''
+									)
+								) + ']'
 								+ '}'
 
 								FROM ConfirmationOfIncidence coi WITH(NOLOCK)
