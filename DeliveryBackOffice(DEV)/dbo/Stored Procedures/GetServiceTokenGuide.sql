@@ -273,7 +273,7 @@ BEGIN
 									 '"courierLongitude":"'+ ISNULL(da.Longitude, '') + '",'), '') , '') +
 								'"incidenceDescription":"'+ ISNULL(cti.DescriptionIncidence, '') + '",' +
 								'"dynamicFields": ['+ 
-								(
+								ISNULL((
 									SELECT STUFF(
 										(
 											SELECT ',{' +	'"FieldName":"' + CAST([IDI].[FieldName] AS VARCHAR) +'"'+ ',' +
@@ -286,9 +286,9 @@ BEGIN
 											FOR XML PATH(''), TYPE
 										).value('.', 'varchar(max)'),1,1,''
 									)
-								) + '],' +
+								), '') + '],' +
 								'"dynamicTexts": ['+ 
-								(
+								ISNULL((
 									SELECT STUFF(
 										(
 											SELECT TOP 1 ',{' +	'"QuestionTrue":"' +	[IDQ].[QuestionTrue] +'"'+ ',' +
@@ -301,7 +301,7 @@ BEGIN
 											FOR XML PATH(''), TYPE
 										).value('.', 'varchar(max)'),1,1,''
 									)
-								) + ']'
+								), '') + ']'
 								+ '}'
 
 								FROM ConfirmationOfIncidence coi WITH(NOLOCK)
