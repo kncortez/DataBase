@@ -3,10 +3,15 @@
 -- Create date: <2022-01-03>
 -- Description:	< Actualiza información de servicio para guía.>
 -- =============================================
--- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-01-03>
 -- Description:	< Se remueve el poder modificar departamento y municipio ya que puede causar revalorizaciones. >
+-- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <2023-01-10>
+-- Description:	< Manejo de parámetro para marcar como devolución de última milla las incidencias. >
+-- Create date: <2023-01-10>
+-- Description:	< Manejo de campos dinámico. >
 -- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
@@ -23,6 +28,8 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@NewAddress NVARCHAR(600) = '',
 	@NewTownshipID INT = -1,
 	@NewSettlementID BIGINT = -1,
+	@NewPhoneNumber NVARCHAR(50) = '',
+	@Observations NVARCHAR(500) = '',
 
 	@DeliveryAttemptId INT = NULL,
 	@RoutePreparationId INT = NULL,
@@ -33,13 +40,25 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 
 	@SetReschedule BIT = 0,
 	@RescheduleDate DATE = NULL,
-	@IsConfirmed BIT = 1
+
+	@IsConfirmed BIT = 1,
+	@CancelOrder BIT = 0
 AS
 BEGIN
 
 	-- Variables de apoyo
 	DECLARE @TokenGuideSerie NVARCHAR(2);
 	DECLARE @TokenGuideNumber INT;
+
+	DECLARE @OriginRouteId INT;
+	DECLARE @NewRoutePreparation INT = 0;
+	DECLARE @NewRouteManifest INT = 0;
+	DECLARE @InsertedRoutePreparation TABLE (
+		IdRoutePreparation INT
+	)
+	DECLARE @InsertedRoutePreparationDetail TABLE (
+		IdRoutePreparationDetail INT
+	)
 
 	-- Variables de control de flujo
 	DECLARE @IsDeliveryOnRoute AS BIT = 0;
@@ -57,6 +76,7 @@ BEGIN
 
 	DECLARE @StatusOrderId TINYINT
 	DECLARE @CatTypeConfirmationOfIncidenceId INT
+	DECLARE @IsLastMileReturn BIT = 0;
 
 	-- Variables de respuesta
 	DECLARE @jsonResult NVARCHAR(MAX);
@@ -178,17 +198,12 @@ BEGIN
 				IF(ISNULL(@SetReschedule,0) = 1)
 				BEGIN
 				
-					DECLARE @OriginRouteId INT;
-
 					SELECT
 						@OriginRouteId = RP.CatRouteId
 					FROM
 						[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
 					WHERE
 						RP.IdRoutePreparation = @RoutePreparationId
-
-					DECLARE @NewRoutePreparation INT = 0;
-					DECLARE @NewRouteManifest INT = 0;
 
 					SELECT 
 						@NewRoutePreparation = COALESCE(IdRoutePreparation,0),
@@ -200,13 +215,6 @@ BEGIN
 						DateRoutePreparation = @RescheduleDate 
 						AND 
 						RowStatus = 1
-
-					DECLARE @InsertedRoutePreparation TABLE (
-						IdRoutePreparation INT
-					)
-					DECLARE @InsertedRoutePreparationDetail TABLE (
-						IdRoutePreparationDetail INT
-					)
 
 					IF(@NewRouteManifest = 0)
 					BEGIN
@@ -427,7 +435,7 @@ BEGIN
 				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
-			FROM [dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+			FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
 			INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			ON DO.Guide_Serie = SDFG.GuideSerie AND DO.Guide_Number = SDFG.GuideNumber
 			WHERE SDFG.GuideToken = @GuideToken
@@ -500,13 +508,13 @@ BEGIN
 		BEGIN TRY
 			IF @IsConfirmed = 1
 			BEGIN
-				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida') 
+				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida') 
 			END
 			ELSE
 			BEGIN
-				SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
+				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
 			END
 
 			-- Si tiene diferente estado, actualizar 
@@ -516,7 +524,7 @@ BEGIN
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderDetail dod
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON dod.Guide_Serie = da.Guide_Serie
 					AND dod.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -527,9 +535,9 @@ BEGIN
 				AND dod.DateCreated = coi.DateStatusOrder
 
 				UPDATE do
-				SET StatusOrderId = @StatusOrderId 
+				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrder do
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -540,7 +548,7 @@ BEGIN
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderPiece dop
-				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON dop.GuideSerie = da.Guide_Serie
 					AND dop.GuideNumber = da.Guide_Number
 				INNER JOIN ConfirmationOfIncidence coi 
@@ -549,17 +557,238 @@ BEGIN
 				AND coi.RowStatus = 1
 			
 
-			END
-		
+			END 
 
 			UPDATE ConfirmationOfIncidence
 			SET IsConfirmed = 1
 			   ,StatusOrderId = @StatusOrderId
 			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
+			   ,ActionObservation = @Observations
+			   ,ClientConfirmsReturn = @CancelOrder
 			   ,TokenUpdated = 'SetServiceTokenGuideData'
 			   ,DateUpdated = GETDATE()
 			WHERE ConfirmationOfIncidentToken = @GuideToken
 			AND RowStatus = 1
+
+			IF (@CancelOrder = 1)
+				BEGIN
+					UPDATE	[DO]
+					SET		[DO].[Sender_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Sender_Address]),
+							[DO].[Sender_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''), @NewPhoneNumber, ISNULL([DO].[Sender_Phone], ''))
+					FROM	[dbo].[DeliveryOrder] [DO]
+					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
+						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
+					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
+						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+						AND		[COI].[RowStatus] = 1 
+				END
+			ELSE IF (@CancelOrder = 0)
+				BEGIN
+					UPDATE	[DO]
+					SET		[DO].[Receiver_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Receiver_Address]),
+							[DO].[Receiver_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''), @NewPhoneNumber, ISNULL([DO].[Receiver_Phone], ''))
+					FROM	[dbo].[DeliveryOrder] [DO]
+					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
+						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
+					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
+						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+						AND		[COI].[RowStatus] = 1 
+				END
+
+			IF(ISNULL(@SetReschedule,0) = 1)
+				BEGIN
+
+					SELECT
+						@OriginRouteId = RP.CatRouteId
+					FROM
+						[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
+					WHERE
+						RP.IdRoutePreparation = @RoutePreparationId
+
+					SELECT 
+						@NewRoutePreparation = COALESCE(IdRoutePreparation,0),
+						@NewRouteManifest = COALESCE(DeliveryOrderBySettlementId,0)
+					FROM [DeliveryBackOffice].[dbo].RoutePreparation RP WITH(NOLOCK)
+					WHERE 
+						CatRouteId = @OriginRouteId 
+						AND 
+						DateRoutePreparation = @RescheduleDate 
+						AND 
+						RowStatus = 1
+
+					IF(@NewRouteManifest = 0)
+					BEGIN
+
+						IF (@NewRoutePreparation = 0)
+						BEGIN
+
+							--- Ingresar nueva preparación de ruta por reasignación 
+							INSERT INTO [dbo].[RoutePreparation]
+								(
+								   [CatRouteId]
+								   ,[DateRoutePreparation]
+								   ,[GuidesQuantity]
+								   ,[PiecesDry]
+								   ,[PiecesCold]
+								   ,[RowStatus]
+								   ,[TokenCreated]
+								   ,[DateCreated]
+								   ,[TokenUpdated]
+								   ,[DateUpdated]
+								)
+							OUTPUT inserted.IdRoutePreparation INTO @InsertedRoutePreparation (IdRoutePreparation)
+							 VALUES
+								(
+								   @OriginRouteId
+								   ,@RescheduleDate
+								   ,1
+								   ,0
+								   ,0
+								   ,1
+								   ,'SYS-HERMESROUTESLanding'
+								   ,GETDATE()
+								   ,NULL
+								   ,NULL
+								)
+
+							SELECT
+								TOP 1
+									@NewRoutePreparation = IdRoutePreparation
+							FROM
+								@InsertedRoutePreparation
+
+						END
+
+						IF(
+							ISNULL(@NewRoutePreparation,0) > 0 
+							AND 
+							NOT EXISTS 
+								(
+									SELECT 
+										TOP 1 
+											1 
+									FROM 
+										[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].RoutePreparation RP WITH(NOLOCK)
+											ON
+												RPD.RoutePreparationId = RP.IdRoutePreparation
+												AND
+												RP.DateRoutePreparation = @RescheduleDate
+									WHERE 
+										RPD.Guide_Serie = @TokenGuideSerie 
+										AND 
+										RPD.Guide_Number = @TokenGuideNumber 
+										AND
+										RPD.RowStatus = 1
+								)
+							)
+						BEGIN
+
+							INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetail]
+								(
+									[RoutePreparationId]
+									,[Guide_Serie]
+									,[Guide_Number]
+									,[RowStatus]
+									,[TokenCreated]
+									,[DateCreated]
+									,[TokenUpdated]
+									,[DateUpdated]
+									,[IsCustomerReschedule]
+								)
+							OUTPUT inserted.IdRoutePreparationDetail INTO @InsertedRoutePreparationDetail (IdRoutePreparationDetail)
+							VALUES 
+								(
+									@NewRoutePreparation
+									, @TokenGuideSerie
+									, @TokenGuideNumber
+									, 1
+									, 'SYS-HERMESROUTESLanding'
+									, GETDATE()
+									, NULL
+									, NULL
+									, 1
+								)
+
+							IF @@ROWCOUNT > 0
+							BEGIN
+								SET @UpdatedRP = 1
+							END
+		
+						END
+
+					END
+					
+					-- Extraer guía del manifiesto de despacho actual
+					UPDATE
+						DSD
+					SET
+						DSD.RowStatus = 0
+						,DSD.TokenUpdated = 'SYS-HERMESROUTESLanding'
+						,DSD.DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH(NOLOCK)
+							ON
+								DOBS.ID = DSD.ID_DeliveryOrderBySettlement
+								AND
+								DSD.Guide_Serie = @TokenGuideSerie
+								AND
+								DSD.Guide_Number = @TokenGuideNumber
+					WHERE
+						DOBS.ID = @DeliverySettlementId
+
+					-- Extraer guía de la ruta de despacho actual
+					UPDATE
+						RPD
+					SET
+						RPD.RowStatus = 0
+						,RPD.TokenUpdated = 'SYS-HERMESROUTESLanding'
+						,RPD.DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
+							ON
+								RP.IdRoutePreparation = RPD.RoutePreparationId
+								AND
+								RPD.Guide_Serie = @TokenGuideSerie
+								AND
+								RPD.Guide_Number = @TokenGuideNumber
+					WHERE
+						RP.IdRoutePreparation = @RoutePreparationId
+
+					-- Extraer piezas de guía de la ruta de despacho actual
+					UPDATE
+						RPDP
+					SET
+						RPDP.RowStatus = 0
+						,RPDP.TokenUpdated = 'SYS-HERMESROUTESLanding'
+						,RPDP.DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK)
+							ON
+								RP.IdRoutePreparation = RPD.RoutePreparationId
+								AND
+								RPD.Guide_Serie = @TokenGuideSerie
+								AND
+								RPD.Guide_Number = @TokenGuideNumber
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH(NOLOCK)
+							ON
+								RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
+					WHERE
+						RP.IdRoutePreparation = @RoutePreparationId
+
+				END
 
 			COMMIT TRANSACTION
 			set @jsonResult =(
@@ -580,7 +809,7 @@ BEGIN
 								).value('.', 'varchar(max)'),1,1,'') )
 			select ('[' + @jsonResult +  ']') jsonResultError 
 		END CATCH
-	END	
+	END
 	ELSE
 	BEGIN
 
