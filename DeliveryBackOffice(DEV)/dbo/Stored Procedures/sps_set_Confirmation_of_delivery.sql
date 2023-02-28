@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
@@ -83,8 +80,11 @@ BEGIN
                 BEGIN
 
 
-				  --l momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
-				  UPDATE  dbo.warehouse SET Active =0 
+				  --al cambiar estado de guia  debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+				  UPDATE  dbo.warehouse SET Active =0,
+				          UserUpdated = @TokenId,
+						  DateUpdated = GETDATE()
+
 				  where Guide_Serie = @Guide_Serie AND 
                         Guide_Number = @Guide_Number
 
