@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
@@ -81,8 +78,11 @@ BEGIN
 				BEGIN
 
 
-				  --l momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
-				  UPDATE  dbo.warehouse SET Active =0 
+				  --al cambiar estado de guia  debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+				  UPDATE  dbo.warehouse SET Active =0,
+				          UserUpdated = @TokenId,
+						  DateUpdated = GETDATE()
+
 				  where Guide_Serie = @Guide_Serie AND 
                         Guide_Number = @Guide_Number
 
@@ -248,19 +248,22 @@ BEGIN
                                    AND CD.IdTypeOfMoney IN ( 2, 6 )
                         WHERE C.ProductNumber = CONCAT(@Guide_Serie, CAST(@Guide_Number AS VARCHAR(50)))
                     )
-
 					BEGIN
 						--Buscar ID modulo liquidación COD
-						SET @CatModuleId = ISNULL((SELECT ModIdModule
+						SET @CatModuleId = ISNULL(
+						                   (
+						                        SELECT ModIdModule
 												FROM DeliveryBackOffice.dbo.CatModule
-												WHERE ModName = 'Confirmación de Entrega'),0)
+												WHERE ModName = 'Confirmación de Entrega'
+											),
+											0
+											      );
 						-- Obtener ID de Courier
 						SELECT TOP 1 @CourierId = ID_Courier 
 						FROM DeliveryBackOffice.dbo.DeliveryAttempt WITH (NOLOCK)
 						WHERE Guide_Serie = @Guide_Serie
 							AND Guide_Number = @Guide_Number
 						ORDER BY Date_Created DESC
-
 						INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
 						   (GuideSerie
 						   ,GuideNumber
