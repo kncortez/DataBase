@@ -55,12 +55,11 @@ BEGIN
 				IF (@DateOfDelivery > @Datetime)
 				BEGIN
 
-				 --l momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+				 --al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
 				  UPDATE  dbo.warehouse SET Active=0,
 				           UserUpdated = @TokenId,
 						   DateUpdated = GETDATE()
-				  where Guide_Serie = @Guide_Serie AND 
-                        Guide_Number = @Guide_Number AND Active=1
+				  where Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND Active=1
 
 					-- Actualizar registro de guía a último estado 
 					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
