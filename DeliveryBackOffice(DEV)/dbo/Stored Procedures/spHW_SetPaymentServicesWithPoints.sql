@@ -21,6 +21,18 @@ BEGIN
 	DECLARE @PointPromoId INT = NULL;
 	DECLARE @PointPromoFactor DECIMAL(12,2) = 0;
 	DECLARE @AuxPointsToSubstract INT = 0;
+	DECLARE @DayName NVARCHAR(20) = '';
+	DECLARE @IsValidDay BIT = 0;
+	DECLARE @CatPointPromoTbl TABLE (	IdPointPromo INT, 
+									PointPromoDescription NVARCHAR(400),
+									Monday BIT,
+									Tuesday BIT,
+									Wednesday BIT,
+									Thursday BIT,
+									Friday BIT,
+									Saturday BIT,
+									Sunday BIT,
+									PointPromoFactor DECIMAL);
 	DECLARE @ValidationForzaPoints TABLE(AvailableForzaPoints INT,
 										PointPromoFactor DECIMAL(12,2),
 										PointsNeededForExchange INT,
@@ -78,13 +90,46 @@ BEGIN
 										FROM	[dbo].[CatSalesPackageStatus] CSPS
 										WHERE	[CSPS].[SalesPackageStatusName] = 'Anulada');
 
-		SELECT		TOP 1 @PointPromoId = [CPP].[IdPointPromo],
-					@PointPromoFactor = [CPP].[PointPromoFactor]
-		FROM		[dbo].[CatPointPromo] CPP
-		WHERE		[CPP].[InPointExchange] = 1
-			AND		[CPP].[RowStatus] = 1
-			AND		SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
-		ORDER BY	[CPP].[PointPromoWeight] DESC;
+		SET @DayName = (SELECT DATENAME(dw, SYSDATETIME()));
+
+		INSERT INTO @CatPointPromoTbl
+		SELECT	TOP 1	[CPP].[IdPointPromo],
+						[CPP].[PointPromoDescription],
+						[CPP].[Monday],
+						[CPP].[Tuesday],
+						[CPP].[Wednesday],
+						[CPP].[Thursday],
+						[CPP].[Friday],
+						[CPP].[Saturday],
+						[CPP].[Sunday],
+						[CPP].[PointPromoFactor]
+		FROM			[dbo].[CatPointPromo] CPP
+		WHERE			[CPP].[RowStatus] = 1
+			AND			[CPP].[InPointExchange] = 1
+			AND			SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+		ORDER BY		[CPP].[PointPromoWeight] DESC;
+
+		SET @IsValidDay =	CASE 
+								WHEN @DayName = 'Monday'	THEN (SELECT TOP 1 Monday FROM @CatPointPromoTbl)
+								WHEN @DayName = 'Tuesday'	THEN (SELECT TOP 1 Tuesday FROM @CatPointPromoTbl)
+								WHEN @DayName = 'Wednesday' THEN (SELECT TOP 1 Wednesday FROM @CatPointPromoTbl)
+								WHEN @DayName = 'Thursday'	THEN (SELECT TOP 1 Thursday FROM @CatPointPromoTbl)
+								WHEN @DayName = 'Friday'	THEN (SELECT TOP 1 Friday FROM @CatPointPromoTbl)
+								WHEN @DayName = 'Saturday'	THEN (SELECT TOP 1 Saturday FROM @CatPointPromoTbl)
+								WHEN @DayName = 'Sunday'	THEN (SELECT TOP 1 Sunday FROM @CatPointPromoTbl)
+								ELSE 0
+							END
+
+		IF(@IsValidDay = 1)
+			BEGIN
+				SELECT		TOP 1 @PointPromoId = [CPP].[IdPointPromo],
+							@PointPromoFactor = [CPP].[PointPromoFactor]
+				FROM		[dbo].[CatPointPromo] CPP
+				WHERE		[CPP].[InPointExchange] = 1
+					AND		[CPP].[RowStatus] = 1
+					AND		SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+				ORDER BY	[CPP].[PointPromoWeight] DESC;
+			END
 
 		INSERT INTO @GuidesProcessedList(GuideSerie, 
 										GuideNumber, 
@@ -95,8 +140,9 @@ BEGIN
 										[DO].[PriceShippment],
 										[DO].[IdCustomer]
 		FROM							[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-		WHERE							[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
-			AND							[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList); 
+		INNER JOIN						@GuidesList GL
+			ON							[DO].[Guide_Serie] = [GL].[Guide_Serie]
+			AND							[DO].[Guide_Number] = [GL].[Guide_Number]; 
 
 		SET @TypeOfInOutMoneyId = (	SELECT	TOP 1 [TIO].[tio_pk_id] 
 									FROM	[dbo].[ctgTypeOfInOutOfMoney] TIO
