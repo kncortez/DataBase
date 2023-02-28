@@ -599,6 +599,13 @@ BEGIN
 						AND		[COI].[RowStatus] = 1 
 				END
 
+			SELECT		@TokenGuideSerie = [DA].[Guide_Serie],
+						@TokenGuideNumber = [DA].[Guide_Number]
+			FROM		[dbo].[ConfirmationOfIncidence] COI
+			INNER JOIN	[dbo].[DeliveryAttempt] DA
+				ON		[COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
+			WHERE	[COI].[ConfirmationOfIncidentToken] = @GuideToken;
+
 			IF(ISNULL(@SetReschedule,0) = 1)
 				BEGIN
 
