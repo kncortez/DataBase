@@ -1447,6 +1447,23 @@ BEGIN
 
             END;
 
+			if (@ServiceType='RETURN' or @ServiceType='DELIVERY' )
+			Begin
+			
+			--- Borrado Logico de posición en la guía
+
+			UPDATE wh
+			SET Active = 0
+			   ,UserUpdated = @TokenP
+			   ,DateUpdated = GETDATE()
+			FROM Warehouse wh
+			INNER JOIN @TblListGuides tlg
+				ON wh.Guide_Serie = tlg.Guide_Serie
+				AND wh.Guide_Number = tlg.Guide_Number
+			WHERE wh.Active = 1
+			End
+
+
         END TRY
         BEGIN CATCH
 
