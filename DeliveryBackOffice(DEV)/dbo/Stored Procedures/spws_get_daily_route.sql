@@ -739,10 +739,10 @@ BEGIN
                                                    AND doadel.RowStatus = 1
                                                    AND doadel.ServiceTypeId = @DeliveryTypeId
                                             LEFT JOIN dbo.DeliveryOrderAlert doaret WITH (NOLOCK)
-                                                ON doadel.GuideNumber = DAT.Guide_Number
-                                                   AND doadel.GuideSerie = DAT.Guide_Serie
-                                                   AND doadel.RowStatus = 1
-                                                   AND doadel.ServiceTypeId = @DeliveryTypeId
+                                                ON doaret.GuideNumber = DAT.Guide_Number
+                                                   AND doaret.GuideSerie = DAT.Guide_Serie
+                                                   AND doaret.RowStatus = 1
+                                                   AND doaret.ServiceTypeId = @ReturnTypeId
 											OUTER APPLY (
 												SELECT
 													MAX(ISNULL(SDFG.Latitude, 0)) 'Latitude',
