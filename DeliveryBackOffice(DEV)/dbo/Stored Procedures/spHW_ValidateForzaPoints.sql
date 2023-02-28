@@ -24,6 +24,18 @@ BEGIN
 	DECLARE @ProceedWithTransaction BIT = 0;
 	DECLARE @PromoDescription NVARCHAR(200) = '';
 	DECLARE @MembershipLock INT = 0;
+	DECLARE @DayName NVARCHAR(20) = '';
+	DECLARE @IsValidDay BIT = 0;
+	DECLARE @CatPointPromoTbl TABLE (	IdPointPromo INT, 
+									PointPromoDescription NVARCHAR(400),
+									Monday BIT,
+									Tuesday BIT,
+									Wednesday BIT,
+									Thursday BIT,
+									Friday BIT,
+									Saturday BIT,
+									Sunday BIT,
+									PointPromoFactor DECIMAL);
 	DECLARE @GuidesProcessedList TABLE (GuideSerie NVARCHAR(5),
 										GuideNumber INT,
 										PriceShipment DECIMAL(12,2),
@@ -61,8 +73,9 @@ BEGIN
 			FROM			[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			INNER JOIN		[dbo].[Account] A
 				ON			[DO].[IdCustomer] = [A].[IdCustomer]
-			WHERE			[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND			[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList);
+			INNER JOIN		@GuidesList GL
+				ON			[DO].[Guide_Serie] = [GL].[Guide_Serie]
+				AND			[DO].[Guide_Number] = [GL].[Guide_Number];
 			
 			-- Validations
 			IF ((SELECT COUNT(DISTINCT(CustomerId)) FROM @CustomerList) != 1)
@@ -88,9 +101,10 @@ BEGIN
 			FROM		[dbo].[MembershipSubscriptionLog] MSL
 			INNER JOIN	[dbo].[Membership] M
 				ON		[MSL].[MembershipId] = [M].[IdMembership]
-			WHERE		[MSL].[LogGuideSerie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND		[MSL].[LogGuideNumber] IN (SELECT Guide_Number FROM @GuidesList)
-				AND		[MSL].[RowStatus] = 1
+			INNER JOIN	@GuidesList GL
+				ON		[MSL].[LogGuideSerie] = [GL].[Guide_Serie]
+				AND		[MSL].[LogGuideNumber] = [GL].[Guide_Number]
+			WHERE		[MSL].[RowStatus] = 1
 				AND		[MSL].[SubscriptionId] IS NULL
 				AND		[MSL].[LogServiceNumber] <= [M].[MembershipMaxServiceFixedValue];
 
@@ -105,9 +119,10 @@ BEGIN
 			FROM		[dbo].[MembershipSubscriptionLog] MSL
 			INNER JOIN	[dbo].[Subscription] S
 				ON		[MSL].[SubscriptionId] = [S].[IdSubscription]
-			WHERE		[MSL].[LogGuideSerie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND		[MSL].[LogGuideNumber] IN (SELECT Guide_Number FROM @GuidesList)
-				AND		[MSL].[RowStatus] = 1
+			INNER JOIN	@GuidesList GL
+				ON		[MSL].[LogGuideSerie] = [GL].[Guide_Serie]
+				AND		[MSL].[LogGuideNumber] = [GL].[Guide_Number]
+			WHERE		[MSL].[RowStatus] = 1
 				AND		[MSL].[LogServiceNumber] <= [S].[SubscriptionMaxServiceFixedValue];
 
 			IF (@MembershipLock > 0)
@@ -126,8 +141,9 @@ BEGIN
 											[DO].[PriceShippment],
 											[DO].[IsCollect]
 			FROM							[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			WHERE							[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND							[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList);
+			INNER JOIN						@GuidesList GL
+				ON							[DO].[Guide_Serie] = [GL].[Guide_Serie]
+				AND							[DO].[Guide_Number] = [GL].[Guide_Number];
 
 			IF ((SELECT COUNT(IsCollect) FROM @GuidesProcessedList WHERE IsCollect = 1) > 0)
 				BEGIN
@@ -157,13 +173,46 @@ BEGIN
 		END
 
 	-- Get active promotion por exchange
-	SELECT		TOP 1 @PointPromoFactor = [CPP].[PointPromoFactor],
-				@PromoDescription = [CPP].[PointPromoDescription]
-	FROM		[dbo].[CatPointPromo] CPP
-	WHERE		[CPP].[InPointExchange] = 1
-		AND		[CPP].[RowStatus] = 1
-		AND		SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
-	ORDER BY	[CPP].[PointPromoWeight] DESC;
+	SET @DayName = (SELECT DATENAME(dw, SYSDATETIME()));
+
+	INSERT INTO @CatPointPromoTbl
+	SELECT	TOP 1	[CPP].[IdPointPromo],
+					[CPP].[PointPromoDescription],
+					[CPP].[Monday],
+					[CPP].[Tuesday],
+					[CPP].[Wednesday],
+					[CPP].[Thursday],
+					[CPP].[Friday],
+					[CPP].[Saturday],
+					[CPP].[Sunday],
+					[CPP].[PointPromoFactor]
+	FROM			[dbo].[CatPointPromo] CPP
+	WHERE			[CPP].[RowStatus] = 1
+		AND			[CPP].[InPointExchange] = 1
+		AND			SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+	ORDER BY		[CPP].[PointPromoWeight] DESC;
+
+	SET @IsValidDay =	CASE 
+							WHEN @DayName = 'Monday'	THEN (SELECT TOP 1 Monday FROM @CatPointPromoTbl)
+							WHEN @DayName = 'Tuesday'	THEN (SELECT TOP 1 Tuesday FROM @CatPointPromoTbl)
+							WHEN @DayName = 'Wednesday' THEN (SELECT TOP 1 Wednesday FROM @CatPointPromoTbl)
+							WHEN @DayName = 'Thursday'	THEN (SELECT TOP 1 Thursday FROM @CatPointPromoTbl)
+							WHEN @DayName = 'Friday'	THEN (SELECT TOP 1 Friday FROM @CatPointPromoTbl)
+							WHEN @DayName = 'Saturday'	THEN (SELECT TOP 1 Saturday FROM @CatPointPromoTbl)
+							WHEN @DayName = 'Sunday'	THEN (SELECT TOP 1 Sunday FROM @CatPointPromoTbl)
+							ELSE 0
+						END
+
+	IF (@IsValidDay = 1)
+		BEGIN
+			SELECT		TOP 1 @PointPromoFactor = [CPP].[PointPromoFactor],
+						@PromoDescription = [CPP].[PointPromoDescription]
+			FROM		[dbo].[CatPointPromo] CPP
+			WHERE		[CPP].[InPointExchange] = 1
+				AND		[CPP].[RowStatus] = 1
+				AND		SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+			ORDER BY	[CPP].[PointPromoWeight] DESC;
+		END
 
 	-- Get needed points for transaction
 	IF (UPPER(@ForzaPointsExchangeType) = 'SERVICIO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
@@ -177,7 +226,10 @@ BEGIN
 		END
 
 	-- Get new points price with promotion
-	SET @PromoDiscount = (@PointsNeededForExchange * (@PointPromoFactor/100));
+	IF (@PointPromoFactor > 0)
+		BEGIN
+			SET @PromoDiscount = (@PointsNeededForExchange * (@PointPromoFactor/100));
+		END
 	SET @PointsNeededForExchange = @PointsNeededForExchange - @PromoDiscount;
 
 	IF (@PointsNeededForExchange <= @AvailableForzaPoints)
