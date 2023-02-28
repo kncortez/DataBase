@@ -342,7 +342,7 @@ PRINT @ExistePiezaPorServicio
 	UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
 		  SET Active = 0, UserUpdated = @TokenId, DateUpdated = GETDATE()
 			 WHERE Guide_Serie=SUBSTRING(@Guide_Number,1,2) and Guide_Number=SUBSTRING(Replace(@guide_Number,'FD',''),0,
-				                                                          CHARINDEX('-',Replace(@guide_Number,'FD',''))) 
+				                                                          CHARINDEX('-',Replace(@guide_Number,'FD',''))) and Active = 1
 		COMMIT TRANSACTION;
 	END
 END
