@@ -86,7 +86,8 @@ BEGIN
 						  DateUpdated = GETDATE()
 
 				  where Guide_Serie = @Guide_Serie AND 
-                        Guide_Number = @Guide_Number
+                        Guide_Number = @Guide_Number AND
+						Active = 1
 
 					-- Actualizar registro de guía a último estado 
 					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
