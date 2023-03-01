@@ -75,6 +75,20 @@ BEGIN
 				AND da.ID_DeliveryOrderBySettlement = @IdManifest
 			-- FIN FDAPI-1374 <Oscar Morales 2023-02-16>
 
+			--FDD-1071 <Oscar Morales 2023-02-16> 
+			--Detectar desacatos courier
+			UPDATE coi
+			SET CourierContempt = 1
+			   ,TokenUpdated = @Token
+			   ,DateUpdated = GETDATE()
+			FROM ConfirmationOfIncidence coi
+			INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+				ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+				AND da.Guide_Serie = @GuideSerie
+				AND da.Guide_Number = @GuideNumber
+				AND da.ID_DeliveryOrderBySettlement = @IdManifest
+			WHERE coi.IsActionIssued = 1
+			--FIN FDD-1071 <Oscar Morales 2023-02-16> 
 		END TRY
 
 		BEGIN CATCH
