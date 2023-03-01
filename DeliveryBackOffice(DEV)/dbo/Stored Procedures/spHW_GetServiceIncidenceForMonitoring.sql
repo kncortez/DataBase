@@ -22,7 +22,7 @@ BEGIN
 	DECLARE @SACWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
 	DECLARE @OPWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
 
-	DECLARE @CourierFailedVisit AS NVARCHAR(100)= (SELECT ISNULL(SR.First_Name,'') +' '+ ISNULL(SR.Last_Name,'') AS NameCourier FROM  [dbo].[SenderReceiver] SR WITH (NOLOCK) WHERE ID = @CourierId)
+	
 
 	IF(@EndDate IS NULL)
 	BEGIN
@@ -130,13 +130,15 @@ BEGIN
 			,DO.Guide_Number 'GuideNumber'
 			,CAST(ISNULL(DO.IsLastMileReturn, 0) AS BIT) 'IsLastMileReturn'
 			,COI.ConfirmationOfIncidentToken 'IncidenceToken'
-			,@CourierFailedVisit As 'CourierFailedVisit'
+			,ISNULL(SR.First_Name,'') +' '+ ISNULL(SR.Last_Name,'') As 'CourierFailedVisit'
 			,COI.DateCreated AS 'Failedvisitdate'
-			,DA.LogLatitude AS 'LogLatitude'
-			,DA.LogLongitude AS 'LogLongitude'
+			,DA.Latitude AS 'LatitudeIncidence'
+			,DA.Longitude AS 'LongitudeIncidence'
 			,(Select TOP 1 Path_Incident
 						From [dbo].[DeliveryProof]
 						WHERE ID = DA.ID_Proof) AS  'IncidenceImage'
+            ,VPC.Latitude AS 'LatitudeVisitPointClient'
+			,VPC.Longitude AS 'LongitudeVisitPintClient'
 
 		FROM
 			[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
@@ -216,6 +218,10 @@ BEGIN
 					DSCDes.Hub = HLBUDes.HubLogisticId
 					AND
 					HLBUDes.UserId = @UserId
+			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR
+			     ON DA.ID_Courier = SR.ID
+			LEFT JOIN [dbo].[VisitPointClient] VPC
+				ON VPC.CodeOfReference = Case when  DO.IsLastMileReturn = 1 And DO.Sender_ID != 0 Then DO.Sender_ID Else DO.Receiver_ID End
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND
