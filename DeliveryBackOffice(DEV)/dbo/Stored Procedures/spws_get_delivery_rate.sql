@@ -1880,24 +1880,23 @@ BEGIN
                     IF @ServiceValue >= 0
                     BEGIN
                         IF (@ServiceValue = 0)
-                        BEGIN
-                            SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
-                                   @NewPriceShippment
-                                       = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate)
-                            FROM @TempRate tr
-                            WHERE Id = @i;
-                            SET @PriceWithCreditCard = 1;
-                        END;
-                        ELSE
-                        BEGIN
-                            SET @Discount = @PriceShippment - @ServiceValue;
-                            SELECT @NewPriceShippment
-                                = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
-                                   + tr.CreditCardRate + tr.OverWeightRate
-                                  )
-                            FROM @TempRate tr
-                            WHERE Id = @i;
-                        END;
+							BEGIN
+								SELECT	@Discount = IIF((tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate) > 0, (@PriceShippment), (@PriceShippment + tr.CreditCardRate)),
+										@NewPriceShippment = IIF((tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate) > 0, (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate + tr.CreditCardRate), 0)
+								FROM	@TempRate tr
+								WHERE	Id = @i;
+								IF (@NewPriceShippment = 0)
+									BEGIN 
+										SET @PriceWithCreditCard = 1;
+									END
+							END
+						ELSE 
+							BEGIN
+								SET @Discount = @PriceShippment - @ServiceValue
+								SELECT	@NewPriceShippment = (@ServiceValue + tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate)
+								FROM	@TempRate tr
+								WHERE	Id = @i;
+							END
                     END;
                     ELSE
                     BEGIN
@@ -1907,16 +1906,16 @@ BEGIN
                             --Si es tarifa fija
                             IF @ServiceValueSubscription >= 0
                                 IF (@ServiceValueSubscription = 0)
-                                BEGIN
-                                    SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
-                                           @NewPriceShippment
-                                               = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
-                                                  + tr.OverWeightRate
-                                                 )
-                                    FROM @TempRate tr
-                                    WHERE Id = @i;
-                                    SET @PriceWithCreditCard = 1;
-                                END;
+									BEGIN
+										SELECT	@Discount = IIF((tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate) > 0, (@PriceShippment), (@PriceShippment + tr.CreditCardRate)),
+												@NewPriceShippment = IIF((tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate) > 0, (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate + tr.CreditCardRate), 0)
+										FROM	@TempRate tr
+										WHERE	Id = @i;
+										IF (@NewPriceShippment = 0)
+											BEGIN
+												SET @PriceWithCreditCard = 1;
+											END
+									END
                                 ELSE
                                 BEGIN
                                     SET @Discount = @PriceShippment - @ServiceValueSubscription;

@@ -494,11 +494,6 @@ BEGIN
                 BEGIN
                     SET @DiscountMembership = @PriceShippment - @ServiceValue;
                     SET @NewPriceShippment = @ServiceValue;
-
-                    IF (@ServiceValue = 0)
-                    BEGIN
-                        SET @PriceWithCreditCard = 1;
-                    END;
                 END;
                 ELSE
                 BEGIN
@@ -669,14 +664,6 @@ BEGIN
                 IF @ServiceValue >= 0
                 BEGIN
                     SET @DiscountMembership = @PriceShippment - @ServiceValue;
-                    IF (@ServiceValue = 0)
-                    BEGIN
-                        SET @PriceWithCreditCard = 1;
-                    END;
-                    ELSE
-                    BEGIN
-                        SET @PriceWithCreditCard = 0;
-                    END;
 
                     SET @NewPriceShippment = @ServiceValue;
                     SET @DecriptionDiscount = CONCAT('Tarifa fija membresía a ', @ServiceValue);
@@ -707,14 +694,6 @@ BEGIN
                         IF @ServiceValueSubscription >= 0
                         BEGIN
                             SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
-                            IF (@ServiceValueSubscription = 0)
-                            BEGIN
-                                SET @PriceWithCreditCard = 1;
-                            END;
-                            ELSE
-                            BEGIN
-                                SET @PriceWithCreditCard = 0;
-                            END;
 
                             SET @NewPriceShippment = @ServiceValueSubscription;
                             SET @DecriptionDiscount = CONCAT('Tarifa fija suscripción a ', @ServiceValueSubscription);
@@ -947,14 +926,7 @@ BEGIN
         PRINT 'servicio';
         PRINT @ServiceShortName;
 
-        SELECT @NewPrice
-            = IIF(@PriceWithCreditCard = 1,
-                  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-                   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)
-                  ),
-                  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-                   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)
-                  )),
+        SELECT @NewPrice = IIF((ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)) > 0, (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)), 0),
                @BaseRate = ISNULL(tr.BaseRate, 0),
                @Discount = ISNULL(tr.Discount, 0),
                @DiscountDescription = ISNULL(tr.DiscountName, ''),
@@ -978,14 +950,7 @@ BEGIN
         IF @NewPrice = 0
         BEGIN
             SELECT TOP 1
-                   @NewPrice
-					= IIF(@PriceWithCreditCard = 1,
-						  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-						   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)
-						  ),
-						  (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0)
-						   + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)
-						  )),
+                   @NewPrice = IIF((ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0)) > 0, (ISNULL(tr.Price, 0) + ISNULL(tr.FragilRate, 0) + ISNULL(tr.CollectedRate, 0) + ISNULL(tr.InsuranceRate, 0) + ISNULL(tr.OverWeightRate, 0) + ISNULL(tr.CreditCardRate, 0)), 0),
                    @BaseRate = ISNULL(tr.BaseRate, 0),
                    @Discount = ISNULL(tr.Discount, 0),
                    @DiscountDescription = ISNULL(tr.DiscountName, ''),
