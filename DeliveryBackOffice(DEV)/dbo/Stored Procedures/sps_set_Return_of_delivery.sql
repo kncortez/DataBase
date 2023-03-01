@@ -1,45 +1,24 @@
-﻿
+
 
 -- =============================================
 -- Author:		<Hernandez, Josselyn>
 -- Create date: <2020-09-15>
 -- Description:	<Devolucion entrega de guía>
 -- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2022-09-26>
--- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
--- =============================================
--- =============================================
--- Author:		<Edelman>
--- Create date: <2022-10-19>
--- Description:	<confirmación de devolución, ingreso a cola de webhooks>
--- =============================================
-
-CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
+ALter PROCEDURE [dbo].[sps_set_Return_of_delivery]
 		@Guide_Serie AS VARCHAR(2), --guide serie
 		@Guide_Number AS INT, --guide number
 		@DateOfDelivery VARCHAR(50),--Date of delivery
 		@TokenId AS VARCHAR(50) --token user
 AS
 BEGIN
-	DECLARE @StatusId tinyint = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Devuelto' AND RowStatus = 1) --Status of returned 
+	DECLARE @StatusId tinyint = 14 --Status of returned 
 	DECLARE @ValidateOperation BIGINT
 	DECLARE @Times INT -- cantidad de veces que se encuentra el registro con estado de entregado
 	DECLARE @Datetime DATETIME -- Fecha y hora del último checkpoint
 
-	DECLARE @StatusProgrammed TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Programado para devolución' AND RowStatus = 1)
-	DECLARE @StatusOnRoute TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'En ruta para devolución' AND RowStatus = 1)
-
 	BEGIN TRANSACTION
 		BEGIN TRY
-
-		DECLARE @CurrentStatus int 
-
-		SELECT @CurrentStatus = dr.StatusOrderId FROM dbo.DeliveryOrder dr
-		WHERE dr.Guide_Serie = @Guide_Serie AND dr.Guide_Number = @Guide_Number
-
-		IF (@CurrentStatus IN(@StatusProgrammed,@StatusOnRoute))
-			BEGIN
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId OR StatusOrderId = 5))
 
@@ -146,9 +125,6 @@ BEGIN
 			-- registro existente
 			ELSE
 				SET @ValidateOperation = -1
-			END
-			ELSE
-				SET @ValidateOperation = -3
 
 		END TRY
 
@@ -187,13 +163,6 @@ BEGIN
 				SELECT			  
 					-2 AS 'StatusCode',
 					'Fecha y hora incorrecta' AS 'Description', 
-					@ValidateOperation AS 'NumTransferID'
-			END
-			ELSE IF (@ValidateOperation = -3)
-			BEGIN
-				SELECT			  
-					-3 AS 'StatusCode',
-					'Para operar una guia en este módulo debe estar en estado [Programado para devolución] o [En ruta para devolución]' AS 'Description', 
 					@ValidateOperation AS 'NumTransferID'
 			END
 			ELSE
