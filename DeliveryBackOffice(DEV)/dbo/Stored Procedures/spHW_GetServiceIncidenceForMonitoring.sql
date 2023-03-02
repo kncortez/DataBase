@@ -98,6 +98,20 @@ BEGIN
 			) 'ServiceAddress'
 			,(
 				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Town
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Town
+					ELSE DO.Receiver_Town
+				END
+			) 'ServiceTownship'
+			,(
+				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Department
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Department
+					ELSE DO.Receiver_Department
+				END
+			) 'ServiceProvince'
+			,(
+				CASE
 					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Phone
 					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Phone
 					ELSE DO.Receiver_Phone
