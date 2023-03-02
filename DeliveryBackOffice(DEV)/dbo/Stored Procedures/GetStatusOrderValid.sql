@@ -20,45 +20,53 @@ BEGIN
                       AND do.Guide_Number = @GuideNumber
             );
 
+	DECLARE @StatusDelivery TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Entregado')
+	DECLARE @StatusDeliveryExpress TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Entregado en Express center')
+	DECLARE @StatusCODSettlement TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'COD Liquidado')
+	DECLARE @StatusCODPaid TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'COD Pagado')
+	DECLARE @StatusReturn TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Devuelto')
+	DECLARE @StatusReturnExpress TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Devuelto en Express center')
+	DECLARE @StatusCancelled TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Anulado')
+
     --Estados de finalización (Entregado, Entregado en Express center)
-    IF @GuideStatusOrderId = 5
-       OR @GuideStatusOrderId = 22
+    IF @GuideStatusOrderId = @StatusDelivery
+       OR @GuideStatusOrderId = @StatusDeliveryExpress
         --Solo pueden pasar a COD Liquidado o COD PAGADO
-        IF @StatusOrderId = 24
-           OR @StatusOrderId = 25
+        IF @StatusOrderId = @StatusCODSettlement
+           OR @StatusOrderId = @StatusCODPaid
             SELECT 1 StatusCode,
                    'Estado válido.' Description;
         ELSE
             SELECT 0 StatusCode,
                    'La guía se encuentra en estado Entregada.' Description;
     --COD Liquidado
-    ELSE IF @GuideStatusOrderId = 24
+    ELSE IF @GuideStatusOrderId = @StatusCODSettlement
         --Solo puede pasar a COD pagado
-        IF @StatusOrderId = 25
+        IF @StatusOrderId = @StatusCODPaid
             SELECT 1 StatusCode,
                    'Estado válido.' Description;
         ELSE
             SELECT 0 StatusCode,
                    'La guía se encuentra en estado COD Liquidado.' Description;
     --COD Pagado
-    ELSE IF @GuideStatusOrderId = 25
+    ELSE IF @GuideStatusOrderId = @StatusCODPaid
         --Solo puede pasar a COD Liquidado
-        IF @StatusOrderId = 24
+        IF @StatusOrderId = @StatusCODSettlement
             SELECT 1 StatusCode,
                    'Estado válido.' Description;
         ELSE
             SELECT 0 StatusCode,
                    'La guía se encuentra en estado COD Pagado.' Description;
     --ANULADO
-    ELSE IF @GuideStatusOrderId = 7
+    ELSE IF @GuideStatusOrderId = @StatusCancelled
         SELECT 0 StatusCode,
                'La guía se encuentra en estado Anulado.' Description;
     --Devuelto en Express Center
-    ELSE IF @GuideStatusOrderId = 23
+    ELSE IF @GuideStatusOrderId = @StatusReturnExpress
         SELECT 0 StatusCode,
                'La guía se encuentra en estado Devuelto en Express Center.' Description;
     --Devuelto
-    ELSE IF @GuideStatusOrderId = 14
+    ELSE IF @GuideStatusOrderId = @StatusReturn
         SELECT 0 StatusCode,
                'La guía se encuentra en estado Devuelto.' Description;
 

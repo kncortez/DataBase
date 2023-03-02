@@ -26,6 +26,10 @@ BEGIN
 		IsCollect BIT
     );
 
+	DECLARE @StatusDelivery TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Entregado')
+	DECLARE @StatusCOD TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'COD pagado')
+	DECLARE @StatusReturn TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Devuelto')
+
     INSERT INTO @GuidesFound
     SELECT DISTINCT
            dsd.Guide_Serie,
@@ -39,10 +43,9 @@ BEGIN
           (
               dsd.Guide_Settlement = 0
               OR dsd.Guide_Settlement IS NULL
-			  -- OR dsd.TokenUpdated IS NULL
           );
-		  --Select *from @GuidesFound
-    SELECT --*
+		  
+    SELECT 
         dbs.ID,
         Date_Dispatched,
         Pieces_Dry_Dispatched,
@@ -66,23 +69,21 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
                 WHERE dod.Guide_Serie = gf.Guide_Serie
                       AND dod.Guide_Number = gf.Guide_Number
-                      AND dod.StatusOrderId IN ( 5, 25 ) -- Entregado y COD pagado
+                      AND dod.StatusOrderId IN ( @StatusDelivery, @StatusCOD, @StatusReturn ) -- Entregado, COD pagado y devuelto
 					  AND dod.RowStatus = 1
             ),
             0
                   )
            ) AS Delivered,
-           --ISNULL(do.Collect_OnDelivery,0) as Collect_OnDelivery
            (CASE
                 WHEN do.IsCollect = 'TRUE' THEN
-                    CONVERT(VARCHAR, CAST((ISNULL(do.Collect_OnDelivery, 0) + ISNULL(do.PriceShippment, 0)) AS DECIMAL), 1)
+                    CONVERT(VARCHAR, CAST((ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 0) + ISNULL(do.PriceShippment, 0)) AS DECIMAL), 1)
                 ELSE
-                    CONVERT(VARCHAR, CAST((ISNULL(do.Collect_OnDelivery, 0)) AS DECIMAL), 1)
+                    CONVERT(VARCHAR, CAST((ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 0)) AS DECIMAL), 1)
             END
            ) AS Collect_OnDelivery,
 		   do.IsCollect
     FROM @GuidesFound gf
-        --JOIN DeliveryBackOffice.dbo.DeliveryAttempt da ON gf.Guide_Serie = da.Guide_Serie AND gf.Guide_Number = da.Guide_Number
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON do.Guide_Serie = gf.Guide_Serie
                AND do.Guide_Number = gf.Guide_Number;
