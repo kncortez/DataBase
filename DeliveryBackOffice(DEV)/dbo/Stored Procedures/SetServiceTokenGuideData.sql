@@ -103,7 +103,7 @@ BEGIN
 				DateUsed = GETDATE(),
 				Latitude = @Latitude,
 				Longitude = @Longitude,
-				ProviderModule = (SELECT [ModIdModule] FROM [CatModule] WHERE [ModName]LIKE'%Landing Delivery Page%'),
+				ProviderModule = (SELECT TOP 1 [ModIdModule] FROM [CatModule] WITH(NOLOCK) WHERE [ModName]LIKE'%Landing Delivery Page%'),
 				TokenUpdated = 'SYS-HERMESROUTESLanding',
 				DateUpdated = GETDATE()
 			FROM [dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
@@ -510,25 +510,25 @@ BEGIN
 			IF @IsConfirmed = 1
 			BEGIN
 				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida') 
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Visita Fallida') 
 			END
 			ELSE
 			BEGIN
 				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
+				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Incidencia en Ruta') 
 			END
 
 			-- Si tiene diferente estado, actualizar 
-			IF EXISTS (SELECT 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
+			IF EXISTS (SELECT TOP 1 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
 			BEGIN 
 			
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
-				FROM DeliveryOrderDetail dod
+				FROM DeliveryOrderDetail dod WITH(NOLOCK)
 				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON dod.Guide_Serie = da.Guide_Serie
 					AND dod.Guide_Number = da.Guide_Number
-				INNER JOIN ConfirmationOfIncidence coi 
+				INNER JOIN ConfirmationOfIncidence coi  WITH(NOLOCK)
 					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
 				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
 				AND coi.RowStatus = 1
@@ -549,11 +549,11 @@ BEGIN
 
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
-				FROM DeliveryOrderPiece dop
+				FROM DeliveryOrderPiece dop WITH(NOLOCK)
 				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON dop.GuideSerie = da.Guide_Serie
 					AND dop.GuideNumber = da.Guide_Number
-				INNER JOIN ConfirmationOfIncidence coi 
+				INNER JOIN ConfirmationOfIncidence coi  WITH(NOLOCK)
 					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
 				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
 				AND coi.RowStatus = 1
@@ -565,11 +565,11 @@ BEGIN
 				-- UDPATE ONLY ISLASTMILERETURN IN DELIVERY ORDER
 				UPDATE do
 				SET IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
-				FROM DeliveryOrder do
+				FROM DeliveryOrder do WITH(NOLOCK)
 				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
-				INNER JOIN ConfirmationOfIncidence coi 
+				INNER JOIN ConfirmationOfIncidence coi WITH(NOLOCK)
 					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
 				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
 				AND coi.RowStatus = 1
@@ -597,34 +597,34 @@ BEGIN
 										AND		[COI].[RowStatus] = 1 
  									);
 
-			IF (@IsLastMileReturn = 1 AND LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != '')
+			IF (@IsLastMileReturn = 1)
 				BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Sender_Address] = @NewAddress
 							--[DO].[Sender_Town] = @NewTown,
 							--[DO].[Sender_Zone] = @NewZone,
 							--[DO].[SenderIdTownship] = @NewTownshipID
-					FROM	[dbo].[DeliveryOrder] [DO]
+					FROM	[dbo].[DeliveryOrder] [DO] WITH(NOLOCK)
 					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
 						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
-					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
+					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
 						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
 					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
 						AND		[COI].[RowStatus] = 1 
 				END
-			ELSE IF (@IsLastMileReturn = 0 AND LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != '')
+			ELSE 
 				BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Receiver_Address] = @NewAddress
 							--[DO].[Receiver_Town] = @NewTown,
 							--[DO].[Receiver_Zone] = @NewZone,
 							--[DO].[ReceiverIdTownship] = @NewTownshipID
-					FROM	[dbo].[DeliveryOrder] [DO]
+					FROM	[dbo].[DeliveryOrder] [DO] WITH(NOLOCK)
 					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
 						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
-					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI 
+					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
 						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
 					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
 						AND		[COI].[RowStatus] = 1 

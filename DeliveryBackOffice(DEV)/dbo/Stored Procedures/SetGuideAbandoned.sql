@@ -16,62 +16,101 @@ BEGIN
 	BEGIN  TRANSACTION
 	BEGIN TRY
 		DECLARE @StatusOrderId TINYINT
+		DECLARE @Exists BIT = 0
+		DECLARE @IsValidPassword BIT = 0
+		DECLARE @IsValidRol BIT = 0
 
-		IF EXISTS (SELECT
-				1
-			FROM InternalUser iu
-			INNER JOIN RegisterUser ru
-				ON iu.RegisterUserID = ru.UsrIdUser
+		SELECT
+			@Exists = 1
+		   ,@IsValidPassword =
+			CASE
+				WHEN ru.UsrLastPassword = @Password THEN 1
+				ELSE 0
+			END
+		   ,@IsValidRol =
+			CASE
+				WHEN cr.RolName = 'Supervisor' THEN 1
+				ELSE 0
+			END
+		FROM InternalUser iu
+		INNER JOIN RegisterUser ru
+			ON iu.RegisterUserID = ru.UsrIdUser
 				AND ru.UsrRowStatus = 1
-			INNER JOIN RolByUserBySystem rus
-				ON ru.UsrIdUser = rus.RusIdUser
+		INNER JOIN RolByUserBySystem rus
+			ON ru.UsrIdUser = rus.RusIdUser
 				AND rus.RusRowStatus = 1
-			INNER JOIN CatRol cr
-				ON rus.RusIdRol = cr.RolIdRol
-			INNER JOIN CatSystem cs
-				ON rus.RusIdSystem = cs.SysIdSystem
-			WHERE iu.IdUser = @IdUser
-			AND iu.Username = @Username
-			AND ru.UsrLastPassword = @Password
-			AND cr.RolName = 'Supervisor'
-			AND cs.SysNameSystem = @NameSystem
-			AND iu.RowStatus = 1)
+		INNER JOIN CatRol cr
+			ON rus.RusIdRol = cr.RolIdRol
+		INNER JOIN CatSystem cs
+			ON rus.RusIdSystem = cs.SysIdSystem
+		WHERE iu.IdUser = @IdUser
+		AND iu.Username = @Username
+		AND cs.SysNameSystem = @NameSystem
+		AND iu.RowStatus = 1
+
+		IF (@Exists = 1)
 		BEGIN
 
-			SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Paquete abandonado')
+			IF (@IsValidPassword = 1)
+			BEGIN
 
-			-- registrar checkpoint histórico de paquete abandonado
-			INSERT INTO [dbo].[DeliveryOrderDetail]
-			   ([Guide_Serie]
-			   ,[Guide_Number]
-			   ,[StatusOrderId]
-			   ,[UserCreated]
-			   ,[DateCreated]
-			   ,[DateCreatedInSystem]
-			   ,[Observations]
-			   ,[Temperature_Celsius])
-			 VALUES
-				   (@GuideSerie
-				   ,@GuideNumber
-				   ,@StatusOrderId
-				   ,@Token
-				   ,GETDATE()
-				   ,GETDATE()
-				   ,NULL
-				   ,NULL)
+				IF (@IsValidRol = 1)
+				BEGIN
 
-			-- actualizar estado de la guía
-			UPDATE DeliveryOrder
-			SET StatusOrderId = @StatusOrderId
-			WHERE Guide_Serie = @GuideSerie
-			AND Guide_Number = @GuideNumber
+					SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Paquete abandonado')
+
+					-- registrar checkpoint histórico de paquete abandonado
+					INSERT INTO [dbo].[DeliveryOrderDetail]
+					   ([Guide_Serie]
+					   ,[Guide_Number]
+					   ,[StatusOrderId]
+					   ,[UserCreated]
+					   ,[DateCreated]
+					   ,[DateCreatedInSystem]
+					   ,[Observations]
+					   ,[Temperature_Celsius])
+					 VALUES
+						   (@GuideSerie
+						   ,@GuideNumber
+						   ,@StatusOrderId
+						   ,@Token
+						   ,GETDATE()
+						   ,GETDATE()
+						   ,NULL
+						   ,NULL)
+
+					-- actualizar estado de la guía
+					UPDATE DeliveryOrder
+					SET StatusOrderId = @StatusOrderId
+					WHERE Guide_Serie = @GuideSerie
+					AND Guide_Number = @GuideNumber
 
 
-			SELECT
-				200 AS 'StatusCode'
-			   ,'Credenciales correctas.' AS 'Description'
+					SELECT
+						200 AS 'StatusCode'
+					   ,'Credenciales correctas.' AS 'Description'
 
-			COMMIT TRANSACTION
+					COMMIT TRANSACTION
+				END
+				ELSE 
+				BEGIN
+					ROLLBACK TRANSACTION
+
+					SELECT
+						403 AS 'StatusCode'
+					   ,'El usuario ingresado no posee los permisos necesarios.' AS 'Description'
+
+				END
+			END
+			ELSE 
+			BEGIN
+				ROLLBACK TRANSACTION
+
+				SELECT
+					401 AS 'StatusCode'
+				   ,'El usuario o la contraseña no coinciden, por favor revise la información.' AS 'Description'
+
+			END
 		END
 		ELSE 
 		BEGIN
@@ -79,7 +118,7 @@ BEGIN
 
 			SELECT
 				404 AS 'StatusCode'
-			   ,'El usuario no ha sido encontrado.' AS 'Description'
+			   ,'El usuario ingresado no ha sido encontrado.' AS 'Description'
 
 		END
 	END TRY
