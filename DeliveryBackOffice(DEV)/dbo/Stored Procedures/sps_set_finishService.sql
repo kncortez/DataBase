@@ -1,4 +1,9 @@
-﻿
+﻿-- =============================================
+-- Author: <Jerson Ochoa>
+-- Updated date: <2023-01-26>
+-- Description: <Agregar acumulación de puntos forza>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_set_finishService]
     @InGuidesP VARCHAR(MAX),
     @TblListGuides AS TblListGuides READONLY,
@@ -1240,6 +1245,23 @@ BEGIN
                 SELECT @Output FormatJson;
 
             END;
+
+			if (@ServiceType='RETURN' or @ServiceType='DELIVERY' )
+			Begin
+			
+			--- Borrado Logico de posición en la guía
+
+			UPDATE wh
+			SET Active = 0
+			   ,UserUpdated = @TokenP
+			   ,DateUpdated = GETDATE()
+			FROM Warehouse wh
+			INNER JOIN @TblListGuides tlg
+				ON wh.Guide_Serie = tlg.Guide_Serie
+				AND wh.Guide_Number = tlg.Guide_Number
+			WHERE wh.Active = 1
+			End
+
 
         END TRY
         BEGIN CATCH
