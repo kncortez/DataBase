@@ -18,8 +18,7 @@ BEGIN
 	DECLARE @ForzaPointsExchangeType NVARCHAR(25) = '';
 	DECLARE @ForzaPointsExchangeValue INT = 0;
 	DECLARE @CatSalesPackageStatusId INT = 0;
-	DECLARE @PromoPoints INT = 0;
-	DECLARE @ForzaPointsWithPromotion INT = 0;
+	DECLARE @PromoDiscount INT = 0;
 	DECLARE @PointPromoFactor DECIMAL(12,2) = 0;
 	DECLARE @PointsNeededForExchange INT = 0;
 	DECLARE @ProceedWithTransaction BIT = 0;
@@ -27,7 +26,8 @@ BEGIN
 	DECLARE @MembershipLock INT = 0;
 	DECLARE @GuidesProcessedList TABLE (GuideSerie NVARCHAR(5),
 										GuideNumber INT,
-										PriceShipment DECIMAL(12,2));
+										PriceShipment DECIMAL(12,2),
+										IsCollect BIT);
 	DECLARE @CustomerList TABLE (CustomerId INT,
 								AccountId INT);
 
@@ -61,8 +61,9 @@ BEGIN
 			FROM			[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			INNER JOIN		[dbo].[Account] A
 				ON			[DO].[IdCustomer] = [A].[IdCustomer]
-			WHERE			[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND			[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList);
+			INNER JOIN		@GuidesList GL
+				ON			[DO].[Guide_Serie] = [GL].[Guide_Serie]
+				AND			[DO].[Guide_Number] = [GL].[Guide_Number];
 			
 			-- Validations
 			IF ((SELECT COUNT(DISTINCT(CustomerId)) FROM @CustomerList) != 1)
@@ -88,9 +89,10 @@ BEGIN
 			FROM		[dbo].[MembershipSubscriptionLog] MSL
 			INNER JOIN	[dbo].[Membership] M
 				ON		[MSL].[MembershipId] = [M].[IdMembership]
-			WHERE		[MSL].[LogGuideSerie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND		[MSL].[LogGuideNumber] IN (SELECT Guide_Number FROM @GuidesList)
-				AND		[MSL].[RowStatus] = 1
+			INNER JOIN	@GuidesList GL
+				ON		[MSL].[LogGuideSerie] = [GL].[Guide_Serie]
+				AND		[MSL].[LogGuideNumber] = [GL].[Guide_Number]
+			WHERE		[MSL].[RowStatus] = 1
 				AND		[MSL].[SubscriptionId] IS NULL
 				AND		[MSL].[LogServiceNumber] <= [M].[MembershipMaxServiceFixedValue];
 
@@ -105,9 +107,10 @@ BEGIN
 			FROM		[dbo].[MembershipSubscriptionLog] MSL
 			INNER JOIN	[dbo].[Subscription] S
 				ON		[MSL].[SubscriptionId] = [S].[IdSubscription]
-			WHERE		[MSL].[LogGuideSerie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND		[MSL].[LogGuideNumber] IN (SELECT Guide_Number FROM @GuidesList)
-				AND		[MSL].[RowStatus] = 1
+			INNER JOIN	@GuidesList GL
+				ON		[MSL].[LogGuideSerie] = [GL].[Guide_Serie]
+				AND		[MSL].[LogGuideNumber] = [GL].[Guide_Number]
+			WHERE		[MSL].[RowStatus] = 1
 				AND		[MSL].[LogServiceNumber] <= [S].[SubscriptionMaxServiceFixedValue];
 
 			IF (@MembershipLock > 0)
@@ -119,13 +122,22 @@ BEGIN
 			-- Get data for each guide
 			INSERT INTO @GuidesProcessedList(GuideSerie, 
 											GuideNumber, 
-											PriceShipment)
+											PriceShipment,
+											IsCollect)
 			SELECT							[DO].[Guide_Serie],
 											[DO].[Guide_Number],
-											[DO].[PriceShippment]
+											[DO].[PriceShippment],
+											[DO].[IsCollect]
 			FROM							[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			WHERE							[DO].[Guide_Serie] IN (SELECT Guide_Serie FROM @GuidesList)
-				AND							[DO].[Guide_Number] IN (SELECT Guide_Number FROM @GuidesList);
+			INNER JOIN						@GuidesList GL
+				ON							[DO].[Guide_Serie] = [GL].[Guide_Serie]
+				AND							[DO].[Guide_Number] = [GL].[Guide_Number];
+
+			IF ((SELECT COUNT(IsCollect) FROM @GuidesProcessedList WHERE IsCollect = 1) > 0)
+				BEGIN
+					SELECT 0 [spResult], 'El proceso no puede continuar debido a que se encontraron guías tipo COLLECT en el listado recibido' [spMessage];
+					RETURN;
+				END
 		END
 
 	-- Get available points
@@ -157,10 +169,6 @@ BEGIN
 		AND		SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
 	ORDER BY	[CPP].[PointPromoWeight] DESC;
 
-	-- Get points with promotion
-	SET @PromoPoints = (@AvailableForzaPoints * (@PointPromoFactor/100));
-	SET @ForzaPointsWithPromotion = @AvailableForzaPoints + @PromoPoints;
-
 	-- Get needed points for transaction
 	IF (UPPER(@ForzaPointsExchangeType) = 'SERVICIO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
 		BEGIN
@@ -172,15 +180,17 @@ BEGIN
 			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT SUM(PriceShipment) FROM @GuidesProcessedList));
 		END
 
-	IF (@PointsNeededForExchange <= @ForzaPointsWithPromotion)
+	-- Get new points price with promotion
+	SET @PromoDiscount = (@PointsNeededForExchange * (@PointPromoFactor/100));
+	SET @PointsNeededForExchange = @PointsNeededForExchange - @PromoDiscount;
+
+	IF (@PointsNeededForExchange <= @AvailableForzaPoints)
 		BEGIN
 			SET @ProceedWithTransaction = 1;
 		END
 
 	SELECT	ISNULL(@AvailableForzaPoints, 0) [AvailableForzaPoints], 
 			ISNULL(@PointPromoFactor, 0) [PointPromoFactor], 
-			ISNULL(@PromoPoints, 0) [PromoPoints],
-			ISNULL(@ForzaPointsWithPromotion, 0) [PointsWithPromotion],
 			ISNULL(@PointsNeededForExchange, 0) [PointsNeededForExchange],
 			@ProceedWithTransaction [ProceedWithTransaction],
 			ISNULL(@PromoDescription, '') [PromoDescription],
