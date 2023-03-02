@@ -38,123 +38,35 @@ BEGIN
 
         BEGIN TRY
             INSERT INTO @TblGuides
-            SELECT dsd.Guide_Serie,
-                   dsd.Guide_Number,
-                   CASE
-                       WHEN do.IsLastMileReturn = 1 THEN
-                           CASE
-                               WHEN
-                               (
-                                   SELECT COUNT(1)
-                                   FROM DeliveryOrderDetail dod WITH (NOLOCK)
-                                       INNER JOIN StatusOrder so WITH (NOLOCK)
-                                           ON so.StatusOrderId = dod.StatusOrderId
-                                   WHERE dod.RowStatus = 1
-                                         AND dod.Guide_Serie = do.Guide_Serie
-                                         AND dod.Guide_Number = do.Guide_Number
-                                         AND so.OrderDescription = 'Intento de entrega fallida'
-                               ) >=
-                               (
-                                   SELECT TOP 1
-                                          ISNULL(rh.Attempt, 2) + rh.AttemptReturn
-                                   FROM RateHeader rh WITH (NOLOCK)
-                                       LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-                                           ON vpc.CodeOfReference = do.Sender_ID
-                                       INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-                                           ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                                              AND
-                                              (
-                                                  rc.RbcCodeOfReference IS NULL
-                                                  OR rc.RbcCodeOfReference = do.Sender_ID
-                                              )
-                                   WHERE rh.RheId = rc.RbcIdRate
-                                   ORDER BY rc.RbcCodeOfReference DESC
-                               ) THEN
-                                   3 --'IsBazar'
-                               ELSE
-                                   4 --'IsReturn'
-                           END
-                       ELSE
-                           CASE
-                               WHEN
-                               (
-                                   SELECT COUNT(1)
-                                   FROM DeliveryOrderDetail dod WITH (NOLOCK)
-                                       INNER JOIN StatusOrder so WITH (NOLOCK)
-                                           ON so.StatusOrderId = dod.StatusOrderId
-                                   WHERE dod.RowStatus = 1
-                                         AND dod.Guide_Serie = do.Guide_Serie
-                                         AND dod.Guide_Number = do.Guide_Number
-                                         AND so.OrderDescription = 'Intento de entrega fallida'
-                               ) >= ISNULL(
-                                    (
-                                        SELECT TOP 1
-                                               rh.Attempt
-                                        FROM RateHeader rh WITH (NOLOCK)
-                                            LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-                                                ON vpc.CodeOfReference = do.Sender_ID
-                                            INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-                                                ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-                                                   AND
-                                                   (
-                                                       rc.RbcCodeOfReference IS NULL
-                                                       OR rc.RbcCodeOfReference = do.Sender_ID
-                                                   )
-                                                   AND rc.RbcRowStatus = 1
-                                        WHERE rh.RheId = rc.RbcIdRate
-                                        ORDER BY rc.RbcCodeOfReference DESC
-                                    ),
-                                    2
-                                          ) THEN
-                                   2 --'IsReturn'
-                               ELSE
-                                   1 --'IsDelivery'
-                           END
-                   END FlowGuide
-            FROM DeliverySettlementDetail dsd WITH (NOLOCK)
-                INNER JOIN DeliveryOrder do WITH (NOLOCK)
-                    ON dsd.Guide_Serie = do.Guide_Serie
-                       AND dsd.Guide_Number = do.Guide_Number
-            WHERE dsd.ID_DeliveryOrderBySettlement = @DeliveryOrderBySettlementId
-                  AND dsd.RowStatus = 1
-                  AND dsd.Guide_Returned = 1;
+            SELECT DISTINCT
+				dsd.Guide_Serie
+			   ,dsd.Guide_Number
+			   ,CASE
+					WHEN NOT do.IsLastMileReturn = 1 THEN CASE
+							WHEN doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount OR coi.ClientConfirmsReturn = 1 THEN 2
+							ELSE 1
+						END
+					ELSE 1
+				END
+				FlowGuide
+			FROM DeliverySettlementDetail dsd WITH (NOLOCK)
+			INNER JOIN DeliveryOrder do WITH (NOLOCK)
+				ON dsd.Guide_Serie = do.Guide_Serie
+					AND dsd.Guide_Number = do.Guide_Number
+			INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
+				ON dsd.Guide_Serie = doad.GuideSerie
+					AND dsd.Guide_Number = doad.GuideNumber
+					AND doad.RowStatus = 1
+			INNER JOIN DeliveryAttempt da WITH(NOLOCK)
+			ON dsd.Guide_Serie = da.Guide_Serie
+					AND dsd.Guide_Number = da.Guide_Number
+					AND da.ID_DeliveryOrderBySettlement = dsd.ID_DeliveryOrderBySettlement
+			LEFT JOIN ConfirmationOfIncidence coi WITH(NOLOCK)
+			ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+			WHERE dsd.ID_DeliveryOrderBySettlement = @DeliveryOrderBySettlementId
+			AND dsd.RowStatus = 1
+			AND dsd.Guide_Returned = 1
 
-
-
-            -- Marcar las que ya no tienen intentos disponibles de devolución a paquetes destruidos
-            UPDATE do
-            SET StatusOrderId = @StatusOrderDestroyed
-            FROM DeliveryOrder do
-                INNER JOIN @TblGuides tg
-                    ON do.Guide_Serie = tg.GuideSerie
-                       AND do.Guide_Number = tg.GuideNumber
-            WHERE tg.FlowGuide = 3;
-
-            INSERT INTO [dbo].[DeliveryOrderDetail]
-            (
-                [Guide_Serie],
-                [Guide_Number],
-                [StatusOrderId],
-                [UserCreated],
-                [DateCreated],
-                [DateCreatedInSystem],
-                [Observations],
-                [Temperature_Celsius],
-                [PieceId],
-                [RowStatus]
-            )
-            SELECT tg.GuideSerie,
-                   tg.GuideNumber,
-                   @StatusOrderDestroyed,
-                   'spHD_ValidateDeliveryAttemps',
-                   GETDATE(),
-                   GETDATE(),
-                   NULL,
-                   NULL,
-                   NULL,
-                   1
-            FROM @TblGuides tg
-            WHERE tg.FlowGuide = 3;
 
             -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
             UPDATE do

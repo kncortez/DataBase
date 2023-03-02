@@ -1429,6 +1429,8 @@
     <Build Include="dbo\Stored Procedures\RDL_CODReport_temp.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
     <Build Include="dbo\Stored Procedures\Reporte_de_membresías_y_suscripciones.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetServiceIncidenceForMonitoring.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetActionToConfirmationOfIncidence.sql" />
     <Build Include="dbo\Tables\PackagesRangeDetail.sql" />
     <Build Include="dbo\Tables\PackagesRangeCOD.sql" />
     <Build Include="dbo\Tables\PackagesRange.sql" />
@@ -1440,6 +1442,8 @@
     <Build Include="dbo\Stored Procedures\GetPackagesRangeData.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRate.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRange.sql" />
+    <Build Include="dbo\Stored Procedures\SetGuideAbandoned.sql" />
+    <Build Include="dbo\Tables\DeliveryOrderAttemptData.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetStatusAccountData.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_TMGetDataMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
