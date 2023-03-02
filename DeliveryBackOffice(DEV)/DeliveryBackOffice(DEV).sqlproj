@@ -1446,6 +1446,8 @@
     <Build Include="dbo\Stored Procedures\SetGuideAbandoned.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetServiceIncidenceForMonitoring.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetActionToConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspectionDetail.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspection.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
