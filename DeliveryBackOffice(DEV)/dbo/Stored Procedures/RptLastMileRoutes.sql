@@ -41,7 +41,8 @@ BEGIN
 			SUM(IIF(DSD.Guide_Delivered = 1, (DO.Pieces_Dry + DO.Pieces_Cold), 0)) Delivered_Pieces,
 			(DOBS.Pieces_Dry_Dispatched + DOBS.Pieces_Cold_Dispatched) Delivery_effectiveness,
 			CONVERT(TIME, DOBS.Date_Dispatched - DOBS.Route_Received) Time_on_route,
-			SUM(IIF(DO.StatusOrderId = 32,1,0)) IncidenceInRoute
+			SUM(IIF(DO.StatusOrderId = 32,1,0)) IncidenceInRoute,
+			SUM(Contempts.CoutierContempt) CoutierContempt
             FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOBS WITH (NOLOCK)
 				LEFT JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
 				ON DSD.ID_DeliveryOrderBySettlement=DOBS.ID
@@ -63,6 +64,27 @@ BEGIN
 				ON DOBS.CatRouteId=CRT.IdRoute AND CRT.RowStatus=1
 				LEFT JOIN DeliveryBackOffice.dbo.CatVehicle CVH WITH (NOLOCK)
 				ON DOBS.CatVehicleId=cvh.IdVehicle
+				OUTER APPLY
+				(
+					SELECT
+						COUNT(1) 'CoutierContempt'
+					FROM
+						[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+							ON
+								DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+								AND
+								COI.RowStatus = 1
+					WHERE
+						DA.Date_Created BETWEEN @StartDate AND @EndDate
+						AND
+						DO.Guide_Serie = DA.Guide_Serie
+						AND
+						DO.Guide_Number = DA.Guide_Number
+						AND
+						COI.CourierContempt = 1
+				) Contempts
             WHERE CAST(DOBS.Date_Dispatched AS DATE)
             BETWEEN @StartDate AND @EndDate
             GROUP BY DOBS.ID,DOBS.Date_Dispatched,SRE.CUI,SRE.First_Name,SRE.Last_Name,DOBS.Guides_Dispatched,DOBS.Pieces_Dry_Dispatched,Pieces_Cold_Dispatched
