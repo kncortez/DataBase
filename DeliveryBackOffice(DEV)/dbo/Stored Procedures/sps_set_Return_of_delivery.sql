@@ -5,7 +5,7 @@
 -- Create date: <2020-09-15>
 -- Description:	<Devolucion entrega de guía>
 -- =============================================
-ALter PROCEDURE [dbo].[sps_set_Return_of_delivery]
+CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
 		@Guide_Serie AS VARCHAR(2), --guide serie
 		@Guide_Number AS INT, --guide number
 		@DateOfDelivery VARCHAR(50),--Date of delivery

@@ -31,7 +31,8 @@ BEGIN TRY
 		 FinalAmount,	
 		 RowStatus,	
 		 DateCreated,
-		 TokenCreated
+		 TokenCreated,
+		 RegisterUserId
 		 )
 		 VALUES
 		 (
@@ -45,8 +46,8 @@ BEGIN TRY
 		  @FinalAmountAfterApplyingDiscount,
 		  1,
 		  GETDATE(),
-		  @TOKEN
-
+		  @TOKEN,
+		  @Affiliate
 		 )
 
 	 COMMIT TRANSACTION
