@@ -11,7 +11,7 @@
 -- =============================================
 -- Author:		<Edelman, Vásquez>
 -- Create date: <2022-08-01>
--- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center: reviosión 01/09/2022>
+-- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center: revisión 01/09/2022>
 -- =============================================
 -- Author:		<Edelman, Vásquez>
 -- Create date: <2022-09-26>
