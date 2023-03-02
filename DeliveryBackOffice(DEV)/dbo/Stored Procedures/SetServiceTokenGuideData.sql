@@ -538,7 +538,7 @@ BEGIN
 				UPDATE do
 				SET StatusOrderId = @StatusOrderId,
 					IsLastMileReturn = IIF(IsLastMileReturn = 1, IsLastMileReturn, @CancelOrder)
-				FROM DeliveryOrder do
+				FROM DeliveryOrder do WITH(NOLOCK)
 				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
 					ON do.Guide_Serie = da.Guide_Serie
 					AND do.Guide_Number = da.Guide_Number
