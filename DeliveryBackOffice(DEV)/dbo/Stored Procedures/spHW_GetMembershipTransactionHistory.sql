@@ -56,7 +56,9 @@ BEGIN
 				[M].[IsAutoRenewable],
 				ISNULL([CM].[Icon], '') [Icon],
 				[M].[DateCreated],
-				[M].[ExpirationDate]
+				[M].[ExpirationDate],
+				ISNULL([M].[AccumulatedPoints], 0) [AccumulatedPoints],
+				ISNULL([M].[AvailablePoints], 0) [AvailablePoints]
 	FROM		[dbo].[Membership] M
 	INNER JOIN	[dbo].[CatMembership] CM
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]

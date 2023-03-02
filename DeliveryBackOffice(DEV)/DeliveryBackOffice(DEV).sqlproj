@@ -1445,6 +1445,11 @@
     <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetConfirmationOfAccount.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetUnblockOfUserInSystem.sql" />
+    <Build Include="dbo\Tables\PointsByServiceLog.sql" />
+    <Build Include="dbo\Tables\CatPointPromo.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPoints.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetPaymentServicesWithPoints.sql" />
+    <Build Include="dbo\Stored Procedures\GetSalePackageToDeactivate.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
