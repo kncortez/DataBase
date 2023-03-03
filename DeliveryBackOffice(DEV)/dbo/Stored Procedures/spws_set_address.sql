@@ -193,7 +193,7 @@ BEGIN
 						  ,VP.IdKindOfVPBusiness=@IdKindOfVPBusiness
 						  ,VP.Latitude=@Latitude
 						  ,VP.Longitude=@Longitude
-						  ,VP.IsOriginVisitPoint = @IsOriginVisitPoint
+						  ,VP.IsOriginVisitPoint = ISNULL(@IsOriginVisitPoint, 1)
 						  ,VP.ContactName = @ContactName
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
@@ -265,7 +265,7 @@ BEGIN
 					   ,@IdTownship
 					   ,@Latitude
 					   ,@Longitude
-					   ,@IsOriginVisitPoint
+					   ,ISNULL(@IsOriginVisitPoint, 1)
 					   )
 				set @IdVisitPointClient = SCOPE_IDENTITY()
 

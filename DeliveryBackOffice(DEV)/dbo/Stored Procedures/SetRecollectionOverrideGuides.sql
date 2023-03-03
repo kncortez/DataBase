@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
 -- =============================================
 -- Author:		<Jorge,Murillo>
 -- Create date: <2021-02-10>
@@ -77,12 +78,7 @@ SET NOCOUNT ON;
 				*/
 				SELECT @ESTADO = CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END  FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 				WHERE OrderNumber = (SELECT (RTRIM(LTRIM(SerieGuide))+ CONVERT(varchar,T.GuideNumber)) AS OrderNumber FROM @TBGUIDES T WHERE T.ITERATOR = @IDENTYGUIDES)
-				
-				PRINT 'IDENTYGUIDES'
-				PRINT @IDENTYGUIDES
 
-				PRINT 'ESTADO TARJETA INDIVIDUAL'
-				PRINT @ESTADO
 				
 				IF (@ESTADO = 0)
 				BEGIN
@@ -91,10 +87,7 @@ SET NOCOUNT ON;
 						INNER JOIN @TBGUIDES T
 						ON T.GuideNumber = D.ProductNumber AND RTRIM(LTRIM(D.SerieNumber)) = RTRIM(LTRIM(T.SerieGuide))
 						WHERE T.ITERATOR = @IDENTYGUIDES
-						
-					PRINT 'ESTADO TARJETA DETALLE'
-					PRINT @ESTADO
-				
+
 				   --SELECT @ESTADO						
 					IF (@ESTADO = 0)
 						BEGIN--SI ES PARTE DE UN LOTTE DE PAGADO CON TARJETA
@@ -102,9 +95,6 @@ SET NOCOUNT ON;
 							INNER JOIN @TBGUIDES T
 							ON T.GuideNumber = O.Guide_Number AND RTRIM(LTRIM(O.Guide_Serie)) = RTRIM(LTRIM(T.SerieGuide)) AND O.StatusOrderId  = 15 OR O.StatusOrderId  = 1
 							WHERE T.ITERATOR = @IDENTYGUIDES
-				
-							PRINT 'ESTADO'
-							PRINT @ESTADO
 				
 						END
 				END
