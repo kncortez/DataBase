@@ -212,7 +212,8 @@ BEGIN
 			cpt.TimePlaName,
 			ctiom.tio_pk_name
     ORDER BY bt.IdBatchCOD,
-             bt.Date, btd.AuthorizationNumber DESC;
+             bt.Date, btd.AuthorizationNumber DESC
+			 option (optimize for unknown);
 			 
     SET NOCOUNT OFF;
 END;

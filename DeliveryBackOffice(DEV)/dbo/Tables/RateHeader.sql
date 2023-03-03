@@ -26,11 +26,17 @@
     [CollectRate]          DECIMAL (12, 2) NULL,
     [PiecesIncluded]       DECIMAL (12, 2) NULL,
     [AttemptReturn]        INT             CONSTRAINT [DF__RateHeade__Attem__6423B28F] DEFAULT ((2)) NOT NULL,
+    [CutOffDate]           TINYINT         NULL,
+    [CatBusinessSegmentId] INT             NULL,
+    [PackagesRangeId]      INT             NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
+    CONSTRAINT [FK_RateHeader_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
 );
+
+
 
 
 
@@ -45,4 +51,16 @@ CREATE NONCLUSTERED INDEX [IDX_RheDefault]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de intentos disponibles para devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'AttemptReturn';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Rango de paquetes al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'PackagesRangeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de corte para tarifario por paquetes 1=Inicio de mes, 2=Quincena, 3=Fin de mes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'CutOffDate';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de negocio al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'CatBusinessSegmentId';
 

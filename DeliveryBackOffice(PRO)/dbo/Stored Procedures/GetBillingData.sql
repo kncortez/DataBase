@@ -14,6 +14,7 @@ BEGIN
 	DECLARE @IdCustomer INT 
 	DECLARE @Email NVARCHAR(100)
 	DECLARE @Amount DECIMAL(14,2)
+	DECLARE @IsCOD BIT
 	DECLARE @IdFEL BIGINT
 	DECLARE @TypeService VARCHAR(3)
 	DECLARE @Segment VARCHAR(MAX)
@@ -32,6 +33,7 @@ BEGIN
 		,@Email = cu.RegexEmail
 		,@Amount = do.PriceShippment
 		,@TypeService = do.TypeService
+		,@IsCOD = (CASE WHEN do.Collect_OnDelivery > 0 THEN 1 ELSE 0 END)
 	FROM DeliveryOrder do WITH(NOLOCK)
 	LEFT JOIN VisitPointClient vpc WITH(NOLOCK)
 		ON do.Sender_ID = vpc.CodeOfReference
@@ -39,24 +41,29 @@ BEGIN
 		ON COALESCE(do.IdCustomer, vpc.CustomerID) = cu.IdCustomer
 	WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber
 
-	IF @TypeService IS NULL
-		SET @TypeService = 'NDD'
-
 	SET @Segment = (SELECT [dbo].[fn_get_segment] (@GuideSerie,@GuideNumber))
 	
+	IF @TypeService IS NULL
+		SET @TypeService = 'STD'
+
 	IF @Segment IS NULL
 		SET @Segment = 'LOC'
-
-	IF @Segment = 'FOR'
-		IF @TypeService = 'SDD'
-			SET @NameArticle = 'SAME DAY DELIVERY FORANEO'
-		ELSE
-			SET @NameArticle = 'NEXT DAY DELIVERY FORANEO'
+		
+	-- FRESH DELIVERY
+    IF (@TypeService = 'FDD')
+    BEGIN
+		SET @NameArticle = 'TARIFA DE ENVIO FRESH';
+    END;
+	-- COD
+    ELSE IF (@TypeService = 'COD' OR @IsCOD = 1)
+    BEGIN
+		SET @NameArticle = 'TARIFA DE ENVIO COD';
+    END;
+	-- ESTANDAR
 	ELSE
-		IF @TypeService = 'SDD'
-			SET @NameArticle = 'SAME DAY DELIVERY LOCAL'
-		ELSE
-			SET @NameArticle = 'NEXT DAY DELIVERY LOCAL'
+	BEGIN
+		SET @NameArticle = 'TARIFA DE ENVIO ESTANDAR';
+	END
 
 	SELECT
 		@SAPCode = SAPCode

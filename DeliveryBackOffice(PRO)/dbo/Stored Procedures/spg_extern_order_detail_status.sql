@@ -279,7 +279,7 @@ BEGIN
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
     ) RES
-    ORDER BY RES.[StageDate] ASC,
+    ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
 
 END;

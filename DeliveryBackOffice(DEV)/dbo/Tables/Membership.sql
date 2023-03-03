@@ -25,6 +25,9 @@
     [FiscalAddress]                  NVARCHAR (200)  NULL,
     [RenewalFixedDay]                INT             NULL,
     [CatTMSalesPersonId]             INT             NULL,
+    [AccumulatedPoints]              INT             NULL,
+    [AvailablePoints]                INT             NULL,
+    [PointsExpirationDate]           DATETIME        NULL,
     CONSTRAINT [PK_Membership] PRIMARY KEY CLUSTERED ([IdMembership] ASC),
     CONSTRAINT [FK_Membership_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_Membership_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
@@ -53,4 +56,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Día  el cu
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado a la membresía vendida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de expiración de puntos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'PointsExpirationDate';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Puntos disponibles para usar', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'AvailablePoints';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Puntos acumulados durante un periodo de vigencia de membresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'AccumulatedPoints';
 

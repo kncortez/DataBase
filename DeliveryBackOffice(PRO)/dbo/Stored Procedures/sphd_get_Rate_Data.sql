@@ -25,7 +25,10 @@ BEGIN
            rd.CurrencyId [CurrencyId],
            rd.CollectRate [CollectRate],
            cr.Currency_Name [Currency],
-           rd.PiecesIncluded [PiecesIncluded]
+           rd.PiecesIncluded [PiecesIncluded],
+		   rd.CutOffDate [CutOffDate],
+		   ISNULL(rd.CatBusinessSegmentId, -1) [CatBusinessSegmentId],
+		   ISNULL(rd.PackagesRangeId, -1) [PackagesRangeId]
     FROM dbo.RateHeader rd
         LEFT JOIN dbo.DeliveryCurrency cr
             ON cr.Currency_Id = rd.CurrencyId
@@ -61,6 +64,7 @@ BEGIN
 
     ELSE IF @TypeRateId = 2
        OR @TypeRateId = 3 -- tarifas todo destino
+	   OR @TypeRateId = 6 -- Coberturas
     BEGIN
 
         SELECT rd.RateId [RateId],
@@ -96,9 +100,25 @@ BEGIN
 		   ,ts.CtsShortName Service
 		   ,rs.CrsShortName Segment
 		FROM RateData rd
-		JOIN CatTypeService ts
+		INNER JOIN CatTypeService ts
 			ON ts.CtsId = rd.TypeServiceId
-		JOIN CatRateSegment rs
+		INNER JOIN CatRateSegment rs
+			ON rs.CrsId = rd.TypeSegmentId
+		WHERE rd.RateId = @IdRate
+			AND rd.RowStatus = 'TRUE'
+	END
+	ELSE IF @TypeRateId = 7
+	BEGIN
+		SELECT
+			rd.PackagesFrom
+		   ,rd.PackagesTo
+		   ,rd.RateValue
+		   ,ts.CtsShortName Service
+		   ,rs.CrsShortName Segment
+		FROM RateData rd
+		INNER JOIN CatTypeService ts
+			ON ts.CtsId = rd.TypeServiceId
+		INNER JOIN CatRateSegment rs
 			ON rs.CrsId = rd.TypeSegmentId
 		WHERE rd.RateId = @IdRate
 			AND rd.RowStatus = 'TRUE'
@@ -157,6 +177,8 @@ BEGIN
                SUM(dt1.LOCRate) LocRate,
                SUM(dt1.METRate) MetRate,
                SUM(dt1.FORRate) ForRate,
+			   SUM(dt1.ESPRate) EspRate,
+			   dt1.TypeRate TypeRate,
                1 'Status'
         FROM
         (
@@ -166,7 +188,9 @@ BEGIN
                    --,sg.CrsShortName
                    IIF(sg.CrsShortName = 'FOR', SUM(ISNULL(rd.RateValue, 0)), 0) FORRate,
                    IIF(sg.CrsShortName = 'MET', SUM(ISNULL(rd.RateValue, 0)), 0) METRate,
-                   IIF(sg.CrsShortName = 'LOC', SUM(ISNULL(rd.RateValue, 0)), 0) LOCRate
+                   IIF(sg.CrsShortName = 'LOC', SUM(ISNULL(rd.RateValue, 0)), 0) LOCRate,
+				   IIF(sg.CrsShortName = 'ESP', SUM(ISNULL(rd.RateValue, 0)), 0) ESPRate,
+				   ct.CtsShortName TypeRate
             FROM dbo.RateData rd
                 LEFT JOIN dbo.CatTypeService ct
                     ON ct.CtsId = rd.TypeServiceId
@@ -182,11 +206,13 @@ BEGIN
             GROUP BY rd.RateId,
                      rd.ArticleId,
                      sg.CrsShortName,
-                     CONCAT( ac.Code,'  -  ', ta.TarName,'-', ca.ArtName)
+                     CONCAT( ac.Code,'  -  ', ta.TarName,'-', ca.ArtName),
+					 ct.CtsShortName
         ) AS dt1
         GROUP BY dt1.RateId,
                  dt1.ArticleId,
-                 dt1.Code;
+                 dt1.Code,
+				 dt1.TypeRate;
 
     END;
 END;
