@@ -28,20 +28,20 @@ BEGIN
 				ISNULL([M].[IdMembership], 0) [MembershipId],
 				ISNULL([CM].[MembershipName], '') [MembershipName], 
 				ISNULL([CM].[MembershipCost], 0) [MembershipCost]
-	FROM		[dbo].[Customer] C
-	INNER JOIN	[dbo].[Account] A
+	FROM		[dbo].[Customer] C  WITH(NOLOCK) 
+	INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
 		ON		[C].[IdCustomer] = [A].[IdCustomer]
 		AND		[C].[CutOffDate] >= SYSDATETIME()
-	INNER JOIN	[dbo].[RolByUserByAccount] RUA
+	INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
 		ON		[A].[AccIdAccount] = [RUA].[RuaIdAccount]
-	INNER JOIN	[dbo].[RegisterUser] RU
+	INNER JOIN	[dbo].[RegisterUser] RU  WITH(NOLOCK) 
 		ON		[RUA].[RuaIdUser] = [RU].[UsrIdUser]
-	INNER JOIN	[dbo].[Person] P
+	INNER JOIN	[dbo].[Person] P  WITH(NOLOCK) 
 		ON		[RU].[UsrIdPerson] = [P].[PerIdPerson]
-	LEFT JOIN	[dbo].[Membership] M
+	LEFT JOIN	[dbo].[Membership] M  WITH(NOLOCK) 
 		ON		[C].[IdCustomer] = [M].[CustomerId]
 		AND		[M].[ExpirationDate] >= SYSDATETIME()
-	LEFT JOIN	[dbo].[CatMembership] CM
+	LEFT JOIN	[dbo].[CatMembership] CM  WITH(NOLOCK) 
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	OUTER APPLY (
 		SELECT
@@ -58,6 +58,34 @@ BEGIN
 		GROUP BY
 			DO.IdCustomer
 	) GuideAmountBeforeCut
-	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId;
+	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId
+	UNION
+	SELECT		[P].[PerFirstName] [FirstName],
+				[P].[PerLastName] [LastName],
+				[RU].[UsrEmail] [Email],
+				[RU].[Phone] [Phone],
+				[RU].[UsrDateCreated] [DateCreated],
+				[RU].[UsrDateCreated] [CutOffDate],
+				0 [CustomerGoalQuantity],
+				0 [ActualServiceCount],
+				ISNULL([M].[IdMembership], 0) [MembershipId],
+				ISNULL([CM].[MembershipName], '') [MembershipName], 
+				ISNULL([CM].[MembershipCost], 0) [MembershipCost]
+	FROM		[dbo].[Customer] C  WITH(NOLOCK) 
+	INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
+		ON		[C].[IdCustomer] = [A].[IdCustomer]
+		AND		[C].[CutOffDate] >= SYSDATETIME()
+	INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
+		ON		[A].[AccIdAccount] = [RUA].[RuaIdAccount]
+	INNER JOIN	[dbo].[RegisterUser] RU  WITH(NOLOCK) 
+		ON		[RUA].[RuaIdUser] = [RU].[UsrIdUser]
+	INNER JOIN	[dbo].[Person] P  WITH(NOLOCK) 
+		ON		[RU].[UsrIdPerson] = [P].[PerIdPerson]
+	LEFT JOIN	[dbo].[Membership] M  WITH(NOLOCK) 
+		ON		[C].[IdCustomer] = [M].[CustomerId]
+		AND		[M].[ExpirationDate] >= SYSDATETIME()
+	LEFT JOIN	[dbo].[CatMembership] CM  WITH(NOLOCK) 
+		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
+	WHERE	[M].[CatTMSalesPersonId] = @CatTMSalesPersonId;
 
 END
