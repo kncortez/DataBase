@@ -20,6 +20,8 @@ BEGIN
 	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Charge Service' COLLATE Latin1_general_CI_AI AND CS.SysRowStatus = 1);
 	DECLARE @ModuleId INT = (SELECT TOP 1 CM.ModIdModule FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH(NOLOCK) WHERE CM.ModName = 'Hermes Charge Service' COLLATE Latin1_general_CI_AI AND CM.ModRowStatus = 1);
 
+	DECLARE @AddedDaysToPointsExpiration INT = CAST((SELECT TOP 1 CP.[Value] FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK) WHERE CP.[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI) AS INT)
+
 	-- Variables de control de flujo
 	DECLARE @MustFailTransaction BIT = 0;
 	DECLARE @CompletedFullTransaction BIT = 0;
@@ -84,6 +86,10 @@ BEGIN
 						,Mmshp.RowStatus = 1
 						,Mmshp.DateUpdated = @FixedDate
 						,Mmshp.TokenUpdated = @Token
+						,Mmshp.RenewalFixedDay = ISNULL(Mmshp.RenewalFixedDay, DAY(@FixedDate))
+						,Mmshp.AccumulatedPoints = 0
+						,Mmshp.AvailablePoints = (CASE WHEN @FixedDate <= Mmshp.PointsExpirationDate THEN Mmshp.AvailablePoints ELSE 0 END)
+						,Mmshp.PointsExpirationDate = DATEADD(DAY, @AddedDaysToPointsExpiration, (CASE WHEN DAY(EOMONTH(DATEADD(MONTH, 12, @FixedDate) )) <= Mmshp.RenewalFixedDay THEN EOMONTH(DATEADD(MONTH, 12, @FixedDate) ) ELSE DATEADD(MONTH, 12, @FixedDate) END))
 					OUTPUT inserted.IdMembership INTO @RenewedSalePackage(IdSalePackage)
 					FROM
 						[DeliveryBackOffice].[dbo].[Membership] Mmshp WITH(NOLOCK)
@@ -305,6 +311,7 @@ BEGIN
 						,Sbscrptn.RowStatus = 1
 						,Sbscrptn.DateUpdated = @FixedDate2
 						,Sbscrptn.TokenUpdated = @Token
+						,Sbscrptn.RenewalFixedDay = ISNULL(Sbscrptn.RenewalFixedDay, DAY(@FixedDate2))
 					OUTPUT inserted.IdSubscription INTO @RenewedSalePackage(IdSalePackage)
 					FROM
 						[DeliveryBackOffice].[dbo].[Subscription] Sbscrptn WITH(NOLOCK)

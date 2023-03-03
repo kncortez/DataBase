@@ -15,7 +15,8 @@ CREATE PROCEDURE [dbo].[spHW_TMBuyMembership]
 	@TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL',
 	@InvoiceEmail NVARCHAR(50) = '',
 	@RegisterUserId INT,
-	@IsAutoRenewable BIT = 0
+	@IsAutoRenewable BIT = 0,
+	@ImageURL NVARCHAR(600) = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -30,6 +31,7 @@ BEGIN
 	DECLARE @TypeOfInOutMoney INT = 0;
 	DECLARE @MembershipId INT = 0;
 	DECLARE @CatTMSalesPersonId INT = 0;
+	DECLARE @AddedPointExpirationDate INT = 0;
 	
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
@@ -52,6 +54,18 @@ BEGIN
 	SET @CatTMSalesPersonId = ( SELECT TOP 1 [CTSP].[IdCatTMSalesPerson]
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
+
+    SET @AddedPointExpirationDate
+        = CAST(ISNULL(
+               (
+                   SELECT TOP 1
+                          [CP].[Value]
+                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
+                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
+               ),
+               0
+            ) AS INT);
+
 
 	IF (@ActiveMembership > 0) 
 		BEGIN
@@ -81,7 +95,11 @@ BEGIN
 										[InvoiceName], 
 										[InvoiceEmail], 
 										[FiscalAddress],
-										[CatTMSalesPersonId] )
+										[CatTMSalesPersonId],
+										[AvailablePoints],
+										[AccumulatedPoints],
+										[PointsExpirationDate]
+										)
 		SELECT							[CM].[IdCatMembership],								-- CatMembershipId
 										@StartingStatus,									-- CatMembershipStatusId
 										[CM].[MembershipCost],								-- MembershipCost
@@ -101,7 +119,10 @@ BEGIN
 										@TaxName,											-- InvoiceName
 										@InvoiceEmail,										-- InvoiceEmail
 										@FiscalAddress,										-- FiscalAddress
-										@CatTMSalesPersonId									-- CatTMSalesPersonId
+										@CatTMSalesPersonId,								-- CatTMSalesPersonId
+										0,													-- AvailablePoints
+										0,													-- AccumulatedPoints
+										DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE())) -- PointsExpirationDate
 		FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
 		WHERE							[CM].[IdCatMembership] = @CatMembershipId;
 
@@ -133,13 +154,15 @@ BEGIN
 													[TransactionOrder], 
 													[RowStatus], 
 													[TokenCreated], 
-													[DateCreated])
+													[DateCreated],
+													[PaymentImageURL])
 		VALUES										(@MembershipId,
 													@TypeOfInOutMoney,
 													@Voucher,
 													1,
 													@Token,
-													SYSDATETIME());
+													SYSDATETIME(),
+													@ImageURL);
 
 		SELECT 1 [spResult], 'Membresía ha sido asociada con éxito' [spMessage];
 		IF (@@TRANCOUNT > 0) 

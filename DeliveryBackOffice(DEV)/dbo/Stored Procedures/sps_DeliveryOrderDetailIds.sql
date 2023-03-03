@@ -2,7 +2,7 @@
  @GuideSerie						varchar(2) = 'FD'
 ,@GuideNumber						int = 0
 ,@IdCustomer						int = 0 
-,@TypeService						varchar(4) = 'EXP'
+,@TypeService						varchar(4) = 'STD'
 ,@IndicationsOrigin					varchar(1500) = ''
 ,@IndicationsDestination			varchar(1500) = ''
 ,@Sender_Mail						varchar(200) = ''
@@ -22,6 +22,8 @@
 AS 
 BEGIN
 
+
+
 	update DeliveryBackOffice.[dbo].[DeliveryOrder] 
 	set IdCustomer =
 			case 
@@ -31,7 +33,7 @@ BEGIN
 				from dbo.Ecommerce e 
 				where e.UserKey = @CodApp)
 			end 
-	, TypeService = @TypeService
+	, TypeService = iif(Collect_OnDelivery>0, 'COD', @TypeService)
 	,IndicationsToSendOrigin = @IndicationsOrigin
 	, IndicationsToSendDestination = @IndicationsDestination
 	,Ticket_Number = @Ticket_Number

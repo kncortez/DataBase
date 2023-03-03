@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <202207-14>
 -- Description:	< Método para renovación y registro de pago de membresias y subscripciones mediante sistema automatizado >
@@ -40,6 +39,15 @@ BEGIN
                 WHERE CM.ModName = 'Hermes Charge Service' COLLATE Latin1_General_CI_AI
                       AND CM.ModRowStatus = 1
             );
+
+    DECLARE @AddedDaysToPointsExpiration INT
+        = CAST(
+          (
+              SELECT TOP 1
+                     CP.[Value]
+              FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
+              WHERE CP.[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
+          ) AS INT);
 
     -- Variables de control de flujo
     DECLARE @MustFailTransaction BIT = 0;
@@ -137,7 +145,27 @@ BEGIN
                         Mmshp.ActualServiceCount = 0,
                         Mmshp.RowStatus = 1,
                         Mmshp.DateUpdated = @FixedDate,
-                        Mmshp.TokenUpdated = @Token
+                        Mmshp.TokenUpdated = @Token,
+                        Mmshp.RenewalFixedDay = ISNULL(Mmshp.RenewalFixedDay, DAY(@FixedDate)),
+                        Mmshp.AccumulatedPoints = 0,
+                        Mmshp.AvailablePoints = (CASE
+                                                     WHEN @FixedDate <= Mmshp.PointsExpirationDate THEN
+                                                         Mmshp.AvailablePoints
+                                                     ELSE
+                                                         0
+                                                 END
+                                                ),
+                        Mmshp.PointsExpirationDate = DATEADD(
+                                                                DAY,
+                                                                @AddedDaysToPointsExpiration,
+                                                                (CASE
+                                                                     WHEN DAY(EOMONTH(DATEADD(MONTH, 12, @FixedDate))) <= Mmshp.RenewalFixedDay THEN
+                                                                         EOMONTH(DATEADD(MONTH, 12, @FixedDate))
+                                                                     ELSE
+                                                                         DATEADD(MONTH, 12, @FixedDate)
+                                                                 END
+                                                                )
+                                                            )
                     OUTPUT inserted.IdMembership
                     INTO @RenewedSalePackage
                     (
@@ -472,7 +500,8 @@ BEGIN
                         Sbscrptn.ActualServiceCount = 0,
                         Sbscrptn.RowStatus = 1,
                         Sbscrptn.DateUpdated = @FixedDate2,
-                        Sbscrptn.TokenUpdated = @Token
+                        Sbscrptn.TokenUpdated = @Token,
+                        Sbscrptn.RenewalFixedDay = ISNULL(Sbscrptn.RenewalFixedDay, DAY(@FixedDate2))
                     OUTPUT inserted.IdSubscription
                     INTO @RenewedSalePackage
                     (

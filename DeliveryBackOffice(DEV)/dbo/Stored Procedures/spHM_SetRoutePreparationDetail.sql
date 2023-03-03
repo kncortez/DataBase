@@ -485,7 +485,7 @@ BEGIN
                                                GETDATE(),
                                                IIF(do.IsLastMileReturn = 1, do.Sender_ID, do.Receiver_ID),
                                                do.VisitpointClientPortfolioId,
-                                               CONCAT(do.Sender_FirstName, ' ', do.Sender_LastName),
+                                               CAST(CONCAT(do.Sender_FirstName, ' ', do.Sender_LastName) AS NVARCHAR(100)),
                                                tw.IdProvince,
                                                tw.IdTownship,
                                                IIF(do.IsLastMileReturn = 1, NULL, do.ReceiverIdSettlement),

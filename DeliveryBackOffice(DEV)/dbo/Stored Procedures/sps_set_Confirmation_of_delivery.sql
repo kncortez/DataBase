@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
@@ -14,8 +11,13 @@
 -- =============================================
 -- Author:		<Edelman, Vásquez>
 -- Create date: <2022-08-01>
--- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center>
+-- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center: revisión 01/09/2022>
 -- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-09-26>
+-- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
     @Guide_Serie AS VARCHAR(2),   --guide serie
     @Guide_Number AS INT,         --guide number
@@ -77,12 +79,22 @@ BEGIN
                 IF (@DateOfDelivery > @Datetime)
                 BEGIN
 
-                    -- Actualizar registro de guía a último estado 
-                    UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-                    SET StatusOrderId = @StatusId, --Status of delivery 			
-                        NameOfReceiver = @NameOfReceiver
-                    WHERE Guide_Serie = @Guide_Serie
-                          AND Guide_Number = @Guide_Number;
+
+				  --al cambiar estado de guia  debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL
+				  UPDATE  dbo.warehouse SET Active =0,
+				          UserUpdated = @TokenId,
+						  DateUpdated = GETDATE()
+
+				  where Guide_Serie = @Guide_Serie AND 
+                        Guide_Number = @Guide_Number AND
+						Active = 1
+
+					-- Actualizar registro de guía a último estado 
+					UPDATE DeliveryBackOffice.dbo.DeliveryOrder
+					SET StatusOrderId = @StatusId, --Status of delivery 			
+					    NameOfReceiver = @NameOfReceiver
+					WHERE Guide_Serie = @Guide_Serie 
+					      AND Guide_Number = @Guide_Number;	
 
                     UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
                     SET Delivered = 1 --Status of delivery 	

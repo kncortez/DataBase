@@ -473,24 +473,12 @@ BEGIN
 
 
 
-        END;
-        --ELSE
-        --BEGIN
-        --	SELECT
-        --		0 AS 'StatusCode'
-        --	   ,'El registro no existe' AS 'Description'
-        --	   ,@ValidateOperation AS 'NumTransferID'
-        --END
-        UPDATE [DeliveryBackOffice].[dbo].[Warehouse]
-        SET Active = 0,
-            UserUpdated = @TokenId,
-            DateUpdated = GETDATE()
-        WHERE Guide_Serie = SUBSTRING(@Guide_Number, 1, 2)
-              AND Guide_Number = SUBSTRING(
-                                              REPLACE(@Guide_Number, 'FD', ''),
-                                              0,
-                                              CHARINDEX('-', REPLACE(@Guide_Number, 'FD', ''))
-                                          );
-        COMMIT TRANSACTION;
-    END;
-END;
+		END
+	--- Borrado Logico de posición en la guía
+	UPDATE [DeliveryBackOffice].[dbo].[Warehouse] 
+		  SET Active = 0, UserUpdated = @TokenId, DateUpdated = GETDATE()
+			 WHERE Guide_Serie=SUBSTRING(@Guide_Number,1,2) and Guide_Number=SUBSTRING(Replace(@guide_Number,'FD',''),0,
+				                                                          CHARINDEX('-',Replace(@guide_Number,'FD',''))) and Active = 1
+		COMMIT TRANSACTION;
+	END
+END

@@ -1,0 +1,2 @@
+INSERT [dbo].[CatExternalPlatform] ( [NameExternalPlatform], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated]) VALUES ( N'Msmclaro', 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL)
+INSERT [dbo].[CatExternalPlatform] ([NameExternalPlatform], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated]) VALUES ( N'MsmIncidence', 1, N'SYS-EVASQUEZ', GETDATE(), NULL, NULL)

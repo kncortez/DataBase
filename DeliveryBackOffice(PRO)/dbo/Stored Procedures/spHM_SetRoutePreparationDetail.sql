@@ -485,7 +485,7 @@ BEGIN
                                                GETDATE(),
                                                IIF(do.IsLastMileReturn = 1, do.Sender_ID, do.Receiver_ID),
                                                do.VisitpointClientPortfolioId,
-                                               CONCAT(do.Sender_FirstName, ' ', do.Sender_LastName),
+                                               CAST(CONCAT(do.Sender_FirstName, ' ', do.Sender_LastName) AS NVARCHAR(100)),
                                                tw.IdProvince,
                                                tw.IdTownship,
                                                IIF(do.IsLastMileReturn = 1, NULL, do.ReceiverIdSettlement),
@@ -519,7 +519,7 @@ BEGIN
                                                                        do.ReceiverIdTownship)
                                                    OR tw.TownshipName = IIF(do.IsLastMileReturn = 1,
                                                                             do.Sender_Town,
-                                                                            do.Receiver_Town)
+                                                                            do.Receiver_Town)  COLLATE Latin1_General_CI_AI 
                                         WHERE do.Guide_Serie = @GuideSerie
                                               AND do.Guide_Number = @GuideNumber;
 

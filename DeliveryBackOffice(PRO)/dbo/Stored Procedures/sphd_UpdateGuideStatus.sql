@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César, Sazo>
 -- Create date: <20/10/2021>
 -- Description:	< Cambio de estado de pantalla de administración de checkpoints >
@@ -37,6 +36,8 @@ BEGIN
 	DECLARE @MembershipId INT
 	DECLARE @SubscriptionId INT
 	DECLARE @MembershipSubscriptionLogId BIGINT
+	DECLARE @PointsByServiceLogId INT = NULL
+	DECLARE @PointsToReceive INT = 0
 	-------------------------------------
 
 	SET @IsCouponOrigin = ISNULL((
@@ -178,6 +179,49 @@ BEGIN
 
 			END
 			--Termina Membresías y suscripciones
+					
+			-- puntos forza
+
+			SELECT
+				@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+				,@MembershipId = PBSL.MembershipId
+				,@PointsToReceive = PBSL.PointsConsumed
+			FROM
+				[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+			WHERE
+				PBSL.GuideSerie = @Guide_Serie
+				AND
+				PBSL.GuideNumber = @Guide_Number
+				AND
+				ISNULL(PBSL.PointsConsumed, 0) > 0
+				AND 
+				PBSL.RowStatus = 1
+
+			IF(@PointsByServiceLogId IS NOT NULL)
+			BEGIN
+
+				-- Inactivar registro de bitacora
+				UPDATE
+					[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+				SET
+					RowStatus = 0,
+					TokenUpdated = @UserToken,
+					DateUpdated = GETDATE()
+				WHERE
+					IdPointsByServiceLog = @PointsByServiceLogId
+
+				-- Devolver puntos forza
+				UPDATE
+					[DeliveryBackOffice].[dbo].[Membership]
+				SET
+					AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+					,TokenUpdated = @UserToken
+					,DateUpdated = GETDATE()
+				WHERE
+					IdMembership = @MembershipId
+
+			END
+			-- Termina puntos forza
 
 				IF(@@TRANCOUNT > 0)
 					COMMIT TRANSACTION;
@@ -277,6 +321,49 @@ BEGIN
 			END
 			--Termina Membresías y suscripciones
 					
+			-- puntos forza
+
+			SELECT
+				@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+				,@MembershipId = PBSL.MembershipId
+				,@PointsToReceive = PBSL.PointsConsumed
+			FROM
+				[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+			WHERE
+				PBSL.GuideSerie = @Guide_Serie
+				AND
+				PBSL.GuideNumber = @Guide_Number
+				AND
+				ISNULL(PBSL.PointsConsumed, 0) > 0
+				AND 
+				PBSL.RowStatus = 1
+
+			IF(@PointsByServiceLogId IS NOT NULL)
+			BEGIN
+
+				-- Inactivar registro de bitacora
+				UPDATE
+					[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+				SET
+					RowStatus = 0,
+					TokenUpdated = @UserToken,
+					DateUpdated = GETDATE()
+				WHERE
+					IdPointsByServiceLog = @PointsByServiceLogId
+
+				-- Devolver puntos forza
+				UPDATE
+					[DeliveryBackOffice].[dbo].[Membership]
+				SET
+					AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+					,TokenUpdated = @UserToken
+					,DateUpdated = GETDATE()
+				WHERE
+					IdMembership = @MembershipId
+
+			END
+			-- Termina puntos forza
+
 			IF(@@TRANCOUNT > 0)
 				COMMIT TRANSACTION;
 				
@@ -358,6 +445,49 @@ BEGIN
 				END
 			END
 			--Termina Membresías y suscripciones
+					
+			-- puntos forza
+
+			SELECT
+				@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+				,@MembershipId = PBSL.MembershipId
+				,@PointsToReceive = PBSL.PointsConsumed
+			FROM
+				[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+			WHERE
+				PBSL.GuideSerie = @Guide_Serie
+				AND
+				PBSL.GuideNumber = @Guide_Number
+				AND
+				ISNULL(PBSL.PointsConsumed, 0) > 0
+				AND 
+				PBSL.RowStatus = 1
+
+			IF(@PointsByServiceLogId IS NOT NULL)
+			BEGIN
+
+				-- Inactivar registro de bitacora
+				UPDATE
+					[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+				SET
+					RowStatus = 0,
+					TokenUpdated = @UserToken,
+					DateUpdated = GETDATE()
+				WHERE
+					IdPointsByServiceLog = @PointsByServiceLogId
+
+				-- Devolver puntos forza
+				UPDATE
+					[DeliveryBackOffice].[dbo].[Membership]
+				SET
+					AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+					,TokenUpdated = @UserToken
+					,DateUpdated = GETDATE()
+				WHERE
+					IdMembership = @MembershipId
+
+			END
+			-- Termina puntos forza
 				
               IF(@@TRANCOUNT > 0)
 				COMMIT TRANSACTION;
