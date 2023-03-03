@@ -66,6 +66,7 @@ begin
 			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			when DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -82,6 +83,7 @@ begin
 			 AND dopd.ShipmentCompleted = 1
 			 AND DOPD.AccountId > 0
 			 AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -140,6 +142,7 @@ begin
 				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
@@ -167,6 +170,7 @@ begin
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
 		AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 	ORDER BY DOPD.DateCreated ASC
 end
 
@@ -197,6 +201,7 @@ begin
 			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -213,6 +218,7 @@ begin
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -269,6 +275,7 @@ begin
 				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
@@ -296,6 +303,7 @@ begin
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -327,6 +335,7 @@ begin
 			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
 --,DOPD.*
@@ -345,6 +354,7 @@ begin
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -401,6 +411,7 @@ begin
 				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
@@ -427,6 +438,7 @@ begin
 				ON REU.UsrIdUser = ACH.UserId
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END

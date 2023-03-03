@@ -110,7 +110,7 @@ BEGIN
     FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
-        INNER JOIN #TEMPLATEDETAIL IND
+        LEFT JOIN #TEMPLATEDETAIL IND
             ON IND.guideserie = DOR.Guide_Serie
                AND IND.guidenumber = DOR.Guide_Number
         LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
@@ -123,6 +123,7 @@ BEGIN
                AND DOPD.ShipmentCompleted = 1
                AND DOPD.AccountId = @IdAccount
                AND DOPD.AccountId > 0
+			 AND DOPD.[TypeofInOutMoneyId] != 8
                
         INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
@@ -210,6 +211,7 @@ BEGIN
             )
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @IdAccount
+			 AND DOPD.[TypeofInOutMoneyId] != 8
           AND DOPD.GuideSerie IS NULL
           AND NOT EXISTS
     (
@@ -421,6 +423,7 @@ BEGIN
                        AND DOPD.GuideNumber = DOR.Guide_Number
                        AND DOPD.ShipmentCompleted = 1
                        AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
                   AND
@@ -551,6 +554,7 @@ BEGIN
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
+			 AND DOPD.[TypeofInOutMoneyId] != 8
                   AND DOPD.GuideSerie IS NULL
                   AND NOT EXISTS
             (
