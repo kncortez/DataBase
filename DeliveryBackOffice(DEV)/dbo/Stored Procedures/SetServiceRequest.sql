@@ -384,7 +384,7 @@ BEGIN
                NULL,                  -- Dispatched_Token,
                GT.Collect_OnDelivery, -- Collect_OnDelivery
                0,                     -- Guide_Collected
-               'NDD',
+               CASE WHEN GT.Collect_OnDelivery > 0 THEN 'COD' ELSE 'STD' END,
                                       -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                       --,GT.Collect
                GT.SenderIdTownship,

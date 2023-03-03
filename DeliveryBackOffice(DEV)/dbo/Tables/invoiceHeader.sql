@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[invoiceHeader] (
+﻿CREATE TABLE [dbo].[invoiceHeader] (
     [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
     [inv_vpCodeOfReferences]  INT            NOT NULL,
     [inv_cmp_name]            VARCHAR (500)  NULL,
@@ -54,6 +54,8 @@ CREATE TABLE [dbo].[invoiceHeader] (
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si factura es manual TRUE', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IsManualInvoice';
 
@@ -86,4 +88,10 @@ CREATE NONCLUSTERED INDEX [idx_inv_status_inv_dateRegister_inv_type_inv_SAPDocEn
 GO
 CREATE NONCLUSTERED INDEX [IDX_id_status_certification_seriefel_]
     ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_certificationFEL] ASC, [inv_serieFEL] ASC, [inv_status] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_inv_numberFEL_inv_numberFEL]
+    ON [dbo].[invoiceHeader]([inv_numberFEL] ASC)
+    INCLUDE([inv_certificationFEL], [inv_serieFEL], [inv_UserName], [inv_SAPDocEntry]);
 

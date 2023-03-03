@@ -2,7 +2,7 @@
  @GuideSerie						varchar(2) = 'FD'
 ,@GuideNumber						int = 0
 ,@IdCustomer						int = 0 
-,@TypeService						varchar(3) = 'EXP'
+,@TypeService						varchar(4) = 'STD'
 ,@IndicationsOrigin					varchar(1500) = ''
 ,@IndicationsDestination			varchar(1500) = ''
 ,@Sender_Mail						varchar(200) = ''
@@ -16,9 +16,13 @@
 ,@ReceiverId						int = 0
 ,@OriginSenderId					int = 0
 ,@IsReturn							bit = 0
+,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
+,@UseMembership bit=0
 AS 
 BEGIN
+
+
 
 	update DeliveryBackOffice.[dbo].[DeliveryOrder] 
 	set IdCustomer =
@@ -29,7 +33,7 @@ BEGIN
 				from dbo.Ecommerce e 
 				where e.UserKey = @CodApp)
 			end 
-	, TypeService = @TypeService
+	, TypeService = iif(Collect_OnDelivery>0, 'COD', @TypeService)
 	,IndicationsToSendOrigin = @IndicationsOrigin
 	, IndicationsToSendDestination = @IndicationsDestination
 	,Ticket_Number = @Ticket_Number
@@ -75,12 +79,15 @@ BEGIN
 		AND
 		PC.GuideNumberDestination = @GuideNumber
 		AND
+		PC.FinalActiveDate >= GETDATE()
+		AND
 		PC.RowStatus = 1), 0)
 
-
+		
 	DECLARE @RC INT;
-	IF @Price =0 AND @CouponApplied = 0
-	BEGIN
+	--SE COMENTA PARA CÁLCULAR MEMBRESÍAS
+	--IF @Price =0 AND @CouponApplied = 0 
+	--BEGIN
 		EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide
 					@GuideSerie = @GuideSerie,
 					@GuideNumber = @GuideNumber,
@@ -90,8 +97,10 @@ BEGIN
 					@IdModule = 33,
 					@SetUpdate = 'true',
 					@Token = 'sps_DeliveryOrderDetailIds',
-					@IsReturn = 'false'
-	END
+					@IsReturn = 'false',
+					@ParIsCreditCard = @IsCreditCardPayment,
+					@UseMembership = @UseMembership
+	--END
 
 	select 1;
 END

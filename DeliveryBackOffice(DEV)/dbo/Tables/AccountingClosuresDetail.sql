@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresDetail', @level2type = N'COLUMN', @level2name = N'IdAccountingClosuresDetail';
 
@@ -63,4 +65,15 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la transacción que registra el pago de una guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresDetail', @level2type = N'COLUMN', @level2name = N'DopId';
 
 
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus]
+    ON [dbo].[AccountingClosuresDetail]([RowStatus] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [DopId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus_DopId]
+    ON [dbo].[AccountingClosuresDetail]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC, [DopId] ASC);
 

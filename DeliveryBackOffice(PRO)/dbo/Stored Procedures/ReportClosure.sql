@@ -66,6 +66,7 @@ begin
 			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			when DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -74,7 +75,7 @@ begin
 			AND IND.guidenumber = DOR.Guide_Number
 		LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_pk_id = IND.header
-		JOIN DeliveryBackOffice.dbo.StatusOrder STO 
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO 
 			ON STO.StatusOrderId = DOR.StatusOrderId
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 			 ON DOPD.GuideSerie = DOR.Guide_Serie 
@@ -82,15 +83,16 @@ begin
 			 AND dopd.ShipmentCompleted = 1
 			 AND DOPD.AccountId > 0
 			 AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
-		JOIN CatTypeServiceClosure CTS 
+		INNER JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 
@@ -99,7 +101,7 @@ begin
 			-- FIN MODIFICACIÓN
 
 			AND ACD.RowStatus = 1
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 			ON REU.UsrIdUser = ACH.UserId
@@ -140,6 +142,7 @@ begin
 				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
@@ -148,25 +151,26 @@ begin
     FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
-        JOIN CatTypeServiceClosure CTS
+        INNER JOIN CatTypeServiceClosure CTS
             ON CTS.IdTypeService = DOPD.TypeServiceId
         LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		JOIN invoiceHeader INH WITH (NOLOCK)
+		INNER JOIN invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-        JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+        INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 			ON REU.UsrIdUser = ACH.UserId
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
 		AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 	ORDER BY DOPD.DateCreated ASC
 end
 
@@ -197,6 +201,7 @@ begin
 			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -205,7 +210,7 @@ begin
 			AND IND.guidenumber = DOR.Guide_Number
 		LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_pk_id = IND.header
-		JOIN DeliveryBackOffice.dbo.StatusOrder STO 
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO 
 			ON STO.StatusOrderId = DOR.StatusOrderId
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 			ON DOPD.GuideSerie = DOR.Guide_Serie 
@@ -213,15 +218,16 @@ begin
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
-		JOIN CatTypeServiceClosure CTS 
+		INNER JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 
@@ -230,7 +236,7 @@ begin
 			-- FIN MODIFICACIÓN
 
 			AND ACD.RowStatus = 1
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 			ON REU.UsrIdUser = ACH.UserId
@@ -269,6 +275,7 @@ begin
 				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
@@ -277,25 +284,26 @@ begin
 		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 				ON DOPD.VisitPoint = VPC.CodeOfReference
 			-- FIN MODIFICACIÓN
 
-			JOIN CatTypeServiceClosure CTS
+			INNER JOIN CatTypeServiceClosure CTS
 				ON CTS.IdTypeService = DOPD.TypeServiceId
 			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
 				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-			JOIN invoiceHeader INH WITH (NOLOCK)  
+			INNER JOIN invoiceHeader INH WITH (NOLOCK)  
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-			JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
-			JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -327,6 +335,7 @@ begin
 			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 			 else '' end 'PaymentType'
 		,CTS.NameTypeService as 'ServiceType'
 --,DOPD.*
@@ -337,7 +346,7 @@ begin
 			AND IND.guidenumber = DOR.Guide_Number
 		LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_pk_id = IND.header
-		JOIN DeliveryBackOffice.dbo.StatusOrder STO 
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO 
 			ON STO.StatusOrderId = DOR.StatusOrderId
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK) 
 			ON DOPD.GuideSerie = DOR.Guide_Serie 
@@ -345,15 +354,16 @@ begin
 			AND dopd.ShipmentCompleted = 1
 			AND DOPD.AccountId > 0
 			AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
 
-		JOIN CatTypeServiceClosure CTS 
+		INNER JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 
@@ -362,7 +372,7 @@ begin
 			-- FIN MODIFICACIÓN
 
 			AND ACD.RowStatus = 1
-		JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 			ON REU.UsrIdUser = ACH.UserId
@@ -401,25 +411,26 @@ begin
 				when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
 				when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 				when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+				WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
 				 else '' end 'PaymentType'
 			,CTS.NameTypeService as 'ServiceType'
 		
     --,DOPD.*
     --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 		FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
-			JOIN CatTypeServiceClosure CTS
+			INNER JOIN CatTypeServiceClosure CTS
 				ON CTS.IdTypeService = DOPD.TypeServiceId
 			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
 				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-			JOIN invoiceHeader INH WITH (NOLOCK)  
+			INNER JOIN invoiceHeader INH WITH (NOLOCK)  
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
-			JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
-			JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
 			-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+			INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 				ON DOPD.VisitPoint = VPC.CodeOfReference
 			-- FIN MODIFICACIÓN
 
@@ -427,6 +438,7 @@ begin
 				ON REU.UsrIdUser = ACH.UserId
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService NOT IN (5,23))
+			 AND DOPD.[TypeofInOutMoneyId] != 8
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END

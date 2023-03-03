@@ -127,16 +127,16 @@ BEGIN
 										   ,abc.Length
 										   ,abc.MassWeight
 										   ,IIF(ra.RateId IN (@NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates), IIF(ra.TypeServiceId IS NOT NULL AND ra.TypeSegmentId IS NOT NULL, 1, 0), NULL) 'IsMainPackage'
-										FROM dbo.CatArticle art
-										INNER JOIN dbo.ArticleByCustomer abc
+										FROM dbo.CatArticle art WITH(NOLOCK)
+										INNER JOIN dbo.ArticleByCustomer abc WITH(NOLOCK)
 											ON abc.AbcIdArticle = art.ArtId
-										LEFT JOIN CatTypeArticle ta
+										LEFT JOIN CatTypeArticle ta WITH(NOLOCK)
 											ON ta.TarId = art.ArtIdTypeArticle
-										INNER JOIN RateData ra
+										INNER JOIN RateData ra WITH(NOLOCK)
 											ON ra.ArticleId = abc.AbcId
-										INNER JOIN RatebyCustomer rbc
+										INNER JOIN RatebyCustomer rbc WITH(NOLOCK)
 											ON rbc.RbcIdRate = ra.RateId
-										INNER JOIN Account ac
+										INNER JOIN Account ac WITH(NOLOCK)
 											ON ac.IdCustomer = rbc.RbcIdCustomer
 										WHERE ac.AccIdAccount = @IdAccount
 										AND art.ArtRowStatus = 'TRUE'
@@ -359,6 +359,8 @@ BEGIN
     END;
     ELSE IF (@TypeMethod = 'GetCorporateCustomers')
     BEGIN
+	
+		DECLARE @ActiveSalesPackageId INT = ( SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI )
 
         SET @jsonResult =
         (
@@ -373,7 +375,9 @@ BEGIN
                                        + '",' + '"Address":"' + ISNULL(REPLACE(vpc.[Address], '"', ''), '') + '",'
                                        + '"Province":"' + ISNULL(pr.ProvinceName, '') + '",' + '"Township":"'
                                        + ISNULL(TWS.TownshipName, '') + '",' + '"HeaderCode":"'
-                                       + ISNULL(TWS.HeaderCode, '') + '",' + '"HasRate":"'
+                                       + ISNULL(TWS.HeaderCode, '') + '",' 
+									   + '"HasMembership":' + CONVERT(NVARCHAR, ISNULL((CASE WHEN mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END), 0)) + ','
+									   + '"HasRate":"'
                                        + CONVERT(NVARCHAR, ISNULL(rc.[RbcRowStatus], '')) + '",' + '"HasCredit":"'
                                        + CONVERT(
                                                     NVARCHAR,
@@ -384,10 +388,10 @@ BEGIN
                                                               ''
                                                           )
                                                 ) + '",' + '"Billing":' + '[{' + '"EntityName":"'
-                                       + REPLACE(ISNULL([InvoiceName], ''), '"', '') + '",' + '"TaxId":"'
-                                       + ISNULL([TaxIdentificationNumber], '') + '",' + '"TaxAddress":"'
-                                       + REPLACE(ISNULL([FiscalAddress], ''), '"', '') + '",' + '"TaxEmail":"'
-                                       + REPLACE(ISNULL([InvoiceEmail], ''), CHAR(31), '') + '"' + '}]' + ','
+                                       + REPLACE(ISNULL(Cu.[InvoiceName], ''), '"', '') + '",' + '"TaxId":"'
+                                       + ISNULL(Cu.[TaxIdentificationNumber], '') + '",' + '"TaxAddress":"'
+                                       + REPLACE(ISNULL(Cu.[FiscalAddress], ''), '"', '') + '",' + '"TaxEmail":"'
+                                       + REPLACE(ISNULL(Cu.[InvoiceEmail], ''), CHAR(31), '') + '"' + '}]' + ','
                                        + '"Cod":' + '[{' + '"IdBank":"'
                                        + CONVERT(NVARCHAR, ISNULL([CODAccountBankID], '')) + '",'
                                        + '"BankDescription":"'
@@ -419,6 +423,11 @@ BEGIN
                                         ON TWS.IdTownship = STL.IdTownship 
                                     LEFT JOIN DeliveryBackOffice.dbo.Province pr WITH(NOLOCK)
                                         ON pr.IdProvince = TWS.IdProvince
+									LEFT JOIN DeliveryBackOffice.dbo.Membership mmbrshp WITH(NOLOCK)
+										ON cu.IdCustomer = mmbrshp.CustomerId
+										AND mmbrshp.RowStatus = 1
+										AND mmbrshp.ExpirationDate >= GETDATE()
+										AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
                                 WHERE IdCustomerType = 1
                                       AND cu.RowSatus = 1
 									   
@@ -555,7 +564,88 @@ BEGIN
         );
     END
 
+	ELSE IF (@TypeMethod = 'GetPaymentMethod')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"Id":"' + CONVERT(NVARCHAR, cpv.IdCustomerPaymentValue) + '",'
+                                       + '"DisplayText":"' + cpv.DisplayText + '",' 
+									   + '"IsDefault":' + IIF(cpv.IsDefault = 1, 'true','false') + ',' + '}'
+                                FROM CustomerPaymentValue cpv
+								WHERE (cpv.AccountId = @IdAccount
+								OR (cpv.AccountId IS NULL AND cpv.CustomerId = (SELECT IdCustomer FROM Account WHERE AccIdAccount = @IdAccount)))
+								AND cpv.RowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
+	ELSE IF (@TypeMethod = 'GetTypeArticle')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"ArticleTypeId":"' + CONVERT(NVARCHAR, cta.TarId) + '",'
+									   + '"ArticleType":"' + CONVERT(NVARCHAR, cta.TarName) + '",' + '}'
+                                FROM CatTypeArticle cta
+								WHERE cta.TarRowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
+	
+	ELSE IF (@TypeMethod = 'MundialPromo')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"CandidateId":"' + CONVERT(NVARCHAR, WCPC.IdWorldCupPromoCandidate) + '",'
+									   + '"CandidateName":"' + CONVERT(NVARCHAR, WCPC.WorldCupCandidateName) + '",' + '}'
+                                FROM [DeliveryBackOffice].[dbo].[WorldCupPromoCandidate] WCPC WITH(NOLOCK)
+								WHERE WCPC.RowStatus = 1
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
+	
+	ELSE IF (@TypeMethod = 'ActiveMembership')
+    BEGIN
+        SET @jsonResult =
+        (
+            SELECT STUFF(
+                            (
+                                SELECT ',{"ActiveMembership":' + CAST((CASE WHEN Mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END) AS NVARCHAR) + '}'
+                                FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
+								LEFT JOIN [DeliveryBackOffice].[dbo].[Membership] Mmbrshp WITH(NOLOCK)
+								ON Acc.IdCustomer = Mmbrshp.CustomerId 
+								AND acc.AccIdAccount = Mmbrshp.AccountId
+								AND Mmbrshp.RowStatus = 1
+								AND Mmbrshp.ExpirationDate >= GETDATE()
+								WHERE Acc.AccIdAccount = @IdAccount
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
+                        )
+        );
+    END
 
     SELECT '[' + @jsonResult + ']' FormatJson;
 

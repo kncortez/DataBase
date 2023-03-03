@@ -39,6 +39,15 @@ BEGIN
 
             DECLARE @jsonResult2 NVARCHAR(MAX);
 
+            --UPDATE dbo.DeliveryOrder
+            --SET PriceShippment = t.PriceShippment,
+            --    StatusOrderId = @IdStatus,
+            --    IsCollect = t.IsCollect
+            --FROM dbo.DeliveryOrder ord WITH (NOLOCK)
+            --    INNER JOIN @TblDeliveryOrdersList t
+            --        ON t.Guide_Number = ord.Guide_Number
+            --           AND t.Guide_Serie = ord.Guide_Serie;
+
             INSERT INTO dbo.DeliveryOrderPaymentDetail
             (
                 [GuideNumber],
@@ -150,7 +159,7 @@ BEGIN
         DECLARE @ValidateTransaction INT =
                 (
                     SELECT DopId
-                    FROM dbo.DeliveryOrderPaymentTransaction do
+                    FROM dbo.DeliveryOrderPaymentTransaction do WITH (NOLOCK)
                         INNER JOIN @TblDeliveryOrdersList tpo
                             ON do.GuideNumber = tpo.Guide_Number
                                AND do.GuideSerie = tpo.Guide_Serie

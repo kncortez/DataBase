@@ -24,6 +24,8 @@ CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@Token NVARCHAR(50)
 AS
 BEGIN
+
+SET ARITHABORT ON
 	--- Conteo para verificar cantidad correcta de validaciones
 	DECLARE @RModified INT = 0
 

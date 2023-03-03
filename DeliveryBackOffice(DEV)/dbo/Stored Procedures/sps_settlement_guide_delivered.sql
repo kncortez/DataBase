@@ -72,56 +72,30 @@ BEGIN
 							InsertedId BIGINT
 						);
 
-						IF( 
-								NOT EXISTS (
-									SELECT 
-										TOP 1 
-											1 
-									FROM 
-										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK) 
-									WHERE 
-										WTQ.GuideSerie = @GuideSerie 
-										AND 
-										WTQ.GuideNumber = @GuideNumber 
-										AND
-										WTQ.RowStatus = 1
-										AND 
-										WTQ.StatusOrderId IN (
-											SELECT
-												WRBU.StatusOrderId 
-											FROM 
-												[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
-											WHERE 
-												WRBU.CustomerId = @WebhookCustomerId 
-												AND 
-												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
-								) ) )
-							BEGIN
-								INSERT INTO 
-									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-									(
-										[GuideSerie]
-										,[GuideNumber]
-										,[CustomerId]
-										,[StatusOrderId]
-										,[WebhookEndpointId]
-										,[HasNotified]
-										,[TokenCreated]
-										,[DateCreated]
-									)
-								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-								VALUES
-									(
-										@GuideSerie
-										,@GuideNumber
-										,@WebhookCustomerId
-										,@GuideCurrentStatus
-										,@CustomerEndpointId
-										,0
-										,@Token
-										,GETDATE()
-									)
-							END
+						INSERT INTO 
+							[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+							(
+								[GuideSerie]
+								,[GuideNumber]
+								,[CustomerId]
+								,[StatusOrderId]
+								,[WebhookEndpointId]
+								,[HasNotified]
+								,[TokenCreated]
+								,[DateCreated]
+							)
+						OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+						VALUES
+							(
+								@GuideSerie
+								,@GuideNumber
+								,@WebhookCustomerId
+								,@GuideCurrentStatus
+								,@CustomerEndpointId
+								,0
+								,@Token
+								,GETDATE()
+							)
 					END
 				END TRY
 				BEGIN CATCH
@@ -173,6 +147,29 @@ BEGIN
 				0 AS RetriesMade,
 				0 AS RetriesAllowed
 			ROLLBACK TRANSACTION
+
+
+			INSERT INTO dbo.RoutePreparationLogError
+			(
+			    ErrorDescription,
+			    ErrorNumber,
+			    ErrorProcedure,
+			    ErrorLine,
+			    GuideSerie,
+			    GuideNumber,
+			    TokenCreated,
+			    DateCreated
+			)
+			VALUES
+			(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+			    ERROR_NUMBER(),     -- ErrorNumber - int
+			    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+			    ERROR_LINE(),     -- ErrorLine - int
+			    @GuideSerie,     -- GuideSerie - nvarchar(2)
+			    @GuideNumber,     -- GuideNumber - int
+			    @Token,       -- TokenCreated - varchar(50)
+			    GETDATE() -- DateCreated - datetime
+			    )
 		END CATCH;
 
 		IF @@TRANCOUNT > 0

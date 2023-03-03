@@ -1,4 +1,5 @@
 ﻿
+
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-10-21>
@@ -62,18 +63,18 @@ BEGIN
 		vpc.Department 'OriginAddressProvince',
 		vpc.Town 'OriginAddressTown',
 		CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) 'rangeHour'
-	FROM dbo.RouteAssigment ra
-		INNER JOIN dbo.SenderReceiver sr
+	FROM dbo.RouteAssigment ra WITH(NOLOCK)
+		INNER JOIN dbo.SenderReceiver sr WITH(NOLOCK)
 			ON sr.ID = ra.IdCurrierMan
-		INNER JOIN dbo.HubLogisticByUser hlbu 
+		INNER JOIN dbo.HubLogisticByUser hlbu WITH(NOLOCK)
 			ON sr.HubLogisticId = hlbu.HubLogisticId
 				AND hlbu.UserId = @userId
-		INNER JOIN dbo.ServiceManagement srv
+		INNER JOIN dbo.ServiceManagement srv WITH(NOLOCK)
 			ON srv.IdPuRouteAssigment = ra.IdRouteAssigment
 			   AND srv.RowStatus = 1
-		INNER JOIN dbo.SchedulePickup shp
+		INNER JOIN dbo.SchedulePickup shp WITH(NOLOCK)
 			ON shp.SchedulePickupId = srv.IdSchedulePickup
-		LEFT JOIN dbo.HubLogistics hl
+		LEFT JOIN dbo.HubLogistics hl WITH(NOLOCK)
 			ON hl.IdHubLogistic = shp.IdHubLogistics
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 			ON shp.SenderId = vpc.CodeOfReference

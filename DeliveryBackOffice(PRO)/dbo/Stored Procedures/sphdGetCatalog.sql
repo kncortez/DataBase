@@ -227,6 +227,7 @@ BEGIN
             SELECT RheId [IdValue],
                    UPPER(RheName) [NameValue],
                    hr.RateTypeId [IdFilter],
+				   hr.CatBusinessSegmentId [CatBusinessSegmentId],
                    'RateCatalog' [Catalog]
             FROM dbo.RateHeader hr
             WHERE hr.RheRowStatus = 'TRUE'
@@ -523,6 +524,8 @@ BEGIN
                    abfr.StartsWith [StartsWith],
                    abfr.Complete [Complete],
                    db.[Id_country] [IdFilter],
+				   db.Id_bank [IdValue],
+				   db.[Name] [NameValue],
                    'AccountBankFormatRule' [Catalog]
             FROM AccountBankFormatRule abfr
                 JOIN DeliveryBank db
@@ -531,6 +534,54 @@ BEGIN
                   AND db.[Id_country] = @IdFilter
                   AND abfr.RowStatus = 1;
         END;
+		---------------------------------------------------------------------------
+
+			--Rango de paquetes
+			IF (@NameOfCatalog = 'PackagesRange')
+			BEGIN
+				SELECT
+					cbs.IdBusinessSegment [IdBusinessSegment]
+					,cbs.BusinessSegmentName [BusinessSegmentName]
+					,pr.CatTypeRateId [IdTypeRate]
+					,pr.IdPackagesRange [IdPackagesRange]
+					,pr.[Range] [Range]
+					,cts.CtsShortName [TypeService]
+					,crs.CrsShortName [RateSegment]
+					,pr.IsPercent [IsPercent]
+					,prd.[Value] [Value]
+					,crs2.CrsShortName [RateSegmentCOD]
+					,prCOD.CODRate [CODRate]
+					,prCOD.CODExempt [CODExempt]
+					,pr.WeightLimit [WeightLimit]
+					,pr.AdditionalWeightRate [AdditionalWeightRate]
+					,pr.InsuranceRate [InsuranceRate]
+					,pr.InsuranceExempt [InsuranceExempt]
+					,pr.CreditCardRate [CreditCardRate]
+					,pr.ReturnRate [ReturnRate]
+					,pr.FragilRate [FragilRate]
+					,pr.CollectRate [CollectRate]
+					,pr.Attempt [Attempt]
+					,pr.PiecesIncluded [PiecesIncluded]
+					,cbs.IdBusinessSegment [IdValue]
+					,cbs.BusinessSegmentName [NameValue]
+					,'PackagesRange' [Catalog]
+				FROM PackagesRange pr
+				INNER JOIN PackagesRangeDetail prd
+					ON pr.IdPackagesRange = prd.PackagesRangeId
+				INNER JOIN CatBusinessSegment cbs
+					ON pr.CatBusinessSegmentId = cbs.IdBusinessSegment
+				INNER JOIN CatTypeService cts
+					ON prd.CatTypeServiceId = cts.CtsId
+				INNER JOIN CatRateSegment crs
+					ON prd.CatRateSegmentId = crs.CrsId
+				LEFT JOIN PackagesRangeCOD prCOD
+					ON pr.IdPackagesRange = prCOD.PackagesRangeId
+				LEFT JOIN CatRateSegment crs2
+					ON prCOD.CatRateSegmentId = crs2.CrsId
+				WHERE pr.RowStatus = 1
+				AND prd.RowStatus = 1
+				ORDER BY cts.CtsShortName DESC, pr.[Order]
+			END
 
         SET @count = @count + 1;
         DELETE TOP (1)

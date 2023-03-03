@@ -183,7 +183,6 @@ BEGIN
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Sender_Department)
                       )
-                      AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1
             ),
             ReceiverIdTownship =
             (
@@ -196,7 +195,6 @@ BEGIN
                           FROM [DeliveryBackOffice].[dbo].[Province]
                           WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
                       )
-                      AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1
             ),
             SourceSystemId =
             (
@@ -386,7 +384,7 @@ BEGIN
                NULL,                  -- Dispatched_Token,
                GT.Collect_OnDelivery, -- Collect_OnDelivery
                0,                     -- Guide_Collected
-               'NDD',
+               CASE WHEN GT.Collect_OnDelivery > 0 THEN 'COD' ELSE 'STD' END,
                                       -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                       --,GT.Collect
                GT.SenderIdTownship,

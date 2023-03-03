@@ -288,7 +288,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId 
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -306,6 +306,7 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -465,6 +466,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -500,6 +502,7 @@ BEGIN
 																	  CONVERT(
 																				 VARCHAR,
 																				 CASE
+																					 WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																					 WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																						 UPPER(ctgmon.tio_pk_name)
 																					 WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -560,7 +563,8 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
+												AND ord.Guide_Serie = paydord.GuideSerie
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -578,7 +582,18 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										WHERE
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
 											--AND
@@ -823,7 +838,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -832,6 +847,7 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -967,6 +983,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -999,6 +1016,7 @@ BEGIN
 													   ) + '",' + '"TypePayment":"'
 											   + ISNULL(CONVERT(   VARCHAR,
 																   CASE
+																	   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																	   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																		   UPPER(ctgmon.tio_pk_name)
 																	   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -1041,7 +1059,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON ord.Guide_Number = paydord.GuideNumber  AND ord.Guide_Serie = paydord.GuideSerie
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1049,8 +1067,19 @@ BEGIN
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch GB WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
+												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
+
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										WHERE
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
 											--AND
@@ -1310,7 +1339,7 @@ BEGIN
 											LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
-												ON gb.GuideNumber = ord.Guide_Number
+												ON gb.GuideNumber = ord.Guide_Number AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1461,6 +1490,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -1493,6 +1523,7 @@ BEGIN
 													   ) + '",' + '"TypePayment":"'
 											   + ISNULL(CONVERT(   VARCHAR,
 																   CASE
+																	   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																	   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																		   UPPER(ctgmon.tio_pk_name)
 																	   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -1537,7 +1568,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1547,6 +1578,16 @@ BEGIN
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ISNULL(ord.StatusOrderId, 15) NOT IN ( 15, 5, 7, 22 )
 											  AND
@@ -1779,7 +1820,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1788,6 +1829,7 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+													AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -1917,6 +1959,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -1949,6 +1992,7 @@ BEGIN
 													   ) + '",' + '"TypePayment":"'
 											   + ISNULL(CONVERT(   VARCHAR,
 																   CASE
+																	   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																	   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																		   UPPER(ctgmon.tio_pk_name)
 																	   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -1993,7 +2037,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+											ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -2002,7 +2046,18 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
 											  AND
@@ -2241,7 +2296,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2258,6 +2313,7 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2363,6 +2419,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -2398,6 +2455,7 @@ BEGIN
 																	  CONVERT(
 																				 VARCHAR,
 																				 CASE
+																					 WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																					 WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																						 UPPER(ctgmon.tio_pk_name)
 																					 WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -2458,7 +2516,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2475,7 +2533,18 @@ BEGIN
 												ON prd.IdProvince = twd.IdProvince
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
@@ -2679,7 +2748,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie )
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2688,6 +2757,7 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -2791,6 +2861,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -2823,6 +2894,7 @@ BEGIN
 													   ) + '",' + '"TypePayment":"'
 											   + ISNULL(CONVERT(   VARCHAR,
 																   CASE
+																	   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																	   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																		   UPPER(ctgmon.tio_pk_name)
 																	   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -2865,7 +2937,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -2874,7 +2946,18 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
 
@@ -3099,7 +3182,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3108,6 +3191,7 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3234,6 +3318,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -3266,6 +3351,7 @@ BEGIN
 													   ) + '",' + '"TypePayment":"'
 											   + ISNULL(CONVERT(   VARCHAR,
 																   CASE
+																	   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																	   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																		   UPPER(ctgmon.tio_pk_name)
 																	   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -3310,7 +3396,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3319,7 +3405,18 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)
@@ -3522,7 +3619,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3531,6 +3628,7 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											INNER JOIN
 												#temp tp
@@ -3635,6 +3733,7 @@ BEGIN
 																CONVERT(
 																		   VARCHAR,
 																		   CASE
+																			   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 																			   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																				   UPPER(catpay.PayTypeName)
 																			   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -3667,6 +3766,7 @@ BEGIN
 													   ) + '",' + '"TypePayment":"'
 											   + ISNULL(CONVERT(   VARCHAR,
 																   CASE
+																	   WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 																	   WHEN paydord.TypeofInOutMoneyId = 1 THEN
 																		   UPPER(ctgmon.tio_pk_name)
 																	   WHEN paydord.TypeofInOutMoneyId = 2 THEN
@@ -3711,7 +3811,7 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH (NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH (NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH (NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH (NOLOCK)
@@ -3720,7 +3820,18 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH (NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
+											LEFT JOIN
+												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+												ON
+													ord.Guide_Serie = PBSL.GuideSerie
+													AND
+													ord.Guide_Number = PBSL.GuideNumber
+													AND
+													PBSL.PointsConsumed > 0
+													AND
+													PBSL.PointsReceived = 0
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE CONVERT(DATE, ord.DateCreated) BETWEEN @StartDate AND @EndDate
 										AND (ord.Sender_ID IN(SELECT tp.CodeOfReference FROM #temp tp)

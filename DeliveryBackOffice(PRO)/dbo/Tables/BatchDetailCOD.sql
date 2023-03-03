@@ -56,6 +56,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_CatConceptCODId]
     ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC);
@@ -201,4 +203,9 @@ CREATE NONCLUSTERED INDEX [IDX_GUIDE_SERIE]
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222500]
     ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CatConceptCODId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_AuthorizationDate]
+    ON [dbo].[BatchDetailCOD]([AuthorizationDate] ASC);
 

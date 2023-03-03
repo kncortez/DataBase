@@ -1,6 +1,5 @@
 ﻿
 
-
 -- =============================================
 -- Author:		<Aquino, César>
 -- Create date: <2021-03-23>
@@ -37,7 +36,7 @@ AS
 BEGIN
     -- control de inserciones para transacción
     DECLARE @RInserted INT;
-	DECLARE @IsReturn BIT = 0;
+    DECLARE @IsReturn BIT = 0;
     -- tabla temporal para actualizar registros encontrados
     DECLARE @Table AS TABLE
     (
@@ -58,15 +57,15 @@ BEGIN
             (
                 SELECT TOP 1
                        StatusOrderId
-                FROM StatusOrder WITH(NOLOCK)
+                FROM StatusOrder WITH (NOLOCK)
                 WHERE OrderDescription = 'Reenviado a Express Center'
             ); --FDAPI-337
     --Se obtiene el IdDeliveryOption configurado
     DECLARE @IdDeliveryOption AS INT =
             (
                 SELECT TOP 1
-                       IdDeliveryOption 
-                FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH(NOLOCK)
+                       IdDeliveryOption
+                FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH (NOLOCK)
                 WHERE Name = 'Express Center'
             ); --FDAPI-337
     --Se obtiene el IdDeliveryOption que tiene la guía
@@ -76,11 +75,11 @@ BEGIN
     SELECT TOP 1
            @IdDeliveryOptionGuide = IdDeliveryOption,
            @IsExpress = IIF(ISNULL(kvp.KindOfVPName, '') = 'Express Center', 'true', 'false'),
-		   @IsReturn = ISNULL(IsLastMileReturn,0)
-    FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
-        LEFT JOIN dbo.VisitPointClient vpr WITH(NOLOCK)
+           @IsReturn = ISNULL(IsLastMileReturn, 0)
+    FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+        LEFT JOIN dbo.VisitPointClient vpr WITH (NOLOCK)
             ON vpr.CodeOfReference = DeliveryOrder.Receiver_ID
-        LEFT JOIN dbo.KindOfVPClient kvp WITH(NOLOCK)
+        LEFT JOIN dbo.KindOfVPClient kvp WITH (NOLOCK)
             ON kvp.IdKindOfVPClient = vpr.IdKindOfVPClient
     WHERE Guide_Serie = @GuideSerie
           AND Guide_Number = @GuideNumber; --FDAPI-337
@@ -114,11 +113,11 @@ BEGIN
                                                               ' ',
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
-                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
-                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -177,8 +176,8 @@ BEGIN
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
         SELECT da.ID
-        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
-            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH(NOLOCK)
+        FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
         WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
               AND da.Guide_Serie = @GuideSerie
@@ -222,14 +221,14 @@ BEGIN
                     (
                         SELECT TOP 1
                                ISNULL(StatusOrderId, 1)
-                        FROM dbo.DeliveryOrder WITH(NOLOCK)
+                        FROM dbo.DeliveryOrder WITH (NOLOCK)
                         WHERE Guide_Serie = @GuideSerie
                               AND Guide_Number = @GuideNumber
                     );
 
 
 
-            IF @StatusId NOT IN ( 5, 22 ) -- estado etregado
+            IF @StatusId NOT IN ( 5, 14, 22 ) -- estado etregado
             BEGIN
 
                 PRINT 'ACUTALIZADO DELIVERYORDER';
@@ -240,7 +239,7 @@ BEGIN
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
-                    LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', null, Collect_OnDelivery),
+                    LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', NULL, Collect_OnDelivery),
                     Collect_OnDelivery = IIF(@ExcludeCODPyament = 'true', 0, Collect_OnDelivery) -- 2021-09-09 si el flag de exlucion de pago COD es true actualizar monto COD a 0
                 WHERE Guide_Serie = @GuideSerie
                       AND Guide_Number = @GuideNumber;
@@ -266,9 +265,10 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber,
-                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption, @StatusEXC, IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
-                 @Token, GETDATE(), GETDATE(), NULL,
-                 IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
+                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
+                     @StatusEXC,
+                     IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
+                 NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
                 SET @RInserted = @@ROWCOUNT;
 
@@ -276,87 +276,336 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.CatModule cm
                 WHERE cm.ModName = @ModName;
 
-				-----------------WEBHOOK.INI-----------------------		
-				DECLARE @WebhookCustomerId INT = -1;
-				DECLARE @CustomerEndpointId INT = -1;
-				-- Debido a que se procesa únicamente 1 guía
-				DECLARE @GuideCurrentStatus INT = -1;
+                -----------------WEBHOOK.INI-----------------------		
+                DECLARE @WebhookCustomerId INT = -1;
+                DECLARE @CustomerEndpointId INT = -1;
+                -- Debido a que se procesa únicamente 1 guía
+                DECLARE @GuideCurrentStatus INT = -1;
 
+                BEGIN TRY
+                    DECLARE @GuideStatusChangeWebhook INT =
+                            (
+                                SELECT TOP 1
+                                       WT.IdWebhookType
+                                FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
+                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                      AND WT.RowStatus = 1
+                            );
+
+                    SET @WebhookCustomerId = ISNULL(
+                                             (
+                                                 SELECT TOP 1
+                                                        DO.IdCustomer
+                                                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                                                 WHERE DO.Guide_Number = @GuideNumber
+                                                       AND DO.Guide_Serie = @GuideSerie
+                                             ),
+                                             -1
+                                                   );
+                    SET @CustomerEndpointId = ISNULL(
+                                              (
+                                                  SELECT TOP 1
+                                                         WE.IdWebhookEndpoint
+                                                  FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+                                                  WHERE WE.CustomerId = @WebhookCustomerId
+                                                        AND WE.WebhookTypeId = @GuideStatusChangeWebhook
+                                              ),
+                                              -1
+                                                    );
+
+                    SET @GuideCurrentStatus =
+                    (
+                        SELECT TOP 1
+                               DO.StatusOrderId
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                        WHERE DO.Guide_Number = @GuideNumber
+                              AND DO.Guide_Serie = @GuideSerie
+                    );
+
+                    -- Cliente tiene webhook configurado para el tipo especificado
+                    -- Estado actual de la guía coincide dentro de las restricciónes por usuario
+                    IF (
+                           @WebhookCustomerId > 0
+                           AND @CustomerEndpointId > 0
+                           AND @GuideCurrentStatus IN
+                               (
+                                   SELECT WRBU.StatusOrderId
+                                   FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH (NOLOCK)
+                                   WHERE WRBU.CustomerId = @WebhookCustomerId
+                                         AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+                               )
+                       )
+                    BEGIN
+
+                        DECLARE @ResponseTable AS TABLE
+                        (
+                            InsertedId BIGINT
+                        );
+
+                        INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+                        (
+                            [GuideSerie],
+                            [GuideNumber],
+                            [CustomerId],
+                            [StatusOrderId],
+                            [WebhookEndpointId],
+                            [HasNotified],
+                            [TokenCreated],
+                            [DateCreated]
+                        )
+                        OUTPUT inserted.IdWebhookTrackingQueue
+                        INTO @ResponseTable
+                        (
+                            InsertedId
+                        )
+                        VALUES
+                        (@GuideSerie, @GuideNumber, @WebhookCustomerId, @GuideCurrentStatus, @CustomerEndpointId, 0,
+                         @Token, GETDATE());
+
+                    END;
+                END TRY
+                BEGIN CATCH
+
+                END CATCH;
+                -------------------WEBHOOK.FIN------------------------------			
+				
+				-------------------FORZA POINTS.INI------------------------------
 				BEGIN TRY
-					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
 
-					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
-					SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
+					-- Datos generales de la guía 
+					DECLARE @CustomerId INT 
+					DECLARE @AccountId BIGINT
+					DECLARE @MembershipId INT
+					DECLARE @GuidePrice DECIMAL(14, 2)
+					DECLARE @GuideIsCollect BIT = 0;
+					DECLARE @GuideAlreadyInPointLog BIT = 0;
+					DECLARE @IsGuideValidForPoints BIT = NULL;
+			
+					-- Datos de puntos generados
+					DECLARE @PointsGenerated INT = 0;
+					DECLARE @ForzaPointsGenerationValue DECIMAL = 0;
+					DECLARE @ForzaPointsGenerationType NVARCHAR(50) = '';
+					
+					-- Promociones validas de generación de puntos forza
+					DECLARE @CatPointPromoTbl TABLE (	IdPointPromo INT, 
+													PointPromoDescription NVARCHAR(400),
+													Monday BIT,
+													Tuesday BIT,
+													Wednesday BIT,
+													Thursday BIT,
+													Friday BIT,
+													Saturday BIT,
+													Sunday BIT,
+													PointPromoFactor DECIMAL);
+					-- Promoción de mayor peso a aplicar
+					INSERT INTO @CatPointPromoTbl
+					SELECT	TOP 1	[CPP].[IdPointPromo],
+									[CPP].[PointPromoDescription],
+									[CPP].[Monday],
+									[CPP].[Tuesday],
+									[CPP].[Wednesday],
+									[CPP].[Thursday],
+									[CPP].[Friday],
+									[CPP].[Saturday],
+									[CPP].[Sunday],
+									[CPP].[PointPromoFactor]
+					FROM	[dbo].[CatPointPromo] CPP
+					WHERE	[CPP].[RowStatus] = 1
+						AND [CPP].[InPointGeneration] = 1
+						AND SYSDATETIME() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+					ORDER BY [CPP].[PointPromoWeight] DESC;
+					
+					SET @ForzaPointsGenerationType = (	SELECT	[CP].[Value]
+														FROM	[dbo].[ConfigParams] CP
+														WHERE	[CP].[Name] = 'ForzaPointsGenerationType'
+															AND [CP].[Status] = 1);
 
-					SET @GuideCurrentStatus = (SELECT TOP 1 DO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie);
+					SET @ForzaPointsGenerationValue = ( SELECT	[CP].[Value]
+														FROM	[dbo].[ConfigParams] CP
+														WHERE	[CP].[Name] = 'ForzaPointsGenerationValue'
+															AND [CP].[Status] = 1);
 
-					-- Cliente tiene webhook configurado para el tipo especificado
-					-- Estado actual de la guía coincide dentro de las restricciónes por usuario
-					IF ( @WebhookCustomerId > 0 AND @CustomerEndpointId > 0 AND @GuideCurrentStatus IN (SELECT WRBU.StatusOrderId FROM [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) WHERE WRBU.CustomerId = @WebhookCustomerId AND WRBU.WebhookTypeId = @GuideStatusChangeWebhook) )
-					BEGIN 
+					-- Datos generales de la guía para cálculo de puntos
+					SELECT 
+						TOP 1 
+							@CustomerId = DO.IdCustomer,
+							@AccountId = Acc.AccIdAccount,
+							@GuidePrice = DO.PriceShippment,
+							@GuideIsCollect = DO.IsCollect,
+							@MembershipId = ISNULL(MMBSHP.IdMembership, -1)
+					FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+						INNER JOIN 
+							[DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
+							ON
+								Do.IdCustomer = Acc.IdCustomer
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[Membership] MMBSHP WITH(NOLOCK)
+							ON
+								Acc.AccIdAccount = MMBSHP.AccountId
+								AND
+								MMBSHP.RowStatus = 1
+								AND
+								MMBSHP.ExpirationDate >= GETDATE()
+					WHERE
+						DO.Guide_Serie = @GuideSerie
+						AND
+						DO.Guide_Number = @GuideNumber;
 
-						DECLARE @ResponseTable AS TABLE (
-							InsertedId BIGINT
-						);
+					-- Si es NULL asegurar dato como falso
+					IF(ISNULL(@GuideIsCollect, 0) = 0)
+						SET @GuideIsCollect = 0
 
-						IF( 
-								NOT EXISTS (
-									SELECT 
-										TOP 1 
-											1 
-									FROM 
-										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK) 
-									WHERE 
-										WTQ.GuideSerie = @GuideSerie 
-										AND 
-										WTQ.GuideNumber = @GuideNumber 
-										AND
-										WTQ.RowStatus = 1
-										AND 
-										WTQ.StatusOrderId IN (
-											SELECT
-												WRBU.StatusOrderId 
-											FROM 
-												[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
-											WHERE 
-												WRBU.CustomerId = @WebhookCustomerId 
-												AND 
-												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
-								) ) )
-							BEGIN
-								INSERT INTO 
-									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-									(
-										[GuideSerie]
-										,[GuideNumber]
-										,[CustomerId]
-										,[StatusOrderId]
-										,[WebhookEndpointId]
-										,[HasNotified]
-										,[TokenCreated]
-										,[DateCreated]
-									)
-								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-								VALUES
-									(
-										@GuideSerie
-										,@GuideNumber
-										,@WebhookCustomerId
-										,@GuideCurrentStatus
-										,@CustomerEndpointId
-										,0
-										,@Token
-										,GETDATE()
-									)
-							END
+					-- Revisar si la guía pertenece a servicios de monto fijo de membresía o suscripción
+					-- Por membresía
+					SELECT
+						@IsGuideValidForPoints = 0
+					FROM
+						[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[Membership] MMBSHP WITH(NOLOCK)
+							ON
+								MSL.MembershipId = MMBSHP.IdMembership
+								AND
+								MSL.SubscriptionId IS NULL
+					WHERE
+						MSL.LogGuideSerie = @GuideSerie
+						AND
+						MSL.LogGuideNumber = @GuideNumber
+						AND
+						MSL.RowStatus = 1
+						AND
+						MSL.LogServiceNumber <= MMBSHP.MembershipMaxServiceFixedValue
 
-					END
+					-- Por suscripción
+					SELECT
+						@IsGuideValidForPoints = 0
+					FROM
+						[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[Subscription] SBSCPN WITH(NOLOCK)
+							ON
+								MSL.MembershipId = SBSCPN.MembershipId
+								AND
+								MSL.SubscriptionId = SBSCPN.IdSubscription
+					WHERE
+						MSL.LogGuideSerie = @GuideSerie
+						AND
+						MSL.LogGuideNumber = @GuideNumber
+						AND
+						MSL.RowStatus = 1
+						AND
+						MSL.LogServiceNumber <= SBSCPN.SubscriptionMaxServiceFixedValue
+
+					-- Si permanece NULL, entonces es valida para acumular puntos
+					IF(@IsGuideValidForPoints IS NULL)
+						SET @IsGuideValidForPoints = 1
+
+					-- Revisar si existe en bitácora de puntos lógicamente activa
+					SELECT
+						TOP 1
+							@GuideAlreadyInPointLog = 1
+					FROM
+						[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL
+					WHERE
+						PBSL.GuideNumber = @GuideNumber
+						AND
+						PBSL.GuideSerie = @GuideSerie
+						AND
+						PBSL.RowStatus = 1
+
+					-- Solo si se reconoce membresía activa y que guía es collect y que no este dentro de la bitácora de guías de membresía o que no se encuentre bajo y que no este ya en bitácora de puntos
+					IF (@MembershipId > 0 AND @GuideIsCollect = 1 AND ISNULL(@IsGuideValidForPoints, 0) = 1 AND ISNULL(@GuideAlreadyInPointLog, 0) = 0)
+						BEGIN
+
+							-- Agregar Log de puntos 
+							INSERT INTO 
+								[DeliveryBackOffice].[dbo].[PointsByServiceLog] 
+								(
+									[MembershipId],
+									[GuideSerie],
+									[GuideNumber],
+									[GuidePrice],
+									[PointsReceived],
+									[PointsConsumed],
+									[TypeTransaction],
+									[CatPointPromoId],
+									[RowStatus],
+									[DateCreated],
+									[TokenCreated]
+								)
+							VALUES
+								(
+									@MembershipId,
+									@GuideSerie,
+									@GuideNumber, 
+									@GuidePrice,
+									(CASE
+										WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST(@ForzaPointsGenerationValue AS INT)
+										WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST((@GuidePrice / @ForzaPointsGenerationValue) AS INT)
+										ELSE 0
+									END),	 -- POINTS RECEIVED
+									0,		-- POINTS CONSUMED
+									@ForzaPointsGenerationType,
+									NULL,
+									1,
+									SYSDATETIME(),
+									@Token
+								);
+
+							-- Acumulación adicional por promoción
+					
+							IF ((SELECT COUNT(IdPointPromo) FROM @CatPointPromoTbl) > 0)
+								BEGIN
+									DECLARE @DayName NVARCHAR(20) = '';
+									DECLARE @IsValidDay BIT = 0;
+
+									SET @DayName = (SELECT DATENAME(dw, SYSDATETIME()));
+									SET @IsValidDay =	CASE 
+															WHEN @DayName = 'Monday'	THEN (SELECT TOP 1 Monday FROM @CatPointPromoTbl)
+															WHEN @DayName = 'Tuesday'	THEN (SELECT TOP 1 Tuesday FROM @CatPointPromoTbl)
+															WHEN @DayName = 'Wednesday' THEN (SELECT TOP 1 Wednesday FROM @CatPointPromoTbl)
+															WHEN @DayName = 'Thursday'	THEN (SELECT TOP 1 Thursday FROM @CatPointPromoTbl)
+															WHEN @DayName = 'Friday'	THEN (SELECT TOP 1 Friday FROM @CatPointPromoTbl)
+															WHEN @DayName = 'Saturday'	THEN (SELECT TOP 1 Saturday FROM @CatPointPromoTbl)
+															WHEN @DayName = 'Sunday'	THEN (SELECT TOP 1 Sunday FROM @CatPointPromoTbl)
+															ELSE 0
+														END
+									IF (@IsValidDay = 1)
+										BEGIN
+
+											UPDATE		PSL
+											SET			[PSL].[CatPointPromoId] = (SELECT IdPointPromo FROM @CatPointPromoTbl),
+														[PSL].[PointsReceived] = [PSL].[PointsReceived] +	CASE 
+																												WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST((SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
+																												WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST([PSL].[PointsReceived] / (SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
+																												ELSE 0
+																											END
+											FROM		[dbo].[PointsByServiceLog] PSL
+											WHERE PSL.GuideSerie = @GuideSerie
+											AND PSL.GuideNumber = @GuideNumber
+											AND PSL.RowStatus = 1;
+										END
+								END
+
+							-- Agregar puntos a membresía
+							SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
+													FROM	[dbo].[PointsByServiceLog] PSL
+													WHERE	[PSL].[GuideSerie] = @GuideSerie
+														AND [PSL].[GuideNumber] = @GuideNumber
+														AND PSL.RowStatus = 1), 0);
+					
+							UPDATE	[dbo].[Membership] 
+							SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
+									[AvailablePoints] = ISNULL([AvailablePoints], 0) + (@PointsGenerated)
+							WHERE	[IdMembership] = @MembershipId;
+
+						END
+
 				END TRY
 				BEGIN CATCH
 
 				END CATCH
-				-------------------WEBHOOK.FIN------------------------------			
-
+				-------------------FORZA POINTS.FIN------------------------------
                 -- ********************************** PROCESO DE COD ********************************************************************************
                 INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
                 (
@@ -377,10 +626,10 @@ BEGIN
                        @DataOriginId AS 'DataOriginId',
                        @Token AS 'Token',
                        cus.IdCustomer
-                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = ord.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
                 WHERE Guide_Serie = @GuideSerie
                       AND Guide_Number = @GuideNumber
@@ -391,16 +640,16 @@ BEGIN
                        ord.Guide_Number AS 'GuideNumber',
                        (
                            SELECT IdCourierman
-                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH(NOLOCK)
+                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token AS 'Token',
                        cus.IdCustomer
-                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = ord.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
                 WHERE Guide_Serie = @GuideSerie
                       AND Guide_Number = @GuideNumber
@@ -412,19 +661,19 @@ BEGIN
                        ord.Guide_Number AS 'GuideNumber',
                        (
                            SELECT IdCourierman
-                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH(NOLOCK)
+                           FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
                        @DataOriginId AS 'DataOriginId',
                        @Token AS 'Token',
                        cus.IdCustomer
-                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH(NOLOCK)
-                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH(NOLOCK)
+                FROM DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                         ON ord.Guide_Serie = DOP.GuideSerie
                            AND ord.Guide_Number = DOP.GuideNumber
-                    LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK)
+                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = ord.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH(NOLOCK)
+                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(ord.IdCustomer, vp.CustomerID)
                 WHERE Guide_Serie = @GuideSerie
                       AND Guide_Number = @GuideNumber

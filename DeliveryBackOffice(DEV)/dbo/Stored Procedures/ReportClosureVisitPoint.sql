@@ -75,6 +75,8 @@ BEGIN
                        UPPER('pago con tarjeta')
                    WHEN DOPD.TypeofInOutMoneyId = 7 THEN
                        UPPER(ctgmon.tio_pk_name)
+                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                       UPPER(ctgmon.tio_pk_name)
                    ELSE
                        ''
                END 'PaymentType',
@@ -104,6 +106,7 @@ BEGIN
                    AND DOPD.ShipmentCompleted = 1
                    AND DOPD.AccountId > 0
                    AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
             JOIN CatTypeServiceClosure CTS
                 ON CTS.IdTypeService = DOPD.TypeServiceId
             JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
@@ -185,6 +188,8 @@ BEGIN
                        UPPER('pago con tarjeta')
                    WHEN DOPD.TypeofInOutMoneyId = 7 THEN
                        UPPER(ctgmon.tio_pk_name)
+                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                       UPPER(ctgmon.tio_pk_name)
                    ELSE
                        ''
                END 'PaymentType',
@@ -237,6 +242,7 @@ BEGIN
               AND ACHVP.IdAccountingClosuresHeaderVisitPoint = @IdCierre
               AND (CTS.IdTypeService NOT IN ( 5, 23 ))
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
+			 AND DOPD.[TypeofInOutMoneyId] != 8
         ORDER BY DOPD.DateCreated ASC;
     END;
 
@@ -274,6 +280,8 @@ BEGIN
                        UPPER('pago con tarjeta')
                    WHEN DOPD.TypeofInOutMoneyId = 7 THEN
                        UPPER(ctgmon.tio_pk_name)
+                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                       UPPER(ctgmon.tio_pk_name)
                    ELSE
                        ''
                END 'PaymentType',
@@ -303,6 +311,7 @@ BEGIN
                    AND DOPD.ShipmentCompleted = 1
                    AND DOPD.AccountId > 0
                    AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
             JOIN CatTypeServiceClosure CTS
                 ON CTS.IdTypeService = DOPD.TypeServiceId
             JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
@@ -385,6 +394,8 @@ BEGIN
                        UPPER('pago con tarjeta')
                    WHEN DOPD.TypeofInOutMoneyId = 7 THEN
                        UPPER(ctgmon.tio_pk_name)
+                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                       UPPER(ctgmon.tio_pk_name)
                    ELSE
                        ''
                END 'PaymentType',
@@ -436,6 +447,7 @@ BEGIN
                   )
               AND (CTS.IdTypeService NOT IN ( 5, 23 ))
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
+			 AND DOPD.[TypeofInOutMoneyId] != 8
         ORDER BY ACD.AccountingClosuresHeaderId,
                  DOPD.DateCreated ASC;
 
@@ -475,6 +487,8 @@ BEGIN
                        UPPER('pago con tarjeta')
                    WHEN DOPD.TypeofInOutMoneyId = 7 THEN
                        UPPER(ctgmon.tio_pk_name)
+                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                       UPPER(ctgmon.tio_pk_name)
                    ELSE
                        ''
                END 'PaymentType',
@@ -506,6 +520,7 @@ BEGIN
                    AND DOPD.ShipmentCompleted = 1
                    AND DOPD.AccountId > 0
                    AND DOR.StatusOrderId != 7
+			 AND DOPD.[TypeofInOutMoneyId] != 8
             JOIN CatTypeServiceClosure CTS
                 ON CTS.IdTypeService = DOPD.TypeServiceId
             JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
@@ -580,6 +595,8 @@ BEGIN
                        UPPER('pago con tarjeta')
                    WHEN DOPD.TypeofInOutMoneyId = 7 THEN
                        UPPER(ctgmon.tio_pk_name)
+                   WHEN DOPD.TypeofInOutMoneyId = 8 THEN
+                       UPPER(ctgmon.tio_pk_name)
                    ELSE
                        ''
                END 'PaymentType',
@@ -627,6 +644,7 @@ BEGIN
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
               AND (CTS.IdTypeService NOT IN ( 5, 23 ))
               AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
+			 AND DOPD.[TypeofInOutMoneyId] != 8
         ORDER BY ACD.AccountingClosuresHeaderId,
                  DOPD.DateCreated ASC;
     END;

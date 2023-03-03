@@ -35,6 +35,8 @@ BEGIN
 
 	DECLARE @CanceledStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI);
 
+	DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora' COLLATE Latin1_General_CI_AI)
+
 	-- Configuraciones generales
 	DECLARE @OffsetRegistries BIGINT = @DisplayPage * @DisplayRegistries;
 	DECLARE @TotalServices BIGINT = 0;
@@ -123,59 +125,166 @@ BEGIN
 
 		CREATE NONCLUSTERED INDEX IX_ProductVendor_Guide ON #AccountFilteredGuides (GuideSerie, GuideNumber);
 		CREATE NONCLUSTERED INDEX IX_ProductVendor_Status ON #AccountFilteredGuides (StatusOrderId);
+		
+		IF(@CustomerTypeId = 3)
+		BEGIN
 
-		INSERT INTO #AccountFilteredGuides
-			(
-				GuideSerie
-				,GuideNumber
-				,StatusOrderId
-				,Pieces_Dry
-				,Pieces_Cold
-				,Ticket_Number
-				,Receiver_FirstName
-				,Receiver_LastName
-				,Receiver_Phone
-				,IsCollect
-				,PriceShippment
-				,Collect_OnDelivery
-				,TypeService
-				,DateCreated
-			)
-		SELECT
-			DISTINCT
-				DO.Guide_Serie
-				,DO.Guide_Number
-				,DO.StatusOrderId
-				,DO.Pieces_Dry
-				,DO.Pieces_Cold
-				,DO.Ticket_Number
-				,DO.Receiver_FirstName
-				,DO.Receiver_LastName
-				,DO.Receiver_Phone
-				,DO.IsCollect
-				,DO.PriceShippment
-				,DO.Collect_OnDelivery
-				,DO.TypeService
-				,DO.DateCreated
-		FROM
-			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-			INNER JOIN
-				@FilteredStatus FS
-				ON
-					DO.StatusOrderId = FS.StatusOrderId
-		WHERE
-			-- Área de filtros
-			(
-				( @CustomerTypeId = 3 AND DO.IdCustomer = @CustomerId)
-				OR
-				( @CustomerTypeId = 2 AND (DO.Sender_ID = @VisitPointByAccount OR do.OriginSenderId = @VisitPointByAccount) )
-				OR
-				( @CustomerTypeId = 1 AND (DO.Sender_ID = @VisitPointByAccount)  )
-			)
-			AND
-			( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
-			AND
-			( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+			INSERT INTO #AccountFilteredGuides
+				(
+					GuideSerie
+					,GuideNumber
+					,StatusOrderId
+					,Pieces_Dry
+					,Pieces_Cold
+					,Ticket_Number
+					,Receiver_FirstName
+					,Receiver_LastName
+					,Receiver_Phone
+					,IsCollect
+					,PriceShippment
+					,Collect_OnDelivery
+					,TypeService
+					,DateCreated
+				)
+			SELECT
+				DISTINCT
+					DO.Guide_Serie
+					,DO.Guide_Number
+					,DO.StatusOrderId
+					,DO.Pieces_Dry
+					,DO.Pieces_Cold
+					,DO.Ticket_Number
+					,DO.Receiver_FirstName
+					,DO.Receiver_LastName
+					,DO.Receiver_Phone
+					,DO.IsCollect
+					,DO.PriceShippment
+					,DO.Collect_OnDelivery
+					,DO.TypeService
+					,DO.DateCreated
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+					@FilteredStatus FS
+					ON
+						DO.StatusOrderId = FS.StatusOrderId
+			WHERE
+				-- Área de filtros
+				(
+					( @CustomerTypeId = 3 AND DO.IdCustomer = @CustomerId)
+				)
+				AND
+				( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+				AND
+				( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+		END
+		ELSE IF (@CustomerTypeId = 2)
+		BEGIN
+
+			INSERT INTO #AccountFilteredGuides
+				(
+					GuideSerie
+					,GuideNumber
+					,StatusOrderId
+					,Pieces_Dry
+					,Pieces_Cold
+					,Ticket_Number
+					,Receiver_FirstName
+					,Receiver_LastName
+					,Receiver_Phone
+					,IsCollect
+					,PriceShippment
+					,Collect_OnDelivery
+					,TypeService
+					,DateCreated
+				)
+			SELECT
+				DISTINCT
+					DO.Guide_Serie
+					,DO.Guide_Number
+					,DO.StatusOrderId
+					,DO.Pieces_Dry
+					,DO.Pieces_Cold
+					,DO.Ticket_Number
+					,DO.Receiver_FirstName
+					,DO.Receiver_LastName
+					,DO.Receiver_Phone
+					,DO.IsCollect
+					,DO.PriceShippment
+					,DO.Collect_OnDelivery
+					,DO.TypeService
+					,DO.DateCreated
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+					@FilteredStatus FS
+					ON
+						DO.StatusOrderId = FS.StatusOrderId
+			WHERE
+				-- Área de filtros
+				(
+					( @CustomerTypeId = 2 AND (DO.Sender_ID = @VisitPointByAccount OR do.OriginSenderId = @VisitPointByAccount) )
+				)
+				AND
+				( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+				AND
+				( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+		END
+		ELSE IF (@CustomerTypeId = 1)
+		BEGIN
+
+			INSERT INTO #AccountFilteredGuides
+				(
+					GuideSerie
+					,GuideNumber
+					,StatusOrderId
+					,Pieces_Dry
+					,Pieces_Cold
+					,Ticket_Number
+					,Receiver_FirstName
+					,Receiver_LastName
+					,Receiver_Phone
+					,IsCollect
+					,PriceShippment
+					,Collect_OnDelivery
+					,TypeService
+					,DateCreated
+				)
+			SELECT
+				DISTINCT
+					DO.Guide_Serie
+					,DO.Guide_Number
+					,DO.StatusOrderId
+					,DO.Pieces_Dry
+					,DO.Pieces_Cold
+					,DO.Ticket_Number
+					,DO.Receiver_FirstName
+					,DO.Receiver_LastName
+					,DO.Receiver_Phone
+					,DO.IsCollect
+					,DO.PriceShippment
+					,DO.Collect_OnDelivery
+					,DO.TypeService
+					,DO.DateCreated
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				INNER JOIN
+					@FilteredStatus FS
+					ON
+						DO.StatusOrderId = FS.StatusOrderId
+			WHERE
+				-- Área de filtros
+				(
+					( @CustomerTypeId = 1 AND (DO.Sender_ID = @VisitPointByAccount)  )
+				)
+				AND
+				( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+				AND
+				( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+		END
 
 		IF( EXISTS(SELECT TOP 1 1 FROM #AccountFilteredGuides) )
 		BEGIN
@@ -191,7 +300,10 @@ BEGIN
 				ISNULL(DO.Ticket_Number,'') 'Reference',
 				UPPER(LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName,' ',DO.Receiver_LastName)))) 'ReceiverName',
 				ISNULL(DO.Receiver_Phone, '') 'ReceiverPhone',
-				ISNULL(DO.IsCollect, 0) 'IsCollect',
+				(CASE
+					WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 0
+					ELSE ISNULL(DO.IsCollect, 0)
+				END) 'IsCollect',
 				CAST(CAST(ISNULL(DO.PriceShippment, 0) AS MONEY) AS NVARCHAR) 'PriceService',
 				CAST(CAST(ISNULL(DO.Collect_OnDelivery, 0) AS MONEY) AS NVARCHAR) 'CollectOnDelivery',
 				SO.StatusOrderId 'IdStatus',
@@ -200,6 +312,7 @@ BEGIN
 				ISNULL((
 					CASE
 						WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN 'PENDIENTE'
+						WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
 						WHEN DOPD.TimePlaId = 8 THEN 'CREDITO'
 						WHEN DO.IsCollect = 1 THEN 'COLLECT'
 						ELSE UPPER(CPType.PayTypeName)
@@ -208,13 +321,17 @@ BEGIN
 				ISNULL((
 					CASE
 						WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN UPPER('pendiente de pago')
+						WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
 						WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
 						WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER('pago al crédito')
 						ELSE UPPER(IOOMT.tio_pk_name)
 					END
 				), UPPER('pago en efectivo')) 'TypePayment',
 				UPPER(ISNULL(DO.TypeService, '')) 'TypeService',
-				ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 'TimePayment',
+				(CASE 
+					WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN CONVERT(VARCHAR, @InmediatePaymentTime)
+					ELSE ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 
+				END) 'TimePayment',
 				ISNULL(CPTime.TimePlaName, '') 'TimePaymentDescription',
 				'Q.' 'CurrencySymbol'
 			FROM
@@ -241,6 +358,16 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] IOOMT WITH(NOLOCK)
 					ON
 						DOPD.TypeofInOutMoneyId = IOOMT.tio_pk_id
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+					ON
+						DO.GuideSerie = PBSL.GuideSerie
+						AND
+						DO.GuideNumber = PBSL.GuideNumber
+						AND
+						PBSL.PointsConsumed > 0
+						AND
+						PBSL.PointsReceived = 0
 				ORDER BY
 					DO.DateCreated DESC
 				OFFSET @OffsetRegistries ROWS FETCH NEXT @DisplayRegistries ROWS ONLY

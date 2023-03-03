@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
 -- =============================================
 -- Author:		<Jorge,Murillo>
 -- Create date: <2021-02-10>
@@ -61,6 +62,8 @@ SET NOCOUNT ON;
 			DECLARE @MembershipId INT
 			DECLARE @SubscriptionId INT
 			DECLARE @MembershipSubscriptionLogId BIGINT
+			DECLARE @PointsByServiceLogId INT = NULL
+			DECLARE @PointsToReceive INT = NULL
 			-------------------------------------
 
 			while (@COUNTGUIDES > 0)
@@ -226,6 +229,50 @@ SET NOCOUNT ON;
 
 							END
 							--Termina Membresías y suscripciones
+							
+								-- puntos forza
+								SET @PointsByServiceLogId = NULL
+								SET @PointsToReceive = NULL
+
+								SELECT
+									@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+								    ,@MembershipId = PBSL.MembershipId
+									,@PointsToReceive = PBSL.PointsConsumed
+								FROM
+									[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+									INNER JOIN @TBGUIDES TB
+									ON TB.SerieGuide = PBSL.GuideSerie
+									AND TB.GuideNumber = PBSL.GuideNumber
+									AND ISNULL(PBSL.PointsConsumed, 0) > 0
+								WHERE
+									TB.ITERATOR = @IDENTYGUIDES
+									AND PBSL.RowStatus = 1
+
+								IF(@PointsByServiceLogId IS NOT NULL)
+								BEGIN
+
+									-- Inactivar registro de bitacora
+									UPDATE
+										[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+									SET
+										RowStatus = 0,
+										TokenUpdated = @Token,
+										DateUpdated = GETDATE()
+									WHERE
+										IdPointsByServiceLog = @PointsByServiceLogId
+
+									-- Devolver puntos forza
+									UPDATE
+										[DeliveryBackOffice].[dbo].[Membership]
+									SET
+										AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+										,TokenUpdated = @Token
+										,DateUpdated = GETDATE()
+									WHERE
+										IdMembership = @MembershipId
+
+								END
+								-- Termina puntos forza
 
 							SET @TOTAL = @TOTAL + 1;
 							
@@ -326,6 +373,50 @@ SET NOCOUNT ON;
 
 								END
 								--Termina Membresías y suscripciones
+								
+								-- puntos forza
+								SET @PointsByServiceLogId = NULL
+								SET @PointsToReceive = NULL
+
+								SELECT
+									@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+								    ,@MembershipId = PBSL.MembershipId
+									,@PointsToReceive = PBSL.PointsConsumed
+								FROM
+									[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+									INNER JOIN @TBGUIDES TB
+									ON TB.SerieGuide = PBSL.GuideSerie
+									AND TB.GuideNumber = PBSL.GuideNumber
+									AND ISNULL(PBSL.PointsConsumed, 0) > 0
+								WHERE
+									TB.ITERATOR = @IDENTYGUIDES
+									AND PBSL.RowStatus = 1
+
+								IF(@PointsByServiceLogId IS NOT NULL)
+								BEGIN
+
+									-- Inactivar registro de bitacora
+									UPDATE
+										[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+									SET
+										RowStatus = 0,
+										TokenUpdated = @Token,
+										DateUpdated = GETDATE()
+									WHERE
+										IdPointsByServiceLog = @PointsByServiceLogId
+
+									-- Devolver puntos forza
+									UPDATE
+										[DeliveryBackOffice].[dbo].[Membership]
+									SET
+										AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+										,TokenUpdated = @Token
+										,DateUpdated = GETDATE()
+									WHERE
+										IdMembership = @MembershipId
+
+								END
+								-- Termina puntos forza
 
 								SET @TOTAL = @TOTAL + 1;
 						 END   
@@ -403,6 +494,51 @@ SET NOCOUNT ON;
 								END
 								--Termina Membresías y suscripciones
 
+								-- puntos forza
+								SET @PointsByServiceLogId = NULL
+								SET @PointsToReceive = NULL
+
+								SELECT
+									@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+								    ,@MembershipId = PBSL.MembershipId
+									,@PointsToReceive = PBSL.PointsConsumed
+								FROM
+									[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+									INNER JOIN @TBGUIDES TB
+									ON TB.SerieGuide = PBSL.GuideSerie
+									AND TB.GuideNumber = PBSL.GuideNumber
+									AND ISNULL(PBSL.PointsConsumed, 0) > 0
+								WHERE
+									TB.ITERATOR = @IDENTYGUIDES
+									AND PBSL.RowStatus = 1
+
+								IF(@PointsByServiceLogId IS NOT NULL)
+								BEGIN
+
+									-- Inactivar registro de bitacora
+									UPDATE
+										[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+									SET
+										RowStatus = 0,
+										TokenUpdated = @Token,
+										DateUpdated = GETDATE()
+									WHERE
+										IdPointsByServiceLog = @PointsByServiceLogId
+
+									-- Devolver puntos forza
+									UPDATE
+										[DeliveryBackOffice].[dbo].[Membership]
+									SET
+										AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+										,TokenUpdated = @Token
+										,DateUpdated = GETDATE()
+									WHERE
+										IdMembership = @MembershipId
+
+								END
+								-- Termina puntos forza
+
+
 									SET @TOTAL = @TOTAL + 1;
 						 END  
 						  --------Anular guía con estado Generado -----
@@ -478,6 +614,50 @@ SET NOCOUNT ON;
 
 								END
 								--Termina Membresías y suscripciones
+								
+								-- puntos forza
+								SET @PointsByServiceLogId = NULL
+								SET @PointsToReceive = NULL
+
+								SELECT
+									@PointsByServiceLogId = PBSL.IdPointsByServiceLog
+								    ,@MembershipId = PBSL.MembershipId
+									,@PointsToReceive = PBSL.PointsConsumed
+								FROM
+									[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+									INNER JOIN @TBGUIDES TB
+									ON TB.SerieGuide = PBSL.GuideSerie
+									AND TB.GuideNumber = PBSL.GuideNumber
+									AND ISNULL(PBSL.PointsConsumed, 0) > 0
+								WHERE
+									TB.ITERATOR = @IDENTYGUIDES
+									AND PBSL.RowStatus = 1
+
+								IF(@PointsByServiceLogId IS NOT NULL)
+								BEGIN
+
+									-- Inactivar registro de bitacora
+									UPDATE
+										[DeliveryBackOffice].[dbo].[PointsByServiceLog]
+									SET
+										RowStatus = 0,
+										TokenUpdated = @Token,
+										DateUpdated = GETDATE()
+									WHERE
+										IdPointsByServiceLog = @PointsByServiceLogId
+
+									-- Devolver puntos forza
+									UPDATE
+										[DeliveryBackOffice].[dbo].[Membership]
+									SET
+										AvailablePoints = ISNULL(AvailablePoints, 0) + @PointsToReceive
+										,TokenUpdated = @Token
+										,DateUpdated = GETDATE()
+									WHERE
+										IdMembership = @MembershipId
+
+								END
+								-- Termina puntos forza
 
 									SET @TOTAL = @TOTAL + 1;
 						 END 

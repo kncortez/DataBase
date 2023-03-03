@@ -2,7 +2,7 @@
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-01-08>
--- Description:	<Login Portal Web>
+-- Description:	<Método para registrar dirección y punto de visita>
 -- =============================================
 
 
@@ -27,11 +27,12 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@Neighborhood varchar(50) = NULL,
 	@Zone smallint = NULL,
 	@ProvinceTownship NVARCHAR(100) = '', -- Posible texto con datos de municipio y/o departamento concatenados
-	@IsOriginVisitPoint bit = 1,
 	@IdPopulated int = NULL,
 	@Predeterminated bit = NULL,
 	@VisibleInGuide bit = NULL,
-	@PickupsProgram bit = NULL
+	@PickupsProgram bit = NULL,
+	@IsOriginVisitPoint bit = 1,
+	@ContactName NVARCHAR(200) = NULL
 	
 	
 AS
@@ -192,7 +193,8 @@ BEGIN
 						  ,VP.IdKindOfVPBusiness=@IdKindOfVPBusiness
 						  ,VP.Latitude=@Latitude
 						  ,VP.Longitude=@Longitude
-						  ,VP.IsOriginVisitPoint = @IsOriginVisitPoint
+						  ,VP.IsOriginVisitPoint = ISNULL(@IsOriginVisitPoint, 1)
+						  ,VP.ContactName = @ContactName
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
@@ -255,7 +257,7 @@ BEGIN
 					   ,@TownshipName
 					   ,@Department
 					   ,@Phone
-					   ,NULL
+					   ,@ContactName
 					   ,6
 					   ,@IdKindOfVPBusiness
 					   ,NULL
@@ -263,7 +265,7 @@ BEGIN
 					   ,@IdTownship
 					   ,@Latitude
 					   ,@Longitude
-					   ,@IsOriginVisitPoint
+					   ,ISNULL(@IsOriginVisitPoint, 1)
 					   )
 				set @IdVisitPointClient = SCOPE_IDENTITY()
 

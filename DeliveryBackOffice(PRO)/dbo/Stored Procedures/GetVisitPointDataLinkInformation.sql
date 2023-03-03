@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-09-21>
@@ -39,7 +38,9 @@ BEGIN
 		VisitPointSpecialInstructions NVARCHAR(200),
 		
 		VisitPointLatitude NVARCHAR(20),
-		VisitPointLongitude NVARCHAR(20)
+		VisitPointLongitude NVARCHAR(20),
+
+		IsOnlyVisitPoint BIT
 	);
 
 	BEGIN TRY
@@ -65,6 +66,7 @@ BEGIN
 				, VisitPointSpecialInstructions
 				, VisitPointLatitude
 				, VisitPointLongitude
+				, IsOnlyVisitPoint
 			)
 		SELECT
 			VPDL.IdVisitPointDataLink
@@ -86,6 +88,7 @@ BEGIN
 			,UA.UadAdditionalInstructions
 			,VPC.Latitude
 			,VPC.Longitude
+			,ISNULL(VPDL.IsOnlyVisitPoint, 0)
 		FROM
 			[DeliveryBackOffice].[dbo].[VisitPointDataLink] VPDL WITH(NOLOCK)
 			LEFT JOIN
@@ -144,6 +147,7 @@ BEGIN
 				, DLI.VisitPointColony
 				, DLI.VisitPointLatitude
 				, DLI.VisitPointLongitude
+				, DLI.IsOnlyVisitPoint
 			FROM
 				@DataLinkInfo DLI
 

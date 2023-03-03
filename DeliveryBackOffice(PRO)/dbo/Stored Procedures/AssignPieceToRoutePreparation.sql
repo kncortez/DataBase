@@ -24,6 +24,8 @@ CREATE PROCEDURE [dbo].[AssignPieceToRoutePreparation]
 	@Token NVARCHAR(50)
 AS
 BEGIN
+
+SET ARITHABORT ON
 	--- Conteo para verificar cantidad correcta de validaciones
 	DECLARE @RModified INT = 0
 
@@ -73,6 +75,7 @@ BEGIN
 	------Variables para proceso de generación de datos de servicio marcados como devolución
 	DECLARE @IsReturn AS BIT=0--bandera de dvolución
 	DECLARE @AmountToPay AS DECIMAL (18,2)
+	DECLARE @AmountToPayCOD AS DECIMAL (18,2)
 	DECLARE @IdServiceManagement AS INT
 	DECLARE @subtypeservicemanagment AS INT 
 
@@ -591,7 +594,8 @@ BEGIN
 																'',           -- Codeapp
 																1,            -- Identificador de modulo donde proviene
 																@Token;       -- Token de courier
-					SELECT @AmountToPay  = bpg.AmountToPay
+					SELECT @AmountToPay  = bpg.AmountToPay,
+						   @AmountToPayCOD  = bpg.CODAmount
 					FROM  @BrainProcessedGuides bpg
 				END
 
@@ -817,8 +821,8 @@ BEGIN
 					END
 
 					UPDATE ServiceManagementDetail SET
-						ServiceAmount = IIF(@IsReturn=1,ServiceAmount,ServiceAmount+@AmountToPay),
-						ServiceExtraAmount = IIF(@IsReturn=1,0,(ServiceExtraAmount +@GuideCOD)),
+						ServiceAmount = IIF(@IsReturn=1,ServiceAmount,ServiceAmount+ISNULL(@AmountToPay,0)),
+						ServiceExtraAmount = IIF(@IsReturn=1,0,(ServiceExtraAmount +ISNULL(@AmountToPayCOD,0))),
 						TokenUpdated=@Token,
 						DateUpdated=GETDATE()
 					WHERE IdServiceManagementDetail = @ServiceManagementDetailId;							

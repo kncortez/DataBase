@@ -13,8 +13,11 @@
     [ServiceManagementId]  INT            NULL,
     CONSTRAINT [PK_DeliveryOrderAlert] PRIMARY KEY CLUSTERED ([IdDeliveryOrderAlert] ASC),
     CONSTRAINT [FK_DeliveryOrderAlert_SubTypeServiceManagment] FOREIGN KEY ([ServiceTypeId]) REFERENCES [dbo].[SubTypeServiceManagment] ([IdSubTypeServiceManagment]),
-    CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert])
+    CONSTRAINT [FK_DeliveryOrderAlert_TypeAlertId] FOREIGN KEY ([AlertTypeId]) REFERENCES [dbo].[CatTypeAlert] ([IdCatTypeAlert]),
+    CONSTRAINT [FK_DOA_ServiceManagement] FOREIGN KEY ([ServiceManagementId]) REFERENCES [dbo].[ServiceManagement] ([IdServiceManagement])
 );
+
+
 
 
 

@@ -80,7 +80,8 @@ BEGIN
 				SNR.Last_Name 'Last_Name',
 				vpc.Latitude 'Latitude',
 				vpc.Longitude 'Longitude',
-				ISNULL(SA.IsAlerted, 0) 'IsAlerted'
+				ISNULL(SA.IsAlerted, 0) 'IsAlerted',
+				ISNULL(srv.IdPuRouteAssigment, 0) 'IsAssigned'
 		FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
 				ON shp.SenderId = vpc.CodeOfReference
@@ -139,11 +140,6 @@ BEGIN
 			AND
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
-			--AND (
-			--	@HubId = -1 
-			--	OR (SPHUB.IdHubLogistic IS NOT NULL AND SPHUB.IdHubLogistic= @HubId)
-			--	OR (HUB.IdHubLogistic IS NULL AND HUB.IdHubLogistic = @HubId)
-			--)
 			AND(
 				@IdUser =-1
 				OR
@@ -156,11 +152,10 @@ BEGIN
 				AND
 				INSRV.ServiceManagementId IS NULL--No posee ninguna incidencia registrada
 			------------------------------------------------------------------------
-			AND
-				srv.IdPuRouteAssigment IS NULL
 		ORDER BY
-			ISNULL(SA.IsAlerted, 0) DESC,
-			CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108)) DESC
+			ISNULL(srv.IdPuRouteAssigment, 0) ASC, -- Primero servicios sin asignar
+			ISNULL(SA.IsAlerted, 0) DESC, -- Luego servicios alertados
+			CONCAT(CONVERT(VARCHAR(10), shp.DateCreated, 105),' ',CONVERT(VARCHAR(10), shp.DateCreated, 108)) DESC -- Fecha del servicio
 
 	END TRY
 	BEGIN CATCH

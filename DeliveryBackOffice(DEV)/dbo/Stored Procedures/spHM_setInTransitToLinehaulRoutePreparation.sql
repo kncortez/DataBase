@@ -31,14 +31,62 @@ BEGIN
 	DECLARE @EXISTING_EMPTY_CONTAINERS AS INT;	-- Linehaul Route Preparation Container Detail
 	DECLARE @STATUS_ORDER_ID AS INT;			-- StatusOrder
 	DECLARE @STATUS_LINEHAUL_ID AS INT;			-- CatLinehaulStatus
+	DECLARE @STATUS_GENERATED AS INT;			-- CatLinehaulStatus
+	DECLARE @EXISTING_LRP_TRANSIT AS INT;		-- Linehaul Route Preparation
+
+	SET @STATUS_GENERATED = (SELECT [CLS].[IdCatLinehaulStatus]
+							FROM	[dbo].[CatLinehaulStatus] CLS
+							WHERE	[CLS].[StatusName] = 'GENERATED');
+
+	SET @STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
+							FROM	[dbo].[StatusOrder] SO
+							WHERE	[SO].[OrderDescription] = 'En Tránsito');
+
+	SET @STATUS_LINEHAUL_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
+								FROM	[dbo].[CatLinehaulStatus] CLS
+								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
 
 	-- Check if there is an active record in LinehaulRoutePreparation
 	SET @EXISTING_LRP = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS IdLinehaulRoutePreparation
 						 FROM	[dbo].[LinehaulRoutePreparation] LRP
 						 WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
-							AND	[LRP].[CatLinehaulStatusId] = (SELECT [CLS].[IdCatLinehaulStatus]
-																FROM [dbo].[CatLinehaulStatus] CLS
-																WHERE [CLS].[StatusName] = 'GENERATED'));
+							AND	[LRP].[CatLinehaulStatusId] = @STATUS_GENERATED);
+
+	-- Check if there is an 'IN TRANSIT' record in LinehaulRoutePreparation
+	SET @EXISTING_LRP_TRANSIT = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS IdLinehaulRoutePreparation
+								 FROM	[dbo].[LinehaulRoutePreparation] LRP
+								 WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
+									AND	[LRP].[CatLinehaulStatusId] = @STATUS_LINEHAUL_ID);
+
+	IF (@EXISTING_LRP_TRANSIT > 0)
+		BEGIN
+			SELECT	[LRP].[IdLinehaulRoutePreparation],
+					[LRP].[StationDispatchedId],
+					[LRP].[CatLinehaulStatusId],
+					[LRP].[CatRouteId],
+					COALESCE([LRP].[SenderReceiverId], 0) AS SenderReceiverId,
+					COALESCE([LRP].[CatVehicleId], 0) AS CatVehicleId,
+					COALESCE([LRP].[DriverCUI], '') AS DriverCUI,
+					COALESCE([LRP].[DriverName], '') AS DriverName,
+					COALESCE([LRP].[DriverPhone], '') AS DriverPhone,
+					COALESCE([LRP].[VehicleID], '') AS VehicleID,
+					COALESCE([LRP].[VehicleDescription], '') AS VehicleDescription,
+					COALESCE([LRP].[SecurityManName], '') AS SecurityManName,
+					COALESCE([LRP].[SecurityManPhone], '') AS SecurityManPhone,
+					COALESCE([LRP].[SecurityManCUI], '') AS SecurityManCUI,
+					[LRP].[DateLinehaulRoutePreparation],
+					[LRP].[ContainerQuantity],
+					[LRP].[GuideQuantity],
+					[LRP].[DryPieceQuantity],
+					[LRP].[ColdPieceQuantity],
+					[LRP].[RowStatus],
+					[LRP].[TokenCreated],
+					[LRP].[DateCreated]
+			FROM	[dbo].[LinehaulRoutePreparation] LRP
+			WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
+
+			RETURN;
+		END
 
 	SET @EXISTING_TAG = (SELECT COUNT([LCM].[IdLinehaulRoutePreparationCustomsMark]) AS IdLinehaulRoutePreparationCustomsMark
 						 FROM	[dbo].[LinehaulRoutePreparationCustomsMark] LCM

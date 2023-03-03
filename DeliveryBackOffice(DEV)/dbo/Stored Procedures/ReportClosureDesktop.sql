@@ -107,7 +107,7 @@ BEGIN
 			AND IND.guidenumber = DOR.Guide_Number
 	LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH(NOLOCK)
 		ON INH.inv_pk_id = IND.header
-	JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
 		ON STO.StatusOrderId = DOR.StatusOrderId
 	LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 		ON DOPD.GuideSerie = DOR.Guide_Serie
@@ -121,14 +121,14 @@ BEGIN
 		ON DOPD.VisitPoint = VPC.CodeOfReference
 	-- FIN MODIFICACIÓN
 
-	JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
+	INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
 		ON CTS.IdTypeService = DOPD.TypeServiceId
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 		ON ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 			AND ACD.DopId = DOPD.DopId
 			AND ACD.RowStatus = 1
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
 		ON REU.UsrIdUser = ACH.UserId
@@ -143,9 +143,9 @@ BEGIN
 				AND costd.Voucher != '')
 
 	-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+	LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
 			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
-	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
 			ON REU1.UsrIdUser = ACHVP.UserId
 	-- FIN MODIFICACIÓN
 
@@ -199,23 +199,23 @@ BEGIN
 	--SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
 	FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
 
-	JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
+	INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
 		ON CTS.IdTypeService = DOPD.TypeServiceId
 	LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
 		ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-	JOIN invoiceHeader INH WITH(NOLOCK)
+	INNER JOIN invoiceHeader INH WITH(NOLOCK)
 		ON INH.inv_numberFEL = (SELECT
 					item
 				FROM dbo.SplitUnlimited(DOPD.Fel, '-')
 				WHERE id = 2)
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 		ON INH.inv_numberFEL = ACD.Fel
 			AND ACD.RowStatus = 1
-	JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
 	-- MODIFICACIÓN 27/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 		--ON VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId)
 		ON DOPD.VisitPoint = VPC.CodeOfReference
 			OR (@VisitPointId = '-1' AND VPC.CodeOfReference = ACH.VisitPoint)
@@ -225,9 +225,9 @@ BEGIN
 		ON REU.UsrIdUser = ACH.UserId
 
 	-- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-	LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP
+	LEFT JOIN AccountingClosuresHeaderVisitPoint ACHVP WITH(NOLOCK)
 			ON ACHVP.IdAccountingClosuresHeaderVisitPoint = ACH.AccountingClosuresHeaderVisitPointId
-	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1
+	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU1 WITH(NOLOCK)
 			ON REU1.UsrIdUser = ACHVP.UserId
 	-- FIN MODIFICACIÓN
 
@@ -241,4 +241,5 @@ BEGIN
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService NOT IN (5, 23))
 	ORDER BY DOPD.DateCreated ASC
+	option (optimize for unknown)
 END

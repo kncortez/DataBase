@@ -14,6 +14,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_PieceByServiceGuidePieceService]
     ON [dbo].[PieceByService]([GuidePieceId] ASC)
@@ -24,4 +26,9 @@ GO
 CREATE NONCLUSTERED INDEX [idx_ServiceManagmentId]
     ON [dbo].[PieceByService]([ServiceManagmentId] ASC)
     INCLUDE([GuidePieceId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuidePieceId]
+    ON [dbo].[PieceByService]([GuidePieceId] ASC);
 

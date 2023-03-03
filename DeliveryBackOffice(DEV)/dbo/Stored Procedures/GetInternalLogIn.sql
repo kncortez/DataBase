@@ -121,8 +121,6 @@ AS
 				usr.UsrLastPassword = @Password;
         -- insertar en tabla temporal posbibles mensajes de error
 
-	--	SELECT * FROM @User
-
 		INSERT INTO @ErrorMessage
 			(IdResult, [Message], Id)
         SELECT
@@ -436,7 +434,7 @@ AS
                                         (
                                             SELECT STUFF(
                                         (
-                                            SELECT ',{"IdUser":"' + CONVERT(VARCHAR, us.UsrIdUser) + '",' + '"UserName":"' + iu.Username + '",' + '"TacName":"Interno",' + '"RolName":"' + ro.RolName + '"' + '}'
+                                            SELECT ',{"IdUser":"' + CONVERT(VARCHAR, us.UsrIdUser) + '",' + '"UserName":"' + iu.Username + '",' + '"TacName":"Interno",' + '"RolName":"' + ro.RolName + '",'  + '"SalesPersonCode":"' + ISNULL(CTMSP.Code, 'N/A') + '"' + '}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
                                                  INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson
                                                                                AND pe.PerRowStatus = 1
@@ -450,6 +448,9 @@ AS
 															RBUBA.RusRowStatus = 1
                                                  INNER JOIN DeliveryBackOffice.dbo.CatRol ro WITH(NOLOCK) ON ro.RolIdRol = RBUBA.RusIdRol
 												INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = UsrIdUser
+												LEFT JOIN [DeliveryBackOffice].[dbo].[CatTMSalesPerson] CTMSP WITH(NOLOCK)
+													ON CTMSP.RegisterUserId = us.UsrIdUser
+													AND CTMSP.RowStatus = 1
 												WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
 													AND iu.RowStatus = 1 FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)'), 1, 1, '')

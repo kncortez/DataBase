@@ -5,7 +5,9 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
 @VisitPointByClientPortfolioId BIGINT = 0,
 @UserAddressId BIGINT = 0,
-@SystemModule NVARCHAR(200) = NULL
+@SystemModule NVARCHAR(200) = NULL,
+@IdAccount BIGINT = NULL,
+@AddToServiceCart BIT = 0
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL
@@ -172,211 +174,272 @@ BEGIN
 			@ManifestNumber,
 			[CustomerID]
 		FROM @TblServiceRequestFD
-		--SET @IdTransaction = SCOPE_IDENTITY();
-		--IF (@IdTransaction IS NOT NULL)
-		--BEGIN
-			/**********************************************************************/
-			/*********** GUARDAR ÓRDENES ASOCIADAS (GUÍAS ELECTRÓNICAS) ***********/
-			/**********************************************************************/
 
-			INSERT DeliveryBackOffice.dbo.DeliveryOrder (
-				[Ticket_Number],
-				[Order_Number],
-				[Preparation_Date],
-				[Shipping_Date],
-				[Pieces_Dry],
-				[Pieces_Cold],
-				[Consolidated_Number],
-				[Recipe_Number],
-				[Sender_ID],
-				[Sender_FirstName],
-				[Sender_LastName],
-				[Sender_Address],
-				[Sender_Zone],
-				[Sender_Town],
-				[Sender_Department],
-				[Sender_Phone],
-				[Receiver_ID],
-				[Receiver_FirstName],
-				[Receiver_LastName],
-				[Receiver_Address],
-				[Receiver_Zone],
-				[Receiver_Town],
-				[Receiver_Department],
-				[Receiver_Phone],
-				[Receiver_Email],
-				[Receiver_SocialSecurity_ID],
-				[Receiver_Alternant_ID],
-				[Receiver_Alternant_FullName],
-				[Receiver_Alternant_Address],
-				[Receiver_Alternant_Zone],
-				[Receiver_Alternant_Town],
-				[Receiver_Alternant_Department],
-				[Receiver_Alternant_Phone],
-				[Receiver_Alternant_Email],
-				[Receiver_Alternant_SocialSecurity_ID],
-				[Delivery_Max_Date],
-				[printedStatus],
-				[Guide_Serie],
-				[Guide_Number],
-				[Manifest_Serie],
-				[Manifest_Number],
-				[DateCreated],
-				[StatusOrderId],
-				[Receiver_CUI],
-				[Package_Description],
-				[Sender_Internal_Code],
-				[Receiver_Alternant_CUI],
-				[Courier_Route],
-				[Courier_Name],
-				[Courier_Vehicle_Plate],
-				[Dispatched_Date],
-				[Dispatched_Token],
-				[Collect_OnDelivery],
-				[Guide_Collected],
-				[IsCollect],
-				[PriceShippment],
-				[SenderIdTownship],
-				[ReceiverIdTownship],
-				[VisitpointClientPortfolioId],
-				[UserAddressId],
-				[Sender_Lat],
-				[Sender_Lng],
-				[CatSystemId],
-				[CatModuleId]
-			)
-			SELECT 
-				GT.[Ticket_Number],
-				GT.[Order_Number],
-				GT.[Preparation_Date],
-				GT.[Shipping_Date],
-				GT.[Pieces_Dry],
-				GT.[Pieces_Cold],
-				GT.[Consolidated_Number],
-				GT.[Recipe_Number],
-				GT.[Sender_ID],
-				GT.[Sender_FirstName],
-				GT.[Sender_LastName],
-				GT.[Sender_Address],
-				GT.[Sender_Zone],
-				GT.[Sender_Town],
-				GT.[Sender_Department],
-				GT.[Sender_Phone],
-				GT.[Receiver_ID],
-				GT.[Receiver_FirstName],
-				GT.[Receiver_LastName],
-				GT.[Receiver_Address],
-				GT.[Receiver_Zone],
-				GT.[Receiver_Town],
-				GT.[Receiver_Department],
-				GT.[Receiver_Phone],
-				GT.[Receiver_Email],
-				GT.[Receiver_SocialSecurity_ID],
-				GT.[Receiver_Alternant_ID],
-				GT.[Receiver_Alternant_FullName],
-				GT.[Receiver_Alternant_Address],
-				GT.[Receiver_Alternant_Zone],
-				GT.[Receiver_Alternant_Town],
-				GT.[Receiver_Alternant_Department],
-				GT.[Receiver_Alternant_Phone],
-				GT.[Receiver_Alternant_Email],
-				GT.[Receiver_Alternant_SocialSecurity_ID],
-				GT.[Delivery_Max_Date],
-				GT.[printedStatus],
-				GT.Guide_Serie,
-				GT.Guide_Number,
-				@ManifestSerie, 
-				@ManifestNumber,
-				GETDATE(),
-				GT.StatusOrderId,
-				GT.Receiver_CUI,
-				GT.Package_Description,
-				GT.Sender_Internal_Code,
-				GT.Receiver_Alternant_CUI,
-				NULL, -- Courier_Route,
-				NULL, -- Courier_Name,
-				NULL, -- Courier_Vehicle_Plate,
-				NULL, -- Dispatched_Date,
-				NULL, -- Dispatched_Token,
-				GT.Collect_OnDelivery, -- Collect_OnDelivery
-				0, -- Guide_Collected,
-				GT.IsCollect,
-				GT.PriceShippment,
-				GT.SenderIdTownship,
-				GT.ReceiverIdTownship,
+		/**********************************************************************/
+		/*********** GUARDAR ÓRDENES ASOCIADAS (GUÍAS ELECTRÓNICAS) ***********/
+		/**********************************************************************/
+
+		INSERT DeliveryBackOffice.dbo.DeliveryOrder (
+			[Ticket_Number],
+			[Order_Number],
+			[Preparation_Date],
+			[Shipping_Date],
+			[Pieces_Dry],
+			[Pieces_Cold],
+			[Consolidated_Number],
+			[Recipe_Number],
+			[Sender_ID],
+			[Sender_FirstName],
+			[Sender_LastName],
+			[Sender_Address],
+			[Sender_Zone],
+			[Sender_Town],
+			[Sender_Department],
+			[Sender_Phone],
+			[Receiver_ID],
+			[Receiver_FirstName],
+			[Receiver_LastName],
+			[Receiver_Address],
+			[Receiver_Zone],
+			[Receiver_Town],
+			[Receiver_Department],
+			[Receiver_Phone],
+			[Receiver_Email],
+			[Receiver_SocialSecurity_ID],
+			[Receiver_Alternant_ID],
+			[Receiver_Alternant_FullName],
+			[Receiver_Alternant_Address],
+			[Receiver_Alternant_Zone],
+			[Receiver_Alternant_Town],
+			[Receiver_Alternant_Department],
+			[Receiver_Alternant_Phone],
+			[Receiver_Alternant_Email],
+			[Receiver_Alternant_SocialSecurity_ID],
+			[Delivery_Max_Date],
+			[printedStatus],
+			[Guide_Serie],
+			[Guide_Number],
+			[Manifest_Serie],
+			[Manifest_Number],
+			[DateCreated],
+			[StatusOrderId],
+			[Receiver_CUI],
+			[Package_Description],
+			[Sender_Internal_Code],
+			[Receiver_Alternant_CUI],
+			[Courier_Route],
+			[Courier_Name],
+			[Courier_Vehicle_Plate],
+			[Dispatched_Date],
+			[Dispatched_Token],
+			[Collect_OnDelivery],
+			[Guide_Collected],
+			[IsCollect],
+			[PriceShippment],
+			[SenderIdTownship],
+			[ReceiverIdTownship],
+			[VisitpointClientPortfolioId],
+			[UserAddressId],
+			[Sender_Lat],
+			[Sender_Lng],
+			[CatSystemId],
+			[CatModuleId]
+		)
+		SELECT 
+			GT.[Ticket_Number],
+			GT.[Order_Number],
+			GT.[Preparation_Date],
+			GT.[Shipping_Date],
+			GT.[Pieces_Dry],
+			GT.[Pieces_Cold],
+			GT.[Consolidated_Number],
+			GT.[Recipe_Number],
+			GT.[Sender_ID],
+			GT.[Sender_FirstName],
+			GT.[Sender_LastName],
+			GT.[Sender_Address],
+			GT.[Sender_Zone],
+			GT.[Sender_Town],
+			GT.[Sender_Department],
+			GT.[Sender_Phone],
+			GT.[Receiver_ID],
+			GT.[Receiver_FirstName],
+			GT.[Receiver_LastName],
+			GT.[Receiver_Address],
+			GT.[Receiver_Zone],
+			GT.[Receiver_Town],
+			GT.[Receiver_Department],
+			GT.[Receiver_Phone],
+			GT.[Receiver_Email],
+			GT.[Receiver_SocialSecurity_ID],
+			GT.[Receiver_Alternant_ID],
+			GT.[Receiver_Alternant_FullName],
+			GT.[Receiver_Alternant_Address],
+			GT.[Receiver_Alternant_Zone],
+			GT.[Receiver_Alternant_Town],
+			GT.[Receiver_Alternant_Department],
+			GT.[Receiver_Alternant_Phone],
+			GT.[Receiver_Alternant_Email],
+			GT.[Receiver_Alternant_SocialSecurity_ID],
+			GT.[Delivery_Max_Date],
+			GT.[printedStatus],
+			GT.Guide_Serie,
+			GT.Guide_Number,
+			@ManifestSerie, 
+			@ManifestNumber,
+			GETDATE(),
+			GT.StatusOrderId,
+			GT.Receiver_CUI,
+			GT.Package_Description,
+			GT.Sender_Internal_Code,
+			GT.Receiver_Alternant_CUI,
+			NULL, -- Courier_Route,
+			NULL, -- Courier_Name,
+			NULL, -- Courier_Vehicle_Plate,
+			NULL, -- Dispatched_Date,
+			NULL, -- Dispatched_Token,
+			GT.Collect_OnDelivery, -- Collect_OnDelivery
+			0, -- Guide_Collected,
+			GT.IsCollect,
+			GT.PriceShippment,
+			GT.SenderIdTownship,
+			GT.ReceiverIdTownship,
 				
-				@VisitPointByClientPortfolioId,
-				@UserAddressId,
-				GT.Sender_Lat,
-				GT.Sender_Lng,
-				@system,
-				@module
-			FROM #GuideTable GT
+			@VisitPointByClientPortfolioId,
+			@UserAddressId,
+			GT.Sender_Lat,
+			GT.Sender_Lng,
+			@system,
+			@module
+		FROM #GuideTable GT
 			
-			-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
-			-- INSERTAR DATA PARA MANEJO DE LANDING PAGE
-			INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide](
-				[GuideSerie],
-				[GuideNumber],
-				[GuideToken],
-				[IsDelivery],
-				[RowStatus],
-				[TokenCreated],
-				[DateCreated])
-			SELECT 
-				GT.Guide_Serie,
-				GT.Guide_Number,
-				CONCAT( GT.Guide_Serie, CAST(GT.Guide_Number AS NVARCHAR) , RIGHT ('00000'+CAST( (FLOOR(RAND()*(99999-0+1))+0) AS NVARCHAR),5)),
-				1,
-				1,
-				'SYS-HERMESROUTES',
-				GETDATE()
-			FROM #GuideTable GT
-			WHERE NOT EXISTS (
-				SELECT 1
-				FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
-				WHERE GT.Guide_Serie = SDFG.GuideSerie
-				AND GT.Guide_Number = SDFG.GuideNumber
-				AND SDFG.IsDelivery = 1
-			);
-			-- FIN DE MODIFICACION
+		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
+		-- INSERTAR DATA PARA MANEJO DE LANDING PAGE
+		INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide](
+			[GuideSerie],
+			[GuideNumber],
+			[GuideToken],
+			[IsDelivery],
+			[RowStatus],
+			[TokenCreated],
+			[DateCreated])
+		SELECT 
+			GT.Guide_Serie,
+			GT.Guide_Number,
+			CONCAT( GT.Guide_Serie, CAST(GT.Guide_Number AS NVARCHAR) , RIGHT ('00000'+CAST( (FLOOR(RAND()*(99999-0+1))+0) AS NVARCHAR),5)),
+			1,
+			1,
+			'SYS-HERMESROUTES',
+			GETDATE()
+		FROM #GuideTable GT
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH(NOLOCK)
+			WHERE GT.Guide_Serie = SDFG.GuideSerie
+			AND GT.Guide_Number = SDFG.GuideNumber
+			AND SDFG.IsDelivery = 1
+		);
+		-- FIN DE MODIFICACION
 			
-			-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
-			INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
-				[Guide_Serie],
-				[Guide_Number],
-				[StatusOrderId],
-				[UserCreated],
-				[DateCreated],
-				[DateCreatedInSystem])
-			SELECT 
-				GT.Guide_Serie,
-				GT.Guide_Number,
-				GT.StatusOrderId,
-				'SYSTEM',
-				GETDATE(),
-				GETDATE()
-			FROM #GuideTable GT
+		-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
+		INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
+			[Guide_Serie],
+			[Guide_Number],
+			[StatusOrderId],
+			[UserCreated],
+			[DateCreated],
+			[DateCreatedInSystem])
+		SELECT 
+			GT.Guide_Serie,
+			GT.Guide_Number,
+			GT.StatusOrderId,
+			'SYSTEM',
+			GETDATE(),
+			GETDATE()
+		FROM #GuideTable GT
 
-			DECLARE @Route nvarchar(20) = (select  top 1 cov.RouteCode 
-			from #GuideTable g
-				inner join dbo.Township twn on twn.IdTownship = g.ReceiverIdTownship
-				left join dbo.DumpServiceCoverage cov on cov.HeaderCode = twn.HeaderCode
-				and cov.RowStatus=1
-					)
+		DECLARE @Route nvarchar(20) = (select  top 1 cov.RouteCode 
+		from #GuideTable g
+			inner join dbo.Township twn on twn.IdTownship = g.ReceiverIdTownship
+			left join dbo.DumpServiceCoverage cov on cov.HeaderCode = twn.HeaderCode
+			and cov.RowStatus=1
+				)
 
 		--Actualizar registro de guía agregando registro en columna Segment
-		         UPDATE do
-                   SET do.Segment = (dbo.fn_get_segment(GT.Guide_Serie,GT.Guide_Number))
-                   FROM DeliveryOrder do WITH(NOLOCK)
-                   INNER JOIN #GuideTable GT
-                   ON GT.Guide_Number = do.Guide_Number
-                      AND GT.Guide_Serie = do.Guide_Serie;
+		UPDATE do
+        SET do.Segment = (dbo.fn_get_segment(GT.Guide_Serie,GT.Guide_Number))
+        FROM DeliveryOrder do WITH(NOLOCK)
+        INNER JOIN #GuideTable GT
+        ON GT.Guide_Number = do.Guide_Number
+            AND GT.Guide_Serie = do.Guide_Serie;
 		-------------------------------------------------------------------
 
+		--Proceso para añadir a carrito de compras
+		--Oscar Morales - 2022-08-17
 
-			DROP TABLE #GuideTable
-		--END
+		IF @AddToServiceCart = 1 AND @IdAccount IS NOT NULL
+		BEGIN
+			DECLARE @AccountServiceCartId INT
+
+			SELECT TOP 1
+				@AccountServiceCartId = IdAccountServiceCart
+			FROM AccountServiceCart
+			WHERE AccountId = @IdAccount
+			AND IsPending = 1
+			AND RowStatus = 1
+			ORDER BY DateCreated DESC
+
+			IF @AccountServiceCartId IS NULL
+			BEGIN
+				
+				INSERT INTO [dbo].[AccountServiceCart] ([AccountId]
+				, [IsPending]
+				, [RowStatus]
+				, [TokenCreated]
+				, [DateCreated]
+				, [TokenUpdated]
+				, [DateUpdated])
+					VALUES (@IdAccount, 1, 1, 'SetServiceRequestFD', GETDATE(), NULL, NULL)
+
+				SET @AccountServiceCartId = @@IDENTITY
+			END
+			ELSE
+			BEGIN
+				--Desactivar otros carritos
+				UPDATE AccountServiceCart
+				SET IsPending = 0
+				   ,RowStatus = 0
+				   ,TokenUpdated = 'SetServiceRequestFD'
+				   ,DateUpdated = GETDATE()
+				WHERE IsPending = 1
+				AND RowStatus = 1
+				AND IdAccountServiceCart <> @AccountServiceCartId
+				AND AccountId = @IdAccount
+			END
+
+			--Agregar guías al carrito
+			INSERT INTO [dbo].[AccountServiceCartDetail] ([AccountServiceCartId]
+			, [GuideSerie]
+			, [GuideNumber]
+			, [RowStatus]
+			, [TokenCreated]
+			, [DateCreated]
+			, [TokenUpdated]
+			, [DateUpdated])
+				SELECT
+					@AccountServiceCartId
+				   ,Guide_Serie
+				   ,Guide_Number
+				   ,1
+				   ,'SetServiceRequestFD'
+				   ,GETDATE()
+				   ,NULL
+				   ,NULL
+				FROM #GuideTable
+		END
+		--Termina proceso para añadir a carrito de compras
+
+		DROP TABLE #GuideTable
 	END TRY
 	BEGIN CATCH
 		SELECT 
@@ -435,7 +498,7 @@ BEGIN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
 			IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
-			CONCAT('https://develop.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			(CASE
 				WHEN 
 					(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )

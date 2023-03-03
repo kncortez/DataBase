@@ -180,7 +180,7 @@ BEGIN
 					AND [Guide_Number] = @GuideNumber;
 			END
 
-	
+		IF (@@TRANCOUNT > 0)
 			COMMIT TRANSACTION;
 	END TRY
 	BEGIN CATCH

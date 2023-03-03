@@ -28,7 +28,13 @@
     [SaleChannelId]           INT            NULL,
     [ExcludePriceShippingCOD] BIT            NULL,
     [ExcludeCommissionCOD]    BIT            NULL,
+    [IsOriginVisitPoint]      BIT            CONSTRAINT [DF_VisitPointClient_IsOriginVisitPoint] DEFAULT ((1)) NOT NULL,
+    [LogLatitude]             NVARCHAR (20)  NULL,
+    [LogLongitude]            NVARCHAR (20)  NULL,
+    [DescriptionCC]           NVARCHAR (100) NULL,
+    [CatBusinessSegmentId]    INT            NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
+    CONSTRAINT [FK_VisitPointClient_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPBusiness] FOREIGN KEY ([IdKindOfVPBusiness]) REFERENCES [dbo].[KindOfVPBusiness] ([IdKindOfVPBusiness]),
     CONSTRAINT [FK_VisitPointClient_KindOfVPClient] FOREIGN KEY ([IdKindOfVPClient]) REFERENCES [dbo].[KindOfVPClient] ([IdKindOfVPClient]),
@@ -36,6 +42,12 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
+
+
+
+
 
 
 GO
@@ -61,4 +73,25 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para indicar si se excluye la comision.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'ExcludeCommissionCOD';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
+    ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Ubicación (longitud) anterior o para revisión del punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'LogLongitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Ubicación (latitud) anterior o para revisión del punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'LogLatitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción para Contact Center', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'DescriptionCC';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de negocio al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CatBusinessSegmentId';
 
