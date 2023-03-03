@@ -95,67 +95,67 @@ BEGIN
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
 
-    --DECLARE @TarifaPlanBasico INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanBasicoPlus INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanGold INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanCorporativo INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
-    --        );
+    DECLARE @TarifaPlanBasico INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanBasicoPlus INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanGold INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanCorporativo INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
+            );
 
-    --DECLARE @TarifaPlanBasicoAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanBasicoPlusAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanGoldAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanCorporativoAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
+    DECLARE @TarifaPlanBasicoAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanBasicoPlusAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanGoldAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanCorporativoAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
+            );
 
     DECLARE @IdRate AS INT;
     DECLARE @IdTypeRate AS INT;
@@ -1138,7 +1138,9 @@ BEGIN
         --select * from #ListCode
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;
 
-        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates ))
+        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+                            @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+                            @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt ))
         BEGIN
 
             SET @IdSegment = NULL;
@@ -2002,11 +2004,10 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
-               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
-               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
-               --           )
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+                            @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+                            @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
+                          )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
@@ -2343,11 +2344,9 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
-               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
-               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
-               --)
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+                            @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+                            @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt)
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
