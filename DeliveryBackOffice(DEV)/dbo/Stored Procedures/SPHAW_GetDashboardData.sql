@@ -161,6 +161,8 @@ BEGIN
 				MUBAD.DiscountGiven
 			FROM
 				@MembershipUsageByAffiliateData MUBAD
+			ORDER BY
+				[MUBAD].[TransactionDate] DESC
 
 		END
 		ELSE
@@ -282,6 +284,8 @@ BEGIN
 				MUBAD.DiscountGiven
 			FROM
 				@MembershipUsageByAffiliateData MUBAD
+			ORDER BY
+				[MUBAD].[TransactionDate] DESC
 
 			-- Transactions by affiliate user by day
 			SELECT
