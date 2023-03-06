@@ -47,7 +47,7 @@ BEGIN TRY
 		  1,
 		  GETDATE(),
 		  @TOKEN,
-		  @Affiliate
+		  @Idaffiliate
 		 )
 
 	 COMMIT TRANSACTION
