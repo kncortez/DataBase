@@ -50,14 +50,21 @@ BEGIN
                 SELECT TOP 1
                        STSM.IdSubTypeServiceManagment
                 FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE STSM.Name = 'Recolección'
+                WHERE STSM.Name = 'Recolección' COLLATE Latin1_General_CI_AI
             );
     DECLARE @DeliveryTypeId BIGINT =
             (
                 SELECT TOP 1
                        STSM.IdSubTypeServiceManagment
                 FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE STSM.Name = 'Entrega'
+                WHERE STSM.Name = 'Entrega' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @ReturnTypeId BIGINT =
+            (
+                SELECT TOP 1
+                       STSM.IdSubTypeServiceManagment
+                FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
+                WHERE STSM.Name = 'Devolución' COLLATE Latin1_General_CI_AI
             );
 
     --Flujo Recolecciones
@@ -105,6 +112,120 @@ BEGIN
                AND CAR.IdTypeRoute = 1
     WHERE SMA.IdPuCourrier = @IdCourier;
     --Fin flujo recolecciones
+	--Flujo nuevo devoluciones
+    IF OBJECT_ID('tempdb.dbo.#GuideReturnService', 'U') IS NOT NULL
+        DROP TABLE #GuideReturnService;
+
+    CREATE TABLE #GuideReturnService
+    (
+        GuideSerie NVARCHAR(2),
+        GuideNumber INT
+    );
+    CREATE NONCLUSTERED INDEX IDX_TMP_GuideReturnService_Guide ON #GuideReturnService (GuideSerie, GuideNumber);
+
+    INSERT INTO #GuideReturnService
+    (
+        GuideSerie,
+        GuideNumber
+    )
+	SELECT 
+		DISTINCT
+			DAT.Guide_Serie,
+			DAT.Guide_Number
+    FROM 
+		(
+			SELECT DISTINCT
+					Guide_Serie,
+					Guide_Number,
+					ID_Courier
+			FROM dbo.DeliveryAttempt WITH (NOLOCK)
+			WHERE CAST(Date_Created AS DATE) = CAST(@DateRoute AS DATE)
+		) DAT
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+            ON DAT.Guide_Serie = DOR.Guide_Serie
+                AND DAT.Guide_Number = DOR.Guide_Number
+				AND DOR.IsLastMileReturn = 1
+                AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+        INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
+            ON DSD.Guide_Serie = DAT.Guide_Serie
+                AND DSD.Guide_Number = DAT.Guide_Number
+                AND DSD.RowStatus = 1
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS WITH (NOLOCK)
+            ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
+                AND DOS.ID_Courier = DAT.ID_Courier
+    WHERE DAT.ID_Courier = @IdCourier
+
+    DECLARE @ConcatReturnGuides NVARCHAR(MAX) = (
+        SELECT STUFF
+		(
+            (
+                SELECT ',' + CONCAT(GuideSerie, GuideNumber)
+                FROM #GuideReturnService
+                FOR XML PATH('')
+            ),
+            1,
+            1,
+            ''
+        )
+    );
+
+    DECLARE @TempReturnPrice AS TABLE
+    (
+        GuideSerie NVARCHAR(25) NULL,
+        GuideNumber NVARCHAR(25) NULL,
+        IsCollect NVARCHAR(25) NULL,
+        Price DECIMAL(14, 2) NULL,
+        COD DECIMAL(14, 2) NULL,
+        AmountPaid DECIMAL(14, 2) NULL,
+        CODPaid DECIMAL(14, 2) NULL,
+        CODIsPaid DECIMAL(14, 2) NULL,
+        PaymentTime INT NULL,
+        TimeSequence INT NULL,
+        FelNumber NVARCHAR(50) NULL,
+        IsPaid INT NULL,
+        IsCustomer INT NULL,
+        ConditionPayment NVARCHAR(200) NULL,
+        HaveCredit NVARCHAR(50) NULL,
+        CollectCOD NVARCHAR(50) NULL,
+        ReturnRate DECIMAL(14, 2) NULL,
+        AmountToPay DECIMAL(14, 2) NULL,
+        CODAmount DECIMAL(14, 2) NULL,
+        ReturnRates DECIMAL(14, 2) NULL
+    );
+    INSERT INTO @TempReturnPrice
+    (
+        GuideSerie,
+        GuideNumber,
+        IsCollect,
+        Price,
+        COD,
+        AmountPaid,
+        CODPaid,
+        CODIsPaid,
+        PaymentTime,
+        TimeSequence,
+        FelNumber,
+        IsPaid,
+        IsCustomer,
+        ConditionPayment,
+        HaveCredit,
+        CollectCOD,
+        ReturnRate,
+        AmountToPay,
+        CODAmount,
+        ReturnRates
+    )
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides,		-- Guías
+                                                @InTime = 3,							-- Entrega
+                                                @IsReturn = 1,							-- Devolución
+                                                @CodeApp = 'SIFDCECOM300720201459',		-- CodeApp
+                                                @IdModule = 1,
+                                                @Token = @Token;
+		
+	IF OBJECT_ID('tempdb.dbo.#GuideReturnService', 'U') IS NOT NULL
+		DROP TABLE #GuideReturnService;
+
+	--Fin flujo devoluciones
 
     IF (@TokenAct = 1 AND @hourtoken <= 8)
     BEGIN
@@ -304,14 +425,21 @@ BEGIN
                                                           + IIF(kvp.KindOfVPName = 'Express Center',
                                                                 ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(VPr.Address), ''),
                                                                 dbo.fnt_String_Escape(/*concat(*/
-                                                                                         ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Sender_Address, DOR.Receiver_Address)), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(VPC.Address), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/
+                                                                                         ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Sender_Address, DOR.Receiver_Address)), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, VPC.Address, VPr.Address)), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/
                                                                                          'json'
                                                                                      )) + '",' + '"Phone":"'
                                                           + ISNULL(
-                                                                      ISNULL(
-                                                                                DOR.Receiver_Phone,
-                                                                                DOR.Receiver_Alternant_Phone
-                                                                            ),
+																	IIF(
+																		DOR.IsLastMileReturn = 1,
+																		  ISNULL(
+																					DOR.Sender_Phone,
+																					'N/A'
+																				),
+																		  ISNULL(
+																					DOR.Receiver_Phone,
+																					DOR.Receiver_Alternant_Phone
+																				)
+																		),
                                                                       'N/A'
                                                                   ) + '",' + '"PiecesDry":"'
                                                           + CONVERT(
@@ -358,7 +486,9 @@ BEGIN
                                                                             WHEN ISNULL(EPS.Latitude, 0) != 0
                                                                                  AND ISNULL(EPS.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))
-                                                                            WHEN ISNULL(VPr.Latitude, '0') <> '' THEN
+                                                                            WHEN ISNULL(VPC.Longitude, '0') <> '' AND DOR.IsLastMileReturn = 1 THEN
+                                                                                ISNULL(VPC.Longitude, '0')
+                                                                            WHEN ISNULL(VPr.Latitude, '0') <> '' AND DOR.IsLastMileReturn = 0 THEN
                                                                                 ISNULL(VPr.Latitude, '0')
                                                                             ELSE
                                                                                 '0'
@@ -374,7 +504,9 @@ BEGIN
                                                                             WHEN ISNULL(EPS.Latitude, 0) != 0
                                                                                  AND ISNULL(EPS.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(EPS.Longitude, 0))
-                                                                            WHEN ISNULL(VPr.Longitude, '0') <> '' THEN
+                                                                            WHEN ISNULL(VPC.Longitude, '0') <> '' AND DOR.IsLastMileReturn = 1 THEN
+                                                                                ISNULL(VPC.Longitude, '0')
+                                                                            WHEN ISNULL(VPr.Longitude, '0') <> '' AND DOR.IsLastMileReturn = 0 THEN
                                                                                 ISNULL(VPr.Longitude, '0')
                                                                             ELSE
                                                                                 '0'
@@ -407,10 +539,13 @@ BEGIN
                                                                           '0',
                                                                           CONVERT(
                                                                                      VARCHAR,
-                                                                                     IIF(ISNULL(DOR.IsCollect, 0) = 1,
-                                                                                      ISNULL(DOR.PriceShippment, 0),
-                                                                                      0)
-                                                                                 )) + '",'
+																					 IIF(
+																						DOR.IsLastMileReturn = 1,
+																						TRPreturns.AmountToPay,
+																						 IIF(ISNULL(DOR.IsCollect, 0) = 1,
+																						  ISNULL(DOR.PriceShippment, 0),
+																						  0)
+                                                                                 ))) + '",'
                                                             END
                                                           + CASE
                                                                 WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN
@@ -435,7 +570,21 @@ BEGIN
                                                                                        )
                                                                              ) + '",'
                                                             END + '"customerName":"'
-                                                          + IIF(kvp.KindOfVPName = 'Express Center',
+                                                          + IIF(DOR.IsLastMileReturn = 1,
+															  IIF(kvpori.KindOfVPName = 'Express Center',
+																	ISNULL(
+																			  dbo.fn_ReplaceSpecialCharsForJSON(VPC.DescriptionOfClient),
+																			  ''
+																		  ),
+																	ISNULL(
+																			  REPLACE(
+																						 dbo.fn_ReplaceSpecialCharsForJSON(DOR.Sender_FirstName),
+																						 '"',
+																						 ''
+																					 ),
+																			  'N/A'
+																		  )),
+															IIF(kvp.KindOfVPName = 'Express Center',
                                                                 ISNULL(
                                                                           dbo.fn_ReplaceSpecialCharsForJSON(VPr.DescriptionOfClient),
                                                                           ''
@@ -447,8 +596,8 @@ BEGIN
                                                                                      ''
                                                                                  ),
                                                                           'N/A'
-                                                                      )) + '",' + '"alterName":"'
-                                                          + ISNULL(
+                                                                      ))) + '",' + '"alterName":"'
+                                                          + IIF(DOR.IsLastMileReturn = 1 , 'N/A',ISNULL(
                                                                       ISNULL(
                                                                                 REPLACE(
                                                                                            dbo.fn_ReplaceSpecialCharsForJSON(DOR.Receiver_Alternant_FullName),
@@ -462,9 +611,9 @@ BEGIN
                                                                                        )
                                                                             ),
                                                                       'N/A'
-                                                                  ) + '",' + '"Status":"'
+                                                                  )) + '",' + '"Status":"'
                                                           + CONVERT(VARCHAR,ISNULL(CASE WHEN DOR.StatusOrderId = 45 THEN 12 ELSE DOR.StatusOrderId END,4)) + '"'
-                                                          + IIF(doa.GuideNumber IS NOT NULL,
+                                                          + IIF((doadel.GuideNumber IS NOT NULL AND DOR.IsLastMileReturn = 0) OR (doaret.GuideNumber IS NOT NULL AND DOR.IsLastMileReturn = 1) ,
                                                                 ',"HighPriority":'
                                                                 + CONVERT(
                                                                              VARCHAR,
@@ -478,7 +627,7 @@ BEGIN
                                                                                     WHERE doa.GuideNumber = DOR.Guide_Number
                                                                                           AND doa.GuideSerie = DOR.Guide_Serie
                                                                                           AND doa.RowStatus = 1
-                                                                                          AND doa.ServiceTypeId = @DeliveryTypeId
+                                                                                          AND doa.ServiceTypeId = IIF(DOR.IsLastMileReturn = 1, @ReturnTypeId, @DeliveryTypeId)
                                                                                 ) > 0,
                                                                                 'true',
                                                                                 'false')
@@ -516,7 +665,7 @@ BEGIN
                                                                                WHERE doa.GuideNumber = DOR.Guide_Number
                                                                                      AND doa.GuideSerie = DOR.Guide_Serie
                                                                                      AND doa.RowStatus = 1
-                                                                                     AND doa.ServiceTypeId = @DeliveryTypeId
+                                                                                     AND doa.ServiceTypeId = IIF(DOR.IsLastMileReturn = 1, @ReturnTypeId, @DeliveryTypeId)
                                                                                ORDER BY doa.DateCreated DESC
                                                                                FOR XML PATH('')
                                                                            ),
@@ -550,6 +699,9 @@ BEGIN
                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS WITH (NOLOCK)
                                                 ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
                                                    AND DOS.ID_Courier = DAT.ID_Courier
+											LEFT JOIN @TempReturnPrice TRPreturns
+												ON DOR.Guide_Serie = TRPreturns.GuideSerie
+												AND DOR.Guide_Number = TRPreturns.GuideNumber
                                             LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
                                                 ON VPC.CodeOfReference = DOR.Sender_ID
                                             LEFT JOIN
@@ -577,13 +729,20 @@ BEGIN
                                                    AND DAT.Guide_Number = EPS.GuideNumber
                                             LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPr WITH (NOLOCK)
                                                 ON VPr.CodeOfReference = DOR.Receiver_ID
+                                            LEFT JOIN dbo.KindOfVPClient kvpori WITH (NOLOCK)
+                                                ON kvpori.IdKindOfVPClient = VPC.IdKindOfVPClient
                                             LEFT JOIN dbo.KindOfVPClient kvp WITH (NOLOCK)
                                                 ON kvp.IdKindOfVPClient = VPr.IdKindOfVPClient
-                                            LEFT JOIN dbo.DeliveryOrderAlert doa WITH (NOLOCK)
-                                                ON doa.GuideNumber = DAT.Guide_Number
-                                                   AND doa.GuideSerie = DAT.Guide_Serie
-                                                   AND doa.RowStatus = 1
-                                                   AND doa.ServiceTypeId = @DeliveryTypeId
+                                            LEFT JOIN dbo.DeliveryOrderAlert doadel WITH (NOLOCK)
+                                                ON doadel.GuideNumber = DAT.Guide_Number
+                                                   AND doadel.GuideSerie = DAT.Guide_Serie
+                                                   AND doadel.RowStatus = 1
+                                                   AND doadel.ServiceTypeId = @DeliveryTypeId
+                                            LEFT JOIN dbo.DeliveryOrderAlert doaret WITH (NOLOCK)
+                                                ON doaret.GuideNumber = DAT.Guide_Number
+                                                   AND doaret.GuideSerie = DAT.Guide_Serie
+                                                   AND doaret.RowStatus = 1
+                                                   AND doaret.ServiceTypeId = @ReturnTypeId
 											OUTER APPLY (
 												SELECT
 													MAX(ISNULL(SDFG.Latitude, 0)) 'Latitude',

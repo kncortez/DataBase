@@ -1436,6 +1436,14 @@
     <Build Include="dbo\Stored Procedures\SetPackagesRangeData.sql" />
     <Build Include="dbo\Stored Procedures\GetPackagesRangeData.sql" />
     <Build Include="dbo\User Defined Types\TblPackagesRange.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPoints.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetPaymentServicesWithPoints.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetIncidenceDashboardData.sql" />
+    <Build Include="dbo\Stored Procedures\SetGuideAbandoned.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetServiceIncidenceForMonitoring.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetActionToConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspectionDetail.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspection.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetStatusAccountData.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_TMGetDataMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
