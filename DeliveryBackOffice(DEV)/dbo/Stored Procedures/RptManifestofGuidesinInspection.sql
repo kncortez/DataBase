@@ -26,10 +26,6 @@ BEGIN
 		
 	)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/FDD-1074-mejora-de-comportamiento-de-repDB
 		     Select Distinct
 			        DOS.ID, 
 			        DOS.Date_Received,

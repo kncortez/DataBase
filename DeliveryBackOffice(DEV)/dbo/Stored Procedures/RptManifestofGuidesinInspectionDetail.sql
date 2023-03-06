@@ -25,10 +25,7 @@ BEGIN
 		Sender_Address nvarchar(600)
 	
 	)
-<<<<<<< HEAD
 
-=======
->>>>>>> feature/FDD-1074-mejora-de-comportamiento-de-repDB
     -- tablix content
 	INSERT INTO @temp
              Select   Distinct     
