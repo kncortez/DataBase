@@ -1456,6 +1456,7 @@
     <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPoints.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetPaymentServicesWithPoints.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToDeactivate.sql" />
+    <Build Include="dbo\Stored Procedures\SPHAW_GetDashboardData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
