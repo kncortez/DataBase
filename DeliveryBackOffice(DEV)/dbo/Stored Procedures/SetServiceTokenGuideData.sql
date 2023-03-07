@@ -517,6 +517,35 @@ BEGIN
 				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta') 
 			END
 
+			SET @IsLastMileReturn = 
+				CAST
+				(
+					ISNULL
+					(
+						(
+							SELECT 
+								TOP (1) 
+									DO.[IsLastMileReturn]
+							FROM 
+								[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK) 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA  WITH(NOLOCK) 
+									ON
+										[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+									ON
+										[DO].[Guide_Serie] = [DA].[Guide_Serie] 
+										AND 
+										[DO].[Guide_Number] = [DA].[Guide_Number]
+							WHERE
+								[COI].[ConfirmationOfIncidentToken] = @GuideToken 
+								AND 
+								[COI].[RowStatus] = 1
+						)
+					, 0)
+				AS BIT)
+
 			-- Si tiene diferente estado, actualizar 
 			IF EXISTS (SELECT 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
 			BEGIN 
@@ -570,7 +599,7 @@ BEGIN
 			WHERE ConfirmationOfIncidentToken = @GuideToken
 			AND RowStatus = 1
 
-			IF (@CancelOrder = 1)
+			IF (@IsLastMileReturn = 1)
 				BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Sender_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Sender_Address]),
@@ -584,7 +613,7 @@ BEGIN
 					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
 						AND		[COI].[RowStatus] = 1 
 				END
-			ELSE IF (@CancelOrder = 0)
+			ELSE IF (@IsLastMileReturn = 0)
 				BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Receiver_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Receiver_Address]),
