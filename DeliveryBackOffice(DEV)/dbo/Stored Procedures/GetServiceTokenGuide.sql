@@ -265,6 +265,7 @@ BEGIN
 				set @jsonResult = (SELECT STUFF(( 
 								SELECT  
 								',{"IdResult":200,"receiverAddress":"' +  (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Address ELSE do.Receiver_Address END) + '",' +
+								'"receiverPhone":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.[Sender_Phone] ELSE do.[Receiver_Phone] END) + '",' +
 								'"serviceType":"Incidence"' + ',' +
 								'"trackingForza":"https://forzadelivery.com/rastreo/' + do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) + '/",' +
 								'"Province":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Department ELSE do.Receiver_Department END) + '",' +
