@@ -701,6 +701,130 @@ BEGIN
                                         @CODPayment = @CODPayment;
         END;
 
+		-- Actualizar ubicación de punto de visita correspondiente
+		BEGIN TRY
+		    
+			DECLARE @CodeOfReference INT = 0;
+			SET @CodeOfReference = 
+			(
+				ISNULL
+				(
+					(
+						SELECT 
+							TOP (1) 
+								(
+									CASE
+										WHEN DO.[IsLastMileReturn] = 1 THEN [DO].[Sender_ID]
+										ELSE [DO].[Receiver_ID]
+									END
+								)
+						FROM 
+							[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+						WHERE
+							DO.[Guide_Serie] = @GuideSerie
+							AND
+							DO.[Guide_Number] = @GuideNumber
+					)
+				, 0)
+			)
+
+			IF( ISNULL(@CodeOfReference, 0) != 0 )
+			BEGIN
+
+				DECLARE @VPLatitude NVARCHAR(20)
+				DECLARE @VPLongitude NVARCHAR(20)
+				
+				SELECT 
+					@VPLatitude = vpc.Latitude
+					,@VPLongitude = vpc.Longitude
+				FROM VisitPointClient vpc WITH (NOLOCK)
+				WHERE 
+					vpc.CodeOfReference = @CodeOfReference
+
+				IF 
+					(RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
+				BEGIN
+					
+					-- Punto de visita con ubicación existente
+					IF 
+						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
+					BEGIN
+						
+						-- Si existe una ubicación para registrar
+						-- Distancia (en metros) entre recolección y el punto de visita
+						-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
+						IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @FixedLongitude, ' ', @FixedLatitude, ')'), 4326)) ) < 10)
+						BEGIN
+							-- Si la distancia es menor a 10 metros
+							-- Guardar última ubicación
+							UPDATE
+								[DeliveryBackOffice].[dbo].[VisitPointClient]
+							SET
+								LogLatitude = Latitude
+								,LogLongitude = Longitude
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								CodeOfReference = @CodeOfReference
+
+							-- Guardar nueva ubicación de recolección
+							UPDATE
+								[DeliveryBackOffice].[dbo].[VisitPointClient]
+							SET
+								Latitude = @FixedLatitude
+								,Longitude = @FixedLongitude
+								,[Accuracy] = @Accuracy
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								CodeOfReference = @CodeOfReference
+
+						END
+						ELSE
+						BEGIN
+								-- Guardar nueva ubicación de recolección en "bitácora" para revisión
+								UPDATE
+									[DeliveryBackOffice].[dbo].[VisitPointClient]
+								SET
+									LogLatitude = @FixedLatitude
+									,LogLongitude = @FixedLongitude
+									,TokenUpdated = @Token
+									,DateUpdated = GETDATE()
+								WHERE
+									CodeOfReference = @CodeOfReference
+
+						END
+					END
+
+				END
+				ELSE
+				BEGIN
+					
+					-- Punto de visita sin ubicación registrada
+					IF 
+						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
+					BEGIN
+
+						-- Si existe una ubicación para registrar
+						UPDATE
+							[DeliveryBackOffice].[dbo].[VisitPointClient]
+						SET
+							Latitude = ISNULL(@FixedLatitude, Latitude)
+							,Longitude = ISNULL(@FixedLongitude, Longitude)
+							,TokenUpdated = @Token
+							,DateUpdated = GETDATE()
+						WHERE
+							CodeOfReference = @CodeOfReference
+
+					END
+				END
+			END
+
+		END TRY
+		BEGIN CATCH
+		    
+		END CATCH
+
     END TRY
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
