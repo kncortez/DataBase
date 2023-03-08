@@ -605,7 +605,7 @@ BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Sender_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Sender_Address]),
 							[DO].[Sender_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''), @NewPhoneNumber, ISNULL([DO].[Sender_Phone], ''))
-					FROM	[dbo].[DeliveryOrder] [DO]
+					FROM	[dbo].[DeliveryOrder] [DO]  WITH(NOLOCK) 
 					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
 						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
@@ -619,7 +619,7 @@ BEGIN
 					UPDATE	[DO]
 					SET		[DO].[Receiver_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Receiver_Address]),
 							[DO].[Receiver_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''), @NewPhoneNumber, ISNULL([DO].[Receiver_Phone], ''))
-					FROM	[dbo].[DeliveryOrder] [DO]
+					FROM	[dbo].[DeliveryOrder] [DO]  WITH(NOLOCK) 
 					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
 						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
