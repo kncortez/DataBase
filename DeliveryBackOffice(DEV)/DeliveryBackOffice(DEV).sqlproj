@@ -1458,6 +1458,9 @@
     <Build Include="dbo\Stored Procedures\GetSalePackageToDeactivate.sql" />
     <Build Include="dbo\Stored Procedures\SPHAW_GetDashboardData.sql" />
     <Build Include="dbo\Tables\DeliveryOrderAttemptData.sql" />
+    <Build Include="dbo\Stored Procedures\RptFailedVisitsHeader.sql" />
+    <Build Include="dbo\Stored Procedures\RptFailedVisitsDitail.sql" />
+    <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
