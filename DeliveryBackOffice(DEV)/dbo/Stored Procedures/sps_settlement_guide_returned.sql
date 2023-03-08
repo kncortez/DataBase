@@ -142,26 +142,37 @@ BEGIN
 		IF @@TRANCOUNT > 0
 		BEGIN
 			IF (@RModified > 0)
-				SELECT			  
-					1 AS 'StatusCode',
-					'Registro guardado correctamente' AS 'Description', 
-					@@TRANCOUNT AS 'NumTransferID',
-					@GuideSerie + convert(nvarchar,@GuideNumber) AS 'Guide',
-					@Amount AS 'Amount',
-					0 AS 'SubStatusCode'
-					, COUNT(*)		AS RetriesMade--Numero intentos de entrega fallidas
-					, (case when RH.Attempt is NULL then CASE WHEN DOR.IsLastMileReturn = 1 THEN 4 ELSE 2 END else CASE WHEN DOR.IsLastMileReturn = 1 THEN RH.Attempt + RH.AttemptReturn ELSE RH.Attempt END end) AS RetriesAllowed ---Numero de intentos permitidos
-					, '' 'Retries'
-					, CASE WHEN DOR.IsLastMileReturn = 1 THEN 1 ELSE 0 END ValidateAbandonedPackage
-					, CASE WHEN @IsMarkedReturn = 1 THEN 1 ELSE 0 END IsMarkedReturn
-				FROM DeliveryOrder DOR WITH(NOLOCK)
-					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK)  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
-					AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder WITH(NOLOCK) where OrderDescription ='Intento de entrega fallida')
-					LEFT JOIN DBO.Customer CU WITH(NOLOCK) ON DOR.IdCustomer=CU.IdCustomer
-					LEFT JOIN DBO.RatebyCustomer RC WITH(NOLOCK) ON CU.IdCustomer=RC.RbcIdCustomer
-					LEFT JOIN RateHeader RH WITH(NOLOCK) ON RC.RbcIdRate=RH.RheId								
-				WHERE DOR.Guide_Serie=@GuideSerie AND DOR.Guide_Number=@GuideNumber
-				GROUP BY DOR.Guide_Serie,DOR.Guide_Number,CU.IdCustomer,RH.Attempt,DORD.StatusOrderId, DOR.IsLastMileReturn, RH.AttemptReturn
+				SELECT
+					1 AS 'StatusCode'
+				   ,'Registro guardado correctamente' AS 'Description'
+				   ,@@TRANCOUNT AS 'NumTransferID'
+				   ,@GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide'
+				   ,@Amount AS 'Amount'
+				   ,0 AS 'SubStatusCode'
+				   ,CASE
+						WHEN DOR.IsLastMileReturn = 1 THEN ISNULL(doad.GuideReturnAttemptCount, 1)
+						ELSE ISNULL(doad.GuideDeliveryAttemptCount, 1)
+					END AS RetriesMade--Numero intentos de entrega fallidas
+				   ,CASE
+						WHEN DOR.IsLastMileReturn = 1 THEN ISNULL(doad.GuideReturnMaxAttemptCount, 2)
+						ELSE ISNULL(doad.GuideDeliveryMaxAttemptCount, 2)
+					END AS RetriesAllowed ---Numero de intentos permitidos
+				   ,'' 'Retries'
+				   ,CASE
+						WHEN DOR.IsLastMileReturn = 1 THEN 1
+						ELSE 0
+					END ValidateAbandonedPackage
+				   ,CASE
+						WHEN @IsMarkedReturn = 1 THEN 1
+						ELSE 0
+					END IsMarkedReturn
+				FROM DeliveryOrder DOR WITH (NOLOCK)
+				INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
+					ON doad.GuideSerie = DOR.Guide_Serie
+						AND doad.GuideNumber = DOR.Guide_Number
+						AND doad.RowStatus = 1
+				WHERE DOR.Guide_Serie = @GuideSerie
+				AND DOR.Guide_Number = @GuideNumber
 
 			ELSE
 				SELECT			  
