@@ -70,7 +70,7 @@ BEGIN
 					RETURN;
 				END
 
-			IF (@AUX_VEHICLE_KMS >= @VehicleKms)
+			IF (@AUX_VEHICLE_KMS > @VehicleKms)
 				BEGIN
 					SELECT 0 [spResult], 'Datos incorrectos: El kilometraje ingresado es menor al último registro.' [spMessage];
 					RETURN;
