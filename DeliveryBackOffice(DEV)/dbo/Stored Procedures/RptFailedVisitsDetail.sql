@@ -6,7 +6,7 @@
 CREATE PROCEDURE [dbo].[RptFailedVisitsDetail] 
 @DateOf DateTime,
 @DateTo DateTime,
-@IdHub nvarchar,
+@IdHub nvarchar(5),
 @IdCourier nvarchar = null
 AS
 BEGIN
@@ -17,7 +17,7 @@ BEGIN
 
 	 Select
 			 ROW_NUMBER() OVER (ORDER BY CI.DateCreated) [NumberRow],
-				  Guide_Serie+CONVERT(nvarchar,DA.Guide_Number) AS Guide,
+				  DA.Guide_Serie+CONVERT(nvarchar,DA.Guide_Number) AS Guide,
 				  SR.First_Name +' '+ SR.Last_Name Courierman,
 				  CTI.NameIncidence,
 				  SO.OrderDescription,
@@ -33,20 +33,24 @@ BEGIN
 				      WHEN CI.CourierContempt = 1  THEN 'Desacato'
 				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) THEN 'Visita Falsa'
 				  ELSE 'Incidencia Sospechosa' end TypeIncidence
-			From [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
-			INNER JOIN [dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
-			 ON CI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
-			INNER JOIN [dbo].[SenderReceiver]    SR    WITH(NOLOCK)
-			 ON DA.ID_Courier = SR.ID
-			LEFT JOIN [dbo].[CatTypeIncidence] CTI     WITH(NOLOCK)
-			 ON CTI.IdIncidenceType = ID_Incident
-			LEFT JOIN [dbo].[StatusOrder] SO          WITH(NOLOCK)
-			 ON  CI.StatusOrderId = SO.StatusOrderId
-			Where CI.StatusOrderId in(@IdIncidenceInRoute) 
-					  And SR.HubLogisticId = Convert(int,@IdHub) 
-					  And CI.DateCreated Between @DateOf And @DateTo
+			From [dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		        Inner JOIN
+				[dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
+				ON DO.Guide_Serie = DA.Guide_Serie AND  DO.Guide_Number = DA.Guide_Number 
+				INNER JOIN 
+		        [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
+				 ON DA.ConfirmationOfIncidenceId = CI.IdConfirmationOfIncidence  
+				INNER JOIN [dbo].[SenderReceiver]    SR    WITH(NOLOCK)
+				 ON DA.ID_Courier = SR.ID
+				LEFT JOIN [dbo].[CatTypeIncidence] CTI     WITH(NOLOCK)
+				 ON CTI.IdIncidenceType = ID_Incident
+				LEFT JOIN [dbo].[StatusOrder] SO          WITH(NOLOCK)
+				 ON  CI.StatusOrderId = SO.StatusOrderId
+		 Where CI.StatusOrderId in(@IdIncidenceInRoute) 
+					  And   Case When DO.IsLastMileReturn = 0 Then  DO.ReceiverIdTownship
+					      Else   DO.SenderIdTownship End = Convert(int,@IdHub)  
+					  And CI.DateCreated Between @DateOf +' 00:00:00' And @DateTo + ' 23:59:59'
 					  And (@IdCourier IS NULL OR  DA.ID_Courier = Convert(int, @IdCourier))
-			
 		
 	
 	
