@@ -1464,6 +1464,7 @@
     <Build Include="dbo\Stored Procedures\RptFailedVisitsDitail.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ListGuide.sql" />
+    <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

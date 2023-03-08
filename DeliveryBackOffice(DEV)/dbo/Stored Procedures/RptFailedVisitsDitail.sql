@@ -6,12 +6,14 @@
 CREATE PROCEDURE [dbo].[RptFailedVisitsDitail] 
 @DateOf DateTime,
 @DateTo DateTime,
-@IdHub int,
-@IdCourier int = null
+@IdHub nvarchar,
+@IdCourier nvarchar = null
 AS
 BEGIN
 	
 	SET NOCOUNT ON;
+	 DECLARE @IdDeliveryFail     NVARCHAR(100) = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Intento de entrega fallida')
+	 DECLARE @IdIncidenceInRoute NVARCHAR(100) = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Incidencia en ruta')
 
 	If (@IdCourier Is Not Null)
 	Begin
@@ -20,14 +22,18 @@ BEGIN
 				  SR.First_Name +' '+ SR.Last_Name Courierman,
 				  CTI.NameIncidence,
 				  SO.OrderDescription,
-				  Convert(varchar(10), DA.Date_Created,108) [Hour],
-				  CONVERT(varchar(10), DA.Date_Created, 103) [Date],
+				 CONVERT(varchar(10), DA.Date_Created, 103) +' '+ Convert(varchar(10), DA.Date_Created,108) [DateAndHour],
 				  CASE 
 					  WHEN CI.IsValid = 1 THEN     'Si'
 					  ELSE 'No' End IsValid, 
 				  CASE 
 					  WHEN CI.IsConfirmed = 1 THEN 'Si'
-					  Else 'No' End  IsConfirmed
+					  Else 'No' End  IsConfirmed,
+				  CI.ActionObservation,
+				  CASE 
+				      WHEN CI.CourierContempt = 1  THEN 'Desacato'
+				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) THEN 'Visita Falsa'
+				  ELSE 'Incidencia Sospechosa' end TypeIncidence
 			From [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
 			INNER JOIN [dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
 			 ON CI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
@@ -37,9 +43,9 @@ BEGIN
 			 ON CTI.IdIncidenceType = ID_Incident
 			LEFT JOIN [dbo].[StatusOrder] SO          WITH(NOLOCK)
 			 ON  CI.StatusOrderId = SO.StatusOrderId
-			Where CI.StatusOrderId in(12,32) 
-			      And DA.ID_Courier = @IdCourier
-				  And SR.HubLogisticId = @IdHub 
+			Where CI.StatusOrderId in(@IdIncidenceInRoute) 
+			      And DA.ID_Courier = Convert(int,@IdCourier)
+				  And SR.HubLogisticId =Convert(int, @IdHub) 
 				  And CI.DateCreated Between @DateOf and @DateTo
 			
 		
@@ -53,15 +59,18 @@ BEGIN
 				  SR.First_Name +' '+ SR.Last_Name Courierman,
 				  CTI.NameIncidence,
 				  SO.OrderDescription,
-				 CONVERT(varchar(10), DA.Date_Created, 108) [Hour],
-				 CONVERT(varchar(10), DA.Date_Created, 103) [Date],
+				 CONVERT(varchar(10), DA.Date_Created, 103) +' '+ Convert(varchar(10), DA.Date_Created,108) [DateAndHour],
 				  CASE 
 					  WHEN CI.IsValid = 1 THEN     'Si'
 					  ELSE 'No' End IsValid, 
 				  CASE 
 					  WHEN CI.IsConfirmed = 1 THEN 'Si'
 					  Else 'No' End  IsConfirmed,
-					  DA.ID_Courier
+				  CI.ActionObservation,
+				  CASE 
+				      WHEN CI.CourierContempt = 1  THEN 'Desacato'
+				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) THEN 'Visita Falsa'
+				  ELSE 'Incidencia Sospechosa' end TypeIncidence
 			From [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
 			INNER JOIN [dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
 			 ON CI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
@@ -71,7 +80,7 @@ BEGIN
 			 ON CTI.IdIncidenceType = ID_Incident
 			LEFT JOIN [dbo].[StatusOrder] SO          WITH(NOLOCK)
 			 ON  CI.StatusOrderId = SO.StatusOrderId
-			Where CI.StatusOrderId in(12,32) And SR.HubLogisticId = @IdHub And 
+			Where CI.StatusOrderId in(@IdIncidenceInRoute) And SR.HubLogisticId = Convert(int, @IdHub) And 
 			      CI.DateCreated Between @DateOf and @DateTo
 				
 
