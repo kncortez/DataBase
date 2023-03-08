@@ -135,14 +135,16 @@ BEGIN
 						do.Guide_Serie
 					   ,do.Guide_Number
 					   ,CASE
-							WHEN so.OrderDescription = 'Intento de entrega fallida' AND
+							WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
+								so.OrderDescription = 'Intento de entrega fallida' AND
 								(NOT do.IsLastMileReturn = 1 OR
 								coi.ClientConfirmsReturn = 1) THEN 1
 							ELSE 0
 						END
 					   ,rh.Attempt
 					   ,CASE
-							WHEN so.OrderDescription = 'Intento de entrega fallida' AND
+							WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
+								so.OrderDescription = 'Intento de entrega fallida' AND
 								do.IsLastMileReturn = 1 AND
 								NOT coi.ClientConfirmsReturn = 1 THEN 1
 							ELSE 0
@@ -167,9 +169,9 @@ BEGIN
 						ON do.Guide_Serie = da.Guide_Serie
 							AND do.Guide_Number = da.Guide_Number
 							AND da.ID_DeliveryOrderBySettlement = @IdManifest
-					INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+					LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
 						ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-					INNER JOIN StatusOrder so 
+					LEFT JOIN StatusOrder so
 						ON coi.StatusOrderId = so.StatusOrderId
 					WHERE do.Guide_Serie = @GuideSerie
 					AND do.Guide_Number = @GuideNumber
