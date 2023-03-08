@@ -359,13 +359,7 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[CatTypeIncidence] WITH (NOLOCK)
 				WHERE IdIncidenceType = @idissue
                    
-			        
-					INSERT INTO [dbo].[ReviewIncidence]
-						( IncidenceReviewOrigin, DeliveryProofId, ReviewIncidenceToken, IsReviewed, RowStatus, TokenCreated, DateCreated )
-					VALUES
-						( @IdIncidenceReviewOrigin, @ID_PHOTO, CONCAT( @GuideSerie, @GuideNumber , RIGHT (CAST( (FLOOR(RAND()*(99999-0+1))+0) AS NVARCHAR),5),10) , 0, 1, 'sps_proof_onincident', GETDATE() )
-
-
+			  
 
 
 
