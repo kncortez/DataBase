@@ -230,7 +230,8 @@ BEGIN
 				[CatSystemId],
 				[CatModuleId],
 				[TypeService],
-				[OrderUserCreated]
+				[OrderUserCreated],
+				[IdCustomer]
 				
 			)
 			SELECT 
@@ -285,7 +286,8 @@ BEGIN
 				@system,
 				@module,
 				'FDD',
-				sr.Username
+				sr.Username,
+				@CustomerId
 			FROM @ServiceRoutes sr
 			WHERE sr.IdTblServiceRoutes = @RowNumber
 
@@ -357,6 +359,42 @@ BEGIN
 				AND SDFG.IsDelivery = 1
 			) AND sr.IdTblServiceRoutes = @RowNumber;
 
+			-- FDAPI-1418 Oscar Morales 2023-02-23
+			-- Insertar data para manejo de inténtos de entrega/devolución
+			INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+			, [GuideNumber]
+			, [GuideDeliveryAttemptCount]
+			, [GuideDeliveryMaxAttemptCount]
+			, [GuideReturnAttemptCount]
+			, [GuideReturnMaxAttemptCount]
+			, [RowStatus]
+			, [DateCreated]
+			, [TokenCreated]
+			, [DateUptaded]
+			, [TokenUpdated])
+				SELECT TOP 1
+					@GuideSerie
+					,@GuideNumber
+					,0
+					,rh.Attempt
+					,0
+					,rh.AttemptReturn
+					,1
+					,GETDATE()
+					,'SYSTEM'
+					,NULL
+					,NULL
+				FROM RateHeader rh WITH (NOLOCK)
+				LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+					ON @SenderId = vpc.CodeOfReference
+				INNER JOIN RatebyCustomer rbc WITH (NOLOCK)
+					ON ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
+						AND rbc.RbcRowStatus = 1
+						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+							OR rbc.RbcCodeOfReference IS NULL)
+				WHERE rbc.RbcIdRate = rh.RheId
+				ORDER BY rbc.RbcCodeOfReference DESC
+			-- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
 			-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
 			INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
