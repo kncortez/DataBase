@@ -125,7 +125,105 @@ BEGIN
 				AND Guide_Number = @GuideNumber
 			
 			END
-			--FDD-1071 <Oscar Morales 2023-02-22> 
+			--FDD-1073 <Oscar Morales 2023-02-22> 
+
+			--FDD-1075 <Oscar Morales 2023-02-24> 
+			--Actualizar inténtos de entrega/devolución 
+
+			--Si no existe el registro, crearlo
+			IF NOT EXISTS (SELECT 1 FROM DeliveryOrderAttemptData WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber AND RowStatus = 1)
+			BEGIN
+				INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+				, [GuideNumber]
+				, [GuideDeliveryAttemptCount]
+				, [GuideDeliveryMaxAttemptCount]
+				, [GuideReturnAttemptCount]
+				, [GuideReturnMaxAttemptCount]
+				, [RowStatus]
+				, [DateCreated]
+				, [TokenCreated]
+				, [DateUptaded]
+				, [TokenUpdated])
+					SELECT TOP 1
+						do.Guide_Serie
+					   ,do.Guide_Number
+					   ,CASE
+							WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
+								so.OrderDescription = 'Intento de entrega fallida' AND
+								(NOT do.IsLastMileReturn = 1 OR
+								coi.ClientConfirmsReturn = 1) THEN 1
+							ELSE 0
+						END
+					   ,rh.Attempt
+					   ,CASE
+							WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
+								so.OrderDescription = 'Intento de entrega fallida' AND
+								do.IsLastMileReturn = 1 AND
+								NOT coi.ClientConfirmsReturn = 1 THEN 1
+							ELSE 0
+						END
+					   ,rh.AttemptReturn
+					   ,1
+					   ,GETDATE()
+					   ,@Token
+					   ,NULL
+					   ,NULL
+					FROM DeliveryOrder do WITH (NOLOCK)
+					LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+						ON do.Sender_ID = vpc.CodeOfReference
+					INNER JOIN RatebyCustomer rbc WITH (NOLOCK)
+						ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
+							AND rbc.RbcRowStatus = 1
+							AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+								OR rbc.RbcCodeOfReference IS NULL)
+					INNER JOIN RateHeader rh WITH (NOLOCK)
+						ON rbc.RbcIdRate = rh.RheId
+					INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+						ON do.Guide_Serie = da.Guide_Serie
+							AND do.Guide_Number = da.Guide_Number
+							AND da.ID_DeliveryOrderBySettlement = @IdManifest
+					LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+						ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+					LEFT JOIN StatusOrder so
+						ON coi.StatusOrderId = so.StatusOrderId
+					WHERE do.Guide_Serie = @GuideSerie
+					AND do.Guide_Number = @GuideNumber
+					ORDER BY rbc.RbcCodeOfReference DESC
+			END
+			ELSE
+			BEGIN
+				UPDATE doad
+				SET doad.GuideDeliveryAttemptCount =
+					CASE
+						WHEN NOT do.IsLastMileReturn = 1 OR
+							coi.ClientConfirmsReturn = 1 THEN doad.GuideDeliveryAttemptCount + 1
+						ELSE doad.GuideDeliveryAttemptCount
+					END
+				   ,doad.GuideReturnAttemptCount =
+					CASE
+						WHEN do.IsLastMileReturn = 1 AND
+							NOT coi.ClientConfirmsReturn = 1 THEN doad.GuideReturnAttemptCount + 1
+						ELSE doad.GuideReturnAttemptCount
+					END
+				   ,doad.DateUptaded = GETDATE()
+				   ,doad.TokenUpdated = @Token
+				FROM DeliveryOrderAttemptData doad
+				INNER JOIN DeliveryOrder do WITH (NOLOCK)
+					ON doad.GuideSerie = do.Guide_Serie
+					AND doad.GuideNumber = do.Guide_Number
+				INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+					ON doad.GuideSerie = da.Guide_Serie
+					AND doad.GuideNumber = da.Guide_Number
+					AND da.ID_DeliveryOrderBySettlement = @IdManifest
+				INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+				INNER JOIN StatusOrder so
+					ON coi.StatusOrderId = so.StatusOrderId
+				WHERE doad.GuideSerie = @GuideSerie
+				AND doad.GuideNumber = @GuideNumber
+				AND so.OrderDescription = 'Intento de entrega fallida'
+			END
+			--FIN FDD-1075 <Oscar Morales 2023-02-24> 
 		END TRY
 
 		BEGIN CATCH
