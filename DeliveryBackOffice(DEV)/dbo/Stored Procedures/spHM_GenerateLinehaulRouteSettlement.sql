@@ -3,20 +3,29 @@
 -- Create date: <08-08-2022>
 -- Description:	<Get or insert a new Linehaul Route Settlement >
 -- =============================================
+-- Author:		<Ochoa, Jerson>
+-- Date:		<14-02-2023>
+-- Update:		<Add log for vehicles mileage value>
+-- Date:		<08-03-2023>
+-- Description: <Add totals by HUB>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_GenerateLinehaulRouteSettlement]
 	@LinehaulRoutePreparationId AS INT,
 	@DateSelected AS DATE,
 	@HubID AS INT,
 	@UserName as  NVARCHAR(20),
+	@VehicleKms AS INT,
 	@TknUser AS NVARCHAR(50)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-	DECLARE @EXISTING_LRP AS INT;	-- Linehaul Route Preparation
-	DECLARE @EXISTING_LRS AS INT;	-- Linehaul Route Settlement
-	DECLARE @INSERTED_DOC AS INT;	-- Last inserted doc
+	DECLARE @EXISTING_LRP AS INT;		-- Linehaul Route Preparation
+	DECLARE @EXISTING_LRS AS INT;		-- Linehaul Route Settlement
+	DECLARE @INSERTED_DOC AS INT;		-- Last inserted doc
+	DECLARE @VEHICLE_ID AS INT;			-- LinehaulRoutePreparation
+	DECLARE @VEHICLE_LAST_KMS AS INT;	-- CatVehicle
 
 	-- Check if there is a valid record in Linehaul Route Preparation
 	SET @EXISTING_LRP = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS CONTEO
@@ -25,6 +34,14 @@ BEGIN
 							AND [LRP].[CatLinehaulStatusId] = (SELECT	[CLS].[IdCatLinehaulStatus]
 																FROM	[dbo].[CatLinehaulStatus] CLS
 																WHERE	[CLS].[StatusName] = 'IN TRANSIT'));
+
+	SET @VEHICLE_ID = (	SELECT	[LRP].[CatVehicleId]
+						FROM	[dbo].[LinehaulRoutePreparation] LRP
+						WHERE	[LRP].[IdLinehaulRoutePreparation] = @LinehaulRoutePreparationId);
+
+	SET @VEHICLE_LAST_KMS = (SELECT	ISNULL([CV].[Kms], 0)
+							FROM	[dbo].[CatVehicle] CV
+							WHERE	[CV].[IdVehicle] = @VEHICLE_ID);
 
 	IF (@EXISTING_LRP > 0) 
 		BEGIN
@@ -68,12 +85,30 @@ BEGIN
 														WHERE	[CLS].[StatusName] = 'GENERATED')
 					AND [LRS].[DateReceived] = @DateSelected
 					AND [LRS].[RowStatus] = 1;
+
+				SELECT		[LRPC].[HubDestinyId],
+							[HL].[HubAbbreviation],
+							COUNT([LRPC].[ContainerId]) AS Containers,
+							SUM([LRPC].[GuideQuantity]) AS Guides,
+							SUM([LRPC].[DryPieceQuantity] + [LRPC].[ColdPieceQuantity]) AS Pieces
+				FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC
+				INNER JOIN	[dbo].[HubLogistics] HL
+					ON		[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
+				WHERE		[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+					AND		[LRPC].[RowStatus] = 1
+				GROUP BY	[LRPC].[HubDestinyId], [HL].[HubAbbreviation] ;
 			END
 		ELSE
 			BEGIN
 				-- INSERT NEW DOC
 				BEGIN TRANSACTION
 				BEGIN TRY
+
+					IF (@VehicleKms < @VEHICLE_LAST_KMS)
+						BEGIN
+							SELECT 0 [spResult], 'El kilometraje ingresado NO es válido.' [spMessage];
+							RETURN;
+						END
 					
 					INSERT INTO [LinehaulRouteSettlement]
 								([LinehaulRoutePreparationId], 
@@ -86,6 +121,7 @@ BEGIN
 								 [GuidesReceived],
 								 [GuidePiecesReceived],
 								 [GuidePiecesMissing],
+								 [VehicleKms],
 								 [RowStatus],
 								 [TokenCreated],
 								 [DateCreated])
@@ -99,11 +135,30 @@ BEGIN
 								 0,		-- GuidesReceived
 								 0,		-- GuidePiecesReceived
 								 0,		-- GuidePiecesMissing,
+								 @VehicleKms,
 								 1,		-- RowStatus,
 								 @TknUser,
 								 SYSDATETIME());
 
 					SET @INSERTED_DOC = SCOPE_IDENTITY();
+
+					-- VEHICLE LOG
+					UPDATE	[dbo].[CatVehicle]
+					SET		[Kms] = @VehicleKms,
+							[TokenUpdated] = @TknUser,
+							[DateUpdated] = SYSDATETIME()
+					WHERE	[IdVehicle] = @VEHICLE_ID;
+
+					INSERT INTO [dbo].[VehicleLog] ([Unidad],
+													[Kms],
+													[Observacion],
+													[TokenCreate],
+													[DateCreate])
+					VALUES							(@VEHICLE_ID,
+													@VehicleKms,
+													'spHM_EndLinehaulRouteSettlement',
+													@TknUser,
+													SYSDATETIME());
 
 					SELECT		[LRS].[IdLinehaulRouteSettlement],
 								[LRS].[LinehaulRoutePreparationId], 
@@ -125,6 +180,18 @@ BEGIN
 					INNER JOIN	[dbo].[CatLinehaulStatus] CLS
 						ON		[LRS].[CatLinehaulStatusId] = [CLS].[IdCatLinehaulStatus]
 					WHERE	[LRS].[IdLinehaulRouteSettlement] = @INSERTED_DOC;
+
+					SELECT		[LRPC].[HubDestinyId],
+								[HL].[HubAbbreviation],
+								COUNT([LRPC].[ContainerId]) AS Containers,
+								SUM([LRPC].[GuideQuantity]) AS Guides,
+								SUM([LRPC].[DryPieceQuantity] + [LRPC].[ColdPieceQuantity]) AS Pieces
+					FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC
+					INNER JOIN	[dbo].[HubLogistics] HL
+						ON		[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
+					WHERE		[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+						AND		[LRPC].[RowStatus] = 1
+					GROUP BY	[LRPC].[HubDestinyId], [HL].[HubAbbreviation] ;
 
 					IF(@@TRANCOUNT > 0)
 						COMMIT TRANSACTION
