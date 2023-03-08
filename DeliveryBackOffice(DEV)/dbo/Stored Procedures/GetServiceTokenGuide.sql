@@ -245,21 +245,24 @@ BEGIN
 	BEGIN
 		BEGIN TRY
 
-			-- Buscar ubicación del VP
-			SELECT		@VPLatitude = ISNULL([VPC].[Latitude], ''),
-						@VPLongitude = ISNULL([VPC].[Longitude], '')
-			FROM		[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
-			INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
-				ON		[COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
-			INNER JOIN	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-				ON		[DA].[Guide_Serie] = [DO].[Guide_Serie] AND [DA].[Guide_Number] = [DO].[Guide_Number]
-			INNER JOIN	[dbo].[VisitPointClient] VPC WITH (NOLOCK)
-				ON		[VPC].[CodeOfReference] = (CASE WHEN [DO].[IsLastMileReturn] = 1 THEN [DO].[Sender_ID] ELSE [DO].[Receiver_ID] END)
-			WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
-				AND		[COI].[RowStatus] = 1
-				AND		[COI].[IsConfirmed] <> 1;
+			IF ( EXISTS ( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK) WHERE [COI].[ConfirmationOfIncidentToken] = @GuideToken AND [COI].[RowStatus] = 1 AND [COI].[IsConfirmed] = 0 ) )
+			BEGIN
+			    
+				-- Buscar ubicación del VP
+				SELECT		@VPLatitude = ISNULL([VPC].[Latitude], ''),
+							@VPLongitude = ISNULL([VPC].[Longitude], '')
+				FROM		[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+				INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+					ON		[COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
+				INNER JOIN	[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+					ON		[DA].[Guide_Serie] = [DO].[Guide_Serie] AND [DA].[Guide_Number] = [DO].[Guide_Number]
+				INNER JOIN	[dbo].[VisitPointClient] VPC WITH (NOLOCK)
+					ON		[VPC].[CodeOfReference] = (CASE WHEN [DO].[IsLastMileReturn] = 1 THEN [DO].[Sender_ID] ELSE [DO].[Receiver_ID] END)
+				WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
+					AND		[COI].[RowStatus] = 1
+					AND		[COI].[IsConfirmed] <> 1;
 
-			set @jsonResult = (SELECT STUFF(( 
+				set @jsonResult = (SELECT STUFF(( 
 								SELECT  
 								',{"IdResult":200,"receiverAddress":"' +  (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Address ELSE do.Receiver_Address END) + '",' +
 								'"serviceType":"Incidence"' + ',' +
@@ -318,6 +321,32 @@ BEGIN
 								FOR XML PATH(''), TYPE
 								).value('.', 'varchar(max)'),1,1,''
 								) )
+
+			END
+			ELSE 
+			BEGIN
+			         
+				set @jsonResult = (SELECT STUFF(( 
+								SELECT  
+								',{"IdResult":206,' +
+								'"serviceType":"DeliveryInRoute"' + ',' +
+								'"trackingForza":"https://forzadelivery.com/rastreo/' + do.Guide_Serie + CAST(do.Guide_Number AS NVARCHAR) + '/"' +
+								+ '}'
+
+								FROM ConfirmationOfIncidence coi WITH(NOLOCK)
+								INNER JOIN DeliveryAttempt da WITH(NOLOCK)
+									ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+								INNER JOIN DeliveryOrder do WITH(NOLOCK)
+									ON do.Guide_Serie = da.Guide_Serie AND do.Guide_Number = da.Guide_Number
+								LEFT JOIN CatTypeIncidence cti WITH(NOLOCK)
+									ON da.ID_Incident = cti.IdIncidenceType
+								WHERE coi.ConfirmationOfIncidentToken = @GuideToken
+								AND coi.RowStatus = 1
+								FOR XML PATH(''), TYPE
+								).value('.', 'varchar(max)'),1,1,''
+								) )
+
+		    END
 
 			IF @jsonResult IS NULL
 			BEGIN
