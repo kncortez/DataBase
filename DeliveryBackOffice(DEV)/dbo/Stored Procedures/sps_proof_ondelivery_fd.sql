@@ -14,6 +14,11 @@
 --               en cambio se debe insertar el checkpoint Reenviado a Express Center>
 -- Hotfix: FDAPI-337
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-03-02>
+-- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -700,6 +705,35 @@ BEGIN
                                         @Token = @Token,
                                         @CODPayment = @CODPayment;
         END;
+
+		 IF(EXISTS(SELECT  Top 1 1 FROM [dbo].[DeliveryOrder] dlo WITH (NOLOCK) WHERE dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1)) -- guía marcada para devolución
+            BEGIN
+		
+			-- agregar guía marcada para devolución en tabla de proceso de COD
+			  INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                                (
+                                    GuideSerie,
+                                    GuideNumber,
+                                    DataOriginId,
+                                    Token,
+                                    CustomerId
+                                )
+                                SELECT @GuideSerie,
+                                       @GuideNumber,
+                                       @DataOriginId,
+                                       @Token,
+                                       cus.IdCustomer
+                                FROM DeliveryOrder dlo WITH (NOLOCK)
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = Case when  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  Then dlo.Sender_ID Else dlo.Receiver_ID End
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1
+                 END
+
 
     END TRY
     BEGIN CATCH
