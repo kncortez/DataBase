@@ -1515,7 +1515,7 @@ BEGIN
                        ISNULL(sv.CtsName, '') AS CtsName,
                        ISNULL(sv.CtsDescription, '') AS CtsDescription,
                        ISNULL(rh.ReturnRate, 0) AS ReturnRate
-                FROM #ListCode ls
+                FROM #ParceCode ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
                     INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
@@ -1560,7 +1560,7 @@ BEGIN
                        ISNULL(sv.CtsName, '') AS CtsName,
                        ISNULL(sv.CtsDescription, '') AS CtsDescription,
                        ISNULL(rh.ReturnRate, 0) AS ReturnRate
-                FROM #ListCode ls
+                FROM #ParceCode ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
                     INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
