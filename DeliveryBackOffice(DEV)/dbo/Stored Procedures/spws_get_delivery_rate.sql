@@ -803,7 +803,35 @@ BEGIN
 
     ---------------------Fin obtener descuento -------------------------------------------------------------------------------------
     ---------------------Determinar si existe exceso de libras ---------------------------------------------------------------------
+	
+    -- Hotfix - Andrés Ruíz - 17-02-2023
+    IF (
+           (
+               LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = ''
+               OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0'
+           )
+           AND @IdTypeRate = 3
+       )
+    BEGIN
 
+        DECLARE @DataCounter INT = 1;
+
+        SET @ParcelCode = N'EXP076';
+
+        IF (@DataCounter < @CountPiecesParams)
+        BEGIN
+            WHILE @DataCounter < @CountPiecesParams
+            BEGIN
+
+                SET @ParcelCode = CONCAT(@ParcelCode, ',EXP076');
+
+                SET @DataCounter = @DataCounter + 1;
+
+            END;
+        END;
+
+    END;
+    -- Fin hotfix
 
     IF OBJECT_ID('tempdb.dbo.#ParceCode', 'U') IS NOT NULL
         DROP TABLE #ParceCode;
@@ -815,12 +843,17 @@ BEGIN
     INTO #ParceCode
     FROM DeliveryBackOffice.dbo.SplitUnlimited(@ParcelCode, ',');
 
-	UPDATE
-		[#ParceCode]
-	SET
-		[Item] = 'EXP076'
-	WHERE
-		LTRIM(RTRIM(ISNULL([Item], ''))) = ''
+	IF ( @IdTypeRate = 3 )
+	BEGIN
+	    
+		UPDATE
+			[#ParceCode]
+		SET
+			[Item] = 'EXP076'
+		WHERE
+			LTRIM(RTRIM(ISNULL([Item], ''))) = ''
+
+	END
 
     SELECT Item,
            ROW_NUMBER() OVER (ORDER BY (SELECT 0)) ID
