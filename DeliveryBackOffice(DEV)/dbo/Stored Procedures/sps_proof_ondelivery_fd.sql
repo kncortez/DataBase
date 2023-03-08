@@ -731,7 +731,7 @@ BEGIN
                                     LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
                                         ON pcd.GuideSerie = dlo.Guide_Serie
                                            AND pcd.GuideNumber = dlo.Guide_Number
-                                WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1
+                                WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1 AND dlo.[IsCollect] = 1
                  END
 
 
