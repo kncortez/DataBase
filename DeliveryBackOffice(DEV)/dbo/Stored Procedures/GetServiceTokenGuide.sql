@@ -245,7 +245,7 @@ BEGIN
 	BEGIN
 		BEGIN TRY
 
-			IF ( EXISTS ( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK) WHERE [COI].[ConfirmationOfIncidentToken] = @GuideToken AND [COI].[RowStatus] = 1 AND [COI].[IsConfirmed] = 0 ) )
+			IF ( EXISTS ( SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK) WHERE [COI].[ConfirmationOfIncidentToken] = @GuideToken AND [COI].[RowStatus] = 1 AND [COI].[IsConfirmed] = 0 AND [COI].[ConfirmationOfIncidentToken] NOT LIKE '%TIMEOUT' ) )
 			BEGIN
 			    
 				-- Buscar ubicación del VP
