@@ -320,3 +320,123 @@ BEGIN
                CONVERT(BIGINT, 0) AS 'NumTransferID';
 
 END;
+	 DECLARE @TotalGuide Decimal(18,2)
+
+	------------------------ Bitacora de Guías en carrito de compras no collect y que no fueron liquidadas y se recolectaron
+		If(@Idd>0)
+		 Begin
+
+
+		     SET @TotalGuide= ( SELECT
+									 
+								Sum([DO].[PriceShippment])
+							FROM
+								[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+							ON
+							    [DO].[Guide_Serie] = [AccSCD].[GuideSerie] AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+							ON
+								[Co].[GuideSerie] = [DO].[Guide_Serie] AND [Co].[GuideNumber] = [DO].[Guide_Number]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD
+							ON  Co.GuideSerie = DSD.Guide_Serie And  Co.GuideNumber= DSD.Guide_Number
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH(NOLOCK)
+							ON DSD.ID_DeliveryOrderBySettlement = DOBS.ID AND dsd.RowStatus = 1
+							Inner Join   
+							    [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] spd WITH(NOLOCK)
+							ON   DO.Guide_Serie = spd.GuideSerie AND DO.Guide_Number = spd.GuideNumber
+							INNER JOIN 
+							    [DeliveryBackOffice].[dbo].[SettlementByPickup] sp WITH(NOLOCK)
+			                ON spd.SettlementByPickupId = sp.Id
+							WHERE  [AccSCD].[RowStatus] = 1 AND
+								   [DO].[IsCollect] = 0 AND
+								   [Co].[TotalAmountPaid] IS NULL AND
+								   [sp].Id = @Idd
+							)
+			  
+				 Insert Into [dbo].[ConflictManifest] 
+				 (
+				 CourierResponsible,
+				 TotalAmount,
+				 RowStatus,
+				 TokenCreated,
+				 DateCreated
+				 )
+				 SELECT 
+					isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,''),
+					@TotalGuide,
+					1,
+					'Route_Settlement',
+					Getdate()
+				FROM [DeliveryBackOffice].[dbo].[SettlementByPickup] dobs WITH(NOLOCK)
+				INNER JOIN 
+				     [DeliveryBackOffice].[dbo].[SenderReceiver] sr WITH(NOLOCK)
+				ON sr.ID = dobs.IdCourier
+				INNER JOIN 
+				     [DenariusUser_Dev].[dbo].[LGN_LogByToken] lbt WITH(NOLOCK)
+				ON lbt.SSN_IdToken = dobs.TokenCreated
+				INNER JOIN 
+				     [DenariusUser_Dev].[dbo].[RouteAssigment] ra WITH(NOLOCK)
+				ON (ra.IdRouteAssigment = dobs.RouteAssigmentId)
+				INNER JOIN 
+				     [DenariusUser_Dev].[dbo].[CatRoute] cr WITH(NOLOCK) 
+				ON (cr.IdRoute = ra.IdRoute)
+				WHERE dobs.ID = @Idd
+
+			DECLARE	@Id INT = SCOPE_IDENTITY()
+			
+			--- Insert Detalle
+			Insert Into [dbo].[ConflictManifestDetail]
+			(
+			
+			ConflictManifestId,
+			GuideSerie,
+			GuideNumber,
+			GuidePrice,
+			RowStatus,
+			TokenCreated,
+			DateCreated
+			)
+				Select 
+						@Id,
+						DO.Guide_Serie,
+						Do.Guide_Number,
+						DO.PriceShippment,
+						1,
+						'Route_Settlement',
+						GETDATE()
+				FROM
+									[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+								ON
+									[DO].[Guide_Serie] = [AccSCD].[GuideSerie] AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+								ON
+									[Co].[GuideSerie] = [DO].[Guide_Serie] AND [Co].[GuideNumber] = [DO].[Guide_Number]
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD
+								ON  Co.GuideSerie = DSD.Guide_Serie And  Co.GuideNumber= DSD.Guide_Number
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH(NOLOCK)
+								ON DSD.ID_DeliveryOrderBySettlement = DOBS.ID AND dsd.RowStatus = 1
+								Inner Join   
+									[DeliveryBackOffice].[dbo].[SettlementByPickupDetail] spd WITH(NOLOCK)
+								ON   DO.Guide_Serie = spd.GuideSerie AND DO.Guide_Number = spd.GuideNumber
+								INNER JOIN 
+									[DeliveryBackOffice].[dbo].[SettlementByPickup] sp WITH(NOLOCK)
+								ON spd.SettlementByPickupId = sp.Id
+				WHERE  [AccSCD].[RowStatus] = 1 AND
+									   [DO].[IsCollect] = 0 AND
+									   [Co].[TotalAmountPaid] IS NULL AND
+									   [sp].Id = @Idd
+
+
+
+		 End
+
