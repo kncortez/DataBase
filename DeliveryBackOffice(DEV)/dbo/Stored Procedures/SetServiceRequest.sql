@@ -10,6 +10,8 @@ BEGIN
     DECLARE @ManifestNumber INT = 0;
     DECLARE @ManifestSerie VARCHAR(2) = 'FM';
     DECLARE @GuideSerie VARCHAR(2) = 'FD';
+	DECLARE @GuidePriority INT = 0;
+	DECLARE @Priority VARCHAR(1);
 
     /*********************************************************************************************/
     /******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -246,7 +248,7 @@ BEGIN
             ),
             Segment =
             (
-                SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
+                SELECT DeliveryBackOffice.dbo.fn_get_segmentNew(t.Guide_Serie, t.Guide_Number, t.Sender_ID, t.Receiver_Town)
             )
         FROM #GuideTable t;
 
@@ -400,6 +402,7 @@ BEGIN
         -- FIN MODIFICACION
         FROM #GuideTable GT;
 
+
         -- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
         -- INSERTAR DATA PARA MANEJO DE LANDING PAGE
         INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide]
@@ -433,6 +436,47 @@ BEGIN
                   AND SDFG.IsDelivery = 1
         );
         -- FIN DE MODIFICACION
+
+		-- FDAPI-1418 Oscar Morales 2023-02-23
+		-- Insertar data para manejo de inténtos de entrega/devolución
+		INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+		, [GuideNumber]
+		, [GuideDeliveryAttemptCount]
+		, [GuideDeliveryMaxAttemptCount]
+		, [GuideReturnAttemptCount]
+		, [GuideReturnMaxAttemptCount]
+		, [RowStatus]
+		, [DateCreated]
+		, [TokenCreated]
+		, [DateUptaded]
+		, [TokenUpdated])
+			SELECT
+				GT.Guide_Serie
+			   ,GT.Guide_Number
+			   ,0
+			   ,rh.Attempt
+			   ,0
+			   ,rh.AttemptReturn
+			   ,1
+			   ,GETDATE()
+			   ,'SYSTEM'
+			   ,NULL
+			   ,NULL
+			FROM #GuideTable GT
+			INNER JOIN RateByCustomer rc WITH (NOLOCK)
+				ON rc.RbcId = (SELECT TOP 1
+							rbc.RbcId
+						FROM RatebyCustomer rbc WITH (NOLOCK)
+						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+							ON GT.Sender_ID = vpc.CodeOfReference
+						WHERE ISNULL(GT.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
+						AND rbc.RbcRowStatus = 1
+						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+						OR rbc.RbcCodeOfReference IS NULL)
+						ORDER BY rbc.RbcCodeOfReference DESC)
+			INNER JOIN RateHeader rh WITH (NOLOCK)
+				ON rc.RbcIdRate = rh.RheId
+        -- Fin FDAPI-1418 Oscar Morales 2023-02-23
 
         -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
         INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
@@ -657,6 +701,15 @@ BEGIN
 
             END;
         END;
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
+		INNER JOIN @CorrelativeTable ct
+		ON do.Guide_Number = ct.Guide_Number
+		INNER JOIN Membership mb
+		ON do.IdCustomer = mb.CustomerId
+		WHERE mb.CatMembershipStatusId = 3
+		AND mb.ExpirationDate >= GETDATE()
+		AND mb.RowStatus = 1)
+
         DROP TABLE #GuideTable;
 
     --END
@@ -703,7 +756,8 @@ BEGIN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
                ) AS 'Attempts',
-			   IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+
+			  IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E') 'Priority',
 			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
 					WHEN 
@@ -720,6 +774,7 @@ BEGIN
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
+				AND D.Guide_Serie = @GuideSerie
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
         WHERE D.Guide_Serie = @GuideSerie
