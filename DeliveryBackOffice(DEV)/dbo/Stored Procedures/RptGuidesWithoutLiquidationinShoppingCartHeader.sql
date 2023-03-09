@@ -79,6 +79,86 @@ BEGIN
 		WHERE dobs.ID = @IdManifiesto
 	
 
+		if(@GuideCount>0)
+		 Begin
+			  
+				 Insert Into [dbo].[ConflictManifest] 
+				 (
+				 CourierResponsible,
+				 TotalAmount,
+				 RowStatus,
+				 TokenCreated,
+				 DateCreated
+				 )
+				 SELECT 
+					isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,''),
+					@TotalGuide,
+					1,
+					'Route_Settlement',
+					Getdate()
+				FROM [DeliveryBackOffice].[dbo].[SettlementByPickup] dobs
+				JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.IdCourier
+				JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = dobs.TokenCreated
+				JOIN RouteAssigment ra on (ra.IdRouteAssigment = dobs.RouteAssigmentId)
+				JOIN CatRoute cr on (cr.IdRoute = ra.IdRoute)
+				WHERE dobs.ID = @IdManifiesto
+
+			DECLARE	@Id INT = SCOPE_IDENTITY()
+			
+			--- Insert Detalle
+			Insert Into [dbo].[ConflictManifestDetail]
+			(
+			
+			ConflictManifestId,
+			GuideSerie,
+			GuideNumber,
+			GuidePrice,
+			RowStatus,
+			TokenCreated,
+			DateCreated
+			)
+				Select 
+						@Id,
+						DO.Guide_Serie,
+						Do.Guide_Number,
+						DO.PriceShippment,
+						1,
+						'Route_Settlement',
+						GETDATE()
+				FROM
+									[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+								ON
+									[DO].[Guide_Serie] = [AccSCD].[GuideSerie] AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+								ON
+									[Co].[GuideSerie] = [DO].[Guide_Serie] AND [Co].[GuideNumber] = [DO].[Guide_Number]
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD
+								ON  Co.GuideSerie = DSD.Guide_Serie And  Co.GuideNumber= DSD.Guide_Number
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH(NOLOCK)
+								ON DSD.ID_DeliveryOrderBySettlement = DOBS.ID AND dsd.RowStatus = 1
+								Inner Join   
+									[DeliveryBackOffice].[dbo].[SettlementByPickupDetail] spd WITH(NOLOCK)
+								ON   DO.Guide_Serie = spd.GuideSerie AND DO.Guide_Number = spd.GuideNumber
+								INNER JOIN 
+									[DeliveryBackOffice].[dbo].[SettlementByPickup] sp WITH(NOLOCK)
+								ON spd.SettlementByPickupId = sp.Id
+				WHERE  [AccSCD].[RowStatus] = 1 AND
+									   [DO].[IsCollect] = 0 AND
+									   [Co].[TotalAmountPaid] IS NULL AND
+									   [sp].Id = @IdManifiesto 
+
+
+
+		 End
+
+
+
+
 SELECT Liquidator,
        Courier,
 	   SettlementDate,
