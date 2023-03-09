@@ -1462,7 +1462,32 @@ BEGIN
 				AND wh.Guide_Number = tlg.Guide_Number
 			WHERE wh.Active = 1
 			End
-
+			
+			-- agregar guía marcada para devolución en tabla de proceso de COD
+			  INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                    (
+                        GuideSerie,
+                        GuideNumber,
+                        DataOriginId,
+                        Token,
+                        CustomerId
+                    )
+                    SELECT lge.Guide_Serie,
+                            lge.Guide_Number,
+                            25,
+                            @TokenP UserCreated,
+                            cus.IdCustomer
+                    FROM #listGuidesEnabled lge
+                        INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
+                            ON lge.Guide_Number = dlo.Guide_Number
+                        LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                            ON vp.CodeOfReference = Case when  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  Then dlo.Sender_ID Else dlo.Receiver_ID End
+                        LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                            ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                        LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                            ON pcd.GuideSerie = dlo.Guide_Serie
+                                AND pcd.GuideNumber = dlo.Guide_Number
+                    WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.IsLastMileReturn = 1 AND dlo.[IsCollect] = 1
 
         END TRY
         BEGIN CATCH

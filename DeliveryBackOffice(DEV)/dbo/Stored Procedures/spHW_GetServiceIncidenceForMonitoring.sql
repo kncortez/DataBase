@@ -4,6 +4,11 @@
 -- Create date: <2023-02-17>
 -- Description:	< Devuelve los datos de incidencias en ruta y visitas para portal web interno >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2023-02-27>
+-- Description:	<Agregar nuevos campos: Courier quien marcó la visita fallida, Fecha de visita fallida, Ubicación del mapa de la visita fallida (punto de entrega y punto de courier), Foto que tomó el courier >
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetServiceIncidenceForMonitoring]
 
 	@StartDate DATETIME = NULL,
@@ -16,6 +21,8 @@ BEGIN
 
 	DECLARE @SACWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
 	DECLARE @OPWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
+
+	
 
 	IF(@EndDate IS NULL)
 	BEGIN
@@ -123,6 +130,16 @@ BEGIN
 			,DO.Guide_Number 'GuideNumber'
 			,CAST(ISNULL(DO.IsLastMileReturn, 0) AS BIT) 'IsLastMileReturn'
 			,COI.ConfirmationOfIncidentToken 'IncidenceToken'
+			,ISNULL(SR.First_Name,'') +' '+ ISNULL(SR.Last_Name,'') As 'CourierFailedVisit'
+			,COI.DateCreated AS 'Failedvisitdate'
+			,DA.Latitude AS 'LatitudeIncidence'
+			,DA.Longitude AS 'LongitudeIncidence'
+			,(Select TOP 1 Path_Incident
+						From [dbo].[DeliveryProof]
+						WHERE ID = DA.ID_Proof) AS  'IncidenceImage'
+            ,VPC.Latitude AS 'LatitudeVisitPointClient'
+			,VPC.Longitude AS 'LongitudeVisitPintClient'
+
 		FROM
 			[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 			INNER JOIN
@@ -201,6 +218,10 @@ BEGIN
 					DSCDes.Hub = HLBUDes.HubLogisticId
 					AND
 					HLBUDes.UserId = @UserId
+			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR
+			     ON DA.ID_Courier = SR.ID
+			LEFT JOIN [dbo].[VisitPointClient] VPC
+				ON VPC.CodeOfReference = Case when  DO.IsLastMileReturn = 1 And DO.Sender_ID != 0 Then DO.Sender_ID Else DO.Receiver_ID End
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND

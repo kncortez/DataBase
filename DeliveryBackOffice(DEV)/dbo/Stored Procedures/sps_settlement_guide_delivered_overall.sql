@@ -28,16 +28,16 @@ BEGIN
 
 			UPDATE dsd
 			SET
-				Settlement_Collect_OnDelivery = do.Collect_OnDelivery, 
+				Settlement_Collect_OnDelivery = CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 
 				SettlementCollect_TokenCreated = @Token, 
 				SettlementCollect_DateCreated = GETDATE(), 
 				Guide_Settlement = 1, -- guía liquidada en bodega
 				Guide_Returned = 0,  -- guía liquidada vía material devuelto
 				Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega
 			FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd
-			JOIN #listGuidesoOverall lg
+			INNER JOIN #listGuidesoOverall lg
 				ON dsd.Guide_Serie = lg.ItemSerie AND dsd.Guide_Number = lg.ItemNumber
-			JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] do
+			INNER JOIN DeliveryOrder do WITH(NOLOCK)
 				ON lg.ItemSerie = do.Guide_Serie AND lg.ItemNumber = do.Guide_Number
 			WHERE 
 				dsd.RowStatus = 1
@@ -66,28 +66,43 @@ BEGIN
 					@@TRANCOUNT AS 'NumTransferID',
 					1 AS 'SubStatusCode'
 
-				SELECT 1 AS 'StatusCode'
-					, 'Registros guardado correctamente' AS 'Description'
-					, @@TRANCOUNT AS 'NumTransferID'
-					, CONCAT(lg.ItemSerie, lg.ItemNumber) Guide
-					, (case when dsd.Settlement_Collect_OnDelivery IS NULL then 0 else dsd.Settlement_Collect_OnDelivery end) Amount
-					, 1 AS 'SubStatusCode'
-					, COUNT(DORD.StatusOrderId)		AS RetriesMade--Numero intentos de entrega fallidas
-					, (case when RH.Attempt is NULL then 2 else RH.Attempt end)		AS RetriesAllowed ---Numero de intentos permitidos
+				SELECT
+					1 AS 'StatusCode'
+				   ,'Registros guardado correctamente' AS 'Description'
+				   ,@@TRANCOUNT AS 'NumTransferID'
+				   ,CONCAT(lg.ItemSerie, lg.ItemNumber) Guide
+				   ,(CASE
+						WHEN dsd.Settlement_Collect_OnDelivery IS NULL THEN 0
+						ELSE dsd.Settlement_Collect_OnDelivery
+					END) Amount
+				   ,1 AS 'SubStatusCode'
+				   ,CASE
+						WHEN DOR.IsLastMileReturn = 1 THEN ISNULL(doad.GuideReturnAttemptCount, 1)
+						ELSE ISNULL(doad.GuideDeliveryAttemptCount, 1)
+					END AS RetriesMade--Numero intentos de entrega fallidas
+				   ,CASE
+						WHEN DOR.IsLastMileReturn = 1 THEN ISNULL(doad.GuideReturnMaxAttemptCount, 2)
+						ELSE ISNULL(doad.GuideDeliveryMaxAttemptCount, 2)
+					END AS RetriesAllowed ---Numero de intentos permitidos
+				   ,'' 'Retries'
+				   ,0 ValidateAbandonedPackage
+				   ,0 IsMarkedReturn
 				FROM #listGuidesoOverall lg
-					LEFT JOIN DeliveryOrder DOR ON DOR.Guide_Serie=lg.ItemSerie AND DOR.Guide_Number=lg.ItemNumber
-					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd ON dsd.Guide_Serie = lg.ItemSerie AND dsd.Guide_Number = lg.ItemNumber
-					LEFT JOIN DBO.DeliveryOrderDetail DORD  ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number
-						AND DORD.StatusOrderId= (select StatusOrderId from dbo.StatusOrder where OrderDescription ='Intento de entrega fallida')
-					LEFT JOIN DBO.Customer CU ON DOR.IdCustomer=CU.IdCustomer
-					LEFT JOIN DBO.RatebyCustomer RC ON CU.IdCustomer=RC.RbcIdCustomer AND rc.RbcRowStatus ='true' AND rc.RbcCodeOfReference IS NULL
-					LEFT JOIN RateHeader RH ON RC.RbcIdRate=RH.RheId AND rh.RheRowStatus ='true'							
+				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
+					ON DOR.Guide_Serie = lg.ItemSerie
+						AND DOR.Guide_Number = lg.ItemNumber
+				INNER JOIN DeliverySettlementDetail dsd WITH (NOLOCK)
+					ON dsd.Guide_Serie = lg.ItemSerie
+						AND dsd.Guide_Number = lg.ItemNumber
+				LEFT JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
+					ON doad.GuideSerie = DOR.Guide_Serie
+						AND doad.GuideNumber = DOR.Guide_Number
+						AND doad.RowStatus = 1
 				WHERE dsd.ID_DeliveryOrderBySettlement = @IdManifest
-					AND dsd.RowStatus = 1
-					AND Guide_Settlement = 1 -- guía liquidada en bodega
-					AND Guide_Returned = 0  -- guía liquidada vía material devuelto
-					AND Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega
-				GROUP BY lg.ItemSerie,lg.ItemNumber,CU.IdCustomer,RH.Attempt,DORD.StatusOrderId,dsd.Settlement_Collect_OnDelivery 
+				AND dsd.RowStatus = 1
+				AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
+				AND dsd.Guide_Returned = 0  -- guía liquidada vía material devuelto
+				AND dsd.Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega
 
 			END
 			ELSE
