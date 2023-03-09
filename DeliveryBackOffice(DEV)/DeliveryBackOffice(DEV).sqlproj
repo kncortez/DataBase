@@ -1468,6 +1468,7 @@
     <Build Include="dbo\Tables\IncidenceDynamicQuestion.sql" />
     <Build Include="dbo\Tables\IncidenceDynamicInput.sql" />
     <Build Include="dbo\Stored Procedures\spHW_GetServiceIncidenceForMonitoring.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_TMBuySubscriptionWithMembership.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
