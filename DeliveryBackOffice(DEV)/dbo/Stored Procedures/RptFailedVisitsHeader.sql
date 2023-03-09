@@ -22,8 +22,6 @@ BEGIN
 	 if (@IdCourier IS NOT NULL or @IdCourier != '')
 	 Begin
 
-	   DECLARE @CourierName        NVARCHAR(100) = (select First_Name +' '+ Last_Name From [dbo].[SenderReceiver] Where  ID = @IdCourier)
-
 	   DECLARE @CourierName        NVARCHAR(100) = (select First_Name +' '+ Last_Name From [dbo].[SenderReceiver] Where  ID = Convert(int, @IdCourier))
 
 		 Select       
