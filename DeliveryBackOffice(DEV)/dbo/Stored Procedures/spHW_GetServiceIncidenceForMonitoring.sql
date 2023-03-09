@@ -135,7 +135,7 @@ BEGIN
 			,DA.Latitude AS 'LatitudeIncidence'
 			,DA.Longitude AS 'LongitudeIncidence'
 			,(Select TOP 1 Path_Incident
-						From [dbo].[DeliveryProof]
+						From [dbo].[DeliveryProof] WITH(NOLOCK)
 						WHERE ID = DA.ID_Proof) AS  'IncidenceImage'
             ,VPC.Latitude AS 'LatitudeVisitPointClient'
 			,VPC.Longitude AS 'LongitudeVisitPintClient'
