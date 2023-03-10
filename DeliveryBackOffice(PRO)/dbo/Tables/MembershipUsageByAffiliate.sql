@@ -13,11 +13,15 @@
     [TokenCreated]                 NVARCHAR (50)   NOT NULL,
     [DateUpdated]                  DATETIME        NULL,
     [TokenUpdated]                 NVARCHAR (50)   NULL,
+    [RegisterUserId]               BIGINT          NOT NULL,
     PRIMARY KEY CLUSTERED ([IdMembershipUsageByAffiliate] ASC),
     CONSTRAINT [FK_MembershipUsageByAffiliate_Affiliate] FOREIGN KEY ([AffiliateId]) REFERENCES [dbo].[Affiliate] ([IdAffiliate]),
     CONSTRAINT [FK_MembershipUsageByAffiliate_DiscountType] FOREIGN KEY ([DiscountValueType]) REFERENCES [dbo].[CatValueType] ([IdCatValueType]),
-    CONSTRAINT [FK_MembershipUsageByAffiliate_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership])
+    CONSTRAINT [FK_MembershipUsageByAffiliate_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
+    CONSTRAINT [FK_MembershipUsageByAffiliate_RegisterUser] FOREIGN KEY ([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
+
+
 
 
 GO
@@ -78,4 +82,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de canjeo de membresias por afiliados.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipUsageByAffiliate';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Identificador del usuario que registro el uso de la tabla RegisterUser', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipUsageByAffiliate', @level2type = N'COLUMN', @level2name = N'RegisterUserId';
 
