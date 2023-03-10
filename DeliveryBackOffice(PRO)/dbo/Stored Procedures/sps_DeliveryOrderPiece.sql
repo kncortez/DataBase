@@ -37,11 +37,11 @@ BEGIN
 	SET @EXCCustomerId = (
 		SELECT
 			TOP 1
-				Cu.IdCustomer
+				[KoVPC].[IdKindOfVPClient]
 		FROM
-			[DeliveryBackOffice].[dbo].[Customer] Cu
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KoVPC  WITH(NOLOCK) 
 		WHERE
-			Cu.Name = 'FD EXPRESS CENTER'
+			[KoVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
 	)
 
 	-- Si la guía se origino en Express Center
@@ -52,17 +52,35 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[VisitPointClient] VPCs WITH(NOLOCK)
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPCSend WITH(NOLOCK)
 				ON
-					DO.Sender_ID = VPCs.CodeOfReference
+					DO.Sender_ID = [VPCSend].CodeOfReference
 					AND
-					VPCs.StatusClient = 1
+					[VPCSend].StatusClient = 1
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPCOri  WITH(NOLOCK) 
+				ON
+					DO.[OriginSenderId] = [VPCOri].[CodeOfReference]
+					AND
+					[VPCOri].[StatusClient] = 1
 		WHERE
 			DO.Guide_Serie = @GuideSerie
 			AND
 			DO.Guide_Number = @GuideNumber
 			AND
-			ISNULL(DO.IdCustomer, VPCs.CustomerID) = @EXCCustomerId -- Customer que representa Express Centers
+			(
+				(
+					[VPCSend].[IdKindOfVPClient] = @EXCCustomerId
+					AND
+					[VPCSend].[IdVisitPointClient] IS NOT NULL
+				)
+				OR
+				(
+					[VPCOri].[IdKindOfVPClient] = @EXCCustomerId
+					AND
+					[VPCOri].[IdVisitPointClient] IS NOT NULL
+				)
+			)
 	)
 
 	BEGIN TRANSACTION
@@ -154,8 +172,8 @@ BEGIN
 			SET
 				DO.BilledWeight = GWS.GuideWeight
 			FROM
-				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO
-				JOIN 
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+				INNER JOIN 
 					@GuideWeightReview GWS
 					ON
 						DO.Guide_Serie = GWS.GuideSerie
