@@ -3,13 +3,16 @@
     [TypeContainerName]        NVARCHAR (50)  NOT NULL,
     [TypeContainerSerie]       NVARCHAR (100) NOT NULL,
     [TypeContainerDescription] NVARCHAR (200) NULL,
-    [RowStatus]                BIT            DEFAULT ((1)) NOT NULL,
+    [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
+    [RowStatus]                BIT            CONSTRAINT [DF__CatTypeCo__RowSt__0A5E6A10] DEFAULT ((1)) NOT NULL,
     [TokenCreated]             NVARCHAR (50)  NOT NULL,
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              DATETIME       NULL,
-    PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
+    CONSTRAINT [PK__CatTypeC__15586F038ABAA2A9] PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
 );
+
+
 
 
 GO
@@ -50,4 +53,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de catalogo de tipos de contenedores.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeContainer';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si el tipo de contenedores admite liquidación en ESCALA', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeContainer', @level2type = N'COLUMN', @level2name = N'AllowStopOver';
 
