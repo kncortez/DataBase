@@ -1014,9 +1014,9 @@ BEGIN
 															@AuxLogServiceNumber = [TGP].[LogServiceNumber]
 													FROM	@TblGuidesForPoints TGP;
 
-											SET @AccountId = (	SELECT [A].[AccIdAccount]
-																FROM	[dbo].[Account] A
-																WHERE	[A].[IdCustomer] = @CustomerId );
+											--SET @AccountId = (	SELECT [A].[AccIdAccount]
+											--					FROM	[dbo].[Account] A
+											--					WHERE	[A].[IdCustomer] = @CustomerId );
 
 											SET @AuxPointsGenerated = CASE
 																		WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST(@ForzaPointsGenerationValue AS INT)

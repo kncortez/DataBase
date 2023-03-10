@@ -296,5 +296,27 @@ BEGIN
                @dti_fk_header IdInvoice,
                @inv_cli_email inv_cli_email,
                @Token Token;
+
+		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+		(
+		    [ErrorDescription],
+		    [ErrorNumber],
+		    [ErrorProcedure],
+		    [ErrorLine],
+		    [GuideSerie],
+		    [GuideNumber],
+		    [TokenCreated],
+		    [DateCreated]
+		)
+		VALUES
+		(   CAST(ERROR_MESSAGE() AS NVARCHAR(300)),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    NULL,     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
     END CATCH;
 END;
