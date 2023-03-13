@@ -19,7 +19,7 @@ BEGIN
         [Row_Number] [INT] IDENTITY(1, 1), -- no de fila
         [Guide_Number] [INT] NULL          -- correlativo autogenerado
     );
-
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
     BEGIN TRY
         /*********************************************************************************************/
@@ -730,7 +730,7 @@ BEGIN
 				ON ctm.IdCustomer = D.IdCustomer
 			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
 				ON MMBSHP.CustomerId = ctm.IdCustomer
-				AND MMBSHP.CatMembershipStatusId = 3
+				AND MMBSHP.CatMembershipStatusId = @StatusPackage
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
         WHERE D.Guide_Serie = @GuideSerie
