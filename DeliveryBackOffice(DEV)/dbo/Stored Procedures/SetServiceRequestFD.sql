@@ -15,10 +15,11 @@ BEGIN
 	DECLARE @ManifestSerie VARCHAR(2) = 'FM'
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
 
+
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	--FIN MODIFICACIÓN
-
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -475,7 +476,7 @@ BEGIN
 	BEGIN
 		COMMIT TRANSACTION;
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 		SELECT 
 			1 AS 'StatusCode',
@@ -522,7 +523,7 @@ BEGIN
 			ON ctm.IdCustomer = D.IdCustomer
 		LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
 				ON MMBSHP.CustomerId = ctm.IdCustomer
-				AND MMBSHP.CatMembershipStatusId = 3
+				AND MMBSHP.CatMembershipStatusId = @StatusPackage
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
