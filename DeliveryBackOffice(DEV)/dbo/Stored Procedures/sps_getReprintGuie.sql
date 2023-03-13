@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Serie_Number VARCHAR(2) = 'FD'
 AS
 BEGIN
+	DECLARE @GuidePriority INT = 0;
     DECLARE @jsonOutput VARCHAR(MAX) = '',
             @parcels NVARCHAR(MAX) = N'',
             /*pieces*/
@@ -174,6 +175,15 @@ BEGIN
     BEGIN
         SET @integrationCost = LEFT(@integrationCost, LEN(@integrationCost) - 1);
     END;
+
+	SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
+		INNER JOIN Membership mb
+		ON do.IdCustomer = mb.CustomerId
+		WHERE do.Guide_Number = @Guide_Number
+		AND mb.CatMembershipStatusId = 3
+		AND mb.ExpirationDate >= GETDATE()
+		AND mb.RowStatus = 1)
+
 
     /*end integration cost*/
 
@@ -443,7 +453,14 @@ BEGIN
                                      + '"BankAccountId":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Num_account), '') + '",'
                                      + '"Identification":"' + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Identification), '')
                                      + '"' + ' },' + '"Integration": [' + COALESCE(@integrationCost, '') + ' ], ' 
-									 + '"Priority": "' + COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') + '",' 
+									  + '"Priority": "' + 
+										COALESCE(
+											(CASE 
+												WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+												WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
+												ELSE 'E'
+											END)
+										, '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
                                      + '"Pieces_Cold": ' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'') + ','
@@ -492,6 +509,11 @@ BEGIN
                                   LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
                                       ON DOPD.TimePlaId = CPT.TimePlaId
                                          AND cov.RowStatus = 1
+								  LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+									    ON MMBSHP.CustomerId = ctm.IdCustomer
+										AND MMBSHP.CatMembershipStatusId = 3
+										AND MMBSHP.ExpirationDate >= GETDATE()
+										AND MMBSHP.RowStatus = 1
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),

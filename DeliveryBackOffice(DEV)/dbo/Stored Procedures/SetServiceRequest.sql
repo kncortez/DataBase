@@ -10,6 +10,8 @@ BEGIN
     DECLARE @ManifestNumber INT = 0;
     DECLARE @ManifestSerie VARCHAR(2) = 'FM';
     DECLARE @GuideSerie VARCHAR(2) = 'FD';
+	DECLARE @GuidePriority INT = 0;
+	DECLARE @Priority VARCHAR(1);
 
     /*********************************************************************************************/
     /******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -698,6 +700,15 @@ BEGIN
 
             END;
         END;
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
+		INNER JOIN @CorrelativeTable ct
+		ON do.Guide_Number = ct.Guide_Number
+		INNER JOIN Membership mb
+		ON do.IdCustomer = mb.CustomerId
+		WHERE mb.CatMembershipStatusId = 3
+		AND mb.ExpirationDate >= GETDATE()
+		AND mb.RowStatus = 1)
+
         DROP TABLE #GuideTable;
 
     --END
@@ -744,7 +755,13 @@ BEGIN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
                ) AS 'Attempts',
-			   IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			   (CASE 
+					WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+					WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
+					ELSE 'E'
+					END) 'Priority',
+
+			  -- IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
 			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
 					WHEN 
@@ -761,8 +778,14 @@ BEGIN
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
+				AND D.Guide_Serie = @GuideSerie
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+				ON MMBSHP.CustomerId = ctm.IdCustomer
+				AND MMBSHP.CatMembershipStatusId = 3
+			    AND MMBSHP.ExpirationDate >= GETDATE()
+				AND MMBSHP.RowStatus = 1
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
