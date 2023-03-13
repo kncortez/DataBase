@@ -42,7 +42,7 @@ BEGIN
 				dsd.Guide_Serie
 			   ,dsd.Guide_Number
 			   ,CASE
-					WHEN NOT do.IsLastMileReturn = 1 THEN CASE
+					WHEN do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 THEN CASE
 							WHEN doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount OR coi.ClientConfirmsReturn = 1 THEN 2
 							ELSE 1
 						END

@@ -137,7 +137,7 @@ BEGIN
 					   ,CASE
 							WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
 								so.OrderDescription = 'Intento de entrega fallida' AND
-								(NOT do.IsLastMileReturn = 1 OR
+								(do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 OR
 								coi.ClientConfirmsReturn = 1) THEN 1
 							ELSE 0
 						END
@@ -146,7 +146,7 @@ BEGIN
 							WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
 								so.OrderDescription = 'Intento de entrega fallida' AND
 								do.IsLastMileReturn = 1 AND
-								NOT coi.ClientConfirmsReturn = 1 THEN 1
+								(coi.ClientConfirmsReturn IS NULL OR coi.ClientConfirmsReturn = 0) THEN 1
 							ELSE 0
 						END
 					   ,rh.AttemptReturn
@@ -182,14 +182,14 @@ BEGIN
 				UPDATE doad
 				SET doad.GuideDeliveryAttemptCount =
 					CASE
-						WHEN NOT do.IsLastMileReturn = 1 OR
+						WHEN do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 OR
 							coi.ClientConfirmsReturn = 1 THEN doad.GuideDeliveryAttemptCount + 1
 						ELSE doad.GuideDeliveryAttemptCount
 					END
 				   ,doad.GuideReturnAttemptCount =
 					CASE
 						WHEN do.IsLastMileReturn = 1 AND
-							NOT coi.ClientConfirmsReturn = 1 THEN doad.GuideReturnAttemptCount + 1
+							(coi.ClientConfirmsReturn IS NULL OR coi.ClientConfirmsReturn = 0) THEN doad.GuideReturnAttemptCount + 1
 						ELSE doad.GuideReturnAttemptCount
 					END
 				   ,doad.DateUptaded = GETDATE()
