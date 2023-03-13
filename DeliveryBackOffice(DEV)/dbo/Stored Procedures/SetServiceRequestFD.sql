@@ -499,7 +499,7 @@ BEGIN
 			--FIN MODIFICACIÓN
 			(CASE 
 				WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
-				WHEN D.SalePipeLineId=@IDCatBusinessB2B THEN 'P' 
+				WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
 				ELSE 'E'
 				END) 'Priority',
 			--IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
@@ -517,6 +517,7 @@ BEGIN
 			)'Icon'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
+										AND D.Guide_Serie = @GuideSerie
 		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 			ON ctm.IdCustomer = D.IdCustomer
 		LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
