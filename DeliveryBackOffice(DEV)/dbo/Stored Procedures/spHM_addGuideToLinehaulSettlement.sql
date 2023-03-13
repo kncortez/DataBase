@@ -23,6 +23,7 @@ BEGIN
 	SET NOCOUNT ON;
 	DECLARE @EXISTING_LRPC AS INT;				-- LinehaulRoutePreparationContainer
 	DECLARE @EXISTING_LRPCDP AS INT;			-- LinehaulRoutePreparationContainerDetailPiece
+	DECLARE @EXISTING_PIECE AS INT;				-- LinehaulRoutePreparationContainerDetailPiece
 	DECLARE @EXISTING_LRSC AS INT;				-- LinehaulRouteSettlementContainer;
 	DECLARE @EXISTING_LRSCD AS INT;				-- LinehaulRouteSettlementContainerDetail
 	DECLARE @EXISTING_LRSCD_ACTIVE AS INT;		-- LinehaulRouteSettlementContainerDetail
@@ -44,6 +45,14 @@ BEGIN
 	DECLARE @IS_OPEN_PROCESS AS INT;			-- Configuration
 	DECLARE @LIQUIDATED_STATUS_ID AS INT;		-- CatLinehaulStatus
 	DECLARE @SETTLEMENT_STATUS_ORDER_ID AS INT; -- StatusOrderId
+	DECLARE @VBX_ID AS INT;						-- Container
+
+	SET @VBX_ID = (	SELECT		TOP 1 [C].[IdContainer]
+					FROM		[dbo].[Container] C
+					INNER JOIN	[dbo].[CatTypeContainer] CTC
+						ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
+						AND		[CTC].[TypeContainerSerie] = 'VBX'
+					WHERE		[C].[RowStatus] = 1);
 
 	SET @EXISTING_LRPC = (	SELECT	COUNT([LRPC].[IdLinehaulRoutePreparationContainer]) AS CONT
 							FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
@@ -51,19 +60,32 @@ BEGIN
 								AND	[LRPC].[ContainerId] = @ContainerId
 								AND [LRPC].[RowStatus] = 1 );
 
+	SET @EXISTING_PIECE = (SELECT		COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
+							FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+							INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+								ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+								AND		[LRPCD].[RowStatus] = 1
+								AND		[LRPCD].[GuideSerie] = @GuideSerie
+								AND		[LRPCD].[GuideNumber] = @GuideNumber
+							INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+								ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+								AND		[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+								AND		[LRPC].[RowStatus] = 1
+							WHERE	[LRPCDP].[PieceNumber] = @GuidePiece );
+
 	SET @EXISTING_LRPCDP = (SELECT	COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece])
-							FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP,
-									[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD,
-									[dbo].[LinehaulRoutePreparationContainer] LRPC
-							WHERE	[LRPCDP].[PieceNumber] = @GuidePiece 
-								AND [LRPCD].[IdLinehaulRoutePreparationContainerDetail] = [LRPCDP].[LinehaulRoutePreparationContainerDetailId]
-								AND [LRPCD].[GuideSerie] = @GuideSerie
-								AND [LRPCD].[GuideNumber] = @GuideNumber
-								AND [LRPCD].[RowStatus] = 1
-								AND [LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
-								AND [LRPC].[ContainerId] = @ContainerId
-								AND [LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-								AND [LRPC].[RowStatus] = 1);
+							FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+							INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+								ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+								AND		[LRPCD].[GuideSerie] = @GuideSerie
+								AND		[LRPCD].[GuideNumber] = @GuideNumber
+								AND		[LRPCD].[RowStatus] = 1
+							INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+								ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+								AND		[LRPC].[ContainerId] = @ContainerId
+								AND		[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
+								AND		[LRPC].[RowStatus] = 1
+							WHERE	[LRPCDP].[PieceNumber] = @GuidePiece );
 
 	SET @DOP_PIECES = (SELECT	COUNT([DOP].[NoPiece]) AS CONT
 						FROM	[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
@@ -80,6 +102,13 @@ BEGIN
 	SET @LIQUIDATED_STATUS_ID = (SELECT	[CLS].[IdCatLinehaulStatus]
 								FROM	[dbo].[CatLinehaulStatus] CLS
 								WHERE	[CLS].[StatusName] = 'LIQUIDATED');
+	
+	IF (@EXISTING_PIECE = 0)
+		BEGIN
+			-- LinehaulRoutePreparationContainer doesn't exist
+			SELECT 6 [spResult], 'La pieza escaneada NO pertenece al manifiesto en liquidación, ¿Desea agregarla de todas formas?' [errorMessage];
+			RETURN;
+		END
 
 	IF (@EXISTING_LRPC = 0)
 		BEGIN
@@ -707,10 +736,10 @@ BEGIN
 											AND		[LRSCDP].[RowStatus] = 1);
 									
 			SET @COUNT_GUIDE_QUANTITY = (SELECT  COUNT([LRSCD].[IdLinehaulRouteSettlementContainerDetail]) AS CONT
-										FROM	[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
-										WHERE	[LRSCD].[RowStatus] = 1
-											AND	[LRSCD].[IsOpenProcess] = 0
-											AND [LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId);
+										FROM		[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD
+										WHERE		[LRSCD].[RowStatus] = 1
+											AND		[LRSCD].[IsOpenProcess] = 0
+											AND		[LRSCD].[LinehaulRouteSettlementContainerId] = @LinehaulRouteSettlementContainerId);
 									
 			UPDATE	[LinehaulRouteSettlementContainer]
 			SET		[GuideQuantity] = @COUNT_GUIDE_QUANTITY,
@@ -722,6 +751,7 @@ BEGIN
 			SET @COUNT_CONTAINERS_RECEIVED = (SELECT	COUNT([LRSC].[IdLinehaulRouteSettlementContainer]) AS CONT
 												FROM	[dbo].[LinehaulRouteSettlementContainer] LRSC
 												WHERE	[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId
+													AND	[LRSC].[ContainerId] != @VBX_ID
 													AND [LRSC].[RowStatus] = 1);
 
 			SET @COUNT_GUIDES_RECEIVED = (SELECT		COUNT([LRSCD].[IdLinehaulRouteSettlementContainerDetail]) AS CONT
@@ -730,6 +760,7 @@ BEGIN
 												ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 												AND		[LRSC].[RowStatus] = 1
 												AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId
+												AND		[LRSC].[ContainerId] != @VBX_ID
 											WHERE		[LRSCD].[RowStatus] = 1);
 
 			SET @COUNT_PIECES_RECEIVED = (SELECT		SUM([LRSCD].[PiecesReceived]) AS CONT
@@ -737,6 +768,7 @@ BEGIN
 											INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 												ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 												AND		[LRSC].[RowStatus] = 1
+												AND		[LRSC].[ContainerId] != @VBX_ID
 												AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 			SET @COUNT_PIECES_MISSING = (SELECT		SUM([LRSCD].[PiecesMissing]) AS CONT
@@ -744,6 +776,7 @@ BEGIN
 											INNER JOIN	[dbo].[LinehaulRouteSettlementContainer] LRSC
 												ON		[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 												AND		[LRSC].[RowStatus] = 1
+												AND		[LRSC].[ContainerId] != @VBX_ID
 												AND		[LRSC].[LinehaulRouteSettlementId] = @LinehaulRouteSettlementId);
 
 			UPDATE	[LinehaulRouteSettlement]
