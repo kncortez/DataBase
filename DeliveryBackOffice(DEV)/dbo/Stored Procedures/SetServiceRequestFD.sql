@@ -544,7 +544,7 @@ BEGIN
 				ELSE 'E'
 				END) 'Priority',
 			--IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
-			CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			CONCAT('https://qa.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			(CASE
 				WHEN 
 					(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
