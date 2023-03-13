@@ -22,6 +22,7 @@ BEGIN
     DECLARE @j INT = 0,
             @integrationCost VARCHAR(MAX) = '',
             @identityCost INT;
+   DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
 
     SELECT 
 		@i = COUNT(1),
@@ -81,7 +82,7 @@ BEGIN
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
     IF (@Impersonate = 'TRUE')
     BEGIN
@@ -511,7 +512,7 @@ BEGIN
                                          AND cov.RowStatus = 1
 								  LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
 									    ON MMBSHP.CustomerId = ctm.IdCustomer
-										AND MMBSHP.CatMembershipStatusId = 3
+										AND MMBSHP.CatMembershipStatusId = @StatusPackage
 										AND MMBSHP.ExpirationDate >= GETDATE()
 										AND MMBSHP.RowStatus = 1
                               WHERE dev.Guide_Number = @Guide_Number
