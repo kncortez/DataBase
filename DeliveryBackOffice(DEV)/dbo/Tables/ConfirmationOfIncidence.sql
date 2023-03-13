@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_ConfirmationOfIncidence_ConfirmationOfIncidentToken]
     ON [dbo].[ConfirmationOfIncidence]([ConfirmationOfIncidentToken] ASC);
@@ -95,4 +97,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observación adicionada a la acción realizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ActionObservation';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Confirmación del lado de cliente indicando que solicita devolución del paquete al origen.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ClientConfirmsReturn';
 
