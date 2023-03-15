@@ -1452,6 +1452,8 @@
     <Build Include="dbo\Stored Procedures\GetSalePackageToDeactivate.sql" />
     <Build Include="dbo\Stored Procedures\SPHAW_GetDashboardData.sql" />
     <Build Include="dbo\Stored Procedures\spHW_TMBuySubscriptionWithMembership.sql" />
+    <Build Include="dbo\Stored Procedures\spg_InformationInvoiceOrigin.sql" />
+    <Build Include="dbo\Stored Procedures\Set_ResponseFelToNoteCredit.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
