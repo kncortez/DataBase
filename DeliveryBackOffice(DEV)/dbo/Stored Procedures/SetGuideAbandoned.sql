@@ -29,24 +29,25 @@ BEGIN
 			END
 		   ,@IsValidRol =
 			CASE
-				WHEN cr.RolName = 'Supervisor' THEN 1
+				WHEN EXISTS (SELECT
+							1
+						FROM RolByUserBySystem rus
+						INNER JOIN CatRol cr
+							ON rus.RusIdRol = cr.RolIdRol
+						INNER JOIN CatSystem cs
+							ON rus.RusIdSystem = cs.SysIdSystem
+						WHERE ru.UsrIdUser = rus.RusIdUser
+						AND rus.RusRowStatus = 1
+						AND cr.RolName = 'Supervisor'
+						AND cs.SysNameSystem = @NameSystem) THEN 1
 				ELSE 0
 			END
 		FROM InternalUser iu
 		INNER JOIN RegisterUser ru
 			ON iu.RegisterUserID = ru.UsrIdUser
 				AND ru.UsrRowStatus = 1
-		INNER JOIN RolByUserBySystem rus
-			ON ru.UsrIdUser = rus.RusIdUser
-				AND rus.RusRowStatus = 1
-		INNER JOIN CatRol cr
-			ON rus.RusIdRol = cr.RolIdRol
-		INNER JOIN CatSystem cs
-			ON rus.RusIdSystem = cs.SysIdSystem
 		WHERE iu.IdUser = @IdUser
 		AND iu.Username = @Username
-		AND cs.SysNameSystem = @NameSystem
-		AND iu.RowStatus = 1
 
 		IF (@Exists = 1)
 		BEGIN
