@@ -156,7 +156,14 @@ BEGIN
 									 
 								ISNULL(Sum([DO].[PriceShippment]),0)
 		
-									FROM  #listGuides LG
+									FROM  (
+										SELECT
+											DISTINCT
+												[LGaux].[ItemSerie]
+												,[LGaux].[ItemNumber]
+										FROM
+											#listGuides LGaux
+									) LG
 									INNER JOIN 
 										[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
 									ON  LG.ItemSerie = AccSCD.GuideSerie  And LG.ItemNumber = AccSCD.GuideNumber 
@@ -214,10 +221,17 @@ BEGIN
 								1,
 								@Token,
 								GETDATE()
-						FROM    #listGuides LG
+						FROM    (
+										SELECT
+											DISTINCT
+												[LGaux].[ItemSerie]
+												,[LGaux].[ItemNumber]
+										FROM
+											#listGuides LGaux
+									) LG
 								INNER JOIN 
 										[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
-								ON  LG.ItemSerie = AccSCD.GuideSerie  And LG.ItemNumber = AccSCD.GuideNumber 
+								ON  LG.ItemSerie = AccSCD.GuideSerie  AND LG.ItemNumber = AccSCD.GuideNumber 
 								INNER JOIN
 									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 								ON
@@ -234,6 +248,15 @@ BEGIN
 
          
    	Update  [dbo].[AccountServiceCartDetail] Set  RowStatus=0 
+												 Where GuideNumber in 
+													 (Select LG.ItemNumber 
+															From #listGuides LG
+													  )
+									  
+
+
+         
+   	Update  [dbo].[DeliveryOrderPaymentDetail] Set  [ShipmentCompleted]=1 
 												 Where GuideNumber in 
 													 (Select LG.ItemNumber 
 															From #listGuides LG

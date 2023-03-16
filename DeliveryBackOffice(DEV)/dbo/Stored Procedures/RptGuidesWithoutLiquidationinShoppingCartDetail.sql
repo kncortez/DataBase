@@ -27,9 +27,15 @@ BEGIN
 								  ,DO.Sender_Phone
 								  ,DO.Sender_Address
 								  ,CMD.GuidePrice
-							FROM [dbo].[ConflictManifestDetail] CMD
-							INNER JOIN [dbo].[DeliveryOrder] DO	
+							FROM [dbo].[ConflictManifest] CM WITH(NOLOCK)
+							INNER JOIN
+							           [dbo].[ConflictManifestDetail] CMD WITH(NOLOCK)
+							ON
+							CM.IdConflictManifest = CMD.ConflictManifestId
+							INNER JOIN 
+							           [dbo].[DeliveryOrder] DO	 WITH(NOLOCK)
 							ON CMD.GuideSerie = DO.Guide_Serie And DO.Guide_Number = CMD.GuideNumber 
+							WHERE CMD.ConflictManifestId = @IdConflictManifest
 								   
 
     SELECT Guide_Code,
