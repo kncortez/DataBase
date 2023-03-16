@@ -397,7 +397,7 @@ BEGIN
                                                           + 'Delivery' + '",' + '"CodeOfReference":"'
                                                           + CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0)) + '",'
 														  + '"DeliveryOption":"' 
-														  + CONVERT( VARCHAR,ISNULL(DOR.IdDeliveryOption,0))  + '",' +
+														  + CONVERT( VARCHAR,ISNULL((CASE WHEN DOR.[IsLastMileReturn] = 1 THEN 1 ELSE DOR.IdDeliveryOption END),0))  + '",' +
                                                           + '"Id":"'
                                                           + ISNULL(
                                                                       CONVERT(
@@ -422,7 +422,7 @@ BEGIN
                                                                             ),
                                                                       'N/A'
                                                                   ) + '",' + '"Address":"'
-                                                          + IIF(kvp.KindOfVPName = 'Express Center',
+                                                          + IIF(kvp.KindOfVPName = 'Express Center' AND DOR.[IsLastMileReturn] = 0,
                                                                 ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(VPr.Address), ''),
                                                                 dbo.fnt_String_Escape(/*concat(*/
                                                                                          ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Sender_Address, DOR.Receiver_Address)), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, VPC.Address, VPr.Address)), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/

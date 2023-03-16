@@ -8,7 +8,7 @@
 -- Create date: <2022-12-20>
 -- Description:	<Agregar Campos de Piezas Frías y piezas Secas>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_getReprintMultipleGuides]
+CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY
 AS
@@ -409,6 +409,7 @@ BEGIN
 								)ADDRES1_FA
 								OUTER APPLY (
 									SELECT (CASE
+											WHEN [dev].[IsLastMileReturn] = 1 THEN ''
                                             WHEN AUX.Impersonate = 'TRUE' THEN
                                                 --IMPERSONADO
                                                 CASE
