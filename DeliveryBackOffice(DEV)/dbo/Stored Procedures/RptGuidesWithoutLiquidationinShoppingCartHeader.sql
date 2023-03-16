@@ -4,11 +4,11 @@
 -- Description:	<Description, SP para cabecera de reporte de guías que no estan liquidadas y no son collect>
 -- =============================================
 CREATE PROCEDURE [dbo].[RptGuidesWithoutLiquidationinShoppingCartHeader] 
-@IdManifiesto int	
+@IdConflictManifest int	
 AS
 BEGIN
 
-	    DECLARE @TotalGuide int
+	    
 	    DECLARE @temp TABLE (
 		Liquidator	nvarchar(max),
 		Courier nvarchar(201),	
@@ -21,64 +21,30 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SET @GuideCount = (
-		SELECT 
-			COUNT(dobs.GuidesQuantity)
-		FROM [DeliveryBackOffice].[dbo].[SettlementByPickup] dobs
-		INNER JOIN 
-		     [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] dsd 
-		ON dsd.SettlementByPickupId = dobs.Id
-		WHERE dobs.ID = @IdManifiesto
-		AND dsd.IsPieceLiquidaded = 0 -- guía y pieza liquidada
-	)
+		
+						select ISNULL(COUNT(CMD.GuideNumber),0)
+							  from [dbo].[ConflictManifestDetail] CMD With(Nolock)
+									WHERE ConflictManifestId = @IdConflictManifest
+					)
 
 
-	     SET @TotalGuide= ( SELECT
-									 
-								Sum([DO].[PriceShippment])
-							FROM
-								[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
-							INNER JOIN
-								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-							ON
-							    [DO].[Guide_Serie] = [AccSCD].[GuideSerie] AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
-							INNER JOIN
-								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
-							ON
-								[Co].[GuideSerie] = [DO].[Guide_Serie] AND [Co].[GuideNumber] = [DO].[Guide_Number]
-							INNER JOIN
-								[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD
-							ON  Co.GuideSerie = DSD.Guide_Serie And  Co.GuideNumber= DSD.Guide_Number
-							INNER JOIN
-								[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH(NOLOCK)
-							ON DSD.ID_DeliveryOrderBySettlement = DOBS.ID AND dsd.RowStatus = 1
-							Inner Join   
-							    [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] spd WITH(NOLOCK)
-							ON   DO.Guide_Serie = spd.GuideSerie AND DO.Guide_Number = spd.GuideNumber
-							INNER JOIN 
-							    [DeliveryBackOffice].[dbo].[SettlementByPickup] sp WITH(NOLOCK)
-			                ON spd.SettlementByPickupId = sp.Id
-							WHERE  [AccSCD].[RowStatus] = 1 AND
-								   [DO].[IsCollect] = 0 AND
-								   [Co].[TotalAmountPaid] IS NULL AND
-								   [sp].Id = @IdManifiesto 
-							)
+	
 
 	-- tablix content
 	INSERT INTO @temp
 
-
 		SELECT 
-			CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username,
-			isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,''),
-			dobs.DateCreated,
+		    CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username,
+		    isnull(sr.First_Name,'') + ' ' + isnull(sr.Last_Name,''),
+			CM.DateCreated,
 			@GuideCount,
-			@TotalGuide
-		FROM [DeliveryBackOffice].[dbo].[SettlementByPickup] dobs
-		INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = dobs.IdCourier
-		INNER JOIN DenariusUser_Dev.dbo.LGN_LogByToken lbt ON lbt.SSN_IdToken = dobs.TokenCreated
-		INNER JOIN RouteAssigment ra on (ra.IdRouteAssigment = dobs.RouteAssigmentId)
-		INNER JOIN CatRoute cr on (cr.IdRoute = ra.IdRoute)
-		WHERE dobs.ID = @IdManifiesto
+			CM.TotalAmount
+		FROM [DeliveryBackOffice].[dbo].[ConflictManifest] CM WITH(NOLOCK)
+		     INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] sr 
+		ON   CM.CourierResponsible = sr.ID
+		     INNER JOIN [DenariusUser_Dev].[dbo].[LGN_LogByToken] lbt 
+		ON lbt.SSN_IdToken = CM.TokenCreated
+		WHERE CM.IdConflictManifest = @IdConflictManifest
 	
 
 
@@ -90,7 +56,7 @@ SELECT Liquidator,
 	   SettlementDate,
 	   NumberofGuides,
 	   TotalAmount,
-	   @IdManifiesto
+	   @IdConflictManifest
 FROM @temp
 	order by SettlementDate desc
 
