@@ -43,7 +43,11 @@ SELECT
 FROM [dbo].[DeliveryOrder] WITH (NOLOCK) 
 WHERE Guide_Serie+CAST(Guide_Number AS nvarchar) = @Guide
 
-
+declare @isreturnt bit =(
+SELECT         
+IsLastMileReturn
+FROM [dbo].[DeliveryOrder] WITH (NOLOCK) 
+WHERE Guide_Serie+CAST(Guide_Number AS nvarchar) = @Guide)
 
 IF (EXISTS(SELECT TOP 1 1 
 		   FROM [dbo].[DeliveryOrder] DDO WITH (NOLOCK)
@@ -81,7 +85,7 @@ BEGIN
 
 					SELECT Result = 1 /* Estados no validos*/
 				END
-				    ELSE if (@STATUS = @Devuelto)
+				    ELSE if (@isreturnt=1)
 				           BEGIN
 
 					          SELECT Result = 6 /* Estados Devuelto*/

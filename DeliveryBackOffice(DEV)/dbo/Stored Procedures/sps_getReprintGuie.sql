@@ -307,6 +307,7 @@ BEGIN
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"contact":"'
                                      + (CASE
+											WHEN dev.[IsLastMileReturn] = 1 THEN ''
                                             WHEN @Impersonate = 'TRUE' THEN
                                                 --IMPERSONADO
                                                 CASE
