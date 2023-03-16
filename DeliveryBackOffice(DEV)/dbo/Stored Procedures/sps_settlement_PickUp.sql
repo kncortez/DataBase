@@ -262,6 +262,35 @@ BEGIN
 															From #listGuides LG
 													  )
 
+	UPDATE [Co]
+	SET [Co].[TotalAmountPaid] = [Co].[TotalAmount]
+	,[Co].[TokenUpdated] = @Token
+	,[Co].[DateUpdated] = GETDATE()
+	FROM    (
+										SELECT
+											DISTINCT
+												[LGaux].[ItemSerie]
+												,[LGaux].[ItemNumber]
+										FROM
+											#listGuides LGaux
+									) LG
+								INNER JOIN 
+										[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
+								ON  LG.ItemSerie = AccSCD.GuideSerie  AND LG.ItemNumber = AccSCD.GuideNumber 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+								ON
+									[DO].[Guide_Serie] = [AccSCD].[GuideSerie] AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
+								ON
+									[Co].[GuideSerie] = [DO].[Guide_Serie] AND [Co].[GuideNumber] = [DO].[Guide_Number]
+				        WHERE  [AccSCD].[RowStatus] = 1 AND
+									   [DO].[IsCollect] = 0 AND
+									   [Co].[TotalAmountPaid] IS NULL 
+
+
+
       COMMIT TRANSACTION;	
        	END TRY
 
