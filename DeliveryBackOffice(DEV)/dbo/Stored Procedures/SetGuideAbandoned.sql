@@ -48,6 +48,7 @@ BEGIN
 				AND ru.UsrRowStatus = 1
 		WHERE iu.IdUser = @IdUser
 		AND iu.Username = @Username
+		AND iu.RowStatus = 1
 
 		IF (@Exists = 1)
 		BEGIN
