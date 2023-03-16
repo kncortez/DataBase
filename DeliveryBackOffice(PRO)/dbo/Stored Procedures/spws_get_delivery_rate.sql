@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Devuelve la opción y precio shipping según un punto de visita ó un cliente>
@@ -803,9 +802,15 @@ BEGIN
 
     ---------------------Fin obtener descuento -------------------------------------------------------------------------------------
     ---------------------Determinar si existe exceso de libras ---------------------------------------------------------------------
-
-	-- Hotfix - Andrés Ruíz - 17-02-2023
-	IF ((LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '' OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0') AND @IdTypeRate = 3)
+	
+    -- Hotfix - Andrés Ruíz - 17-02-2023
+    IF (
+           (
+               LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = ''
+               OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0'
+           )
+           AND @IdTypeRate = 3
+       )
     BEGIN
 
         DECLARE @DataCounter INT = 1;
@@ -825,7 +830,7 @@ BEGIN
         END;
 
     END;
-	-- Fin hotfix
+    -- Fin hotfix
 
     IF OBJECT_ID('tempdb.dbo.#ParceCode', 'U') IS NOT NULL
         DROP TABLE #ParceCode;
@@ -833,12 +838,24 @@ BEGIN
         DROP TABLE #ParceWeigth;
 
     SELECT Item,
-           ROW_NUMBER() OVER (ORDER BY Item) ID
+           ROW_NUMBER() OVER (ORDER BY (SELECT 0)) ID
     INTO #ParceCode
     FROM DeliveryBackOffice.dbo.SplitUnlimited(@ParcelCode, ',');
 
+	IF ( @IdTypeRate = 3 )
+	BEGIN
+	    
+		UPDATE
+			[#ParceCode]
+		SET
+			[Item] = 'EXP076'
+		WHERE
+			LTRIM(RTRIM(ISNULL([Item], ''))) = ''
+
+	END
+
     SELECT Item,
-           ROW_NUMBER() OVER (ORDER BY Item) ID
+           ROW_NUMBER() OVER (ORDER BY (SELECT 0)) ID
     INTO #ParceWeigth
     FROM DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@WeigthParcels)), ',');
 
@@ -1378,6 +1395,85 @@ BEGIN
         END;
         ELSE
         BEGIN
+		
+            -- Paquetes con su peso indicado
+            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerTypeCorp', 'U') IS NOT NULL
+                DROP TABLE #ParcelOverweightPerTypeCorp;
+				
+			DECLARE @DefaultWeighRatetOfRate DECIMAL(12,2) = 0;
+			DECLARE @DefaultWeightOfRate DECIMAL(18,2) = 0;
+
+			SET @DefaultWeighRatetOfRate = (
+				SELECT 
+					TOP (1) 
+						RH.[AdditionalWeightRate]
+				FROM 
+					[DeliveryBackOffice].[dbo].[RateHeader] RH  WITH(NOLOCK) 
+				WHERE
+					RH.[RheId] = @IdRate
+			)
+
+			SET @DefaultWeightOfRate = (
+				SELECT 
+					TOP (1) 
+						RH.[WeightLimit]
+				FROM 
+					[DeliveryBackOffice].[dbo].[RateHeader] RH  WITH(NOLOCK) 
+				WHERE
+					RH.[RheId] = @IdRate
+			)
+
+            DECLARE @ExpectedWeightCorp DECIMAL(12, 2) = 0;
+
+            SELECT p.ID 'RowNumber',
+                    ABC.Code 'ParcelCode',
+                    (
+						CASE 
+							WHEN RD.[IdRateData] IS NULL THEN @DefaultWeightOfRate
+							ELSE CAST(PW.[Item] AS DECIMAL(12, 2))
+						END
+					) 'ParcelWeight'
+            INTO #ParcelOverweightPerTypeCorp
+            FROM #ParceCode p
+				INNER JOIN [#ParceWeigth] PW
+				ON
+					P.[ID] = PW.[ID]
+                INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
+                    ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
+                        AND ABC.AbcRowStatus = 1
+				OUTER APPLY
+				(
+					SELECT 
+						TOP (1) 
+							RD.[IdRateData]
+					FROM 
+						 [DeliveryBackOffice].[dbo].[RateData] RD  WITH(NOLOCK) 
+					WHERE [RD].[ArticleId] = [ABC].[AbcId]
+					AND [RD].[RateId] = @IdRate
+				) RD;
+
+            SET @ExpectedWeightCorp =
+            (
+                SELECT SUM(POPT.ParcelWeight) FROM #ParcelOverweightPerTypeCorp POPT
+            );
+
+            BEGIN TRY
+
+                SET @OverWeight =
+                (
+                    SELECT SUM(CAST(ROUND(CAST(PW.Item AS DECIMAL(12, 2)), 0) AS INT))
+                    FROM #ParceWeigth PW
+                );
+
+            END TRY
+            BEGIN CATCH
+
+                SET @OverWeight = @ExpectedWeightCorp;
+
+            END CATCH;
+
+            DECLARE @NewOverWeightCorp DECIMAL(12, 2) = 0;
+            SET @NewOverWeightCorp = (@OverWeight - @ExpectedWeightCorp);
 
             -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
             INSERT INTO @TempRate
@@ -1391,7 +1487,7 @@ BEGIN
                    x.CollectedRate,
                    SUM(x.InsuranceRate),
                    x.CreditCardRate,
-                   x.OverWeightRate,
+                   x.OverWeightRate + CAST((IIF(@NewOverWeightCorp > 0, @NewOverWeightCorp * ISNULL(@DefaultWeighRatetOfRate, 0), 0)) AS DECIMAL(12,2)),
                    SUM(x.IrregularParcelRate),
                    x.CtsName,
                    x.CtsDescription,
@@ -1413,12 +1509,12 @@ BEGIN
                            ),
                            0) AS InsuranceRate,
                        IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       0 OverWeightRate,
                        ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
                        ISNULL(sv.CtsName, '') AS CtsName,
                        ISNULL(sv.CtsDescription, '') AS CtsDescription,
                        ISNULL(rh.ReturnRate, 0) AS ReturnRate
-                FROM #ListCode ls
+                FROM #ParceCode ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
                     INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
@@ -1458,12 +1554,12 @@ BEGIN
                            ),
                            0) AS InsuranceRate,
                        IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       0 OverWeightRate,
                        ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
                        ISNULL(sv.CtsName, '') AS CtsName,
                        ISNULL(sv.CtsDescription, '') AS CtsDescription,
                        ISNULL(rh.ReturnRate, 0) AS ReturnRate
-                FROM #ListCode ls
+                FROM #ParceCode ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
                     INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
@@ -1504,6 +1600,9 @@ BEGIN
                      x.OverWeightRate,
                      x.CtsDescription,
                      x.ReturnRate;
+
+            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerTypeCorp', 'U') IS NOT NULL
+                DROP TABLE #ParcelOverweightPerTypeCorp;
 
         END;
     --print 'rate'

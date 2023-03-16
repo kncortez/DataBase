@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Jerson Ochoa>
 -- Create date: <26-12-2022>
 -- Description:	<Get membership transaction history>
@@ -21,6 +20,9 @@ BEGIN
 	DECLARE @MEMBERSHIP_STATUS_INACTIVE_ID AS INT;	-- CatSalesPackageStatus
 	DECLARE @NULL_STATUS_ORDER AS INT;				-- StatusOrder
 	DECLARE @DESTROYED_STATUS_ORDER AS INT;			-- StatusOrder
+
+	DECLARE @SPECIALSUSCRIPTION AS INT;
+	SET @SPECIALSUSCRIPTION = (SELECT TOP 1 CS.IdCatSubscription FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.SubscriptionName = 'Plan Diamante' COLLATE Latin1_General_CI_AI)
 
 	SET @CUSTOMER_ID = (SELECT	[A].[IdCustomer]
 						FROM	[dbo].[Account] A
@@ -129,6 +131,12 @@ BEGIN
 				[S].[CustomerId],
 				[S].[AccountId],
 				[S].[IsAutoRenewable],
+				CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew],
 				[S].[SubscriptionMaxServiceFixedValue],
 				[S].[ActualServiceCount],
 				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) < 0, 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionRemainingUses],

@@ -594,7 +594,7 @@ BEGIN
 			   ,StatusOrderId = @StatusOrderId
 			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
 			   ,ActionObservation = @Observations
-			   ,ClientConfirmsReturn = @CancelOrder
+			   ,ClientConfirmsReturn = IIF(@CancelOrder = 1, 0, 1)
 			   ,TokenUpdated = 'SetServiceTokenGuideData'
 			   ,DateUpdated = GETDATE()
 			WHERE ConfirmationOfIncidentToken = @GuideToken

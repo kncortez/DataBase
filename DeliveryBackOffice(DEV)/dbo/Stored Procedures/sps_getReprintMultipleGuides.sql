@@ -58,7 +58,7 @@ BEGIN
     
 
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 
 
@@ -230,8 +230,8 @@ BEGIN
 
 
 								--COALESCE(@integrationCost, '') 'Integration',
-                                COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') 'Priority',
-								COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
+                                COALESCE(IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E'), '') 'Priority',
+								COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
 								COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') 'Pieces_Dry' ,
                                 COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'')  'Pieces_Cold',
 								(CASE
