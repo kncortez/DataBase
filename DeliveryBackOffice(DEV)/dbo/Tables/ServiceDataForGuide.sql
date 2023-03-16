@@ -31,6 +31,8 @@
 
 
 
+
+
 GO
 
 
@@ -133,4 +135,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'El radio ap
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si el flujo es de una guía en ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceDataForGuide', @level2type = N'COLUMN', @level2name = N'IsInRoute';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ServiceDataForGuide_Token]
+    ON [dbo].[ServiceDataForGuide]([GuideToken] ASC);
 
