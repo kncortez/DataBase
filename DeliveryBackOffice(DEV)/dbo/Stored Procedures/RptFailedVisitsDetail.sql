@@ -28,7 +28,7 @@ BEGIN
 								TypeIncidence nvarchar(50)
 	                      )
 
-BEGIN TRANSACTION
+
 BEGIN TRY
 	
 	INSERT INTO @temp
@@ -84,11 +84,11 @@ BEGIN TRY
 		TypeIncidence 
 	FROM @temp
 	
-COMMIT TRANSACTION
+
 END TRY
 BEGIN CATCH
 
-
+      
         SELECT 0 [blnResult],
                ERROR_NUMBER() AS [ErrorNumber],
                ERROR_SEVERITY() AS [ErrorSeverity],
