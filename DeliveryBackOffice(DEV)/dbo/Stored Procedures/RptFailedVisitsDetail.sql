@@ -16,7 +16,8 @@ BEGIN
 	 DECLARE @IdIncidenceInRoute int = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Incidencia en ruta')
 
 	 Select
-			 ROW_NUMBER() OVER (ORDER BY CI.DateCreated) [NumberRow],
+	             Distinct
+			     ROW_NUMBER() OVER (ORDER BY CI.DateCreated) [NumberRow],
 				  DA.Guide_Serie+CONVERT(nvarchar,DA.Guide_Number) AS Guide,
 				  SR.First_Name +' '+ SR.Last_Name Courierman,
 				  CTI.NameIncidence,
