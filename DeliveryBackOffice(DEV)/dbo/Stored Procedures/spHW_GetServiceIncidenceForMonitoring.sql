@@ -22,6 +22,17 @@ BEGIN
 	DECLARE @SACWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
 	DECLARE @OPWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
 
+	DECLARE @TerminalStatus INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[CCT].[IdCatCheckpointType] 
+		FROM 
+			[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
+		WHERE
+			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'  COLLATE Latin1_General_CI_AI 
+	);
+
 	IF(@EndDate IS NULL)
 	BEGIN
 
@@ -204,6 +215,12 @@ BEGIN
 			     ON DA.ID_Courier = SR.ID
 			LEFT JOIN [dbo].[VisitPointClient] VPC
 				ON VPC.CodeOfReference = CASE WHEN  DO.IsLastMileReturn = 1 AND DO.Sender_ID != 0 THEN DO.Sender_ID ELSE DO.Receiver_ID END
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
+				ON
+					[SODO].[StatusOrderId] = [DO].[StatusOrderId]
+					AND
+					[SODO].[CatCheckpointTypeId] <> @TerminalStatus
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND
@@ -311,6 +328,12 @@ BEGIN
 			     ON DA.ID_Courier = SR.ID
 			LEFT JOIN [dbo].[VisitPointClient] VPC
 				ON VPC.CodeOfReference = Case when  DO.IsLastMileReturn = 1 And DO.Sender_ID != 0 Then DO.Sender_ID Else DO.Receiver_ID End
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
+				ON
+					[SODO].[StatusOrderId] = [DO].[StatusOrderId]
+					AND
+					[SODO].[CatCheckpointTypeId] <> @TerminalStatus
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND
@@ -389,6 +412,16 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 				ON
 					COI.StatusOrderId = SO.StatusOrderId
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+				ON
+					[DO].[Guide_Serie] = [DA].[Guide_Serie] AND [DO].[Guide_Number] = [DA].[Guide_Number]
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
+				ON
+					[SODO].[StatusOrderId] = [DO].[StatusOrderId]
+					AND
+					[SODO].[CatCheckpointTypeId] <> @TerminalStatus
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND
