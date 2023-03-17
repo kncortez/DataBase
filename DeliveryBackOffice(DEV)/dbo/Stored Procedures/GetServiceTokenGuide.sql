@@ -272,6 +272,7 @@ BEGIN
 								'"Township":"'+ (CASE WHEN do.IsLastMileReturn = 1 THEN  do.Sender_Town ELSE do.Receiver_Town END) + '",' +
 								'"GuideSerie":"'+ CAST(DO.Guide_Serie AS NVARCHAR) + '",' +
 								'"GuideNumber":"'+ CAST(DO.Guide_Number AS NVARCHAR) + '",' +
+								'"IsLastMileReturn":'+ CAST(ISNULL(DO.[IsLastMileReturn], 0) AS NVARCHAR) + ',' +
 								'"confirmationOfIncidenceId":"'+ CAST(coi.IdConfirmationOfIncidence AS VARCHAR) + '",' +
 								IIF((ISNULL([DA].[Longitude], '') <> '' AND ISNULL([DA].[Latitude], '') <> '' AND @VPLongitude <> '' AND @VPLatitude <> ''), 
 									IIF(((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', ISNULL([DA].[Longitude], '0'), ' ', ISNULL([DA].[Latitude], '0'), ')'), 4326)) ) <= @MaxDistance), 
