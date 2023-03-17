@@ -7,7 +7,7 @@ CREATE PROCEDURE [dbo].[RptFailedVisitsHeader]
 @DateOf DateTime,
 @DateTo DateTime,
 @IdHub nvarchar(5),
-@IdCourier nvarchar = null
+@IdCourier nvarchar(5) = null
 AS
 BEGIN
        
@@ -46,8 +46,7 @@ BEGIN
 				LEFT JOIN [dbo].[StatusOrder] SO          WITH(NOLOCK)
 				 ON  CI.StatusOrderId = SO.StatusOrderId
 		 Where CI.StatusOrderId in(@IdIncidenceInRoute) 
-					  And   Case When DO.IsLastMileReturn = 0 Then  DO.ReceiverIdTownship
-					      Else   DO.SenderIdTownship End = Convert(int,@IdHub)  
+					  And  SR.HubLogisticId = Convert(int,@IdHub)  
 					  And CI.DateCreated Between @DateOf +' 00:00:00' And @DateTo + ' 23:59:59'
 					  And (@IdCourier IS NULL OR  DA.ID_Courier = Convert(int, @IdCourier))
 					
