@@ -15,14 +15,30 @@ BEGIN
 	 DECLARE @IdDeliveryFail     int = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Intento de entrega fallida')
 	 DECLARE @IdIncidenceInRoute int = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Incidencia en ruta')
 
+
+	 	 DECLARE @temp TABLE (
+								Guide	nvarchar(max),
+								Courierman nvarchar(201),
+								NameIncidence nvarchar(100),
+								OrderDescriptions nvarchar(600),
+								DateAndHour  Datetime,
+								IsValid nvarchar(2),
+								IsConfirmed nvarchar(2),
+								ActionObservation nvarchar(600),
+								TypeIncidence nvarchar(50)
+	                      )
+
+
+BEGIN TRY
+	
+	INSERT INTO @temp
 	 Select
-	             Distinct
-			     ROW_NUMBER() OVER (ORDER BY CI.DateCreated) [NumberRow],
+	              distinct
 				  DA.Guide_Serie+CONVERT(nvarchar,DA.Guide_Number) AS Guide,
 				  SR.First_Name +' '+ SR.Last_Name Courierman,
 				  CTI.NameIncidence,
 				  SO.OrderDescription,
-				 CONVERT(varchar(10), DA.Date_Created, 103) +' '+ Convert(varchar(10), DA.Date_Created,108) [DateAndHour],
+				 DA.Date_Created [DateAndHour],
 				  CASE 
 					  WHEN CI.IsValid = 1 THEN     'Si'
 					  ELSE 'No' End IsValid, 
@@ -54,5 +70,35 @@ BEGIN
 		
 	
 	
+
+	 SELECT
+	       ROW_NUMBER() OVER (ORDER BY Guide) [NumberRow],
+		 Guide,
+		Courierman,
+		NameIncidence,
+		OrderDescriptions,
+		CONVERT(varchar(10), DateAndHour, 103) +' '+ Convert(varchar(10),DateAndHour,108) [DateAndHour],
+		IsValid,
+		IsConfirmed,
+		ActionObservation,
+		TypeIncidence 
+	FROM @temp
+	
+
+END TRY
+BEGIN CATCH
+
+      
+        SELECT 0 [blnResult],
+               ERROR_NUMBER() AS [ErrorNumber],
+               ERROR_SEVERITY() AS [ErrorSeverity],
+               ERROR_STATE() AS [ErrorState],
+               ERROR_PROCEDURE() AS [ErrorProcedure],
+               ERROR_LINE() AS [ErrorLine],
+               ERROR_MESSAGE() AS [ErrorMessage];
+
+
+END CATCH
+
 
 END
