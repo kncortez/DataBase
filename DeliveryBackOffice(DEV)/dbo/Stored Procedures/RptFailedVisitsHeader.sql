@@ -6,8 +6,8 @@
 CREATE PROCEDURE [dbo].[RptFailedVisitsHeader]
 @DateOf DateTime,
 @DateTo DateTime,
-@IdHub nvarchar,
-@IdCourier nvarchar = null
+@IdHub nvarchar(5),
+@IdCourier nvarchar(5) = null
 AS
 BEGIN
        
@@ -33,9 +33,13 @@ BEGIN
 				SUM(IIF(CI.StatusOrderId = @IdIncidenceInRoute,1,0))  TotalIncidence,
 				SUM(IIF(CI.CourierContempt=1,1,0)) TotalDesacato,
 				SUM(IIF(CI.StatusOrderId in(@IdDeliveryFail, @IdIncidenceInRoute),1,0)) TotalVisitandIncidence
-		From [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
-				INNER JOIN [dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
-				 ON CI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
+		From   [dbo].[DeliveryOrder] DO WITH(NOLOCK)
+		        Inner JOIN
+				[dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
+				ON DO.Guide_Serie = DA.Guide_Serie AND  DO.Guide_Number = DA.Guide_Number 
+				INNER JOIN 
+		        [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
+				 ON DA.ConfirmationOfIncidenceId = CI.IdConfirmationOfIncidence  
 				INNER JOIN [dbo].[SenderReceiver]    SR    WITH(NOLOCK)
 				 ON DA.ID_Courier = SR.ID
 				LEFT JOIN [dbo].[CatTypeIncidence] CTI     WITH(NOLOCK)
@@ -43,8 +47,8 @@ BEGIN
 				LEFT JOIN [dbo].[StatusOrder] SO          WITH(NOLOCK)
 				 ON  CI.StatusOrderId = SO.StatusOrderId
 		 Where CI.StatusOrderId in(@IdIncidenceInRoute) 
-					  And SR.HubLogisticId = Convert(int,@IdHub) 
-					  And CI.DateCreated Between @DateOf And @DateTo
+					  And  SR.HubLogisticId = Convert(int,@IdHub)  
+					  And CI.DateCreated Between @DateOf +' 00:00:00' And @DateTo + ' 23:59:59'
 					  And (@IdCourier IS NULL OR  DA.ID_Courier = Convert(int, @IdCourier))
 					
 
