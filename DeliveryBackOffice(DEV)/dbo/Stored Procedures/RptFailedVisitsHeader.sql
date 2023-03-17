@@ -14,29 +14,34 @@ BEGIN
 	   DECLARE @IdIncidenceInRoute int = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Incidencia en ruta')
 	   DECLARE @IdDeliveryFail     int = (Select StatusOrderId From [dbo].[StatusOrder] WHERE OrderDescription='Intento de entrega fallida')
 	   DECLARE @Hub                NVARCHAR(100) = (select HubName from [dbo].[HubLogistics]      Where IdHubLogistic= Convert(int, @IdHub))
-	 
-	  
+	   DECLARE @CourierName        NVARCHAR(100) ='';
+	   DECLARE @temp TABLE (
+	                            
+	                            Guide int,
+								GenerationDate	Datetime,
+								StatusOrderId int,
+								IsValid bit,
+								CourierContempt bit
+	                      )
 	
 	SET NOCOUNT ON;
 	 
-	 if (@IdCourier IS NOT NULL or @IdCourier != '')
-	 Begin
 
-	   DECLARE @CourierName        NVARCHAR(100) = (select First_Name +' '+ Last_Name From [dbo].[SenderReceiver] Where  ID = Convert(int, @IdCourier))
+	 IF (@IdCourier IS NOT NULL OR  @IdCourier <> '') 
+	  SET  @CourierName  = (select First_Name +' '+ Last_Name From [dbo].[SenderReceiver] WITH(NOLOCK) Where  ID = Convert(int, @IdCourier))
+	 
+	 BEGIN TRY
 
-		 Select       
-			    Convert(varchar(10), GETDATE(),103)   GenerationDate,
-				Convert(varchar(10), @DateOf,  103)   DateOf,
-				Convert(varchar(10), @DateTo,  103)   DateTo,
-				IIF(@IdCourier IS NOT NULL,   @Hub + '-'+ @CourierName,@Hub) Hub ,
-				SUM(IIF((CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) , 1,0))  TotalVisit,
-				SUM(IIF(CI.StatusOrderId = @IdIncidenceInRoute,1,0))  TotalIncidence,
-				SUM(IIF(CI.CourierContempt=1,1,0)) TotalDesacato,
-				SUM(IIF(CI.StatusOrderId in(@IdDeliveryFail, @IdIncidenceInRoute),1,0)) TotalVisitandIncidence
-		From   [dbo].[DeliveryOrder] DO WITH(NOLOCK)
-		        Inner JOIN
+	 INSERT INTO @temp
+	   SELECT
+		  Distinct
+			    DA.Guide_Number,
+			    GETDATE(),
+				CI.StatusOrderId,
+				CI.IsValid,
+				CI.CourierContempt
+		From   
 				[dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
-				ON DO.Guide_Serie = DA.Guide_Serie AND  DO.Guide_Number = DA.Guide_Number 
 				INNER JOIN 
 		        [dbo].[ConfirmationOfIncidence] CI   WITH(NOLOCK)
 				 ON DA.ConfirmationOfIncidenceId = CI.IdConfirmationOfIncidence  
@@ -50,9 +55,35 @@ BEGIN
 					  And  SR.HubLogisticId = Convert(int,@IdHub)  
 					  And CI.DateCreated Between @DateOf +' 00:00:00' And @DateTo + ' 23:59:59'
 					  And (@IdCourier IS NULL OR  DA.ID_Courier = Convert(int, @IdCourier))
-					
 
-		   End
+
+
+	 Select       
+		     
+			    Convert(varchar(10), GETDATE(),103)   GenerationDate,
+				Convert(varchar(10), @DateOf,  103)   DateOf,
+				Convert(varchar(10), @DateTo,  103)   DateTo,
+				IIF((@IdCourier IS NOT NULL OR @IdCourier <>'') ,@Hub + '-'+ @CourierName,@Hub) Hub ,
+				SUM(IIF((CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) , 1,0))  TotalVisit,
+				SUM(IIF(CI.StatusOrderId = @IdIncidenceInRoute,1,0))  TotalIncidence,
+				SUM(IIF(CI.CourierContempt=1,1,0)) TotalDesacato,
+				SUM(IIF(CI.StatusOrderId in(@IdDeliveryFail, @IdIncidenceInRoute),1,0)) TotalVisitandIncidence
+		From   @temp CI
+								
+END TRY
+BEGIN CATCH
+
+      
+        SELECT 0 [blnResult],
+               ERROR_NUMBER() AS [ErrorNumber],
+               ERROR_SEVERITY() AS [ErrorSeverity],
+               ERROR_STATE() AS [ErrorState],
+               ERROR_PROCEDURE() AS [ErrorProcedure],
+               ERROR_LINE() AS [ErrorLine],
+               ERROR_MESSAGE() AS [ErrorMessage];
+
+
+END CATCH
 	
     
 END
