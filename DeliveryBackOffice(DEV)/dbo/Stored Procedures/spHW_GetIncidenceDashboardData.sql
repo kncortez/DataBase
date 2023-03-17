@@ -86,7 +86,7 @@ BEGIN
 		ON		[COI].[StatusOrderId] = [SOR].[StatusOrderId]
 	INNER JOIN	[dbo].[CatTypeConfirmationOfIncidence] TCI
 		ON		[COI].[CatTypeConfirmationOfIncidenceId] = [TCI].[IdCatTypeConfirmationOfIncidence]
-	WHERE		[DAT].[Date_Created] BETWEEN @DateStart AND @DateEnd
+	WHERE		CAST([DAT].[Date_Created] AS DATE) BETWEEN @DateStart AND @DateEnd
 		AND		((@CourierId IS NULL) OR ([DAT].[ID_Courier] = @CourierId));
 
 	SELECT		[GDA].[IdCourier],
