@@ -5,6 +5,20 @@
 -- Create date: <2020-09-15>
 -- Description:	<Devolucion entrega de guía>
 -- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-09-26>
+-- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2022-10-19>
+-- Description:	<confirmación de devolución, ingreso a cola de webhooks>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-20>
+-- Description:	<Validar que guía esta en estado terminal y evitar cualquier proceso>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
 		@Guide_Serie AS VARCHAR(2), --guide serie
 		@Guide_Number AS INT, --guide number
@@ -12,13 +26,44 @@ CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
 		@TokenId AS VARCHAR(50) --token user
 AS
 BEGIN
-	DECLARE @StatusId tinyint = 14 --Status of returned 
+	DECLARE @StatusId tinyint = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Devuelto' AND RowStatus = 1) --Status of returned 
 	DECLARE @ValidateOperation BIGINT
 	DECLARE @Times INT -- cantidad de veces que se encuentra el registro con estado de entregado
 	DECLARE @Datetime DATETIME -- Fecha y hora del último checkpoint
 
+	DECLARE @StatusProgrammed TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Programado para devolución' AND RowStatus = 1)
+	DECLARE @StatusOnRoute TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'En ruta para devolución' AND RowStatus = 1)
+
+	DECLARE @StatusDescription NVARCHAR(200)= ( Select SO.OrderDescription 
+												From [dbo].[DeliveryOrder] DO With(Nolock) 
+													 INNER JOIN 
+													 [dbo].[StatusOrder] SO With(Nolock)
+												ON DO.StatusOrderId = SO.StatusOrderId
+												Where DO.Guide_Serie = @Guide_Serie And 
+													  DO.Guide_Number = @Guide_Number
+	                                          )
+	DECLARE @IsStatusTerminal int = ISNULL(( Select 1 From [dbo].[DeliveryOrder] DO WITH(NOLOCK) Where DO.Guide_Serie= @Guide_Serie And DO.Guide_Number =@Guide_Number 
+	                                                                                          And DO.StatusOrderId  IN (SELECT SO.[StatusOrderId]
+                                                                                                                              FROM	[dbo].[StatusOrder] SO  WITH(NOLOCK)
+																														WHERE [CatCheckpointTypeId] = 3)),0)
+									
+
 	BEGIN TRANSACTION
 		BEGIN TRY
+
+		DECLARE @CurrentStatus int 
+
+		SELECT @CurrentStatus = dr.StatusOrderId FROM dbo.DeliveryOrder dr
+		WHERE dr.Guide_Serie = @Guide_Serie AND dr.Guide_Number = @Guide_Number
+
+
+
+
+		IF(@IsStatusTerminal = 0)
+		BEGIN
+
+		IF (@CurrentStatus IN(@StatusProgrammed,@StatusOnRoute))
+			BEGIN
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId OR StatusOrderId = 5))
 
@@ -59,7 +104,6 @@ BEGIN
 			
 					SET @ValidateOperation = COALESCE(@@ROWCOUNT,0)
 
-					
 					
 	-------------------WEBHOOK.INI--------------------------------------------------------------------------------------------
 				DECLARE @WebhookCustomerId INT = -1;
@@ -118,6 +162,7 @@ BEGIN
 							
 					-------------------WEBHOOK.INI FIN----------------------------------------------------------------------------------------
 
+
 				END
 				ELSE
 					SET @ValidateOperation = -2	
@@ -125,7 +170,12 @@ BEGIN
 			-- registro existente
 			ELSE
 				SET @ValidateOperation = -1
-
+			END
+			ELSE
+				SET @ValidateOperation = -3
+			END
+			ELSE
+			    SET @ValidateOperation = -4
 		END TRY
 
 		BEGIN CATCH
@@ -163,6 +213,20 @@ BEGIN
 				SELECT			  
 					-2 AS 'StatusCode',
 					'Fecha y hora incorrecta' AS 'Description', 
+					@ValidateOperation AS 'NumTransferID'
+			END
+			ELSE IF (@ValidateOperation = -3)
+			BEGIN
+				SELECT			  
+					-3 AS 'StatusCode',
+					'Para operar una guia en este módulo debe estar en estado:'  + char(10) + ' [Programado para devolución]    '  + char(10) + '   [En ruta para devolución]' AS 'Description', 
+					@ValidateOperation AS 'NumTransferID'
+			END
+			ELSE IF (@ValidateOperation = -4)
+			BEGIN
+				SELECT			  
+					-4 AS 'StatusCode',
+					'Para operar una guia en este módulo no debe estar en  estado : ['+ @StatusDescription + '] por ser estado Terminal.' AS 'Description', 
 					@ValidateOperation AS 'NumTransferID'
 			END
 			ELSE
