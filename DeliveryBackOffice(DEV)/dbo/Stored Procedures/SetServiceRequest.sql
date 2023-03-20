@@ -2,9 +2,89 @@
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest READONLY,
-    @TblDeliveryOrders AS TblDeliveryOrders READONLY
+    @TblDeliveryOrders AS TblDeliveryOrders READONLY,
+	@IsArticle BIT = 0
 AS
 BEGIN
+	
+	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20), IsExists BIT DEFAULT 0)
+
+	--Validaciones de artículos
+	IF @IsArticle = 1
+	BEGIN 
+
+		IF EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
+		BEGIN
+			
+			SELECT
+				-1 AS 'StatusCode'
+			   ,CONCAT('Faltan datos de artículos en la fila ', (SELECT TOP 1
+						RowNumber+1
+					FROM @TblDeliveryOrders
+					WHERE ParcelCode IS NULL
+					OR ParcelCode = '')
+				, '.') AS 'Description'
+
+			RETURN
+		END
+
+		INSERT INTO @ParcelExists (RowNumber, Parcel)
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY (SELECT
+						0)
+				ASC) AS RowNumber
+			   ,RTRIM(LTRIM(item)) item
+			FROM SplitUnlimited((SELECT
+					STUFF((SELECT
+							', ' + ParcelCode
+						FROM @TblDeliveryOrders
+						FOR XML PATH (''))
+					,
+					1, 2, ''))
+			, ',')
+		
+		DECLARE @RateId INT
+
+		SELECT TOP 1
+			@RateId = rbc.RbcIdRate
+		FROM RatebyCustomer rbc WITH (NOLOCK)
+		INNER JOIN @TblServiceRequest tsr
+			ON rbc.RbcIdCustomer = tsr.CustomerID
+		LEFT JOIN @TblDeliveryOrders tdo
+			ON rbc.RbcCodeOfReference = tdo.Sender_ID
+				OR rbc.RbcCodeOfReference IS NULL
+		WHERE rbc.RbcRowStatus = 1
+		ORDER BY rbc.RbcCodeOfReference DESC
+
+		UPDATE pe
+		SET IsExists = 1
+		FROM @ParcelExists pe
+		INNER JOIN ArticleByCustomer abc WITH (NOLOCK)
+			ON abc.Code = pe.Parcel
+		INNER JOIN RateData rd WITH (NOLOCK)
+			ON abc.AbcId = rd.ArticleId
+			AND rd.RowStatus = 1
+			AND rd.RateId = @RateId
+
+		IF EXISTS(SELECT 1 FROM @ParcelExists WHERE IsExists = 0)
+		BEGIN
+			
+			SELECT
+				-1 AS 'StatusCode'
+			   ,CONCAT('El artículo ', (SELECT TOP 1
+						Parcel
+					FROM @ParcelExists
+					WHERE IsExists = 0)
+				, ' en la fila ', (SELECT TOP 1
+						tdo.RowNumber + 1
+					FROM @ParcelExists pe
+					INNER JOIN @TblDeliveryOrders tdo
+						ON tdo.ParcelCode LIKE '%' + pe.Parcel + '%'
+					WHERE IsExists = 0)
+				, ' no existe o no está en la negociación.') AS 'Description'
+			RETURN
+		END
+	END
 
     DECLARE @IdTransaction BIGINT = NULL;
     DECLARE @ManifestNumber INT = 0;
@@ -467,7 +547,8 @@ BEGIN
             [Guide_Serie] NVARCHAR(2) NULL,
             [Guide_Number] [INT] NULL,
             [PartNumber] INT,
-            [IsDry] BIT
+            [IsDry] BIT,
+			[ParcelCode] NVARCHAR(10) NULL
         );
 
         INSERT INTO @Guides
@@ -482,31 +563,14 @@ BEGIN
                 (
                     SELECT COUNT(1)FROM @Guides
                 );
+		DECLARE @z INT = 1
         IF (@elements > 0) --insertar piezas
         BEGIN
             WHILE @i < @elements
             BEGIN
-                --piezas secas
-                DECLARE @j INT = 0;
-                DECLARE @PiecesCount INT =
-                        (
-                            SELECT CountDry FROM @Guides WHERE RowNumber = @i + 1
-                        );
-                WHILE @j < @PiecesCount
-                BEGIN
-                    INSERT INTO @Pieces
-                    SELECT Guide_Serie,
-                           Guide_Number,
-                           @j + 1,
-                           1
-                    FROM @Guides
-                    WHERE RowNumber = @i + 1;
-                    SET @j = @j + 1;
-                END;
-
                 --piezas frías
                 DECLARE @k INT = 0;
-                SET @PiecesCount =
+                DECLARE @PiecesCount INT =
                 (
                     SELECT CountCold FROM @Guides WHERE RowNumber = @i + 1
                 );
@@ -515,11 +579,37 @@ BEGIN
                     INSERT INTO @Pieces
                     SELECT Guide_Serie,
                            Guide_Number,
-                           @k + 1 + @j,
-                           0
-                    FROM @Guides
-                    WHERE RowNumber = @i + 1;
+                           @k + 1,
+                           0,
+						   pe.Parcel
+                    FROM @Guides g
+					LEFT JOIN @ParcelExists pe
+						ON pe.RowNumber = @z
+                    WHERE g.RowNumber = @i + 1;
                     SET @k = @k + 1;
+					SET @z = @z + 1;
+                END;
+
+				--piezas secas
+                DECLARE @j INT = 0;
+                SET @PiecesCount =
+                        (
+                            SELECT CountDry FROM @Guides WHERE RowNumber = @i + 1
+                        );
+                WHILE @j < @PiecesCount
+                BEGIN
+                    INSERT INTO @Pieces
+                    SELECT Guide_Serie,
+                           Guide_Number,
+                           @j + 1 + @k,
+                           1,
+						   pe.Parcel
+                    FROM @Guides g
+					LEFT JOIN @ParcelExists pe
+						ON pe.RowNumber = @z
+                    WHERE g.RowNumber = @i + 1;
+                    SET @j = @j + 1;
+					SET @z = @z + 1;
                 END;
 
                 SET @i = @i + 1;
@@ -551,7 +641,8 @@ BEGIN
             [volumetricWeight],
             [CategoryCheck],
             [StatusOrderId],
-            [IsDry]
+            [IsDry],
+			[ParcelCode]
         )
         SELECT PIC.Guide_Serie,
                PIC.Guide_Number,
@@ -576,7 +667,8 @@ BEGIN
                NULL,
                NULL,
                1,
-               PIC.IsDry
+               PIC.IsDry,
+			   PIC.ParcelCode
         FROM @Pieces PIC
             INNER JOIN #GuideTable GTB
                 ON PIC.Guide_Serie = GTB.Guide_Serie
