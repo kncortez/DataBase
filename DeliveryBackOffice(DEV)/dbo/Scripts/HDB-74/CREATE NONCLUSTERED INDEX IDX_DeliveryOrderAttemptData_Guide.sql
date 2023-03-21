@@ -1,0 +1,1 @@
+CREATE NONCLUSTERED INDEX IDX_DeliveryOrderAttemptData_Guide ON [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] ([GuideSerie], [GuideNumber])
