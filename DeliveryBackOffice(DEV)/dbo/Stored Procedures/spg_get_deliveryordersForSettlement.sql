@@ -26,16 +26,16 @@ BEGIN
 		IsCollect BIT
     );
 
-	DECLARE @StatusDelivery TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Entregado')
-	DECLARE @StatusCOD TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'COD pagado')
-	DECLARE @StatusReturn TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Devuelto')
+	DECLARE @StatusDelivery TINYINT = (SELECT StatusOrderId FROM StatusOrder  WITH(NOLOCK)  WHERE OrderDescription = 'Entregado')
+	DECLARE @StatusCOD TINYINT = (SELECT StatusOrderId FROM StatusOrder  WITH(NOLOCK)  WHERE OrderDescription = 'COD pagado')
+	DECLARE @StatusReturn TINYINT = (SELECT StatusOrderId FROM StatusOrder  WITH(NOLOCK)  WHERE OrderDescription = 'Devuelto')
 
     INSERT INTO @GuidesFound
     SELECT DISTINCT
            dsd.Guide_Serie,
            dsd.Guide_Number
-    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
+    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
+        INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
                AND dsd.RowStatus = 1
     WHERE dbs.ID = @IdManifest
@@ -53,8 +53,8 @@ BEGIN
         Guides_Dispatched,
         dbs.ID_Courier,
         ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
-    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr  WITH(NOLOCK) 
             ON sr.ID = dbs.ID_Courier
     WHERE dbs.ID = @IdManifest;
 
@@ -66,7 +66,7 @@ BEGIN
             (
                 SELECT TOP 1
                        1
-                FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod
+                FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod  WITH(NOLOCK) 
                 WHERE dod.Guide_Serie = gf.Guide_Serie
                       AND dod.Guide_Number = gf.Guide_Number
                       AND dod.StatusOrderId IN ( @StatusDelivery, @StatusCOD, @StatusReturn ) -- Entregado, COD pagado y devuelto
