@@ -100,24 +100,24 @@ BEGIN
 	SELECT		[GDA].[IdCourier],
 				[GDA].[FirstName],
 				[GDA].[LastName],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier])														[FailedVisitsCount],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsDenied] = 1)								[FailedVisitsDenied],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 1 AND [GD].[IsValid] = 1)		[FailedVisitsConfirmed],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 0)							[FailedVisitsNotConfirmed],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier])													[IncidenceVisitsCount],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsDenied] = 1)							[IncidenceVisitsDenied],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 1 AND [GD].[IsValid] = 1)	[IncidenceVisitsConfirmed],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 0)							[IncidenceVisitsNotConfirmed]
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier])														[FailedVisitsCount],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsDenied] = 1)							[FailedVisitsDenied],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 1 AND [GD].[IsDenied] = 0)	[FailedVisitsConfirmed],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdFailed AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 0 AND [GD].[IsDenied] = 0)	[FailedVisitsNotConfirmed],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier])													[IncidenceVisitsCount],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsDenied] = 1)						[IncidenceVisitsDenied],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 1 AND [GD].[IsDenied] = 0)	[IncidenceVisitsConfirmed],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdIncidence AND [GD].[IdCourier] = [GDA].[IdCourier] AND [GD].[IsConfirmed] = 0 AND [GD].[IsDenied] = 0)	[IncidenceVisitsNotConfirmed]
 	FROM		@GeneralData GDA
 	GROUP BY	[GDA].[IdCourier], [GDA].[FirstName], [GDA].[LastName];
 
-	SELECT		(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE ([GD].[LastStatusOrderId] = @StatusOrderIdFailed OR [GD].[StatusOrderId] = @StatusOrderIdIncidence))	[FailedAndIncidenceCountTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed)														[FailedVisitsCountTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IsDenied] = 1)								[FailedVisitsDeniedTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IsConfirmed] = 1 AND [GD].[IsValid] = 1)		[FailedVisitsConfirmedTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IsConfirmed] = 0)								[FailedVisitsNotConfirmedTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence)														[IncidenceVisitsCountTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IsDenied] = 1)								[IncidenceVisitsDeniedTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IsConfirmed] = 1 AND [GD].[IsValid] = 1)	[IncidenceVisitsConfirmedTotal],
-				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IsConfirmed] = 0)							[IncidenceVisitsNotConfirmedTotal];
+	SELECT		(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE ([GD].[StatusOrderId] = @StatusOrderIdFailed OR [GD].[StatusOrderId] = @StatusOrderIdIncidence))	[FailedAndIncidenceCountTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdFailed)														[FailedVisitsCountTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdFailed AND [GD].[IsDenied] = 1)							[FailedVisitsDeniedTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdFailed AND [GD].[IsConfirmed] = 1 AND [GD].[IsDenied] = 0)		[FailedVisitsConfirmedTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdFailed AND [GD].[IsConfirmed] = 0 AND [GD].[IsDenied] = 0)		[FailedVisitsNotConfirmedTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdIncidence)														[IncidenceVisitsCountTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[LastStatusOrderId] = @StatusOrderIdIncidence AND [GD].[IsDenied] = 1)							[IncidenceVisitsDeniedTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdIncidence AND [GD].[IsConfirmed] = 1 AND [GD].[IsDenied] = 0)	[IncidenceVisitsConfirmedTotal],
+				(SELECT COUNT([GD].[ID]) FROM @GeneralData GD WHERE [GD].[StatusOrderId] = @StatusOrderIdIncidence AND [GD].[IsConfirmed] = 0 AND [GD].[IsDenied] = 0)	[IncidenceVisitsNotConfirmedTotal];
 END
