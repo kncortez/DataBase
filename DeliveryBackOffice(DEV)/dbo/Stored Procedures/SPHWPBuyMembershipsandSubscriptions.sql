@@ -25,9 +25,9 @@ BEGIN
 		​
 	-- Variables estaticas "globales"
 	DECLARE @StartingStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI);
-
-	DECLARE @StatusSubcription INT = (SELECT  COUNT(IdSubscription) FROM [DeliveryBackOffice].[dbo].[Subscription] WHERE AccountId = @IdAcount  AND RowStatus = 1 AND CatSubscriptionId = @IdSalePackage )​
 	
+	DECLARE @StatusSubcription INT = (SELECT  COUNT(IdSubscription) FROM [DeliveryBackOffice].[dbo].[Subscription] WHERE AccountId = @IdAcount  AND RowStatus = 1 AND CatSubscriptionId  = @IdSalePackage )​
+
 	-- Variables de control de flujo
 	DECLARE @TransactionSuccess BIT = 0;
 	DECLARE @ActivationCode NVARCHAR(100) = '';
@@ -78,9 +78,11 @@ BEGIN
 	BEGIN
 		SET @ActivationCode = NEWID();
 	END
+
   ---- adquisición de membresia​
   BEGIN TRANSACTION
   BEGIN TRY
+
 	IF(@TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI AND ISNULL(@StatusMembershipt,0) < 1)
 	BEGIN
 	​
@@ -194,13 +196,12 @@ BEGIN
 	END
 	ELSE IF(@TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI AND ((ISNULL(@StatusMembershipt,0) > 0 AND ISNULL(@StatusSubcription,0) < 1) OR @CustomerType = 2) )
 	BEGIN
-	​	
-	
+
 		DECLARE @AuxNewSubscriptions AS TABLE (IdNewSubscriptions INT);
 
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Subscription]
-				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RenewalFixedDay)
+				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RenewalFixedDay, RateHeaderId, AlternativeRateHeaderId)
 			OUTPUT inserted.IdSubscription INTO @AuxNewSubscriptions(IdNewSubscriptions)
 			SELECT
 			    IIF(@CustomerType = 2, NULL, @ActiveMembershipId) 
@@ -226,6 +227,8 @@ BEGIN
 				,@Token
 				,GETDATE()
 				,DAY(GETDATE())
+				,CS.RateHeaderId
+				,CS.AlternativeRateHeaderId
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			WHERE
@@ -357,7 +360,7 @@ BEGIN
 
 	END
 
-	SELECT  ( '[' + @JsonResponse + ']' )  JsonOutput 
+	
    END TRY
    BEGIN CATCH
 
@@ -377,4 +380,5 @@ BEGIN
 				);
 
    END CATCH
+   SELECT  ( '[' + @JsonResponse + ']' )  JsonOutput 
 END

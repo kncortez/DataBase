@@ -18,6 +18,15 @@ BEGIN
 		DECLARE @Sender_Town  AS INT;
 		DECLARE @Receiver_Town AS INT;
 
+		DECLARE @Entregado INT=( SELECT StatusOrderId FROM [dbo].[StatusOrder] WITH (NOLOCK)  WHERE  OrderDescription='Entregado' )
+		DECLARE @Anulado INT=( SELECT StatusOrderId FROM [dbo].[StatusOrder] WITH (NOLOCK)  WHERE  OrderDescription='Anulado' )
+		DECLARE @Devuelto INT=( SELECT StatusOrderId FROM [dbo].[StatusOrder] WITH (NOLOCK) WHERE  OrderDescription='Devuelto' )
+		DECLARE @EntregadoEnExpressCenter INT=( SELECT StatusOrderId FROM [dbo].[StatusOrder]  WITH (NOLOCK) WHERE  OrderDescription='Entregado En Express Center' )
+		
+
+       DECLARE @RESULT INT = 0;
+
+
 
 	SET NOCOUNT ON;
 
@@ -33,6 +42,12 @@ SELECT
 	   @Receiver_Town = ReceiverIdTownship
 FROM [dbo].[DeliveryOrder] WITH (NOLOCK) 
 WHERE Guide_Serie+CAST(Guide_Number AS nvarchar) = @Guide
+
+declare @isreturnt bit =(
+SELECT         
+IsLastMileReturn
+FROM [dbo].[DeliveryOrder] WITH (NOLOCK) 
+WHERE Guide_Serie+CAST(Guide_Number AS nvarchar) = @Guide)
 
 IF (EXISTS(SELECT TOP 1 1 
 		   FROM [dbo].[DeliveryOrder] DDO WITH (NOLOCK)
@@ -63,17 +78,24 @@ BEGIN
                       )
 					  AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1)))
 	BEGIN
-			IF (@STATUS  IN(22,5,7,14))
+
+
+			IF (@STATUS  IN(@Entregado,@Anulado,@EntregadoEnExpressCenter))
 			BEGIN
 
 					SELECT Result = 1 /* Estados no validos*/
 				END
-				   ELSE
-				   BEGIN
+				    ELSE if (@isreturnt=1)
+				           BEGIN
 
-					SELECT Result = 0 /* Estados Validos*/
+					          SELECT Result = 6 /* Estados Devuelto*/
 				  
-			    END
+			               END
+				               ELSE
+				                    BEGIN
+
+				                          SELECT  Result =0
+				                    END
 	END 
 	   ELSE
 	       BEGIN
