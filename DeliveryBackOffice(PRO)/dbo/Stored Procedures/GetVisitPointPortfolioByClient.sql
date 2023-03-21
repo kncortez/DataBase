@@ -14,6 +14,7 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from 6854
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	SET ARITHABORT ON;
 
 	IF OBJECT_ID('tempdb.dbo.#VisitPointPortfolioMain', 'U') IS NOT NULL
         DROP TABLE #VisitPointPortfolioMain;
