@@ -16,6 +16,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAttemptData', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -66,4 +68,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para indicar los intentos que posee una guía en procesos operativos.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAttemptData';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderAttemptData_Guide]
+    ON [dbo].[DeliveryOrderAttemptData]([GuideSerie] ASC, [GuideNumber] ASC);
 

@@ -1470,6 +1470,9 @@
     <Build Include="dbo\Stored Procedures\spHW_TMBuySubscriptionWithMembership.sql" />
     <Build Include="dbo\Stored Procedures\spg_InformationInvoiceOrigin.sql" />
     <Build Include="dbo\Stored Procedures\Set_ResponseFelToNoteCredit.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetMembershipTransactionHistory_1.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetMembershipSubscriptionDashboardData_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetInfoFAC_BNHL.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

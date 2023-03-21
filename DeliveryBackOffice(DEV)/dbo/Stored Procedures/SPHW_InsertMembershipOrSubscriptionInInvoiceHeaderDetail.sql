@@ -18,7 +18,7 @@ BEGIN
     -- Datos cliente Cabecera de factura   
 	
 
-    DECLARE @inv_vpCodeOfReferences AS INT = 999;
+    DECLARE @inv_vpCodeOfReferences AS INT = 4362;
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
             (
                 SELECT dpf_FELEntity
