@@ -1,20 +1,28 @@
 ﻿CREATE TABLE [dbo].[ConfirmationOfIncidence] (
-    [IdConfirmationOfIncidence]        INT           IDENTITY (1, 1) NOT NULL,
-    [ConfirmationOfIncidentToken]      NVARCHAR (50) NOT NULL,
-    [CatTypeConfirmationOfIncidenceId] INT           NOT NULL,
-    [IsValid]                          BIT           CONSTRAINT [DF_ConfirmationOfIncidence_IsValid] DEFAULT ((0)) NOT NULL,
-    [IsConfirmed]                      BIT           CONSTRAINT [DF_ConfirmationOfIncidence_IsConfirmed] DEFAULT ((0)) NOT NULL,
-    [StatusOrderId]                    TINYINT       NOT NULL,
-    [DateStatusOrder]                  DATETIME      NOT NULL,
-    [RowStatus]                        BIT           CONSTRAINT [DF_ConfirmationOfIncidence_RowStatus] DEFAULT ((1)) NOT NULL,
-    [TokenCreated]                     NVARCHAR (50) NOT NULL,
-    [DateCreated]                      DATETIME      NOT NULL,
-    [TokenUpdated]                     NVARCHAR (50) NULL,
-    [DateUpdated]                      DATETIME      NULL,
+    [IdConfirmationOfIncidence]        INT            IDENTITY (1, 1) NOT NULL,
+    [ConfirmationOfIncidentToken]      NVARCHAR (50)  NOT NULL,
+    [CatTypeConfirmationOfIncidenceId] INT            NOT NULL,
+    [IsValid]                          BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsValid] DEFAULT ((0)) NOT NULL,
+    [IsConfirmed]                      BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsConfirmed] DEFAULT ((0)) NOT NULL,
+    [IsDenied]                         BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsDenied] DEFAULT ((0)) NULL,
+    [StatusOrderId]                    TINYINT        NOT NULL,
+    [DateStatusOrder]                  DATETIME       NOT NULL,
+    [LastStatusOrderId]                TINYINT        NULL,
+    [RowStatus]                        BIT            CONSTRAINT [DF_ConfirmationOfIncidence_RowStatus] DEFAULT ((1)) NOT NULL,
+    [TokenCreated]                     NVARCHAR (50)  NOT NULL,
+    [DateCreated]                      DATETIME       NOT NULL,
+    [TokenUpdated]                     NVARCHAR (50)  NULL,
+    [DateUpdated]                      DATETIME       NULL,
+    [IsActionIssued]                   BIT            CONSTRAINT [DF__Confirmat__IsAct__16651999] DEFAULT ((0)) NULL,
+    [ActionObservation]                NVARCHAR (600) NULL,
+    [CourierContempt]                  BIT            CONSTRAINT [DF__Confirmat__Couri__17593DD2] DEFAULT ((0)) NULL,
+    [ClientConfirmsReturn]             BIT            CONSTRAINT [DF__Confirmat__Clien__184D620B] DEFAULT ((0)) NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 GO
@@ -72,4 +80,28 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de tabla
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar información de confirmación de incidencias.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Status anterior de la guia asociada a la incidencia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'LastStatusOrderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si la incidencia ha sido denegada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'IsDenied';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si el área operativa realizo una acción sobre la confirmación de incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'IsActionIssued';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si courier realizo un desacato de la acción sobre la confirmación de incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'CourierContempt';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Confirmación del lado de cliente indicando que solicita devolución del paquete al origen.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ClientConfirmsReturn';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observación adicionada a la acción realizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ActionObservation';
 
