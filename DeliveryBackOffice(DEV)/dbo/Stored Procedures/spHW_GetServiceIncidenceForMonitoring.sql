@@ -211,9 +211,9 @@ BEGIN
 					DSCOri.Hub = HLBUOri.HubLogisticId
 					AND
 					HLBUOri.UserId = @UserId
-			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR
+			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR  WITH(NOLOCK) 
 			     ON DA.ID_Courier = SR.ID
-			LEFT JOIN [dbo].[VisitPointClient] VPC
+			LEFT JOIN [dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
 				ON VPC.CodeOfReference = CASE WHEN  DO.IsLastMileReturn = 1 AND DO.Sender_ID != 0 THEN DO.Sender_ID ELSE DO.Receiver_ID END
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
@@ -324,9 +324,9 @@ BEGIN
 					DSCDes.Hub = HLBUDes.HubLogisticId
 					AND
 					HLBUDes.UserId = @UserId
-			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR
+			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR  WITH(NOLOCK) 
 			     ON DA.ID_Courier = SR.ID
-			LEFT JOIN [dbo].[VisitPointClient] VPC
+			LEFT JOIN [dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
 				ON VPC.CodeOfReference = Case when  DO.IsLastMileReturn = 1 And DO.Sender_ID != 0 Then DO.Sender_ID Else DO.Receiver_ID End
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
