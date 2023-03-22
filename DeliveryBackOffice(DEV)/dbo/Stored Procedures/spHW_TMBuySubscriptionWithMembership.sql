@@ -30,6 +30,12 @@ BEGIN
 	DECLARE @MembershipId INT = 0;
 	DECLARE @SubscriptionId INT = 0;
 	
+	DECLARE @TacId INT = 0;
+
+	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
+					FROM	[dbo].[TermsAndConditions] TAC
+					WHERE	[TAC].[Name] = 'Terms and conditions memberships and subscriptions');
+
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
 							FROM	[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK) 
@@ -214,6 +220,22 @@ BEGIN
 													@Token,
 													SYSDATETIME(),
 													@ImageURL);
+
+
+       -- Asignación de terminos y condiciones
+		INSERT INTO [dbo].[TermsAndConditionsByUser]([TACId],
+														[IdAccount],
+														[TAC],
+														[RowStatus],
+														[TokenCreated],
+														[DateCreated])
+		                                     VALUES	 (@TacId,
+														@AccountId,
+														1,				-- TAC
+														1,				-- RowStatus
+														'SPHWPBuyMembershipsandSubscriptions',
+														SYSDATETIME());
+
 
 		IF(@MembershipId IS NOT NULL AND @SubscriptionId IS NOT NULL)
 		BEGIN
