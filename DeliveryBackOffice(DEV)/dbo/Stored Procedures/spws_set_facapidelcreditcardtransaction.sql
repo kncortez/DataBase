@@ -173,13 +173,827 @@ BEGIN
           BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
     ORDER BY [CPP].[PointPromoWeight] DESC;
 
-    BEGIN TRANSACTION;
-    BEGIN TRY
+    IF (@Type = 1)
+    BEGIN
 
-        -- Flujo normal de authorizeTransaction
-        IF (@Type = 1)
-        BEGIN
+		-- Transacción para ingreso de proceso con tarjeta
+		BEGIN TRANSACTION LogTransactionTypeOne
+		BEGIN TRY
+			    
+			-- Flujo normal de spws_set_facapidelcreditcardtransaction
+			SELECT 
+				@IdTransaction = ISNULL([IdTransaction], 0)
+			FROM 
+				DeliveryBackOffice.dbo.CreditCardTransactionByCustomer CCTBC WITH (NOLOCK)
+			WHERE 
+				[CCTBC].OrderNumber = @OrderNumber
+				AND 
+				CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
 
+			IF (@IdTransaction = 0)
+			BEGIN
+
+				INSERT INTO DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				(
+					[System],
+					CardNumber,
+					TypeCardNumber,
+					Currency,
+					Ammount,
+					OrderNumber,
+					[Signature],
+					CustomerReference,
+					ReferenceNumber,
+					ECIIndicator,
+					Authenticationresult,
+					TransactionStain,
+					CAVV,
+					ReasonCode,
+					ReasonDescription,
+					StatusSend,
+					RowStatus,
+					TokenCreated,
+					DateCreated,
+					TokenUpdated,
+					DateUpdated
+				)
+				VALUES
+				(
+					@System, 
+					@CardNumber, 
+					@TypeCardNumber, 
+					@Currency, 
+					@Ammount, 
+					@OrderNumber, 
+					@Signature,
+					@CustomerReference, 
+					@ReferenceNumber, 
+					@ECIIndicator, 
+					@Authenticationresult, 
+					@TransactionStain, 
+					@CAVV,
+					@ReasonCode, 
+					@ReasonDescription, 
+					@StatusSend, 
+					@RowStatus, 
+					@TokenCreated, 
+					@DateCreated, 
+					@TokenUpdated,
+					@DateUpdated
+				);
+
+				SET @IdTransaction = ISNULL(@@Identity, 0);
+
+			END
+			ELSE IF (@IdTransaction > 0)
+			BEGIN
+				UPDATE 
+					DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				SET 
+					[System] = @System,
+					CardNumber = @CardNumber,
+					TypeCardNumber = @TypeCardNumber,
+					Currency = @Currency,
+					Ammount = @Ammount,
+					OrderNumber = @OrderNumber,
+					[Signature] = @Signature,
+					CustomerReference = @CustomerReference,
+					ReferenceNumber = @ReferenceNumber,
+					ECIIndicator = @ECIIndicator,
+					Authenticationresult = @Authenticationresult,
+					TransactionStain = @TransactionStain,
+					CAVV = @CAVV,
+					ReasonCode = @ReasonCode,
+					ReasonDescription = @ReasonDescription,
+					StatusSend = @StatusSend,
+					RowStatus = @RowStatus,
+					TokenCreated = @TokenCreated,
+					DateCreated = @DateCreated,
+					TokenUpdated = @TokenUpdated,
+					DateUpdated = @DateUpdated
+				WHERE 
+					IdTransaction = @IdTransaction
+					AND 
+					OrderNumber = @OrderNumber
+					AND 
+					StatusSend <> 1
+					AND 
+					CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+
+			END;
+
+			COMMIT TRANSACTION LogTransactionTypeOne
+		END TRY
+		BEGIN CATCH
+			ROLLBACK TRANSACTION LogTransactionTypeOne
+			    
+		END CATCH
+
+		-- "Registro" de llamada en bitácora
+        BEGIN TRY
+
+            INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor
+            (
+                [TypeOfUse],
+                [IdSystem],
+                [EntityObjectName],
+                [TransactionID],
+                [RQ_Method],
+                [RQ_Uri],
+                [RQ_Service],
+                [RQ_Header],
+                [RQ_Body],
+                [RQ_Object],
+                [RQ_Datetime],
+                [RQ_LauValue],
+                [RQ_Token],
+                [RQ_IdOrder],
+                [RS_Service],
+                [RS_StatusCode],
+                [RS_ReasonPhrase],
+                [RS_ReasonCode],
+                [RS_ReasonCodeMessage],
+                [RS_Header],
+                [RS_Body],
+                [RS_Object],
+                [RS_Datetime],
+                [RS_IdOrder],
+                [RS_LauValue],
+                [RS_Token]
+            )
+            VALUES
+            (
+				'Push', 
+				15, 
+				'DeliveryBackOffice.dbo.CreditCardTransaction', 
+				@IdTransaction, 
+				'SOAP',
+				'https://ecm.firstatlanticcommerce.com/PGService/Services.svc', 
+				1, 
+				NULL, 
+				NULL, 
+				NULL, 
+				@DateCreated,
+				NULL, 
+				NULL, 
+				1, 
+				2, 
+				0, 
+				NULL, 
+				@ReasonCode, 
+				@ReasonDescription, 
+				NULL, 
+				NULL, 
+				NULL, 
+				@DateCreated,
+				@OrderNumber, 
+				NULL, 
+				@TokenUpdated
+			);
+
+        END TRY
+        BEGIN CATCH
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+            (
+                DateCreated,
+                TokenCreated,
+                ErrorLine,
+                ErrorDescription,
+                ErrorProcedure
+            )
+            VALUES
+            (GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
+
+        END CATCH;
+
+    END;
+    ELSE IF (@Type = 2)
+    BEGIN
+		
+		-- Transacción para actualización de proceso con tarjeta
+		BEGIN TRANSACTION LogTransactionTypeTwo
+		BEGIN TRY
+			
+			SELECT 
+				@IdTransaction = [IdTransaction],
+				@ServiceAmmount = [Ammount]
+			FROM 
+				DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
+			WHERE 
+				OrderNumber = @OrderNumber;
+
+			UPDATE 
+				DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+			SET 
+				ReasonCode = @ReasonCode,
+				ReasonDescription = @ReasonDescription,
+				DateUpdated = @DateUpdated,
+				TokenUpdated = @TokenUpdated,
+				ECIIndicator = @ECIIndicator,
+				Authenticationresult = @Authenticationresult,
+				TransactionStain = @TransactionStain,
+				CAVV = @CAVV,
+				StatusSend = @StatusSend
+			WHERE 
+				IdTransaction = @IdTransaction
+				AND 
+				OrderNumber = @OrderNumber
+				AND 
+				StatusSend <> 1
+				AND 
+				CAST(@DateUpdated AS DATE) = CAST(DateCreated AS DATE);
+
+			COMMIT TRANSACTION LogTransactionTypeTwo
+
+		END TRY
+		BEGIN CATCH
+			ROLLBACK TRANSACTION LogTransactionTypeTwo
+
+		END CATCH
+
+		-- "Registro" de llamada en bitácora
+        BEGIN TRY
+
+            INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor
+            (
+                [TypeOfUse],
+                [IdSystem],
+                [EntityObjectName],
+                [TransactionID],
+                [RQ_Method],
+                [RQ_Uri],
+                [RQ_Service],
+                [RQ_Header],
+                [RQ_Body],
+                [RQ_Object],
+                [RQ_Datetime],
+                [RQ_LauValue],
+                [RQ_Token],
+                [RQ_IdOrder],
+                [RS_Service],
+                [RS_StatusCode],
+                [RS_ReasonPhrase],
+                [RS_ReasonCode],
+                [RS_ReasonCodeMessage],
+                [RS_Header],
+                [RS_Body],
+                [RS_Object],
+                [RS_Datetime],
+                [RS_IdOrder],
+                [RS_LauValue],
+                [RS_Token]
+            )
+            VALUES
+            ('Push', 15, 'DeliveryBackOffice.dbo.CreditCardTransaction', @IdTransaction, 'SOAP',
+                'https://ecm.firstatlanticcommerce.com/PGService/Services.svc', 1, NULL, NULL, NULL, @DateUpdated,
+                NULL, NULL, 1, 2, 0, NULL, @ReasonCode, @ReasonDescription, NULL, NULL, NULL, @DateUpdated,
+                @OrderNumber, NULL, @TokenUpdated);
+
+        END TRY
+        BEGIN CATCH
+
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+            (
+                DateCreated,
+                TokenCreated,
+                ErrorLine,
+                ErrorDescription,
+                ErrorProcedure
+            )
+            VALUES
+            (GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
+
+
+        END CATCH;
+
+    END
+    ELSE IF (@Type = 3)
+    BEGIN
+
+        -- Pago de renovación de membresía o suscripción
+		BEGIN TRANSACTION LogTransactionTypeThree
+		BEGIN TRY
+				
+			SELECT 
+				@IdTransaction = ISNULL([IdTransaction], 0)
+			FROM 
+				DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
+			WHERE 
+				OrderNumber = @OrderNumber
+				AND 
+				CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+				
+			IF (@IdTransaction = 0)
+			BEGIN
+
+				INSERT INTO DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				(
+					[System],
+					CardNumber,
+					TypeCardNumber,
+					Currency,
+					Ammount,
+					OrderNumber,
+					[Signature],
+					CustomerReference,
+					ReferenceNumber,
+					ECIIndicator,
+					Authenticationresult,
+					TransactionStain,
+					CAVV,
+					ReasonCode,
+					ReasonDescription,
+					StatusSend,
+					RowStatus,
+					TokenCreated,
+					DateCreated,
+					TokenUpdated,
+					DateUpdated
+				)
+				VALUES
+				(
+					@System, 
+					@CardNumber, 
+					@TypeCardNumber, 
+					@Currency, 
+					@Ammount, 
+					@OrderNumber, 
+					@Signature,
+					@CustomerReference, 
+					@ReferenceNumber, 
+					@ECIIndicator, 
+					@Authenticationresult, 
+					@TransactionStain, 
+					@CAVV,
+					@ReasonCode, 
+					@ReasonDescription, 
+					@StatusSend, 
+					@RowStatus, 
+					@TokenCreated, 
+					@DateCreated, 
+					@TokenUpdated,
+					@DateUpdated
+				);
+
+				SET @IdTransaction = ISNULL(@@Identity, 0);
+			END;
+			ELSE IF (@IdTransaction > 0)
+			BEGIN
+				UPDATE 
+					DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
+				SET 
+					ECIIndicator = @ECIIndicator,
+					Authenticationresult = @Authenticationresult,
+					ReasonCode = @ReasonCode,
+					ReasonDescription = @ReasonDescription,
+					StatusSend = @StatusSend,
+					TokenUpdated = @TokenCreated,
+					DateUpdated = @DateCreated
+				WHERE 
+					IdTransaction = @IdTransaction
+					AND 
+					OrderNumber = @OrderNumber
+					AND 
+					StatusSend <> 1
+					AND 
+					CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+
+			END;
+
+			COMMIT TRANSACTION [LogTransactionTypeThree]
+		END TRY
+		BEGIN CATCH
+			ROLLBACK TRANSACTION [LogTransactionTypeThree]
+
+		END CATCH
+
+    END;
+
+	-- Variables para procesos de pago y puntos
+	DECLARE @AcceptedGuides AS TABLE
+	(
+		GuideSerie NVARCHAR(2),
+		GuideNumber INT,
+		GuidePriceShipment DECIMAL(14, 2),
+		CustomerID INT,
+		LogServiceNumber INT
+	);
+
+	DECLARE @CostUpdated AS TABLE
+	(
+		IdCost INT,
+		GuideSerie NVARCHAR(2),
+		GuideNumber INT,
+		GuidePriceShipment DECIMAL(14, 2)
+	);
+
+	INSERT INTO @AcceptedGuides
+	(
+		GuideSerie,
+		GuideNumber,
+		GuidePriceShipment,
+		CustomerID,
+		LogServiceNumber
+	)
+	SELECT DISTINCT
+			CCTBCD.SerieNumber,
+			CCTBCD.ProductNumber,
+			DO.PriceShippment,
+			DO.IdCustomer,
+			ISNULL([MSL].[LogServiceNumber], 0)
+	FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH (NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+			ON CCTBCD.ProductNumber = DO.Guide_Number
+				AND CCTBCD.SerieNumber = DO.Guide_Serie
+		LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
+			ON [CCTBCD].[ProductNumber] = [MSL].[LogGuideNumber]
+				AND [CCTBCD].[SerieNumber] = [MSL].[LogGuideSerie]
+				AND [MSL].[RowStatus] = 1
+				AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
+		LEFT JOIN [dbo].[Membership] M
+			ON [MSL].[MembershipId] = [M].[IdMembership]
+	WHERE CCTBCD.OrderNumber = @OrderNumber;
+
+	IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
+	BEGIN
+
+		IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+			DROP TABLE #listGuides;
+
+		SELECT LTRIM(RTRIM(SUBSTRING(Item, 1, 2))) ItemSerie,
+				LTRIM(RTRIM(SUBSTRING(
+										Item,
+										3,
+										IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))
+									)
+							)
+					) ItemNumber
+		INTO #listGuides
+		FROM DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@OrderNumber)), ',');
+
+		INSERT INTO @AcceptedGuides
+		(
+			GuideSerie,
+			GuideNumber,
+			GuidePriceShipment,
+			CustomerID,
+			LogServiceNumber
+		)
+		SELECT TOP 1
+				LG.ItemSerie,
+				LG.ItemNumber,
+				DO.PriceShippment,
+				DO.IdCustomer,
+				ISNULL([MSL].[LogServiceNumber], 0)
+		FROM #listGuides LG
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
+				ON LG.ItemSerie = DO.Guide_Serie
+					AND LG.ItemNumber = DO.Guide_Number
+			LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
+				ON [LG].[ItemNumber] = [MSL].[LogGuideNumber]
+					AND [LG].[ItemSerie] = [MSL].[LogGuideSerie]
+					AND [MSL].[RowStatus] = 1
+					AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
+			LEFT JOIN [dbo].[Membership] M
+				ON [MSL].[MembershipId] = [M].[IdMembership];
+
+		IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+			DROP TABLE #listGuides;
+
+	END;
+
+	BEGIN TRANSACTION RegisterSuccessfulPayment
+	BEGIN TRY
+			-- Proceso para registro de pago
+		IF (@ReasonCode IN ( '1', '40', '00' ) AND EXISTS ( SELECT TOP 1 1 FROM @AcceptedGuides ))
+		BEGIN
+
+			INSERT INTO DeliveryBackOffice.dbo.Cost
+			(
+				IdProduct,
+				IdTypeCharge,
+				IdModule,
+				ProductNumber,
+				TotalAmount,
+				RowStatus,
+				TokenCreated,
+				DateCreated,
+				GuideSerie,
+				GuideNumber
+			)
+			SELECT 1,
+					1,
+					NULL,
+					CONCAT(AG.GuideSerie, AG.GuideNumber),
+					AG.GuidePriceShipment,
+					1,
+					@TokenUpdated,
+					GETDATE(),
+					AG.GuideSerie,
+					AG.GuideNumber
+			FROM @AcceptedGuides AG
+				OUTER APPLY
+			(
+				SELECT TOP 1
+						Co.IdCost
+				FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+				WHERE (
+							(
+								Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
+								AND Co.GuideNumber = AG.GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
+								AND Co.GuideSerie IS NULL
+								AND Co.GuideNumber IS NULL
+							)
+						)
+						AND Co.RowStatus = 1
+				ORDER BY Co.DateCreated DESC
+			) CoAux
+			WHERE CoAux.IdCost IS NULL;
+
+			UPDATE Co
+			SET Co.TotalAmountPaid = Co.TotalAmount,
+				Co.PaymentDate = GETDATE(),
+				Co.TokenUpdated = @TokenUpdated,
+				Co.DateUpdated = GETDATE(),
+				Co.GuideSerie = AG.GuideSerie,
+				Co.GuideNumber = AG.GuideNumber
+			OUTPUT inserted.IdCost,
+					inserted.TotalAmount,
+					inserted.GuideSerie,
+					inserted.GuideNumber
+			INTO @CostUpdated
+			(
+				IdCost,
+				GuidePriceShipment,
+				GuideSerie,
+				GuideNumber
+			)
+			FROM @AcceptedGuides AG
+				OUTER APPLY
+			(
+				SELECT TOP 1
+						Co.IdCost
+				FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+				WHERE (
+							(
+								Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
+								AND Co.GuideNumber = AG.GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
+								AND Co.GuideSerie IS NULL
+								AND Co.GuideNumber IS NULL
+							)
+						)
+						AND Co.RowStatus = 1
+				ORDER BY Co.DateCreated DESC
+			) CoAux
+				INNER JOIN DeliveryBackOffice.dbo.Cost Co WITH (NOLOCK)
+					ON Co.IdCost = CoAux.IdCost;
+
+			-- Generar CostDetail inexistentes
+			INSERT INTO [DeliveryBackOffice].[dbo].[CostDetail]
+			(
+				IdCost,
+				IdTypeOfMoney,
+				Amount,
+				Voucher,
+				RowStatus,
+				TokenCreated,
+				DateCreated,
+				TokenUpdated,
+				DateUpdated
+			)
+			SELECT CU.IdCost,
+					2,
+					CU.GuidePriceShipment,
+					@OrderNumber,
+					1,
+					@TokenUpdated,
+					GETDATE(),
+					NULL,
+					NULL
+			FROM @CostUpdated CU
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+					ON CD.IdCost = CU.IdCost
+			WHERE CD.IdCostDetail IS NULL;
+
+			-- Actualizar CostDetails
+			UPDATE [DeliveryBackOffice].[dbo].[CostDetail]
+			SET Amount = CU.GuidePriceShipment,
+				Voucher = @OrderNumber,
+				TokenUpdated = @TokenUpdated,
+				DateUpdated = GETDATE()
+			FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+				INNER JOIN @CostUpdated CU
+					ON CD.IdCost = CU.IdCost;
+
+		END;
+		
+		COMMIT TRANSACTION [RegisterSuccessfulPayment]
+	END TRY
+	BEGIN CATCH
+
+		ROLLBACK TRANSACTION [RegisterSuccessfulPayment]
+	    
+	END CATCH
+	
+	-- Proceso de puntos forza
+	BEGIN TRANSACTION RegisterForzaPointsGeneration
+	BEGIN TRY
+	
+		IF ( @ReasonCode IN ( '1', '40', '00' ) AND EXISTS ( SELECT TOP 1 1 FROM @AcceptedGuides ) )
+		BEGIN
+		
+				-- Acumulación de puntos FORZA POR LOTE
+				-- Author: Jerson Ochoa - 27-01-2023
+
+				SET @CustomerId =
+				(
+					SELECT TOP 1 CustomerID FROM @AcceptedGuides
+				);
+
+				SET @AccountId =
+				(
+					SELECT [A].[AccIdAccount]
+					FROM [dbo].[Account] A
+					WHERE [A].[IdCustomer] = @CustomerId
+				);
+
+				SELECT @MembershipId = [M].[IdMembership],
+						@MaxServiceMembership = [M].[MembershipMaxServiceFixedValue]
+				FROM [dbo].[Membership] M
+				WHERE [M].[AccountId] = @AccountId
+						AND [M].[RowStatus] = 1
+						AND [M].[ExpirationDate] >= SYSDATETIME();
+
+				IF (@MembershipId > 0)
+				BEGIN
+
+					-- Agregar Log de puntos 
+					INSERT INTO [dbo].[PointsByServiceLog]
+					(
+						[MembershipId],
+						[GuideSerie],
+						[GuideNumber],
+						[GuidePrice],
+						[PointsReceived],
+						[PointsConsumed],
+						[TypeTransaction],
+						[CatPointPromoId],
+						[RowStatus],
+						[DateCreated],
+						[TokenCreated]
+					)
+					SELECT @MembershipId,
+							GuideSerie,
+							GuideNumber,
+							GuidePriceShipment,
+							(CASE
+								WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN
+									CAST(@ForzaPointsGenerationValue AS INT)
+								WHEN @ForzaPointsGenerationType = 'MONTO' THEN
+									CAST((GuidePriceShipment / @ForzaPointsGenerationValue) AS INT)
+								ELSE
+									0
+							END
+							), -- POINTS RECEIVED
+							0, -- POINTS CONSUMED
+							@ForzaPointsGenerationType,
+							NULL,
+							1,
+							SYSDATETIME(),
+							@TokenCreated
+					FROM @AcceptedGuides
+					WHERE (
+								LogServiceNumber > @MaxServiceMembership
+								OR LogServiceNumber = 0
+							);
+
+					-- Acumulación adicional por promoción
+
+					IF ((SELECT COUNT(IdPointPromo)FROM @CatPointPromoTbl) > 0)
+					BEGIN
+						SET @DayName =
+						(
+							SELECT DATENAME(dw, SYSDATETIME())
+						);
+						SET @IsValidDay = CASE
+												WHEN @DayName = 'Monday' THEN
+												(
+													SELECT TOP 1 Monday FROM @CatPointPromoTbl
+												)
+												WHEN @DayName = 'Tuesday' THEN
+												(
+													SELECT TOP 1 Tuesday FROM @CatPointPromoTbl
+												)
+												WHEN @DayName = 'Wednesday' THEN
+												(
+													SELECT TOP 1 Wednesday FROM @CatPointPromoTbl
+												)
+												WHEN @DayName = 'Thursday' THEN
+												(
+													SELECT TOP 1 Thursday FROM @CatPointPromoTbl
+												)
+												WHEN @DayName = 'Friday' THEN
+												(
+													SELECT TOP 1 Friday FROM @CatPointPromoTbl
+												)
+												WHEN @DayName = 'Saturday' THEN
+												(
+													SELECT TOP 1 Saturday FROM @CatPointPromoTbl
+												)
+												WHEN @DayName = 'Sunday' THEN
+												(
+													SELECT TOP 1 Sunday FROM @CatPointPromoTbl
+												)
+												ELSE
+													0
+											END;
+						IF (@IsValidDay = 1)
+						BEGIN
+
+							UPDATE PSL
+							SET [PSL].[CatPointPromoId] =
+								(
+									SELECT IdPointPromo FROM @CatPointPromoTbl
+								),
+								[PSL].[PointsReceived] = [PSL].[PointsReceived]
+															+ CASE
+																WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN
+																	CAST(
+																	(
+																		SELECT PointPromoFactor FROM @CatPointPromoTbl
+																	) AS INT)
+																WHEN @ForzaPointsGenerationType = 'MONTO' THEN
+																	CAST([PSL].[PointsReceived] /
+																		(
+																			SELECT PointPromoFactor FROM @CatPointPromoTbl
+																		) AS INT)
+																ELSE
+																	0
+															END
+							FROM [dbo].[PointsByServiceLog] PSL
+								INNER JOIN @AcceptedGuides AG
+									ON [PSL].[GuideSerie] = [AG].[GuideSerie]
+										AND [PSL].[GuideNumber] = [AG].[GuideNumber]
+										AND
+										(
+											[AG].[LogServiceNumber] > @MaxServiceMembership
+											OR [AG].[LogServiceNumber] = 0
+										);
+						END;
+					END;
+
+					-- Agregar puntos a membresía
+					SET @PointsGenerated = ISNULL(
+											(
+												SELECT SUM([PSL].[PointsReceived])
+												FROM [dbo].[PointsByServiceLog] PSL
+												WHERE [PSL].[GuideSerie] IN
+														(
+															SELECT GuideSerie FROM @AcceptedGuides
+														)
+														AND [PSL].[GuideNumber] IN
+															(
+																SELECT GuideNumber FROM @AcceptedGuides
+															)
+											),
+											0
+													);
+
+					UPDATE [dbo].[Membership]
+					SET [AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
+						[AvailablePoints] = ISNULL([AvailablePoints], 0) + (@PointsGenerated)
+					WHERE [IdMembership] = @MembershipId;
+
+				END;
+
+			-- FIN Acumulación de puntos FORZA
+
+		END
+	    
+		COMMIT TRANSACTION [RegisterForzaPointsGeneration]
+	END TRY
+	BEGIN CATCH
+	    
+		ROLLBACK TRANSACTION [RegisterForzaPointsGeneration]
+	END CATCH
+
+	BEGIN TRANSACTION
+	BEGIN TRY
+
+		-- Proceso de cupones
+		IF ( @Type = 1 )
+		BEGIN
+		    
             BEGIN TRY
                 -- Si es posible generar o redimir un cupon
                 IF (EXISTS (SELECT TOP 1 1 FROM @TblDeliveryOrdersList))
@@ -782,669 +1596,9 @@ BEGIN
 
             END CATCH;
 
-            -- Flujo normal de spws_set_facapidelcreditcardtransaction
-            SELECT @IdTransaction = ISNULL([IdTransaction], 0)
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
-            WHERE OrderNumber = @OrderNumber
-                  AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
+		END
 
-            IF (@IdTransaction = 0)
-            BEGIN
-
-                INSERT INTO DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-                (
-                    [System],
-                    CardNumber,
-                    TypeCardNumber,
-                    Currency,
-                    Ammount,
-                    OrderNumber,
-                    [Signature],
-                    CustomerReference,
-                    ReferenceNumber,
-                    ECIIndicator,
-                    Authenticationresult,
-                    TransactionStain,
-                    CAVV,
-                    ReasonCode,
-                    ReasonDescription,
-                    StatusSend,
-                    RowStatus,
-                    TokenCreated,
-                    DateCreated,
-                    TokenUpdated,
-                    DateUpdated
-                --,Token
-                )
-                VALUES
-                (@System, @CardNumber, @TypeCardNumber, @Currency, @Ammount, @OrderNumber, @Signature,
-                 @CustomerReference, @ReferenceNumber, @ECIIndicator, @Authenticationresult, @TransactionStain, @CAVV,
-                 @ReasonCode, @ReasonDescription, @StatusSend, @RowStatus, @TokenCreated, @DateCreated, @TokenUpdated,
-                 @DateUpdated
-                    --,@Token
-                    );
-                SET @IdTransaction = ISNULL(@@Identity, 0);
-            END;
-            ELSE IF (@IdTransaction > 0)
-            BEGIN
-                UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-                SET [System] = @System,
-                    CardNumber = @CardNumber,
-                    TypeCardNumber = @TypeCardNumber,
-                    Currency = @Currency,
-                    Ammount = @Ammount,
-                    OrderNumber = @OrderNumber,
-                    [Signature] = @Signature,
-                    CustomerReference = @CustomerReference,
-                    ReferenceNumber = @ReferenceNumber,
-                    ECIIndicator = @ECIIndicator,
-                    Authenticationresult = @Authenticationresult,
-                    TransactionStain = @TransactionStain,
-                    CAVV = @CAVV,
-                    ReasonCode = @ReasonCode,
-                    ReasonDescription = @ReasonDescription,
-                    StatusSend = @StatusSend,
-                    RowStatus = @RowStatus,
-                    TokenCreated = @TokenCreated,
-                    DateCreated = @DateCreated,
-                    TokenUpdated = @TokenUpdated,
-                    DateUpdated = @DateUpdated
-                WHERE IdTransaction = @IdTransaction
-                      AND OrderNumber = @OrderNumber
-                      AND StatusSend <> 1
-                      AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
-
-            END;
-
-            BEGIN TRY
-
-                INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor
-                (
-                    [TypeOfUse],
-                    [IdSystem],
-                    [EntityObjectName],
-                    [TransactionID],
-                    [RQ_Method],
-                    [RQ_Uri],
-                    [RQ_Service],
-                    [RQ_Header],
-                    [RQ_Body],
-                    [RQ_Object],
-                    [RQ_Datetime],
-                    [RQ_LauValue],
-                    [RQ_Token],
-                    [RQ_IdOrder],
-                    [RS_Service],
-                    [RS_StatusCode],
-                    [RS_ReasonPhrase],
-                    [RS_ReasonCode],
-                    [RS_ReasonCodeMessage],
-                    [RS_Header],
-                    [RS_Body],
-                    [RS_Object],
-                    [RS_Datetime],
-                    [RS_IdOrder],
-                    [RS_LauValue],
-                    [RS_Token]
-                )
-                VALUES
-                ('Push', 15, 'DeliveryBackOffice.dbo.CreditCardTransaction', @IdTransaction, 'SOAP',
-                 'https://ecm.firstatlanticcommerce.com/PGService/Services.svc', 1, NULL, NULL, NULL, @DateCreated,
-                 NULL, NULL, 1, 2, 0, NULL, @ReasonCode, @ReasonDescription, NULL, NULL, NULL, @DateCreated,
-                 @OrderNumber, NULL, @TokenUpdated);
-
-            END TRY
-            BEGIN CATCH
-
-                INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
-                (
-                    DateCreated,
-                    TokenCreated,
-                    ErrorLine,
-                    ErrorDescription,
-                    ErrorProcedure
-                )
-                VALUES
-                (GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
-
-            END CATCH;
-
-        END;
-        ELSE IF (@Type = 2)
-        BEGIN
-
-            SELECT @IdTransaction = [IdTransaction],
-                   @ServiceAmmount = [Ammount]
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
-            WHERE OrderNumber = @OrderNumber;
-
-            UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-            SET ReasonCode = @ReasonCode,
-                ReasonDescription = @ReasonDescription,
-                DateUpdated = @DateUpdated,
-                TokenUpdated = @TokenUpdated,
-                ECIIndicator = @ECIIndicator,
-                Authenticationresult = @Authenticationresult,
-                TransactionStain = @TransactionStain,
-                CAVV = @CAVV,
-                StatusSend = @StatusSend
-            WHERE IdTransaction = @IdTransaction
-                  AND OrderNumber = @OrderNumber
-                  AND StatusSend <> 1
-                  AND CAST(@DateUpdated AS DATE) = CAST(DateCreated AS DATE);
-
-            BEGIN TRY
-
-                INSERT INTO DenariusLog_Dev.dbo.LOG_Http_Interceptor
-                (
-                    [TypeOfUse],
-                    [IdSystem],
-                    [EntityObjectName],
-                    [TransactionID],
-                    [RQ_Method],
-                    [RQ_Uri],
-                    [RQ_Service],
-                    [RQ_Header],
-                    [RQ_Body],
-                    [RQ_Object],
-                    [RQ_Datetime],
-                    [RQ_LauValue],
-                    [RQ_Token],
-                    [RQ_IdOrder],
-                    [RS_Service],
-                    [RS_StatusCode],
-                    [RS_ReasonPhrase],
-                    [RS_ReasonCode],
-                    [RS_ReasonCodeMessage],
-                    [RS_Header],
-                    [RS_Body],
-                    [RS_Object],
-                    [RS_Datetime],
-                    [RS_IdOrder],
-                    [RS_LauValue],
-                    [RS_Token]
-                )
-                VALUES
-                ('Push', 15, 'DeliveryBackOffice.dbo.CreditCardTransaction', @IdTransaction, 'SOAP',
-                 'https://ecm.firstatlanticcommerce.com/PGService/Services.svc', 1, NULL, NULL, NULL, @DateUpdated,
-                 NULL, NULL, 1, 2, 0, NULL, @ReasonCode, @ReasonDescription, NULL, NULL, NULL, @DateUpdated,
-                 @OrderNumber, NULL, @TokenUpdated);
-
-            END TRY
-            BEGIN CATCH
-
-
-                INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
-                (
-                    DateCreated,
-                    TokenCreated,
-                    ErrorLine,
-                    ErrorDescription,
-                    ErrorProcedure
-                )
-                VALUES
-                (GETDATE(), 'ERROR HTTP LOG', ERROR_LINE(), ERROR_MESSAGE(), ERROR_PROCEDURE());
-
-
-            END CATCH;
-
-        END;
-
-        ELSE IF (@Type = 3)
-        BEGIN
-
-            -- Pago de renovación de membresía o suscripción
-
-            -- Flujo normal de spws_set_facapidelcreditcardtransaction
-            SELECT @IdTransaction = ISNULL([IdTransaction], 0)
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomer WITH (NOLOCK)
-            WHERE OrderNumber = @OrderNumber
-                  AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
-            IF (@IdTransaction = 0)
-            BEGIN
-
-                INSERT INTO DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-                (
-                    [System],
-                    CardNumber,
-                    TypeCardNumber,
-                    Currency,
-                    Ammount,
-                    OrderNumber,
-                    [Signature],
-                    CustomerReference,
-                    ReferenceNumber,
-                    ECIIndicator,
-                    Authenticationresult,
-                    TransactionStain,
-                    CAVV,
-                    ReasonCode,
-                    ReasonDescription,
-                    StatusSend,
-                    RowStatus,
-                    TokenCreated,
-                    DateCreated,
-                    TokenUpdated,
-                    DateUpdated
-                --,Token
-                )
-                VALUES
-                (@System, @CardNumber, @TypeCardNumber, @Currency, @Ammount, @OrderNumber, @Signature,
-                 @CustomerReference, @ReferenceNumber, @ECIIndicator, @Authenticationresult, @TransactionStain, @CAVV,
-                 @ReasonCode, @ReasonDescription, @StatusSend, @RowStatus, @TokenCreated, @DateCreated, @TokenUpdated,
-                 @DateUpdated
-                    --,@Token
-                    );
-                SET @IdTransaction = ISNULL(@@Identity, 0);
-            END;
-            ELSE IF (@IdTransaction > 0)
-            BEGIN
-                UPDATE DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
-                SET ECIIndicator = @ECIIndicator,
-                    Authenticationresult = @Authenticationresult,
-                    ReasonCode = @ReasonCode,
-                    ReasonDescription = @ReasonDescription,
-                    StatusSend = @StatusSend,
-                    TokenUpdated = @TokenCreated,
-                    DateUpdated = @DateCreated
-                WHERE IdTransaction = @IdTransaction
-                      AND OrderNumber = @OrderNumber
-                      AND StatusSend <> 1
-                      AND CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
-
-            END;
-
-        END;
-
-        IF (@ReasonCode IN ( '1', '40', '00' ))
-        BEGIN
-
-            DECLARE @AcceptedGuides AS TABLE
-            (
-                GuideSerie NVARCHAR(2),
-                GuideNumber INT,
-                GuidePriceShipment DECIMAL(14, 2),
-                CustomerID INT,
-                LogServiceNumber INT
-            );
-
-            DECLARE @CostUpdated AS TABLE
-            (
-                IdCost INT,
-                GuideSerie NVARCHAR(2),
-                GuideNumber INT,
-                GuidePriceShipment DECIMAL(14, 2)
-            );
-
-            INSERT INTO @AcceptedGuides
-            (
-                GuideSerie,
-                GuideNumber,
-                GuidePriceShipment,
-                CustomerID,
-                LogServiceNumber
-            )
-            SELECT DISTINCT
-                   CCTBCD.SerieNumber,
-                   CCTBCD.ProductNumber,
-                   DO.PriceShippment,
-                   DO.IdCustomer,
-                   ISNULL([MSL].[LogServiceNumber], 0)
-            FROM DeliveryBackOffice.dbo.CreditCardTransactionByCustomerDetail CCTBCD WITH (NOLOCK)
-                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-                    ON CCTBCD.ProductNumber = DO.Guide_Number
-                       AND CCTBCD.SerieNumber = DO.Guide_Serie
-                LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
-                    ON [CCTBCD].[ProductNumber] = [MSL].[LogGuideNumber]
-                       AND [CCTBCD].[SerieNumber] = [MSL].[LogGuideSerie]
-                       AND [MSL].[RowStatus] = 1
-                       AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
-                LEFT JOIN [dbo].[Membership] M
-                    ON [MSL].[MembershipId] = [M].[IdMembership]
-            WHERE CCTBCD.OrderNumber = @OrderNumber;
-
-            IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
-            BEGIN
-
-                IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
-                    DROP TABLE #listGuides;
-
-                SELECT LTRIM(RTRIM(SUBSTRING(Item, 1, 2))) ItemSerie,
-                       LTRIM(RTRIM(SUBSTRING(
-                                                Item,
-                                                3,
-                                                IIF(CHARINDEX('-', Item) = 0, (LEN(Item)), (CHARINDEX('-', Item) - 3))
-                                            )
-                                  )
-                            ) ItemNumber
-                INTO #listGuides
-                FROM DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@OrderNumber)), ',');
-
-                INSERT INTO @AcceptedGuides
-                (
-                    GuideSerie,
-                    GuideNumber,
-                    GuidePriceShipment,
-                    CustomerID,
-                    LogServiceNumber
-                )
-                SELECT TOP 1
-                       LG.ItemSerie,
-                       LG.ItemNumber,
-                       DO.PriceShippment,
-                       DO.IdCustomer,
-                       ISNULL([MSL].[LogServiceNumber], 0)
-                FROM #listGuides LG
-                    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
-                        ON LG.ItemSerie = DO.Guide_Serie
-                           AND LG.ItemNumber = DO.Guide_Number
-                    LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
-                        ON [LG].[ItemNumber] = [MSL].[LogGuideNumber]
-                           AND [LG].[ItemSerie] = [MSL].[LogGuideSerie]
-                           AND [MSL].[RowStatus] = 1
-                           AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
-                    LEFT JOIN [dbo].[Membership] M
-                        ON [MSL].[MembershipId] = [M].[IdMembership];
-
-                IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
-                    DROP TABLE #listGuides;
-
-            END;
-
-            INSERT INTO DeliveryBackOffice.dbo.Cost
-            (
-                IdProduct,
-                IdTypeCharge,
-                IdModule,
-                ProductNumber,
-                TotalAmount,
-                RowStatus,
-                TokenCreated,
-                DateCreated,
-                GuideSerie,
-                GuideNumber
-            )
-            SELECT 1,
-                   1,
-                   NULL,
-                   CONCAT(AG.GuideSerie, AG.GuideNumber),
-                   AG.GuidePriceShipment,
-                   1,
-                   @TokenUpdated,
-                   GETDATE(),
-                   AG.GuideSerie,
-                   AG.GuideNumber
-            FROM @AcceptedGuides AG
-                OUTER APPLY
-            (
-                SELECT TOP 1
-                       Co.IdCost
-                FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                WHERE (
-                          (
-                              Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
-                              AND Co.GuideNumber = AG.GuideNumber
-                          )
-                          OR
-                          (
-                              Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
-                              AND Co.GuideSerie IS NULL
-                              AND Co.GuideNumber IS NULL
-                          )
-                      )
-                      AND Co.RowStatus = 1
-                ORDER BY Co.DateCreated DESC
-            ) CoAux
-            WHERE CoAux.IdCost IS NULL;
-
-            UPDATE Co
-            SET Co.TotalAmountPaid = Co.TotalAmount,
-                Co.PaymentDate = GETDATE(),
-                Co.TokenUpdated = @TokenUpdated,
-                Co.DateUpdated = GETDATE(),
-                Co.GuideSerie = AG.GuideSerie,
-                Co.GuideNumber = AG.GuideNumber
-            OUTPUT inserted.IdCost,
-                   inserted.TotalAmount,
-                   inserted.GuideSerie,
-                   inserted.GuideNumber
-            INTO @CostUpdated
-            (
-                IdCost,
-                GuidePriceShipment,
-                GuideSerie,
-                GuideNumber
-            )
-            FROM @AcceptedGuides AG
-                OUTER APPLY
-            (
-                SELECT TOP 1
-                       Co.IdCost
-                FROM [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
-                WHERE (
-                          (
-                              Co.GuideSerie = ISNULL(AG.GuideSerie, 'FD')
-                              AND Co.GuideNumber = AG.GuideNumber
-                          )
-                          OR
-                          (
-                              Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie, 'FD'), AG.GuideNumber)
-                              AND Co.GuideSerie IS NULL
-                              AND Co.GuideNumber IS NULL
-                          )
-                      )
-                      AND Co.RowStatus = 1
-                ORDER BY Co.DateCreated DESC
-            ) CoAux
-                INNER JOIN DeliveryBackOffice.dbo.Cost Co WITH (NOLOCK)
-                    ON Co.IdCost = CoAux.IdCost;
-
-            -- Generar CostDetail inexistentes
-            INSERT INTO [DeliveryBackOffice].[dbo].[CostDetail]
-            (
-                IdCost,
-                IdTypeOfMoney,
-                Amount,
-                Voucher,
-                RowStatus,
-                TokenCreated,
-                DateCreated,
-                TokenUpdated,
-                DateUpdated
-            )
-            SELECT CU.IdCost,
-                   2,
-                   CU.GuidePriceShipment,
-                   @OrderNumber,
-                   1,
-                   @TokenUpdated,
-                   GETDATE(),
-                   NULL,
-                   NULL
-            FROM @CostUpdated CU
-                LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
-                    ON CD.IdCost = CU.IdCost
-            WHERE CD.IdCostDetail IS NULL;
-
-            -- Actualizar CostDetails
-            UPDATE [DeliveryBackOffice].[dbo].[CostDetail]
-            SET Amount = CU.GuidePriceShipment,
-                Voucher = @OrderNumber,
-                TokenUpdated = @TokenUpdated,
-                DateUpdated = GETDATE()
-            FROM [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
-                INNER JOIN @CostUpdated CU
-                    ON CD.IdCost = CU.IdCost;
-
-            -- Acumulación de puntos FORZA POR LOTE
-            -- Author: Jerson Ochoa - 27-01-2023
-
-            SET @CustomerId =
-            (
-                SELECT TOP 1 CustomerID FROM @AcceptedGuides
-            );
-
-            SET @AccountId =
-            (
-                SELECT [A].[AccIdAccount]
-                FROM [dbo].[Account] A
-                WHERE [A].[IdCustomer] = @CustomerId
-            );
-
-            SELECT @MembershipId = [M].[IdMembership],
-                   @MaxServiceMembership = [M].[MembershipMaxServiceFixedValue]
-            FROM [dbo].[Membership] M
-            WHERE [M].[AccountId] = @AccountId
-                  AND [M].[RowStatus] = 1
-                  AND [M].[ExpirationDate] >= SYSDATETIME();
-
-            IF (@MembershipId > 0)
-            BEGIN
-
-                -- Agregar Log de puntos 
-                INSERT INTO [dbo].[PointsByServiceLog]
-                (
-                    [MembershipId],
-                    [GuideSerie],
-                    [GuideNumber],
-                    [GuidePrice],
-                    [PointsReceived],
-                    [PointsConsumed],
-                    [TypeTransaction],
-                    [CatPointPromoId],
-                    [RowStatus],
-                    [DateCreated],
-                    [TokenCreated]
-                )
-                SELECT @MembershipId,
-                       GuideSerie,
-                       GuideNumber,
-                       GuidePriceShipment,
-                       (CASE
-                            WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN
-                                CAST(@ForzaPointsGenerationValue AS INT)
-                            WHEN @ForzaPointsGenerationType = 'MONTO' THEN
-                                CAST((GuidePriceShipment / @ForzaPointsGenerationValue) AS INT)
-                            ELSE
-                                0
-                        END
-                       ), -- POINTS RECEIVED
-                       0, -- POINTS CONSUMED
-                       @ForzaPointsGenerationType,
-                       NULL,
-                       1,
-                       SYSDATETIME(),
-                       @TokenCreated
-                FROM @AcceptedGuides
-                WHERE (
-                          LogServiceNumber > @MaxServiceMembership
-                          OR LogServiceNumber = 0
-                      );
-
-                -- Acumulación adicional por promoción
-
-                IF ((SELECT COUNT(IdPointPromo)FROM @CatPointPromoTbl) > 0)
-                BEGIN
-                    SET @DayName =
-                    (
-                        SELECT DATENAME(dw, SYSDATETIME())
-                    );
-                    SET @IsValidDay = CASE
-                                          WHEN @DayName = 'Monday' THEN
-                                          (
-                                              SELECT TOP 1 Monday FROM @CatPointPromoTbl
-                                          )
-                                          WHEN @DayName = 'Tuesday' THEN
-                                          (
-                                              SELECT TOP 1 Tuesday FROM @CatPointPromoTbl
-                                          )
-                                          WHEN @DayName = 'Wednesday' THEN
-                                          (
-                                              SELECT TOP 1 Wednesday FROM @CatPointPromoTbl
-                                          )
-                                          WHEN @DayName = 'Thursday' THEN
-                                          (
-                                              SELECT TOP 1 Thursday FROM @CatPointPromoTbl
-                                          )
-                                          WHEN @DayName = 'Friday' THEN
-                                          (
-                                              SELECT TOP 1 Friday FROM @CatPointPromoTbl
-                                          )
-                                          WHEN @DayName = 'Saturday' THEN
-                                          (
-                                              SELECT TOP 1 Saturday FROM @CatPointPromoTbl
-                                          )
-                                          WHEN @DayName = 'Sunday' THEN
-                                          (
-                                              SELECT TOP 1 Sunday FROM @CatPointPromoTbl
-                                          )
-                                          ELSE
-                                              0
-                                      END;
-                    IF (@IsValidDay = 1)
-                    BEGIN
-
-                        UPDATE PSL
-                        SET [PSL].[CatPointPromoId] =
-                            (
-                                SELECT IdPointPromo FROM @CatPointPromoTbl
-                            ),
-                            [PSL].[PointsReceived] = [PSL].[PointsReceived]
-                                                     + CASE
-                                                           WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN
-                                                               CAST(
-                                                               (
-                                                                   SELECT PointPromoFactor FROM @CatPointPromoTbl
-                                                               ) AS INT)
-                                                           WHEN @ForzaPointsGenerationType = 'MONTO' THEN
-                                                               CAST([PSL].[PointsReceived] /
-                                                                    (
-                                                                        SELECT PointPromoFactor FROM @CatPointPromoTbl
-                                                                    ) AS INT)
-                                                           ELSE
-                                                               0
-                                                       END
-                        FROM [dbo].[PointsByServiceLog] PSL
-                            INNER JOIN @AcceptedGuides AG
-                                ON [PSL].[GuideSerie] = [AG].[GuideSerie]
-                                   AND [PSL].[GuideNumber] = [AG].[GuideNumber]
-                                   AND
-                                   (
-                                       [AG].[LogServiceNumber] > @MaxServiceMembership
-                                       OR [AG].[LogServiceNumber] = 0
-                                   );
-                    END;
-                END;
-
-                -- Agregar puntos a membresía
-                SET @PointsGenerated = ISNULL(
-                                       (
-                                           SELECT SUM([PSL].[PointsReceived])
-                                           FROM [dbo].[PointsByServiceLog] PSL
-                                           WHERE [PSL].[GuideSerie] IN
-                                                 (
-                                                     SELECT GuideSerie FROM @AcceptedGuides
-                                                 )
-                                                 AND [PSL].[GuideNumber] IN
-                                                     (
-                                                         SELECT GuideNumber FROM @AcceptedGuides
-                                                     )
-                                       ),
-                                       0
-                                             );
-
-                UPDATE [dbo].[Membership]
-                SET [AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
-                    [AvailablePoints] = ISNULL([AvailablePoints], 0) + (@PointsGenerated)
-                WHERE [IdMembership] = @MembershipId;
-
-            END;
-
-        -- FIN Acumulación de puntos FORZA
-
-        END;
-
-        COMMIT TRANSACTION;
+		COMMIT TRANSACTION;
 
         SELECT 200 Code,
                'Success' Description,
@@ -1462,7 +1616,8 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
+
+		ROLLBACK TRANSACTION;
 
         INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
         (
