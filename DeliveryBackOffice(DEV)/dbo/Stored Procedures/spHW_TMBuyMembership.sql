@@ -3,6 +3,11 @@
 -- Create date: <23-01-2023>
 -- Description:	<Buy a membership from Telemarketing Web module>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-03-22>
+-- Description:	<aceptar terminos y condiciones al momento de la adquisición de membresias y suscripciones>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_TMBuyMembership]
 	@CatMembershipId AS INT,
 	@AccountId AS BIGINT,
@@ -31,7 +36,12 @@ BEGIN
 	DECLARE @TypeOfInOutMoney INT = 0;
 	DECLARE @MembershipId INT = 0;
 	DECLARE @CatTMSalesPersonId INT = 0;
-	DECLARE @AddedPointExpirationDate INT = 0;
+
+	DECLARE @TacId INT = 0;
+
+	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
+					FROM	[dbo].[TermsAndConditions] TAC
+					WHERE	[TAC].[Name] = 'New Termns And Conditions');
 	
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
@@ -54,18 +64,6 @@ BEGIN
 	SET @CatTMSalesPersonId = ( SELECT TOP 1 [CTSP].[IdCatTMSalesPerson]
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
-
-    SET @AddedPointExpirationDate
-        = CAST(ISNULL(
-               (
-                   SELECT TOP 1
-                          [CP].[Value]
-                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
-                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
-               ),
-               0
-            ) AS INT);
-
 
 	IF (@ActiveMembership > 0) 
 		BEGIN
@@ -95,11 +93,7 @@ BEGIN
 										[InvoiceName], 
 										[InvoiceEmail], 
 										[FiscalAddress],
-										[CatTMSalesPersonId],
-										[AvailablePoints],
-										[AccumulatedPoints],
-										[PointsExpirationDate]
-										)
+										[CatTMSalesPersonId] )
 		SELECT							[CM].[IdCatMembership],								-- CatMembershipId
 										@StartingStatus,									-- CatMembershipStatusId
 										[CM].[MembershipCost],								-- MembershipCost
@@ -119,10 +113,7 @@ BEGIN
 										@TaxName,											-- InvoiceName
 										@InvoiceEmail,										-- InvoiceEmail
 										@FiscalAddress,										-- FiscalAddress
-										@CatTMSalesPersonId,								-- CatTMSalesPersonId
-										0,													-- AvailablePoints
-										0,													-- AccumulatedPoints
-										DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE())) -- PointsExpirationDate
+										@CatTMSalesPersonId									-- CatTMSalesPersonId
 		FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
 		WHERE							[CM].[IdCatMembership] = @CatMembershipId;
 
@@ -163,6 +154,22 @@ BEGIN
 													@Token,
 													SYSDATETIME(),
 													@ImageURL);
+
+
+       -- Asignación de terminos y condiciones
+		INSERT INTO [dbo].[TermsAndConditionsByUser]([TACId],
+														[IdAccount],
+														[TAC],
+														[RowStatus],
+														[TokenCreated],
+														[DateCreated])
+		                                     VALUES	 (@TacId,
+														@AccountId ,
+														1,				-- TAC
+														1,				-- RowStatus
+														'spHW_CreateTMCustomerAccount',
+														SYSDATETIME());
+
 
 		SELECT 1 [spResult], 'Membresía ha sido asociada con éxito' [spMessage];
 		IF (@@TRANCOUNT > 0) 

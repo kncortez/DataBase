@@ -3,6 +3,11 @@
 -- Create date: <Create Date,2022-07-14>
 -- Description:	<Description, adquisición de membresia o suscripción>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-03-22>
+-- Description:	<aceptar terminos y condiciones al momento de la adquisición de membresias y suscripciones>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
 	-- Add the parameters for the stored procedure here
 	@IdTarjeta AS INT = NULL, -- puede ser null por ex c y por credito
@@ -25,9 +30,9 @@ BEGIN
 		​
 	-- Variables estaticas "globales"
 	DECLARE @StartingStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI);
-
-	DECLARE @StatusSubcription INT = (SELECT  COUNT(IdSubscription) FROM [DeliveryBackOffice].[dbo].[Subscription] WHERE AccountId = @IdAcount  AND RowStatus = 1 AND CatSubscriptionId = @IdSalePackage )​
 	
+	DECLARE @StatusSubcription INT = (SELECT  COUNT(IdSubscription) FROM [DeliveryBackOffice].[dbo].[Subscription] WHERE AccountId = @IdAcount  AND RowStatus = 1 AND CatSubscriptionId  = @IdSalePackage )​
+
 	-- Variables de control de flujo
 	DECLARE @TransactionSuccess BIT = 0;
 	DECLARE @ActivationCode NVARCHAR(100) = '';
@@ -35,20 +40,14 @@ BEGIN
 	DECLARE @StatusMembershipt INT = 0
 	DECLARE @CustomerType INT = 0; 
 	DECLARE @HasCredit BIT = 0;
-	DECLARE @AddedPointExpirationDate INT = 0;
 	DECLARE @Idcustumer  AS INT;
 	DECLARE @JsonResponse NVARCHAR(MAX) = '';
-	
-    SET @AddedPointExpirationDate
-        = CAST(ISNULL(
-               (
-                   SELECT TOP 1
-                          [CP].[Value]
-                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
-                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
-               ),
-               0
-            ) AS INT);
+
+	DECLARE @TacId INT = 0;
+
+	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
+					FROM	[dbo].[TermsAndConditions] TAC
+					WHERE	[TAC].[Name] = 'New Termns And Conditions');
 	--- Estado de membresia
 	SELECT
 		TOP 1
@@ -78,9 +77,11 @@ BEGIN
 	BEGIN
 		SET @ActivationCode = NEWID();
 	END
+
   ---- adquisición de membresia​
   BEGIN TRANSACTION
   BEGIN TRY
+
 	IF(@TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI AND ISNULL(@StatusMembershipt,0) < 1)
 	BEGIN
 	​
@@ -89,7 +90,7 @@ BEGIN
 			​
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Membership]
-				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress, RenewalFixedDay, AvailablePoints, AccumulatedPoints, PointsExpirationDate)
+				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress)
 			OUTPUT inserted.IdMembership INTO @AuxNewMEmbership(IdNewMembership)
 			SELECT
 				CM.IdCatMembership
@@ -117,10 +118,6 @@ BEGIN
 				,@TaxName
 				,@InvoiceEmail
 				,@FiscalAddress
-				,DAY(GETDATE())
-				,0
-				,0
-				,DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE()))
 			FROM
 				[DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			WHERE
@@ -139,6 +136,22 @@ BEGIN
 									AND
 									M.RowStatus = 1
 							)
+
+
+
+            -- Asignación de terminos y condiciones
+		INSERT INTO [dbo].[TermsAndConditionsByUser]([TACId],
+														[IdAccount],
+														[TAC],
+														[RowStatus],
+														[TokenCreated],
+														[DateCreated])
+		                                     VALUES	 (@TacId,
+														@IdAcount,
+														1,				-- TAC
+														1,				-- RowStatus
+														'spHW_CreateTMCustomerAccount',
+														SYSDATETIME());
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @AuxNewMembership) )
 			BEGIN
@@ -194,13 +207,12 @@ BEGIN
 	END
 	ELSE IF(@TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI AND ((ISNULL(@StatusMembershipt,0) > 0 AND ISNULL(@StatusSubcription,0) < 1) OR @CustomerType = 2) )
 	BEGIN
-	​	
-	
+
 		DECLARE @AuxNewSubscriptions AS TABLE (IdNewSubscriptions INT);
 
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Subscription]
-				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RenewalFixedDay)
+				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RateHeaderId, AlternativeRateHeaderId)
 			OUTPUT inserted.IdSubscription INTO @AuxNewSubscriptions(IdNewSubscriptions)
 			SELECT
 			    IIF(@CustomerType = 2, NULL, @ActiveMembershipId) 
@@ -225,7 +237,8 @@ BEGIN
 				,1
 				,@Token
 				,GETDATE()
-				,DAY(GETDATE())
+				,CS.RateHeaderId
+				,CS.AlternativeRateHeaderId
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			WHERE
@@ -246,6 +259,19 @@ BEGIN
 									AND
 									S.RowStatus = 1
 							)
+             -- Asignación de terminos y condiciones
+		INSERT INTO [dbo].[TermsAndConditionsByUser]([TACId],
+														[IdAccount],
+														[TAC],
+														[RowStatus],
+														[TokenCreated],
+														[DateCreated])
+		                                     VALUES	 (@TacId,
+														@IdAcount,
+														1,				-- TAC
+														1,				-- RowStatus
+														'spHW_CreateTMCustomerAccount',
+														SYSDATETIME());
 
 			IF(EXISTS (SELECT TOP 1 1 FROM @AuxNewSubscriptions))
 			BEGIN
@@ -357,7 +383,7 @@ BEGIN
 
 	END
 
-	SELECT  ( '[' + @JsonResponse + ']' )  JsonOutput 
+	
    END TRY
    BEGIN CATCH
 
@@ -376,5 +402,28 @@ BEGIN
 								)
 				);
 
+
+				
+			   --Insert en tabla de log
+		INSERT INTO DeliveryBackOffice.dbo.[RoutePreparationLogError]
+					([ErrorDescription]
+					,[ErrorNumber]
+					,[ErrorProcedure]
+					,[ErrorLine]
+					,[GuideSerie]
+					,[GuideNumber]
+					,[TokenCreated]
+					,[DateCreated])
+				VALUES
+					(CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					,ERROR_NUMBER()
+					,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					,ERROR_LINE()
+					,'MS'
+					,0
+					,'SYSTEM'
+					,GETDATE())
+
    END CATCH
+   SELECT  ( '[' + @JsonResponse + ']' )  JsonOutput 
 END
