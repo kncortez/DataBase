@@ -3,7 +3,6 @@
 -- Create date: <2022-01-03>
 -- Description:	< Actualiza información de servicio para guía.>
 -- =============================================
--- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-01-03>
 -- Description:	< Se remueve el poder modificar departamento y municipio ya que puede causar revalorizaciones. >
@@ -11,8 +10,10 @@
 -- Author:		<Jerson Ochoa>
 -- Update date: <2023-01-10>
 -- Description:	< Manejo de parámetro para marcar como devolución de última milla las incidencias. >
--- Create date: <2023-01-10>
+-- Update date: <2023-01-10>
 -- Description:	< Manejo de campos dinámico. >
+-- Update date: <2023-03-21>
+-- Description:	< Actualizar campos para denegación de incidencias >
 -- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
@@ -62,6 +63,11 @@ BEGIN
 	DECLARE @InsertedRoutePreparationDetail TABLE (
 		IdRoutePreparationDetail INT
 	)
+	DECLARE @FailedVisitStatusId INT;
+	DECLARE @IncidenceStatusId INT;
+	DECLARE @CatTypeCOIFailedVisitStatusId INT;
+	DECLARE @CatTypeCOIIncidenceStatusId INT;
+	DECLARE @LastStatusId INT;
 
 	-- Variables de control de flujo
 	DECLARE @IsDeliveryOnRoute AS BIT = 0;
@@ -99,6 +105,10 @@ BEGIN
 		ORDER BY SDFG.DateCreated DESC
 	);
 
+	SET @FailedVisitStatusId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+	SET @CatTypeCOIFailedVisitStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida');
+	SET @IncidenceStatusId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta');
+	SET @CatTypeCOIIncidenceStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta');
 
 	IF (@IsDeliveryOnRoute = 1)
 	BEGIN
