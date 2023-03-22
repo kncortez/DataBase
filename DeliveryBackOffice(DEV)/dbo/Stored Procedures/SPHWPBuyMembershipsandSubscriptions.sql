@@ -47,7 +47,7 @@ BEGIN
 
 	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
 					FROM	[dbo].[TermsAndConditions] TAC
-					WHERE	[TAC].[Name] = 'New Termns And Conditions');
+					WHERE	[TAC].[Name] = 'Terms and conditions memberships and subscriptions');
 	--- Estado de membresia
 	SELECT
 		TOP 1
@@ -150,7 +150,7 @@ BEGIN
 														@IdAcount,
 														1,				-- TAC
 														1,				-- RowStatus
-														'spHW_CreateTMCustomerAccount',
+														'SPHWPBuyMembershipsandSubscriptions',
 														SYSDATETIME());
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @AuxNewMembership) )
@@ -270,7 +270,7 @@ BEGIN
 														@IdAcount,
 														1,				-- TAC
 														1,				-- RowStatus
-														'spHW_CreateTMCustomerAccount',
+														'SPHWPBuyMembershipsandSubscriptions',
 														SYSDATETIME());
 
 			IF(EXISTS (SELECT TOP 1 1 FROM @AuxNewSubscriptions))
