@@ -550,33 +550,33 @@ BEGIN
 						)
 					, 0)
 				AS BIT)
+				
+			DECLARE @GuideSerieAux NVARCHAR(2);
+			DECLARE @GuideNumberAux INT;
+			DECLARE @GuideDateAux DATETIME;
+			DECLARE @GuideStatusAux INT;
 
+			SELECT 
+				TOP (1) 
+					@GuideSerieAux = [DA].[Guide_Serie]
+					,@GuideNumberAux = [DA].[Guide_Number]
+					,@GuideStatusAux = [COI].[StatusOrderId]
+					,@GuideDateAux = [COI].[DateStatusOrder]
+			FROM 
+				[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA  WITH(NOLOCK) 
+					ON
+						[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+			WHERE
+				[COI].[ConfirmationOfIncidentToken] = @GuideToken
+				AND
+				[COI].[RowStatus] = 1;
+			
 			-- Si tiene diferente estado, actualizar 
 			IF EXISTS (SELECT TOP 1 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
 			BEGIN 
 
-				DECLARE @GuideSerieAux NVARCHAR(2);
-				DECLARE @GuideNumberAux INT;
-				DECLARE @GuideDateAux DATETIME;
-				DECLARE @GuideStatusAux INT;
-
-				SELECT 
-					TOP (1) 
-						@GuideSerieAux = [DA].[Guide_Serie]
-						,@GuideNumberAux = [DA].[Guide_Number]
-						,@GuideStatusAux = [COI].[StatusOrderId]
-						,@GuideDateAux = [COI].[DateStatusOrder]
-				FROM 
-					[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA  WITH(NOLOCK) 
-						ON
-							[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
-				WHERE
-					[COI].[ConfirmationOfIncidentToken] = @GuideToken
-					AND
-					[COI].[RowStatus] = 1;
-			
 				UPDATE 
 					dod 
 				SET 
