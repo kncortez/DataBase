@@ -585,7 +585,15 @@ BEGIN
 			
 			-- Si tiene diferente estado, actualizar 
 			IF EXISTS (SELECT TOP 1 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
-			BEGIN 
+			BEGIN  
+
+				UPDATE	[dbo].[ConfirmationOfIncidence]
+				SET		[LastStatusOrderId] = [StatusOrderId],
+						[IsDenied] = 1,
+						[TokenUpdated] = 'SetServiceTokenGuideData',
+						[DateUpdated] = SYSDATETIME()
+				WHERE	[ConfirmationOfIncidentToken] = @GuideToken
+					AND [RowStatus] = 1;
 
 				UPDATE 
 					dod 
