@@ -538,7 +538,8 @@ BEGIN
 						[IsDenied] = 1,
 						[TokenUpdated] = 'SetServiceTokenGuideData',
 						[DateUpdated] = SYSDATETIME()
-				WHERE	[ConfirmationOfIncidentToken] = @GuideToken;
+				WHERE	[ConfirmationOfIncidentToken] = @GuideToken
+					AND [RowStatus] = 1;
 			
 				UPDATE dod 
 				SET StatusOrderId = @StatusOrderId
