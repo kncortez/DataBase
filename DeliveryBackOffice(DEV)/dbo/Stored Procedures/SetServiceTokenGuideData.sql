@@ -523,13 +523,13 @@ BEGIN
 		BEGIN TRY
 			IF @IsConfirmed = 1
 			BEGIN
-				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Visita Fallida') 
+				SET @StatusOrderId = @FailedVisitStatusId;
+				SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIFailedVisitStatusId;
 			END
 			ELSE
 			BEGIN
-				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Incidencia en Ruta') 
+				SET @StatusOrderId = @IncidenceStatusId;
+				SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIIncidenceStatusId; 
 			END
 
 			SET @IsLastMileReturn = 
