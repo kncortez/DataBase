@@ -84,8 +84,7 @@ BEGIN
         ReturnRate DECIMAL(14, 2) NULL,
         AmountToPay DECIMAL(14, 2) NULL,
         CODAmount DECIMAL(14, 2) NULL,
-        ReturnRates DECIMAL(14, 2) NULL,
-        INDEX IDX_VAR_GuideReturnService_Guide NONCLUSTERED(GuideSerie, GuideNumber)
+        ReturnRates DECIMAL(14, 2) NULL
     );
 
     INSERT INTO @TempReturnPrice
