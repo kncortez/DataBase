@@ -758,7 +758,7 @@ BEGIN
 														WHEN doad.IdDeliveryOrderAttemptData IS NOT NULL AND doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount THEN 'IsReturn'
 														ELSE 'IsArrival'
 													END
-												END
+											END
 										WHEN @IsPickup = 1 AND
 											so.OrderDescription NOT IN ('Anulado') THEN 'IsArrival'
 										ELSE 'IsError'
@@ -928,7 +928,7 @@ BEGIN
 									AND doad.RowStatus = 1
 									AND so.OrderDescription = 'Intento de entrega fallida'
 								END
-								print 'ENTRA'
+
 								--Actualizar flujo con los contadores
 								SELECT
 									@IsArrival =
@@ -953,7 +953,7 @@ BEGIN
 								AND doad.RowStatus = 1
 
 							END
-							
+
 
 							INSERT INTO UnifiedRouteSettlementDetail (UnifiedRouteSettlementId, ServiceManagementId, GuideSerie, GuideNumber, ServiceSettlementAmount, ServiceCODSettlementAmount, IsArrival, IsReturn, IsDelivered, IsTransfered, RowStatus, TokenCreated, DateCreated)
 								VALUES (@IdUnifiedRouteSettlement, @ServiceManagementId, @GuideSerie, @GuideNumber, CASE WHEN @IsDelivered = 1 THEN IIF(@IsCollect = 1, @ServiceAmount, 0) ELSE 0 END, CASE WHEN @IsDelivered = 1 AND @IsLastMileReturn = 0 THEN @CODAmount ELSE 0 END, @IsArrival, @IsReturn, @IsDelivered, @IsTransfered, 1, @Token, GETDATE());
@@ -1089,10 +1089,22 @@ BEGIN
 									   ,'Pieza asignada correctamente.' 'Description'
 									   ,@IsOpenProcess 'IsOpenProcess'
 									   ,(CASE
+											WHEN @IsArrival = 0 AND
+												@IsReturn = 0 AND
+												@IsDelivered = 0 AND
+												@IsTransfered = 0 THEN 'Abandonado'
 											WHEN @IsPickup = 1 THEN 'Recolección'
 											WHEN @IsLastMileReturn = 1 THEN 'Devolución'
 											ELSE 'Entrega'
 										END) 'FlowType'
+									   ,CASE
+											WHEN @IsMarkedReturn = 1 THEN 1
+											ELSE 0
+										END IsMarkedReturn
+									   ,CASE
+											WHEN @IsReturn = 1 THEN 1
+											ELSE 0
+										END IsReturn  
 
 									SELECT
 										dop.NoPiece
