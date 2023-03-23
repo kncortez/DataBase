@@ -85,7 +85,7 @@ BEGIN
 	INNER JOIN	[dbo].[SenderReceiver] SRE 
 		ON		[DAT].[ID_Courier] = [SRE].[ID]
 		AND		[SRE].[HubLogisticId] IN (SELECT ID FROM @UserHubsList)
-	WHERE		[DAT].[Date_Created] BETWEEN @DateStart AND @DateEnd
+	WHERE		CONVERT(DATE, [DAT].[Date_Created]) BETWEEN @DateStart AND @DateEnd
 		AND		((@CourierId IS NULL) OR ([DAT].[ID_Courier] = @CourierId))
 		AND		[DAT].[ConfirmationOfIncidenceId] IS NOT NULL
 	GROUP BY	[DAT].[Date_Created] , [DAT].[Guide_Number], [DAT].[ConfirmationOfIncidenceId], [SRE].[First_Name], [SRE].[Last_Name], [DAT].[ID_Courier]
