@@ -62,15 +62,18 @@ BEGIN
 			AND URSD.GuideNumber=RPD.Guide_Number
 			AND URSD.RowStatus=1
 			AND URSD.UnifiedRouteSettlementId=URS.IdUnifiedRouteSettlement
-
-
-		LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK) ON 
-			DO.Guide_Serie=DORD.Guide_Serie AND 
-			DO.Guide_Number=DORD.Guide_Number
-			AND DORD.StatusOrderId= @STATUSFAILED_DO
-		LEFT JOIN DBO.Customer CU WITH(NOLOCK) ON DO.IdCustomer=CU.IdCustomer
-						LEFT JOIN DBO.RatebyCustomer RC WITH(NOLOCK) ON CU.IdCustomer=RC.RbcIdCustomer
-						LEFT JOIN RateHeader RH WITH(NOLOCK) ON RC.RbcIdRate=RH.RheId								
+		INNER JOIN DeliveryOrderAttemptData doad WITH(NOLOCK) 
+		ON DO.Guide_Serie = doad.GuideSerie
+		AND DO.Guide_Number = doad.GuideNumber
+		AND doad.RowStatus = 1
+		LEFT JOIN RoutePreparation rp WITH(NOLOCK) 
+			ON rpd.RoutePreparationId = rp.IdRoutePreparation
+		LEFT JOIN DeliveryAttempt da WITH(NOLOCK)
+			ON DO.Guide_Serie = da.Guide_Serie
+			AND DO.Guide_Number = da.Guide_Number
+			AND da.ID_DeliveryOrderBySettlement = rp.DeliveryOrderBySettlementId
+		LEFT JOIN ConfirmationOfIncidence coi WITH(NOLOCK) 
+			ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence									
 		WHERE 
 			RA.RowStatus=1		
 			AND RA.IdVehicle IS NOT NULL
@@ -80,8 +83,7 @@ BEGIN
 			AND RA.DateOfRoute =@Date
 			AND DO.IsLastMileReturn=0
 			AND (URSD.RowStatus=1 AND URSD.IsOpenProcess=0)--FILTRO PARA GUIAS LIQUIDADAS
-		GROUP BY DO.Guide_Serie,DO.Guide_Number,CU.IdCustomer,RH.Attempt,DORD.StatusOrderId
-		HAVING COUNT(DISTINCT CHECKSUM(DORD.Guide_Serie,DORD.Guide_Number,DORD.DateCreated))>=(case when RH.Attempt is NULL then 2 else RH.Attempt end)--FILTRANDO GUIAS SIN INTENTOS DE ENTREGAS
+			AND  (doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount OR coi.ClientConfirmsReturn = 1)
 
 
 		--LISTANDO TODAS LAS GUÍAS MARCADAS COMO DEVOLUCIÓN Y QUE NO ESTAN CON IsLastMileReturn=1 para actualizar dicho campo
