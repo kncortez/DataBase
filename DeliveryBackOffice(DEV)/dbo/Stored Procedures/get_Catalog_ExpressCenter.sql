@@ -16,8 +16,7 @@ BEGIN
             SELECT STUFF(
                             (
                                 SELECT ',{"Name":"' + DescriptionOfClient + '",'
-									   + '"Phone":"' + ISNULL(Phone, '') + '",'
-                                       + '"Email":"' + ISNULL(Email, '') + '",' + '"IdTownship":"'
+									   +'"IdTownship":"'
                                        + ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '') + '",' + '"TownshipName":"'
                                        + ISNULL(TWS.TownshipDescription, '') + '",' + '"IdProvince":"'
                                        + ISNULL(CONVERT(VARCHAR, PRV.IdProvince), '') + '",' + '"ProvinceName":"'
