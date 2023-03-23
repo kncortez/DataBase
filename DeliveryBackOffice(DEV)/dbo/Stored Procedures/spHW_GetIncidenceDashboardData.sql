@@ -111,8 +111,7 @@ BEGIN
 		ON		[COI].[StatusOrderId] = [SOR].[StatusOrderId]
 	INNER JOIN	[dbo].[CatTypeConfirmationOfIncidence] TCI
 		ON		[COI].[CatTypeConfirmationOfIncidenceId] = [TCI].[IdCatTypeConfirmationOfIncidence]
-	WHERE		[COI].[IdConfirmationOfIncidence] IN (SELECT [ConfirmationOfIncidenceId] FROM @ConfOfIncList)
-		AND		[COI].[RowStatus] = 1;
+	WHERE		[COI].[RowStatus] = 1;
 
 	SELECT		[GDA].[IdCourier],
 				[GDA].[FirstName],
