@@ -156,6 +156,8 @@ BEGIN
 			IF (@ID_Photo > 0)
 			BEGIN
 				
+				SET @DateStatusOrder = GETDATE()
+
 				-- Validación del rango de distancia entre el VP y Courier
 				DECLARE @IncidenceIssue TABLE (
 					IdIncidence INT
@@ -329,8 +331,6 @@ BEGIN
 						SET @MessageReturn = 'Hemos detectado un comportamiento extraño y será investigado.'
 
 					-- FIN FDAPI-1374 <Oscar Morales 2023-02-16> 
-
-					SET @DateStatusOrder = GETDATE()
 
 					INSERT INTO [dbo].[ConfirmationOfIncidence] ([ConfirmationOfIncidentToken]
 					, [CatTypeConfirmationOfIncidenceId]
