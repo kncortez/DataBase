@@ -105,6 +105,7 @@ BEGIN
 	WHERE ih.inv_pk_id = @IdFEL
 		AND ih.inv_certificationFEL IS NOT NULL
 		AND ih.inv_certificationFEL != ''
+		AND ih.inv_creditNote IS NULL
 	ORDER BY ih.inv_date DESC
 
 	-- Table 3

@@ -150,83 +150,89 @@ BEGIN
 
 			----------------------------------------------------------
 				----------------
-				--INICIO --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA				
-				DECLARE @GuidesTableWithoutFailRetries AS TABLE (Guide_Serie NVARCHAR(MAX), Guide_Number INT,StatusOrderId INT, StatusCount INT)
-				DECLARE @IDSTATUSINROUTE INT =(select StatusOrderId from dbo.StatusOrder where OrderDescription ='En ruta');
-				DECLARE @IDSTATUSFAILEDDELIVERY INT =(select StatusOrderId from dbo.StatusOrder where OrderDescription ='Intento de entrega fallida');
-				--Obtiene la lista de guías que ya salieron a ruta 2 o mas veces y que tienen 0 intentos de entrega fallida
-				INSERT INTO @GuidesTableWithoutFailRetries	
-				SELECT  LG.Guide_Serie, LG.Guide_Number,(DORD.StatusOrderId),COUNT(DORD.StatusOrderId)
-				FROM @ListGuides LG
-					LEFT JOIN DeliveryOrder DOR WITH(NOLOCK) ON LG.Guide_Serie=DOR.Guide_Serie AND LG.Guide_Number=DOR.Guide_Number
-					LEFT JOIN DBO.DeliveryOrderDetail DORD WITH(NOLOCK) ON DOR.Guide_Serie=DORD.Guide_Serie AND DOR.Guide_Number=DORD.Guide_Number		
-				GROUP BY LG.Guide_Serie,LG.Guide_Number,DORD.StatusOrderId
-				HAVING 
-					(DORD.StatusOrderId=@IDSTATUSINROUTE AND COUNT(DORD.StatusOrderId)>=2)--CUANDO YA SALIERON A RUTA 2 O MAS VECES
-					OR 
-					(DORD.StatusOrderId=@IDSTATUSFAILEDDELIVERY AND COUNT(DORD.StatusOrderId)=0)-- CUANDO TIENEN 0 INTENTOS DE ENTREGA FALLIDA
-
-
+				--INICIO --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA	
 				
-				IF (SELECT COUNT(*) FROM @GuidesTableWithoutFailRetries)>0 AND @iduser is not null
+				IF @iduser IS NOT NULL 
 				BEGIN
-					DECLARE @GuidesTableWithRetriesDispatch AS TABLE (Guide_Serie NVARCHAR(MAX),Guide_Number INT, RretriesMade INT);
-					INSERT INTO @GuidesTableWithRetriesDispatch
-					SELECT GTA.Guide_Serie, GTA.Guide_Number,GTA.StatusCount
-						FROM @GuidesTableWithoutFailRetries  GTA
-						where GTA.StatusOrderId=@IDSTATUSINROUTE
-					--CREANDO ALERTA DE GUÍAS QUE NO POSEEN ALERTA Y QUE TIENEN MAS DE DOS SALIDAS A RUTA
-					DECLARE @SERVICETYPE NVARCHAR(MAX)= (SELECT IdTypeServiceManagment FROM DBO.TypeServiceManagment WHERE NAME ='Entrega')
-					INSERT INTO DBO.DeliveryOrderAlert 
-						(
-						GuideSerie,
-						GuideNumber,
-						ServiceTypeId,
-						AlertDescription,
-						AlertTypeId,
-						RowStatus,
-						TokenCreated,
-						DateCreated,
-						TokenUpdated,
-						DateUpdated)						
-					SELECT GTWRD.Guide_Serie,
-						GTWRD.Guide_Number,
-						@SERVICETYPE,
-						'El paquete ha salido a ruta 2 o mas veces',
-						(SELECT IdCatTypeAlert FROM DBO.CatTypeAlert WHERE AlertName='Prioritario'),
-						1,
-						@Token,
-						GETDATE(),
-						NULL,
-						NULL
-						FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA WITH(NOLOCK) 
-							ON  DOA.GuideSerie=GTWRD.Guide_Serie AND DOA.GuideNumber=GTWRD.Guide_Number
-						WHERE DOA.IdDeliveryOrderAlert IS NULL;
-				
-					INSERT INTO DBO.DeliveryOrderAlertDetail
-					(
-						author,
-						username,
-						comment,
-						DeliveryOrderAlertId,
-						RowStatus,
-						TokenCreated,
-						DateCreated,
-						TokenUpdated,
-						DateUpdated
-					)
-					SELECT 
-						@iduser,
-						@username,
-						'ALERTA: El paquete ya ha salido a ruta '+CONVERT(NVARCHAR,GTWRD.RretriesMade)+' veces',
-						DOA.IdDeliveryOrderAlert,
-						1,
-						@Token,
-						GETDATE(),
-						NULL,
-						NULL
-					FROM @GuidesTableWithRetriesDispatch GTWRD LEFT JOIN DBO.DeliveryOrderAlert DOA WITH(NOLOCK) 
-							ON  DOA.GuideSerie=GTWRD.Guide_Serie AND DOA.GuideNumber=GTWRD.Guide_Number
+					DECLARE @SubTypeDelivery BIGINT = (SELECT IdSubTypeServiceManagment FROM SubTypeServiceManagment WHERE [Name] = 'Entrega' AND RowStatus = 1)
+					DECLARE @SubTypeReturn BIGINT = (SELECT IdSubTypeServiceManagment FROM SubTypeServiceManagment WHERE [Name] = 'Devolución' AND RowStatus = 1)
+					DECLARE @GuidesTableWithRetries TABLE (GuideSerie NVARCHAR(2), GuideNumber INT, SubTypeServiceManagmentId BIGINT, RetriesMade INT);
+					DECLARE @CatTypeAlertId INT = (SELECT IdCatTypeAlert FROM CatTypeAlert WHERE AlertName='Prioritario')
+
+					INSERT INTO @GuidesTableWithRetries
+						SELECT
+							lg.Guide_Serie
+						   ,lg.Guide_Number
+						   ,(CASE
+								WHEN do.IsLastMileReturn = 1 THEN @SubTypeReturn
+								ELSE @SubTypeDelivery
+							END)
+							,(CASE
+								WHEN do.IsLastMileReturn = 1 THEN doad.GuideReturnAttemptCount
+								ELSE doad.GuideDeliveryAttemptCount
+							END)
+						FROM @ListGuides lg
+						INNER JOIN DeliveryOrderAttemptData doad
+							ON lg.Guide_Serie = doad.GuideSerie
+								AND lg.Guide_Number = doad.GuideNumber
+						INNER JOIN DeliveryOrder do WITH (NOLOCK)
+							ON lg.Guide_Serie = do.Guide_Serie
+								AND lg.Guide_Number = do.Guide_Number
+						LEFT JOIN DeliveryOrderAlert doa WITH (NOLOCK)
+							ON lg.Guide_Serie = doa.GuideSerie
+								AND lg.Guide_Number = doa.GuideNumber
+								AND doa.AlertTypeId = (CASE
+									WHEN do.IsLastMileReturn = 1 THEN @SubTypeReturn
+									ELSE @SubTypeDelivery
+								END)
+								AND doa.RowStatus = 1
+						WHERE (do.IsLastMileReturn = 1
+						AND doad.GuideReturnAttemptCount > 0)
+						OR (do.IsLastMileReturn <> 1
+						AND doad.GuideDeliveryAttemptCount > 0)
+						AND doa.IdDeliveryOrderAlert IS NULL
+					
+					INSERT INTO DeliveryOrderAlert (GuideSerie,
+					GuideNumber,
+					ServiceTypeId,
+					AlertDescription,
+					AlertTypeId,
+					RowStatus,
+					TokenCreated,
+					DateCreated)
+						SELECT
+							gtwr.GuideSerie
+						   ,gtwr.GuideNumber
+						   ,gtwr.SubTypeServiceManagmentId
+						   ,'Entrega prioritaria'
+						   ,@CatTypeAlertId
+						   ,1
+						   ,@Token
+						   ,GETDATE()
+						FROM @GuidesTableWithRetries gtwr
+
+					INSERT INTO DBO.DeliveryOrderAlertDetail (author,
+					username,
+					comment,
+					DeliveryOrderAlertId,
+					RowStatus,
+					TokenCreated,
+					DateCreated)
+						SELECT
+							@iduser
+						   ,@username
+						   ,'ALERTA: El paquete ya ha salido a ruta ' + CONVERT(NVARCHAR, gtwr.RetriesMade) + ' veces'
+						   ,doa.IdDeliveryOrderAlert
+						   ,1
+						   ,@Token
+						   ,GETDATE()
+						FROM @GuidesTableWithRetries gtwr
+						LEFT JOIN DeliveryOrderAlert doa WITH (NOLOCK)
+							ON doa.GuideSerie = gtwr.GuideSerie
+								AND doa.GuideNumber = gtwr.GuideNumber
+						WHERE doa.AlertTypeId = gtwr.SubTypeServiceManagmentId
+						AND doa.RowStatus = 1
+					
 				END
 				--FIN --CREANDO ALERTA POR CADA GUÍA QUE HAYA SIDO PUESTO EN RUTA 2 O MAS VECES Y QUE NO POSEAN ALERTA				
 				------------------------------------------------------------------------
