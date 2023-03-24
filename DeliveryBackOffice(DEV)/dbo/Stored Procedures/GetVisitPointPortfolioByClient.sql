@@ -136,15 +136,15 @@ BEGIN
 	WHERE									[VPBCP].[VisitPointId] = @VisitPointClientId
 		AND									[VPBCP].[RowStatus] = 1 
 		AND									(
-												(@FilterText IS NULL OR [VPBCP].[InternalCode] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [VPBCP].[FirstName] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [VPBCP].[SecondName] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [VPBCP].[LastName] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [VPBCP].[SecondLastName] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [VPBCP].[Phone] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [VPBCP].[CUI] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [SUB].[UadAddress1] LIKE CONCAT('%', @FilterText , '%'))
-											OR	(@FilterText IS NULL OR [SUB].[UadAddress2] LIKE CONCAT('%', @FilterText , '%'))
+												(@FilterText IS NULL OR LOWER([VPBCP].[InternalCode]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([VPBCP].[FirstName]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([VPBCP].[SecondName]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([VPBCP].[LastName]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([VPBCP].[SecondLastName]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([VPBCP].[Phone]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([VPBCP].[CUI]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([SUB].[UadAddress1]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
+											OR	(@FilterText IS NULL OR LOWER([SUB].[UadAddress2]) LIKE CONCAT('%', LOWER(@FilterText) , '%'))
 											)
 												
 												;
