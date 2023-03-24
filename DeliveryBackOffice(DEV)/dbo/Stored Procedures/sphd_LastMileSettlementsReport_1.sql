@@ -17,11 +17,11 @@ BEGIN
            cst.StationName 'Hub',
            CONVERT(DATE, dst.Date_Received) 'Fecha',
            CONCAT(dsd.Guide_Serie, dsd.Guide_Number) 'Guia',
-           CONCAT(ord.Sender_FirstName, ' ', ord.Sender_LastName) 'Remitente',
-           CONCAT(ord.Receiver_FirstName, ' ', ord.Receiver_LastName) 'Destinatario',
+           (CASE WHEN ord.[IsLastMileReturn] = 1 THEN CONCAT(ord.Receiver_FirstName, ' ', ord.Receiver_LastName) ELSE CONCAT(ord.[Sender_FirstName], ' ', ord.[Sender_LastName]) END) 'Remitente',
+           (CASE WHEN ord.[IsLastMileReturn] = 1 THEN CONCAT(ord.[Sender_FirstName], ' ', ord.[Sender_LastName]) ELSE CONCAT(ord.Receiver_FirstName, ' ', ord.Receiver_LastName) END) 'Destinatario',
            CONCAT(sdr.First_Name, ' ', sdr.Last_Name) 'Piloto',
            IIF(ord.IsCollect = 1, ord.PriceShippment, 0) 'Collect',
-           ord.Collect_OnDelivery 'COD'
+           (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD'
     FROM dbo.DeliveryOrderBySettlement dst
         JOIN dbo.DeliverySettlementDetail dsd
             ON dsd.ID_DeliveryOrderBySettlement = dst.ID
