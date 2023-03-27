@@ -5,8 +5,8 @@
 -- ============================================= 
 CREATE PROCEDURE [dbo].[SetServiceRoutes]
 	-- Add the parameters for the stored procedure here
-	@CodeApp nvarchar(100),
-	@Route nvarchar(50), 
+	@CodeApp NVARCHAR(100),
+	@Route NVARCHAR(50), 
 	@Country nvarchar(2),
 	@SystemModule NVARCHAR(200) = NULL,
 	@ServiceRoutes TblServiceRoutes READONLY,

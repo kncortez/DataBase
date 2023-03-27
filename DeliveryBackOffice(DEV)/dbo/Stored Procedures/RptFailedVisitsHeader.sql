@@ -21,7 +21,8 @@ BEGIN
 								GenerationDate	Datetime,
 								StatusOrderId int,
 								IsValid bit,
-								CourierContempt bit
+								CourierContempt BIT,
+                                IsDenied bit
 	                      )
 	
 	SET NOCOUNT ON;
@@ -39,7 +40,8 @@ BEGIN
 			    GETDATE(),
 				CI.StatusOrderId,
 				CI.IsValid,
-				CI.CourierContempt
+				CI.CourierContempt,
+				CI.IsDenied
 		From   
 				[dbo].[DeliveryAttempt]   DA   WITH(NOLOCK)
 				INNER JOIN 
@@ -64,7 +66,7 @@ BEGIN
 				Convert(varchar(10), @DateOf,  103)   DateOf,
 				Convert(varchar(10), @DateTo,  103)   DateTo,
 				IIF((@IdCourier IS NOT NULL OR @IdCourier <>'') ,@Hub + '-'+ @CourierName,@Hub) Hub ,
-				SUM(IIF((CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) , 1,0))  TotalVisit,
+				SUM(IIF((CI.StatusOrderId = @IdIncidenceInRoute and CI.IsDenied=1) , 1,0))  TotalVisit,
 				SUM(IIF(CI.StatusOrderId = @IdIncidenceInRoute,1,0))  TotalIncidence,
 				SUM(IIF(CI.CourierContempt=1,1,0)) TotalDesacato,
 				SUM(IIF(CI.StatusOrderId in(@IdDeliveryFail, @IdIncidenceInRoute),1,0)) TotalVisitandIncidence

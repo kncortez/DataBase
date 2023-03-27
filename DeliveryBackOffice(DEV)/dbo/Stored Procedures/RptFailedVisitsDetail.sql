@@ -48,7 +48,7 @@ BEGIN TRY
 				  CI.ActionObservation,
 				  CASE 
 				      WHEN CI.CourierContempt = 1  THEN 'Desacato'
-				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsValid=0) THEN 'Visita Falsa'
+				      WHEN (CI.StatusOrderId = @IdIncidenceInRoute and CI.IsDenied=1) THEN 'Visita Falsa'
 				  ELSE 'Incidencia Sospechosa' end TypeIncidence
 			From [dbo].[DeliveryOrder] DO WITH(NOLOCK)
 		        Inner JOIN
