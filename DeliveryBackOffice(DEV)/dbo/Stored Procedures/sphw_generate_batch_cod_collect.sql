@@ -157,7 +157,7 @@ BEGIN
                            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)
                        WHERE pg.BatchCODId IS NULL
-                             AND do.Collect_OnDelivery = 0
+                             AND (do.IsLastMileReturn = 1 OR do.Collect_OnDelivery = 0)
                              AND do.IsCollect = 'true'
                              AND pg.BatchCODIdCommission IS NULL
                              AND pg.RowStatus = 1
