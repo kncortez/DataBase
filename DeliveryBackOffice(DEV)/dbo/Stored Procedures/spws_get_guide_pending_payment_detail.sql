@@ -92,7 +92,8 @@ BEGIN
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )
+              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )			  
+			  AND COALESCE(DO.IsLastMileReturn,0) = 0
           )
           OR
           (
@@ -142,6 +143,32 @@ BEGIN
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
           );
+
+		  IF ((SELECT COUNT(1)FROM #listGuidesExcluded) = 0)
+			BEGIN
+			
+			
+			INSERT INTO #listGuidesExcluded(Guide_Serie,Guide_Number,StatusOrderId,Description)			
+				SELECT lg.Guide_Serie,
+           lg.Guide_Number,
+           so.StatusOrderId,
+           so.OrderDescription 'Description'
+    FROM #listGuides lg
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+            ON lg.Guide_Serie = do.Guide_Serie
+               AND lg.Guide_Number = do.Guide_Number
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD
+		ON DOD.Guide_Serie = do.Guide_Serie AND DOD.Guide_Number = do.Guide_Number
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+            ON DOD.StatusOrderId = so.StatusOrderId
+    WHERE           
+          (
+              UPPER(@ServiceType) = 'DELIVERY'
+              AND DO.IsLastMileReturn = 1
+			  AND DOD.StatusOrderId IN ( 32 )						
+          )
+         
+			END
 
     CREATE NONCLUSTERED INDEX IX_LGE_SERIE
     ON #listGuidesExcluded (Guide_Serie);
