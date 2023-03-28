@@ -146,7 +146,7 @@ BEGIN
                        SELECT /*TOP 50*/
                            ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg WITH (NOLOCK)
-                           JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                ON do.Guide_Serie = pg.GuideSerie
                                   AND do.Guide_Number = pg.GuideNumber
                            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
@@ -432,7 +432,7 @@ BEGIN
 
             INTO #TableAmountCOD
             FROM #listGuides lst
-                JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Serie = lst.Guide_Serie
                        AND ord.Guide_Number = lst.Guide_Number
                 LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
@@ -493,6 +493,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
+				OR ord.IsLastMileReturn = 1
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
