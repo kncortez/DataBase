@@ -134,6 +134,7 @@ BEGIN
                                  --	  OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
+								 AND ISNULL(do.IsLastMileReturn,0) =0
                            FOR XML PATH('')
                        ),
                        1,
@@ -186,6 +187,7 @@ BEGIN
                                  AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
+								  AND ISNULL(do.IsLastMileReturn,0) =0
                            FOR XML PATH('')
                        ),
                        1,
