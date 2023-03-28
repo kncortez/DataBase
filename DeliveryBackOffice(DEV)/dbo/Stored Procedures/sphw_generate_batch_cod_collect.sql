@@ -283,7 +283,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #listGuides lst
-                JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
@@ -385,6 +385,7 @@ BEGIN
 
 
                    --, iif(op.Deposit_Number is null,( ord.Collect_OnDelivery - tp.Commission - ord.PriceShippment   ), 0) as CODtoPay
+				   CASE WHEN ord.IsLastMileReturn = 1 THEN 0 ELSE
                    IIF(op.Deposit_Number IS NULL,
                        ord.Collect_OnDelivery
                        -- comi
@@ -420,7 +421,7 @@ BEGIN
                                   0,
                                   IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
                          ),
-                       0) CODtoPay,
+                       0) END CODtoPay,
                    (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
                         0,
                         IIF(ISNULL(ord.IsCollect, 0) = 1,
