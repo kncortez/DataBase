@@ -57,29 +57,6 @@ IF (EXISTS(SELECT TOP 1 1
            WHERE DDO.Guide_Serie+CAST(DDO.Guide_Number AS nvarchar)  = @Guide))
 BEGIN
 
-
-    IF ((EXISTS(SELECT TOP 1 1
-                FROM [DeliveryBackOffice].[dbo].[Township] WITH (NOLOCK)
-                WHERE IdTownship = @Sender_Town
-				AND IdProvince = (
-                          SELECT TOP 1  IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
-                          WHERE ProvinceName = @Sender_Department COLLATE Latin1_General_CI_AI
-                      )
-					  AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1)) 
-					  AND
-		(EXISTS(SELECT TOP 1 1
-                FROM [DeliveryBackOffice].[dbo].[Township] WITH (NOLOCK)
-                WHERE IdTownship = @Receiver_Town
-				AND IdProvince = (
-                          SELECT TOP 1  IdProvince
-                          FROM [DeliveryBackOffice].[dbo].[Province] WITH (NOLOCK)
-                          WHERE ProvinceName= @Receiver_Department COLLATE Latin1_General_CI_AI
-                      )
-					  AND [DeliveryBackOffice].[dbo].[Township].TownshipStatus=1)))
-	BEGIN
-
-
 			IF (@STATUS  IN(@Entregado,@Anulado,@EntregadoEnExpressCenter))
 			BEGIN
 
@@ -96,14 +73,6 @@ BEGIN
 
 				                          SELECT  Result =0
 				                    END
-	END 
-	   ELSE
-	       BEGIN
-
-				SELECT Result=5 /*Municipios inactivos */
-
-		   END
-
 END
 ELSE
 	BEGIN
