@@ -30,7 +30,7 @@ BEGIN
 				FROM
 					[dbo].[StatusOrder] SO  WITH(NOLOCK)
 				WHERE
-					SO.[CatCheckpointTypeId] = 3 And SO.StatusOrderId = @StatusActualId)
+					SO.[CatCheckpointTypeId] = 3 And SO.StatusOrderId = @StatusActualId And SO.RowStatus =1)
 				)
 
 				BEGIN
@@ -38,7 +38,7 @@ BEGIN
 				END
 				ELSE
 					BEGIN
-						SELECT 0 AS 'STATUSTYPE', '[' + @Status + ']' AS [Status]
+					SELECT 0 AS 'STATUSTYPE', '[' + @Status + ']' AS [Status]
 			
 					END
 		  END
