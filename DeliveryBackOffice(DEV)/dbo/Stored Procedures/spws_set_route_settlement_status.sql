@@ -24,11 +24,11 @@ BEGIN
     DECLARE @Description NVARCHAR(2048);
 
     DECLARE @IsDry BIT;
-
+	DECLARE @IsStatusTerminal int = (Select Count(Guide_Number) From dbo.DeliveryOrder DO With (nolock) Where DO.StatusOrderId in(57,14,22,23,24,25,30,33,34,42) And DO.Guide_Serie=@GuideSerie And Guide_Number = @GuideNumber)
     BEGIN TRANSACTION;
     BEGIN TRY
 
-
+	Print @IsStatusTerminal
         DECLARE @stattus INT = 11;
 
         /* Inserción en tabla TransactionalBackbone para guardar 
@@ -885,7 +885,8 @@ BEGIN
                --	CONVERT(BIGINT, 0) AS 'NumTransferID',
                CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide',
                0 AS 'SubStatusCode',
-               0 'IsDry';
+               0 'IsDry',
+			   @IsStatusTerminal 'IsTerminal'
         ROLLBACK TRANSACTION;
 
         SELECT 'No se guardo el registro' AS StatusCode;
@@ -905,7 +906,8 @@ BEGIN
                    @GuideNumber GuideNumber,
                    @GuidePiece GuidePiece,
                    @IsDry 'IsDry',
-                   COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) Pieces
+                   COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) Pieces,
+				   @IsStatusTerminal 'IsTerminal'
             FROM DeliveryOrder do WITH (NOLOCK)
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber;
@@ -1023,11 +1025,12 @@ BEGIN
             SELECT 0 AS 'StatusCode',
                    @Description AS 'Description',
                    --	0 AS 'NumTransferID',
-                   CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide',
+                   CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide', 
 
                    --@Amount AS 'Amount',
                    0 AS 'SubStatusCode',
-                   0 'IsDry';
+                   0 'IsDry',
+				   @IsStatusTerminal 'IsTerminal'
             ROLLBACK TRANSACTION;
         END;
     END;
