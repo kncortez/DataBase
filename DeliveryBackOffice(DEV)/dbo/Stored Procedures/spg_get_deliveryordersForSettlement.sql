@@ -77,7 +77,7 @@ BEGIN
            ) AS Delivered,
            (CASE
                 WHEN do.IsCollect = 'TRUE' THEN
-                    CONVERT(VARCHAR, CAST((ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 0) + ISNULL(do.PriceShippment, 0)) AS DECIMAL), 1)
+                    CONVERT(VARCHAR, CAST((ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 0) + ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END ELSE do.PriceShippment END, 0)) AS DECIMAL), 1)
                 ELSE
                     CONVERT(VARCHAR, CAST((ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 0)) AS DECIMAL), 1)
             END
@@ -86,7 +86,14 @@ BEGIN
     FROM @GuidesFound gf
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON do.Guide_Serie = gf.Guide_Serie
-               AND do.Guide_Number = gf.Guide_Number;
+               AND do.Guide_Number = gf.Guide_Number
+		LEFT JOIN [dbo].VisitPointClient vps WITH(NOLOCK)
+			ON vps.CodeOfReference = do.Sender_ID
+		LEFT JOIN [dbo].[Customer] cu WITH(NOLOCK)
+			ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
+		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
+            ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
+               AND cdp.IdConditionOfPayment > 1;
 
     SELECT SUM(COD) AS COD_Manifest
     FROM @GuidesDetail;

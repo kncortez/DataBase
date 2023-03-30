@@ -120,68 +120,69 @@ BEGIN
                     [Token],
                     CustomerId
                 )
-                SELECT do.[Guide_Serie],
-                       do.[Guide_Number],
-                       @CourierId,
-                       GETDATE(),
-                       NULL,
-                       NULL,
-                       @CatModuleId,
-                       0,
-                       @Token,
-                       cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                        ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                        ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
-                      AND do.[Collect_OnDelivery] > 0
-					 AND do.IsLastMileReturn =0
-                UNION
-                SELECT do.[Guide_Serie],
-                       do.[Guide_Number],
-                       @CourierId,
-                       GETDATE(),
-                       NULL,
-                       NULL,
-                       @CatModuleId,
-                       0,
-                       @Token,
-                       cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                        ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                        ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
-                      AND do.[Collect_OnDelivery] = 0 
-                      AND do.IsCollect = 'true'
-                UNION
-                SELECT do.[Guide_Serie],
-                       do.[Guide_Number],
-                       @CourierId,
-                       GETDATE(),
-                       NULL,
-                       NULL,
-                       @CatModuleId,
-                       0,
-                       @Token,
-                       cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
-                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
-                        ON vp.CodeOfReference = do.Sender_ID
-                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-                        ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
-                    INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-                        ON do.Guide_Serie = DOP.GuideSerie
-                           AND do.Guide_Number = DOP.GuideNumber
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
-                      AND do.IsCollect = 'false'
-                      AND DOP.TimePlaId = 2;
+                SELECT
+					do.[Guide_Serie]
+				   ,do.[Guide_Number]
+				   ,@CourierId
+				   ,GETDATE()
+				   ,NULL
+				   ,NULL
+				   ,@CatModuleId
+				   ,0
+				   ,@Token
+				   ,cus.IdCustomer
+				FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+				LEFT JOIN dbo.VisitPointClient vp
+					ON vp.CodeOfReference = do.Sender_ID
+				LEFT JOIN dbo.Customer cus
+					ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
+				LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
+					ON cdp.IdConditionOfPayment = cus.ConditionOfPaymentID
+						AND cdp.IdConditionOfPayment > 1
+				LEFT JOIN dbo.DeliveryOrderPaymentDetail DOP
+					ON do.Guide_Serie = DOP.GuideSerie
+						AND do.Guide_Number = DOP.GuideNumber
+				WHERE do.[Guide_Number] = @GuideNumber
+				AND do.[Guide_Serie] = @GuideSerie
+				AND ((CASE
+					WHEN do.IsCollect = 1 THEN CASE
+							WHEN do.IsLastMileReturn = 1 THEN 0
+							ELSE do.Collect_OnDelivery
+						END +
+						CASE
+							WHEN do.IsLastMileReturn = 1 THEN CASE
+									WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0
+									ELSE do.PriceShippment
+								END
+							ELSE do.PriceShippment
+						END
+					ELSE CASE
+							WHEN do.IsLastMileReturn = 1 THEN 0
+							ELSE do.Collect_OnDelivery
+						END
+				END) > 0
+				OR (do.[Collect_OnDelivery] = 0
+				AND do.IsCollect = 'true'
+				AND NOT EXISTS (SELECT
+					TOP 1
+						1
+					FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+						ON CD.IdCost = C.IdCost
+						AND CD.IdTypeOfMoney IN (2, 6)
+					WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
+				)
+				OR (do.IsCollect = 'false'
+				AND ISNULL(DOP.TimePlaId, 0) = 2
+				AND NOT EXISTS (SELECT
+					TOP 1
+						1
+					FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH (NOLOCK)
+						ON CD.IdCost = C.IdCost
+						AND CD.IdTypeOfMoney IN (2, 6)
+					WHERE C.ProductNumber = CONCAT(@GuideSerie, CAST(@GuideNumber AS VARCHAR(50))))
+				))
             END;
 
             --- Se agrega nuevo checkpoint
@@ -189,9 +190,10 @@ BEGIN
             SET @IsCOD = CASE
                              WHEN
                              (
-                                 SELECT Collect_OnDelivery
-                                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-                                 WHERE Guide_Number = @GuideNumber
+                                 SELECT CASE WHEN IsLastMileReturn = 1 THEN 0 ELSE ISNULL(Collect_OnDelivery, 0) END
+                                 FROM DeliveryBackOffice.dbo.DeliveryOrder
+                                 WHERE Guide_Serie = @GuideSerie 
+								 AND Guide_Number = @GuideNumber
                              ) > 0 THEN
                                  'true'
                              ELSE
@@ -201,19 +203,11 @@ BEGIN
             IF (@IsCOD = 'true')
             BEGIN
 
-
-			DECLARE @Isreturn bit  =0
-
-			SELECT @Isreturn = ord.IsLastMileReturn FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-			WHERE ord.Guide_Serie ='fd' AND ord.Guide_Number = @GuideNumber
-
-			IF @Isreturn = 1
-
-				BEGIN
+				DECLARE @StatusCOD TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'COD liquidado' AND RowStatus = 1)
 
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
-                SET StatusOrderId = 24
+                SET StatusOrderId = @StatusCOD
                 WHERE Guide_Number = @GuideNumber;
 
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrderDetail si la guia tuviera COD
@@ -227,9 +221,7 @@ BEGIN
                     DateCreated
                 )
                 VALUES
-                (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
-
-				END;
+                (@GuideSerie, @GuideNumber, @StatusCOD, @Token, GETDATE());
 
             END;
 

@@ -136,6 +136,30 @@ BEGIN
 				AND ID_DeliveryOrderBySettlement = @IdManifest
 
 			SET @RModified = @@ROWCOUNT
+
+			-- incluir en el monto, el envío si es collect y corresponde
+			SET @Amount += ISNULL((SELECT
+					CASE
+						WHEN do.IsCollect = 1 THEN CASE
+								WHEN do.IsLastMileReturn = 1 THEN CASE
+										WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0
+										ELSE do.PriceShippment
+									END
+								ELSE do.PriceShippment
+							END
+						ELSE 0
+					END
+				FROM DeliveryOrder do WITH (NOLOCK)
+				LEFT JOIN [dbo].VisitPointClient vps WITH (NOLOCK)
+					ON vps.CodeOfReference = do.Sender_ID
+				LEFT JOIN [dbo].[Customer] cu WITH (NOLOCK)
+					ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
+				LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
+					ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
+					AND cdp.IdConditionOfPayment > 1
+				WHERE Guide_Serie = @GuideSerie
+				AND Guide_Number = @GuideNumber)
+			, 0)
 						
 		END TRY
 
