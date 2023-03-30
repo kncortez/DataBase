@@ -85,10 +85,10 @@ BEGIN
            lg.Guide_Number
     INTO #listGuidesIncluded
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
                AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
@@ -129,10 +129,10 @@ BEGIN
            so.OrderDescription 'Description'
     INTO #listGuidesExcluded
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
                AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
@@ -160,10 +160,10 @@ BEGIN
            so.StatusOrderId,
            so.OrderDescription 'Description'
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
                AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
              
@@ -172,7 +172,7 @@ BEGIN
 												FROM
 													[dbo].[StatusOrder] SO  WITH(NOLOCK)
 												WHERE
-													[CatCheckpointTypeId] = 3 ))
+													[CatCheckpointTypeId] = 3 And RowStatus = 1 ))
 		)
 
 ------------------------------------  Validación de estados terminales --------------------------------------------------
@@ -451,7 +451,7 @@ BEGIN
            IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON ppt.GuideSerie = do.Guide_Serie
                AND ppt.GuideNumber = do.Guide_Number;
 
@@ -508,7 +508,7 @@ BEGIN
                        SELECT ' { "Description": "' + ISNULL(br.Description, '') + '", ' + '"Amount": '
                               + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ' }, '
                        FROM Cost c
-                           INNER JOIN BreakdownOfPayment br
+                           INNER JOIN BreakdownOfPayment br WITH(NOLOCK)
                                ON c.IdCost = br.IdCost
                        WHERE c.ProductNumber = @ActualGuide
                              AND ABS(br.Amount) > 0
