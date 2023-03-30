@@ -1467,6 +1467,11 @@
     <Build Include="dbo\Stored Procedures\RptFailedVisitsHeader.sql" />
     <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
+    <Build Include="dbo\Tables\InvoiceDailyExecution.sql" />
+    <Build Include="dbo\Tables\CatInvoiceDailySchedule.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateInvoiceHelperExecutionQueue.sql" />
+    <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceExecutionProcess.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
