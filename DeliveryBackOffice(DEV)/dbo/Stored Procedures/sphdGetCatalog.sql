@@ -454,23 +454,21 @@ BEGIN
 	END;
 
 		
-		   IF (@NameOfCatalog = 'BillingTime')
-		   BEGIN
+		
 			   SELECT BT.IdCatBillingTime  [IdValue]
 					,BT.DescriptionBillingTime [NameValue],
 					'BillingTime'	 [Catalog]
-				FROM [dbo].[CatBillingTime] BT
+				FROM [dbo].[CatBillingTime] BT with(nolock)
 				WHERE BT.RowStatus ='TRUE'
-			END 
+		
 
 			
-		   IF (@NameOfCatalog = 'BillingVolume')
-		   BEGIN
+		
 			   SELECT BV.IdCatBillingVolume  [IdValue]
-					,BV.DescriptionBillingVolume [NameValue],
-					'Billingvolume'	 [Catalog]
-				FROM [dbo].[CatBillingVolume] BV
+					,BV.NameBillingVolume [NameValue],
+					'BillingVolume'	 [Catalog]
+				FROM [dbo].[CatBillingVolume] BV with(nolock)
 				WHERE BV.RowStatus ='TRUE'
-			END 
-
+		
+		
 END
