@@ -3,6 +3,11 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-21>
+-- Description:	<Agregar guìas con estado terminal a tabla temporal de guìas excluidas, asì evitar que realicen algun proceso en recolecciòn, entrega o devoluciòn>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -88,6 +93,7 @@ BEGIN
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
               AND so.StatusOrderId IN ( 1, 4, 15, 16 )
+			  
           )
           OR
           (
@@ -130,18 +136,54 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId NOT IN ( 1, 4, 15, 16 )
-          )
+              AND (so.StatusOrderId NOT IN ( 1, 4, 15, 16 )
+			))
+          
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+			  )
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+			
           );
+		  
+
+  INSERT INTO #listGuidesExcluded
+     
+    SELECT lg.Guide_Serie,
+           lg.Guide_Number,
+           so.StatusOrderId,
+           so.OrderDescription 'Description'
+    FROM #listGuides lg
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+            ON lg.Guide_Serie = do.Guide_Serie
+               AND lg.Guide_Number = do.Guide_Number
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+            ON do.StatusOrderId = so.StatusOrderId
+    WHERE (
+             
+               (so.StatusOrderId  IN ( SELECT
+													SO.[StatusOrderId]
+												FROM
+													[dbo].[StatusOrder] SO  WITH(NOLOCK)
+												WHERE
+													[CatCheckpointTypeId] = 3 ))
+		)
+
+------------------------------------  Validación de estados terminales --------------------------------------------------
+ 
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
 
     CREATE NONCLUSTERED INDEX IX_LGE_SERIE
     ON #listGuidesExcluded (Guide_Serie);
@@ -180,6 +222,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 			ON lst.Guide_Serie = PC.GuideSerieDestination
 				AND lst.Guide_Number = PC.GuideNumberDestination
+				AND PC.FinalActiveDate >= GETDATE()
 				AND PC.RowStatus = 1
     WHERE ISNULL(ord.PriceShippment, 0) = 0
 		AND PC.IdPromoCoupon IS NULL;
@@ -507,7 +550,7 @@ BEGIN
                                  --'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
                                  --'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
                                  '"StatusOrderId": ' + CAST(ISNULL(lge.StatusOrderId, 0) AS VARCHAR) + ', '
-                                    + '"Description": "' + lge.Description + '" }, '
+                                    + '"Description": "' +'Guía en estado : ' + lge.Description +' , no permite realizar el proceso.' + '" }, '
                              FROM #listGuidesExcluded lge
                              FOR XML PATH('')
                          ),
@@ -531,7 +574,7 @@ BEGIN
                                  --'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
                                  --'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
                                  '"StatusOrderId": ' + CAST(ISNULL(lgne.StatusOrderId, 0) AS VARCHAR) + ', '
-                                    + '"Description": "' + lgne.Description + '" }, '
+                                  + '"Description": "' + lgne.Description + '" }, '
                              FROM #listGuidesNotExist lgne
                              FOR XML PATH('')
                          ),
