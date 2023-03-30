@@ -45,7 +45,7 @@ BEGIN
 	DECLARE @IsStatusTerminal int = ISNULL(( Select 1 From [dbo].[DeliveryOrder] DO WITH(NOLOCK) Where DO.Guide_Serie= @Guide_Serie And DO.Guide_Number =@Guide_Number 
 	                                                                                          And DO.StatusOrderId  IN (SELECT SO.[StatusOrderId]
                                                                                                                               FROM	[dbo].[StatusOrder] SO  WITH(NOLOCK)
-																														WHERE [CatCheckpointTypeId] = 3)),0)
+																														WHERE [CatCheckpointTypeId] = 3  And SO.RowStatus = 1)),0)
 									
 
 	BEGIN TRANSACTION
