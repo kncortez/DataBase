@@ -4,6 +4,11 @@
 -- Create date: <2021-06-04>
 -- Description:	<creación o modificación de valores>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-31>
+-- Description:	<agragar campos para configuración de tiempo de facturación y volumen de facturación>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT,
@@ -45,6 +50,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT, --1 Insert Into , 2 Update,
 	@CatBusinessSegmentId INT = NULL
+	@CatBillingTimeId INT = -1,
+	@CatBillingVolumeId INT = -1
 
 AS
 BEGIN
@@ -161,7 +168,9 @@ BEGIN
                             TokenUpdated,
                             DateUpdated,
                             AveragePackageDaily,
-                            DateStartOperation
+                            DateStartOperation,
+							CatBillingTimeId,
+							CatBillingVolumeId
                         )
                         VALUES
                         (   @CodeOfReference,				   -- VisitPointID - int
@@ -178,7 +187,9 @@ BEGIN
                             NULL,                  -- TokenUpdated - nvarchar(50)
                             NULL,                  -- DateUpdated - datetime
                             @AveragePackageDaily,  -- AveragePackageDaily - int
-                            @DateStartOperation    -- DateStartOperation - datetime
+                            @DateStartOperation,    -- DateStartOperation - datetime
+							@CatBillingTimeId,
+							@CatBillingVolumeId
                             )
                         DECLARE @IDVPCONF AS INT = -1
                         SET @IDVPCONF = SCOPE_IDENTITY()
