@@ -36,6 +36,8 @@
     [RecolectionBatch]        BIT             NULL,
     [CODBatch]                BIT             NULL,
     [RowStatus]               BIT             CONSTRAINT [DF_BatchDetailCOD_RowStatus] DEFAULT ((1)) NULL,
+    [CODCommission]           DECIMAL (18, 2) NULL,
+    [CODDiscount]             DECIMAL (18, 2) NULL,
     CONSTRAINT [PK_BatchDetailCOD_IdBatchDetailCOD] PRIMARY KEY CLUSTERED ([IdBatchDetailCOD] ASC),
     CONSTRAINT [FK_BatchDetailCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
     CONSTRAINT [FK_BatchDetailCOD_CatAccountTypeCOD] FOREIGN KEY ([CatAccountTypeCODId]) REFERENCES [dbo].[CatAccountTypeCOD] ([IdCatAccountTypeCOD]),
@@ -46,6 +48,8 @@
     CONSTRAINT [FK_BatchDetailCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 
@@ -175,7 +179,7 @@ CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber]
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar la fecha en la que se genera la comisión.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CommissionDate';
+
 
 
 GO
@@ -208,4 +212,12 @@ CREATE NONCLUSTERED INDEX [IDX_GUIDE_SERIE]
 GO
 CREATE NONCLUSTERED INDEX [idx_AuthorizationDate]
     ON [dbo].[BatchDetailCOD]([AuthorizationDate] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro de descuento en COD al generar lote', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CODDiscount';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'comisión de cobro por  COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CODCommission';
 
