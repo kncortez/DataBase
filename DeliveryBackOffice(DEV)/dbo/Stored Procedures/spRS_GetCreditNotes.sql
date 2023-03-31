@@ -15,11 +15,11 @@ BEGIN
 	DECLARE @ExpressCenterVPCType INT = (
 		SELECT 
 			TOP (1) 
-				[KOVPB].[IdKindOfVPBusiness] 
+				[KOVPC].[IdKindOfVPClient] 
 		FROM 
-			[DeliveryBackOffice].[dbo].[KindOfVPBusiness] KOVPB  WITH(NOLOCK) 
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPB].[Shorthand] = 'EXP'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
 	)
 
 	DECLARE @TempGuideSplit TABLE (
@@ -84,7 +84,7 @@ BEGIN
 		SELECT 
 			DISTINCT
 				ISNULL([CS].[SysNameSystem], 'Hermes Integrations') [System]
-				,ISNULL([VPC].[DescriptionOfClient], 'N/A') [StoreName]
+				,COALESCE([VPC].[DescriptionOfClient], [VPCsec].[DescriptionOfClient], 'N/A') [StoreName]
 				,LTRIM(RTRIM(CONCAT([DO].[Sender_FirstName],' ', [DO].[Sender_LastName]))) [Sender]
 				,CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) [Guide]
 				,[DO].[DateCreated]
@@ -119,6 +119,12 @@ BEGIN
 					[VPC].[CodeOfReference] = [DO].[Sender_ID]
 					AND
 					[VPC].[IdKindOfVPClient] = @ExpressCenterVPCType
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPCsec  WITH(NOLOCK) 
+				ON
+					[VPCsec].[CodeOfReference] = [DO].[OriginSenderId]
+					AND
+					[VPCsec].[IdKindOfVPClient] = @ExpressCenterVPCType
 			-- Token de hermes desktop
 			LEFT JOIN
 				[DenariusUser_Dev].[dbo].[LGN_LogByToken] LGNLBT  WITH(NOLOCK) 
@@ -136,7 +142,7 @@ BEGIN
 		SELECT 
 			DISTINCT
 				ISNULL([CS].[SysNameSystem], 'Hermes Integrations') [System]
-				,ISNULL([VPC].[DescriptionOfClient], 'N/A') [StoreName]
+				,COALESCE([VPC].[DescriptionOfClient], [VPCsec].[DescriptionOfClient], 'N/A') [StoreName]
 				,LTRIM(RTRIM(CONCAT([DO].[Sender_FirstName],' ', [DO].[Sender_LastName]))) [Sender]
 				,CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) [Guide]
 				,[DO].[DateCreated]
@@ -177,6 +183,12 @@ BEGIN
 					[VPC].[CodeOfReference] = [DO].[Sender_ID]
 					AND
 					[VPC].[IdKindOfVPClient] = @ExpressCenterVPCType
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPCsec  WITH(NOLOCK) 
+				ON
+					[VPCsec].[CodeOfReference] = [DO].[OriginSenderId]
+					AND
+					[VPCsec].[IdKindOfVPClient] = @ExpressCenterVPCType
 			-- Token de hermes desktop
 			LEFT JOIN
 				[DenariusUser_Dev].[dbo].[LGN_LogByToken] LGNLBT  WITH(NOLOCK) 
