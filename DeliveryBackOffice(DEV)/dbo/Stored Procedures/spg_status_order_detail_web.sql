@@ -119,9 +119,12 @@ BEGIN
 											DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(courier.First_Name) + ' '+LOWER(courier.Last_Name)) +
 											' ]'
 											+ ' ' +
-											'[ ' + [HL].[HubAbbreviation] + ' ]'
+											CASE 
+												WHEN [HL].[HubAbbreviation] IS NOT NULL THEN ( '[ ' + [HL].[HubAbbreviation] + ' ]' )
+												ELSE ''
+											END
 								   FROM dbo.SenderReceiver courier 
-								   INNER JOIN [dbo].[HubLogistics] HL
+								   LEFT JOIN [dbo].[HubLogistics] HL
 									ON [courier].[HubLogisticId] = [HL].[IdHubLogistic]
 								   WHERE courier.ID = da.ID_Courier) + ' ' + 
 								   --I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
