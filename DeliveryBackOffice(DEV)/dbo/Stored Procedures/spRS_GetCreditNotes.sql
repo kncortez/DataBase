@@ -71,13 +71,6 @@ BEGIN
 
 	END
 
-	IF(DATEDIFF(DAY,@StartDate, @EndDate) > 7)
-	BEGIN
-
-		SET @StartDate = CAST(CAST(DATEADD(DAY,-7,@EndDate) AS DATE) AS DATETIME)
-
-	END
-
 	IF(NOT EXISTS ( SELECT TOP 1 1 FROM @TempGuideSplit ))
 	BEGIN
 	    
