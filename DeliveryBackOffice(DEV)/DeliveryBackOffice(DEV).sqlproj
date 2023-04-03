@@ -1467,6 +1467,8 @@
     <Build Include="dbo\Stored Procedures\RptFailedVisitsHeader.sql" />
     <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
+    <Build Include="dbo\Tables\ExternalPlatformPickupServiceLog.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_GetPickupServicesForExternalService.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
