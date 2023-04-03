@@ -7,7 +7,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 -- =============================================
--- Author:		<Andrés, Ruíz>
+-- Author:		<Andrï¿½s, Ruï¿½z>
 -- Create date: <2023-02-17>
 -- Description:	< Devuelve los datos de incidencias en ruta y visitas para portal web interno >
 -- =============================================
@@ -21,8 +21,22 @@ CREATE PROCEDURE [dbo].[spHW_GetServiceIncidenceForMonitoring]
 AS 
 BEGIN
 
-	DECLARE @SACWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
-	DECLARE @OPWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
+	DECLARE @SACWebRoleId INT =
+        (
+            SELECT TOP 1
+                   CR.RolIdRol
+            FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
+            WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI
+                  AND CR.RolRowStatus = 1
+        );
+DECLARE @OPWebRoleId INT =
+        (
+            SELECT TOP 1
+                   CR.RolIdRol
+            FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
+            WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI
+                  AND CR.RolRowStatus = 1
+        );
 
 	IF(@EndDate IS NULL)
 	BEGIN
@@ -59,6 +73,33 @@ BEGIN
 
 	BEGIN TRY
 
+	IF OBJECT_ID('tempdb.dbo.#HubServiceCoverage', 'U') IS NOT NULL 
+		DROP TABLE #HubServiceCoverage;
+
+	CREATE TABLE #HubServiceCoverage(
+		HeaderCode NVARCHAR(50),
+		Hub INT
+	);
+
+	INSERT INTO #HubServiceCoverage
+	(
+	    [HeaderCode],
+	    [Hub]
+	)
+	SELECT
+		DSC.[HeaderCode],
+		MAX(HL.IdHubLogistic) 'Hub'
+	FROM
+		[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
+			ON
+				DSC.Hub = HL.HubAbbreviation
+	GROUP BY
+		DSC.HeaderCode
+
+		print '@SACWebRoleId'
+		PRINT @SACWebRoleId
 	-- SAC Web
 	IF
 	(
@@ -202,10 +243,123 @@ BEGIN
 			COI.IsConfirmed = 0
 			AND
 			COI.RowStatus = 1
+			AND do.IsLastMileReturn = 1
 			AND
 			(
 				HLBUOri.IdHubLogisticByUser IS NOT NULL
-				OR
+			)
+		UNION
+		SELECT
+			CONCAT(DA.Guide_Serie, DA.Guide_Number) 'Service'
+			,(
+				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN LTRIM(RTRIM(CONCAT(DO.Sender_FirstName,' ',DO.Sender_LastName)))
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName,' ',DO.Receiver_LastName)))
+					ELSE LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName,' ',DO.Receiver_LastName)))
+				END
+			) 'ServiceCustomer'
+			,(
+				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Address
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Address
+					ELSE DO.Receiver_Address
+				END
+			) 'ServiceAddress'
+			,(
+				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Town
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Town
+					ELSE DO.Receiver_Town
+				END
+			) 'ServiceTownship'
+			,(
+				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Department
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Department
+					ELSE DO.Receiver_Department
+				END
+			) 'ServiceProvince'
+			,(
+				CASE
+					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Phone
+					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Phone
+					ELSE DO.Receiver_Phone
+				END
+			) 'ServiceCustomerPhone'
+			,SO.OrderDescription 'Tipo de incidencia'
+			,CTI.NameIncidence 'Incidencia indicada'
+			,DO.Guide_Serie 'GuideSerie'
+			,DO.Guide_Number 'GuideNumber'
+			,CAST(ISNULL(DO.IsLastMileReturn, 0) AS BIT) 'IsLastMileReturn'
+			,COI.ConfirmationOfIncidentToken 'IncidenceToken'
+			,ISNULL(SR.First_Name,'') +' '+ ISNULL(SR.Last_Name,'') AS 'CourierFailedVisit'
+			,COI.DateCreated AS 'Failedvisitdate'
+			,DA.Latitude AS 'LatitudeIncidence'
+			,DA.Longitude AS 'LongitudeIncidence'
+			,(SELECT TOP 1 Path_Incident
+						FROM [dbo].[DeliveryProof] WITH(NOLOCK)
+						WHERE ID = DA.ID_Proof) AS  'IncidenceImage'
+            ,VPC.Latitude AS 'LatitudeVisitPointClient'
+			,VPC.Longitude AS 'LongitudeVisitPintClient'
+
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
+				ON
+					COI.StatusOrderId = SO.StatusOrderId
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+				ON
+					COI.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK)
+				ON
+					DA.ID_Incident = CTI.IdIncidenceType
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+				ON
+					DA.Guide_Serie = DO.Guide_Serie
+					AND
+					DA.Guide_Number = DO.Guide_Number
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[Township] TwnByIdDes WITH(NOLOCK)
+				ON
+					DO.ReceiverIdTownship = TwnByIdDes.IdTownship
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[Township] TwnByNameDes WITH(NOLOCK)
+				ON
+					DO.Receiver_Town = TwnByNameDes.TownshipName
+			LEFT JOIN #HubServiceCoverage DSCDes
+				ON
+					[DSCDes].[HeaderCode] = ISNULL([TwnByIdDes].[HeaderCode], [TwnByNameDes].[HeaderCode])
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLBUDes WITH(NOLOCK)
+				ON
+					DSCDes.Hub = HLBUDes.HubLogisticId
+					AND
+					HLBUDes.UserId = @UserId
+			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR  WITH(NOLOCK) 
+			     ON DA.ID_Courier = SR.ID
+			LEFT JOIN [dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+				ON VPC.CodeOfReference = Case when  DO.IsLastMileReturn = 1 And DO.Sender_ID != 0 Then DO.Sender_ID Else DO.Receiver_ID End
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
+				ON
+					[SODO].[StatusOrderId] = [DO].[StatusOrderId]
+					AND
+					[SODO].[CatCheckpointTypeId] <> @TerminalStatus
+		WHERE
+			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
+			AND
+			COI.DateCreated BETWEEN @StartDate AND @EndDate
+			AND
+			COI.IsConfirmed = 0
+			AND
+			COI.RowStatus = 1
+			AND ISNULL(do.IsLastMileReturn,0)=0
+			AND
+			(
 				HLBUDes.IdHubLogisticByUser IS NOT NULL
 			)
 

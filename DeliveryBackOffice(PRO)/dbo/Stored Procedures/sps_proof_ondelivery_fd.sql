@@ -236,9 +236,9 @@ BEGIN
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET NameOfReceiver = @ReceiverName,
-                    StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
+                    StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                                         @StatusEXC,
-                                        IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
+                                        IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
                     LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', NULL, Collect_OnDelivery),
                     Collect_OnDelivery = IIF(@ExcludeCODPyament = 'true', 0, Collect_OnDelivery) -- 2021-09-09 si el flag de exlucion de pago COD es true actualizar monto COD a 0
                 WHERE Guide_Serie = @GuideSerie
@@ -265,9 +265,9 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber,
-                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
+                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                      @StatusEXC,
-                     IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
+                     IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
                  NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
                 SET @RInserted = @@ROWCOUNT;
@@ -458,7 +458,8 @@ BEGIN
 					-- Revisar si la guía pertenece a servicios de monto fijo de membresía o suscripción
 					-- Por membresía
 					SELECT
-						@IsGuideValidForPoints = 0
+						TOP 1
+							@IsGuideValidForPoints = 0
 					FROM
 						[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 						INNER JOIN
@@ -478,7 +479,8 @@ BEGIN
 
 					-- Por suscripción
 					SELECT
-						@IsGuideValidForPoints = 0
+						TOP 1
+							@IsGuideValidForPoints = 0
 					FROM
 						[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 						INNER JOIN
@@ -619,7 +621,7 @@ BEGIN
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -639,7 +641,7 @@ BEGIN
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -660,7 +662,7 @@ BEGIN
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -707,6 +709,29 @@ BEGIN
                CONVERT(BIGINT, 0) AS 'NumTransferID',
                @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide';
         ROLLBACK TRANSACTION;
+
+		INSERT INTO [dbo].[RoutePreparationLogError]
+		(
+		    [ErrorDescription],
+		    [ErrorNumber],
+		    [ErrorProcedure],
+		    [ErrorLine],
+		    [GuideSerie],
+		    [GuideNumber],
+		    [TokenCreated],
+		    [DateCreated]
+		)
+		VALUES
+		(   
+			ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    NULL,     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
     END CATCH;
 
     IF @@TRANCOUNT > 0

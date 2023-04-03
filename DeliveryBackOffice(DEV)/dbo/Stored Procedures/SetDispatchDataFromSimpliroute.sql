@@ -30,7 +30,7 @@ CREATE PROCEDURE [dbo].[SetDispatchDataFromSimpliroute]
 AS
 BEGIN
 
-    DECLARE @Active BIT = 'true';
+    DECLARE @Active BIT = 'false';
 
     IF @Active = 'true'
     BEGIN

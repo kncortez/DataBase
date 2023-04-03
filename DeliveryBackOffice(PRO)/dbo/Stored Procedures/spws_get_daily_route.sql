@@ -358,7 +358,9 @@ BEGIN
                                                                             WHEN ISNULL(EPS.Latitude, 0) != 0
                                                                                  AND ISNULL(EPS.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))
-                                                                            WHEN ISNULL(VPr.Latitude, '0') <> '' THEN
+                                                                            WHEN ISNULL(VPC.Longitude, '0') <> '' AND DOR.IsLastMileReturn = 1 THEN
+                                                                                ISNULL(VPC.Latitude, '0')
+                                                                            WHEN ISNULL(VPr.Latitude, '0') <> '' AND DOR.IsLastMileReturn = 0 THEN
                                                                                 ISNULL(VPr.Latitude, '0')
                                                                             ELSE
                                                                                 '0'

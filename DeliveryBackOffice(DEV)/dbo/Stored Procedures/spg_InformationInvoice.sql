@@ -21,16 +21,13 @@ BEGIN
 	where dti_fk_header = @idInvoice
 	ORDER BY dti_dateRegister
 
-	select
+select top 1
 	io_pk_id 'Id',
 	case when io_type = 1 then io_amount else 0 end cash,
 	case when io_type = 2 then io_amount else 0 end credCard,
 	iod.io_ticket 'Ticket',
 	io_SAPDocEntryPaymentDetail 'docEntry',
-	(select del.dpf_WarehouseCode from del_ParametrosFactura del WITH(NOLOCK)  
-	where 
-	inh.inv_vpCodeOfReferences = del.dpf_VpCodeOfReference 
-	AND cts.SendAlmacenExp = 1) 'WarehouseCode'
+	del.dpf_WarehouseCode 'WarehouseCode'
 	from InOutOfMoneyDetail iod WITH(NOLOCK)
 	inner join invoiceHeader inh WITH(NOLOCK)
 	on iod.io_invoice = inh.inv_pk_id
@@ -38,7 +35,9 @@ BEGIN
 	on inh.inv_pk_id = ind.dti_fk_header
 	left join CatArticleSAP cts WITH(NOLOCK)
 	on ind.SAPCode = cts.SAPCode
-	where io_invoice = @idInvoice
-	and cts.RowSatus = 1
+	inner join del_ParametrosFactura del
+	on inh.inv_vpCodeOfReferences = del.dpf_VpCodeOfReference
+	where iod.io_invoice = @idInvoice
+	and cts.RowSatus = 1 and ind.SAPCode = cts.SAPCode
 	
 END
