@@ -48,9 +48,7 @@ BEGIN
 											ON		[LRPC].[ContainerId] = [C].[IdContainer]
 										INNER JOIN	[dbo].[CatTypeContainer] CTC
 											ON		[C].[CatTypeContainerId] = [CTC].[IdCatTypeContainer]
-										WHERE		[LRPCDP].[CatLinehaulStatusId] = (SELECT	[CLS].[IdCatLinehaulStatus] 
-																					FROM	[dbo].[CatLinehaulStatus] CLS
-																					WHERE	[CLS].[StatusName] = 'IN TRANSIT')
+										WHERE		[LRPCDP].[CatLinehaulStatusId] = @IN_TRANSIT_STATUS_ID
 											AND		[LRPCDP].[ActCode] IS NULL);
 
 	IF (@EXISTING_LRS = 0)
@@ -86,6 +84,7 @@ BEGIN
 	-- END SETTLEMENT 
 		UPDATE	[dbo].[LinehaulRouteSettlement]
 		SET		[CatLinehaulStatusId] = @LIQUIDATED_STATUS_ID,
+				[EndDateLinehaulRouteSettlement] = SYSDATETIME(),
 				[TokenUpdated] = @TknUser,
 				[DateUpdated] = SYSDATETIME()
 		WHERE	[IdLinehaulRouteSettlement] = @LinehaulRouteSettlementId;
