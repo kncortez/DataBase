@@ -775,6 +775,8 @@ BEGIN
 					END
 				)'Icon'
         --FIN MODIFICACIÓN
+
+		, D.TypeService  'TypeService'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
