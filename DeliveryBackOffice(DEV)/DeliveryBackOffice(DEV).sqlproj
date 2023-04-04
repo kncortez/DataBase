@@ -1471,6 +1471,10 @@
     <Build Include="dbo\Stored Procedures\spg_InformationInvoiceOrigin.sql" />
     <Build Include="dbo\Stored Procedures\Set_ResponseFelToNoteCredit.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidateTerminalStatus.sql" />
+    <Build Include="dbo\Tables\ConflictManifestDetail.sql" />
+    <Build Include="dbo\Tables\ConflictManifest.sql" />
+    <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartHeader.sql" />
+    <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
