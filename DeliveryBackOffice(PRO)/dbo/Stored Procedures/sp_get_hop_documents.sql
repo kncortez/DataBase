@@ -1,4 +1,14 @@
-ï»¿
+USE [DeliveryBackOffice]
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_get_hop_documents]    Script Date: 12/02/2023 13:02:26 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
 
 
 
@@ -7,7 +17,7 @@
 -- Create date: <04/Agosto/2020>
 -- Description:	<Listado de documentos digitalizados por sede y rango de fechas>
 -- =============================================
-CREATE PROCEDURE [dbo].[sp_get_hop_documents]
+ALTER PROCEDURE [dbo].[sp_get_hop_documents]
 	-- Add the parameters for the stored procedure here
 	 @IdSender INT
 	,@StartDate DATETIME
@@ -66,14 +76,14 @@ BEGIN
 
 	-- resultados
 	SELECT 
-		COUNT(Guide_Delivery) AS Guides_Found -- guÃ­as encontradas
+		COUNT(Guide_Delivery) AS Guides_Found -- guías encontradas
 	FROM @GuidesInDelivery
 	
 	SELECT 
-		COUNT(Guide_Hop) AS Guides_Digitalized -- guÃ­as digitalizadas
+		COUNT(Guide_Hop) AS Guides_Digitalized -- guías digitalizadas
 	FROM @GuidesInHop
 
-	SELECT -- detalle de guÃ­as
+	SELECT -- detalle de guías
 		D.*
 		,H.*
 	FROM @GuidesInDelivery D
@@ -81,5 +91,8 @@ BEGIN
 	ORDER BY D.Guide_Delivery
 
 END
+
+
+GO
 
 

@@ -8,13 +8,15 @@
 -- Update:		<Add log for vehicles mileage value>
 -- Date:		<08-03-2023>
 -- Description: <Add totals by HUB>
+-- Date:		<04-04-2023>
+-- Update:		<Remove vehicle mileage flows>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_GenerateLinehaulRouteSettlement]
 	@LinehaulRoutePreparationId AS INT,
 	@DateSelected AS DATE,
 	@HubID AS INT,
 	@UserName as  NVARCHAR(20),
-	@VehicleKms AS INT,
+	--@VehicleKms AS INT,
 	@TknUser AS NVARCHAR(50)
 AS
 BEGIN
@@ -25,7 +27,7 @@ BEGIN
 	DECLARE @EXISTING_LRS AS INT;		-- Linehaul Route Settlement
 	DECLARE @INSERTED_DOC AS INT;		-- Last inserted doc
 	DECLARE @VEHICLE_ID AS INT;			-- LinehaulRoutePreparation
-	DECLARE @VEHICLE_LAST_KMS AS INT;	-- CatVehicle
+	--DECLARE @VEHICLE_LAST_KMS AS INT;	-- CatVehicle
 
 	-- Check if there is a valid record in Linehaul Route Preparation
 	SET @EXISTING_LRP = (SELECT	COUNT([LRP].[IdLinehaulRoutePreparation]) AS CONTEO
@@ -39,9 +41,9 @@ BEGIN
 						FROM	[dbo].[LinehaulRoutePreparation] LRP
 						WHERE	[LRP].[IdLinehaulRoutePreparation] = @LinehaulRoutePreparationId);
 
-	SET @VEHICLE_LAST_KMS = (SELECT	ISNULL([CV].[Kms], 0)
-							FROM	[dbo].[CatVehicle] CV
-							WHERE	[CV].[IdVehicle] = @VEHICLE_ID);
+	--SET @VEHICLE_LAST_KMS = (SELECT	ISNULL([CV].[Kms], 0)
+	--						FROM	[dbo].[CatVehicle] CV
+	--						WHERE	[CV].[IdVehicle] = @VEHICLE_ID);
 
 	IF (@EXISTING_LRP > 0) 
 		BEGIN
@@ -104,11 +106,11 @@ BEGIN
 				BEGIN TRANSACTION
 				BEGIN TRY
 
-					IF (@VehicleKms < @VEHICLE_LAST_KMS)
-						BEGIN
-							SELECT 0 [spResult], 'El kilometraje ingresado NO es válido.' [spMessage];
-							RETURN;
-						END
+					--IF (@VehicleKms < @VEHICLE_LAST_KMS)
+					--	BEGIN
+					--		SELECT 0 [spResult], 'El kilometraje ingresado NO es válido.' [spMessage];
+					--		RETURN;
+					--	END
 					
 					INSERT INTO [LinehaulRouteSettlement]
 								([LinehaulRoutePreparationId], 
@@ -121,7 +123,7 @@ BEGIN
 								 [GuidesReceived],
 								 [GuidePiecesReceived],
 								 [GuidePiecesMissing],
-								 [VehicleKms],
+								 --[VehicleKms],
 								 [RowStatus],
 								 [TokenCreated],
 								 [DateCreated])
@@ -135,7 +137,7 @@ BEGIN
 								 0,		-- GuidesReceived
 								 0,		-- GuidePiecesReceived
 								 0,		-- GuidePiecesMissing,
-								 @VehicleKms,
+								 --@VehicleKms,
 								 1,		-- RowStatus,
 								 @TknUser,
 								 SYSDATETIME());
@@ -143,22 +145,22 @@ BEGIN
 					SET @INSERTED_DOC = SCOPE_IDENTITY();
 
 					-- VEHICLE LOG
-					UPDATE	[dbo].[CatVehicle]
-					SET		[Kms] = @VehicleKms,
-							[TokenUpdated] = @TknUser,
-							[DateUpdated] = SYSDATETIME()
-					WHERE	[IdVehicle] = @VEHICLE_ID;
+					--UPDATE	[dbo].[CatVehicle]
+					--SET		[Kms] = @VehicleKms,
+					--		[TokenUpdated] = @TknUser,
+					--		[DateUpdated] = SYSDATETIME()
+					--WHERE	[IdVehicle] = @VEHICLE_ID;
 
-					INSERT INTO [dbo].[VehicleLog] ([Unidad],
-													[Kms],
-													[Observacion],
-													[TokenCreate],
-													[DateCreate])
-					VALUES							(@VEHICLE_ID,
-													@VehicleKms,
-													'spHM_EndLinehaulRouteSettlement',
-													@TknUser,
-													SYSDATETIME());
+					--INSERT INTO [dbo].[VehicleLog] ([Unidad],
+					--								[Kms],
+					--								[Observacion],
+					--								[TokenCreate],
+					--								[DateCreate])
+					--VALUES							(@VEHICLE_ID,
+					--								@VehicleKms,
+					--								'spHM_EndLinehaulRouteSettlement',
+					--								@TknUser,
+					--								SYSDATETIME());
 
 					SELECT		[LRS].[IdLinehaulRouteSettlement],
 								[LRS].[LinehaulRoutePreparationId], 
