@@ -289,27 +289,7 @@ BEGIN
                 WHERE [AccSCD].[RowStatus] = 1
                       AND [DO].[IsCollect] = 0
                       AND [Co].[TotalAmountPaid] IS NULL;
-
-
-
-
-                UPDATE [dbo].[AccountServiceCartDetail]
-                SET RowStatus = 0
-                WHERE GuideNumber IN
-                      (
-                          SELECT LG.ItemNumber FROM #listGuides LG
-                      );
-
-
-
-
-                UPDATE [dbo].[DeliveryOrderPaymentDetail]
-                SET [ShipmentCompleted] = 1
-                WHERE GuideNumber IN
-                      (
-                          SELECT LG.ItemNumber FROM #listGuides LG
-                      );
-
+					  
                 UPDATE [Co]
                 SET [Co].[TotalAmountPaid] = [Co].[TotalAmount],
                     [Co].[TokenUpdated] = @Token,
@@ -334,7 +314,19 @@ BEGIN
                       AND [DO].[IsCollect] = 0
                       AND [Co].[TotalAmountPaid] IS NULL;
 
+                UPDATE [dbo].[AccountServiceCartDetail]
+                SET RowStatus = 0
+                WHERE GuideNumber IN
+                      (
+                          SELECT LG.ItemNumber FROM #listGuides LG
+                      );
 
+                UPDATE [dbo].[DeliveryOrderPaymentDetail]
+                SET [ShipmentCompleted] = 1
+                WHERE GuideNumber IN
+                      (
+                          SELECT LG.ItemNumber FROM #listGuides LG
+                      );
 
                 COMMIT TRANSACTION;
             END TRY
