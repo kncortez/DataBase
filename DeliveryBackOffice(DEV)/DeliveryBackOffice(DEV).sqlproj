@@ -1469,6 +1469,7 @@
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetReturnGuidesWithNoPayment.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetCreditNotes.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
