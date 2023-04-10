@@ -50,7 +50,12 @@ BEGIN
                WHERE twn.[HeaderCode] = dsc.[HeaderCode]
            ) END AS Hub,
            btd.[Commission],
-           do.[Collect_OnDelivery],
+           (
+				CASE
+					WHEN ISNULL([do].[IsLastMileReturn],0) = 1 THEN 0
+					ELSE do.[Collect_OnDelivery]
+				END
+		   ) [Collect_OnDelivery],
            btd.[Amount],
            btd.AccountNumber AS NumAccount,
            btd.AccountName AS AccountName,
@@ -163,6 +168,7 @@ BEGIN
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,
+		   do.[IsLastMileReturn],
 		   bt.IdBatchCOD,
            bt.Name,
            bt.BatchNumber,
