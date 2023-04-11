@@ -1471,6 +1471,7 @@
     <Build Include="dbo\Stored Procedures\spRS_GetCreditNotes.sql" />
     <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetConcessionaireGuides.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetCDCTransactions.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
