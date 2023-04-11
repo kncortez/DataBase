@@ -316,6 +316,8 @@ BEGIN
 
                 UPDATE [dbo].[AccountServiceCartDetail]
                 SET RowStatus = 0
+				,[TokenUpdated] = @Token
+	            ,[DateUpdated] = GETDATE()
                 WHERE GuideNumber IN
                       (
                           SELECT LG.ItemNumber FROM #listGuides LG
@@ -323,6 +325,8 @@ BEGIN
 
                 UPDATE [dbo].[DeliveryOrderPaymentDetail]
                 SET [ShipmentCompleted] = 1
+				,[TokenUpdated] = @Token
+	            ,[DateUpdated] = GETDATE()
                 WHERE GuideNumber IN
                       (
                           SELECT LG.ItemNumber FROM #listGuides LG

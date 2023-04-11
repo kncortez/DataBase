@@ -1473,6 +1473,8 @@
     <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartHeader.sql" />
     <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHM_addGuideToLinehaulSettlementVirtualContainer.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetConcessionaireGuides.sql" />
+    <Build Include="dbo\Stored Procedures\GetInformationGuide.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

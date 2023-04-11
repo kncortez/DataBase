@@ -1,4 +1,4 @@
-
+﻿
 
 -- =============================================
 -- Author:		<Hernandez, Josselyn>
@@ -30,9 +30,12 @@ BEGIN
 	DECLARE @ValidateOperation BIGINT
 	DECLARE @Times INT -- cantidad de veces que se encuentra el registro con estado de entregado
 	DECLARE @Datetime DATETIME -- Fecha y hora del último checkpoint
-
-	DECLARE @StatusProgrammed TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Programado para devolución' AND RowStatus = 1)
-	DECLARE @StatusOnRoute TINYINT = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'En ruta para devolución' AND RowStatus = 1)
+	
+	DECLARE @IsLastMileReturn BIT = ISNULL(( SELECT TOP 1 DO.[IsLastMileReturn] 
+												From [dbo].[DeliveryOrder] DO With(Nolock) 
+												Where DO.Guide_Serie = @Guide_Serie And 
+													  DO.Guide_Number = @Guide_Number
+	                                          ),0)
 
 	DECLARE @StatusDescription NVARCHAR(200)= ( Select SO.OrderDescription 
 												From [dbo].[DeliveryOrder] DO With(Nolock) 
@@ -45,7 +48,7 @@ BEGIN
 	DECLARE @IsStatusTerminal int = ISNULL(( Select 1 From [dbo].[DeliveryOrder] DO WITH(NOLOCK) Where DO.Guide_Serie= @Guide_Serie And DO.Guide_Number =@Guide_Number 
 	                                                                                          And DO.StatusOrderId  IN (SELECT SO.[StatusOrderId]
                                                                                                                               FROM	[dbo].[StatusOrder] SO  WITH(NOLOCK)
-																														WHERE [CatCheckpointTypeId] = 3)),0)
+																														WHERE [CatCheckpointTypeId] = 3 AND SO.RowStatus = 1)),0)
 									
 
 	BEGIN TRANSACTION
@@ -53,7 +56,7 @@ BEGIN
 
 		DECLARE @CurrentStatus int 
 
-		SELECT @CurrentStatus = dr.StatusOrderId FROM dbo.DeliveryOrder dr
+		SELECT @CurrentStatus = dr.StatusOrderId FROM dbo.DeliveryOrder dr WITH(NOLOCK)
 		WHERE dr.Guide_Serie = @Guide_Serie AND dr.Guide_Number = @Guide_Number
 
 
@@ -62,7 +65,7 @@ BEGIN
 		IF(@IsStatusTerminal = 0)
 		BEGIN
 
-		IF (@CurrentStatus IN(@StatusProgrammed,@StatusOnRoute))
+		IF ( @IsLastMileReturn = 1 )
 			BEGIN
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
 			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number AND (StatusOrderId = @StatusId OR StatusOrderId = 5))
@@ -219,7 +222,7 @@ BEGIN
 			BEGIN
 				SELECT			  
 					-3 AS 'StatusCode',
-					'Para operar una guia en este módulo debe estar en estado:'  + char(10) + ' [Programado para devolución]    '  + char(10) + '   [En ruta para devolución]' AS 'Description', 
+					'Para operar una guia en este módulo debe estar declarada para devolución' AS 'Description', 
 					@ValidateOperation AS 'NumTransferID'
 			END
 			ELSE IF (@ValidateOperation = -4)
