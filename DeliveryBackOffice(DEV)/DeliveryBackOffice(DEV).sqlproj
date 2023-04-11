@@ -1475,6 +1475,8 @@
     <Build Include="dbo\Stored Procedures\spHM_addGuideToLinehaulSettlementVirtualContainer.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetConcessionaireGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetInformationGuide.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRequest3.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
