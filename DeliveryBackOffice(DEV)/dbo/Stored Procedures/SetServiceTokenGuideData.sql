@@ -44,7 +44,9 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@RescheduleDate DATE = NULL,
 
 	@IsConfirmed BIT = 1,
-	@CancelOrder BIT = 0
+	@CancelOrder BIT = 0,
+
+	@CompletedBySAC BIT = 0
 AS
 BEGIN
 
@@ -642,6 +644,7 @@ BEGIN
 			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
 			   ,ActionObservation = @Observations
 			   ,ClientConfirmsReturn = @CancelOrder
+			   ,[IncidentfinalizedbySAC] = @CompletedBySAC
 			   ,TokenUpdated = 'SetServiceTokenGuideData'
 			   ,DateUpdated = GETDATE()
 			WHERE ConfirmationOfIncidentToken = @GuideToken
