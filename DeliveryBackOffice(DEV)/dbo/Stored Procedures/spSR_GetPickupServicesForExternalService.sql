@@ -11,8 +11,8 @@ BEGIN
 	-- Manejo de configuraciones
 	DECLARE @ExternalPlatformId INT = 0;
 	DECLARE @CatConfigurableServiceId INT = 0;
-	DECLARE @SimpliRouteType NVARCHAR(25);
-	DECLARE @DateToProcess DATETIME = CAST(DATEADD(DAY, 1, GETDATE()) AS DATE); -- SERVICIOS PROGRAMADOS PARA EL DIA SIGUIENTE
+	DECLARE @SimpliRouteType NVARCHAR(50);
+	DECLARE @DateToProcess DATE = CAST(DATEADD(DAY, 1, GETDATE()) AS DATE); -- SERVICIOS PROGRAMADOS PARA EL DIA SIGUIENTE
 	DECLARE @AcceptedServices TABLE (	[CatExternalPlatformId] INT,
 										[ServiceManagementId] INT,
 										[SchedulePickupId] INT,
@@ -119,28 +119,26 @@ BEGIN
 
 		SELECT	CONCAT('PICKUP-',[ACS].[ServiceManagementId]) [title],
 				[ACS].[AddressPickup] [address],
-				CAST(GETDATE() AS DATE) [planned_date],
+				@DateToProcess [planned_date],
 				[ACS].[Latitude] [latitude],
 				[ACS].[Longitude] [longitude],
 				[ACS].[SenderName] [contact_name],
 				[ACS].[SenderPhone] [contact_phone],
 				[ACS].[ServiceManagementId] [reference],
 				[ACS].[HubAbbreviation] [skills_required],
-				[ACS].[ServiceManagementId] [route],
 				4 [priority_level],
 				@SimpliRouteType [visit_type]
 		FROM	@AcceptedServices ACS
 		UNION 
 		SELECT		CONCAT('PICKUP-', [EXPS].[ServiceManagementId]) [title],
 					[SP].[AddressPickup] [address],
-					CAST(GETDATE() AS DATE) [planned_date],
+					@DateToProcess [planned_date],
 					[VPC].[Latitude] [latitude],
 					[VPC].[Longitude] [longitude],
 					[SP].[SenderName] [contact_name],
 					[SP].[SenderPhone] [contact_phone],
 					[SM].[IdServiceManagement] [reference],
 					[HL].[HubAbbreviation] [skills_required],
-					[SM].[IdServiceManagement] [route],
 					4 [priority_level],
 					@SimpliRouteType [visit_type]
 		FROM		[dbo].[ExternalPlatformPickupServiceLog] EXPS
