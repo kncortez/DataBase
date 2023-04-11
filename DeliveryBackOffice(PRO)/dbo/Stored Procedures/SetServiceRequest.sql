@@ -1,7 +1,7 @@
 ﻿
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
-    @TblServiceRequest AS TblServiceRequest READONLY,
+    @TblServiceRequest AS TblServiceRequest3 READONLY,
     @TblDeliveryOrders AS TblDeliveryOrders READONLY
 AS
 BEGIN
@@ -714,11 +714,36 @@ BEGIN
     --END
     END TRY
     BEGIN CATCH
+
+		
         SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID',
                ERROR_LINE() AS [ErrorLine];
         ROLLBACK TRANSACTION;
+
+		INSERT INTO dbo.RoutePreparationLogError
+		(
+		    ErrorDescription,
+		    ErrorNumber,
+		    ErrorProcedure,
+		    ErrorLine,
+		    GuideSerie,
+		    GuideNumber,
+		    TokenCreated,
+		    DateCreated
+		)
+		VALUES
+		(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    '',     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
+
     END CATCH;
 
     IF @@TRANCOUNT > 0
