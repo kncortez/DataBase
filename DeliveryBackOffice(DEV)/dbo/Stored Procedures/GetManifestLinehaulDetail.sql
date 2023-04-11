@@ -71,7 +71,8 @@ BEGIN
 			AND lrpc.RowStatus = 1
 			ORDER BY lrpcd.DateCreated)
 		, lrp.DateCreated), 'dd/MM/yyyy hh:mm tt') DateCreated
-	   ,FORMAT(ISNULL((SELECT TOP 1
+	   ,FORMAT(ISNULL(lrp.[EndDateLinehaulRoutePreparation]
+		, (SELECT TOP 1
 				lrpcd.DateCreated
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
@@ -79,8 +80,9 @@ BEGIN
 				AND lrpc.RowStatus = 1
 			WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
 			AND lrpc.RowStatus = 1
-			ORDER BY lrpcd.DateCreated DESC)
-		, lrp.DateLinehaulRoutePreparation), 'dd/MM/yyyy hh:mm tt') DateRoutePreparation
+			ORDER BY lrpcd.DateCreated DESC)), 'dd/MM/yyyy hh:mm tt') DateRoutePreparation
+		, ISNULL(FORMAT([lrs].[DateCreated], 'dd/MM/yyyy hh:mm tt'), 'N/A') [SettlementStartDate]
+		, ISNULL(FORMAT([lrs].[EndDateLinehaulRouteSettlement], 'dd/MM/yyyy hh:mm tt'), 'N/A') [SettlementEndDate]
 		, ISNULL(lrpcm.CustomsMarkSerie, '') CustomMark
 	FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
 	LEFT JOIN CatRoute cr WITH (NOLOCK)
@@ -94,6 +96,8 @@ BEGIN
 	LEFT JOIN LinehaulRoutePreparationCustomsMark lrpcm WITH(NOLOCK)
 		ON lrp.IdLinehaulRoutePreparation = lrpcm.LinehaulRoutePreparationId
 		AND lrpcm.RowStatus = 1
+	LEFT JOIN [dbo].[LinehaulRouteSettlement] lrs  WITH(NOLOCK) 
+		ON [lrs].[LinehaulRoutePreparationId] = [lrp].[IdLinehaulRoutePreparation]
 	WHERE lrp.IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
 	AND lrp.RowStatus = 1
 
