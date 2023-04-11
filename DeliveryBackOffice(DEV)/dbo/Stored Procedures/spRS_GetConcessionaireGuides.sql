@@ -132,20 +132,30 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 				ON
 					[SO].[StatusOrderId] = [DODlast].[LastStatusId]
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[invoiceDetail] InD  WITH(NOLOCK) 
-				ON
+			OUTER APPLY
+			(
+				SELECT 
+					TOP (1) 
+						[InH].[inv_certificationFEL]
+						,[InH].[inv_dateFEL]
+				FROM 
+					[DeliveryBackOffice].[dbo].[invoiceDetail] InD  WITH(NOLOCK) 
+					LEFT JOIN
+						[DeliveryBackOffice].[dbo].[invoiceHeader] InH  WITH(NOLOCK) 
+						ON
+							[InD].[dti_fk_header] = [InH].[inv_pk_id]
+							AND
+							[InH].[inv_invoiceOfCreditNote] IS NULL
+							AND
+							[InH].[inv_creditNote] IS NULL
+				WHERE
 					[DO].[Guide_Serie] = [InD].[dti_fk_orderSerie]
 					AND
 					[DO].[Guide_Number] = [InD].[dti_fk_orderNumber]
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[invoiceHeader] InH  WITH(NOLOCK) 
-				ON
-					[InD].[dti_fk_header] = [InH].[inv_pk_id]
-					AND
-					[InH].[inv_invoiceOfCreditNote] IS NULL
-					AND
-					[InH].[inv_creditNote] IS NULL
+				ORDER BY
+					ISNULL([InH].[inv_certificationFEL],'') DESC,
+					[InH].[inv_date] DESC
+			) INH
 		WHERE
 			[DO].[DateCreated] BETWEEN @StartDate AND @EndDate
 		
@@ -216,20 +226,30 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 				ON
 					[SO].[StatusOrderId] = [DODlast].[LastStatusId]
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[invoiceDetail] InD  WITH(NOLOCK) 
-				ON
+			OUTER APPLY
+			(
+				SELECT 
+					TOP (1) 
+						[InH].[inv_certificationFEL]
+						,[InH].[inv_dateFEL]
+				FROM 
+					[DeliveryBackOffice].[dbo].[invoiceDetail] InD  WITH(NOLOCK) 
+					LEFT JOIN
+						[DeliveryBackOffice].[dbo].[invoiceHeader] InH  WITH(NOLOCK) 
+						ON
+							[InD].[dti_fk_header] = [InH].[inv_pk_id]
+							AND
+							[InH].[inv_invoiceOfCreditNote] IS NULL
+							AND
+							[InH].[inv_creditNote] IS NULL
+				WHERE
 					[DO].[Guide_Serie] = [InD].[dti_fk_orderSerie]
 					AND
 					[DO].[Guide_Number] = [InD].[dti_fk_orderNumber]
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[invoiceHeader] InH  WITH(NOLOCK) 
-				ON
-					[InD].[dti_fk_header] = [InH].[inv_pk_id]
-					AND
-					[InH].[inv_invoiceOfCreditNote] IS NULL
-					AND
-					[InH].[inv_creditNote] IS NULL
+				ORDER BY
+					ISNULL([InH].[inv_certificationFEL],'') DESC,
+					[InH].[inv_date] DESC
+			) INH
 		WHERE
 			[DO].[DateCreated] BETWEEN @StartDate AND @EndDate
 		
