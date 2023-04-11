@@ -7,6 +7,8 @@
 -- Author:		<Jerson Ochoa>
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
+-- Update date: <28-03-2023>
+-- Description: <Add Username and station for each registered checkpoint>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
     @Guide_Serie NVARCHAR(2),
@@ -109,15 +111,24 @@ BEGIN
             (CASE
                  WHEN dod.StatusOrderId IN ( 6, 8 ) THEN
                      ISNULL(dod.Observations, '')
-                 WHEN dod.StatusOrderId IN ( 12 ) THEN
+                 WHEN dod.StatusOrderId IN ( 12, 45 ) THEN
                      ISNULL(
                      (
                          SELECT TOP 1
 								   (SELECT '[ ' + 
 											DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(courier.First_Name) + ' '+LOWER(courier.Last_Name)) +
 											' ]'
-								   FROM dbo.SenderReceiver courier WHERE courier.ID = da.ID_Courier ) + ' ' + 
-								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
+											+ ' ' +
+											CASE 
+												WHEN [HL].[HubAbbreviation] IS NOT NULL THEN ( '[ ' + [HL].[HubAbbreviation] + ' ]' )
+												ELSE ''
+											END
+								   FROM dbo.SenderReceiver courier 
+								   LEFT JOIN [dbo].[HubLogistics] HL
+									ON [courier].[HubLogisticId] = [HL].[IdHubLogistic]
+								   WHERE courier.ID = da.ID_Courier) + ' ' + 
+								   --I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
+								   ISNULL(dod.Observations,'')
 							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
 								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
 									ON da.ID_Incident = I.IdIncidenceType
@@ -130,7 +141,22 @@ BEGIN
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
                      ''
 				ELSE
-					ISNULL(dod.Observations, '')
+					ISNULL(dod.Observations, 
+						ISNULL((SELECT  '[ ' + [P].[PerFirstName] + ' ' + [P].[PerLastName] +' ]' + ' ' +
+									'[ ' + [CS].[StationName] +' ]' 
+							FROM	[dbo].[TokenLog] TL
+							INNER JOIN [RegisterUser] RU
+								ON [TL].[TknIdUser] = [RU].[UsrIdUser]
+							INNER JOIN [dbo].[Person] P
+								ON [RU].[UsrIdPerson] = [PerIdPerson]
+							INNER JOIN [dbo].[RolByUserBySystem] RUS
+								ON [TL].[TknIdSystem] = [RUS].[RusIdSystem]
+								AND [RU].[UsrIdUser] = [RUS].[RusIdUser]
+							INNER JOIN [dbo].[CatStation] CS
+								ON	[RUS].[StationId] = [CS].[IdStation]
+							WHERE	[TL].[TknIdToken] = [DOD].[UserCreated]
+						), '')
+					)
              END
             ) AS [StageDescription],
 			ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
