@@ -5,6 +5,10 @@
 -- Create date: <13/06/2020>
 -- Description:	<Detalle de rastreo en pagina web tracking externa para el cliente, sin datos sensibles>
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <21-02-2023>
+-- Description: <Management for checkpoint icons>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_extern_order_detail_status]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT
@@ -105,6 +109,7 @@ BEGIN
            RES.[StageTitle],
            RES.[StageSource],
            RES.[StageDescription],
+		   RES.[CheckpointIcon],
            RES.[NameOfReceiver],
            RES.[Place],
            RES.[NextSteps],
@@ -128,6 +133,7 @@ BEGIN
                '' [StageTitle],                                                        -- status order name
                'web' [StageSource],
                '' AS [StageDescription],                                               --detail description or observations in events
+			   '' AS [CheckpointIcon],
                ISNULL([NameOfReceiver], '') AS NameOfReceiver,
                ISNULL(do.SenderName, '') AS Place,
                '' NextSteps,
@@ -161,6 +167,7 @@ BEGIN
                so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) AS [StageTitle], -- status order name
                'web' AS [StageSource],
                so.StatusOrderTrackingDescription AS [StageDescription],
+			   ISNULL([CCT].[CheckpointIcon], '') [CheckpointIcon],
                (CASE
                     WHEN dod.StatusOrderId = 5 THEN
                     (
@@ -275,6 +282,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
                    AND so.CatStatusTypeId = @ExternalTypeId
+			INNER JOIN [dbo].[CatCheckpointType] CCT
+				ON	[so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
         --INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder dord WITH (NOLOCK) on dod.Guide_Serie = dord.Guide_Serie AND dod.Guide_Number = dord.Guide_Number
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
