@@ -114,6 +114,7 @@ BEGIN
 		,[DispatchedLienahul].[Act]
 		,[DispatchedLienahul].[ActPieces]
 		,[DispatchedLienahul].[IsNotInManifest]
+		,[DispatchedLienahul].[IsOffRoute] 
 	FROM
 		(
 			SELECT
@@ -148,6 +149,7 @@ BEGIN
 						ELSE NULL
 					END ActPieces
 					,0 [IsNotInManifest]
+					,lrpcd.IsOffRoute [IsOffRoute]
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 				ON lrpcd.LinehaulRoutePreparationContainerId = lrpc.IdLinehaulRoutePreparationContainer
@@ -182,6 +184,7 @@ BEGIN
 		 ,[ExtraGuidesLinehaul].[Act]
 		 ,[ExtraGuidesLinehaul].[ActPieces]
 		 ,[ExtraGuidesLinehaul].[IsNotInManifest]
+		 ,[ExtraGuidesLinehaul].[IsOffRoute]
 	FROM
 		(
 			SELECT 
@@ -216,6 +219,7 @@ BEGIN
 						ELSE NULL
 					END ActPieces
 					,1 [IsNotInManifest]
+					,LRSCD.IsOffRoute [IsOffRoute]
 				FROM
 					-- Datos de despacho de linehaul
 					[dbo].[LinehaulRoutePreparation] LRP  WITH(NOLOCK) 

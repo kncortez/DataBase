@@ -1468,6 +1468,8 @@
     <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\spHD_GetManifestLinehaulDetailByHub.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetOffRouteLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetOffRouteLinehaulsInfo.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
