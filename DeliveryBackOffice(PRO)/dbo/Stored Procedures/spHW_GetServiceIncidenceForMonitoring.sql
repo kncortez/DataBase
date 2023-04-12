@@ -127,8 +127,12 @@ DECLARE @OPWebRoleId INT =
 						RBMBS.RmsIdSystem = RBUBS.RusIdSystem
 						AND
 						RBUBS.RusIdUser = @UserId
+						AND
+						[RBUBS].[RusRowStatus] = 1
 			WHERE
 				RBMBS.RmsIdRol = @SACWebRoleId
+				AND
+				[RBMBS].[RmsRowStatus] = 1
 		)
 	)
 	BEGIN
@@ -385,8 +389,12 @@ DECLARE @OPWebRoleId INT =
 						RBMBS.RmsIdSystem = RBUBS.RusIdSystem
 						AND
 						RBUBS.RusIdUser = @UserId
+						AND
+						[RBUBS].[RusRowStatus] = 1
 			WHERE
 				RBMBS.RmsIdRol = @OPWebRoleId
+				AND
+				[RBMBS].[RmsRowStatus] = 1
 		)
 	)
 	BEGIN
