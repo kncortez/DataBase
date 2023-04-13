@@ -130,6 +130,7 @@ BEGIN
 					COUNT(1)
 				FROM CreditCardTransactionByCustomer
 				WHERE OrderNumber = @OrderNumber
+				AND [ReasonCode] = '00'
 				AND RowStatus = 1);
 
 			IF (@CountRows > 0)
