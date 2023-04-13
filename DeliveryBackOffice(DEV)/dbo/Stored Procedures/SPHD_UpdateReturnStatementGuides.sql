@@ -168,6 +168,28 @@ BEGIN
 			AND DO.Guide_Number=UG.GuideNumber
 		WHERE MarkedAsReturn=1;
 
+		
+		-- registrar checkpoint histórico de devolución
+		INSERT INTO [dbo].[DeliveryOrderDetail] ([Guide_Serie]
+		, [Guide_Number]
+		, [StatusOrderId]
+		, [UserCreated]
+		, [DateCreated]
+		, [DateCreatedInSystem]
+		, [Observations]
+		, [Temperature_Celsius])
+			SELECT
+				GuideSerie
+			   ,GuideNumber
+			   ,@STATUSDECLAREDRETURNED_DO
+			   ,@Token
+			   ,GETDATE()
+			   ,GETDATE()
+			   ,NULL
+			   ,NULL
+			FROM @UpdateGuides
+			WHERE NoAttempts = 1;
+
 		SELECT 
 			GuideSerie,
 			GuideNumber,
