@@ -1467,6 +1467,8 @@
     <Build Include="dbo\Stored Procedures\RptFailedVisitsHeader.sql" />
     <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRequest3.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
     <Build Include="dbo\Stored Procedures\spHM_LoginSupervisor.sql" />
   </ItemGroup>
   <ItemGroup>

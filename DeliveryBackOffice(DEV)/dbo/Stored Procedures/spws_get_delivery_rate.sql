@@ -929,6 +929,11 @@ BEGIN
                     ON pc.ID = pw.ID
             WHERE pc.Item <> '0'
                   AND pc.Item <> ''
+                  AND pc.Item <> 'EXP076'
+                  AND pc.Item <> 'EXP077'
+                  AND pc.Item <> 'EXP078'
+                  AND pc.Item <> 'EXP079'
+                  AND pc.Item <> 'EXP080'
                   AND pc.Item IS NOT NULL
         );
 
