@@ -79,9 +79,9 @@ BEGIN
              HL.HubAbbreviation,
              DOBS.ID
 	UNION
-	SELECT '---' 'Courier',
-           '---' 'Hub',
-           '---' 'Route',
+	SELECT 'TOTALES' 'Courier',
+           '' 'Hub',
+           '' 'Route',
            0 'Manifest',
            COUNT(DISTINCT DO.Guide_Number) 'TotalServices',
            SUM(ISNULL(DOA.TotalCount, 0)) 'TotalAlerts',
