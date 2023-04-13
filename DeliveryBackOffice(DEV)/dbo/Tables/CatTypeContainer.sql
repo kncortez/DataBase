@@ -10,7 +10,7 @@
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              DATETIME       NULL,
-    CONSTRAINT [PK__CatTypeC__15586F038ABAA2A9] PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
+    PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
 );
 
 
