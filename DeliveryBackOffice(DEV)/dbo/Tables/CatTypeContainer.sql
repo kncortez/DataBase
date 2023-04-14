@@ -3,7 +3,7 @@
     [TypeContainerName]        NVARCHAR (50)  NOT NULL,
     [TypeContainerSerie]       NVARCHAR (100) NOT NULL,
     [TypeContainerDescription] NVARCHAR (200) NULL,
-    [RowStatus]                BIT            CONSTRAINT [DF__CatTypeCo__RowSt__0A5E6A10] DEFAULT ((1)) NOT NULL,
+    [RowStatus]                BIT            DEFAULT ((1)) NOT NULL,
     [TokenCreated]             NVARCHAR (50)  NOT NULL,
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,

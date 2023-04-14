@@ -18,7 +18,7 @@
     [GuideQuantity]                   INT            NOT NULL,
     [DryPieceQuantity]                INT            NOT NULL,
     [ColdPieceQuantity]               INT            NOT NULL,
-    [RowStatus]                       BIT            CONSTRAINT DEFAULT ((1)) NOT NULL,
+    [RowStatus]                       BIT            DEFAULT ((1)) NOT NULL,
     [TokenCreated]                    NVARCHAR (50)  NOT NULL,
     [DateCreated]                     DATETIME       NOT NULL,
     [TokenUpdated]                    NVARCHAR (50)  NULL,
