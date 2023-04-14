@@ -3,14 +3,14 @@
     [TypeContainerName]        NVARCHAR (50)  NOT NULL,
     [TypeContainerSerie]       NVARCHAR (100) NOT NULL,
     [TypeContainerDescription] NVARCHAR (200) NULL,
-    [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
-    [AllowUnrstSettl]          BIT            CONSTRAINT [DF_CatTypeContainer_AllowUnrstSettl] DEFAULT ((0)) NOT NULL,
     [RowStatus]                BIT            CONSTRAINT [DF__CatTypeCo__RowSt__0A5E6A10] DEFAULT ((1)) NOT NULL,
     [TokenCreated]             NVARCHAR (50)  NOT NULL,
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              DATETIME       NULL,
-    CONSTRAINT [PK__CatTypeC__15586F038ABAA2A9] PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
+    [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
+    [AllowUnrstSettl]          BIT            CONSTRAINT [DF_CatTypeContainer_AllowUnrstSettl] DEFAULT ((0)) NOT NULL,
+    PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
 );
 
 
