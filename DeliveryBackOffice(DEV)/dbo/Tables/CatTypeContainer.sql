@@ -3,13 +3,16 @@
     [TypeContainerName]        NVARCHAR (50)  NOT NULL,
     [TypeContainerSerie]       NVARCHAR (100) NOT NULL,
     [TypeContainerDescription] NVARCHAR (200) NULL,
-    [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
-    [AllowUnrstSettl]          BIT            CONSTRAINT [DF_CatTypeContainer_AllowUnrstSettl] DEFAULT ((0)) NOT NULL,
-    [RowStatus]                BIT            CONSTRAINT [DF__CatTypeCo__RowSt__0A5E6A10] DEFAULT ((1)) NOT NULL,
+    [RowStatus]                BIT            DEFAULT ((1)) NOT NULL,
     [TokenCreated]             NVARCHAR (50)  NOT NULL,
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              DATETIME       NULL,
+<<<<<<< HEAD
+=======
+    [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
+    [AllowUnrstSettl]          BIT            CONSTRAINT [DF_CatTypeContainer_AllowUnrstSettl] DEFAULT ((0)) NOT NULL,
+>>>>>>> feature/HMO-150-mejoras-de-linehauls-BD
     PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
 );
 
