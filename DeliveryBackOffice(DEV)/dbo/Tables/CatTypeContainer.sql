@@ -8,11 +8,8 @@
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              DATETIME       NULL,
-<<<<<<< HEAD
-=======
     [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
     [AllowUnrstSettl]          BIT            CONSTRAINT [DF_CatTypeContainer_AllowUnrstSettl] DEFAULT ((0)) NOT NULL,
->>>>>>> feature/HMO-150-mejoras-de-linehauls-BD
     PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
 );
 
