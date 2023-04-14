@@ -121,9 +121,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de estad
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Kilometraje de vehículo asociado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'VehicleKms';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de kilometraje de salida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'VehicleKms';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de cierre de liquidación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'EndDateLinehaulRouteSettlement';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de finalización de despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlement', @level2type = N'COLUMN', @level2name = N'EndDateLinehaulRouteSettlement';
 
