@@ -13,13 +13,11 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	DECLARE @SimpliRoutePlatformId INT = 0;
-	DECLARE @ServiceManagementId INT = 0;
 
 	SET @SimpliRoutePlatformId = (	SELECT	[CEP].[IdExternalPlatform]
 									FROM	[dbo].[CatExternalPlatform] CEP
 									WHERE	[CEP].[NameExternalPlatform] = 'Simpliroute'
 										AND	[CEP].[RowStatus] = 1);
-	SET @ServiceManagementId = (SELECT ServiceId FROM @TblSimpliroutePickup);
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -119,9 +117,11 @@ BEGIN
 			END
     
 		-- ACTUALIZAR REGISTRO EN TABLA ExternalPlatformPickupServiceLog
-		UPDATE [dbo].[ExternalPlatformPickupServiceLog] 
-		SET [IsInExternalPlatform] = 1
-		WHERE [ServiceManagementId] = @ServiceManagementId;
+		UPDATE		[EPPSL]
+		SET			[EPPSL].[IsInExternalPlatform] = 1
+		FROM		[dbo].[ExternalPlatformPickupServiceLog] EPPSL
+		INNER JOIN	@TblSimpliroutePickup TSRP
+			ON		[EPPSL].[ServiceManagementId] = [TSRP].[ServiceId];
 
 		IF @@TRANCOUNT > 0
 			BEGIN
