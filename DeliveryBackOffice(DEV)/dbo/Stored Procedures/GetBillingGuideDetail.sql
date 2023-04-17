@@ -458,4 +458,4 @@ BEGIN
     FROM @GuideDetail;
 
     SET NOCOUNT OFF;
-END;	
+END;

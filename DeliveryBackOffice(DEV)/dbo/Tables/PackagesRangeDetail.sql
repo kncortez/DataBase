@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[PackagesRangeDetail] (
+CREATE TABLE [dbo].[PackagesRangeDetail] (
     [IdPackagesRangeDetail] INT             IDENTITY (1, 1) NOT NULL,
     [PackagesRangeId]       INT             NULL,
     [CatTypeServiceId]      INT             NOT NULL,
@@ -41,11 +41,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valor de la
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de tarifa', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail', @level2type = N'COLUMN', @level2name = N'CatRateSegmentId';
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de servicio al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail', @level2type = N'COLUMN', @level2name = N'CatTypeServiceId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de tarifa', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail', @level2type = N'COLUMN', @level2name = N'CatRateSegmentId';
 
 
 GO
@@ -58,4 +58,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para almacenar el detalle de precios para un rango de paquetes para las tarifas.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de servicio al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PackagesRangeDetail', @level2type = N'COLUMN', @level2name = N'CatTypeServiceId';
 

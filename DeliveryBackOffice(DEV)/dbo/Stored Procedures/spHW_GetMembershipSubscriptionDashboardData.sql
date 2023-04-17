@@ -20,6 +20,9 @@ BEGIN
 	DECLARE @MEMBERSHIP_ID AS INT;					-- Membership
 	DECLARE @MEMBERSHIP_STATUS_ACTIVE_ID AS INT;	-- CatSalesPackageStatus
 	DECLARE @MEMBERSHIP_STATUS_INACTIVE_ID AS INT;	-- CatSalesPackageStatus
+	DECLARE @SPECIALSUSCRIPTION AS INT;
+
+	SET @SPECIALSUSCRIPTION = (SELECT TOP 1 CS.IdCatSubscription FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.SubscriptionName = 'Plan Diamante' COLLATE Latin1_General_CI_AI)
 
 	SET @DateStart = DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(@DateStart AS DATE)) AS DATETIME));
 	SET @DateEnd = DATEADD(SECOND,-1,CAST(DATEADD(DAY,1,CAST(@DateEnd AS DATE)) AS DATETIME));
@@ -51,14 +54,14 @@ BEGIN
 				[M].[ActualServiceCount],
 				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService],
 				[M].[ExpirationDate] [MembershipExpirationDate],
-				IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) > 100, 100, (([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue])) [MembershipUsagePercentage],
+				IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage],
 				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[MembershipId] = [M].[IdMembership]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [MembershipDeliveriesCount],
-				CAST(IIF((([M].[ActualServiceCount] * 100) / [M].[MembershipMaxServiceFixedValue]) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
+				CAST(IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
@@ -93,6 +96,12 @@ BEGIN
 				[S].[CatSubscriptionStatusId],
 				[S].[SubscriptionCost],
 				[S].[IsAutoRenewable],
+				CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew],
 				[S].[SubscriptionMaxServiceFixedValue],
 				[S].[ActualServiceCount],
 				IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0, 0, ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount])) [SubscriptionAvailableFixedService],

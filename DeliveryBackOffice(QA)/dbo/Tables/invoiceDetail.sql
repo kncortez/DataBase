@@ -17,14 +17,15 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_dti_fk_header]
     ON [dbo].[invoiceDetail]([dti_fk_header] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_dti_fk_orderNumber_dti_fk_orderSerie]
-    ON [dbo].[invoiceDetail]([dti_fk_orderNumber] ASC, [dti_fk_orderSerie] ASC);
+
 
 
 GO

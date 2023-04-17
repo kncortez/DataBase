@@ -38,6 +38,8 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
+	
+
     DECLARE @jsonResult NVARCHAR(MAX);
     DECLARE @jsonResult1 NVARCHAR(MAX);
     DECLARE @jsonResult2 NVARCHAR(MAX);
@@ -455,6 +457,20 @@ BEGIN
                           OR dop.IdHeaderRecolection IS NULL
                       );
 
+				-- Quitar guías no recolectadas asociadas al servicio
+				UPDATE DeliveryOrderPaymentDetail
+                SET IdHeaderRecolection = NULL
+				FROM DeliveryOrderPaymentDetail dop
+				LEFT JOIN #listGuides LG
+					ON
+						dop.GuideNumber = LG.ItemNumber
+						AND
+						dop.GuideSerie = LG.ItemSerie
+				WHERE
+					dop.IdHeaderRecolection = @IdPickup
+					AND
+					LG.ItemNumber IS NULL
+
                 ------------------------------------------------- Actualiza su StatusId a 2 = Recoleccion todas las guias del lote -------------------------------------
 
                 UPDATE DeliveryOrder
@@ -468,38 +484,146 @@ BEGIN
                           (
                               SELECT ItemSerie FROM #listGuides
                           );
-                /*
 						
-						-------------------WEBHOOK.INI-----------------------			
-			IF ( SELECT ISNULL(WebhookEndpointId,0) 
-		FROM WebhookEndpoint wep
-		WHERE wep.IdCustomer  IN (
-							select od.IdCustomer
-							from  #listGuides ls
-								  INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.ItemSerie AND od.Guide_Number = ls.ItemNumber
+				DECLARE @CartGuides AS TABLE (
+					GuideSerie NVARCHAR(2),
+					GuideNumber INT
+				);  
+				UPDATE
+					ASCD
+				SET
+					RowStatus = 0
+					,TokenUpdated = @Token
+					,DateUpdated = GETDATE()
+				FROM
+					[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ASCD WITH(NOLOCK)
+					INNER JOIN
+						#listGuides LGE WITH(NOLOCK)
+						ON
+							ASCD.GuideSerie = LGE.ItemSerie
+							AND
+							ASCD.GuideNumber = LGE.ItemNumber
+							AND
+							ASCD.RowStatus = 1
+
+				UPDATE
+					DOPD
+				SET
+					DOPD.ShipmentCompleted = 1
+				FROM
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+					INNER JOIN
+						@CartGuides CG
+						ON
+							DOPD.GuideSerie = CG.GuideSerie
+							AND
+							DOPD.GuideNumber = CG.GuideNumber
+
+							
+				---------------------WEBHOOK.INI--------------------------------
+
+
+				DECLARE @WebhookCustomerTable AS TABLE(
+									CustomerId INT,
+									CustomerEndpointId BIGINT,
+									WebhookType INT,
+									GuideSerie NVARCHAR(2),
+									GuideNumber INT,
+									GuideStatusId TINYINT
 								)
-		) > 0
-	BEGIN 
-						INSERT INTO [dbo].[WebhookTrackingQueue]
-						       ([Guide_Serie]
-						       ,[Guide_Number]
-						       ,[IdCustomer]
-						       ,[Status]
-						       ,[WebhookEndpointId]
-						       ,[HasNotified]
-						       ,[ChangedDate])
-						SELECT  od.[Guide_Serie]
-						       ,od.[Guide_Number]
-						       ,od.[IdCustomer]
-						       ,od.[StatusOrderId]
-						       ,(SELECT WebhookEndpointId FROM WebhookEndpoint WHERE IdCustomer = od.IdCustomer)
-						       ,0
-						       ,GETDATE()
-						FROM   #listGuides ls
-							   INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.ItemSerie AND od.Guide_Number = ls.ItemNumber
-		END
-						-------------------WEBHOOK.FIN------------------------------	
-	*/
+								BEGIN TRY
+									DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+
+									-- Clientes de las guías por procesar
+									INSERT INTO 
+										@WebhookCustomerTable
+										(CustomerId, GuideSerie, GuideNumber, GuideStatusId)
+									SELECT
+										DISTINCT
+											DO.IdCustomer,
+											TLG.ItemSerie ,
+											TLG.ItemNumber,
+											DO.StatusOrderId
+									FROM
+										#listGuides TLG
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+											ON
+												TLG.ItemNumber = DO.Guide_Number
+												AND
+												TLG.ItemSerie = DO.Guide_Serie;
+
+									-- Ingresar endpoints de cliente
+									UPDATE
+										@WebhookCustomerTable
+									SET
+										CustomerEndpointId = WE.IdWebhookEndpoint
+										,WebhookType = @GuideStatusChangeWebhook
+									FROM
+										[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
+										INNER JOIN
+											@WebhookCustomerTable WCT
+											ON
+												WE.CustomerId = WCT.CustomerId
+												AND
+												WE.WebhookTypeId = @GuideStatusChangeWebhook;
+
+									DECLARE @ResponseTable AS TABLE (
+										InsertedId BIGINT
+									);
+
+									INSERT INTO 
+										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+										(
+											[GuideSerie]
+											,[GuideNumber]
+											,[CustomerId]
+											,[StatusOrderId]
+											,[WebhookEndpointId]
+											,[HasNotified]
+											,[TokenCreated]
+											,[DateCreated]
+										)
+									OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+									SELECT
+										WCT.GuideSerie
+										,WCT.GuideNumber
+										,WCT.CustomerId
+										,WCT.GuideStatusId
+										,WCT.CustomerEndpointId
+										,0
+										,@Token
+										,GETDATE()
+									FROM
+										@WebhookCustomerTable WCT
+										LEFT JOIN
+											[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK)
+											ON
+												WCT.CustomerId = WRBU.CustomerId
+												AND
+												WCT.GuideStatusId = WRBU.StatusOrderId
+												AND
+												WCT.WebhookType = WRBU.WebhookTypeId
+										LEFT JOIN
+											[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
+											ON
+												WCT.GuideSerie = WTQ.GuideSerie
+												AND
+												WCT.GuideNumber = WTQ.GuideNumber
+												AND
+												WCT.GuideStatusId = WTQ.StatusOrderId
+									WHERE
+										WRBU.IdWebhookRestrinctionByUser IS NOT NULL
+										AND
+										WTQ.IdWebhookTrackingQueue IS NULL
+
+								END TRY
+								BEGIN CATCH
+
+								END CATCH
+
+				--------------------WEBHOOK.FIN------------------------------
+
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
 
 
@@ -668,7 +792,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.SenderReceiver sr
                         INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp
                             ON ltp.LogTokenPOD = @Token
-                               AND ltp.RowStatus = 1
+                               --AND ltp.RowStatus = 1
                                AND ltp.IdCourierman = sr.ID
                 );
 
@@ -732,7 +856,7 @@ BEGIN
                 -- asignar valor a la variable ModName
                 SET @ModName = N'Courier App';
 
-                SELECT @DataOriginId = cm.ModIdModule
+                SELECT  TOP 1 @DataOriginId = cm.ModIdModule
                 FROM DeliveryBackOffice.dbo.CatModule cm WITH (NOLOCK)
                 WHERE cm.ModName = @ModName;
 
@@ -749,7 +873,7 @@ BEGIN
                        lge.ItemSerie GuideSerie,
                        lge.ItemNumber GuideNumber,
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -804,6 +928,23 @@ BEGIN
                                     ''
                                 )
                 );
+
+				 INSERT INTO dbo.RoutePreparationLogError
+        (
+            ErrorDescription,
+            ErrorNumber,
+            ErrorProcedure,
+            ErrorLine,
+            GuideSerie,
+            GuideNumber,
+            TokenCreated,
+            DateCreated
+        )
+        VALUES
+        (CAST(ERROR_MESSAGE() AS VARCHAR(300)), ERROR_NUMBER(), CAST(ERROR_PROCEDURE() AS VARCHAR(100)), ERROR_LINE(),
+         0  , 0, 'SetFinishPickup', GETDATE());
+
+
             END CATCH;
             IF @@TRANCOUNT > 0
             BEGIN

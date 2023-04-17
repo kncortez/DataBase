@@ -25,7 +25,7 @@ BEGIN
 		AND IsPending = 1
 		AND RowStatus = 1
 		ORDER BY DateCreated DESC
-
+		
 		IF @AccountServiceCartId IS NOT NULL
 		BEGIN
 			
@@ -161,7 +161,7 @@ BEGIN
 			END
 			ELSE
 			BEGIN 
-				
+
 				--Deshabilitar carrito sin servicios
 				UPDATE AccountServiceCart
 				SET IsPending = 0

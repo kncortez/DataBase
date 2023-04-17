@@ -22,7 +22,7 @@ BEGIN
 		COUNT(Guide_Number) AS Guides,
 		COUNT(ID_ContactIncident) AS Total_ContactIncident,
 		ISNULL(SUM(CAST(Contact_Confirmed AS INT)),0) AS Total_ContactConfirmed
-	FROM DeliveryBackOffice.dbo.DeliveryOrder
+	FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
 	WHERE User_Contact IN (
 		SELECT lbt.SSN_IdToken
 		FROM DenariusUser_Dev.dbo.LGN_User u with (nolock)

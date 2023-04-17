@@ -29,9 +29,10 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IDX_delivery_order_payment]
-    ON [dbo].[DeliveryOrderPaymentDetail]([GuideSerie] ASC, [GuideNumber] ASC);
+
 
 
 GO

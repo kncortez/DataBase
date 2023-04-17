@@ -919,7 +919,7 @@ BEGIN
                                 ORDER BY Co.DateCreated DESC
                             ) CoAux
                             WHERE ISNULL(ct.TotalAmountPaid, 0) = 0;
-
+							PRINT (CONVERT( VARCHAR(24), GETDATE(), 121))
                             IF (@Amount > 0)
                             BEGIN
                                 INSERT INTO [dbo].[CostDetail]
@@ -1014,9 +1014,9 @@ BEGIN
 															@AuxLogServiceNumber = [TGP].[LogServiceNumber]
 													FROM	@TblGuidesForPoints TGP;
 
-											SET @AccountId = (	SELECT [A].[AccIdAccount]
-																FROM	[dbo].[Account] A
-																WHERE	[A].[IdCustomer] = @CustomerId );
+											--SET @AccountId = (	SELECT [A].[AccIdAccount]
+											--					FROM	[dbo].[Account] A
+											--					WHERE	[A].[IdCustomer] = @CustomerId );
 
 											SET @AuxPointsGenerated = CASE
 																		WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST(@ForzaPointsGenerationValue AS INT)

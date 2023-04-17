@@ -1,0 +1,2 @@
+INSERT [dbo].[CatExternalPlatform] ([IdExternalPlatform], [NameExternalPlatform], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated]) VALUES (5, N'Msmclaro', 1, N'SYS-EVASQUEZ', CAST(N'2023-02-07T16:35:00.000' AS DateTime), NULL, NULL)
+INSERT [dbo].[CatExternalPlatform] ([IdExternalPlatform], [NameExternalPlatform], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated]) VALUES (7, N'MsmIncidence', 1, N'SYS-EVASQUEZ', CAST(N'2023-02-09T17:21:00.000' AS DateTime), NULL, NULL)

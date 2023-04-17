@@ -3,7 +3,7 @@
 -- Create date: <Create Date,2022-07-25>
 -- Description:	<Description,Modifiar Autorenovación automatica y tipo de pago (en usuarios corporativos se puede cambiar a credito)>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
+CREATE  PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
 	-- Add the parameters for the stored procedure here
 	@IdCard AS INT,
 	@TypeSalePackage AS NVARCHAR(50), -- membership or subscription

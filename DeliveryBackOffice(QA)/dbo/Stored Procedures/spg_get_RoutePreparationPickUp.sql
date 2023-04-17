@@ -14,9 +14,9 @@
 -- Update date: <2022-07-20>
 -- Description:	< Cambio de agrupaciones para evitar duplicados (Falsos positivos) >
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp] 
-	@datePickUp AS DATE = '',
-	@hubId INT = -1
+CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp]
+    @datePickUp AS DATE = '',
+    @hubId INT = -1
 AS
 BEGIN
     SET ARITHABORT ON;
@@ -92,10 +92,10 @@ BEGIN
            ISNULL(dro.Sender_Zone, '0') Zone,
            SenderPhone 'Phone',
            shp.StartDate,
-           shp.EndDate,
+           ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))),
            CONVERT(VARCHAR(10), shp.StartDate, 105) AS datePickUp,
            CONVERT(VARCHAR(10), shp.StartDate, 108) AS hourPickUp,
-           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), shp.EndDate, 108)) AS rangeHour,
+           CONCAT(CONVERT(VARCHAR(10), shp.StartDate, 108), '   ', CONVERT(VARCHAR(10), ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME))), 108)) AS rangeHour,
            QuantityRegularPackages,
            QuantityOverDimensionedPackage,
            EstimatedWeight,
@@ -146,7 +146,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder AS dro WITH (NOLOCK)
             ON dro.Guide_Number = dop.GuideNumber
                AND dro.Guide_Serie = dop.GuideSerie
-			   AND DRO.SalePipeLineId !=7
+               AND dro.SalePipeLineId != 7
         LEFT JOIN [DeliveryBackOffice].[dbo].[Township] twnTdro WITH (NOLOCK)
             ON dro.SenderIdTownship = twnTdro.IdTownship
         LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
@@ -173,7 +173,7 @@ BEGIN
         (NOT (
                  NOT (
                          @datePickUp_Internal >= CONVERT(DATE, shp.StartDate)
-                         AND CONVERT(DATE, shp.EndDate) >= @datePickUp_Internal
+                         AND CONVERT(DATE, ISNULL(shp.EndDate, DATEADD(HOUR, 19, CAST(CAST(shp.StartDate AS DATE) AS DATETIME)))) >= @datePickUp_Internal
                      )
                  AND NOT (@datePickUp_Internal = '')
              )
@@ -184,64 +184,12 @@ BEGIN
                  )
             )
         AND shp.RowStatus = 1
-        AND (@hubId = -1 OR shp.IdHubLogistics = @hubId)
-       -- AND (dro.Guide_Number IS NULL OR (dro.Guide_Number IS NOT NULL AND dro.StatusOrderId <> 7)) -- Si tiene guía y no está anulada
-    --PRINT CONVERT(VARCHAR, GETDATE(), 9);
-    --DECLARE @guides NVARCHAR(MAX) =
-    --        (
-    --            SELECT STUFF(
-    --                   (
-    --                      SELECT DISTINCT
-    --                              ',' + CONCAT(GuideSerie, GuideNumber)
-    --                       FROM @tbl
-    --                       WHERE Amount = 0
-    --                             AND Timeid < 3
-    --                       GROUP BY GuideSerie,
-    --                                GuideNumber
-    --                       FOR XML PATH('')
-    --                   ),
-    --                   1,
-    --                   1,
-    --                   ''
-    --                        )
-    --        );
-
-    --PRINT 'inicia brain';
-    --PRINT CONVERT(VARCHAR, GETDATE(), 9);
-    --INSERT INTO @TempPrice
-    --(
-    --    GuideSerie,
-    --    GuideNumber,
-    --    IsCollect,
-    --    Price,
-    --    COD,
-    --    AmountPaid,
-    --    CODPaid,
-    --    CODIsPaid,
-    --    PaymentTime,
-    --    TimeSequence,
-    --    FelNumber,
-    --    IsPaid,
-    --    IsCustomer,
-    --    ConditionPayment,
-    --    HaveCredit,
-    --    CollectCOD,
-    --    ReturnRate,
-    --    AmountToPay,
-    --    CODAmount,
-    --    ReturnRates
-    --)
-    --EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @guides,
-    --                                            @InTime = 2,
-    --                                            @IsReturn = 'FALSE',
-    --                                            @CodeApp = 'SIFDCECOM300720201459',
-    --                                            @IdModule = 1,
-    --                                            @Token = 'SYSTEM';
-
-
-
-
-
+        AND
+        (
+            @hubId = -1
+            OR shp.IdHubLogistics = @hubId
+        );
+   
     PRINT 'termina brain';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
     SELECT MAX(tb.Periodicy) 'Periodicy',
@@ -250,7 +198,7 @@ BEGIN
            tb.Address,
            MAX(tb.Zone) 'Zone',
            MAX(tb.Phone) 'Phone',
-           MAX(tb.StartDate) 'StartDate' ,
+           MAX(tb.StartDate) 'StartDate',
            MAX(tb.EndDate) 'EndDate',
            MAX(tb.datePickUp) 'datePickUp',
            MAX(tb.hourPickUp) 'hourPickUp',
@@ -275,24 +223,8 @@ BEGIN
     GROUP BY idSchedulePickUp,
              IdServiceManagement,
              Address,
-             --Name,--
-             --NameProvince,--
-             --NameTownship,--
-             --Zone,
-             --TypeService,
+            
              SchedulePickupStatus
-             --StartDate,
-             --Periodicy,
-             --Phone,
-             --StartDate,
-             --EndDate,
-             --datePickUp,
-             --hourPickUp,
-             --rangeHour,
-             --IdHubLogistics,
-             --HubAbbreviation,
-             --ServiceVehicle,
-             --StatusName
-  --  OPTION (OPTIMIZE FOR UNKNOWN);
+  OPTION (OPTIMIZE FOR UNKNOWN);
 
 END;

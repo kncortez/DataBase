@@ -1,17 +1,17 @@
 USE [DeliveryBackOffice]
 GO
 
--- Cat醠ogo de suscripciones
+-- Cat谩logo de suscripciones
 ALTER TABLE [DeliveryBackOffice].[dbo].[CatSubscription]
 ADD RateHeaderId INT NULL
 
-EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario a utilizar cuando se usa suscripci髇', N'SCHEMA', N'dbo', N'TABLE', N'CatSubscription', N'COLUMN', N'RateHeaderId'
+EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario a utilizar cuando se usa suscripci贸n', N'SCHEMA', N'dbo', N'TABLE', N'CatSubscription', N'COLUMN', N'RateHeaderId'
 
 
 ALTER TABLE [DeliveryBackOffice].[dbo].[CatSubscription]
 ADD AlternativeRateHeaderId INT NULL
 
-EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario alterno a utilizar cuando se usa suscripci髇', N'SCHEMA', N'dbo', N'TABLE', N'CatSubscription', N'COLUMN', N'AlternativeRateHeaderId'
+EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario alterno a utilizar cuando se usa suscripci贸n', N'SCHEMA', N'dbo', N'TABLE', N'CatSubscription', N'COLUMN', N'AlternativeRateHeaderId'
 
 
 ALTER TABLE [DeliveryBackOffice].[dbo].[CatSubscription]
@@ -26,13 +26,13 @@ ADD CONSTRAINT FK_CatSubscription_AlternativeRate FOREIGN KEY (AlternativeRateHe
 ALTER TABLE [DeliveryBackOffice].[dbo].[Subscription]
 ADD RateHeaderId INT NULL
 
-EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario a utilizar cuando se usa suscripci髇', N'SCHEMA', N'dbo', N'TABLE', N'Subscription', N'COLUMN', N'RateHeaderId'
+EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario a utilizar cuando se usa suscripci贸n', N'SCHEMA', N'dbo', N'TABLE', N'Subscription', N'COLUMN', N'RateHeaderId'
 
 
 ALTER TABLE [DeliveryBackOffice].[dbo].[Subscription]
 ADD AlternativeRateHeaderId INT NULL
 
-EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario alterno a utilizar cuando se usa suscripci髇', N'SCHEMA', N'dbo', N'TABLE', N'Subscription', N'COLUMN', N'AlternativeRateHeaderId'
+EXECUTE sp_addextendedproperty N'MS_Description', 'Tarifario alterno a utilizar cuando se usa suscripci贸n', N'SCHEMA', N'dbo', N'TABLE', N'Subscription', N'COLUMN', N'AlternativeRateHeaderId'
 
 
 ALTER TABLE [DeliveryBackOffice].[dbo].[Subscription]

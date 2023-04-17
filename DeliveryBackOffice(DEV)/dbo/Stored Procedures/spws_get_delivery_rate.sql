@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Devuelve la opción y precio shipping según un punto de visita ó un cliente>
@@ -59,7 +58,7 @@ BEGIN
         SET @IdCustomer =
         (
             SELECT TOP 1
-                   eco.IdCustomer
+                eco.IdCustomer
             FROM DeliveryBackOffice.[dbo].[Ecommerce] eco WITH (NOLOCK)
             WHERE eco.UserKey = @CodApp --'SIFDCECOM300720201459'
                   AND eco.IdCountry = @Country
@@ -74,89 +73,88 @@ BEGIN
 
     ------- determinar el Tarifario y tipo de tarifario que se va a aplicar -------------------------------------------------------
 
-    DECLARE @NewMainRates INT =
-            (
+    DECLARE @NewMainRates INT = (
+                                    SELECT TOP 1
+                                        RH.RheId
+                                    FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                                    WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+                                );
+    DECLARE @NewAlternativeRates INT
+        =   (
                 SELECT TOP 1
-                       RH.RheId
-                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
-            );
-    DECLARE @NewAlternativeRates INT =
-            (
-                SELECT TOP 1
-                       RH.RheId
+                    RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
             );
-    DECLARE @NewAutoSalesMainRates INT =
-            (
+    DECLARE @NewAutoSalesMainRates INT
+        =   (
                 SELECT TOP 1
-                       RH.RheId
+                    RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
 
-    --DECLARE @TarifaPlanBasico INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanBasicoPlus INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanGold INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanCorporativo INT =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
-    --        );
+    DECLARE @TarifaPlanBasico INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanBasicoPlus INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanGold INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Gold' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanCorporativo INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo' COLLATE Latin1_General_CI_AI
+            );
 
-    --DECLARE @TarifaPlanBasicoAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanBasicoPlusAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanGoldAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
-    --DECLARE @TarifaPlanCorporativoAlt INT
-    --    =
-    --        (
-    --            SELECT TOP 1
-    --                   RH.RheId
-    --            FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-    --            WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
-    --        );
+    DECLARE @TarifaPlanBasicoAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico destinos express center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanBasicoPlusAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Básico Plus destinos express center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanGoldAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Gold destinos express center' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @TarifaPlanCorporativoAlt INT
+        =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifa suscripción Plan Corporativo destinos express center' COLLATE Latin1_General_CI_AI
+            );
 
     DECLARE @IdRate AS INT;
     DECLARE @IdTypeRate AS INT;
@@ -254,7 +252,7 @@ BEGIN
         IF (EXISTS
         (
             SELECT TOP 1
-                   1
+                1
             FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
             WHERE VPC.CodeOfReference = @CodeOfReferenceDestiny
                   AND VPC.StatusClient = 1
@@ -304,7 +302,7 @@ BEGIN
             IF (EXISTS
             (
                 SELECT TOP 1
-                       1
+                    1
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
                 WHERE VPC.CodeOfReference = @CodeOfReferenceDestiny
                       AND VPC.StatusClient = 1
@@ -362,147 +360,147 @@ BEGIN
     SET @AddressParse =
     (
         SELECT TOP 1
-               REPLACE(
-                          REPLACE(
-                                     REPLACE(
-                                                REPLACE(
-                                                           REPLACE(
-                                                                      REPLACE(
-                                                                                 REPLACE(
-                                                                                            REPLACE(
-                                                                                                       REPLACE(
-                                                                                                                  REPLACE(
-                                                                                                                             REPLACE(
-                                                                                                                                        REPLACE(
-                                                                                                                                                   REPLACE(
-                                                                                                                                                              REPLACE(
-                                                                                                                                                                         REPLACE(
-                                                                                                                                                                                    REPLACE(
-                                                                                                                                                                                               REPLACE(
-                                                                                                                                                                                                          REPLACE(
-                                                                                                                                                                                                                     REPLACE(
-                                                                                                                                                                                                                                REPLACE(
-                                                                                                                                                                                                                                           REPLACE(
-                                                                                                                                                                                                                                                      REPLACE(
-                                                                                                                                                                                                                                                                 REPLACE(
-                                                                                                                                                                                                                                                                            REPLACE(
-                                                                                                                                                                                                                                                                                       REPLACE(
-                                                                                                                                                                                                                                                                                                  REPLACE(
-                                                                                                                                                                                                                                                                                                             REPLACE(
-                                                                                                                                                                                                                                                                                                                        REPLACE(
-                                                                                                                                                                                                                                                                                                                                   REPLACE(
-                                                                                                                                                                                                                                                                                                                                              REPLACE(
-                                                                                                                                                                                                                                                                                                                                                         REPLACE(
-                                                                                                                                                                                                                                                                                                                                                                    REPLACE(
-                                                                                                                                                                                                                                                                                                                                                                               REPLACE(
-                                                                                                                                                                                                                                                                                                                                                                                          REPLACE(
-                                                                                                                                                                                                                                                                                                                                                                                                     REPLACE(
-                                                                                                                                                                                                                                                                                                                                                                                                                @AddressParse,
-                                                                                                                                                                                                                                                                                                                                                                                                                '!',
-                                                                                                                                                                                                                                                                                                                                                                                                                ''
-                                                                                                                                                                                                                                                                                                                                                                                                            ),
-                                                                                                                                                                                                                                                                                                                                                                                                     '"',
-                                                                                                                                                                                                                                                                                                                                                                                                     ''
-                                                                                                                                                                                                                                                                                                                                                                                                 ),
-                                                                                                                                                                                                                                                                                                                                                                                          '#',
-                                                                                                                                                                                                                                                                                                                                                                                          ''
-                                                                                                                                                                                                                                                                                                                                                                                      ),
-                                                                                                                                                                                                                                                                                                                                                                               '$',
-                                                                                                                                                                                                                                                                                                                                                                               ''
-                                                                                                                                                                                                                                                                                                                                                                           ),
-                                                                                                                                                                                                                                                                                                                                                                    '%',
-                                                                                                                                                                                                                                                                                                                                                                    ''
-                                                                                                                                                                                                                                                                                                                                                                ),
-                                                                                                                                                                                                                                                                                                                                                         '&',
-                                                                                                                                                                                                                                                                                                                                                         'y'
-                                                                                                                                                                                                                                                                                                                                                     ),
-                                                                                                                                                                                                                                                                                                                                              '''',
-                                                                                                                                                                                                                                                                                                                                              ''
-                                                                                                                                                                                                                                                                                                                                          ),
-                                                                                                                                                                                                                                                                                                                                   '*',
-                                                                                                                                                                                                                                                                                                                                   ''
-                                                                                                                                                                                                                                                                                                                               ),
-                                                                                                                                                                                                                                                                                                                        '+',
-                                                                                                                                                                                                                                                                                                                        ''
-                                                                                                                                                                                                                                                                                                                    ),
-                                                                                                                                                                                                                                                                                                             '/',
-                                                                                                                                                                                                                                                                                                             ''
-                                                                                                                                                                                                                                                                                                         ),
-                                                                                                                                                                                                                                                                                                  '<',
-                                                                                                                                                                                                                                                                                                  ''
-                                                                                                                                                                                                                                                                                              ),
-                                                                                                                                                                                                                                                                                       '=',
-                                                                                                                                                                                                                                                                                       ''
-                                                                                                                                                                                                                                                                                   ),
-                                                                                                                                                                                                                                                                            '>',
-                                                                                                                                                                                                                                                                            ''
-                                                                                                                                                                                                                                                                        ),
-                                                                                                                                                                                                                                                                 '?',
-                                                                                                                                                                                                                                                                 ''
-                                                                                                                                                                                                                                                             ),
-                                                                                                                                                                                                                                                      '@',
-                                                                                                                                                                                                                                                      ''
-                                                                                                                                                                                                                                                  ),
-                                                                                                                                                                                                                                           '[',
-                                                                                                                                                                                                                                           ''
-                                                                                                                                                                                                                                       ),
-                                                                                                                                                                                                                                '\',
-                                                                                                                                                                                                                                ''
-                                                                                                                                                                                                                            ),
-                                                                                                                                                                                                                     ']',
-                                                                                                                                                                                                                     ''
-                                                                                                                                                                                                                 ),
-                                                                                                                                                                                                          '^',
-                                                                                                                                                                                                          ''
-                                                                                                                                                                                                      ),
-                                                                                                                                                                                               '_',
-                                                                                                                                                                                               ''
-                                                                                                                                                                                           ),
-                                                                                                                                                                                    '`',
-                                                                                                                                                                                    ''
-                                                                                                                                                                                ),
-                                                                                                                                                                         '{',
-                                                                                                                                                                         ''
-                                                                                                                                                                     ),
-                                                                                                                                                              '|',
-                                                                                                                                                              ''
-                                                                                                                                                          ),
-                                                                                                                                                   '}',
-                                                                                                                                                   ''
-                                                                                                                                               ),
-                                                                                                                                        '~',
-                                                                                                                                        ''
-                                                                                                                                    ),
-                                                                                                                             '¡',
-                                                                                                                             ''
-                                                                                                                         ),
-                                                                                                                  '¿',
-                                                                                                                  ''
-                                                                                                              ),
-                                                                                                       '°',
-                                                                                                       ''
-                                                                                                   ),
-                                                                                            '¬',
-                                                                                            ''
-                                                                                        ),
-                                                                                 '´',
-                                                                                 ''
-                                                                             ),
-                                                                      '¨',
-                                                                      ''
-                                                                  ),
-                                                           '&Quot;',
-                                                           ''
-                                                       ),
-                                                CHAR(255),
-                                                ''
-                                            ),
-                                     twn.TownshipName,
-                                     ''
-                                 ),
-                          prv.ProvinceName,
-                          ''
-                      )
+            REPLACE(
+                       REPLACE(
+                                  REPLACE(
+                                             REPLACE(
+                                                        REPLACE(
+                                                                   REPLACE(
+                                                                              REPLACE(
+                                                                                         REPLACE(
+                                                                                                    REPLACE(
+                                                                                                               REPLACE(
+                                                                                                                          REPLACE(
+                                                                                                                                     REPLACE(
+                                                                                                                                                REPLACE(
+                                                                                                                                                           REPLACE(
+                                                                                                                                                                      REPLACE(
+                                                                                                                                                                                 REPLACE(
+                                                                                                                                                                                            REPLACE(
+                                                                                                                                                                                                       REPLACE(
+                                                                                                                                                                                                                  REPLACE(
+                                                                                                                                                                                                                             REPLACE(
+                                                                                                                                                                                                                                        REPLACE(
+                                                                                                                                                                                                                                                   REPLACE(
+                                                                                                                                                                                                                                                              REPLACE(
+                                                                                                                                                                                                                                                                         REPLACE(
+                                                                                                                                                                                                                                                                                    REPLACE(
+                                                                                                                                                                                                                                                                                               REPLACE(
+                                                                                                                                                                                                                                                                                                          REPLACE(
+                                                                                                                                                                                                                                                                                                                     REPLACE(
+                                                                                                                                                                                                                                                                                                                                REPLACE(
+                                                                                                                                                                                                                                                                                                                                           REPLACE(
+                                                                                                                                                                                                                                                                                                                                                      REPLACE(
+                                                                                                                                                                                                                                                                                                                                                                 REPLACE(
+                                                                                                                                                                                                                                                                                                                                                                            REPLACE(
+                                                                                                                                                                                                                                                                                                                                                                                       REPLACE(
+                                                                                                                                                                                                                                                                                                                                                                                                  REPLACE(
+                                                                                                                                                                                                                                                                                                                                                                                                             @AddressParse,
+                                                                                                                                                                                                                                                                                                                                                                                                             '!',
+                                                                                                                                                                                                                                                                                                                                                                                                             ''
+                                                                                                                                                                                                                                                                                                                                                                                                         ),
+                                                                                                                                                                                                                                                                                                                                                                                                  '"',
+                                                                                                                                                                                                                                                                                                                                                                                                  ''
+                                                                                                                                                                                                                                                                                                                                                                                              ),
+                                                                                                                                                                                                                                                                                                                                                                                       '#',
+                                                                                                                                                                                                                                                                                                                                                                                       ''
+                                                                                                                                                                                                                                                                                                                                                                                   ),
+                                                                                                                                                                                                                                                                                                                                                                            '$',
+                                                                                                                                                                                                                                                                                                                                                                            ''
+                                                                                                                                                                                                                                                                                                                                                                        ),
+                                                                                                                                                                                                                                                                                                                                                                 '%',
+                                                                                                                                                                                                                                                                                                                                                                 ''
+                                                                                                                                                                                                                                                                                                                                                             ),
+                                                                                                                                                                                                                                                                                                                                                      '&',
+                                                                                                                                                                                                                                                                                                                                                      'y'
+                                                                                                                                                                                                                                                                                                                                                  ),
+                                                                                                                                                                                                                                                                                                                                           '''',
+                                                                                                                                                                                                                                                                                                                                           ''
+                                                                                                                                                                                                                                                                                                                                       ),
+                                                                                                                                                                                                                                                                                                                                '*',
+                                                                                                                                                                                                                                                                                                                                ''
+                                                                                                                                                                                                                                                                                                                            ),
+                                                                                                                                                                                                                                                                                                                     '+',
+                                                                                                                                                                                                                                                                                                                     ''
+                                                                                                                                                                                                                                                                                                                 ),
+                                                                                                                                                                                                                                                                                                          '/',
+                                                                                                                                                                                                                                                                                                          ''
+                                                                                                                                                                                                                                                                                                      ),
+                                                                                                                                                                                                                                                                                               '<',
+                                                                                                                                                                                                                                                                                               ''
+                                                                                                                                                                                                                                                                                           ),
+                                                                                                                                                                                                                                                                                    '=',
+                                                                                                                                                                                                                                                                                    ''
+                                                                                                                                                                                                                                                                                ),
+                                                                                                                                                                                                                                                                         '>',
+                                                                                                                                                                                                                                                                         ''
+                                                                                                                                                                                                                                                                     ),
+                                                                                                                                                                                                                                                              '?',
+                                                                                                                                                                                                                                                              ''
+                                                                                                                                                                                                                                                          ),
+                                                                                                                                                                                                                                                   '@',
+                                                                                                                                                                                                                                                   ''
+                                                                                                                                                                                                                                               ),
+                                                                                                                                                                                                                                        '[',
+                                                                                                                                                                                                                                        ''
+                                                                                                                                                                                                                                    ),
+                                                                                                                                                                                                                             '\',
+                                                                                                                                                                                                                             ''
+                                                                                                                                                                                                                         ),
+                                                                                                                                                                                                                  ']',
+                                                                                                                                                                                                                  ''
+                                                                                                                                                                                                              ),
+                                                                                                                                                                                                       '^',
+                                                                                                                                                                                                       ''
+                                                                                                                                                                                                   ),
+                                                                                                                                                                                            '_',
+                                                                                                                                                                                            ''
+                                                                                                                                                                                        ),
+                                                                                                                                                                                 '`',
+                                                                                                                                                                                 ''
+                                                                                                                                                                             ),
+                                                                                                                                                                      '{',
+                                                                                                                                                                      ''
+                                                                                                                                                                  ),
+                                                                                                                                                           '|',
+                                                                                                                                                           ''
+                                                                                                                                                       ),
+                                                                                                                                                '}',
+                                                                                                                                                ''
+                                                                                                                                            ),
+                                                                                                                                     '~',
+                                                                                                                                     ''
+                                                                                                                                 ),
+                                                                                                                          '¡',
+                                                                                                                          ''
+                                                                                                                      ),
+                                                                                                               '¿',
+                                                                                                               ''
+                                                                                                           ),
+                                                                                                    '°',
+                                                                                                    ''
+                                                                                                ),
+                                                                                         '¬',
+                                                                                         ''
+                                                                                     ),
+                                                                              '´',
+                                                                              ''
+                                                                          ),
+                                                                   '¨',
+                                                                   ''
+                                                               ),
+                                                        '&Quot;',
+                                                        ''
+                                                    ),
+                                             CHAR(255),
+                                             ''
+                                         ),
+                                  twn.TownshipName,
+                                  ''
+                              ),
+                       prv.ProvinceName,
+                       ''
+                   )
         FROM Township twn WITH (NOLOCK)
             LEFT JOIN Province prv WITH (NOLOCK)
                 ON prv.IdProvince = twn.IdProvince
@@ -532,9 +530,9 @@ BEGIN
         IF @Zone = 0 -- si no trae zona verificar por direccion
         BEGIN
             SELECT TOP 1
-                   st.IdSettlement,
-                   COUNT(st.IdSettlement) AS mas_popular,
-                   st.Settlement
+                st.IdSettlement,
+                COUNT(st.IdSettlement) AS mas_popular,
+                st.Settlement
             INTO #SettlementList
             FROM #ItemAddress i
                 LEFT JOIN dbo.Township tw WITH (NOLOCK)
@@ -563,7 +561,7 @@ BEGIN
             SET @IdSettlement =
             (
                 SELECT TOP 1
-                       st.IdSettlement
+                    st.IdSettlement
                 FROM dbo.Township tw WITH (NOLOCK)
                     LEFT JOIN dbo.Settlement st WITH (NOLOCK)
                         ON st.IdTownship = tw.IdTownship
@@ -579,7 +577,7 @@ BEGIN
             SET @IdSettlement =
             (
                 SELECT TOP 1
-                       st.IdSettlement
+                    st.IdSettlement
                 FROM dbo.Township tw WITH (NOLOCK)
                     LEFT JOIN dbo.Settlement st WITH (NOLOCK)
                         ON st.IdTownship = tw.IdTownship
@@ -608,7 +606,7 @@ BEGIN
     SET @IsTDA = ISNULL(
                  (
                      SELECT TOP 1
-                            IIF(cov.TDA = 0, 'false', 'true')
+                         IIF(cov.TDA = 0, 'false', 'true')
                      FROM dbo.DumpServiceCoverage cov WITH (NOLOCK)
                      WHERE cov.IdSettlement = @IdSettlement
                            AND cov.RowStatus = 1
@@ -616,12 +614,7 @@ BEGIN
                  'false'
                        );
 
-    DECLARE @IdRateGroup INT = (IIF(@IsTDA = 'false',
-                                    1,
-                                (
-                                    1
-                                ))
-                               );
+    DECLARE @IdRateGroup INT = (IIF(@IsTDA = 'false', 1, (1)));
 
 
     ---HOTFIX_SAMEDAY.INI	
@@ -632,7 +625,7 @@ BEGIN
         SET @IsSDD = ISNULL(
                      (
                          SELECT TOP 1
-                                IIF(cov.SDD = 0, 'false', 'true')
+                             IIF(cov.SDD = 0, 'false', 'true')
                          FROM dbo.DumpServiceCoverage cov WITH (NOLOCK)
                          WHERE cov.IdSettlement = @IdSettlement
                                AND cov.RowStatus = 1
@@ -644,7 +637,7 @@ BEGIN
                                            1,
                                        (
                                            SELECT TOP 1
-                                                  RateGroup
+                                               RateGroup
                                            FROM dbo.CatTypeService WITH (NOLOCK)
                                            WHERE CtsShortName = 'SDD'
                                                  AND CtsRowStatus = 1
@@ -663,7 +656,7 @@ BEGIN
     DECLARE @IdHubDestiny INT;
 
     SELECT TOP 1
-           @IdHubSource = hb.IdHubLogistic
+        @IdHubSource = hb.IdHubLogistic
     FROM dbo.DumpServiceCoverage cov WITH (NOLOCK)
         LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
             ON hb.HubAbbreviation = cov.Hub
@@ -671,7 +664,7 @@ BEGIN
     ORDER BY cov.Hub;
 
     SELECT TOP 1
-           @IdHubDestiny = hb.IdHubLogistic
+        @IdHubDestiny = hb.IdHubLogistic
     FROM dbo.DumpServiceCoverage cov WITH (NOLOCK)
         LEFT JOIN dbo.HubLogistics hb WITH (NOLOCK)
             ON hb.HubAbbreviation = cov.Hub
@@ -685,7 +678,7 @@ BEGIN
     IF @CodeOfReferenceSource <= 0 -- si no viene el codeOfReference tomar el primero de cada cliente
     BEGIN
         SELECT TOP 1
-               @CodeOfReferenceSource = vp.CodeOfReference
+            @CodeOfReferenceSource = vp.CodeOfReference
         FROM dbo.VisitPointClient vp WITH (NOLOCK)
         WHERE vp.CustomerID = @IdCustomer;
     END;
@@ -695,7 +688,7 @@ BEGIN
     IF (@HeaderCodeSource = @HeaderCodeDestiny)
     BEGIN
         SELECT TOP 1
-               @IdSegment = sg.CrsId
+            @IdSegment = sg.CrsId
         FROM dbo.CatRateSegment sg WITH (NOLOCK)
         WHERE sg.CrsShortName = 'LOC';
     END;
@@ -705,7 +698,7 @@ BEGIN
         IF (@CustomerType != 1)
         BEGIN
             SELECT TOP 1
-                   @IdSegment = RTC.SegmentTypeId
+                @IdSegment = RTC.SegmentTypeId
             FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
                 INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
                     ON RTC.TownshipSourceId = TwnSource.IdTownship
@@ -719,7 +712,7 @@ BEGIN
         ELSE
         BEGIN
             SELECT TOP 1
-                   @IdSegment = CTC.SegmentTypeId
+                @IdSegment = CTC.SegmentTypeId
             FROM [DeliveryBackOffice].[dbo].[CorporateTownshipCoverage] CTC WITH (NOLOCK)
                 INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
                     ON CTC.TownshipSourceId = TwnSource.IdTownship
@@ -736,7 +729,7 @@ BEGIN
     BEGIN
 
         SELECT TOP 1
-               @IdSegment = sg.CrsId
+            @IdSegment = sg.CrsId
         FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
         WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
     END;
@@ -744,22 +737,21 @@ BEGIN
     --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
     -------------------------------Obtener descuento --------------------------------------------------------------------------
 
-    DECLARE @IdTypeCustomer INT =
-            (
-                SELECT TOP 1
-                       cus.IdCustomerType
-                FROM dbo.Customer cus WITH (NOLOCK)
-                WHERE cus.IdCustomer = @IdCustomer
-            );
+    DECLARE @IdTypeCustomer INT = (
+                                      SELECT TOP 1
+                                          cus.IdCustomerType
+                                      FROM dbo.Customer cus WITH (NOLOCK)
+                                      WHERE cus.IdCustomer = @IdCustomer
+                                  );
 
     SELECT TOP 1
-           ss.Name AS DicountName,
-           ss.IsGlobal AS IsGlobla,
-           sd.UnitId AS IdUnit,
-           sd.Value AS Value,
-           unt.Prefix AS Unit,
-           sd.TypeDiscountId AS idTypeDiscount,
-           tyd.ShortName AS TypeDiscount
+        ss.Name AS DicountName,
+        ss.IsGlobal AS IsGlobla,
+        sd.UnitId AS IdUnit,
+        sd.Value AS Value,
+        unt.Prefix AS Unit,
+        sd.TypeDiscountId AS idTypeDiscount,
+        tyd.ShortName AS TypeDiscount
     INTO #Dicounts
     FROM dbo.SpecialSale ss WITH (NOLOCK)
         INNER JOIN dbo.SpecialSaleDetail sd WITH (NOLOCK)
@@ -774,38 +766,40 @@ BEGIN
     WHERE ss.RowStatus = 1
           AND GETDATE()
           BETWEEN ss.StartDate AND ss.FinishDate
-          AND
-          (
-              ss.IsGlobal = 1
-              OR tgt.CustomerId = @IdCustomer
-              OR tgt.CustomerTypeid = @IdTypeCustomer
-          )
+          AND (
+                  ss.IsGlobal = 1
+                  OR tgt.CustomerId = @IdCustomer
+                  OR tgt.CustomerTypeid = @IdTypeCustomer
+              )
     ORDER BY ss.Priority DESC;
 
     DECLARE @Value DECIMAL(12, 2) = 0;
 
-    DECLARE @TypeDiscount VARCHAR(20) =
-            (
-                SELECT TOP 1 ds.TypeDiscount FROM #Dicounts ds
-            );
-    DECLARE @DiscountName VARCHAR(100) =
-            (
-                SELECT TOP 1 ds.DicountName FROM #Dicounts ds
-            );
+    DECLARE @TypeDiscount VARCHAR(20) = (
+                                            SELECT TOP 1 ds.TypeDiscount FROM #Dicounts ds
+                                        );
+    DECLARE @DiscountName VARCHAR(100) = (
+                                             SELECT TOP 1 ds.DicountName FROM #Dicounts ds
+                                         );
     SET @Value =
     (
-        SELECT TOP 1 ISNULL(ds.Value, 0)FROM #Dicounts ds
+        SELECT TOP 1 ISNULL(ds.Value, 0) FROM #Dicounts ds
     );
-    DECLARE @Unit VARCHAR(10) =
-            (
-                SELECT TOP 1 ds.Unit FROM #Dicounts ds
-            );
+    DECLARE @Unit VARCHAR(10) = (
+                                    SELECT TOP 1 ds.Unit FROM #Dicounts ds
+                                );
 
     ---------------------Fin obtener descuento -------------------------------------------------------------------------------------
     ---------------------Determinar si existe exceso de libras ---------------------------------------------------------------------
-
-	-- Hotfix - Andrés Ruíz - 17-02-2023
-	IF ((LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '' OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0') AND @IdTypeRate = 3)
+	
+    -- Hotfix - Andrés Ruíz - 17-02-2023
+    IF (
+           (
+               LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = ''
+               OR LTRIM(RTRIM(REPLACE(@ParcelCode, ',', ''))) = '0'
+           )
+           AND @IdTypeRate = 3
+       )
     BEGIN
 
         DECLARE @DataCounter INT = 1;
@@ -825,7 +819,7 @@ BEGIN
         END;
 
     END;
-	-- Fin hotfix
+    -- Fin hotfix
 
     IF OBJECT_ID('tempdb.dbo.#ParceCode', 'U') IS NOT NULL
         DROP TABLE #ParceCode;
@@ -833,12 +827,24 @@ BEGIN
         DROP TABLE #ParceWeigth;
 
     SELECT Item,
-           ROW_NUMBER() OVER (ORDER BY Item) ID
+           ROW_NUMBER() OVER (ORDER BY (SELECT 0)) ID
     INTO #ParceCode
     FROM DeliveryBackOffice.dbo.SplitUnlimited(@ParcelCode, ',');
 
+	IF ( @IdTypeRate = 3 )
+	BEGIN
+	    
+		UPDATE
+			[#ParceCode]
+		SET
+			[Item] = 'EXP076'
+		WHERE
+			LTRIM(RTRIM(ISNULL([Item], ''))) = ''
+
+	END
+
     SELECT Item,
-           ROW_NUMBER() OVER (ORDER BY Item) ID
+           ROW_NUMBER() OVER (ORDER BY (SELECT 0)) ID
     INTO #ParceWeigth
     FROM DeliveryBackOffice.dbo.SplitUnlimited(RTRIM(LTRIM(@WeigthParcels)), ',');
 
@@ -970,13 +976,12 @@ BEGIN
             WHERE rh.RheRowStatus = 'true'
                   AND rh.RheId = @IdRate
                   AND rd.ArticleId IS NULL
-                  AND (rd.TypeServiceId IN
-                       (
-                           SELECT CtsId
-                           FROM dbo.CatTypeService
-                           WHERE RateGroup = @IdRateGroup
-                                 AND CtsRowStatus = 1
-                       )
+                  AND (rd.TypeServiceId IN (
+                                               SELECT CtsId
+                                               FROM dbo.CatTypeService
+                                               WHERE RateGroup = @IdRateGroup
+                                                     AND CtsRowStatus = 1
+                                           )
                       )
                   AND rd.HubSourceId = @IdHubSource
                   AND rd.HubDestinyId = @IdHubDestiny
@@ -1030,13 +1035,12 @@ BEGIN
             WHERE rh.RheRowStatus = 'true'
                   AND rh.RheId = @IdRate
                   AND rd.ArticleId IS NULL
-                  AND (rd.TypeServiceId IN
-                       (
-                           SELECT CtsId
-                           FROM dbo.CatTypeService
-                           WHERE RateGroup = @IdRateGroup
-                                 AND CtsRowStatus = 1
-                       )
+                  AND (rd.TypeServiceId IN (
+                                               SELECT CtsId
+                                               FROM dbo.CatTypeService
+                                               WHERE RateGroup = @IdRateGroup
+                                                     AND CtsRowStatus = 1
+                                           )
                       )
                   AND rd.HubSourceId = @IdHubSource
                   AND rd.HubDestinyId = @IdHubDestiny
@@ -1106,13 +1110,12 @@ BEGIN
         WHERE rh.RheId = @IdRate
               AND rd.ArticleId IS NULL
               AND rd.TypeSegmentId = @IdSegment
-              AND (rd.TypeServiceId IN
-                   (
-                       SELECT CtsId
-                       FROM dbo.CatTypeService
-                       WHERE RateGroup = @IdRateGroup
-                             AND CtsRowStatus = 1
-                   )
+              AND (rd.TypeServiceId IN (
+                                           SELECT CtsId
+                                           FROM dbo.CatTypeService
+                                           WHERE RateGroup = @IdRateGroup
+                                                 AND CtsRowStatus = 1
+                                       )
                   )
               AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                              CONVERT(
@@ -1146,7 +1149,9 @@ BEGIN
         --select * from #ListCode
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;
 
-        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates ))
+        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+                            @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+                            @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt ))
         BEGIN
 
             SET @IdSegment = NULL;
@@ -1165,7 +1170,7 @@ BEGIN
                 IF (@HeaderCodeSource = @HeaderCodeDestiny)
                 BEGIN
                     SELECT TOP 1
-                           @IdSegment = sg.CrsId
+                        @IdSegment = sg.CrsId
                     FROM dbo.CatRateSegment sg WITH (NOLOCK)
                     WHERE sg.CrsShortName = 'LOC';
                 END;
@@ -1173,7 +1178,7 @@ BEGIN
                 ELSE
                 BEGIN
                     SELECT TOP 1
-                           @IdSegment = RTC.SegmentTypeId
+                        @IdSegment = RTC.SegmentTypeId
                     FROM [DeliveryBackOffice].[dbo].[RateTownshipCoverage] RTC WITH (NOLOCK)
                         INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSource WITH (NOLOCK)
                             ON RTC.TownshipSourceId = TwnSource.IdTownship
@@ -1189,7 +1194,7 @@ BEGIN
                 IF (@IdSegment IS NULL) -- si no se encuentra una configuracion válida para determinar el segmento tomar el foraneo como predeterminado.
                 BEGIN
                     SELECT TOP 1
-                           @IdSegment = sg.CrsId
+                        @IdSegment = sg.CrsId
                     FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
                     WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
                 END;
@@ -1222,7 +1227,7 @@ BEGIN
 
                 SET @ExpectedWeight =
                 (
-                    SELECT SUM(POPT.ParcelWeight)FROM #ParcelOverweightPerType POPT
+                    SELECT SUM(POPT.ParcelWeight) FROM #ParcelOverweightPerType POPT
                 );
 
                 BEGIN TRY
@@ -1302,13 +1307,12 @@ BEGIN
                 WHERE RateGroup = @IdRateGroup
                       AND CtsRowStatus = 1;
 
-                DECLARE @SDDTypeId INT =
-                        (
-                            SELECT TOP 1
-                                   CTS.CtsId
-                            FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)
-                            WHERE CTS.CtsShortName = 'SDD' COLLATE Latin1_General_CI_AI
-                        );
+                DECLARE @SDDTypeId INT = (
+                                             SELECT TOP 1
+                                                 CTS.CtsId
+                                             FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)
+                                             WHERE CTS.CtsShortName = 'SDD' COLLATE Latin1_General_CI_AI
+                                         );
                 IF (@IsSDD = 0)
                     UPDATE @RealRateGroup
                     SET RowStatus = 0
@@ -1317,26 +1321,26 @@ BEGIN
                 -- Tarifas finales
                 INSERT INTO @TempRate
                 SELECT DISTINCT
-                       ISNULL(cr.Name, '') TypeRate,
-                       ISNULL(sg.CrsShortName, '') Segment,
-                       ISNULL(sv.CtsShortName, '') Service,
-                       (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
-                       '' DiscountName,
-                       0 DiscountValue,
-                       IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
-                       IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
-                       IIF(@IsInsurance = 'true',
-                           (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
-                                CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
-                                0)
-                           ),
-                           0) AS InsuranceRate,
-                       IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-                       IIF(@NewOverWeight > 0, @NewOverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
-                       ISNULL(papt.TotalAmount, 0) AS IrregularParcelRate,
-                       ISNULL(sv.CtsName, '') AS CtsName,
-                       ISNULL(sv.CtsDescription, '') AS CtsDescription,
-                       ISNULL(rh.ReturnRate, 0) AS ReturnRate
+                    ISNULL(cr.Name, '') TypeRate,
+                    ISNULL(sg.CrsShortName, '') Segment,
+                    ISNULL(sv.CtsShortName, '') Service,
+                    (ISNULL(rd.RateValue, 0) * @CountPiece) BaseRate,
+                    '' DiscountName,
+                    0 DiscountValue,
+                    IIF(@IsFragile = 'true', ISNULL(rh.FragilRate, 0), 0) AS fragilRate,
+                    IIF(@IsCollected = 'true', ISNULL(rh.CollectRate, 0), 0) AS CollectedRate,
+                    IIF(@IsInsurance = 'true',
+                        (IIF(@InsuranceAmount > ISNULL(rh.InsuranceExempt, 0),
+                             CAST((@InsuranceAmount * ISNULL(rh.InsuranceRate, 0) / 100) AS DECIMAL(12, 2)),
+                             0)
+                        ),
+                        0) AS InsuranceRate,
+                    IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
+                    IIF(@NewOverWeight > 0, @NewOverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                    ISNULL(papt.TotalAmount, 0) AS IrregularParcelRate,
+                    ISNULL(sv.CtsName, '') AS CtsName,
+                    ISNULL(sv.CtsDescription, '') AS CtsDescription,
+                    ISNULL(rh.ReturnRate, 0) AS ReturnRate
                 FROM dbo.RateHeader rh
                     INNER JOIN dbo.RateData rd
                         ON rd.RateId = rh.RheId
@@ -1353,10 +1357,9 @@ BEGIN
                 WHERE rh.RheId = @IdRate
                       --and rd.ArticleId is null
                       AND rd.TypeSegmentId = @IdSegment
-                      AND (rd.TypeServiceId IN
-                           (
-                               SELECT RRG.ServiceTypeId FROM @RealRateGroup RRG WHERE RRG.RowStatus = 1
-                           )
+                      AND (rd.TypeServiceId IN (
+                                                   SELECT RRG.ServiceTypeId FROM @RealRateGroup RRG WHERE RRG.RowStatus = 1
+                                               )
                           )
                       AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                                      CONVERT(
@@ -1378,6 +1381,85 @@ BEGIN
         END;
         ELSE
         BEGIN
+		
+            -- Paquetes con su peso indicado
+            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerTypeCorp', 'U') IS NOT NULL
+                DROP TABLE #ParcelOverweightPerTypeCorp;
+				
+			DECLARE @DefaultWeighRatetOfRate DECIMAL(12,2) = 0;
+			DECLARE @DefaultWeightOfRate DECIMAL(18,2) = 0;
+
+			SET @DefaultWeighRatetOfRate = (
+				SELECT 
+					TOP (1) 
+						RH.[AdditionalWeightRate]
+				FROM 
+					[DeliveryBackOffice].[dbo].[RateHeader] RH  WITH(NOLOCK) 
+				WHERE
+					RH.[RheId] = @IdRate
+			)
+
+			SET @DefaultWeightOfRate = (
+				SELECT 
+					TOP (1) 
+						RH.[WeightLimit]
+				FROM 
+					[DeliveryBackOffice].[dbo].[RateHeader] RH  WITH(NOLOCK) 
+				WHERE
+					RH.[RheId] = @IdRate
+			)
+
+            DECLARE @ExpectedWeightCorp DECIMAL(12, 2) = 0;
+
+            SELECT p.ID 'RowNumber',
+                    ABC.Code 'ParcelCode',
+                    (
+						CASE 
+							WHEN RD.[IdRateData] IS NULL THEN @DefaultWeightOfRate
+							ELSE CAST(PW.[Item] AS DECIMAL(12, 2))
+						END
+					) 'ParcelWeight'
+            INTO #ParcelOverweightPerTypeCorp
+            FROM #ParceCode p
+				INNER JOIN [#ParceWeigth] PW
+				ON
+					P.[ID] = PW.[ID]
+                INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
+                    ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
+                        AND ABC.AbcRowStatus = 1
+				OUTER APPLY
+				(
+					SELECT 
+						TOP (1) 
+							RD.[IdRateData]
+					FROM 
+						 [DeliveryBackOffice].[dbo].[RateData] RD  WITH(NOLOCK) 
+					WHERE [RD].[ArticleId] = [ABC].[AbcId]
+					AND [RD].[RateId] = @IdRate
+				) RD;
+
+            SET @ExpectedWeightCorp =
+            (
+                SELECT SUM(POPT.ParcelWeight) FROM #ParcelOverweightPerTypeCorp POPT
+            );
+
+            BEGIN TRY
+
+                SET @OverWeight =
+                (
+                    SELECT SUM(CAST(ROUND(CAST(PW.Item AS DECIMAL(12, 2)), 0) AS INT))
+                    FROM #ParceWeigth PW
+                );
+
+            END TRY
+            BEGIN CATCH
+
+                SET @OverWeight = @ExpectedWeightCorp;
+
+            END CATCH;
+
+            DECLARE @NewOverWeightCorp DECIMAL(12, 2) = 0;
+            SET @NewOverWeightCorp = (@OverWeight - @ExpectedWeightCorp);
 
             -------------------------------------- fin verificar tarifas de piezas irregulares -----------------------------------------------
             INSERT INTO @TempRate
@@ -1391,7 +1473,7 @@ BEGIN
                    x.CollectedRate,
                    SUM(x.InsuranceRate),
                    x.CreditCardRate,
-                   x.OverWeightRate,
+                   x.OverWeightRate + CAST((IIF(@NewOverWeightCorp > 0, @NewOverWeightCorp * ISNULL(@DefaultWeighRatetOfRate, 0), 0)) AS DECIMAL(12,2)),
                    SUM(x.IrregularParcelRate),
                    x.CtsName,
                    x.CtsDescription,
@@ -1413,12 +1495,12 @@ BEGIN
                            ),
                            0) AS InsuranceRate,
                        IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       0 OverWeightRate,
                        ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
                        ISNULL(sv.CtsName, '') AS CtsName,
                        ISNULL(sv.CtsDescription, '') AS CtsDescription,
                        ISNULL(rh.ReturnRate, 0) AS ReturnRate
-                FROM #ListCode ls
+                FROM #ParceCode ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
                     INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
@@ -1434,13 +1516,12 @@ BEGIN
                     LEFT JOIN dbo.CatTypeRate cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rd.TypeSegmentId = @IdSegment
-                      AND (rd.TypeServiceId IN
-                           (
-                               SELECT CtsId
-                               FROM dbo.CatTypeService WITH (NOLOCK)
-                               WHERE RateGroup = @IdRateGroup
-                                     AND CtsRowStatus = 1
-                           )
+                      AND (rd.TypeServiceId IN (
+                                                   SELECT CtsId
+                                                   FROM dbo.CatTypeService WITH (NOLOCK)
+                                                   WHERE RateGroup = @IdRateGroup
+                                                         AND CtsRowStatus = 1
+                                               )
                           )
                 UNION ALL
                 SELECT ISNULL(cr.Name, '') TypeRate,
@@ -1458,12 +1539,12 @@ BEGIN
                            ),
                            0) AS InsuranceRate,
                        IIF(@IsCreditCardPayment = 'true', ISNULL(rh.CreditCardRate, 0), 0) AS CreditCardRate,
-                       IIF(@OverWeight > 0, @OverWeight * ISNULL(rh.AdditionalWeightRate, 0), 0) OverWeightRate,
+                       0 OverWeightRate,
                        ISNULL(rd.RateValue, ISNULL(ar.PriceDefault, 0)) AS IrregularParcelRate,
                        ISNULL(sv.CtsName, '') AS CtsName,
                        ISNULL(sv.CtsDescription, '') AS CtsDescription,
                        ISNULL(rh.ReturnRate, 0) AS ReturnRate
-                FROM #ListCode ls
+                FROM #ParceCode ls
                     INNER JOIN dbo.ArticleByCustomer ar WITH (NOLOCK)
                         ON ar.Code = ls.Item
                     INNER JOIN dbo.RateHeader rh WITH (NOLOCK)
@@ -1484,13 +1565,12 @@ BEGIN
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
                       AND rd.TypeSegmentId = @IdSegment
-                      AND (rd.TypeServiceId IN
-                           (
-                               SELECT CtsId
-                               FROM dbo.CatTypeService WITH (NOLOCK)
-                               WHERE RateGroup = @IdRateGroup
-                                     AND CtsRowStatus = 1
-                           )
+                      AND (rd.TypeServiceId IN (
+                                                   SELECT CtsId
+                                                   FROM dbo.CatTypeService WITH (NOLOCK)
+                                                   WHERE RateGroup = @IdRateGroup
+                                                         AND CtsRowStatus = 1
+                                               )
                           )
             ) x
             GROUP BY x.TypeRate,
@@ -1504,6 +1584,9 @@ BEGIN
                      x.OverWeightRate,
                      x.CtsDescription,
                      x.ReturnRate;
+
+            IF OBJECT_ID('tempdb.dbo.#ParcelOverweightPerTypeCorp', 'U') IS NOT NULL
+                DROP TABLE #ParcelOverweightPerTypeCorp;
 
         END;
     --print 'rate'
@@ -1604,13 +1687,12 @@ BEGIN
                        BETWEEN rd.WeightFrom AND rd.WeightTo
             WHERE rh.RheId = @IdRate
                   AND rd.TypeSegmentId = @IdSegment
-                  AND (rd.TypeServiceId IN
-                       (
-                           SELECT CtsId
-                           FROM CatTypeService
-                           WHERE RateGroup = @IdRateGroup
-                                 AND CtsRowStatus = 1
-                       )
+                  AND (rd.TypeServiceId IN (
+                                               SELECT CtsId
+                                               FROM CatTypeService
+                                               WHERE RateGroup = @IdRateGroup
+                                                     AND CtsRowStatus = 1
+                                           )
                       )
                   AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                                  CONVERT(
@@ -1662,7 +1744,7 @@ BEGIN
                        AND rd.IdRateData =
                        (
                            SELECT TOP 1
-                                  IdRateData
+                               IdRateData
                            FROM RateData
                            WHERE RateId = @IdRate
                                  AND TypeSegmentId = @IdSegment
@@ -1738,13 +1820,12 @@ BEGIN
         WHERE rh.RheId = @IdRate
               AND rd.ArticleId IS NULL
               AND rd.TypeSegmentId = @IdSegment
-              AND (rd.TypeServiceId IN
-                   (
-                       SELECT CtsId
-                       FROM dbo.CatTypeService
-                       WHERE RateGroup = @IdRateGroup
-                             AND CtsRowStatus = 1
-                   )
+              AND (rd.TypeServiceId IN (
+                                           SELECT CtsId
+                                           FROM dbo.CatTypeService
+                                           WHERE RateGroup = @IdRateGroup
+                                                 AND CtsRowStatus = 1
+                                       )
                   )
               AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                              CONVERT(
@@ -1783,17 +1864,17 @@ BEGIN
         DECLARE @i INT = 0;
         DECLARE @total INT = ISNULL(
                              (
-                                 SELECT MAX(Id)FROM @TempRate
+                                 SELECT MAX(Id) FROM @TempRate
                              ),
                              0
                                    );
 
         --Se busca si existe una membresía activa
         SELECT TOP 1
-               @MembershipId = ms.IdMembership,
-               --,@CatMembershipStatusId = ms.CatMembershipStatusId
-               @ServiceValue
-                   = IIF(ms.ActualServiceCount + 1 <= ms.MembershipMaxServiceFixedValue, ms.MembershipFixedValue, -1)
+            @MembershipId = ms.IdMembership,
+            --,@CatMembershipStatusId = ms.CatMembershipStatusId
+            @ServiceValue
+                = IIF(ms.ActualServiceCount + 1 <= ms.MembershipMaxServiceFixedValue, ms.MembershipFixedValue, -1)
         FROM Membership ms
             INNER JOIN CatSalesPackageStatus csps
                 ON csps.IdCatSalesPackageStatus = ms.CatMembershipStatusId
@@ -1808,30 +1889,29 @@ BEGIN
         BEGIN
             --Se busca membresía por rango de servicios
             SELECT TOP 1
-                   @DiscountValue2 = DiscountValue,
-                   @Type2 = cvt.ValueTypeName
+                @DiscountValue2 = DiscountValue,
+                @Type2 = cvt.ValueTypeName
             FROM MembershipDiscountRange mdr
                 INNER JOIN Membership ms
                     ON ms.IdMembership = mdr.MembershipId
                 INNER JOIN CatValueType cvt
                     ON mdr.ValueTypeId = cvt.IdCatValueType
             WHERE mdr.MembershipId = @MembershipId
-                  AND
-                  (
-                      (ms.ActualServiceCount + 1
+                  AND (
+                          (ms.ActualServiceCount + 1
                   BETWEEN mdr.DiscountLowServiceRange AND mdr.DiscountTopServiceRange
+                          )
+                          OR ms.ActualServiceCount + 1 >= mdr.DiscountLowServiceRange
+                             AND mdr.DiscountTopServiceRange IS NULL
                       )
-                      OR ms.ActualServiceCount + 1 >= mdr.DiscountLowServiceRange
-                         AND mdr.DiscountTopServiceRange IS NULL
-                  )
                   AND mdr.RowStatus = 1
             ORDER BY mdr.DateCreated DESC;
 
             --Se busca suscripciones 
             SELECT TOP 1
-                   @SubscriptionId = sc.IdSubscription,
-                   @ServiceValueSubscription
-                       = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+                @SubscriptionId = sc.IdSubscription,
+                @ServiceValueSubscription
+                    = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
                           sc.SubscriptionFixedValue,
                           -1)
             FROM Subscription sc
@@ -1845,22 +1925,21 @@ BEGIN
 
             --Se busca membresía por rango de servicios
             SELECT TOP 1
-                   @DiscountValue = DiscountValue,
-                   @Type = cvt.ValueTypeName
+                @DiscountValue = DiscountValue,
+                @Type = cvt.ValueTypeName
             FROM SubscriptionDiscountRange sdr
                 INNER JOIN Subscription sc
                     ON sc.IdSubscription = sdr.SubscriptionId
                 INNER JOIN CatValueType cvt
                     ON sdr.ValueTypeId = cvt.IdCatValueType
             WHERE sdr.SubscriptionId = @SubscriptionId
-                  AND
-                  (
-                      (sc.ActualServiceCount + 1
+                  AND (
+                          (sc.ActualServiceCount + 1
                   BETWEEN sdr.DiscountLowServiceRange AND sdr.DiscountTopServiceRange
+                          )
+                          OR sc.ActualServiceCount + 1 >= sdr.DiscountLowServiceRange
+                             AND sdr.DiscountTopServiceRange IS NULL
                       )
-                      OR sc.ActualServiceCount + 1 >= sdr.DiscountLowServiceRange
-                         AND sdr.DiscountTopServiceRange IS NULL
-                  )
                   AND sdr.RowStatus = 1
             ORDER BY sdr.DateCreated DESC;
 
@@ -2018,11 +2097,9 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
-               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
-               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
-               --           )
-			     @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+                            @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+                            @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
                           )
                AND @IdCustomerParams != 0
            )
@@ -2257,7 +2334,8 @@ BEGIN
                                                                  )
                                                       ) + '",' + '"Currency":"' + COALESCE(@Currency, '') + '"' + '}',
                                              ' ')
-                                       + IIF((ISNULL(
+                                       + IIF(
+                                             (ISNULL(
                                                         dbo.fnt_Iva_Calculator(
                                                                                   @CalculateTaxes,
                                                                                   'GT',
@@ -2359,11 +2437,9 @@ BEGIN
 
         -- Desplegar valor base sin IVA
         IF (
-               --@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
-               --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
-               --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
-               --)
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @TarifaPlanBasico,
+                            @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
+                            @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt)
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';

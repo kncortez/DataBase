@@ -403,11 +403,25 @@ BEGIN
 					FROM
 						[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 					WHERE
-						Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-						AND
-						Co.IdProduct = 1
+						(
+							(
+								Co.GuideSerie = @GuideSerie
+								AND
+								Co.GuideNumber = @GuideNumber
+							)
+							OR
+							(
+								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+								AND
+								Co.GuideSerie IS NULL
+								AND
+								Co.GuideNumber IS NULL
+							)
+						)
 						AND
 						Co.RowStatus = 1
+					ORDER BY
+						Co.DateCreated DESC
 				), 0)
 
 				SET @PromoName = ISNULL((
@@ -436,6 +450,8 @@ BEGIN
 						,PaymentDate = GETDATE()
 						,TokenUpdated = @Token
 						,DateUpdated = GETDATE()
+						,GuideSerie = @GuideSerie
+						,GuideNumber = @GuideNumber
 					WHERE
 						IdCost = @CostId
 
@@ -649,11 +665,25 @@ BEGIN
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-								AND
-								Co.IdProduct = 1
+								(
+									(
+										Co.GuideSerie = @GuideSerie
+										AND
+										Co.GuideNumber = @GuideNumber
+									)
+									OR
+									(
+										Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+										AND
+										Co.GuideSerie IS NULL
+										AND
+										Co.GuideNumber IS NULL
+									)
+								)
 								AND
 								Co.RowStatus = 1
+							ORDER BY
+								Co.DateCreated DESC
 						), 0)
 
 						IF(@CostId > 0)
@@ -667,6 +697,8 @@ BEGIN
 								,PaymentDate = GETDATE()
 								,TokenUpdated = @Token
 								,DateUpdated = GETDATE()
+								,GuideSerie = @GuideSerie
+								,GuideNumber = @GuideNumber
 							WHERE
 								IdCost = @CostId
 
@@ -707,11 +739,25 @@ BEGIN
 								FROM
 									[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 								WHERE
-									Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
-									AND
-									Co.IdProduct = 1
+									(
+										(
+											Co.GuideSerie = @GuideSerie
+											AND
+											Co.GuideNumber = @GuideNumber
+										)
+										OR
+										(
+											Co.ProductNumber = CONCAT(@GuideSerie, @GuideNumber)
+											AND
+											Co.GuideSerie IS NULL
+											AND
+											Co.GuideNumber IS NULL
+										)
+									)
 									AND
 									Co.RowStatus = 1
+								ORDER BY
+									Co.DateCreated DESC
 							), 0)
 							
 							UPDATE
@@ -722,6 +768,8 @@ BEGIN
 								,PaymentDate = GETDATE()
 								,TokenUpdated = @Token
 								,DateUpdated = GETDATE()
+								,GuideSerie = @GuideSerie
+								,GuideNumber = @GuideNumber
 							WHERE
 								IdCost = @CostId
 

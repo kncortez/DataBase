@@ -39,6 +39,7 @@ BEGIN
           (
               dsd.Guide_Settlement = 0
               OR dsd.Guide_Settlement IS NULL
+			  -- OR dsd.TokenUpdated IS NULL
           );
 		  --Select *from @GuidesFound
     SELECT --*
