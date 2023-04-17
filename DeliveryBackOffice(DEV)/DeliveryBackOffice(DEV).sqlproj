@@ -1478,6 +1478,10 @@
     <Build Include="dbo\User Defined Types\TblServiceRequest3.sql" />
     <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateVisitPointStatusByCodeOfReference.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetReturnGuidesWithNoPayment.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetCreditNotes.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetCDCTransactions.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
