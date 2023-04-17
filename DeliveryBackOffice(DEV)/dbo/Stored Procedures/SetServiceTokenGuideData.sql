@@ -3,7 +3,6 @@
 -- Create date: <2022-01-03>
 -- Description:	< Actualiza información de servicio para guía.>
 -- =============================================
--- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-01-03>
 -- Description:	< Se remueve el poder modificar departamento y municipio ya que puede causar revalorizaciones. >
@@ -11,8 +10,10 @@
 -- Author:		<Jerson Ochoa>
 -- Update date: <2023-01-10>
 -- Description:	< Manejo de parámetro para marcar como devolución de última milla las incidencias. >
--- Create date: <2023-01-10>
+-- Update date: <2023-01-10>
 -- Description:	< Manejo de campos dinámico. >
+-- Update date: <2023-03-21>
+-- Description:	< Actualizar campos para denegación de incidencias >
 -- =============================================
 CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 	@GuideSerie NVARCHAR(2) = '',
@@ -47,6 +48,8 @@ CREATE PROCEDURE [dbo].[SetServiceTokenGuideData]
 AS
 BEGIN
 
+	SET ARITHABORT ON;
+
 	-- Variables de apoyo
 	DECLARE @TokenGuideSerie NVARCHAR(2);
 	DECLARE @TokenGuideNumber INT;
@@ -60,6 +63,11 @@ BEGIN
 	DECLARE @InsertedRoutePreparationDetail TABLE (
 		IdRoutePreparationDetail INT
 	)
+	DECLARE @FailedVisitStatusId INT;
+	DECLARE @IncidenceStatusId INT;
+	DECLARE @CatTypeCOIFailedVisitStatusId INT;
+	DECLARE @CatTypeCOIIncidenceStatusId INT;
+	DECLARE @LastStatusId INT;
 
 	-- Variables de control de flujo
 	DECLARE @IsDeliveryOnRoute AS BIT = 0;
@@ -88,6 +96,7 @@ BEGIN
 		WHERE SDFG.GuideToken = @GuideToken
 		ORDER BY SDFG.DateCreated DESC
 	);
+
 	
 	SET @IsDeliveryOnRoute = (
 		SELECT TOP 1 (CASE WHEN SDFG.[IsDelivery] = 1 AND SDFG.IsInRoute = 1 THEN 1 ELSE 0 END) 
@@ -95,6 +104,11 @@ BEGIN
 		WHERE SDFG.GuideToken = @GuideToken
 		ORDER BY SDFG.DateCreated DESC
 	);
+
+	SET @FailedVisitStatusId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+	SET @CatTypeCOIFailedVisitStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Visita Fallida');
+	SET @IncidenceStatusId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta');
+	SET @CatTypeCOIIncidenceStatusId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WHERE [Name] = 'Incidencia en Ruta');
 
 	IF (@IsDeliveryOnRoute = 1)
 	BEGIN
@@ -509,13 +523,13 @@ BEGIN
 		BEGIN TRY
 			IF @IsConfirmed = 1
 			BEGIN
-				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Visita Fallida') 
+				SET @StatusOrderId = @FailedVisitStatusId;
+				SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIFailedVisitStatusId;
 			END
 			ELSE
 			BEGIN
-				SET @StatusOrderId = (SELECT TOP 1 StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription = 'Incidencia en ruta')
-				SET @CatTypeConfirmationOfIncidenceId = (SELECT TOP 1 IdCatTypeConfirmationOfIncidence FROM CatTypeConfirmationOfIncidence WITH(NOLOCK) WHERE [Name] = 'Incidencia en Ruta') 
+				SET @StatusOrderId = @IncidenceStatusId;
+				SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIIncidenceStatusId; 
 			END
 
 			SET @IsLastMileReturn = 
@@ -546,46 +560,79 @@ BEGIN
 						)
 					, 0)
 				AS BIT)
+				
+			DECLARE @GuideSerieAux NVARCHAR(2);
+			DECLARE @GuideNumberAux INT;
+			DECLARE @GuideDateAux DATETIME;
+			DECLARE @GuideStatusAux INT;
 
+			SELECT 
+				TOP (1) 
+					@GuideSerieAux = [DA].[Guide_Serie]
+					,@GuideNumberAux = [DA].[Guide_Number]
+					,@GuideStatusAux = [COI].[StatusOrderId]
+					,@GuideDateAux = [COI].[DateStatusOrder]
+			FROM 
+				[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA  WITH(NOLOCK) 
+					ON
+						[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+			WHERE
+				[COI].[ConfirmationOfIncidentToken] = @GuideToken
+				AND
+				[COI].[RowStatus] = 1;
+			
 			-- Si tiene diferente estado, actualizar 
 			IF EXISTS (SELECT TOP 1 1 FROM ConfirmationOfIncidence WITH(NOLOCK) WHERE ConfirmationOfIncidentToken = @GuideToken AND RowStatus = 1 AND StatusOrderId <> @StatusOrderId)
-			BEGIN 
-			
-				UPDATE dod 
-				SET StatusOrderId = @StatusOrderId
-				FROM DeliveryOrderDetail dod WITH(NOLOCK)
-				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
-					ON dod.Guide_Serie = da.Guide_Serie
-					AND dod.Guide_Number = da.Guide_Number
-				INNER JOIN ConfirmationOfIncidence coi  WITH(NOLOCK)
-					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
-				AND coi.RowStatus = 1
-				AND dod.StatusOrderId = coi.StatusOrderId
-				AND dod.DateCreated = coi.DateStatusOrder
+			BEGIN  
+
+				UPDATE	[dbo].[ConfirmationOfIncidence]
+				SET		[LastStatusOrderId] = [StatusOrderId],
+						[IsDenied] = 1,
+						[TokenUpdated] = 'SetServiceTokenGuideData',
+						[DateUpdated] = SYSDATETIME()
+				WHERE	[ConfirmationOfIncidentToken] = @GuideToken
+					AND [RowStatus] = 1;
+
+				UPDATE 
+					dod 
+				SET 
+					StatusOrderId = @StatusOrderId
+				FROM 
+					DeliveryOrderDetail dod WITH(NOLOCK)
+				WHERE 
+					dod.[Guide_Serie] = @GuideSerieAux
+					AND
+                    dod.[Guide_Number] = @GuideNumberAux
+					AND 
+					dod.[StatusOrderId] = @GuideStatusAux
+					AND 
+					dod.[DateCreated] = @GuideDateAux
+
+
 
 				UPDATE do
-				SET StatusOrderId = @StatusOrderId
-				FROM DeliveryOrder do WITH(NOLOCK)
-				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
-					ON do.Guide_Serie = da.Guide_Serie
-					AND do.Guide_Number = da.Guide_Number
-				INNER JOIN ConfirmationOfIncidence coi 
-					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
-				AND coi.RowStatus = 1
+				SET	
+					StatusOrderId = @StatusOrderId
+				FROM
+					DeliveryOrder do WITH(NOLOCK)
+				WHERE 
+					[do].[Guide_Serie] = @GuideSerieAux
+					AND
+					[do].[Guide_Number] = @GuideNumberAux
+
+
 
 				UPDATE dop
 				SET StatusOrderId = @StatusOrderId
 				FROM DeliveryOrderPiece dop WITH(NOLOCK)
-				INNER JOIN DeliveryAttempt da WITH(NOLOCK)
-					ON dop.GuideSerie = da.Guide_Serie
-					AND dop.GuideNumber = da.Guide_Number
-				INNER JOIN ConfirmationOfIncidence coi  WITH(NOLOCK)
-					ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-				WHERE coi.ConfirmationOfIncidentToken = @GuideToken
-				AND coi.RowStatus = 1
-			
+				WHERE 
+					[dop].[GuideSerie] = @GuideSerieAux
+					AND
+					[dop].[GuideNumber] = @GuideNumberAux
+
+
 
 			END 
 
@@ -594,7 +641,7 @@ BEGIN
 			   ,StatusOrderId = @StatusOrderId
 			   ,CatTypeConfirmationOfIncidenceId = @CatTypeConfirmationOfIncidenceId
 			   ,ActionObservation = @Observations
-			   ,ClientConfirmsReturn = IIF(@CancelOrder = 1, 0, 1)
+			   ,ClientConfirmsReturn = @CancelOrder
 			   ,TokenUpdated = 'SetServiceTokenGuideData'
 			   ,DateUpdated = GETDATE()
 			WHERE ConfirmationOfIncidentToken = @GuideToken
@@ -606,13 +653,11 @@ BEGIN
 					SET		[DO].[Sender_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Sender_Address]),
 							[DO].[Sender_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''), @NewPhoneNumber, ISNULL([DO].[Sender_Phone], ''))
 					FROM	[dbo].[DeliveryOrder] [DO]  WITH(NOLOCK) 
-					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
-						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
-						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
-					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
-						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
-					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
-						AND		[COI].[RowStatus] = 1 
+					WHERE
+						[DO].[Guide_Serie] = @GuideSerieAux
+						AND
+						[DO].[Guide_Number] = @GuideNumberAux
+
 				END
 			ELSE IF (@IsLastMileReturn = 0)
 				BEGIN
@@ -620,21 +665,16 @@ BEGIN
 					SET		[DO].[Receiver_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''), @NewAddress, [DO].[Receiver_Address]),
 							[DO].[Receiver_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''), @NewPhoneNumber, ISNULL([DO].[Receiver_Phone], ''))
 					FROM	[dbo].[DeliveryOrder] [DO]  WITH(NOLOCK) 
-					INNER JOIN	[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
-						ON		[DO].[Guide_Serie] = [DA].[Guide_Serie]
-						AND		[DO].[Guide_Number] = [DA].[Guide_Number]
-					INNER JOIN	[dbo].[ConfirmationOfIncidence] COI  WITH(NOLOCK)
-						ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
-					WHERE		[COI].[ConfirmationOfIncidentToken] = @GuideToken
-						AND		[COI].[RowStatus] = 1 
+					WHERE
+						[DO].[Guide_Serie] = @GuideSerieAux
+						AND
+						[DO].[Guide_Number] = @GuideNumberAux
+
 				END
 
-			SELECT		@TokenGuideSerie = [DA].[Guide_Serie],
-						@TokenGuideNumber = [DA].[Guide_Number]
-			FROM		[dbo].[ConfirmationOfIncidence] COI
-			INNER JOIN	[dbo].[DeliveryAttempt] DA
-				ON		[COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
-			WHERE	[COI].[ConfirmationOfIncidentToken] = @GuideToken;
+			SELECT		@TokenGuideSerie = @GuideSerieAux,
+						@TokenGuideNumber = @GuideNumberAux
+
 
 			IF(ISNULL(@SetReschedule,0) = 1)
 				BEGIN

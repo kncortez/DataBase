@@ -5,8 +5,8 @@
 -- ============================================= 
 CREATE PROCEDURE [dbo].[SetServiceRoutes]
 	-- Add the parameters for the stored procedure here
-	@CodeApp nvarchar(100),
-	@Route nvarchar(50), 
+	@CodeApp NVARCHAR(100),
+	@Route NVARCHAR(50), 
 	@Country nvarchar(2),
 	@SystemModule NVARCHAR(200) = NULL,
 	@ServiceRoutes TblServiceRoutes READONLY,
@@ -66,7 +66,7 @@ BEGIN
 		BEGIN
 		--Se almacena el sistema y modulo desde donde se crea una guía
 		SET @system = (
-						SELECT SysIdSystem from CatSystem ca
+						SELECT SysIdSystem from CatSystem ca  WITH(NOLOCK) 
 						WHERE ca.SysNameSystem = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/') 
 						WHERE id = 1)
 						);
@@ -74,7 +74,7 @@ BEGIN
 		-- Se deja la sentencia TOP 1 ya que existe dos modulos con el mismo nombre para la creación de guías en porta Web
 		-- Crear guías para usuarios individuales/Express y Crear Guías para corporativos en el flujo normal
 		SET @module = (
-						SELECT TOP 1 mo.ModIdModule from CatModule mo
+						SELECT TOP 1 mo.ModIdModule from CatModule mo  WITH(NOLOCK) 
 						WHERE mo.ModName = (SELECT item FROM dbo.SplitUnlimited(@SystemModule, '/')
 						WHERE id = 2)
 						);
@@ -124,8 +124,8 @@ BEGIN
 					,@SenderDepartment = vpc.Department
 					,@SenderPhone = vpc.Phone
 					,@CustomerId = vpc.CustomerID
-				FROM VisitPointClient vpc
-				INNER JOIN Customer cu 
+				FROM VisitPointClient vpc  WITH(NOLOCK) 
+				INNER JOIN Customer cu  WITH(NOLOCK) 
 				ON cu.IdCustomer = vpc.CustomerID
 				WHERE vpc.CodeOfReference = (SELECT OriginCode FROM @ServiceRoutes WHERE IdTblServiceRoutes = @RowNumber)
 			END
@@ -171,7 +171,7 @@ BEGIN
 				GETDATE(),
 				@ManifestSerie,
 				@ManifestNumber,
-				(SELECT CustomerID FROM VisitPointClient WHERE CodeOfReference = OriginCode)
+				(SELECT CustomerID FROM VisitPointClient  WITH(NOLOCK)  WHERE CodeOfReference = OriginCode)
 			FROM @ServiceRoutes 
 			WHERE IdTblServiceRoutes = @RowNumber
 
@@ -282,7 +282,7 @@ BEGIN
 				0, -- Guide_Collected,
 				0,
 				NULL, --SenderIdTownship
-				(SELECT IdTownship FROM Township WHERE HeaderCode = sr.HeaderCodeTownship), --ReceiverIdTownship
+				(SELECT IdTownship FROM Township  WITH(NOLOCK)  WHERE HeaderCode = sr.HeaderCodeTownship), --ReceiverIdTownship
 				@system,
 				@module,
 				'FDD',
@@ -353,7 +353,7 @@ BEGIN
 			FROM @ServiceRoutes sr
 			WHERE NOT EXISTS (
 				SELECT 1
-				FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG
+				FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG  WITH(NOLOCK) 
 				WHERE @GuideSerie = SDFG.GuideSerie
 				AND @GuideNumber = SDFG.GuideNumber
 				AND SDFG.IsDelivery = 1

@@ -87,10 +87,10 @@ BEGIN
             0
                   )
            ) AS Delivered,
-           CAST(IIF(do.IsCollect = 'TRUE', ISNULL(do.PriceShippment, 0), 0) AS DECIMAL(18, 2)) AS Price,
+           CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment), 0) AS DECIMAL(18, 2)) AS Price,
            CAST(ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) AS DECIMAL(18, 2)) AS COD,
            CAST(IIF(do.IsCollect = 'TRUE',
-                    (ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) + ISNULL(do.PriceShippment, 0)),
+                    (ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment)),
                     ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0)) AS DECIMAL(18, 2)) AS Total,
            CASE
                WHEN invh.inv_serieFEL IS NULL
@@ -125,12 +125,19 @@ BEGIN
                AND invh.dti_fk_orderNumber = do.Guide_Number
         LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp  WITH(NOLOCK) 
             ON do.Receiver_ID = vp.CodeOfReference
+		LEFT JOIN [dbo].VisitPointClient vps WITH(NOLOCK)
+			ON vps.CodeOfReference = do.Sender_ID
+		LEFT JOIN [dbo].[Customer] cu WITH(NOLOCK)
+			ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
+		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
+            ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
+               AND cdp.IdConditionOfPayment > 1
     WHERE (
-              (do.Collect_OnDelivery > 0)
+              (CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END > 0)
               OR
               (
                   do.IsCollect = 1
-                  AND do.PriceShippment + do.Collect_OnDelivery > 0
+                  AND IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment) + CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END > 0
               )
           )
           AND

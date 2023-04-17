@@ -19,12 +19,22 @@ BEGIN
 			IF OBJECT_ID('tempdb.dbo.#listGuidesoOverall', 'U') IS NOT NULL
 			DROP TABLE #listGuidesoOverall;
 
-			SELECT
-			SUBSTRING(Item, 1, 2) ItemSerie
-			,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber
-			INTO #listGuidesoOverall
-			FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',')
+			CREATE TABLE #listGuidesoOverall
+			(
+				ItemSerie NVARCHAR(2),
+				ItemNumber INT
+			);
+			CREATE NONCLUSTERED INDEX IDX_TMP_listGuidesoOverall_Item ON #listGuidesoOverall (ItemSerie, ItemNumber);
 
+			INSERT INTO [#listGuidesoOverall]
+			(
+			    [ItemSerie],
+			    [ItemNumber]
+			)
+			SELECT
+				SUBSTRING(Item, 1, 2) ItemSerie
+				,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber
+			FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',')
 
 			UPDATE dsd
 			SET

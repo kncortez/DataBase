@@ -1471,6 +1471,20 @@
     <Build Include="dbo\Stored Procedures\spHW_TMBuySubscriptionWithMembership.sql" />
     <Build Include="dbo\Stored Procedures\spg_InformationInvoiceOrigin.sql" />
     <Build Include="dbo\Stored Procedures\Set_ResponseFelToNoteCredit.sql" />
+    <Build Include="dbo\Tables\IncidenceDynamicQuestion.sql" />
+    <Build Include="dbo\Tables\IncidenceDynamicInput.sql" />
+    <Build Include="dbo\Tables\DeliveryOrderAttemptData.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_SetActionToConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetServiceIncidenceForMonitoring.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetIncidenceDashboardData.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ListGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SetGuideAbandoned.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspectionDetail.sql" />
+    <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspection.sql" />
+    <Build Include="dbo\Stored Procedures\RptFailedVisitsHeader.sql" />
+    <Build Include="dbo\Stored Procedures\RptFailedVisitsDetail.sql" />
+    <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_LoginSupervisor.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

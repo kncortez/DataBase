@@ -16,12 +16,12 @@
     [CourierContempt]                  BIT            DEFAULT ((0)) NULL,
     [ClientConfirmsReturn]             BIT            DEFAULT ((0)) NULL,
     [IncidentfinalizedbySAC]           BIT            NULL,
+    [IsDenied]                         BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsDenied] DEFAULT ((0)) NULL,
+    [LastStatusOrderId]                TINYINT        NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
-
-
 
 
 
@@ -84,6 +84,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para 
 
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Status anterior de la guia asociada a la incidencia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'LastStatusOrderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si la incidencia ha sido denegada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'IsDenied';
+
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si el área operativa realizo una acción sobre la confirmación de incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'IsActionIssued';
 
 
@@ -96,9 +104,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observación adicionada a la acción realizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ActionObservation';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Confirmación del lado de cliente indicando que solicita devolución del paquete al origen.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ClientConfirmsReturn';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Confirmación del lado de cliente indicando que solicita devolución del paquete al origen.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ClientConfirmsReturn';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observación adicionada a la acción realizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ActionObservation';
 

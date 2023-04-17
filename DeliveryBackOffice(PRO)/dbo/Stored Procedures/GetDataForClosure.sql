@@ -13,6 +13,7 @@ BEGIN
     DECLARE @Recepcion INT;
     DECLARE @Devolucion INT;
     DECLARE @Traslado INT;
+    DECLARE @Internacional INT;
 
     SET @Estandar =
     (
@@ -43,6 +44,12 @@ BEGIN
         SELECT IdTypeService
         FROM CatTypeServiceClosure
         WHERE NameTypeService = 'Traslado'
+    );
+    SET @Internacional =
+    (
+        SELECT IdTypeService
+        FROM CatTypeServiceClosure
+        WHERE NameTypeService = 'Internacional'
     );
     -- FIN MODIFICACIÓN
 
@@ -451,7 +458,7 @@ BEGIN
             UNION ALL
             SELECT CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
-                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
+                            AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -461,7 +468,7 @@ BEGIN
                        (
                            DOPD.TypeofInOutMoneyId = 1
                            AND DOPD.amount != 0
-                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion )
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional )
                        ) THEN
                            COUNT(DOPD.TypeofInOutMoneyId)
                        ELSE
@@ -470,7 +477,7 @@ BEGIN
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 6
                             OR DOPD.TypeofInOutMoneyId = 2
-                               AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion ) THEN
+                               AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional ) THEN
                            SUM(DOPD.amount)
                        ELSE
                            0
@@ -483,7 +490,7 @@ BEGIN
                                OR DOPD.TypeofInOutMoneyId = 2
                            )
                            AND DOPD.amount != 0
-                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion )
+                           AND DOPD.TypeServiceId IN ( @Estandar, @Devolucion, @Internacional )
                        ) THEN
                            COUNT(DOPD.TypeofInOutMoneyId)
                        ELSE
