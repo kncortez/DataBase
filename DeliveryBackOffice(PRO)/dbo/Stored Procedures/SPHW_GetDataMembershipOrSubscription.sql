@@ -11,18 +11,16 @@ CREATE PROCEDURE [dbo].[SPHW_GetDataMembershipOrSubscription]
 AS
 BEGIN
 
-
 	DECLARE     @IdMemberOrSuscription AS INT
 	DECLARE     @inv_cli_email AS  NVARCHAR(50)
 	DECLARE     @Name AS NVARCHAR(100)
 	DECLARE     @DateExpiration AS DATETIME
 	DECLARE     @Url AS Nvarchar(max)
+	DECLARE     @LastInvoiceId AS INT
 	
-
 	SET NOCOUNT ON;
 
     BEGIN TRY
-
 
 	 SET @Url= 'https://portal.forzadelivery.com/design/dashboard' 
 
@@ -43,7 +41,25 @@ BEGIN
 				 M.RowStatus = 1 AND 
 				 CM.IdCatMembership = @IdSalePackage
 
-				 
+			SELECT 
+				TOP (1) 
+					@LastInvoiceId = [InH].[inv_pk_id]
+			FROM 
+				[dbo].[invoiceHeader] InH  WITH(NOLOCK) 
+				INNER JOIN
+					[dbo].[invoiceDetail] InD  WITH(NOLOCK) 
+					ON
+						[InH].[inv_pk_id] = [InD].[dti_fk_header]
+			WHERE
+				[InD].[MembershipId] = @IdMemberOrSuscription
+				AND
+				ISNULL([InH].[inv_certificationFEL], '') = ''
+				AND
+				ISNULL([InH].[inv_invoiceOfCreditNote], 0) = 0
+				AND
+				ISNULL([InH].[inv_creditNote], 0) = 0
+				AND
+				DATEDIFF(DAY, [InH].[inv_date], GETDATE()) < 5;
 
 
 		END
@@ -67,6 +83,26 @@ BEGIN
 					  M.RowStatus = 1 AND 
 				      CS.IdCatSubscription = @IdSalePackage
 				ORDER BY M.DateCreated DESC
+
+			SELECT 
+				TOP (1) 
+					@LastInvoiceId = [InH].[inv_pk_id]
+			FROM 
+				[dbo].[invoiceHeader] InH  WITH(NOLOCK) 
+				INNER JOIN
+					[dbo].[invoiceDetail] InD  WITH(NOLOCK) 
+					ON
+						[InH].[inv_pk_id] = [InD].[dti_fk_header]
+			WHERE
+				[InD].[SubscriptionId] = @IdMemberOrSuscription
+				AND
+				ISNULL([InH].[inv_certificationFEL], '') = ''
+				AND
+				ISNULL([InH].[inv_invoiceOfCreditNote], 0) = 0
+				AND
+				ISNULL([InH].[inv_creditNote], 0) = 0
+				AND
+				DATEDIFF(DAY, [InH].[inv_date], GETDATE()) < 5;
 		
 		END
 	     
@@ -75,11 +111,18 @@ BEGIN
 		        @IdMemberOrSuscription Id,
 				@Name [Name],
 				CONVERT(VARCHAR, @DateExpiration, 101) [DateExpirate],
-				@Url as [Url]
+				@Url as [Url],
+				ISNULL(@LastInvoiceId, -1) [IdInvoice],
+				200 [ResultCode],
+				'' [ResultMessage]
 
 	END TRY
 	BEGIN CATCH
 
-	  SELECT Result = 0 , ERROR_MESSAGE() [Description] 
+		  SELECT 
+			  Result = 0 
+			  , ERROR_MESSAGE() [Description] 
+			  , 500 [ResultCode]
+			  , ERROR_MESSAGE() [ResultMessage]
 	END Catch
 END

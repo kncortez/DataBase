@@ -45,6 +45,7 @@ BEGIN
 	DECLARE @STATUSRETURNED_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto');
 	DECLARE @STATUSINROUTE INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'En ruta');
 	DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
+	DECLARE @STATUSINCIDENCE INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Incidencia en ruta');
 	DECLARE @STATUSARRIVAL_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Arribó a las instalaciones');
 	DECLARE @RETURNEDTOFORZA_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Retornado a forza');
 	DECLARE @STATUSLOST_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Paquete Extraviado');
@@ -55,7 +56,7 @@ BEGIN
 	DECLARE @IdSubTypeRecollection INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Recolección');
 	DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Devolución');
 
-	DECLARE @STATUSINCIDENCE_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Incidencia en ruta');
+	DECLARE @StatusAbandoned TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Paquete abandonado' AND RowStatus = 1)
 
 	IF @Date IS NULL
 		SET @Date =GETDATE()
@@ -199,7 +200,7 @@ BEGIN
 		DECLARE @DELIVERYFAILEDCOUNT_DL INT = 0;
 		SELECT 
 			@GUIDESCOUNTNOTLIQUIDED_DL=COUNT(DISTINCT CASE WHEN URSD.UnifiedRouteSettlementId IS NULL OR  NOT(URSD.RowStatus=1 AND URSD.IsOpenProcess IN (0,NULL)) THEN DO.Guide_Number ELSE NULL END)--CANTIDAD DE GUÍAS SIN LIQUIDAR
-			,@GUIDESCOUNTNOTDELIVERED_DL=SUM(CASE WHEN DO.StatusOrderId NOT IN (@STATUSDELIVERED_DO,@STATUSRETURNED_DO,@STATUSFAILED_DO,@STATUSLOST_DO,@STATUSTRANSFER_DO, @STATUSINCIDENCE_DO) THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE ENTREGA/RECOLECCIÓN QUE NO ESTAN EN ESTADO DE ENTREGA O DEVUELTO, INTENTO DE ENTREGA FALLIDO
+			,@GUIDESCOUNTNOTDELIVERED_DL=SUM(CASE WHEN DO.StatusOrderId NOT IN (@STATUSDELIVERED_DO,@STATUSRETURNED_DO,@STATUSFAILED_DO,@STATUSLOST_DO,@STATUSTRANSFER_DO,@STATUSINCIDENCE) THEN 1 ELSE 0 END) --CANTIDAD DE GUIAS DE ENTREGA/RECOLECCIÓN QUE NO ESTAN EN ESTADO DE ENTREGA O DEVUELTO, INTENTO DE ENTREGA FALLIDO
 			,@SERVICESCOUNTWITHINCIDENCE_DL=SUM(CASE WHEN SM.ServiceStatusId=@STATUSINCIDENCE_SM THEN 1 ELSE 0 END) --CANTIDAD DE SERVICIOS CON INCIDENCIA
 			--,@DELIVERYFAILEDCOUNT_DL=COUNT(DISTINCT CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN CHECKSUM(DOD.StatusCheckpoint,DO.Guide_Number,DO.Guide_Serie) ELSE NULL END)--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
 			,@TOTALGUIDESDL = COUNT(DISTINCT CHECKSUM(DO.Guide_Number,DO.Guide_Serie))
@@ -376,7 +377,7 @@ BEGIN
 					AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 					AND RA.DateOfRoute=@Date		
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
-					AND URSD.IsOpenProcess IN (0,NULL)
+					AND ISNULL(URSD.IsOpenProcess, 0) = 0
 					AND DO.StatusOrderId=@STATUSCOLLECTED_DO
 					AND DO.Guide_Number NOT IN (3701336,3701496,3698645,3701496)
 
@@ -412,7 +413,7 @@ BEGIN
 					AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 					AND RA.DateOfRoute=@Date		
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
-					AND URSD.IsOpenProcess IN (0,NULL)
+					AND ISNULL(URSD.IsOpenProcess, 0) = 0
 					AND DO.StatusOrderId=@STATUSCOLLECTED_DO
 					AND DO.Guide_Number NOT IN (3701336,3701496,3698645,3701496)
 
@@ -450,8 +451,8 @@ BEGIN
 					AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 					AND RA.DateOfRoute=@Date		
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
-					AND URSD.IsOpenProcess IN (0,NULL)
-					AND DO.StatusOrderId IN (@STATUSFAILED_DO, @STATUSINCIDENCE_DO)
+					AND ISNULL(URSD.IsOpenProcess, 0) = 0
+					AND DO.StatusOrderId IN(@STATUSFAILED_DO,@STATUSINCIDENCE)
 					AND GuideNumber NOT IN (3701336,3701496,3698645,3701496)
 
 			UPDATE DO SET DO.StatusOrderId = @RETURNEDTOFORZA_DO
@@ -482,9 +483,79 @@ BEGIN
 					AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
 					AND RA.DateOfRoute=@Date		
 					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
-					AND URSD.IsOpenProcess IN (0,NULL)
-					AND DO.StatusOrderId IN (@STATUSFAILED_DO, @STATUSINCIDENCE_DO)
-					AND DO.Guide_Number NOT IN (3701336,3701496,3698645,3701496)
+					AND ISNULL(URSD.IsOpenProcess, 0) = 0
+					AND DO.StatusOrderId IN (@STATUSFAILED_DO,@STATUSINCIDENCE)
+		------------------------------------------------------
+		--INICIO ACTUALIZACIÓN GUÍAS EN ESTADO ABANDONADO
+			INSERT INTO DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, PieceId, RowStatus)			
+			SELECT 
+				DO.Guide_Serie, DO.Guide_Number, @StatusAbandoned, @Token, GETDATE(), GETDATE(), NULL, NULL, NULL, 1
+				FROM RouteAssigment RA WITH(NOLOCK) 
+				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+					AND SM .RowStatus=1
+				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK) 
+					ON SMD.ServiceManagement=SM.IdServiceManagement
+				INNER JOIN DBO.RoutePreparationDetail RPD  WITH(NOLOCK) 
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+					AND RPD.RowStatus=1
+				LEFT JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
+					ON DO.Guide_Serie=RPD.Guide_Serie
+					AND DO.Guide_Number=RPD.Guide_Number
+				LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+					URS.RouteAssignmentId=RA.IdRouteAssigment
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+					URSD.GuideSerie=RPD.Guide_Serie
+					AND URSD.GuideNumber=RPD.Guide_Number
+					AND URSD.RowStatus=1
+					AND URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+				WHERE 
+					RA.RowStatus=1		
+					--AND RA.IdVehicle IS NOT NULL
+					AND RA.IdRoute IS NOT NULL		
+					AND RA.IdCurrierMan=@IDCOURIER--@CUI
+					AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+					AND RA.DateOfRoute=@Date		
+					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
+					AND ISNULL(URSD.IsOpenProcess, 0) = 0
+					AND URSD.IsArrival = 0
+					AND URSD.IsReturn = 0
+					AND URSD.IsTransfered = 0
+					AND URSD.IsDelivered = 0
+
+			UPDATE DO SET DO.StatusOrderId = @StatusAbandoned
+				FROM RouteAssigment RA WITH(NOLOCK) 
+				INNER JOIN DBO.ServiceManagement SM  WITH(NOLOCK) 
+					ON SM.IdPuRouteAssigment=RA.IdRouteAssigment
+					AND SM .RowStatus=1
+				INNER JOIN DBO.ServiceManagementDetail SMD WITH(NOLOCK) 
+					ON SMD.ServiceManagement=SM.IdServiceManagement
+				INNER JOIN DBO.RoutePreparationDetail RPD  WITH(NOLOCK) 
+					ON RPD.ServiceManagementDetailId=SMD.IdServiceManagementDetail
+					AND RPD.RowStatus=1
+				LEFT JOIN DBO.DeliveryOrder DO WITH (NOLOCK)
+					ON DO.Guide_Serie=RPD.Guide_Serie
+					AND DO.Guide_Number=RPD.Guide_Number
+				LEFT JOIN DBO.UnifiedRouteSettlement URS  WITH(NOLOCK) ON 		
+					URS.RouteAssignmentId=RA.IdRouteAssigment
+				LEFT JOIN DBO.UnifiedRouteSettlementDetail URSD  WITH(NOLOCK) ON 		
+					URSD.GuideSerie=RPD.Guide_Serie
+					AND URSD.GuideNumber=RPD.Guide_Number
+					AND URSD.RowStatus=1
+					AND URS.IdUnifiedRouteSettlement=URSD.UnifiedRouteSettlementId
+				WHERE 
+					RA.RowStatus=1		
+					--AND RA.IdVehicle IS NOT NULL
+					AND RA.IdRoute IS NOT NULL		
+					AND RA.IdCurrierMan=@IDCOURIER--@CUI
+					AND URS.UserSettlement IS NULL --FILTRO PARA LIQUIDACIONES PENDIENTES DE CERRAR
+					AND RA.DateOfRoute=@Date		
+					AND URSD.IdUnifiedRouteSettlementDetail IS NOT NULL 
+					AND ISNULL(URSD.IsOpenProcess, 0) = 0
+					AND URSD.IsArrival = 0
+					AND URSD.IsReturn = 0
+					AND URSD.IsTransfered = 0
+					AND URSD.IsDelivered = 0
 		------------------------------------------------------
 
 			DECLARE @CURRENTDATE DATETIME = GETDATE();

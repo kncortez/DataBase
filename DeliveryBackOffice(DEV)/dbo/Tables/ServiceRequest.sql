@@ -2,7 +2,7 @@
     [Messageid]        NVARCHAR (MAX) NULL,
     [Receiver_Name]    NVARCHAR (100) NOT NULL,
     [Receiver_Email]   NVARCHAR (200) NOT NULL,
-    [PathReceivedFile] NVARCHAR (100) NULL,
+    [PathReceivedFile] NVARCHAR (200) NULL,
     [PathSticker]      NVARCHAR (100) NULL,
     [Status]           NVARCHAR (50)  NOT NULL,
     [Receiver_Date]    DATETIME       NOT NULL,
@@ -13,4 +13,6 @@
     CONSTRAINT [pk_manifest] PRIMARY KEY CLUSTERED ([Manifest_Serie] ASC, [Manifest_Number] ASC),
     CONSTRAINT [FK_ServiceRequest_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
+
+
 

@@ -811,28 +811,10 @@ BEGIN
 										AND da.ID_DeliveryOrderBySettlement = @IdManifest
 									WHERE coi.ClientConfirmsReturn = 1)
 								BEGIN
-									DECLARE @StatusReturn TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Declarado para Devolución' AND RowStatus = 1)
 									SET @IsMarkedReturn = 1
 
 									SET @IsReturn = 1
 									SET @IsArrival = 0
-
-									-- registrar checkpoint histórico de devolución
-									INSERT INTO [dbo].[DeliveryOrderDetail] ([Guide_Serie]
-									, [Guide_Number]
-									, [StatusOrderId]
-									, [UserCreated]
-									, [DateCreated]
-									, [DateCreatedInSystem]
-									, [Observations]
-									, [Temperature_Celsius])
-										VALUES (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL)
-
-									-- registrar último checkpoint de devolución
-									UPDATE DeliveryOrder
-									SET StatusOrderId = @StatusReturn
-									WHERE Guide_Serie = @GuideSerie
-									AND Guide_Number = @GuideNumber
 			
 								END										
 
