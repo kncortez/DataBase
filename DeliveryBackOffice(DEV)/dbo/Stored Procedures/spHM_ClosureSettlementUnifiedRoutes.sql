@@ -46,7 +46,7 @@ BEGIN
 	DECLARE @STATUSINROUTE INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'En ruta');
 	DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
 	DECLARE @STATUSARRIVAL_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Arribó a las instalaciones');
-	DECLARE @RETURNEDTOFORZA_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Retornado a forza');
+	DECLARE @RETURNEDTOFORZA_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Paquete Retornado para Reproceso');
 	DECLARE @STATUSLOST_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Paquete Extraviado');
 
 	DECLARE @STATUSTRANSFER_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WITH (NOLOCK) WHERE OrderDescription ='Traslado a Express Center');
