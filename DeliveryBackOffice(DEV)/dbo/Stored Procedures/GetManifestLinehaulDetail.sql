@@ -20,10 +20,10 @@ BEGIN
 	   ,ISNULL((SELECT
 				SUM(lrpc.GuideQuantity)
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
-			INNER JOIN Container c
+			INNER JOIN Container c WITH (NOLOCK)
 				ON lrpc.ContainerId = c.IdContainer
 				AND c.RowStatus = 1
-			INNER JOIN CatTypeContainer ctc
+			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
 			AND ctc.TypeContainerSerie = 'BOX'
@@ -33,10 +33,10 @@ BEGIN
 	   ,ISNULL((SELECT
 				SUM(lrpc.DryPieceQuantity + lrpc.[ColdPieceQuantity])
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
-			INNER JOIN Container c
+			INNER JOIN Container c WITH (NOLOCK)
 				ON lrpc.ContainerId = c.IdContainer
 				AND c.RowStatus = 1
-			INNER JOIN CatTypeContainer ctc
+			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
 			AND ctc.TypeContainerSerie = 'BOX'

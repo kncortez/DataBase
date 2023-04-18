@@ -126,7 +126,7 @@ BEGIN
 		   ,@Token
 		   ,GETDATE()
 		FROM @TblListGuidePiece tlgp
-		INNER JOIN ActDetail ad
+		INNER JOIN ActDetail ad WITH (NOLOCK)
 			ON tlgp.GuideSerie = ad.GuideSerie
 				AND tlgp.GuideNumber = ad.GuideNumber
 		INNER JOIN DeliveryOrderPiece dop WITH (NOLOCK)

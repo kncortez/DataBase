@@ -22,7 +22,7 @@ BEGIN
 		SELECT
 			@StatusOrderId = StatusOrderId
 		   ,@StatusName = OrderDescription
-		FROM StatusOrder
+		FROM StatusOrder WITH (NOLOCK)
 		WHERE OrderDescription = 'Guía fuera de ruta'
 
 
@@ -50,8 +50,8 @@ BEGIN
 			SET IsOffRoute = 1
 			   ,TokenUpdated = @Token
 			   ,DateUpdated = GETDATE()
-			FROM LinehaulRoutePreparationContainerDetail lrpcd
-			INNER JOIN LinehaulRoutePreparationContainer lrpc
+			FROM LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK) 
+			INNER JOIN LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 				ON lrpcd.LinehaulRoutePreparationContainerId = lrpc.IdLinehaulRoutePreparationContainer
 				AND lrpcd.RowStatus = 1
 			WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
@@ -62,11 +62,11 @@ BEGIN
 			SET IsOffRoute = 1
 			   ,TokenUpdated = @Token
 			   ,DateUpdated = GETDATE()
-			FROM LinehaulRouteSettlementContainerDetail lrscd
-			INNER JOIN LinehaulRouteSettlementContainer lrsc
+			FROM LinehaulRouteSettlementContainerDetail lrscd WITH (NOLOCK)
+			INNER JOIN LinehaulRouteSettlementContainer lrsc WITH (NOLOCK)
 				ON lrscd.LinehaulRouteSettlementContainerId = lrsc.IdLinehaulRouteSettlementContainer
 				AND lrscd.RowStatus = 1
-			INNER JOIN LinehaulRouteSettlement lrs
+			INNER JOIN LinehaulRouteSettlement lrs WITH(NOLOCK)
 				ON lrsc.LinehaulRouteSettlementId = lrs.IdLinehaulRouteSettlement
 
 			WHERE lrs.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
@@ -78,7 +78,7 @@ BEGIN
 			SELECT
 				@StatusOrderId = do.StatusOrderId
 			   ,@StatusName = so.OrderDescription
-			FROM StatusOrder so
+			FROM StatusOrder so WITH (NOLOCK)
 			INNER JOIN DeliveryOrder do WITH (NOLOCK)
 				ON so.StatusOrderId = do.StatusOrderId
 		END
@@ -94,7 +94,7 @@ BEGIN
 				WHEN do.IsLastMileReturn = 1 THEN do.HubDestinationId
 				ELSE @HubLogisticsId
 			END
-		FROM DeliveryOrder do
+		FROM DeliveryOrder do WITH (NOLOCK)
 		WHERE do.Guide_Serie = @GuideSerie
 		AND do.Guide_Number = @GuideNumber
 

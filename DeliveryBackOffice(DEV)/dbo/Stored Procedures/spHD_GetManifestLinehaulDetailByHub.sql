@@ -17,9 +17,9 @@ BEGIN
 		SUM([LRPC].[GuideQuantity]) AS Guides,
 		SUM([LRPC].[DryPieceQuantity] + [LRPC].[ColdPieceQuantity]) AS Pieces
 	FROM
-		[dbo].[LinehaulRoutePreparationContainer] LRPC
+		[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 		INNER JOIN
-			[dbo].[HubLogistics] HL
+			[dbo].[HubLogistics] HL WITH (NOLOCK)
 			ON
 				[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 	WHERE
@@ -34,9 +34,9 @@ BEGIN
 		SUM([LRPC].[GuideQuantity]) AS Guides,
 		SUM([LRPC].[DryPieceQuantity] + [LRPC].[ColdPieceQuantity]) AS Pieces
 	FROM
-		[dbo].[LinehaulRoutePreparationContainer] LRPC
+		[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 		INNER JOIN
-			[dbo].[HubLogistics] HL
+			[dbo].[HubLogistics] HL WITH (NOLOCK)
 			ON
 				[LRPC].[HubDestinyId] = [HL].[IdHubLogistic]
 	WHERE
