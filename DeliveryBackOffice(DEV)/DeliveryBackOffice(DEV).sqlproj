@@ -1482,6 +1482,12 @@
     <Build Include="dbo\Stored Procedures\spRS_GetCreditNotes.sql" />
     <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetCDCTransactions.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetPhoneLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetManifestLinehaulDetailByHub.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetOffRouteLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetOffRouteLinehaulsInfo.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetEmailLinehauls.sql" />
+    <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

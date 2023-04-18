@@ -11,6 +11,7 @@ BEGIN
 	   ctr.CodeRoute
       ,ctr.IdTypeRoute
       ,ctr.RowStatus
+	  ,ctr.IdRoute
 	FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr WITH (NOLOCK)
 	Where ctr.RowStatus = 1 AND ctr.IdTypeRoute=2
 	ORDER BY  ctr.CodeRoute
