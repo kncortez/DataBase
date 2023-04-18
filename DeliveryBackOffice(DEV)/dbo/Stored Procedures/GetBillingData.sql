@@ -101,11 +101,16 @@ BEGIN
 		, ih.inv_cli_name Name
 		, CONCAT(ih.inv_serieFEL, '-', ih.inv_numberFEL) FEL
 		, ih.inv_certificationFEL Certification
-	FROM invoiceHeader ih WITH(NOLOCK)
+	FROM invoiceHeader ih WITH(NOLOCK)	
 	WHERE ih.inv_pk_id = @IdFEL
 		AND ih.inv_certificationFEL IS NOT NULL
 		AND ih.inv_certificationFEL != ''
-		AND ih.inv_creditNote IS NULL
+		AND ih.inv_invoiceOfCreditNote IS NULL
+	AND NOT EXISTS(
+		SELECT 1 FROM dbo.invoiceHeader INH2 WITH(NOLOCK)
+		where ih.inv_creditNote = inh2.inv_pk_id
+	) --validar que no exista nota de crédito asociada
+	
 	ORDER BY ih.inv_date DESC
 
 	-- Table 3

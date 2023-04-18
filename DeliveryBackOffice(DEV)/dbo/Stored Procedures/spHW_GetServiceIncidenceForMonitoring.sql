@@ -1,4 +1,4 @@
-﻿
+
 -- =============================================
 -- Author:		<Andrés, Ruíz>
 -- Create date: <2023-02-17>
@@ -19,8 +19,22 @@ CREATE PROCEDURE [dbo].[spHW_GetServiceIncidenceForMonitoring]
 AS 
 BEGIN
 
-	DECLARE @SACWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
-	DECLARE @OPWebRoleId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1);
+	DECLARE @SACWebRoleId INT =
+        (
+            SELECT TOP 1
+                   CR.RolIdRol
+            FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
+            WHERE CR.RolName = 'SAC web' COLLATE Latin1_General_CI_AI
+                  AND CR.RolRowStatus = 1
+        );
+DECLARE @OPWebRoleId INT =
+        (
+            SELECT TOP 1
+                   CR.RolIdRol
+            FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
+            WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI
+                  AND CR.RolRowStatus = 1
+        );
 
 	DECLARE @TerminalStatus INT = 
 	(
@@ -229,6 +243,7 @@ BEGIN
 			COI.IsConfirmed = 0
 			AND
 			COI.RowStatus = 1
+			AND do.IsLastMileReturn = 1
 			AND
 			(
 				HLBUOri.IdHubLogisticByUser IS NOT NULL
@@ -342,6 +357,7 @@ BEGIN
 			COI.IsConfirmed = 0
 			AND
 			COI.RowStatus = 1
+			AND ISNULL(do.IsLastMileReturn,0)=0
 			AND
 			(
 				HLBUDes.IdHubLogisticByUser IS NOT NULL
