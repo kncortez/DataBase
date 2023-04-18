@@ -415,6 +415,22 @@ BEGIN
         ON GT.Guide_Number = do.Guide_Number
             AND GT.Guide_Serie = do.Guide_Serie;
 		-------------------------------------------------------------------
+		
+		-- Proceso para registro de tiempo estimado de entrega
+		-- Andrés Ruíz - 2023-04-18
+		UPDATE
+			[DO]
+		SET
+			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, NULL)
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			INNER JOIN
+				[#GuideTable] GT
+				ON
+					[DO].[Guide_Serie] = [GT].[Guide_Serie]
+					AND
+					[DO].[Guide_Number] = [GT].[Guide_Number]
+		------------------------------------------------------
 
 		--Proceso para añadir a carrito de compras
 		--Oscar Morales - 2022-08-17

@@ -457,7 +457,21 @@ BEGIN
 				   ,GETDATE()
 				   ,NULL
 				   ,NULL
+				   
 
+			-- Proceso para registro de tiempo estimado de entrega
+			-- Andrés Ruíz - 2023-04-18
+			UPDATE
+				[DO]
+			SET
+				[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, NULL)
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			WHERE
+				[DO].[Guide_Serie] = @GuideSerie
+				AND
+				[DO].[Guide_Number] = @GuideNumber
+			------------------------------------------------------
 
 			SELECT
 				@IsInsurance = sr.IsInsuarance
