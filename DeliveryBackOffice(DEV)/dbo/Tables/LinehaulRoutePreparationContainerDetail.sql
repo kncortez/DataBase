@@ -14,6 +14,7 @@
     [TokenUpdated]                              NVARCHAR (50) NULL,
     [DateUpdated]                               DATETIME      NULL,
     [UserProcess]                               NVARCHAR (50) NULL,
+	[IsOffRoute]                                BIT           DEFAULT ((0)) NOT NULL,    
     PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparationContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Container] FOREIGN KEY ([LinehaulRoutePreparationContainerId]) REFERENCES [dbo].[LinehaulRoutePreparationContainer] ([IdLinehaulRoutePreparationContainer]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),

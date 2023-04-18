@@ -13,6 +13,7 @@
     [DateCreated]                              DATETIME      NOT NULL,
     [TokenUpdated]                             NVARCHAR (50) NULL,
     [DateUpdated]                              DATETIME      NULL,
+    [IsOffRoute]                               BIT DEFAULT ((0)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRouteSettlementContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRouteSettlementContainerDetail_RouteSettlementContainer] FOREIGN KEY ([LinehaulRouteSettlementContainerId]) REFERENCES [dbo].[LinehaulRouteSettlementContainer] ([IdLinehaulRouteSettlementContainer])
 );
@@ -83,3 +84,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de re
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicador booleano de proceso abierto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRouteSettlementContainerDetail', @level2type = N'COLUMN', @level2name = N'IsOpenProcess';
 
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Bandera para saber si es una guía fuera de ruta.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'LinehaulRouteSettlementContainerDetail', @level2type=N'COLUMN',@level2name=N'IsOffRoute'
