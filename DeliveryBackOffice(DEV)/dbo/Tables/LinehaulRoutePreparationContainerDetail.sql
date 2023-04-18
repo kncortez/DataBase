@@ -14,12 +14,14 @@
     [TokenUpdated]                              NVARCHAR (50) NULL,
     [DateUpdated]                               DATETIME      NULL,
     [UserProcess]                               NVARCHAR (50) NULL,
-	[IsOffRoute]                                BIT           DEFAULT ((0)) NOT NULL,    
+    [IsOffRoute]                                BIT           CONSTRAINT [DF_LinehaulRoutePreparationContainerDetail_IsOffRoute] DEFAULT ((0)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparationContainerDetail] ASC),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Container] FOREIGN KEY ([LinehaulRoutePreparationContainerId]) REFERENCES [dbo].[LinehaulRoutePreparationContainer] ([IdLinehaulRoutePreparationContainer]),
     CONSTRAINT [FK_LinehaulRoutePreparationContainerDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [UQ_LinehaulRoutePreparation_ContainerGuide] UNIQUE NONCLUSTERED ([LinehaulRoutePreparationContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC)
 );
+
+
 
 
 
@@ -97,4 +99,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Control de 
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221123-222829]
     ON [dbo].[LinehaulRoutePreparationContainerDetail]([LinehaulRoutePreparationContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para saber si es una guía fuera de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetail', @level2type = N'COLUMN', @level2name = N'IsOffRoute';
 
