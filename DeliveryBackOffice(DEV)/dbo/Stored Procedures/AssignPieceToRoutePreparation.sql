@@ -353,23 +353,23 @@ SET ARITHABORT ON
 								,(ISNULL(DO.Pieces_Dry,0) + ISNULL(DO.Pieces_Cold,0))
 								,ISNULL(DO.Pieces_Dry,0)
 								,ISNULL(DO.Pieces_Cold,0)
-								,DO.Receiver_Department
-								,DO.Receiver_Town
-								,DO.Receiver_Address
-								,DO.ReceiverIdTownship
-								,DO.Receiver_Phone
-								,Do.Sender_Department
-								,Do.SenderIdTownship
-								,Do.Sender_Phone
-								,Do.Sender_Address
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Department] ELSE DO.Receiver_Department END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Town] ELSE DO.Receiver_Town END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Address] ELSE DO.Receiver_Address END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[SenderIdTownship] ELSE DO.ReceiverIdTownship END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN Do.[Sender_Phone] ELSE DO.Receiver_Phone END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Department] ELSE Do.Sender_Department END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[ReceiverIdTownship] ELSE Do.SenderIdTownship END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Phone] ELSE Do.Sender_Phone END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.[Receiver_Address] ELSE Do.Sender_Address END)
 								,DO.PriceShippment
-								,DO.Collect_OnDelivery
-								,DO.Sender_FirstName
-								,DO.Sender_LastName
-								,DO.Receiver_FirstName
-								,DO.Receiver_LastName
-								,DO.Sender_ID
-								,DO.Receiver_ID
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN 0 ELSE DO.Collect_OnDelivery END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_FirstName ELSE DO.Sender_FirstName END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_LastName ELSE DO.Sender_LastName END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_FirstName ELSE DO.Receiver_FirstName END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_LastName ELSE DO.Receiver_LastName END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Receiver_ID ELSE DO.Sender_ID END)
+								,(CASE WHEN DO.[IsLastMileReturn] = 1 THEN DO.Sender_ID ELSE DO.Receiver_ID END)
 							FROM
 								[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
 							WHERE

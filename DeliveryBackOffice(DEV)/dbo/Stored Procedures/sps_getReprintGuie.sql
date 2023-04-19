@@ -404,7 +404,7 @@ BEGIN
                                                   VARCHAR,
                                                   COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), ''),
                                                   103
-                                              ) + '",' + '"Route":"' + COALESCE(cov.RouteCode, '') + '",'
+                                              ) + '",' + '"Route":"",'
                                      + '"TypeService":"' + dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json')
                                      + '",' + '"Service_Payment":"' + COALESCE(CPT.TimePlaName, '') + '",' +
                                   /*nueva seccion del si esta asegurado o no*/
