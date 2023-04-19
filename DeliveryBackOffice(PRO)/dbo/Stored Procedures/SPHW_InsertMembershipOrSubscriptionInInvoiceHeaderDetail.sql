@@ -18,7 +18,7 @@ BEGIN
     -- Datos cliente Cabecera de factura   
 	
 
-    DECLARE @inv_vpCodeOfReferences AS INT = 999;
+    DECLARE @inv_vpCodeOfReferences AS INT = (SELECT TOP 1 [VPC].[CodeOfReference] FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA'  COLLATE Latin1_General_CI_AI  AND VPC.[StatusClient] = 1);
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
             (
                 SELECT dpf_FELEntity
@@ -126,6 +126,17 @@ BEGIN
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'SUSCRIPCION MENSUAL D' COLLATE Latin1_General_CI_AI
+    )   ;
+    ELSE IF (
+                @SuscriptionDesc = 'Plan Diamante'
+                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+            )
+        SET @dti_description =
+    (
+        SELECT TOP 1
+               [Description]
+        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        WHERE [Name] = 'MEMBRESIA DIAMANTE' COLLATE Latin1_General_CI_AI
     )   ;
 
 
@@ -285,5 +296,27 @@ BEGIN
                @dti_fk_header IdInvoice,
                @inv_cli_email inv_cli_email,
                @Token Token;
+
+		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+		(
+		    [ErrorDescription],
+		    [ErrorNumber],
+		    [ErrorProcedure],
+		    [ErrorLine],
+		    [GuideSerie],
+		    [GuideNumber],
+		    [TokenCreated],
+		    [DateCreated]
+		)
+		VALUES
+		(   CAST(ERROR_MESSAGE() AS NVARCHAR(300)),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    NULL,     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
     END CATCH;
 END;

@@ -5,6 +5,16 @@
 -- Create date: <2021-03-11>
 -- Description:	<Inserta el manifiesto de recoleccion>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2022-06-28>
+-- Description:	<Validación sobre pago con Tarjeta o Datafono en CostDetail>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2023-03-14>
+-- Description:	<agregar a bitacora de registro de guías en carrito que no son collect que no fueron liquidadas>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_PickUp]
     @Route NVARCHAR(100),
     @Token NVARCHAR(50),
@@ -28,6 +38,9 @@ BEGIN
     DECLARE @IsCOD BIT;
     -- control de actualizaciones para transacción
     DECLARE @RUpdated INT;
+
+    ----------------
+    DECLARE @TotalGuide DECIMAL(18, 2);
 
     BEGIN TRANSACTION;
 
@@ -183,12 +196,155 @@ BEGIN
             END;
         END;
 
+        -------------------------- Bitacora de Guías en carrito de compras no collect y que no fueron liquidadas y se recolectaron
+        IF ((EXISTS
+        (
+            SELECT 1
+            FROM [dbo].[AccountServiceCartDetail] ASCD WITH (NOLOCK)
+            WHERE ASCD.GuideNumber IN
+                  (
+                      SELECT LG.ItemNumber FROM #listGuides LG
+                  )
+                  AND ASCD.RowStatus = 1
+        )
+            )
+           )
+        BEGIN
 
+            BEGIN TRANSACTION;
+            BEGIN TRY
+
+                SET @TotalGuide =
+                (
+                    SELECT ISNULL(SUM([DO].[PriceShippment]), 0)
+                    FROM
+                    (
+                        SELECT DISTINCT
+                               [LGaux].[ItemSerie],
+                               [LGaux].[ItemNumber]
+                        FROM #listGuides LGaux
+                    ) LG
+                        INNER JOIN [DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH (NOLOCK)
+                            ON LG.ItemSerie = AccSCD.GuideSerie
+                               AND LG.ItemNumber = AccSCD.GuideNumber
+                        INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                            ON [DO].[Guide_Serie] = [AccSCD].[GuideSerie]
+                               AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+                        INNER JOIN [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+                            ON [Co].[GuideSerie] = [DO].[Guide_Serie]
+                               AND [Co].[GuideNumber] = [DO].[Guide_Number]
+                    WHERE [AccSCD].[RowStatus] = 1
+                          AND [DO].[IsCollect] = 0
+                          AND [Co].[TotalAmountPaid] IS NULL
+                );
+
+                INSERT INTO [dbo].[ConflictManifest]
+                (
+                    CourierResponsible,
+                    TotalAmount,
+                    RowStatus,
+                    TokenCreated,
+                    DateCreated
+                )
+                VALUES
+                (@IdCourier, ISNULL(@TotalGuide, 0), 1, @Token, GETDATE());
+
+
+                DECLARE @IdConflictManifest INT = SCOPE_IDENTITY();
+
+                --- Insert Detalle
+                INSERT INTO [dbo].[ConflictManifestDetail]
+                (
+                    ConflictManifestId,
+                    GuideSerie,
+                    GuideNumber,
+                    GuidePrice,
+                    RowStatus,
+                    TokenCreated,
+                    DateCreated
+                )
+                SELECT @IdConflictManifest,
+                       DO.Guide_Serie,
+                       DO.Guide_Number,
+                       DO.PriceShippment,
+                       1,
+                       @Token,
+                       GETDATE()
+                FROM
+                (
+                    SELECT DISTINCT
+                           [LGaux].[ItemSerie],
+                           [LGaux].[ItemNumber]
+                    FROM #listGuides LGaux
+                ) LG
+                    INNER JOIN [DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH (NOLOCK)
+                        ON LG.ItemSerie = AccSCD.GuideSerie
+                           AND LG.ItemNumber = AccSCD.GuideNumber
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                        ON [DO].[Guide_Serie] = [AccSCD].[GuideSerie]
+                           AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+                        ON [Co].[GuideSerie] = [DO].[Guide_Serie]
+                           AND [Co].[GuideNumber] = [DO].[Guide_Number]
+                WHERE [AccSCD].[RowStatus] = 1
+                      AND [DO].[IsCollect] = 0
+                      AND [Co].[TotalAmountPaid] IS NULL;
+					  
+                UPDATE [Co]
+                SET [Co].[TotalAmountPaid] = [Co].[TotalAmount],
+                    [Co].[TokenUpdated] = @Token,
+                    [Co].[DateUpdated] = GETDATE()
+                FROM
+                (
+                    SELECT DISTINCT
+                           [LGaux].[ItemSerie],
+                           [LGaux].[ItemNumber]
+                    FROM #listGuides LGaux
+                ) LG
+                    INNER JOIN [DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH (NOLOCK)
+                        ON LG.ItemSerie = AccSCD.GuideSerie
+                           AND LG.ItemNumber = AccSCD.GuideNumber
+                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                        ON [DO].[Guide_Serie] = [AccSCD].[GuideSerie]
+                           AND [DO].[Guide_Number] = [AccSCD].[GuideNumber]
+                    INNER JOIN [DeliveryBackOffice].[dbo].[Cost] Co WITH (NOLOCK)
+                        ON [Co].[GuideSerie] = [DO].[Guide_Serie]
+                           AND [Co].[GuideNumber] = [DO].[Guide_Number]
+                WHERE [AccSCD].[RowStatus] = 1
+                      AND [DO].[IsCollect] = 0
+                      AND [Co].[TotalAmountPaid] IS NULL;
+
+                UPDATE [dbo].[AccountServiceCartDetail]
+                SET RowStatus = 0
+				,[TokenUpdated] = @Token
+	            ,[DateUpdated] = GETDATE()
+                WHERE GuideNumber IN
+                      (
+                          SELECT LG.ItemNumber FROM #listGuides LG
+                      );
+
+                UPDATE [dbo].[DeliveryOrderPaymentDetail]
+                SET [ShipmentCompleted] = 1
+				,[TokenUpdated] = @Token
+	            ,[DateUpdated] = GETDATE()
+                WHERE GuideNumber IN
+                      (
+                          SELECT LG.ItemNumber FROM #listGuides LG
+                      );
+
+                COMMIT TRANSACTION;
+            END TRY
+            BEGIN CATCH
+                SELECT 0 AS 'StatusCode',
+                       0 AS 'IdConflictManifest',
+                       ERROR_MESSAGE() AS 'Description',
+                       CONVERT(BIGINT, 0) AS 'NumTransferID';
+                ROLLBACK TRANSACTION;
+            END CATCH;
+
+        END;
 
         ----------------------- PROCESSGUIDECOD- SE REGISTRA RECOLECCIÓN . INI ----------------------	
-
-
-
 
         --Buscar ID modulo liquidación Recolecciones
         SET @CatModuleId = ISNULL(
@@ -244,7 +400,7 @@ BEGIN
             IF NOT EXISTS
             (
                 SELECT 1
-                FROM [dbo].[ProcessedGuideCOD]
+                FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
                 WHERE [GuideNumber] = @GuideNumber
                       AND GuideSerie = @GuideSerie
             )
@@ -296,6 +452,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
+               0 AS 'IdConflictManifest',
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID';
         ROLLBACK TRANSACTION;
@@ -305,10 +462,12 @@ BEGIN
     BEGIN
         IF (@Idd > 0)
             SELECT @Idd AS 'StatusCode',
+                   @IdConflictManifest AS 'IdConflictManifest',
                    'Registro guardado correctamente' AS 'Description',
                    @@TRANCOUNT AS 'NumTransferID';
         ELSE
             SELECT 0 AS 'StatusCode',
+                   0 AS 'IdConflictManifest',
                    'Registro no encontrado' AS 'Description',
                    0 AS 'NumTransferID';
 
@@ -316,6 +475,7 @@ BEGIN
     END;
     ELSE
         SELECT 0 AS 'StatusCode',
+               0 AS 'IdConflictManifest',
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID';
 

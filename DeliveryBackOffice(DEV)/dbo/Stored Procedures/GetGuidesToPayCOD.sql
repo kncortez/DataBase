@@ -50,7 +50,12 @@ BEGIN
                WHERE twn.[HeaderCode] = dsc.[HeaderCode]
            ) END AS Hub,
            btd.[Commission],
-           do.[Collect_OnDelivery],
+           (
+				CASE
+					WHEN ISNULL([do].[IsLastMileReturn],0) = 1 THEN 0
+					ELSE do.[Collect_OnDelivery]
+				END
+		   ) [Collect_OnDelivery],
            btd.[Amount],
            btd.AccountNumber AS NumAccount,
            btd.AccountName AS AccountName,
@@ -145,9 +150,26 @@ BEGIN
 			ON ru.UsrIdUser = tl.TknIdUser
 		LEFT JOIN Person p WITH(NOLOCK)
 			ON p.PerIdPerson = ru.UsrIdPerson
-		LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] dopd WITH(NOLOCK)
-			ON dopd.GuideSerie = btd.GuideSerie
-				AND dopd.GuideNumber = btd.GuideNumber
+		OUTER APPLY
+		(
+			SELECT 
+				TOP (1) 
+					[DOPDaux].[TimePlaId]
+					,[DOPDaux].[TypeofInOutMoneyId]
+					,[DOPDaux].[PayTypeId]
+			FROM 
+				[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPDaux  WITH(NOLOCK) 
+			WHERE
+				[DOPDaux].[GuideSerie] = [btd].[GuideSerie]
+				AND
+				[DOPDaux].[GuideNumber] = [btd].[GuideNumber]
+				AND
+				[DOPDaux].[ShipmentCompleted] = 1
+				AND
+				[DOPDaux].[TimePlaId] > 0
+			ORDER BY
+				[DOPDaux].[DateCreated] DESC
+		) dopd
 		LEFT JOIN [dbo].[CatPaymentTime] cpt WITH(NOLOCK)
 			ON cpt.TimePlaId = dopd.TimePlaId
 		LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctiom WITH(NOLOCK)
@@ -163,6 +185,7 @@ BEGIN
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,
+		   do.[IsLastMileReturn],
 		   bt.IdBatchCOD,
            bt.Name,
            bt.BatchNumber,

@@ -138,7 +138,7 @@ BEGIN
                                                     WHEN DAY(EOMONTH(DATEADD(MONTH, 12, @FixedDate))) <= Mmshp.RenewalFixedDay THEN
                                                         EOMONTH(DATEADD(MONTH, 12, @FixedDate))
                                                     ELSE
-                                                        DATEADD(MONTH, 12, @FixedDate)
+														DATEADD(MONTH, 12, DATEADD(DAY, Mmshp.RenewalFixedDay - DAY(@FixedDate), @FixedDate))
                                                 END
                                                ),
                         Mmshp.CatMembershipStatusId = @ActiveStatus,
@@ -162,7 +162,7 @@ BEGIN
                                                                      WHEN DAY(EOMONTH(DATEADD(MONTH, 12, @FixedDate))) <= Mmshp.RenewalFixedDay THEN
                                                                          EOMONTH(DATEADD(MONTH, 12, @FixedDate))
                                                                      ELSE
-                                                                         DATEADD(MONTH, 12, @FixedDate)
+																		 DATEADD(MONTH, 12, DATEADD(DAY, Mmshp.RenewalFixedDay - DAY(@FixedDate), @FixedDate))
                                                                  END
                                                                 )
                                                             )
@@ -493,7 +493,7 @@ BEGIN
                                                        WHEN DAY(EOMONTH(DATEADD(MONTH, 1, @FixedDate2))) <= Sbscrptn.RenewalFixedDay THEN
                                                            EOMONTH(DATEADD(MONTH, 1, @FixedDate2))
                                                        ELSE
-                                                           DATEADD(MONTH, 1, @FixedDate2)
+                                                           DATEADD(MONTH, 1, DATEADD(DAY, Sbscrptn.RenewalFixedDay - DAY(@FixedDate2), @FixedDate2))
                                                    END
                                                   ),
                         Sbscrptn.CatSubscriptionStatusId = @ActiveStatus,

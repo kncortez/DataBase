@@ -60,9 +60,9 @@ BEGIN
 		   ,@GuideNumber Guide_Number
 		   ,@GuidePiece Guide_Piece
 		   ,COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) Pieces
-		   ,Receiver_Department Department
-		   ,Receiver_Town Town
-		   ,Receiver_Address Address
+		   ,(CASE WHEN do.[IsLastMileReturn] = 1 THEN do.[Sender_Department] ELSE do.[Receiver_Department] END) Department
+		   ,(CASE WHEN do.[IsLastMileReturn] = 1 THEN do.[Sender_Town] ELSE do.[Receiver_Town] END) Town
+		   ,(CASE WHEN do.[IsLastMileReturn] = 1 THEN do.[Sender_Address] ELSE do.[Receiver_Address] END) Address
 		   ,Pieces_Dry Pieces_Dry
 		   ,Pieces_Cold Pieces_Cold
 		   ,(CASE WHEN dop.IsDry = 1 THEN 1 ELSE 0 END) Piece_Type

@@ -1,8 +1,11 @@
 ﻿CREATE TABLE [dbo].[CatCheckpointType] (
     [IdCatCheckpointType]       TINYINT        NOT NULL,
     [CheckpointTypeDescription] NVARCHAR (200) NOT NULL,
+    [CheckpointIcon]            NVARCHAR (100) NULL,
     PRIMARY KEY CLUSTERED ([IdCatCheckpointType] ASC)
 );
+
+
 
 
 
@@ -19,4 +22,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del tipo de checkpoint', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCheckpointType', @level2type = N'COLUMN', @level2name = N'CheckpointTypeDescription';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Icono para visualización en tracking', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCheckpointType', @level2type = N'COLUMN', @level2name = N'CheckpointIcon';
 

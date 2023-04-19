@@ -1,7 +1,7 @@
 ﻿
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
-    @TblServiceRequest AS TblServiceRequest READONLY,
+    @TblServiceRequest AS TblServiceRequest3 READONLY,
     @TblDeliveryOrders AS TblDeliveryOrders READONLY
 AS
 BEGIN
@@ -10,6 +10,8 @@ BEGIN
     DECLARE @ManifestNumber INT = 0;
     DECLARE @ManifestSerie VARCHAR(2) = 'FM';
     DECLARE @GuideSerie VARCHAR(2) = 'FD';
+	DECLARE @GuidePriority INT = 0;
+	DECLARE @Priority VARCHAR(1);
 
     /*********************************************************************************************/
     /******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -19,7 +21,7 @@ BEGIN
         [Row_Number] [INT] IDENTITY(1, 1), -- no de fila
         [Guide_Number] [INT] NULL          -- correlativo autogenerado
     );
-
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
     BEGIN TRANSACTION;
     BEGIN TRY
         /*********************************************************************************************/
@@ -434,6 +436,47 @@ BEGIN
         );
         -- FIN DE MODIFICACION
 
+		-- FDAPI-1418 Oscar Morales 2023-02-23
+		-- Insertar data para manejo de inténtos de entrega/devolución
+		INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+		, [GuideNumber]
+		, [GuideDeliveryAttemptCount]
+		, [GuideDeliveryMaxAttemptCount]
+		, [GuideReturnAttemptCount]
+		, [GuideReturnMaxAttemptCount]
+		, [RowStatus]
+		, [DateCreated]
+		, [TokenCreated]
+		, [DateUptaded]
+		, [TokenUpdated])
+			SELECT
+				GT.Guide_Serie
+			   ,GT.Guide_Number
+			   ,0
+			   ,rh.Attempt
+			   ,0
+			   ,rh.AttemptReturn
+			   ,1
+			   ,GETDATE()
+			   ,'SYSTEM'
+			   ,NULL
+			   ,NULL
+			FROM #GuideTable GT
+			INNER JOIN RateByCustomer rc WITH (NOLOCK)
+				ON rc.RbcId = (SELECT TOP 1
+							rbc.RbcId
+						FROM RatebyCustomer rbc WITH (NOLOCK)
+						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+							ON GT.Sender_ID = vpc.CodeOfReference
+						WHERE ISNULL(GT.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
+						AND rbc.RbcRowStatus = 1
+						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+						OR rbc.RbcCodeOfReference IS NULL)
+						ORDER BY rbc.RbcCodeOfReference DESC)
+			INNER JOIN RateHeader rh WITH (NOLOCK)
+				ON rc.RbcIdRate = rh.RheId
+        -- Fin FDAPI-1418 Oscar Morales 2023-02-23
+
         -- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
         INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
         (
@@ -657,23 +700,57 @@ BEGIN
 
             END;
         END;
+		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
+		INNER JOIN @CorrelativeTable ct
+		ON do.Guide_Number = ct.Guide_Number
+		INNER JOIN Membership mb
+		ON do.IdCustomer = mb.CustomerId
+		WHERE mb.CatMembershipStatusId = 3
+		AND mb.ExpirationDate >= GETDATE()
+		AND mb.RowStatus = 1)
+
         DROP TABLE #GuideTable;
 
     --END
     END TRY
     BEGIN CATCH
+
+		
         SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
                CONVERT(BIGINT, 0) AS 'NumTransferID',
                ERROR_LINE() AS [ErrorLine];
         ROLLBACK TRANSACTION;
+
+		INSERT INTO dbo.RoutePreparationLogError
+		(
+		    ErrorDescription,
+		    ErrorNumber,
+		    ErrorProcedure,
+		    ErrorLine,
+		    GuideSerie,
+		    GuideNumber,
+		    TokenCreated,
+		    DateCreated
+		)
+		VALUES
+		(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    '',     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
+
     END CATCH;
 
     IF @@TRANCOUNT > 0
     BEGIN
         COMMIT TRANSACTION;
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 
         SELECT 1 AS 'StatusCode',
@@ -703,8 +780,14 @@ BEGIN
                (
                    SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID, D.IdCustomer)
                ) AS 'Attempts',
-			   IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
-			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			   (CASE 
+					WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+					WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
+					ELSE 'E'
+					END) 'Priority',
+
+			  -- IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			   CONCAT('https://qa.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
 					WHEN 
 						(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
@@ -717,11 +800,19 @@ BEGIN
 					END
 				)'Icon'
         --FIN MODIFICACIÓN
+
+		, D.TypeService  'TypeService'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
+				AND D.Guide_Serie = @GuideSerie
 			LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 				ON ctm.IdCustomer = D.IdCustomer
+			LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+				ON MMBSHP.CustomerId = ctm.IdCustomer
+				AND MMBSHP.CatMembershipStatusId = @StatusPackage
+			    AND MMBSHP.ExpirationDate >= GETDATE()
+				AND MMBSHP.RowStatus = 1
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (

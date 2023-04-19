@@ -29,8 +29,8 @@ BEGIN
     SELECT DISTINCT
            dsd.Guide_Serie,
            dsd.Guide_Number
-    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
+    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
+        INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
                AND dsd.RowStatus = 1
     WHERE dbs.ID = @IdManifest
@@ -87,11 +87,11 @@ BEGIN
             0
                   )
            ) AS Delivered,
-           CAST(IIF(do.IsCollect = 'TRUE', ISNULL(do.PriceShippment, 0), 0) AS DECIMAL(18, 2)) AS Price,
-           CAST(ISNULL(do.Collect_OnDelivery, 0) AS DECIMAL(18, 2)) AS COD,
+           CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment), 0) AS DECIMAL(18, 2)) AS Price,
+           CAST(ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) AS DECIMAL(18, 2)) AS COD,
            CAST(IIF(do.IsCollect = 'TRUE',
-                    (ISNULL(do.Collect_OnDelivery, 0) + ISNULL(do.PriceShippment, 0)),
-                    ISNULL(do.Collect_OnDelivery, 0)) AS DECIMAL(18, 2)) AS Total,
+                    (ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment)),
+                    ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0)) AS DECIMAL(18, 2)) AS Total,
            CASE
                WHEN invh.inv_serieFEL IS NULL
                     OR invh.inv_serieFEL = '' THEN
@@ -104,7 +104,7 @@ BEGIN
            0 StatusOrderValid,
            '' DescriptionStatusOrderValid
     FROM @GuidesFound gf
-        JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do  WITH(NOLOCK) 
             ON do.Guide_Serie = gf.Guide_Serie
                AND do.Guide_Number = gf.Guide_Number
         LEFT JOIN
@@ -113,8 +113,8 @@ BEGIN
                    MAX(invh1.inv_numberFEL) inv_numberFEL,
                    invd.dti_fk_orderSerie dti_fk_orderSerie,
                    invd.dti_fk_orderNumber dti_fk_orderNumber
-            FROM DeliveryBackOffice.dbo.invoiceDetail invd
-                JOIN DeliveryBackOffice.dbo.invoiceHeader invh1
+            FROM DeliveryBackOffice.dbo.invoiceDetail invd  WITH(NOLOCK) 
+                INNER JOIN DeliveryBackOffice.dbo.invoiceHeader invh1  WITH(NOLOCK) 
                     ON invh1.inv_pk_id = invd.dti_fk_header
                        AND invh1.inv_descriptionFEL = 'PROCESO REALIZADO'
                        AND invh1.inv_invoiceOfCreditNote IS NULL
@@ -123,14 +123,21 @@ BEGIN
         ) invh
             ON invh.dti_fk_orderSerie = do.Guide_Serie
                AND invh.dti_fk_orderNumber = do.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp
+        LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp  WITH(NOLOCK) 
             ON do.Receiver_ID = vp.CodeOfReference
+		LEFT JOIN [dbo].VisitPointClient vps WITH(NOLOCK)
+			ON vps.CodeOfReference = do.Sender_ID
+		LEFT JOIN [dbo].[Customer] cu WITH(NOLOCK)
+			ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
+		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
+            ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
+               AND cdp.IdConditionOfPayment > 1
     WHERE (
-              (do.Collect_OnDelivery > 0)
+              (CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END > 0)
               OR
               (
                   do.IsCollect = 1
-                  AND do.PriceShippment + do.Collect_OnDelivery > 0
+                  AND IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment) + CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END > 0
               )
           )
           AND
@@ -169,7 +176,7 @@ BEGIN
             OrderDescription =
             (
                 SELECT so.OrderDescription
-                FROM StatusOrder so
+                FROM StatusOrder so  WITH(NOLOCK) 
                 WHERE so.StatusOrderId =
                 (
                     SELECT StatusOrderId

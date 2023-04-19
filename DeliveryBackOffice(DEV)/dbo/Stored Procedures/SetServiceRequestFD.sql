@@ -15,10 +15,11 @@ BEGIN
 	DECLARE @ManifestSerie VARCHAR(2) = 'FM'
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
 
+
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	--FIN MODIFICACIÓN
-
+	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -341,6 +342,47 @@ BEGIN
 		);
 		-- FIN DE MODIFICACION
 			
+		-- FDAPI-1418 Oscar Morales 2023-02-23
+		-- Insertar data para manejo de inténtos de entrega/devolución
+		INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+		, [GuideNumber]
+		, [GuideDeliveryAttemptCount]
+		, [GuideDeliveryMaxAttemptCount]
+		, [GuideReturnAttemptCount]
+		, [GuideReturnMaxAttemptCount]
+		, [RowStatus]
+		, [DateCreated]
+		, [TokenCreated]
+		, [DateUptaded]
+		, [TokenUpdated])
+			SELECT
+				GT.Guide_Serie
+			   ,GT.Guide_Number
+			   ,0
+			   ,rh.Attempt
+			   ,0
+			   ,rh.AttemptReturn
+			   ,1
+			   ,GETDATE()
+			   ,'SYSTEM'
+			   ,NULL
+			   ,NULL
+			FROM #GuideTable GT
+			INNER JOIN RateByCustomer rc WITH (NOLOCK)
+				ON rc.RbcId = (SELECT TOP 1
+							rbc.RbcId
+						FROM RatebyCustomer rbc WITH (NOLOCK)
+						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
+							ON GT.Sender_ID = vpc.CodeOfReference
+						WHERE ISNULL(@CustomerID, vpc.CustomerID) = rbc.RbcIdCustomer
+						AND rbc.RbcRowStatus = 1
+						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+						OR rbc.RbcCodeOfReference IS NULL)
+						ORDER BY rbc.RbcCodeOfReference DESC)
+			INNER JOIN RateHeader rh WITH (NOLOCK)
+				ON rc.RbcIdRate = rh.RheId
+        -- Fin FDAPI-1418 Oscar Morales 2023-02-23
+
 		-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
 		INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (
 			[Guide_Serie],
@@ -475,7 +517,7 @@ BEGIN
 	BEGIN
 		COMMIT TRANSACTION;
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 		SELECT 
 			1 AS 'StatusCode',
@@ -492,13 +534,18 @@ BEGIN
 			C.[Row_Number] AS 'RowNumber',
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
-			isnull(@Route,'')  as 'Route'
+			''  as 'Route'
 			,D.PriceShippment AS 'Price',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
-			IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
-			CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			(CASE 
+				WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
+				WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
+				ELSE 'E'
+				END) 'Priority',
+			--IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
+			CONCAT('https://qa.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			(CASE
 				WHEN 
 					(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
@@ -512,8 +559,14 @@ BEGIN
 			)'Icon'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
+										AND D.Guide_Serie = @GuideSerie
 		LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
 			ON ctm.IdCustomer = D.IdCustomer
+		LEFT JOIN DeliveryBackOffice.dbo.Membership MMBSHP WITH(NOLOCK)
+				ON MMBSHP.CustomerId = ctm.IdCustomer
+				AND MMBSHP.CatMembershipStatusId = @StatusPackage
+			    AND MMBSHP.ExpirationDate >= GETDATE()
+				AND MMBSHP.RowStatus = 1
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END

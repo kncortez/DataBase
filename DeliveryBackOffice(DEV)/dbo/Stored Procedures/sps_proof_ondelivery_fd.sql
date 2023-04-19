@@ -14,6 +14,11 @@
 --               en cambio se debe insertar el checkpoint Reenviado a Express Center>
 -- Hotfix: FDAPI-337
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-03-02>
+-- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -180,7 +185,9 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
-        WHERE sr.Phone LIKE '%' + @PhoneNumber + '%'
+        WHERE (sr.Phone LIKE '%' + @PhoneNumber + '%'
+				OR
+			  [sr].[UniqueCode] = @PhoneNumber)
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
               AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23);
@@ -237,9 +244,9 @@ BEGIN
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET NameOfReceiver = @ReceiverName,
-                    StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
+                    StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                                         @StatusEXC,
-                                        IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
+                                        IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
                     LastCollectOnDelivery = IIF(@ExcludeCODPyament = 'false', NULL, Collect_OnDelivery),
                     Collect_OnDelivery = IIF(@ExcludeCODPyament = 'true', 0, Collect_OnDelivery) -- 2021-09-09 si el flag de exlucion de pago COD es true actualizar monto COD a 0
                 WHERE Guide_Serie = @GuideSerie
@@ -266,9 +273,9 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber,
-                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption,
+                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                      @StatusEXC,
-                     IIF(@IsExpress = 'true', @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
+                     IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
                  NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
                 SET @RInserted = @@ROWCOUNT;
@@ -459,7 +466,8 @@ BEGIN
 					-- Revisar si la guía pertenece a servicios de monto fijo de membresía o suscripción
 					-- Por membresía
 					SELECT
-						@IsGuideValidForPoints = 0
+						TOP 1
+							@IsGuideValidForPoints = 0
 					FROM
 						[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 						INNER JOIN
@@ -479,7 +487,8 @@ BEGIN
 
 					-- Por suscripción
 					SELECT
-						@IsGuideValidForPoints = 0
+						TOP 1
+							@IsGuideValidForPoints = 0
 					FROM
 						[DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL WITH(NOLOCK)
 						INNER JOIN
@@ -620,7 +629,7 @@ BEGIN
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -640,7 +649,7 @@ BEGIN
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -661,7 +670,7 @@ BEGIN
                 SELECT ord.Guide_Serie AS 'GuideSerie',
                        ord.Guide_Number AS 'GuideNumber',
                        (
-                           SELECT IdCourierman
+                           SELECT TOP 1 IdCourierman
                            FROM DeliveryBackOffice.dbo.LogTokenPOD WITH (NOLOCK)
                            WHERE LogTokenPOD = @Token
                        ) AS 'CourierManId',
@@ -701,6 +710,158 @@ BEGIN
                                         @CODPayment = @CODPayment;
         END;
 
+		 IF(EXISTS(SELECT  Top 1 1 FROM [dbo].[DeliveryOrder] dlo WITH (NOLOCK) WHERE dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1)) -- guía marcada para devolución
+            BEGIN
+		
+			-- agregar guía marcada para devolución en tabla de proceso de COD
+			  INSERT INTO DeliveryBackOffice.dbo.ProcessedGuideCOD
+                                (
+                                    GuideSerie,
+                                    GuideNumber,
+                                    DataOriginId,
+                                    Token,
+                                    CustomerId
+                                )
+                                SELECT @GuideSerie,
+                                       @GuideNumber,
+                                       @DataOriginId,
+                                       @Token,
+                                       cus.IdCustomer
+                                FROM DeliveryOrder dlo WITH (NOLOCK)
+                                    LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+                                        ON vp.CodeOfReference = Case when  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  Then dlo.Sender_ID Else dlo.Receiver_ID End
+                                    LEFT JOIN dbo.Customer cus WITH (NOLOCK)
+                                        ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
+                                    LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
+                                        ON pcd.GuideSerie = dlo.Guide_Serie
+                                           AND pcd.GuideNumber = dlo.Guide_Number
+                                WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.Guide_Serie = @GuideSerie AND dlo.Guide_Number = @GuideNumber AND dlo.IsLastMileReturn=1 AND dlo.[IsCollect] = 1
+                 END
+
+		-- Actualizar ubicación de punto de visita correspondiente
+		BEGIN TRY
+		    
+			DECLARE @CodeOfReference INT = 0;
+			SET @CodeOfReference = 
+			(
+				ISNULL
+				(
+					(
+						SELECT 
+							TOP (1) 
+								(
+									CASE
+										WHEN DO.[IsLastMileReturn] = 1 THEN [DO].[Sender_ID]
+										ELSE [DO].[Receiver_ID]
+									END
+								)
+						FROM 
+							[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+						WHERE
+							DO.[Guide_Serie] = @GuideSerie
+							AND
+							DO.[Guide_Number] = @GuideNumber
+					)
+				, 0)
+			)
+
+			IF( ISNULL(@CodeOfReference, 0) != 0 )
+			BEGIN
+
+				DECLARE @VPLatitude NVARCHAR(20)
+				DECLARE @VPLongitude NVARCHAR(20)
+				
+				SELECT 
+					@VPLatitude = vpc.Latitude
+					,@VPLongitude = vpc.Longitude
+				FROM VisitPointClient vpc WITH (NOLOCK)
+				WHERE 
+					vpc.CodeOfReference = @CodeOfReference
+
+				IF 
+					(RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
+				BEGIN
+					
+					-- Punto de visita con ubicación existente
+					IF 
+						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
+					BEGIN
+						
+						-- Si existe una ubicación para registrar
+						-- Distancia (en metros) entre recolección y el punto de visita
+						-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
+						IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @FixedLongitude, ' ', @FixedLatitude, ')'), 4326)) ) < 10)
+						BEGIN
+							-- Si la distancia es menor a 10 metros
+							-- Guardar última ubicación
+							UPDATE
+								[DeliveryBackOffice].[dbo].[VisitPointClient]
+							SET
+								LogLatitude = Latitude
+								,LogLongitude = Longitude
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								CodeOfReference = @CodeOfReference
+
+							-- Guardar nueva ubicación de recolección
+							UPDATE
+								[DeliveryBackOffice].[dbo].[VisitPointClient]
+							SET
+								Latitude = @FixedLatitude
+								,Longitude = @FixedLongitude
+								,[Accuracy] = @Accuracy
+								,TokenUpdated = @Token
+								,DateUpdated = GETDATE()
+							WHERE
+								CodeOfReference = @CodeOfReference
+
+						END
+						ELSE
+						BEGIN
+								-- Guardar nueva ubicación de recolección en "bitácora" para revisión
+								UPDATE
+									[DeliveryBackOffice].[dbo].[VisitPointClient]
+								SET
+									LogLatitude = @FixedLatitude
+									,LogLongitude = @FixedLongitude
+									,TokenUpdated = @Token
+									,DateUpdated = GETDATE()
+								WHERE
+									CodeOfReference = @CodeOfReference
+
+						END
+					END
+
+				END
+				ELSE
+				BEGIN
+					
+					-- Punto de visita sin ubicación registrada
+					IF 
+						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
+					BEGIN
+
+						-- Si existe una ubicación para registrar
+						UPDATE
+							[DeliveryBackOffice].[dbo].[VisitPointClient]
+						SET
+							Latitude = ISNULL(@FixedLatitude, Latitude)
+							,Longitude = ISNULL(@FixedLongitude, Longitude)
+							,TokenUpdated = @Token
+							,DateUpdated = GETDATE()
+						WHERE
+							CodeOfReference = @CodeOfReference
+
+					END
+				END
+			END
+
+		END TRY
+		BEGIN CATCH
+		    
+		END CATCH
+
     END TRY
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
@@ -708,6 +869,29 @@ BEGIN
                CONVERT(BIGINT, 0) AS 'NumTransferID',
                @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide';
         ROLLBACK TRANSACTION;
+
+		INSERT INTO [dbo].[RoutePreparationLogError]
+		(
+		    [ErrorDescription],
+		    [ErrorNumber],
+		    [ErrorProcedure],
+		    [ErrorLine],
+		    [GuideSerie],
+		    [GuideNumber],
+		    [TokenCreated],
+		    [DateCreated]
+		)
+		VALUES
+		(   
+			ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    NULL,     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
     END CATCH;
 
     IF @@TRANCOUNT > 0

@@ -11,8 +11,15 @@
     [OrderId]                  INT           NULL,
     [Code]                     INT           NULL,
     [IncidenceClasificationId] INT           NULL,
+    [IsForcedIncidence]        BIT           DEFAULT ((0)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdIncidenceType] ASC)
 );
 
 
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la incidencia esta forzada a ser incidencia en ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'IsForcedIncidence';
 

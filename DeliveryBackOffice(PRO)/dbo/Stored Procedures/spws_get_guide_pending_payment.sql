@@ -132,7 +132,7 @@ PRINT '*************************************************************************
            ord.Collect_OnDelivery [COD],
            cst.TotalAmountPaid [AmountPaid],
            cst.CODAmount [CODPaid],
-           IIF(cst.CODAmount IS NULL, 0, 1) [CODIsPaid],
+           IIF(cst.CODAmount IS NULL, 0, IIF(CST.CODAmount = ORD.Collect_OnDelivery,  1,0)) [CODIsPaid],
            ISNULL(
                      pyt.TimePlaId,
                      IIF(ord.IsCollect = 'true',
