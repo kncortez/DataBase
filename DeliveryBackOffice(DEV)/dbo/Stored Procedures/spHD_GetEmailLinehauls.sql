@@ -19,6 +19,7 @@ BEGIN
 					FROM LinehaulCoverage WITH (NOLOCK)
 					WHERE CatRouteId = @CatRouteId
 					AND ISNULL(ReportEmails, '') <> ''
+					AND RowStatus = 1
 					FOR XML PATH (''))
 				, 1, 2, ''))
 
