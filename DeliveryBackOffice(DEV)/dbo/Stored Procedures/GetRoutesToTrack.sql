@@ -82,7 +82,7 @@ BEGIN
 	SELECT 'TOTALES' 'Courier',
            '' 'Hub',
            '' 'Route',
-           0 'Manifest',
+           COUNT(DISTINCT [DOBS].[ID]) 'Manifest',
            COUNT(DISTINCT DO.Guide_Number) 'TotalServices',
            SUM(ISNULL(DOA.TotalCount, 0)) 'TotalAlerts',
            COUNT(DISTINCT DO2.Guide_Number) 'TotalSuccessfulDeliveries',
