@@ -3,7 +3,7 @@
 -- Create date: <2022-12-27>
 -- Description:	<Método para registro de uso de membresía de cliente por parte de afiliados>
 -- =============================================
-create PROCEDURE [dbo].[SPHW_RegistrationCustomerMembershipByAffiliates]
+CREATE PROCEDURE [dbo].[SPHW_RegistrationCustomerMembershipByAffiliates]
 @IdMembership AS INT,
 @Idaffiliate AS INT,
 @OriginalAmountOfConsumption AS Decimal(18,2),
@@ -31,7 +31,8 @@ BEGIN TRY
 		 FinalAmount,	
 		 RowStatus,	
 		 DateCreated,
-		 TokenCreated
+		 TokenCreated,
+		 RegisterUserId
 		 )
 		 VALUES
 		 (
@@ -45,8 +46,8 @@ BEGIN TRY
 		  @FinalAmountAfterApplyingDiscount,
 		  1,
 		  GETDATE(),
-		  @TOKEN
-
+		  @TOKEN,
+		  @Idaffiliate
 		 )
 
 	 COMMIT TRANSACTION

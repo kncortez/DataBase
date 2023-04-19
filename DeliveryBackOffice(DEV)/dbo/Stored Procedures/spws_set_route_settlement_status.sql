@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Hugo, Gomez>
 -- Create date: <2020-03-04>
 -- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
@@ -25,8 +24,44 @@ BEGIN
 
     DECLARE @IsDry BIT;
 
+	DECLARE @IsStatusTerminal int = (Select Count(Guide_Number) From [dbo].[DeliveryOrder] DO With (nolock)
+                                                                INNER JOIN 
+																     [dbo].[StatusOrder] SO  WITH(NOLOCK)
+																	 ON DO.StatusOrderId = SO.StatusOrderId
+																WHERE
+																[CatCheckpointTypeId] = 3 And SO.RowStatus= 1
+																And DO.Guide_Serie=@GuideSerie And Guide_Number = @GuideNumber
+											)
+
+	DECLARE @StatusDescription NVARCHAR(2048) = (Select SO.OrderDescription From dbo.DeliveryOrder DO with (nolock) 
+	                                                Inner Join dbo.StatusOrder SO
+													ON DO.StatusOrderId = SO.StatusOrderId
+													Where DO.Guide_Serie=@GuideSerie And Guide_Number = @GuideNumber)
+	If( @IsStatusTerminal = 1)	
+				Begin
+					SET @Description ='*** Guía : '+ @GuideSerie + CONVERT(nvarchar(25),@GuideNumber) +' en estado Terminal : '+ @StatusDescription  +' ***';	
+
+            SELECT 0 AS 'StatusCode',
+                   @Description AS 'Description',
+                   --	0 AS 'NumTransferID',
+                   CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide', 
+
+                   --@Amount AS 'Amount',
+                   0 AS 'SubStatusCode',
+                   0 'IsDry',
+				   0 'IsTerminal'
+
+				End 
+   Else
+   Begin
+
     BEGIN TRANSACTION;
     BEGIN TRY
+
+
+
+
+
 
 
         DECLARE @stattus INT = 11;
@@ -62,7 +97,8 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.CatRoute WITH (NOLOCK)
                     WHERE CodeRoute = @Route
                 );
-
+   
+	 
         INSERT INTO DeliveryBackOffice.dbo.TransactionalBackbone
         (
             GuideSerie,
@@ -124,9 +160,11 @@ BEGIN
         --    OR dopd.IdHeaderRecolection IS NULL -- la guía se generó pero no se solicitó recolección
         --);
 
-        SET @RModified3 = @@rowcount;
+		
 
-        IF @RModified3 > 0
+        SET @RModified3 = @@rowcount;
+		
+        IF (@RModified3 > 0 )
         BEGIN
             UPDATE dbo.DeliveryOrderPiece
             SET StatusOrderId = @stattus,
@@ -186,7 +224,7 @@ BEGIN
 					DO.Guide_Serie = @GuideSerie 
 					AND 
 					DO.Guide_Number = @GuideNumber
-			) IN (1,15,16) -- Solicitado, Generado, Programado para recolección
+			) IN (1,15,16)  -- Solicitado, Generado, Programado para recolección
 		)
 		BEGIN
 			INSERT INTO dbo.DeliveryOrderDetail
@@ -205,22 +243,26 @@ BEGIN
 			(@GuideSerie, @GuideNumber, 2, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
 		END
         ---	 insertar checkpoint de arribo a instalaciones.	
-        INSERT INTO dbo.DeliveryOrderDetail
-        (
-            [Guide_Serie],
-            [Guide_Number],
-            [StatusOrderId],
-            [UserCreated],
-            [DateCreated],
-            [DateCreatedInSystem],
-            [Observations],
-            [Temperature_Celsius],
-            [PieceId]
-        )
-        VALUES
-        (@GuideSerie, @GuideNumber, @stattus, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
+	
+			INSERT INTO dbo.DeliveryOrderDetail
+			(
+				[Guide_Serie],
+				[Guide_Number],
+				[StatusOrderId],
+				[UserCreated],
+				[DateCreated],
+				[DateCreatedInSystem],
+				[Observations],
+				[Temperature_Celsius],
+				[PieceId]
+			)
+			VALUES
+			(@GuideSerie, @GuideNumber, @stattus, @Token, GETDATE(), GETDATE(), NULL, NULL, @GuidePiece);
 
-        SET @RModified2 = @@rowcount;
+			SET @RModified2 = @@rowcount;
+
+
+	
 
         IF (@val = @valu)
         BEGIN
@@ -885,7 +927,8 @@ BEGIN
                --	CONVERT(BIGINT, 0) AS 'NumTransferID',
                CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide',
                0 AS 'SubStatusCode',
-               0 'IsDry';
+               0 'IsDry',
+			   @IsStatusTerminal 'IsTerminal'
         ROLLBACK TRANSACTION;
 
         SELECT 'No se guardo el registro' AS StatusCode;
@@ -901,11 +944,13 @@ BEGIN
         BEGIN
 
             SELECT 1 AS 'StatusCode',
+			        @Description 'Description',
                    @GuideSerie GuideSerie,
                    @GuideNumber GuideNumber,
                    @GuidePiece GuidePiece,
                    @IsDry 'IsDry',
-                   COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) Pieces
+                   COALESCE(do.Pieces_Dry, 0) + COALESCE(do.Pieces_Cold, 0) Pieces,
+				   1 'IsTerminal'
             FROM DeliveryOrder do WITH (NOLOCK)
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber;
@@ -944,7 +989,7 @@ BEGIN
 
         ELSE
         BEGIN
-            IF @RModified3 = 0
+            IF @RModified3 = 0 
             BEGIN
                 DECLARE @Status NVARCHAR(100);
 
@@ -1023,12 +1068,15 @@ BEGIN
             SELECT 0 AS 'StatusCode',
                    @Description AS 'Description',
                    --	0 AS 'NumTransferID',
-                   CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide',
+                   CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide', 
 
                    --@Amount AS 'Amount',
                    0 AS 'SubStatusCode',
-                   0 'IsDry';
+                   0 'IsDry',
+				   @IsStatusTerminal 'IsTerminal'
             ROLLBACK TRANSACTION;
         END;
     END;
-END;
+END; 
+
+END

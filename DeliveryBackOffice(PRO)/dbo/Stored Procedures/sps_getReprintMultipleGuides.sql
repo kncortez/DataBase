@@ -8,7 +8,7 @@
 -- Create date: <2022-12-20>
 -- Description:	<Agregar Campos de Piezas Frías y piezas Secas>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_getReprintMultipleGuides]
+CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY
 AS
@@ -58,7 +58,7 @@ BEGIN
     
 
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B - BUSINESS TO BUSINESS');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 
 
@@ -128,7 +128,7 @@ BEGIN
                                     END)																'Collected',
 									 COALESCE(CONVERT(VARCHAR, dev.PriceShippment), '0.00')				'Price',
 									 COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') 'IdCustomer',
-									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) END ) 'HeaderCodeTownship_FA',
+									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws.HeaderCode, AlterOrigin.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, AlterDestiny.HeaderCode, '')) END ) 'HeaderCodeTownship_FA',
 									 (CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_FA.NAME_FA ELSE NAME_TA.NAME_TA END)	'name_FA',
 									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN  CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) ELSE REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ') END)'email_FA',
 									 (CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') ELSE REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') END )'phone_FA',
@@ -141,7 +141,7 @@ BEGIN
 									(CASE WHEN DEV.IsLastMileReturn <>1 THEN COALESCE(ctm.Abbreviation, '') ELSE '' END) 'city_FA',
 									COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') 'IdMerchant_FA',
 									 CONTACT_FA.CONTACT_FA 'contact_FA',
-								(CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws.HeaderCode, ''))  END )'HeaderCodeTownship_TA',
+								(CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, AlterDestiny.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws.HeaderCode, AlterOrigin.HeaderCode,''))  END )'HeaderCodeTownship_TA',
 								(CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_TA.NAME_TA  ELSE  NAME_FA.NAME_FA END) 'name_TA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ')  ELSE CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) END) 'email_TA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') ELSE  REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') END ) 'phone_TA',								
@@ -230,8 +230,8 @@ BEGIN
 
 
 								--COALESCE(@integrationCost, '') 'Integration',
-                                COALESCE(IIF(dev.SalePipeLineId=@IDCatBusinessB2B,'P','E'), '') 'Priority',
-								COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
+                                COALESCE(IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E'), '') 'Priority',
+								COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
 								COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') 'Pieces_Dry' ,
                                 COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'')  'Pieces_Cold',
 								(CASE
@@ -409,6 +409,7 @@ BEGIN
 								)ADDRES1_FA
 								OUTER APPLY (
 									SELECT (CASE
+											WHEN [dev].[IsLastMileReturn] = 1 THEN ''
                                             WHEN AUX.Impersonate = 'TRUE' THEN
                                                 --IMPERSONADO
                                                 CASE
@@ -443,6 +444,36 @@ BEGIN
 								  INNER JOIN @TMPPICES TP ON 
 									TP.GuideSerie=DEV.Guide_Serie
 									AND  TP.GuideNumber=DEV.Guide_Number
+								OUTER APPLY (
+									SELECT 
+										TOP (1) 
+											[Twn].[HeaderCode] 
+									FROM 
+										[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+											ON
+												[Twn].[IdProvince] = [Prv].[IdProvince]
+												AND
+												[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
+									WHERE
+										[dev].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+								) AlterOrigin
+								OUTER APPLY (
+									SELECT 
+										TOP (1) 
+											[Twn].[HeaderCode] 
+									FROM 
+										[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+											ON
+												[Twn].[IdProvince] = [Prv].[IdProvince]
+												AND
+												[Twn].[HeaderCode] = CONCAT([Prv].[LocalCode],'01')
+									WHERE
+										[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+								) AlterDestiny
 								  
                               --WHERE dev.Guide_Number = @Guide_Number
 

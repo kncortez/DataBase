@@ -6,6 +6,11 @@
 --				 si estan en estado 15 (generado) o 1(solicitado)
 --               Si no estan asignadas a otra recolección (IdPickup) >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2023-03-10>
+-- Description:	<Al procesar guías en proceso de recolección desde la CourierApp, si durante el proceso de verificación de montos se detecta una guía en estado terminal, debe impedir el proceso indicando las guías y los estados de estas.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_validate_guides_pickup]
     -- Add the parameters for the stored procedure here
     @InGuides NVARCHAR(MAX) = 'FD138515,FD138513,FD13852,FD138514,FD138545,FD135539',
@@ -15,7 +20,6 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
-
 
     BEGIN TRY
 
@@ -119,11 +123,18 @@ BEGIN
                 ON pyt.GuideSerie = dr.Guide_Serie
                    AND pyt.GuideNumber = dr.Guide_Number
             LEFT JOIN dbo.StatusOrder st WITH(NOLOCK)
-                ON st.StatusOrderId = dr.StatusOrderId;
+                ON st.StatusOrderId = dr.StatusOrderId
+				WHERE
+	      dr.StatusOrderId IN ( SELECT
+									SO.[StatusOrderId]
+								FROM
+									[dbo].[StatusOrder] SO  WITH(NOLOCK)
+								WHERE
+									[CatCheckpointTypeId] = 3 And SO.RowStatus =1
+							);
 
 		CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist
             ON #ErrorGuides (exist);
-
 
 		CREATE NONCLUSTERED INDEX IX_ErrorGuides_status
             ON #ErrorGuides (status);

@@ -138,6 +138,7 @@ BEGIN
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
                       AND do.[Collect_OnDelivery] > 0
+					 AND do.IsLastMileReturn =0
                 UNION
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
@@ -156,7 +157,7 @@ BEGIN
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
                 WHERE do.[Guide_Number] = @GuideNumber
                       AND do.[Guide_Serie] = @GuideSerie
-                      AND do.[Collect_OnDelivery] = 0
+                      AND do.[Collect_OnDelivery] = 0 
                       AND do.IsCollect = 'true'
                 UNION
                 SELECT do.[Guide_Serie],
@@ -200,6 +201,16 @@ BEGIN
             IF (@IsCOD = 'true')
             BEGIN
 
+
+			DECLARE @Isreturn bit  =0
+
+			SELECT @Isreturn = ord.IsLastMileReturn FROM dbo.DeliveryOrder ord WITH(NOLOCK)
+			WHERE ord.Guide_Serie ='fd' AND ord.Guide_Number = @GuideNumber
+
+			IF @Isreturn = 1
+
+				BEGIN
+
                 --Actualiza es stado a "COD liquidado" en tabla DeliveryOrder si la guia tuviera COD
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET StatusOrderId = 24
@@ -217,6 +228,8 @@ BEGIN
                 )
                 VALUES
                 (@GuideSerie, @GuideNumber, 24, @Token, GETDATE());
+
+				END;
 
             END;
 
