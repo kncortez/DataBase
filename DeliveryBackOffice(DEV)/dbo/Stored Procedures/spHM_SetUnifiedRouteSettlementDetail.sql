@@ -1064,6 +1064,30 @@ BEGIN
 
 								IF @IdUnifiedRouteSettlementDetailPiece IS NOT NULL AND @IsValidOpenProcess = 1
 								BEGIN
+
+									-- Guía va como abandonada y debe validarse con credenciales de supervisor
+									BEGIN TRY
+										IF
+										(
+											@IsArrival = 0 AND
+											@IsReturn = 0 AND
+											@IsDelivered = 0 AND
+											@IsTransfered = 0
+										)
+										BEGIN
+											UPDATE UnifiedRouteSettlementDetail
+											SET RowStatus = 0
+											WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+
+											UPDATE UnifiedRouteSettlementDetailPiece
+											SET RowStatus = 0
+											WHERE IdUnifiedRouteSettlementDetailPiece = @IdUnifiedRouteSettlementDetailPiece
+										END
+									END TRY
+									BEGIN CATCH
+										
+									END CATCH
+
 									COMMIT TRANSACTION
 
 									SELECT
