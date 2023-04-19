@@ -18,6 +18,7 @@ BEGIN
 						', ' + ReportEmails
 					FROM LinehaulCoverage WITH (NOLOCK)
 					WHERE CatRouteId = @CatRouteId
+					AND ISNULL(ReportEmails, '') <> ''
 					FOR XML PATH (''))
 				, 1, 2, ''))
 
