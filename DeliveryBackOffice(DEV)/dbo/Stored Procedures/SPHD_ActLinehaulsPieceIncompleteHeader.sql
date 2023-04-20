@@ -12,15 +12,23 @@ BEGIN
 	
 	SET NOCOUNT ON;
 	
-		SELECT DISTINCT 'ACT'+Cast(A.IdAct AS varchar) AS IdAct, 
+		SELECT  DISTINCT   'ACT'+Cast(A.IdAct AS varchar) AS IdAct, 
 		       A.ResponsibleName Piloto,
 			   CTA.ActName,
-			   SUM(AD.GuideDryPieceTotal) PiezasSecasTotal,
-			   SUM(AD.GuideColdPieceTotal) PiezasFriasTotal,
+			   (
+				select  COUNT(IsDryPiece) from
+				dbo.ActDetailPiece 
+				where ActDetailId in(select IdActDetail
+				from dbo.ActDetail 
+				where ActId=A.IdAct) and IsDryPiece=1) PiezasSecasTotal,
+			   (select  COUNT(IsDryPiece) 
+			    from dbo.ActDetailPiece 
+				where ActDetailId in(select IdActDetail
+				from dbo.ActDetail 
+				where ActId=A.IdAct) and IsDryPiece=0) PiezasFriasTotal,
 			   AD2.TotalGuide,
 			   FORMAT(A.DateCreated,'dd/MM/yyyy') AS DateCreated,
-			   AD.RowStatus
-			 
+			   AD.RowStatus		 
 		FROM dbo.Act A WITH (NOLOCK)
 		LEFT  JOIN
 			 dbo.ActDetail AD WITH (NOLOCK)
@@ -39,4 +47,5 @@ BEGIN
 				AD.GuideColdPieceTotal,
 				AD2.TotalGuide,
 				A.DateCreated,AD.RowStatus
+
 END
