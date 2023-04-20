@@ -46,8 +46,7 @@ BEGIN
 							AND iu.Username = @Username
 							AND iu.RowStatus = 1
 							AND rus.RusRowStatus = 1
-							AND cr.RolName = 'Supervisor'
-							AND cs.SysNameSystem = @NameSystem) THEN 1
+							AND cr.RolName = 'Supervisor') THEN 1
 				ELSE 0
 			END
 		FROM DenariusUser_Dev.dbo.LGN_User u
