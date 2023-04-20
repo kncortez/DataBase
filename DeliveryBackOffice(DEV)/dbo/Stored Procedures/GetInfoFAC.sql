@@ -399,12 +399,27 @@ BEGIN
 						END
 			
 
-						update  dbo.DeliveryOrderPaymentDetail 
-						set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
-						, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-						from dbo.DeliveryOrderPaymentDetail pay
-								inner join @TblDeliveryOrdersList t 
-								on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+						update  
+							dbo.DeliveryOrderPaymentDetail 
+						set 
+							ShipmentCompleted  = t.ShipmentCompleted
+							, PayTypeId = t.IdTypePayment
+							, TypeofInOutMoneyId = t.IdWayToPayment
+							, TimePlaId = t.IdTimePayment
+						from 
+							dbo.DeliveryOrderPaymentDetail pay
+							inner join 
+								@TblDeliveryOrdersList t 
+								on 
+									(
+										t.Guide_Number = pay.GuideNumber 
+										AND 
+										t.Guide_Serie = pay.GuideSerie
+									)
+						WHERE
+							[t].[IdTimePayment] > 0
+							AND
+							[t].[IdWayToPayment] > 0;
 
 						IF(@@ROWCOUNT > 0)
 						BEGIN
@@ -562,12 +577,27 @@ BEGIN
 							IF(@DOPDAlreadyUpdated = 0)
 							BEGIN
 
-								update  dbo.DeliveryOrderPaymentDetail 
-								set ShipmentCompleted  = t.ShipmentCompleted , PayTypeId = t.IdTypePayment
-								, TypeofInOutMoneyId = t.IdWayToPayment, TimePlaId = t.IdTimePayment
-								from dbo.DeliveryOrderPaymentDetail pay
-									 inner join @TblDeliveryOrdersList t 
-									 on (t.Guide_Number = pay.GuideNumber and t.Guide_Serie = pay.GuideSerie) 
+								update  
+									dbo.DeliveryOrderPaymentDetail 
+								set 
+									ShipmentCompleted  = t.ShipmentCompleted
+									, PayTypeId = t.IdTypePayment
+									, TypeofInOutMoneyId = t.IdWayToPayment
+									, TimePlaId = t.IdTimePayment
+								from 
+									dbo.DeliveryOrderPaymentDetail pay
+									inner join 
+										@TblDeliveryOrdersList t 
+										on 
+											(
+												t.Guide_Number = pay.GuideNumber 
+												AND 
+												t.Guide_Serie = pay.GuideSerie
+											)
+								WHERE
+									[t].[IdTimePayment] > 0
+									AND
+									[t].[IdWayToPayment] > 0;
 
 							END
 

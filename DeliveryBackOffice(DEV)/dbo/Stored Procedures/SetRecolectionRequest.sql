@@ -39,15 +39,11 @@ BEGIN
 
             DECLARE @jsonResult2 NVARCHAR(MAX);
 
-            --UPDATE dbo.DeliveryOrder
-            --SET PriceShippment = t.PriceShippment,
-            --    StatusOrderId = @IdStatus,
-            --    IsCollect = t.IsCollect
-            --FROM dbo.DeliveryOrder ord WITH (NOLOCK)
-            --    INNER JOIN @TblDeliveryOrdersList t
-            --        ON t.Guide_Number = ord.Guide_Number
-            --           AND t.Guide_Serie = ord.Guide_Serie;
+			DECLARE @InsertedDeliveryOrderPaymentDetail TABLE (
+				IdDeliveryOrderPaymentDetail BIGINT NULL
+			);
 
+			-- Ingresar datos de tiempo y forma de pago
             INSERT INTO dbo.DeliveryOrderPaymentDetail
             (
                 [GuideNumber],
@@ -71,6 +67,7 @@ BEGIN
                 [TransaccionFAC],
                 [IdHeaderRecolection]
             )
+			OUTPUT [Inserted].[DopId] INTO @InsertedDeliveryOrderPaymentDetail([IdDeliveryOrderPaymentDetail])
             SELECT Guide_Number,
                    Guide_Serie,
                    IdTypePayment,
@@ -91,7 +88,48 @@ BEGIN
                    NULL,
                    NULL,
                    NULL
-            FROM @TblDeliveryOrdersList tdop;
+            FROM 
+				@TblDeliveryOrdersList tdop
+				LEFT JOIN
+					[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
+					ON
+						[tdop].[Guide_Serie] = [DOPD].[GuideSerie]
+						AND
+						[tdop].[Guide_Number] = [DOPD].[GuideNumber]
+			WHERE
+				[DOPD].[DopId] IS NULL;
+
+			-- Actualizar registro si ya existe y no fue generado en proceso
+			UPDATE
+				[DOPD]
+			SET
+				[DOPD].[PayTypeId] = [TDOP].[IdTypePayment]
+				,[DOPD].[TypeofInOutMoneyId] = [TDOP].[IdWayToPayment]
+				,[DOPD].[TimePlaId] = [TDOP].[IdTimePayment]
+				,[DOPD].[amount] = [TDOP].[AmmountToPay]
+				,[DOPD].[PaymentRecollections] = [TDOP].[PaymentRecollections]
+				,[DOPD].[PaymentNow] = [TDOP].[PaymentNow]
+				,[DOPD].[PaymentDelivery] = [TDOP].[PaymentDelivery]
+				,[DOPD].[ShipmentCompleted] = [TDOP].[ShipmentCompleted]
+				,[DOPD].[RecollectionCompleted] = [TDOP].[RecollectionCompleted]
+				,[DOPD].[PaidGuide] = [TDOP].[PaidGuide]
+				,[DOPD].[TokenUpdated] = @Token
+				,[DOPD].[DateUpdated] = GETDATE()
+			FROM
+				[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
+				INNER JOIN
+					@TblDeliveryOrdersList TDOP
+					ON
+						[DOPD].[GuideSerie] = [TDOP].[Guide_Serie]
+						AND
+						[DOPD].[GuideNumber] = [TDOP].[Guide_Number]
+				LEFT JOIN
+					@InsertedDeliveryOrderPaymentDetail IDOPD
+					ON
+						[DOPD].[DopId] = [IDOPD].[IdDeliveryOrderPaymentDetail]
+			WHERE
+				[IDOPD].[IdDeliveryOrderPaymentDetail] IS NULL
+
         END TRY
         BEGIN CATCH
             DECLARE @jsonOutput NVARCHAR(MAX);

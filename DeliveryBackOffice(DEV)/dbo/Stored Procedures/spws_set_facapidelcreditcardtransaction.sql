@@ -281,7 +281,6 @@ BEGIN
 					CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
 
 			END;
-
 			COMMIT TRANSACTION LogTransactionTypeOne
 		END TRY
 		BEGIN CATCH
@@ -1319,7 +1318,11 @@ BEGIN
                                 ON (
                                        t.Guide_Number = pay.GuideNumber
                                        AND t.Guide_Serie = pay.GuideSerie
-                                   );
+                                   )
+								   AND
+								   [t].[IdTimePayment] > 0
+								   AND
+								   [t].[IdWayToPayment] > 0;
 
                         IF (@@ROWCOUNT > 0)
                         BEGIN
@@ -1508,7 +1511,11 @@ BEGIN
                                     ON (
                                            t.Guide_Number = pay.GuideNumber
                                            AND t.Guide_Serie = pay.GuideSerie
-                                       );
+                                       )
+									   AND
+									   [t].[IdTimePayment] > 0
+									   AND
+									   [t].[IdWayToPayment] > 0;
 
                         END;
 
