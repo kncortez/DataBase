@@ -18,11 +18,15 @@
     [Estatus]                 BIT            NULL,
     [HubLogisticId]           INT            NULL,
     [CatTypeSenderReceiverId] INT            NULL,
+    [UniqueCode]              NVARCHAR (50)  NULL,
     CONSTRAINT [PK_SenderReceiver] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_SenderReceiver_CatTypeSenderReceiver] FOREIGN KEY ([CatTypeSenderReceiverId]) REFERENCES [dbo].[CatTypeSenderReceiver] ([IdCatTypeSenderReceiver]),
     CONSTRAINT [FK_SenderReceiver_HubLogistic] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
-    CONSTRAINT [UC_CUI] UNIQUE NONCLUSTERED ([CUI] ASC)
+    CONSTRAINT [UC_CUI] UNIQUE NONCLUSTERED ([CUI] ASC),
+    CONSTRAINT [UK_SenderReceiver_UniqueCode] UNIQUE NONCLUSTERED ([UniqueCode] ASC)
 );
+
+
 
 
 
@@ -39,4 +43,13 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_Phone_INCLUDE]
     ON [dbo].[SenderReceiver]([Phone] ASC)
     INCLUDE([First_Name], [Last_Name]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UniqueCode]
+    ON [dbo].[SenderReceiver]([UniqueCode] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador único por courier', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiver', @level2type = N'COLUMN', @level2name = N'UniqueCode';
 

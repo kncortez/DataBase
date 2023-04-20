@@ -150,9 +150,26 @@ BEGIN
 			ON ru.UsrIdUser = tl.TknIdUser
 		LEFT JOIN Person p WITH(NOLOCK)
 			ON p.PerIdPerson = ru.UsrIdPerson
-		LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] dopd WITH(NOLOCK)
-			ON dopd.GuideSerie = btd.GuideSerie
-				AND dopd.GuideNumber = btd.GuideNumber
+		OUTER APPLY
+		(
+			SELECT 
+				TOP (1) 
+					[DOPDaux].[TimePlaId]
+					,[DOPDaux].[TypeofInOutMoneyId]
+					,[DOPDaux].[PayTypeId]
+			FROM 
+				[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPDaux  WITH(NOLOCK) 
+			WHERE
+				[DOPDaux].[GuideSerie] = [btd].[GuideSerie]
+				AND
+				[DOPDaux].[GuideNumber] = [btd].[GuideNumber]
+				AND
+				[DOPDaux].[ShipmentCompleted] = 1
+				AND
+				[DOPDaux].[TimePlaId] > 0
+			ORDER BY
+				[DOPDaux].[DateCreated] DESC
+		) dopd
 		LEFT JOIN [dbo].[CatPaymentTime] cpt WITH(NOLOCK)
 			ON cpt.TimePlaId = dopd.TimePlaId
 		LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctiom WITH(NOLOCK)

@@ -7,20 +7,21 @@
     [DateCreated]        DATETIME        NOT NULL,
     [TokenUpdated]       NVARCHAR (50)   NULL,
     [DateUpdated]        DATETIME        NULL,
-    CONSTRAINT [PK_ConflictManifest] PRIMARY KEY CLUSTERED ([IdConflictManifest] ASC)
+    CONSTRAINT [PK_ConflictManifest] PRIMARY KEY CLUSTERED ([IdConflictManifest] ASC),
+    CONSTRAINT [DF_ConflictManifest_SenderReceiver] FOREIGN KEY ([CourierResponsible]) REFERENCES [dbo].[SenderReceiver] ([ID])
 );
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'cha de actualziación de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de usuario de actualziación de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de usuario de actualización de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de creación de registr0', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
 
 GO
@@ -28,7 +29,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de cr
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'estado del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'RowStatus';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
 
 GO
@@ -36,7 +37,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Monto total
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Courierman responsable ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'CourierResponsible';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Courierman responsable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConflictManifest', @level2type = N'COLUMN', @level2name = N'CourierResponsible';
 
 
 GO

@@ -1488,6 +1488,13 @@
     <Build Include="dbo\Stored Procedures\spHD_GetOffRouteLinehaulsInfo.sql" />
     <Build Include="dbo\Stored Procedures\spHD_GetEmailLinehauls.sql" />
     <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
+    <Build Include="dbo\Stored Procedures\Update_InformationInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetConfigurationExcGuides.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGenerateNewCoupon.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreateSentry.sql" />
+    <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
+    <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
+    <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

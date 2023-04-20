@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Devuelve la opción y precio shipping según un punto de visita ó un cliente>
@@ -237,6 +237,8 @@ BEGIN
               AND rh.RheDefault = 'true';
     END;
 
+
+	
     -------- Fin determinar tarifa que se va usar ---------------------------------------------------------------------
 
     ------------Validar Usuario Individual ó Ex C y Asignar nuevo tarifario-----------------------------------------------------------------------------------
@@ -268,6 +270,8 @@ BEGIN
                   AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
             SET @IdRate = ISNULL(@RateId, @IdRate);
+
+		
 
         END;
     END;
