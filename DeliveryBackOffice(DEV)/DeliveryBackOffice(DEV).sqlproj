@@ -1482,6 +1482,12 @@
     <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartHeader.sql" />
     <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartDetail.sql" />
     <Build Include="dbo\Stored Procedures\GetInformationGuide.sql" />
+    <Build Include="dbo\Tables\ServiceStatusLog.sql" />
+    <Build Include="dbo\Tables\ServiceDetailPiece.sql" />
+    <Build Include="dbo\Tables\ServiceDetail.sql" />
+    <Build Include="dbo\Tables\ServiceAssignmentAttempt.sql" />
+    <Build Include="dbo\Tables\Service.sql" />
+    <Build Include="dbo\Tables\RouteAssignment.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
