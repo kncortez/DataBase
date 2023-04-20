@@ -12,6 +12,27 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	DECLARE @SubtypeBoxContainer BIGINT = 
+	(
+		SELECT 
+			TOP (1) 
+				[CCS].IdCatContainerSubtype 
+		FROM 
+			[DeliveryBackOffice].[dbo].[CatContainerSubtype] CCS  WITH(NOLOCK) 
+		WHERE
+			[CCS].ContainerSubtypeName = 'CAJA'  COLLATE Latin1_General_CI_AI 
+	);
+	DECLARE @SubtypeFloorContainer BIGINT = 
+	(
+		SELECT 
+			TOP (1) 
+				[CCS].IdCatContainerSubtype 
+		FROM 
+			[DeliveryBackOffice].[dbo].[CatContainerSubtype] CCS  WITH(NOLOCK) 
+		WHERE
+			[CCS].ContainerSubtypeName = 'PISO'  COLLATE Latin1_General_CI_AI 
+	);
+
     -- Insert statements for procedure here
 	-- Table 0 Información del manifiesto
 	SELECT
@@ -26,7 +47,7 @@ BEGIN
 			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
-			AND ctc.TypeContainerSerie = 'BOX'
+			AND ctc.[SubtypeContainerId] = @SubtypeBoxContainer
 			AND lrpc.RowStatus = 1)
 		, 0)
 		ContainerGuideTotal
@@ -39,7 +60,7 @@ BEGIN
 			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
-			AND ctc.TypeContainerSerie = 'BOX'
+			AND ctc.[SubtypeContainerId] = @SubtypeBoxContainer
 			AND lrpc.RowStatus = 1)
 		, 0)
 		ContainerPiecesTotal
@@ -52,7 +73,7 @@ BEGIN
 			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
-			AND ctc.TypeContainerSerie = 'LH'
+			AND ctc.[SubtypeContainerId] = @SubtypeFloorContainer
 			AND lrpc.RowStatus = 1)
 		, 0)
 		FloorGuideTotal
