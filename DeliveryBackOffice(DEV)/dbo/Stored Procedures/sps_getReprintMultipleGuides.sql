@@ -142,7 +142,19 @@ BEGIN
 									COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') 'IdMerchant_FA',
 									 CONTACT_FA.CONTACT_FA 'contact_FA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, AlterDestiny.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws.HeaderCode, AlterOrigin.HeaderCode,''))  END )'HeaderCodeTownship_TA',
-								(CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_TA.NAME_TA  ELSE  NAME_FA.NAME_FA END) 'name_TA',
+								CONCAT(IIF(
+									ISNULL([dev].[IsLastMileReturn], 0) = 1
+									AND ISNULL([AUX2].[ExpressName], '') <> '',
+									REPLACE(
+										[dbo].[fnt_String_Escape]
+										(
+											[AUX2].[ExpressName],
+											'json'
+										),
+										'"',
+										''
+									) + ' - ',
+								'') , (CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_TA.NAME_TA  ELSE  NAME_FA.NAME_FA END)) 'name_TA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ')  ELSE CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) END) 'email_TA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') ELSE  REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') END ) 'phone_TA',								
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN   REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', ' ') ELSE ADDRES1_FA.ADDRES1_FA	END) 'address1_TA',
@@ -230,7 +242,7 @@ BEGIN
 
 
 								--COALESCE(@integrationCost, '') 'Integration',
-                                COALESCE(IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E'), '') 'Priority',
+                                COALESCE(IIF(ISNULL([dev].[IsLastMileReturn],0) = 1,'D',IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E')), '') 'Priority',
 								COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
 								COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') 'Pieces_Dry' ,
                                 COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'')  'Pieces_Cold',
