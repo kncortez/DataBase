@@ -15,6 +15,8 @@ BEGIN
 	BEGIN TRY
 	
 	
+	DECLARE @StatusReversal INT= (Select StatusOrderId From dbo.StatusOrder Where OrderDescription='Guía revertida para entrega') 
+
 	DECLARE @Numero AS INT;
 	DECLARE @Serie  AS NVARCHAR(2);
 	DECLARE @STATUS AS INT; 
@@ -62,6 +64,7 @@ BEGIN
 								Guide_Serie = @Serie 
 								AND 
 								Guide_Number = @Numero
+							UPDATE [dbo].[DeliveryOrder] SET IsLastMileReturn = 1 WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
 							INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
 
 							-- Ingresar nuevo estado al historico
@@ -98,6 +101,9 @@ BEGIN
 							-- Si la guía esta como "Declarado para devolución"
 							IF(@TOPSTATUS = @STATUSDECLAREDRETURNED_DO)
 							BEGIN
+
+						    UPDATE [dbo].[DeliveryOrder] SET IsLastMileReturn = 0, StatusOrderId = @StatusReversal
+							WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
 							
 								-- Inactivar estado de declarado
 								UPDATE 
@@ -142,6 +148,29 @@ BEGIN
 							-- Último estado de la guía no es declaración para devolución
 							ELSE
 							BEGIN
+							INSERT INTO [dbo].[DeliveryOrderDetail](Guide_Serie,
+							                                        Guide_Number,
+																	StatusOrderId,
+																	UserCreated,	
+																	DateCreated,
+																	DateCreatedInSystem,
+																	Observations,
+																	Temperature_Celsius,
+																	PieceId,
+																	RowStatus)
+							VALUES(
+							        @Serie,
+									@Numero,
+									@StatusReversal,
+									'Reversión de Declaración',
+									Getdate(),
+									GETDATE(),
+									NULL,
+									NULL,
+									NULL,
+									1
+
+							        )
 
 								-- Solo actualizar bandera de devolución de la guía
 								UPDATE 
