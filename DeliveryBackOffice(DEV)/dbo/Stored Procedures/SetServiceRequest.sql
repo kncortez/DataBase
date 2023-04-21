@@ -85,6 +85,39 @@ BEGIN
 			RETURN
 		END
 	END
+	
+	--Validación de municipio y departamento
+	IF EXISTS (SELECT
+				1
+			FROM @TblDeliveryOrders tdo
+			LEFT JOIN Township t
+				ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+				AND t.TownshipStatus = 1
+			LEFT JOIN Province p
+				ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+				AND p.ProvinceStatus = 1
+				AND t.IdProvince = p.IdProvince
+			WHERE t.IdTownship IS NULL OR p.IdProvince IS NULL)
+		BEGIN
+
+		SELECT
+			-1 AS 'StatusCode'
+		   ,CONCAT('No se ha encontrado el municipio o no es un municipio válido en la fila ', (SELECT TOP 1
+					CONCAT(RowNumber + 1, ' (', tdo.Receiver_Town, ')')
+				FROM @TblDeliveryOrders tdo
+				LEFT JOIN Township t
+					ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+					AND t.TownshipStatus = 1
+				LEFT JOIN Province p
+					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+					AND p.ProvinceStatus = 1
+					AND t.IdProvince = p.IdProvince
+				WHERE t.IdTownship IS NULL
+				OR p.IdProvince IS NULL)
+			, '.') AS 'Description'
+
+		RETURN
+	END
 
     DECLARE @IdTransaction BIGINT = NULL;
     DECLARE @ManifestNumber INT = 0;
