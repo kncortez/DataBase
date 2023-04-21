@@ -1,4 +1,11 @@
-﻿
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[sps_set_sender_receiver]    Script Date: 21/04/2023 11:54:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-07-22>
@@ -9,7 +16,7 @@
 -- Create date: <2020-09-19>
 -- Description:	<Control de insert y update>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_set_sender_receiver]
+ALTER PROCEDURE [dbo].[sps_set_sender_receiver]
 		@FirstName NVARCHAR(100),
 		@LastName NVARCHAR(100),
 		@Address NVARCHAR(200),
@@ -30,10 +37,11 @@ CREATE PROCEDURE [dbo].[sps_set_sender_receiver]
 AS
 BEGIN
 	DECLARE @RInserted INT
+	DECLARE @UniqueCode BIGINT 
 
 	--Contador de datos
 	DECLARE @Count INT
-	SELECT @Count=COUNT(ID) FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE CUI = @CUI
+	SELECT @Count=COUNT(ID), @UniqueCode = MAX(UniqueCode) FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE CUI = @CUI
 
 	BEGIN TRANSACTION
 
@@ -42,10 +50,22 @@ BEGIN
 			IF (@Count=0)
 				BEGIN
 					-- registrar nuevo sender / receiver
+
+					-- Creación de código único
+					SET @UniqueCode = ( SELECT
+							ROUND(((9999999999 - 1111111111) * RAND() + 1111111111), 0))
+
+					WHILE EXISTS (SELECT TOP 1
+							1
+						FROM SenderReceiver WITH (NOLOCK)
+						WHERE UniqueCode = @UniqueCode)
+					SET @UniqueCode = (SELECT
+							ROUND(((9999999999 - 1111111111) * RAND() + 1111111111), 0))
+
 					INSERT INTO [DeliveryBackOffice].[dbo].[SenderReceiver]
-					([First_Name],[Last_Name],[Address],[Zone],[Town],[Department],[Phone],[Social_Security_ID],[Email],[CUI],[Latitude],[Longitude],[Entity_Type],[User_Created],[Date_Created],[Estatus],[CatTypeSenderReceiverId],[HubLogisticId]) 
+					([First_Name],[Last_Name],[Address],[Zone],[Town],[Department],[Phone],[Social_Security_ID],[Email],[CUI],[Latitude],[Longitude],[Entity_Type],[User_Created],[Date_Created],[Estatus],[CatTypeSenderReceiverId],[HubLogisticId],[UniqueCode]) 
 					VALUES 
-					(@FirstName,@LastName,@Address,@Zone,@Town,@Department,@Phone,@SocialSecurityID,@Email,@CUI,@Latitude,@Longitude,@EntityType,@UserCreated,GETDATE(),@Estatus,@TypeId,@HubId)
+					(@FirstName,@LastName,@Address,@Zone,@Town,@Department,@Phone,@SocialSecurityID,@Email,@CUI,@Latitude,@Longitude,@EntityType,@UserCreated,GETDATE(),@Estatus,@TypeId,@HubId, @UniqueCode)
 
 					SET @RInserted = @@ROWCOUNT
 				END
@@ -64,7 +84,8 @@ BEGIN
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID',
-				@CUI AS 'CUI'
+				@CUI AS 'CUI',
+				'' 'UniqueCode'
 			ROLLBACK TRANSACTION
 		END CATCH;
 
@@ -75,13 +96,15 @@ BEGIN
 					1 AS 'StatusCode',
 					'Registro guardado correctamente' AS 'Description', 
 					@@TRANCOUNT AS 'NumTransferID',
-					@CUI AS 'CUI'
+					@CUI AS 'CUI',
+					@UniqueCode 'UniqueCode'
 			ELSE
 				SELECT			  
 					0 AS 'StatusCode',
 					'Cantidad de registros inconsistentes' AS 'Description', 
 					@@TRANCOUNT AS 'NumTransferID',
-					@CUI AS 'CUI'
+					@CUI AS 'CUI',
+					'' 'UniqueCode'
 
 			COMMIT TRANSACTION;			
 		END
@@ -90,5 +113,6 @@ BEGIN
 				0 AS 'StatusCode', 
 				ERROR_MESSAGE() AS 'Description', 
 				CONVERT(BIGINT, 0) AS 'NumTransferID',
-				@CUI AS 'CUI'
+				@CUI AS 'CUI',
+				'' 'UniqueCode'
 END
