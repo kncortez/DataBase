@@ -109,7 +109,7 @@ BEGIN
                 SELECT COALESCE(hl_destino.IdHubLogistic, serv.HubDestinationId, 0) AS ID_HUB_DESTINO
                 FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.Township tw WITH(NOLOCK)
-                        ON serv.ReceiverIdTownship = tw.IdTownship
+                        ON (CASE WHEN [serv].[IsLastMileReturn] = 1 THEN [serv].[SenderIdTownship] ELSE serv.ReceiverIdTownship END) = tw.IdTownship
                            AND tw.TownshipStatus = 1
                     INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage dsc_destino WITH(NOLOCK)
                         ON tw.HeaderCode = dsc_destino.HeaderCode
@@ -136,17 +136,33 @@ BEGIN
                 WHERE pc.GuideSerie = @Guide_Serie
                       AND pc.GuideNumber = @GuideNumber
                       AND pc.NoPiece = @GuidePiece
-                      AND serv.HubDestinationId IN
-                          (
-                              SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
-                          )
+					AND 
+					(
+						(
+							serv.HubDestinationId IN
+							(
+								SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+							) 
+							AND 
+							ISNULL([serv].[IsLastMileReturn], 0) = 0
+						)
+						OR
+						(
+							serv.[HubOriginId] IN
+							(
+								SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+							) 
+							AND 
+							ISNULL([serv].[IsLastMileReturn], 0) = 1
+						)
+					)
             ) X
         );
 
 
         SET @ReceiverIdTownship =
         (
-            SELECT ISNULL(serv.ReceiverIdTownship, 0)
+            SELECT ISNULL((CASE WHEN [serv].[IsLastMileReturn] = 1 THEN [serv].[SenderIdTownship] ELSE serv.ReceiverIdTownship END), 0)
             FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
                 INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
                     ON serv.Guide_Number = pc.GuideNumber
@@ -527,9 +543,9 @@ BEGIN
                     --,200 as StatusCode
                     FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
                         INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl_origen WITH(NOLOCK)
-                            ON serv.HubOriginId = hl_origen.IdHubLogistic
+                            ON IIF([serv].[IsLastMileReturn] = 1, serv.HubDestinationId, serv.HubOriginId) = hl_origen.IdHubLogistic
                         INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl_destino WITH(NOLOCK)
-                            ON serv.HubDestinationId = hl_destino.IdHubLogistic
+                            ON IIF([serv].[IsLastMileReturn] = 1, serv.HubOriginId, serv.HubDestinationId) = hl_destino.IdHubLogistic
                         INNER JOIN DeliveryOrderPiece pc WITH(NOLOCK)
                             ON serv.Guide_Number = pc.GuideNumber
                                AND serv.Guide_Serie = pc.GuideSerie
@@ -550,8 +566,8 @@ BEGIN
                            CONCAT(pc.GuideSerie, CAST(pc.GuideNumber AS VARCHAR), '-', CAST(pc.NoPiece AS VARCHAR)) GUIA,
                            ISNULL(serv.Ticket_Number, '') AS Ticket_Number,
                            ISNULL(serv.Receiver_FirstName, '') + ' ' + ISNULL(serv.Receiver_LastName, '') NAME,
-                           hl_origen.HubAbbreviation AS HUB_ORIGEN,
-                           hl_destino.HubAbbreviation AS HUB_DESTINO,
+                           IIF([serv].[IsLastMileReturn] = 1, hl_destino.HubAbbreviation,hl_origen.HubAbbreviation) AS HUB_ORIGEN,
+                           IIF([serv].[IsLastMileReturn] = 1, hl_origen.HubAbbreviation,hl_destino.HubAbbreviation) AS HUB_DESTINO,
                            (
                                SELECT ISNULL(COUNT(1), 0)
                                FROM dbo.PieceByService pbs WITH(NOLOCK)
@@ -619,10 +635,26 @@ BEGIN
                     WHERE pc.GuideSerie = @Guide_Serie
                           AND pc.GuideNumber = @GuideNumber
                           AND pc.NoPiece = @GuidePiece
-                          AND hl_destino.IdHubLogistic IN
-                              (
-                                  SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
-                              );
+						  AND
+							(
+								(
+									hl_destino.IdHubLogistic IN
+									(
+										SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+									) 
+									AND 
+									ISNULL([serv].[IsLastMileReturn], 0) = 0
+								)
+								OR
+								(
+									hl_origen.IdHubLogistic IN
+									(
+										SELECT cl.IdHubDestination FROM CatLinehaul cl WITH(NOLOCK) WHERE cl.IdRoute = @IdRoute
+									) 
+									AND 
+									ISNULL([serv].[IsLastMileReturn], 0) = 1
+								)
+							);
                 --AND @ExistePiezaPorServicio = 0
                 END;
 

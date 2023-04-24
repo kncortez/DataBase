@@ -1469,6 +1469,10 @@
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Tables\ExternalPlatformPickupServiceLog.sql" />
     <Build Include="dbo\Stored Procedures\spSR_GetPickupServicesForExternalService.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRequest3.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_RemoveOutdatedSimpliPickupService.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_GetOutdatedSimpliRouteServices.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
