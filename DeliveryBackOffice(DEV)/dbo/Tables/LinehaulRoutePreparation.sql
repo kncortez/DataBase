@@ -1,35 +1,39 @@
 ﻿CREATE TABLE [dbo].[LinehaulRoutePreparation] (
-    [IdLinehaulRoutePreparation]   INT            IDENTITY (1, 1) NOT NULL,
-    [StationDispatchedId]          INT            NULL,
-    [CatLinehaulStatusId]          INT            CONSTRAINT [DF_LinehaulRoutePreparation_CatLinehaulStatusId] DEFAULT ((1)) NOT NULL,
-    [CatRouteId]                   INT            NOT NULL,
-    [SenderReceiverId]             INT            NULL,
-    [CatVehicleId]                 INT            NULL,
-    [DriverCUI]                    NVARCHAR (50)  NULL,
-    [DriverName]                   NVARCHAR (100) NULL,
-    [DriverPhone]                  NVARCHAR (25)  NULL,
-    [VehicleID]                    NVARCHAR (25)  NULL,
-    [VehicleDescription]           NVARCHAR (100) NULL,
-    [SecurityManName]              NVARCHAR (100) NULL,
-    [SecurityManPhone]             NVARCHAR (25)  NULL,
-    [SecurityManCUI]               NVARCHAR (25)  NULL,
-    [DateLinehaulRoutePreparation] DATE           NOT NULL,
-    [ContainerQuantity]            INT            NOT NULL,
-    [GuideQuantity]                INT            NOT NULL,
-    [DryPieceQuantity]             INT            NOT NULL,
-    [ColdPieceQuantity]            INT            NOT NULL,
-    [RowStatus]                    BIT            DEFAULT ((1)) NOT NULL,
-    [TokenCreated]                 NVARCHAR (50)  NOT NULL,
-    [DateCreated]                  DATETIME       NOT NULL,
-    [TokenUpdated]                 NVARCHAR (50)  NULL,
-    [DateUpdated]                  DATETIME       NULL,
-    PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparation] ASC),
+    [IdLinehaulRoutePreparation]      INT            IDENTITY (1, 1) NOT NULL,
+    [StationDispatchedId]             INT            NULL,
+    [CatLinehaulStatusId]             INT            CONSTRAINT [DF_LinehaulRoutePreparation_CatLinehaulStatusId] DEFAULT ((1)) NOT NULL,
+    [CatRouteId]                      INT            NOT NULL,
+    [SenderReceiverId]                INT            NULL,
+    [CatVehicleId]                    INT            NULL,
+    [DriverCUI]                       NVARCHAR (50)  NULL,
+    [DriverName]                      NVARCHAR (100) NULL,
+    [DriverPhone]                     NVARCHAR (25)  NULL,
+    [VehicleID]                       NVARCHAR (25)  NULL,
+    [VehicleDescription]              NVARCHAR (100) NULL,
+    [SecurityManName]                 NVARCHAR (100) NULL,
+    [SecurityManPhone]                NVARCHAR (25)  NULL,
+    [SecurityManCUI]                  NVARCHAR (25)  NULL,
+    [DateLinehaulRoutePreparation]    DATE           NOT NULL,
+    [ContainerQuantity]               INT            NOT NULL,
+    [GuideQuantity]                   INT            NOT NULL,
+    [DryPieceQuantity]                INT            NOT NULL,
+    [ColdPieceQuantity]               INT            NOT NULL,
+    [RowStatus]                       BIT            DEFAULT ((1)) NOT NULL,
+    [TokenCreated]                    NVARCHAR (50)  NOT NULL,
+    [DateCreated]                     DATETIME       NOT NULL,
+    [TokenUpdated]                    NVARCHAR (50)  NULL,
+    [DateUpdated]                     DATETIME       NULL,
+    [VehicleKms]                      INT            CONSTRAINT [DF_LinehaulRoutePreparation_VehicleKms] DEFAULT ((0)) NULL,    
+    [EndDateLinehaulRoutePreparation] DATETIME       NULL,
+    PRIMARY KEY CLUSTERED ([IdLinehaulRoutePreparation] ASC),						
     CONSTRAINT [FK_LinehaulRoutePreparation_Courier] FOREIGN KEY ([SenderReceiverId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Route] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Station] FOREIGN KEY ([StationDispatchedId]) REFERENCES [dbo].[CatStation] ([IdStation]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Status] FOREIGN KEY ([CatLinehaulStatusId]) REFERENCES [dbo].[CatLinehaulStatus] ([IdCatLinehaulStatus]),
     CONSTRAINT [FK_LinehaulRoutePreparation_Vehicle] FOREIGN KEY ([CatVehicleId]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 
@@ -138,4 +142,12 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'CUI del piloto asignado (OPCIONAL)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'DriverCUI';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de kilometraje de salida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'VehicleKms';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de finalización de despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparation', @level2type = N'COLUMN', @level2name = N'EndDateLinehaulRoutePreparation';
 

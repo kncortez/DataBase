@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatTypeContainer] (
+CREATE TABLE [dbo].[CatTypeContainer] (
     [IdCatTypeContainer]       INT            IDENTITY (1, 1) NOT NULL,
     [TypeContainerName]        NVARCHAR (50)  NOT NULL,
     [TypeContainerSerie]       NVARCHAR (100) NOT NULL,
@@ -8,8 +8,17 @@
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              DATETIME       NULL,
+    [AllowStopOver]            BIT            CONSTRAINT [DF_CatTypeContainer_AllowStopOver] DEFAULT ((0)) NOT NULL,
+    [AllowUnrstSettl]          BIT            CONSTRAINT [DF_CatTypeContainer_AllowUnrstSettl] DEFAULT ((0)) NOT NULL,
+    [SubtypeContainerId]       BIGINT         DEFAULT ((1)) NOT NULL,
     PRIMARY KEY CLUSTERED ([IdCatTypeContainer] ASC)
 );
+
+
+
+
+
+
 
 
 GO
@@ -50,4 +59,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de catalogo de tipos de contenedores.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeContainer';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si el tipo de contenedores admite liquidación en ESCALA', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeContainer', @level2type = N'COLUMN', @level2name = N'AllowStopOver';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera que indica si los contenedores permiten la liquidación sin validar el ID de contenedor siempre que la liquidación sea en destino final.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeContainer', @level2type = N'COLUMN', @level2name = N'AllowUnrstSettl';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del subtipo de contenedor de la tabla CatContainerSubtype.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeContainer', @level2type = N'COLUMN', @level2name = N'SubtypeContainerId';
 
