@@ -1495,6 +1495,13 @@
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
+    <Build Include="dbo\Tables\ExternalPlatformPickupServiceLog.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_GetPickupServicesForExternalService.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_RemoveOutdatedSimpliPickupService.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_GetOutdatedSimpliRouteServices.sql" />
+    <Build Include="dbo\Stored Procedures\SetExternalPlatformServicePickupData.sql" />
+    <Build Include="dbo\Stored Procedures\SetPickupDataFromSimpliRoute.sql" />
+    <Build Include="dbo\User Defined Types\TblExtPlatSimpliroutePickup.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
