@@ -20,6 +20,17 @@ BEGIN
 		DECLARE @Exists BIT = 0
 		DECLARE @IsValidPassword BIT = 0
 		DECLARE @IsValidRol BIT = 0
+		DECLARE @DesktopSystemName NVARCHAR(100);
+
+		SET @DesktopSystemName = 
+		(
+			SELECT 
+				[CS].[SysNameSystem] 
+			FROM
+				[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			WHERE
+				[CS].[SysNameSystem] = 'Hermes Desktop'  COLLATE Latin1_General_CI_AI 
+		)
 
 		SELECT
 			@Exists = 1
@@ -62,105 +73,142 @@ BEGIN
 				IF (@IsValidRol = 1)
 				BEGIN
 
-					UPDATE
-						[URSDP]
-					SET
-						[URSDP].[RowStatus] = 1
-						,[URSDP].[TokenUpdated] = @Token
-						,[URSDP].[DateUpdated] = GETDATE()
-					FROM
-						[DeliveryBackOffice].[dbo].[RouteAssigment] RA  WITH(NOLOCK) 
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[UnifiedRouteSettlement] URS  WITH(NOLOCK) 
-							ON
-								[URS].[RouteAssignmentId] = [RA].[IdRouteAssigment]
-								AND
-								[URS].[RowStatus] = 1
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD  WITH(NOLOCK) 
-							ON
-								[URSD].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetailPiece] URSDP  WITH(NOLOCK) 
-							ON
-								[URSDP].[UnifiedRouteSettlementDetailId] = [URSD].[IdUnifiedRouteSettlementDetail]
-						OUTER APPLY
-						(
-							SELECT 
-								TOP (1) 
-									[URSDaux].[IdUnifiedRouteSettlementDetail]
-							FROM 
-								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSDaux  WITH(NOLOCK) 
-							WHERE
-								[URSDaux].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
-								AND
-								[URSDaux].[GuideSerie] = @GuideSerie
-								AND
-								[URSDaux].[GuideNumber] = @GuideNumber
-							ORDER BY
-								[URSDaux].[DateCreated] DESC
-						) URSDaux
-					WHERE
-						-- Rutas del courier activo
-						[RA].[IdCurrierMan] = @SenderReceiverId
-						AND
-						[RA].[DateOfRoute] = CAST(GETDATE() AS DATE)
-						-- Guía
-						AND
-						[URSD].[GuideSerie] = @GuideSerie
-						AND
-						[URSD].[GuideNumber] = @GuideNumber
-						-- Último ingreso de guía
-						AND
-						[URSD].[IdUnifiedRouteSettlementDetail] = [URSDaux].[IdUnifiedRouteSettlementDetail]
+					IF ( @NameSystem = @DesktopSystemName )
+					BEGIN
+					    
+						SET @StatusOrderId = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Paquete abandonado')
 
-					UPDATE
-						[URSD]
-					SET
-						[URSD].[RowStatus] = 1
-						,[URSD].[TokenUpdated] = @Token
-						,[URSD].[DateUpdated] = GETDATE()
-					FROM
-						[DeliveryBackOffice].[dbo].[RouteAssigment] RA  WITH(NOLOCK) 
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[UnifiedRouteSettlement] URS  WITH(NOLOCK) 
-							ON
-								[URS].[RouteAssignmentId] = [RA].[IdRouteAssigment]
-								AND
-								[URS].[RowStatus] = 1
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD  WITH(NOLOCK) 
-							ON
-								[URSD].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
-						OUTER APPLY
-						(
-							SELECT 
-								TOP (1) 
-									[URSDaux].[IdUnifiedRouteSettlementDetail]
-							FROM 
-								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSDaux  WITH(NOLOCK) 
-							WHERE
-								[URSDaux].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
-								AND
-								[URSDaux].[GuideSerie] = @GuideSerie
-								AND
-								[URSDaux].[GuideNumber] = @GuideNumber
-							ORDER BY
-								[URSDaux].[DateCreated] DESC
-						) URSDaux
-					WHERE
-						-- Rutas del courier activo
-						[RA].[IdCurrierMan] = @SenderReceiverId
-						AND
-						[RA].[DateOfRoute] = CAST(GETDATE() AS DATE)
-						-- Guía
-						AND
-						[URSD].[GuideSerie] = @GuideSerie
-						AND
-						[URSD].[GuideNumber] = @GuideNumber
-						-- Último ingreso de guía
-						AND
-						[URSD].[IdUnifiedRouteSettlementDetail] = [URSDaux].[IdUnifiedRouteSettlementDetail]
+						-- registrar checkpoint histórico de paquete abandonado
+						INSERT INTO [dbo].[DeliveryOrderDetail]
+						   ([Guide_Serie]
+						   ,[Guide_Number]
+						   ,[StatusOrderId]
+						   ,[UserCreated]
+						   ,[DateCreated]
+						   ,[DateCreatedInSystem]
+						   ,[Observations]
+						   ,[Temperature_Celsius])
+						 VALUES
+							   (@GuideSerie
+							   ,@GuideNumber
+							   ,@StatusOrderId
+							   ,@Token
+							   ,GETDATE()
+							   ,GETDATE()
+							   ,NULL
+							   ,NULL)
+
+						-- actualizar estado de la guía
+						UPDATE DeliveryOrder
+						SET StatusOrderId = @StatusOrderId
+						WHERE Guide_Serie = @GuideSerie
+						AND Guide_Number = @GuideNumber
+
+					END
+					ELSE
+					BEGIN
+					    
+						UPDATE
+							[URSDP]
+						SET
+							[URSDP].[RowStatus] = 1
+							,[URSDP].[TokenUpdated] = @Token
+							,[URSDP].[DateUpdated] = GETDATE()
+						FROM
+							[DeliveryBackOffice].[dbo].[RouteAssigment] RA  WITH(NOLOCK) 
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlement] URS  WITH(NOLOCK) 
+								ON
+									[URS].[RouteAssignmentId] = [RA].[IdRouteAssigment]
+									AND
+									[URS].[RowStatus] = 1
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD  WITH(NOLOCK) 
+								ON
+									[URSD].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetailPiece] URSDP  WITH(NOLOCK) 
+								ON
+									[URSDP].[UnifiedRouteSettlementDetailId] = [URSD].[IdUnifiedRouteSettlementDetail]
+							OUTER APPLY
+							(
+								SELECT 
+									TOP (1) 
+										[URSDaux].[IdUnifiedRouteSettlementDetail]
+								FROM 
+									[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSDaux  WITH(NOLOCK) 
+								WHERE
+									[URSDaux].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
+									AND
+									[URSDaux].[GuideSerie] = @GuideSerie
+									AND
+									[URSDaux].[GuideNumber] = @GuideNumber
+								ORDER BY
+									[URSDaux].[DateCreated] DESC
+							) URSDaux
+						WHERE
+							-- Rutas del courier activo
+							[RA].[IdCurrierMan] = @SenderReceiverId
+							AND
+							[RA].[DateOfRoute] = CAST(GETDATE() AS DATE)
+							-- Guía
+							AND
+							[URSD].[GuideSerie] = @GuideSerie
+							AND
+							[URSD].[GuideNumber] = @GuideNumber
+							-- Último ingreso de guía
+							AND
+							[URSD].[IdUnifiedRouteSettlementDetail] = [URSDaux].[IdUnifiedRouteSettlementDetail]
+
+						UPDATE
+							[URSD]
+						SET
+							[URSD].[RowStatus] = 1
+							,[URSD].[TokenUpdated] = @Token
+							,[URSD].[DateUpdated] = GETDATE()
+						FROM
+							[DeliveryBackOffice].[dbo].[RouteAssigment] RA  WITH(NOLOCK) 
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlement] URS  WITH(NOLOCK) 
+								ON
+									[URS].[RouteAssignmentId] = [RA].[IdRouteAssigment]
+									AND
+									[URS].[RowStatus] = 1
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSD  WITH(NOLOCK) 
+								ON
+									[URSD].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
+							OUTER APPLY
+							(
+								SELECT 
+									TOP (1) 
+										[URSDaux].[IdUnifiedRouteSettlementDetail]
+								FROM 
+									[DeliveryBackOffice].[dbo].[UnifiedRouteSettlementDetail] URSDaux  WITH(NOLOCK) 
+								WHERE
+									[URSDaux].[UnifiedRouteSettlementId] = [URS].[IdUnifiedRouteSettlement]
+									AND
+									[URSDaux].[GuideSerie] = @GuideSerie
+									AND
+									[URSDaux].[GuideNumber] = @GuideNumber
+								ORDER BY
+									[URSDaux].[DateCreated] DESC
+							) URSDaux
+						WHERE
+							-- Rutas del courier activo
+							[RA].[IdCurrierMan] = @SenderReceiverId
+							AND
+							[RA].[DateOfRoute] = CAST(GETDATE() AS DATE)
+							-- Guía
+							AND
+							[URSD].[GuideSerie] = @GuideSerie
+							AND
+							[URSD].[GuideNumber] = @GuideNumber
+							-- Último ingreso de guía
+							AND
+							[URSD].[IdUnifiedRouteSettlementDetail] = [URSDaux].[IdUnifiedRouteSettlementDetail]
+
+					END
 
 					SELECT
 						200 AS 'StatusCode'
