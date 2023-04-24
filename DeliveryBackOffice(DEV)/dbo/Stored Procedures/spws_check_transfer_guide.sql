@@ -14,6 +14,43 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	DECLARE @GuideInRoute INT = (
+		SELECT 
+			TOP (1) 
+				[SO].[StatusOrderId]
+		FROM 
+			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+		WHERE
+			SO.[OrderDescription] = 'En ruta'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @GuideInReturnRoute INT = (
+		SELECT 
+			TOP (1) 
+				[SO].[StatusOrderId]
+		FROM 
+			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+		WHERE
+			SO.[OrderDescription] = 'En ruta para devolución'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @IncidenceInRoute INT = (
+		SELECT 
+			TOP (1) 
+				[SO].[StatusOrderId] 
+		FROM 
+			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+		WHERE
+			SO.[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @FailedDeliveryAttempt INT = (
+		SELECT 
+			TOP (1) 
+				[SO].[StatusOrderId]
+		FROM 
+			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+		WHERE
+			SO.[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
+	)
+
 	DECLARE @Series NVARCHAR(50) = SUBSTRING(@Guide, 1, 2);
 	DECLARE @Guide_number NVARCHAR(50) = SUBSTRING(@Guide, 3, LEN(@Guide));
 	DECLARE @jsonResult NVARCHAR(MAX) = '';
@@ -39,7 +76,14 @@ BEGIN
 		)
 	END
 
-	IF(@Status IN(4,18))
+	IF(@Status IN(@GuideInRoute,@GuideInReturnRoute,@IncidenceInRoute,@FailedDeliveryAttempt) And @Status NOT IN (
+	
+											SELECT
+												SO.[StatusOrderId]
+											FROM
+											[dbo].[StatusOrder] SO  WITH(NOLOCK)
+											WHERE
+											[CatCheckpointTypeId] = 3 ))
 	BEGIN
 
 	BEGIN TRY
