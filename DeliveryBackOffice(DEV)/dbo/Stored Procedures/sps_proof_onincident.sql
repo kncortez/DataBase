@@ -1,4 +1,6 @@
 ﻿
+
+
 -- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-09-08>
@@ -497,11 +499,21 @@ BEGIN
                 DateCreated,
                 DateCreatedInSystem,
                 Observations,
-                Temperature_Celsius
+                Temperature_Celsius,
+				[DeliveryAttemptId]
             )
             VALUES
-            (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder,
-             NULL, NULL);
+            (
+				@GuideSerie
+				, @GuideNumber
+				, @StatusOrderId
+				, 'sps_proof_onincident'
+				, @DateStatusOrder
+				, @DateStatusOrder
+				, NULL
+				, NULL
+				, (SELECT TOP 1 [ID] FROM @Table ORDER BY [ID] DESC)
+			);
             SET @RInserted = @@ROWCOUNT;
 
             -----------------WEBHOOK.INI-----------------------		

@@ -9,9 +9,13 @@
     [Temperature_Celsius] DECIMAL (5, 2) NULL,
     [PieceId]             INT            NULL,
     [RowStatus]           BIT            DEFAULT ((1)) NOT NULL,
+    [DeliveryAttemptId]   BIGINT         NULL,
+    CONSTRAINT [FK_DeliveryOrderDetail_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [dbo].[DeliveryAttempt] ([ID]),
     CONSTRAINT [FK_DeliveryOrderDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliveryOrderDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 
@@ -65,4 +69,8 @@ CREATE NONCLUSTERED INDEX [IX_DeliveryOrderDetailRLDReport]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para validar el estado del registro 1 para activo 0 inactivo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderDetail', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del intento de entrega de la tabla DelvieryAttempt.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderDetail', @level2type = N'COLUMN', @level2name = N'DeliveryAttemptId';
 
