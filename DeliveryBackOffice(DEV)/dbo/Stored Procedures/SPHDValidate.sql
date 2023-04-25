@@ -9,7 +9,7 @@ CREATE PROCEDURE [dbo].[SPHDValidate]
 @DateTo    DateTime=null,
 @NumberFel Nvarchar(40)=null,
 @Membership int=null,
-@Subscription int=null,
+@Subscription INT=null,
 @TipoEnvio AS INT =0,
 @TipoComisionCOD AS INT=0
 AS
@@ -19,7 +19,17 @@ BEGIN
 
 	 SET @Guide =  SUBSTRING(@Guide, 0, IIF(CHARINDEX('-', @Guide) = 0, (LEN(@Guide)), (CHARINDEX('-', @Guide) - 0)))
 
-	
+	 DECLARE @Envio INT =0
+	 DECLARE @ComisionCOD INT=0
+
+
+		       SET @Envio =(Select IdCatInvoiceType From [dbo].[CatInvoiceType] CIT  WHERE [Name]='Envío')
+			   SET @ComisionCOD =(Select IdCatInvoiceType From [dbo].[CatInvoiceType] CIT  WHERE [Name]='Comisión COD')
+
+		
+			
+
+
 
 If (@Guide IS NOT NULL) 
 Begin
@@ -37,18 +47,44 @@ Begin
    IF (@OptionGuide =1)
    BEGIN
 
-    Select 0 'HaveaCreditNote',
-	    ID.dti_description,
-		IH.inv_pk_id,
-        IH.inv_serieFEL,
-		IH.inv_numberFEL,
-		IH.inv_certificationFEL,
-		IH.inv_cli_name
-		         FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
-                     INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
-					 ON IH.inv_pk_id = ID.dti_fk_header
-					 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide AND 
-					 IH.inv_invoiceOfCreditNote IS NULL AND inv_certificationFEL IS NOT NULL
+
+
+    IF (@TipoEnvio > 0  OR @TipoComisionCOD >0)
+	 BEGIN
+
+			Select 0 'HaveaCreditNote',
+				ID.dti_description,
+				IH.inv_pk_id,
+				IH.inv_serieFEL,
+				IH.inv_numberFEL,
+				IH.inv_certificationFEL,
+				IH.inv_cli_name
+						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
+							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+							 ON IH.inv_pk_id = ID.dti_fk_header
+							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 AND   IH.inv_invoiceOfCreditNote IS NULL
+							 AND   inv_certificationFEL IS NOT NULL
+							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@Envio,@ComisionCOD))
+         END
+		 ELSE
+		 BEGIN
+
+		 	Select 0 'HaveaCreditNote',
+				ID.dti_description,
+				IH.inv_pk_id,
+				IH.inv_serieFEL,
+				IH.inv_numberFEL,
+				IH.inv_certificationFEL,
+				IH.inv_cli_name
+						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
+							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+							 ON IH.inv_pk_id = ID.dti_fk_header
+							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 AND   IH.inv_invoiceOfCreditNote IS NULL
+							 AND   inv_certificationFEL IS NOT NULL
+
+		 END
    
 
 
@@ -65,12 +101,22 @@ END
 ELSE IF (@NumberFel IS NOT NULL)
 BEGIN
 
-	Declare @OptionFel INT =( Select
-									Count(IH.inv_serieFEL)
+
+	Declare @OrderNumber INT =	(Select
+										ID.dti_fk_orderNumber
 								 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 									 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 									 ON IH.inv_pk_id = ID.dti_fk_header
-								 WHERE IH.inv_certificationFEL IS NOT NULL   AND inv_certificationFEL = @NumberFel)
+								 WHERE IH.inv_certificationFEL IS NOT NULL   
+								 AND inv_certificationFEL =  @NumberFel)
+
+	Declare @OptionFel INT =(  Select
+										Count(ID.dti_fk_orderNumber)
+								 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
+									 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+									 ON IH.inv_pk_id = ID.dti_fk_header
+								 WHERE IH.inv_certificationFEL IS NOT NULL 
+								 AND ID.dti_fk_orderNumber = @OrderNumber)
 
 IF (@OptionFel=1)
 BEGIN
