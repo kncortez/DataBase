@@ -59,6 +59,21 @@ BEGIN
     DECLARE @ConfirmationOfIncidenceId INT;
     DECLARE @MessageReturn NVARCHAR(100) = N'';
 
+    DECLARE @EmailNotificationMedium INT =
+            (
+                SELECT TOP (1)
+                       [CNM].[IdCatNotificationMedium]
+                FROM [DeliveryBackOffice].[dbo].[CatNotificationMedium] CNM WITH (NOLOCK)
+                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP' COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @NotificationType BIGINT =
+            (
+                SELECT TOP (1)
+                       [CNT].[IdCatNotificationType]
+                FROM [DeliveryBackOffice].[dbo].[CatNotificationType] CNT WITH (NOLOCK)
+                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin' COLLATE Latin1_General_CI_AI
+            );
+
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
 
     BEGIN TRY
@@ -169,23 +184,24 @@ BEGIN
 
             SET @DateStatusOrder = GETDATE();
 
-            -- Validación del rango de distancia entre el VP y Courier
-            DECLARE @IncidenceIssue TABLE
-            (
-                IdIncidence INT
-            );
+            -- Verificar procesos de incidencia
+            DECLARE @IsRouteIncidence BIT = 0;
+            DECLARE @ValidateLocation BIT = 0;
+            DECLARE @ConfirmationOfIncidenceProcess BIT = 0;
+            DECLARE @NotifyOrigin BIT = 0;
 
-            INSERT INTO @IncidenceIssue
-            (
-                [IdIncidence]
-            )
-            SELECT [CTI].[IdIncidenceType]
+            -- Revisar que procesos de incidencia proceden
+            SELECT TOP (1)
+                   @ValidateLocation = [CTI].[ValidatesLocation],
+                   @IsRouteIncidence = [CTI].[IsForcedIncidence],
+                   @ConfirmationOfIncidenceProcess = [CTI].[HasConfirmationProcess],
+                   @NotifyOrigin = [CTI].[NotifiesOrigin]
             FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-            WHERE [CTI].[IsForcedIncidence] = 1
-                  AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI
+            WHERE [CTI].[IdIncidenceType] = @IdIssue
                   AND [CTI].[RowStatus] = 1;
 
-            IF (@IdIssue NOT IN ( SELECT [IdIncidence] FROM @IncidenceIssue ))
+            -- Validación del rango de distancia entre el VP y Courier
+            IF (ISNULL(@ValidateLocation, 0) = 1)
             BEGIN
 
                 -- Buscar ubicación del VP
@@ -410,8 +426,62 @@ BEGIN
                 IF @IsValidDistance = 0
                     SET @MessageReturn = N'Hemos detectado un comportamiento extraño y será investigado.';
 
-                -- FIN FDAPI-1374 <Oscar Morales 2023-02-16> 
+            -- FIN FDAPI-1374 <Oscar Morales 2023-02-16> 
 
+            END;
+            ELSE
+            BEGIN
+
+                -- Verificar si es incidencia en ruta o intento de entrega fallido por defecto
+                IF (ISNULL(@IsRouteIncidence, 0) = 1)
+                BEGIN
+
+                    -- Incidencia en ruta
+                    SET @StatusOrderId =
+                    (
+                        SELECT StatusOrderId
+                        FROM StatusOrder
+                        WHERE OrderDescription = 'Incidencia en ruta'
+                    );
+                    SET @CatTypeConfirmationOfIncidenceId =
+                    (
+                        SELECT IdCatTypeConfirmationOfIncidence
+                        FROM CatTypeConfirmationOfIncidence
+                        WHERE [Name] = 'Incidencia en Ruta'
+                    );
+
+                    SET @ConfirmationOfIncidenceId = NULL;
+                    SET @TokenLinkGeneration = N'';
+
+                END;
+                ELSE
+                BEGIN
+
+                    -- Intento de entrega fallido
+                    SET @StatusOrderId =
+                    (
+                        SELECT StatusOrderId
+                        FROM StatusOrder
+                        WHERE OrderDescription = 'Intento de entrega fallida'
+                    );
+                    SET @CatTypeConfirmationOfIncidenceId =
+                    (
+                        SELECT IdCatTypeConfirmationOfIncidence
+                        FROM CatTypeConfirmationOfIncidence
+                        WHERE [Name] = 'Visita Fallida'
+                    );
+
+                    SET @ConfirmationOfIncidenceId = NULL;
+                    SET @TokenLinkGeneration = N'';
+
+                END;
+            END;
+
+            -- Generar proceso de token de incidencia
+            IF (ISNULL(@ConfirmationOfIncidenceProcess, 0) = 1)
+            BEGIN
+
+                -- debe procesar confirmación de la incidencia
                 INSERT INTO [dbo].[ConfirmationOfIncidence]
                 (
                     [ConfirmationOfIncidentToken],
@@ -439,25 +509,177 @@ BEGIN
                 );
 
             END;
-            ELSE
+
+            -- Generar proceso de notificación a remitente
+            IF (ISNULL(@NotifyOrigin, 0) = 1)
             BEGIN
-                -- Forzar incidencia en ruta
 
-                SET @StatusOrderId =
-                (
-                    SELECT StatusOrderId
-                    FROM StatusOrder
-                    WHERE OrderDescription = 'Incidencia en ruta'
-                );
-                SET @CatTypeConfirmationOfIncidenceId =
-                (
-                    SELECT IdCatTypeConfirmationOfIncidence
-                    FROM CatTypeConfirmationOfIncidence
-                    WHERE [Name] = 'Incidencia en Ruta'
-                );
+                -- Debe procesar notificación por correo a remitente
+                -- Obtener datos de destino de notificación
+                DECLARE @NotificationCustomerId INT;
+                DECLARE @NotificationEmail NVARCHAR(200);
 
-                SET @ConfirmationOfIncidenceId = NULL;
-                SET @TokenLinkGeneration = N'';
+                -- Datos para notificación por correo
+                SELECT TOP (1)
+                       @NotificationEmail = (CASE
+                                                 WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Mail], ''))) <> '' THEN
+                                                     [DO].[Sender_Mail]
+                                                 WHEN LTRIM(RTRIM(ISNULL([Cu].[CODContactEmail], ''))) <> '' THEN
+                                                     [Cu].[CODContactEmail]
+                                             END
+                                            ),
+                       @NotificationCustomerId = [DO].[IdCustomer]
+                FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH (NOLOCK)
+                        ON [Cu].[IdCustomer] = [DO].[IdCustomer]
+                WHERE [DO].[Guide_Serie] = @GuideSerie
+                      AND [DO].[Guide_Number] = @GuideNumber;
+
+                -- Notificación activa para destino de notificación y tipo de notificación
+                DECLARE @NotificationQueueId BIGINT =
+                        (
+                            SELECT TOP (1)
+                                   [NQ].[IdNotificationQueue]
+                            FROM [DeliveryBackOffice].[dbo].[NotificationQueue] NQ WITH (NOLOCK)
+                            WHERE [NQ].[CustomerId] = @NotificationCustomerId
+                                  AND [NQ].[CatNotificationTypeId] = @NotificationType
+                                  AND [NQ].[CatNotificationMediumId] = @EmailNotificationMedium
+                                  AND [NQ].[IsSent] = 0
+                                  AND [NQ].[RowStatus] = 1
+                                  AND [NQ].[DateToSend] = CAST(GETDATE() AS DATE)
+                            ORDER BY [NQ].[DateToSend] ASC
+                        );
+
+                -- Revisar si existe notificación activa para el destino de notificación y tipo de notificación
+                IF (ISNULL(@NotificationQueueId, 0) > 0)
+                BEGIN
+                    -- Existe un registro activo pendiente para adjuntar información
+
+                    -- Revisar si la guía ya existe en detalle
+                    IF (NOT EXISTS
+                    (
+                        SELECT TOP 1
+                               1
+                        FROM [DeliveryBackOffice].[dbo].[NotificationQueueDetail] NQD WITH (NOLOCK)
+                        WHERE [NQD].[NotificationQueueId] = @NotificationQueueId
+                              AND [NQD].[GuideSerie] = @GuideSerie
+                              AND [NQD].[GuideNumber] = @GuideNumber
+                              AND [NQD].[RowStatus] = 1
+                    )
+                       )
+                    BEGIN
+
+                        -- Adicionar guía a detalle de notificaciones si no existe
+                        INSERT INTO [DeliveryBackOffice].[dbo].[NotificationQueueDetail]
+                        (
+                            [NotificationQueueId],
+                            [GuideSerie],
+                            [GuideNumber],
+                            [MembershipId],
+                            [SubscriptionId],
+                            [RowStatus],
+                            [TokenCreated],
+                            [DateCreated],
+                            [TokenUpdated],
+                            [DateUpdated]
+                        )
+                        VALUES
+                        (   @NotificationQueueId,    -- NotificationQueueId - bigint
+                            @GuideSerie,             -- GuideSerie - nvarchar(10)
+                            @GuideNumber,            -- GuideNumber - int
+                            NULL,                    -- MembershipId - int
+                            NULL,                    -- SubscriptionId - int
+                            1,                       -- RowStatus - bit
+                            N'sps_proof_onincident', -- TokenCreated - nvarchar(50)
+                            GETDATE(),               -- DateCreated - datetime
+                            NULL,                    -- TokenUpdated - nvarchar(50)
+                            NULL                     -- DateUpdated - datetime
+                            );
+
+                    END;
+
+                END;
+                ELSE
+                BEGIN
+
+                    -- No existe registro activo pendiente, generar uno
+                    DECLARE @NotificationOutput TABLE
+                    (
+                        NotificationQueueId BIGINT NULL
+                    );
+
+                    INSERT INTO [DeliveryBackOffice].[dbo].[NotificationQueue]
+                    (
+                        [CatNotificationMediumId],
+                        [CatNotificationTypeId],
+                        [CustomerId],
+                        [AccountId],
+                        [DestinationPhone],
+                        [DestinationEmail],
+                        [NotificationDate],
+                        [DateToSend],
+                        [IsSent],
+                        [RowStatus],
+                        [TokenCreated],
+                        [DateCreated],
+                        [TokenUpdated],
+                        [DateUpdated]
+                    )
+                    OUTPUT [Inserted].[IdNotificationQueue]
+                    INTO @NotificationOutput
+                    (
+                        [NotificationQueueId]
+                    )
+                    VALUES
+                    (   @EmailNotificationMedium, -- CatNotificationMediumId - int
+                        @NotificationType,        -- CatNotificationTypeId - bigint
+                        @NotificationCustomerId,  -- CustomerId - int
+                        NULL,                     -- AccountId - bigint
+                        NULL,                     -- DestinationPhone - nvarchar(200)
+                        @NotificationEmail,       -- DestinationEmail - nvarchar(200)
+                        GETDATE(),                -- NotificationDate - date
+                        GETDATE(),                -- DateToSend - date
+                        0,                        -- IsSent - bit
+                        1,                        -- RowStatus - bit
+                        N'sps_proof_onincident',  -- TokenCreated - nvarchar(50)
+                        GETDATE(),                -- DateCreated - datetime
+                        NULL,                     -- TokenUpdated - nvarchar(50)
+                        NULL                      -- DateUpdated - datetime
+                        );
+
+                    SET @NotificationQueueId =
+                    (
+                        SELECT TOP (1) [NotO].[NotificationQueueId] FROM @NotificationOutput NotO
+                    );
+
+                    INSERT INTO [DeliveryBackOffice].[dbo].[NotificationQueueDetail]
+                    (
+                        [NotificationQueueId],
+                        [GuideSerie],
+                        [GuideNumber],
+                        [MembershipId],
+                        [SubscriptionId],
+                        [RowStatus],
+                        [TokenCreated],
+                        [DateCreated],
+                        [TokenUpdated],
+                        [DateUpdated]
+                    )
+                    VALUES
+                    (   @NotificationQueueId,    -- NotificationQueueId - bigint
+                        @GuideSerie,             -- GuideSerie - nvarchar(10)
+                        @GuideNumber,            -- GuideNumber - int
+                        NULL,                    -- MembershipId - int
+                        NULL,                    -- SubscriptionId - int
+                        1,                       -- RowStatus - bit
+                        N'sps_proof_onincident', -- TokenCreated - nvarchar(50)
+                        GETDATE(),               -- DateCreated - datetime
+                        NULL,                    -- TokenUpdated - nvarchar(50)
+                        NULL                     -- DateUpdated - datetime
+                        );
+
+                END;
+
             END;
 
             -- actualizar tabla de entregas
@@ -497,11 +719,15 @@ BEGIN
                 DateCreated,
                 DateCreatedInSystem,
                 Observations,
-                Temperature_Celsius
+                Temperature_Celsius,
+                [DeliveryAttemptId]
             )
             VALUES
-            (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder,
-             NULL, NULL);
+            (   @GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder,
+                NULL, NULL,
+                (
+                    SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC
+                ));
             SET @RInserted = @@ROWCOUNT;
 
             -----------------WEBHOOK.INI-----------------------		
