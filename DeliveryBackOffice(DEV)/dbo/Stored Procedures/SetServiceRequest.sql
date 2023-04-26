@@ -18,12 +18,7 @@ BEGIN
 			
 			SELECT
 				-1 AS 'StatusCode'
-			   ,CONCAT('Faltan datos de artículos en la fila ', (SELECT TOP 1
-						RowNumber+1
-					FROM @TblDeliveryOrders
-					WHERE ParcelCode IS NULL
-					OR ParcelCode = '')
-				, '.') AS 'Description'
+			   ,'Faltan datos en la columna Artículos, por favor revise todo el archivo y envie de nuevo la solicitud.' AS 'Description'
 
 			RETURN
 		END
@@ -75,17 +70,11 @@ BEGIN
 						Parcel
 					FROM @ParcelExists
 					WHERE IsExists = 0)
-				, ' en la fila ', (SELECT TOP 1
-						tdo.RowNumber + 1
-					FROM @ParcelExists pe
-					INNER JOIN @TblDeliveryOrders tdo
-						ON tdo.ParcelCode LIKE '%' + pe.Parcel + '%'
-					WHERE IsExists = 0)
-				, ' no existe o no está en la negociación.') AS 'Description'
+				, ' no existe o no está en la negociación, por favor revise todo el archivo y envie de nuevo la solicitud.') AS 'Description'
 			RETURN
 		END
 	END
-	
+
 	--Validación de municipio y departamento
 	IF EXISTS (SELECT
 				1
@@ -102,8 +91,8 @@ BEGIN
 
 		SELECT
 			-1 AS 'StatusCode'
-		   ,CONCAT('No se ha encontrado el municipio o no es un municipio válido en la fila ', (SELECT TOP 1
-					CONCAT(RowNumber + 1, ' (', tdo.Receiver_Town, ')')
+		   ,CONCAT('El municipio ', (SELECT TOP 1
+					CONCAT(' (', tdo.Receiver_Town, ')')
 				FROM @TblDeliveryOrders tdo
 				LEFT JOIN Township t
 					ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
@@ -114,7 +103,7 @@ BEGIN
 					AND t.IdProvince = p.IdProvince
 				WHERE t.IdTownship IS NULL
 				OR p.IdProvince IS NULL)
-			, '.') AS 'Description'
+			, ' no se ha encontrado o no es un municipio válido.') AS 'Description'
 
 		RETURN
 	END
