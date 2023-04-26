@@ -6,7 +6,7 @@ CREATE TABLE NoLaborCalendar (
 
 	NoLaborDate DATE NOT NULL,
 
-	RowStatus BIT NOT NULL DEFAULT 0,
+	RowStatus BIT NOT NULL DEFAULT 1,
 	DateCreated DATETIME NOT NULL,
 	TokenCreated NVARCHAR(50) NOT NULL,
 	DateUpdated DATETIME NULL,

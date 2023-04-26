@@ -312,7 +312,7 @@ BEGIN
 	WHILE (ISNULL(@ValidDate, 0) = 0)
 	BEGIN
 
-		IF ( EXISTS (SELECT [NLC].[NoLaborDate] FROM [DeliveryBackOffice].[dbo].[NoLaborCalendar] NLC  WITH(NOLOCK) WHERE [NLC].[NoLaborDate] = @ResultDate) )
+		IF ( EXISTS (SELECT [NLC].[NoLaborDate] FROM [DeliveryBackOffice].[dbo].[NoLaborCalendar] NLC  WITH(NOLOCK) WHERE [NLC].[NoLaborDate] = @ResultDate AND [NLC].[RowStatus] = 1) )
 		BEGIN
 
 			SET @ResultDate = CAST(DATEADD(DAY, 1, ISNULL(@ResultDate, GETDATE())) AS DATE)

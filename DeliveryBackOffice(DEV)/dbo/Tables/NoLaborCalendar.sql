@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[NoLaborCalendar] (
     [IdNoLaborCalendar] BIGINT        IDENTITY (1, 1) NOT NULL,
     [NoLaborDate]       DATE          NOT NULL,
-    [RowStatus]         BIT           DEFAULT ((0)) NOT NULL,
+    [RowStatus]         BIT           CONSTRAINT [DF__NoLaborCa__RowSt__0E04DDC2] DEFAULT ((1)) NOT NULL,
     [DateCreated]       DATETIME      NOT NULL,
     [TokenCreated]      NVARCHAR (50) NOT NULL,
     [DateUpdated]       DATETIME      NULL,
@@ -9,6 +9,8 @@
     PRIMARY KEY CLUSTERED ([IdNoLaborCalendar] ASC),
     CONSTRAINT [UQ_NoLaborCalendar_NoRepeats] UNIQUE NONCLUSTERED ([NoLaborDate] ASC)
 );
+
+
 
 
 GO
