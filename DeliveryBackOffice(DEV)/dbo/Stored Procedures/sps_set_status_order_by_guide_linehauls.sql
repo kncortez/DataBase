@@ -40,7 +40,62 @@ BEGIN
     DECLARE @StatusOrderId INT = 19;
     DECLARE @ExistePiezaPorServicio INT = 0;
     DECLARE @ReceiverIdTownship INT = 0;
+	DECLARE @GuideStatus INT;
+	DECLARE @TerminalCheckpointType INT;
+	SET @TerminalCheckpointType =
+	(
+		SELECT 
+			TOP (1) 
+				[CCT].[IdCatCheckpointType] 
+		FROM 
+			[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
+		WHERE
+			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @TerminalCheckpoint TABLE
+	(
+		StatusOrderId INT
+	);
+	INSERT INTO @TerminalCheckpoint
+	(
+	    [StatusOrderId]
+	)
+	SELECT 
+		[SO].[StatusOrderId] 
+	FROM
+		[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+	WHERE
+		[SO].[CatCheckpointTypeId] = @TerminalCheckpointType
 
+	SELECT 
+		TOP (1) 
+			@GuideStatus = [DO].[StatusOrderId] 
+	FROM 
+		[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+	WHERE
+		[DO].[Guide_Serie] = @Guide_Serie
+		AND
+		[DO].[Guide_Number] = @GuideNumber
+
+	IF ( @GuideStatus IN (SELECT [TC].[StatusOrderId] FROM @TerminalCheckpoint TC) )
+	BEGIN
+	
+		DECLARE @EmptyTable TABLE
+		(
+			NoId INT NULL
+		)
+
+		SELECT 
+			TOP (1) 
+				[ET].[NoId] 
+		FROM 
+			@EmptyTable ET
+	    
+	END
+	ELSE
+    BEGIN
+        
+		
     BEGIN TRANSACTION;
 
     BEGIN TRY
