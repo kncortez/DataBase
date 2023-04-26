@@ -496,7 +496,7 @@ BEGIN
                 )
                 VALUES
                 (CONCAT(@GuideSerie, @GuideNumber, ROUND(((99999 - 10000) * RAND() + 10000), 0)),
-                 @CatTypeConfirmationOfIncidenceId, @IsValidDistance, 0, @StatusOrderId, @DateStatusOrder, 1,
+                 @CatTypeConfirmationOfIncidenceId, ISNULL(@IsValidDistance, 0), 0, @StatusOrderId, @DateStatusOrder, 1,
                  'sps_proof_onincident', GETDATE());
 
                 SET @ConfirmationOfIncidenceId = SCOPE_IDENTITY();
