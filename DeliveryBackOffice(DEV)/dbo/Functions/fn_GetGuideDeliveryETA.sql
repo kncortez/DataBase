@@ -308,6 +308,25 @@ BEGIN
         SET @ResultDate = CAST(DATEADD(DAY, @DaysToAdd, ISNULL(@TargetDate, GETDATE())) AS DATE)
     END
 
+	DECLARE @ValidDate BIT = 0;
+	WHILE (ISNULL(@ValidDate, 0) = 0)
+	BEGIN
+
+		IF ( EXISTS (SELECT [NLC].[NoLaborDate] FROM [DeliveryBackOffice].[dbo].[NoLaborCalendar] NLC  WITH(NOLOCK) WHERE [NLC].[NoLaborDate] = @ResultDate) )
+		BEGIN
+
+			SET @ResultDate = CAST(DATEADD(DAY, 1, ISNULL(@ResultDate, GETDATE())) AS DATE)
+
+		END
+		ELSE
+        BEGIN
+
+            SET @ValidDate = 1;
+
+        END
+
+	END
+
 	RETURN @ResultDate;
 
 END
