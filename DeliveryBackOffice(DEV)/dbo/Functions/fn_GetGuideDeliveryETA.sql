@@ -309,7 +309,7 @@ BEGIN
     END
 
 	DECLARE @ValidDate BIT = 0;
-	WHILE (ISNULL(@ValidDate, 0) = 0)
+	WHILE (ISNULL(@ValidDate, 0) = 0 AND @ResultDate IS NOT NULL)
 	BEGIN
 
 		IF ( EXISTS (SELECT [NLC].[NoLaborDate] FROM [DeliveryBackOffice].[dbo].[NoLaborCalendar] NLC  WITH(NOLOCK) WHERE [NLC].[NoLaborDate] = @ResultDate AND [NLC].[RowStatus] = 1) )
