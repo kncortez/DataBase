@@ -4,6 +4,11 @@
 -- Create date: <2021-06-04>
 -- Description:	<creación o modificación de valores>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-31>
+-- Description:	<agragar campos para configuración de tiempo de facturación y volumen de facturación>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT,
@@ -45,6 +50,9 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT, --1 Insert Into , 2 Update,
 	@CatBusinessSegmentId INT = NULL
+	@CatBillingTimeId INT = 0,
+	@CatBillingVolumeId INT = 0,
+	@BillingCut_offDate AS DATE=NULL
 
 AS
 BEGIN
@@ -70,6 +78,7 @@ BEGIN
 									WHERE vpc.DescriptionOfClient =  @DescriptionOfClient 
 									AND (vpc.CustomerID = @CustomerID)))
                 BEGIN
+
 					 DECLARE @CodeOfReference AS INT = -1;
 					 SET @CodeOfReference = (SELECT TOP (1) vpc3.CodeOfReference + 1 FROM dbo.VisitPointClient vpc3 ORDER BY vpc3.CodeOfReference DESC)
 					
@@ -161,7 +170,10 @@ BEGIN
                             TokenUpdated,
                             DateUpdated,
                             AveragePackageDaily,
-                            DateStartOperation
+                            DateStartOperation,
+							CatBillingTimeId,
+							CatBillingVolumeId,
+							BillingCut_offDate
                         )
                         VALUES
                         (   @CodeOfReference,				   -- VisitPointID - int
@@ -178,7 +190,11 @@ BEGIN
                             NULL,                  -- TokenUpdated - nvarchar(50)
                             NULL,                  -- DateUpdated - datetime
                             @AveragePackageDaily,  -- AveragePackageDaily - int
-                            @DateStartOperation    -- DateStartOperation - datetime
+                            @DateStartOperation,    -- DateStartOperation - datetime
+							@CatBillingTimeId,
+							@CatBillingVolumeId,
+							@BillingCut_offDate
+
                             )
                         DECLARE @IDVPCONF AS INT = -1
                         SET @IDVPCONF = SCOPE_IDENTITY()
@@ -397,7 +413,10 @@ BEGIN
                             [TokenUpdated] = @Token,
                             [DateUpdated] = GETDATE(),
                             [AveragePackageDaily] = @AveragePackageDaily,
-                            [DateStartOperation] = @DateStartOperation
+                            [DateStartOperation] = @DateStartOperation,
+							[CatBillingTimeId]= @CatBillingTimeId,
+							[CatBillingVolumeId] = @CatBillingVolumeId,
+							[BillingCut_offDate] = @BillingCut_offDate
                         WHERE IdVPConfiguration = @IdVPConfiguration
                               AND VisitPointID = @IdVisitPoint
 										PRINT @@ROWCOUNT
@@ -428,7 +447,10 @@ BEGIN
                             TokenUpdated,
                             DateUpdated,
                             AveragePackageDaily,
-                            DateStartOperation
+                            DateStartOperation,
+							CatBillingTimeId,
+							CatBillingVolumeId,
+							BillingCut_offDate
                         )
                         VALUES
                         (   @IdVisitPoint,         -- VisitPointID - int
@@ -445,7 +467,10 @@ BEGIN
                             NULL,                  -- TokenUpdated - nvarchar(50)
                             NULL,                  -- DateUpdated - datetime
                             @AveragePackageDaily,  -- AveragePackageDaily - int
-                            @DateStartOperation    -- DateStartOperation - datetime
+                            @DateStartOperation,    -- DateStartOperation - datetime
+							@CatBillingTimeId,  -- Configuración de tiempo de facturación
+							@CatBillingVolumeId, --confioguración de volumen de facturación
+							@BillingCut_offDate  --fecha de corte
                             )
 
                         SET @IDVCONF = SCOPE_IDENTITY()

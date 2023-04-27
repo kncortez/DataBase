@@ -61,7 +61,9 @@
 	@ExcludeCommissionCOD bit = 'FALSE',
 	@CatBatchTypeCODId BIGINT,
 	@CatBatchFrequencyCODId BIGINT,
-
+	@BillingTimeId int = 3,
+	@BillingVolumeId int = 2,
+	@BillingCut_offDate Date = NULL,
 	-----------------------------------------------------
 	@CardCode nvarchar(50) =NULL
 	-----------------------------------------------------
@@ -75,7 +77,7 @@ BEGIN
 		DECLARE @msgerror NVARCHAR(MAX)='';		
 				SELECT @msgerror=
 				STUFF((SELECT CHAR(10) + Name
-				FROM DBO.Customer C
+				FROM DBO.Customer C WITH(NOLOCK)
 				  WHERE C.TaxIdentificationNumber= @TaxIdentificationNumber AND LEN(TaxIdentificationNumber)>0 and RowSatus=1 AND (@Option=1 OR(@Option=2 AND IdCustomer<>@IdCustomer))
 				  FOR XML PATH('')), 1, 1, '');
 		IF(LEN(@msgerror)>0)
@@ -110,6 +112,7 @@ BEGIN
 			print 'insert record'
 			IF NOT EXISTS ( SELECT cli.IdCustomer FROM Customer cli where cli.Name = @NameCustomer ) 
 			BEGIN
+
 			INSERT INTO [DeliveryBackOffice].[dbo].[Customer]
 				   ([Name]
 				   ,[Description]
@@ -169,7 +172,10 @@ BEGIN
 				   ,[ExcludeCommissionCOD]
 				   ,[CatBatchTypeCODId]
 				   ,[CatBatchFrequencyCODId]
-
+				   ,[DCBAID]
+				   ,[CatBillingTimeId]
+				   ,[CatBillingVolumeId]
+				   ,[BillingCut_offDate]
 				   )
 			 VALUES
 				   (@NameCustomer
@@ -232,7 +238,11 @@ BEGIN
 				   ,@ExcludePriceShippingCOD
 				   ,@ExcludeCommissionCOD
 				   ,@CatBatchTypeCODId
-				   ,@CatBatchFrequencyCODId				   		
+				   ,@CatBatchFrequencyCODId
+				   ,@DCBAID
+				   ,@BillingTimeId
+				   ,@BillingVolumeId
+				   ,@BillingCut_offDate
 				   )
 
 				   SELECT	'TRUE'	[blnResult]
@@ -322,6 +332,11 @@ BEGIN
 					  -------------------------
 					  ,[SAPCardCode]=@CardCode
 					  -------------------------
+					  ,[DCBAID] = @DCBAID
+					  ,[CatBillingTimeId] = @BillingTimeId
+					  ,[CatBillingVolumeId] = @BillingVolumeId
+				      ,[BillingCut_offDate] = @BillingCut_offDate
+					  
 				 WHERE IdCustomer = @IdCustomer
 
 				  SELECT	'TRUE'	[blnResult]

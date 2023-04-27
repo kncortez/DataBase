@@ -17,6 +17,7 @@
     [DateStartOperation]   DATETIME      NULL,
     [CatBillingTimeId]     INT           NULL,
     [CatBillingVolumeId]   INT           NULL,
+    [BillingCut_offDate]   DATE          NULL,
     CONSTRAINT [PK_VisitPointConfiguration] PRIMARY KEY CLUSTERED ([IdVPConfiguration] ASC),
     CONSTRAINT [FK_VisitPointConfiguration_CatBankAccountType] FOREIGN KEY ([CODAccountBankTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_VisitPointConfiguration_CatTransportCompany] FOREIGN KEY ([TransportCompanyID]) REFERENCES [dbo].[CatTransportCompany] ([IdTransportCompany]),
@@ -25,6 +26,8 @@
     CONSTRAINT [FK_VisitPointConfiguration_HubLogistics] FOREIGN KEY ([HubLogisticID]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_VisitPointConfiguration_VisitPointClient] FOREIGN KEY ([VisitPointID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -47,4 +50,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Volumen de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de corte de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
 
