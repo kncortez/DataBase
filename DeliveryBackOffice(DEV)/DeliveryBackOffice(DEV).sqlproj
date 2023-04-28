@@ -1502,6 +1502,7 @@
     <Build Include="dbo\Stored Procedures\SetExternalPlatformServicePickupData.sql" />
     <Build Include="dbo\Stored Procedures\SetPickupDataFromSimpliRoute.sql" />
     <Build Include="dbo\User Defined Types\TblExtPlatSimpliroutePickup.sql" />
+    <Build Include="dbo\Tables\CatContainerSubtype.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
