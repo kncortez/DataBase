@@ -27,9 +27,13 @@ BEGIN
 									 [LastName] NVARCHAR(100),
 									 [IdCourier] INT);
 	DECLARE @GeneralData AS TABLE (	[ID] INT,
+									[GuideSerie] NVARCHAR(5),
+									[GuideNumber] INT,
+									[Delivered] BIT,
 									[IdCourier] INT,
 									[FirstName] NVARCHAR(100),
 									[LastName] NVARCHAR(100),
+									[ConfirmationOfIncidenceId] INT,
 									[CatTypeConfirmationOfIncidenceId] INT,
 									[CatTypeConfirmationOfIncidenceName] NVARCHAR(100),
 									[IsValid] BIT,

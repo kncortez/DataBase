@@ -1,4 +1,5 @@
-﻿--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
+﻿
+--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
@@ -352,32 +353,137 @@ BEGIN
                    ISNULL(ord.IdCustomer, vpc.CustomerID) IDCUSTOMER,
                    ISNULL(rco.CODRate, @CODRateDefault) CODRate,
                    ISNULL(rco.CODExempt, @CODExemptDefault) CODExempt,
-                   IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
-                       IIF(op.Deposit_Number IS NULL,
-                           IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
-                               0,
-                               (CONVERT(
-                                           DECIMAL(12, 2),
-                                           ((ord.Collect_OnDelivery
-                                             - (IIF(
-                                                    ISNULL(
-                                                              vpc.ExcludePriceShippingCOD,
-                                                              ISNULL(cus.ExcludePriceShippingCOD, 0)
-                                                          ) = 1,
-                                                    0,
-                                                    IIF(ISNULL(ord.IsCollect, 0) = 1,
-                                                        0,
-                                                        IIF(pyt.TimePlaId = 2,
-                                                            0,
-                                                            IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
-                                               )
-                                            )
-                                            * ISNULL(rco.CODRate, @CODRateDefault) / 100
-                                           )
-                                       )
-                               )),
-                           0),
-                       0) Commision,
+					IIF
+					(
+						-- Condición
+						(ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+						-- Verdadero
+						IIF
+						(
+							-- Condición
+							op.Deposit_Number IS NULL,
+							-- Verdadero
+							IIF
+							(
+								-- Condición
+								ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
+								-- Verdadero
+								0,
+								-- Falso
+								IIF
+								(
+									-- Condición
+									
+										CONVERT
+										( DECIMAL(12, 2),
+											(
+												(
+													-- Monto de COD de la guía
+													( 
+														IIF(ord.Collect_OnDelivery < 100, 100, ord.Collect_OnDelivery)
+													)
+													- 
+													-- Monto de comisión
+													(
+													IIF
+														(
+															-- Condición
+															ISNULL( vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0) ) = 1,
+															-- Verdadero
+															0,
+															-- Falso
+															IIF
+															(
+																-- Condición
+																ISNULL(ord.IsCollect, 0) = 1,
+																-- Verdadero
+																0,
+																-- Falso
+																IIF
+																(
+																	-- Condición
+																	pyt.TimePlaId = 2,
+																	-- Verdadero
+																	0,
+																	-- Falso
+																	IIF
+																	(
+																		-- Condición
+																		pyt.TimePlaId = 1,
+																		-- Verdadero
+																		0,
+																		-- Falso
+																		ord.PriceShippment
+																	)
+																)
+															)
+														)
+													)
+												)
+												* ISNULL(rco.CODRate, @CODRateDefault) / 100
+											)
+										)
+									 > ord.Collect_OnDelivery,
+									ord.Collect_OnDelivery,
+									(
+										CONVERT
+										( DECIMAL(12, 2),
+											(
+												(
+													-- Monto de COD de la guía
+													( 
+														IIF(ord.Collect_OnDelivery < 100, 100, ord.Collect_OnDelivery)
+													)
+													- 
+													-- Monto de comisión
+													(
+													IIF
+														(
+															-- Condición
+															ISNULL( vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0) ) = 1,
+															-- Verdadero
+															0,
+															-- Falso
+															IIF
+															(
+																-- Condición
+																ISNULL(ord.IsCollect, 0) = 1,
+																-- Verdadero
+																0,
+																-- Falso
+																IIF
+																(
+																	-- Condición
+																	pyt.TimePlaId = 2,
+																	-- Verdadero
+																	0,
+																	-- Falso
+																	IIF
+																	(
+																		-- Condición
+																		pyt.TimePlaId = 1,
+																		-- Verdadero
+																		0,
+																		-- Falso
+																		ord.PriceShippment
+																	)
+																)
+															)
+														)
+													)
+												)
+												* ISNULL(rco.CODRate, @CODRateDefault) / 100
+											)
+										)
+									)
+								)
+							),
+							-- Falso
+							0
+						),
+						-- Falso
+						0
+					) Commision,
                    ord.PriceShippment DeliveryPrice,
                    .0 CODPaid,
                    0 ReturnRates,
@@ -396,31 +502,137 @@ BEGIN
                    IIF(op.Deposit_Number IS NULL,
                        ord.Collect_OnDelivery
                        -- comi
-                       - IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
-                             (IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
-                                  0,
-                                  (CONVERT(
-                                              DECIMAL(12, 2),
-                                              ((ord.Collect_OnDelivery
-                                                - (IIF(
-                                                       ISNULL(
-                                                                 vpc.ExcludePriceShippingCOD,
-                                                                 ISNULL(cus.ExcludePriceShippingCOD, 0)
-                                                             ) = 1,
-                                                       0,
-                                                       IIF(ISNULL(ord.IsCollect, 0) = 1,
-                                                           0,
-                                                           IIF(pyt.TimePlaId = 2,
-                                                               0,
-                                                               IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
-                                                  )
-                                               )
-                                               * ISNULL(rco.CODRate, @CODRateDefault) / 100
-                                              )
-                                          )
-                                  ))
-                             ),
-                             0)
+                       - IIF
+							(
+								-- Condición
+								(ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+								-- Verdadero
+								IIF
+								(
+									-- Condición
+									op.Deposit_Number IS NULL,
+									-- Verdadero
+									IIF
+									(
+										-- Condición
+										ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
+										-- Verdadero
+										0,
+										-- Falso
+										IIF
+										(
+											-- Condición
+											
+												CONVERT
+												( DECIMAL(12, 2),
+													(
+														(
+															-- Monto de COD de la guía
+															( 
+																IIF(ord.Collect_OnDelivery < 100, 100, ord.Collect_OnDelivery)
+															)
+															- 
+															-- Monto de comisión
+															(
+															IIF
+																(
+																	-- Condición
+																	ISNULL( vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0) ) = 1,
+																	-- Verdadero
+																	0,
+																	-- Falso
+																	IIF
+																	(
+																		-- Condición
+																		ISNULL(ord.IsCollect, 0) = 1,
+																		-- Verdadero
+																		0,
+																		-- Falso
+																		IIF
+																		(
+																			-- Condición
+																			pyt.TimePlaId = 2,
+																			-- Verdadero
+																			0,
+																			-- Falso
+																			IIF
+																			(
+																				-- Condición
+																				pyt.TimePlaId = 1,
+																				-- Verdadero
+																				0,
+																				-- Falso
+																				ord.PriceShippment
+																			)
+																		)
+																	)
+																)
+															)
+														)
+														* ISNULL(rco.CODRate, @CODRateDefault) / 100
+													)
+												)
+											 > ord.Collect_OnDelivery,
+											ord.Collect_OnDelivery,
+											(
+												CONVERT
+												( DECIMAL(12, 2),
+													(
+														(
+															-- Monto de COD de la guía
+															( 
+																IIF(ord.Collect_OnDelivery < 100, 100, ord.Collect_OnDelivery)
+															)
+															- 
+															-- Monto de comisión
+															(
+															IIF
+																(
+																	-- Condición
+																	ISNULL( vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0) ) = 1,
+																	-- Verdadero
+																	0,
+																	-- Falso
+																	IIF
+																	(
+																		-- Condición
+																		ISNULL(ord.IsCollect, 0) = 1,
+																		-- Verdadero
+																		0,
+																		-- Falso
+																		IIF
+																		(
+																			-- Condición
+																			pyt.TimePlaId = 2,
+																			-- Verdadero
+																			0,
+																			-- Falso
+																			IIF
+																			(
+																				-- Condición
+																				pyt.TimePlaId = 1,
+																				-- Verdadero
+																				0,
+																				-- Falso
+																				ord.PriceShippment
+																			)
+																		)
+																	)
+																)
+															)
+														)
+														* ISNULL(rco.CODRate, @CODRateDefault) / 100
+													)
+												)
+											)
+										)
+									),
+									-- Falso
+									0
+								),
+								-- Falso
+								0
+							)
                        -- envio
                        - (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
                               0,
@@ -1183,3 +1395,6 @@ BEGIN
     --END
     END;
 END;
+
+
+
