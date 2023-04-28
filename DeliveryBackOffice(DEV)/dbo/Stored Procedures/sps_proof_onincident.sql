@@ -39,6 +39,15 @@ BEGIN
     (
         ID INT
     );
+	DECLARE @SystemOrigin INT = 
+	(
+		SELECT 
+			TOP (1)
+				[CS].[SysIdSystem] 
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)	
+		WHERE
+			[CS].[SysNameSystem] = 'CourierAPP'  COLLATE Latin1_General_CI_AI 	);
     -- control de inserción de imagen en tabla de fotografías
     DECLARE @ID_Photo INT;
     -- variables auxiliares para conversión de imagen de base64 a varbinary
@@ -497,11 +506,16 @@ BEGIN
                 DateCreated,
                 DateCreatedInSystem,
                 Observations,
-                Temperature_Celsius
+                Temperature_Celsius,
+                [DeliveryAttemptId],
+				[SystemOrigin]
             )
             VALUES
-            (@GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder,
-             NULL, NULL);
+            (   @GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder,
+                NULL, NULL,
+                (
+                    SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC
+                ),@SystemOrigin);
             SET @RInserted = @@ROWCOUNT;
 
             -----------------WEBHOOK.INI-----------------------		
