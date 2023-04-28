@@ -1,5 +1,5 @@
 -- =============================================
--- Author:		<Andrés, Ruíz>
+-- Author:		<AndrÃ©s, RuÃ­z>
 -- Create date: <2023-03-31>
 -- Description:	<Retorna los tipos de una ruta>
 -- =============================================
