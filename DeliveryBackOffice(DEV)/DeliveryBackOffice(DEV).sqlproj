@@ -1153,6 +1153,7 @@
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetActPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetPickupVehiclesByUserHub.sql" />
+    <Build Include="dbo\Tables\SenderReceiverLocationLog.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
