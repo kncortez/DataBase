@@ -496,7 +496,7 @@ BEGIN
 						INSERT INTO DeliveryAttempt (Guide_Serie, Guide_Number, Dry, Cold, Latitude, Longitude, Delivered, ID_Courier, ID_DeliveryOrderBySettlement, User_Created, Date_Created, ID_Proof, Verified, Accepted, User_Verified, Date_Verified, Accuracy, ID_Incident, Guide_Piece, LogLatitude, LogLongitude)
 							VALUES (@GuideSerie, @GuideNumber, 1, 0, NULL, NULL, 0, @CourierId, NULL, @Token, GETDATE(), NULL, NULL, NULL, NULL, NULL, NULL, @IncidenceTypeId, NULL, NULL, NULL);
 							
-						SET @Register = 1
+						SET @Register = 0
 					END
 					ELSE 
 					BEGIN
