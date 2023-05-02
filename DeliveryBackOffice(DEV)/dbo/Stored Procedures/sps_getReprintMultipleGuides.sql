@@ -329,8 +329,8 @@ BEGIN
 											WHEN [vp].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
 											WHEN [dev].[CatSystemId] = @IndividualWebSys THEN 'WEB'
 											WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
-											WHEN [dev].[CatSystemId] = @CorporateWebSys THEN ''
-											WHEN [dev].[CatSystemId] = @ParserSys THEN ''
+											WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'CRP'
+											WHEN [dev].[CatSystemId] = @ParserSys THEN 'CRP'
 											WHEN [dev].[CatSystemId] IS NULL THEN 'API'
 											ELSE 'API'
 										END
