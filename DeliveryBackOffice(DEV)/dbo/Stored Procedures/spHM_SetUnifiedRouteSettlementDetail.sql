@@ -928,7 +928,6 @@ BEGIN
 									AND doad.RowStatus = 1
 									AND so.OrderDescription = 'Intento de entrega fallida'
 								END
-								print 'ENTRA'
 								--Actualizar flujo con los contadores
 								SELECT
 									@IsArrival =
@@ -1089,10 +1088,22 @@ BEGIN
 									   ,'Pieza asignada correctamente.' 'Description'
 									   ,@IsOpenProcess 'IsOpenProcess'
 									   ,(CASE
+											WHEN @IsArrival = 0 AND
+												@IsReturn = 0 AND
+												@IsDelivered = 0 AND
+												@IsTransfered = 0 THEN 'Abandonado'
 											WHEN @IsPickup = 1 THEN 'Recolección'
 											WHEN @IsLastMileReturn = 1 THEN 'Devolución'
 											ELSE 'Entrega'
 										END) 'FlowType'
+									   ,CASE
+											WHEN @IsMarkedReturn = 1 THEN 1
+											ELSE 0
+										END IsMarkedReturn
+									   ,CASE
+											WHEN @IsReturn = 1 THEN 1
+											ELSE 0
+										END IsReturn  
 
 									SELECT
 										dop.NoPiece
