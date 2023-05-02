@@ -17,6 +17,7 @@ BEGIN
 
 	-- Variables globales
 	DECLARE @DateInSystem DATETIME = GETDATE();
+	DECLARE @IncidenceDescription NVARCHAR(200);
 	DECLARE @SystemOrigin INT = 
 	(
 		SELECT 
@@ -159,7 +160,8 @@ BEGIN
 			-- Revisar que procesos de incidencia proceden
 			SELECT 
 				TOP (1) 
-					@NotifyOrigin = [CTI].[NotifiesOrigin]
+					@NotifyOrigin = [CTI].[NotifiesOrigin],
+					@IncidenceDescription = [CTI].[NameIncidence]
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI  WITH(NOLOCK) 
 			WHERE
@@ -518,6 +520,9 @@ BEGIN
 				SELECT 
 					TOP (1) 
 						CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) [Guide] 
+						,@IncidenceDescription [IncidenceDescription]
+						,FORMAT(@SimulatedDate, 'dd/MM/yyyy hh:mm:ss') [IncidenceDate]
+						,FORMAT(@DateInSystem, 'dd/MM/yyyy hh:mm:ss') [RegistryDate] 
 				FROM 
 					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 				WHERE

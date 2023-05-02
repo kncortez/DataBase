@@ -1,6 +1,6 @@
 USE [DeliveryBackOffice]
 GO
-/****** Object:  StoredProcedure [dbo].[SPHD_ValidateTerminalStatus]    Script Date: 4/28/2023 11:36:08 ******/
+/****** Object:  StoredProcedure [dbo].[spHD_SetGuideIncidence]    Script Date: 5/2/2023 07:09:29 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,6 +24,7 @@ BEGIN
 
 	-- Variables globales
 	DECLARE @DateInSystem DATETIME = GETDATE();
+	DECLARE @IncidenceDescription NVARCHAR(200);
 	DECLARE @SystemOrigin INT = 
 	(
 		SELECT 
@@ -166,7 +167,8 @@ BEGIN
 			-- Revisar que procesos de incidencia proceden
 			SELECT 
 				TOP (1) 
-					@NotifyOrigin = [CTI].[NotifiesOrigin]
+					@NotifyOrigin = [CTI].[NotifiesOrigin],
+					@IncidenceDescription = [CTI].[NameIncidence]
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI  WITH(NOLOCK) 
 			WHERE
@@ -525,6 +527,9 @@ BEGIN
 				SELECT 
 					TOP (1) 
 						CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) [Guide] 
+						,@IncidenceDescription [IncidenceDescription]
+						,FORMAT(@SimulatedDate, 'dd/MM/yyyy hh:mm:ss') [IncidenceDate]
+						,FORMAT(@DateInSystem, 'dd/MM/yyyy hh:mm:ss') [RegistryDate] 
 				FROM 
 					[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 				WHERE
