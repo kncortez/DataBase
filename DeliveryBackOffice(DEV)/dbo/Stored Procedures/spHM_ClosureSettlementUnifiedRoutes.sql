@@ -56,6 +56,7 @@ BEGIN
 	DECLARE @IdSubTypeRecollection INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Recolección');
 	DECLARE @IdSubTypeReturn INT=(SELECT IdSubTypeServiceManagment from dbo.SubTypeServiceManagment where [Name] =  'Devolución');
 
+	DECLARE @STATUSINCIDENCE_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Incidencia en ruta');
 	DECLARE @StatusAbandoned TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Paquete abandonado' AND RowStatus = 1)
 
 	IF @Date IS NULL
@@ -93,6 +94,10 @@ BEGIN
 					RA.IdRouteAssigment=URS.RouteAssignmentId
 			WHERE RA.IdCurrierMan=@IDCOURIER AND RA.DateOfRoute=@Date;
 
+			--TABLA 2
+			SELECT dobs.ID  'ManifestId' FROM DeliveryOrderBySettlement dobs  WITH(NOLOCK) 
+			WHERE dobs.ID_Courier=@IDCOURIER AND CAST(dobs.Date_Dispatched AS DATE)=@Date
+
 	END
 	ELSE IF @HasSettled =0
 	BEGIN 
@@ -117,6 +122,14 @@ BEGIN
 					RA.IdRouteAssigment=URS.RouteAssignmentId
 			WHERE RA.IdCurrierMan=@IDCOURIER AND RA.DateOfRoute=@Date
 			AND URS.UserSettlement IS NULL;
+
+		DECLARE @ManifestDelivery TABLE (		
+			ManifestId INT
+		);
+
+		INSERT INTO @ManifestDelivery
+			SELECT dobs.ID  'ManifestId' FROM DeliveryOrderBySettlement dobs  WITH(NOLOCK) 
+			WHERE dobs.ID_Courier=@IDCOURIER AND CAST(dobs.Date_Dispatched AS DATE)=@Date
 
 		DECLARE @EXISTGUIDES BIT =0;
 		----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -853,6 +866,8 @@ BEGIN
 			--Listando manifiestos del ultimo cierre realizado
 			SELECT URSID 'URSID' FROM @ManifestList;
 		
+			--TABLA 2
+			SELECT ManifestId FROM @ManifestDelivery
 
 		END
 		ELSE
