@@ -12,7 +12,8 @@
 CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
     -- Add the parameters for the stored procedure here
     @Phone NVARCHAR(20) = '48119415',
-    @Token VARCHAR(MAX) = '21a31fd231as23d1f21ads'
+    @Token VARCHAR(MAX) = '21a31fd231as23d1f21ads',
+    @LoginToken NVARCHAR(6) = '123456'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
