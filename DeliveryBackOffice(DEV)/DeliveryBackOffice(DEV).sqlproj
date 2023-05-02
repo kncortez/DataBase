@@ -1503,6 +1503,7 @@
     <Build Include="dbo\Stored Procedures\SetPickupDataFromSimpliRoute.sql" />
     <Build Include="dbo\User Defined Types\TblExtPlatSimpliroutePickup.sql" />
     <Build Include="dbo\Tables\CatContainerSubtype.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_LoginSupervisor.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

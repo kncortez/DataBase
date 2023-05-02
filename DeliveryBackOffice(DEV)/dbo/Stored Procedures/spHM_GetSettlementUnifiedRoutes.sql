@@ -35,6 +35,7 @@ BEGIN
 		DECLARE @ORDERSTATUS_TRASLATE_Ret INT = (SELECT StatusOrderId FROM DBO.StatusOrder WHERE OrderDescription = 'Devuelto en Express Center');
 		DECLARE @STATUSFAILED_DO INT = (SELECT StatusOrderId FROM dbo.StatusOrder WITH (NOLOCK) WHERE OrderDescription = 'Intento de entrega fallida');
 		DECLARE @STATUSTRANSFER_DO INT = (SELECT StatusOrderId FROM DBO.StatusOrder WITH (NOLOCK) WHERE OrderDescription ='Traslado a Express Center');
+		DECLARE @STATUSINCIDENCE INT = (SELECT StatusOrderId FROM DBO.StatusOrder WITH (NOLOCK) WHERE OrderDescription ='Incidencia en ruta' AND RowStatus = 1);
 
 		DECLARE @GuidesToSettled TABLE (
 			GuideSerie NVARCHAR(2),
@@ -145,7 +146,7 @@ BEGIN
 					URSD.IdUnifiedRouteSettlementDetail IS NULL
 				AND(
 					--FILTRANDO  GUIAS EN ESTADO EXITOSO
-					DO.StatusOrderId IN (@ORDERSTATUS_DELIVERED,@ORDERSTATUS_RETURNED,@STATUSFAILED_DO)
+					DO.StatusOrderId IN (@ORDERSTATUS_DELIVERED,@ORDERSTATUS_RETURNED)
 					OR TransferGuide.IsTraslate = 1
 				)
 				AND RA.DateOfRoute =@Date
@@ -159,49 +160,15 @@ BEGIN
 				,(CASE 
 					WHEN so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto') THEN 'IsDelivered'
 					WHEN so.OrderDescription IN ('Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center') THEN 'IsTransfered'
-					WHEN so.OrderDescription NOT IN ('Intento de entrega fallida') THEN 'IsError'
-					WHEN (do.IsLastMileReturn IS NULL OR
-						do.IsLastMileReturn = 0) THEN CASE
-							WHEN ISNULL((SELECT
-										rh.Attempt
-									FROM RateHeader rh WITH (NOLOCK)
-									LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-										ON vpc.CodeOfReference = do.Sender_ID
-									INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-										ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-									WHERE rh.RheId = rc.RbcIdRate)
-								, 2) > (SELECT
-										COUNT(1)
-									FROM DeliveryOrderDetail dod WITH (NOLOCK)
-									INNER JOIN StatusOrder so WITH (NOLOCK)
-										ON so.StatusOrderId = dod.StatusOrderId
-									WHERE dod.RowStatus = 1
-									AND dod.Guide_Serie = do.Guide_Serie
-									AND dod.Guide_Number = do.Guide_Number
-									AND so.OrderDescription = 'Intento de entrega fallida') THEN 'IsArrival'
-							ELSE 'IsReturn'
+					WHEN so.OrderDescription NOT IN ('Intento de entrega fallida', 'Incidencia en ruta') THEN 'IsError'
+					WHEN (do.IsLastMileReturn = 1) THEN CASE
+							WHEN doad.IdDeliveryOrderAttemptData IS NOT NULL AND doad.GuideReturnAttemptCount >= doad.GuideReturnMaxAttemptCount THEN 'IsBazar'
+							ELSE 'IsArrival'
 						END
-					ELSE 
-						CASE
-							WHEN (SELECT
-										ISNULL(rh.Attempt, 2) + rh.AttemptReturn
-									FROM RateHeader rh WITH (NOLOCK)
-									LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-										ON vpc.CodeOfReference = do.Sender_ID
-									INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-										ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-									WHERE rh.RheId = rc.RbcIdRate)
-								> (SELECT
-										COUNT(1)
-									FROM DeliveryOrderDetail dod WITH (NOLOCK)
-									INNER JOIN StatusOrder so WITH (NOLOCK)
-										ON so.StatusOrderId = dod.StatusOrderId
-									WHERE dod.RowStatus = 1
-									AND dod.Guide_Serie = do.Guide_Serie
-									AND dod.Guide_Number = do.Guide_Number
-									AND so.OrderDescription = 'Intento de entrega fallida') THEN 'IsReturn'
-							ELSE 'IsBazar'
-						END
+					ELSE CASE
+							WHEN doad.IdDeliveryOrderAttemptData IS NOT NULL AND doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount THEN 'IsReturn'
+							ELSE 'IsArrival'
+					END
 				END) GuideFlow
 			FROM @GuidesToSettled GTS			
 			INNER JOIN DeliveryOrder do WITH (NOLOCK)
@@ -209,6 +176,10 @@ BEGIN
 				AND GTS.GuideNumber = DO.Guide_Number
 			INNER JOIN StatusOrder so (NOLOCK)
 				ON do.StatusOrderId = so.StatusOrderId
+			LEFT JOIN DeliveryOrderAttemptData doad WITH(NOLOCK)
+				ON do.Guide_Serie = doad.GuideSerie
+				AND do.Guide_Number = doad.GuideNumber
+				AND doad.RowStatus = 1
 
 			UPDATE
 				GTS
@@ -710,7 +681,7 @@ BEGIN
 						CAST(IIF(URSD.RowStatus=1 AND URSD.IsOpenProcess=0,1,0) AS BIT) 'Settlement',
 						SMD.ServiceManagement 'IdSettlement',
 						RA.IdRoute,
-						SUM(CASE WHEN DOD.StatusCheckpoint =@STATUSFAILED_DO THEN 1 ELSE 0 END) 'IncidencesCount',--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
+						SUM(CASE WHEN DOD.StatusCheckpoint IN (@STATUSFAILED_DO, @STATUSINCIDENCE) THEN 1 ELSE 0 END) 'IncidencesCount',--CANTIDAD DE GUÍAS CON CHECKPOINT ACTUAL COMO INTENTO DE ENTREGA FALLIDA
 						(CASE WHEN DO.StatusOrderId in(@STATUSDELIVERED_DO,@STATUSRETURNED_DO,@STATUSTRANSFER_DO) THEN 1 ELSE 0 END) 'Completed'
 						--SM.IdServiceManagement 'IdSM'
 			FROM DBO.RouteAssigment RA 

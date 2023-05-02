@@ -513,13 +513,18 @@ BEGIN
                                                NULL,
                                                NULL
                                         FROM DeliveryOrder do WITH (NOLOCK)
+											LEFT JOIN Province pr WITH(NOLOCK)
+												ON pr.ProvinceName = CAST(IIF(do.IsLastMileReturn = 1, 
+																			do.Sender_Department, 
+																			do.Receiver_Department) AS NVARCHAR(50)) COLLATE Latin1_General_CI_AI 
                                             INNER JOIN Township tw WITH (NOLOCK)
                                                 ON tw.IdTownship = IIF(do.IsLastMileReturn = 1,
                                                                        do.SenderIdTownship,
                                                                        do.ReceiverIdTownship)
-                                                   OR tw.TownshipName = IIF(do.IsLastMileReturn = 1,
+                                                   OR tw.TownshipName = CAST(IIF(do.IsLastMileReturn = 1,
                                                                             do.Sender_Town,
-                                                                            do.Receiver_Town)  COLLATE Latin1_General_CI_AI 
+                                                                            do.Receiver_Town) AS NVARCHAR(50))  COLLATE Latin1_General_CI_AI 
+												   OR tw.HeaderCode = CAST(CONCAT(pr.LocalCode, '01') AS VARCHAR(10))
                                         WHERE do.Guide_Serie = @GuideSerie
                                               AND do.Guide_Number = @GuideNumber;
 
