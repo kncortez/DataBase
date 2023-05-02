@@ -422,7 +422,7 @@ BEGIN
 							INNER JOIN SchedulePickup sp WITH (NOLOCK)
 								ON sp.SchedulePickupId = sm.IdSchedulePickup
 							WHERE ra.IdRouteAssigment = @RouteAssignmentId
-							AND sp.AddressPickup = @SenderAddress;
+							AND sp.AddressPickup = CAST(@SenderAddress AS VARCHAR(500));
 						END;
 
 						--Si se encuentra el vp entre los servicios de recolección, se asigna
@@ -522,8 +522,8 @@ BEGIN
 							[IsScheduled])
 								SELECT TOP 1
 									acc.AccIdAccount
-								   ,CONCAT(CAST(GETDATE() AS DATE), ' 08:00:00')
-								   ,CONCAT(CAST(GETDATE() AS DATE), ' 17:00:00')
+								   ,CAST(CONCAT(CAST(GETDATE() AS DATE), ' 08:00:00') AS DATETIME)
+								   ,CAST(CONCAT(CAST(GETDATE() AS DATE), ' 17:00:00') AS DATETIME)
 								   ,0
 								   ,0
 								   ,0
@@ -743,7 +743,7 @@ BEGIN
 										WHEN @IsPickup = 0 THEN CASE
 												WHEN so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto') THEN 'IsDelivered'
 												WHEN so.OrderDescription IN ('Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center') THEN 'IsTransfered'
-												WHEN so.OrderDescription NOT IN ('Intento de entrega fallida') THEN 'IsError'
+												WHEN so.OrderDescription NOT IN ('Intento de entrega fallida', 'Incidencia en ruta') THEN 'IsError'
 												WHEN (do.IsLastMileReturn IS NULL OR
 													do.IsLastMileReturn = 0) THEN CASE
 														WHEN ISNULL((SELECT
@@ -850,54 +850,75 @@ BEGIN
 								IF (@IsOpenProcess = 1)
 								BEGIN
 
-									--- Buscar usuario de proceso abierto
-									SELECT
-										@UserProcess = ISNULL((SELECT
-												CONCAT(iu.IdUser, ' - ', iu.Username)
-											FROM TokenLog tl WITH (NOLOCK)
-											INNER JOIN RegisterUser ru WITH (NOLOCK)
-												ON ru.UsrIdUser = tl.TknIdUser
-											INNER JOIN InternalUser iu WITH (NOLOCK)
-												ON iu.RegisterUserID = ru.UsrIdUser
-											WHERE tl.TknIdToken = ursd.UserProcess)
-										, ISNULL((SELECT
-												CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
-											FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
-											WHERE llbt.SSN_IdToken = ursd.UserProcess)
-										, 'N/A'))
-									FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
-									WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
-									AND ursd.UserProcess IS NOT NULL
-									
-									IF @UserProcess IS NULL OR( @UserProcess <> 'N/A' AND @UserProcess = ( SELECT
-											ISNULL((SELECT
+									--- Buscar usuario de proceso abierto si no es el mismo token
+									IF NOT EXISTS (SELECT
+											1
+										FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
+										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+										AND ursd.UserProcess = @Token)
+									BEGIN
+										SELECT
+											@UserProcess = ISNULL((SELECT
 													CONCAT(iu.IdUser, ' - ', iu.Username)
 												FROM TokenLog tl WITH (NOLOCK)
 												INNER JOIN RegisterUser ru WITH (NOLOCK)
 													ON ru.UsrIdUser = tl.TknIdUser
 												INNER JOIN InternalUser iu WITH (NOLOCK)
 													ON iu.RegisterUserID = ru.UsrIdUser
-												WHERE tl.TknIdToken = @Token)
+												WHERE tl.TknIdToken = ursd.UserProcess)
 											, ISNULL((SELECT
 													CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
 												FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
-												WHERE llbt.SSN_IdToken = @Token)
-											, 'N/A')))
-									)
-									BEGIN
+												WHERE llbt.SSN_IdToken = ursd.UserProcess)
+											, 'N/A'))
+										FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
+										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+										AND ursd.UserProcess IS NOT NULL
+
+										IF @UserProcess IS NULL
+											OR (@UserProcess <> 'N/A'
+											AND @UserProcess = (SELECT
+													ISNULL((SELECT
+															CONCAT(iu.IdUser, ' - ', iu.Username)
+														FROM TokenLog tl WITH (NOLOCK)
+														INNER JOIN RegisterUser ru WITH (NOLOCK)
+															ON ru.UsrIdUser = tl.TknIdUser
+														INNER JOIN InternalUser iu WITH (NOLOCK)
+															ON iu.RegisterUserID = ru.UsrIdUser
+														WHERE tl.TknIdToken = @Token)
+													, ISNULL((SELECT
+															CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
+														FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
+														WHERE llbt.SSN_IdToken = @Token)
+													, 'N/A')))
+											)
+										BEGIN
+											UPDATE UnifiedRouteSettlementDetail
+											SET IsOpenProcess = 1
+											   ,UserProcess = @Token
+											   ,RowStatus = 0
+											WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+
+											UPDATE UnifiedRouteSettlementDetailPiece
+											SET RowStatus = 0
+											WHERE IdUnifiedRouteSettlementDetailPiece = @IdUnifiedRouteSettlementDetailPiece
+										END
+										ELSE
+										BEGIN
+											SET @IsValidOpenProcess = 0;
+										END
+									END
+									ELSE
+									BEGIN 
 										UPDATE UnifiedRouteSettlementDetail
 										SET IsOpenProcess = 1
-										   ,UserProcess = @Token
-										   ,RowStatus = 0
+											,UserProcess = @Token
+											,RowStatus = 0
 										WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
 
 										UPDATE UnifiedRouteSettlementDetailPiece
 										SET RowStatus = 0
 										WHERE IdUnifiedRouteSettlementDetailPiece = @IdUnifiedRouteSettlementDetailPiece
-									END
-									ELSE
-									BEGIN
-										SET @IsValidOpenProcess = 0;
 									END
 								END
 
