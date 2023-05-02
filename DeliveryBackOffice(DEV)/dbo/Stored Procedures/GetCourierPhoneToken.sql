@@ -15,27 +15,30 @@ CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
     @Token VARCHAR(MAX) = '21a31fd231as23d1f21ads'
 AS
 BEGIN
-	SET @Phone = (SELECT Phone FROM dbo.SenderReceiver WHERE UniqueCode = @Phone )
-
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
+
     SET NOCOUNT ON;
-
-    DECLARE @GuideRegexData NVARCHAR(500) =
-            (
-                SELECT TOP 1
-                       CP.[Value]
-                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
-                WHERE CP.[Name] = 'GuideRegex' COLLATE Latin1_General_CI_AI
-            );
-
-    DECLARE @GuideRegexScannerData NVARCHAR(500) =
-            (
-                SELECT TOP 1
-                       CP.[Value]
-                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
-                WHERE CP.[Name] = 'GuideRegexScanner' COLLATE Latin1_General_CI_AI
-            );
+	
+	DECLARE @GuideRegexData NVARCHAR(500) = (
+		SELECT
+			TOP 1
+				CP.[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK)
+		WHERE
+			Cp.[Name] = 'GuideRegex' COLLATE Latin1_General_CI_AI
+		)
+	
+	DECLARE @GuideRegexScannerData NVARCHAR(500) = (
+		SELECT
+			TOP 1
+				CP.[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP WITH(NOLOCK)
+		WHERE
+			Cp.[Name] = 'GuideRegexScanner' COLLATE Latin1_General_CI_AI
+		)
 
     DECLARE @jsonResult NVARCHAR(MAX);
 
@@ -59,9 +62,9 @@ BEGIN
     BEGIN TRANSACTION;
     BEGIN TRY
         -------------------------------------------------------------------------------------------------------------------------
-        DECLARE @pheon INT =
+        DECLARE @phon INT =
                 (
-                    SELECT TOP 1 ID FROM SenderReceiver WHERE Phone LIKE '%' + @Phone + '%'
+                    SELECT TOP 1 ID FROM SenderReceiver WITH (NOLOCK) WHERE Phone LIKE '%' + @Phone + '%' AND Estatus = 1
                 );
 
         DECLARE @TokenInavt VARCHAR(MAX) =
@@ -69,7 +72,7 @@ BEGIN
                     SELECT TOP 1
                            LogTokenPOD
                     FROM LogTokenPOD WITH (NOLOCK)
-                    WHERE IdCourierman = @pheon
+                    WHERE IdCourierman = @phon
                           AND RowStatus = 1
                     ORDER BY DateCreated DESC
                 );
@@ -78,92 +81,85 @@ BEGIN
         SET RowStatus = 0
         WHERE LogTokenPOD = @TokenInavt;
         ------------------------------------------------------------------------------------------------------------------------
+		DECLARE @jsonResult1 NVARCHAR(MAX);
 
-        DECLARE @phon VARCHAR(10) =
-                (
-                    SELECT TOP 1
-                           ID
-                    FROM SenderReceiver WITH (NOLOCK)
-                    WHERE Phone LIKE '%' + @Phone + '%'
-                );
+		IF EXISTS(SELECT 1 FROM SenderReceiverLoginToken WHERE SenderReceiverId = @phon AND LoginToken = @LoginToken AND RowStatus = 1)
+		BEGIN
+			UPDATE SenderReceiverLoginToken
+			SET RowStatus = 0
+			   ,DateUpdated = GETDATE()
+			   ,TokenUpdated = @Token
+			WHERE SenderReceiverId = @phon
+			AND LoginToken = @LoginToken
+			AND RowStatus = 1
 
+			INSERT INTO dbo.LogTokenPOD
+			(
+				LogTokenPOD,
+				IdCourierman,
+				RowStatus,
+				DateCreated,
+				DateUpdate
+			)
+			VALUES
+			(@Token, @phon, 1, GETDATE(), NULL);
 
-        INSERT INTO dbo.LogTokenPOD
-        (
-            LogTokenPOD,
-            IdCourierman,
-            RowStatus,
-            DateCreated,
-            DateUpdate
-        )
-        VALUES
-        (@Token, @phon, 1, GETDATE(), NULL);
+        
 
-        DECLARE @jsonResult1 NVARCHAR(MAX);
+			--CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
+			DECLARE @DefaultEmail NVARCHAR(50) =
+					(
+						SELECT ISNULL(cf.Value, '')
+						FROM dbo.ConfigParams cf
+						WHERE cf.Name = 'BillingEmailCAPP'
+					);
 
-        --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
-        DECLARE @DefaultEmail NVARCHAR(50) =
-                (
-                    SELECT ISNULL(cf.Value, '')
-                    FROM dbo.ConfigParams cf
-                    WHERE cf.Name = 'BillingEmailCAPP'
-                );
+			DECLARE @DefaultPickupManifestEmail NVARCHAR(50) =
+					(
+						SELECT ISNULL(cf.Value, '')
+						FROM dbo.ConfigParams cf
+						WHERE cf.Name = 'PickUpManifestEmailCAPP'
+					);
 
-        DECLARE @DefaultPickupManifestEmail NVARCHAR(50) =
-                (
-                    SELECT ISNULL(cf.Value, '')
-                    FROM dbo.ConfigParams cf
-                    WHERE cf.Name = 'PickUpManifestEmailCAPP'
-                );
-
-        SET @jsonResult1 =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT TOP 1
-                                       ',{"IdCourier":"'
-                                       + CONVERT(VARCHAR, ISNULL(CONVERT(VARCHAR(10), pod.IdCourierman), 'N/A')) + '",'
-                                       + '"DateToken":"' + ISNULL(CONVERT(VARCHAR, pod.DateCreated, 23), 'N/A') + '",'
-                                       + '"FirstName":"' + ISNULL(CONVERT(VARCHAR, sr.First_Name), 'N/A') + '",'
-                                       + '"LastName":"' + ISNULL(CONVERT(VARCHAR, sr.Last_Name), 'N/A') + '",'
-                                       + '"Vehicle":"' + ISNULL(CONVERT(VARCHAR, vh.Plate), 'N/A') + '",' + '"Route":"'
-                                       + ISNULL(CONVERT(VARCHAR, cr.CodeRoute), 'N/A') + '",' + '"GuideRegex":"'
-                                       + ISNULL(CONVERT(VARCHAR(500), @GuideRegexData), '')
-                                       + '",' -- Para validar solo los digitos de la guía
-                                       + '"GuideRegexEscaner":"'
-                                       + ISNULL(CONVERT(VARCHAR(500), @GuideRegexScannerData), '')
-                                       + '",' -- Para el input del escaner de la courier
-                                       + '"BillingEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultEmail), 'N/A') + '",'
-                                       + '"PickUpManifestEmail":"'
-                                       + ISNULL(CONVERT(VARCHAR(50), @DefaultPickupManifestEmail), 'N/A') + '",'
-                                       + '"Token":"' + ISNULL(LogTokenPOD, '') + +'"}'
-                                FROM LogTokenPOD pod WITH (NOLOCK)
-                                    INNER JOIN SenderReceiver sr WITH (NOLOCK)
-                                        ON (sr.ID = pod.IdCourierman)
-                                    LEFT JOIN dbo.RouteAssigment ras WITH (NOLOCK)
-                                        ON ras.IdCurrierMan = sr.ID
-                                           AND DateOfRoute = CONVERT(DATE, GETDATE())
-                                    LEFT JOIN dbo.CatVehicle vh WITH (NOLOCK)
-                                        ON vh.IdVehicle = ras.IdVehicle
-                                    LEFT JOIN dbo.CatRoute cr WITH (NOLOCK)
-                                        ON cr.IdRoute = ras.IdRoute
-                                WHERE LogTokenPOD = @Token
-                                ORDER BY 1 DESC
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
-        PRINT 'ingresa2';
-        PRINT @jsonResult;
-
-
-        --select * from SenderReceiver
-        --where Phone like '%55832214%'
-
-        --select * from LogTokenPOD
+			SET @jsonResult1 =
+			(
+				SELECT STUFF(
+								(
+									SELECT TOP 1
+										   ',{"IdCourier":"'
+										   + CONVERT(VARCHAR, ISNULL(CONVERT(VARCHAR(10), pod.IdCourierman), 'N/A')) + '",'
+										   + '"DateToken":"' + ISNULL(CONVERT(VARCHAR, pod.DateCreated, 23), 'N/A') + '",'
+										   + '"FirstName":"' + ISNULL(CONVERT(VARCHAR, sr.First_Name), 'N/A') + '",'
+										   + '"LastName":"' + ISNULL(CONVERT(VARCHAR, sr.Last_Name), 'N/A') + '",'
+										   + '"Vehicle":"' + ISNULL(CONVERT(VARCHAR, vh.Plate), 'N/A') + '",'
+										   + '"Route":"' + ISNULL(CONVERT(VARCHAR, cr.CodeRoute), 'N/A') + '",'
+										   + '"GuideRegex":"' + ISNULL(CONVERT(VARCHAR(500), @GuideRegexData), '') + '",'					-- Para validar solo los digitos de la guía
+										   + '"GuideRegexEscaner":"' + ISNULL(CONVERT(VARCHAR(500), @GuideRegexScannerData), '') + '",'		-- Para el input del escaner de la courier
+										   + '"BillingEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultEmail), 'N/A') + '",'
+										   + '"PickUpManifestEmail":"' + ISNULL(CONVERT(VARCHAR(50), @DefaultPickupManifestEmail), 'N/A') + '",'
+										   + '"Token":"' + ISNULL(LogTokenPOD, '') + +'"}'
+									FROM LogTokenPOD pod WITH(NOLOCK)
+										INNER JOIN SenderReceiver sr WITH(NOLOCK)
+											ON (sr.ID = pod.IdCourierman)
+										LEFT JOIN dbo.RouteAssigment ras WITH(NOLOCK)
+											ON ras.IdCurrierMan = sr.ID
+											   AND DateOfRoute = CONVERT(DATE, GETDATE())
+										LEFT JOIN dbo.CatVehicle vh WITH(NOLOCK)
+											ON vh.IdVehicle = ras.IdVehicle
+										LEFT JOIN dbo.CatRoute cr WITH(NOLOCK)
+											ON cr.IdRoute = ras.IdRoute
+									WHERE LogTokenPOD = @Token
+									ORDER BY 1 DESC
+									FOR XML PATH(''), TYPE
+								).value('.', 'varchar(max)'),
+								1,
+								1,
+								''
+							)
+			);
+			PRINT 'ingresa2';
+			PRINT @jsonResult;
+        END
 
         -- retornar resultado en formato json
         IF @jsonResult1 IS NULL
