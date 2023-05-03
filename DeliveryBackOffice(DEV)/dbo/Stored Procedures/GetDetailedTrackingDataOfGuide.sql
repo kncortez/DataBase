@@ -4,6 +4,10 @@
 -- Create date: <05-09-2022>
 -- Description:	< Detalle de rastreo interno para nuevo portal web >
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <21-02-2023>
+-- Description: <Management for checkpoint icons>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT,
@@ -13,7 +17,6 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
-	
 	DECLARE @GuideOrderTemp AS TABLE(
 		Guide_Serie NVARCHAR(2),
 		Guide_Number INT,
@@ -108,6 +111,7 @@ BEGIN
            RES.[StageTitle],
            RES.[StageSource],
            RES.[StageDescription],
+		   RES.[CheckpointIcon],
            RES.[ImagePath],
 		   RES.[Dry],
 		   RES.[Cold],
@@ -139,6 +143,7 @@ BEGIN
 			'' [StageTitle], 
 			'web' [StageSource],
 			'' AS [StageDescription], 
+			'' AS [CheckpointIcon],
 			'' AS [ImagePath],
 			 '' AS [Dry],
 			 '' AS [Cold],
@@ -176,7 +181,7 @@ BEGIN
             '' [CourierName],                                 
             CAST(dod.StatusOrderId AS NVARCHAR) AS [StageId], 
             (MAX(dod.DateCreated)) AS [StageDate],            
-            so.OrderDescription AS [StageTitle],              
+            so.OrderDescription AS [StageTitle],    
             'web' AS [StageSource],
             (CASE
                  WHEN dod.StatusOrderId IN ( 6, 8 ) THEN
@@ -202,8 +207,9 @@ BEGIN
 				ELSE
 					ISNULL(so.StatusOrderTrackingDescription, '')
              END
-            ) AS [StageDescription]
-            ,(CASE WHEN dod.StatusOrderId = 5 THEN
+            ) AS [StageDescription],
+			ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
+            (CASE WHEN dod.StatusOrderId = 5 THEN
                      ISNULL(
                                ISNULL(
                                (
@@ -286,6 +292,8 @@ BEGIN
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
 				AND so.CatStatusTypeId = 2
+			INNER JOIN	[dbo].[CatCheckpointType] CCT
+				ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         GROUP BY CONVERT(DATE, dod.DateCreated),
@@ -296,7 +304,8 @@ BEGIN
                  dod.Observations,
                  so.OrderDescription,
 				 so.StatusOrderTrackingDescription,
-				 so.NextSteps
+				 so.NextSteps,
+				 [CCT].[CheckpointIcon]
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -328,6 +337,7 @@ BEGIN
 					,'') 
 			   + ' ' + ISNULL(OrdChkPnt.StageDescription,'')))
 			   AS [StageDescription] ,
+			   OrdChkPnt.[CheckpointIcon],
 			   OrdChkPnt.[ImagePath],
 			   OrdChkPnt.[Dry],
 			   OrdChkPnt.[Cold],

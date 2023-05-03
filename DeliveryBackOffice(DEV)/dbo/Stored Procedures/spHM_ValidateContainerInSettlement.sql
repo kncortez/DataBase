@@ -16,13 +16,15 @@ BEGIN
 	DECLARE @STATUS_IN_TRANSIT AS INT;				-- CatLinehaulStatus
 	DECLARE @CONTAINER_ID AS INT;					-- Container
 	DECLARE @CONTAINER_SERIE_ID AS INT;				-- CatTypeContainer
+	DECLARE @ALLOW_STOPOVER AS BIT;					-- CatTypeContainer
 	DECLARE @EXISTING_CONTAINER_LRPC AS INT;		-- LinehaulRoutePreparationContainer
 	DECLARE @EXISTING_CONTAINER_HUB_LRPC AS INT;	-- LinehaulRoutePreparationContainer
 	DECLARE @LIQUIDATED_PIECES AS INT;				-- LinehaulRoutePreparationContainerDetailPiece
 
-	SET @CONTAINER_SERIE_ID = (SELECT	[CTC].[IdCatTypeContainer]
-								FROM	[dbo].[CatTypeContainer] CTC
-								WHERE	[CTC].[TypeContainerSerie] = @ContainerSerie);
+	SELECT	@CONTAINER_SERIE_ID = [CTC].[IdCatTypeContainer],
+			@ALLOW_STOPOVER = [CTC].[AllowStopOver]
+	FROM	[dbo].[CatTypeContainer] CTC
+	WHERE	[CTC].[TypeContainerSerie] = @ContainerSerie;
 
 	SET @CONTAINER_ID = (SELECT	[C].[IdContainer]
 						FROM	[DBO].[Container] C
@@ -68,7 +70,7 @@ BEGIN
 		END
 
 	-- Container HUB destiny doesn't match with actual HUB
-	IF (@EXISTING_CONTAINER_HUB_LRPC = 0 AND @LIQUIDATED_PIECES = 0)
+	IF (@EXISTING_CONTAINER_HUB_LRPC = 0 AND @LIQUIDATED_PIECES = 0 AND @ALLOW_STOPOVER = 1)
 		BEGIN
 			SELECT 1 [spResult], 'Contenedor con diferente HUB destino al actual, puede ser liquidado por completo' [spMessage];
 			RETURN;

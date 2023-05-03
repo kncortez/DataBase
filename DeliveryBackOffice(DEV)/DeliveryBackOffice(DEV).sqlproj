@@ -1476,6 +1476,33 @@
     <Build Include="dbo\Stored Procedures\SetExternalPlatformServicePickupData.sql" />
     <Build Include="dbo\Stored Procedures\SetPickupDataFromSimpliRoute.sql" />
     <Build Include="dbo\User Defined Types\TblExtPlatSimpliroutePickup.sql" />
+    <Build Include="dbo\Tables\ConflictManifestDetail.sql" />
+    <Build Include="dbo\Tables\ConflictManifest.sql" />
+    <Build Include="dbo\Stored Procedures\Update_InformationInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetConfigurationExcGuides.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGenerateNewCoupon.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreateSentry.sql" />
+    <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
+    <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
+    <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_ValidateTerminalStatus.sql" />
+    <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartHeader.sql" />
+    <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartDetail.sql" />
+    <Build Include="dbo\Stored Procedures\GetInformationGuide.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetReturnGuidesWithNoPayment.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetCreditNotes.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetConcessionaireGuides.sql" />
+    <Build Include="dbo\Stored Procedures\spRS_GetCDCTransactions.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_ValidateVisitPointStatusByCodeOfReference.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_addGuideToLinehaulSettlementVirtualContainer.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetPhoneLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetManifestLinehaulDetailByHub.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetOffRouteLinehauls.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetOffRouteLinehaulsInfo.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetEmailLinehauls.sql" />
+    <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
+    <Build Include="dbo\Tables\CatContainerSubtype.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

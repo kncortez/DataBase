@@ -238,6 +238,8 @@ BEGIN
               AND rh.RheDefault = 'true';
     END;
 
+
+	
     -------- Fin determinar tarifa que se va usar ---------------------------------------------------------------------
 
     ------------Validar Usuario Individual ó Ex C y Asignar nuevo tarifario-----------------------------------------------------------------------------------
@@ -269,6 +271,8 @@ BEGIN
                   AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
             SET @IdRate = ISNULL(@RateId, @IdRate);
+
+		
 
         END;
     END;
@@ -677,6 +681,11 @@ BEGIN
     WHERE cov.HeaderCode = @HeaderCodeDestiny
     ORDER BY cov.Hub DESC;
 
+	PRINT '@IdHubSource'
+	PRINT @IdHubSource
+	PRINT '@IdHubDestiny'
+	PRINT @IdHubDestiny
+
     --------------- Fin determinar Hub Origen y Destino ---------------------------------------------------------------------------------------------------
 
     ---------------- Determinar Segmento LOC/MET/FOR-------------------------------------------------------------------------------------------------------
@@ -913,6 +922,9 @@ BEGIN
     );
 
     ----------------- Fin Variable tipo tabla para almacenar tarifas --------------------------------------------------------------------
+
+	PRINT '@IdRateGroup'
+	PRINT @IdRateGroup
 
 
     IF @IdTypeRate = 1 -- tarifas estandar

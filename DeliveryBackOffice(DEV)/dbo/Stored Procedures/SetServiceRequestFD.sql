@@ -534,7 +534,7 @@ BEGIN
 			C.[Row_Number] AS 'RowNumber',
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
-			isnull(@Route,'')  as 'Route'
+			''  as 'Route'
 			,D.PriceShippment AS 'Price',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',

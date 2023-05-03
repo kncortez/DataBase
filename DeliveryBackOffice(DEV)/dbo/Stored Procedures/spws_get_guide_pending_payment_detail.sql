@@ -3,6 +3,11 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-21>
+-- Description:	<Agregar guìas con estado terminal a tabla temporal de guìas excluidas, asì evitar que realicen algun proceso en recolecciòn, entrega o devoluciòn>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
@@ -80,19 +85,21 @@ BEGIN
            lg.Guide_Number
     INTO #listGuidesIncluded
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
                AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
               AND so.StatusOrderId IN ( 1, 4, 15, 16 )
+			  
           )
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )
+              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )			  
+			  AND COALESCE(DO.IsLastMileReturn,0) = 0
           )
           OR
           (
@@ -123,25 +130,87 @@ BEGIN
            so.OrderDescription 'Description'
     INTO #listGuidesExcluded
     FROM #listGuides lg
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON lg.Guide_Serie = do.Guide_Serie
                AND lg.Guide_Number = do.Guide_Number
-        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId NOT IN ( 1, 4, 15, 16 )
-          )
+              AND (so.StatusOrderId NOT IN ( 1, 4, 15, 16 )
+			))
+          
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+			  )
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+			
           );
+		  
+
+  INSERT INTO #listGuidesExcluded
+     
+    SELECT lg.Guide_Serie,
+           lg.Guide_Number,
+           so.StatusOrderId,
+           so.OrderDescription 'Description'
+    FROM #listGuides lg
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
+            ON lg.Guide_Serie = do.Guide_Serie
+               AND lg.Guide_Number = do.Guide_Number
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK)
+            ON do.StatusOrderId = so.StatusOrderId
+    WHERE (
+             
+               (so.StatusOrderId  IN ( SELECT
+													SO.[StatusOrderId]
+												FROM
+													[dbo].[StatusOrder] SO  WITH(NOLOCK)
+												WHERE
+													[CatCheckpointTypeId] = 3 And RowStatus = 1 ))
+		)
+
+------------------------------------  Validación de estados terminales --------------------------------------------------
+ 
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+		  IF ((SELECT COUNT(1)FROM #listGuidesExcluded) = 0)
+			BEGIN
+			
+			
+			INSERT INTO #listGuidesExcluded(Guide_Serie,Guide_Number,StatusOrderId,Description)			
+				SELECT lg.Guide_Serie,
+           lg.Guide_Number,
+           so.StatusOrderId,
+           so.OrderDescription 'Description'
+    FROM #listGuides lg
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+            ON lg.Guide_Serie = do.Guide_Serie
+               AND lg.Guide_Number = do.Guide_Number
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DOD
+		ON DOD.Guide_Serie = do.Guide_Serie AND DOD.Guide_Number = do.Guide_Number
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder so
+            ON DOD.StatusOrderId = so.StatusOrderId
+    WHERE           
+          (
+              UPPER(@ServiceType) = 'DELIVERY'
+              AND DO.IsLastMileReturn = 1
+			  AND DOD.StatusOrderId IN ( 32 )						
+          )
+         
+			END
 
     CREATE NONCLUSTERED INDEX IX_LGE_SERIE
     ON #listGuidesExcluded (Guide_Serie);
@@ -180,6 +249,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 			ON lst.Guide_Serie = PC.GuideSerieDestination
 				AND lst.Guide_Number = PC.GuideNumberDestination
+				AND PC.FinalActiveDate >= GETDATE()
 				AND PC.RowStatus = 1
     WHERE ISNULL(ord.PriceShippment, 0) = 0
 		AND PC.IdPromoCoupon IS NULL;
@@ -408,7 +478,7 @@ BEGIN
            IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
-        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
+        INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON ppt.GuideSerie = do.Guide_Serie
                AND ppt.GuideNumber = do.Guide_Number;
 
@@ -465,7 +535,7 @@ BEGIN
                        SELECT ' { "Description": "' + ISNULL(br.Description, '') + '", ' + '"Amount": '
                               + CAST(CAST(ISNULL(br.Amount, 0) AS DECIMAL(18, 2)) AS VARCHAR) + ' }, '
                        FROM Cost c
-                           INNER JOIN BreakdownOfPayment br
+                           INNER JOIN BreakdownOfPayment br WITH(NOLOCK)
                                ON c.IdCost = br.IdCost
                        WHERE c.ProductNumber = @ActualGuide
                              AND ABS(br.Amount) > 0
@@ -507,7 +577,7 @@ BEGIN
                                  --'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
                                  --'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
                                  '"StatusOrderId": ' + CAST(ISNULL(lge.StatusOrderId, 0) AS VARCHAR) + ', '
-                                    + '"Description": "' + lge.Description + '" }, '
+                                    + '"Description": "' +'Guía en estado : ' + lge.Description +' , no permite realizar el proceso.' + '" }, '
                              FROM #listGuidesExcluded lge
                              FOR XML PATH('')
                          ),
@@ -531,7 +601,7 @@ BEGIN
                                  --'"GuideSerie": "' + lge.Guide_Serie + '", ' + 
                                  --'"GuideNumber": "' + CAST(lge.Guide_Number AS VARCHAR) + '", ' + 
                                  '"StatusOrderId": ' + CAST(ISNULL(lgne.StatusOrderId, 0) AS VARCHAR) + ', '
-                                    + '"Description": "' + lgne.Description + '" }, '
+                                  + '"Description": "' + lgne.Description + '" }, '
                              FROM #listGuidesNotExist lgne
                              FOR XML PATH('')
                          ),

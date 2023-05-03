@@ -15,6 +15,8 @@ CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
     @Token VARCHAR(MAX) = '21a31fd231as23d1f21ads'
 AS
 BEGIN
+	SET @Phone = (SELECT Phone FROM dbo.SenderReceiver WHERE UniqueCode = @Phone )
+
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;

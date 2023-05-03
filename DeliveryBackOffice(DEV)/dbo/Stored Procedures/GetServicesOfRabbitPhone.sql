@@ -71,12 +71,16 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK)
 				ON
 					srv.ServiceStatusId = CSS.IdServiceStatus
-		WHERE sr.Phone LIKE '%' + @Phone+ '%' 
+		WHERE (sr.Phone LIKE '%' + @Phone + '%'
+				OR
+			  [sr].[UniqueCode] = @Phone)
 
 		-- TABLAS A DEVOLVER
 		-- DATOS DE COURIER
 		SELECT SR.ID , CONCAT( SR.First_Name, ' ',SR.Last_Name) Courier FROM dbo.SenderReceiver sr WITH(NOLOCK)
-		WHERE sr.Phone LIKE '%' + @Phone+ '%' 
+		WHERE (sr.Phone LIKE '%' + @Phone + '%'
+				OR
+			  [sr].[UniqueCode] = @Phone)
 
 		-- DATOS DE SERVICIOS
 		SELECT
@@ -127,7 +131,9 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK)
 				ON
 					srv.ServiceStatusId = CSS.IdServiceStatus
-		WHERE sr.Phone LIKE '%' + @Phone+ '%' 
+		WHERE (sr.Phone LIKE '%' + @Phone + '%'
+				OR
+			  [sr].[UniqueCode] = @Phone)
 		AND spd.SettlementDate IS NULL
 		GROUP BY
 			srv.IdServiceManagement
@@ -205,7 +211,9 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK)
 				ON
 					srv.ServiceStatusId = CSS.IdServiceStatus
-		WHERE sr.Phone LIKE '%' + @Phone+ '%' 
+		WHERE (sr.Phone LIKE '%' + @Phone + '%'
+				OR
+			  [sr].[UniqueCode] = @Phone)
 		and
 		spd.SettlementDate is null
 
@@ -222,7 +230,9 @@ BEGIN
 					sps.TransactionDate  = CONVERT(DATE,GETDATE())
 					AND
 					sps.RowStatus = 1
-		WHERE sr.Phone LIKE '%' + @Phone+ '%' 
+		WHERE (sr.Phone LIKE '%' + @Phone + '%'
+				OR
+			  [sr].[UniqueCode] = @Phone)
 
 		-- Totales de piezas por guía las cuales no han sido liquidadas
 		SELECT DISTINCT
@@ -263,7 +273,9 @@ BEGIN
 					ord.Guide_Serie = dop.GuideSerie
 					AND 
 					ord.Guide_Number = dop.GuideNumber
-		WHERE sr.Phone LIKE '%' + @Phone+ '%' 
+		WHERE (sr.Phone LIKE '%' + @Phone + '%'
+				OR
+			  [sr].[UniqueCode] = @Phone)
 		and
 		spd.SettlementDate is null
 

@@ -182,7 +182,7 @@ BEGIN
                                                   COALESCE(DATEADD(DAY, @DaysToExpiration, dev.DateCreated), ''),
                                                   103
 								) 'ExpirationDate',
-								COALESCE(cov.RouteCode, '') 'Route',
+								'' 'Route',
 								dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json') 'TypeService',
 								COALESCE(CPT.TimePlaName, '') 'Service_Payment',
 								(CASE

@@ -1,4 +1,7 @@
-﻿-- =============================================
+﻿
+
+
+-- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
@@ -17,7 +20,11 @@
 -- Create date: <2022-09-26>
 -- Description:	<Al momento de finalizar el proceso de devolución se debe realizar update en la tabla warehouse al campo Rack_Position, colocarlo como NULL>
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2023-03-20>
+-- Description:	<Validar que guía no este en estado terminal>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
     @Guide_Serie AS VARCHAR(2),   --guide serie
     @Guide_Number AS INT,         --guide number
@@ -34,9 +41,28 @@ BEGIN
     DECLARE @COD DECIMAL(14, 2); -- COD de la guía
     DECLARE @Datetime DATETIME; -- Fecha y hora del último checkpoint
 
+		DECLARE @StatusDescription NVARCHAR(200)= ( Select SO.OrderDescription 
+												From [dbo].[DeliveryOrder] DO With(Nolock) 
+													 INNER JOIN 
+													 [dbo].[StatusOrder] SO With(Nolock)
+												ON DO.StatusOrderId = SO.StatusOrderId
+												Where DO.Guide_Serie = @Guide_Serie And 
+													  DO.Guide_Number = @Guide_Number
+	                                          )
+	DECLARE @IsStatusTerminal int = ISNULL((Select 1 From [dbo].[DeliveryOrder] DO WITH(NOLOCK)       
+                                                            INNER JOIN [dbo].[StatusOrder] SO  WITH(NOLOCK)
+															ON DO.StatusOrderId = SO.StatusOrderId
+											  WHERE SO.CatCheckpointTypeId = 3 AND SO.RowStatus= 1 
+													AND DO.Guide_Serie= @Guide_Serie 
+													And DO.Guide_Number =@Guide_Number 
+														),0)
+																					
+
 
     BEGIN TRANSACTION;
     BEGIN TRY
+
+
         -- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
         SET @Times =
         (
@@ -50,6 +76,10 @@ BEGIN
                       OR StatusOrderId = 14
                   )
         );
+
+			
+IF(@IsStatusTerminal = 0)
+	BEGIN
 
 
         IF (NOT EXISTS
@@ -151,30 +181,56 @@ BEGIN
 								InsertedId BIGINT
 							);
 
-							INSERT INTO 
-								[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-								(
-									[GuideSerie]
-									,[GuideNumber]
-									,[CustomerId]
-									,[StatusOrderId]
-									,[WebhookEndpointId]
-									,[HasNotified]
-									,[TokenCreated]
-									,[DateCreated]
-								)
-							OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-							VALUES
-								(
-									@Guide_Serie
-									,@Guide_Number
-									,@WebhookCustomerId
-									,@GuideCurrentStatus
-									,@CustomerEndpointId
-									,0
-									,@TokenId
-									,GETDATE()
-								)
+							IF( 
+								NOT EXISTS (
+									SELECT 
+										TOP 1 
+											1 
+									FROM 
+										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK) 
+									WHERE 
+										WTQ.GuideSerie = @Guide_Serie 
+										AND 
+										WTQ.GuideNumber = @Guide_Number 
+										AND
+										WTQ.RowStatus = 1
+										AND 
+										WTQ.StatusOrderId IN (
+											SELECT
+												WRBU.StatusOrderId 
+											FROM 
+												[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK) 
+											WHERE 
+												WRBU.CustomerId = @WebhookCustomerId 
+												AND 
+												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
+								) ) )
+							BEGIN
+								INSERT INTO 
+									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+									(
+										[GuideSerie]
+										,[GuideNumber]
+										,[CustomerId]
+										,[StatusOrderId]
+										,[WebhookEndpointId]
+										,[HasNotified]
+										,[TokenCreated]
+										,[DateCreated]
+									)
+								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+								VALUES
+									(
+										@Guide_Serie
+										,@Guide_Number
+										,@WebhookCustomerId
+										,@GuideCurrentStatus
+										,@CustomerEndpointId
+										,0
+										,@TokenId
+										,GETDATE()
+									)
+							END
 						END
 
 					END TRY
@@ -279,7 +335,13 @@ BEGIN
         END;
         ELSE
             SET @ValidateOperation = -3;
-    END TRY
+		END
+     ELSE
+		SET @ValidateOperation = -4
+		
+	
+
+	END TRY
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
                ERROR_MESSAGE() AS 'Description',
@@ -326,6 +388,13 @@ BEGIN
                    'Guías cuyo destino sea un express center no pueden ser entregadas' AS 'Description',
                    @ValidateOperation AS 'NumTransferID';
         END;
+		ELSE IF (@ValidateOperation = -4)
+			BEGIN
+				SELECT			  
+					-4 AS 'StatusCode',
+					'Para operar una guia en este módulo no debe estar en  estado : ['+ @StatusDescription + '] por ser estado Terminal.' AS 'Description',  
+					@ValidateOperation AS 'NumTransferID'
+			END
         ELSE
         BEGIN
             SELECT 0 AS 'StatusCode',

@@ -438,7 +438,7 @@ BEGIN
                 LEFT JOIN dbo.RatebyCustomer rc
                     ON rc.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                        AND rc.RbcRowStatus = 'true'
-                       AND rc.RbcCodeOfReference = NULL
+                       AND rc.RbcCodeOfReference is NULL
                 LEFT JOIN dbo.RatebyCustomer rcv
                     ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                        AND rcv.RbcRowStatus = 1
