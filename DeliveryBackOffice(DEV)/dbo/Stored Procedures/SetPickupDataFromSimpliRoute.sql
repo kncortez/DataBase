@@ -4,6 +4,10 @@
 -- Create date: <2023-04-13>
 -- Description:	<Retorno de datos desde Simpliroute para Recolecciones programadas, cambiando de estado los servicios procesados y generando el manifiesto del servicio y la asociación correspondiente>
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date:	<2023-05-02>
+-- Description:	<Actualizar rowstatus -> 1 en tabla SchedulePickup>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetPickupDataFromSimpliRoute]
 		@ServicesTable TblExtPlatSimpliroutePickup READONLY,
 		@ExternalPlatform INT,
@@ -78,6 +82,7 @@ BEGIN
 			-- MARCA COMO ASIGNADOS LOS REGISTROS EN LA TABLA SCHEDULE PICKUP ASOCIADOS AL LISTADO DE SERVICIOS 
 			UPDATE		[SP]
 			SET			[AssigmentStatus] = 1,
+						[RowStatus] = 1,
 						[DateUpdated] = SYSDATETIME(),
 						[TokenUpdated] = @Token
 			FROM		[dbo].[SchedulePickup] SP
