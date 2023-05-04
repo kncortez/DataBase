@@ -9,11 +9,14 @@
     [DateCreated]        DATETIME       NOT NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
     [DateUpdated]        DATETIME       NULL,
+    [ReportPhones]       NVARCHAR (MAX) NULL,
     PRIMARY KEY CLUSTERED ([IdLinehaulCoverage] ASC),
     CONSTRAINT [FK_LinehaulCoverage_OriginHubDestiny] FOREIGN KEY ([HubDestinyId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulCoverage_OriginHubOrigin] FOREIGN KEY ([HubOriginId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_LinehaulCoverage_Route] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute])
 );
+
+
 
 
 GO
@@ -58,4 +61,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de coberturas de las rutas de linehauls.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulCoverage';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Arreglo de números de telefonos separados por comas a donde se enviarán notificaciones de reportes linehauls.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulCoverage', @level2type = N'COLUMN', @level2name = N'ReportPhones';
 

@@ -4,89 +4,399 @@
 -- Description:	<SP para obtener datos y pintarlos en grid de modulo de impresion y visor de manifiestos de Linehauls>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetManifestLinehauls]
-@DateFilter AS DATE = '',
-@Station INT
+
+	@DateFilter AS DATE = '',
+	@InternalUser AS BIGINT
 
 AS
+BEGIN
 
-	BEGIN
-SELECT DISTINCT lrp.IdLinehaulRoutePreparation, 
-	cr.CodeRoute, 
-	IIF((lrp.CatVehicleId IS NULL), lrp.VehicleID, cv.CodeName) CodeVehicle,
-	IIF((lrp.SenderReceiverId IS NULL), lrp.DriverName, sr.First_Name+ ' '+sr.Last_Name) Courier,
-	cls.StatusName,
-	cls.StatusDescription,
-	lrp.DateCreated, 
-	lrp.DateLinehaulRoutePreparation,
-	lrp.ContainerQuantity,
-	(select sum(lrpc2.GuideQuantity) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
-	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
-	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
-	inner join Container ctn2 WITH (NOLOCK)
-	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 1 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalGuideNoPiso,
+	DECLARE @RegisterUserByInternal BIGINT;
+	SET @RegisterUserByInternal = 
+	(
+		SELECT 
+			TOP (1) 
+				[IU].[RegisterUserID] 
+		FROM 
+			[DeliveryBackOffice].[dbo].[InternalUser] IU  WITH(NOLOCK) 
+		WHERE
+			[IU].[IdUser] = @InternalUser
+	);
 
-	(select top 1 ((sum(lrpc2.ColdPieceQuantity))+(sum(lrpc2.DryPieceQuantity))) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
-	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
-	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
-	inner join Container ctn2 WITH (NOLOCK)
-	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 1 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalPiecesNoPiso,
+	-- Linehauls origen
+	SELECT 
+		DISTINCT 
+			LRP.IdLinehaulRoutePreparation, 
+			CR.CodeRoute, 
+			IIF((LRP.CatVehicleId IS NULL), LRP.VehicleID, CV.CodeName) CodeVehicle,
+			IIF((LRP.SenderReceiverId IS NULL), LRP.DriverName, SR.First_Name+ ' '+SR.Last_Name) Courier,
+			CLS.StatusName,
+			CLS.StatusDescription,
+			LRP.DateCreated, 
+			LRP.[EndDateLinehaulRoutePreparation],
+			LRP.ContainerQuantity,
+			(
+				SELECT
+					SUM(LRPC2.GuideQuantity) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+						ON 
+							LRPC2.ContainerId = CTN2.IdContainer 
+					WHERE 
+						CTN2.CatTypeContainerId = 1 
+						AND 
+						CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+						AND 
+						LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+						AND 
+						LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalGuideNoPiso,
+			(
+				SELECT 
+					TOP (1) 
+						((SUM(LRPC2.ColdPieceQuantity))+(SUM(LRPC2.DryPieceQuantity))) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+						ON 
+							LRPC2.ContainerId = CTN2.IdContainer 
+				WHERE 
+					CTN2.CatTypeContainerId = 1 
+					AND 
+					CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+					AND 
+					LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+					AND 
+					LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalPiecesNoPiso,
+			(
+				SELECT 
+					SUM(LRPC2.GuideQuantity) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+						ON 
+							LRPC2.ContainerId = CTN2.IdContainer 
+					WHERE 
+						CTN2.CatTypeContainerId = 2 
+						AND 
+						CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+						AND 
+						LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+						AND 
+						LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalGuidePiso,
+			(
+				SELECT 
+					TOP (1) 
+						((SUM(LRPC2.ColdPieceQuantity))+(SUM(LRPC2.DryPieceQuantity))) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+					ON 
+						LRPC2.ContainerId = CTN2.IdContainer 
+					WHERE 
+						CTN2.CatTypeContainerId = 2 
+						AND 
+						CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+						AND 
+						LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+						AND 
+						LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalPiecesPiso,
+			(
+				SELECT 
+					SUM(LRPCD.GuideDryPieceTotal) - SUM(LRPCD.DryPieceQuantity)
+			) AS DifPiecesDry, 
+			(
+				SELECT 
+					SUM(LRPCD.GuideColdPieceTotal) - SUM(LRPCD.ColdPieceQuantity)
+			) AS DifPiecesCold,
+			MAX([LRS].[DateCreated]) [SettlementStartDate],
+			MAX([LRS].[DateUpdated]) [SettlementFinishDate],
+			CAST(1 AS BIT) [IsOriginLinehaul]
+	FROM 
+	[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[CatRoute] CR WITH (NOLOCK)
+		ON 
+			LRP.CatRouteId = CR.IdRoute
+	INNER JOIN
+		[DeliveryBackOffice].[dbo].[LinehaulCoverage] LC  WITH(NOLOCK) 
+		ON
+			[LC].[CatRouteId] = [CR].[IdRoute]
+	INNER JOIN
+		[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLBU  WITH(NOLOCK) 
+		ON
+			[LC].[HubOriginId] = [HLBU].[HubLogisticId]
+			AND
+			[HLBU].[UserId] = @RegisterUserByInternal
+			AND
+			[HLBU].[RowStatus] = 1
+	LEFT JOIN 
+		[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH (NOLOCK)
+		ON 
+			LRP.CatVehicleId = CV.IdVehicle
+	LEFT JOIN 
+		[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH (NOLOCK)
+		ON 
+			LRP.SenderReceiverId = SR.ID
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[CatLinehaulStatus] CLS WITH (NOLOCK)
+		ON 
+			LRP.CatLinehaulStatusId = CLS.IdCatLinehaulStatus
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+		ON 
+			LRP.IdLinehaulRoutePreparation = LRPC.LinehaulRoutePreparationId
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[Container] CTN WITH (NOLOCK)
+		ON 
+			LRPC.ContainerId = CTN.IdContainer 
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[CatTypeContainer] CTC WITH (NOLOCK)
+		ON 
+			CTN.CatTypeContainerId = CTC.IdCatTypeContainer
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+		ON 
+			LRPC.IdLinehaulRoutePreparationContainer = LRPCD.LinehaulRoutePreparationContainerId
+	LEFT JOIN 
+		[DeliveryBackOffice].[dbo].[LinehaulRouteSettlement] LRS  WITH(NOLOCK) 
+		ON 
+			[LRS].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
+	WHERE 
+		CONVERT(DATE, LRP.DateCreated) = @DateFilter
+		AND 
+		LRPCD.RowStatus = 1
+	GROUP BY
+		LRP.IdLinehaulRoutePreparation, 
+		[LRP].[StationDispatchedId],
+		CR.CodeRoute, 
+		LRP.CatVehicleId,
+		LRP.VehicleID,
+		LRP.SenderReceiverId,
+		LRP.DriverName,
+		CV.CodeName, 
+		SR.First_Name, 
+		SR.Last_Name, 
+		CLS.StatusName, 
+		CLS.StatusDescription,
+		LRP.DateCreated, 
+		LRP.[EndDateLinehaulRoutePreparation],
+		LRP.ContainerQuantity,
+		LRP.GuideQuantity,
+		LRP.ColdPieceQuantity,
+		LRP.DryPieceQuantity
 
-	(select sum(lrpc2.GuideQuantity) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
-	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
-	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
-	inner join Container ctn2 WITH (NOLOCK)
-	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 2 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalGuidePiso,
+	-- Linehauls destino
+	SELECT 
+		DISTINCT 
+			LRP.IdLinehaulRoutePreparation, 
+			CR.CodeRoute, 
+			IIF((LRP.CatVehicleId IS NULL), LRP.VehicleID, CV.CodeName) CodeVehicle,
+			IIF((LRP.SenderReceiverId IS NULL), LRP.DriverName, SR.First_Name+ ' '+SR.Last_Name) Courier,
+			CLS.StatusName,
+			CLS.StatusDescription,
+			LRP.DateCreated, 
+			LRP.[EndDateLinehaulRoutePreparation],
+			LRP.ContainerQuantity,
+			(
+				SELECT
+					SUM(LRPC2.GuideQuantity) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+						ON 
+							LRPC2.ContainerId = CTN2.IdContainer 
+					WHERE 
+						CTN2.CatTypeContainerId = 1 
+						AND 
+						CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+						AND 
+						LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+						AND 
+						LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalGuideNoPiso,
+			(
+				SELECT 
+					TOP (1) 
+						((SUM(LRPC2.ColdPieceQuantity))+(SUM(LRPC2.DryPieceQuantity))) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+						ON 
+							LRPC2.ContainerId = CTN2.IdContainer 
+				WHERE 
+					CTN2.CatTypeContainerId = 1 
+					AND 
+					CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+					AND 
+					LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+					AND 
+					LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalPiecesNoPiso,
+			(
+				SELECT 
+					SUM(LRPC2.GuideQuantity) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+						ON 
+							LRPC2.ContainerId = CTN2.IdContainer 
+					WHERE 
+						CTN2.CatTypeContainerId = 2 
+						AND 
+						CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+						AND 
+						LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+						AND 
+						LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalGuidePiso,
+			(
+				SELECT 
+					TOP (1) 
+						((SUM(LRPC2.ColdPieceQuantity))+(SUM(LRPC2.DryPieceQuantity))) 
+				FROM 
+					[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP2 WITH (NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC2 WITH (NOLOCK)
+						ON 
+							LRP2.IdLinehaulRoutePreparation = LRPC2.LinehaulRoutePreparationId
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[Container] CTN2 WITH (NOLOCK)
+					ON 
+						LRPC2.ContainerId = CTN2.IdContainer 
+					WHERE 
+						CTN2.CatTypeContainerId = 2 
+						AND 
+						CONVERT(DATE, LRP2.DateCreated) = @DateFilter
+						AND 
+						LRP2.StationDispatchedId = [LRP].[StationDispatchedId] 
+						AND 
+						LRP2.IdLinehaulRoutePreparation = LRP.IdLinehaulRoutePreparation
+			) AS TotalPiecesPiso,
+			(
+				SELECT 
+					SUM(LRPCD.GuideDryPieceTotal) - SUM(LRPCD.DryPieceQuantity)
+			) AS DifPiecesDry, 
+			(
+				SELECT 
+					SUM(LRPCD.GuideColdPieceTotal) - SUM(LRPCD.ColdPieceQuantity)
+			) AS DifPiecesCold,
+			MAX([LRS].[DateCreated]) [SettlementStartDate],
+			MAX([LRS].[DateUpdated]) [SettlementFinishDate],
+			CAST(0 AS BIT) [IsOriginLinehaul]
+	FROM 
+	[DeliveryBackOffice].[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[CatRoute] CR WITH (NOLOCK)
+		ON 
+			LRP.CatRouteId = CR.IdRoute
+	INNER JOIN
+		[DeliveryBackOffice].[dbo].[LinehaulCoverage] LC  WITH(NOLOCK) 
+		ON
+			[LC].[CatRouteId] = [CR].[IdRoute]
+	LEFT JOIN 
+		[DeliveryBackOffice].[dbo].[CatVehicle] CV WITH (NOLOCK)
+		ON 
+			LRP.CatVehicleId = CV.IdVehicle
+	LEFT JOIN 
+		[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH (NOLOCK)
+		ON 
+			LRP.SenderReceiverId = SR.ID
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[CatLinehaulStatus] CLS WITH (NOLOCK)
+		ON 
+			LRP.CatLinehaulStatusId = CLS.IdCatLinehaulStatus
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+		ON 
+			LRP.IdLinehaulRoutePreparation = LRPC.LinehaulRoutePreparationId
+	INNER JOIN
+		[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLBU  WITH(NOLOCK) 
+		ON
+			[LC].[HubDestinyId] = [HLBU].[HubLogisticId]
+			AND
+			[LRPC].[HubDestinyId] = [HLBU].[HubLogisticId]
+			AND
+			[HLBU].[UserId] = @RegisterUserByInternal
+			AND
+			[HLBU].[RowStatus] = 1
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[Container] CTN WITH (NOLOCK)
+		ON 
+			LRPC.ContainerId = CTN.IdContainer 
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[CatTypeContainer] CTC WITH (NOLOCK)
+		ON 
+			CTN.CatTypeContainerId = CTC.IdCatTypeContainer
+	INNER JOIN 
+		[DeliveryBackOffice].[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+		ON 
+			LRPC.IdLinehaulRoutePreparationContainer = LRPCD.LinehaulRoutePreparationContainerId
+	LEFT JOIN 
+		[DeliveryBackOffice].[dbo].[LinehaulRouteSettlement] LRS  WITH(NOLOCK) 
+		ON 
+			[LRS].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
+	WHERE 
+		CONVERT(DATE, LRP.DateCreated) = @DateFilter
+		AND 
+		LRPCD.RowStatus = 1
+	GROUP BY
+		LRP.IdLinehaulRoutePreparation, 
+		[LRP].[StationDispatchedId],
+		CR.CodeRoute, 
+		LRP.CatVehicleId,
+		LRP.VehicleID,
+		LRP.SenderReceiverId,
+		LRP.DriverName,
+		CV.CodeName, 
+		SR.First_Name, 
+		SR.Last_Name, 
+		CLS.StatusName, 
+		CLS.StatusDescription,
+		LRP.DateCreated, 
+		LRP.[EndDateLinehaulRoutePreparation],
+		LRP.ContainerQuantity,
+		LRP.GuideQuantity,
+		LRP.ColdPieceQuantity,
+		LRP.DryPieceQuantity
 
-	(select top 1 ((sum(lrpc2.ColdPieceQuantity))+(sum(lrpc2.DryPieceQuantity))) from LinehaulRoutePreparation lrp2 WITH (NOLOCK)
-	inner join LinehaulRoutePreparationContainer lrpc2 WITH (NOLOCK)
-	on lrp2.IdLinehaulRoutePreparation = lrpc2.LinehaulRoutePreparationId
-	inner join Container ctn2 WITH (NOLOCK)
-	on lrpc2.ContainerId = ctn2.IdContainer where ctn2.CatTypeContainerId = 2 and CONVERT(DATE, lrp2.DateCreated) = @DateFilter
-			AND lrp2.StationDispatchedId = @Station AND lrp2.IdLinehaulRoutePreparation = lrp.IdLinehaulRoutePreparation) AS TotalPiecesPiso,
-	(select sum(lrpcd.GuideDryPieceTotal) - sum(lrpcd.DryPieceQuantity)) AS DifPiecesDry, 
-	(select sum(lrpcd.GuideColdPieceTotal) - sum(lrpcd.ColdPieceQuantity)) AS DifPiecesCold
-		FROM LinehaulRoutePreparation lrp WITH (NOLOCK)
-		INNER JOIN CatRoute cr WITH (NOLOCK)
-		ON lrp.CatRouteId = cr.IdRoute
-		LEFT JOIN CatVehicle cv WITH (NOLOCK)
-		ON lrp.CatVehicleId = cv.IdVehicle
-		LEFT JOIN SenderReceiver sr WITH (NOLOCK)
-		ON lrp.SenderReceiverId = sr.ID
-		INNER JOIN CatLinehaulStatus cls WITH (NOLOCK)
-		ON lrp.CatLinehaulStatusId = cls.IdCatLinehaulStatus
-		INNER JOIN LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
-		ON lrp.IdLinehaulRoutePreparation = lrpc.LinehaulRoutePreparationId
-		INNER JOIN Container ctn WITH (NOLOCK)
-		ON lrpc.ContainerId = ctn.IdContainer 
-		INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
-		ON ctn.CatTypeContainerId = ctc.IdCatTypeContainer
-		INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
-		ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
-			WHERE CONVERT(DATE, lrp.DateCreated) = @DateFilter
-			AND lrp.StationDispatchedId = @Station
-			AND lrpcd.RowStatus = 1
-					Group by lrp.IdLinehaulRoutePreparation, 
-					 cr.CodeRoute, 
-					 lrp.CatVehicleId,
-					 lrp.VehicleID,
-					 lrp.SenderReceiverId,
-					 lrp.DriverName,
-					 cv.CodeName, 
-					 sr.First_Name, 
-					 sr.Last_Name, 
-					 cls.StatusName, 
-					 cls.StatusDescription,
-					 lrp.DateCreated, 
-					 lrp.DateLinehaulRoutePreparation,
-					 lrp.ContainerQuantity,
-					 lrp.GuideQuantity,
-					 lrp.ColdPieceQuantity,
-					 lrp.DryPieceQuantity
-
-
-
-	
-	END
+END
