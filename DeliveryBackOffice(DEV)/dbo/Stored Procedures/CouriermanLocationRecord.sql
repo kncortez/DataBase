@@ -6,10 +6,10 @@
 CREATE PROCEDURE [dbo].[CouriermanLocationRecord] 
 	@CourierIdentifier   AS INT,
     @CourierLatitude AS VARCHAR,
-    @CourierLength AS INT,
+    @CourierLength AS VARCHAR,
     @LocationAccuracy  AS VARCHAR
 AS
-BEGIN
+BEGIN   
 	
 
 	BEGIN TRANSACTION
