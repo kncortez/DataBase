@@ -1497,6 +1497,7 @@
     <Build Include="dbo\User Defined Types\TblListGuidePiece.sql" />
     <Build Include="dbo\Tables\CatContainerSubtype.sql" />
     <Build Include="dbo\Tables\SenderReceiverLocationLog.sql" />
+    <Build Include="dbo\Stored Procedures\CouriermanLocationRecord.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
