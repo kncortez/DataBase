@@ -15,6 +15,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'usuario que actualiza el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiverLocationLog', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -60,5 +62,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del cour
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del log', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiverLocationLog', @level2type = N'COLUMN', @level2name = N'IdSenderReceiverLocationLog';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del bitacora de registro de ubicación de courierman', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiverLocationLog', @level2type = N'COLUMN', @level2name = N'IdSenderReceiverLocationLog';
+
+
 
