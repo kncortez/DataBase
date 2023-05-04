@@ -700,6 +700,36 @@ BEGIN
 
             END;
         END;
+		
+		-- Proceso para registro de tiempo estimado de entrega
+		-- Andrés Ruíz - 2023-04-18
+		UPDATE
+			[DO]
+		SET
+			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]
+				(
+					(CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Department],''))) <> '' THEN [DO].[Sender_Department] ELSE [VPC].[Department] END)
+					, (CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Town],''))) <> '' THEN [DO].[Sender_Town] ELSE [VPC].[Town] END)
+					, NULL
+					, [DO].[Receiver_Department]
+					, [DO].[Receiver_Town]
+					, NULL
+					, NULL
+				)
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			INNER JOIN
+				[#GuideTable] GT
+				ON
+					[DO].[Guide_Serie] = [GT].[Guide_Serie]
+					AND
+					[DO].[Guide_Number] = [GT].[Guide_Number]
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+				ON
+					[DO].[Sender_ID] = [VPC].[CodeOfReference]
+		------------------------------------------------------
+
 		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
 		INNER JOIN @CorrelativeTable ct
 		ON do.Guide_Number = ct.Guide_Number
