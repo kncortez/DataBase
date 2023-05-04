@@ -1507,6 +1507,9 @@
     <Build Include="dbo\Tables\SenderReceiverLoginToken.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierLoginToken.sql" />
     <Build Include="dbo\Stored Procedures\spSR_getAllPreparationRoutesInfo.sql" />
+    <Build Include="dbo\Tables\NoLaborCalendar.sql" />
+    <Build Include="dbo\Tables\DayForDeliveryCoverage.sql" />
+    <Build Include="dbo\Functions\fn_GetGuideDeliveryETA.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
