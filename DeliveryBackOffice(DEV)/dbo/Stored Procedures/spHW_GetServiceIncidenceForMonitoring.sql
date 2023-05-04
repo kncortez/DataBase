@@ -1,4 +1,4 @@
-﻿
+
 -- =============================================
 -- Author:		<Andrés, Ruíz>
 -- Create date: <2023-02-17>
@@ -107,8 +107,6 @@ DECLARE @OPWebRoleId INT =
 	GROUP BY
 		DSC.HeaderCode
 
-		print '@SACWebRoleId'
-		PRINT @SACWebRoleId
 	-- SAC Web
 	IF
 	(

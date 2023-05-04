@@ -427,7 +427,16 @@ BEGIN
                                                                 dbo.fnt_String_Escape(/*concat(*/
                                                                                          ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Sender_Address, DOR.Receiver_Address)), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, VPC.Address, VPr.Address)), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/
                                                                                          'json'
-                                                                                     )) + '",' + '"Phone":"'
+                                                                                     )) + '",' 
+														  + '"SenderPhone":"' + 
+														  (
+															CASE
+																WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 THEN [DOR].[Sender_Phone]
+																ELSE ''
+															END
+														  )
+														  + '",'
+														  + '"Phone":"'
                                                           + ISNULL(
 																	IIF(
 																		DOR.IsLastMileReturn = 1,
