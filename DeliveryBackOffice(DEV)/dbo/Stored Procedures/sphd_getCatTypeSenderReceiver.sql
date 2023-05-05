@@ -9,5 +9,7 @@ BEGIN
 	SELECT 
 		IdCatTypeSenderReceiver IdValue,
 		TypeName NameValue
-	FROM DBO.CatTypeSenderReceiver;
+	FROM DBO.CatTypeSenderReceiver CTSR  WITH(NOLOCK) 
+	WHERE [CTSR].[RowStatus] = 1
+	ORDER BY [CTSR].[TypeName] ASC;
 END
