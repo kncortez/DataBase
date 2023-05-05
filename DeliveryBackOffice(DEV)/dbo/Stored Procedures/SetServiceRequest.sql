@@ -79,14 +79,25 @@ BEGIN
 	IF EXISTS (SELECT
 				1
 			FROM @TblDeliveryOrders tdo
-			LEFT JOIN Township t
+			LEFT JOIN Township t WITH(NOLOCK)
 				ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
 				AND t.TownshipStatus = 1
-			LEFT JOIN Province p
+			LEFT JOIN Province p WITH(NOLOCK)
 				ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
 				AND p.ProvinceStatus = 1
 				AND t.IdProvince = p.IdProvince
-			WHERE t.IdTownship IS NULL OR p.IdProvince IS NULL)
+			OUTER APPLY (SELECT
+					t.IdTownship
+				FROM Township t WITH(NOLOCK)
+				INNER JOIN Province p WITH(NOLOCK)
+					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+					AND p.ProvinceStatus = 1
+					AND t.IdProvince = p.IdProvince
+				WHERE RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+				AND t.TownshipStatus = 1) b
+			WHERE (t.IdTownship IS NULL
+			OR p.IdProvince IS NULL)
+			AND b.IdTownship IS NULL)
 		BEGIN
 
 		SELECT
@@ -94,15 +105,25 @@ BEGIN
 		   ,CONCAT('El municipio ', (SELECT TOP 1
 					CONCAT(' (', tdo.Receiver_Town, ')')
 				FROM @TblDeliveryOrders tdo
-				LEFT JOIN Township t
+				LEFT JOIN Township t WITH(NOLOCK)
 					ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
 					AND t.TownshipStatus = 1
-				LEFT JOIN Province p
+				LEFT JOIN Province p WITH(NOLOCK)
 					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
 					AND p.ProvinceStatus = 1
 					AND t.IdProvince = p.IdProvince
-				WHERE t.IdTownship IS NULL
+				OUTER APPLY (SELECT
+						t.IdTownship
+					FROM Township t WITH(NOLOCK)
+					INNER JOIN Province p WITH(NOLOCK)
+						ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+						AND p.ProvinceStatus = 1
+						AND t.IdProvince = p.IdProvince
+					WHERE RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+					AND t.TownshipStatus = 1) b
+				WHERE (t.IdTownship IS NULL
 				OR p.IdProvince IS NULL)
+				AND b.IdTownship IS NULL)
 			, ' no se ha encontrado o no es un municipio válido.') AS 'Description'
 
 		RETURN
