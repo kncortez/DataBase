@@ -10,6 +10,7 @@
     [DateToSend]              DATE           NOT NULL,
     [IsSent]                  BIT            DEFAULT ((0)) NOT NULL,
     [RowStatus]               BIT            DEFAULT ((1)) NOT NULL,
+    [AttemptsRemaining]       INT            CONSTRAINT [DF_NotificationQueue_AttemptsRemaining] DEFAULT ((3)) NOT NULL,
     [TokenCreated]            NVARCHAR (50)  NOT NULL,
     [DateCreated]             DATETIME       NOT NULL,
     [TokenUpdated]            NVARCHAR (50)  NULL,
@@ -84,4 +85,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para registro de cola de notificaciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NotificationQueue';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo que indica los intentos de envío que le quedan a la notificación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NotificationQueue', @level2type = N'COLUMN', @level2name = N'AttemptsRemaining';
 

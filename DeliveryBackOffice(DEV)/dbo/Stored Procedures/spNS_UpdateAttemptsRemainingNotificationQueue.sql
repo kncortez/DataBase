@@ -1,20 +1,18 @@
 ﻿-- =============================================
 -- Author:		<Jerson Ochoa>
--- Create date: <04-05-2023>
--- Description:	<Set a notification queue item as sent>
+-- Create date: <08-05-2023>
+-- Description:	<Update attempts remaining from Notification Queue>
 -- =============================================
-CREATE PROCEDURE [dbo].[spNS_SetNotificationsQueueItemAsSent]
-	@NotificationQueueId AS INT, 
-	@Token AS NVARCHAR(100)
+CREATE PROCEDURE [dbo].[spNS_UpdateAttemptsRemainingNotificationQueue]
+	@NotificationQueueId AS INT,
+	@Token AS NVARCHAR(50)
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRANSACTION
 	BEGIN TRY
-		
 		UPDATE	[dbo].[NotificationQueue]
-		SET		[IsSent] = 1,
-				[AttemptsRemaining] = [AttemptsRemaining] - 1,
+		SET		[AttemptsRemaining] = [AttemptsRemaining] - 1,
 				[TokenUpdated] = @Token,
 				[DateUpdated] = SYSDATETIME()
 		WHERE	[IdNotificationQueue] = @NotificationQueueId;
@@ -34,4 +32,5 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 	END CATCH
+    
 END
