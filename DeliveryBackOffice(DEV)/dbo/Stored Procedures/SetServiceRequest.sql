@@ -780,6 +780,72 @@ BEGIN
     BEGIN
         COMMIT TRANSACTION;
 
+			---Nuevos datos para consumir nuevo formato guía
+  	DECLARE @FranchiseVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @IndividualWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ParserSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+	)
+
+
+  --Fin Nuevos datos para consumir nuevo formato guía
+
+
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 
@@ -831,7 +897,31 @@ BEGIN
 				)'Icon'
         --FIN MODIFICACIÓN
 
-		, D.TypeService  'TypeService'
+		, D.TypeService  'TypeService',
+		(FORMAT((Select DeliveryETA from DeliveryOrder WITH(NOLOCK) where Manifest_Number = @ManifestNumber), 'ddMM'))'DeliveryETA',
+				(
+					CASE
+						WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
+						WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
+						WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
+						WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
+						ELSE 'CRÉDITO'
+					END
+				)'WayToPayDescription',
+
+			(
+					CASE
+						WHEN vpct.[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+						WHEN vpct.[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN D.[CatSystemId] = @IndividualWebSys THEN 'WEB'
+						WHEN D.[CatSystemId] = @ExpressWebSys THEN 'EXC'
+						WHEN D.[CatSystemId] = @CorporateWebSys THEN 'COR'
+						WHEN D.[CatSystemId] = @ParserSys THEN 'PAR'
+						WHEN D.[CatSystemId] IS NULL THEN 'API'
+						ELSE 'API'
+					END
+			)'GuideOrigin'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
@@ -843,6 +933,12 @@ BEGIN
 				AND MMBSHP.CatMembershipStatusId = @StatusPackage
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
+			LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
+				ON DOPD.GuideNumber = D.Guide_Number
+			LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
+				ON vpct.CodeOfReference = D.Sender_ID
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
