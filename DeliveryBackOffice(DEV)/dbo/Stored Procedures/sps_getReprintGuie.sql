@@ -14,6 +14,16 @@ BEGIN
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
 	)
+	DECLARE @ExpressVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	)
 	DECLARE @IndividualWebSys INT =
 	(
 		SELECT 
@@ -539,10 +549,12 @@ BEGIN
 																	(
 																		CASE
 																			WHEN [vp].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+																			WHEN [vp].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+																			WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
 																			WHEN [dev].[CatSystemId] = @IndividualWebSys THEN 'WEB'
 																			WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
-																			WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'CRP'
-																			WHEN [dev].[CatSystemId] = @ParserSys THEN 'CRP'
+																			WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'COR'
+																			WHEN [dev].[CatSystemId] = @ParserSys THEN 'PAR'
 																			WHEN [dev].[CatSystemId] IS NULL THEN 'API'
 																			ELSE 'API'
 																		END
@@ -565,6 +577,8 @@ BEGIN
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+									  ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
                                   LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
                                       ON ctm.IdCustomer = dev.IdCustomer
                                   LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)
