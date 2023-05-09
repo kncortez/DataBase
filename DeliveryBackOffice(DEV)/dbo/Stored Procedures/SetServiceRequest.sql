@@ -908,7 +908,7 @@ BEGIN
 			LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
 				ON vpct.CodeOfReference = D.Sender_ID
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
-				ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
+				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
