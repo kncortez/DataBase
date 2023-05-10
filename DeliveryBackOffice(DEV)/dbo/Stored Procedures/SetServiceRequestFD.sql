@@ -679,7 +679,7 @@ BEGIN
 		LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
             ON vpct.CodeOfReference = D.Sender_ID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpcti  WITH(NOLOCK) 
-		    ON [vpcti].[CodeOfReference] = [vpcti].[OriginSenderId]
+		    ON [vpcti].[CodeOfReference] = [D].[OriginSenderId]
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END
