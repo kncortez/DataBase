@@ -370,6 +370,7 @@
     <Build Include="dbo\Functions\splitstring.sql" />
     <Build Include="dbo\Functions\SplitStrings.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
+    <Build Include="dbo\Functions\fn_get_diff_minutes_without_holidays.sql" />
     <Build Include="dbo\Stored Procedures\spgConfirmAccount.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetRolesbyUserId.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPCouponData.sql" />
