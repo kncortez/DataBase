@@ -44,7 +44,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @TblVPDestination AS TblVPDestination READONLY,
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT, --1 Insert Into , 2 Update,
-	@CatBusinessSegmentId INT = NULL
+	@CatBusinessSegmentId INT = NULL,
+	@AllowScheduledPickups AS BIT = NULL
 
 AS
 BEGIN
@@ -103,7 +104,8 @@ BEGIN
 						SaleChannelId,
 						ExcludePriceShippingCOD,
 						ExcludeCommissionCOD,
-						CatBusinessSegmentId
+						CatBusinessSegmentId,
+						AllowScheduledPickups
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -134,7 +136,8 @@ BEGIN
 						,@IdKindOfVPClient,
 						@CODExcludedPriceShipping,
 						@CODExcludedCommission,
-						@CatBusinessSegmentId
+						@CatBusinessSegmentId,
+						ISNULL(@AllowScheduledPickups, 1)
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -373,7 +376,8 @@ BEGIN
 						[SaleChannelId] = @IdKindOfVPClient,
 						[ExcludePriceShippingCOD] = @CODExcludedPriceShipping,
 						[ExcludeCommissionCOD] = @CODExcludedCommission,
-						[CatBusinessSegmentId] = @CatBusinessSegmentId
+						[CatBusinessSegmentId] = @CatBusinessSegmentId,
+						[AllowScheduledPickups] = @AllowScheduledPickups
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
@@ -479,7 +483,7 @@ BEGIN
                                 Freq.[VisitsOnFriday] = tblfreq.[VisitsOnFriday],
                                 Freq.[VisitsOnSaturday] = tblfreq.[VisitsOnSaturday],
                                 Freq.[HubLogisticID] = tblfreq.[HubLogisticID],
-                                Freq.[RowStatus] = IIF(@RowStatus = 0, 0, tblfreq.[RowStatus]),
+                                Freq.[RowStatus] = IIF(@RowStatus = 0 OR @AllowScheduledPickups = 0, 0, tblfreq.[RowStatus]),
                                 Freq.[TokenUpdated] = @Token,
                                 Freq.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointFrequency Freq
@@ -572,7 +576,7 @@ BEGIN
 								--Edicion de la ruta inhabilitada
                                 --VPIti.[RouteCodeID] = CASE WHEN tblIti.RouteCodeID <= 0 THEN VPIti.[RouteCodeID] ELSE tblIti.RouteCodeID END ,
                                 VPIti.[HubLogisticID] = tblIti.HubLogisticID,
-                                VPIti.[RowStatus] = IIF(@RowStatus = 0, 0, tblIti.RowStatus),
+                                VPIti.[RowStatus] = IIF(@RowStatus = 0 OR @AllowScheduledPickups = 0, 0, tblIti.RowStatus),
                                 VPIti.[TokenUpdated] = @Token,
                                 VPIti.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointItinerary VPIti
@@ -588,7 +592,7 @@ BEGIN
 								PRINT 'Se actualizaron VisitPointItinerary -  @@ROWCOUNT'
 										
                             UPDATE VPIti
-                            SET VPIti.[RowStatus] = IIF(@RowStatus = 0, 0, tblIti.RowStatus),
+                            SET VPIti.[RowStatus] = 0,
                                 VPIti.[TokenUpdated] = @Token,
                                 VPIti.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointItinerary VPIti

@@ -26,7 +26,8 @@ BEGIN
 			[CustomerID],
 			IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
 			IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
-			vpc.StatusClient
+			vpc.StatusClient,
+			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups'
 		from DeliveryBackOffice.dbo.VisitPointClient vpc
 		where vpc.CustomerID = @IdCustomer
 		--and vpc.StatusClient = 'TRUE'
@@ -40,7 +41,8 @@ BEGIN
 			IIF(vpc.StatusClient = 0, '[INACTIVO] ', '') + Cast([CodeOfReference] as varchar) + ' ' +  [DescriptionOfClient]   [NameValue]  ,
 			[CustomerID]														 [IdFilter],
 			IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
-			IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission
+			IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
+			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups'
 		from DeliveryBackOffice.dbo.VisitPointClient vpc
 		where (@IdCustomer = -1 or vpc.CustomerID = @IdCustomer)
 		and (@IdVisitPoint = -1 OR vpc.CodeOfReference = @IdVisitPoint)
