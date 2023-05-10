@@ -370,6 +370,7 @@
     <Build Include="dbo\Functions\splitstring.sql" />
     <Build Include="dbo\Functions\SplitStrings.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
+    <Build Include="dbo\Functions\fn_get_diff_minutes_without_holidays.sql" />
     <Build Include="dbo\Stored Procedures\spgConfirmAccount.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetRolesbyUserId.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPCouponData.sql" />
@@ -1510,6 +1511,8 @@
     <Build Include="dbo\Tables\NoLaborCalendar.sql" />
     <Build Include="dbo\Tables\DayForDeliveryCoverage.sql" />
     <Build Include="dbo\Functions\fn_GetGuideDeliveryETA.sql" />
+    <Build Include="dbo\Stored Procedures\SetMicroZones.sql" />
+    <Build Include="dbo\User Defined Types\TblMicroZones.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

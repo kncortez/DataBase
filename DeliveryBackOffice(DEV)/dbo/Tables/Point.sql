@@ -8,8 +8,11 @@
     [DateCreated]      DATETIME        NOT NULL,
     [TokenUpdated]     NVARCHAR (50)   NULL,
     [DateUpdated]      DATETIME        NULL,
+    [PointFlag]        BIT             DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([IdPoint] ASC)
 );
+
+
 
 
 GO
@@ -50,4 +53,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Point', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para indicar que pertenece a una geocerca no actualizable.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Point', @level2type = N'COLUMN', @level2name = N'PointFlag';
 

@@ -11,6 +11,7 @@
     [Town]                NVARCHAR (100) NULL,
     [Zone]                NVARCHAR (100) NULL,
     [SettlementId]        BIGINT         NULL,
+    [UpdateFlag]          BIT           DEFAULT ((0)) NULL,
     PRIMARY KEY CLUSTERED ([IdGeofence] ASC),
     CONSTRAINT [FK_Geofence_Country] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_Geofence_Settlement] FOREIGN KEY ([SettlementId]) REFERENCES [dbo].[Settlement] ([IdSettlement])
@@ -69,4 +70,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Poblado rel
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Departamento relacionado a la geocerca', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Geofence', @level2type = N'COLUMN', @level2name = N'Deparment';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para indicar si una Geocerca es actualizable.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Geofence', @level2type = N'COLUMN', @level2name = N'UpdateFlag';
 
