@@ -544,6 +544,17 @@ BEGIN
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
 	)
+	DECLARE @ExpressVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	)
+
 	DECLARE @IndividualWebSys INT =
 	(
 		SELECT 
@@ -643,10 +654,12 @@ BEGIN
 			(
 					CASE
 						WHEN [vpct].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+						WHEN [vpct].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN [vpcti].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
 						WHEN [D].[CatSystemId] = @IndividualWebSys THEN 'WEB'
 						WHEN [D].[CatSystemId] = @ExpressWebSys THEN 'EXC'
-						WHEN [D].[CatSystemId] = @CorporateWebSys THEN 'CRP'
-						WHEN [D].[CatSystemId] = @ParserSys THEN 'CRP'
+						WHEN [D].[CatSystemId] = @CorporateWebSys THEN 'COR'
+						WHEN [D].[CatSystemId] = @ParserSys THEN 'PAR'
 						WHEN [D].[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
 					END
@@ -665,6 +678,8 @@ BEGIN
 			ON DOPD.GuideNumber = D.Guide_Number
 		LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
             ON vpct.CodeOfReference = D.Sender_ID
+		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpcti  WITH(NOLOCK) 
+		    ON [vpcti].[CodeOfReference] = [D].[OriginSenderId]
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END

@@ -22,6 +22,8 @@ BEGIN
 	-- Por defecto NULL ya que si ocurre un inconveniente en el cálculo debe retornar NULL
 	DECLARE @ResultDate DATE = NULL;
 	DECLARE @DaysToAdd INT = NULL;
+	-- 
+	DECLARE @DefaultDate INT = 5;
 	-- Fecha objetivo
 	DECLARE @TargetDate DATETIME = NULL;
 	IF(@StartDate IS NULL)
@@ -298,10 +300,11 @@ BEGIN
 
 	--SELECT 
 	--	@DaysToAdd
+	
 
 	IF ( @DaysToAdd IS NULL )
 	BEGIN
-	    SET @ResultDate = NULL;
+	    SET @ResultDate = CAST(DATEADD(DAY, @DefaultDate, ISNULL(@TargetDate, GETDATE())) AS DATE);
 	END
 	ELSE
     BEGIN
