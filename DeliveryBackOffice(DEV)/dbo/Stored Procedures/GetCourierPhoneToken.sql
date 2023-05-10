@@ -43,6 +43,11 @@ BEGIN
 
     DECLARE @jsonResult NVARCHAR(MAX);
 
+	DECLARE @DateCreatedToken Date = (SELECT Convert(Nvarchar,DateCreated,103)
+	                                  FROM  SenderReceiverLoginToken 
+									  WHERE SenderReceiverId = @Phone AND 
+									        LoginToken = @LoginToken AND RowStatus = 1)
+
     -- insertar en tabla temporal posbibles mensajes de respuesta
 
     IF OBJECT_ID('tempdb.dbo.#responsemessage', 'U') IS NOT NULL
@@ -84,7 +89,7 @@ BEGIN
         ------------------------------------------------------------------------------------------------------------------------
 		DECLARE @jsonResult1 NVARCHAR(MAX);
 
-		IF EXISTS(SELECT 1 FROM SenderReceiverLoginToken WHERE SenderReceiverId = @phon AND LoginToken = @LoginToken AND RowStatus = 1)
+		IF EXISTS(SELECT 1 FROM [dbo].[SenderReceiverLoginToken] WHERE SenderReceiverId = @phon AND LoginToken = @LoginToken AND RowStatus = 1 AND Convert(Nvarchar,DateCreated,103) = Convert(Nvarchar, GETDATE(),103) )
 		BEGIN
 			UPDATE SenderReceiverLoginToken
 			SET RowStatus = 0
@@ -161,9 +166,26 @@ BEGIN
 			PRINT 'ingresa2';
 			PRINT @jsonResult;
         END
+		-- Vigencia de token
+		  IF (@DateCreatedToken = Convert(Nvarchar, GETDATE(),103))
+        BEGIN
+
+            SET @jsonResult1 =
+            (
+                SELECT STUFF(
+                                (
+                                    SELECT ',{"IdResult":408,' + '"Message":"Token no vigente"}'
+                                    FOR XML PATH(''), TYPE
+                                ).value('.', 'varchar(max)'),
+                                1,
+                                1,
+                                ''
+                            )
+            );
+        END;
 
         -- retornar resultado en formato json
-        IF @jsonResult1 IS NULL
+        IF  @DateCreatedToken != Convert(Nvarchar, GETDATE(),103)
         BEGIN
 
             SET @jsonResult1 =
