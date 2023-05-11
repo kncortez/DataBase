@@ -213,21 +213,8 @@ BEGIN
 											INNER JOIN	[dbo].[DeliveryProof] DP
 												ON		[DA].[ID_Proof] = [DP].[ID]
 											WHERE		[DA].[ID] = [DOD].[DeliveryAttemptId]
-										),
-										(	SELECT TOP 1 [DP].[Path_Incident]
-											FROM		[dbo].[DeliveryAttempt] DA
-											INNER JOIN	[dbo].[DeliveryProof] DP
-												ON		[DA].[ID_Proof] = [DP].[ID]
-												AND		[DP].[Date_Photo] = [dod].[DateCreated]
-											INNER JOIN	[dbo].[ConfirmationOfIncidence] COI
-												ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
-											INNER JOIN	[dbo].[CatTypeConfirmationOfIncidence] CTC
-												ON		[COI].[CatTypeConfirmationOfIncidenceId] = [CTC].[IdCatTypeConfirmationOfIncidence]
-											INNER JOIN	[dbo].[StatusOrder] SO
-												ON		[DOD].[StatusOrderId] = [SO].[StatusOrderId]
-											WHERE		[DA].[Guide_Serie] = [dod].[Guide_Serie]
-												AND		[DA].[Guide_Number] = [dod].[Guide_Number]
 										)
+										,''
 									)
 							), 
 					''
@@ -258,8 +245,8 @@ BEGIN
             '' AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            [DA].[Latitude] AS Latitude,
-            [DA].[Longitude] AS Longitude,
+            ISNULL([DAaux].[Latitude], [DA].[Latitude]) AS Latitude,
+            ISNULL([DAaux].[Longitude], [DA].[Longitude]) AS Longitude,
 			dod.UserCreated Token,
 			'' AS NextSteps,
 			ISNULL((SELECT		TOP 1 [CTI].[NameIncidence]
@@ -274,12 +261,14 @@ BEGIN
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 			ON so.StatusOrderId = dod.StatusOrderId
-		INNER JOIN [dbo].[CatCheckpointType] CCT
+		INNER JOIN [dbo].[CatCheckpointType] CCT  WITH(NOLOCK)	
 			ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
-		LEFT JOIN [dbo].[DeliveryProof] DP
+		LEFT JOIN [dbo].[DeliveryProof] DP  WITH(NOLOCK) 
 			ON [dod].[DateCreated] = [Date_Photo]
-		LEFT JOIN [dbo].[DeliveryAttempt] DA
+		LEFT JOIN [dbo].[DeliveryAttempt] DA  WITH(NOLOCK) 
 			ON [DP].[ID] = [DA].[ID_Proof]
+		LEFT JOIN [dbo].[DeliveryAttempt] DAaux  WITH(NOLOCK) 
+			ON [DOD].[DeliveryAttemptId] = [DA].[ID_Proof]
         WHERE dod.Guide_Serie = @Guide_Serie
             AND dod.Guide_Number = @Guide_Number
         --ORDER BY DateCreated
