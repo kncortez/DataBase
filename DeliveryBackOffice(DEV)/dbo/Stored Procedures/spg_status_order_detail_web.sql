@@ -280,7 +280,9 @@ BEGIN
                  dod.Observations,
 				 dod.DateCreated,
 				 [DA].[Latitude],
+				 [DAaux].[Latitude],
 				 [DA].[Longitude],
+				 [DAaux].[Longitude],
                  so.OrderDescription,
 				 [CCT].[CheckpointIcon],
 				 [DOD].[DeliveryAttemptId]
