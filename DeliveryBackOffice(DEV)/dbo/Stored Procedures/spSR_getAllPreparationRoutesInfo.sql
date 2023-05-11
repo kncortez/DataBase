@@ -31,6 +31,7 @@ BEGIN
 										[ProvinceId] INT,
 										[Latitude] NVARCHAR(25),
 										[Longitude] NVARCHAR(25));
+	DECLARE @InsertedSchedulePickup TABLE([SchedulePickupId] INT);
 
 	BEGIN TRANSACTION
 	BEGIN TRY
@@ -83,7 +84,8 @@ BEGIN
 										[SchedulePickupStatus],
 										[TypeVehicleId],
 										[IsScheduled] )
-		SELECT							[A].[AccIdAccount],
+		OUTPUT							INSERTED.SchedulePickupId INTO @InsertedSchedulePickup 
+		SELECT							(SELECT TOP 1 [A].[AccIdAccount] FROM [dbo].[Account] A WHERE [A].[IdCustomer] = [VP].[CustomerID]),
 										CAST(CONCAT(@DateToProcess , ' ' , [VPI].[InitializationTimeOfVisit]) AS DATETIME) [StartDate],
 										CAST(CONCAT(@DateToProcess , ' ' , [VPI].[FinalizationTimeOfVisit]) AS DATETIME) [EndDate],
 										0,		-- EstimatedWeight
@@ -120,12 +122,18 @@ BEGIN
 			AND		[THL].[StatusTownshipHub] = 1
 		INNER JOIN	[dbo].[HubLogistics] HL
 			ON		[THL].[IdHublogistic] = [HL].[IdHubLogistic]
-		INNER JOIN	[dbo].[Account] A
-			ON		[VP].[CustomerID] = [A].[IdCustomer]
-			AND		[A].[AccRowStatus] = 1
+		INNER JOIN	[dbo].[Township] T
+			ON		[VP].[IdTownship] = [T].[IdTownship]
+		INNER JOIN	[dbo].[ServiceProvinceConfiguration] SPC
+			ON		[T].[IdProvince] = [SPC].[ProvinceId]
+			AND		[SPC].[CatConfigurableServiceId] = @CatConfigurableServiceId
+			AND		[SPC].[RowStatus] = 1
+		INNER JOIN	[dbo].[ServiceTownshipConfiguration] STC
+			ON		[T].[IdTownship] = [STC].[TownshipId]
+			AND		[STC].[CatConfigurableServiceId] = @CatConfigurableServiceId
+			AND		[STC].[RowStatus] = 1
 		LEFT JOIN	[dbo].[SchedulePickup] SP
-			ON		[SP].[AccountId] = [A].[AccIdAccount]
-			AND		[SP].[StartDate] = CAST(CONCAT(@DateToProcess , ' ' , [VPI].[InitializationTimeOfVisit]) AS DATETIME)
+			ON		[SP].[StartDate] = CAST(CONCAT(@DateToProcess , ' ' , [VPI].[InitializationTimeOfVisit]) AS DATETIME)
 			AND		[SP].[EndDate] = CAST(CONCAT(@DateToProcess , ' ' , [VPI].[FinalizationTimeOfVisit]) AS DATETIME)
 			AND		[SP].[SenderId] = [VP].[CodeOfReference]
 			AND		[SP].[IdHubLogistics] = [THL].[IdHublogistic]
@@ -140,7 +148,7 @@ BEGIN
 			AND		[VPI].[FinalizationTimeOfVisit] IS NOT NULL 
 			AND		[VPI].[FinalizationTimeOfVisit] NOT IN ('__:__','0','',' ')
 			AND		[SP].[SchedulePickupId] IS NULL
-		GROUP BY	[A].[AccIdAccount],
+		GROUP BY	[VP].[CustomerId],
 					[VPI].[InitializationTimeOfVisit],
 					[VPI].[FinalizationTimeOfVisit],
 					[VP].[CodeOfReference],
@@ -176,16 +184,8 @@ BEGIN
 										0,		-- Amount
 										0		-- IsActiveService
 		FROM							[dbo].[SchedulePickup] SP
-		LEFT JOIN						[dbo].[ServiceManagement] SM
-			ON							[SM].[IdSchedulePickup] = [SP].[SchedulePickupId]
-			AND							[SM].[RowStatus] = 1
-			AND							[SM].[ServiceStatusId] = 1
-			AND							[SM].[IdHubDestination] = [SP].[IdHubLogistics]
-		WHERE							[SM].[IdServiceManagement] IS NULL
-			AND							[SP].[IdSourcePlataform] = @SimpliRoutePlatformId
-			AND							[SP].[SchedulePickupStatus] = 1
-			AND							[SP].[TypeVehicleId] = @CatTypeVehicleId
-			;
+		INNER JOIN						@InsertedSchedulePickup ISP
+			ON							[SP].[SchedulePickupId] = [ISP].[SchedulePickupId];
 
 		-- INSERT INTO ACCEPTED SERVICES
 		INSERT INTO @AcceptedServices (	[CatExternalPlatformId],

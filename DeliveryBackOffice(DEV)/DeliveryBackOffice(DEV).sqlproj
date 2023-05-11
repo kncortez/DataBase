@@ -1513,6 +1513,7 @@
     <Build Include="dbo\Functions\fn_GetGuideDeliveryETA.sql" />
     <Build Include="dbo\Stored Procedures\SetMicroZones.sql" />
     <Build Include="dbo\User Defined Types\TblMicroZones.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
