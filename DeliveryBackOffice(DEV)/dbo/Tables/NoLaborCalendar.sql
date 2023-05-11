@@ -44,3 +44,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de días los cuales se consideran no laborales y deben omitirse en el cálculo de fechas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NoLaborCalendar';
 
+GO
+CREATE NONCLUSTERED INDEX IDX_NoLaborCalendar_DateAvailable
+ON [DeliveryBackOffice].[dbo].[NoLaborCalendar] ( [NoLaborDate], [RowStatus] )

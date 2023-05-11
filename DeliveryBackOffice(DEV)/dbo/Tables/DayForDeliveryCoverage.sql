@@ -54,3 +54,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de cobertura de HUB a HUB para adición de días en cálculo de ETA de entrega de guías', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DayForDeliveryCoverage';
 
+GO
+CREATE NONCLUSTERED INDEX IDX_DayForDeliveryCoverage_HubsAvailable
+ON [DeliveryBackOffice].[dbo].[DayForDeliveryCoverage] ( [HubLogisticsOrigin], [HubLogisticsDestiny], [RowStatus] )
+
