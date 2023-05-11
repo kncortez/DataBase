@@ -8,7 +8,8 @@
     [TokenCreated]         NVARCHAR (50) NOT NULL,
     [DateCreated]          DATETIME      NOT NULL,
     [TokenUpdated]         NVARCHAR (50) NULL,
-    [DateUpdated]          DATETIME      NULL
+    [DateUpdated]          DATETIME      NULL,
+    CONSTRAINT [PK_DeliveryOrderRoute] PRIMARY KEY ([IdDeliveryOrderRoute])
 );
 
 
