@@ -640,7 +640,7 @@ BEGIN
 					''
 				END
 			)'Icon',
-			(FORMAT((Select DeliveryETA from DeliveryOrder WITH(NOLOCK) where Manifest_Number = @ManifestNumber), 'ddMM'))'DeliveryETA',
+			(FORMAT(ISNULL([D].[DeliveryETA], DATEADD(DAY,5,GETDATE())), 'ddMM'))'DeliveryETA',
 				(
 					CASE
 						WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
