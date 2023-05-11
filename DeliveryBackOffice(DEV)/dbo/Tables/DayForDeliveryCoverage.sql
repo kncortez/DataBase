@@ -56,5 +56,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de co
 
 GO
 CREATE NONCLUSTERED INDEX IDX_DayForDeliveryCoverage_HubsAvailable
-ON [DeliveryBackOffice].[dbo].[DayForDeliveryCoverage] ( [HubLogisticsOrigin], [HubLogisticsDestiny], [RowStatus] )
+ON [dbo].[DayForDeliveryCoverage] ( [HubLogisticsOrigin], [HubLogisticsDestiny], [RowStatus] )
 
