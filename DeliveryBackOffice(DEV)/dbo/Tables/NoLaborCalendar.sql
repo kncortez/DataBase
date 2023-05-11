@@ -46,4 +46,4 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de d√
 
 GO
 CREATE NONCLUSTERED INDEX IDX_NoLaborCalendar_DateAvailable
-ON [DeliveryBackOffice].[dbo].[NoLaborCalendar] ( [NoLaborDate], [RowStatus] )
+ON [dbo].[NoLaborCalendar] ( [NoLaborDate], [RowStatus] )
