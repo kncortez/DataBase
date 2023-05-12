@@ -1,16 +1,3 @@
-USE [DeliveryBackOffice]
-GO
-
-/****** Object:  UserDefinedFunction [dbo].[fn_get_diff_minutes_without_holidays]    Script Date: 3/05/2023 19:26:14 ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-
-
-
 CREATE FUNCTION [dbo].[fn_get_diff_minutes_without_holidays]
 (
     @StartDate DATETIME,
