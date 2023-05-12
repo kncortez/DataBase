@@ -22,20 +22,20 @@ BEGIN
 	   ,VP.Phone
 	   ,VP.IdTownship
 	   ,TT.IdVPItinerary
-	FROM dbo.VisitPointItinerary TT
-	JOIN dbo.VisitPointFrequency FQ
+	FROM dbo.VisitPointItinerary TT WITH(NOLOCK)
+	INNER JOIN dbo.VisitPointFrequency FQ WITH(NOLOCK)
 		ON FQ.IdVPFrequency = TT.VPFrequencyID
 			AND FQ.RowStatus = 'true'
-	JOIN dbo.VisitPointConfiguration CF
+	INNER JOIN dbo.VisitPointConfiguration CF WITH(NOLOCK)
 		ON CF.IdVPConfiguration = FQ.VPConfigurationID
 			AND CF.RowStatus = 'true'
-	JOIN dbo.VisitPointClient VP
+	INNER JOIN dbo.VisitPointClient VP WITH(NOLOCK)
 		ON VP.CodeOfReference = CF.VisitPointId
 			AND VP.StatusClient = 'true'
-	JOIN dbo.Customer CS
+	INNER JOIN dbo.Customer CS WITH(NOLOCK)
 		ON CS.IdCustomer = VP.CustomerID
 			AND CS.RowSatus = 'true'
-	LEFT JOIN dbo.CatRoute RT
+	LEFT JOIN dbo.CatRoute RT WITH(NOLOCK)
 		ON RT.IdRoute = TT.RouteCodeID
 	WHERE TT.DayOfVisit = @DayOfVisit
 	AND TT.RowStatus = 'TRUE'

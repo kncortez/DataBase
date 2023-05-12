@@ -2,9 +2,132 @@
 --DROP procedure [dbo].[SetServiceRequest]
 CREATE PROCEDURE [dbo].[SetServiceRequest]
     @TblServiceRequest AS TblServiceRequest3 READONLY,
-    @TblDeliveryOrders AS TblDeliveryOrders READONLY
+    @TblDeliveryOrders AS TblDeliveryOrders READONLY,
+	@IsArticle BIT = 0
 AS
 BEGIN
+	
+	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20), IsExists BIT DEFAULT 0)
+
+	--Validaciones de artículos
+	IF @IsArticle = 1
+	BEGIN 
+
+		IF EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
+		BEGIN
+			
+			SELECT
+				-1 AS 'StatusCode'
+			   ,'Faltan datos en la columna Artículos, por favor revise todo el archivo y envie de nuevo la solicitud.' AS 'Description'
+
+			RETURN
+		END
+
+		INSERT INTO @ParcelExists (RowNumber, Parcel)
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY (SELECT
+						0)
+				ASC) AS RowNumber
+			   ,RTRIM(LTRIM(item)) item
+			FROM SplitUnlimited((SELECT
+					STUFF((SELECT
+							', ' + ParcelCode
+						FROM @TblDeliveryOrders
+						FOR XML PATH (''))
+					,
+					1, 2, ''))
+			, ',')
+		
+		DECLARE @RateId INT
+
+		SELECT TOP 1
+			@RateId = rbc.RbcIdRate
+		FROM RatebyCustomer rbc WITH (NOLOCK)
+		INNER JOIN @TblServiceRequest tsr
+			ON rbc.RbcIdCustomer = tsr.CustomerID
+		LEFT JOIN @TblDeliveryOrders tdo
+			ON rbc.RbcCodeOfReference = tdo.Sender_ID
+				OR rbc.RbcCodeOfReference IS NULL
+		WHERE rbc.RbcRowStatus = 1
+		ORDER BY rbc.RbcCodeOfReference DESC
+
+		UPDATE pe
+		SET IsExists = 1
+		FROM @ParcelExists pe
+		INNER JOIN ArticleByCustomer abc WITH (NOLOCK)
+			ON abc.Code = pe.Parcel
+		INNER JOIN RateData rd WITH (NOLOCK)
+			ON abc.AbcId = rd.ArticleId
+			AND rd.RowStatus = 1
+			AND rd.RateId = @RateId
+
+		IF EXISTS(SELECT 1 FROM @ParcelExists WHERE IsExists = 0)
+		BEGIN
+			
+			SELECT
+				-1 AS 'StatusCode'
+			   ,CONCAT('El artículo ', (SELECT TOP 1
+						Parcel
+					FROM @ParcelExists
+					WHERE IsExists = 0)
+				, ' no existe o no está en la negociación, por favor revise todo el archivo y envie de nuevo la solicitud.') AS 'Description'
+			RETURN
+		END
+	END
+
+	--Validación de municipio y departamento
+	IF EXISTS (SELECT
+				1
+			FROM @TblDeliveryOrders tdo
+			LEFT JOIN Township t WITH(NOLOCK)
+				ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+				AND t.TownshipStatus = 1
+			LEFT JOIN Province p WITH(NOLOCK)
+				ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+				AND p.ProvinceStatus = 1
+				AND t.IdProvince = p.IdProvince
+			OUTER APPLY (SELECT
+					t.IdTownship
+				FROM Township t WITH(NOLOCK)
+				INNER JOIN Province p WITH(NOLOCK)
+					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+					AND p.ProvinceStatus = 1
+					AND t.IdProvince = p.IdProvince
+				WHERE RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+				AND t.TownshipStatus = 1) b
+			WHERE (t.IdTownship IS NULL
+			OR p.IdProvince IS NULL)
+			AND b.IdTownship IS NULL)
+		BEGIN
+
+		SELECT
+			-1 AS 'StatusCode'
+		   ,CONCAT('El municipio ', (SELECT TOP 1
+					CONCAT(' (', tdo.Receiver_Town, ')')
+				FROM @TblDeliveryOrders tdo
+				LEFT JOIN Township t WITH(NOLOCK)
+					ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+					AND t.TownshipStatus = 1
+				LEFT JOIN Province p WITH(NOLOCK)
+					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+					AND p.ProvinceStatus = 1
+					AND t.IdProvince = p.IdProvince
+				OUTER APPLY (SELECT
+						t.IdTownship
+					FROM Township t WITH(NOLOCK)
+					INNER JOIN Province p WITH(NOLOCK)
+						ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
+						AND p.ProvinceStatus = 1
+						AND t.IdProvince = p.IdProvince
+					WHERE RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
+					AND t.TownshipStatus = 1) b
+				WHERE (t.IdTownship IS NULL
+				OR p.IdProvince IS NULL)
+				AND b.IdTownship IS NULL)
+			, ' no se ha encontrado o no es un municipio válido.') AS 'Description'
+
+		RETURN
+	END
 
     DECLARE @IdTransaction BIGINT = NULL;
     DECLARE @ManifestNumber INT = 0;
@@ -510,7 +633,8 @@ BEGIN
             [Guide_Serie] NVARCHAR(2) NULL,
             [Guide_Number] [INT] NULL,
             [PartNumber] INT,
-            [IsDry] BIT
+            [IsDry] BIT,
+			[ParcelCode] NVARCHAR(10) NULL
         );
 
         INSERT INTO @Guides
@@ -525,31 +649,14 @@ BEGIN
                 (
                     SELECT COUNT(1)FROM @Guides
                 );
+		DECLARE @z INT = 1
         IF (@elements > 0) --insertar piezas
         BEGIN
             WHILE @i < @elements
             BEGIN
-                --piezas secas
-                DECLARE @j INT = 0;
-                DECLARE @PiecesCount INT =
-                        (
-                            SELECT CountDry FROM @Guides WHERE RowNumber = @i + 1
-                        );
-                WHILE @j < @PiecesCount
-                BEGIN
-                    INSERT INTO @Pieces
-                    SELECT Guide_Serie,
-                           Guide_Number,
-                           @j + 1,
-                           1
-                    FROM @Guides
-                    WHERE RowNumber = @i + 1;
-                    SET @j = @j + 1;
-                END;
-
                 --piezas frías
                 DECLARE @k INT = 0;
-                SET @PiecesCount =
+                DECLARE @PiecesCount INT =
                 (
                     SELECT CountCold FROM @Guides WHERE RowNumber = @i + 1
                 );
@@ -558,11 +665,37 @@ BEGIN
                     INSERT INTO @Pieces
                     SELECT Guide_Serie,
                            Guide_Number,
-                           @k + 1 + @j,
-                           0
-                    FROM @Guides
-                    WHERE RowNumber = @i + 1;
+                           @k + 1,
+                           0,
+						   pe.Parcel
+                    FROM @Guides g
+					LEFT JOIN @ParcelExists pe
+						ON pe.RowNumber = @z
+                    WHERE g.RowNumber = @i + 1;
                     SET @k = @k + 1;
+					SET @z = @z + 1;
+                END;
+
+				--piezas secas
+                DECLARE @j INT = 0;
+                SET @PiecesCount =
+                        (
+                            SELECT CountDry FROM @Guides WHERE RowNumber = @i + 1
+                        );
+                WHILE @j < @PiecesCount
+                BEGIN
+                    INSERT INTO @Pieces
+                    SELECT Guide_Serie,
+                           Guide_Number,
+                           @j + 1 + @k,
+                           1,
+						   pe.Parcel
+                    FROM @Guides g
+					LEFT JOIN @ParcelExists pe
+						ON pe.RowNumber = @z
+                    WHERE g.RowNumber = @i + 1;
+                    SET @j = @j + 1;
+					SET @z = @z + 1;
                 END;
 
                 SET @i = @i + 1;
@@ -594,7 +727,8 @@ BEGIN
             [volumetricWeight],
             [CategoryCheck],
             [StatusOrderId],
-            [IsDry]
+            [IsDry],
+			[ParcelCode]
         )
         SELECT PIC.Guide_Serie,
                PIC.Guide_Number,
@@ -619,7 +753,8 @@ BEGIN
                NULL,
                NULL,
                1,
-               PIC.IsDry
+               PIC.IsDry,
+			   PIC.ParcelCode
         FROM @Pieces PIC
             INNER JOIN #GuideTable GTB
                 ON PIC.Guide_Serie = GTB.Guide_Serie
@@ -700,6 +835,36 @@ BEGIN
 
             END;
         END;
+		
+		-- Proceso para registro de tiempo estimado de entrega
+		-- Andrés Ruíz - 2023-04-18
+		UPDATE
+			[DO]
+		SET
+			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]
+				(
+					(CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Department],''))) <> '' THEN [DO].[Sender_Department] ELSE [VPC].[Department] END)
+					, (CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Town],''))) <> '' THEN [DO].[Sender_Town] ELSE [VPC].[Town] END)
+					, NULL
+					, [DO].[Receiver_Department]
+					, [DO].[Receiver_Town]
+					, NULL
+					, NULL
+				)
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			INNER JOIN
+				[#GuideTable] GT
+				ON
+					[DO].[Guide_Serie] = [GT].[Guide_Serie]
+					AND
+					[DO].[Guide_Number] = [GT].[Guide_Number]
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+				ON
+					[DO].[Sender_ID] = [VPC].[CodeOfReference]
+		------------------------------------------------------
+
 		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
 		INNER JOIN @CorrelativeTable ct
 		ON do.Guide_Number = ct.Guide_Number
@@ -749,6 +914,72 @@ BEGIN
     IF @@TRANCOUNT > 0
     BEGIN
         COMMIT TRANSACTION;
+
+			---Nuevos datos para consumir nuevo formato guía
+  	DECLARE @FranchiseVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @IndividualWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ParserSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+	)
+
+
+  --Fin Nuevos datos para consumir nuevo formato guía
+
 
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
@@ -801,7 +1032,31 @@ BEGIN
 				)'Icon'
         --FIN MODIFICACIÓN
 
-		, D.TypeService  'TypeService'
+		, D.TypeService  'TypeService',
+		(FORMAT(ISNULL([D].[DeliveryETA], DATEADD(DAY,5,GETDATE())), 'ddMM'))'DeliveryETA',
+				(
+					CASE
+						WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
+						WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
+						WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
+						WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
+						ELSE 'CRÉDITO'
+					END
+				)'WayToPayDescription',
+
+			(
+					CASE
+						WHEN vpct.[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+						WHEN vpct.[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN D.[CatSystemId] = @IndividualWebSys THEN 'WEB'
+						WHEN D.[CatSystemId] = @ExpressWebSys THEN 'EXC'
+						WHEN D.[CatSystemId] = @CorporateWebSys THEN 'COR'
+						WHEN D.[CatSystemId] = @ParserSys THEN 'PAR'
+						WHEN D.[CatSystemId] IS NULL THEN 'API'
+						ELSE 'API'
+					END
+			)'GuideOrigin'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
@@ -813,6 +1068,12 @@ BEGIN
 				AND MMBSHP.CatMembershipStatusId = @StatusPackage
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
+			LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
+				ON DOPD.GuideNumber = D.Guide_Number
+			LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
+				ON vpct.CodeOfReference = D.Sender_ID
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
