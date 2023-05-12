@@ -53,16 +53,17 @@ BEGIN
 		   vpc.SaleChannelId,
 		   IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
 		   IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
-		   ISNULL(vpc.CatBusinessSegmentId, 0) CatBusinessSegmentId
-    FROM DeliveryBackOffice.dbo.VisitPointClient vpc
-        LEFT JOIN dbo.Township twn
+		   ISNULL(vpc.CatBusinessSegmentId, 0) CatBusinessSegmentId,
+			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups'
+    FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
+        LEFT JOIN dbo.Township twn  WITH(NOLOCK)
             ON twn.IdTownship = vpc.IdTownship
-		LEFT JOIN dbo.Province prv 
+		LEFT JOIN dbo.Province prv  WITH(NOLOCK)
 			ON prv.IdProvince = twn.IdProvince
-        LEFT JOIN dbo.VisitPointConfiguration vcf
+        LEFT JOIN dbo.VisitPointConfiguration vcf WITH(NOLOCK)
             ON vpc.CodeOfReference = vcf.VisitPointID
 			AND vcf.RowStatus = 'TRUE'
-		LEFT JOIN dbo.VisitPointFrequency vpf
+		LEFT JOIN dbo.VisitPointFrequency vpf WITH(NOLOCK)
 			ON vpf.VPConfigurationID = vcf.IdVPConfiguration
 			AND vpf.RowStatus = 'TRUE'
     WHERE (

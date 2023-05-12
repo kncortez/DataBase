@@ -4,6 +4,7 @@
     [Description]    VARCHAR (MAX) NULL,
     [Value]          VARCHAR (MAX) NOT NULL,
     [Status]         SMALLINT      NOT NULL,
-    [CreateDate]     DATETIME      CONSTRAINT [DefaultDate] DEFAULT (getdate()) NOT NULL
+    [CreateDate]     DATETIME      CONSTRAINT [DefaultDate] DEFAULT (getdate()) NOT NULL,
+    CONSTRAINT [PK_ConfigParams] PRIMARY KEY CLUSTERED ([ConfigParamsId] ASC)
 );
 
