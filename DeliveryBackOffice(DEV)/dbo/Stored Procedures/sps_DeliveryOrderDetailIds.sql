@@ -22,7 +22,7 @@
 AS 
 BEGIN
 
-
+	DECLARE @GuideServiceType NVARCHAR(3) = dbo.fn_GetGuideServiceType(@GuideSerie, @GuideNumber, @TypeService, (CASE WHEN @IdCustomer != 0 THEN @IdCustomer ELSE (SELECT TOP 1 ECM.IdCustomer FROM dbo.Ecommerce ECM WITH(NOLOCK) WHERE ECM.UserKey = @CodApp) END));
 
 	update DeliveryBackOffice.[dbo].[DeliveryOrder] 
 	set IdCustomer =
@@ -33,7 +33,7 @@ BEGIN
 				from dbo.Ecommerce e 
 				where e.UserKey = @CodApp)
 			end 
-	, TypeService = dbo.fn_GetGuideServiceType(@GuideSerie, @GuideNumber, @TypeService, (CASE WHEN @IdCustomer != 0 THEN @IdCustomer ELSE (SELECT TOP 1 ECM.IdCustomer FROM dbo.Ecommerce ECM WITH(NOLOCK) WHERE ECM.UserKey = @CodApp) END))
+	, TypeService = @GuideServiceType
 	,IndicationsToSendOrigin = @IndicationsOrigin
 	, IndicationsToSendDestination = @IndicationsDestination
 	,Ticket_Number = @Ticket_Number
@@ -102,5 +102,6 @@ BEGIN
 					@UseMembership = @UseMembership
 	--END
 
-	select 1;
+	select 1,
+		ISNULL(@GuideServiceType, 'STD') [GuideServiceType];
 END
