@@ -44,7 +44,8 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @TblVPDestination AS TblVPDestination READONLY,
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT, --1 Insert Into , 2 Update,
-	@CatBusinessSegmentId INT = NULL
+	@CatBusinessSegmentId INT = NULL,
+	@AllowScheduledPickups AS BIT = NULL
 
 AS
 BEGIN
@@ -103,7 +104,8 @@ BEGIN
 						SaleChannelId,
 						ExcludePriceShippingCOD,
 						ExcludeCommissionCOD,
-						CatBusinessSegmentId
+						CatBusinessSegmentId,
+						AllowScheduledPickups
                     )
                     VALUES
                     (   @CodeOfReference,        -- CodeOfReference - int
@@ -134,7 +136,8 @@ BEGIN
 						,@IdKindOfVPClient,
 						@CODExcludedPriceShipping,
 						@CODExcludedCommission,
-						@CatBusinessSegmentId
+						@CatBusinessSegmentId,
+						ISNULL(@AllowScheduledPickups, 1)
                         )
 					DECLARE @IDVP AS INT = -1
                     SET @IDVP = SCOPE_IDENTITY()
@@ -373,7 +376,8 @@ BEGIN
 						[SaleChannelId] = @IdKindOfVPClient,
 						[ExcludePriceShippingCOD] = @CODExcludedPriceShipping,
 						[ExcludeCommissionCOD] = @CODExcludedCommission,
-						[CatBusinessSegmentId] = @CatBusinessSegmentId
+						[CatBusinessSegmentId] = @CatBusinessSegmentId,
+						[AllowScheduledPickups] = @AllowScheduledPickups
                     WHERE [CodeOfReference] = @IdVisitPoint;
 										PRINT @@ROWCOUNT
 										PRINT 'Paso 1 Affected VisitPointClient Updated - @IdVisitPoint'
@@ -393,7 +397,6 @@ BEGIN
                             [CODAccountNumber] = @CODAccountNumber,
                             [CODAccountBankTypeID] = @CODAccountBankTypeID,
                             [CODAccountCurrencyID] = @CODAccountCurrencyID,
-                            --[RowStatus] =  @RowStatus,
                             [TokenUpdated] = @Token,
                             [DateUpdated] = GETDATE(),
                             [AveragePackageDaily] = @AveragePackageDaily,
@@ -480,7 +483,7 @@ BEGIN
                                 Freq.[VisitsOnFriday] = tblfreq.[VisitsOnFriday],
                                 Freq.[VisitsOnSaturday] = tblfreq.[VisitsOnSaturday],
                                 Freq.[HubLogisticID] = tblfreq.[HubLogisticID],
-                                Freq.[RowStatus] = tblfreq.[RowStatus],
+                                Freq.[RowStatus] = IIF(@RowStatus = 0 OR @AllowScheduledPickups = 0, 0, tblfreq.[RowStatus]),
                                 Freq.[TokenUpdated] = @Token,
                                 Freq.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointFrequency Freq
@@ -573,7 +576,7 @@ BEGIN
 								--Edicion de la ruta inhabilitada
                                 --VPIti.[RouteCodeID] = CASE WHEN tblIti.RouteCodeID <= 0 THEN VPIti.[RouteCodeID] ELSE tblIti.RouteCodeID END ,
                                 VPIti.[HubLogisticID] = tblIti.HubLogisticID,
-                                VPIti.[RowStatus] = tblIti.RowStatus,
+                                VPIti.[RowStatus] = IIF(@RowStatus = 0 OR @AllowScheduledPickups = 0, 0, tblIti.RowStatus),
                                 VPIti.[TokenUpdated] = @Token,
                                 VPIti.[DateUpdated] = GETDATE()
                             FROM dbo.VisitPointItinerary VPIti
@@ -582,11 +585,30 @@ BEGIN
 									AND tblIti.IdVPItinerary = VPIti.IdVPItinerary
                             WHERE tblIti.VPFrequencyID = @IDROWFREQ
 							AND tblIti.IdVPItinerary > 0
-										PRINT @@ROWCOUNT
-										PRINT 'Se actualizaron VisitPointItinerary -  @@ROWCOUNT'
+							AND ISNULL(tblIti.InitializationTimeOfVisit, '__:__') != '__:__'
+							AND ISNULL(tblIti.FinalizationTimeOfVisit, '__:__') != '__:__'
+							
+								PRINT @@ROWCOUNT
+								PRINT 'Se actualizaron VisitPointItinerary -  @@ROWCOUNT'
 										
-										PRINT 'Paso 5 se insertaran VisitPointItinerary - @IDROWFREQ'
-										PRINT  @IDROWFREQ
+                            UPDATE VPIti
+                            SET VPIti.[RowStatus] = 0,
+                                VPIti.[TokenUpdated] = @Token,
+                                VPIti.[DateUpdated] = GETDATE()
+                            FROM dbo.VisitPointItinerary VPIti
+                                INNER JOIN @TblVPItinerary tblIti
+                                    ON VPIti.VPFrequencyID = tblIti.VPFrequencyID
+									AND tblIti.IdVPItinerary = VPIti.IdVPItinerary
+                            WHERE tblIti.VPFrequencyID = @IDROWFREQ
+							AND tblIti.IdVPItinerary > 0
+							AND ISNULL(tblIti.InitializationTimeOfVisit, '__:__') = '__:__'
+							AND ISNULL(tblIti.FinalizationTimeOfVisit, '__:__') = '__:__'
+							
+								PRINT @@ROWCOUNT
+								PRINT 'Se inactivaron VisitPointItinerary -  @@ROWCOUNT'
+										
+								PRINT 'Paso 5 se insertaran VisitPointItinerary - @IDROWFREQ'
+								PRINT  @IDROWFREQ
 							--creo los registros que no estan en la tabla 
 							INSERT INTO dbo.VisitPointItinerary
                             (
@@ -594,7 +616,7 @@ BEGIN
                                 DayOfVisit,
                                 InitializationTimeOfVisit,
                                 FinalizationTimeOfVisit,
-                                OrderSequence,
+                                OrderSequence,								
 								--Edicion de la ruta inhabilitada
                                 --RouteCodeID,
                                 HubLogisticID,
@@ -621,6 +643,8 @@ BEGIN
 								FROM @TblVPItinerary tblIti
                                     --WHERE tblIti.VPFrequencyID = @IDROWFREQ
 								WHERE tblIti.IdVPItinerary <= 0
+								AND ISNULL(tblIti.InitializationTimeOfVisit, '__:__') != '__:__'
+								AND ISNULL(tblIti.FinalizationTimeOfVisit, '__:__') != '__:__'
 							)
 										PRINT @@ROWCOUNT			
 										PRINT 'Se insertaron VisitPointItinerary -  @@ROWCOUNT'
