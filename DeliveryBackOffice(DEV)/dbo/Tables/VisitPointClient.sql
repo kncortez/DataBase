@@ -33,6 +33,7 @@
     [LogLongitude]            NVARCHAR (20)  NULL,
     [DescriptionCC]           NVARCHAR (100) NULL,
     [CatBusinessSegmentId]    INT            NULL,
+    [AllowScheduledPickups]   BIT            DEFAULT ((1)) NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
@@ -90,6 +91,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere 
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
     ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Indicativo si punto de visita permite registrar horarios de recolección programada.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'AllowScheduledPickups';
 
 
 GO
