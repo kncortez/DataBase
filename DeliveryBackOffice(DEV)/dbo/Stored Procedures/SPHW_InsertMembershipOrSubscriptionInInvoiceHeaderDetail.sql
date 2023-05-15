@@ -7,6 +7,16 @@
 -- Author: Jerson Ochoa
 -- Guardar identificador de membresía o suscripción en invoiceDetail - 16-01-2023
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-01-23>
+-- Description:	<Agregar Log para registro de error>
+-- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-05-11>
+-- Description:	<insertar vaoucher en tabla InOutOfMoneyDetail cuando es pago con dataphono tipo 6>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail]
     @TypeSalePackage AS NVARCHAR(50),
     @IdSalePackage INT,
@@ -166,7 +176,7 @@ BEGIN
 				  ORDER BY M.DateCreated DESC
 
                SELECT  
-					@Authorizacion = MOL.[Authorization],
+					@Authorizacion = MOL.[TransactionOrder],
 					@typeMoneyId = MOL.TypeOfInOutOfMoneyId
 				  FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK) Where MembershipId =  @IdMemberOrSuscription
 				  ORDER BY MOL.DateCreated DESC
@@ -201,7 +211,7 @@ BEGIN
 				SET @dti_description = @dti_description +' '+   @Descriptionp
 
 		  SELECT  TOP 1
-		    @Authorizacion = SOL.[Authorization],
+		    @Authorizacion =  SOL.TransactionOrder,---SOL.[Authorization],
 			@typeMoneyId = SOL.TypeOfInOutOfMoneyId
 		  FROM [dbo].[SubscriptionPaymentLog]  SOL WITH (NOLOCK) Where SubscriptionId =  @IdMemberOrSuscription
 		  ORDER BY SOL.DateCreated DESC
