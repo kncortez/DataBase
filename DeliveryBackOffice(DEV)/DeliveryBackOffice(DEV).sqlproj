@@ -1515,6 +1515,7 @@
     <Build Include="dbo\User Defined Types\TblMicroZones.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
     <Build Include="dbo\Functions\fn_GetGuideServiceType.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
