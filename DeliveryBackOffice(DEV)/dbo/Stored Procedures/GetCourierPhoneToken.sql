@@ -7,7 +7,11 @@
 -- Create date: <2021-02-11>
 -- Description:	<Recotizacion>
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-05-10>
+-- Description:	<Validación de vigencia de token >
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
     -- Add the parameters for the stored procedure here
@@ -167,14 +171,14 @@ BEGIN
 			PRINT @jsonResult;
         END
 		-- Vigencia de token
-		  IF (@DateCreatedToken = Convert(Nvarchar, GETDATE(),103))
+		  IF (@DateCreatedToken != Convert(Nvarchar, GETDATE(),103))
         BEGIN
 
             SET @jsonResult1 =
             (
                 SELECT STUFF(
                                 (
-                                    SELECT ',{"IdResult":408,' + '"Message":"Token no vigente"}'
+                                    SELECT ',{"IdResult":401,' + '"Message":"Token no vigente"}'
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
