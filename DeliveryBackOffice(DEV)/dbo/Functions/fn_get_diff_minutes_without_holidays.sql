@@ -1,3 +1,7 @@
+﻿
+
+
+
 CREATE FUNCTION [dbo].[fn_get_diff_minutes_without_holidays]
 (
     @StartDate DATETIME,
@@ -91,9 +95,3 @@ ELSE
 RETURN @result;
 
 END;
-
-
-
-GO
-
-

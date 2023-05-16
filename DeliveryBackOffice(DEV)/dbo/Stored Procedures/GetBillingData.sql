@@ -95,6 +95,11 @@ BEGIN
 		ON id.dti_fk_header = ih.inv_pk_id
 	WHERE id.dti_fk_orderSerie = @GuideSerie
 		AND id.dti_fk_orderNumber = @GuideNumber
+	AND ih.inv_invoiceOfCreditNote IS NULL
+	AND NOT EXISTS(
+		SELECT 1 FROM dbo.invoiceHeader INH2 WITH(NOLOCK)
+		where ih.inv_creditNote = inh2.inv_pk_id
+	) --validar que no exista nota de crédito asociada
 
 	-- Table 2
 	SELECT TOP 1 ih.inv_cli_nit Nit

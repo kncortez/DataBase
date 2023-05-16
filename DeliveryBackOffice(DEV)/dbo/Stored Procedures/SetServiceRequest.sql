@@ -998,11 +998,7 @@ BEGIN
         SELECT C.[Row_Number] AS 'RowNumber',
                D.Guide_Serie AS 'GuideSerie',
                D.Guide_Number AS 'GuideNumber',
-               (
-                   SELECT HubAbbreviation
-                   FROM [DeliveryBackOffice].[dbo].[HubLogistics]
-                   WHERE IdHubLogistic = D.HubOriginId
-               ) AS 'HubOrigin',
+               PrvOri.[ProvinceAbbreviation] AS 'HubOrigin',
                (
                    SELECT HubAbbreviation
                    FROM [DeliveryBackOffice].[dbo].[HubLogistics]
@@ -1075,11 +1071,14 @@ BEGIN
 				ON vpct.CodeOfReference = D.Sender_ID
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
+			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK) 
+				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI 
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
                       SELECT CT.Guide_Number FROM @CorrelativeTable CT
-                  );
+                  )
+		ORDER BY C.[Row_Number] ASC;
     END;
 END;
 

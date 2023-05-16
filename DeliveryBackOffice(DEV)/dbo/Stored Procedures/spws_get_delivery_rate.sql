@@ -341,12 +341,12 @@ BEGIN
         END;
     END;
 
-    IF (@IdCustomerParams = 0 AND @IdCustomer = 6)
-    BEGIN
+    --IF (@IdCustomerParams = 0 AND @IdCustomer = 6)
+    --BEGIN
 
         SET @CalculateTaxes = 'false';
 
-    END;
+    --END;
 
     ------------------------- Determinar si el servico es TDA ------------------------------------------------------------------
 
