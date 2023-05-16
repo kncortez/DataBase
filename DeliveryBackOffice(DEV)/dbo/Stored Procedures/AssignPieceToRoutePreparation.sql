@@ -64,7 +64,7 @@ SET ARITHABORT ON
 		GuideSenderLastName NVARCHAR(100),
 		GuideSenderDepartment NVARCHAR(100),
 		GuideSenderIdTownship INT,
-		GuideSenderPhone NVARCHAR(50),
+		GuideSenderPhone NVARCHAR(100),
 		GuideSenderAddress NVARCHAR(600),
 		GUidePriceShippment decimal(14,2),
 		GuideCOD decimal(14,2),
