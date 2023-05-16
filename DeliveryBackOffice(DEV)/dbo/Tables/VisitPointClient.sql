@@ -91,6 +91,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se refiere 
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdVisitPointClient]
     ON [dbo].[VisitPointClient]([IdVisitPointClient] ASC);
+    go
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Indicativo si punto de visita permite registrar horarios de recolección programada.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'AllowScheduledPickups';
 
 
