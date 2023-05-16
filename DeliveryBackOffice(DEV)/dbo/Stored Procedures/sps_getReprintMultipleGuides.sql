@@ -177,6 +177,8 @@ BEGIN
 									CONVERT(VARCHAR, ISNULL(dev.Package_Description, ''))				'ContentDescription',
 									CONVERT(VARCHAR, COALESCE(p.IdCountry, ''))							'IdCountry',
 									CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0))		'CountPieces',
+									CONVERT(VARCHAR, COALESCE([dev].[Ticket_Number], '0'))							'Ticket_Number',
+									CONVERT(VARCHAR, ISNULL(dev.[Order_Number], 0))		'Order_Number',
 									(CASE
                                         WHEN dev.IsCollect = 1 THEN
                                             'true'
