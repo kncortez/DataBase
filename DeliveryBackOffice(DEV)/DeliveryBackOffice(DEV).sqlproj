@@ -1498,6 +1498,8 @@
     <Build Include="dbo\Tables\CatContainerSubtype.sql" />
     <Build Include="dbo\Tables\SenderReceiverLoginToken.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierLoginToken.sql" />
+    <Build Include="dbo\Stored Procedures\GetGeographicalData.sql" />
+    <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
