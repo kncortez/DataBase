@@ -194,8 +194,8 @@ BEGIN
 				  ORDER BY M.DateCreated DESC
 
                SELECT  
-					 MOL.[TransactionOrder],
-					 MOL.TypeOfInOutOfMoneyId
+					 @Authorizacion = MOL.[TransactionOrder],
+					 @typeMoneyId = MOL.TypeOfInOutOfMoneyId
 				  FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK) Where MembershipId = @IdMemberOrSuscription
 				  ORDER BY MOL.DateCreated DESC
 
@@ -233,6 +233,21 @@ BEGIN
 									@typeMoneyId = SOL.TypeOfInOutOfMoneyId
 								  FROM [dbo].[SubscriptionPaymentLog]  SOL WITH (NOLOCK) Where SubscriptionId = @IdMemberOrSuscription
 								  ORDER BY SOL.DateCreated DESC
+
+						IF(ISNULL(@TaxId, 'CF') <> 'CF')
+						BEGIN
+							UPDATE
+								[M]
+							SET
+								InvoiceName = @TaxName
+								,TaxIdNumber = @TaxId
+								,InvoiceEmail = @InvoiceEmail
+								,FiscalAddress = @FiscalAddress
+
+							FROM	[DeliveryBackOffice].[dbo].[Membership] M 
+							WHERE	[M].[AccountId] = @IdAccount AND [M].[RowStatus] = 1
+						END
+            
 					 END
 					ELSE IF(@inv_cli_nit = 'CF' And (Select  SubscriptionCost From [dbo].[CatSubscription] Where IdCatSubscription = @IdSalePackage) < 2500)
 					  BEGIN
@@ -263,6 +278,20 @@ BEGIN
 									@typeMoneyId = SOL.TypeOfInOutOfMoneyId
 								  FROM [dbo].[SubscriptionPaymentLog]  SOL WITH (NOLOCK) Where SubscriptionId = @IdMemberOrSuscription
 								  ORDER BY SOL.DateCreated DESC
+
+						IF(ISNULL(@TaxId, 'CF') <> 'CF')
+						BEGIN
+							UPDATE
+								[M]
+							SET
+								InvoiceName = @TaxName
+								,TaxIdNumber = @TaxId
+								,InvoiceEmail = @InvoiceEmail
+								,FiscalAddress = @FiscalAddress
+
+							FROM	[DeliveryBackOffice].[dbo].[Membership] M 
+							WHERE	[M].[AccountId] = @IdAccount AND [M].[RowStatus] = 1
+						END
 					 END
 					 ELSE IF(@inv_cli_nit = @TaxId)
 					  BEGIN
@@ -272,6 +301,37 @@ BEGIN
 										@inv_cli_adress = M.FiscalAddress,
 										@inv_cli_nit    = REPLACE(M.TaxIdNumber, '-', ''),
 										@inv_cli_name   = M.InvoiceName,
+										@inv_IVA  =   S.SubscriptionCost - (S.SubscriptionCost / 1.12),
+										@Descriptionp = CS.SubscriptionName,
+										@IdMemberOrSuscription = S.IdSubscription,
+										@SubscriptionId = [S].[IdSubscription]
+										From dbo.Membership M WITH (NOLOCK)
+											Inner Join [dbo].[Subscription] S WITH (NOLOCK)
+										ON M.IdMembership = s.MembershipId
+											Inner Join dbo.CatSubscription CS
+										ON s.CatSubscriptionId= cs.IdCatSubscription
+										WHERE M.AccountId =   @IdAccount AND 
+											  M.RowStatus = 1 AND 
+											  CS.IdCatSubscription = @IdSalePackage
+											  ORDER BY S.DateCreated DESC
+
+										SET @dti_description = @dti_description +' '+   @Descriptionp
+
+								  SELECT  TOP 1
+									@Authorizacion =  SOL.TransactionOrder,---SOL.[Authorization],
+									@typeMoneyId = SOL.TypeOfInOutOfMoneyId
+								  FROM [dbo].[SubscriptionPaymentLog]  SOL WITH (NOLOCK) Where SubscriptionId = @IdMemberOrSuscription
+								  ORDER BY SOL.DateCreated DESC
+					 END
+					 ELSE
+					 BEGIN
+
+								Select  TOP 1
+										@inv_amount     = S.SubscriptionCost,
+										@inv_cli_email  = @InvoiceEmail,
+										@inv_cli_adress = @FiscalAddress,
+										@inv_cli_nit    = REPLACE(@TaxId, '-', ''),
+										@inv_cli_name   = @TaxName,
 										@inv_IVA  =   S.SubscriptionCost - (S.SubscriptionCost / 1.12),
 										@Descriptionp = CS.SubscriptionName,
 										@IdMemberOrSuscription = S.IdSubscription,
