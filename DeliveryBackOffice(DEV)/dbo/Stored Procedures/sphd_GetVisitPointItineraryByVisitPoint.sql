@@ -26,22 +26,25 @@ BEGIN
 			TT.IdVPItinerary IdItinerary,
 			VP.Department Province,
 			VP.Town Township
-      FROM dbo.VisitPointItinerary TT
-          JOIN dbo.VisitPointFrequency FQ WITH (NOLOCK)
+      FROM dbo.VisitPointItinerary TT WITH(NOLOCK)
+          INNER JOIN dbo.VisitPointFrequency FQ WITH (NOLOCK)
               ON FQ.IdVPFrequency = TT.VPFrequencyID AND fq.RowStatus ='true' 
-          JOIN dbo.VisitPointConfiguration CF WITH (NOLOCK)
+          INNER JOIN dbo.VisitPointConfiguration CF WITH (NOLOCK)
               ON CF.IdVPConfiguration = FQ.VPConfigurationID AND cf.RowStatus ='true'
-          JOIN dbo.VisitPointClient VP WITH (NOLOCK)
+          INNER JOIN dbo.VisitPointClient VP WITH (NOLOCK)
               ON VP.CodeOfReference = CF.VisitPointID --AND vp.StatusClient ='true'
-          JOIN dbo.Customer CS WITH (NOLOCK)
+          INNER JOIN dbo.Customer CS WITH (NOLOCK)
               ON CS.IdCustomer = VP.CustomerID AND cs.RowSatus ='true'
-          LEFT JOIN dbo.CatRoute RT
+          LEFT JOIN dbo.CatRoute RT WITH(NOLOCK)
               ON RT.IdRoute = TT.RouteCodeID 
       WHERE TT.DayOfVisit = @weekday
             AND TT.RowStatus = 'TRUE'
-      --ORDER BY TT.InitializationTimeOfVisit, TT.FinalizationTimeOfVisit, CS.IdCustomer,vp.CodeOfReference,RT.IdRoute
-	  --ORDER BY TT.OrderSequence
+			AND ISNULL(TT.InitializationTimeOfVisit, '__:__') != '__:__'
+			AND ISNULL(TT.FinalizationTimeOfVisit, '__:__') != '__:__'
+
 	  --CANTIDAD DE PUNTOS DE VISITA SIN RUTA ASIGNADA
-	SELECT COUNT(*) WITHOUTROUTE  FROM dbo.VisitPointItinerary 
+	SELECT COUNT(*) WITHOUTROUTE  FROM dbo.VisitPointItinerary WITH(NOLOCK)
 		WHERE RouteCodeID IS NULL AND DayOfVisit=@weekday AND RowStatus='TRUE'
+			AND ISNULL(InitializationTimeOfVisit, '__:__') != '__:__'
+			AND ISNULL(FinalizationTimeOfVisit, '__:__') != '__:__'
 END

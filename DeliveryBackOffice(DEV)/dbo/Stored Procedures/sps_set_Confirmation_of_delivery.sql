@@ -75,6 +75,7 @@ BEGIN
                       StatusOrderId = @StatusId
                       OR StatusOrderId = 14
                   )
+				  AND [RowStatus] = 1
         );
 
 			

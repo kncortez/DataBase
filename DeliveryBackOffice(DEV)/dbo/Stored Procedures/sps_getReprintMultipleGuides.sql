@@ -14,9 +14,66 @@ CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 AS
 BEGIN
 
-	
-	
-
+	DECLARE @FranchiseVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @IndividualWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ParserSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+	)
     DECLARE @TMPPICES TABLE
     (        
         GuideSerie nvarchar(2),
@@ -120,6 +177,8 @@ BEGIN
 									CONVERT(VARCHAR, ISNULL(dev.Package_Description, ''))				'ContentDescription',
 									CONVERT(VARCHAR, COALESCE(p.IdCountry, ''))							'IdCountry',
 									CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0))		'CountPieces',
+									CONVERT(VARCHAR, COALESCE([dev].[Ticket_Number], '0'))							'Ticket_Number',
+									CONVERT(VARCHAR, ISNULL(dev.[Order_Number], 0))		'Order_Number',
 									(CASE
                                         WHEN dev.IsCollect = 1 THEN
                                             'true'
@@ -142,7 +201,19 @@ BEGIN
 									COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0') 'IdMerchant_FA',
 									 CONTACT_FA.CONTACT_FA 'contact_FA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN CONVERT(VARCHAR, COALESCE(tws2.HeaderCode, AlterDestiny.HeaderCode, '')) ELSE CONVERT(VARCHAR, COALESCE(tws.HeaderCode, AlterOrigin.HeaderCode,''))  END )'HeaderCodeTownship_TA',
-								(CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_TA.NAME_TA  ELSE  NAME_FA.NAME_FA END) 'name_TA',
+								CONCAT(IIF(
+									ISNULL([dev].[IsLastMileReturn], 0) = 1
+									AND ISNULL([AUX2].[ExpressName], '') <> '',
+									REPLACE(
+										[dbo].[fnt_String_Escape]
+										(
+											[AUX2].[ExpressName],
+											'json'
+										),
+										'"',
+										''
+									) + ' - ',
+								'') , (CASE WHEN DEV.IsLastMileReturn<>1 THEN NAME_TA.NAME_TA  ELSE  NAME_FA.NAME_FA END)) 'name_TA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ')  ELSE CONVERT(VARCHAR, COALESCE(rgu.UsrEmail, '')) END) 'email_TA',
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN  REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ') ELSE  REPLACE(CONVERT(VARCHAR, COALESCE(dev.Sender_Phone, '')), '"', ' ') END ) 'phone_TA',								
 								(CASE WHEN DEV.IsLastMileReturn <>1 THEN   REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', ' ') ELSE ADDRES1_FA.ADDRES1_FA	END) 'address1_TA',
@@ -230,7 +301,7 @@ BEGIN
 
 
 								--COALESCE(@integrationCost, '') 'Integration',
-                                COALESCE(IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E'), '') 'Priority',
+                                COALESCE(IIF(ISNULL([dev].[IsLastMileReturn],0) = 1,'D',IIF(ctm.BusinessSegmentID = @IDCatBusinessB2B,'B','E')), '') 'Priority',
 								COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') 'QRLink',
 								COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') 'Pieces_Dry' ,
                                 COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'')  'Pieces_Cold',
@@ -244,13 +315,47 @@ BEGIN
 									ELSE
 										''
 								END
-								)'Icon'
-                                     
-
-								
+								)'Icon',
+								COALESCE
+								(
+									FORMAT([dev].[DeliveryETA], 'ddMM')
+									, ''
+								) [DeliveryETA],
+								COALESCE
+								(
+									(
+										CASE
+											WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
+											WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
+											WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
+											WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
+											ELSE 'CRÉDITO'
+										END
+									)
+									, ''
+								) [WayToPayDescription],
+								COALESCE
+								(
+									(
+										CASE
+											WHEN [vp].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+											WHEN [vp].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+											WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+											WHEN [dev].[CatSystemId] = @IndividualWebSys THEN 'WEB'
+											WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
+											WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'COR'
+											WHEN [dev].[CatSystemId] = @ParserSys THEN 'PAR'
+											WHEN [dev].[CatSystemId] IS NULL THEN 'API'
+											ELSE 'API'
+										END
+									)
+									, ''
+								) [GuideOrigin]
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+									  ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
                                   LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
                                       ON ctm.IdCustomer = dev.IdCustomer
                                   OUTER APPLY(
