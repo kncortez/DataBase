@@ -17,7 +17,8 @@ BEGIN
 	Set @idinvoice = (select inv_pk_id from [dbo].[invoiceHeader] WITH(NOLOCK)
 	where inv_certificationFEL = @fel)
     -- Insert statements for procedure here
-	select [inv_pk_id]
+	select 
+	[inv_pk_id]
       ,[inv_vpCodeOfReferences]
       ,[inv_cmp_name]
       ,[inv_cmp_nameComercial]
@@ -67,21 +68,30 @@ BEGIN
       ,[inv_dateFEL] from [dbo].[invoiceHeader] WITH(NOLOCK)
 	where inv_pk_id = @idinvoice
 
-	select [dti_fk_header]
-      ,[dti_fk_orderSerie]
-      ,[dti_fk_orderNumber]
-      ,[dti_identification]
-      ,[dti_category]
-      ,[dti_quantity]
-      ,[dti_measurement]
-      ,[dti_priceUnit]
-      ,[dti_description]
-      ,[dti_IVA]
-      ,[dti_amount]
-      ,[dti_dateRegister]
-      ,[dti_tokenRegister]
-      ,[SAPCode]
-      ,[SendToInvoice] from [dbo].[invoiceDetail] WITH(NOLOCK)
+	--select * from [dbo].[invoiceDetail] WITH(NOLOCK)
+	--where dti_fk_header = @idinvoice
+	--ORDER BY dti_dateRegister
+
+	select
+	  ivd.[dti_fk_header]
+      ,ivd.[dti_fk_orderSerie]
+      ,ISNULL(ivd.dti_fk_orderNumber, 0) as dti_fk_orderNumber
+      ,ivd.[dti_identification]
+      ,ivd.[dti_category]
+      ,ivd.[dti_quantity]
+      ,ivd.[dti_measurement]
+      ,ivd.[dti_priceUnit]
+      ,ivd.[dti_description]
+      ,ivd.[dti_IVA]
+      ,ivd.[dti_amount]
+      ,ivd.[dti_dateRegister]
+      ,ivd.[dti_tokenRegister]
+      ,ivd.[SAPCode]
+      ,ivd.[SendToInvoice]
+	  ,ISNULL(do.StatusOrderId, 0) as StatusOrderId
+	from [dbo].[invoiceDetail] ivd WITH(NOLOCK)
+	LEFT JOIN DeliveryOrder do WITH(NOLOCK)
+	ON ivd.dti_fk_orderNumber = do.Guide_Number
 	where dti_fk_header = @idinvoice
 	ORDER BY dti_dateRegister
 
