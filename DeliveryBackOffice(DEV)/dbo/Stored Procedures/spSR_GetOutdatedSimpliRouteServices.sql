@@ -49,6 +49,6 @@ BEGIN
 		AND		[STC].[CatConfigurableServiceId] = @CatConfigurableServiceId
 	WHERE		[EPPSL].[IsInExternalPlatform] = 1 
 		AND		[EPPSL].[RowStatus] = 1
-		AND		([STC].[RowStatus] = 0 OR [SPC].[RowStatus] = 0 OR [SP].[RowStatus] = 0);
+		AND		([STC].[RowStatus] = 0 OR [SPC].[RowStatus] = 0 OR [SP].[SchedulePickupStatus] = 0);
     
 END
