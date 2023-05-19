@@ -1,254 +1,484 @@
 ﻿-- =============================================
--- Author:		<Author,,Name>
--- Create date: <Create Date,2023-04-28>
--- Description:	<Description,>
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-05-17>
+-- Description:	<Obtener guías impersonadas desdes express center>
+-- =============================================
+-- =============================================
+-- Author:		<Andrés,Ruíz>
+-- Update date: <2023-05-19>
+-- Description:	<Corrección de funcionamiento de procedimiento>
 -- =============================================
 CREATE PROCEDURE [dbo].[GuidesImpersonatingaCustomerfromAnExpressCenter]
 
-   -- Add the parameters for the stored procedure here 
-    --@StartDate DATETIME,
-    --@EndDate DATETIME ,
-    @Token VARCHAR(200),
-    @Email VARCHAR(50),
-    @DPI VARCHAR(50),
-    @InitialDate DATE,
-    @EndDate DATE
+    @AccountId INT, 
+	@StartDate DATETIME = NULL,
+	@EndDate DATETIME = NULL,
 
+	@GuideFilter NVARCHAR(50) = NULL,
+
+	@ShowAll BIT = 0,
+	@OnlyShowNotStarted BIT = 0,
+	@OnlyShowInProgress BIT = 0,
+	@OnlyShowCompleted BIT = 0,
+	@OnlyShowCanceled BIT = 0,
+
+	@DisplayRegistries INT = 10,
+	@DisplayPage INT = 0,
+
+    @Email VARCHAR(50) = '',
+    @DPI VARCHAR(50) = ''
+   
 AS
-
 BEGIN
 
-DECLARE @IdAccount INT;
-DECLARE @IdUser INT;
-DECLARE @jsonResult NVARCHAR(MAX);
+	SET NOCOUNT ON;
 
-IF (@Email='')
+	DECLARE @ExpressCenterKindOfVisitPoint INT = 
+	(
+		SELECT 
+			TOP 1
+				[KOVPC].[IdKindOfVPClient]
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	);
 
-BEGIN
+	DECLARE @IsAccountExpressCenter BIT = 0;
 
-SELECT TOP 1 @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.Person WITH(NOLOCK)
-INNER JOIN dbo.RegisterUser ru WITH(NOLOCK) ON ru.UsrIdPerson = PerIdPerson
-INNER JOIN dbo.RolByUserByAccount rub WITH(NOLOCK) ON rub.RuaIdUser = UsrIdUser
-WHERE PerIdentification= @DPI
+	SELECT 
+		TOP 1
+			@IsAccountExpressCenter = 1
+	FROM
+		[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA  WITH(NOLOCK) 
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[VisitPointByUser] VPBU  WITH(NOLOCK) 
+			ON
+				[RBUBA].[RuaIdUser] = [VPBU].[RegisterUserID]
+		INNER JOIN
+			[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+			ON
+				[VPC].[IdVisitPointClient] = [VPBU].[IdVisitPointClient]
+	WHERE
+		[RBUBA].[RuaIdAccount] = @AccountId
+		AND
+		[VPC].[IdKindOfVPClient] = @ExpressCenterKindOfVisitPoint
 
-END
+	IF ( @IsAccountExpressCenter IS NULL )
+	BEGIN
+	    SET @IsAccountExpressCenter = 0;
+	END
 
-ELSE
+	IF(ISNULL(@IsAccountExpressCenter, 0) = 1)
+	BEGIN
+	    
+		DECLARE @ClientAccountId BIGINT;
 
-BEGIN
+		IF (ISNULL(@DPI, '') <> '')
+		BEGIN
 
-SELECT @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser FROM dbo.RegisterUser WITH(NOLOCK)
-INNER JOIN dbo.RolByUserByAccount rub WITH(NOLOCK) ON rub.RuaIdUser = UsrIdUser
-WHERE UsrEmail = @Email
+			SELECT 
+				TOP (1) 
+					@ClientAccountId = [RBUBA].[RuaIdAccount]
+			FROM 
+				[DeliveryBackOffice].[dbo].[Person] Prs WITH(NOLOCK)
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK) 
+					ON 
+						[RU].[UsrIdPerson] = [Prs].[PerIdPerson]
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK) 
+					ON 
+						[RBUBA].[RuaIdUser] = [RU].[UsrIdUser]
+			WHERE 
+				[Prs].[PerIdentification] = @DPI
 
-END
+		END
+		ELSE IF (ISNULL(@Email, '') <> '')
+		BEGIN
 
-SET @jsonResult =
-        (
-            SELECT STUFF(
-                            (
-                                SELECT ',{"Guide":"' + ISNULL(CONCAT(ord.Guide_Serie, ord.Guide_Number), 'N/A') + '",'
-                                       + '"RequestDate":"' + ISNULL(CONVERT(VARCHAR, ord.DateCreated, 20), 'N/A')
-                                       + '",' + '"Source":"'
-                                       + ISNULL(CONCAT(twn.TownshipName, pr.ProvinceAbbreviation), 'N/A') + '",'
-                                       + '"Destiny":"'
-                                       + ISNULL(CONCAT(twd.TownshipName, prd.ProvinceAbbreviation), 'N/A') + '",'
-                                       + '"NameofSender":"'
-                                       + ISNULL(
-                                                   dbo.fnt_String_Escape((CAST(UPPER(ISNULL(REPLACE(ord.Sender_FirstName,'"',''), '')) AS VARCHAR) + ' '
-                                                   + CAST(UPPER(ISNULL(REPLACE(ord.Sender_LastName,'"',''), '')) AS VARCHAR)),'json')
-												   ,
-                                                   'N/A'
-                                               ) + '",' + '"NameReceiver":"'
-                                       + ISNULL(
-                                                   CAST(UPPER(ISNULL(dbo.fnt_String_Escape(REPLACE(ord.Receiver_FirstName,'"',''),'json'), 'N/A')) AS VARCHAR) + ' '
-                                                   + CAST(UPPER(ISNULL(dbo.fnt_String_Escape(REPLACE(ord.Receiver_LastName,'"',''),'json'), '')) AS VARCHAR) ,
-                                                   'N/A'
-                                               ) + '",' + '"AddresofSender":"'
-                                       + ISNULL(
-                                                   CAST(UPPER(ISNULL(
-                                                                        dbo.fnt_String_Escape(
-                                                                                                 REPLACE(ord.Sender_Address,'"',''),
-                                                                                                 'json'
-                                                                                             ),
-                                                                        'N/A'
-                                                                    )
-                                                             ) AS VARCHAR),
-                                                   'N/A'
-                                               ) + '",' + '"DateRecoleccion":"'
-                                       + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
-                                       + '",' + '"DateProgramadaEntrega":"'
-                                       + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') + '",'
-                                       + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
-                                       +
-                                    --'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
-                                    '"PrecioServicio":"'
-                                       + CONVERT(VARCHAR, CAST(COALESCE(ord.PriceShippment, '0') AS MONEY), 1) + '",'
-                                       + '"CollectOnDelivery":"'
-                                       + CONVERT(VARCHAR, CAST(COALESCE(ord.Collect_OnDelivery, '0') AS MONEY), 1)
-                                       + '",' + '"ShippmentComplete":'
-                                       + CONVERT(VARCHAR, COALESCE(paydord.ShipmentCompleted, 'false')) + ','
-                                       + '"IdStatus":' + CONVERT(VARCHAR, COALESCE(sto.StatusOrderId, '0')) + ','
-                                       + '"Status":"' + ISNULL(CONVERT(VARCHAR, sto.OrderDescription), 'N/A') + '",'
-                                       + '"WayToPay":"'
-                                       + IIF(ISNULL(paydord.ShipmentCompleted, 0) = 0,
-                                             'PENDIENTE',
-                                             (ISNULL(CONVERT(   VARCHAR,
-                                                                CASE
-																	WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
-                                                                    WHEN paydord.TypeofInOutMoneyId = 1 THEN
-                                                                        UPPER(catpay.PayTypeName)
-                                                                    WHEN paydord.TypeofInOutMoneyId = 2 THEN
-                                                                        UPPER(catpay.PayTypeName)
-                                                                    ELSE
-                                                                        CASE
-                                                                            WHEN ord.IsCollect = 1 THEN
-                                                                                'COLLECT'
-                                                                            ELSE
-                                                                                'CONTADO'
-                                                                        END
-                                                                END
-                                                            ),
-                                                     'N/A'
-                                                    )
-                                             )) + '",' + '"TimePayment":"'
-                                       + ISNULL(CONVERT(VARCHAR, paydord.TimePlaId), '') + '",'
-                                       + '"TimePaymentDescription":"'
-                                       + ISNULL(
-                                                   CONVERT(   VARCHAR,
-                                                   (
-                                                       SELECT TimePlaName
-                                                       FROM DeliveryBackOffice.dbo.CatPaymentTime TMD
-                                                       WHERE paydord.TimePlaId = TMD.TimePlaId
-                                                   )
-                                                          ),
-                                                   ''
-                                               ) + '",' + '"TypePayment":"'
-                                       + ISNULL(
-                                                   CONVERT(
-                                                              VARCHAR,
-                                                              CASE
-																  WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
-                                                                  WHEN paydord.TypeofInOutMoneyId = 1 THEN
-                                                                      UPPER(ctgmon.tio_pk_name)
-                                                                  WHEN paydord.TypeofInOutMoneyId = 2 THEN
-                                                                      UPPER(ctgmon.tio_pk_name)
-                                                                  WHEN paydord.TypeofInOutMoneyId = 3 THEN
-                                                                      UPPER(ctgmon.tio_pk_name)
-                                                                  WHEN paydord.TypeofInOutMoneyId = 4 THEN
-                                                                      UPPER(ctgmon.tio_pk_name)
-                                                                  ELSE
-                                                                      CASE
-                                                                          WHEN ord.IsCollect = 1 THEN
-                                                                              'EFECTIVO'
-                                                                          ELSE
-                                                                              CASE
-                                                                                  WHEN
-                                                                                  (
-                                                                                      SELECT COUNT(*)
-                                                                                      FROM Cost C
-                                                                                          INNER JOIN CostDetail CD WITH(NOLOCK)
-                                                                                              ON C.IdCost = CD.IdCost
-                                                                                                 AND C.RowStatus = 1
-                                                                                      WHERE ProductNumber = CONCAT(
-                                                                                                                      ord.Guide_Serie,
-                                                                                                                      ord.Guide_Number
-                                                                                                                  )
-                                                                                  ) > 1 THEN
-                                                                                      'TARJETA'
-                                                                                  WHEN
-                                                                                  (
-                                                                                      SELECT 1 FROM InternalUser WHERE RegisterUserID = @IdUser
-                                                                                  ) = 1 THEN
-                                                                                      'EFECTIVO'
-                                                                                  ELSE
-                                                                                      'TARJETA'
-                                                                              END
-                                                                      END
-                                                              END
-                                                          ),
-                                                   'N/A'
-                                               ) + '",' + '"CollectDelivery":"'
-                                       + ISNULL(CONVERT(   VARCHAR,
-                                                           CASE
-                                                               WHEN ord.IsCollect = 1 THEN
-                                                                   'SI'
-                                                               ELSE
-                                                                   'NO'
-                                                           END
-                                                       ),
-                                                'N/A'
-                                               ) + '",' + +'"TypeService":"'
-                                       + ISNULL(CAST(ord.TypeService AS VARCHAR), '') + '"}'
-                                FROM dbo.DeliveryOrder ord WITH(NOLOCK)
-                                    INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
-                                        ON sto.StatusOrderId = ord.StatusOrderId
-                                    LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-                                        ON (ord.Guide_Number = paydord.GuideNumber)
-                                    LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
-                                        ON (catpay.PayTypeId = paydord.PayTypeId)
-                                    LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
-                                        ON (cattime.TimePlaId = paydord.TimePlaId)
-                                    LEFT JOIN [dbo].[ctgTypeOfInOutOfMoney] ctgmon WITH(NOLOCK)
-                                        ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
-                                    --LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
-                                    LEFT JOIN dbo.Township twn WITH(NOLOCK)
-                                        ON twn.IdTownship = ord.SenderIdTownship
-                                    LEFT JOIN dbo.Province pr WITH(NOLOCK)
-                                        ON pr.IdProvince = twn.IdProvince
-                                    LEFT JOIN dbo.Township twd WITH(NOLOCK)
-                                        ON twd.IdTownship = ord.ReceiverIdTownship
-                                    LEFT JOIN dbo.Province prd WITH(NOLOCK)
-                                        ON prd.IdProvince = twd.IdProvince
-									LEFT JOIN
-										[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
-										ON
-											ord.Guide_Serie = PBSL.GuideSerie
-											AND
-											ord.Guide_Number = PBSL.GuideNumber
-											AND
-											PBSL.PointsConsumed > 0
-											AND
-											PBSL.PointsReceived = 0
-                                --select convert(varchar ,cast(2000 as money),1) from
+			SELECT 
+				TOP (1)
+					@ClientAccountId = [RBUBA].[RuaIdAccount] 
+			FROM 
+				[DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK)
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK) 
+					ON 
+						[RBUBA].[RuaIdUser] = [RU].[UsrIdUser]
+			WHERE 
+				[RU].[UsrEmail] = @Email
 
-                                WHERE CONVERT(DATE , ord.DateCreated) BETWEEN @InitialDate AND  @EndDate AND ( ord.Sender_ID IN
-                                      (
-                                          SELECT ua.CodeOfReference
-                                          FROM dbo.RolByUserByAccount rua WITH(NOLOCK)
-                                              INNER JOIN dbo.UserAddress ua WITH(NOLOCK)
-                                                  ON ua.UadIdAccount = rua.RuaIdAccount
-                                          WHERE rua.RuaIdAccount = @IdAccount
-                                                AND rua.RuaIdUser = @IdUser
-                                                AND rua.RuaRowStatus = 1
-                                                AND ua.CodeOfReference IS NOT NULL
-                                      )
-                                      OR
-                                      (
-                                         ---- ord.Sender_ID = 0
-                                          --AND 
-										  ord.IdCustomer =
-                                          (
-                                              SELECT TOP 1 IdCustomer FROM Account WHERE AccIdAccount = @IdAccount
-                                          )
-                                      ))
-                                ORDER BY ord.Guide_Number DESC
-                                --	where ord.Sender_ID = 4244
-                                --and (ord.DateCreated between @StartDate and @EndDate)
-                                --and (@Filter = '-1' or concat(ord.Guide_Serie,ord.Guide_Number)   like '%'+@Filter+ '%'
-                                --	or twn.TownshipName like '%'+@Filter+ '%'
-                                --	or twd.TownshipName like '%'+@Filter+ '%' )
+		END
 
+		IF (ISNULL(@ClientAccountId, 0) > 0)
+		BEGIN
+	
+			IF OBJECT_ID('tempdb.dbo.#AccountFilteredGuides', 'U') IS NOT NULL DROP TABLE #AccountFilteredGuides;
 
+			DECLARE @NotStartCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint inicial' COLLATE Latin1_General_CI_AI);
+			DECLARE @InProgessCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de proceso' COLLATE Latin1_General_CI_AI);
+			DECLARE @CompletedCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final' COLLATE Latin1_General_CI_AI);
+			DECLARE @IncidenceCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia' COLLATE Latin1_General_CI_AI);
 
-                                FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
-                        )
-        );
+			DECLARE @CanceledStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI);
 
- SELECT ('[' + @jsonResult + ']') jsonResult;
+			DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora' COLLATE Latin1_General_CI_AI)
+
+			-- Configuraciones generales
+			DECLARE @OffsetRegistries BIGINT = @DisplayPage * @DisplayRegistries;
+			DECLARE @TotalServices BIGINT = 0;
+
+			-- Variables de control de flujo
+			DECLARE @CustomerId INT = NULL;
+			DECLARE @CustomerTypeId INT = NULL;
+			DECLARE @VisitPointByAccount INT = NULL;
+
+			DECLARE @FilteredStatus AS TABLE (
+				StatusOrderId INT
+			);
+	
+				DECLARE @ExternalTypeId INT = (
+						SELECT
+							TOP 1
+								CST.IdCatStatusType
+						FROM
+							[DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
+						WHERE
+							CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
+					)
+			-- Obtener datos de usuario
+			SELECT
+				@CustomerId = Cu.IdCustomer
+				,@CustomerTypeId = Cu.IdCustomerType
+				,@VisitPointByAccount = VPC.CodeOfReference
+			FROM
+				[DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
+					ON
+						Acc.IdCustomer = Cu.IdCustomer
+						AND
+						ISNULL(Cu.RowSatus,1) = 1
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
+					ON
+						RBUBA.RuaIdAccount = Acc.AccIdAccount
+						AND
+						RBUBA.RuaRowStatus = 1
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[VisitPointByUser] VPBU WITH(NOLOCK)
+					ON
+						RBUBA.RuaIdUser = VPBU.RegisterUserID
+						AND
+						VPBU.RowStatus = 1
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+					ON
+						VPBU.IdVisitPointClient = VPC.IdVisitPointClient
+						AND
+						VPC.StatusClient = 1
+			WHERE
+				Acc.AccIdAccount = @ClientAccountId
+				AND
+				Acc.AccRowStatus = 1
+
+			-- Ingreso de filtros de estado
+			INSERT INTO @FilteredStatus
+				(StatusOrderId)
+			SELECT
+				SO.StatusOrderId
+			FROM
+				[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
+			WHERE
+				@ShowAll = 1
+				OR
+				(@OnlyShowNotStarted = 1 AND SO.CatCheckpointTypeId = @NotStartCheckpontTypeId)
+				OR
+				(@OnlyShowInProgress = 1 AND SO.CatCheckpointTypeId = @InProgessCheckpontTypeId)
+				OR
+				(@OnlyShowCompleted = 1 AND SO.CatCheckpointTypeId = @CompletedCheckpontTypeId AND SO.StatusOrderId != @CanceledStatusOrderId)
+				OR
+				(@OnlyShowCanceled = 1 AND SO.StatusOrderId = @CanceledStatusOrderId)
+
+			-- Filtro de datos
+			BEGIN TRY
+				CREATE TABLE #AccountFilteredGuides (
+					GuideSerie NVARCHAR(2),
+					GuideNumber INT,
+					StatusOrderId INT,
+					Pieces_Dry INT,               
+					Pieces_Cold INT,
+					Ticket_Number NVARCHAR(50),
+					Receiver_FirstName NVARCHAR(100),
+					Receiver_LastName NVARCHAR(100),
+					Receiver_Phone NVARCHAR(100),
+					IsCollect BIT,
+					PriceShippment DECIMAL(18,2),
+					Collect_OnDelivery DECIMAL(18,2),
+					TypeService NVARCHAR(5),
+					DateCreated DATETIME
+				);
+
+				CREATE NONCLUSTERED INDEX IX_ProductVendor_Guide ON #AccountFilteredGuides (GuideSerie, GuideNumber);
+				CREATE NONCLUSTERED INDEX IX_ProductVendor_Status ON #AccountFilteredGuides (StatusOrderId);
+		
+				-- INDIVIDUALES
+				IF(@CustomerTypeId = 3)
+				BEGIN
+
+					INSERT INTO #AccountFilteredGuides
+						(
+							GuideSerie
+							,GuideNumber
+							,StatusOrderId
+							,Pieces_Dry
+							,Pieces_Cold
+							,Ticket_Number
+							,Receiver_FirstName
+							,Receiver_LastName
+							,Receiver_Phone
+							,IsCollect
+							,PriceShippment
+							,Collect_OnDelivery
+							,TypeService
+							,DateCreated
+						)
+					SELECT
+						DISTINCT
+							DO.Guide_Serie
+							,DO.Guide_Number
+							,LastExternalStatus.StatusOrderId
+							,DO.Pieces_Dry
+							,DO.Pieces_Cold
+							,DO.Ticket_Number
+							,DO.Receiver_FirstName
+							,DO.Receiver_LastName
+							,DO.Receiver_Phone
+							,DO.IsCollect
+							,DO.PriceShippment
+							,DO.Collect_OnDelivery
+							,DO.TypeService
+							,DO.DateCreated
+					FROM
+						[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+						OUTER APPLY (
+							SELECT
+								TOP (1)
+									SO.[StatusOrderId]
+							FROM
+								[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD  WITH(NOLOCK) 
+								INNER JOIN
+									[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+									ON
+										[SO].[StatusOrderId] = [DOD].[StatusOrderId]
+										AND
+										[SO].[CatStatusTypeId] = @ExternalTypeId
+							WHERE
+								DOD.[Guide_Serie] = DO.[Guide_Serie]
+								AND
+								DOD.[Guide_Number] = DO.[Guide_Number]
+								AND
+								DOD.[RowStatus] = 1
+							ORDER BY
+								DOD.[DateCreated] DESC
+						) LastExternalStatus
+						INNER  JOIN
+							@FilteredStatus FS
+							ON
+							LastExternalStatus.StatusOrderId = FS.StatusOrderId 
+
+					WHERE
+						-- Área de filtros
+						(
+							( @CustomerTypeId = 3 AND DO.IdCustomer = @CustomerId)
+						)
+						AND
+						( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+						AND
+						( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+				
+
+				END
+				-- CORPORATIVOS
+				ELSE IF (@CustomerTypeId = 1)
+				BEGIN
+
+					INSERT INTO #AccountFilteredGuides
+						(
+							GuideSerie
+							,GuideNumber
+							,StatusOrderId
+							,Pieces_Dry
+							,Pieces_Cold
+							,Ticket_Number
+							,Receiver_FirstName
+							,Receiver_LastName
+							,Receiver_Phone
+							,IsCollect
+							,PriceShippment
+							,Collect_OnDelivery
+							,TypeService
+							,DateCreated
+						)
+					SELECT
+						DISTINCT
+							DO.Guide_Serie
+							,DO.Guide_Number
+							,DO.StatusOrderId
+							,DO.Pieces_Dry
+							,DO.Pieces_Cold
+							,DO.Ticket_Number
+							,DO.Receiver_FirstName
+							,DO.Receiver_LastName
+							,DO.Receiver_Phone
+							,DO.IsCollect
+							,DO.PriceShippment
+							,DO.Collect_OnDelivery
+							,DO.TypeService
+							,DO.DateCreated
+					FROM
+						[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+						INNER JOIN
+							@FilteredStatus FS
+							ON
+								DO.StatusOrderId = FS.StatusOrderId
+					WHERE
+						-- Área de filtros
+						(
+							( @CustomerTypeId = 1 AND (DO.Sender_ID = @VisitPointByAccount)  )
+						)
+						AND
+						( (@StartDate IS NULL AND @EndDate IS NULL) OR DO.DateCreated BETWEEN @StartDate AND @EndDate )
+						AND
+						( @GuideFilter IS NULL OR CONCAT(DO.Guide_Serie, DO.Guide_Number) LIKE '%'+LTRIM(RTRIM(@GuideFilter))+'%' )
+
+				END
+
+				IF( EXISTS(SELECT TOP 1 1 FROM #AccountFilteredGuides) )
+				BEGIN
+
+					SELECT
+						200 'ResultCode',
+						'Datos obtenidos correctamente' 'ResultMessage',
+						(SELECT COUNT(1) FROM #AccountFilteredGuides) 'TotalGuides'
+
+					SELECT
+						CONCAT(DO.GuideSerie, DO.GuideNumber) 'Guide',
+						(ISNULL(DO.Pieces_Dry,0) + ISNULL(DO.Pieces_Cold,0)) 'Pieces',
+						ISNULL(DO.Ticket_Number,'') 'Reference',
+						UPPER(LTRIM(RTRIM(CONCAT(DO.Receiver_FirstName,' ',DO.Receiver_LastName)))) 'ReceiverName',
+						ISNULL(DO.Receiver_Phone, '') 'ReceiverPhone',
+						(CASE
+							WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 0
+							ELSE ISNULL(DO.IsCollect, 0)
+						END) 'IsCollect',
+						CAST(CAST(ISNULL(DO.PriceShippment, 0) AS MONEY) AS NVARCHAR) 'PriceService',
+						CAST(CAST(ISNULL(DO.Collect_OnDelivery, 0) AS MONEY) AS NVARCHAR) 'CollectOnDelivery',
+						SO.StatusOrderId 'IdStatus',
+						UPPER(SO.OrderDescription) 'StatusDescription',
+						ISNULL(DOPD.ShipmentCompleted, 0) 'ShippmentComplete',
+						ISNULL((
+							CASE
+								WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN 'PENDIENTE'
+								WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN 'PUNTOS'
+								WHEN DOPD.TimePlaId = 8 THEN 'CREDITO'
+								WHEN DO.IsCollect = 1 THEN 'COLLECT'
+								ELSE UPPER(CPType.PayTypeName)
+							END
+						), 'PENDIENTE') 'WayToPay',
+						ISNULL((
+							CASE
+								WHEN ISNULL(DOPD.ShipmentCompleted, 0) = 0 THEN UPPER('pendiente de pago')
+								WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN UPPER('Pago con puntos forza')
+								WHEN DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+								WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER('pago al crédito')
+								ELSE UPPER(IOOMT.tio_pk_name)
+							END
+						), UPPER('pago en efectivo')) 'TypePayment',
+						UPPER(ISNULL(DO.TypeService, '')) 'TypeService',
+						(CASE 
+							WHEN PBSL.IdPointsByServiceLog IS NOT NULL THEN CONVERT(VARCHAR, @InmediatePaymentTime)
+							ELSE ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 
+						END) 'TimePayment',
+						ISNULL(CPTime.TimePlaName, '') 'TimePaymentDescription',
+						'Q.' 'CurrencySymbol'
+					FROM
+						#AccountFilteredGuides DO WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
+							ON
+								DO.StatusOrderId = SO.StatusOrderId
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH(NOLOCK)
+							ON
+								DOPD.GuideSerie = DO.GuideSerie
+								AND
+								DOPD.GuideNumber = DO.GuideNumber
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[CatPaymentType] CPType WITH(NOLOCK)
+							ON
+								DOPD.PayTypeId = CPType.PayTypeId
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[CatPaymentTime] CPTime WITH(NOLOCK)
+							ON
+								DOPD.TimePlaId = CPTime.TimePlaId
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] IOOMT WITH(NOLOCK)
+							ON
+								DOPD.TypeofInOutMoneyId = IOOMT.tio_pk_id
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
+							ON
+								DO.GuideSerie = PBSL.GuideSerie
+								AND
+								DO.GuideNumber = PBSL.GuideNumber
+								AND
+								PBSL.PointsConsumed > 0
+								AND
+								PBSL.PointsReceived = 0
+						ORDER BY
+							DO.DateCreated DESC
+						OFFSET @OffsetRegistries ROWS FETCH NEXT @DisplayRegistries ROWS ONLY
+
+				END
+				ELSE
+				BEGIN
+
+					SELECT
+						204 'ResultCode',
+						'No se encontraron datos' 'ResultMessage'
+
+				END
+			END TRY
+			BEGIN CATCH
+
+				SELECT
+					500 'ResultCode',
+					'Error en obtener datos' 'ResultMessage'
+
+			END CATCH
+	
+			IF OBJECT_ID('tempdb.dbo.#AccountFilteredGuides', 'U') IS NOT NULL DROP TABLE #AccountFilteredGuides;
+	    
+		END
+		ELSE
+		BEGIN
+
+			SELECT
+				204 'ResultCode',
+				'No se encontraron datos' 'ResultMessage'
+	    
+		END
+
+	END
+	ELSE
+    BEGIN
+        
+		SELECT
+			401 'ResultCode',
+			'No se tienen permisos para obtener esta información' 'ResultMessage'
+	    
+    END
 
  END
