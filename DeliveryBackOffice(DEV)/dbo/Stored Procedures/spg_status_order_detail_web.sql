@@ -6,12 +6,14 @@
 -- =============================================
 -- Updates
 -- Author:		<Jerson Ochoa>
--- Date: <21-02-2023>
+-- Date:		<21-02-2023>
 -- Description: <Management for checkpoint icons>
--- Date: <28-03-2023>
+-- Date:		<28-03-2023>
 -- Description: <Add Username and station for each registered checkpoint>
 -- Date:		<24-04-2023>
 -- Description: <Show coordinates, pictures and incidence description>
+-- Date:		<09-05-2023>
+-- Description: <Show coordinates, pictures and incidence description by DeliveryAttemptId>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
     @Guide_Serie NVARCHAR(2),
@@ -118,31 +120,27 @@ BEGIN
                      ISNULL(dod.Observations, '')
                  WHEN dod.StatusOrderId IN ( 12, 45 ) THEN -- 12 Intento de entrega fallida | 45 Incidencia en ruta
                      ISNULL(
-                     (
-                         SELECT TOP 1
-								   (SELECT '[ ' + 
-											DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(courier.First_Name) + ' '+LOWER(courier.Last_Name)) +
-											' ]'
-											+ ' ' +
-											CASE 
-												WHEN [HL].[HubAbbreviation] IS NOT NULL THEN ( '[ ' + [HL].[HubAbbreviation] + ' ]' )
-												ELSE ''
-											END
-								   FROM dbo.SenderReceiver courier 
-								   LEFT JOIN [dbo].[HubLogistics] HL
-									ON [courier].[HubLogisticId] = [HL].[IdHubLogistic]
-								   WHERE courier.ID = da.ID_Courier) + ' ' + 
-								   --I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
-								   ISNULL(dod.Observations,'')
-							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
-								INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da 
-									ON da.ID_Incident = I.IdIncidenceType
-                         WHERE dod.Guide_Serie = da.Guide_Serie
-                               AND dod.Guide_Number = da.Guide_Number
-                         ORDER BY da.Date_Created DESC
+						 (
+							(
+								CASE
+									WHEN [SR].[ID] IS NOT NULL THEN '[ ' + 
+									DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER([SR].First_Name) + ' '+LOWER([SR].Last_Name)) +
+									' ]'
+									ELSE ''
+								END
+							)
+									+ ' ' +
+									(
+										CASE 
+											WHEN [HL].[HubAbbreviation] IS NOT NULL THEN ( '[ ' + [HL].[HubAbbreviation] + ' ]' )
+											ELSE ''
+										END
+									)
+							+ ' ' + 
+							ISNULL(dod.Observations,'')
                      ),
                      ''
-                           )
+                )
                  WHEN dod.StatusOrderId IN ( 15 ) THEN -- 15 Generado
                      ''
 				ELSE
@@ -168,56 +166,17 @@ BEGIN
             (
                 ISNULL(	
 					ISNULL(
-							ISNULL(
-											(
-												SELECT TOP 1
-														'data:image/jpeg;base64,'
-														+
-														(
-															SELECT CAST('' AS XML).value(
-																							'xs:base64Binary(sql:column("PICTURE"))',
-																							'varchar(max)'
-																						)
-														)
-												FROM
-												(
-													SELECT IIF([dp].[Proof_Dry] = 0x, dp.Proof_Cold, ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
-															Date_Photo
-													FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-														INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-															ON da.Guide_Serie = dp.Guide_Serie
-																AND da.Guide_Number = dp.Guide_Number
-																AND da.Verified = 1
-																AND da.Accepted = 1
-													WHERE dp.Guide_Serie = 'FD'
-															AND dp.Guide_Number = @Guide_Number
-															AND
-															(
-																dp.Proof_Incident != 0x
-																OR dp.Proof_Incident IS NULL
-															)
-												) L1
-												ORDER BY L1.Date_Photo DESC
-											),
-											(CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
-																									+ CAST(dod.Guide_Number AS VARCHAR)
-																									) AS VARCHAR(300))
-											)
-										),
-									(	SELECT TOP 1 [DP].[Path_Incident]
-										FROM		[dbo].[DeliveryAttempt] DA
-										INNER JOIN	[dbo].[DeliveryProof] DP
-											ON		[DA].[ID_Proof] = [DP].[ID]
-											AND		[DP].[Date_Photo] = [dod].[DateCreated]
-										INNER JOIN	[dbo].[ConfirmationOfIncidence] COI
-											ON		[DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
-										INNER JOIN	[dbo].[CatTypeConfirmationOfIncidence] CTC
-											ON		[COI].[CatTypeConfirmationOfIncidenceId] = [CTC].[IdCatTypeConfirmationOfIncidence]
-										INNER JOIN	[dbo].[StatusOrder] SO
-											ON		[DOD].[StatusOrderId] = [SO].[StatusOrderId]
-										WHERE		[DA].[Guide_Serie] = [dod].[Guide_Serie]
-											AND		[DA].[Guide_Number] = [dod].[Guide_Number]
+							
+											
+											
+									ISNULL
+									(
+										[DP].[Path_Dry]
+										,[DP].[Path_Incident]
 									)
+									,
+									(CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie + CAST(dod.Guide_Number AS VARCHAR) ) AS VARCHAR(300))
+											)
 							), 
 					''
 				)
@@ -231,7 +190,7 @@ BEGIN
                                                   AND da.Verified = 1
                                                   AND da.Accepted = 1
                                        WHERE dp.Guide_Serie = 'FD'
-                                             AND dp.Guide_Number = @Guide_Number order By dp.Date_Photo desc) AS [Dry],
+                                             AND dp.Guide_Number = @Guide_Number ORDER BY dp.Date_Photo DESC) AS [Dry],
 
 			(SELECT TOP 1
 			IIF([dp].[Path_Cold] = '', dp.Path_Cold,ISNULL([Path_Cold], [Path_Cold]))
@@ -242,7 +201,7 @@ BEGIN
                                                   AND da.Verified = 1
                                                   AND da.Accepted = 1
                                        WHERE dp.Guide_Serie = 'FD'
-                                             AND dp.Guide_Number = @Guide_Number order By dp.Date_Photo desc) AS [Cold],
+                                             AND dp.Guide_Number = @Guide_Number ORDER BY dp.Date_Photo DESC) AS [Cold],
 
             '' AS NameOfReceiver,
             '' AS Place,
@@ -251,27 +210,24 @@ BEGIN
             [DA].[Longitude] AS Longitude,
 			dod.UserCreated Token,
 			'' AS NextSteps,
-			ISNULL((SELECT		TOP 1 [CTI].[NameIncidence]
-			FROM		[dbo].[DeliveryAttempt] DA
-			INNER JOIN	[dbo].[CatTypeIncidence] CTI
-				ON		[DA].[ID_Incident] = [CTI].[IdIncidenceType]
-			INNER JOIN	[dbo].[DeliveryProof] DP
-				ON		[DA].[ID_Proof] = [DP].[ID]
-				AND		[DP].[Date_Photo] = [dod].[DateCreated]
-			WHERE		[DA].[Guide_Serie] = @Guide_Serie
-				AND		[DA].[Guide_Number] = @Guide_Number), '') AS [IncidenceDescription]
+			ISNULL([CTI].[NameIncidence], '') AS [IncidenceDescription]
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
 			ON so.StatusOrderId = dod.StatusOrderId
-		INNER JOIN [dbo].[CatCheckpointType] CCT
+		INNER JOIN [dbo].[CatCheckpointType] CCT  WITH(NOLOCK)	
 			ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
-		LEFT JOIN [dbo].[DeliveryProof] DP
-			ON [dod].[DateCreated] = [Date_Photo]
-		LEFT JOIN [dbo].[DeliveryAttempt] DA
+		LEFT JOIN [dbo].[DeliveryAttempt] DA  WITH(NOLOCK) 
+			ON [DOD].[DeliveryAttemptId] = [DA].[ID]
+		LEFT JOIN [dbo].[CatTypeIncidence] CTI  WITH(NOLOCK) 
+			ON [DA].[ID_Incident] = [CTI].[IdIncidenceType]
+		LEFT JOIN [dbo].[DeliveryProof] DP  WITH(NOLOCK) 
 			ON [DP].[ID] = [DA].[ID_Proof]
+		LEFT JOIN [dbo].[SenderReceiver] SR  WITH(NOLOCK) 
+			ON [DA].[ID_Courier] = [SR].[ID]
+		LEFT JOIN [dbo].[HubLogistics] HL
+			ON [SR].[HubLogisticId] = [HL].[IdHubLogistic]
         WHERE dod.Guide_Serie = @Guide_Serie
             AND dod.Guide_Number = @Guide_Number
-        --ORDER BY DateCreated
         GROUP BY CONVERT(DATE, dod.DateCreated),
                  dod.Guide_Serie,
                  dod.Guide_Number,
@@ -282,7 +238,16 @@ BEGIN
 				 [DA].[Latitude],
 				 [DA].[Longitude],
                  so.OrderDescription,
-				 [CCT].[CheckpointIcon]
+				 [CCT].[CheckpointIcon],
+				 [DOD].[DeliveryAttemptId],
+				 [CTI].[NameIncidence],
+				 [DP].[Path_Dry],
+				 [DP].[Path_Cold],
+				 [DP].[Path_Incident],
+				 [SR].[ID],
+				 [SR].First_Name,
+				 [SR].[Last_Name],
+				 [HL].[HubAbbreviation]
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
