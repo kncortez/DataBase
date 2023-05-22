@@ -56,6 +56,7 @@ BEGIN
 				[SO].[OrderDescription] = 'En Tránsito'  COLLATE Latin1_General_CI_AI  OR
 				[SO].[OrderDescription] = 'En preparación de traslado'  COLLATE Latin1_General_CI_AI  OR
 				[SO].[OrderDescription] = 'Declarado para Devolución'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Guía revertida para entrega'  COLLATE Latin1_General_CI_AI  OR
 				[SO].[OrderDescription] = 'Trasladado a Hub'  COLLATE Latin1_General_CI_AI )
 		WHERE	[DO].[Guide_Serie] = @GuideSerie
 		AND		[DO].[Guide_Number] = @GuideNumber;
