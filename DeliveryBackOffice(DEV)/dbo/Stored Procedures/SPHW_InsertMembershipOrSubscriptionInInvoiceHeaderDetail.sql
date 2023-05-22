@@ -358,6 +358,9 @@ BEGIN
 
         END;
 
+		DECLARE @IdTypeFac INT;
+		SET @IdTypeFac = (SELECT IdCatInvoiceType FROM CatInvoiceType WHERE NAME = 'Otros')
+
 
         INSERT INTO [dbo].[invoiceHeader]
         (
@@ -373,11 +376,12 @@ BEGIN
             inv_status,
             inv_dateRegister,
             inv_tokenRegister,
-            inv_type
+            inv_type,
+			CatInvoiceTypeId
         )
         VALUES
         (@inv_vpCodeOfReferences, @inv_cmp_nit, @inv_cli_name, @inv_cli_adress, @inv_cli_nit, @inv_cli_email,
-         @inv_date, @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1);
+         @inv_date, @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1,@IdTypeFac);
 
 
 
