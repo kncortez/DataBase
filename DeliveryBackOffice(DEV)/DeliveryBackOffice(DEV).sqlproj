@@ -1510,6 +1510,8 @@
     <Build Include="dbo\Stored Procedures\GetInvoiceProcessedToUpdate.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
     <Build Include="dbo\User Defined Types\TblServiceExecutionProcess.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetPaymentGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
