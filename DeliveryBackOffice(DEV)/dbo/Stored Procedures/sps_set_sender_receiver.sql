@@ -52,7 +52,7 @@ BEGIN
 					WHILE EXISTS (SELECT TOP 1
 							1
 						FROM SenderReceiver WITH (NOLOCK)
-						WHERE UniqueCode = @UniqueCode)
+						WHERE UniqueCode = CAST(@UniqueCode AS NVARCHAR(50)))
 					SET @UniqueCode = (SELECT
 							ROUND(((9999999999 - 1111111111) * RAND() + 1111111111), 0))
 
@@ -81,6 +81,29 @@ BEGIN
 				@CUI AS 'CUI',
 				'' 'UniqueCode'
 			ROLLBACK TRANSACTION
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
+			(
+			    [ErrorDescription],
+			    [ErrorNumber],
+			    [ErrorProcedure],
+			    [ErrorLine],
+			    [GuideSerie],
+			    [GuideNumber],
+			    [TokenCreated],
+			    [DateCreated]
+			)
+			VALUES
+			(   
+				ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+			    NULL,     -- ErrorNumber - int
+			    NULL,     -- ErrorProcedure - varchar(100)
+			    ERROR_LINE(),     -- ErrorLine - int
+			    NULL,     -- GuideSerie - nvarchar(2)
+			    NULL,     -- GuideNumber - int
+			    ERROR_PROCEDURE(),       -- TokenCreated - varchar(50)
+			    GETDATE() -- DateCreated - datetime
+			    )
 		END CATCH;
 
 		IF @@TRANCOUNT > 0
