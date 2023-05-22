@@ -1519,6 +1519,7 @@
     <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetPendingNotificationsQueue.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetNotificationsQueueDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

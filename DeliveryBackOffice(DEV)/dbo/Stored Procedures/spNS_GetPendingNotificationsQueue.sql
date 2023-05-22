@@ -27,7 +27,8 @@ BEGIN
 				[NQ].[NotificationDate],
 				[NQ].[DateToSend],
 				[CNT].[NotificationStartTime],
-				[CNT].[NotificationEndTime]
+				[CNT].[NotificationEndTime],
+				[NQ].[AttemptsRemaining]
 	FROM		[dbo].[NotificationQueue] NQ
 	INNER JOIN	[dbo].[CatNotificationMedium] CNM
 		ON		[NQ].[CatNotificationMediumId] = [CNM].[IdCatNotificationMedium]
@@ -42,5 +43,6 @@ BEGIN
 	WHERE		[NQ].[IsSent] = 0
 		AND		[NQ].[DateToSend] >= CAST(GETDATE() AS DATE)
 		AND		CAST(GETDATE() AS TIME) BETWEEN [CNT].[NotificationStartTime] AND [CNT].[NotificationEndTime]
+		AND		[NQ].[AttemptsRemaining] > 0
 		AND		[NQ].[RowStatus] = 1;
 END
