@@ -1,5 +1,4 @@
-﻿
-CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+﻿CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 AS
@@ -102,6 +101,16 @@ BEGIN
     SELECT GuidePiece
     FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE GuideNumber = @Guide_Number;
+	
+	DECLARE @EXCKindOfVPC INT =
+	(
+		SELECT 
+			[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	);
 
     DECLARE @DaysToExpiration INT =
             (
@@ -282,7 +291,7 @@ BEGIN
 									 +' {' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
-                                  '"name":"'
+                                  '"name":"' + IIF(ISNULL([dev].[IsLastMileReturn], 0) = 1 AND [vp].[IdKindOfVPClient] = @EXCKindOfVPC, REPLACE(dbo.fnt_String_Escape(ISNULL([vp].[DescriptionOfClient], ''), 'json'), '"','') + ' - ' , '') +
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
                                                                            (CASE
@@ -518,6 +527,7 @@ BEGIN
 									  + '"Priority": "' + 
 										COALESCE(
 											(CASE 
+												WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 THEN 'D'
 												WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
 												WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
 												ELSE 'E'
