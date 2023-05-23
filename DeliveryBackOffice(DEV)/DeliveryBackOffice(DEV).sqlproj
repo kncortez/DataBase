@@ -1515,6 +1515,8 @@
     <Build Include="dbo\Tables\CatInvoiceType.sql" />
     <Build Include="dbo\Stored Procedures\SPHDValidate.sql" />
     <Build Include="dbo\Tables\UndefinedDescriptions.sql" />
+    <Build Include="dbo\Tables\CatBillingVolume.sql" />
+    <Build Include="dbo\Tables\CatBillingTime.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
