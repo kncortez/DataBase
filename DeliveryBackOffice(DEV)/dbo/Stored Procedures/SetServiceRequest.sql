@@ -9,6 +9,8 @@ BEGIN
 	
 	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20), IsExists BIT DEFAULT 0)
 
+	DECLARE @SenderVisitTSE INT = 223359; --CodeOfReferences de punto de visita del Parque de la industria del TSE
+
 	--Validaciones de artículos
 	IF @IsArticle = 1
 	BEGIN 
@@ -702,7 +704,74 @@ BEGIN
             END;
         END;
 
-        INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
+       DECLARE @Sender INT;
+		SET @Sender = (SELECT TOP 1 Sender_ID FROM #GuideTable)
+
+		IF (@Sender = @SenderVisitTSE)
+			BEGIN 
+				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
+        (
+            [GuideSerie],
+            [GuideNumber],
+            [PiecePhysicalWeight],
+            [PieceHeight],
+            [PieceWidth],
+            [PieceLength],
+            [PieceWeight],
+            [Detail],
+            [Currency],
+            [Amount],
+            [DateCreated],
+            [PieceUpdated],
+            [DateUpdated],
+            [fragile],
+            [IsPickup],
+            [NoPiece],
+            [PieceHeightCheck],
+            [PieceWidthCheck],
+            [PieceLengthCheck],
+            [MassWeight],
+            [volumetricWeight],
+            [CategoryCheck],
+            [StatusOrderId],
+            [IsDry],
+			[ParcelCode]
+        )
+        SELECT PIC.Guide_Serie,
+               PIC.Guide_Number,
+               0,
+               0,
+               0,
+               0,
+               0,
+               PIC.ParcelCode,
+               'GTQ',
+               0,
+               GETDATE(),
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               PIC.PartNumber,
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               1,
+               PIC.IsDry,
+			   NULL
+        FROM @Pieces PIC
+            INNER JOIN #GuideTable GTB
+                ON PIC.Guide_Serie = GTB.Guide_Serie
+                   AND PIC.Guide_Number = GTB.Guide_Number;
+
+			END
+
+	ELSE
+			BEGIN 
+			 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
         (
             [GuideSerie],
             [GuideNumber],
@@ -759,7 +828,8 @@ BEGIN
             INNER JOIN #GuideTable GTB
                 ON PIC.Guide_Serie = GTB.Guide_Serie
                    AND PIC.Guide_Number = GTB.Guide_Number;
-
+			END
+       
 
         DECLARE @idcustomer INT =
                 (
