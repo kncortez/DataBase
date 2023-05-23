@@ -1524,6 +1524,16 @@
     <Build Include="dbo\Stored Procedures\GetInvoiceProcessedToUpdate.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
     <Build Include="dbo\User Defined Types\TblServiceExecutionProcess.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_VerifyGuideStatus.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetGuideIncidence.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetIncidenceListByType.sql" />
+    <Build Include="dbo\Tables\NotificationQueueDetail.sql" />
+    <Build Include="dbo\Tables\NotificationQueue.sql" />
+    <Build Include="dbo\Tables\CatNotificationType.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_GetPendingNotificationsQueue.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_GetNotificationsQueueDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
