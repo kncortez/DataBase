@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[CatNotificationType] (
     [IdCatNotificationType]       BIGINT         IDENTITY (1, 1) NOT NULL,
-    [ConfigExternalPlatformId]    INT            NOT NULL,
+    [ConfigExternalPlatformId]    INT            NULL,
     [EmailTemplateName]           NVARCHAR (50)  NULL,
     [NotificationTypeName]        NVARCHAR (100) NULL,
     [NotificationTypeDescription] NVARCHAR (600) NULL,
