@@ -48,10 +48,13 @@
     [IsManualInvoice]         BIT            NULL,
     [inv_dateFEL]             DATETIME       NULL,
     [CatInvoiceTypeId]        INT            NULL,
+    [Retries]                 INT            DEFAULT ((1)) NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
-    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
+    CONSTRAINT [FK__invoiceHe__syste__17AD7836] FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FK_InvoiceHeader_CatInvoiceTypeId] FOREIGN KEY ([CatInvoiceTypeId]) REFERENCES [dbo].[CatInvoiceType] ([IdCatInvoiceType])
 );
+
+
 
 
 
@@ -102,4 +105,8 @@ CREATE NONCLUSTERED INDEX [IDX_inv_numberFEL_inv_numberFEL]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el tipo de factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'CatInvoiceTypeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los inténtos de la generación de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
 
