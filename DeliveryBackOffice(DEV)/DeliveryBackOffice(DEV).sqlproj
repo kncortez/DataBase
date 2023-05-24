@@ -1534,6 +1534,8 @@
     <Build Include="dbo\Stored Procedures\spNS_GetPendingNotificationsQueue.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetNotificationsQueueDetail.sql" />
     <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetPaymentGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
