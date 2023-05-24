@@ -316,11 +316,28 @@ BEGIN
 										''
 								END
 								)'Icon',
+								-- ADICIONES TSE
 								COALESCE
 								(
-									FORMAT([dev].[DeliveryETA], 'ddMM')
+									(
+										CASE
+											WHEN [TSEGuide].[TSECodeRoute] IS NOT NULL THEN UPPER([TSEGuide].[TSECodeRoute])
+											ELSE FORMAT([dev].[DeliveryETA], 'ddMM')
+										END
+									)
 									, ''
 								) [DeliveryETA],
+								COALESCE
+								(
+									(
+										CASE
+											WHEN [TSEGuide].[TSEClusterAbbreviation] IS NOT NULL THEN UPPER([TSEGuide].[TSEClusterAbbreviation])
+											ELSE ''
+										END
+									)
+									, ''
+								) [DestinyHub],
+								-- FIN ADICIONES
 								COALESCE
 								(
 									(
@@ -579,6 +596,36 @@ BEGIN
 									WHERE
 										[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
 								) AlterDestiny
+								-- ADICIONES TSE
+								OUTER APPLY (
+									SELECT 
+										TOP (1) 
+											CR.[CodeRoute] [TSECodeRoute],
+											[CRC].[ClusterAbbreviation] [TSEClusterAbbreviation]
+									FROM 
+										[DeliveryBackOffice].[dbo].[TSERoutePreparationDetail] TSERPD  WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
+											ON
+												[TSERPD].[TSERoutePreparationHeaderID] = [TSERPH].[IDTSERoutePreparationHeader]
+												AND
+												[TSERPH].[RowStatus] = 1
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[CatRouteCluster] CRC  WITH(NOLOCK) 
+											ON
+												[CRC].[IdCatRouteCluster] = [TSERPH].[IdCatRouteCluster]
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[CatRoute] CR  WITH(NOLOCK) 
+											ON
+												[TSERPH].[IdCatRoute] = [CR].[IdRoute]
+									WHERE
+										[TSERPD].[GuideSerie] = [dev].[Guide_Serie]
+										AND
+										[TSERPD].[GuideNumber] = [dev].[Guide_Number]
+										AND
+										[TSERPD].[RowStatus] = 1
+								) [TSEGuide]
+							  -- FIN ADICIONES
 								  
                               --WHERE dev.Guide_Number = @Guide_Number
 
