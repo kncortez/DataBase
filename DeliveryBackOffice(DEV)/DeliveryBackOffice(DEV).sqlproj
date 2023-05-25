@@ -1519,6 +1519,8 @@
     <Build Include="dbo\Stored Procedures\SpCatRoutEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial.sql" />
     <Build Include="dbo\Tables\CatRouteCluster.sql" />
+    <Build Include="dbo\Stored Procedures\TestTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

@@ -20,13 +20,17 @@ AS
 BEGIN	
 
 		DECLARE @TSERoutePreparationDetail AS INT
-
+		DECLARE @IdHeader AS INT = (Select  ISNULL(IdTSERoutePreparationHeader,0)  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster)
 		
 		BEGIN TRANSACTION
 			BEGIN TRY
          
-		 IF (Exists(Select  1  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster))
+		 IF (Exists(Select Top 1  1  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster And RP.Rowstatus=1))
 		 BEGIN
+
+		
+
+			
 
 			 UPDATE [dbo].[TSERoutePreparationHeader] 
 			      SET IdCatVehicle = @IdCatVehicle, 
@@ -37,8 +41,36 @@ BEGIN
 					  TokenUpdated = @TokenCreated
 			  Where IdCatRoute = @IdCatRoute 
 			  And IdCatRouteCluster = @IdCatRouteCluster
+			  And IDTSERoutePreparationHeader = @IdHeader
+			  
 
-			  SELECT 2 [blnResult]
+			UPDATE [dbo].[TSERoutePreparationDetail]
+			     SET  Rowstatus = 0, 
+			          DateUpdated = Getdate(),
+				      TokenUpdated = @TokenCreated
+			  WHERE [TSERoutePreparationHeaderID] = @IdHeader
+           
+
+			  	INSERT INTO [dbo].[TSERoutePreparationDetail]
+					(
+					 TSERoutePreparationHeaderID,
+					 GuideSerie,
+					 GuideNumber,
+					 Rowstatus,
+					 DateCreated,
+					 TokenCreated
+	 
+					) 
+					SELECT
+						@IdHeader,
+						gp.Guide_Serie,
+						gp.Guide_Number,
+						1,
+						GETDATE(),
+						@TokenCreated
+					FROM @TblGuides gp
+
+			  SELECT 2 [blnResult], @IdHeader
 
 		 END
 		 ELSE
