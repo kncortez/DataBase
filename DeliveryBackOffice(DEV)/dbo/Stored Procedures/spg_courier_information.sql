@@ -27,7 +27,9 @@ BEGIN
 	  ,[Estatus]
 	  ,[CatTypeSenderReceiverId]
 	  ,[HubLogisticId]
-  FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH (NOLOCK)
+	  ,[UniqueCode]
+	  ,[Email]
+  FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
   WHERE CUI = @CUI
   AND Entity_Type = 3
 END
