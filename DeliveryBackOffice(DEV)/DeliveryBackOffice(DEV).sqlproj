@@ -1502,6 +1502,7 @@
     <Build Include="dbo\Tables\DayForDeliveryCoverage.sql" />
     <Build Include="dbo\Functions\fn_GetGuideDeliveryETA.sql" />
     <Build Include="dbo\Functions\fn_GetGuideServiceType.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

@@ -371,7 +371,7 @@ BEGIN
             ),
             Segment =
             (
-                SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
+                SELECT DeliveryBackOffice.dbo.fn_get_segmentNew(t.Guide_Serie, t.Guide_Number, t.Sender_ID, t.Receiver_Town)
             )
         FROM #GuideTable t;
 
@@ -524,6 +524,7 @@ BEGIN
                GT.SalePipeLineId
         -- FIN MODIFICACION
         FROM #GuideTable GT;
+
 
         -- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
         -- INSERTAR DATA PARA MANEJO DE LANDING PAGE
@@ -1018,7 +1019,7 @@ BEGIN
 					END) 'Priority',
 
 			  -- IIF(D.SalePipeLineId=@IDCatBusinessB2B,'P','E') 'Priority',
-			   CONCAT('https://qa.forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
+			   CONCAT('https://forzadelivery.com/rastreo/',D.Guide_Serie,D.Guide_Number)'QRLink',
 			   (CASE
 					WHEN 
 						(D.IsCollect <> 1 AND D.Collect_OnDelivery>0 )
