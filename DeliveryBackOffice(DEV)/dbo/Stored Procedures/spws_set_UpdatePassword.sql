@@ -56,6 +56,8 @@ AS
                     SELECT COUNT(1) AS PasswordVerification
                     FROM dbo.PasswordLog pl
                     WHERE pl.PslPassword = @Password
+					AND pl.PslIdUser = @IdUser
+
                 );
                 IF @PasswordVerification > 0
                     BEGIN

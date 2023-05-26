@@ -23,6 +23,13 @@ BEGIN
 			WHERE Phone LIKE '%' + @Phone + '%'
 			AND Estatus = 1);
 
+		DECLARE @Email AS NVARCHAR(50) =  ( SELECT TOP 1
+				Email
+			FROM SenderReceiver
+			WHERE Phone LIKE '%' + @Phone + '%'
+			AND Estatus = 1);
+
+
 		IF @SenderReceiverId IS NOT NULL
 		BEGIN 
 			DECLARE @LoginToken NVARCHAR(6)
@@ -48,6 +55,8 @@ BEGIN
 				'200' 'StatusCode'
 			   ,'Token obtenido correctamente.' 'Description' 
 			   ,@LoginToken 'LoginToken'
+			   ,@Email 'Email'
+			   
 		END
 		ELSE
 		BEGIN
