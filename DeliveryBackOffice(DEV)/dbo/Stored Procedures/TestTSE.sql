@@ -80,7 +80,9 @@ BEGIN
 		DISTINCT 
 			TRPD.GuideNumber,
 			TRPD.IDTSERoutePreparationDetail,
-			[DO].[Receiver_Address] [VoteCenter],
+			[DO].[Receiver_FirstName] [VoteCenter],
+			[DO].[Receiver_Address] [Adress],
+			[DO].[Receiver_Alternant_FullName] [Coordinador],
 			(
 				SELECT
 					SUM

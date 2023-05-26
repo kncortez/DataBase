@@ -17,8 +17,8 @@ BEGIN
 			CV.UnitNumber+'-'+CV.Plate Plate,
 			UPPER(CRC.ClusterName) ClusterName,
 			SR1.First_Name +' '+ SR1.Last_Name [Name],
-			SR2.First_Name +' '+ SR2.Last_Name [Leader],
-			RPH.Coordinator
+			SR2.First_Name +' '+ SR2.Last_Name [Leader]
+		
 
 
 	From [dbo].[TSERoutePreparationHeader] RPH WITH (NOLOCK)

@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[SpSaveRegisterPreparationRouteEspecial]
 @IdRouteSupervisor AS INT,
 @IdRouteLeader AS INT,
 @SenderReceiverId AS INT=1,
-@Coordinator AS NVARCHAR(150),
+--@Coordinator AS NVARCHAR(150),
 @RowStatus AS  BIT=1,
 @TokenCreated AS  NVARCHAR(50),
 @TblGuides TblGuides READONLY
@@ -83,7 +83,7 @@ BEGIN
 					IdRouteSupervisor,
 					IdRouteLeader,
 					SenderReceiverId,
-					Coordinator,
+					--Coordinator,
 					DateCreated,
 					TokenCreated
 	
@@ -96,7 +96,7 @@ BEGIN
 					@IdRouteSupervisor,
 					@IdRouteLeader,
 					 @SenderReceiverId,
-					@Coordinator,
+					--@Coordinator,
 					GETDATE(),
 					@TokenCreated
 	

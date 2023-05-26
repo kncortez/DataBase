@@ -1,19 +1,24 @@
 ﻿CREATE TABLE [dbo].[TSERoutePreparationHeader] (
-    [IDTSERoutePreparationHeader] INT            IDENTITY (1, 1) NOT NULL,
-    [IdCatRoute]                  INT            NOT NULL,
-    [IdCatVehicle]                INT            NOT NULL,
-    [IdCatRouteCluster]           INT            NOT NULL,
-    [IdRouteSupervisor]           INT            NOT NULL,
-    [IdRouteLeader]               INT            NOT NULL,
-    [Coordinator]                 NVARCHAR (150) NOT NULL,
-    [RowStatus]                   BIT            CONSTRAINT [DF_TSERoutePreparationHeader_RowStatus] DEFAULT ((1)) NOT NULL,
-    [DateCreated]                 DATETIME       NOT NULL,
-    [TokenCreated]                NVARCHAR (50)  NOT NULL,
-    [DateUpdated]                 DATETIME       NULL,
-    [TokenUpdated]                NVARCHAR (50)  NULL,
-    [SenderReceiverId]            INT            NOT NULL,
+    [IDTSERoutePreparationHeader] INT           IDENTITY (1, 1) NOT NULL,
+    [IdCatRoute]                  INT           NOT NULL,
+    [IdCatVehicle]                INT           NOT NULL,
+    [IdCatRouteCluster]           INT           NOT NULL,
+    [IdRouteSupervisor]           INT           NOT NULL,
+    [IdRouteLeader]               INT           NOT NULL,
+    [RowStatus]                   BIT           CONSTRAINT [DF_TSERoutePreparationHeader_RowStatus] DEFAULT ((1)) NOT NULL,
+    [DateCreated]                 DATETIME      NOT NULL,
+    [TokenCreated]                NVARCHAR (50) NOT NULL,
+    [DateUpdated]                 DATETIME      NULL,
+    [TokenUpdated]                NVARCHAR (50) NULL,
+    [SenderReceiverId]            INT           NOT NULL,
+    [TSECustomsMark]              NVARCHAR (50) NULL,
+    [HasFirstPickupProcess]       BIT           DEFAULT ((0)) NOT NULL,
+    [HasFirstArrivalProcess]      BIT           DEFAULT ((0)) NOT NULL,
+    [HasFirstDispatchProcess]     BIT           DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_TSERoutePreparationHeader] PRIMARY KEY CLUSTERED ([IDTSERoutePreparationHeader] ASC)
 );
+
+
 
 
 GO
@@ -37,7 +42,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'estado del 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'nombre de coordinador', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'Coordinator';
+
 
 
 GO
@@ -62,4 +67,20 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'IDTSERoutePreparationHeader';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Primer marchamo de cajas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'TSECustomsMark';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su primera recolección', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasFirstPickupProcess';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su primer despacho a ruta de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasFirstDispatchProcess';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su primer arribo a instalaciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasFirstArrivalProcess';
 
