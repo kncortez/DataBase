@@ -49,7 +49,7 @@ BEGIN
 				from dbo.Ecommerce e 
 				where e.UserKey = @CodApp)
 			end 
-	, TypeService = @GuideServiceType
+	, TypeService = dbo.fn_GetGuideServiceType(@GuideSerie, @GuideNumber, @TypeService, (CASE WHEN @IdCustomer != 0 THEN @IdCustomer ELSE (select top 1 ECM.IdCustomer from dbo.Ecommerce ECM WITH(NOLOCK) WHERE ECM.UserKey = @CodApp) END))
 	,IndicationsToSendOrigin = @IndicationsOrigin
 	, IndicationsToSendDestination = @IndicationsDestination
 	,Ticket_Number = @Ticket_Number
