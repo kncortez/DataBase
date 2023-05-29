@@ -62,7 +62,6 @@
     [CutOffDate]              DATETIME       NULL,
     [UpgradeDate]             DATETIME       NULL,
     [CustomerGoalQuantity]    INT            NULL,
-    [DCBAID]                  INT            NULL,
     [CatBillingTimeId]        INT            NULL,
     [CatBillingVolumeId]      INT            NULL,
     [BillingCut_offDate]      DATE           NULL,            
@@ -79,7 +78,6 @@
     CONSTRAINT [FK_Customer_CustomerType] FOREIGN KEY ([IdCustomerType]) REFERENCES [dbo].[CustomerType] ([IdCustomerType]),
     CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
-    CONSTRAINT [FK_Customer_DCBA] FOREIGN KEY ([DCBAID]) REFERENCES [dbo].[DeliveryCustomerBankAccount] ([DCBA_Id]),    
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),    
     CONSTRAINT [FK_Customer_CatBillingVolume] FOREIGN KEY ([CatBillingVolumeId]) REFERENCES [dbo].[CatBillingVolume] ([IdCatBillingVolume]),    
     CONSTRAINT [FK_Customer_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
@@ -130,10 +128,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Meta de env
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado al cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
-
-    
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Referencia al identificador de la tabla DeliveryCustomerBankAccount.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'DCBAID';
 
 
 GO
