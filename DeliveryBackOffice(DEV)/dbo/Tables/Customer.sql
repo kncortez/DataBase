@@ -58,36 +58,32 @@
     [ExcludeCommissionCOD]    BIT            NULL,
     [CatBatchTypeCODId]       BIGINT         NULL,
     [CatBatchFrequencyCODId]  BIGINT         NULL,
-    [DCBAID]                  INT            NULL,
     [CatTMSalesPersonId]      INT            NULL,
     [CutOffDate]              DATETIME       NULL,
     [UpgradeDate]             DATETIME       NULL,
     [CustomerGoalQuantity]    INT            NULL,
+    [DCBAID]                  INT            NULL,
     [CatBillingTimeId]        INT            NULL,
     [CatBillingVolumeId]      INT            NULL,
-    [BillingCut_offDate]      DATE           NULL,
-    PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
-    CONSTRAINT [FK_Customer_CatBankAccountType2] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
-    CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
-    CONSTRAINT [FK_Customer_CatBillingVolume] FOREIGN KEY ([CatBillingVolumeId]) REFERENCES [dbo].[CatBillingVolume] ([IdCatBillingVolume]),
-    CONSTRAINT [FK_Customer_CatBusinessActivity2] FOREIGN KEY ([BusinessActivityID]) REFERENCES [dbo].[CatBusinessActivity] ([IdBusinessActivity]),
-    CONSTRAINT [FK_Customer_CatBusinessSegment2] FOREIGN KEY ([BusinessSegmentID]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
-    CONSTRAINT [FK_Customer_CatCommercialSegment2] FOREIGN KEY ([CommercialSegmentID]) REFERENCES [dbo].[CatCommercialSegment] ([IdCommercialSegment]),
-    CONSTRAINT [FK_Customer_CatConditionOfPayment2] FOREIGN KEY ([ConditionOfPaymentID]) REFERENCES [dbo].[CatConditionOfPayment] ([IdConditionOfPayment]),
-    CONSTRAINT [FK_Customer_CatCountry2] FOREIGN KEY ([CountryID]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
-    CONSTRAINT [FK_Customer_CatSaleAdvisor2] FOREIGN KEY ([SaleAdvisorID]) REFERENCES [dbo].[CatSaleAdvisor] ([IdSaleAdvisor]),
+    [BillingCut_offDate]      DATE           NULL,            
+    CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
+    CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
+    CONSTRAINT [FK_Customer_CatBusinessActivity] FOREIGN KEY ([BusinessActivityID]) REFERENCES [dbo].[CatBusinessActivity] ([IdBusinessActivity]),
+    CONSTRAINT [FK_Customer_CatBusinessSegment] FOREIGN KEY ([BusinessSegmentID]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
+    CONSTRAINT [FK_Customer_CatCommercialSegment] FOREIGN KEY ([CommercialSegmentID]) REFERENCES [dbo].[CatCommercialSegment] ([IdCommercialSegment]),
+    CONSTRAINT [FK_Customer_CatConditionOfPayment] FOREIGN KEY ([ConditionOfPaymentID]) REFERENCES [dbo].[CatConditionOfPayment] ([IdConditionOfPayment]),
+    CONSTRAINT [FK_Customer_CatCountry] FOREIGN KEY ([CountryID]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [FK_Customer_CatSaleAdvisor] FOREIGN KEY ([SaleAdvisorID]) REFERENCES [dbo].[CatSaleAdvisor] ([IdSaleAdvisor]),
     CONSTRAINT [FK_Customer_CatTMSalesPerson] FOREIGN KEY ([CatTMSalesPersonId]) REFERENCES [dbo].[CatTMSalesPerson] ([IdCatTMSalesPerson]),
-    CONSTRAINT [FK_Customer_CatTypeOfBusiness2] FOREIGN KEY ([TypeOfBusinessID]) REFERENCES [dbo].[CatTypeOfBusiness] ([IdTypeOfBusiness]),
-    CONSTRAINT [FK_Customer_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_Customer_CustomerType2] FOREIGN KEY ([IdCustomerType]) REFERENCES [dbo].[CustomerType] ([IdCustomerType]),
-    CONSTRAINT [FK_Customer_DCBA] FOREIGN KEY ([DCBAID]) REFERENCES [dbo].[DeliveryCustomerBankAccount] ([DCBA_Id]),
-    CONSTRAINT [FK_Customer_DeliveryBank2] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
-    CONSTRAINT [FK_Customer_DeliveryCurrency2] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
+    CONSTRAINT [FK_Customer_CatTypeOfBusiness] FOREIGN KEY ([TypeOfBusinessID]) REFERENCES [dbo].[CatTypeOfBusiness] ([IdTypeOfBusiness]),
+    CONSTRAINT [FK_Customer_CustomerType] FOREIGN KEY ([IdCustomerType]) REFERENCES [dbo].[CustomerType] ([IdCustomerType]),
+    CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
+    CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
+    CONSTRAINT [FK_Customer_DCBA] FOREIGN KEY ([DCBAID]) REFERENCES [dbo].[DeliveryCustomerBankAccount] ([DCBA_Id]),    
+    CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),    
+    CONSTRAINT [FK_Customer_CatBillingVolume] FOREIGN KEY ([CatBillingVolumeId]) REFERENCES [dbo].[CatBillingVolume] ([IdCatBillingVolume]),    
+    CONSTRAINT [FK_Customer_Customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer])
 );
-
-
-
-
 
 
 
@@ -113,11 +109,11 @@ CREATE NONCLUSTERED INDEX [idx_IdCustomerType_RowSatus]
 
 
 GO
-
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para indicar si se excluye el precio de envio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'ExcludePriceShippingCOD';
 
 
 GO
-
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para indicar si se excluye la comision.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'ExcludeCommissionCOD';
 
 
 GO
@@ -135,7 +131,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Meta de env
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado al cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
 
-
+    
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Referencia al identificador de la tabla DeliveryCustomerBankAccount.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'DCBAID';
 
@@ -150,4 +146,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fechad e corte de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
-
