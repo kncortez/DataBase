@@ -47,9 +47,12 @@
     [systemOperation]         INT            NULL,
     [IsManualInvoice]         BIT            NULL,
     [inv_dateFEL]             DATETIME       NULL,
+    [CatInvoiceTypeId]        INT            NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
     FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 

@@ -1536,6 +1536,22 @@
     <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetPaymentGuide.sql" />
     <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationHeader.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationDetailPiece.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationDetail.sql" />
+    <Build Include="dbo\Tables\CatRouteCluster.sql" />
+    <Build Include="dbo\Stored Procedures\TestTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetPaymentPGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SpSaveRegisterPreparationRouteEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SpGetDataGuideEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SPDHValidateGuideInRourteSpecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatSenderReceiverEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRoutEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\RDL_Info_DensityGMap_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetGeographicalData.sql" />
+    <Build Include="dbo\Stored Procedures\get_Catalog_ExpressCenter_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

@@ -41,7 +41,7 @@ BEGIN
 	LEFT JOIN	[dbo].[Account] A
 		ON		[NQ].[AccountId] = [A].[AccIdAccount]
 	WHERE		[NQ].[IsSent] = 0
-		AND		[NQ].[DateToSend] >= CAST(GETDATE() AS DATE)
+		--AND		[NQ].[DateToSend] >= CAST(GETDATE() AS DATE)
 		AND		CAST(GETDATE() AS TIME) BETWEEN [CNT].[NotificationStartTime] AND [CNT].[NotificationEndTime]
 		AND		[NQ].[AttemptsRemaining] > 0
 		AND		[NQ].[RowStatus] = 1;

@@ -7,10 +7,28 @@ CREATE PROCEDURE [dbo].[SetServiceRequest]
 AS
 BEGIN
 	
+	DECLARE @PreSenderTSE INT;
 	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20), IsExists BIT DEFAULT 0)
-
+	DECLARE @SenderVisitTSE INT = --239629;
+	(
+		SELECT 
+			TOP (1)
+				[VPC].[CodeOfReference] 
+		FROM
+			[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+		WHERE
+			[VPC].[DescriptionOfClient] = 'PARQUE DE LA INDUSTRIA'  COLLATE Latin1_General_CI_AI 
+	)
+	SET @PreSenderTSE = 
+	(
+		SELECT 
+			TOP (1) 
+				[TDO].[Sender_ID] 
+		FROM 
+			@TblDeliveryOrders TDO
+	)
 	--Validaciones de artículos
-	IF @IsArticle = 1
+	IF (@IsArticle = 1 AND (ISNULL(@PreSenderTSE, 0) <> @SenderVisitTSE))
 	BEGIN 
 
 		IF EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
@@ -51,6 +69,8 @@ BEGIN
 		WHERE rbc.RbcRowStatus = 1
 		ORDER BY rbc.RbcCodeOfReference DESC
 
+		PRINT @RateId
+
 		UPDATE pe
 		SET IsExists = 1
 		FROM @ParcelExists pe
@@ -73,6 +93,28 @@ BEGIN
 				, ' no existe o no está en la negociación, por favor revise todo el archivo y envie de nuevo la solicitud.') AS 'Description'
 			RETURN
 		END
+	END
+	ELSE IF (@IsArticle = 1 AND (ISNULL(@PreSenderTSE, 0) = @SenderVisitTSE))
+	BEGIN
+	
+		IF NOT EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
+		BEGIN
+			INSERT INTO @ParcelExists (RowNumber, Parcel)
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY (SELECT
+						0)
+				ASC) AS RowNumber
+			   ,RTRIM(LTRIM(item)) item
+			FROM SplitUnlimited((SELECT
+					STUFF((SELECT
+							', ' + ParcelCode
+						FROM @TblDeliveryOrders
+						FOR XML PATH (''))
+					,
+					1, 2, ''))
+			, ',')
+		END
+
 	END
 
 	--Validación de municipio y departamento
@@ -133,7 +175,6 @@ BEGIN
     DECLARE @ManifestNumber INT = 0;
     DECLARE @ManifestSerie VARCHAR(2) = 'FM';
     DECLARE @GuideSerie VARCHAR(2) = 'FD';
-	DECLARE @GuidePriority INT = 0;
 	DECLARE @Priority VARCHAR(1);
 
     /*********************************************************************************************/
@@ -703,7 +744,81 @@ BEGIN
             END;
         END;
 
-        INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
+		DECLARE @Sender INT;
+		SET @Sender = (SELECT TOP 1 Sender_ID FROM #GuideTable)
+		
+		IF (@Sender = @SenderVisitTSE)
+			BEGIN 
+
+			DECLARE @TestGuide TABLE (
+				guideserie NVARCHAR(2),
+				guidenumber INT,
+				guidepiece INT,
+				parcelcode NVARCHAR(100)
+			);
+				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
+        (
+            [GuideSerie],
+            [GuideNumber],
+            [PiecePhysicalWeight],
+            [PieceHeight],
+            [PieceWidth],
+            [PieceLength],
+            [PieceWeight],
+            [Detail],
+            [Currency],
+            [Amount],
+            [DateCreated],
+            [PieceUpdated],
+            [DateUpdated],
+            [fragile],
+            [IsPickup],
+            [NoPiece],
+            [PieceHeightCheck],
+            [PieceWidthCheck],
+            [PieceLengthCheck],
+            [MassWeight],
+            [volumetricWeight],
+            [CategoryCheck],
+            [StatusOrderId],
+            [IsDry],
+			[ParcelCode]
+        )
+        SELECT PIC.Guide_Serie,
+               PIC.Guide_Number,
+               0,
+               0,
+               0,
+               0,
+               0,
+               PIC.ParcelCode,
+               'GTQ',
+               0,
+               GETDATE(),
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               PIC.PartNumber,
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               NULL,
+               1,
+               PIC.IsDry,
+			   NULL
+        FROM @Pieces PIC
+            INNER JOIN #GuideTable GTB
+                ON PIC.Guide_Serie = GTB.Guide_Serie
+                   AND PIC.Guide_Number = GTB.Guide_Number;
+
+			END
+
+	ELSE
+			BEGIN 
+			 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
         (
             [GuideSerie],
             [GuideNumber],
@@ -760,7 +875,8 @@ BEGIN
             INNER JOIN #GuideTable GTB
                 ON PIC.Guide_Serie = GTB.Guide_Serie
                    AND PIC.Guide_Number = GTB.Guide_Number;
-
+			END
+       
 
         DECLARE @idcustomer INT =
                 (
@@ -866,120 +982,74 @@ BEGIN
 					[DO].[Sender_ID] = [VPC].[CodeOfReference]
 		------------------------------------------------------
 
-		SET @GuidePriority = (SELECT COUNT (do.Guide_Number) FROM DeliveryOrder do
-		INNER JOIN @CorrelativeTable ct
-		ON do.Guide_Number = ct.Guide_Number
-		INNER JOIN Membership mb
-		ON do.IdCustomer = mb.CustomerId
-		WHERE mb.CatMembershipStatusId = 3
-		AND mb.ExpirationDate >= GETDATE()
-		AND mb.RowStatus = 1)
-
         DROP TABLE #GuideTable;
 
-    --END
-    END TRY
-    BEGIN CATCH
+		COMMIT TRANSACTION;
 
-		
-        SELECT 0 AS 'StatusCode',
-               ERROR_MESSAGE() AS 'Description',
-               CONVERT(BIGINT, 0) AS 'NumTransferID',
-               ERROR_LINE() AS [ErrorLine];
-        ROLLBACK TRANSACTION;
-
-		INSERT INTO dbo.RoutePreparationLogError
+		---Nuevos datos para consumir nuevo formato guía
+  		DECLARE @FranchiseVisitPointTypeId INT = 
 		(
-		    ErrorDescription,
-		    ErrorNumber,
-		    ErrorProcedure,
-		    ErrorLine,
-		    GuideSerie,
-		    GuideNumber,
-		    TokenCreated,
-		    DateCreated
+			SELECT 
+				TOP (1) 
+					[KOVPC].[IdKindOfVPClient] 
+			FROM
+				[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+			WHERE
+				[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
 		)
-		VALUES
-		(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
-		    ERROR_NUMBER(),     -- ErrorNumber - int
-		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
-		    ERROR_LINE(),     -- ErrorLine - int
-		    '',     -- GuideSerie - nvarchar(2)
-		    NULL,     -- GuideNumber - int
-		    '',       -- TokenCreated - varchar(50)
-		    GETDATE() -- DateCreated - datetime
-		    )
-
-    END CATCH;
-
-    IF @@TRANCOUNT > 0
-    BEGIN
-        COMMIT TRANSACTION;
-
-			---Nuevos datos para consumir nuevo formato guía
-  	DECLARE @FranchiseVisitPointTypeId INT = 
-	(
-		SELECT 
-			TOP (1) 
-				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @ExpressVisitPointTypeId INT = 
-	(
-		SELECT 
-			TOP (1) 
-				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @IndividualWebSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @ExpressWebSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @CorporateWebSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
-	)
-	DECLARE @ParserSys INT =
-	(
-		SELECT 
-			TOP 1
-				[CS].[SysIdSystem]
-		FROM
-			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
-		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
-	)
+		DECLARE @ExpressVisitPointTypeId INT = 
+		(
+			SELECT 
+				TOP (1) 
+					[KOVPC].[IdKindOfVPClient] 
+			FROM
+				[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+			WHERE
+				[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+		)
+		DECLARE @IndividualWebSys INT =
+		(
+			SELECT 
+				TOP 1
+					[CS].[SysIdSystem]
+			FROM
+				[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			WHERE
+				[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+		)
+		DECLARE @ExpressWebSys INT =
+		(
+			SELECT 
+				TOP 1
+					[CS].[SysIdSystem]
+			FROM
+				[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			WHERE
+				[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+		)
+		DECLARE @CorporateWebSys INT =
+		(
+			SELECT 
+				TOP 1
+					[CS].[SysIdSystem]
+			FROM
+				[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			WHERE
+				[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+		)
+		DECLARE @ParserSys INT =
+		(
+			SELECT 
+				TOP 1
+					[CS].[SysIdSystem]
+			FROM
+				[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+			WHERE
+				[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+		)
 
 
-  --Fin Nuevos datos para consumir nuevo formato guía
+	  --Fin Nuevos datos para consumir nuevo formato guía
 
 
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
@@ -1079,6 +1149,41 @@ BEGIN
                       SELECT CT.Guide_Number FROM @CorrelativeTable CT
                   )
 		ORDER BY C.[Row_Number] ASC;
-    END;
+
+    --END
+    END TRY
+    BEGIN CATCH
+
+		
+        SELECT 0 AS 'StatusCode',
+               ERROR_MESSAGE() AS 'Description',
+               CONVERT(BIGINT, 0) AS 'NumTransferID',
+               ERROR_LINE() AS [ErrorLine];
+        ROLLBACK TRANSACTION;
+
+		INSERT INTO dbo.RoutePreparationLogError
+		(
+		    ErrorDescription,
+		    ErrorNumber,
+		    ErrorProcedure,
+		    ErrorLine,
+		    GuideSerie,
+		    GuideNumber,
+		    TokenCreated,
+		    DateCreated
+		)
+		VALUES
+		(   ERROR_MESSAGE(),     -- ErrorDescription - varchar(300)
+		    ERROR_NUMBER(),     -- ErrorNumber - int
+		    ERROR_PROCEDURE(),     -- ErrorProcedure - varchar(100)
+		    ERROR_LINE(),     -- ErrorLine - int
+		    '',     -- GuideSerie - nvarchar(2)
+		    NULL,     -- GuideNumber - int
+		    '',       -- TokenCreated - varchar(50)
+		    GETDATE() -- DateCreated - datetime
+		    )
+
+    END CATCH;
+
 END;
 
