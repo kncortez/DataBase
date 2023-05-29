@@ -20,11 +20,33 @@ CREATE PROCEDURE [dbo].[sps_detailInvoice]
 	,@tokenRegister varchar(200)
 	,@SAPCode varchar(50) = NULL
 	,@SendToInvoice BIT = NULL
+	,@CatInvoiceTypeId INT = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+	DECLARE @IdType INT;
+
+	IF(@orderNumber > 0)
+		BEGIN
+		IF(@CatInvoiceTypeId IS NULL)
+			SET @IdType = (SELECT IdCatInvoiceType FROM CatInvoiceType WITH (NOLOCK) WHERE Name = 'Envío')
+		ELSE
+			SET @IdType = (SELECT IdCatInvoiceType FROM CatInvoiceType WITH (NOLOCK) WHERE IdCatInvoiceType = @CatInvoiceTypeId)
+
+			UPDATE invoiceHeader 
+			SET CatInvoiceTypeId = @IdType
+			WHERE inv_pk_id = @header
+		END
+	ELSE	
+	    BEGIN
+			SET @IdType = (SELECT IdCatInvoiceType FROM CatInvoiceType WITH (NOLOCK) WHERE Name = 'Otros')
+			UPDATE invoiceHeader 
+			SET CatInvoiceTypeId = @IdType
+			WHERE inv_pk_id = @header
+
+		END
 
 	DECLARE @IdType INT;
 
