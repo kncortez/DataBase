@@ -48,7 +48,6 @@ BEGIN
 
 		END
 
-	DECLARE @IdType INT;
 
 	IF(@orderNumber > 0)
 		BEGIN
