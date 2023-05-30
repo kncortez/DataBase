@@ -158,6 +158,17 @@ BEGIN
 				AND eascd.RowStatus = 1
 				ORDER BY bop.IdBreakdownOfPayment
 				
+				SELECT 
+					CAST((CASE WHEN [EASC].[CustomerId] IS NOT NULL THEN 1 ELSE 0 END) AS BIT) [IsImpersonated],
+					[EASC].[CustomerId],
+					[EASC].[CustomerPortfolioId]
+				FROM
+					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
+				WHERE
+					[EASC].[IdExpressAccountServiceCart] = @ExpressAccountServiceCartId
+					AND
+					[EASC].[RowStatus] = 1;
+
 			END
 			ELSE
 			BEGIN 
