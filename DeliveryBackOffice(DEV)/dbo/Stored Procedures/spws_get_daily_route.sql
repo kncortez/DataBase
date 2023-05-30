@@ -248,8 +248,8 @@ BEGIN
                                        + '"ServiceManagementId":"'
                                        + ISNULL(CONVERT(VARCHAR, sma.IdServiceManagement), 'N/A') + '",'
                                        + '"ServicePaymentTime":"' + CONVERT(VARCHAR, ISNULL(cpt.TimePlaName, 'N/A'))
-                                       + '",' + '"Sender":"'
-                                       + ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A') + '",'
+                                       + '",' 
+									   + '"Sender":"' + ISNULL(CONCAT(ISNULL(spk.SenderName, vpc.DescriptionOfClient) , (CASE WHEN ISNULL(vpc.[IdVisitPointClient], 0) > 0 AND spk.SenderName IS NOT NULL THEN CONCAT(' - ', vpc.DescriptionOfClient) ELSE '' END)), 'N/A') + '",'
                                        + '"Address":"'
                                        + dbo.fnt_String_Escape(
                                                                   CONCAT(
