@@ -76,6 +76,7 @@ BEGIN
     (
         SELECT [dbo].[fn_get_segment](@GuideSerie, @GuideNumber)
     );
+	DECLARE @DescriptionReturn NVARCHAR(MAX);
 
     SET @CostId =
     (
@@ -88,6 +89,11 @@ BEGIN
 	
 	IF @TypeService IS NULL
 		SET @TypeService = 'STD'
+	DECLARE @IsLastMileReturn INT = (SELECT ISNULL(IsLastMileReturn,0)  FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
+														
+														Where  
+														Guide_Serie = @GuideSerie And Guide_Number = @GuideNumber
+													)
 
     IF @Segment IS NULL
         SET @Segment = 'LOC';
@@ -110,10 +116,17 @@ BEGIN
     END;
 	-- ESTANDAR
 	ELSE
+
+	IF (@IsLastMileReturn = 1)
 	BEGIN
 		SET @NameArticle = 'TARIFA DE ENVIO ESTANDAR';
 		SET @NameArticleWeight = 'RECARGO POR PESO ESTANDAR';
 		SET @NameArticleCollect = 'TARIFA COLLECT ESTANDAR';
+			
+			
+			SELECT @DescriptionReturn = COALESCE(@DescriptionReturn, '') + [Description]
+			FROM [dbo].[UndefinedDescriptions]
+	
 	END
 
     INSERT INTO @BreakdownOfPayment
@@ -449,13 +462,17 @@ BEGIN
             WHERE ca.Name = @NameArticleSecure;
     END;
 
-    SELECT SAPCode,
-           Name,
-           Description,
-           Price,
-           Category,
-           SendToInvoice
-    FROM @GuideDetail;
+		
 
-    SET NOCOUNT OFF;
-END;
+	SELECT	SAPCode,
+			Name ,
+			Case
+			   when @IsLastMileReturn = 1 Then REPLACE(REPLACE ( @DescriptionReturn, '##' , Price ),'+++',+ char(10))  
+			   Else [Description] End [Description] ,
+			Price,
+			Category,
+			SendToInvoice
+	FROM @GuideDetail;
+
+	SET NOCOUNT OFF;
+END	
