@@ -16,6 +16,7 @@
     [HasFirstArrivalProcess]      BIT           DEFAULT ((0)) NOT NULL,
     [HasFirstDispatchProcess]     BIT           DEFAULT ((0)) NOT NULL,
     [HasFirstDeliveryProccess]    BIT           DEFAULT ((0)) NOT NULL,
+    [HasLastDeliveryProccess]     BIT           DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_TSERoutePreparationHeader] PRIMARY KEY CLUSTERED ([IDTSERoutePreparationHeader] ASC),
     CONSTRAINT [FK_TSERoutePreparationHeader_Boss] FOREIGN KEY ([IdRouteLeader]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FK_TSERoutePreparationHeader_Courier] FOREIGN KEY ([SenderReceiverId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
@@ -23,6 +24,8 @@
     CONSTRAINT [FK_TSERoutePreparationHeader_Supervisor] FOREIGN KEY ([IdRouteSupervisor]) REFERENCES [dbo].[SenderReceiver] ([ID]),
     CONSTRAINT [FK_TSERoutePreparationHeader_Vehicle] FOREIGN KEY ([IdCatVehicle]) REFERENCES [dbo].[CatVehicle] ([IdVehicle])
 );
+
+
 
 
 GO
@@ -87,4 +90,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'IDTSERoutePreparationHeader';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su última entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasLastDeliveryProccess';
 
