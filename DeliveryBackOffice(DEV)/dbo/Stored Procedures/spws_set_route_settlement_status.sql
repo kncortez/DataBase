@@ -296,17 +296,21 @@ BEGIN
         END;
 
         --Se marca como recolectado el servicio
-        UPDATE sm
-        SET ServiceStatusId = 3,
-            TokenUpdated = @Token,
-            DateUpdated = GETDATE()
-        FROM ServiceManagement sm WITH (NOLOCK)
-            INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
-                ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
-        WHERE dopd.GuideSerie = @GuideSerie
-              AND dopd.GuideNumber = @GuideNumber;
 
-        --Validar si pertenece a un punto de visita
+		
+		
+			UPDATE sm
+			SET ServiceStatusId = 3,
+				TokenUpdated = @Token,
+				DateUpdated = GETDATE()
+			FROM ServiceManagement sm WITH (NOLOCK)
+				INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
+					ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
+			WHERE dopd.GuideSerie = @GuideSerie
+				  AND dopd.GuideNumber = @GuideNumber;
+		
+        
+		--Validar si pertenece a un punto de visita
         DECLARE @tiempo DATE =
                 (
                     SELECT CAST(GETDATE() AS DATE)

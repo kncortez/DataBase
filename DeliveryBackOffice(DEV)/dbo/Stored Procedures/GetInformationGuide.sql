@@ -1,6 +1,4 @@
-﻿
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Eduardo López>
 -- Create date: <2023-03-13>
 -- Description:	<Devuelve dato de estado actual de la guía en cuestión>
@@ -18,6 +16,6 @@ BEGIN
  FROM DeliveryOrderDetail dor WITH (NOLOCK) 
  INNER JOIN StatusOrder so
  ON dor.StatusOrderId = so.StatusOrderId
- WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber ORDER BY DateCreated DESC
+ WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber ORDER BY dor.DateCreated DESC
 
 END

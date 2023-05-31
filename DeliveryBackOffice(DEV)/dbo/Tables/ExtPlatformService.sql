@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[ExtPlatformService] (
+﻿CREATE TABLE [dbo].[ExtPlatformService] (
     [IdExtPlatformService] INT              IDENTITY (1, 1) NOT NULL,
     [ExtPlatformId]        INT              NOT NULL,
     [IdService]            INT              NOT NULL,
@@ -30,6 +30,8 @@ CREATE TABLE [dbo].[ExtPlatformService] (
     PRIMARY KEY CLUSTERED ([IdExtPlatformService] ASC),
     CONSTRAINT [ExtPlatformService_PlatformId_FK] FOREIGN KEY ([ExtPlatformId]) REFERENCES [dbo].[CatExternalPlatform] ([IdExternalPlatform])
 );
+
+
 
 
 
@@ -145,11 +147,17 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de ac
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ubicación fue obtenida desde base de datos (1) o si fue cálculada (0)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ExtPlatformService', @level2type = N'COLUMN', @level2name = N'IsPreLocated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ubicación fue obtenida desde base de datos de forza (1) o si fue cálculada (0)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ExtPlatformService', @level2type = N'COLUMN', @level2name = N'IsPreLocated';
+
+
 
 
 GO
 CREATE NONCLUSTERED INDEX [idx_EstimatedTimeArrival]
     ON [dbo].[ExtPlatformService]([EstimatedTimeArrival] ASC)
     INCLUDE([IdService], [Latitude], [Longitude]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de respuestas luego de ejecutar servicios de la plataforma simpli route', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ExtPlatformService';
 

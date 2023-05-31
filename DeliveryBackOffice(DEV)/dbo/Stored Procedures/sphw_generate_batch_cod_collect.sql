@@ -146,7 +146,7 @@ BEGIN
                        SELECT /*TOP 50*/
                            ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg WITH (NOLOCK)
-                           JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                ON do.Guide_Serie = pg.GuideSerie
                                   AND do.Guide_Number = pg.GuideNumber
                            LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba WITH (NOLOCK)
@@ -157,7 +157,7 @@ BEGIN
                            LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerId)
                        WHERE pg.BatchCODId IS NULL
-                             AND do.Collect_OnDelivery = 0
+                             AND (do.IsLastMileReturn = 1 OR do.Collect_OnDelivery = 0)
                              AND do.IsCollect = 'true'
                              AND pg.BatchCODIdCommission IS NULL
                              AND pg.RowStatus = 1
@@ -283,7 +283,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #listGuides lst
-                JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
@@ -385,6 +385,7 @@ BEGIN
 
 
                    --, iif(op.Deposit_Number is null,( ord.Collect_OnDelivery - tp.Commission - ord.PriceShippment   ), 0) as CODtoPay
+				   CASE WHEN ord.IsLastMileReturn = 1 THEN 0 ELSE
                    IIF(op.Deposit_Number IS NULL,
                        ord.Collect_OnDelivery
                        -- comi
@@ -420,7 +421,7 @@ BEGIN
                                   0,
                                   IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
                          ),
-                       0) CODtoPay,
+                       0) END CODtoPay,
                    (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
                         0,
                         IIF(ISNULL(ord.IsCollect, 0) = 1,
@@ -432,7 +433,7 @@ BEGIN
 
             INTO #TableAmountCOD
             FROM #listGuides lst
-                JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Serie = lst.Guide_Serie
                        AND ord.Guide_Number = lst.Guide_Number
                 LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
@@ -493,6 +494,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
+				OR ord.IsLastMileReturn = 1
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;

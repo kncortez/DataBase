@@ -1,6 +1,5 @@
 ﻿
 
-
 -- =============================================
 -- Author:		<Aquino, César>
 -- Create date: <2021-03-23>
@@ -274,14 +273,21 @@ BEGIN
                     DateCreated,
                     DateCreatedInSystem,
                     Temperature_Celsius,
-                    Observations
+                    Observations,
+					[DeliveryAttemptId]
                 )
                 VALUES
-                (@GuideSerie, @GuideNumber,
-                 IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
-                     @StatusEXC,
-                     IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))), @Token, GETDATE(), GETDATE(),
-                 NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
+                (
+					@GuideSerie
+					, @GuideNumber
+					, IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5)))
+					, @Token
+					, GETDATE()
+					, GETDATE()
+					, NULL
+					, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), '')
+					, (SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC)
+				);
 
                 SET @RInserted = @@ROWCOUNT;
 

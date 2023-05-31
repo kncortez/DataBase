@@ -14,7 +14,7 @@
 -- =============================================
 -- Author:		<Edelman, Vásquez>
 -- Create date: <2022-08-01>
--- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center: revisión 01/09/2022>
+-- Description:	<Agregar validación para impedir entrega cuando el destino sea un express center: reviosión 01/09/2022>
 -- =============================================
 -- Author:		<Edelman, Vásquez>
 -- Create date: <2022-09-26>
@@ -26,11 +26,11 @@
 -- Description:	<Validar que guía no este en estado terminal>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
-    @Guide_Serie AS VARCHAR(2),   --guide serie
-    @Guide_Number AS INT,         --guide number
-    @DateOfDelivery VARCHAR(50),  --Date of delivery
-    @NameOfReceiver VARCHAR(200), --Name of receiver
-    @TokenId AS VARCHAR(50)       --token user
+		@Guide_Serie AS VARCHAR(2), --guide serie
+		@Guide_Number AS INT, --guide number
+		@DateOfDelivery VARCHAR(50),--Date of delivery
+		@NameOfReceiver VARCHAR(200), --Name of receiver
+		@TokenId AS VARCHAR(50) --token user
 AS
 BEGIN
     DECLARE @StatusId TINYINT = 5; --Status of delivery 

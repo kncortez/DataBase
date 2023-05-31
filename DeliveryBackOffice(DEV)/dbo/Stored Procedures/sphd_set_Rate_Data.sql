@@ -25,32 +25,32 @@ CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @ReturnRate DECIMAL(12, 2) = 100,
     @CollectRate DECIMAL(12, 2) = 3,
     @PiecesIncluded INT = 1,
-    @CutOffDate TINYINT = NULL,
-    @CatBusinessSegmentId INT = NULL,
-    @PackagesRangeId INT = NULL,
+	@CutOffDate TINYINT = NULL,
+	@CatBusinessSegmentId INT = NULL,
+	@PackagesRangeId INT = NULL,
     @STDLoc DECIMAL(12, 2) = 0,
     @STDMet DECIMAL(12, 2) = 0,
     @STDFor DECIMAL(12, 2) = 0,
-    @STDEsp DECIMAL(12, 2) = 0,
+	@STDEsp DECIMAL(12, 2) = 0,
     @CODLoc DECIMAL(12, 2) = 0,
     @CODMet DECIMAL(12, 2) = 0,
     @CODFor DECIMAL(12, 2) = 0,
     @CODEsp DECIMAL(12, 2) = 0,
-    @CODLocCOD DECIMAL(12, 2) = 0,
+	@CODLocCOD DECIMAL(12, 2) = 0,
     @CODMetCOD DECIMAL(12, 2) = 0,
     @CODForCOD DECIMAL(12, 2) = 0,
     @CODEspCOD DECIMAL(12, 2) = 0,
     @CODExcentLoc DECIMAL(12, 2) = 0,
     @CODExcentMet DECIMAL(12, 2) = 0,
     @CODExcentFor DECIMAL(12, 2) = 0,
-    @CODExcentEsp DECIMAL(12, 2) = 0,
+	@CODExcentEsp DECIMAL(12, 2) = 0,
     @TblArticleRate AS TblArticleRate READONLY,
-    @TblWeightRate AS TblWeightRate READONLY,
-    @TblPackagesRate AS TblPackagesRate READONLY
+	@TblWeightRate AS TblWeightRate READONLY,
+	@TblPackagesRate AS TblPackagesRate READONLY
 AS
 BEGIN
 
-    DECLARE @STD INT =
+	DECLARE @STD INT =
             (
                 SELECT TOP (1)
                        cs.CtsId
@@ -59,7 +59,7 @@ BEGIN
                 ORDER BY cs.CtsId
             );
 
-    DECLARE @COD INT =
+	DECLARE @COD INT =
             (
                 SELECT TOP (1)
                        cs.CtsId
@@ -93,7 +93,7 @@ BEGIN
                 ORDER BY cs.CrsId
             );
 
-    DECLARE @ESP INT =
+	DECLARE @ESP INT =
             (
                 SELECT TOP (1)
                        cs.CrsId
@@ -132,15 +132,14 @@ BEGIN
                 CountryId,
                 CurrencyId,
                 IsTemplate,
-                CutOffDate,
-                CatBusinessSegmentId,
-                PackagesRangeId
+				CutOffDate,
+				CatBusinessSegmentId,
+				PackagesRangeId
             )
             VALUES
             (@RateName, @RateShortName, @RateDescription, 1, @Token, GETDATE(), @IdTypeRate, 0, @FragilRate,
              @InsuranceRate, @InsuranceExempt, @AdditionalWeightRate, @WeightLimit, @CreditCardRate, @Attempt,
-             @ReturnRate, @CollectRate, @PiecesIncluded, @CountryId, @CurrencyId, @IsTemplate, @CutOffDate,
-             @CatBusinessSegmentId, @PackagesRangeId);
+             @ReturnRate, @CollectRate, @PiecesIncluded, @CountryId, @CurrencyId, @IsTemplate, @CutOffDate, @CatBusinessSegmentId, @PackagesRangeId);
 
             SET @IdRate = SCOPE_IDENTITY();
             PRINT 'se inserto el tarifario';

@@ -29,8 +29,8 @@ DECLARE @hour AS INT =
 	(IOMD.io_SAPDocEntryPaymentDetail = -1 OR IOMD.io_SAPDocEntryPaymentDetail IS NULL)
 	AND ihd.inv_SAPDocEntry <> -1
 	AND ihd.inv_SAPDocEntry IS NOT NULL
-		  AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2023-04-01' AS DATE)     
-		 -- AND 1=0
+		  AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2023-02-01' AS DATE)     
+		  --AND 1=0
 	--AND ihd.inv_pk_id IN ()
 	END
 END

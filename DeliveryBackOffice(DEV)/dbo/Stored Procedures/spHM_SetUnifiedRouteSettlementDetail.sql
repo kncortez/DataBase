@@ -56,6 +56,9 @@ BEGIN
 	DECLARE @ServiceAmount DECIMAL(14,2) = 0
 	DECLARE @CODAmount DECIMAL(14,2) = 0
 
+	DECLARE @IdManifest INT
+	DECLARE @IsMarkedReturn BIT = 0
+
 	DECLARE @ServiceStatus INT =
     (
         SELECT IdServiceStatus FROM CatServiceStatus WHERE [Name] = 'Recolectado'
@@ -96,6 +99,7 @@ BEGIN
 			   ,@SchedulePickupId = sm.IdSchedulePickup
 			   ,@ServiceStatusId = sm.ServiceStatusId
 			   ,@IsPickup = IIF(stsm.IdSubTypeServiceManagment IS NULL OR stsm.[Name] = 'Recolección', 1, 0)
+			   ,@IdManifest = rp.DeliveryOrderBySettlementId
 			FROM RouteAssigment ra WITH (NOLOCK)
 			INNER JOIN ServiceManagement sm WITH (NOLOCK)
 				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
@@ -117,6 +121,8 @@ BEGIN
 						OR sp.SchedulePickupStatus = 1)
 			LEFT JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
 				ON sp.SchedulePickupId = dopd.IdHeaderRecolection
+			LEFT JOIN RoutePreparation rp WITH(NOLOCK)
+				ON rpd.RoutePreparationId = rp.IdRoutePreparation
 			WHERE (css.[Name] <> 'Cancelado' OR css.IdServiceStatus IS NULL)
 			AND ra.DateOfRoute = CAST(GETDATE() AS DATE)
 			AND ISNULL(dopd.GuideSerie, rpd.Guide_Serie) = @GuideSerie
@@ -422,7 +428,7 @@ BEGIN
 							INNER JOIN SchedulePickup sp WITH (NOLOCK)
 								ON sp.SchedulePickupId = sm.IdSchedulePickup
 							WHERE ra.IdRouteAssigment = @RouteAssignmentId
-							AND sp.AddressPickup = @SenderAddress;
+							AND sp.AddressPickup = CAST(@SenderAddress AS VARCHAR(500));
 						END;
 
 						--Si se encuentra el vp entre los servicios de recolección, se asigna
@@ -522,8 +528,8 @@ BEGIN
 							[IsScheduled])
 								SELECT TOP 1
 									acc.AccIdAccount
-								   ,CONCAT(CAST(GETDATE() AS DATE), ' 08:00:00')
-								   ,CONCAT(CAST(GETDATE() AS DATE), ' 17:00:00')
+								   ,CAST(CONCAT(CAST(GETDATE() AS DATE), ' 08:00:00') AS DATETIME)
+								   ,CAST(CONCAT(CAST(GETDATE() AS DATE), ' 17:00:00') AS DATETIME)
 								   ,0
 								   ,0
 								   ,0
@@ -743,49 +749,16 @@ BEGIN
 										WHEN @IsPickup = 0 THEN CASE
 												WHEN so.OrderDescription IN ('Entregado', 'COD liquidado', 'COD pagado', 'Devuelto') THEN 'IsDelivered'
 												WHEN so.OrderDescription IN ('Traslado a Express Center', 'Entregado En Express Center', 'Devuelto en Express Center') THEN 'IsTransfered'
-												WHEN so.OrderDescription NOT IN ('Intento de entrega fallida') THEN 'IsError'
-												WHEN (do.IsLastMileReturn IS NULL OR
-													do.IsLastMileReturn = 0) THEN CASE
-														WHEN ISNULL((SELECT
-																	rh.Attempt
-																FROM RateHeader rh WITH (NOLOCK)
-																LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-																	ON vpc.CodeOfReference = do.Sender_ID
-																INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-																	ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-																WHERE rh.RheId = rc.RbcIdRate)
-															, 2) >= (SELECT
-																	COUNT(1)
-																FROM DeliveryOrderDetail dod WITH (NOLOCK)
-																INNER JOIN StatusOrder so WITH (NOLOCK)
-																	ON so.StatusOrderId = dod.StatusOrderId
-																WHERE dod.RowStatus = 1
-																AND dod.Guide_Serie = do.Guide_Serie
-																AND dod.Guide_Number = do.Guide_Number
-																AND so.OrderDescription = 'Intento de entrega fallida') THEN 'IsArrival'
-														ELSE 'IsReturn'
+												WHEN so.OrderDescription NOT IN ('Intento de entrega fallida', 'Incidencia en ruta') THEN 'IsError'
+												WHEN (do.IsLastMileReturn = 1) THEN CASE
+														WHEN doad.IdDeliveryOrderAttemptData IS NOT NULL AND doad.GuideReturnAttemptCount >= doad.GuideReturnMaxAttemptCount THEN 'IsBazar'
+														ELSE 'IsArrival'
 													END
 												ELSE CASE
-														WHEN (SELECT
-																	ISNULL(rh.Attempt, 2) + rh.AttemptReturn
-																FROM RateHeader rh WITH (NOLOCK)
-																LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
-																	ON vpc.CodeOfReference = do.Sender_ID
-																INNER JOIN RatebyCustomer rc WITH (NOLOCK)
-																	ON rc.RbcIdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
-																WHERE rh.RheId = rc.RbcIdRate)
-															>= (SELECT
-																	COUNT(1)
-																FROM DeliveryOrderDetail dod WITH (NOLOCK)
-																INNER JOIN StatusOrder so WITH (NOLOCK)
-																	ON so.StatusOrderId = dod.StatusOrderId
-																WHERE dod.RowStatus = 1
-																AND dod.Guide_Serie = do.Guide_Serie
-																AND dod.Guide_Number = do.Guide_Number
-																AND so.OrderDescription = 'Intento de entrega fallida') THEN 'IsReturn'
-														ELSE 'IsBazar'
+														WHEN doad.IdDeliveryOrderAttemptData IS NOT NULL AND doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount THEN 'IsReturn'
+														ELSE 'IsArrival'
 													END
-											END
+												END
 										WHEN @IsPickup = 1 AND
 											so.OrderDescription NOT IN ('Anulado') THEN 'IsArrival'
 										ELSE 'IsError'
@@ -793,8 +766,192 @@ BEGIN
 								FROM DeliveryOrder do WITH (NOLOCK)
 								INNER JOIN StatusOrder so (NOLOCK)
 									ON do.StatusOrderId = so.StatusOrderId
+								LEFT JOIN DeliveryOrderAttemptData doad WITH(NOLOCK)
+									ON do.Guide_Serie = doad.GuideSerie
+									AND do.Guide_Number = doad.GuideNumber
+									AND doad.RowStatus = 1
 								WHERE do.Guide_Serie = @GuideSerie
 								AND do.Guide_Number = @GuideNumber) Flow
+
+							--Si es Arrival, Bazar, Return y no es pickup actualizar contadores
+							IF (@IsError = 0 AND @IsPickup = 0 AND (@IsArrival = 1 OR @IsReturn = 1 OR (@IsDelivered = 0 AND @IsTransfered = 0)))
+							BEGIN 
+
+								-- invalidar token de incidencias
+								UPDATE coi
+								SET coi.ConfirmationOfIncidentToken += 'TIMEOUT'
+								FROM ConfirmationOfIncidence coi
+								INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+									ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+									AND da.Guide_Serie = @GuideSerie
+									AND da.Guide_Number = @GuideNumber
+									AND da.ID_DeliveryOrderBySettlement = @IdManifest
+
+								--Detectar desacatos courier
+								UPDATE coi
+								SET CourierContempt = 1
+								   ,TokenUpdated = @Token
+								   ,DateUpdated = GETDATE()
+								FROM ConfirmationOfIncidence coi
+								INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+									ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+									AND da.Guide_Serie = @GuideSerie
+									AND da.Guide_Number = @GuideNumber
+									AND da.ID_DeliveryOrderBySettlement = @IdManifest
+								WHERE coi.IsActionIssued = 1
+
+								--Detectar marcado como devolución por cliente
+								IF EXISTS (SELECT
+										1
+									FROM ConfirmationOfIncidence coi
+									INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+										ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+										AND da.Guide_Serie = @GuideSerie
+										AND da.Guide_Number = @GuideNumber
+										AND da.ID_DeliveryOrderBySettlement = @IdManifest
+									WHERE coi.ClientConfirmsReturn = 1)
+								BEGIN
+									DECLARE @StatusReturn TINYINT = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Declarado para Devolución' AND RowStatus = 1)
+									SET @IsMarkedReturn = 1
+
+									SET @IsReturn = 1
+									SET @IsArrival = 0
+
+									-- registrar checkpoint histórico de devolución
+									INSERT INTO [dbo].[DeliveryOrderDetail] ([Guide_Serie]
+									, [Guide_Number]
+									, [StatusOrderId]
+									, [UserCreated]
+									, [DateCreated]
+									, [DateCreatedInSystem]
+									, [Observations]
+									, [Temperature_Celsius])
+										VALUES (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL)
+
+									-- registrar último checkpoint de devolución
+									UPDATE DeliveryOrder
+									SET StatusOrderId = @StatusReturn
+									WHERE Guide_Serie = @GuideSerie
+									AND Guide_Number = @GuideNumber
+			
+								END										
+
+								--Actualizar contadores de inténtos de entregas
+								--Si no existe el registro, crearlo
+								IF NOT EXISTS (SELECT 1 FROM DeliveryOrderAttemptData WITH(NOLOCK) WHERE GuideSerie = @GuideSerie AND GuideNumber = @GuideNumber AND RowStatus = 1)
+								BEGIN
+									INSERT INTO [dbo].[DeliveryOrderAttemptData] ([GuideSerie]
+									, [GuideNumber]
+									, [GuideDeliveryAttemptCount]
+									, [GuideDeliveryMaxAttemptCount]
+									, [GuideReturnAttemptCount]
+									, [GuideReturnMaxAttemptCount]
+									, [RowStatus]
+									, [DateCreated]
+									, [TokenCreated]
+									, [DateUptaded]
+									, [TokenUpdated])
+										SELECT TOP 1
+											do.Guide_Serie
+											,do.Guide_Number
+											,CASE
+												WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
+													so.OrderDescription = 'Intento de entrega fallida' AND
+													(do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 OR
+													coi.ClientConfirmsReturn = 1) THEN 1
+												ELSE 0
+											END
+											,rh.Attempt
+											,CASE
+												WHEN coi.IdConfirmationOfIncidence IS NOT NULL AND
+													so.OrderDescription = 'Intento de entrega fallida' AND
+													do.IsLastMileReturn = 1 AND
+													(coi.ClientConfirmsReturn IS NULL OR coi.ClientConfirmsReturn = 0) THEN 1
+												ELSE 0
+											END
+											,rh.AttemptReturn
+											,1
+											,GETDATE()
+											,@Token
+											,NULL
+											,NULL
+										FROM DeliveryOrder do WITH (NOLOCK)
+										LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+											ON do.Sender_ID = vpc.CodeOfReference
+										INNER JOIN RatebyCustomer rbc WITH (NOLOCK)
+											ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
+												AND rbc.RbcRowStatus = 1
+												AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+													OR rbc.RbcCodeOfReference IS NULL)
+										INNER JOIN RateHeader rh WITH (NOLOCK)
+											ON rbc.RbcIdRate = rh.RheId
+										LEFT JOIN DeliveryAttempt da WITH (NOLOCK)
+											ON do.Guide_Serie = da.Guide_Serie
+												AND do.Guide_Number = da.Guide_Number
+												AND da.ID_DeliveryOrderBySettlement = @IdManifest
+										LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+											ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+										LEFT JOIN StatusOrder so
+											ON coi.StatusOrderId = so.StatusOrderId
+										WHERE do.Guide_Serie = @GuideSerie
+										AND do.Guide_Number = @GuideNumber
+										ORDER BY rbc.RbcCodeOfReference DESC
+								END
+								ELSE
+								BEGIN
+									UPDATE doad
+									SET doad.GuideDeliveryAttemptCount =
+										CASE
+											WHEN NOT @IsLastMileReturn = 1 OR
+												coi.ClientConfirmsReturn = 1 THEN doad.GuideDeliveryAttemptCount + 1
+											ELSE doad.GuideDeliveryAttemptCount
+										END
+										,doad.GuideReturnAttemptCount =
+										CASE
+											WHEN @IsLastMileReturn = 1 AND
+												(coi.ClientConfirmsReturn IS NULL OR coi.ClientConfirmsReturn = 0) THEN doad.GuideReturnAttemptCount + 1
+											ELSE doad.GuideReturnAttemptCount
+										END
+										,doad.DateUptaded = GETDATE()
+										,doad.TokenUpdated = @Token
+									FROM DeliveryOrderAttemptData doad
+									INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+										ON doad.GuideSerie = da.Guide_Serie
+										AND doad.GuideNumber = da.Guide_Number
+										AND da.ID_DeliveryOrderBySettlement = @IdManifest
+									INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+										ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+									INNER JOIN StatusOrder so
+										ON coi.StatusOrderId = so.StatusOrderId
+									WHERE doad.GuideSerie = @GuideSerie
+									AND doad.GuideNumber = @GuideNumber
+									AND doad.RowStatus = 1
+									AND so.OrderDescription = 'Intento de entrega fallida'
+								END
+								--Actualizar flujo con los contadores
+								SELECT
+									@IsArrival =
+									CASE
+										WHEN NOT @IsMarkedReturn = 1 AND
+											((NOT @IsLastMileReturn = 1 AND
+											doad.GuideDeliveryAttemptCount < doad.GuideDeliveryMaxAttemptCount) OR
+											(@IsLastMileReturn = 1 AND
+											doad.GuideReturnAttemptCount < doad.GuideReturnMaxAttemptCount)) THEN 1
+										ELSE 0
+									END
+								   ,@IsReturn =
+									CASE
+										WHEN @IsMarkedReturn = 1 OR
+											(NOT @IsLastMileReturn = 1 AND
+											doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount) THEN 1
+										ELSE 0
+									END
+								FROM DeliveryOrderAttemptData doad WITH (NOLOCK)
+								WHERE doad.GuideSerie = @GuideSerie
+								AND doad.GuideNumber = @GuideNumber
+								AND doad.RowStatus = 1
+
+							END
 							
 
 							INSERT INTO UnifiedRouteSettlementDetail (UnifiedRouteSettlementId, ServiceManagementId, GuideSerie, GuideNumber, ServiceSettlementAmount, ServiceCODSettlementAmount, IsArrival, IsReturn, IsDelivered, IsTransfered, RowStatus, TokenCreated, DateCreated)
@@ -850,54 +1007,75 @@ BEGIN
 								IF (@IsOpenProcess = 1)
 								BEGIN
 
-									--- Buscar usuario de proceso abierto
-									SELECT
-										@UserProcess = ISNULL((SELECT
-												CONCAT(iu.IdUser, ' - ', iu.Username)
-											FROM TokenLog tl WITH (NOLOCK)
-											INNER JOIN RegisterUser ru WITH (NOLOCK)
-												ON ru.UsrIdUser = tl.TknIdUser
-											INNER JOIN InternalUser iu WITH (NOLOCK)
-												ON iu.RegisterUserID = ru.UsrIdUser
-											WHERE tl.TknIdToken = ursd.UserProcess)
-										, ISNULL((SELECT
-												CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
-											FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
-											WHERE llbt.SSN_IdToken = ursd.UserProcess)
-										, 'N/A'))
-									FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
-									WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
-									AND ursd.UserProcess IS NOT NULL
-									
-									IF @UserProcess IS NULL OR( @UserProcess <> 'N/A' AND @UserProcess = ( SELECT
-											ISNULL((SELECT
+									--- Buscar usuario de proceso abierto si no es el mismo token
+									IF NOT EXISTS (SELECT
+											1
+										FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
+										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+										AND ursd.UserProcess = @Token)
+									BEGIN
+										SELECT
+											@UserProcess = ISNULL((SELECT
 													CONCAT(iu.IdUser, ' - ', iu.Username)
 												FROM TokenLog tl WITH (NOLOCK)
 												INNER JOIN RegisterUser ru WITH (NOLOCK)
 													ON ru.UsrIdUser = tl.TknIdUser
 												INNER JOIN InternalUser iu WITH (NOLOCK)
 													ON iu.RegisterUserID = ru.UsrIdUser
-												WHERE tl.TknIdToken = @Token)
+												WHERE tl.TknIdToken = ursd.UserProcess)
 											, ISNULL((SELECT
 													CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
 												FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
-												WHERE llbt.SSN_IdToken = @Token)
-											, 'N/A')))
-									)
-									BEGIN
+												WHERE llbt.SSN_IdToken = ursd.UserProcess)
+											, 'N/A'))
+										FROM UnifiedRouteSettlementDetail ursd WITH (NOLOCK)
+										WHERE ursd.IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+										AND ursd.UserProcess IS NOT NULL
+
+										IF @UserProcess IS NULL
+											OR (@UserProcess <> 'N/A'
+											AND @UserProcess = (SELECT
+													ISNULL((SELECT
+															CONCAT(iu.IdUser, ' - ', iu.Username)
+														FROM TokenLog tl WITH (NOLOCK)
+														INNER JOIN RegisterUser ru WITH (NOLOCK)
+															ON ru.UsrIdUser = tl.TknIdUser
+														INNER JOIN InternalUser iu WITH (NOLOCK)
+															ON iu.RegisterUserID = ru.UsrIdUser
+														WHERE tl.TknIdToken = @Token)
+													, ISNULL((SELECT
+															CONCAT(llbt.SSN_IdUser, ' - ', llbt.SSN_Username)
+														FROM DenariusUser_Dev.dbo.LGN_LogByToken llbt WITH (NOLOCK)
+														WHERE llbt.SSN_IdToken = @Token)
+													, 'N/A')))
+											)
+										BEGIN
+											UPDATE UnifiedRouteSettlementDetail
+											SET IsOpenProcess = 1
+											   ,UserProcess = @Token
+											   ,RowStatus = 0
+											WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
+
+											UPDATE UnifiedRouteSettlementDetailPiece
+											SET RowStatus = 0
+											WHERE IdUnifiedRouteSettlementDetailPiece = @IdUnifiedRouteSettlementDetailPiece
+										END
+										ELSE
+										BEGIN
+											SET @IsValidOpenProcess = 0;
+										END
+									END
+									ELSE
+									BEGIN 
 										UPDATE UnifiedRouteSettlementDetail
 										SET IsOpenProcess = 1
-										   ,UserProcess = @Token
-										   ,RowStatus = 0
+											,UserProcess = @Token
+											,RowStatus = 0
 										WHERE IdUnifiedRouteSettlementDetail = @IdUnifiedRouteSettlementDetail
 
 										UPDATE UnifiedRouteSettlementDetailPiece
 										SET RowStatus = 0
 										WHERE IdUnifiedRouteSettlementDetailPiece = @IdUnifiedRouteSettlementDetailPiece
-									END
-									ELSE
-									BEGIN
-										SET @IsValidOpenProcess = 0;
 									END
 								END
 
@@ -910,10 +1088,22 @@ BEGIN
 									   ,'Pieza asignada correctamente.' 'Description'
 									   ,@IsOpenProcess 'IsOpenProcess'
 									   ,(CASE
+											WHEN @IsArrival = 0 AND
+												@IsReturn = 0 AND
+												@IsDelivered = 0 AND
+												@IsTransfered = 0 THEN 'Abandonado'
 											WHEN @IsPickup = 1 THEN 'Recolección'
 											WHEN @IsLastMileReturn = 1 THEN 'Devolución'
 											ELSE 'Entrega'
 										END) 'FlowType'
+									   ,CASE
+											WHEN @IsMarkedReturn = 1 THEN 1
+											ELSE 0
+										END IsMarkedReturn
+									   ,CASE
+											WHEN @IsReturn = 1 THEN 1
+											ELSE 0
+										END IsReturn  
 
 									SELECT
 										dop.NoPiece

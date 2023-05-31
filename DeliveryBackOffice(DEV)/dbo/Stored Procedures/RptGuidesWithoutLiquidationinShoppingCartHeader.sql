@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman Vásquez>
 -- Create date: <Create Date,2023-03-03>
 -- Description:	<Description, SP para cabecera de reporte de guías que no estan liquidadas y no son collect>

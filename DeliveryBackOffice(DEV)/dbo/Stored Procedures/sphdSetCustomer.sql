@@ -61,7 +61,9 @@
 	@ExcludeCommissionCOD bit = 'FALSE',
 	@CatBatchTypeCODId BIGINT,
 	@CatBatchFrequencyCODId BIGINT,
-
+	@BillingTimeId int = 3,
+	@BillingVolumeId int = 2,
+	@BillingCut_offDate Date = NULL,
 	-----------------------------------------------------
 	@CardCode nvarchar(50) =NULL
 	-----------------------------------------------------
@@ -103,6 +105,7 @@ BEGIN
 		--END		
 		ELSE 
 		-----------
+
 
 		IF (@Option = 1)
 		BEGIN 
@@ -169,6 +172,9 @@ BEGIN
 				   ,[ExcludeCommissionCOD]
 				   ,[CatBatchTypeCODId]
 				   ,[CatBatchFrequencyCODId]
+				   ,[CatBillingTimeId]
+				   ,[CatBillingVolumeId]
+				   ,[BillingCut_offDate]
 				   )
 			 VALUES
 				   (@NameCustomer
@@ -232,6 +238,9 @@ BEGIN
 				   ,@ExcludeCommissionCOD
 				   ,@CatBatchTypeCODId
 				   ,@CatBatchFrequencyCODId
+				   ,@BillingTimeId
+				   ,@BillingVolumeId
+				   ,@BillingCut_offDate
 				   )
 
 				   SELECT	'TRUE'	[blnResult]
@@ -320,6 +329,10 @@ BEGIN
 					  -------------------------
 					  ,[SAPCardCode]=@CardCode
 					  -------------------------
+					  ,[CatBillingTimeId] = @BillingTimeId
+					  ,[CatBillingVolumeId] = @BillingVolumeId
+				      ,[BillingCut_offDate] = @BillingCut_offDate
+					  
 				 WHERE IdCustomer = @IdCustomer
 
 				 -- Inactivar el registro

@@ -26,7 +26,6 @@ BEGIN
 		
 	)
 
-
 		     Select Distinct
 			        DOS.ID, 
 			        DOS.Date_Received,

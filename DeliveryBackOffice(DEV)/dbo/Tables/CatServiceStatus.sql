@@ -10,3 +10,10 @@
     PRIMARY KEY CLUSTERED ([IdServiceStatus] ASC)
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [NCI_CatServiceStatus_Name]
+    ON [dbo].[CatServiceStatus]([Name] ASC);
+

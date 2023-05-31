@@ -1,0 +1,2 @@
+Update [dbo].[ConfigExternalPlatform] SET ConfigParameterValue='Hola <Nombre> hubo un inconveniente al entregar el paquete <Guia> ingrese al siguiente link ' Where ConfigParameterName='MsmMessageIncidence'
+Update [dbo].[ConfigExternalPlatform] SET ConfigParameterValue='https://forzadelivery.io/' Where ConfigParameterName='MsmLinkIncidence'

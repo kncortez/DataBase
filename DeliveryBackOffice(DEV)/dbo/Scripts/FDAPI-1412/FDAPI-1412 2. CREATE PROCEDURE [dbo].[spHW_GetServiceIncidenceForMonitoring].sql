@@ -1,13 +1,15 @@
-﻿
+USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[sphw_GetRoutePreparationPickupByRange]    Script Date: 2/17/2023 07:59:03 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
--- Author:		<Andrés, Ruíz>
+-- Author:		<Andr�s, Ru�z>
 -- Create date: <2023-02-17>
 -- Description:	< Devuelve los datos de incidencias en ruta y visitas para portal web interno >
--- =============================================
--- =============================================
--- Author:		<Edelman, Vásquez>
--- Create date: <2023-02-27>
--- Description:	<Agregar nuevos campos: Courier quien marcó la visita fallida, Fecha de visita fallida, Ubicación del mapa de la visita fallida (punto de entrega y punto de courier), Foto que tomó el courier >
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetServiceIncidenceForMonitoring]
 
@@ -35,17 +37,6 @@ DECLARE @OPWebRoleId INT =
             WHERE CR.RolName = 'Operaciones web' COLLATE Latin1_General_CI_AI
                   AND CR.RolRowStatus = 1
         );
-
-	DECLARE @TerminalStatus INT = 
-	(
-		SELECT 
-			TOP (1) 
-				[CCT].[IdCatCheckpointType] 
-		FROM 
-			[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
-		WHERE
-			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'  COLLATE Latin1_General_CI_AI 
-	);
 
 	IF(@EndDate IS NULL)
 	BEGIN
@@ -159,20 +150,6 @@ DECLARE @OPWebRoleId INT =
 			) 'ServiceAddress'
 			,(
 				CASE
-					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Town
-					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Town
-					ELSE DO.Receiver_Town
-				END
-			) 'ServiceTownship'
-			,(
-				CASE
-					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Department
-					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Department
-					ELSE DO.Receiver_Department
-				END
-			) 'ServiceProvince'
-			,(
-				CASE
 					WHEN DO.IsLastMileReturn = 1 THEN DO.Sender_Phone
 					WHEN ISNULL(DO.IsLastMileReturn, 0) = 0 THEN DO.Receiver_Phone
 					ELSE DO.Receiver_Phone
@@ -184,16 +161,6 @@ DECLARE @OPWebRoleId INT =
 			,DO.Guide_Number 'GuideNumber'
 			,CAST(ISNULL(DO.IsLastMileReturn, 0) AS BIT) 'IsLastMileReturn'
 			,COI.ConfirmationOfIncidentToken 'IncidenceToken'
-			,ISNULL(SR.First_Name,'') +' '+ ISNULL(SR.Last_Name,'') AS 'CourierFailedVisit'
-			,COI.DateCreated AS 'Failedvisitdate'
-			,DA.Latitude AS 'LatitudeIncidence'
-			,DA.Longitude AS 'LongitudeIncidence'
-			,(SELECT TOP 1 Path_Incident
-						FROM [dbo].[DeliveryProof] WITH(NOLOCK)
-						WHERE ID = DA.ID_Proof) AS  'IncidenceImage'
-            ,VPC.Latitude AS 'LatitudeVisitPointClient'
-			,VPC.Longitude AS 'LongitudeVisitPintClient'
-
 		FROM
 			[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 			INNER JOIN
@@ -222,25 +189,56 @@ DECLARE @OPWebRoleId INT =
 				[DeliveryBackOffice].[dbo].[Township] TwnByNameOri WITH(NOLOCK)
 				ON
 					DO.Sender_Town = TwnByNameOri.TownshipName
-			LEFT JOIN #HubServiceCoverage DSCOri
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[Township] TwnByIdDes WITH(NOLOCK)
 				ON
-					[DSCOri].[HeaderCode] = ISNULL([TwnByIdOri].[HeaderCode], [TwnByNameOri].[HeaderCode])
+					DO.ReceiverIdTownship = TwnByIdDes.IdTownship
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[Township] TwnByNameDes WITH(NOLOCK)
+				ON
+					DO.Receiver_Town = TwnByNameDes.TownshipName
+			OUTER APPLY
+			(
+				SELECT
+					MAX(HL.IdHubLogistic) 'Hub'
+				FROM
+					[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
+						ON
+							DSC.Hub = HL.HubAbbreviation
+				WHERE
+					DSC.HeaderCode = ISNULL(TwnByIdOri.HeaderCode, TwnByNameOri.HeaderCode)
+				GROUP BY
+					DSC.HeaderCode
+			) DSCOri
+			OUTER APPLY
+			(
+				SELECT
+					MAX(HL.IdHubLogistic) 'Hub'
+				FROM
+					[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSC WITH(NOLOCK)
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
+						ON
+							DSC.Hub = HL.HubAbbreviation
+				WHERE
+					DSC.HeaderCode = ISNULL(TwnByIdDes.HeaderCode, TwnByNameDes.HeaderCode)
+				GROUP BY
+					DSC.HeaderCode
+			) DSCDes
 			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLBUOri WITH(NOLOCK)
 				ON
 					DSCOri.Hub = HLBUOri.HubLogisticId
 					AND
 					HLBUOri.UserId = @UserId
-			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SR  WITH(NOLOCK) 
-			     ON DA.ID_Courier = SR.ID
-			LEFT JOIN [dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
-				ON VPC.CodeOfReference = CASE WHEN  DO.IsLastMileReturn = 1 AND DO.Sender_ID != 0 THEN DO.Sender_ID ELSE DO.Receiver_ID END
-			INNER JOIN
-				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[HubLogisticByUser] HLBUDes WITH(NOLOCK)
 				ON
-					[SODO].[StatusOrderId] = [DO].[StatusOrderId]
+					DSCDes.Hub = HLBUDes.HubLogisticId
 					AND
-					[SODO].[CatCheckpointTypeId] <> @TerminalStatus
+					HLBUDes.UserId = @UserId
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND
@@ -413,7 +411,6 @@ DECLARE @OPWebRoleId INT =
 			,DA.Guide_Serie 'GuideSerie'
 			,DA.Guide_Number 'GuideNumber'
 			,ISNULL(COI.IsActionIssued, 0) 'IsActionIssued'
-			,COI.IdConfirmationOfIncidence 'ConfirmationOfIncidenceId'
 		FROM
 			[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 			INNER JOIN
@@ -438,16 +435,6 @@ DECLARE @OPWebRoleId INT =
 				[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 				ON
 					COI.StatusOrderId = SO.StatusOrderId
-			INNER JOIN
-				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
-				ON
-					[DO].[Guide_Serie] = [DA].[Guide_Serie] AND [DO].[Guide_Number] = [DA].[Guide_Number]
-			INNER JOIN
-				[DeliveryBackOffice].[dbo].[StatusOrder] SODO  WITH(NOLOCK) 
-				ON
-					[SODO].[StatusOrderId] = [DO].[StatusOrderId]
-					AND
-					[SODO].[CatCheckpointTypeId] <> @TerminalStatus
 		WHERE
 			COI.ConfirmationOfIncidentToken NOT LIKE '%TIMEOUT'
 			AND
@@ -469,8 +456,5 @@ DECLARE @OPWebRoleId INT =
 			ERROR_MESSAGE() 'resultMessage'
 
 	END CATCH
-	
-	IF OBJECT_ID('tempdb.dbo.#HubServiceCoverage', 'U') IS NOT NULL 
-		DROP TABLE #HubServiceCoverage;
 
 END
