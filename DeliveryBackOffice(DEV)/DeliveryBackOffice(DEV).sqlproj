@@ -1522,6 +1522,8 @@
     <Build Include="dbo\Stored Procedures\spSR_getAllPreparationRoutesInfo.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
     <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteArrival.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetSpecialRouteArrival.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteArrivalDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

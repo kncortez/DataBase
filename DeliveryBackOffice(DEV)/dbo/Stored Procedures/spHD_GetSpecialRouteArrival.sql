@@ -86,7 +86,7 @@ BEGIN
 			WHERE trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader) trpd
 		WHERE trph.RowStatus = 1
 		AND trph.HasFirstPickupProcess = 1
-		AND trph.HasFirstArrivalProcess = 0
+		AND trph.HasFirstArrivalProcess = 1
 
 	END TRY
 	BEGIN CATCH
