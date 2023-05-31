@@ -1,14 +1,15 @@
-﻿-- =============================================
+﻿--USE DeliveryBackOffice
+-- =============================================
 -- Author:		<Jerson Ochoa>
 -- Create date: <18-04-2023>
 -- Description:	<Set rowStatus = 0 in removed services from SimpliRoute>
 -- =============================================
-CREATE PROCEDURE [dbo].[spSR_RemoveOutdatedSimpliPickupService]
+create procedure [dbo].[spSR_RemoveOutdatedSimpliPickupService]
 	@SimpliRouteServiceId INT,
 	@Token NVARCHAR(100)
-AS
-BEGIN
-	SET NOCOUNT ON;
+as
+begin
+	set nocount on;
 
     BEGIN TRANSACTION
 		BEGIN TRY

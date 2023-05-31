@@ -1472,7 +1472,6 @@
     <Build Include="dbo\User Defined Types\TblServiceRequest3.sql" />
     <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
     <Build Include="dbo\Stored Procedures\spSR_RemoveOutdatedSimpliPickupService.sql" />
-    <Build Include="dbo\Stored Procedures\spSR_GetOutdatedSimpliRouteServices.sql" />
     <Build Include="dbo\Stored Procedures\SetExternalPlatformServicePickupData.sql" />
     <Build Include="dbo\Stored Procedures\SetPickupDataFromSimpliRoute.sql" />
     <Build Include="dbo\User Defined Types\TblExtPlatSimpliroutePickup.sql" />
@@ -1521,6 +1520,7 @@
     <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
     <Build Include="dbo\Stored Procedures\spSR_getAllPreparationRoutesInfo.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
+    <Build Include="dbo\Stored Procedures\RDL_report_Difrisa.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
