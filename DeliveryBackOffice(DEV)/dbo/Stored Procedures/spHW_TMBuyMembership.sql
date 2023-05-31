@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Jerson Ochoa>
 -- Create date: <23-01-2023>
 -- Description:	<Buy a membership from Telemarketing Web module>
@@ -106,7 +107,7 @@ BEGIN
 										@CustomerId,										-- CustomerId
 										@AccountId,											-- AccountId
 										NULL,												-- MembershipCode
-										@TypeOfInOutMoney,									-- CustomerPaymentId
+										NULL,									-- CustomerPaymentId
 										@IsAutoRenewable,									-- IsAutoRenewable
 										[CM].[MembershipFixedValue],						-- MembershipFixedValue
 										[CM].[MembershipMaxServiceFixedValue],				-- MembershipMaxServiceFixedValue
