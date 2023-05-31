@@ -12,6 +12,38 @@ BEGIN
 	SET NOCOUNT ON;
 	SET ARITHABORT ON;
 
+	DECLARE @IndividualCustomerType INT = 
+	(
+		SELECT 
+			TOP (1)
+				[CT].[IdCustomerType]
+		FROM
+			[DeliveryBackOffice].[dbo].[CustomerType] CT  WITH(NOLOCK) 
+		WHERE
+			[CT].[Description] = 'INDIVIDUAL'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateCustomerType INT = 
+	(
+		SELECT 
+			TOP (1)
+				[CT].[IdCustomerType]
+		FROM
+			[DeliveryBackOffice].[dbo].[CustomerType] CT  WITH(NOLOCK) 
+		WHERE
+			[CT].[Description] = 'CORPORATIVO'  COLLATE Latin1_General_CI_AI 
+	)
+
+	DECLARE @IndividualAccountType INT =
+	(
+		SELECT 
+			TOP (1)
+				CTA.[TacIdTypeAccount]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatTypeAccount] CTA  WITH(NOLOCK) 
+		WHERE
+			[CTA].[TacShortName] = 'IND'  COLLATE Latin1_General_CI_AI 
+	)
+
 	BEGIN TRANSACTION
 
 	BEGIN TRY
@@ -157,13 +189,37 @@ BEGIN
 				WHERE eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
 				AND eascd.RowStatus = 1
 				ORDER BY bop.IdBreakdownOfPayment
-				
+
 				SELECT 
 					CAST((CASE WHEN [EASC].[CustomerId] IS NOT NULL THEN 1 ELSE 0 END) AS BIT) [IsImpersonated],
 					[EASC].[CustomerId],
-					[EASC].[CustomerPortfolioId]
+					[EASC].[CustomerPortfolioId],
+					(
+						CASE
+							WHEN [Cu].[IdCustomerType] = @IndividualCustomerType THEN 'IND'
+							WHEN [Cu].[IdCustomerType] = @CorporateCustomerType THEN 'COR'
+							ELSE 'EXC'
+						END
+					) [ClientType],
+					[Acc].[AccIdAccount] [AccountId]
 				FROM
 					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
+					LEFT JOIN
+						[DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+						ON
+							[EASC].[CustomerId] = [Cu].[IdCustomer]
+					OUTER APPLY
+					(
+						SELECT 
+							TOP (1) 
+								[Acc].[AccIdAccount] 
+						FROM 
+							[DeliveryBackOffice].[dbo].[Account] Acc  WITH(NOLOCK) 
+						WHERE
+							[Acc].[IdCustomer] = [Cu].[IdCustomer]
+							AND
+							[Acc].[AccIdTypeAccount] = @IndividualAccountType
+					) [Acc]
 				WHERE
 					[EASC].[IdExpressAccountServiceCart] = @ExpressAccountServiceCartId
 					AND
