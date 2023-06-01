@@ -170,6 +170,14 @@ BEGIN
 				,[CG].[GuideNumber]
 		FROM
 			@CartGuides CG
+			LEFT JOIN -- Guías marcadas como pago inmediato
+				[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPDInmediate WITH(NOLOCK)
+				ON
+					[CG].[GuideSerie] = [DOPDInmediate].[GuideSerie]
+					AND
+					[CG].[GuideNumber] = [DOPDInmediate].[GuideNumber]
+					AND
+					[DOPDInmediate].[TimePlaId] = @InmediateTimePaymentId
 			LEFT JOIN -- Guías marcadas como collect
 				[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPDcollect WITH(NOLOCK)
 				ON
@@ -225,6 +233,8 @@ BEGIN
 					AND
 					[PC].[RowStatus] = 1
 		WHERE
+			[DOPDInmediate].[DopId] IS NOT NULL
+			OR
 			[DOPDcollect].[DopId] IS NOT NULL
 			OR
 			[DOPDcredit].[DopId] IS NOT NULL
@@ -399,8 +409,8 @@ BEGIN
 
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentTransaction]
 			(
-			    [GuideNumber],
 			    [GuideSerie],
+			    [GuideNumber],
 			    [PayTypeId],
 			    [TypeofInOutMoneyId],
 			    [TimePlaId],
