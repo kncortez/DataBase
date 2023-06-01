@@ -9,11 +9,113 @@ CREATE PROCEDURE [dbo].[FinishExpressServiceCartbyAccount]
 	@IdAccount BIGINT,
 	@TypeOfPayment INT,
 	@Voucher NVARCHAR(50) = NULL,
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@InputGuidesList AS TblListGuides READONLY,
+	@CustomerId INT = NULL,
+	@CustomerAccountId BIGINT = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
 
+	DECLARE @MembershipId INT = 0;
+	DECLARE @ActualMembershipPoints INT = 0;
+	DECLARE @MaxServiceMembership INT = 0;
+	DECLARE @DayName NVARCHAR(20) = '';
+	DECLARE @IsValidDay BIT = 0;
+	DECLARE @PointsGenerated INT = 0;
+	DECLARE @PointPromoId INT = NULL;
+	DECLARE @PointPromoFactor DECIMAL(12,2) = 0;
+	DECLARE @CatPointPromoTbl TABLE 
+	(	
+		IdPointPromo INT, 
+		PointPromoDescription NVARCHAR(400),
+		Monday BIT,
+		Tuesday BIT,
+		Wednesday BIT,
+		Thursday BIT,
+		Friday BIT,
+		Saturday BIT,
+		Sunday BIT,
+		PointPromoFactor DECIMAL,
+		PromoStart DATETIME,
+		PromoFinish DATETIME
+	);
+			
+	DECLARE @ForzaPointsGenerationType NVARCHAR(50) = 
+	(	
+		SELECT
+			TOP (1)
+				[CP].[Value]
+		FROM	
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP  WITH(NOLOCK) 
+		WHERE	
+			[CP].[Name] = 'ForzaPointsGenerationType'  COLLATE Latin1_General_CI_AI 
+			AND 
+			[CP].[Status] = 1
+	);
+	DECLARE @ForzaPointsGenerationValue DECIMAL = 
+	( 
+		SELECT
+			TOP (1)
+				[CP].[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP  WITH(NOLOCK) 
+		WHERE	
+			[CP].[Name] = 'ForzaPointsGenerationValue'  COLLATE Latin1_General_CI_AI 
+			AND 
+			[CP].[Status] = 1
+	);
+	
+	DECLARE @ForzaPointsExchangeType NVARCHAR(50) = 
+	(
+		SELECT  
+			TOP (1)
+				[CP].[Value]
+		FROM
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP  WITH(NOLOCK) 
+		WHERE
+			[CP].[Name] = 'ForzaPointsExchangeType'  COLLATE Latin1_General_CI_AI 
+			AND
+			[CP].[Status] = 1
+	);
+
+	DECLARE @ForzaPointsExchangeValue INT = 
+	(
+		SELECT 
+			TOP (1)
+				ISNULL([CP].[Value], 0)
+		FROM	
+			[DeliveryBackOffice].[dbo].[ConfigParams] CP  WITH(NOLOCK) 
+		WHERE	
+			[CP].[Name] = 'ForzaPointsExchangeValue'  COLLATE Latin1_General_CI_AI 
+			AND
+			[CP].[Status] = 1
+	);
+	DECLARE @CatSalesPackageActiveStatusId INT = 
+	(	
+		SELECT	
+			TOP (1)
+				[CSPS].[IdCatSalesPackageStatus]
+		FROM	
+			[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS  WITH(NOLOCK) 
+		WHERE	
+			[CSPS].[SalesPackageStatusName] = 'Activa' 
+			AND 
+			[CSPS].[RowStatus] = 1 
+	);
+	DECLARE @CatSalesPackageVoidedStatusId INT = 
+	(	
+		SELECT	
+			TOP (1)
+				[CSPS].[IdCatSalesPackageStatus]
+		FROM	
+			[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS  WITH(NOLOCK) 
+		WHERE	
+			[CSPS].[SalesPackageStatusName] = 'Anulada' 
+			AND 
+			[CSPS].[RowStatus] = 1 
+	);
+			
 	DECLARE @ExpressCenterWebSystem INT =
 	(
 		SELECT 
@@ -53,6 +155,18 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[CatPaymentTime] CPT  WITH(NOLOCK) 
 		WHERE 
 			[CPT].[TimePlaName] = 'Ahora'
+	);
+
+	
+	DECLARE @PointsTypeOfPayment INT = 
+	(	
+		SELECT	
+			TOP (1)
+				[CTOIOOM].[tio_pk_id] 
+		FROM
+			[DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOOM  WITH(NOLOCK) 
+		WHERE
+			[CTOIOOM].[tio_pk_name] = 'Puntos Forza'  COLLATE Latin1_General_CI_AI 
 	);
 
 	DECLARE @RequestedStatusId INT = 
@@ -170,6 +284,12 @@ BEGIN
 				,[CG].[GuideNumber]
 		FROM
 			@CartGuides CG
+			INNER JOIN -- Guías a procesar del carrito de compras
+				@InputGuidesList GL
+				ON
+					[CG].[GuideSerie] = [GL].[Guide_Serie]
+					AND
+					[CG].[GuideNumber] = [GL].[Guide_Number]
 			LEFT JOIN -- Guías marcadas como pago inmediato
 				[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPDInmediate WITH(NOLOCK)
 				ON
@@ -325,6 +445,7 @@ BEGIN
 			@ValidCartGuides CG
 
 		-- Procesar transacción 
+		-- Guías de pago inmediato
 		DECLARE @InmediatePaymentGuides TABLE 
 		(
 			GuideSerie NVARCHAR(2),
@@ -354,10 +475,204 @@ BEGIN
 		IF ( EXISTS ( SELECT TOP 1 1 FROM @InmediatePaymentGuides ) )
 		BEGIN
 
+			-- Si pago es con puntos forza, revisar si es posible proceder
+			IF ( @TypeOfPayment = @PointsTypeOfPayment )
+			BEGIN
+			    
+				DECLARE @ValidationForzaPoints TABLE
+				(
+					AvailableForzaPoints INT,
+					PointPromoFactor DECIMAL(12,2),
+					PointsNeededForExchange INT,
+					ProceedWithTransaction BIT,
+					PromoDescription NVARCHAR(200), 
+					spResult INT,
+					spMessage NVARCHAR(200)
+				);
+
+				DECLARE @GuideCustomerId INT = @CustomerId;
+				DECLARE @GuideAccountId BIGINT = @CustomerAccountId;
+
+				INSERT INTO @ValidationForzaPoints
+				EXEC dbo.spHW_ValidateForzaPoints 
+					@AccountId = @GuideAccountId
+					, @CustomerId = @GuideCustomerId
+					, @GuidesList = @InputGuidesList;
+
+				IF ((SELECT TOP 1 spResult FROM @ValidationForzaPoints) = 0) 
+				BEGIN
+					DECLARE @ResponseMessage NVARCHAR(200)
+					SELECT TOP (1) @ResponseMessage = spMessage FROM @ValidationForzaPoints;
+					;THROW 50000, @ResponseMessage, 1;
+				END
+
+				IF ((SELECT TOP 1 ProceedWithTransaction FROM @ValidationForzaPoints) = 0)
+				BEGIN
+					;THROW 50001, 'No es posible realizar el canje de puntos porque no cuenta con la cantidad requerida.', 2;
+				END
+				
+				SET @DayName = (SELECT DATENAME(dw, SYSDATETIME()));
+
+				
+				INSERT INTO @CatPointPromoTbl
+				(
+				    [IdPointPromo],
+				    [PointPromoDescription],
+				    [Monday],
+				    [Tuesday],
+				    [Wednesday],
+				    [Thursday],
+				    [Friday],
+				    [Saturday],
+				    [Sunday],
+				    [PointPromoFactor],
+					[PromoStart],
+					[PromoFinish]
+				)
+				SELECT	
+					TOP (1)
+						[CPP].[IdPointPromo],
+						[CPP].[PointPromoDescription],
+						[CPP].[Monday],
+						[CPP].[Tuesday],
+						[CPP].[Wednesday],
+						[CPP].[Thursday],
+						[CPP].[Friday],
+						[CPP].[Saturday],
+						[CPP].[Sunday],
+						[CPP].[PointPromoFactor],
+						[CPP].[StartPromoDate],
+						[CPP].[FinishPromoDate]
+				FROM			
+					[DeliveryBackOffice].[dbo].[CatPointPromo] CPP  WITH(NOLOCK) 
+				WHERE
+					[CPP].[RowStatus] = 1
+					AND	
+					[CPP].[InPointExchange] = 1
+					AND	
+					GETDATE() BETWEEN [CPP].[StartPromoDate] AND [CPP].[FinishPromoDate]
+				ORDER BY
+					[CPP].[PointPromoWeight] DESC;
+
+				SET @IsValidDay =	
+				(
+					CASE 
+						WHEN @DayName = 'Monday'	THEN (SELECT TOP 1 Monday FROM @CatPointPromoTbl)
+						WHEN @DayName = 'Tuesday'	THEN (SELECT TOP 1 Tuesday FROM @CatPointPromoTbl)
+						WHEN @DayName = 'Wednesday' THEN (SELECT TOP 1 Wednesday FROM @CatPointPromoTbl)
+						WHEN @DayName = 'Thursday'	THEN (SELECT TOP 1 Thursday FROM @CatPointPromoTbl)
+						WHEN @DayName = 'Friday'	THEN (SELECT TOP 1 Friday FROM @CatPointPromoTbl)
+						WHEN @DayName = 'Saturday'	THEN (SELECT TOP 1 Saturday FROM @CatPointPromoTbl)
+						WHEN @DayName = 'Sunday'	THEN (SELECT TOP 1 Sunday FROM @CatPointPromoTbl)
+						ELSE 0
+					END
+				);
+				
+				IF(@IsValidDay = 1)
+				BEGIN
+					SELECT		
+						TOP 1 
+							@PointPromoId = [CPP].[IdPointPromo],
+							@PointPromoFactor = [CPP].[PointPromoFactor]
+					FROM
+						@CatPointPromoTbl CPP;
+				END
+
+				UPDATE
+					DOPD
+				SET
+					[DOPD].[TypeofInOutMoneyId] = @PointsTypeOfPayment,
+					[DOPD].[TimePlaId] = @InmediateTimePaymentId,
+					[DOPD].[TokenUpdated] = @Token,
+					[DOPD].[DateUpdated] = GETDATE()
+				FROM
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
+					INNER JOIN
+						@InmediatePaymentGuides IPG
+						ON
+							[IPG].[GuideSerie] = [DOPD].[GuideSerie]
+							AND
+							[IPG].[GuideNumber] = [DOPD].[GuideNumber]
+
+				DECLARE @AuxPointsToSubstract INT = 
+				(
+					SELECT 
+						TOP 1 
+							PointsNeededForExchange 
+					FROM 
+						@ValidationForzaPoints
+				);
+
+				SELECT	
+					@MembershipId = [M].[IdMembership],
+					@ActualMembershipPoints = [M].[AvailablePoints]
+				FROM	
+					[DeliveryBackOffice].[dbo].[Membership] M  WITH(NOLOCK) 
+				WHERE	
+					[M].[AccountId] = @GuideAccountId
+					AND	
+					[M].[RowStatus] = 1
+					AND 
+					[M].[ExpirationDate] >= SYSDATETIME();
+
+				IF( @AuxPointsToSubstract > ISNULL(@ActualMembershipPoints, 0) )
+				BEGIN
+				    ;THROW 50002, 'No es posible realizar transacción de pago con puntos forza.', 3;
+				END
+
+				UPDATE
+					[DeliveryBackOffice].[dbo].[Membership]
+				SET
+					[AvailablePoints] = ([AvailablePoints] - @AuxPointsToSubstract)
+					,[TokenUpdated] = @Token
+					,[DateUpdated] = GETDATE()
+				WHERE
+					[IdMembership] = @MembershipId;
+
+				INSERT INTO [dbo].[PointsByServiceLog] 
+				(
+					[MembershipId],
+					[GuideSerie],
+					[GuideNumber],
+					[GuidePrice],
+					[PointsConsumed],
+					[RowStatus],
+					[DateCreated],
+					[TokenCreated],
+					[TypeTransaction],
+					[CatPointPromoId]
+				)
+				SELECT
+					@MembershipId,
+					[GPL].[GuideSerie],
+					[GPL].[GuideNumber],
+					[DO].[PriceShippment],
+					CASE 
+						WHEN (@ForzaPointsExchangeType = 'MONTO') THEN (([DO].[PriceShippment] * @ForzaPointsExchangeValue) - CAST(([DO].[PriceShippment] * (@PointPromoFactor/100)) AS INT))
+						WHEN (@ForzaPointsExchangeType = 'SERVICIO') THEN (@ForzaPointsExchangeValue)
+						ELSE 0
+					END,						-- PointsConsumed
+					1,							-- RowStatus
+					SYSDATETIME(),
+					@Token,
+					@ForzaPointsExchangeType,	-- TypeTransaction
+					@PointPromoId				-- CatPointPromoId
+				FROM
+					@InmediatePaymentGuides GPL
+					INNER JOIN 
+						[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+						ON
+							[GPL].[GuideSerie] = [DO].[Guide_Serie]
+							AND
+							[GPL].[GuideNumber] = [DO].[Guide_Number];
+
+			END
+
 			UPDATE
 				[Co]
 			SET
 				[Co].[TotalAmountPaid] = [Co].[TotalAmount]
+				,[Co].[PaymentDate] = GETDATE()
 				,[Co].[TokenUpdated] = @Token
 				,[Co].[DateUpdated] = GETDATE()
 			FROM
@@ -403,8 +718,8 @@ BEGIN
 				[CD].[IdCostDetail] IS NULL;
 		END
 
-		-- Registrar transacción de guías al express center
-		IF ( EXISTS ( SELECT TOP 1 1 FROM @InmediatePaymentGuides ) )
+		-- Registrar transacción de guías al express center si no son pagadas con puntos forza
+		IF ( EXISTS ( SELECT TOP 1 1 FROM @InmediatePaymentGuides ) AND NOT(@TypeOfPayment = @PointsTypeOfPayment))
 		BEGIN
 
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentTransaction]
@@ -501,53 +816,11 @@ BEGIN
 		END
 
 
-		-- Procesar puntos forza
-		IF ( EXISTS ( SELECT TOP 1 1 FROM @InmediatePaymentGuides ) )
+		-- Procesar puntos forza para guías si no son pagadas con puntos forza
+		IF ( EXISTS ( SELECT TOP 1 1 FROM @InmediatePaymentGuides ) AND NOT(@TypeOfPayment = @PointsTypeOfPayment))
 		BEGIN
 
 			-- Existen guías de pago inmediato
-			DECLARE @MembershipId INT = 0;
-			DECLARE @MaxServiceMembership INT = 0;
-			DECLARE @DayName NVARCHAR(20) = '';
-			DECLARE @IsValidDay BIT = 0;
-			DECLARE @PointsGenerated INT = 0;
-			
-			DECLARE @ForzaPointsGenerationType NVARCHAR(50) = 
-			(	
-				SELECT
-					TOP (1)
-						[CP].[Value]
-				FROM	
-					[DeliveryBackOffice].[dbo].[ConfigParams] CP  WITH(NOLOCK) 
-				WHERE	
-					[CP].[Name] = 'ForzaPointsGenerationType'  COLLATE Latin1_General_CI_AI 
-					AND 
-					[CP].[Status] = 1
-			);
-			DECLARE @ForzaPointsGenerationValue DECIMAL = 
-			( 
-				SELECT
-					TOP (1)
-						[CP].[Value]
-				FROM
-					[DeliveryBackOffice].[dbo].[ConfigParams] CP  WITH(NOLOCK) 
-				WHERE	
-					[CP].[Name] = 'ForzaPointsGenerationValue'  COLLATE Latin1_General_CI_AI 
-					AND 
-					[CP].[Status] = 1
-			);
-			DECLARE @CatSalesPackageStatusId INT = 
-			(	
-				SELECT	
-					TOP (1)
-						[CSPS].[IdCatSalesPackageStatus]
-				FROM	
-					[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS  WITH(NOLOCK) 
-				WHERE	
-					[CSPS].[SalesPackageStatusName] = 'Activa' 
-					AND 
-					[CSPS].[RowStatus] = 1 
-			);
 			
 			DECLARE @AcceptedPointGuides TABLE 
 			(
@@ -557,19 +830,6 @@ BEGIN
 				CustomerId INT,
 				AccountId BIGINT,
 				LogServiceNumber INT
-			);
-			DECLARE @CatPointPromoTbl TABLE 
-			(	
-				IdPointPromo INT, 
-				PointPromoDescription NVARCHAR(400),
-				Monday BIT,
-				Tuesday BIT,
-				Wednesday BIT,
-				Thursday BIT,
-				Friday BIT,
-				Saturday BIT,
-				Sunday BIT,
-				PointPromoFactor DECIMAL
 			);
 											
 			INSERT INTO @CatPointPromoTbl
@@ -641,7 +901,7 @@ BEGIN
 						AND		
 						[MSL].[RowStatus] = 1
 						AND		
-						[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
+						[MSL].[SalesPackageStatusId] = @CatSalesPackageActiveStatusId
 				LEFT JOIN
 					[DeliveryBackOffice].[dbo].[Membership] MMBSHP  WITH(NOLOCK) 
 					ON
@@ -650,21 +910,21 @@ BEGIN
 						[MMBSHP].[RowStatus] = 1;
 
 			DECLARE @MembershipCustomerId INT = 
-			(	
+			ISNULL(@CustomerId,(	
 				SELECT 
 					TOP 1 
 						[APG].[CustomerId]
 				FROM 
 					@AcceptedPointGuides APG
-			);
+			));
 
 			DECLARE @MembershipAccountId BIGINT = 
-			(	
+			ISNULL(@CustomerAccountId, (	
 				SELECT 
 					TOP 1 
 						[APG].[AccountId]
 				FROM @AcceptedPointGuides APG
-			);
+			));
 
 			SELECT	
 				@MembershipId = [M].[IdMembership],
