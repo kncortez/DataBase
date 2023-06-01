@@ -62,6 +62,8 @@ BEGIN
 
 		UPDATE TSERoutePreparationHeader
 		SET HasFirstArrivalProcess = 1
+		   ,TokenUpdated = @Token
+		   ,DateUpdated = GETDATE()
 		WHERE TSECustomsMark = @CustomMark
 		AND RowStatus = 1
 
