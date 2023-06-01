@@ -1524,6 +1524,7 @@
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromExpressCenterServiceCart.sql" />
     <Build Include="dbo\Stored Procedures\FinishExpressServiceCartbyAccount.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPointsFromExpressCenter.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
