@@ -111,6 +111,7 @@ BEGIN
 														'"Province":"' + isnull( convert(varchar, pr.ProvinceName) , ' ') + '",' +
 														'"Township":"' + isnull( convert(varchar, tw.TownshipName) , ' ') + '",' +
 														'"HeaderCode":"' + isnull( convert(varchar, tw.HeaderCode) , ' ') + '",' +
+														'"IdCityPlace":"' + isnull( convert(varchar, ISNULL([SUB].[IdCityPlace], 7)) , ' ') + '",' +
 														'"IdAccount":"' + isnull( convert(varchar, SUB.UadIdAccount) , ' ') + '",' +
 														'"IdCountry":"' + isnull( convert(varchar, SUB.UadIdCountry) , ' ') + '",' +
 														'"FullName":"' +  dbo.fnt_String_Escape(REPLACE([dbo].[fn_replace_special_characters](ISNULL(SUB.UadFullName,'')),'"',''),'json') + '",' +
