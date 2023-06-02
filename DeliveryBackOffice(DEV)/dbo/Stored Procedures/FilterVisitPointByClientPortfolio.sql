@@ -81,6 +81,7 @@ BEGIN
 									isnull(STUFF((    SELECT ',{ "Id":"'  +  isnull( convert(varchar, SUB.IdDeliveryFavCOD) , ' ')  + '",' +
 														'"IdAccount":"' + isnull( convert(varchar, SUB.IdAccountFavCOD) , ' ') + '",' +
 														'"IdBank":"' + isnull( convert(varchar, SUB.IdBank) , ' ') + '",' +
+														'"DCBA":"' + isnull( convert(varchar, [DCBAmax].[DCBA_Id]) , 'N/A') + '",' +
 														'"NameBank":"'  +  isnull(convert(nvarchar(max), DB.Name),'') + '",' +
 														'"NameAccount":"'  + dbo.fnt_String_Escape( isnull( convert(varchar, [dbo].[fn_replace_special_characters](ISNULL(SUB.NameAccountFavCOD,''))),'json') , ' ') + '",' +
 														'"TypeAccount":"'  + dbo.fnt_String_Escape( isnull( convert(varchar, SUB.TypeAccountFavCOD),'json') , ' ') + '",' +
@@ -92,10 +93,22 @@ BEGIN
 														'"Status":"' + isnull( convert(varchar, SUB.StatusFavCOD) , ' ') + '",' +
 														'"IdVisitPointByClientPortfolio":"' +   isnull( convert(varchar, SUB.VisitPointByClientPortfolioId) , ' ')  
 														+'"}'
-													 FROM dbo.DeliveryFavCOD SUB with (nolock), dbo.DeliveryBank DB with (nolock)
+													 FROM dbo.DeliveryFavCOD SUB with (nolock)
+													 INNER JOIN dbo.DeliveryBank DB with (nolock)
+													 ON SUB.StatusFavCOD= 1 and DB.Id_bank = SUB.IdBank
+													OUTER APPLY ( 
+														SELECT
+															MAX(DCBA.DCBA_Id) 'DCBA_Id'
+														FROM
+															[DeliveryBackOffice].[dbo].[DeliveryCustomerBankAccount] DCBA
+														WHERE SUB.[NumberAccFavCOD] = dcba.DCBA_Num_account
+															and SUB.IdBank = dcba.DCBA_Bank_Id
+															and SUB.TypeAccountFavCOD = dcba.DCBA_BankAccountType COLLATE Latin1_General_CI_AI
+															and dcba.DCBA_Id_estado = 1
+													  ) DCBAmax
 													 --join  dbo.DeliveryBank db on db.Id_bank = SUB.IdBank
 													 WHERE
-													 SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio and SUB.StatusFavCOD= 1 and DB.Id_bank = SUB.IdBank
+													 SUB.VisitPointByClientPortfolioId = vcp.IdVisitPointByClientPortfolio
 													 FOR XML PATH(''), TYPE).value('.', 'varchar(max)'), 1, 1, '' ),
 													 
 													 ' '
