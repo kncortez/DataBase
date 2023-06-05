@@ -1,0 +1,200 @@
+﻿-- Author:		<Eduardo, López>
+-- Create date: <2023-05-31>
+-- Description:	<Insertar piezas escaneadas he insertar checkpoint de recolectado al escanear todas las piezas de cada guía>
+
+CREATE PROCEDURE Set_GuidePiecesScan
+@SerieNumber VARCHAR(2),
+@GuideNumber INT,
+@PieceNumber INT,
+@Token VARCHAR(100),
+@TSEMark VARCHAR(25)
+
+AS
+
+BEGIN
+	DECLARE @IdDetail INT;
+	DECLARE @IdHeader INT;
+	DECLARE @CountPieces INT;
+	DECLARE @ScanPieces INT;
+	DECLARE @ScanPiecesTotal INT;
+
+	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+	DROP TABLE #listGuides;
+	SET @IdHeader = (SELECT tsed.TSERoutePreparationHeaderID FROM TSERoutePreparationHeader tseh
+						INNER JOIN TSERoutePreparationDetail tsed
+						ON tseh.IDTSERoutePreparationHeader = tsed.TSERoutePreparationHeaderID
+						WHERE tsed.GuideSerie = @SerieNumber AND tsed.GuideNumber =@GuideNumber) /*625196*/
+	SET @IdDetail = (SELECT IDTSERoutePreparationDetail FROM TSERoutePreparationDetail WHERE GuideSerie = @SerieNumber AND GuideNumber = @GuideNumber)
+
+	SET @CountPieces =(SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WHERE GuideSerie =@SerieNumber AND GuideNumber = @GuideNumber)
+
+	SET @ScanPiecesTotal =(SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WHERE TSERoutePreparationDetailId = @IdDetail)
+	SET @ScanPieces = @ScanPiecesTotal+1
+	 IF(@IdHeader IS NOT NULL)
+		BEGIN
+				IF(@ScanPiecesTotal < @CountPieces)
+					BEGIN
+						IF(@ScanPieces = @CountPieces)
+							 BEGIN
+								IF((SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WHERE GuideSerie =@SerieNumber/*'FD'*/ AND GuideNumber = @GuideNumber /*625196*/ AND NoPiece = @PieceNumber)>0)
+									 BEGIN
+										IF ((SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WHERE TSERoutePreparationDetailId = @IdDetail AND PieceNumber = @PieceNumber) = 0)
+											BEGIN
+												DECLARE @StatusRecolect INT;
+												SET @StatusRecolect = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Recolectado')
+													INSERT INTO [dbo].[TSERoutePreparationDetailPiece]
+												   ([TSERoutePreparationDetailId]
+												   ,[PieceNumber]
+												   ,[RowStatus]
+												   ,[DateCreated]
+												   ,[TokenCreated])
+												   VALUES
+												   (@IdDetail
+												   ,@PieceNumber
+												   ,1
+												   ,GETDATE()
+												   ,@Token)
+		
+		
+												   INSERT INTO [dbo].[DeliveryOrderDetail]
+												   ([Guide_Serie]
+												   ,[Guide_Number]
+												   ,[StatusOrderId]
+												   ,[UserCreated]
+												   ,[DateCreated]
+												   ,[DateCreatedInSystem]
+												   ,[RowStatus])
+												   VALUES
+												   (@SerieNumber
+												   ,@GuideNumber
+												   ,@StatusRecolect
+												   ,@Token
+												   ,GETDATE()
+												   ,GETDATE()
+												   ,1
+												   )
+		
+													UPDATE DeliveryOrder 
+													SET StatusOrderId = @StatusRecolect
+															WHERE Guide_Serie = @SerieNumber
+					    									AND Guide_Number = @GuideNumber
+
+													DECLARE @TotalPiecesExist INT;
+													DECLARE @TotalPiecesScanned INT;
+													IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+													DROP TABLE #listGuides;
+													SELECT
+														tsd.GuideSerie
+													   ,tsd.GuideNumber
+													   ,tsd.IDTSERoutePreparationDetail
+													   INTO #listGuides
+													FROM TSERoutePreparationDetail tsd
+													WHERE TSERoutePreparationHeaderID = @IdHeader--29
+													--SELECT *from #listGuides
+										
+											
+
+													SET @TotalPiecesExist = (SELECT COUNT(dyop.GuideNumber) FROM DeliveryOrderPiece dyop
+													INNER JOIN #listGuides lsg
+													ON dyop.GuideSerie = lsg.GuideSerie
+													AND dyop.GuideNumber = lsg.GuideNumber)
+
+													SET @TotalPiecesScanned = (SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece tsep
+													INNER JOIN #listGuides lsg2
+													ON tsep.TSERoutePreparationDetailId = lsg2.IDTSERoutePreparationDetail)
+
+													IF(@TotalPiecesExist=@TotalPiecesScanned)
+														BEGIN
+															UPDATE TSERoutePreparationHeader
+															SET HasFirstPickupProcess = 1
+															WHERE IDTSERoutePreparationHeader = @IdHeader--29
+
+														SELECT 7 AS ValueMessage,
+															'El total de piezas de las guías han sido ingresadas correctamente' AS MessageDescription
+														END
+													SELECT 1 AS ValueMessage,
+															'Pieza de la guía registrada correctamente' AS MessageDescription
+												 
+										
+											 END
+										 ELSE
+											 BEGIN
+													SELECT 5 AS ValueMessage,
+															'El numero de pieza de la guía que intenga ingresar ya fue registrada' AS MessageDescription
+											 END
+									END
+								ELSE
+									 BEGIN
+										SELECT 6 AS ValueMessage,
+												'El numero de pieza que desea registrar no forma parte de la guía' AS MessageDescription
+									 END
+		
+							 END
+						ELSE
+							 BEGIN
+								 IF((SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WHERE GuideSerie =@SerieNumber/*'FD'*/ AND GuideNumber = @GuideNumber /*625196*/ AND NoPiece = @PieceNumber)>0)
+									 BEGIN
+											IF ((SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WHERE TSERoutePreparationDetailId = @IdDetail AND PieceNumber = @PieceNumber) = 0)
+												BEGIN
+													INSERT INTO [dbo].[TSERoutePreparationDetailPiece]
+													([TSERoutePreparationDetailId]
+													,[PieceNumber]
+													,[RowStatus]
+													,[DateCreated]
+													,[TokenCreated])
+													VALUES
+													(@IdDetail
+													,@PieceNumber
+													,1
+													,GETDATE()
+													,@Token)
+
+											
+													IF((SELECT TSECustomsMark FROM TSERoutePreparationHeader WHERE IDTSERoutePreparationHeader = @IdHeader)IS NULL )
+														BEGIN
+															UPDATE [dbo].[TSERoutePreparationHeader]
+															SET TSECustomsMark = @TSEMark
+															WHERE IDTSERoutePreparationHeader = @IdHeader
+												
+														END
+													SELECT 1 AS ValueMessage,
+															'Pieza de la guía registrada correctamente' AS MessageDescription
+												END
+											ELSE
+												BEGIN
+													SELECT 2 AS ValueMessage,
+															'La pieza que intenga ingresar ya fue registrada anteriormente' AS MessageDescription
+										
+												END
+									 END
+							 ELSE
+									 BEGIN
+										SELECT 3 AS ValueMessage,
+											'El numero de pieza que desea ingresar no forma parte de la guía' AS MessageDescription
+
+									 END
+
+							 END
+					END
+
+
+				 ELSE
+					BEGIN
+
+						SELECT 4 AS ValueMessage,
+							'Las piezas de la guía que desea ingresar ya han sido ingresadas por completo' AS MessageDescription
+
+
+					END
+		 END
+	 ELSE
+		BEGIN
+				SELECT 8 AS ValueMessage,
+				'La guía que desea ingresar no forma parte de la ruta' AS MessageDescription
+		END
+	/*select @CountPieces
+	select @ScanPiecesTotal
+	select @ScanPieces
+	select @TotalPiecesExist
+	select @TotalPiecesScanned*/
+END
