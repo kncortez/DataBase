@@ -1527,6 +1527,8 @@
     <Build Include="dbo\Stored Procedures\spHD_SetSpecialRouteDeliveryDispatch.sql" />
     <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteDeliveryDispatchDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteDeliveryDispatch.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetSpecialRouteSettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteSettlement.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
