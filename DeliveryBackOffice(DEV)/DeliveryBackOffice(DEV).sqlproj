@@ -1523,6 +1523,7 @@
     <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
     <Build Include="dbo\Stored Procedures\TestTSE.sql" />
     <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDPickUpManifestHeaderTSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
