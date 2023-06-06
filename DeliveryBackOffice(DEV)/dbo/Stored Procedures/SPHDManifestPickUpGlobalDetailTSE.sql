@@ -135,6 +135,7 @@ BEGIN
 			SR.First_Name +' '+ SR.Last_Name [Curierman],
 			CV.UnitNumber+'-'+CV.Plate Plate,
 			Upper(CRC.ClusterName) ClusterName,
+			FORMAT(GETDATE(),'dd-MM-yyyyy hh:mm:ss') [DateExec],
 		    CR.CodeRoute ,
 			(
 				SELECT

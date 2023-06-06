@@ -12,8 +12,9 @@ BEGIN
 
 	Select 
       COUNT(B.GuideNumber) TotalGuide,
-	  0 Totalpiece
-
+	  0 Totalpiece,
+	  COUNT(B.GuideNumber) AS Sobres
+	
 	  
 	From [DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] A  WITH(NOLOCK) 
 		 Inner Join 
@@ -23,8 +24,9 @@ BEGIN
 	UNION ALL
 	Select 
           0 TotalGuide,
-		  COUNT(C.Detail) Totalpiece
-	  
+		  COUNT(C.Detail) Totalpiece,
+		  0  AS  Sobres
+	    
 	From [DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] A  WITH(NOLOCK) 
 		 Inner Join 
 		 [DeliveryBackOffice].[dbo].[TSERoutePreparationDetail] B  WITH(NOLOCK) 
