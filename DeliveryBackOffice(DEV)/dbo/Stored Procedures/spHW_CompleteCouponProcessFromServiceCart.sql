@@ -101,6 +101,13 @@ BEGIN
 		PriceShipment DECIMAL(18,2)
 	);
 
+	DECLARE @ManualCouponGuides TABLE
+	(
+		GuideSerie NVARCHAR(2),
+		GuideNumber INT,
+		PriceShipment DECIMAL(18,2)
+	);
+
 	-- Primer proceso de encapsulación, errores sin ingreso de datos a base de datos
 	BEGIN TRY
 
@@ -509,9 +516,37 @@ BEGIN
 		BEGIN
 			;THROW 50000, 'Tipo de cliente no reconocido, proporcionar más información.', 2;
 		END
+
+		-- Verificar por cupones ingresados manualmente
+		INSERT INTO @ManualCouponGuides
+		(
+		    [GuideSerie],
+		    [GuideNumber],
+		    [PriceShipment]
+		)
+		SELECT
+			[PC].[GuideSerieDestination]
+			,[PC].[GuideNumberDestination]
+			,[DO].[PriceShippment]
+		FROM
+			[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
+			INNER JOIN
+				@InputGuidesList IGL
+				ON
+					[PC].[GuideSerieDestination] = [IGL].[Guide_Serie]
+					AND
+					[PC].[GuideNumberDestination] = [IGL].[Guide_Number]
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+				ON
+					[DO].[Guide_Serie] = [PC].[GuideSerieDestination] 
+					AND 
+					[DO].[Guide_Number] = [PC].[GuideNumberDestination]
+		WHERE
+			[PC].[RowStatus] = 1
 	
-		-- Sin guías validas a procesar, detener proceso
-		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @ValidGuides ) )
+		-- Sin guías validas a procesar y no hayan cupones manuales, detener proceso
+		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @ValidGuides ) AND NOT EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides ) )
 		BEGIN
 			;THROW 50002, 'Sin guías validas en carrito de compras para proceso de verificación de cupones.', 1;
 		END
@@ -588,15 +623,15 @@ BEGIN
 		ORDER BY
 			[CP].[PromoWeight] DESC
 		
-		-- Sin poder aplicar promociones, detener proceso
-		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @PromoTable ) )
+		-- Sin poder aplicar promociones y no hayan cupones manuales, detener proceso
+		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @PromoTable ) AND NOT EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides ) )
 		BEGIN
 
 			;THROW 50000, 'Sin promoción valida para aplicar', 1;
 
 		END
 
-		-- Cantidad de guías no es apta para promoción, detener proceso
+		-- Cantidad de guías no es apta para promoción y no hayan cupones manuales, detener proceso
 		IF 
 		(
 			(
@@ -616,6 +651,7 @@ BEGIN
 				)
 			)
 			<= 0
+			AND NOT EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides ) 
 		)
 		BEGIN
 			;THROW 50000, 'Cantidad de guías en carrito de compras no apta para promoción.', 1;
@@ -653,88 +689,92 @@ BEGIN
 			PromoToApply INT
 		);
 
-		-- Procesamiento de cupones
-		WHILE 
-		(
-			-- Mientras exista una cantidad posible de guías para generar cupón
-			FLOOR
-			(
-				(
-					SELECT
-						COUNT(DISTINCT [VG].[GuideNumber])
-					FROM
-						@TempValidGuide VG
-				)
-				/
-				(
-					SELECT 
-						TOP (1) 
-							[PT].[MinimumGuideExpected] 
-					FROM 
-						@PromoTable PT
-				)
-			)
-			> 0
-		)
+		-- Si hay promociones y guías validas, realizar proceso de pregeneración de cupones
+		IF ( EXISTS ( SELECT TOP 1 1 FROM @PromoTable ) AND EXISTS ( SELECT TOP 1 1 FROM @ValidGuides ) )
 		BEGIN
-			-- Guía origen de cupón
-			DECLARE @PossibleGuideOriginSerie NVARCHAR(2)
-			DECLARE @PossibleGuideOriginNumber INT
-
-			-- Guía destino de cupón
-			DECLARE @PossibleGuideDestinySerie NVARCHAR(2)
-			DECLARE @PossibleGuideDestinyNumber INT
-
-			-- Obtener guía origen
-			SELECT
-				TOP (1)
-					@PossibleGuideOriginSerie = [TVG].[GuideSerie],
-					@PossibleGuideOriginNumber = [TVG].[GuideNumber]
-			FROM
-				@TempValidGuide TVG
-			ORDER BY
-				[TVG].[PriceShipment] DESC
-
-			-- Obtener guía destino
-			SELECT
-				TOP (1)
-					@PossibleGuideDestinySerie = [TVG].[GuideSerie],
-					@PossibleGuideDestinyNumber = [TVG].[GuideNumber]
-			FROM
-				@TempValidGuide TVG
-			WHERE
-				[TVG].[GuideNumber] <> @PossibleGuideOriginNumber
-			ORDER BY
-				[TVG].[PriceShipment] ASC
-
-			-- Ingresar a proceso de cupones con tipo de promoción a aplicar
-			INSERT INTO @PromoProcess
+			-- Procesamiento de cupones
+			WHILE 
 			(
-				[GuideSerieOrigin],
-				[GuideNumberOrigin],
-				[GuideSerieDestiny],
-				[GuideNumberDestiny],
-				[PromoToApply]
+				-- Mientras exista una cantidad posible de guías para generar cupón
+				FLOOR
+				(
+					(
+						SELECT
+							COUNT(DISTINCT [VG].[GuideNumber])
+						FROM
+							@TempValidGuide VG
+					)
+					/
+					(
+						SELECT 
+							TOP (1) 
+								[PT].[MinimumGuideExpected] 
+						FROM 
+							@PromoTable PT
+					)
+				)
+				> 0
 			)
-			VALUES
-			(   
-				@PossibleGuideOriginSerie, -- GuideSerieOrigin - nvarchar(2)
-				@PossibleGuideOriginNumber, -- GuideNumberOrigin - int
-				@PossibleGuideDestinySerie, -- GuideSerieDestiny - nvarchar(2)
-				@PossibleGuideDestinyNumber, -- GuideNumberDestiny - int
-				(SELECT TOP (1) [PT].[IdPromo] FROM @PromoTable PT ORDER BY [PT].[IdPromo] ASC)  -- PromoToApply - int
-			)
+			BEGIN
+				-- Guía origen de cupón
+				DECLARE @PossibleGuideOriginSerie NVARCHAR(2)
+				DECLARE @PossibleGuideOriginNumber INT
 
-			-- Eliminar guía de origen de temporal de procesamiento
-			DELETE FROM @TempValidGuide
-			WHERE [GuideSerie] = @PossibleGuideOriginSerie AND [GuideNumber] = @PossibleGuideOriginNumber
-			-- Eliminar guía de destino de temporal de procesamiento
-			DELETE FROM @TempValidGuide
-			WHERE [GuideSerie] = @PossibleGuideDestinySerie AND [GuideNumber] = @PossibleGuideDestinyNumber
+				-- Guía destino de cupón
+				DECLARE @PossibleGuideDestinySerie NVARCHAR(2)
+				DECLARE @PossibleGuideDestinyNumber INT
+
+				-- Obtener guía origen
+				SELECT
+					TOP (1)
+						@PossibleGuideOriginSerie = [TVG].[GuideSerie],
+						@PossibleGuideOriginNumber = [TVG].[GuideNumber]
+				FROM
+					@TempValidGuide TVG
+				ORDER BY
+					[TVG].[PriceShipment] DESC
+
+				-- Obtener guía destino
+				SELECT
+					TOP (1)
+						@PossibleGuideDestinySerie = [TVG].[GuideSerie],
+						@PossibleGuideDestinyNumber = [TVG].[GuideNumber]
+				FROM
+					@TempValidGuide TVG
+				WHERE
+					[TVG].[GuideNumber] <> @PossibleGuideOriginNumber
+				ORDER BY
+					[TVG].[PriceShipment] ASC
+
+				-- Ingresar a proceso de cupones con tipo de promoción a aplicar
+				INSERT INTO @PromoProcess
+				(
+					[GuideSerieOrigin],
+					[GuideNumberOrigin],
+					[GuideSerieDestiny],
+					[GuideNumberDestiny],
+					[PromoToApply]
+				)
+				VALUES
+				(   
+					@PossibleGuideOriginSerie, -- GuideSerieOrigin - nvarchar(2)
+					@PossibleGuideOriginNumber, -- GuideNumberOrigin - int
+					@PossibleGuideDestinySerie, -- GuideSerieDestiny - nvarchar(2)
+					@PossibleGuideDestinyNumber, -- GuideNumberDestiny - int
+					(SELECT TOP (1) [PT].[IdPromo] FROM @PromoTable PT ORDER BY [PT].[IdPromo] ASC)  -- PromoToApply - int
+				)
+
+				-- Eliminar guía de origen de temporal de procesamiento
+				DELETE FROM @TempValidGuide
+				WHERE [GuideSerie] = @PossibleGuideOriginSerie AND [GuideNumber] = @PossibleGuideOriginNumber
+				-- Eliminar guía de destino de temporal de procesamiento
+				DELETE FROM @TempValidGuide
+				WHERE [GuideSerie] = @PossibleGuideDestinySerie AND [GuideNumber] = @PossibleGuideDestinyNumber
+			END
+
 		END
-
-		-- Error al realizar proceso de cupones, detener proceso
-		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @PromoProcess ) )
+		-- Error al realizar proceso de cupones y no hayan cupones manuales, detener proceso
+		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @PromoProcess ) AND NOT EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides )  )
 		BEGIN
 			;THROW 50004, 'No se pudieron procesar carrito de compras para generación de cupones', 2;
 		END
@@ -757,313 +797,186 @@ BEGIN
 				GuideNumber INT
 			);
 		
-			-- Buscar carrito de compras
-			-- Cliente es individual y no es impersonado
-			IF ( @CustomerType = @IndividualType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0 )
+			-- Si proceso cupones automaticos
+			IF ( EXISTS ( SELECT TOP 1 1 FROM @PromoProcess ) )
 			BEGIN
-				-- Pertenece a un individual
-				-- Buscar identificador del carrito de compras e intento de procesamiento
-				SELECT 
-					TOP (1) 
-						@ProcessServiceCartId = [PCPL].[AccountServiceCartId],
-						@ProcessServiceCartLastProcess = [PCPL].[ProcessAttempt]
-				FROM 
-					[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[AccountServiceCart] AccSC  WITH(NOLOCK) 
-						ON
-							[AccSC].[IdAccountServiceCart] = [PCPL].[AccountServiceCartId]
-				WHERE
-					[AccSC].[AccountId] = ISNULL(@ImpersonatedCustomerAccountId, @IdAccount)
-					AND
-					[AccSC].[IsPending] = 1
-					AND
-					[AccSC].[RowStatus] = 1
-					AND
-					[PCPL].[RowStatus] = 1
-				ORDER BY
-					[AccSC].[DateCreated] DESC
-
-				-- No existe procesamiento del carrito de compras activo
-				IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 )
+			    -- Buscar carrito de compras
+				-- Cliente es individual y no es impersonado
+				IF ( @CustomerType = @IndividualType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0 )
 				BEGIN
-					;THROW 50000, 'No existe procesamiento de cupones anterior, revisión no es valida en proceso.', 1;
-				END
-				-- Ya existe procesamiento anterior activo
-				ELSE
-				BEGIN
-					SET @CountTotalProcessedGuides =
-					(
-						SELECT 
-							COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
-						FROM
-							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
-						WHERE
-							[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
-							AND
-							[PCPL].[AccountServiceCartId] = @ProcessServiceCartId
-							AND
-							[PCPL].[RowStatus] = 1
-					)
-
-					SET @CountTotalMatchedProcessedGuides =
-					(
-						SELECT 
-							COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
-						FROM
-							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
-							INNER JOIN
-								(
-								SELECT 
-									[VGStart].[GuideSerie] [GuideSerieOrigin],
-									[VGStart].[GuideNumber] [GuideNumberOrigin],
-									[VGStart].[PriceShipment] [PriceShipmentOrigin],
-									[PT].[IdPromo],
-									[PT].[PromoDescription],
-									[CVT].[ValueTypeName],
-									[PT].[PromoValue],
-									[CTD].[ShortName],
-									[PT].[LimitPromoTime],
-									[PT].[MinimumGuideExpected],
-									[VGEnd].[GuideSerie] [GuideSerieDestiny],
-									[VGEnd].[GuideNumber] [GuideNumberDestiny],
-									[VGEnd].[PriceShipment] [PriceShipmentDestiny] 
-								FROM
-									@ValidGuides VGStart
-									LEFT JOIN
-										@PromoProcess PP
-										ON
-											[VGStart].[GuideSerie] = [PP].[GuideSerieOrigin]
-											AND
-											[VGStart].[GuideNumber] = [PP].[GuideNumberOrigin]
-									LEFT JOIN
-										@PromoTable PT
-										ON
-											[PP].[PromoToApply] = [PT].[IdPromo]
-									LEFT JOIN
-										@ValidGuides VGEnd
-										ON
-											[VGEnd].[GuideSerie] = [PP].[GuideSerieDestiny]
-											AND
-											[VGEnd].[GuideNumber] = [PP].[GuideNumberDestiny]
-									LEFT JOIN
-										[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
-										ON
-											[PT].[ValueType] = [CVT].[IdCatValueType]
-									LEFT JOIN
-										[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
-										ON
-											[PT].[DiscontType] = [CTD].[IdCatTypeDiscount]
-								) PP
-								ON
-									[PCPL].[GuideSerieOrigin] = [PP].[GuideSerieOrigin]
-									AND
-									[PCPL].[GuideNumberOrigin] = [PP].[GuideNumberOrigin]
-									AND
-									ISNULL([PCPL].[CatPromoId], 0) = ISNULL([PP].[IdPromo], 0)
-									AND
-									ISNULL([PCPL].[GuideSerieDestiny], 'FD') = ISNULL([PP].[GuideSerieDestiny], 'FD')
-									AND
-									ISNULL([PCPL].[GuideNumberDestiny], 0) = ISNULL([PP].[GuideNumberDestiny], 0)
-						WHERE
-							[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
-							AND
-							[PCPL].[AccountServiceCartId] = @ProcessServiceCartId
-							AND
-							[PCPL].[RowStatus] = 1
-					)
-
-					IF ( @CountTotalMatchedProcessedGuides <> @CountTotalProcessedGuides )
-					BEGIN
-						;THROW 50005, 'La cantidad de guías procesadas contra la verificación no coinciden en datos', 2;
-					END
-					
-					-- Canjeo de cupones ingresados manualmente
-					UPDATE
-						[PC]
-					SET
-						[PC].[OriginalAmount] = [DO].[PriceShippment]
-						,[PC].[DiscountAmount] = ROUND
-						(
-							(
-								CASE
-									WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-										CASE
-											WHEN [CTD].[ShortName] = 'TOT' THEN
-												ROUND((([DO].[PriceShippment] * [PC].[CouponValue]) / 100), 1)
-											ELSE 0
-										END
-									WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
-										CASE
-											WHEN [CTD].[ShortName] = 'TOT' THEN
-												CASE
-													WHEN [PC].[CouponValue] > [DO].[PriceShippment] THEN
-														[DO].[PriceShippment]
-													ELSE
-														[DO].[PriceShippment] - [PC].[CouponValue]
-												END
-											ELSE 0
-										END
-									WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
-										CASE
-											WHEN [CTD].[ShortName] = 'TOT' THEN
-												[DO].[PriceShippment]
-											ELSE 0
-										END
-									ELSE 0
-								END
-							)
-						,1)
-						,[PC].[FinalAmount] = ROUND((
-							(
-								[DO].[PriceShippment] - 
-								(
-									CASE
-										WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-											CASE
-												WHEN [CTD].[ShortName] = 'TOT' THEN
-													ROUND((([DO].[PriceShippment] * [PC].[CouponValue]) / 100), 1)
-												ELSE 0
-											END
-										WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
-											CASE
-												WHEN [CTD].[ShortName] = 'TOT' THEN
-													CASE
-														WHEN [PC].[CouponValue] > [DO].[PriceShippment] THEN
-															[DO].[PriceShippment]
-														ELSE
-															[DO].[PriceShippment] - [PC].[CouponValue]
-													END
-												ELSE 0
-											END
-										WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
-											CASE
-												WHEN [CTD].[ShortName] = 'TOT' THEN
-													[DO].[PriceShippment]
-												ELSE 0
-											END
-										ELSE 0
-									END
-								)
-							)
-						),1)
-						,[PC].[RedeemedDate] = GETDATE()
-						,[PC].[DateUpdated] = GETDATE()
-						,[PC].[TokenUpdated] = @Token
-					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
-					FROM
-						[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
-						INNER JOIN
-							@InputGuidesList IGL
-							ON
-								[PC].[GuideSerieDestination] = [IGL].[Guide_Serie]
-								AND
-								[PC].[GuideNumberDestination] = [IGL].[Guide_Number]
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
-							ON
-								[IGL].[Guide_Serie] = [DO].[Guide_Serie]
-								AND
-								[IGL].[Guide_Number] = [DO].[Guide_Number]
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
-							ON
-								[PC].[CatValueTypeId] = [CVT].[IdCatValueType]
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
-							ON
-								[CTD].[IdCatTypeDiscount] = [PC].[CatDiscountTypeId]
-					WHERE
-						[PC].[RowStatus] = 1
-
-					-- Ingreso y canjeo de cupones generados por brain 
-					INSERT INTO [DeliveryBackOffice].[dbo].[PromoCoupon]
-					(
-						[CatPromoId],
-						[PromoCouponSerie],
-						[GuideSerieOrigin],
-						[GuideNumberOrigin],
-						[ServiceManagementOrigin],
-						[SystemOrigin],
-						[CustomerOrigin],
-						[VisitPointClientOrigin],
-						[VisitPointClientPortfolioOrigin],
-						[GuideSerieDestination],
-						[GuideNumberDestination],
-						[ServiceManagementDestination],
-						[SystemDestination],
-						[CustomerDestination],
-						[VisitPointClientDestination],
-						[VisitPointClientPortfolioDestination],
-						[CatDiscountTypeId],
-						[CatValueTypeId],
-						[CouponValue],
-						[OriginalAmount],
-						[DiscountAmount],
-						[FinalAmount],
-						[RedeemedDate],
-						[StartActiveDate],
-						[FinalActiveDate],
-						[RowStatus],
-						[DateCreated],
-						[TokenCreated]
-					)
-					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
+					-- Pertenece a un individual
+					-- Buscar identificador del carrito de compras e intento de procesamiento
 					SELECT 
-						[PCPL].[CatPromoId]
-						,CONCAT([PCPL].[GuideSerieOrigin], [PCPL].[GuideNumberOrigin], RIGHT(CONCAT('000', RAND([PCPL].[GuideNumberOrigin] + CHECKSUM(GETDATE()))), 3))
-						,[PCPL].[GuideSerieOrigin]
-						,[PCPL].[GuideNumberOrigin]
-						,NULL
-						,@SystemId
-						,NULL
-						,NULL
-						,NULL
-						,[PCPL].[GuideSerieDestiny]
-						,[PCPL].[GuideNumberDestiny]
-						,NULL
-						,@SystemId
-						,NULL
-						,NULL
-						,NULL
-						,[CP].[CatDiscountTypeId]
-						,[CP].[CatValueTypeId]
-						,[CP].[PromoValue]
-						,[PCPL].[DestinyGuideAmount]
-						,ROUND
+						TOP (1) 
+							@ProcessServiceCartId = [PCPL].[AccountServiceCartId],
+							@ProcessServiceCartLastProcess = [PCPL].[ProcessAttempt]
+					FROM 
+						[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[AccountServiceCart] AccSC  WITH(NOLOCK) 
+							ON
+								[AccSC].[IdAccountServiceCart] = [PCPL].[AccountServiceCartId]
+					WHERE
+						[AccSC].[AccountId] = ISNULL(@ImpersonatedCustomerAccountId, @IdAccount)
+						AND
+						[AccSC].[IsPending] = 1
+						AND
+						[AccSC].[RowStatus] = 1
+						AND
+						[PCPL].[RowStatus] = 1
+					ORDER BY
+						[AccSC].[DateCreated] DESC
+
+					-- No existe procesamiento del carrito de compras activo
+					IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 )
+					BEGIN
+						;THROW 50000, 'No existe procesamiento de cupones anterior, revisión no es valida en proceso.', 1;
+					END
+					-- Ya existe procesamiento anterior activo
+					ELSE
+					BEGIN
+						SET @CountTotalProcessedGuides =
 						(
+							SELECT 
+								COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
+							FROM
+								[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+							WHERE
+								[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
+								AND
+								[PCPL].[AccountServiceCartId] = @ProcessServiceCartId
+								AND
+								[PCPL].[RowStatus] = 1
+						)
+
+						SET @CountTotalMatchedProcessedGuides =
+						(
+							SELECT 
+								COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
+							FROM
+								[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+								INNER JOIN
+									(
+									SELECT 
+										[VGStart].[GuideSerie] [GuideSerieOrigin],
+										[VGStart].[GuideNumber] [GuideNumberOrigin],
+										[VGStart].[PriceShipment] [PriceShipmentOrigin],
+										[PT].[IdPromo],
+										[PT].[PromoDescription],
+										[CVT].[ValueTypeName],
+										[PT].[PromoValue],
+										[CTD].[ShortName],
+										[PT].[LimitPromoTime],
+										[PT].[MinimumGuideExpected],
+										[VGEnd].[GuideSerie] [GuideSerieDestiny],
+										[VGEnd].[GuideNumber] [GuideNumberDestiny],
+										[VGEnd].[PriceShipment] [PriceShipmentDestiny] 
+									FROM
+										@ValidGuides VGStart
+										LEFT JOIN
+											@PromoProcess PP
+											ON
+												[VGStart].[GuideSerie] = [PP].[GuideSerieOrigin]
+												AND
+												[VGStart].[GuideNumber] = [PP].[GuideNumberOrigin]
+										LEFT JOIN
+											@PromoTable PT
+											ON
+												[PP].[PromoToApply] = [PT].[IdPromo]
+										LEFT JOIN
+											@ValidGuides VGEnd
+											ON
+												[VGEnd].[GuideSerie] = [PP].[GuideSerieDestiny]
+												AND
+												[VGEnd].[GuideNumber] = [PP].[GuideNumberDestiny]
+										LEFT JOIN
+											[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+											ON
+												[PT].[ValueType] = [CVT].[IdCatValueType]
+										LEFT JOIN
+											[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+											ON
+												[PT].[DiscontType] = [CTD].[IdCatTypeDiscount]
+									) PP
+									ON
+										[PCPL].[GuideSerieOrigin] = [PP].[GuideSerieOrigin]
+										AND
+										[PCPL].[GuideNumberOrigin] = [PP].[GuideNumberOrigin]
+										AND
+										ISNULL([PCPL].[CatPromoId], 0) = ISNULL([PP].[IdPromo], 0)
+										AND
+										ISNULL([PCPL].[GuideSerieDestiny], 'FD') = ISNULL([PP].[GuideSerieDestiny], 'FD')
+										AND
+										ISNULL([PCPL].[GuideNumberDestiny], 0) = ISNULL([PP].[GuideNumberDestiny], 0)
+							WHERE
+								[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
+								AND
+								[PCPL].[AccountServiceCartId] = @ProcessServiceCartId
+								AND
+								[PCPL].[RowStatus] = 1
+						)
+
+						IF ( @CountTotalMatchedProcessedGuides <> @CountTotalProcessedGuides )
+						BEGIN
+							;THROW 50005, 'La cantidad de guías procesadas contra la verificación no coinciden en datos', 2;
+						END
+					
+						-- Ingreso y canjeo de cupones generados por brain 
+						INSERT INTO [DeliveryBackOffice].[dbo].[PromoCoupon]
+						(
+							[CatPromoId],
+							[PromoCouponSerie],
+							[GuideSerieOrigin],
+							[GuideNumberOrigin],
+							[ServiceManagementOrigin],
+							[SystemOrigin],
+							[CustomerOrigin],
+							[VisitPointClientOrigin],
+							[VisitPointClientPortfolioOrigin],
+							[GuideSerieDestination],
+							[GuideNumberDestination],
+							[ServiceManagementDestination],
+							[SystemDestination],
+							[CustomerDestination],
+							[VisitPointClientDestination],
+							[VisitPointClientPortfolioDestination],
+							[CatDiscountTypeId],
+							[CatValueTypeId],
+							[CouponValue],
+							[OriginalAmount],
+							[DiscountAmount],
+							[FinalAmount],
+							[RedeemedDate],
+							[StartActiveDate],
+							[FinalActiveDate],
+							[RowStatus],
+							[DateCreated],
+							[TokenCreated]
+						)
+						OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
+						SELECT 
+							[PCPL].[CatPromoId]
+							,CONCAT([PCPL].[GuideSerieOrigin], [PCPL].[GuideNumberOrigin], RIGHT(CONCAT('000', RAND([PCPL].[GuideNumberOrigin] + CHECKSUM(GETDATE()))), 3))
+							,[PCPL].[GuideSerieOrigin]
+							,[PCPL].[GuideNumberOrigin]
+							,NULL
+							,@SystemId
+							,NULL
+							,NULL
+							,NULL
+							,[PCPL].[GuideSerieDestiny]
+							,[PCPL].[GuideNumberDestiny]
+							,NULL
+							,@SystemId
+							,NULL
+							,NULL
+							,NULL
+							,[CP].[CatDiscountTypeId]
+							,[CP].[CatValueTypeId]
+							,[CP].[PromoValue]
+							,[PCPL].[DestinyGuideAmount]
+							,ROUND
 							(
-								CASE
-									WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-										CASE
-											WHEN [CTD].[ShortName] = 'TOT' THEN
-												ROUND((([PCPL].[DestinyGuideAmount] * [CP].[PromoValue]) / 100), 1)
-											ELSE 0
-										END
-									WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
-										CASE
-											WHEN [CTD].[ShortName] = 'TOT' THEN
-												CASE
-													WHEN [CP].[PromoValue] > [PCPL].[DestinyGuideAmount] THEN
-														[PCPL].[DestinyGuideAmount]
-													ELSE
-														[PCPL].[DestinyGuideAmount] - [CP].[PromoValue]
-												END
-											ELSE 0
-										END
-									WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
-										CASE
-											WHEN [CTD].[ShortName] = 'TOT' THEN
-												[PCPL].[DestinyGuideAmount]
-											ELSE 0
-										END
-									ELSE 0
-								END
-							)
-						,1)
-						,ROUND((
-							(
-								[PCPL].[DestinyGuideAmount] - 
 								(
 									CASE
 										WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
@@ -1092,182 +1005,401 @@ BEGIN
 										ELSE 0
 									END
 								)
+							,1)
+							,ROUND((
+								(
+									[PCPL].[DestinyGuideAmount] - 
+									(
+										CASE
+											WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN [CTD].[ShortName] = 'TOT' THEN
+														ROUND((([PCPL].[DestinyGuideAmount] * [CP].[PromoValue]) / 100), 1)
+													ELSE 0
+												END
+											WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN [CTD].[ShortName] = 'TOT' THEN
+														CASE
+															WHEN [CP].[PromoValue] > [PCPL].[DestinyGuideAmount] THEN
+																[PCPL].[DestinyGuideAmount]
+															ELSE
+																[PCPL].[DestinyGuideAmount] - [CP].[PromoValue]
+														END
+													ELSE 0
+												END
+											WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN [CTD].[ShortName] = 'TOT' THEN
+														[PCPL].[DestinyGuideAmount]
+													ELSE 0
+												END
+											ELSE 0
+										END
+									)
+								)
+							),1)
+							,GETDATE()
+							,GETDATE()
+							,(
+								CASE
+									WHEN [CP].[LimitPromoTime] = 24.00 THEN
+										DATEADD(SECOND, -1, CAST(DATEADD(DAY, 1, CAST(GETDATE() AS DATE)) AS DATETIME))
+									ELSE
+										DATEADD(MINUTE, (ISNULL([CP].[LimitPromoTime], 1) * 60), GETDATE())
+								END
 							)
-						),1)
-						,GETDATE()
-						,GETDATE()
-						,(
-							CASE
-								WHEN [CP].[LimitPromoTime] = 24.00 THEN
-									DATEADD(SECOND, -1, CAST(DATEADD(DAY, 1, CAST(GETDATE() AS DATE)) AS DATETIME))
-								ELSE
-									DATEADD(MINUTE, (ISNULL([CP].[LimitPromoTime], 1) * 60), GETDATE())
-							END
-                        )
-						,1
-						,GETDATE()
-						,@Token
-					FROM
-						[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK)
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
-							ON
-								[CP].[IdPromo] = [PCPL].[CatPromoId]
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
-							ON
-								[CP].[CatValueTypeId] = [CVT].[IdCatValueType]
-						INNER JOIN
-							[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
-							ON
-								[CTD].[IdCatTypeDiscount] = [CP].[CatDiscountTypeId]
-					WHERE	
-						[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
-						AND
-						[PCPL].[AccountServiceCartId] = @ProcessServiceCartId
-						AND
-						[PCPL].[CatPromoId] IS NOT NULL
-						AND
-						[PCPL].[RowStatus] = 1
+							,1
+							,GETDATE()
+							,@Token
+						FROM
+							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK)
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
+								ON
+									[CP].[IdPromo] = [PCPL].[CatPromoId]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+								ON
+									[CP].[CatValueTypeId] = [CVT].[IdCatValueType]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+								ON
+									[CTD].[IdCatTypeDiscount] = [CP].[CatDiscountTypeId]
+						WHERE	
+							[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
+							AND
+							[PCPL].[AccountServiceCartId] = @ProcessServiceCartId
+							AND
+							[PCPL].[CatPromoId] IS NOT NULL
+							AND
+							[PCPL].[RowStatus] = 1
 					
-					UPDATE
-						[DeliveryBackOffice].[dbo].[PromoCouponProcessLog]
-					SET
-						[RowStatus] = 0
-						,[DateUpdated] = GETDATE()
-						,[TokenUpdated] = @Token
-					WHERE
-						[AccountServiceCartId] = @ProcessServiceCartId
-						AND
-						[RowStatus] = 1
+						UPDATE
+							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog]
+						SET
+							[RowStatus] = 0
+							,[DateUpdated] = GETDATE()
+							,[TokenUpdated] = @Token
+						WHERE
+							[AccountServiceCartId] = @ProcessServiceCartId
+							AND
+							[RowStatus] = 1
 
-				END
+					END
 			
-			END
-			-- Cliente es redistribuidor o es impersonado
-			ELSE IF ( @CustomerType = @RedistributorType OR (ISNULL(@ImpersonatedCustomerId, 0) > 0 OR ISNULL(@ImpersonatedCustomerAccountId, 0) > 0) )
-			BEGIN
-
-				SELECT 
-					TOP (1) 
-						@ProcessServiceCartId = [PCPL].[ExpressAccountServiceCartId],
-						@ProcessServiceCartLastProcess = [PCPL].[ProcessAttempt]
-				FROM 
-					[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
-						ON
-							EASC.[IdExpressAccountServiceCart] = [PCPL].[ExpressAccountServiceCartId]
-				WHERE
-					[EASC].[AccountId] = @IdAccount
-					AND
-					(
-						[EASC].[CustomerId] = @ImpersonatedCustomerId
-						OR
-						[EASC].[CustomerPortfolioId] = @ClientPortfolioId
-					)
-					AND
-					[EASC].[IsPending] = 1
-					AND
-					[EASC].[RowStatus] = 1
-					AND
-					[PCPL].[RowStatus] = 1
-				ORDER BY
-					[EASC].[DateCreated] DESC
-
-				IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 )
-				BEGIN
-					;THROW 50000, 'No existe procesamiento de cupones anterior, revisión no es valida en proceso.', 1;
 				END
+				-- Cliente es redistribuidor o es impersonado
+				ELSE IF ( @CustomerType = @RedistributorType OR (ISNULL(@ImpersonatedCustomerId, 0) > 0 OR ISNULL(@ImpersonatedCustomerAccountId, 0) > 0) )
+				BEGIN
+
+					SELECT 
+						TOP (1) 
+							@ProcessServiceCartId = [PCPL].[ExpressAccountServiceCartId],
+							@ProcessServiceCartLastProcess = [PCPL].[ProcessAttempt]
+					FROM 
+						[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
+							ON
+								EASC.[IdExpressAccountServiceCart] = [PCPL].[ExpressAccountServiceCartId]
+					WHERE
+						[EASC].[AccountId] = @IdAccount
+						AND
+						(
+							[EASC].[CustomerId] = @ImpersonatedCustomerId
+							OR
+							[EASC].[CustomerPortfolioId] = @ClientPortfolioId
+						)
+						AND
+						[EASC].[IsPending] = 1
+						AND
+						[EASC].[RowStatus] = 1
+						AND
+						[PCPL].[RowStatus] = 1
+					ORDER BY
+						[EASC].[DateCreated] DESC
+
+					IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 )
+					BEGIN
+						;THROW 50000, 'No existe procesamiento de cupones anterior, revisión no es valida en proceso.', 1;
+					END
+					ELSE
+					BEGIN
+					
+						SET @CountTotalProcessedGuides =
+						(
+							SELECT 
+								COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
+							FROM
+								[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+							WHERE
+								[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
+								AND
+								[PCPL].[ExpressAccountServiceCartId] = @ProcessServiceCartId
+								AND
+								[PCPL].[RowStatus] = 1
+						)
+
+						SET @CountTotalMatchedProcessedGuides =
+						(
+							SELECT 
+								COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
+							FROM
+								[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+								INNER JOIN
+									(
+									SELECT 
+										[VGStart].[GuideSerie] [GuideSerieOrigin],
+										[VGStart].[GuideNumber] [GuideNumberOrigin],
+										[VGStart].[PriceShipment] [PriceShipmentOrigin],
+										[PT].[IdPromo],
+										[PT].[PromoDescription],
+										[CVT].[ValueTypeName],
+										[PT].[PromoValue],
+										[CTD].[ShortName],
+										[PT].[LimitPromoTime],
+										[PT].[MinimumGuideExpected],
+										[VGEnd].[GuideSerie] [GuideSerieDestiny],
+										[VGEnd].[GuideNumber] [GuideNumberDestiny],
+										[VGEnd].[PriceShipment] [PriceShipmentDestiny] 
+									FROM
+										@ValidGuides VGStart
+										LEFT JOIN
+											@PromoProcess PP
+											ON
+												[VGStart].[GuideSerie] = [PP].[GuideSerieOrigin]
+												AND
+												[VGStart].[GuideNumber] = [PP].[GuideNumberOrigin]
+										LEFT JOIN
+											@PromoTable PT
+											ON
+												[PP].[PromoToApply] = [PT].[IdPromo]
+										LEFT JOIN
+											@ValidGuides VGEnd
+											ON
+												[VGEnd].[GuideSerie] = [PP].[GuideSerieDestiny]
+												AND
+												[VGEnd].[GuideNumber] = [PP].[GuideNumberDestiny]
+										LEFT JOIN
+											[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+											ON
+												[PT].[ValueType] = [CVT].[IdCatValueType]
+										LEFT JOIN
+											[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+											ON
+												[PT].[DiscontType] = [CTD].[IdCatTypeDiscount]
+									) PP
+									ON
+										[PCPL].[GuideSerieOrigin] = [PP].[GuideSerieOrigin]
+										AND
+										[PCPL].[GuideNumberOrigin] = [PP].[GuideNumberOrigin]
+										AND
+										ISNULL([PCPL].[CatPromoId], 0) = ISNULL([PP].[IdPromo], 0)
+										AND
+										ISNULL([PCPL].[GuideSerieDestiny], 'FD') = ISNULL([PP].[GuideSerieDestiny], 'FD')
+										AND
+										ISNULL([PCPL].[GuideNumberDestiny], 0) = ISNULL([PP].[GuideNumberDestiny], 0)
+							WHERE
+								[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
+								AND
+								[PCPL].[ExpressAccountServiceCartId] = @ProcessServiceCartId
+								AND
+								[PCPL].[RowStatus] = 1
+						)
+
+						IF ( @CountTotalMatchedProcessedGuides <> @CountTotalProcessedGuides )
+						BEGIN
+							;THROW 50005, 'La cantidad de guías procesadas contra la verificación no coinciden en datos', 2;
+						END
+					
+						-- Ingreso y canjeo de cupones generados por brain 
+						INSERT INTO [DeliveryBackOffice].[dbo].[PromoCoupon]
+						(
+							[CatPromoId],
+							[PromoCouponSerie],
+							[GuideSerieOrigin],
+							[GuideNumberOrigin],
+							[ServiceManagementOrigin],
+							[SystemOrigin],
+							[CustomerOrigin],
+							[VisitPointClientOrigin],
+							[VisitPointClientPortfolioOrigin],
+							[GuideSerieDestination],
+							[GuideNumberDestination],
+							[ServiceManagementDestination],
+							[SystemDestination],
+							[CustomerDestination],
+							[VisitPointClientDestination],
+							[VisitPointClientPortfolioDestination],
+							[CatDiscountTypeId],
+							[CatValueTypeId],
+							[CouponValue],
+							[OriginalAmount],
+							[DiscountAmount],
+							[FinalAmount],
+							[RedeemedDate],
+							[StartActiveDate],
+							[FinalActiveDate],
+							[RowStatus],
+							[DateCreated],
+							[TokenCreated]
+						)
+						OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
+						SELECT 
+							[PCPL].[CatPromoId]
+							,CONCAT([PCPL].[GuideSerieOrigin], [PCPL].[GuideNumberOrigin], RIGHT(CONCAT('000', RAND([PCPL].[GuideNumberOrigin] + CHECKSUM(GETDATE()))), 3))
+							,[PCPL].[GuideSerieOrigin]
+							,[PCPL].[GuideNumberOrigin]
+							,NULL
+							,@SystemId
+							,NULL
+							,NULL
+							,NULL
+							,[PCPL].[GuideSerieDestiny]
+							,[PCPL].[GuideNumberDestiny]
+							,NULL
+							,@SystemId
+							,NULL
+							,NULL
+							,NULL
+							,[CP].[CatDiscountTypeId]
+							,[CP].[CatValueTypeId]
+							,[CP].[PromoValue]
+							,[PCPL].[OriginGuideAmount]
+							,ROUND
+							(
+								(
+									CASE
+										WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+											CASE
+												WHEN [CTD].[ShortName] = 'TOT' THEN
+													ROUND((([PCPL].[DestinyGuideAmount] * [CP].[PromoValue]) / 100), 1)
+												ELSE 0
+											END
+										WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+											CASE
+												WHEN [CTD].[ShortName] = 'TOT' THEN
+													CASE
+														WHEN [CP].[PromoValue] > [PCPL].[DestinyGuideAmount] THEN
+															[PCPL].[DestinyGuideAmount]
+														ELSE
+															[PCPL].[DestinyGuideAmount] - [CP].[PromoValue]
+													END
+												ELSE 0
+											END
+										WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+											CASE
+												WHEN [CTD].[ShortName] = 'TOT' THEN
+													[PCPL].[DestinyGuideAmount]
+												ELSE 0
+											END
+										ELSE 0
+									END
+								)
+							,1)
+							,ROUND((
+								(
+									[PCPL].[DestinyGuideAmount] - 
+									(
+										CASE
+											WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN [CTD].[ShortName] = 'TOT' THEN
+														ROUND((([PCPL].[DestinyGuideAmount] * [CP].[PromoValue]) / 100), 1)
+													ELSE 0
+												END
+											WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN [CTD].[ShortName] = 'TOT' THEN
+														CASE
+															WHEN [CP].[PromoValue] > [PCPL].[DestinyGuideAmount] THEN
+																[PCPL].[DestinyGuideAmount]
+															ELSE
+																[PCPL].[DestinyGuideAmount] - [CP].[PromoValue]
+														END
+													ELSE 0
+												END
+											WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN [CTD].[ShortName] = 'TOT' THEN
+														[PCPL].[DestinyGuideAmount]
+													ELSE 0
+												END
+											ELSE 0
+										END
+									)
+								)
+							),1)
+							,GETDATE()
+							,GETDATE()
+							,(
+								CASE
+									WHEN [CP].[LimitPromoTime] = 24.00 THEN
+										DATEADD(SECOND, -1, CAST(DATEADD(DAY, 1, CAST(GETDATE() AS DATE)) AS DATETIME))
+									ELSE
+										DATEADD(MINUTE, (ISNULL([CP].[LimitPromoTime], 1) * 60), GETDATE())
+								END
+							)
+							,1
+							,GETDATE()
+							,@Token
+						FROM
+							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK)
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
+								ON
+									[CP].[IdPromo] = [PCPL].[CatPromoId]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+								ON
+									[CP].[CatValueTypeId] = [CVT].[IdCatValueType]
+							INNER JOIN
+								[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+								ON
+									[CTD].[IdCatTypeDiscount] = [CP].[CatDiscountTypeId]
+						WHERE	
+							[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
+							AND
+							[PCPL].[ExpressAccountServiceCartId] = @ProcessServiceCartId
+							AND
+							[PCPL].[CatPromoId] IS NOT NULL
+							AND
+							[PCPL].[RowStatus] = 1
+					
+						UPDATE
+							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog]
+						SET
+							[RowStatus] = 0
+							,[DateUpdated] = GETDATE()
+							,[TokenUpdated] = @Token
+						WHERE
+							[ExpressAccountServiceCartId] = @ProcessServiceCartId
+							AND
+							[RowStatus] = 1
+					
+					END
+		
+				END
+				-- Cliente es corporativo, detener proceso (ROLLBACK)
+				ELSE IF ( @CustomerType = @CorporateType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0 )
+				BEGIN
+					;THROW 50001, 'Tipo de cliente no valido en proceso actualmente.', 2;
+				END
+				-- Cliente no identificado, detener proceso (ROLLBACK)
 				ELSE
 				BEGIN
-					
-					SET @CountTotalProcessedGuides =
-					(
-						SELECT 
-							COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
-						FROM
-							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
-						WHERE
-							[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
-							AND
-							[PCPL].[ExpressAccountServiceCartId] = @ProcessServiceCartId
-							AND
-							[PCPL].[RowStatus] = 1
-					)
+					;THROW 50000, 'Tipo de cliente no reconocido, proporcionar más información.', 2;
+				END
 
-					SET @CountTotalMatchedProcessedGuides =
-					(
-						SELECT 
-							COUNT (DISTINCT [PCPL].[IdPromoCouponProcessLog]) 
-						FROM
-							[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
-							INNER JOIN
-								(
-								SELECT 
-									[VGStart].[GuideSerie] [GuideSerieOrigin],
-									[VGStart].[GuideNumber] [GuideNumberOrigin],
-									[VGStart].[PriceShipment] [PriceShipmentOrigin],
-									[PT].[IdPromo],
-									[PT].[PromoDescription],
-									[CVT].[ValueTypeName],
-									[PT].[PromoValue],
-									[CTD].[ShortName],
-									[PT].[LimitPromoTime],
-									[PT].[MinimumGuideExpected],
-									[VGEnd].[GuideSerie] [GuideSerieDestiny],
-									[VGEnd].[GuideNumber] [GuideNumberDestiny],
-									[VGEnd].[PriceShipment] [PriceShipmentDestiny] 
-								FROM
-									@ValidGuides VGStart
-									LEFT JOIN
-										@PromoProcess PP
-										ON
-											[VGStart].[GuideSerie] = [PP].[GuideSerieOrigin]
-											AND
-											[VGStart].[GuideNumber] = [PP].[GuideNumberOrigin]
-									LEFT JOIN
-										@PromoTable PT
-										ON
-											[PP].[PromoToApply] = [PT].[IdPromo]
-									LEFT JOIN
-										@ValidGuides VGEnd
-										ON
-											[VGEnd].[GuideSerie] = [PP].[GuideSerieDestiny]
-											AND
-											[VGEnd].[GuideNumber] = [PP].[GuideNumberDestiny]
-									LEFT JOIN
-										[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
-										ON
-											[PT].[ValueType] = [CVT].[IdCatValueType]
-									LEFT JOIN
-										[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
-										ON
-											[PT].[DiscontType] = [CTD].[IdCatTypeDiscount]
-								) PP
-								ON
-									[PCPL].[GuideSerieOrigin] = [PP].[GuideSerieOrigin]
-									AND
-									[PCPL].[GuideNumberOrigin] = [PP].[GuideNumberOrigin]
-									AND
-									ISNULL([PCPL].[CatPromoId], 0) = ISNULL([PP].[IdPromo], 0)
-									AND
-									ISNULL([PCPL].[GuideSerieDestiny], 'FD') = ISNULL([PP].[GuideSerieDestiny], 'FD')
-									AND
-									ISNULL([PCPL].[GuideNumberDestiny], 0) = ISNULL([PP].[GuideNumberDestiny], 0)
-						WHERE
-							[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
-							AND
-							[PCPL].[ExpressAccountServiceCartId] = @ProcessServiceCartId
-							AND
-							[PCPL].[RowStatus] = 1
-					)
+			END
 
-					IF ( @CountTotalMatchedProcessedGuides <> @CountTotalProcessedGuides )
-					BEGIN
-						;THROW 50005, 'La cantidad de guías procesadas contra la verificación no coinciden en datos', 2;
-					END
-					
+			IF ( EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides ) )
+			BEGIN
+				-- Cliente es individual y no es impersonado
+				IF ( @CustomerType = @IndividualType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0 )
+				BEGIN
+					-- Pertenece a un individual
 					-- Canjeo de cupones ingresados manualmente
 					UPDATE
 						[PC]
@@ -1366,117 +1498,73 @@ BEGIN
 					WHERE
 						[PC].[RowStatus] = 1
 
-					-- Ingreso y canjeo de cupones generados por brain 
-					INSERT INTO [DeliveryBackOffice].[dbo].[PromoCoupon]
-					(
-						[CatPromoId],
-						[PromoCouponSerie],
-						[GuideSerieOrigin],
-						[GuideNumberOrigin],
-						[ServiceManagementOrigin],
-						[SystemOrigin],
-						[CustomerOrigin],
-						[VisitPointClientOrigin],
-						[VisitPointClientPortfolioOrigin],
-						[GuideSerieDestination],
-						[GuideNumberDestination],
-						[ServiceManagementDestination],
-						[SystemDestination],
-						[CustomerDestination],
-						[VisitPointClientDestination],
-						[VisitPointClientPortfolioDestination],
-						[CatDiscountTypeId],
-						[CatValueTypeId],
-						[CouponValue],
-						[OriginalAmount],
-						[DiscountAmount],
-						[FinalAmount],
-						[RedeemedDate],
-						[StartActiveDate],
-						[FinalActiveDate],
-						[RowStatus],
-						[DateCreated],
-						[TokenCreated]
-					)
-					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
-					SELECT 
-						[PCPL].[CatPromoId]
-						,CONCAT([PCPL].[GuideSerieOrigin], [PCPL].[GuideNumberOrigin], RIGHT(CONCAT('000', RAND([PCPL].[GuideNumberOrigin] + CHECKSUM(GETDATE()))), 3))
-						,[PCPL].[GuideSerieOrigin]
-						,[PCPL].[GuideNumberOrigin]
-						,NULL
-						,@SystemId
-						,NULL
-						,NULL
-						,NULL
-						,[PCPL].[GuideSerieDestiny]
-						,[PCPL].[GuideNumberDestiny]
-						,NULL
-						,@SystemId
-						,NULL
-						,NULL
-						,NULL
-						,[CP].[CatDiscountTypeId]
-						,[CP].[CatValueTypeId]
-						,[CP].[PromoValue]
-						,[PCPL].[OriginGuideAmount]
-						,ROUND
+				END
+				-- Cliente es redistribuidor o es impersonado
+				ELSE IF ( @CustomerType = @RedistributorType OR (ISNULL(@ImpersonatedCustomerId, 0) > 0 OR ISNULL(@ImpersonatedCustomerAccountId, 0) > 0) )
+				BEGIN
+
+					-- Canjeo de cupones ingresados manualmente
+					UPDATE
+						[PC]
+					SET
+						[PC].[OriginalAmount] = [DO].[PriceShippment]
+						,[PC].[DiscountAmount] = ROUND
 						(
 							(
 								CASE
 									WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
 										CASE
 											WHEN [CTD].[ShortName] = 'TOT' THEN
-												ROUND((([PCPL].[DestinyGuideAmount] * [CP].[PromoValue]) / 100), 1)
+												ROUND((([DO].[PriceShippment] * [PC].[CouponValue]) / 100), 1)
 											ELSE 0
 										END
 									WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
 										CASE
 											WHEN [CTD].[ShortName] = 'TOT' THEN
 												CASE
-													WHEN [CP].[PromoValue] > [PCPL].[DestinyGuideAmount] THEN
-														[PCPL].[DestinyGuideAmount]
+													WHEN [PC].[CouponValue] > [DO].[PriceShippment] THEN
+														[DO].[PriceShippment]
 													ELSE
-														[PCPL].[DestinyGuideAmount] - [CP].[PromoValue]
+														[DO].[PriceShippment] - [PC].[CouponValue]
 												END
 											ELSE 0
 										END
 									WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
 										CASE
 											WHEN [CTD].[ShortName] = 'TOT' THEN
-												[PCPL].[DestinyGuideAmount]
+												[DO].[PriceShippment]
 											ELSE 0
 										END
 									ELSE 0
 								END
 							)
 						,1)
-						,ROUND((
+						,[PC].[FinalAmount] = ROUND((
 							(
-								[PCPL].[DestinyGuideAmount] - 
+								[DO].[PriceShippment] - 
 								(
 									CASE
 										WHEN [CVT].[ValueTypeName] = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
 											CASE
 												WHEN [CTD].[ShortName] = 'TOT' THEN
-													ROUND((([PCPL].[DestinyGuideAmount] * [CP].[PromoValue]) / 100), 1)
+													ROUND((([DO].[PriceShippment] * [PC].[CouponValue]) / 100), 1)
 												ELSE 0
 											END
 										WHEN [CVT].[ValueTypeName] = 'Monto' COLLATE Latin1_General_CI_AI THEN 
 											CASE
 												WHEN [CTD].[ShortName] = 'TOT' THEN
 													CASE
-														WHEN [CP].[PromoValue] > [PCPL].[DestinyGuideAmount] THEN
-															[PCPL].[DestinyGuideAmount]
+														WHEN [PC].[CouponValue] > [DO].[PriceShippment] THEN
+															[DO].[PriceShippment]
 														ELSE
-															[PCPL].[DestinyGuideAmount] - [CP].[PromoValue]
+															[DO].[PriceShippment] - [PC].[CouponValue]
 													END
 												ELSE 0
 											END
 										WHEN [CVT].[ValueTypeName] = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
 											CASE
 												WHEN [CTD].[ShortName] = 'TOT' THEN
-													[PCPL].[DestinyGuideAmount]
+													[DO].[PriceShippment]
 												ELSE 0
 											END
 										ELSE 0
@@ -1484,67 +1572,49 @@ BEGIN
 								)
 							)
 						),1)
-						,GETDATE()
-						,GETDATE()
-						,(
-							CASE
-								WHEN [CP].[LimitPromoTime] = 24.00 THEN
-									DATEADD(SECOND, -1, CAST(DATEADD(DAY, 1, CAST(GETDATE() AS DATE)) AS DATETIME))
-								ELSE
-									DATEADD(MINUTE, (ISNULL([CP].[LimitPromoTime], 1) * 60), GETDATE())
-							END
-                        )
-						,1
-						,GETDATE()
-						,@Token
+						,[PC].[RedeemedDate] = GETDATE()
+						,[PC].[DateUpdated] = GETDATE()
+						,[PC].[TokenUpdated] = @Token
+					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
 					FROM
-						[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK)
+						[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
 						INNER JOIN
-							[DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
+							@InputGuidesList IGL
 							ON
-								[CP].[IdPromo] = [PCPL].[CatPromoId]
+								[PC].[GuideSerieDestination] = [IGL].[Guide_Serie]
+								AND
+								[PC].[GuideNumberDestination] = [IGL].[Guide_Number]
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+							ON
+								[IGL].[Guide_Serie] = [DO].[Guide_Serie]
+								AND
+								[IGL].[Guide_Number] = [DO].[Guide_Number]
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
 							ON
-								[CP].[CatValueTypeId] = [CVT].[IdCatValueType]
+								[PC].[CatValueTypeId] = [CVT].[IdCatValueType]
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
 							ON
-								[CTD].[IdCatTypeDiscount] = [CP].[CatDiscountTypeId]
-					WHERE	
-						[PCPL].[ProcessAttempt] = @ProcessServiceCartLastProcess
-						AND
-						[PCPL].[ExpressAccountServiceCartId] = @ProcessServiceCartId
-						AND
-						[PCPL].[CatPromoId] IS NOT NULL
-						AND
-						[PCPL].[RowStatus] = 1
-					
-					UPDATE
-						[DeliveryBackOffice].[dbo].[PromoCouponProcessLog]
-					SET
-						[RowStatus] = 0
-						,[DateUpdated] = GETDATE()
-						,[TokenUpdated] = @Token
+								[CTD].[IdCatTypeDiscount] = [PC].[CatDiscountTypeId]
 					WHERE
-						[ExpressAccountServiceCartId] = @ProcessServiceCartId
-						AND
-						[RowStatus] = 1
+						[PC].[RowStatus] = 1
 					
 				END
-		
-			END
-			-- Cliente es corporativo, detener proceso (ROLLBACK)
-			ELSE IF ( @CustomerType = @CorporateType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0 )
-			BEGIN
-				;THROW 50001, 'Tipo de cliente no valido en proceso actualmente.', 2;
-			END
-			-- Cliente no identificado, detener proceso (ROLLBACK)
-			ELSE
-			BEGIN
-				;THROW 50000, 'Tipo de cliente no reconocido, proporcionar más información.', 2;
-			END
+				-- Cliente es corporativo, detener proceso (ROLLBACK)
+				ELSE IF ( @CustomerType = @CorporateType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0 )
+				BEGIN
+					;THROW 50001, 'Tipo de cliente no valido en proceso actualmente.', 2;
+				END
+				-- Cliente no identificado, detener proceso (ROLLBACK)
+				ELSE
+				BEGIN
+					;THROW 50000, 'Tipo de cliente no reconocido, proporcionar más información.', 2;
+				END
 
+			END
+			
 			-- No ingreso correctamente procesamiento, detener proceso (ROLLBACK)
 			IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @SuccessfulProcess ) )
 			BEGIN
