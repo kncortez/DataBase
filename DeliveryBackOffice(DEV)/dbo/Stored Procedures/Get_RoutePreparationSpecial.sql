@@ -15,7 +15,7 @@ AS
 	DROP TABLE #listGuides;
 BEGIN
 
-	SET @IdHeader = (SELECT TOP 1 IDTSERoutePreparationHeader FROM TSERoutePreparationHeader 
+	SET @IdHeader = (SELECT TOP 1 IDTSERoutePreparationHeader FROM TSERoutePreparationHeader WITH(NOLOCK) 
 	WHERE IdCatRoute = @IdRoute AND RowStatus = 1);
 
 
@@ -49,6 +49,7 @@ BEGIN
 	  ON trp.IdCatRouteCluster = crc.IdCatRouteCluster
 	  INNER JOIN dbo.TSERoutePreparationDetail trd WITH(NOLOCK)
 	  ON trp.IDTSERoutePreparationHeader = trd.TSERoutePreparationHeaderID
+	  AND trd.RowStatus = 1
 	  INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK)
 	  ON trd.GuideSerie = dor.Guide_Serie AND trd.GuideNumber = dor.Guide_Number
 	  INNER JOIN dbo.DeliveryOrderPiece dop WITH(NOLOCK)
@@ -63,7 +64,8 @@ BEGIN
 	   ,tsd.GuideNumber
 	   INTO #listGuides
 			FROM TSERoutePreparationDetail tsd WITH(NOLOCK)
-			WHERE TSERoutePreparationHeaderID = @IdHeader--29
+			WHERE tsd.TSERoutePreparationHeaderID = @IdHeader
+			AND tsd.RowStatus = 1
 			--SELECT *from #listGuides;
 
 		SELECT COUNT(lgs.GuideNumber) AS TotalGuides FROM #listGuides lgs;
@@ -76,11 +78,11 @@ BEGIN
 		SELECT UnitNumber FROM TSERoutePreparationHeader tsh WITH(NOLOCK)
 			 INNER JOIN CatVehicle ctv
 			 ON tsh.IdCatVehicle = ctv.IdVehicle
-			 WHERE IDTSERoutePreparationHeader = @IdHeader;
+			 WHERE IDTSERoutePreparationHeader = @IdHeader AND tsh.RowStatus = 1;
 
 		SELECT TSECustomsMark
 			FROM TSERoutePreparationHeader WITH(NOLOCK)
-			WHERE IDTSERoutePreparationHeader = @IdHeader;
+			WHERE IDTSERoutePreparationHeader = @IdHeader AND RowStatus = 1;
 				
 							
 

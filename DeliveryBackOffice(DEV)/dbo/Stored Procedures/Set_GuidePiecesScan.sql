@@ -28,14 +28,15 @@ BEGIN
 	SET @IdHeader = (SELECT TOP 1 tsed.TSERoutePreparationHeaderID FROM TSERoutePreparationHeader tseh WITH(NOLOCK)
 						INNER JOIN TSERoutePreparationDetail tsed WITH(NOLOCK)
 						ON tseh.IDTSERoutePreparationHeader = tsed.TSERoutePreparationHeaderID
-						INNER JOIN DeliveryOrderPiece dopc
+						AND tseh.RowStatus = 1
+						INNER JOIN DeliveryOrderPiece dopc WITH(NOLOCK)
 						ON tsed.GuideSerie = dopc.GuideSerie AND tsed.GuideNumber = dopc.GuideNumber
 						WHERE tsed.GuideSerie = @SerieNumber AND tsed.GuideNumber =@GuideNumber AND @GuideValidPieces >1) /*625196*/
-	SET @IdDetail = (SELECT IDTSERoutePreparationDetail FROM TSERoutePreparationDetail WITH(NOLOCK) WHERE GuideSerie = @SerieNumber AND GuideNumber = @GuideNumber)
+	SET @IdDetail = (SELECT IDTSERoutePreparationDetail FROM TSERoutePreparationDetail WITH(NOLOCK) WHERE GuideSerie = @SerieNumber AND GuideNumber = @GuideNumber AND RowStatus = 1)
 
 	SET @CountPieces =(SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie =@SerieNumber AND GuideNumber = @GuideNumber)
 
-	SET @ScanPiecesTotal =(SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WITH(NOLOCK) WHERE TSERoutePreparationDetailId = @IdDetail)
+	SET @ScanPiecesTotal =(SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WITH(NOLOCK) WHERE TSERoutePreparationDetailId = @IdDetail AND RowStatus = 1)
 	SET @ScanPieces = @ScanPiecesTotal+1
 	 IF(@IdHeader IS NOT NULL)
 		BEGIN
@@ -45,7 +46,7 @@ BEGIN
 							 BEGIN
 								IF((SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie =@SerieNumber/*'FD'*/ AND GuideNumber = @GuideNumber /*625196*/ AND NoPiece = @PieceNumber)>0)
 									 BEGIN
-										IF ((SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WITH(NOLOCK) WHERE TSERoutePreparationDetailId = @IdDetail AND PieceNumber = @PieceNumber) = 0)
+										IF ((SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WITH(NOLOCK) WHERE TSERoutePreparationDetailId = @IdDetail AND RowStatus = 1 AND PieceNumber = @PieceNumber) = 0)
 											BEGIN
 													INSERT INTO [dbo].[TSERoutePreparationDetailPiece]
 												   ([TSERoutePreparationDetailId]
@@ -105,7 +106,7 @@ BEGIN
 
 													SET @TotalPiecesScanned = (SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece tsep WITH(NOLOCK)
 													INNER JOIN #listGuides lsg2
-													ON tsep.TSERoutePreparationDetailId = lsg2.IDTSERoutePreparationDetail)
+													ON tsep.TSERoutePreparationDetailId = lsg2.IDTSERoutePreparationDetail AND tsep.RowStatus = 1)
 													
 													UPDATE
 														[dbo].[DeliveryOrderPiece]
@@ -153,7 +154,7 @@ BEGIN
 							 BEGIN
 								 IF((SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie =@SerieNumber/*'FD'*/ AND GuideNumber = @GuideNumber /*625196*/ AND NoPiece = @PieceNumber)>0)
 									 BEGIN
-											IF ((SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WITH(NOLOCK) WHERE TSERoutePreparationDetailId = @IdDetail AND PieceNumber = @PieceNumber) = 0)
+											IF ((SELECT COUNT(TSERoutePreparationDetailId) FROM TSERoutePreparationDetailPiece WITH(NOLOCK) WHERE TSERoutePreparationDetailId = @IdDetail AND RowStatus = 1 AND PieceNumber = @PieceNumber) = 0)
 												BEGIN
 													INSERT INTO [dbo].[TSERoutePreparationDetailPiece]
 													([TSERoutePreparationDetailId]
@@ -181,7 +182,7 @@ BEGIN
 														[NoPiece] = @PieceNumber
 
 											
-													IF((SELECT TSECustomsMark FROM TSERoutePreparationHeader WITH(NOLOCK) WHERE IDTSERoutePreparationHeader = @IdHeader)IS NULL )
+													IF((SELECT TSECustomsMark FROM TSERoutePreparationHeader WITH(NOLOCK) WHERE IDTSERoutePreparationHeader = @IdHeader AND RowStatus = 1)IS NULL )
 														BEGIN
 															UPDATE [dbo].[TSERoutePreparationHeader]
 															SET TSECustomsMark = @TSEMark
