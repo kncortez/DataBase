@@ -17,6 +17,7 @@ BEGIN
 	DECLARE @CountPieces INT;
 	DECLARE @ScanPieces INT;
 	DECLARE @ScanPiecesTotal INT;
+	DECLARE @GuideValidPieces INT;
 
 	IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
 	DROP TABLE #listGuides;
@@ -24,10 +25,12 @@ BEGIN
 	DECLARE @StatusRecolect INT;
 	SET @StatusRecolect = (SELECT TOP 1 StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Recolectado')
 
-	SET @IdHeader = (SELECT tsed.TSERoutePreparationHeaderID FROM TSERoutePreparationHeader tseh WITH(NOLOCK)
+	SET @IdHeader = (SELECT TOP 1 tsed.TSERoutePreparationHeaderID FROM TSERoutePreparationHeader tseh WITH(NOLOCK)
 						INNER JOIN TSERoutePreparationDetail tsed WITH(NOLOCK)
 						ON tseh.IDTSERoutePreparationHeader = tsed.TSERoutePreparationHeaderID
-						WHERE tsed.GuideSerie = @SerieNumber AND tsed.GuideNumber =@GuideNumber) /*625196*/
+						INNER JOIN DeliveryOrderPiece dopc
+						ON tsed.GuideSerie = dopc.GuideSerie AND tsed.GuideNumber = dopc.GuideNumber
+						WHERE tsed.GuideSerie = @SerieNumber AND tsed.GuideNumber =@GuideNumber AND @GuideValidPieces >1) /*625196*/
 	SET @IdDetail = (SELECT IDTSERoutePreparationDetail FROM TSERoutePreparationDetail WITH(NOLOCK) WHERE GuideSerie = @SerieNumber AND GuideNumber = @GuideNumber)
 
 	SET @CountPieces =(SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WITH(NOLOCK) WHERE GuideSerie =@SerieNumber AND GuideNumber = @GuideNumber)
@@ -83,8 +86,7 @@ BEGIN
 
 													DECLARE @TotalPiecesExist INT;
 													DECLARE @TotalPiecesScanned INT;
-													IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
-													DROP TABLE #listGuides;
+
 													SELECT
 														tsd.GuideSerie
 													   ,tsd.GuideNumber
@@ -137,7 +139,7 @@ BEGIN
 										 ELSE
 											 BEGIN
 													SELECT 5 AS ValueMessage,
-															'El numero de pieza de la guía que intenga ingresar ya fue registrada' AS MessageDescription
+															'El numero de pieza de la guía que intenta ingresar ya fue registrada' AS MessageDescription
 											 END
 									END
 								ELSE
@@ -192,7 +194,7 @@ BEGIN
 											ELSE
 												BEGIN
 													SELECT 2 AS ValueMessage,
-															'La pieza que intenga ingresar ya fue registrada anteriormente' AS MessageDescription
+															'La pieza que intenta ingresar ya fue registrada anteriormente' AS MessageDescription
 										
 												END
 									 END
@@ -219,7 +221,7 @@ BEGIN
 	 ELSE
 		BEGIN
 				SELECT 8 AS ValueMessage,
-				'La guía que desea ingresar no forma parte de la ruta' AS MessageDescription
+				'La guía que desea ingresar no forma parte de la ruta o las piezas contenidas en ella no corresponde cajas' AS MessageDescription
 		END
 
 END
