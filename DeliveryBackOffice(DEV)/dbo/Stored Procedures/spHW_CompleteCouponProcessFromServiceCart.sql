@@ -828,12 +828,12 @@ BEGIN
 						[AccSC].[DateCreated] DESC
 
 					-- No existe procesamiento del carrito de compras activo
-					IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 )
+					IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 AND NOT EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides ) )
 					BEGIN
 						;THROW 50000, 'No existe procesamiento de cupones anterior, revisión no es valida en proceso.', 1;
 					END
 					-- Ya existe procesamiento anterior activo
-					ELSE
+					ELSE IF (ISNULL(@ProcessServiceCartLastProcess, 0) > 0)
 					BEGIN
 						SET @CountTotalProcessedGuides =
 						(
@@ -1120,11 +1120,11 @@ BEGIN
 					ORDER BY
 						[EASC].[DateCreated] DESC
 
-					IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 )
+					IF ( ISNULL(@ProcessServiceCartLastProcess, 0) = 0 AND NOT EXISTS ( SELECT TOP 1 1 FROM @ManualCouponGuides ) )
 					BEGIN
 						;THROW 50000, 'No existe procesamiento de cupones anterior, revisión no es valida en proceso.', 1;
 					END
-					ELSE
+					ELSE IF (ISNULL(@ProcessServiceCartLastProcess, 0) > 0)
 					BEGIN
 					
 						SET @CountTotalProcessedGuides =
