@@ -34,7 +34,14 @@ BEGIN
 		DOP2.GuideNumber = trd.GuideNumber
 		AND 
 		DOP2.StatusOrderId = 2 --guías que ya fueron recolectadas	
-	  ) ScannedPiecesTotal
+	  ) ScannedPiecesTotal,
+	   CONVERT(VARCHAR(50),(
+		SELECT COUNT(DOP2.GuidePiece) FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP2 WITH(NOLOCK) 
+		WHERE 
+		DOP2.GuideNumber = trd.GuideNumber
+		AND 
+		DOP2.StatusOrderId = 2 --guías que ya fueron recolectadas	
+	  )) + '/' + CONVERT(VARCHAR(50),COUNT(dop.GuideNumber)) TotalDescription
 	  FROM dbo.CatRoute ctr	 
 	  INNER JOIN dbo.TSERoutePreparationHeader trp WITH(NOLOCK)
 	  ON ctr.IdRoute = trp.IdCatRoute
