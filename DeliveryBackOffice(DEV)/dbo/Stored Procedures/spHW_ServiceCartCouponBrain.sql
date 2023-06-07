@@ -20,6 +20,8 @@ BEGIN
 	-- Variables para apoyo de control de flujo
 	DECLARE @CustomerType INT -- Tipo de cliente procesando 
 	DECLARE @CustomerVisitPointClient INT -- Punto de visita de cliente, de ser necesario
+	DECLARE @ProcessServiceCartId BIGINT; -- Carrito de compras a procesar
+	DECLARE @ProcessServiceCartLastProcess BIGINT; -- Último procesamiento de cupones de carrito
 	DECLARE @IndividualType INT = -- Tipo de cliente individual (Nivel: [DeliveryBackOffice].[dbo].[Customer])
 	(
 		SELECT 
@@ -231,6 +233,38 @@ BEGIN
 				),0);
 			END
 		END
+		
+		-- Desactivar procesos previos
+		SELECT 
+			TOP (1) 
+				@ProcessServiceCartId = [PCPL].[AccountServiceCartId]
+		FROM 
+			[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+			INNER JOIN
+				[DeliveryBackOffice].[dbo].[AccountServiceCart] AccSC  WITH(NOLOCK) 
+				ON
+					[AccSC].[IdAccountServiceCart] = [PCPL].[AccountServiceCartId]
+		WHERE
+			[AccSC].[AccountId] = ISNULL(@ImpersonatedCustomerAccountId, @IdAccount)
+			AND
+			[AccSC].[IsPending] = 1
+			AND
+			[AccSC].[RowStatus] = 1
+			AND
+			[PCPL].[RowStatus] = 1
+		ORDER BY
+			[AccSC].[DateCreated] DESC
+
+		UPDATE
+			[DeliveryBackOffice].[dbo].[PromoCouponProcessLog]
+		SET
+			[RowStatus] = 0
+			,[TokenUpdated] = @Token
+			,[DateUpdated] = GETDATE()
+		WHERE
+			[AccountServiceCartId] = @ProcessServiceCartId
+			AND
+			[RowStatus] = 1
 
 		-- Tipo de cliente individual
 		IF ( @CustomerType = @IndividualType AND ISNULL(@ImpersonatedCustomerId, 0) = 0 AND ISNULL(@ImpersonatedCustomerAccountId, 0) = 0  )
@@ -733,9 +767,6 @@ BEGIN
 		BEGIN TRANSACTION 
 		BEGIN TRY
 
-			-- Variables para proceso transaccional
-			DECLARE @ProcessServiceCartId BIGINT; -- Carrito de compras a procesar
-			DECLARE @ProcessServiceCartLastProcess BIGINT; -- Último procesamiento de cupones de carrito
 			-- Procesamiento exitoso de ingreso de datos
 			DECLARE @SuccessfulProcess TABLE 
 			(
