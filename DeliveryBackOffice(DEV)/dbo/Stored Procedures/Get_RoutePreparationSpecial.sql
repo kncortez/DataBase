@@ -47,7 +47,7 @@ BEGIN
 	  INNER JOIN dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 	  ON dor.Guide_Serie = dop.GuideSerie AND dor.Guide_Number = dop.GuideNumber
 	  WHERE ctr.IdRoute = @IdRoute --775
-	  AND HasFirstPickupProcess = 1--0
+	  AND HasFirstPickupProcess = 0 --1
 	  GROUP BY trd.GuideSerie,trd.GuideNumber,dor.Receiver_Town, dor.Receiver_Department,dor.Receiver_FirstName,crc.ClusterDescription,dor.Receiver_Address
 	  HAVING COUNT(dop.GuideNumber) > 1;
 
