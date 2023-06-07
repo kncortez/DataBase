@@ -1551,6 +1551,27 @@ BEGIN
 				;THROW 50005, 'No se ingreso correctamente proceso de cupones', 5;
 			END
 
+			-- Actualizar monto de costo
+			UPDATE
+				[Co]
+			SET
+				[Co].[TotalAmount] = [PC].[FinalAmount]
+				,[Co].[TokenUpdated] = @Token
+				,[Co].[DateUpdated] = GETDATE()
+			FROM
+				[DeliveryBackOffice].[dbo].[Cost] Co
+				INNER JOIN
+					@SuccessfulProcess SP
+					ON
+						[Co].[GuideSerie] = [SP].[GuideSerie]
+						AND
+						[Co].[GuideNumber] = [SP].[GuideNumber]
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
+					ON
+						[SP].[IdPromoCouponProcessLog] = [PC].[IdPromoCoupon]
+
+			-- Ingresar descuento de cupon
 			INSERT INTO [DeliveryBackOffice].[dbo].[BreakdownOfPayment]
 			(
 			    [IdCost],
@@ -1587,6 +1608,26 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
 					ON
 						[PC].[CatPromoId] = [CP].[IdPromo]
+
+			-- Actualizar guías a monto final
+			UPDATE
+				[DO]
+			SET
+				[DO].[PriceShippment] = [PC].[FinalAmount]
+				,[DO].[DateUpdated] = GETDATE()
+				,[DO].[TokenUpdated] = @Token
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO
+				INNER JOIN
+					@SuccessfulProcess SP
+					ON
+						[DO].[Guide_Serie] = [SP].[GuideSerie]
+						AND
+						[DO].[Guide_Number] = [SP].[GuideNumber]
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
+					ON
+						[SP].[IdPromoCouponProcessLog] = [PC].[IdPromoCoupon]
 		
 			COMMIT TRANSACTION
 		
