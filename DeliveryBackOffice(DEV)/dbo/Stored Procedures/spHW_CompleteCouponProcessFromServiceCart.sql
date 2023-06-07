@@ -752,7 +752,9 @@ BEGIN
 			-- Procesamiento exitoso de ingreso de datos
 			DECLARE @SuccessfulProcess TABLE 
 			(
-				IdPromoCouponProcessLog BIGINT
+				IdPromoCouponProcessLog INT,
+				GuideSerie NVARCHAR(2),
+				GuideNumber INT
 			);
 		
 			-- Buscar carrito de compras
@@ -948,6 +950,7 @@ BEGIN
 						,[PC].[RedeemedDate] = GETDATE()
 						,[PC].[DateUpdated] = GETDATE()
 						,[PC].[TokenUpdated] = @Token
+					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
 					FROM
 						[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
 						INNER JOIN
@@ -1005,7 +1008,7 @@ BEGIN
 						[DateCreated],
 						[TokenCreated]
 					)
-					OUTPUT [Inserted].[IdPromoCoupon] INTO @SuccessfulProcess ([IdPromoCouponProcessLog])
+					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
 					SELECT 
 						[PCPL].[CatPromoId]
 						,CONCAT([PCPL].[GuideSerieOrigin], [PCPL].[GuideNumberOrigin], RIGHT(CONCAT('000', RAND([PCPL].[GuideNumberOrigin] + CHECKSUM(GETDATE()))), 3))
@@ -1337,6 +1340,7 @@ BEGIN
 						,[PC].[RedeemedDate] = GETDATE()
 						,[PC].[DateUpdated] = GETDATE()
 						,[PC].[TokenUpdated] = @Token
+					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
 					FROM
 						[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
 						INNER JOIN
@@ -1394,7 +1398,7 @@ BEGIN
 						[DateCreated],
 						[TokenCreated]
 					)
-					OUTPUT [Inserted].[IdPromoCoupon] INTO @SuccessfulProcess ([IdPromoCouponProcessLog])
+					OUTPUT [Inserted].[IdPromoCoupon], [Inserted].[GuideSerieDestination], [Inserted].[GuideNumberDestination] INTO @SuccessfulProcess ([IdPromoCouponProcessLog], [GuideSerie], [GuideNumber])
 					SELECT 
 						[PCPL].[CatPromoId]
 						,CONCAT([PCPL].[GuideSerieOrigin], [PCPL].[GuideNumberOrigin], RIGHT(CONCAT('000', RAND([PCPL].[GuideNumberOrigin] + CHECKSUM(GETDATE()))), 3))
@@ -1546,6 +1550,43 @@ BEGIN
 			BEGIN
 				;THROW 50005, 'No se ingreso correctamente proceso de cupones', 5;
 			END
+
+			INSERT INTO [DeliveryBackOffice].[dbo].[BreakdownOfPayment]
+			(
+			    [IdCost],
+			    [Description],
+			    [Amount],
+			    [ModIdModule],
+			    [RowStatus],
+			    [TokenCreated],
+			    [DateCreated],
+			    [PromoCouponId]
+			)
+			SELECT 
+				[Co].[IdCost]
+				,CAST([CP].[PromoDescription] AS NVARCHAR(100))
+				,-[PC].[DiscountAmount]
+				,NULL
+				,1
+				,@Token
+				,GETDATE()
+				,[SP].[IdPromoCouponProcessLog]
+			FROM
+				[DeliveryBackOffice].[dbo].[Cost] Co  WITH(NOLOCK) 
+				INNER JOIN
+					@SuccessfulProcess SP
+					ON
+						[Co].[GuideSerie] = [SP].[GuideSerie]
+						AND
+						[Co].[GuideNumber] = [SP].[GuideNumber]
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[PromoCoupon] PC  WITH(NOLOCK) 
+					ON
+						[SP].[IdPromoCouponProcessLog] = [PC].[IdPromoCoupon]
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
+					ON
+						[PC].[CatPromoId] = [CP].[IdPromo]
 		
 			COMMIT TRANSACTION
 		
