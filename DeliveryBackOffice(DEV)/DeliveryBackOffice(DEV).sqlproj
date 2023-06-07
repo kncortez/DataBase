@@ -1527,6 +1527,7 @@
     <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPointsFromExpressCenter.sql" />
     <Build Include="dbo\Tables\PromoCouponProcessLog.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ServiceCartCouponBrain.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_CompleteCouponProcessFromServiceCart.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
