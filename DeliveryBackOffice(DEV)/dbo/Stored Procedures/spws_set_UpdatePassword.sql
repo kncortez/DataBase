@@ -9,17 +9,17 @@
 -- Description: <Set changePassword field to 0 when it is a successfull update>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[spws_set_UpdatePassword]
+CREATE procedure [dbo].[spws_set_UpdatePassword]
 -- Add the parameters for the stored procedure here	
-@Token        NVARCHAR(MAX), 
-@Password     NVARCHAR(MAX), 
-@OldPassword  NVARCHAR(MAX), 
-@SessionToken NVARCHAR(MAX), 
-@IdAccount    BIGINT, 
-@ChangeType   VARCHAR(1)    -- R = Reset  |  U = Update
-AS
-    BEGIN
-        DECLARE @jsonResult NVARCHAR(MAX); 	
+@Token        nvarchar(max), 
+@Password     nvarchar(max), 
+@OldPassword  nvarchar(max), 
+@SessionToken nvarchar(max), 
+@IdAccount    bigint, 
+@ChangeType   varchar(1)    -- R = Reset  |  U = Update
+as
+    begin
+        declare @jsonResult nvarchar(max); 	
         -- 90 dias para cambio de contraseña
         DECLARE @ExpirationDate AS DATE=
         (
@@ -56,6 +56,8 @@ AS
                     SELECT COUNT(1) AS PasswordVerification
                     FROM dbo.PasswordLog pl
                     WHERE pl.PslPassword = @Password
+					AND pl.PslIdUser = @IdUser
+
                 );
                 IF @PasswordVerification > 0
                     BEGIN

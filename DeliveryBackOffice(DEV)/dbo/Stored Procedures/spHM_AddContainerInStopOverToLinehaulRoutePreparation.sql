@@ -26,6 +26,18 @@ BEGIN
 	DECLARE @GUIDE_QUANTITY_CONTAINER AS INT;		-- Linehaul Route Preparation Container
 	DECLARE @DRY_QUANTITY_CONTAINER AS INT;			-- Linehaul Route Preparation Container
 	DECLARE @COLD_QUANTITY_CONTAINER AS INT;		-- Linehaul Route Preparation Container
+	DECLARE @TerminalStatusId INT;					-- Estado terminal
+
+	SET @TerminalStatusId = 
+	(
+		SELECT 
+			TOP (1)
+				[CCT].[IdCatCheckpointType] 
+		FROM
+			[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
+		WHERE
+			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'  COLLATE Latin1_General_CI_AI 
+	);
 
 	SET @EXISTING_LRP = (SELECT COUNT([LRP].[IdLinehaulRoutePreparation]) AS CONT
 						FROM	[dbo].[LinehaulRoutePreparation] LRP
@@ -141,7 +153,13 @@ BEGIN
 		FROM		[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-				AND [LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_LRPC_STOPOVER;
+				AND [LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_LRPC_STOPOVER
+		INNER JOIN	[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie] AND [DO].[Guide_Number] = [LRPCD].[GuideNumber]
+		LEFT JOIN	[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+			ON		[DO].[StatusOrderId] = [SO].[StatusOrderId]
+			AND		[SO].[CatCheckpointTypeId] = 3
+		WHERE		[SO].[StatusOrderId] IS NULL;
 
 		-- ADD CONTAINER DETAIL PIECE TO CURRENT PROCESS
 		INSERT INTO [dbo].[LinehaulRoutePreparationContainerDetailPiece]
@@ -170,7 +188,13 @@ BEGIN
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_LRPC_STOPOVER;
+			AND		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_LRPC_STOPOVER
+		INNER JOIN	[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie] AND [DO].[Guide_Number] = [LRPCD].[GuideNumber]
+		LEFT JOIN	[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+			ON		[DO].[StatusOrderId] = [SO].[StatusOrderId]
+			AND		[SO].[CatCheckpointTypeId] = 3
+		WHERE		[SO].[StatusOrderId] IS NULL;
 
 		-- UPDATE DELIVERY ORDER STATUS
 		UPDATE		DO
@@ -214,6 +238,33 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 			AND		[LRPC].[IdLinehaulRoutePreparationContainer] = @EXISTING_LRPC_STOPOVER;
+
+		-- UPDATE LINEHAUL CONTAINER PREPARATION NUMBERS
+
+		UPDATE LRPC
+		SET [LRPC].[GuideQuantity] = ISNULL([LinehaulFixed].[GuidesToUpdate], 0),
+			[LRPC].[DryPieceQuantity] = ISNULL([LinehaulFixed].[DryPiecesToUpdate], 0),
+			[LRPC].[ColdPieceQuantity] = ISNULL([LinehaulFixed].[ColdPiecesToUpdate], 0)
+		FROM		[dbo].[LinehaulRoutePreparationContainer] LRPC
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[LRPC].[IdLinehaulRoutePreparationContainer] = [LRPCD].[LinehaulRoutePreparationContainerId]
+		OUTER APPLY 
+			(
+				SELECT 
+					TOP (1) 
+						SUM(DOaux.[Pieces_Dry]) [DryPiecesToUpdate],
+						SUM(DOaux.[Pieces_Cold]) [ColdPiecesToUpdate],
+						COUNT(DOaux.[Guide_Number]) [GuidesToUpdate]
+				FROM 
+					[dbo].[DeliveryOrder] DOaux  WITH(NOLOCK) 
+				LEFT JOIN	[dbo].[StatusOrder] SOaux  WITH(NOLOCK) 
+					ON		[DOaux].[StatusOrderId] = [SOaux].[StatusOrderId]
+					AND		[SOaux].[CatCheckpointTypeId] = 3
+				WHERE	[DOaux].[Guide_Serie] = [LRPCD].[GuideSerie] 
+				AND		[DOaux].[Guide_Number] = [LRPCD].[GuideNumber]
+				AND		[SOaux].[StatusOrderId] IS NULL
+			) LinehaulFixed
+		WHERE [LRPC].[IdLinehaulRoutePreparationContainer] = @INSERTED_LRPC_ID
 
 		-- UPDATE LINEHAUL ROUTE PREPARATION NUMBERS
 
