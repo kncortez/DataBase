@@ -24,7 +24,7 @@ BEGIN
 	
 	DECLARE @StatusRecolect INT;
 	SET @StatusRecolect = (SELECT TOP 1 StatusOrderId FROM StatusOrder WHERE OrderDescription = 'Recolectado')
-
+	SET @GuideValidPieces = (SELECT COUNT(GuideNumber) FROM DeliveryOrderPiece WHERE GuideSerie = @SerieNumber AND GuideNumber = @GuideNumber)
 	SET @IdHeader = (SELECT TOP 1 tsed.TSERoutePreparationHeaderID FROM TSERoutePreparationHeader tseh WITH(NOLOCK)
 						INNER JOIN TSERoutePreparationDetail tsed WITH(NOLOCK)
 						ON tseh.IDTSERoutePreparationHeader = tsed.TSERoutePreparationHeaderID
@@ -222,7 +222,7 @@ BEGIN
 	 ELSE
 		BEGIN
 				SELECT 8 AS ValueMessage,
-				'La guía que desea ingresar no forma parte de la ruta o las piezas contenidas en ella no corresponde cajas' AS MessageDescription
+				'La guía no corresponde a la ruta o es un sobre' AS MessageDescription
 		END
 
 END
