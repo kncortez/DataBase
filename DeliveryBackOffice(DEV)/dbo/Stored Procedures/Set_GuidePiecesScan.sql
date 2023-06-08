@@ -122,9 +122,9 @@ BEGIN
 
 													IF(@TotalPiecesExist=@TotalPiecesScanned)
 														BEGIN
-															UPDATE TSERoutePreparationHeader
+															/*UPDATE TSERoutePreparationHeader
 															SET HasFirstPickupProcess = 1
-															WHERE IDTSERoutePreparationHeader = @IdHeader--29
+															WHERE IDTSERoutePreparationHeader = @IdHeader--29*/
 
 															SELECT 7 AS ValueMessage,
 																'El total de piezas de las guías han sido ingresadas correctamente' AS MessageDescription
