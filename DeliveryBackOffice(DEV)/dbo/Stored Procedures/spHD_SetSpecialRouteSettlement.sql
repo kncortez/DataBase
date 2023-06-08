@@ -337,6 +337,38 @@ BEGIN
 						VALUES (@ServiceManagementId, @ServiceStatus, 1, @Token, GETDATE(), NULL);
 				END
 
+				IF EXISTS (SELECT
+						1
+					FROM DeliveryOrder do WITH (NOLOCK)
+					WHERE do.Guide_Serie = @GuideSerie
+					AND do.Guide_Number = @GuideNumber
+					AND (do.Pieces_Dry + do.Pieces_Cold) = 1)
+				BEGIN
+					IF NOT EXISTS (SELECT
+							1
+						FROM TSERoutePreparationDetail trpd WITH (NOLOCK)
+						INNER JOIN TSERoutePreparationDetailPiece trpdp WITH (NOLOCK)
+							ON trpd.IDTSERoutePreparationDetail = trpdp.TSERoutePreparationDetailId
+							AND trpdp.PieceNumber = 1
+							AND trpdp.RowStatus = 1
+						WHERE trpd.TSERoutePreparationHeaderID = @TSERoutePreparationHeaderId
+						AND trpd.GuideSerie = @GuideSerie
+						AND trpd.GuideNumber = @GuideNumber)
+					BEGIN
+						INSERT INTO TSERoutePreparationDetailPiece (TSERoutePreparationDetailId, PieceNumber, RowStatus, DateUpdated, TokenCreated)
+							SELECT
+								trpd.IDTSERoutePreparationDetail
+							   ,1
+							   ,1
+							   ,GETDATE()
+							   ,@Token
+							FROM TSERoutePreparationDetail trpd WITH (NOLOCK)
+							WHERE trpd.TSERoutePreparationHeaderID = @TSERoutePreparationHeaderId
+							AND trpd.GuideSerie = @GuideSerie
+							AND trpd.GuideNumber = @GuideNumber
+					END
+				END
+	
 				DELETE FROM @GuidesIterate
 				WHERE GuideSerie = @GuideSerie
 					AND GuideNumber = @GuideNumber;

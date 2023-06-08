@@ -25,9 +25,6 @@ BEGIN
 		SELECT
 			@IDTSERoutePreparationDetail = IDTSERoutePreparationDetail
 		FROM TSERoutePreparationDetail trpd WITH (NOLOCK)
-		INNER JOIN DeliveryOrder do WITH (NOLOCK)
-			ON trpd.GuideSerie = do.Guide_Serie
-			AND trpd.GuideNumber = do.Guide_Number
 		INNER JOIN TSERoutePreparationDetailPiece trpdp WITH (NOLOCK)
 			ON trpdp.TSERoutePreparationDetailId = trpd.IDTSERoutePreparationDetail
 		WHERE trpd.TSERoutePreparationHeaderID = @IDTSERoutePreparationHeader
@@ -36,7 +33,6 @@ BEGIN
 		AND trpdp.PieceNumber = @GuidePiece
 		AND trpd.RowStatus = 1
 		AND trpdp.RowStatus = 1
-		AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 
 		IF @IDTSERoutePreparationDetail > 0
 		BEGIN
@@ -123,7 +119,7 @@ BEGIN
 
 			SELECT
 				'-2' 'ResultCode'
-			   ,'La pieza no existe o no ha sido asignada a la ruta.' 'Description'
+			   ,'La Caja/Sobre no existe o no ha sido asignada a la ruta.' 'Description'
 		END
 	END TRY
 	BEGIN CATCH
