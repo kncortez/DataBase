@@ -24,15 +24,32 @@ BEGIN
 
 		UPDATE do
 		SET do.StatusOrderId = @StatusOrderId
-		FROM DeliveryOrder do
-		INNER JOIN TSERoutePreparationDetail trpd
+		FROM DeliveryOrder do WITH (NOLOCK)
+		INNER JOIN TSERoutePreparationDetail trpd WITH (NOLOCK)
 			ON do.Guide_Serie = trpd.GuideSerie
 			AND do.Guide_Number = trpd.GuideNumber
-		INNER JOIN TSERoutePreparationHeader trph
+		INNER JOIN TSERoutePreparationHeader trph WITH (NOLOCK)
 			ON trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader
 			AND trph.TSECustomsMark = @CustomMark
 		WHERE trpd.RowStatus = 1
 		AND trph.RowStatus = 1
+		AND (do.Pieces_Dry + do.Pieces_Cold) > 1
+
+		UPDATE dop
+		SET dop.StatusOrderId = @StatusOrderId
+		FROM DeliveryOrderPiece dop WITH (NOLOCK)
+		INNER JOIN DeliveryOrder do WITH (NOLOCK)
+			ON do.Guide_Serie = dop.GuideSerie
+			AND do.Guide_Number = dop.GuideNumber
+		INNER JOIN TSERoutePreparationDetail trpd WITH (NOLOCK)
+			ON do.Guide_Serie = trpd.GuideSerie
+			AND do.Guide_Number = trpd.GuideNumber
+		INNER JOIN TSERoutePreparationHeader trph WITH (NOLOCK)
+			ON trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader
+			AND trph.TSECustomsMark = @CustomMark
+		WHERE trpd.RowStatus = 1
+		AND trph.RowStatus = 1
+		AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 
 		INSERT INTO DeliveryOrderDetail ([Guide_Serie],
 		[Guide_Number],
@@ -53,12 +70,16 @@ BEGIN
 			   ,NULL
 			   ,NULL
 			   ,NULL
-			FROM TSERoutePreparationDetail trpd
-			INNER JOIN TSERoutePreparationHeader trph
+			FROM DeliveryOrder do WITH (NOLOCK)
+			INNER JOIN TSERoutePreparationDetail trpd WITH (NOLOCK)
+				ON do.Guide_Serie = trpd.GuideSerie
+				AND do.Guide_Number = trpd.GuideNumber
+			INNER JOIN TSERoutePreparationHeader trph WITH (NOLOCK)
 				ON trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader
 					AND trph.TSECustomsMark = @CustomMark
 			WHERE trpd.RowStatus = 1
 			AND trph.RowStatus = 1
+			AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 
 		UPDATE TSERoutePreparationHeader
 		SET HasFirstArrivalProcess = 1

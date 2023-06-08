@@ -30,20 +30,23 @@ BEGIN
 		WHERE trph.TSECustomsMark = @CustomMark
 		AND	trph.RowStatus = 1
 		AND trpd.RowStatus = 1
+		AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 
 		SELECT
 			CONCAT(do.Guide_Serie, do.Guide_Number) Guide
 			,CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) Receiver
 			,do.Receiver_Address [Address]
-			,do.Pieces_Dry + do.Pieces_Cold Pieces
+			,(do.Pieces_Dry + do.Pieces_Cold) [Pieces]
 		FROM TSERoutePreparationHeader trph WITH (NOLOCK)
-		INNER JOIN TSERoutePreparationDetail trpd
+		INNER JOIN TSERoutePreparationDetail trpd WITH (NOLOCK)
 		ON trph.IDTSERoutePreparationHeader = trpd.TSERoutePreparationHeaderID
 		AND trph.TSECustomsMark = @CustomMark
-		INNER JOIN DeliveryOrder do
+		INNER JOIN DeliveryOrder do WITH (NOLOCK)
 			ON do.Guide_Serie = trpd.GuideSerie
 			AND do.Guide_Number = trpd.GuideNumber 
 		WHERE trph.RowStatus = 1
+		AND trpd.RowStatus = 1
+		AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 		AND trph.HasFirstPickupProcess = 1
 		AND trph.HasFirstArrivalProcess = 0
 

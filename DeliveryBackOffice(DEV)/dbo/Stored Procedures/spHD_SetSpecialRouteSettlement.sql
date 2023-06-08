@@ -353,7 +353,23 @@ BEGIN
 				,do.TokenUpdated = @Token
 				,do.DateUpdated = GETDATE()
 				,do.Dispatched_Date = GETDATE()
-			FROM DeliveryOrder do
+			FROM DeliveryOrder do WITH (NOLOCK)
+			INNER JOIN TSERoutePreparationDetail trpd WITH (NOLOCK)
+				ON do.Guide_Serie = trpd.GuideSerie
+				AND do.Guide_Number = trpd.GuideNumber
+			INNER JOIN TSERoutePreparationHeader trph WITH (NOLOCK)
+				ON trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader
+				AND trph.IDTSERoutePreparationHeader = @TSERoutePreparationHeaderId
+			WHERE trpd.RowStatus = 1
+			AND trph.RowStatus = 1
+			AND (do.Pieces_Dry + do.Pieces_Cold) > 1
+
+			UPDATE dop
+			SET dop.StatusOrderId = @StatusOrderId
+			FROM DeliveryOrderPiece dop WITH (NOLOCK) 
+			INNER JOIN DeliveryOrder do WITH (NOLOCK)
+				ON do.Guide_Serie = dop.GuideSerie
+				AND do.Guide_Number = dop.GuideNumber
 			INNER JOIN TSERoutePreparationDetail trpd WITH (NOLOCK)
 				ON do.Guide_Serie = trpd.GuideSerie
 				AND do.Guide_Number = trpd.GuideNumber
