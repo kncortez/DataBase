@@ -1253,6 +1253,38 @@ BEGIN
 										END
 									)
 								)
+							WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN 
+								(
+									[do].[PriceShippment] - 
+									(
+										CASE
+											WHEN [CVT].ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN CTD.ShortName = 'TOT' THEN
+														ROUND((([do].[PriceShippment] * [PCDest].[CouponValue]) / 100), 1)
+													ELSE 0
+												END
+											WHEN [CVT].ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN CTD.ShortName = 'TOT' THEN
+														CASE
+															WHEN [PCDest].[CouponValue] > [do].[PriceShippment] THEN
+																[do].[PriceShippment]
+															ELSE
+																[do].[PriceShippment] - [PCDest].[CouponValue]
+														END
+													ELSE 0
+												END
+											WHEN [CVT].ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN CTD.ShortName = 'TOT' THEN
+														[do].[PriceShippment]
+													ELSE 0
+												END
+											ELSE 0
+										END
+									)
+								)
 							ELSE 
 								do.PriceShippment
 						END
@@ -1265,8 +1297,9 @@ BEGIN
 					,ISNULL(CAST(do.DCBA_ID AS NVARCHAR), '') 'DCBA_ID'
 					,ISNULL(CAST(do.InsuranceAmount AS NVARCHAR),'') InsuranceAmount
 					,(CASE WHEN ISNULL(MSL.IdMembershipSubscriptionLog, 0) > 0 THEN 'true' ELSE 'false' END) UsedMembership
-					,CAST(ISNULL((CASE WHEN [PPDest].[RowNum] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [AppliedCoupon]
-					,CAST(ISNULL((CASE WHEN [PPOri].[PromoToApply] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [GeneratedCoupon]
+					,CAST(ISNULL((CASE WHEN [PPDest].[RowNum] IS NOT NULL THEN 1 WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN 1 ELSE 0 END),0) AS BIT) [AppliedCoupon]
+					,ISNULL((CASE WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN [PCDest].[PromoCouponSerie] ELSE '' END),'') [AppliedCouponSerie]
+					,CAST(ISNULL((CASE WHEN [PPOri].[PromoToApply] IS NOT NULL THEN 1 WHEN [PCOri].[IdPromoCoupon] IS NOT NULL THEN 1 ELSE 0 END),0) AS BIT) [GeneratedCoupon]
 				FROM AccountServiceCartDetail ascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = ascd.GuideSerie
@@ -1275,6 +1308,18 @@ BEGIN
 					ON ascd.GuideSerie = MSL.LogGuideSerie
 					AND ascd.GuideNumber = MSL.LogGuideNumber
 					AND MSL.RowStatus = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PCDest]  WITH(NOLOCK) 
+					ON ascd.[GuideSerie] = [PCDest].[GuideSerieDestination]
+					AND ascd.[GuideNumber] = [PCDest].[GuideNumberDestination]
+					AND [PCDest].[RowStatus] = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+					ON [PCDest].[CatValueTypeId] = [CVT].[IdCatValueType]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+					ON [PCDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PCOri]  WITH(NOLOCK) 
+					ON ascd.[GuideSerie] = [PCOri].[GuideSerieOrigin]
+					AND ascd.[GuideNumber] = [PCOri].[GuideNumberOrigin]
+					AND [PCOri].[RowStatus] = 1
 				LEFT JOIN 
 					(
 						SELECT 
@@ -1428,6 +1473,64 @@ BEGIN
 					) PP
 				WHERE
 					[PP].[GuideNumberDestiny] IS NOT NULL
+				UNION
+				SELECT 
+					ascd.[GuideSerie] [GuideSerie]
+					,ascd.[GuideNumber] [GuideNumber]
+					,[CP].[PromoDescription]
+					,-(
+						CASE
+							WHEN [CVT].ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN [CTD].ShortName = 'TOT' THEN
+										ROUND((([do].[PriceShippment] * [PPDest].[CouponValue]) / 100), 1)
+									ELSE 0
+								END
+							WHEN [CVT].ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN [CTD].ShortName = 'TOT' THEN
+										CASE
+											WHEN [PPDest].[CouponValue] > [do].[PriceShippment] THEN
+												[do].[PriceShippment]
+											ELSE
+												[do].[PriceShippment] - [PPDest].[CouponValue]
+										END
+									ELSE 0
+								END
+							WHEN [CVT].ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN CTD.ShortName = 'TOT' THEN
+										[do].[PriceShippment]
+									ELSE 0
+								END
+							ELSE 0
+						END
+					) [Amount]
+				FROM
+					[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] ascd  WITH(NOLOCK) 
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[PromoCoupon] PPDest  WITH(NOLOCK) 
+						ON
+							ascd.[GuideSerie] = [PPDest].[GuideSerieDestination]
+							AND
+							ascd.[GuideNumber] = [PPDest].[GuideNumberDestination]
+							AND
+							[PPDest].[RowStatus] = 1
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+						ON 
+							[DO].[Guide_Serie] = [PPDest].[GuideSerieDestination] 
+							AND 
+							[DO].[Guide_Number] = [PPDest].[GuideNumberDestination]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
+						ON [CP].[IdPromo] = [PPDest].[CatPromoId]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+						ON [PPDest].[CatValueTypeId] = [CVT].[IdCatValueType]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+						ON [PPDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
+				WHERE
+					ascd.[AccountServiceCartId] = @ProcessServiceCartId
+					AND ascd.RowStatus = 1
 				ORDER BY 
 					[ascd].[GuideSerie],
 					[ascd].[GuideNumber]
@@ -1481,6 +1584,38 @@ BEGIN
 										END
 									)
 								)
+							WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN 
+								(
+									[do].[PriceShippment] - 
+									(
+										CASE
+											WHEN [CVT].ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN CTD.ShortName = 'TOT' THEN
+														ROUND((([do].[PriceShippment] * [PCDest].[CouponValue]) / 100), 1)
+													ELSE 0
+												END
+											WHEN [CVT].ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN CTD.ShortName = 'TOT' THEN
+														CASE
+															WHEN [PCDest].[CouponValue] > [do].[PriceShippment] THEN
+																[do].[PriceShippment]
+															ELSE
+																[do].[PriceShippment] - [PCDest].[CouponValue]
+														END
+													ELSE 0
+												END
+											WHEN [CVT].ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+												CASE
+													WHEN CTD.ShortName = 'TOT' THEN
+														[do].[PriceShippment]
+													ELSE 0
+												END
+											ELSE 0
+										END
+									)
+								)
 							ELSE 
 								do.PriceShippment
 						END
@@ -1493,8 +1628,9 @@ BEGIN
 					,ISNULL(CAST(do.DCBA_ID AS NVARCHAR), '') 'DCBA_ID'
 					,ISNULL(CAST(do.InsuranceAmount AS NVARCHAR),'') InsuranceAmount
 					,(CASE WHEN ISNULL(MSL.IdMembershipSubscriptionLog, 0) > 0 THEN 'true' ELSE 'false' END) UsedMembership
-					,CAST(ISNULL((CASE WHEN [PPDest].[RowNum] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [AppliedCoupon]
-					,CAST(ISNULL((CASE WHEN [PPOri].[PromoToApply] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [GeneratedCoupon]
+					,CAST(ISNULL((CASE WHEN [PPDest].[RowNum] IS NOT NULL THEN 1 WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN 1 ELSE 0 END),0) AS BIT) [AppliedCoupon]
+					,ISNULL((CASE WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN [PCDest].[PromoCouponSerie] ELSE '' END),'') [AppliedCouponSerie]
+					,CAST(ISNULL((CASE WHEN [PPOri].[PromoToApply] IS NOT NULL THEN 1 WHEN [PCOri].[IdPromoCoupon] IS NOT NULL THEN 1 ELSE 0 END),0) AS BIT) [GeneratedCoupon]
 				FROM DeliveryBackOffice.dbo.ExpressAccountServiceCartDetail eascd  WITH(NOLOCK) 
 				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = eascd.GuideSerie
@@ -1503,6 +1639,18 @@ BEGIN
 					ON eascd.GuideSerie = MSL.LogGuideSerie
 					AND eascd.GuideNumber = MSL.LogGuideNumber
 					AND MSL.RowStatus = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PCDest  WITH(NOLOCK) 
+					ON [eascd].[GuideSerie] = PCDest.[GuideSerieDestination]
+					AND [eascd].[GuideNumber] = PCDest.[GuideNumberDestination]
+					AND PCDest.[RowStatus] = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+					ON PCDest.[CatValueTypeId] = [CVT].[IdCatValueType]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+					ON PCDest.[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PCOri]  WITH(NOLOCK) 
+					ON [eascd].[GuideSerie] = [PCOri].[GuideSerieOrigin]
+					AND [eascd].[GuideNumber] = [PCOri].[GuideNumberOrigin]
+					AND [PCOri].[RowStatus] = 1
 				LEFT JOIN 
 					(
 						SELECT 
@@ -1659,6 +1807,64 @@ BEGIN
 					) PP
 				WHERE
 					[PP].[GuideNumberDestiny] IS NOT NULL
+				UNION
+				SELECT 
+					[eascd].[GuideSerie] [GuideSerie]
+					,[eascd].[GuideNumber] [GuideNumber]
+					,[CP].[PromoDescription]
+					,-(
+						CASE
+							WHEN [CVT].ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN [CTD].ShortName = 'TOT' THEN
+										ROUND((([do].[PriceShippment] * [PPDest].[CouponValue]) / 100), 1)
+									ELSE 0
+								END
+							WHEN [CVT].ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN [CTD].ShortName = 'TOT' THEN
+										CASE
+											WHEN [PPDest].[CouponValue] > [do].[PriceShippment] THEN
+												[do].[PriceShippment]
+											ELSE
+												[do].[PriceShippment] - [PPDest].[CouponValue]
+										END
+									ELSE 0
+								END
+							WHEN [CVT].ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN CTD.ShortName = 'TOT' THEN
+										[do].[PriceShippment]
+									ELSE 0
+								END
+							ELSE 0
+						END
+					) [Amount]
+				FROM
+					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCartDetail] eascd  WITH(NOLOCK) 
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[PromoCoupon] PPDest  WITH(NOLOCK) 
+						ON
+							[eascd].[GuideSerie] = [PPDest].[GuideSerieDestination]
+							AND
+							[eascd].[GuideNumber] = [PPDest].[GuideNumberDestination]
+							AND
+							[PPDest].[RowStatus] = 1
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+						ON 
+							[DO].[Guide_Serie] = [PPDest].[GuideSerieDestination] 
+							AND 
+							[DO].[Guide_Number] = [PPDest].[GuideNumberDestination]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
+						ON [CP].[IdPromo] = [PPDest].[CatPromoId]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
+						ON [PPDest].[CatValueTypeId] = [CVT].[IdCatValueType]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
+						ON [PPDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
+				WHERE
+					eascd.ExpressAccountServiceCartId = @ProcessServiceCartId
+					AND eascd.RowStatus = 1
 				ORDER BY 
 					[eascd].[GuideSerie],
 					[eascd].[GuideNumber]
