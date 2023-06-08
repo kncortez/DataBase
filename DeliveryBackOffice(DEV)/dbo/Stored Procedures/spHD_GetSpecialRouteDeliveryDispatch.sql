@@ -54,6 +54,7 @@ BEGIN
 				AND trpd.GuideNumber = do.Guide_Number
 		WHERE trph.RowStatus = 1
 		AND trpd.RowStatus = 1
+		AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 
 		SELECT
 			trph.TSECustomsMark [TSECustomsMark]
@@ -83,7 +84,8 @@ BEGIN
 			INNER JOIN DeliveryOrder do WITH (NOLOCK)
 			ON do.Guide_Serie = trpd.GuideSerie
 			AND do.Guide_Number = trpd.GuideNumber
-			WHERE trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader) trpd
+			WHERE trpd.TSERoutePreparationHeaderID = trph.IDTSERoutePreparationHeader
+			AND (do.Pieces_Dry + do.Pieces_Cold) > 1) trpd
 		WHERE trph.RowStatus = 1
 		AND trph.HasFirstPickupProcess = 1
 		AND trph.HasFirstArrivalProcess = 1
