@@ -159,8 +159,16 @@ BEGIN
 		RETURN @FinalTypeService;
 
 	END
+	ELSE
+	BEGIN
+	    
+		-- Tipo de dato envíado es posible como tipo de servicio
+		SET @FinalTypeService = @DefaultServiceType;
+
+
+	END
 
 	-- Tipo de servicio por defecto
-	RETURN @DefaultServiceType;
+	RETURN @FinalTypeService;
 	
 END

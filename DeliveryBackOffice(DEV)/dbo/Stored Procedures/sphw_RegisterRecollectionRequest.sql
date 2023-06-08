@@ -1,8 +1,11 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto,Ixchop>
 -- Create date: <19-09-2022>
 -- Description:	<Crea una solicitud de recolección>
+-- =============================================
+-- Author:		<Jerson Ochoa>
+-- Create date: <30-03-2023>
+-- Description:	<Agregar township a solicitud de recolección en base a visit Point>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphw_RegisterRecollectionRequest]
 	-- Add the parameters for the stored procedure here
@@ -122,6 +125,7 @@ BEGIN
 					AmountPickup,
 					IdSourcePlataform,
 					AddressPickup,
+					[TownshipId],
 					TypeVehicleId,
 					IsScheduled
 				)
@@ -145,6 +149,7 @@ BEGIN
 					   NULL,
 					   NULL,
 					   vp.Address,
+					   [vp].[IdTownship],
 					   @TypeVehicleId,
 					   @Scheduled
 				FROM VisitPointClient VP
