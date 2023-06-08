@@ -46,7 +46,7 @@ BEGIN
                                          IIF(LTRIM(RTRIM(do.Sender_Mail)) = '', NULL, LTRIM(RTRIM(do.Sender_Mail))),
                                          IIF(LTRIM(RTRIM(cu.RegexEmail)) = '', NULL, LTRIM(RTRIM(cu.RegexEmail)))
                                      ),
-                             ',envios.parser4@gmail.com,cod.gt@forzalatam.com'
+                             ''--',envios.parser4@gmail.com,cod.gt@forzalatam.com'
                          ))
                --)
                RegexEmail,
@@ -81,6 +81,15 @@ BEGIN
               AND pg.BatchCODId IS NOT NULL
               AND btd.[AuthorizationNumber] IS NOT NULL
               AND vpc.SaleChannelId NOT IN ( 3 )
+			  AND 
+			  (LEN(COALESCE(cu.CODContactEmail,''))>0
+			  OR LEN(COALESCE(do.Sender_Mail,''))>0
+			  OR LEN(COALESCE(cu.RegexEmail,''))>0--quitar valores nulos
+			  )
+			  
+
+
+
         --ORDER BY cu.IdCustomer
         UNION
         SELECT *
@@ -97,8 +106,9 @@ BEGIN
                                    ISNULL(
                                              IIF(do.Sender_Mail = '',
                                               NULL,
-                                              CONCAT(do.Sender_Mail, ',envios.parser4@gmail.com,cod.gt@forzalatam.com')),
-                                             'envios.parser4@gmail.com,cod.gt@forzalatam.com'
+                                              do.Sender_Mail/*CONCAT(do.Sender_Mail, ',envios.parser4@gmail.com,cod.gt@forzalatam.com')*/
+											  ),
+                                             ''--'envios.parser4@gmail.com,cod.gt@forzalatam.com'
                                          ))
                               )
                         )
@@ -135,6 +145,7 @@ BEGIN
                   AND pg.BatchCODId IS NOT NULL
                   AND btd.[AuthorizationNumber] IS NOT NULL
                   AND do.SalePipeLineId IN ( 3 )
+				  AND LEN(COALESCE(do.Sender_Mail,''))>0 --quitar valores nulos
             GROUP BY do.Sender_Mail,
                      cu.CODContactEmail,
                      cu.RegexEmail,

@@ -14,6 +14,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfigExternalPlatform', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -35,7 +37,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lóg
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha máxima de valides, si el valor tiene expiración.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfigExternalPlatform', @level2type = N'COLUMN', @level2name = N'ConfigMaxValidDate';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha máxima de validez, si el valor tiene expiración.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfigExternalPlatform', @level2type = N'COLUMN', @level2name = N'ConfigMaxValidDate';
+
+
 
 
 GO

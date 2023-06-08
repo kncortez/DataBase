@@ -7,7 +7,7 @@
 -- Create date: <30-03-2023>
 -- Description:	<Agregar township a solicitud de recolección en base a visit Point>
 -- =============================================
-CREATE PROCEDURE [dbo].[sphw_RegisterRecolLectionRequest]
+CREATE PROCEDURE [dbo].[sphw_RegisterRecollectionRequest]
 	-- Add the parameters for the stored procedure here
 	@TAC1 BIT = NULL,
 	@TAC2 BIT = NULL,
@@ -29,10 +29,7 @@ BEGIN
 	SET NOCOUNT ON;
     DECLARE @TranCounter INT;  
     SET @TranCounter = @@TRANCOUNT;  
-    IF @TranCounter > 0  
-        SAVE TRANSACTION ProcedureSave;  
-    ELSE  
-        BEGIN TRANSACTION;  
+
 		
 
         BEGIN TRY
@@ -67,7 +64,13 @@ BEGIN
 		ELSE
 		BEGIN 
 
-			IF @Scheduled = 0
+
+			IF @TranCounter > 0  
+				SAVE TRANSACTION ProcedureSave;  
+			ELSE  
+				BEGIN TRANSACTION;  
+					IF @Scheduled = 0
+
 			BEGIN				
 				DECLARE @CURRENTDATE DATETIME= GETDATE();
 				SET @StartDate =DATEADD(mi,15,@CURRENTDATE);

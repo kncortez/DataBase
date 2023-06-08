@@ -1,4 +1,4 @@
-﻿
+﻿--USE DeliveryBackOffice
 -- =============================================
 -- Author:		<Jerson Ochoa>
 -- Create date: <2023-04-13>
@@ -8,20 +8,20 @@
 -- Update date:	<2023-05-02>
 -- Description:	<Actualizar rowstatus -> 1 en tabla SchedulePickup>
 -- =============================================
-CREATE PROCEDURE [dbo].[SetPickupDataFromSimpliRoute]
-		@ServicesTable TblExtPlatSimpliroutePickup READONLY,
+create procedure [dbo].[SetPickupDataFromSimpliRoute]
+		@ServicesTable TblExtPlatSimpliroutePickup readonly,
 		@ExternalPlatform INT,
 		@RoutePlatform NVARCHAR(50),
 		@CouriermanDPI NVARCHAR(50) = '',
 		@VehicleCode NVARCHAR(50), -- De lado de Simpliroute proviene el codigo de una ruta "virtual"
 		@RouteDispatched NVARCHAR(50) = '',
 		@ServicesQuantity INT,
-		@DateOfEvent DATETIME = NULL,
+		@DateOfEvent DATETIME = null,
 		@Token NVARCHAR(50) = 'SYS-HERMESROUTES',
-		@StationId INT = NULL
-AS
-BEGIN
-	SET NOCOUNT ON;
+		@StationId INT = null
+as
+begin
+	set nocount on;
 	DECLARE @IdRoute INT = NULL;
 	DECLARE @RouteAssigmentId INT = NULL;
 	DECLARE @SenderReceiverId INT = NULL;
