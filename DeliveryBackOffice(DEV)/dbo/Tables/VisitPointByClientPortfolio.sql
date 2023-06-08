@@ -23,6 +23,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_VisitPointByClientPortfolio_LoadList]
     ON [dbo].[VisitPointByClientPortfolio]([VisitPointId] ASC, [RowStatus] ASC);
@@ -58,4 +60,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo inte
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Contacto de cartera de cliente corporativo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointByClientPortfolio', @level2type = N'COLUMN', @level2name = N'ContactName';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Phone]
+    ON [dbo].[VisitPointByClientPortfolio]([Phone] ASC);
 

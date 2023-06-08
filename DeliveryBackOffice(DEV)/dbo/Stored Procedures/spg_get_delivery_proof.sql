@@ -30,7 +30,8 @@ BEGIN
            ) AS Image_Incident,
            Path_Dry AS Path_Dry,
            Path_Cold AS Path_Cold,
-           Path_Incident AS Path_Incident
+           Path_Incident AS Path_Incident, 
+		   PathSignature AS Path_Signature
     FROM [DeliveryBackOffice].[dbo].[DeliveryProof] WITH (NOLOCK)
     WHERE Guide_Serie = @GuideSerie
           AND Guide_Number = @GuideNumber

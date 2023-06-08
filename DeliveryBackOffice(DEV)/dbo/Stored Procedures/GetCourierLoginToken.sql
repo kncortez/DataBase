@@ -3,14 +3,14 @@
 -- Create date: <2023-04-24>
 -- Description:	<Genera o obtiene el token para login en Courier App>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetCourierLoginToken]
+CREATE procedure [dbo].[GetCourierLoginToken]
 	-- Add the parameters for the stored procedure here
-    @Phone NVARCHAR(20)
-AS
-BEGIN
+    @Phone nvarchar(20)
+as
+begin
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+	set nocount on;
 
     BEGIN TRANSACTION
 
@@ -22,6 +22,13 @@ BEGIN
 			FROM SenderReceiver
 			WHERE Phone LIKE '%' + @Phone + '%'
 			AND Estatus = 1);
+
+		DECLARE @Email AS NVARCHAR(50) =  ( SELECT TOP 1
+				Email
+			FROM SenderReceiver
+			WHERE Phone LIKE '%' + @Phone + '%'
+			AND Estatus = 1);
+
 
 		IF @SenderReceiverId IS NOT NULL
 		BEGIN 
@@ -48,6 +55,8 @@ BEGIN
 				'200' 'StatusCode'
 			   ,'Token obtenido correctamente.' 'Description' 
 			   ,@LoginToken 'LoginToken'
+			   ,@Email 'Email'
+			   
 		END
 		ELSE
 		BEGIN

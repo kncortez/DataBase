@@ -133,6 +133,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -356,4 +358,9 @@ CREATE NONCLUSTERED INDEX [idx_DCBA_ID]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica el tiempo estimado de entrega de la guía, cálculado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'DeliveryETA';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Sender_Mail]
+    ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
 

@@ -3,188 +3,172 @@
 -- Create date: <2022-08-29>
 -- Description:	<SP para Modificar bandera de devolución (IsLastMileReturn)>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ModifyReturnStatement] 
-	@TblListGuideActa TblListGuideActa READONLY,
-	@Token NVARCHAR(50)
-AS
-BEGIN	
-  
-	SET NOCOUNT ON;
+CREATE procedure [dbo].[SPHD_ModifyReturnStatement]
+    @TblListGuideActa TblListGuideActa readonly
+  , @Token nvarchar(50)
+as
+begin
 
-	BEGIN TRANSACTION
-	BEGIN TRY
-	
-	
-	DECLARE @Numero AS INT;
-	DECLARE @Serie  AS NVARCHAR(2);
-	DECLARE @STATUS AS INT; 
-	DECLARE @STATUSDECLAREDRETURNED_DO INT = (SELECT TOP 1 SO.StatusOrderId FROM DBO.StatusOrder SO WITH(NOLOCK) WHERE OrderDescription = 'Declarado para Devolución');
-	DECLARE @RevalueGuides AS TABLE(
-				GuideSerie NVARCHAR(2),
-				GuideNumber INT)
-	DECLARE @GuidesModify AS TABLE(
-				GuideSerie NVARCHAR(2),
-				GuideNumber INT)
+    set nocount on;
 
-	INSERT INTO @RevalueGuides
-				SELECT
-					SUBSTRING(lg.NumberGuidePice,1,2)
-				    ,CAST(SUBSTRING(LTRIM(lg.NumberGuidePice), 3, CAST(LEN(lg.NumberGuidePice) AS INT)) AS INT)
-				FROM @TblListGuideActa lg
-
-------------Modificar Bandera campo IsLastMileReturn ----------------------------
-WHILE EXISTS (SELECT TOP 1 1 FROM @RevalueGuides)
-BEGIN
-					SELECT TOP 1
-						@Serie  =  rg.GuideSerie,
-						@Numero =  rg.GuideNumber	
-				   FROM @RevalueGuides rg
-
-				   SELECT @STATUS = StatusOrderId
-				   FROM [dbo].[DeliveryOrderDetail] WITH (NOLOCK)
-				   WHERE Guide_Serie = @Serie AND Guide_Number = @Numero
-
-                  IF (EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrder]  WITH (NOLOCK) 
-				  WHERE Guide_Serie = @Serie AND Guide_Number = @Numero AND
-				        (IsLastMileReturn = 0 OR IsLastMileReturn IS NULL) )
-					  )
-				   BEGIN
-
-							-- Activar guía para devolución y asignar estado de "Declarado para devolución"
-							UPDATE 
-								[dbo].[DeliveryOrder] 
-							SET 
-								IsLastMileReturn = 1,
-								StatusOrderId= @STATUSDECLAREDRETURNED_DO,
-								TokenUpdated=@Token,
-								DateUpdated=GETDATE()
-							WHERE 
-								Guide_Serie = @Serie 
-								AND 
-								Guide_Number = @Numero
-							INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
-
-							-- Ingresar nuevo estado al historico
-							INSERT INTO 
-								[DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
-								(Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
-							VALUES
-								(@Serie, @Numero, @STATUSDECLAREDRETURNED_DO, @Token, GETDATE(), GETDATE(), 1)
-				   END
-					   ELSE
-					   BEGIN
-							-- Para revisar estado del historico
-							DECLARE @TOPSTATUS INT;
-							DECLARE @TOPSTATUSROWDATE DATETIME;
-							-- En caso sea necesario recuperar un estado
-							DECLARE @NEWTOPSTATUS INT;
-
-							-- Revisar último estado de la guía
-							SELECT
-								TOP 1
-									@TOPSTATUS = DOD.StatusOrderId,
-									@TOPSTATUSROWDATE = ISNULL(DOD.DateCreatedInSystem, DOD.DateCreated)
-							FROM
-								[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
-							WHERE
-								DOD.Guide_Serie = @Serie
-								AND
-								DOD.Guide_Number = @Numero
-								AND
-								DOD.RowStatus = 1
-							ORDER BY
-								ISNULL(DOD.DateCreatedInSystem, DOD.DateCreated) DESC
-
-							-- Si la guía esta como "Declarado para devolución"
-							IF(@TOPSTATUS = @STATUSDECLAREDRETURNED_DO)
-							BEGIN
-							
-								-- Inactivar estado de declarado
-								UPDATE 
-									DeliveryBackOffice.dbo.DeliveryOrderDetail 
-								SET 
-									RowStatus = 0,
-									Observations = 'Declaración de devolución revertido.'
-								WHERE 
-									Guide_Serie =  @Serie
-									AND Guide_Number = @Numero
-									AND StatusOrderId = @TOPSTATUS
-									AND ISNULL(DateCreatedInSystem, DateCreated) = @TOPSTATUSROWDATE
-									
-								-- Rescatar último estado de la guía previo a la declaración para devolución
-								SELECT
-									TOP 1
-										@NEWTOPSTATUS = DOD.StatusOrderId
-								FROM
-									[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
-								WHERE
-									DOD.Guide_Serie = @Serie
-									AND
-									DOD.Guide_Number = @Numero
-									AND
-									DOD.RowStatus = 1
-								ORDER BY
-									ISNULL(DOD.DateCreatedInSystem, DOD.DateCreated) DESC
-									
-								-- Revertir bandera de devolución de la guía y asignar estado previo
-								UPDATE 
-									[dbo].[DeliveryOrder] 
-								SET 
-									IsLastMileReturn = 0,
-									StatusOrderId = @NEWTOPSTATUS,
-									TokenUpdated=@Token,
-									DateUpdated=GETDATE()
-								WHERE 
-									Guide_Serie = @Serie 
-									AND 
-									Guide_Number = @Numero
-							END
-							-- Último estado de la guía no es declaración para devolución
-							ELSE
-							BEGIN
-
-								-- Solo actualizar bandera de devolución de la guía
-								UPDATE 
-									[dbo].[DeliveryOrder] 
-								SET 
-									IsLastMileReturn = 0,
-									TokenUpdated=@Token,
-									DateUpdated=GETDATE()
-								WHERE 
-									Guide_Serie = @Serie 
-									AND 
-									Guide_Number = @Numero
-
-							END
-						    INSERT INTO @GuidesModify(GuideSerie,GuideNumber) VALUES (@Serie, @Numero)
-					   END
-				 
-	DELETE FROM @RevalueGuides
-	WHERE GuideSerie = @Serie AND GuideNumber = @Numero
-
-END
-			COMMIT TRANSACTION;
-			SELECT GuideSerie,
-				   GuideNumber 
-			FROM @GuidesModify 
-          
-	   END TRY
-			 BEGIN CATCH
-				ROLLBACK TRANSACTION
-				
-			SELECT
-			0 [blnResult]
-			,ERROR_MESSAGE() [Description]
-			,0 [NumTransferID]
-			,ERROR_NUMBER() [ErrorNumber]
-			,ERROR_SEVERITY() [ErrorSeverity]
-			,ERROR_STATE() [ErrorState]
-			,ERROR_PROCEDURE() [ErrorProcedure]
-			,ERROR_LINE() [ErrorLine]
-			,ERROR_MESSAGE() [ErrorMessage];
-	  END CATCH
+    begin transaction;
+    begin try
 
 
+        declare @Numero as int;
+        declare @Serie as nvarchar(2);
+        declare @STATUS as int;
+        declare @STATUSDECLAREDRETURNED_DO int =
+                (
+                    select top 1
+                           [SO].[StatusOrderId]
+                    from [dbo].[StatusOrder] [SO] with (nolock)
+                    where [OrderDescription] = 'Declarado para Devolución'
+                );
+        declare @StatusReversal int =
+                (
+                    select [StatusOrderId]
+                    from [dbo].[StatusOrder]
+                    where [OrderDescription] = 'Guía revertida para entrega'
+                );
+        declare @RevalueGuides as table
+        (
+            [GuideSerie] nvarchar(2)
+          , [GuideNumber] int
+        );
+        declare @GuidesModify as table
+        (
+            [GuideSerie] nvarchar(2)
+          , [GuideNumber] int
+        );
+
+        insert into @RevalueGuides
+        select substring([lg].[NumberGuidePice], 1, 2)
+             , cast(substring(ltrim([lg].[NumberGuidePice]), 3, cast(len([lg].[NumberGuidePice]) as int)) as int)
+        from @TblListGuideActa [lg];
+
+        ------------Modificar Bandera campo IsLastMileReturn ----------------------------
+        while exists (select top 1 1 from @RevalueGuides)
+        begin
+            select top 1
+                   @Serie  = [rg].[GuideSerie]
+                 , @Numero = [rg].[GuideNumber]
+            from @RevalueGuides [rg];
+
+            select @STATUS = [StatusOrderId]
+            from [dbo].[DeliveryOrderDetail] with (nolock)
+            where [Guide_Serie] = @Serie
+                  and [Guide_Number] = @Numero;
+
+            if (exists
+            (
+                select top 1
+                       1
+                from [dbo].[DeliveryOrder] with (nolock)
+                where [Guide_Serie] = @Serie
+                      and [Guide_Number] = @Numero
+                      and
+                      (
+                          [IsLastMileReturn] = 0
+                          or [IsLastMileReturn] is null
+                      )
+            )
+               )
+            begin
+
+                -- Activar guía para devolución y asignar estado de "Declarado para devolución"
+                update [dbo].[DeliveryOrder]
+                set [IsLastMileReturn] = 1
+                  , [StatusOrderId] = @STATUSDECLAREDRETURNED_DO
+                  , [TokenUpdated] = @Token
+                  , [DateUpdated] = getdate()
+                where [Guide_Serie] = @Serie
+                      and [Guide_Number] = @Numero;
+                insert into @GuidesModify
+                (
+                    [GuideSerie]
+                  , [GuideNumber]
+                )
+                values
+                (@Serie, @Numero);
+
+                -- Ingresar nuevo estado al historico
+                insert into [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+                (
+                    [Guide_Serie]
+                  , [Guide_Number]
+                  , [StatusOrderId]
+                  , [UserCreated]
+                  , [DateCreated]
+                  , [DateCreatedInSystem]
+                  , [RowStatus]
+                )
+                values
+                (@Serie, @Numero, @STATUSDECLAREDRETURNED_DO, @Token, getdate(), getdate(), 1);
+            end;
+            else
+            begin
+                update [dbo].[DeliveryOrder]
+                set [IsLastMileReturn] = 0
+                  , [StatusOrderId] = @StatusReversal
+                  , [TokenUpdated] = @Token
+                  , [DateUpdated] = getdate()
+                where [Guide_Serie] = @Serie
+                      and [Guide_Number] = @Numero;
+                insert into @GuidesModify
+                (
+                    [GuideSerie]
+                  , [GuideNumber]
+                )
+                values
+                (@Serie, @Numero);
+
+                insert into [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
+                (
+                    [Guide_Serie]
+                  , [Guide_Number]
+                  , [StatusOrderId]
+                  , [UserCreated]
+                  , [DateCreated]
+                  , [DateCreatedInSystem]
+                  , [RowStatus]
+                )
+                values
+                (@Serie, @Numero, @StatusReversal, @Token, getdate(), getdate(), 1);
+
+                insert into @GuidesModify
+                (
+                    [GuideSerie]
+                  , [GuideNumber]
+                )
+                values
+                (@Serie, @Numero);
+            end;
+
+            delete from @RevalueGuides
+            where [GuideSerie] = @Serie
+                  and [GuideNumber] = @Numero;
+
+        end;
+        commit transaction;
+        select [GuideSerie]
+             , [GuideNumber]
+        from @GuidesModify;
+
+    end try
+    begin catch
+        rollback transaction;
+
+        select 0                 [blnResult]
+             , error_message()   [Description]
+             , 0                 [NumTransferID]
+             , error_number()    [ErrorNumber]
+             , error_severity()  [ErrorSeverity]
+             , error_state()     [ErrorState]
+             , error_procedure() [ErrorProcedure]
+             , error_line()      [ErrorLine]
+             , error_message()   [ErrorMessage];
+    end catch;
 
 
-END
+end;

@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-07-22>
 -- Description:	<Cambiar la ubicación en rack de una guía>
@@ -9,21 +8,21 @@
 -- Create date: <2020-09-19>
 -- Description:	<Control de insert y update>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_set_sender_receiver]
-		@FirstName NVARCHAR(100),
-		@LastName NVARCHAR(100),
-		@Address NVARCHAR(200),
-		@Zone NVARCHAR(100),
-		@Town NVARCHAR(100),
-		@Department NVARCHAR(100),
-		@Phone NVARCHAR(50),
-		@SocialSecurityID NVARCHAR(200),
-		@Email NVARCHAR(200),
-		@CUI NVARCHAR(25),
-		@Latitude NVARCHAR(40),
-		@Longitude NVARCHAR(40),
-		@EntityType TINYINT,
-		@UserCreated NVARCHAR(50),
+CREATE procedure [dbo].[sps_set_sender_receiver]
+		@FirstName nvarchar(100),
+		@LastName nvarchar(100),
+		@Address nvarchar(200),
+		@Zone nvarchar(100),
+		@Town nvarchar(100),
+		@Department nvarchar(100),
+		@Phone nvarchar(50),
+		@SocialSecurityID nvarchar(200),
+		@Email nvarchar(200),
+		@CUI nvarchar(25),
+		@Latitude nvarchar(40),
+		@Longitude nvarchar(40),
+		@EntityType tinyint,
+		@UserCreated nvarchar(50),
 		@Estatus bit,
 		@TypeId int=NULL,
 		@HubId int=NULL
@@ -34,14 +33,15 @@ BEGIN
 
 	--Contador de datos
 	DECLARE @Count INT
-	SELECT @Count=COUNT(ID) FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE CUI = @CUI
+	SELECT @Count=COUNT(ID), @UniqueCode = MAX(UniqueCode) FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE CUI = @CUI
+	
+	DECLARE @EmailFound INT = (SELECT COUNT(1) FROM SenderReceiver WHERE CUI <> @CUI AND Email = @Email)
 
 	BEGIN TRANSACTION
 
 		BEGIN TRY
 		    
-		    
-			IF (@Count=0)
+			IF (@Count=0 AND @EmailFound = 0)
 				BEGIN
 					-- registrar nuevo sender / receiver
 
@@ -63,7 +63,7 @@ BEGIN
 
 					SET @RInserted = @@ROWCOUNT
 				END
-			ELSE IF (@Count=1)
+			ELSE IF (@Count=1 AND @EmailFound = 0)
 				BEGIN
 					UPDATE [DeliveryBackOffice].[dbo].[SenderReceiver]
 					SET [First_Name]=@FirstName, [Last_Name]=@LastName, [Address]=@Address, [Phone]=@Phone, [Entity_Type]=@EntityType, [Estatus]=@Estatus, [CatTypeSenderReceiverId]=@TypeId,[HubLogisticId]=@HubId, Email=@Email
@@ -116,12 +116,20 @@ BEGIN
 					@CUI AS 'CUI',
 					@UniqueCode 'UniqueCode'
 			ELSE
-				SELECT			  
-					0 AS 'StatusCode',
-					'Cantidad de registros inconsistentes' AS 'Description', 
-					@@TRANCOUNT AS 'NumTransferID',
-					@CUI AS 'CUI',
-					'' 'UniqueCode'
+				IF (@EmailFound = 0)
+					SELECT			  
+						0 AS 'StatusCode',
+						'Cantidad de registros inconsistentes' AS 'Description', 
+						@@TRANCOUNT AS 'NumTransferID',
+						@CUI AS 'CUI',
+						'' 'UniqueCode'
+				ELSE 
+					SELECT			  
+						0 AS 'StatusCode',
+						'Correo electrónico ya registrado, por favor escriba otro correo.' AS 'Description', 
+						@@TRANCOUNT AS 'NumTransferID',
+						@CUI AS 'CUI',
+						'' 'UniqueCode'
 
 			COMMIT TRANSACTION;			
 		END
