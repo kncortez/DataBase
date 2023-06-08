@@ -1535,6 +1535,8 @@
     <Build Include="dbo\Stored Procedures\Set_GuidePiecesScan.sql" />
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\Set_FinishProcesRecolect.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalDetailTSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
