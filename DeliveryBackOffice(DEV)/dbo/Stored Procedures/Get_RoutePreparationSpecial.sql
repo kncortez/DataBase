@@ -102,7 +102,28 @@ BEGIN
 			WHERE IDTSERoutePreparationHeader = @IdHeader AND RowStatus = 1;
 
 		SELECT 
-			CAST(ISNULL([HasFirstPickupProcess],0) AS BIT) [HasFirstPickupProcess] 
+			CAST(ISNULL([HasFirstPickupProcess],0) AS BIT) [HasFirstPickupProcess],
+			CAST(ISNULL(IIF(
+				(
+					(
+						SELECT 
+							COUNT([TSERPH].[HasFirstPickupProcess]) 
+						FROM
+							[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
+						WHERE
+							ISNULL([TSERPH].[HasFirstPickupProcess], 0) = 1
+					)
+					=
+					(
+						SELECT 
+							COUNT([TSERPH].[HasFirstPickupProcess]) 
+						FROM
+							[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK)
+					)
+				)
+				,1
+				,0
+			),0) AS BIT) [PickupGlobalManifest]
 		FROM
 			[dbo].[TSERoutePreparationHeader]  WITH(NOLOCK) 
 		WHERE
