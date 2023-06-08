@@ -1,8 +1,12 @@
-﻿create PROCEDURE Set_FinishProcesRecolect
+﻿-- =============================================
+-- Author:		<Eduardo López>
+-- Create date: <2023-06-08>
+-- Description:	<Finaliza el proceso de recolecciones especiales creando servicio de recoleccion>
+
+CREATE PROCEDURE Set_FinishProcesRecolect
+@TblListGuides AS TblGuides READONLY,
 @IdRoute INT,
 @DateRoute DATE,
---@IdCurier INT,
---@IdVehicle INT,
 @Token VARCHAR (50),
 @UrlSignature VARCHAR(500)
 
@@ -13,8 +17,8 @@ AS
 BEGIN
 	DECLARE @RouteAssignment INT;
 
-	SET @IdCourier = (SELECT IdCatRoute FROM TSERoutePreparationHeader WHERE IdCatRoute =@IdRoute AND RowStatus = 1)
-	SET @IdVehicle = (SELECT SenderReceiverId FROM TSERoutePreparationHeader WHERE IdCatRoute =@IdRoute AND RowStatus = 1 )
+	SET @IdCourier = (SELECT SenderReceiverId FROM TSERoutePreparationHeader WHERE IdCatRoute =@IdRoute AND RowStatus = 1)
+	SET @IdVehicle = (SELECT IdCatVehicle FROM TSERoutePreparationHeader WHERE IdCatRoute =@IdRoute AND RowStatus = 1 )
 			
 			IF NOT EXISTS (SELECT
 					IdRouteAssigment
@@ -128,6 +132,5 @@ BEGIN
 						[DOPD].[GuideNumber] = [tsed].[GuideNumber]
 			WHERE
 				[tse].[IdCatRoute] = @IdRoute
-
 
 END
