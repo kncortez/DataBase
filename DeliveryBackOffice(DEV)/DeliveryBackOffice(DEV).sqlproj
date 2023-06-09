@@ -1546,6 +1546,8 @@
     <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE.sql" />
     <Build Include="dbo\Stored Procedures\SPHDDeliveryManifestHeaderTSE.sql" />
     <Build Include="dbo\Stored Procedures\SetServiceRequest_TSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_Courier_Dispatched_Status_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\spg_pending_delivery_proof_PickUp.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
