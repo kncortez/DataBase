@@ -1545,6 +1545,7 @@
     <Build Include="dbo\Stored Procedures\SPHDPreparationRouteEspecialManifest.sql" />
     <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE.sql" />
     <Build Include="dbo\Stored Procedures\SPHDDeliveryManifestHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SetServiceRequest_TSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
