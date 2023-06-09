@@ -1537,6 +1537,15 @@
     <Build Include="dbo\Stored Procedures\Set_FinishProcesRecolect.sql" />
     <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalHeaderTSE.sql" />
     <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalDetailTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_Courier_Dispatched_Status_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\spg_pending_delivery_proof_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\spg_general_information_waybill_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\SPDHValidateGuideInRourteSpecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatVehicleEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatSenderReceiverEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRoutEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_delivery_proof_PickUp.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
