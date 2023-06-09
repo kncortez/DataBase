@@ -12,11 +12,14 @@
 -- Modified:     <25/Enero/2022>
 -- Description:  <Se optimizó el sp>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_courier_dispatched_status] @DispatchedDate DATE
+CREATE PROCEDURE [dbo].[spg_courier_dispatched_status]
+	@DispatchedDate DATE,
+	@IsLastMileReturn Bit = NULL
 AS
 BEGIN
-    SET NOCOUNT ON;
-    SELECT SR.ID AS ID_Courier,
+	SET NOCOUNT ON;
+	SELECT  
+		   SR.ID AS ID_Courier,
            SR.First_Name + ' ' + SR.Last_Name AS Courier_Name,
            ISNULL(HL.HubAbbreviation, ' ') AS HUB,
            COUNT(DISTINCT Guide_Serie + CONVERT(NVARCHAR, (Guide_Number))) AS Cantidad_Guias,
@@ -30,15 +33,17 @@ BEGIN
                 ) AS Delivered,
            COUNT(DATT.Verified) AS Verified,
            (SUM(CAST(ISNULL(DATT.Verified, 0) AS INT)) - SUM(CAST(ISNULL(DATT.Accepted, 0) AS INT))) AS Failed
-    FROM dbo.DeliveryAttempt DATT --WITH(NOLOCK)
-        LEFT JOIN dbo.SenderReceiver SR --WITH(NOLOCK)
-            ON DATT.ID_Courier = SR.ID
-        LEFT JOIN dbo.HubLogistics HL ---WITH(NOLOCK)
-            ON SR.HubLogisticId = HL.IdHubLogistic
-    WHERE CONVERT(DATE, DATT.Date_Created) = @DispatchedDate
-    GROUP BY SR.ID,
-             HL.HubAbbreviation,
-             SR.First_Name,
-             SR.Last_Name,
-             HL.IdHubLogistic;
-END;
+		FROM DBO.DeliveryAttempt DATT WITH (NOLOCK)
+		LEFT JOIN  DBO.SenderReceiver SR WITH (NOLOCK)
+		   ON DATT.ID_Courier=SR.ID
+		LEFT JOIN DBO.HubLogistics HL WITH (NOLOCK)
+		   ON SR.HubLogisticId=HL.IdHubLogistic
+		WHERE
+		CONVERT(DATE,DATT.Date_Created)=@DispatchedDate
+		And (@IsLastMileReturn IS NULL OR ISNULL(DATT.IsLastMileReturn,0) = @IsLastMileReturn) 
+		GROUP BY SR.ID,
+		         HL.HubAbbreviation,
+		         SR.First_Name,
+				 SR.Last_Name,
+				 HL.IdHubLogistic;
+END
