@@ -449,6 +449,45 @@ BEGIN
 			WHERE IDTSERoutePreparationHeader = @TSERoutePreparationHeaderId
 			AND RowStatus = 1
 
+			INSERT INTO [dbo].[TSERoutePreparationDetailPiece]
+			(
+			    [TSERoutePreparationDetailId],
+			    [PieceNumber],
+			    [RowStatus],
+			    [DateCreated],
+			    [TokenCreated]
+			)
+			SELECT 
+				[TSERPD].[IDTSERoutePreparationDetail]
+				,1
+				,1
+				,GETDATE()
+				,@Token
+			FROM
+				[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
+				INNER JOIN
+					[dbo].[TSERoutePreparationDetail] TSERPD  WITH(NOLOCK) 
+					ON
+						[TSERPH].[IDTSERoutePreparationHeader] = [TSERPD].[TSERoutePreparationHeaderID]
+						AND
+						[TSERPD].[RowStatus] = 1
+				INNER JOIN
+					[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+					ON
+						[DO].[Guide_Serie] = [TSERPD].[GuideSerie] AND [DO].[Guide_Number] = [TSERPD].[GuideNumber]
+						AND
+						[DO].[Pieces_Dry] = 1
+				LEFT JOIN
+					[dbo].[TSERoutePreparationDetailPiece] TSERPDP  WITH(NOLOCK) 
+					ON
+						[TSERPDP].[TSERoutePreparationDetailId] = [TSERPD].[IDTSERoutePreparationDetail]
+			WHERE
+				[TSERPH].[IDTSERoutePreparationHeader] = @TSERoutePreparationHeaderId
+				AND
+				[TSERPH].[RowStatus] = 1
+				AND
+				[TSERPDP].[IdTSERoutePreparationDetailPiece] IS NULL
+
 			COMMIT TRANSACTION 
 
 			SELECT
