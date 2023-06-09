@@ -1537,6 +1537,11 @@
     <Build Include="dbo\Stored Procedures\Set_FinishProcesRecolect.sql" />
     <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalHeaderTSE.sql" />
     <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalDetailTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDPickUpManifestHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestDeliveryGlobalHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestDeliveryGlobalDetailTSE.sql" />
+    <Build Include="dbo\Stored Procedures\PickUpManifestDetailTSE.sql" />
+    <Build Include="dbo\Stored Procedures\DeliveryManifestDetailTSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
