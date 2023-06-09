@@ -1542,6 +1542,9 @@
     <Build Include="dbo\Stored Procedures\SPHDManifestDeliveryGlobalDetailTSE.sql" />
     <Build Include="dbo\Stored Procedures\PickUpManifestDetailTSE.sql" />
     <Build Include="dbo\Stored Procedures\DeliveryManifestDetailTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDPreparationRouteEspecialManifest.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDDeliveryManifestHeaderTSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
