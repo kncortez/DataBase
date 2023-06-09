@@ -9,6 +9,16 @@
 -- Create date: <2022-10-24>
 -- Description:	<Agregar flujo de respuesta de los diferentes estados de una guía>
 -- =============================================
+-- =============================================
+-- Author:		<Andres,Ruiz>
+-- Create date: <2022-09-13>
+-- Description:	< Obtener datos de guía para  >
+-- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2022-10-24>
+-- Description:	<Agregar flujo de respuesta de los diferentes estados de una guía>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetWebhookDataForJSON] 
 	 @WebhookTrackingQueueId BIGINT
 	,@WebhookTypeId INT
@@ -130,13 +140,27 @@ BEGIN
 				ELSE IF(@StatusId IN(25)) /* COD pagado  */
 				BEGIN
 
-					   SELECT TOP 1
-						 GSRT.GuideSerie
-						,GSRT.GuideNumber
-						,GSRT.GuideStatus
-						,GSRT.GuideStatusId
-						,GSRT.GuideStatusChange
-						,ISNULL(BDC.AuthorizationNumber,'') AS AuthorizationNumber
+					
+					DECLARE @GuidePaymentConceptId INT = 
+					(
+						SELECT 
+							TOP (1)
+								[CCCOD].[IdCatConceptCOD] 
+						FROM
+							[DeliveryBackOffice].[dbo].[CatConceptCOD] CCCOD  WITH(NOLOCK) 
+						WHERE
+							[CCCOD].[Concept] = 'PAGO DE LA GUIA'  COLLATE Latin1_General_CI_AI 
+					)
+
+					SELECT 
+						TOP (1)
+							 GSRT.GuideSerie
+							,GSRT.GuideNumber
+							,GSRT.GuideStatus
+							,GSRT.GuideStatusId
+							,GSRT.GuideStatusChange
+							,ISNULL(BDC.AuthorizationNumber,'') AS AuthorizationNumber
+							,[BDC].[Amount] TransactionAmount
 					FROM
 						@GuideStatusResponseTable GSRT
 						LEFT JOIN 
@@ -145,6 +169,8 @@ BEGIN
 								GSRT.GuideSerie = BDC.GuideSerie 
 								AND 
 								GSRT.GuideNumber = BDC.GuideNumber
+								AND
+								[BDC].[CatConceptCODId] = @GuidePaymentConceptId
 					
 				END
 				ELSE IF(@StatusId IN(14,23))  /* Devuelto */
