@@ -1,6 +1,6 @@
 ﻿
 
-CREATE PROCEDURE [dbo].[SetServiceRequestFD]
+alter PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
 @VisitPointByClientPortfolioId BIGINT = 0,
@@ -618,7 +618,9 @@ BEGIN
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
 			''  as 'Route'
-			,D.PriceShippment AS 'Price',
+			,D.PriceShippment AS 'Price'
+			,D.Ticket_Number AS 'IdInternalOrderRef'
+			,D.Order_Number AS 'IdInternalOrderRef2',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
