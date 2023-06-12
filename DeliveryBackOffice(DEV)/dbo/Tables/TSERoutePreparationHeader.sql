@@ -27,14 +27,6 @@
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su última entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasLastDeliveryProccess';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su primera liquidación de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasFirstDeliveryProccess';
-
-
-GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su primer despacho a ruta de entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasFirstDispatchProcess';
 
 

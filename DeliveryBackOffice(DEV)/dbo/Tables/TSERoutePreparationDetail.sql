@@ -8,7 +8,8 @@
     [TokenCreated]                NVARCHAR (50) NOT NULL,
     [DateUpdated]                 DATETIME      NULL,
     [TokenUpdated]                NVARCHAR (50) NULL,
-    CONSTRAINT [PK_TSERoutePreparationDetail] PRIMARY KEY CLUSTERED ([IDTSERoutePreparationDetail] ASC)
+    CONSTRAINT [PK_TSERoutePreparationDetail] PRIMARY KEY CLUSTERED ([IDTSERoutePreparationDetail] ASC),
+    CONSTRAINT [FK_TSERoutePreparationDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
 
 

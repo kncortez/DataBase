@@ -1521,6 +1521,31 @@
     <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
     <Build Include="dbo\Stored Procedures\spSR_getAllPreparationRoutesInfo.sql" />
     <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteArrival.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetSpecialRouteArrival.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteArrivalDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetSpecialRouteDeliveryDispatch.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteDeliveryDispatchDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteDeliveryDispatch.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetSpecialRouteSettlement.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetSpecialRouteSettlement.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationHeader.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationDetailPiece.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationDetail.sql" />
+    <Build Include="dbo\Stored Procedures\Set_GuidePiecesScan.sql" />
+    <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
+    <Build Include="dbo\Stored Procedures\Set_FinishProcesRecolect.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalHeaderTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestPickUpGlobalDetailTSE.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_Courier_Dispatched_Status_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\spg_pending_delivery_proof_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\spg_general_information_waybill_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\SPDHValidateGuideInRourteSpecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatVehicleEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatSenderReceiverEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRoutEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_delivery_proof_PickUp.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
