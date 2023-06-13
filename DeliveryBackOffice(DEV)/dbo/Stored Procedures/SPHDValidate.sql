@@ -35,23 +35,6 @@ BEGIN
 		BEGIN
 		   SET  @Guide=  SUBSTRING(@Guide, 0, IIF(CHARINDEX('-', @Guide) = 0, (LEN(@Guide)), (CHARINDEX('-', @Guide) - 0)))
 		END
-	
-
-
-
-
-	 DECLARE @Envio INT =0
-	 DECLARE @ComisionCOD INT=0
-
-
-		       SET @Envio =(Select IdCatInvoiceType From [dbo].[CatInvoiceType] CIT  WHERE [Name]='Envío')
-			   SET @ComisionCOD =(Select IdCatInvoiceType From [dbo].[CatInvoiceType] CIT  WHERE [Name]='Comisión COD')
-
-		
-			
-
-
-
 If (@Guide IS NOT NULL) 
 Begin
 
