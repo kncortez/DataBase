@@ -1,9 +1,4 @@
-﻿-- =============================================
--- Author:		<Edelman Vásquez>
--- Create date: <2023-03-31>
--- Description:	<VALIDAR SI FACTURA TIENE NOTA DE CREDITO>
--- =============================================
-CREATE PROCEDURE [dbo].[SPHDValidate]
+﻿CREATE PROCEDURE [dbo].[SPHDValidate]
 @Guide     Nvarchar(25)=null,
 @DateOf    Datetime=null,
 @DateTo    DateTime=null,
@@ -40,7 +35,7 @@ Begin
 
 
  DECLARE @OptionGuide AS INT = (Select 
-								Count(IH.inv_numberFEL)
+								COUNT(IH.inv_creditNote)
 								FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 											INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 											ON IH.inv_pk_id = ID.dti_fk_header
@@ -51,7 +46,7 @@ Begin
 
 
 
-   IF (@OptionGuide =1)
+   IF (@OptionGuide =0)
    BEGIN
 
 
@@ -97,7 +92,7 @@ Begin
 
 
    END
-	   ELSE IF (@OptionGuide>=2)
+	   ELSE IF (@OptionGuide>=1)
 		   BEGIN
 					Select 1 'HaveaCreditNote'
 		   END
@@ -119,7 +114,7 @@ BEGIN
 								 )
 
 	Declare @OptionFel INT =(  Select Top 1
-										Count(ID.dti_fk_orderNumber)
+										COUNT(IH.inv_creditNote)
 								 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 									 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 									 ON IH.inv_pk_id = ID.dti_fk_header
@@ -127,7 +122,7 @@ BEGIN
 								 AND ID.dti_fk_orderNumber = @OrderNumber
 								 )
 
-IF (@OptionFel IS NOT NULL)
+IF (@OptionFel IS NOT NULL OR @OptionFel>0)
 BEGIN
 Select TOP 1 0 'HaveaCreditNote',
 	    ID.dti_description,
@@ -143,7 +138,7 @@ Select TOP 1 0 'HaveaCreditNote',
 					 IH.inv_invoiceOfCreditNote IS NULL AND inv_certificationFEL = @NumberFel
 					 ORDER BY IH.inv_pk_id DESC
 END
-	ELSE IF (@OptionFel=2)
+	ELSE IF (@OptionFel>=1)
 		BEGIN
 			Select 1 'HaveaCreditNote'
 		END
@@ -157,7 +152,7 @@ END
 END
 ELSE IF (@Membership IS NOT NULL)
 BEGIN
-	Declare @OptionMembership INT =( Select COUNT(IH.inv_numberFEL)
+	Declare @OptionMembership INT =( Select COUNT(IH.inv_creditNote)
 										 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 											 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 											 ON IH.inv_pk_id = ID.dti_fk_header
@@ -165,7 +160,7 @@ BEGIN
 											  AND (IH.inv_certificationFEL IS NOT NULL 
 											  AND IH.inv_certificationFEL<>'')
 											  AND ID.MembershipId= @Membership )
-IF (@OptionMembership=1)
+IF (@OptionMembership=0)
 BEGIN
 
 	Select 0 'HaveaCreditNote',
@@ -183,7 +178,7 @@ BEGIN
 						 AND  IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
 
 	END
-	ELSE IF(@OptionMembership=2)
+	ELSE IF(@OptionMembership>=1)
 	BEGIN
 		Select 1 'HaveaCreditNote'
 		END
@@ -205,7 +200,7 @@ Declare @OptionSubscription INT =(  Select COUNT(IH.inv_numberFEL)
 											 (IH.inv_certificationFEL IS NOT NULL 
 											  AND IH.inv_certificationFEL<>'')
 											  AND ID.SubscriptionId =@Subscription )
-IF (@OptionSubscription=1)
+IF (@OptionSubscription=0)
 BEGIN
 
 Select 0 'HaveaCreditNote',
@@ -222,7 +217,7 @@ Select 0 'HaveaCreditNote',
 					 IH.inv_invoiceOfCreditNote IS NULL AND  ID.SubscriptionId = @Subscription
 					 AND   IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
 END
-ELSE IF(@OptionSubscription=2)
+ELSE IF(@OptionSubscription>=1)
 	BEGIN
 		Select 1 'HaveaCreditNote'
 		END
