@@ -245,7 +245,8 @@ BEGIN
 								 CONVERT(VARCHAR, 'GT') 'InsuranceCurrency',
 								 CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) 'CodeOfReference',
 								 CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) 'CodeOfReferenceDestiny',
-								 CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, '')) 'IdInternalOrderRef',
+								 CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, '')) 'IdInternalOrderRef',
+								 CONVERT(VARCHAR, COALESCE(dev.Order_Number, '')) 'IdInternalOrderRef2',
 								 ISNULL(dev.IndicationsToSendDestination, '') 'Service_Ref1',
 								 dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json') 'Username',
 								 CONVERT(
