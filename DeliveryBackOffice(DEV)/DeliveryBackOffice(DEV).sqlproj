@@ -1546,6 +1546,7 @@
     <Build Include="dbo\Stored Procedures\SpCatRoutEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_delivery_proof_PickUp.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestDetailTSE.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
