@@ -29,7 +29,8 @@ CREATE procedure [dbo].[sps_proof_onincident]
     @Latitude NVARCHAR(20),
     @Longitude NVARCHAR(20),
     @Accuracy NVARCHAR(20),
-    @MaxDistance FLOAT = 7000 --Distancia en metros
+    @MaxDistance FLOAT = 7000, --Distancia en metros
+	@Token NVARCHAR(100)
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -738,7 +739,7 @@ BEGIN
 				[SystemOrigin]
             )
             VALUES
-            (   @GuideSerie, @GuideNumber, @StatusOrderId, 'sps_proof_onincident', @DateStatusOrder, @DateStatusOrder,
+            (   @GuideSerie, @GuideNumber, @StatusOrderId, @Token, @DateStatusOrder, @DateStatusOrder,
                 NULL, NULL,
                 (
                     SELECT TOP (1) [ID] FROM @Table ORDER BY [ID] DESC
