@@ -1472,7 +1472,6 @@
     <Build Include="dbo\User Defined Types\TblServiceRequest3.sql" />
     <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
     <Build Include="dbo\Stored Procedures\spSR_RemoveOutdatedSimpliPickupService.sql" />
-    <Build Include="dbo\Stored Procedures\spSR_GetOutdatedSimpliRouteServices.sql" />
     <Build Include="dbo\Stored Procedures\SetExternalPlatformServicePickupData.sql" />
     <Build Include="dbo\Stored Procedures\SetPickupDataFromSimpliRoute.sql" />
     <Build Include="dbo\User Defined Types\TblExtPlatSimpliroutePickup.sql" />
