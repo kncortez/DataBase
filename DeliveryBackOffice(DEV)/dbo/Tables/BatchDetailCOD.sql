@@ -213,6 +213,9 @@ GO
 CREATE NONCLUSTERED INDEX [idx_AuthorizationDate]
     ON [dbo].[BatchDetailCOD]([AuthorizationDate] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [IDX_BatchDetailCOD_GetInvoicePaymentCommissionCOD] ON [dbo].[BatchDetailCOD]([CatConceptCODiD],[RowStatus],[Commission])
+INCLUDE ([GuideSerie], [GuideNumber], [CreditDate], [Amount])
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro de descuento en COD al generar lote', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CODDiscount';
