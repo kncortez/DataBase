@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[SPHDValidate]
+﻿-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-03-31>
+-- Description:	<VALIDAR SI FACTURA TIENE NOTA DE CREDITO>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHDValidate]
 @Guide     Nvarchar(25)=null,
 @DateOf    Datetime=null,
 @DateTo    DateTime=null,
@@ -24,7 +29,7 @@ If (@Guide IS NOT NULL)
 Begin
 
 
- DECLARE @OptionGuide AS INT = (Select 
+ DECLARE @OptionGuide AS INT = (Select top 1
 								COUNT(IH.inv_creditNote)
 								FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 											INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
@@ -41,7 +46,43 @@ Begin
 
 
 
-    IF (@TipoEnvio > 0  OR @TipoComisionCOD >0)
+    IF (@TipoEnvio = 1 And @TipoComisionCOD = 0)
+	 BEGIN
+
+			Select 0 'HaveaCreditNote',
+				ID.dti_description,
+				IH.inv_pk_id,
+				IH.inv_serieFEL,
+				IH.inv_numberFEL,
+				IH.inv_certificationFEL,
+				IH.inv_cli_name
+						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
+							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+							 ON IH.inv_pk_id = ID.dti_fk_header
+							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 AND   IH.inv_invoiceOfCreditNote IS NULL
+							 AND   inv_certificationFEL IS NOT NULL
+							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@Envio))
+         END
+		ELSE IF (@TipoComisionCOD = 1 And @TipoEnvio=0)
+		 BEGIN
+
+			Select 0 'HaveaCreditNote',
+				ID.dti_description,
+				IH.inv_pk_id,
+				IH.inv_serieFEL,
+				IH.inv_numberFEL,
+				IH.inv_certificationFEL,
+				IH.inv_cli_name
+						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
+							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
+							 ON IH.inv_pk_id = ID.dti_fk_header
+							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 AND   IH.inv_invoiceOfCreditNote IS NULL
+							 AND   inv_certificationFEL IS NOT NULL
+							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@ComisionCOD))
+         END
+	ELSE IF (@TipoEnvio = 1  And @TipoComisionCOD =1)
 	 BEGIN
 
 			Select 0 'HaveaCreditNote',
@@ -59,6 +100,7 @@ Begin
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@Envio,@ComisionCOD))
          END
+	
 		 ELSE
 		 BEGIN
 
@@ -75,6 +117,7 @@ Begin
 							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
 							 AND   IH.inv_invoiceOfCreditNote IS NULL
 							 AND   inv_certificationFEL IS NOT NULL
+							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId  NOT IN(@ComisionCOD))
 
 		 END
    
@@ -180,7 +223,7 @@ END
 ELSE IF (@Subscription IS NOT NULL)
 BEGIN
 
-Declare @OptionSubscription INT =(  Select COUNT(IH.inv_numberFEL)
+Declare @OptionSubscription INT =(  Select COUNT(IH.inv_creditNote)
 										 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 											 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 											 ON IH.inv_pk_id = ID.dti_fk_header
