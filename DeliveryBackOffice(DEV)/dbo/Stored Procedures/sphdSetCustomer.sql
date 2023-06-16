@@ -61,9 +61,8 @@
 	@ExcludeCommissionCOD bit = 'FALSE',
 	@CatBatchTypeCODId BIGINT,
 	@CatBatchFrequencyCODId BIGINT,
-	@BillingTimeId int = 3,
-	@BillingVolumeId int = 2,
-
+	@BillingTimeId int = null,
+	@BillingVolumeId int = null,
 	-----------------------------------------------------
 	@CardCode nvarchar(50) =NULL
 	-----------------------------------------------------
@@ -73,6 +72,13 @@ BEGIN
 	
 	BEGIN TRANSACTION
 	BEGIN TRY
+
+
+	IF (@BillingTimeId = -1)
+	 Set @BillingTimeId =(Select IdCatBillingTime From [dbo].[CatBillingTime] CBT Where CBT.DescriptionBillingTime='Default(Cada domingo del mes y el día 2 del siguiente mes)')
+
+	 IF(@BillingVolumeId=-1)
+	 Set @BillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
 
 		DECLARE @msgerror NVARCHAR(MAX)='';		
 				SELECT @msgerror=
