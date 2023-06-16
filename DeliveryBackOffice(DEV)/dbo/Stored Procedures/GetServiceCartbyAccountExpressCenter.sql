@@ -44,6 +44,17 @@ BEGIN
 			[CTA].[TacShortName] = 'IND'  COLLATE Latin1_General_CI_AI 
 	)
 
+	DECLARE @CreditPaymentType INT =
+	(
+		SELECT 
+			TOP (1)
+				[CPT].[TimePlaId]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatPaymentTime] CPT  WITH(NOLOCK)
+		WHERE
+			[CPT].[TimePlaAbrev] = 'POST'  COLLATE Latin1_General_CI_AI 
+	)
+
 	BEGIN TRANSACTION
 
 	BEGIN TRY
@@ -202,6 +213,17 @@ BEGIN
 					,CAST(ISNULL((CASE WHEN [PPDest].[IdPromoCoupon] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [AppliedCoupon]
 					,ISNULL((CASE WHEN [PPDest].[IdPromoCoupon] IS NULL THEN '' ELSE [PPDest].[PromoCouponSerie] END),'') [AppliedCouponSerie]
 					,CAST(ISNULL((CASE WHEN [PPOri].[IdPromoCoupon] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [GeneratedCoupon]
+					-- Revisión de crédito
+					,CAST(ISNULL((
+						CASE 
+							WHEN [CCOP].[IdConditionOfPayment] IS NOT NULL AND [DOPD].[DopId] IS NULL THEN 1
+							WHEN [DOPD].[TimePlaId] = @CreditPaymentType THEN 1
+							ELSE 0
+						END
+					),0) AS BIT) [IsCredit]
+					,CAST(ISNULL([do].[IsReturn], 0) AS BIT) [IsReturn]
+					-----------------------------
+
 				FROM ExpressAccountServiceCartDetail eascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = eascd.GuideSerie
@@ -222,6 +244,16 @@ BEGIN
 					ON [eascd].[GuideSerie] = [PPOri].[GuideSerieOrigin]
 					AND [eascd].[GuideNumber] = [PPOri].[GuideNumberOrigin]
 					AND [PPOri].[RowStatus] = 1
+						-- Revisión de crédito
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+					ON [Cu].[IdCustomer] = [do].[IdCustomer]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatConditionOfPayment] CCOP  WITH(NOLOCK) 
+					ON [CCOP].[IdConditionOfPayment] = [Cu].[ConditionOfPaymentID]
+					AND [CCOP].[ConditionOfPaymenAbbreviation] LIKE '%CREDITO%'
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
+					ON [do].[Guide_Serie] = [DOPD].[GuideSerie]
+					AND [do].[Guide_Number] = [DOPD].[GuideNumber]
+				----------------------------
 				WHERE eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
 				AND eascd.RowStatus = 1
 				
