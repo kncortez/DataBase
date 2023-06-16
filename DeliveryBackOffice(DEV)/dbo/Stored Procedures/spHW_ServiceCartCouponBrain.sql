@@ -84,6 +84,17 @@ BEGIN
 			[SO].[OrderDescription] = 'Generado'  COLLATE Latin1_General_CI_AI 
 	);
 
+	DECLARE @CreditPaymentType INT =
+	(
+		SELECT 
+			TOP (1)
+				[CPT].[TimePlaId]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatPaymentTime] CPT  WITH(NOLOCK)
+		WHERE
+			[CPT].[TimePlaAbrev] = 'POST'  COLLATE Latin1_General_CI_AI 
+	)
+
 	-- Guías validas de carrito de compras para procesar
 	DECLARE @ValidGuides TABLE
 	(
@@ -1631,6 +1642,17 @@ BEGIN
 					,CAST(ISNULL((CASE WHEN [PPDest].[RowNum] IS NOT NULL THEN 1 WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN 1 ELSE 0 END),0) AS BIT) [AppliedCoupon]
 					,ISNULL((CASE WHEN [PCDest].[IdPromoCoupon] IS NOT NULL THEN [PCDest].[PromoCouponSerie] ELSE '' END),'') [AppliedCouponSerie]
 					,CAST(ISNULL((CASE WHEN [PPOri].[PromoToApply] IS NOT NULL THEN 1 WHEN [PCOri].[IdPromoCoupon] IS NOT NULL THEN 1 ELSE 0 END),0) AS BIT) [GeneratedCoupon]
+					-- Revisión de crédito
+					,CAST(ISNULL((
+						CASE 
+							WHEN [CCOP].[IdConditionOfPayment] IS NOT NULL AND [DOPD].[DopId] IS NULL THEN 1
+							WHEN [DOPD].[TimePlaId] = @CreditPaymentType THEN 1
+							ELSE 0
+						END
+					),0) AS BIT) [IsCredit]
+					,CAST(ISNULL([do].[IsReturn], 0) AS BIT) [IsReturn]
+					-----------------------------
+
 				FROM DeliveryBackOffice.dbo.ExpressAccountServiceCartDetail eascd  WITH(NOLOCK) 
 				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = eascd.GuideSerie
@@ -1703,6 +1725,16 @@ BEGIN
 					ON [eascd].[GuideSerie] = [PPOri].[GuideSerieOrigin]
 					AND [eascd].[GuideNumber] = [PPOri].[GuideNumberOrigin]
 					AND [PPOri].[PromoToApply] IS NOT NULL
+					-- Revisión de crédito
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+					ON [Cu].[IdCustomer] = [do].[IdCustomer]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatConditionOfPayment] CCOP  WITH(NOLOCK) 
+					ON [CCOP].[IdConditionOfPayment] = [Cu].[ConditionOfPaymentID]
+					AND [CCOP].[ConditionOfPaymenAbbreviation] LIKE '%CREDITO%'
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
+					ON [do].[Guide_Serie] = [DOPD].[GuideSerie]
+					AND [do].[Guide_Number] = [DOPD].[GuideNumber]
+				--------------------------------
 				WHERE eascd.ExpressAccountServiceCartId = @ProcessServiceCartId
 				AND eascd.RowStatus = 1
 				
