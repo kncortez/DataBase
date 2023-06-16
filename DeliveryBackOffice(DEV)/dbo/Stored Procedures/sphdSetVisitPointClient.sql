@@ -4,6 +4,11 @@
 -- Create date: <2021-06-04>
 -- Description:	<creación o modificación de valores>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-31>
+-- Description:	<agragar campos para configuración de tiempo de facturación y volumen de facturación>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT,
@@ -45,12 +50,21 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT, --1 Insert Into , 2 Update,
 	@CatBusinessSegmentId INT = NULL
+	@CatBillingTimeId INT = -1,
+	@CatBillingVolumeId INT = -1
 
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+
+	IF (@CatBillingTimeId = -1)
+	 Set @CatBillingTimeId =(Select IdCatBillingTime From [dbo].[CatBillingTime] CBT Where CBT.DescriptionBillingTime='Default(Cada domingo del mes y el día 2 del siguiente mes)')
+
+	 IF(@CatBillingVolumeId = -1)
+	 Set @CatBillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
 
     DECLARE @blnCotinue AS BIT = 'TRUE';
 	DECLARE @MessageError AS NVARCHAR(100) = '';
@@ -161,7 +175,9 @@ BEGIN
                             TokenUpdated,
                             DateUpdated,
                             AveragePackageDaily,
-                            DateStartOperation
+                            DateStartOperation,
+							CatBillingTimeId,
+							CatBillingVolumeId
                         )
                         VALUES
                         (   @CodeOfReference,				   -- VisitPointID - int
@@ -178,7 +194,9 @@ BEGIN
                             NULL,                  -- TokenUpdated - nvarchar(50)
                             NULL,                  -- DateUpdated - datetime
                             @AveragePackageDaily,  -- AveragePackageDaily - int
-                            @DateStartOperation    -- DateStartOperation - datetime
+                            @DateStartOperation,    -- DateStartOperation - datetime
+							@CatBillingTimeId,
+							@CatBillingVolumeId
                             )
                         DECLARE @IDVPCONF AS INT = -1
                         SET @IDVPCONF = SCOPE_IDENTITY()

@@ -15,6 +15,8 @@
     [DateUpdated]          DATETIME      NULL,
     [AveragePackageDaily]  INT           NULL,
     [DateStartOperation]   DATETIME      NULL,
+    [CatBillingTimeId]     INT           NULL,
+    [CatBillingVolumeId]   INT           NULL,
     CONSTRAINT [PK_VisitPointConfiguration] PRIMARY KEY CLUSTERED ([IdVPConfiguration] ASC),
     CONSTRAINT [FK_VisitPointConfiguration_CatBankAccountType] FOREIGN KEY ([CODAccountBankTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_VisitPointConfiguration_CatTransportCompany] FOREIGN KEY ([TransportCompanyID]) REFERENCES [dbo].[CatTransportCompany] ([IdTransportCompany]),
@@ -27,6 +29,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_VisitPointID]
     ON [dbo].[VisitPointConfiguration]([VisitPointID] ASC);
@@ -35,4 +39,12 @@ CREATE NONCLUSTERED INDEX [idx_VisitPointID]
 GO
 CREATE NONCLUSTERED INDEX [idx_DateStartOperation]
     ON [dbo].[VisitPointConfiguration]([DateStartOperation] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Volumen de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
 
