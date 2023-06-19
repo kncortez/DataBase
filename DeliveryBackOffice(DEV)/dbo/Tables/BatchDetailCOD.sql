@@ -69,6 +69,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del banco al que pertenece la cuenta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'BankName';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar la fecha en la que se genera la comisión.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CommissionDate';
+
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del tipo de cuenta al que pertenece la misma.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'TypeAccountName';
@@ -166,6 +169,11 @@ GO
 CREATE NONCLUSTERED INDEX [idx_BatchCODId_CatConceptCODId_Excluded]
     ON [dbo].[BatchDetailCOD]([BatchCODId] ASC, [CatConceptCODId] ASC, [Excluded] ASC)
     INCLUDE([GuideSerie], [GuideNumber], [CatDebitAccountCODId], [CreditDate], [Amount], [Reference], [CatTransactionTypeCODId], [CatCurrencyCODId], [BankId], [CatAccountTypeCODId], [Password], [AccountNumber], [AccountName]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_BatchDetailCOD_CommisionInvoice]
+    ON [dbo].[BatchDetailCOD]([CreditDate] ASC, [RowStatus] ASC, [CatConceptCODId] ASC, [Commission] ASC);
 
 
 GO
