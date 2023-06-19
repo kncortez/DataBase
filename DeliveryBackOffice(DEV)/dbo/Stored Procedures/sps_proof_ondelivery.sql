@@ -1,10 +1,14 @@
-﻿
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-08-08>
 -- Description:	<Registrar prueba de entrega en sitio>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman, Vásquez>
+-- Create date: <2023-06-19>
+-- Description:	<inactivar el token de la confirmación de incidencia>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery]
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
@@ -45,6 +49,22 @@ BEGIN
 				AND da.Guide_Serie = @GuideSerie
 				AND da.Guide_Number = @GuideNumber
 				AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
+
+
+				--Invalidar token de validación de incidencias 
+				Update   c
+				Set  c.ConfirmationOfIncidentToken += 'TIMEOUT'
+				From [dbo].[DeliveryAttempt] a
+				Inner Join 
+				[dbo].[ConfirmationOfIncidence] c
+				On a.ConfirmationOfIncidenceId = c.IdConfirmationOfIncidence
+				Where
+				a.Guide_Serie = @GuideSerie And 	
+				a.Guide_Number = @GuideNumber
+				
+
+				
+
 
 			-- insertar foto y guardar ID para actualizar tabla de entregas
 			INSERT INTO DeliveryBackOffice.dbo.DeliveryProof (Guide_Serie, Guide_Number, Date_Photo, Proof_Dry, Proof_Cold) VALUES (@GuideSerie, @GuideNumber, GETDATE(), @PhotoDryVB, @PhotoColdVB)
