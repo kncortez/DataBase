@@ -510,6 +510,8 @@ BEGIN
 				[EASC].[IsPending] = 1
 				-- Validaciones
 				AND
+				ISNULL([DO].[IsReturn], 0) = 0
+				AND
 				[PCOrigin].[IdPromoCoupon] IS NULL -- Guía que no haya generado un cupón
 				AND
 				[PCDestiny].[IdPromoCoupon] IS NULL -- Guía que no haya precanjeado/canjeado un cupón
