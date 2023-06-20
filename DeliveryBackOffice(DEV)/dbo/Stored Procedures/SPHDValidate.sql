@@ -149,6 +149,7 @@ Select TOP 1 ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 					 ON IH.inv_pk_id = ID.dti_fk_header
 					 WHERE 
 					 IH.inv_invoiceOfCreditNote IS NULL AND inv_certificationFEL = @NumberFel
+					  AND IH.inv_creditNote IS NULL
 					 ORDER BY IH.inv_pk_id DESC
 
    
@@ -158,7 +159,7 @@ END
 ELSE IF (@Membership IS NOT NULL)
 BEGIN
 	
-	Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
+		Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 			ID.dti_description,
 			IH.inv_pk_id,
 			IH.inv_serieFEL,
@@ -171,6 +172,8 @@ BEGIN
 						 WHERE 
 						 IH.inv_invoiceOfCreditNote IS NULL AND ID.MembershipId = @Membership
 						 AND  IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
+						 AND   inv_certificationFEL IS NOT NULL
+						 AND IH.inv_creditNote IS NULL
 
 	
 END
@@ -192,6 +195,9 @@ Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 					 WHERE  
 					 IH.inv_invoiceOfCreditNote IS NULL AND  ID.SubscriptionId = @Subscription
 					 AND   IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
+					 AND   inv_certificationFEL IS NOT NULL
+					 AND   inv_certificationFEL !=''
+					 AND IH.inv_creditNote IS NULL
 
 END
 
