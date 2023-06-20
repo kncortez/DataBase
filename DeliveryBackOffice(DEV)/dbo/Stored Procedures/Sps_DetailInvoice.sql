@@ -49,23 +49,6 @@ BEGIN
 		END
 
 
-	IF(@orderNumber > 0)
-		BEGIN
-		SET @IdType = (SELECT IdCatInvoiceType FROM CatInvoiceType WITH (NOLOCK) WHERE Name = 'Envío')
-			UPDATE invoiceHeader 
-			SET CatInvoiceTypeId = @IdType
-			WHERE inv_pk_id = @header
-		END
-	ELSE	
-	    BEGIN
-			SET @IdType = (SELECT IdCatInvoiceType FROM CatInvoiceType WITH (NOLOCK) WHERE Name = 'Otros')
-			UPDATE invoiceHeader 
-			SET CatInvoiceTypeId = @IdType
-			WHERE inv_pk_id = @header
-
-		END
-
-
     -- Insert statements for procedure here
 	INSERT INTO [dbo].[invoiceDetail]
            ([dti_fk_header]
