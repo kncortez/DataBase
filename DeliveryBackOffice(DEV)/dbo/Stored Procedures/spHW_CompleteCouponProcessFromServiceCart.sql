@@ -724,6 +724,20 @@ BEGIN
 				DECLARE @PossibleGuideDestinySerie NVARCHAR(2)
 				DECLARE @PossibleGuideDestinyNumber INT
 
+				-- Cantidad auxiliar para remover por factor de guías
+				DECLARE @FactorToRemove INT = (
+					SELECT 
+						TOP (1) 
+							[PT].[MinimumGuideExpected] 
+					FROM 
+						@PromoTable PT
+				) - 2; -- Cantidad minima menos guía origen y guía destino
+				
+				IF ( ISNULL(@FactorToRemove,0) < 0 )
+				BEGIN
+					SET @FactorToRemove = 0;
+				END
+
 				-- Obtener guía origen
 				SELECT
 					TOP (1)
@@ -770,6 +784,34 @@ BEGIN
 				-- Eliminar guía de destino de temporal de procesamiento
 				DELETE FROM @TempValidGuide
 				WHERE [GuideSerie] = @PossibleGuideDestinySerie AND [GuideNumber] = @PossibleGuideDestinyNumber
+				-- Eliminar guías adicionales si factor lo requiere
+				IF ( ISNULL(@FactorToRemove,0) > 0 )
+				BEGIN
+
+					WHILE (ISNULL(@FactorToRemove,0) > 0)
+					BEGIN
+
+						-- Guía origen de cupón
+						DECLARE @PossibleGuideAuxSerie NVARCHAR(2)
+						DECLARE @PossibleGuideAuxNumber INT
+
+						SELECT
+							TOP (1)
+								@PossibleGuideAuxSerie = [TVG].[GuideSerie],
+								@PossibleGuideAuxNumber = [TVG].[GuideNumber]
+						FROM
+							@TempValidGuide TVG
+						ORDER BY
+							[TVG].[PriceShipment] DESC
+
+						DELETE FROM @TempValidGuide
+						WHERE [GuideSerie] = @PossibleGuideAuxSerie AND [GuideNumber] = @PossibleGuideAuxNumber
+
+						SET @FactorToRemove = @FactorToRemove - 1;
+
+					END
+
+				END
 			END
 
 		END
@@ -1266,7 +1308,7 @@ BEGIN
 							,[CP].[CatDiscountTypeId]
 							,[CP].[CatValueTypeId]
 							,[CP].[PromoValue]
-							,[PCPL].[OriginGuideAmount]
+							,[PCPL].[DestinyGuideAmount]
 							,ROUND
 							(
 								(
