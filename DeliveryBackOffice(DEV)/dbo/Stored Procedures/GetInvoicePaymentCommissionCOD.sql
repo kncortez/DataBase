@@ -28,7 +28,7 @@ BEGIN
 			WHERE [Name] = 'Comisión COD'
 			AND RowStatus = 1)
 
-		DECLARE @NameVolumeBillingDefault NVARCHAR(50) = 'Individual(Una guía por factura)'
+		DECLARE @NameVolumeBillingDefault NVARCHAR(50) = 'Individual'
 
 		DECLARE @NameArticle VARCHAR(100) = 'COMISION COD'
 
