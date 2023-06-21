@@ -21,6 +21,7 @@ BEGIN
 
 	 DECLARE @Envio INT =0
 	 DECLARE @ComisionCOD INT=0
+	 DECLARE @dti_fk_header INT =0;
 
 	       -- IF(@TipoEnvio > 0)
 		       SET @Envio =(Select IdCatInvoiceType From [dbo].[CatInvoiceType] CIT  WHERE [Name]='Envío')
@@ -42,6 +43,11 @@ If (@Guide IS NOT NULL)
 Begin
 
 
+     Select Top 1 @dti_fk_header = dti_fk_header From [dbo].[invoiceDetail]
+								Where dti_fk_orderSerie + Cast(dti_fk_orderNumber as varchar)  = @Guide
+								
+
+
 
     IF (@TipoEnvio = 1 And @TipoComisionCOD = 0)
 	 BEGIN
@@ -58,11 +64,14 @@ Begin
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
-							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 WHERE 
+							 ---ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							  ID.dti_fk_header = @dti_fk_header
 							 AND   IH.inv_invoiceOfCreditNote IS NULL
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@Envio))
 							 AND IH.inv_creditNote IS NULL
+							 AND   IH.inv_invoiceOfCreditNote IS  NULL
 							 ORDER BY IH.inv_pk_id DESC
          END
 		ELSE IF (@TipoComisionCOD = 1 And @TipoEnvio=0)
@@ -79,11 +88,14 @@ Begin
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
-							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 WHERE 
+							 --ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide
+							  ID.dti_fk_header = @dti_fk_header
 							 AND   IH.inv_invoiceOfCreditNote IS NULL
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@ComisionCOD))
 							 AND IH.inv_creditNote IS NULL
+							 AND  IH.inv_invoiceOfCreditNote IS   NULL
 							 ORDER BY IH.inv_pk_id DESC
          END
 	ELSE IF (@TipoEnvio = 1  And @TipoComisionCOD =1)
@@ -100,9 +112,12 @@ Begin
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
-							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 WHERE
+							 --ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide  
+							  ID.dti_fk_header = @dti_fk_header
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND IH.inv_creditNote IS NULL
+							 AND  IH.inv_invoiceOfCreditNote IS  NULL
 
          END
 	
@@ -121,9 +136,12 @@ Begin
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
-							 WHERE ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							 WHERE 
+							 ---ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
+							  ID.dti_fk_header = @dti_fk_header
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND IH.inv_creditNote IS NULL
+							 AND  IH.inv_invoiceOfCreditNote IS NULL
 							
 
 		 END
@@ -137,7 +155,7 @@ ELSE IF (@NumberFel IS NOT NULL)
 BEGIN
 
 
-Select TOP 1 ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
+Select  ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 	    ID.dti_description,
 		IH.inv_pk_id,
         IH.inv_serieFEL,
@@ -150,7 +168,10 @@ Select TOP 1 ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 					 WHERE 
 					 IH.inv_invoiceOfCreditNote IS NULL AND inv_certificationFEL = @NumberFel
 					  AND IH.inv_creditNote IS NULL
+					  AND  IH.inv_invoiceOfCreditNote IS  NULL
 					 ORDER BY IH.inv_pk_id DESC
+					 
+						
 
    
 
@@ -159,7 +180,7 @@ END
 ELSE IF (@Membership IS NOT NULL)
 BEGIN
 	
-		Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
+	Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 			ID.dti_description,
 			IH.inv_pk_id,
 			IH.inv_serieFEL,
@@ -174,6 +195,7 @@ BEGIN
 						 AND  IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
 						 AND   inv_certificationFEL IS NOT NULL
 						 AND IH.inv_creditNote IS NULL
+						 AND  IH.inv_invoiceOfCreditNote IS  NULL
 
 	
 END
@@ -196,8 +218,8 @@ Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
 					 IH.inv_invoiceOfCreditNote IS NULL AND  ID.SubscriptionId = @Subscription
 					 AND   IH.inv_dateFEL Between  @DateOf + ' 00:00:00'  AND @DateTo + ' 23:59:59'
 					 AND   inv_certificationFEL IS NOT NULL
-					 AND   inv_certificationFEL !=''
 					 AND IH.inv_creditNote IS NULL
+					 AND  IH.inv_invoiceOfCreditNote IS   NULL
 
 END
 
