@@ -65,8 +65,7 @@ Begin
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
 							 WHERE 
-							 ---ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
-							  ID.dti_fk_header = @dti_fk_header
+							(ID.dti_fk_header = @dti_fk_header OR ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide )
 							 AND   IH.inv_invoiceOfCreditNote IS NULL
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@Envio))
@@ -89,8 +88,7 @@ Begin
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
 							 WHERE 
-							 --ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide
-							  ID.dti_fk_header = @dti_fk_header
+							 (ID.dti_fk_header = @dti_fk_header OR ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide )
 							 AND   IH.inv_invoiceOfCreditNote IS NULL
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND (IH.CatInvoiceTypeId IS NULL OR IH.CatInvoiceTypeId IN (@ComisionCOD))
@@ -113,8 +111,7 @@ Begin
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
 							 WHERE
-							 --ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide  
-							  ID.dti_fk_header = @dti_fk_header
+							 (ID.dti_fk_header = @dti_fk_header OR ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide )
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND IH.inv_creditNote IS NULL
 							 AND  IH.inv_invoiceOfCreditNote IS  NULL
@@ -137,8 +134,7 @@ Begin
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
 							 WHERE 
-							 ---ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide 
-							  ID.dti_fk_header = @dti_fk_header
+							  (ID.dti_fk_header = @dti_fk_header OR ID.dti_fk_orderSerie + Cast(ID.dti_fk_orderNumber as varchar) = @Guide )
 							 AND   inv_certificationFEL IS NOT NULL
 							 AND IH.inv_creditNote IS NULL
 							 AND  IH.inv_invoiceOfCreditNote IS NULL
