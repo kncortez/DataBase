@@ -172,11 +172,6 @@ CREATE NONCLUSTERED INDEX [idx_BatchCODId_CatConceptCODId_Excluded]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_BatchDetailCOD_CommisionInvoice]
-    ON [dbo].[BatchDetailCOD]([CreditDate] ASC, [RowStatus] ASC, [CatConceptCODId] ASC, [Commission] ASC);
-
-
-GO
 CREATE NONCLUSTERED INDEX [idx_BatchCODId]
     ON [dbo].[BatchDetailCOD]([BatchCODId] ASC);
 
@@ -184,11 +179,6 @@ CREATE NONCLUSTERED INDEX [idx_BatchCODId]
 GO
 CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber]
     ON [dbo].[BatchDetailCOD]([AuthorizationNumber] ASC);
-
-
-GO
-
-
 
 GO
 CREATE NONCLUSTERED INDEX [idx_AuthorizationNumber_include]
