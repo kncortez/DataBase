@@ -1,5 +1,4 @@
 ﻿
-
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -618,7 +617,9 @@ BEGIN
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
 			''  as 'Route'
-			,D.PriceShippment AS 'Price',
+			,D.PriceShippment AS 'Price'
+			,D.Ticket_Number AS 'IdInternalOrderRef'
+			,D.Order_Number AS 'IdInternalOrderRef2',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
@@ -643,6 +644,7 @@ BEGIN
 			(FORMAT(ISNULL([D].[DeliveryETA], DATEADD(DAY,5,GETDATE())), 'ddMM'))'DeliveryETA',
 				(
 					CASE
+						WHEN ISNULL([D].[IsCollect], 0) = 1 THEN 'COLLECT'
 						WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 						WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 						WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'

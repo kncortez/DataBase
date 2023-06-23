@@ -1,4 +1,5 @@
-﻿CREATE procedure [dbo].[sps_getReprintGuie]
+﻿
+CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as
@@ -463,8 +464,10 @@ begin
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
                                      + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
-                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
+                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, ''))
                                      + '",'
+									 +'"IdInternalOrderRef2":"'
+                                     + CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) + '",'
 									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
@@ -545,6 +548,7 @@ begin
 																		(
 																			(
 																				CASE
+																					WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
 																					WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 																					WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 																					WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'

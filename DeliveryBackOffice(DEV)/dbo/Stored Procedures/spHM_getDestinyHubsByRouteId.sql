@@ -15,6 +15,6 @@ BEGIN
 				[HL].[HubAbbreviation]
 	FROM		[dbo].[LinehaulCoverage] LC
 	INNER JOIN	[dbo].[HubLogistics] HL
-		ON		[LC].[HubDestinyId] = [HL].[IdHubLogistic]
-	WHERE		[LC].[CatRouteId] = @CatRouteId;
+		ON		[LC].[HubDestinyId] = [HL].[IdHubLogistic] and hl.HubStatus = 1
+	WHERE		[LC].[CatRouteId] = @CatRouteId and lc.RowStatus = 1;
 END
