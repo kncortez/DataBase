@@ -3,6 +3,11 @@
 -- Create date: <2021-04-20>
 -- Description:	<Devuevlve el listado de items asociados a un catalogo especifico>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-03-28>
+-- Description:	<agragar catalogo para opciones de tiempo de facturación y volument de facturación>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -590,4 +595,20 @@ BEGIN
 
 
 
-END;
+    SELECT BT.IdCatBillingTime [IdValue],
+           BT.DescriptionBillingTime [NameValue],
+           'BillingTime' [Catalog]
+    FROM [dbo].[CatBillingTime] BT with (nolock)
+    WHERE BT.RowStatus = 'TRUE'
+
+
+
+
+    SELECT BV.IdCatBillingVolume [IdValue],
+           BV.NameBillingVolume [NameValue],
+           'BillingVolume' [Catalog]
+    FROM [dbo].[CatBillingVolume] BV with (nolock)
+    WHERE BV.RowStatus = 'TRUE'
+
+
+END

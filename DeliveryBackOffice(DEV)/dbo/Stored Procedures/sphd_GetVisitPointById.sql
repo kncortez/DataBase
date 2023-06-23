@@ -53,8 +53,11 @@ BEGIN
 		   vpc.SaleChannelId,
 		   IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
 		   IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
-		   ISNULL(vpc.CatBusinessSegmentId, 0) CatBusinessSegmentId,
-			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups'
+			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups',
+			ISNULL(vpc.CatBusinessSegmentId, 0) CatBusinessSegmentId,
+			ISNULL(vcf.[CatBillingTimeId],-1)  AS CatBillingTimeId,
+			ISNULL(vcf.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
+			vcf.[BillingCut_offDate] AS  BillingCut_offDate
     FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
         LEFT JOIN dbo.Township twn  WITH(NOLOCK)
             ON twn.IdTownship = vpc.IdTownship
