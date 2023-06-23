@@ -1,4 +1,5 @@
-﻿CREATE procedure [dbo].[sps_getReprintGuie]
+﻿
+CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as
@@ -547,6 +548,7 @@ begin
 																		(
 																			(
 																				CASE
+																					WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
 																					WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 																					WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 																					WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'

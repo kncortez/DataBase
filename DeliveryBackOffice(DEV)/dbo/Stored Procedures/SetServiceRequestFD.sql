@@ -1,6 +1,5 @@
 ﻿
-
-alter PROCEDURE [dbo].[SetServiceRequestFD]
+CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
 @VisitPointByClientPortfolioId BIGINT = 0,
@@ -645,6 +644,7 @@ BEGIN
 			(FORMAT(ISNULL([D].[DeliveryETA], DATEADD(DAY,5,GETDATE())), 'ddMM'))'DeliveryETA',
 				(
 					CASE
+						WHEN ISNULL([D].[IsCollect], 0) = 1 THEN 'COLLECT'
 						WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 						WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 						WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'

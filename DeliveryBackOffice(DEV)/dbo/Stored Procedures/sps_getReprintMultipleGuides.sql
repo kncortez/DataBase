@@ -342,6 +342,7 @@ BEGIN
 								(
 									(
 										CASE
+											WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
 											WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 											WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 											WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'

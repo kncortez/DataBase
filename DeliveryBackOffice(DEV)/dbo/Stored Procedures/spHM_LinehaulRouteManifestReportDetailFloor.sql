@@ -13,9 +13,13 @@ BEGIN
 	 SELECT DISTINCT
 	     ROW_NUMBER () OVER(ORDER BY LRPC.IdLinehaulRoutePreparationContainer ) NumberRow,
 	     C.ContainerDescription,
-		 ISNULL(LRPC.GuideQuantity,0)      AS Totaldeguiasasignadasacontenedor,
+		 --isnull(LRPC.GuideQuantity,0)      AS Totaldeguiasasignadasacontenedor,
+		 -- nuevo hacer rolback si falla con la linea de arriba
+		 count(lrpcd.GuideNumber) AS Totaldeguiasasignadasacontenedor,
 		 ISNULL(LRPC.ColdPieceQuantity,0)  AS TotaldePiezasFriasAsignadasaPiso,
-		 ISNULL(LRPC.DryPieceQuantity,0)   AS TotaldePiezasAsignadasaPiso,
+		 --isnull(LRPC.DryPieceQuantity,0)   AS TotaldePiezasAsignadasaPiso,
+		-- nuevo hacer rolback si falla con la linea de arriba
+		sum(LRPCD.GuideDryPieceTotal)AS TotaldePiezasAsignadasaPiso,
 		  HL.HubAbbreviation AS HubDestinyId
   FROM   LinehaulRoutePreparationContainer LRPC WITH (NOLOCK)
 		INNER JOIN LinehaulRoutePreparationContainerDetail LRPCD WITH (NOLOCK)
