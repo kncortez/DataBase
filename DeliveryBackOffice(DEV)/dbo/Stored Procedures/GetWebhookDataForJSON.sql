@@ -19,293 +19,242 @@
 -- Create date: <2022-10-24>
 -- Description:	<Agregar flujo de respuesta de los diferentes estados de una guía>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetWebhookDataForJSON] 
-	 @WebhookTrackingQueueId BIGINT
-	,@WebhookTypeId INT
-	,@WebhookTypeName NVARCHAR(50)
-AS 
-BEGIN 
+CREATE PROCEDURE [dbo].[GetWebhookDataForJSON]
+    @WebhookTrackingQueueId BIGINT,
+    @WebhookTypeId INT,
+    @WebhookTypeName NVARCHAR(50)
+AS
+BEGIN
 
 
 
-      DECLARE @StatusChange  AS NVARCHAR(200)
-	  DECLARE @StatusId  AS INT
-	
-	--========================================================================================================
-	--===                                       STATUS CHANGE                                              ===
-	--========================================================================================================
-	IF (@WebhookTypeName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI) 
-	BEGIN
-		BEGIN TRY
+    DECLARE @StatusChange AS NVARCHAR(200);
+    DECLARE @StatusId AS INT;
 
-			DECLARE @GuideStatusResponseTable AS TABLE (
-				GuideSerie NVARCHAR(2),
-				GuideNumber INT,
-				GuideStatus NVARCHAR(200),
-				GuideStatusId INT,
-				GuideStatusChange DATETIME
-			);
-			INSERT INTO @GuideStatusResponseTable
-				(GuideSerie, GuideNumber, GuideStatus, GuideStatusId, GuideStatusChange)
-			SELECT
-				WTQ.GuideSerie
-				,WTQ.GuideNumber
-				,ISNULL(WRBY.StatusExternalName, SO.OrderDescription) 'GuideStatus'
-				,SO.StatusOrderId
-				,(SELECT TOP 1 DOD.DateCreated FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK) WHERE DOD.Guide_Serie = WTQ.GuideSerie AND DOD.Guide_Number = WTQ.GuideNumber AND DOD.StatusOrderId = WTQ.StatusOrderId ORDER BY DOD.DateCreated DESC) 'GuideStatusChange'
-			FROM
-				[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
-					ON
-						WTQ.StatusOrderId = SO.StatusOrderId
-				LEFT JOIN
-					[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBY WITH(NOLOCK)
-					ON
-						WTQ.CustomerId = WRBY.CustomerId
-						AND
-						WTQ.StatusOrderId = WRBY.StatusOrderId
-						AND
-						WRBY.WebhookTypeId = @WebhookTypeId
-						AND
-						WRBY.RowStatus = 1
-			WHERE
-				WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId
+    --========================================================================================================
+    --===                                       STATUS CHANGE                                              ===
+    --========================================================================================================
+    IF (@WebhookTypeName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI)
+    BEGIN
+        BEGIN TRY
 
-			SELECT 
-				@StatusId = WTQ.StatusOrderId
-			FROM
-				[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
-				INNER JOIN
-					[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
-					ON
-						WTQ.StatusOrderId = SO.StatusOrderId
-			WHERE
-				WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId
+            DECLARE @GuideStatusResponseTable AS TABLE
+            (
+                GuideSerie NVARCHAR(2),
+                GuideNumber INT,
+                GuideStatus NVARCHAR(200),
+                GuideStatusId INT,
+                GuideStatusChange DATETIME
+            );
+            INSERT INTO @GuideStatusResponseTable
+            (
+                GuideSerie,
+                GuideNumber,
+                GuideStatus,
+                GuideStatusId,
+                GuideStatusChange
+            )
+            SELECT WTQ.GuideSerie,
+                   WTQ.GuideNumber,
+                   ISNULL(WRBY.StatusExternalName, SO.OrderDescription) 'GuideStatus',
+                   SO.StatusOrderId,
+                   (
+                       SELECT TOP 1
+                              DOD.DateCreated
+                       FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
+                       WHERE DOD.Guide_Serie = WTQ.GuideSerie
+                             AND DOD.Guide_Number = WTQ.GuideNumber
+                             AND DOD.StatusOrderId = WTQ.StatusOrderId
+                       ORDER BY DOD.DateCreated DESC
+                   ) 'GuideStatusChange'
+            FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
+                    ON WTQ.StatusOrderId = SO.StatusOrderId
+                LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBY WITH (NOLOCK)
+                    ON WTQ.CustomerId = WRBY.CustomerId
+                       AND WTQ.StatusOrderId = WRBY.StatusOrderId
+                       AND WRBY.WebhookTypeId = @WebhookTypeId
+                       AND WRBY.RowStatus = 1
+            WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
 
-			IF( EXISTS (SELECT TOP 1 1 FROM @GuideStatusResponseTable) )
-			BEGIN
-		
-		   	    
-		      
-				SELECT
-					CAST(1 AS BIT) [blnResult],
-					'Exito obteniendo datos de webhook 2' [resultMessage]
+            SELECT @StatusId = WTQ.StatusOrderId
+            FROM [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
+                    ON WTQ.StatusOrderId = SO.StatusOrderId
+            WHERE WTQ.IdWebhookTrackingQueue = @WebhookTrackingQueueId;
+
+            IF (EXISTS (SELECT TOP 1 1 FROM @GuideStatusResponseTable))
+            BEGIN
 
 
-				IF (@StatusId IN(5,22)) /* Estados de Entregado  */
-				BEGIN
 
-					SELECT
-						 GSRT.GuideSerie
-						,GSRT.GuideNumber
-						,GSRT.GuideStatus
-						,GSRT.GuideStatusId
-						,GSRT.GuideStatusChange
-						,ISNULL(DA.Path_Dry,'') AS ImageEvidence
-						,ISNULL(DO.NameOfReceiver,'')  AS ReceiverName
-						,ISNULL(DA.Longitude,'') AS Longitude
-						,ISNULL(DA.Latitude,'') AS Latitude
-					FROM
-						@GuideStatusResponseTable GSRT
-						OUTER APPLY (
-							SELECT
-								TOP 1
-									DA.Longitude 'Longitude',
-									DA.Latitude 'Latitude',
-									DP.Path_Dry 'Path_Dry'
-							FROM
-								[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-								LEFT JOIN
-									[DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH(NOLOCK)
-									ON 
-										DA.ID_Proof = DP.ID
-							WHERE
-								GSRT.GuideSerie = DA.Guide_Serie
-								AND 
-								GSRT.GuideNumber =DA.Guide_Number
-								AND
-								DA.Delivered = 1
-							ORDER BY
-								DA.Date_Created DESC
-						) DA
-						LEFT JOIN 
-							[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-							ON 
-								GSRT.GuideSerie = DO.Guide_Serie 
-								AND 
-								GSRT.GuideNumber = DO.Guide_Number
+                SELECT CAST(1 AS BIT) [blnResult],
+                       'Exito obteniendo datos de webhook 2' [resultMessage];
 
-				END
-				ELSE IF(@StatusId IN(25)) /* COD pagado  */
-				BEGIN
 
-					
-					DECLARE @GuidePaymentConceptId INT = 
-					(
-						SELECT 
-							TOP (1)
-								[CCCOD].[IdCatConceptCOD] 
-						FROM
-							[DeliveryBackOffice].[dbo].[CatConceptCOD] CCCOD  WITH(NOLOCK) 
-						WHERE
-							[CCCOD].[Concept] = 'PAGO DE LA GUIA'  COLLATE Latin1_General_CI_AI 
-					)
+                IF (@StatusId IN ( 5, 22 )) /* Estados de Entregado  */
+                BEGIN
 
-					SELECT 
-						TOP (1)
-							 GSRT.GuideSerie
-							,GSRT.GuideNumber
-							,GSRT.GuideStatus
-							,GSRT.GuideStatusId
-							,GSRT.GuideStatusChange
-							,ISNULL(BDC.AuthorizationNumber,'') AS AuthorizationNumber
-							,[BDC].[Amount] TransactionAmount
-					FROM
-						@GuideStatusResponseTable GSRT
-						LEFT JOIN 
-							[DeliveryBackOffice].[dbo].[BatchDetailCOD] BDC WITH(NOLOCK)
-							ON 
-								GSRT.GuideSerie = BDC.GuideSerie 
-								AND 
-								GSRT.GuideNumber = BDC.GuideNumber
-								AND
-								[BDC].[CatConceptCODId] = @GuidePaymentConceptId
-					
-				END
-				ELSE IF(@StatusId IN(14,23))  /* Devuelto */
-				BEGIN
+                    SELECT GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange,
+                           ISNULL(DA.Path_Dry, '') AS ImageEvidence,
+                           ISNULL(DO.NameOfReceiver, '') AS ReceiverName,
+                           ISNULL(DA.Longitude, '') AS Longitude,
+                           ISNULL(DA.Latitude, '') AS Latitude
+                    FROM @GuideStatusResponseTable GSRT
+                        OUTER APPLY
+                    (
+                        SELECT TOP 1
+                               DA.Longitude 'Longitude',
+                               DA.Latitude 'Latitude',
+                               DP.Path_Dry 'Path_Dry'
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH (NOLOCK)
+                                ON DA.ID_Proof = DP.ID
+                        WHERE GSRT.GuideSerie = DA.Guide_Serie
+                              AND GSRT.GuideNumber = DA.Guide_Number
+                              AND DA.Delivered = 1
+                        ORDER BY DA.Date_Created DESC
+                    ) DA
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                            ON GSRT.GuideSerie = DO.Guide_Serie
+                               AND GSRT.GuideNumber = DO.Guide_Number;
 
-					 SELECT
-						 GSRT.GuideSerie
-						,GSRT.GuideNumber
-						,GSRT.GuideStatus
-						,GSRT.GuideStatusId
-						,GSRT.GuideStatusChange
-						,ISNULL(DA.Path_Dry,'') AS ImageEvidence
-						,ISNULL(DO.NameOfReceiver,'')  AS ReceiverName
-						,ISNULL(DA.Longitude,'') AS Longitude
-						,ISNULL(DA.Latitude,'') AS Latitude
-					FROM
-						@GuideStatusResponseTable GSRT
-						OUTER APPLY (
-							SELECT
-								TOP 1
-									DA.Longitude 'Longitude',
-									DA.Latitude 'Latitude',
-									DP.Path_Dry 'Path_Dry'
-							FROM
-								[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-								LEFT JOIN
-									[DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH(NOLOCK)
-									ON 
-										DA.ID_Proof = DP.ID
-							WHERE
-								GSRT.GuideSerie = DA.Guide_Serie
-								AND 
-								GSRT.GuideNumber =DA.Guide_Number
-								AND
-								DA.Delivered = 1
-							ORDER BY
-								DA.Date_Created DESC
-						) DA
-						LEFT JOIN 
-							[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-							ON 
-								GSRT.GuideSerie = DO.Guide_Serie 
-								AND 
-								GSRT.GuideNumber = DO.Guide_Number
+                END;
+                ELSE IF (@StatusId IN ( 25 )) /* COD pagado  */
+                BEGIN
 
-				END
-				ELSE IF(@StatusId IN(12)) /* Intento de entrega fallida */
-				BEGIN
 
-					SELECT
-						GSRT.GuideSerie
-						,GSRT.GuideNumber
-						,GSRT.GuideStatus
-						,GSRT.GuideStatusId
-						,GSRT.GuideStatusChange
-						,ISNULL(DA.Longitude,'') AS Longitude
-						,ISNULL(DA.Latitude,'') AS Latitude
-						,ISNULL(DA.DescriptionIncidence,'') AS DescriptionIncidence
-					FROM
-						@GuideStatusResponseTable GSRT
-						OUTER APPLY (
-							SELECT
-								TOP 1
-									DA.Longitude 'Longitude',
-									DA.Latitude 'Latitude',
-									DP.Path_Dry 'Path_Dry',
-									CTI.DescriptionIncidence 'DescriptionIncidence'
-							FROM
-								[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-								LEFT JOIN
-									[DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH(NOLOCK)
-									ON 
-										DA.ID_Proof = DP.ID
-								LEFT JOIN
-									[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK)
-									ON  
-										DA.ID_Incident = CTI.IdIncidenceType
-							WHERE
-								GSRT.GuideSerie = DA.Guide_Serie
-								AND 
-								GSRT.GuideNumber =DA.Guide_Number
-								AND
-								DA.Delivered = 0
-								AND
-								DA.ID_Incident IS NOT NULL
-							ORDER BY
-								DA.Date_Created DESC
-						) DA
+                    DECLARE @GuidePaymentConceptId INT =
+                            (
+                                SELECT TOP (1)
+                                       [CCCOD].[IdCatConceptCOD]
+                                FROM [DeliveryBackOffice].[dbo].[CatConceptCOD] CCCOD WITH (NOLOCK)
+                                WHERE [CCCOD].[Concept] = 'PAGO DE LA GUIA' COLLATE Latin1_General_CI_AI
+                            );
 
-				END
-				ELSE
-				BEGIN
+                    SELECT TOP (1)
+                           GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange,
+                           ISNULL(BDC.AuthorizationNumber, '') AS AuthorizationNumber,
+                           [BDC].[Amount] TransactionAmount
+                    FROM @GuideStatusResponseTable GSRT
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[BatchDetailCOD] BDC WITH (NOLOCK)
+                            ON GSRT.GuideSerie = BDC.GuideSerie
+                               AND GSRT.GuideNumber = BDC.GuideNumber
+                               AND [BDC].[CatConceptCODId] = @GuidePaymentConceptId;
 
-					SELECT
-						GSRT.GuideSerie
-						,GSRT.GuideNumber
-						,GSRT.GuideStatus
-						,GSRT.GuideStatusId
-						,GSRT.GuideStatusChange
-					FROM
-						@GuideStatusResponseTable GSRT
+                END;
+                ELSE IF (@StatusId IN ( 14, 23 )) /* Devuelto */
+                BEGIN
 
-				END
+                    SELECT GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange,
+                           ISNULL(DA.Path_Dry, '') AS ImageEvidence,
+                           ISNULL(DO.NameOfReceiver, '') AS ReceiverName,
+                           ISNULL(DA.Longitude, '') AS Longitude,
+                           ISNULL(DA.Latitude, '') AS Latitude
+                    FROM @GuideStatusResponseTable GSRT
+                        OUTER APPLY
+                    (
+                        SELECT TOP 1
+                               DA.Longitude 'Longitude',
+                               DA.Latitude 'Latitude',
+                               DP.Path_Dry 'Path_Dry'
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH (NOLOCK)
+                                ON DA.ID_Proof = DP.ID
+                        WHERE GSRT.GuideSerie = DA.Guide_Serie
+                              AND GSRT.GuideNumber = DA.Guide_Number
+                              AND DA.Delivered = 1
+                        ORDER BY DA.Date_Created DESC
+                    ) DA
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                            ON GSRT.GuideSerie = DO.Guide_Serie
+                               AND GSRT.GuideNumber = DO.Guide_Number;
 
-			END
-			ELSE
-			BEGIN
+                END;
+                ELSE IF (@StatusId IN ( 12 )) /* Intento de entrega fallida */
+                BEGIN
 
-				SELECT
-					CAST(0 AS BIT) [blnResult],
-					'Error obteniendo datos de webhook' [resultMessage]
+                    SELECT GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange,
+                           ISNULL(DA.Longitude, '') AS Longitude,
+                           ISNULL(DA.Latitude, '') AS Latitude,
+                           ISNULL(DA.DescriptionIncidence, '') AS DescriptionIncidence
+                    FROM @GuideStatusResponseTable GSRT
+                        OUTER APPLY
+                    (
+                        SELECT TOP 1
+                               DA.Longitude 'Longitude',
+                               DA.Latitude 'Latitude',
+                               DP.Path_Dry 'Path_Dry',
+                               CTI.DescriptionIncidence 'DescriptionIncidence'
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryProof] DP WITH (NOLOCK)
+                                ON DA.ID_Proof = DP.ID
+                            LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
+                                ON DA.ID_Incident = CTI.IdIncidenceType
+                        WHERE GSRT.GuideSerie = DA.Guide_Serie
+                              AND GSRT.GuideNumber = DA.Guide_Number
+                              AND DA.Delivered = 0
+                              AND DA.ID_Incident IS NOT NULL
+                        ORDER BY DA.Date_Created DESC
+                    ) DA;
 
-			END
+                END;
+                ELSE
+                BEGIN
 
-		END TRY
-		BEGIN CATCH
+                    SELECT GSRT.GuideSerie,
+                           GSRT.GuideNumber,
+                           GSRT.GuideStatus,
+                           GSRT.GuideStatusId,
+                           GSRT.GuideStatusChange
+                    FROM @GuideStatusResponseTable GSRT;
 
-			SELECT
-				CAST(0 AS BIT) [blnResult],
-				ERROR_MESSAGE() [resultMessage],
-				@WebhookTypeName [webhookName]
+                END;
 
-		END CATCH
-	END
-	--========================================================================================================
-	--===                                      NO WEBHOOK FOUND                                            ===
-	--========================================================================================================
-	ELSE
-	BEGIN
+            END;
+            ELSE
+            BEGIN
 
-		SELECT
-			CAST(0 AS BIT) [blnResult],
-			'Tipo de webhook inexistente, por favor, verifique su información' [resultMessage],
-			@WebhookTypeName [webhookName]
+                SELECT CAST(0 AS BIT) [blnResult],
+                       'Error obteniendo datos de webhook' [resultMessage];
 
-	END
+            END;
 
-END
+        END TRY
+        BEGIN CATCH
+
+            SELECT CAST(0 AS BIT) [blnResult],
+                   ERROR_MESSAGE() [resultMessage],
+                   @WebhookTypeName [webhookName];
+
+        END CATCH;
+    END;
+    --========================================================================================================
+    --===                                      NO WEBHOOK FOUND                                            ===
+    --========================================================================================================
+    ELSE
+    BEGIN
+
+        SELECT CAST(0 AS BIT) [blnResult],
+               'Tipo de webhook inexistente, por favor, verifique su información' [resultMessage],
+               @WebhookTypeName [webhookName];
+
+    END;
+
+END;
