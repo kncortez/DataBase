@@ -15,7 +15,11 @@
 -- Create date: <2022-08-05>
 -- Description:	< Cambio para uso de orden como decimal y ETA de servicio.>
 -- =============================================
-
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-06-26>
+-- Description:	<cuando se generan los registros de la tabla DeliveryAttempt, tomar correctamente la bandera de IsLastMileReturn de DeliveryOrder de la guía respectiva para identificar el flujo al que pertenece ese DeliveryAttempt>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetSettlementDispatched]
     -- Add the parameters for the stored procedure here
 	@IdRoute INT,
@@ -297,13 +301,16 @@ BEGIN
 				,[ID_DeliveryOrderBySettlement]
 				,[User_Created]
 				,[Date_Created]
-				,[Guide_Piece]) 
+				,[Guide_Piece]
+				,[IsLastMileReturn]) 
 			SELECT lg.Guide_Serie, lg.Guide_Number, 
 				COALESCE(dop.IsDry,1), CASE WHEN dop.IsDry IS NULL THEN 0 ELSE 1-dop.IsDry END,
-				'','',0, @IdCourier, @ID_Manifest, @Token, GETDATE(), dop.NoPiece
+				'','',0, @IdCourier, @ID_Manifest, @Token, GETDATE(), dop.NoPiece, ISNULL(DO.IsLastMileReturn,0)
 			FROM @ListGuides lg
 			INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK) 
 				ON lg.Guide_Serie = dop.GuideSerie AND lg.Guide_Number = dop.GuideNumber
+			INNER JOIN [dbo].[DeliveryOrder] DO WITH(NOLOCK)
+			    ON lg.Guide_Serie = DO.Guide_Serie AND lg.Guide_Number = DO.Guide_Number
 
 			--operation 4
 			IF COALESCE(@@ROWCOUNT,0) > 0
