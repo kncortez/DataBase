@@ -3,7 +3,7 @@
 -- Create date: <2022-08-04>
 -- Description:	<encabezado de reporte Ruta  LineHauls>
 -- =============================================
-CREATE procedure [dbo].[spHM_RouteManifestReportlinehaulHeader] 
+CREATE procedure [dbo].[spHM_RouteManifestReportlinehaulHeader_cras] 
 
 @IdLinehaulRoutePreparation as int 
 as

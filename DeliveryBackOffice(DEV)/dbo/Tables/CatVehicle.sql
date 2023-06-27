@@ -21,6 +21,8 @@
     [CubicMeters]            DECIMAL (14, 2) NULL,
     [CapabilityEcomerce]     DECIMAL (14, 2) NULL,
     [HubLogisticId]          INT             NULL,
+    [LastLatitude]           NVARCHAR (20)   NULL,
+    [LastLongitude]          NVARCHAR (20)   NULL,
     PRIMARY KEY CLUSTERED ([IdVehicle] ASC),
     FOREIGN KEY ([CatVehicleBrandId]) REFERENCES [dbo].[CatVehicleBrand] ([IdCatVehicleBrand]),
     FOREIGN KEY ([CatVehicleCategoriesId]) REFERENCES [dbo].[CatVehicleCategories] ([IdCatVehicleCategories]),
@@ -32,6 +34,16 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del hub al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'HubLogisticId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubicación, longitud, registrada del vehículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'LastLongitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubicación, latitud, registrada del vehículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'LastLatitude';
 

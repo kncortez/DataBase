@@ -3,8 +3,9 @@
 -- Create date: <Create Date,2023-05-31>
 -- Description:	<Description,Cabecera de reporte de manifiiesto recolección de rutas especiales>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHDManifestHeaderTSE] 
-@IdRoute AS INT
+CREATE PROCEDURE [dbo].[SPHDPickUpManifestHeaderTSE] 
+@IdRoute AS INT,
+@NameUser AS NVARCHAR(50)=''
 AS
 BEGIN
 	
@@ -13,11 +14,15 @@ BEGIN
 		Select Top 1 
 			RPH.IDTSERoutePreparationHeader,
 			UPPER(CR.CodeRoute) CodeRoute,
-			UPPER(SR.First_Name +' '+ SR.Last_Name) [Curierman],
+			SR.First_Name +' '+ SR.Last_Name [Curierman],
 			CV.UnitNumber+'-'+CV.Plate Plate,
 			UPPER(CRC.ClusterName) ClusterName,
-			UPPER(SR1.First_Name +' '+ SR1.Last_Name) [Name],
-			UPPER(SR2.First_Name +' '+ SR2.Last_Name) [Leader]
+			SR1.First_Name +' '+ SR1.Last_Name [Name],
+			SR2.First_Name +' '+ SR2.Last_Name [Leader],
+			UPPER(@NameUser) [User],
+			FORMAT(GETDATE(),'dd-MM-yyyy hh:mm:ss') DateExec,
+			ISNULL([RouteSignature].[Signature], '') [Signature],
+			ISNULL([RPH].[TSECustomsMark], '') [CustomsMark]
 		
 
 
@@ -40,10 +45,30 @@ BEGIN
 		 Inner Join 
 		 [dbo].[CatVehicle] CV  WITH (NOLOCK)
 		 ON RPH.IdCatVehicle = CV.IdVehicle 
+		 OUTER APPLY
+		 (
+			SELECT 
+				TOP (1) 
+					[SM].[PuSignaturePath] [Signature] 
+			FROM 
+				[DeliveryBackOffice].[dbo].[RouteAssigment] RA  WITH(NOLOCK) 
+				INNER JOIN
+					[DeliveryBackOffice].[dbo].[ServiceManagement] SM  WITH(NOLOCK) 
+					ON
+						[SM].[IdPuRouteAssigment] = [RA].[IdRouteAssigment]
+			WHERE
+				[RA].[RowStatus] = 1
+				AND
+				[RA].[IdVehicle] = [RPH].[IdCatVehicle]
+				AND
+				[RA].[IdRoute] = [RPH].[IdCatRoute]
+				AND
+				[SM].[PuSignaturePath] IS NOT NULL
+		 ) RouteSignature
 
 	WHERE  RPH.RowStatus = 1 And 
 	       RPH.IdCatRoute = @IdRoute
-		  -- And RPH.HasFirstPickupProcess =1
+		   And RPH.HasFirstPickupProcess =1
  
    
 END

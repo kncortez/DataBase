@@ -1,7 +1,10 @@
 ﻿
-
-
-CREATE PROCEDURE [dbo].[TestTSE]  
+-- =============================================
+-- Author:		<Author,Edelman>
+-- Create date: <Create Date,2023-05-19>
+-- Description:	<Description, Detalle de manifiesto de preparación de rutas especiales TSE>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHDManifestDetailTSE]  
 	@IdRoute INT
 AS
 BEGIN
@@ -122,9 +125,9 @@ BEGIN
 		    TRPD.GuideSerie + Convert(NVARCHAR(50),TRPD.GuideNumber) Guide,
 			TRPD.GuideNumber,
 			TRPD.IDTSERoutePreparationDetail,
-			[DO].[Receiver_FirstName] [VoteCenter],
-			[DO].[Receiver_Address] [Adress],
-			Upper([DO].[Receiver_Alternant_FullName]) [Coordinador],
+			UPPER([DO].[Receiver_FirstName]) [VoteCenter],
+			UPPER([DO].[Receiver_Address]) [Adress],
+			CONCAT(Upper([DO].[Receiver_Alternant_FullName]), (CASE WHEN RTRIM(LTRIM(ISNULL([DO].[Receiver_Phone],''))) <> '' THEN ' - ' + [DO].[Receiver_Phone] ELSE '' END)) [Coordinador],
 			(
 				SELECT
 					SUM

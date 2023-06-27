@@ -1,7 +1,8 @@
 ﻿
 
 
-CREATE PROCEDURE [dbo].[TestTSE]  
+
+CREATE PROCEDURE [dbo].[PickUpManifestDetailTSE]  
 	@IdRoute INT
 AS
 BEGIN
@@ -55,6 +56,7 @@ BEGIN
 			[TRPH].[IdCatRoute] = @IdRoute
 			AND
 			[TRPH].[RowStatus] = 1
+			AND TRPH.HasFirstPickupProcess =1
 		UNION ALL
 		SELECT
 			([RowNum] + 1) [RowNum],
@@ -102,20 +104,20 @@ BEGIN
 		[TP].[GuideSerie],
 		[TP].[GuideNumber]
 
-	UPDATE
-		TP
-	SET
-		TP.[Detail] = 'SOBRE'
-	FROM
-		@TempPieces TP
-		INNER JOIN
-			@TempMinBlankPiece TMBP
-			ON
-				[TP].[RowNum] = [TMBP].[RowNum]
-				AND
-				[TP].[GuideSerie] = [TMBP].[GuideSerie]
-				AND
-				[TP].[GuideNumber] = [TMBP].[GuideNumber]
+	--UPDATE
+	--	TP
+	--SET
+	--	TP.[Detail] = 'SOBRE'
+	--FROM
+	--	@TempPieces TP
+	--	INNER JOIN
+	--		@TempMinBlankPiece TMBP
+	--		ON
+	--			[TP].[RowNum] = [TMBP].[RowNum]
+	--			AND
+	--			[TP].[GuideSerie] = [TMBP].[GuideSerie]
+	--			AND
+	--			[TP].[GuideNumber] = [TMBP].[GuideNumber]
 
 	SELECT 
 		DISTINCT 
@@ -130,8 +132,6 @@ BEGIN
 					SUM
 					(
 						CASE
-							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRE'  COLLATE Latin1_General_CI_AI  THEN 0
-							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRES'  COLLATE Latin1_General_CI_AI  THEN 0
 							WHEN LTRIM(RTRIM([TP].[Detail])) <> '' THEN 1
 							ELSE 0
 						END
@@ -177,6 +177,7 @@ BEGIN
 		[TRPH].[IdCatRoute] = @IdRoute 
 		AND 
 		[TRPD].[RowStatus] = 1
+		AND   TRPH.HasFirstPickupProcess =1
 	ORDER BY
 		[TRPD].[GuideNumber] ASC
 
