@@ -38,7 +38,7 @@ BEGIN
 	DECLARE @GuideServiceType NVARCHAR(3) = @TypeService;
 
 	IF(@OriginGuideSystem IS NULL)
-		SET @GuideServiceType = dbo.fn_GetGuideServiceType(@GuideSerie, @GuideNumber, @TypeService, (CASE WHEN @IdCustomer != 0 THEN @IdCustomer ELSE (SELECT TOP 1 ECM.IdCustomer FROM dbo.Ecommerce ECM WITH(NOLOCK) WHERE ECM.UserKey = @CodApp) END));
+		SET @GuideServiceType = dbo.fn_GetGuideServiceType(@GuideSerie, @GuideNumber, NULL, (CASE WHEN @IdCustomer != 0 THEN @IdCustomer ELSE (SELECT TOP 1 ECM.IdCustomer FROM dbo.Ecommerce ECM WITH(NOLOCK) WHERE ECM.UserKey = @CodApp) END));
 
 	update DeliveryBackOffice.[dbo].[DeliveryOrder] 
 	set IdCustomer =

@@ -1,17 +1,18 @@
-﻿-- =============================================
+﻿--USE DeliveryBackOffice
+-- =============================================
 -- Author:		<Jerson Ochoa>
 -- Create date: <10-04-2023>
 -- Description:	<Insertar registros de recolecciones programadas que han sido enviadas exitósamente a plataforma externa>
 -- =============================================
-CREATE PROCEDURE [dbo].[SetExternalPlatformServicePickupData]
-	@TblSimpliroutePickup AS TblExtPlatSimpliroutePickup READONLY,
-	@ServiceInputType AS INT,
-	@UserToken AS NVARCHAR(50)
-AS
-BEGIN
+create procedure [dbo].[SetExternalPlatformServicePickupData]
+	@TblSimpliroutePickup as TblExtPlatSimpliroutePickup readonly,
+	@ServiceInputType as INT,
+	@UserToken as NVARCHAR(50)
+as
+begin
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+	set nocount on;
 	DECLARE @SimpliRoutePlatformId INT = 0;
 
 	SET @SimpliRoutePlatformId = (	SELECT	[CEP].[IdExternalPlatform]

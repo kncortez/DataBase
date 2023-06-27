@@ -47,7 +47,7 @@ BEGIN
 			AND
 			DO.Guide_Number = @GuideNumber
 
-		IF(@ActualStatusGuide NOT IN (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.CatCheckpointTypeId = @TerminalStatusGuide))
+		IF(@ActualStatusGuide NOT IN (SELECT [SO].[StatusOrderId] FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.CatCheckpointTypeId = @TerminalStatusGuide))
 		BEGIN
 		
 			BEGIN TRANSACTION

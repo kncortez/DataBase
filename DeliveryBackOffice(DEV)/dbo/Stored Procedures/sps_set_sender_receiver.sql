@@ -8,21 +8,21 @@
 -- Create date: <2020-09-19>
 -- Description:	<Control de insert y update>
 -- =============================================
-CREATE PROCEDURE [dbo].[sps_set_sender_receiver]
-		@FirstName NVARCHAR(100),
-		@LastName NVARCHAR(100),
-		@Address NVARCHAR(200),
-		@Zone NVARCHAR(100),
-		@Town NVARCHAR(100),
-		@Department NVARCHAR(100),
-		@Phone NVARCHAR(50),
-		@SocialSecurityID NVARCHAR(200),
-		@Email NVARCHAR(200),
-		@CUI NVARCHAR(25),
-		@Latitude NVARCHAR(40),
-		@Longitude NVARCHAR(40),
-		@EntityType TINYINT,
-		@UserCreated NVARCHAR(50),
+CREATE procedure [dbo].[sps_set_sender_receiver]
+		@FirstName nvarchar(100),
+		@LastName nvarchar(100),
+		@Address nvarchar(200),
+		@Zone nvarchar(100),
+		@Town nvarchar(100),
+		@Department nvarchar(100),
+		@Phone nvarchar(50),
+		@SocialSecurityID nvarchar(200),
+		@Email nvarchar(200),
+		@CUI nvarchar(25),
+		@Latitude nvarchar(40),
+		@Longitude nvarchar(40),
+		@EntityType tinyint,
+		@UserCreated nvarchar(50),
 		@Estatus bit,
 		@TypeId int=NULL,
 		@HubId int=NULL

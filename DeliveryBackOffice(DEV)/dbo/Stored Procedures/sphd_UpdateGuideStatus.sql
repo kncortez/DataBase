@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César, Sazo>
 -- Create date: <20/10/2021>
 -- Description:	< Cambio de estado de pantalla de administración de checkpoints >
@@ -371,7 +370,7 @@ BEGIN
 				
 		END
 		--Valida si guía esta anulada
-		ELSE IF(@IsCouponRedeemer = 0 AND @IsCouponOrigin = 0 AND @RowStatus1 = 0)  
+		ELSE IF(/*@IsCouponRedeemer = 0 AND @IsCouponOrigin = 0 AND*/ @RowStatus1 = 0)  
 		BEGIN
 		SET @ResultOperation  = 'Guía  ya fue anulada!!'
 			
@@ -381,7 +380,7 @@ BEGIN
 				
 				
 		END
-		ELSE IF (@RowStatus1 = 1 AND @IsCouponRedeemer = 0 AND @IsCouponOrigin = 0 )
+		ELSE IF (@RowStatus1 = 1 /*AND @IsCouponRedeemer = 0 AND @IsCouponOrigin = 0 */)
 		BEGIN
 			DECLARE @StatusDecription NVARCHAR(100) = (SELECT OrderDescription FROM StatusOrder WHERE StatusOrderId = @newStatus)
 				SET @ResultOperation  =CONCAT('Se ha cambiado el estado de la guía a "', @StatusDecription ,'" exitosamente!!')
@@ -495,7 +494,7 @@ BEGIN
 		    END
 			ELSE
 			BEGIN
-			SET @ResultOperation  ='Guía No Existe!!'
+			SET @ResultOperation  ='Operación no válida'
 			END 
 					
 			

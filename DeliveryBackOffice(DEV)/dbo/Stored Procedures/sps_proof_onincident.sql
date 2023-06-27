@@ -20,10 +20,10 @@
 -- Description:	<devolución ingreso a cola de webhooks>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[sps_proof_onincident]
-    @GuideSerie NVARCHAR(2),
-    @GuideNumber INT,
-    @PhoneNumber NVARCHAR(50),
+CREATE procedure [dbo].[sps_proof_onincident]
+    @GuideSerie nvarchar(2),
+    @GuideNumber int,
+    @PhoneNumber nvarchar(50),
     @IdIssue INT,
     @ImageIncident VARCHAR(300),
     @Latitude NVARCHAR(20),

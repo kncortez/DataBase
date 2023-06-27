@@ -1,29 +1,29 @@
-﻿CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
-AS
-BEGIN
-	DECLARE @FranchiseVisitPointTypeId INT = 
+as
+begin
+	declare @FranchiseVisitPointTypeId int = 
 	(
-		SELECT 
-			TOP (1) 
+		select 
+			top (1) 
 				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+		from
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
+		where
+			[KOVPC].[KindOfVPName] = 'Concesionario'  collate Latin1_General_CI_AI 
 	)
-	DECLARE @ExpressVisitPointTypeId INT = 
+	declare @ExpressVisitPointTypeId int = 
 	(
-		SELECT 
-			TOP (1) 
+		select 
+			top (1) 
 				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+		from
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
+		where
+			[KOVPC].[KindOfVPName] = 'Express Center'  collate Latin1_General_CI_AI 
 	)
-	DECLARE @IndividualWebSys INT =
+	declare @IndividualWebSys int =
 	(
 		SELECT 
 			TOP 1

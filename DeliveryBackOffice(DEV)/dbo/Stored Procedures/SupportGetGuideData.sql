@@ -22,6 +22,7 @@ select 'Información General'   as Descripcion
      , sy.SysNameSystem        'Sistema'
      , st.OrderDescription     'Estado'
      , ord.IsLastMileReturn    'Devolucion'
+	 , ord.TypeService 'Tipo de Servicio'
 from dbo.DeliveryOrder                  ord with (nolock)
     left join dbo.Customer              cs with (nolock)
         on cs.IdCustomer = ord.IdCustomer

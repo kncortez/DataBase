@@ -88,6 +88,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id para la tabla Customer ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'IdCustomer';
 
@@ -128,6 +130,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Meta de env
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado al cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Customer_CODContactEmail]
+    ON [dbo].[Customer]([CODContactEmail] ASC, [RegexEmail] ASC);
 
 
 GO
