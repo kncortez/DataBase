@@ -18,12 +18,6 @@ begin
 		IncidenceId INT
 	);
 
-	-- Tabla de incidencias forzadas a devolución
-	DECLARE @ReturnIncidence TABLE 
-	(
-		IncidenceId INT
-	);
-
     -- Insert statements for procedure here
     DECLARE @TblGuides AS TABLE
     (
