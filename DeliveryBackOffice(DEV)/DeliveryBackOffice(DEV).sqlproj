@@ -1559,6 +1559,8 @@
     <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenOld.sql" />
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\DeliveryManifestDetailTSE.sql" />
+    <Build Include="dbo\Tables\CatInvoiceType.sql" />
+    <Build Include="dbo\Stored Procedures\GetInvoicePaymentCommissionCOD.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
