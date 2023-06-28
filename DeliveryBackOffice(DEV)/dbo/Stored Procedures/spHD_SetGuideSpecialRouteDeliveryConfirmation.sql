@@ -21,6 +21,13 @@ BEGIN
 	BEGIN TRY
 		
 		DECLARE @IDTSERoutePreparationDetail INT
+		DECLARE @AmountOfPieces INT
+		DECLARE @TotalPieces INT =(select
+										 COUNT (dop.GuideNumber)
+											FROM DeliveryOrderPiece dop WITH (NOLOCK)
+											WHERE dop.GuideSerie = @GuideSerie
+											AND dop.GuideNumber = @GuideNumber)
+
 
 		SELECT
 			@IDTSERoutePreparationDetail = IDTSERoutePreparationDetail
@@ -57,6 +64,26 @@ BEGIN
 			WHERE dop.GuideSerie = @GuideSerie
 			AND dop.GuideNumber = @GuideNumber
 			AND dop.NoPiece = @GuidePiece
+
+			SET @AmountOfPieces = (SELECT
+										COUNT (dop.GuideNumber)
+											FROM DeliveryOrderPiece dop WITH (NOLOCK)
+											WHERE dop.GuideSerie = @GuideSerie
+											AND dop.GuideNumber = @GuideNumber
+											AND dop.StatusOrderId =@StatusOrderId)
+
+
+			IF (@AmountOfPieces = @TotalPieces)
+			BEGIN	
+					UPDATE do
+					SET do.StatusOrderId = @StatusOrderId
+						,do.DateUpdated = GETDATE()
+						,do.TokenUpdated = @Token
+						FROM DeliveryOrder do WITH (NOLOCK)
+						WHERE do.Guide_Serie = @GuideSerie
+						AND do.Guide_Number = @GuideNumber
+			END 
+		
 
 			IF NOT EXISTS (SELECT 1 FROM DeliveryOrderDetail WITH (NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND StatusOrderId = @StatusOrderId AND RowStatus = 1 )
 			BEGIN
