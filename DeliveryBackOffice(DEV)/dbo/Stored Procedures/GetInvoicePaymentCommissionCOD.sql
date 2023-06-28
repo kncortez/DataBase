@@ -28,7 +28,7 @@ BEGIN
 			WHERE [Name] = 'Comisión COD'
 			AND RowStatus = 1)
 
-		DECLARE @NameVolumeBillingDefault NVARCHAR(50) = 'Individual(Una guía por factura)'
+		DECLARE @NameVolumeBillingDefault NVARCHAR(50) = 'Individual'
 
 		DECLARE @NameArticle VARCHAR(100) = 'COMISION COD'
 
@@ -68,12 +68,11 @@ BEGIN
 		   ,@Description = CONCAT(Description, '. ')
 		FROM CatArticleSAP
 		WHERE Name = @NameArticle
-		PRINT (CONVERT( VARCHAR(24), GETDATE(), 121))
 		INSERT INTO #GuidesCommission (GuideSerie, GuideNumber, Amount, CreditDate)
 			SELECT
 				bdCOD.GuideSerie
 			   ,bdCOD.GuideNumber
-			   ,MAX(bdCOD.Amount)
+			   ,MAX(bdCOD.Commission)
 			   ,MAX(bdCOD.CreditDate)
 			FROM BatchDetailCOD bdCOD WITH (NOLOCK)
 			OUTER APPLY (SELECT TOP 1
@@ -83,7 +82,9 @@ BEGIN
 					ON [ih].[inv_pk_id] = [id].[dti_fk_header]
 				WHERE bdCOD.GuideSerie = id.dti_fk_orderSerie
 					AND bdCOD.GuideNumber = id.dti_fk_orderNumber
-				AND ih.CatInvoiceTypeId = @IdCatInvoiceType) invoice
+				AND ih.CatInvoiceTypeId = @IdCatInvoiceType
+				AND ih.inv_invoiceOfCreditNote IS NULL
+				AND ih.inv_creditNote IS NULL) invoice
 			WHERE invoice.inv_pk_id IS NULL
 			AND bdCOD.CatConceptCODId = @IdCatConceptCOD
 			AND bdCOD.RowStatus = 1
@@ -185,7 +186,6 @@ BEGIN
 				END [Address]
 			FROM #InvoicePaymentCommissionCOD ipcCOD
 			ORDER BY ipcCOD.IdCustomer
-			PRINT (CONVERT( VARCHAR(24), GETDATE(), 121))
 			DECLARE @Retries INT = ISNULL(( SELECT
 					ConfEP.ConfigParameterValue
 				FROM [DeliveryBackOffice].[dbo].[ConfigExternalPlatform] ConfEP WITH (NOLOCK)
