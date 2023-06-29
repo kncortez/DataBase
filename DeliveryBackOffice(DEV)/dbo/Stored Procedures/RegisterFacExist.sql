@@ -6,20 +6,25 @@
 
 CREATE PROCEDURE [dbo].[RegisterFacExist]
     @serie varchar(5),
-	@guide int
-
+	@guide int,
+	@CatInvoiceTypeId int = NULL
 AS
 BEGIN
 	DECLARE @invoiceHeaderId bigint=-1;
+	DECLARE @InvoiceTypeSend INT = (SELECT IdCatInvoiceType FROM CatInvoiceType WHERE [Name] = 'Envío')
 
-	SET @invoiceHeaderId =(SELECT TOP 1 ivhd.inv_pk_id
-				 FROM invoiceDetail ind WITH (NOLOCK)
-				 INNER JOIN invoiceHeader ivhd WITH (NOLOCK)
-				 ON ind.dti_fk_header = ivhd.inv_pk_id
-				 WHERE ind.dti_fk_orderSerie = @serie
-				 AND ind.dti_fk_orderNumber = @guide
-				 AND ivhd.inv_certificationFEL IS NULL
-				);
+	SET @invoiceHeaderId = (SELECT TOP 1
+			ivhd.inv_pk_id
+		FROM invoiceDetail ind WITH (NOLOCK)
+		INNER JOIN invoiceHeader ivhd WITH (NOLOCK)
+			ON ind.dti_fk_header = ivhd.inv_pk_id
+		WHERE ind.dti_fk_orderSerie = @serie
+		AND ind.dti_fk_orderNumber = @guide
+		AND (ivhd.CatInvoiceTypeId = @CatInvoiceTypeId
+		OR ((@CatInvoiceTypeId IS NULL OR @CatInvoiceTypeId = @InvoiceTypeSend)
+		AND (ivhd.CatInvoiceTypeId = @InvoiceTypeSend
+		OR ivhd.CatInvoiceTypeId IS NULL)))
+		AND ivhd.inv_certificationFEL IS NULL);
 
 	IF(@invoiceHeaderId IS NULL)
 		BEGIN
