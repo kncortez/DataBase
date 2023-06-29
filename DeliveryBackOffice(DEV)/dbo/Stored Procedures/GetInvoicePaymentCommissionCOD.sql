@@ -72,7 +72,7 @@ BEGIN
 			SELECT
 				bdCOD.GuideSerie
 			   ,bdCOD.GuideNumber
-			   ,MAX(bdCOD.Amount)
+			   ,MAX(bdCOD.Commission)
 			   ,MAX(bdCOD.CreditDate)
 			FROM BatchDetailCOD bdCOD WITH (NOLOCK)
 			OUTER APPLY (SELECT TOP 1
@@ -82,7 +82,9 @@ BEGIN
 					ON [ih].[inv_pk_id] = [id].[dti_fk_header]
 				WHERE bdCOD.GuideSerie = id.dti_fk_orderSerie
 					AND bdCOD.GuideNumber = id.dti_fk_orderNumber
-				AND ih.CatInvoiceTypeId = @IdCatInvoiceType) invoice
+				AND ih.CatInvoiceTypeId = @IdCatInvoiceType
+				AND ih.inv_invoiceOfCreditNote IS NULL
+				AND ih.inv_creditNote IS NULL) invoice
 			WHERE invoice.inv_pk_id IS NULL
 			AND bdCOD.CatConceptCODId = @IdCatConceptCOD
 			AND bdCOD.RowStatus = 1
