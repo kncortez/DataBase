@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[invoiceHeader] (
+﻿CREATE TABLE [dbo].[invoiceHeader] (
     [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
     [inv_vpCodeOfReferences]  INT            NOT NULL,
     [inv_cmp_name]            VARCHAR (500)  NULL,
@@ -50,9 +50,10 @@ CREATE TABLE [dbo].[invoiceHeader] (
     [CatInvoiceTypeId]        INT            NULL,
     [Retries]                 INT            DEFAULT ((1)) NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
-    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
-    CONSTRAINT [FK_InvoiceHeader_CatInvoiceTypeId] FOREIGN KEY ([CatInvoiceTypeId]) REFERENCES [dbo].[CatInvoiceType] ([IdCatInvoiceType])
+    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
+
+
 
 
 
@@ -115,5 +116,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los inténtos de la generación de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los int�ntos de la generaci�n de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
+
+
 

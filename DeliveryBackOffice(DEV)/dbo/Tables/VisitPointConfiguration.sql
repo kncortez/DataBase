@@ -34,6 +34,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_VisitPointID]
     ON [dbo].[VisitPointConfiguration]([VisitPointID] ASC);
@@ -45,13 +47,19 @@ CREATE NONCLUSTERED INDEX [idx_DateStartOperation]
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Volumen de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Volumen de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
+
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de corte de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de corte de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointConfiguration', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
+
+
 
