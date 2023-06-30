@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2023-05-19>
 -- Description:	<Description, Guardar registros de preparación de rutas especiales>
@@ -21,12 +20,12 @@ AS
 BEGIN	
 
 		DECLARE @TSERoutePreparationDetail AS INT
-		DECLARE @IdHeader AS INT = (SELECT  ISNULL(IdTSERoutePreparationHeader,0)  FROM  [dbo].[TSERoutePreparationHeader] RP  WHERE RP.IdCatRoute = @IdCatRoute AND RP.IdCatRouteCluster = @IdCatRouteCluster)
+		DECLARE @IdHeader AS INT = (Select  ISNULL(IdTSERoutePreparationHeader,0)  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster)
 		
 		BEGIN TRANSACTION
 			BEGIN TRY
          
-		 IF (EXISTS(SELECT TOP 1  1  FROM  [dbo].[TSERoutePreparationHeader] RP  WHERE RP.IdCatRoute = @IdCatRoute AND RP.IdCatRouteCluster = @IdCatRouteCluster AND RP.Rowstatus=1))
+		 IF (Exists(Select Top 1  1  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster And RP.Rowstatus=1))
 		 BEGIN
 
 		
@@ -37,17 +36,18 @@ BEGIN
 			      SET IdCatVehicle = @IdCatVehicle, 
 				      IdCatRouteCluster = @IdCatRouteCluster,
 					  IdRouteSupervisor = @IdRouteSupervisor,
+					  [SenderReceiverId] = @SenderReceiverId,
 				      IdRouteLeader = @IdRouteLeader,
-					  DateUpdated = GETDATE(),
+					  DateUpdated = Getdate(),
 					  TokenUpdated = @TokenCreated
-			  WHERE IdCatRoute = @IdCatRoute 
-			  AND IdCatRouteCluster = @IdCatRouteCluster
-			  AND IDTSERoutePreparationHeader = @IdHeader
+			  Where IdCatRoute = @IdCatRoute 
+			  And IdCatRouteCluster = @IdCatRouteCluster
+			  And IDTSERoutePreparationHeader = @IdHeader
 			  
 
 			UPDATE [dbo].[TSERoutePreparationDetail]
 			     SET  Rowstatus = 0, 
-			          DateUpdated = GETDATE(),
+			          DateUpdated = Getdate(),
 				      TokenUpdated = @TokenCreated
 			  WHERE [TSERoutePreparationHeaderID] = @IdHeader
            

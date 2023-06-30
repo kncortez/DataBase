@@ -18,6 +18,7 @@ CREATE PROCEDURE [dbo].[sps_headerInvoice]
     ,@tokenRegister varchar(200)
 	,@type int
 	,@systemOrigen int = 1
+	,@CatTypeInvoiceId INT = NULL
 AS
 BEGIN
 
@@ -47,6 +48,7 @@ END
            ,[inv_tokenRegister]
 		   ,[inv_type]
            ,[systemOperation]
+		   ,[CatInvoiceTypeId]
 		   )
      VALUES
            (@VpCodeOfReferences
@@ -63,6 +65,7 @@ END
            ,@tokenRegister
 		   ,@type
            ,@systemOrigen
+		   ,ISNULL(@CatTypeInvoiceId, (SELECT IdCatInvoiceType FROM CatInvoiceType WHERE Name = 'Envío' AND RowStatus = 1))
 		   )
 		   select @@IDENTITY 'IDENTITY'
 END
