@@ -54,14 +54,14 @@ BEGIN
 				[M].[ActualServiceCount],
 				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService],
 				[M].[ExpirationDate] [MembershipExpirationDate],
-				IIF((([M].[ActualServiceCount] * 100) / (case when [M].[MembershipMaxServiceFixedValue] = 0 then 1 else [M].[MembershipMaxServiceFixedValue] end)) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage],
+				IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage],
 				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[MembershipId] = [M].[IdMembership]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [MembershipDeliveriesCount],
-				CAST(IIF((([M].[ActualServiceCount] * 100) / (case  when [M].[MembershipMaxServiceFixedValue] = 0 then 1 else [M].[MembershipMaxServiceFixedValue] end)) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
+				CAST(IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]

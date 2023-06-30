@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Morales, Oscar>
 -- Create date: <2021-11-03>
 -- Description:	<Recupera información detallada de la guía a facturar>
@@ -116,16 +115,32 @@ BEGIN
     END;
 	-- ESTANDAR
 	ELSE
-
-	IF (@IsLastMileReturn = 1)
 	BEGIN
+
 		SET @NameArticle = 'TARIFA DE ENVIO ESTANDAR';
 		SET @NameArticleWeight = 'RECARGO POR PESO ESTANDAR';
 		SET @NameArticleCollect = 'TARIFA COLLECT ESTANDAR';
 			
-			
-			SELECT @DescriptionReturn = COALESCE(@DescriptionReturn, '') + [Description]
-			FROM [dbo].[UndefinedDescriptions]
+	END
+
+	IF (@IsLastMileReturn = 1)
+	BEGIN
+		    
+		SELECT @DescriptionReturn = 
+			COALESCE(@DescriptionReturn, '') + 
+			IIF
+			(
+				[UD].[IdUndefinedDescriptions] = 1, 
+				REPLACE([Description],'+++',CONCAT(@GuideSerie,@GuideNumber,'. +++ ')),
+				IIF
+				(
+					[UD].[IdUndefinedDescriptions] = 2,
+					REPLACE([Description],'Q ##',CONCAT(@GuideSerie,@GuideNumber,'. Q ##')),
+					REPLACE([Description],'Q',CONCAT(@GuideSerie,@GuideNumber,'. Q'))
+				)
+			)
+			FROM 
+				[DeliveryBackOffice].[dbo].[UndefinedDescriptions] UD  WITH(NOLOCK) 
 	
 	END
 

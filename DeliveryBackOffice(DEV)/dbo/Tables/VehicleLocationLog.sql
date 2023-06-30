@@ -14,6 +14,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VehicleLocationLog', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -56,4 +58,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora de ubicaciones de vehículos.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VehicleLocationLog';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_VehicleLocationLog_RowStatus_INCLUDE]
+    ON [dbo].[VehicleLocationLog]([RowStatus] ASC)
+    INCLUDE([VehicleId]);
 

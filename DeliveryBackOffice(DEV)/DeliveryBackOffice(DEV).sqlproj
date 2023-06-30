@@ -1565,6 +1565,31 @@
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\DeliveryManifestDetailTSE.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoicePaymentCommissionCOD.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationHeader_1.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationDetailPiece_1.sql" />
+    <Build Include="dbo\Tables\TSERoutePreparationDetail_1.sql" />
+    <Build Include="dbo\Tables\NotificationQueueDetail_1.sql" />
+    <Build Include="dbo\Tables\NotificationQueue_1.sql" />
+    <Build Include="dbo\Tables\CatRouteCluster_1.sql" />
+    <Build Include="dbo\Tables\CatNotificationType_1.sql" />
+    <Build Include="dbo\Functions\fn_get_cv_status.sql" />
+    <Build Include="dbo\Stored Procedures\TestTSE_1.sql" />
+    <Build Include="dbo\Stored Procedures\SpSaveRegisterPreparationRouteEspecial_1.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue_1.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent_1.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_GetPendingNotificationsQueue_1.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_GetNotificationsQueueDetail_1.sql" />
+    <Build Include="dbo\Stored Procedures\SPHDManifestHeaderTSE_1.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_VerifyGuideStatus_1.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_SetGuideIncidence_1.sql" />
+    <Build Include="dbo\Stored Procedures\spHD_GetIncidenceListByType_1.sql" />
+    <Build Include="dbo\Stored Procedures\SpGetDataGuideEspecial_1.sql" />
+    <Build Include="dbo\Stored Procedures\SPDHValidateGuideInRourteSpecial_1.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatSenderReceiverEspecial_1.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRoutEspecial_1.sql" />
+    <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetGeographicalData_1.sql" />
+    <Build Include="dbo\Stored Procedures\get_Catalog_ExpressCenter_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

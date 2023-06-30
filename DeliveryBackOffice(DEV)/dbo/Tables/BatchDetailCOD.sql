@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[BatchDetailCOD] (
+﻿CREATE TABLE [dbo].[BatchDetailCOD] (
     [IdBatchDetailCOD]        INT             IDENTITY (1, 1) NOT NULL,
     [BatchCODId]              INT             NOT NULL,
     [GuideSerie]              NVARCHAR (2)    NOT NULL,
@@ -48,6 +48,8 @@ CREATE TABLE [dbo].[BatchDetailCOD] (
     CONSTRAINT [FK_BatchDetailCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
+
+
 
 
 
@@ -224,5 +226,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro de
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'comisión de cobro por  COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CODCommission';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'comisi�n de cobro por  COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CODCommission';
+
+
 

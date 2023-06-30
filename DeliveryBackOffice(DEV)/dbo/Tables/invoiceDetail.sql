@@ -17,10 +17,10 @@
     [MembershipId]       INT             NULL,
     [SubscriptionId]     INT             NULL,
     CONSTRAINT [FK_invoiceDetail_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
-    CONSTRAINT [FK_invoiceDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription]),
-    CONSTRAINT [FK_invoiceDetail_invoiceHeader] FOREIGN KEY ([dti_fk_header]) REFERENCES [dbo].[invoiceHeader] (inv_pk_id),
-    CONSTRAINT [FK_invoiceDetail_deliveryorder] FOREIGN KEY ([dti_fk_orderSerie],[dti_fk_orderNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie],[Guide_Number])
+    CONSTRAINT [FK_invoiceDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
 );
+
+
 
 
 
