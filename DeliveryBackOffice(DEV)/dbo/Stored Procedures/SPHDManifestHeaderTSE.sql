@@ -1,8 +1,7 @@
-﻿
--- =============================================
--- Author:		<Author,,Name>
--- Create date: <Create Date,,>
--- Description:	<Description,,>
+﻿-- =============================================
+-- Author:		<Author,Edelman>
+-- Create date: <Create Date,2023-05-31>
+-- Description:	<Description,Cabecera de reporte de manifiiesto recolección de rutas especiales>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHDManifestHeaderTSE] 
 @IdRoute AS INT
@@ -11,39 +10,40 @@ BEGIN
 	
 	SET NOCOUNT ON;
 
-		SELECT TOP 1 
+		Select Top 1 
 			RPH.IDTSERoutePreparationHeader,
 			UPPER(CR.CodeRoute) CodeRoute,
-			SR.First_Name +' '+ SR.Last_Name [Curierman],
+			UPPER(SR.First_Name +' '+ SR.Last_Name) [Curierman],
 			CV.UnitNumber+'-'+CV.Plate Plate,
 			UPPER(CRC.ClusterName) ClusterName,
-			SR1.First_Name +' '+ SR1.Last_Name [Name],
-			SR2.First_Name +' '+ SR2.Last_Name [Leader]
+			UPPER(SR1.First_Name +' '+ SR1.Last_Name) [Name],
+			UPPER(SR2.First_Name +' '+ SR2.Last_Name) [Leader]
 		
 
 
-	FROM [dbo].[TSERoutePreparationHeader] RPH WITH (NOLOCK)
-		 INNER JOIN
+	From [dbo].[TSERoutePreparationHeader] RPH WITH (NOLOCK)
+		 Inner Join
 		 [dbo].[CatRoute] CR WITH (NOLOCK)
 		 ON 	RPH.IdCatRoute = CR.IdRoute
-		 INNER JOIN 
+		 Inner Join 
 		 [dbo].[SenderReceiver] SR WITH (NOLOCK)
 		 ON RPH.SenderReceiverId = SR.ID
-		 INNER JOIN 
+		 Inner Join 
 		 [dbo].[SenderReceiver] SR1 WITH (NOLOCK)
 		 ON RPH.IdRouteSupervisor = SR1.ID
-		 INNER JOIN 
+		 Inner Join 
 		 [dbo].[SenderReceiver] SR2 WITH (NOLOCK)
 		 ON  RPH.IdRouteLeader  = SR2.ID
-		 INNER JOIN
+		 Inner Join
 		 [dbo].[CatRouteCluster] CRC WITH (NOLOCK)
 		 ON   RPH.IdCatRouteCluster = CRC.IdCatRouteCluster
-		 INNER JOIN 
+		 Inner Join 
 		 [dbo].[CatVehicle] CV  WITH (NOLOCK)
 		 ON RPH.IdCatVehicle = CV.IdVehicle 
 
-	WHERE  RPH.RowStatus = 1 AND 
+	WHERE  RPH.RowStatus = 1 And 
 	       RPH.IdCatRoute = @IdRoute
+		  -- And RPH.HasFirstPickupProcess =1
  
    
 END

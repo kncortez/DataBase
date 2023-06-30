@@ -24,8 +24,13 @@ BEGIN
 	DECLARE @CardAmount DECIMAL(14,2)
 	DECLARE @Category VARCHAR(50)
 	DECLARE @Description NVARCHAR(100)
+	DECLARE @IdType INT 
+	DECLARE @FacService INT
+	DECLARE @FacServiceNC INT
 
 	SET NOCOUNT ON;
+
+	SET @IdType = (SELECT IdCatInvoiceType FROM CatInvoiceType WHERE Name = 'Envío')
 
 	-- Table 0
 	SELECT 
@@ -101,28 +106,50 @@ BEGIN
 		where ih.inv_creditNote = inh2.inv_pk_id
 	) --validar que no exista nota de crédito asociada
 
-	-- Table 2
-	SELECT TOP 1 ih.inv_cli_nit Nit
-		, ih.inv_cli_name Name
-		, CONCAT(ih.inv_serieFEL, '-', ih.inv_numberFEL) FEL
-		, ih.inv_certificationFEL Certification
-	FROM invoiceHeader ih WITH(NOLOCK)	
-	WHERE ih.inv_pk_id = @IdFEL
-		AND ih.inv_certificationFEL IS NOT NULL
-		AND ih.inv_certificationFEL != ''
-		AND ih.inv_invoiceOfCreditNote IS NULL
-	AND NOT EXISTS(
-		SELECT 1 FROM dbo.invoiceHeader INH2 WITH(NOLOCK)
-		where ih.inv_creditNote = inh2.inv_pk_id
-	) --validar que no exista nota de crédito asociada
-	
-	ORDER BY ih.inv_date DESC
+	SET @FacService = (SELECT COUNT(1)
+		FROM invoiceHeader
+		WHERE inv_pk_id = @IdFEL
+		AND CatInvoiceTypeId = @IdType)
+
+	SET @FacServiceNC=(SELECT COUNT(1)
+		FROM invoiceHeader
+		WHERE inv_pk_id = @IdFEL
+		AND CatInvoiceTypeId = @IdType
+		AND inv_creditNote IS NOT NULL)
+
+	IF(@FacService >0 AND @FacServiceNC = 0)
+		 BEGIN
+						-- Table 2
+			SELECT TOP 1 ih.inv_cli_nit Nit
+				, ih.inv_cli_name Name
+				, CONCAT(ih.inv_serieFEL, '-', ih.inv_numberFEL) FEL
+				, ih.inv_certificationFEL Certification
+			FROM invoiceHeader ih WITH(NOLOCK)	
+			WHERE ih.inv_pk_id = @IdFEL
+				AND ih.inv_certificationFEL IS NOT NULL
+				AND ih.inv_certificationFEL != ''
+				AND ih.inv_invoiceOfCreditNote IS NULL
+			AND NOT EXISTS(
+				SELECT 1 FROM dbo.invoiceHeader INH2 WITH(NOLOCK)
+				where ih.inv_creditNote = inh2.inv_pk_id
+			) --validar que no exista nota de crédito asociada
+			ORDER BY ih.inv_date DESC
+		 END
+	ELSE 
+		 BEGIN
+						-- Table 2
+			SELECT 'Nit' AS Nit, 'Name' AS Name, '' AS FEL, 'Certification' AS Certification
+				WHERE 1 = 0
+		 END
+
+
 
 	-- Table 3
 	SELECT CONCAT(id.dti_fk_orderSerie, id.dti_fk_orderNumber) Guide
 		, id.dti_priceUnit Amount
 	FROM invoiceDetail id WITH(NOLOCK)
 	WHERE id.dti_fk_header = @IdFEL
+
 
 	SET NOCOUNT OFF;
 END	

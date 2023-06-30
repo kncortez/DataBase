@@ -17,7 +17,9 @@
     [MembershipId]       INT             NULL,
     [SubscriptionId]     INT             NULL,
     CONSTRAINT [FK_invoiceDetail_Membership] FOREIGN KEY ([MembershipId]) REFERENCES [dbo].[Membership] ([IdMembership]),
-    CONSTRAINT [FK_invoiceDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription])
+    CONSTRAINT [FK_invoiceDetail_Subscription] FOREIGN KEY ([SubscriptionId]) REFERENCES [dbo].[Subscription] ([IdSubscription]),
+    CONSTRAINT [FK_invoiceDetail_invoiceHeader] FOREIGN KEY ([dti_fk_header]) REFERENCES [dbo].[invoiceHeader] (inv_pk_id),
+    CONSTRAINT [FK_invoiceDetail_deliveryorder] FOREIGN KEY ([dti_fk_orderSerie],[dti_fk_orderNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie],[Guide_Number])
 );
 
 
@@ -53,7 +55,10 @@ GO
 CREATE NONCLUSTERED INDEX [idx_dti_fk_orderNumber_dti_fk_orderSerie]
     ON [dbo].[invoiceDetail]([dti_fk_orderNumber] ASC, [dti_fk_orderSerie] ASC);
 
-
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fk_header_dti_fk_orderSerie_dti_fk_orderNumber]
+    ON [dbo].[invoiceDetail]([dti_fk_orderSerie],[dti_fk_orderNumber]) INCLUDE ([dti_fk_header]);
+    
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de suscripción facturada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'SubscriptionId';
 

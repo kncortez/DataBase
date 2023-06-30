@@ -27,6 +27,11 @@
 
 
 GO
+CREATE UNIQUE NONCLUSTERED INDEX [UQ_TSERoutePreparationHeader_CustomsMark]
+    ON [dbo].[TSERoutePreparationHeader]([TSECustomsMark] ASC) WHERE ([TSECustomsMark] IS NOT NULL);
+
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si la ruta ya fue procesada en su última entrega', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationHeader', @level2type = N'COLUMN', @level2name = N'HasLastDeliveryProccess';
 
 

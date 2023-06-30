@@ -37,6 +37,7 @@ BEGIN
 					AND
 					[DOPaux].[GuideNumber] = [DOP].[GuideNumber]
 			) [MaxValue]
+			
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP  WITH(NOLOCK) 
 			INNER JOIN
@@ -119,16 +120,19 @@ BEGIN
 
 	SELECT 
 		DISTINCT 
+		    TRPD.GuideSerie + Convert(NVARCHAR(50),TRPD.GuideNumber) Guide,
 			TRPD.GuideNumber,
 			TRPD.IDTSERoutePreparationDetail,
 			[DO].[Receiver_FirstName] [VoteCenter],
 			[DO].[Receiver_Address] [Adress],
-			[DO].[Receiver_Alternant_FullName] [Coordinador],
+			Upper([DO].[Receiver_Alternant_FullName]) [Coordinador],
 			(
 				SELECT
 					SUM
 					(
 						CASE
+							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRE'  COLLATE Latin1_General_CI_AI  THEN 0
+							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRES'  COLLATE Latin1_General_CI_AI  THEN 0
 							WHEN LTRIM(RTRIM([TP].[Detail])) <> '' THEN 1
 							ELSE 0
 						END

@@ -57,6 +57,11 @@ BEGIN
 						-- interfering with SELECT statements.
 						SET NOCOUNT ON;
 						-- Insert statements for procedure here
+
+							DECLARE @idType INT;
+
+							SET @idType = (SELECT IdCatInvoiceType FROM CatInvoiceType WHERE Name = 'Envío')
+
 						INSERT INTO [dbo].[invoiceHeader]
 								([inv_vpCodeOfReferences]
 								,[inv_cmp_nit]
@@ -72,6 +77,7 @@ BEGIN
 								,[inv_tokenRegister]
 								,[inv_type]
 								,[systemOperation]
+								,[CatInvoiceTypeId]
 								)
 							VALUES
 								(@VpCodeOfReferences
@@ -88,6 +94,7 @@ BEGIN
 								,@tokenRegister
 								,@type
 								,@systemOrigen
+								,@idType
 								)
 								SET @invoiceHeaderId= @@IDENTITY --'IDENTITY'
 

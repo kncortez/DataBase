@@ -61,7 +61,9 @@
 	@ExcludeCommissionCOD bit = 'FALSE',
 	@CatBatchTypeCODId BIGINT,
 	@CatBatchFrequencyCODId BIGINT,
-
+	@BillingTimeId int = null,
+	@BillingVolumeId int = null,
+	@BillingCut_offDate Date = NULL,	
 	-----------------------------------------------------
 	@CardCode nvarchar(50) =NULL
 	-----------------------------------------------------
@@ -71,6 +73,13 @@ BEGIN
 	
 	BEGIN TRANSACTION
 	BEGIN TRY
+
+
+	IF (@BillingTimeId = -1)
+	 Set @BillingTimeId =(Select IdCatBillingTime From [dbo].[CatBillingTime] CBT Where CBT.DescriptionBillingTime='Default(Cada domingo del mes y el día 2 del siguiente mes)')
+
+	 IF(@BillingVolumeId=-1)
+	 Set @BillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
 
 		DECLARE @msgerror NVARCHAR(MAX)='';		
 				SELECT @msgerror=
@@ -103,6 +112,7 @@ BEGIN
 		--END		
 		ELSE 
 		-----------
+
 
 		IF (@Option = 1)
 		BEGIN 
@@ -169,6 +179,9 @@ BEGIN
 				   ,[ExcludeCommissionCOD]
 				   ,[CatBatchTypeCODId]
 				   ,[CatBatchFrequencyCODId]
+				   ,[CatBillingTimeId]
+				   ,[CatBillingVolumeId]
+				   ,[BillingCut_offDate]
 				   )
 			 VALUES
 				   (@NameCustomer
@@ -232,6 +245,9 @@ BEGIN
 				   ,@ExcludeCommissionCOD
 				   ,@CatBatchTypeCODId
 				   ,@CatBatchFrequencyCODId
+				   ,@BillingTimeId
+				   ,@BillingVolumeId
+				   ,@BillingCut_offDate
 				   )
 
 				   SELECT	'TRUE'	[blnResult]
@@ -320,6 +336,10 @@ BEGIN
 					  -------------------------
 					  ,[SAPCardCode]=@CardCode
 					  -------------------------
+					  ,[CatBillingTimeId] = @BillingTimeId
+					  ,[CatBillingVolumeId] = @BillingVolumeId
+				      ,[BillingCut_offDate] = @BillingCut_offDate
+					  
 				 WHERE IdCustomer = @IdCustomer
 
 				 -- Inactivar el registro
