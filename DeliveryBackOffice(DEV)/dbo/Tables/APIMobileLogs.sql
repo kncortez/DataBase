@@ -14,6 +14,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo HTTP de la respuesta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APIMobileLogs', @level2type = N'COLUMN', @level2name = N'ResponseCode';
 
@@ -56,4 +58,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Metodo HTTP
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APIMobileLogs', @level2type = N'COLUMN', @level2name = N'IdAPIMobileLogs';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de peticiones en API móvil.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'APIMobileLogs';
 

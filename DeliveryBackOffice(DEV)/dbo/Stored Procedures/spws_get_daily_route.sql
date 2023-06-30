@@ -366,7 +366,11 @@ BEGIN
                                     LEFT JOIN dbo.CatPaymentTime cpt WITH (NOLOCK)
                                         ON sma.CatPaymentTimeId = cpt.TimePlaId
                                 WHERE ras.IdCurrierMan = @IdCourier
-                                      AND ras.DateOfRoute = @DateRoute
+                                      AND 
+									  (ras.DateOfRoute = @DateRoute
+									 --- OR ras.DateOfRoute = '2023-06-25'
+									  )
+
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,

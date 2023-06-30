@@ -1,8 +1,8 @@
 ﻿
 
---DROP FUNCTION [dbo].[fn_get_tse_status]
-/* CONTROL DE ESTADOS OPERATIVOS PARA EL PARQUE DE LA INDUSTRIA */
-CREATE FUNCTION [dbo].[fn_get_tse_status]
+--DROP FUNCTION [dbo].[fn_get_cv_status]
+/* CONTROL DE ESTADOS OPERATIVOS PARA LOS CENTROS DE VOTACION, NO PARA EL PARQUE DE LA INDUSTRIA */
+CREATE FUNCTION [dbo].[fn_get_cv_status]
 (
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT
@@ -24,21 +24,21 @@ BEGIN
     DECLARE @StatusDateTime DATETIME;
 
     -- Status 1 = Solicitado
-    DECLARE @msgSolicitado NVARCHAR(60) = N'Cajas pendientes de recolectar en Parque de la Industria';  -- Fase 0
+    DECLARE @msgSolicitado NVARCHAR(60) = N'Servicio programado';
     -- Status 2 = Recolectado
-    DECLARE @msgRecolectado NVARCHAR(60) = N'Cajas recolectadas en Parque de la Industria'; -- Fase 1
+    DECLARE @msgRecolectado NVARCHAR(60) = N'Servicio programado';
     -- Status 11 = Arribó a Instalaciones
-    DECLARE @msgArribo NVARCHAR(60) = N'Cajas recolectadas en Parque de la Industria'; -- Fase 1
+    DECLARE @msgArribo NVARCHAR(60) = N'Servicio programado';
     -- Status 4 = En Ruta
-    DECLARE @msgEnRuta NVARCHAR(60) = N'Cajas recolectadas en Parque de la Industria'; -- Fase 1
+    DECLARE @msgEnRuta NVARCHAR(60) = N'Servicio programado';
     -- Status 5 = Entregado
-    DECLARE @msgEntregado NVARCHAR(60) = N'Cajas entregadas a Centro de Votación'; -- Fase 2
+    DECLARE @msgEntregado NVARCHAR(60) = N'Cajas entregadas a Centro de Votación';
     -- Status 32 = Declarado para devolución
-    DECLARE @msgDeclaradoDevolucion NVARCHAR(60) = N'Cajas entregadas a Centro de Votación'; -- Fase 2
+    DECLARE @msgDeclaradoDevolucion NVARCHAR(60) = N'Cajas entregadas a Centro de Votación';
     -- Status 2 = Recolectado (devolución)
-    DECLARE @msgRecolectado2 NVARCHAR(60) = N'Cajas recolectadas en Centro de Votación'; -- Fase 3
+    DECLARE @msgRecolectado2 NVARCHAR(60) = N'Cajas recolectadas en Centro de Votación';
     -- Status 14 = Devuelto
-    DECLARE @msgDevuelto NVARCHAR(60) = N'Cajas entregadas en Parque de la Industria'; -- Fase 4
+    DECLARE @msgDevuelto NVARCHAR(60) = N'Cajas recolectadas en Centro de Votación';
 
     INSERT INTO @recordFound
     SELECT TOP (1)

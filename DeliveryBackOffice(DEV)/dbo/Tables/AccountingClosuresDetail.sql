@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresDetail', @level2type = N'COLUMN', @level2name = N'IdAccountingClosuresDetail';
 
@@ -76,4 +78,8 @@ CREATE NONCLUSTERED INDEX [IDX_RowStatus]
 GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus_DopId]
     ON [dbo].[AccountingClosuresDetail]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC, [DopId] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de detalle de guías asociadas a un cierre de punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AccountingClosuresDetail';
 
