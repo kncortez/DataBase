@@ -1,5 +1,0 @@
-﻿CREATE SEQUENCE [dbo].[COD_CommissionId]
-    AS BIGINT
-    START WITH 1
-    INCREMENT BY 1;
-
