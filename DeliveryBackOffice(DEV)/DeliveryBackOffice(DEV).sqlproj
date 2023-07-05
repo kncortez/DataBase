@@ -337,6 +337,8 @@
     <Build Include="dbo\Tables\ExtPlatformService.sql" />
     <Build Include="dbo\Tables\ExtPlatServiceRelationshipWithGuide.sql" />
     <Build Include="dbo\Tables\ExtPlatIncidence_TypeIncidence.sql" />
+    <Build Include="dbo\Tables\ExpressAccountServiceCartDetail.sql" />
+    <Build Include="dbo\Tables\ExpressAccountServiceCart.sql" />
     <Build Include="dbo\Tables\EventService.sql" />
     <Build Include="dbo\Tables\EcommerceBySeller.sql" />
     <Build Include="dbo\Tables\Ecommerce.sql" />
