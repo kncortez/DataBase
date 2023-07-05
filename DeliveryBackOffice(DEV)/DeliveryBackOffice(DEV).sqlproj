@@ -1538,6 +1538,22 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateInvoiceHelperExecutionQueue.sql" />
+    <Build Include="dbo\Stored Procedures\SetInvoiceProcessedToUpdate.sql" />
+    <Build Include="dbo\Stored Procedures\GetInvoiceProcessedToUpdate.sql" />
+    <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
+    <Build Include="dbo\User Defined Types\TblServiceExecutionProcess.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetPaymentGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
+    <Build Include="dbo\Stored Procedures\spSR_getAllPreparationRoutesInfo.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_GetRouteData.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountExpressCenter.sql" />
+    <Build Include="dbo\Stored Procedures\RemoveGuideFromExpressCenterServiceCart.sql" />
+    <Build Include="dbo\Stored Procedures\FinishExpressServiceCartbyAccount.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPointsFromExpressCenter.sql" />
+    <Build Include="dbo\Tables\PromoCouponProcessLog.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ServiceCartCouponBrain.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_CompleteCouponProcessFromServiceCart.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

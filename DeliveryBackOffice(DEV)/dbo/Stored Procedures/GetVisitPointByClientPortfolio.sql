@@ -289,6 +289,14 @@ BEGIN
                                                           + '"Township":"' + ISNULL(CONVERT(VARCHAR, tw.TownshipName), ' ')
                                                           + '",' + '"HeaderCode":"'
                                                           + ISNULL(CONVERT(VARCHAR, tw.HeaderCode), ' ') + '",'
+														  + '"IdCityPlace":"'
+																+ ISNULL(
+																			CONVERT(
+																						VARCHAR,
+																						ISNULL([SUB].[IdCityPlace], 7)
+																					),
+																			' '
+																		) + '",' +
                                                           + '"IdAccount":"' + ISNULL(CONVERT(VARCHAR, SUB.UadIdAccount), ' ')
                                                           + '",' + '"IdCountry":"'
                                                           + ISNULL(CONVERT(VARCHAR, SUB.UadIdCountry), ' ') + '",'

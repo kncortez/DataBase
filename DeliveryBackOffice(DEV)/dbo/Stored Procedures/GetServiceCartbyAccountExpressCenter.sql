@@ -1,9 +1,9 @@
 ﻿-- =============================================
 -- Author:		<Oscar Morales>
--- Create date: <2022-08-16>
--- Description:	<Obtiene información del carrito de compras>
+-- Create date: <2023-05-25>
+-- Description:	<Obtiene información del carrito de compras express center>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetServiceCartbyAccount]
+CREATE PROCEDURE [dbo].[GetServiceCartbyAccountExpressCenter]
 	-- Add the parameters for the stored procedure here
 	@IdAccount BIGINT,
 	@Token NVARCHAR(50)
@@ -12,46 +12,89 @@ BEGIN
 	SET NOCOUNT ON;
 	SET ARITHABORT ON;
 
+	DECLARE @IndividualCustomerType INT = 
+	(
+		SELECT 
+			TOP (1)
+				[CT].[IdCustomerType]
+		FROM
+			[DeliveryBackOffice].[dbo].[CustomerType] CT  WITH(NOLOCK) 
+		WHERE
+			[CT].[Description] = 'INDIVIDUAL'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateCustomerType INT = 
+	(
+		SELECT 
+			TOP (1)
+				[CT].[IdCustomerType]
+		FROM
+			[DeliveryBackOffice].[dbo].[CustomerType] CT  WITH(NOLOCK) 
+		WHERE
+			[CT].[Description] = 'CORPORATIVO'  COLLATE Latin1_General_CI_AI 
+	)
+
+	DECLARE @IndividualAccountType INT =
+	(
+		SELECT 
+			TOP (1)
+				CTA.[TacIdTypeAccount]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatTypeAccount] CTA  WITH(NOLOCK) 
+		WHERE
+			[CTA].[TacShortName] = 'IND'  COLLATE Latin1_General_CI_AI 
+	)
+
+	DECLARE @CreditPaymentType INT =
+	(
+		SELECT 
+			TOP (1)
+				[CPT].[TimePlaId]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatPaymentTime] CPT  WITH(NOLOCK)
+		WHERE
+			[CPT].[TimePlaAbrev] = 'POST'  COLLATE Latin1_General_CI_AI 
+	)
+
 	BEGIN TRANSACTION
 
 	BEGIN TRY
 
-		DECLARE @AccountServiceCartId INT
+		DECLARE @ExpressAccountServiceCartId INT
 
 		SELECT TOP 1
-			@AccountServiceCartId = IdAccountServiceCart
-		FROM AccountServiceCart
+			@ExpressAccountServiceCartId = IdExpressAccountServiceCart
+		FROM ExpressAccountServiceCart
 		WHERE AccountId = @IdAccount
 		AND IsPending = 1
 		AND RowStatus = 1
 		ORDER BY DateCreated DESC
 
-		IF @AccountServiceCartId IS NOT NULL
+		IF @ExpressAccountServiceCartId IS NOT NULL
 		BEGIN
 			
 			--Desactivar otros carritos
-			UPDATE AccountServiceCart
+			UPDATE ExpressAccountServiceCart
 			SET IsPending = 0
 			   ,RowStatus = 0
 			   ,TokenUpdated = @Token
 			   ,DateUpdated = GETDATE()
 			WHERE IsPending = 1
 			AND RowStatus = 1
-			AND IdAccountServiceCart <> @AccountServiceCartId
+			AND IdExpressAccountServiceCart <> @ExpressAccountServiceCartId
 			AND AccountId = @IdAccount
 
 			--Eliminar guías anuladas
-			UPDATE ascd
-			SET ascd.RowStatus = 0
-			   ,ascd.TokenUpdated = @Token
-			   ,ascd.DateUpdated = GETDATE()
-			FROM AccountServiceCartDetail ascd
+			UPDATE eascd
+			SET eascd.RowStatus = 0
+			   ,eascd.TokenUpdated = @Token
+			   ,eascd.DateUpdated = GETDATE()
+			FROM ExpressAccountServiceCartDetail eascd
 			INNER JOIN DeliveryOrder do WITH (NOLOCK)
-				ON do.Guide_Serie = ascd.GuideSerie
-				AND do.Guide_Number = ascd.GuideNumber
+				ON do.Guide_Serie = eascd.GuideSerie
+				AND do.Guide_Number = eascd.GuideNumber
 			INNER JOIN StatusOrder so
 				ON so.StatusOrderId = do.StatusOrderId
-			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
+			WHERE eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
 			AND so.OrderDescription = 'Anulado'
 
 			--Eliminar guías pagadas
@@ -68,32 +111,32 @@ BEGIN
 			INSERT INTO @PaidCartGuides
 				(GuideSerie, GuideNumber, TotalAmountPaid)
 			SELECT
-				ascd.GuideSerie, ascd.GuideNumber, co.TotalAmountPaid
-			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd with (nolock)
+				eascd.GuideSerie, eascd.GuideNumber, co.TotalAmountPaid
+			FROM DeliveryBackOffice.dbo.ExpressAccountServiceCartDetail eascd with (nolock)
 			LEFT JOIN DeliveryBackOffice.dbo.Cost Co with (nolock)
 				ON 
 					(
 						(
-							Co.GuideSerie = ascd.GuideSerie
+							Co.GuideSerie = eascd.GuideSerie
 							AND
-							Co.GuideNumber = ascd.GuideNumber
+							Co.GuideNumber = eascd.GuideNumber
 						)
 					)
-			WHERE ascd.AccountServiceCartId = @AccountServiceCartId
+			WHERE eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
 			AND ISNULL(co.TotalAmountPaid,0) > 0
-			AND ascd.RowStatus = 1;
+			AND eascd.RowStatus = 1;
 			
-			UPDATE ascd
-			SET ascd.RowStatus = 0
-			   ,ascd.TokenUpdated = @Token
-			   ,ascd.DateUpdated = GETDATE()
+			UPDATE eascd
+			SET eascd.RowStatus = 0
+			   ,eascd.TokenUpdated = @Token
+			   ,eascd.DateUpdated = GETDATE()
 			OUTPUT inserted.GuideSerie, inserted.GuideNumber INTO @PaidGuides(GuideSerie, GuideNumber)
-			FROM DeliveryBackOffice.dbo.AccountServiceCartDetail ascd with (nolock)
+			FROM DeliveryBackOffice.dbo.ExpressAccountServiceCartDetail eascd with (nolock)
 			INNER JOIN @PaidCartGuides PCG
 				ON 
-					ascd.GuideSerie = PCG.GuideSerie
+					eascd.GuideSerie = PCG.GuideSerie
 					AND
-					ascd.GuideNumber = PCG.GuideNumber
+					eascd.GuideNumber = PCG.GuideNumber
 			
 			-- Actualizar guías validas que fueron procesadas
 			UPDATE DOPD
@@ -106,8 +149,8 @@ BEGIN
 				
 			IF EXISTS (SELECT TOP 1
 					1
-				FROM AccountServiceCartDetail
-				WHERE AccountServiceCartId = @AccountServiceCartId
+				FROM ExpressAccountServiceCartDetail
+				WHERE ExpressAccountServiceCartId = @ExpressAccountServiceCartId
 				AND RowStatus = 1)
 			BEGIN
 				
@@ -116,9 +159,9 @@ BEGIN
 				   ,'Records found' 'Description'
 				
 				SELECT
-					ascd.IdAccountServiceCartDetail
-					,ascd.GuideSerie
-					,ascd.GuideNumber
+					eascd.IdExpressAccountServiceCartDetail
+					,eascd.GuideSerie
+					,eascd.GuideNumber
 					,do.Pieces_Dry
 					,do.Pieces_Cold
 					, ROUND((
@@ -170,48 +213,69 @@ BEGIN
 					,CAST(ISNULL((CASE WHEN [PPDest].[IdPromoCoupon] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [AppliedCoupon]
 					,ISNULL((CASE WHEN [PPDest].[IdPromoCoupon] IS NULL THEN '' ELSE [PPDest].[PromoCouponSerie] END),'') [AppliedCouponSerie]
 					,CAST(ISNULL((CASE WHEN [PPOri].[IdPromoCoupon] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [GeneratedCoupon]
-				FROM AccountServiceCartDetail ascd
+					-- Revisión de crédito
+					,CAST(ISNULL((
+						CASE 
+							WHEN [CCOP].[IdConditionOfPayment] IS NOT NULL AND [DOPD].[DopId] IS NULL THEN 1
+							WHEN [DOPD].[TimePlaId] = @CreditPaymentType THEN 1
+							ELSE 0
+						END
+					),0) AS BIT) [IsCredit]
+					,CAST(ISNULL([do].[IsReturn], 0) AS BIT) [IsReturn]
+					-----------------------------
+
+				FROM ExpressAccountServiceCartDetail eascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
-					ON do.Guide_Serie = ascd.GuideSerie
-					AND do.Guide_Number = ascd.GuideNumber
+					ON do.Guide_Serie = eascd.GuideSerie
+					AND do.Guide_Number = eascd.GuideNumber
 				LEFT JOIN DeliveryBackOffice.dbo.MembershipSubscriptionLog MSL WITH(NOLOCK)
-					ON ascd.GuideSerie = MSL.LogGuideSerie
-					AND ascd.GuideNumber = MSL.LogGuideNumber
+					ON eascd.GuideSerie = MSL.LogGuideSerie
+					AND eascd.GuideNumber = MSL.LogGuideNumber
 					AND MSL.RowStatus = 1
 				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PPDest]  WITH(NOLOCK) 
-					ON ascd.[GuideSerie] = [PPDest].[GuideSerieDestination]
-					AND ascd.[GuideNumber] = [PPDest].[GuideNumberDestination]
+					ON [eascd].[GuideSerie] = [PPDest].[GuideSerieDestination]
+					AND [eascd].[GuideNumber] = [PPDest].[GuideNumberDestination]
 					AND [PPDest].[RowStatus] = 1
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
 					ON [PPDest].[CatValueTypeId] = [CVT].[IdCatValueType]
 				LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
 					ON [PPDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
 				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PPOri]  WITH(NOLOCK) 
-					ON ascd.[GuideSerie] = [PPOri].[GuideSerieOrigin]
-					AND ascd.[GuideNumber] = [PPOri].[GuideNumberOrigin]
+					ON [eascd].[GuideSerie] = [PPOri].[GuideSerieOrigin]
+					AND [eascd].[GuideNumber] = [PPOri].[GuideNumberOrigin]
 					AND [PPOri].[RowStatus] = 1
-				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
-				AND ascd.RowStatus = 1
+						-- Revisión de crédito
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+					ON [Cu].[IdCustomer] = [do].[IdCustomer]
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatConditionOfPayment] CCOP  WITH(NOLOCK) 
+					ON [CCOP].[IdConditionOfPayment] = [Cu].[ConditionOfPaymentID]
+					AND [CCOP].[ConditionOfPaymenAbbreviation] LIKE '%CREDITO%'
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
+					ON [do].[Guide_Serie] = [DOPD].[GuideSerie]
+					AND [do].[Guide_Number] = [DOPD].[GuideNumber]
+				----------------------------
+				WHERE eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
+				AND eascd.RowStatus = 1
 				
 				SELECT
-					ascd.GuideSerie GuideSerie
-				   ,ascd.GuideNumber GuideNumber
+					eascd.GuideSerie GuideSerie
+				   ,eascd.GuideNumber GuideNumber
 				   ,bop.[Description] [Description]
 				   ,bop.Amount Amount
-				FROM AccountServiceCartDetail ascd
+				FROM ExpressAccountServiceCartDetail eascd  WITH(NOLOCK) 
 				INNER JOIN Cost c WITH (NOLOCK)
-					ON CONCAT(ascd.GuideSerie, ascd.GuideNumber) = c.ProductNumber
+					ON CONCAT(eascd.GuideSerie, eascd.GuideNumber) = c.ProductNumber
 						AND c.RowStatus = 1
 				INNER JOIN BreakdownOfPayment bop WITH (NOLOCK)
 					ON c.IdCost = bop.IdCost
 						AND bop.RowStatus = 1
 						AND bop.Amount <> 0
-				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
-				AND ascd.RowStatus = 1
+				WHERE eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
+				AND eascd.RowStatus = 1
 				UNION
 				SELECT 
-					ascd.[GuideSerie] [GuideSerie]
-					,ascd.[GuideNumber] [GuideNumber]
+					[eascd].[GuideSerie] [GuideSerie]
+					,[eascd].[GuideNumber] [GuideNumber]
 					,[CP].[PromoDescription]
 					,-(
 						CASE
@@ -242,13 +306,13 @@ BEGIN
 						END
 					) [Amount]
 				FROM
-					[DeliveryBackOffice].[dbo].AccountServiceCartDetail ascd  WITH(NOLOCK) 
+					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCartDetail] eascd  WITH(NOLOCK) 
 					INNER JOIN
 						[DeliveryBackOffice].[dbo].[PromoCoupon] PPDest  WITH(NOLOCK) 
 						ON
-							ascd.[GuideSerie] = [PPDest].[GuideSerieDestination]
+							[eascd].[GuideSerie] = [PPDest].[GuideSerieDestination]
 							AND
-							ascd.[GuideNumber] = [PPDest].[GuideNumberDestination]
+							[eascd].[GuideNumber] = [PPDest].[GuideNumberDestination]
 							AND
 							[PPDest].[RowStatus] = 1
 					INNER JOIN
@@ -264,22 +328,57 @@ BEGIN
 					LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
 						ON [PPDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
 				WHERE
-					ascd.[AccountServiceCartId] = @AccountServiceCartId
-					AND ascd.RowStatus = 1
-				ORDER BY ascd.[GuideSerie],
-				ascd.[GuideNumber] 
-				
+					eascd.ExpressAccountServiceCartId = @ExpressAccountServiceCartId
+					AND eascd.RowStatus = 1
+				ORDER BY [eascd].[GuideSerie],
+				[eascd].[GuideNumber] 
+
+				SELECT 
+					CAST((CASE WHEN [EASC].[CustomerId] IS NOT NULL THEN 1 ELSE 0 END) AS BIT) [IsImpersonated],
+					[EASC].[CustomerId],
+					[EASC].[CustomerPortfolioId],
+					(
+						CASE
+							WHEN [Cu].[IdCustomerType] = @IndividualCustomerType THEN 'IND'
+							WHEN [Cu].[IdCustomerType] = @CorporateCustomerType THEN 'COR'
+							ELSE 'EXC'
+						END
+					) [ClientType],
+					[Acc].[AccIdAccount] [AccountId]
+				FROM
+					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
+					LEFT JOIN
+						[DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+						ON
+							[EASC].[CustomerId] = [Cu].[IdCustomer]
+					OUTER APPLY
+					(
+						SELECT 
+							TOP (1) 
+								[Acc].[AccIdAccount] 
+						FROM 
+							[DeliveryBackOffice].[dbo].[Account] Acc  WITH(NOLOCK) 
+						WHERE
+							[Acc].[IdCustomer] = [Cu].[IdCustomer]
+							AND
+							[Acc].[AccIdTypeAccount] = @IndividualAccountType
+					) [Acc]
+				WHERE
+					[EASC].[IdExpressAccountServiceCart] = @ExpressAccountServiceCartId
+					AND
+					[EASC].[RowStatus] = 1;
+
 			END
 			ELSE
 			BEGIN 
 				
 				--Deshabilitar carrito sin servicios
-				UPDATE AccountServiceCart
+				UPDATE ExpressAccountServiceCart
 				SET IsPending = 0
 				   ,RowStatus = 0
 				   ,TokenUpdated = @Token
 				   ,DateUpdated = GETDATE()
-				WHERE IdAccountServiceCart = @AccountServiceCartId
+				WHERE IdExpressAccountServiceCart = @ExpressAccountServiceCartId
 
 				SELECT
 					2 'StatusCode'
