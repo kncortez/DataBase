@@ -25,6 +25,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PromoCouponProcessLog', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -38,7 +40,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de cr
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PromoCouponProcessLog', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PromoCouponProcessLog', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 
 
 GO
