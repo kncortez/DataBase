@@ -1778,7 +1778,7 @@ BEGIN
 				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
 					ON [do].[Guide_Serie] = [DOPD].[GuideSerie]
 					AND [do].[Guide_Number] = [DOPD].[GuideNumber]
-					----------------------------
+				--------------------------------
 				WHERE eascd.ExpressAccountServiceCartId = @ProcessServiceCartId
 				AND eascd.RowStatus = 1
 				
