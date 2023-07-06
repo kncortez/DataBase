@@ -217,7 +217,7 @@ BEGIN
 						ELSE @IdTarjeta
 					END
 				) -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
-				,1
+				,0
 				,CS.SubscriptionFixedValue
 				,CS.SubscriptionMaxServiceFixedValue
 				,0
