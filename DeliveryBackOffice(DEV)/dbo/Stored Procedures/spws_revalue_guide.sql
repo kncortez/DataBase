@@ -698,7 +698,9 @@ BEGIN
                           AND @DateCreated <= sc.ExpirationDate
                           AND sc.RowStatus = 1
                           AND csps.SalesPackageStatusName = 'Activa'
-                    ORDER BY sc.ExpirationDate;
+						  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+						  ORDER BY sc.IdSubscription asc
+                    --ORDER BY sc.ExpirationDate;
 
                     --Si existe una suscripción
                     IF @SubscriptionId IS NOT NULL
