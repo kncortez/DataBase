@@ -192,7 +192,7 @@ BEGIN
 			
 	​
 	END
-	ELSE IF(@TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI AND ((ISNULL(@StatusMembershipt,0) > 0 AND ISNULL(@StatusSubcription,0) < 1) OR @CustomerType = 2) )
+		ELSE IF(@TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI AND ((ISNULL(@StatusMembershipt,0) > 0) OR @CustomerType = 2) )
 	BEGIN
 	​	
 	
