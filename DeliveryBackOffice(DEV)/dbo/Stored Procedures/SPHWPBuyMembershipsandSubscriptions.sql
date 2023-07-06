@@ -284,6 +284,23 @@ BEGIN
 					@AuxNewSubscriptions ANM2
 
 
+					/* Actualiza fecha de vigencia de las suscripciones vigentes por 180 días mas  */
+
+					DECLARE @SubscriptionValidity	INT =(SELECT TOP 1 CS.SubscriptionValidity
+								 FROM  
+									[DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+								 WHERE CS.IdCatSubscription = @IdSalePackage)
+					
+					UPDATE dbo.Subscription SET ExpirationDate = GETDATE() +  @SubscriptionValidity ,
+					                            TokenUpdated = @Token,
+												DateUpdated=GETDATE() 
+					  Where CustomerId = @Idcustumer
+					And RowStatus =1
+					And Convert(VARCHAR(10),ExpirationDate,20)> = Convert(VARCHAR(10),GETDATE(),20)
+					And (SubscriptionMaxServiceFixedValue - ActualServiceCount)> = 1
+					/*---------------------------------------------------------------*/
+          
+
 				SET @JsonResponse  =
 									(
 										SELECT STUFF(
