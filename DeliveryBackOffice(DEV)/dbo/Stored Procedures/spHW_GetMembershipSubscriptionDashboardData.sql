@@ -8,7 +8,12 @@
 -- Create date: <31-01-2023>
 -- Description:	<Added membership and subscription fields for more information in dashboard>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHW_GetMembershipSubscriptionDashboardData]
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <05-07-2023>
+-- Description:	<Ordenar suscripciones de la mas antigua a la mas nueva>
+-- =============================================
+CREATE  PROCEDURE [dbo].[spHW_GetMembershipSubscriptionDashboardData]
 	@AccountId AS INT,
 	@DateStart AS DATETIME,
 	@DateEnd AS DATETIME
@@ -128,5 +133,5 @@ BEGIN
 		AND		[S].[ExpirationDate] >= GETDATE()
 		AND		[S].[RowStatus] = 1
 	ORDER BY
-		[S].[ExpirationDate] ASC;
+		[S].[IdSubscription] DESC;
 END
