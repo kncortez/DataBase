@@ -3,6 +3,11 @@
 -- Create date: <Create Date,2022-07-14>
 -- Description:	<Description, revisión de membresia o suscripción previo a compra>
 -- =============================================
+-- =============================================
+-- Author:		<Author,,Edelman Vásquez>
+-- Create date: <Create Date,2023-07-05>
+-- Description:	<Description, quitar restricción que valdia que la suscripción ya este adquirida>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPRevisarMembresia]
 	-- Add the parameters for the stored procedure here
 	@IdAcount AS BIGINT,   ---- user
@@ -89,7 +94,7 @@ BEGIN
 			(
 				SELECT STUFF(
 								(
-									SELECT '{{"IdResult":403,' + '"Message":"No es posible la adquicición." }'
+									SELECT '{{"IdResult":200,' + '"Message":"Es posible la adquisición." }'
 									FOR XML PATH(''), TYPE
 								).value('.', 'varchar(max)'),
 								1,
