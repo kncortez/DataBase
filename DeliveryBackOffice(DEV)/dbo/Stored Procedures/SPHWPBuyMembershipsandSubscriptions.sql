@@ -1,12 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SPHWPBuyMembershipsandSubscriptions]    Script Date: 6/07/2023 17:27:14 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,,Edelman Vásquez>
 -- Create date: <Create Date,2022-07-14>
 -- Description:	<Description, adquisición de membresia o suscripción>

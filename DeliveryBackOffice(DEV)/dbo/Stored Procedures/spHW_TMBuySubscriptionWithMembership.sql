@@ -1,11 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[spHW_TMBuySubscriptionWithMembership]    Script Date: 7/07/2023 06:31:05 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Andrés, Ruíz>
 -- Create date: <16-02-2023>
 -- Description:	< Comprar suscripción que posee membresía incluida >
