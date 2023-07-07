@@ -22,14 +22,21 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @TransactionSuccess BIT = 0;
-	DECLARE @ActiveMembership INT = 0;
+	DECLARE @ActiveMembership INT = 0; 
 	DECLARE @CustomerTypeId INT = 0; 
 	DECLARE @CustomerId  AS INT;
 	DECLARE @StartingStatus INT = 0;
 	DECLARE @TypeOfInOutMoney INT = 0;
 	DECLARE @MembershipId INT = 0;
 	DECLARE @SubscriptionId INT = 0;
+	DECLARE @ActiveSuscription INT = 0;
 	
+	DECLARE @TacId INT = 0;
+
+	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
+					FROM	[dbo].[TermsAndConditions] TAC
+					WHERE	[TAC].[Name] = 'Terms and conditions memberships and subscriptions');
+
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
 							FROM	[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK) 
@@ -49,61 +56,72 @@ BEGIN
 								FROM	[dbo].[ctgTypeOfInOutOfMoney] TIOM
 								WHERE	[TIOM].[tio_pk_name] = 'Datafono');
 
-	IF (@ActiveMembership > 0 OR (SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId) IS NULL) 
-	BEGIN
-		SELECT 
-			204 'ResultCode'
-			,'No se ha podido realizar la compra debido a que el usuario ya tiene una membresía activa.' 'ResultMessage';
-		RETURN;
-	END
+     SET @ActiveSuscription =(SELECT COUNT(IdCatSubscription) 
+	                            FROM [dbo].[CatSubscription] where IdCatSubscription = @CatSubscriptionId And RowStatus=1)
+
+	--IF (@ActiveMembership > 0 OR (SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId) IS NULL) 
+	--BEGIN
+	--	SELECT 
+	--		204 'ResultCode'
+	--		,'No se ha podido realizar la compra debido a que el usuario ya tiene una membresía activa.' 'ResultMessage';
+	--	RETURN;
+	--END
 
   ---- Adquisición de membresia​
 	BEGIN TRANSACTION
 	BEGIN TRY
 
 		--------------------------------------------- MEMBRESÍA ---------------------------------------------
-		INSERT INTO [dbo].[Membership] ([CatMembershipId], 
-										[CatMembershipStatusId], 
-										[MembershipCost], 
-										[CustomerId], 
-										[AccountId], 
-										[MembershipCode], 
-										[CustomerPaymentId], 
-										[IsAutoRenewable], 
-										[MembershipFixedValue], 
-										[MembershipMaxServiceFixedValue], 
-										[ActualServiceCount], 
-										[ExpirationDate], 
-										[RowStatus], 
-										[TokenCreated], 
-										[DateCreated], 
-										[TaxIdNumber], 
-										[InvoiceName], 
-										[InvoiceEmail], 
-										[FiscalAddress])
-		SELECT							[CM].[IdCatMembership],								-- CatMembershipId
-										@StartingStatus,									-- CatMembershipStatusId
-										[CM].[MembershipCost],								-- MembershipCost
-										@CustomerId,										-- CustomerId
-										@AccountId,											-- AccountId
-										NULL,												-- MembershipCode
-										@TypeOfInOutMoney,									-- CustomerPaymentId
-										0,													-- IsAutoRenewable
-										0,													-- MembershipFixedValue
-										0,													-- MembershipMaxServiceFixedValue
-										0,													-- ActualServiceCount
-										DATEADD(DAY,[CM].[MembershipValidity], GETDATE()),	-- ExpirationDate
-										1,													-- RowStatus
-										@Token,												-- TokenCreated
-										SYSDATETIME(),										-- DateCreated
-										@TaxId,												-- TaxIdNumber
-										@TaxName,											-- InvoiceName
-										@InvoiceEmail,										-- InvoiceEmail
-										@FiscalAddress										-- FiscalAddress
-		FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
-		WHERE							[CM].[IdCatMembership] = (SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId);
+		--INSERT INTO [dbo].[Membership] ([CatMembershipId], 
+		--								[CatMembershipStatusId], 
+		--								[MembershipCost], 
+		--								[CustomerId], 
+		--								[AccountId], 
+		--								[MembershipCode], 
+		--								[CustomerPaymentId], 
+		--								[IsAutoRenewable], 
+		--								[MembershipFixedValue], 
+		--								[MembershipMaxServiceFixedValue], 
+		--								[ActualServiceCount], 
+		--								[ExpirationDate], 
+		--								[RowStatus], 
+		--								[TokenCreated], 
+		--								[DateCreated], 
+		--								[TaxIdNumber], 
+		--								[InvoiceName], 
+		--								[InvoiceEmail], 
+		--								[FiscalAddress])
+		--SELECT							[CM].[IdCatMembership],								-- CatMembershipId
+		--								@StartingStatus,									-- CatMembershipStatusId
+		--								[CM].[MembershipCost],								-- MembershipCost
+		--								@CustomerId,										-- CustomerId
+		--								@AccountId,											-- AccountId
+		--								NULL,												-- MembershipCode
+		--								@TypeOfInOutMoney,									-- CustomerPaymentId
+		--								0,													-- IsAutoRenewable
+		--								0,													-- MembershipFixedValue
+		--								0,													-- MembershipMaxServiceFixedValue
+		--								0,													-- ActualServiceCount
+		--								DATEADD(DAY,[CM].[MembershipValidity], GETDATE()),	-- ExpirationDate
+		--								1,													-- RowStatus
+		--								@Token,												-- TokenCreated
+		--								SYSDATETIME(),										-- DateCreated
+		--								@TaxId,												-- TaxIdNumber
+		--								@TaxName,											-- InvoiceName
+		--								@InvoiceEmail,										-- InvoiceEmail
+		--								@FiscalAddress										-- FiscalAddress
+		--FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
+		--WHERE							[CM].[IdCatMembership] = (SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId);
 
-		SET @MembershipId = SCOPE_IDENTITY();
+		--SET @MembershipId = SCOPE_IDENTITY();
+
+
+
+	IF(@ActiveMembership > 0 And @ActiveSuscription > 0)
+	BEGIN
+
+		SET @MembershipId =(SELECT TOP 1 IdMembership FROM dbo.Membership WHERE CustomerId = @CustomerId AND RowStatus = 1 ) 
+
 
 		​---------- Rango de descuento
 		INSERT INTO [dbo].[MembershipDiscountRange] (	[MembershipId], 
@@ -158,6 +176,7 @@ BEGIN
 										[RowStatus], 
 										[TokenCreated], 
 										[DateCreated])
+
 		SELECT							[CS].[IdCatSubscription],							-- CatSubscriptionId
 										@MembershipId,										-- MembershpiId
 										@StartingStatus,									-- CatSubscriptionStatusId
@@ -175,7 +194,8 @@ BEGIN
 										@Token,												-- TokenCreated
 										SYSDATETIME()										-- DateCreated
 		FROM							[dbo].[CatSubscription] CS WITH (NOLOCK)
-		WHERE							[CS].[IdCatSubscription] = @CatSubscriptionId;
+		                                
+		WHERE							[CS].Rowstatus=1 And [CS].[IdCatSubscription] = @CatSubscriptionId;
 
 		SET @SubscriptionId = SCOPE_IDENTITY();
 
@@ -188,7 +208,8 @@ BEGIN
 														[RowStatus], 
 														[TokenCreated], 
 														[DateCreated])
-		SELECT											@SubscriptionId,						-- MembershipId
+
+		SELECT											@SubscriptionId,					-- MembershipId
 														[CSDR].[ValueTypeId],				-- ValueType
 														[CSDR].[DiscountValue],				-- DiscountValue
 														[CSDR].[DiscountLowServiceRange],	-- DiscountLowServiceRange
@@ -207,6 +228,7 @@ BEGIN
 													[TokenCreated], 
 													[DateCreated],
 													[PaymentImageURL])
+
 		VALUES										(@SubscriptionId,
 													@TypeOfInOutMoney,
 													@Voucher,
@@ -215,15 +237,39 @@ BEGIN
 													SYSDATETIME(),
 													@ImageURL);
 
-		IF(@MembershipId IS NOT NULL AND @SubscriptionId IS NOT NULL)
+
+       -- Asignación de terminos y condiciones
+		INSERT INTO [dbo].[TermsAndConditionsByUser]([TACId],
+														[IdAccount],
+														[TAC],
+														[RowStatus],
+														[TokenCreated],
+														[DateCreated])
+		                                     VALUES	 (@TacId,
+														@AccountId,
+														1,				-- TAC
+														1,				-- RowStatus
+														'SPHWPBuyMembershipsandSubscriptions',
+														SYSDATETIME());
+
+
+
+
+END
+
+
+
+		IF(@MembershipId >0 AND @SubscriptionId>0)
 		BEGIN
 		
 			SELECT 
 				200 'ResultCode'
-				,'Membresía y suscripción ha sido asociada con éxito.' 'ResultMessage'
+				,'Suscripción ha sido asociada con éxito.' 'ResultMessage'
+				--,'Membresía y suscripción ha sido asociada con éxito.' 'ResultMessage'
 
-			SELECT 
-				(SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId) 'MembershipIncludedId';
+
+			--SELECT 
+			--	(SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId) 'MembershipIncludedId';
 
 			COMMIT TRANSACTION;
 		
