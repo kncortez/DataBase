@@ -162,6 +162,15 @@ begin
         where [Name] = 'MEMBRESIA DIAMANTE' collate Latin1_General_CI_AI
     )   ;
 
+        IF (@InvoiceEmail='')
+            BEGIN
+
+            SET  @InvoiceEmail= (SELECT TOP 1 InvoiceEmail
+                                        FROM	[DeliveryBackOffice].[dbo].[Membership] M 
+                                        WHERE	[M].[AccountId] = @IdAccount
+                                            AND [M].[RowStatus] = 1);
+
+            END
 
 
     begin transaction;

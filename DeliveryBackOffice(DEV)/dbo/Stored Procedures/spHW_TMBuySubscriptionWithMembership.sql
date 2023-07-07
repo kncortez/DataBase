@@ -275,8 +275,13 @@ END
 				--,'Membresía y suscripción ha sido asociada con éxito.' 'ResultMessage'
 
 
-			--SELECT 
-			--	(SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId) 'MembershipIncludedId';
+				 SELECT Top 1 CM.IdCatMembership  'MembershipIncludedId' from dbo.Membership M with(NOLOCK)
+					Inner Join CatMembership CM with(NOLOCK)
+					On M.CatMembershipId = CM.IdCatMembership
+				 Where M.AccountId=@AccountId
+				   And M.RowStatus=1
+				 Order By M.DateCreated Desc;
+             
 
 			COMMIT TRANSACTION;
 		
