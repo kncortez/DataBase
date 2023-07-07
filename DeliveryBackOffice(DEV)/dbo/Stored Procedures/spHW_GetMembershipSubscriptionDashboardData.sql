@@ -133,5 +133,5 @@ BEGIN
 		AND		[S].[ExpirationDate] >= GETDATE()
 		AND		[S].[RowStatus] = 1
 	ORDER BY
-		[S].[IdSubscription] DESC;
+		[S].[IdSubscription] ASC;
 END
