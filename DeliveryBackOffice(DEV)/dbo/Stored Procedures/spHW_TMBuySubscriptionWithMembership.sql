@@ -1,11 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[spHW_TMBuySubscriptionWithMembership]    Script Date: 7/07/2023 06:31:05 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Andrés, Ruíz>
 -- Create date: <16-02-2023>
 -- Description:	< Comprar suscripción que posee membresía incluida >
@@ -42,7 +35,7 @@ BEGIN
 
 	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
 					FROM	[dbo].[TermsAndConditions] TAC
-					WHERE	[TAC].[Name] = 'Terms and conditions memberships and subscriptions');
+					WHERE	[TAC].[Name] = 'New Termns And Conditions');
 
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
