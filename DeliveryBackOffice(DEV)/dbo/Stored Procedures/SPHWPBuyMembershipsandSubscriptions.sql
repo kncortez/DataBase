@@ -8,7 +8,7 @@
 -- Create date: <2023-05-07>
 -- Description:	<quitar restricción para adquirir misma suscripción>
 -- =============================================
-ALTER PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
+CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     -- Add the parameters for the stored procedure here
     @IdTarjeta AS INT = NULL,         -- puede ser null por ex c y por credito
     @TypeSalePackage AS NVARCHAR(50), -- membership or suscription
