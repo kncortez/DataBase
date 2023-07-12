@@ -18,3 +18,9 @@
     CONSTRAINT [FK_VisitPointItinerary_VisitPointFrequency] FOREIGN KEY ([VPFrequencyID]) REFERENCES [dbo].[VisitPointFrequency] ([IdVPFrequency])
 );
 
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para registro de itinerarios de recolección por punto de visita.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointItinerary';
+

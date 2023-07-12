@@ -3,138 +3,117 @@
 -- Create date: <Create Date,2022-07-14>
 -- Description:	<Description, revisión de membresia o suscripción previo a compra>
 -- =============================================
+-- =============================================
+-- Author:		<Author,,Edelman Vásquez>
+-- Create date: <Create Date,2023-07-05>
+-- Description:	<Description, quitar restricción que valdia que la suscripción ya este adquirida>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPRevisarMembresia]
-	-- Add the parameters for the stored procedure here
-	@IdAcount AS BIGINT,   ---- user
-	@IdSalePackage AS INT,
-	@TypeSalePackage AS NVARCHAR(20) = 'MEMBERSHIP'
+    -- Add the parameters for the stored procedure here
+    @IdAcount AS BIGINT ---- user
+  , @IdSalePackage AS INT
+  , @TypeSalePackage AS NVARCHAR(20) = 'MEMBERSHIP'
 AS
 BEGIN
-	
-	SET NOCOUNT ON;
 
-	-- Variables estaticas "globales"
-	DECLARE @ActiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI);
+    SET NOCOUNT ON;
 
-	-- Variables de control de flujo
-	DECLARE @Credencial INT = 0;
-	DECLARE @ActiveMembershipId INT = 0;
-	DECLARE @IdActiveSalePackage INT = 0;
+    -- Variables estaticas "globales"
+    DECLARE @ActiveStatus INT =
+            (
+                SELECT TOP 1
+                       CSPS.IdCatSalesPackageStatus
+                FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+            );
 
-	IF(@TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
-	BEGIN
+    -- Variables de control de flujo
+    DECLARE @Credencial INT = 0;
+    DECLARE @ActiveMembershipId INT = 0;
+    DECLARE @IdActiveSalePackage INT = 0;
 
-		SELECT
-			TOP 1
-				@Credencial = 1,
-				@IdActiveSalePackage = mmbrshp.IdMembership
-		FROM
-			[DeliveryBackOffice].[dbo].[Membership] mmbrshp WITH(NOLOCK)
-		WHERE
-			mmbrshp.AccountId = @IdAcount
-			AND
-			mmbrshp.RowStatus = 1
-			AND
-			mmbrshp.CatMembershipStatusId = @ActiveStatus
-			AND
-			mmbrshp.CatMembershipId = @IdSalePackage
+    IF (@TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
+    BEGIN
 
-	END
-	ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
-	BEGIN
-	
-		SELECT
-			TOP 1
-				@ActiveMembershipId = IdMembership
-		FROM [DeliveryBackOffice].[dbo].[Membership] WHERE AccountId = @IdAcount  AND RowStatus = 1 AND CatMembershipStatusId = @ActiveStatus
+        SELECT TOP 1
+               @Credencial          = 1
+             , @IdActiveSalePackage = mmbrshp.IdMembership
+        FROM [DeliveryBackOffice].[dbo].[Membership] mmbrshp WITH (NOLOCK)
+        WHERE mmbrshp.AccountId = @IdAcount
+              AND mmbrshp.RowStatus = 1
+              AND mmbrshp.CatMembershipStatusId = @ActiveStatus
+              AND mmbrshp.CatMembershipId = @IdSalePackage;
 
-		SELECT
-			TOP 1
-				@Credencial = 1,
-				@IdActiveSalePackage = sbscrptn.IdSubscription
-		FROM
-			[DeliveryBackOffice].[dbo].[Subscription] sbscrptn WITH(NOLOCK)
-		WHERE
-			sbscrptn.AccountId = @IdAcount
-			AND
-			sbscrptn.RowStatus = 1
-			AND
-			sbscrptn.CatSubscriptionStatusId = @ActiveStatus
-			AND
-			sbscrptn.CatSubscriptionId = @IdSalePackage
-			AND
-			sbscrptn.MembershipId = @ActiveMembershipId
+    END;
+    ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
+    BEGIN
 
-		IF(ISNULL(@Credencial,0) = 0 AND ISNULL(@ActiveMembershipId,0) = 0)
-		BEGIN
 
-			SET @Credencial = 1;
 
-		END
+        SET @Credencial = 1;
 
-	END
 
-	IF(ISNULL(@Credencial,0) = 0)
-		SET @Credencial = 0;
-	IF(ISNULL(@IdActiveSalePackage,0) = 0)
-		SET @IdActiveSalePackage = 0;
 
-	-- Variables de control de flujo
-	DECLARE @JsonResponse NVARCHAR(MAX) = '';
+    END;
 
-	IF(@Credencial > 0)
-	BEGIN
+    IF (ISNULL(@Credencial, 0) = 0)
+        SET @Credencial = 0;
+    IF (ISNULL(@IdActiveSalePackage, 0) = 0)
+        SET @IdActiveSalePackage = 0;
 
-		SET @JsonResponse  =
-			(
-				SELECT STUFF(
-								(
-									SELECT '{{"IdResult":403,' + '"Message":"No es posible la adquicición." }'
-									FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),
-								1,
-								1,
-								''
-							)
-			);
+    -- Variables de control de flujo
+    DECLARE @JsonResponse NVARCHAR(MAX) = N'';
 
-	END
-	ELSE
-	BEGIN
+    IF (@Credencial > 0)
+    BEGIN
 
-		SET @JsonResponse  =
-			(
-				SELECT STUFF(
-								(
-									SELECT '{{"IdResult":200,' + '"Message":"Es posible la adquicición." }'
-									FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),
-								1,
-								1,
-								''
-							)
-			);
+        SET @JsonResponse =
+        (
+            SELECT STUFF((
+                             SELECT '{{"IdResult":200,' + '"Message":"Es posible la adquisición." }'
+                             FOR XML PATH(''), TYPE
+                         ).value('.', 'varchar(max)')
+                       , 1
+                       , 1
+                       , ''
+                        )
+        );
 
-	END
+    END;
+    ELSE
+    BEGIN
 
-	IF(@JsonResponse IS NULL)
-	BEGIN
+        SET @JsonResponse =
+        (
+            SELECT STUFF((
+                             SELECT '{{"IdResult":200,' + '"Message":"Es posible la adquicición." }'
+                             FOR XML PATH(''), TYPE
+                         ).value('.', 'varchar(max)')
+                       , 1
+                       , 1
+                       , ''
+                        )
+        );
 
-		SET @JsonResponse  =
-			(
-				SELECT STUFF(
-								(
-									SELECT '{{"IdResult":500,' + '"Message":"No es posible la adquicición" }'
-									FOR XML PATH(''), TYPE
-								).value('.', 'varchar(max)'),
-								1,
-								1,
-								''
-							)
-			);
+    END;
 
-	END
+    IF (@JsonResponse IS NULL)
+    BEGIN
 
-	SELECT  ( '[' + @JsonResponse + ']' )  JsonOutput 
-   
-END
+        SET @JsonResponse =
+        (
+            SELECT STUFF((
+                             SELECT '{{"IdResult":500,' + '"Message":"No es posible la adquicición" }'
+                             FOR XML PATH(''), TYPE
+                         ).value('.', 'varchar(max)')
+                       , 1
+                       , 1
+                       , ''
+                        )
+        );
+
+    END;
+
+    SELECT ('[' + @JsonResponse + ']') JsonOutput;
+
+END;

@@ -234,7 +234,7 @@ BEGIN
 			Mmshp.RowStatus = 1
 
 	END
-	ELSE IF (@TypeProcess = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
+	/*ELSE IF (@TypeProcess = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
 	BEGIN
 
 		-- Subscripciones
@@ -466,7 +466,7 @@ BEGIN
 			AND
 			Sbsctptn.RowStatus = 1
 
-	END
+	END*/
 
 
 END
