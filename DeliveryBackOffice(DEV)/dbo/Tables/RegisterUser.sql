@@ -13,7 +13,6 @@
     [UsrRestrictionAddressIp] VARCHAR (200)  NULL,
     [UsrRowStatus]            BIT            NOT NULL,
     [UsrTokenCreated]         VARCHAR (50)   NOT NULL,
-    [UsrDateCreated]          DATE           NOT NULL,
     [UsrTokenUpdated]         VARCHAR (50)   NULL,
     [UsrDateUpdated]          DATE           NULL,
     [PrefixCallingCode]       NVARCHAR (4)   NULL,
@@ -26,6 +25,7 @@
     [IdentificationImageB]    NVARCHAR (500) NULL,
     [VerifiedPhone]           BIT            CONSTRAINT [DF__RegisterU__Verif__2E51B1C3] DEFAULT ('false') NULL,
     [ChangePassword]          BIT            NULL,
+    [UsrDateCreated]          DATETIME      NOT NULL,
     PRIMARY KEY CLUSTERED ([UsrIdUser] ASC),
     FOREIGN KEY ([UsrIdPerson]) REFERENCES [dbo].[Person] ([PerIdPerson])
 );
