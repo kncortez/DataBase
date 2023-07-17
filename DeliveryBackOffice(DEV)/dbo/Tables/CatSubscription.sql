@@ -21,6 +21,7 @@
     CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_CatSubscription_CatMembership] FOREIGN KEY ([IncludedMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
     CONSTRAINT [FK_CatSubscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
+    [TermsandConditions]             NVARCHAR (MAX)  NULL,
 );
 
 
@@ -57,4 +58,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario al
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si suscripci?n contiene una membres?a incluida y cual membres?a es de la tabla CatMembership', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'IncludedMembershipId';
 
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Terminos y condiciones suscripciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'TermsandConditions';
 

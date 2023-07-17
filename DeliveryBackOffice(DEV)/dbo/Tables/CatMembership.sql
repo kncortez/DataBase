@@ -13,6 +13,7 @@
     [DateUpdated]                    DATETIME        NULL,
     [Icon]                           NVARCHAR (50)   NULL,
     [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
+    [TermsandConditions]             NVARCHAR (MAX)  NULL,
     CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
 );
 
@@ -78,4 +79,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de í
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Terminos y condiciones de mebresías ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'TermsandConditions';
 
