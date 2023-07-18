@@ -3,6 +3,11 @@
 -- Create date: <Create Date,12/07/2022>
 -- Description:	<Description,muestra las membresias y credenciales disponibles con su respectivo detalle>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <Create Date,18/07/2023>
+-- Description:	<Description,Descripción corta y larga de los beneficios>
+-- =============================================
 /*
 	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
 	Actualización: Agregar campo de ícono a estructura de membresías y suscripciones - 11-01-2023
@@ -54,8 +59,10 @@ BEGIN
                                                                SELECT ',' + '{' + '"Id":"'
                                                                       + CAST(CMA.IdCatMembershipAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
-                                                                      + CMA.MembershipAttributeDescription + '"' + ','
-                                                                      + '"Valor":"'
+                                                                      + CMA.MembershipAttributeDescription 
+																	  + '"' + ',' + '"DescripcionLong":"'
+                                                                      + ISNULL( CMA.MembershipAttributeDescriptionLong, CMA.MembershipAttributeDescription) 
+                                                                      + '"' + ',' + '"Valor":"'
                                                                       + CAST(CMA.MembershipAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CMA.MembershipAttributePosition AS VARCHAR)
@@ -162,8 +169,10 @@ BEGIN
                                                                SELECT ',' + '{' + '"Id":"'
                                                                       + CAST(CSA.IdCatSubscriptionAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
-                                                                      + CSA.SubscriptionAttributeDescription + '"' + ','
-                                                                      + '"Valor":"'
+                                                                      + CSA.SubscriptionAttributeDescription 
+																	  + '"' + ',' + '"DescripcionLong":"'
+                                                                      + ISNULL(CSA.SubscriptionAttributeDescriptionLong, CSA.SubscriptionAttributeDescription )
+                                                                      + '"' + ',' + '"Valor":"'
                                                                       + CAST(CSA.SubscriptionAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CSA.SubscriptionAttributePosition AS VARCHAR)
