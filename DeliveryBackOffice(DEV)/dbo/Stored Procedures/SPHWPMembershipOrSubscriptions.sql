@@ -46,6 +46,8 @@ BEGIN
                                        ',{' + '"Data" : [{' + '"Id":   "' + CAST(CM.IdCatMembership AS VARCHAR),
                                        +'"' + ',' + '"Name": "' + CM.MembershipName,
                                        +'"' + ',' + '"Icon": "' + CM.Icon,
+									   + '"' + ',' + '"TermsandConditions": "'
+									   + ISNULL(REPLACE(CM.TermsandConditions,'"','\"'),'')
                                        +'"' + ',' + '"Attibutos": ['
                                        +
                                        (
@@ -151,10 +153,12 @@ BEGIN
                             (
                                 SELECT DISTINCT
                                        ',{' + '"Data" : [{' + '"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR),
-                                       +'"' + ',' + '"Name": "' + CS.SubscriptionName,
-                                       +'"' + ',' + '"Icon": "' + CS.Icon,
-                                       +'"' + ',' + '"Attibutos": ['
-                                       +
+										    +'"' + ',' + '"Name": "' + CS.SubscriptionName,
+										    + '"' + ',' + '"TermsandConditions": "'
+										    + REPLACE(ISNULL(CS.TermsandConditions,''),'"','\"')
+										    +'"' + ',' + '"Icon": "' + CS.Icon,
+										    +'"' + ',' + '"Attibutos": ['
+										    +
                                        (
                                            SELECT STUFF(
                                                            (
