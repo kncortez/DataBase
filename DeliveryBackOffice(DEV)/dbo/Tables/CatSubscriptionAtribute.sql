@@ -10,10 +10,11 @@
     [DateCreated]                      DATETIME       NOT NULL,
     [TokenUpdated]                     NVARCHAR (50)  NULL,
     [DateUpdated]                      DATETIME       NULL,
+	[SubscriptionAttributeDescriptionLong] NVARCHAR (500) NULL,
     CONSTRAINT [PK_CatSubscriptionAtribute] PRIMARY KEY CLUSTERED ([IdCatSubscriptionAttribute] ASC),
     CONSTRAINT [FK_CatSubscriptionAtribute_IdCatAttribute] FOREIGN KEY ([CatAttributeId]) REFERENCES [dbo].[CatAttribute] ([IdCatAttribute]) ON DELETE CASCADE,
     CONSTRAINT [FK_CatSubscriptionAtribute_IdCatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]) ON DELETE CASCADE
-    [SubscriptionAttributeDescriptionLong] NVARCHAR (500) NULL,
+    
 );
 
 
