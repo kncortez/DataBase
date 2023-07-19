@@ -390,89 +390,106 @@ BEGIN
     BEGIN TRY
         IF ((@TotalCash + @TotalCard) >= 0) --Si existen datos para cierre
         BEGIN
-		PRINT 'INSERTA HEADER';
-            --Insertar encabezado
-            INSERT INTO DeliveryBackOffice.dbo.AccountingClosuresHeader
-            (
-                UserId,
-                ClosurerPOS,
-                TotalAmountCash,
-                TotalAmountCashDeclared,
-                TotalAmountCredit,
-                TotalAmountCreditDeclared,
-                InvoiceAmountCash,
-                InvoiceAmountCredit,
-                VisitPoint,
-                Voucher1,
-                Bag1,
-                Voucher2,
-                Bag2,
-                RowStatus,
-                TokenCreated,
-                DateCreated,
-                TokenUpdated,
-                DateUpdated,
-                TotalAmountCODCash,
-				TotalAmountCODCashDeclared,
-				TotalAmountFacturaCashDeclared,
-				TotalAmountFacturaCardDeclared,
-				TotalAmountFacturaCash,
-				InvoiceAmountFacturaCash,
-				TotalAmountFacturaCard,
-				InvoiceAmountFacturaCard,
-				InvoiceAmountCOD
-            )
-            VALUES
-            (@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
-             @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(),
-             NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
-			 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
-			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD);
-            PRINT 'INSERTA ENCABEZADO';
-            SET @HeaderClosures = SCOPE_IDENTITY();
-            PRINT @HeaderClosures;
-            --Insertar detalle
-            INSERT INTO DeliveryBackOffice.dbo.AccountingClosuresDetail
-            (
-                AccountingClosuresHeaderId,
-                GuideSerie,
-                GuideNumber,
-                RowStatus,
-                TokenCreated,
-                DateCreated,
-                TokenUpdated,
-                DateUpdated,
-				Fel
+		DECLARE @ClouserValid INT;
 
-				-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-				,DopId
-				-- FIN MODIFICACIÓN
+		SET @ClouserValid =(SELECT TOP 1 COUNT(UserId)FROM AccountingClosuresHeader WHERE UserId = @UserId2 
+						AND Convert(DATE,DateCreated) = Convert(DATE,GETDATE()) 
+						AND DATEDIFF(minute ,DateCreated,GETDATE()) <= 3 Group by UserId)
 
-            )
-            SELECT @HeaderClosures,
-                   Guide_Serie,
-                   Guide_Number,
-                   1,
-                   @TokenCreated,
-                   GETDATE(),
-                   NULL,
-                   NULL,
-				   (SELECT item FROM dbo.SplitUnlimited(Fel, '-') WHERE id = 2)
+			IF(@ClouserValid IS NULL)
+				BEGIN
 
-				   -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-				   ,DopId
-				   -- FIN MODIFICACIÓN
+					PRINT 'INSERTA HEADER';
+						--Insertar encabezado
+						INSERT INTO DeliveryBackOffice.dbo.AccountingClosuresHeader
+						(
+							UserId,
+							ClosurerPOS,
+							TotalAmountCash,
+							TotalAmountCashDeclared,
+							TotalAmountCredit,
+							TotalAmountCreditDeclared,
+							InvoiceAmountCash,
+							InvoiceAmountCredit,
+							VisitPoint,
+							Voucher1,
+							Bag1,
+							Voucher2,
+							Bag2,
+							RowStatus,
+							TokenCreated,
+							DateCreated,
+							TokenUpdated,
+							DateUpdated,
+							TotalAmountCODCash,
+							TotalAmountCODCashDeclared,
+							TotalAmountFacturaCashDeclared,
+							TotalAmountFacturaCardDeclared,
+							TotalAmountFacturaCash,
+							InvoiceAmountFacturaCash,
+							TotalAmountFacturaCard,
+							InvoiceAmountFacturaCard,
+							InvoiceAmountCOD
+						)
+						VALUES
+						(@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
+						 @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(),
+						 NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
+						 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
+						 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD);
+						PRINT 'INSERTA ENCABEZADO';
+						SET @HeaderClosures = SCOPE_IDENTITY();
+						PRINT @HeaderClosures;
+						--Insertar detalle
+						INSERT INTO DeliveryBackOffice.dbo.AccountingClosuresDetail
+						(
+							AccountingClosuresHeaderId,
+							GuideSerie,
+							GuideNumber,
+							RowStatus,
+							TokenCreated,
+							DateCreated,
+							TokenUpdated,
+							DateUpdated,
+							Fel
 
-            FROM #TempClosureDetail;
+							-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+							,DopId
+							-- FIN MODIFICACIÓN
 
-            SELECT 200 IdResult,
-                   'Cierre generado exitosamente' Message,
-                   Value 'URL',
-                   @HeaderClosures 'IdCierre'
-            FROM ConfigParams
-            WHERE Name = 'ClosureExpressCenter';
+						)
+						SELECT @HeaderClosures,
+							   Guide_Serie,
+							   Guide_Number,
+							   1,
+							   @TokenCreated,
+							   GETDATE(),
+							   NULL,
+							   NULL,
+							   (SELECT item FROM dbo.SplitUnlimited(Fel, '-') WHERE id = 2)
 
-			select * from #TempClosureDetail;
+							   -- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+							   ,DopId
+							   -- FIN MODIFICACIÓN
+
+						FROM #TempClosureDetail;
+
+						SELECT 200 IdResult,
+							   'Cierre generado exitosamente' Message,
+							   Value 'URL',
+							   @HeaderClosures 'IdCierre'
+						FROM ConfigParams
+						WHERE Name = 'ClosureExpressCenter';
+
+						select * from #TempClosureDetail;
+
+					END
+				 ELSE
+				     BEGIN
+						 SELECT 500 IdResult,
+						'Ya existe un cierre generado con los mismos datos' Message;
+ 
+					 END
         END;
         ELSE
         BEGIN
