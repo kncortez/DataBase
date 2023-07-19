@@ -10,8 +10,16 @@
     [DateCreated]                    DATETIME       NOT NULL,
     [TokenUpdated]                   NVARCHAR (50)  NULL,
     [DateUpdated]                    DATETIME       NULL,
+	[MembershipAttributeDescriptionLong] NVARCHAR (500) NULL,
     CONSTRAINT [PK_CatMembershipAttribute] PRIMARY KEY CLUSTERED ([IdCatMembershipAttribute] ASC),
     CONSTRAINT [FK_CatMembershipAttribute_CatAttribute] FOREIGN KEY ([CatAttributeId]) REFERENCES [dbo].[CatAttribute] ([IdCatAttribute]),
     CONSTRAINT [FK_CatMembershipAttribute_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership])
+    
 );
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción larga de membresía ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembershipAttribute', @level2type = N'COLUMN', @level2name = N'MembershipAttributeDescriptionLong';
 
