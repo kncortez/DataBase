@@ -17,8 +17,11 @@
     [InternalCode]                  VARCHAR (50)   NULL,
     [TaxId]                         VARCHAR (50)   NULL,
     [ContactName]                   VARCHAR (50)   NULL,
+    [IsBusiness]                    BIT            NULL,
     CONSTRAINT [PK_VisitPointByClientPortfolio] PRIMARY KEY CLUSTERED ([IdVisitPointByClientPortfolio] ASC)
 );
+
+
 
 
 
@@ -65,4 +68,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Contacto de
 GO
 CREATE NONCLUSTERED INDEX [IDX_Phone]
     ON [dbo].[VisitPointByClientPortfolio]([Phone] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'bandera indica si el tipo de cliente es individual o empresarial', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointByClientPortfolio', @level2type = N'COLUMN', @level2name = N'IsBusiness';
 
