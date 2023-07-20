@@ -175,7 +175,8 @@ BEGIN
 										[ExpirationDate], 
 										[RowStatus], 
 										[TokenCreated], 
-										[DateCreated])
+										[DateCreated],
+										[CatTypeSubscriptionId])
 
 		SELECT							[CS].[IdCatSubscription],							-- CatSubscriptionId
 										@MembershipId,										-- MembershpiId
@@ -192,7 +193,8 @@ BEGIN
 										DATEADD(DAY,[CS].[SubscriptionValidity], GETDATE()),-- ExpirationDate
 										1,													-- RowStatus
 										@Token,												-- TokenCreated
-										SYSDATETIME()										-- DateCreated
+										SYSDATETIME(),										-- DateCreated
+										CS.IdCatSubscription                                --CatTypeSubscriptionId
 		FROM							[dbo].[CatSubscription] CS WITH (NOLOCK)
 		                                
 		WHERE							[CS].Rowstatus=1 And [CS].[IdCatSubscription] = @CatSubscriptionId;
