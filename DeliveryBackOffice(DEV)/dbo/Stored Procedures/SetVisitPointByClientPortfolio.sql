@@ -33,7 +33,7 @@ CREATE PROCEDURE [dbo].[SetVisitPointByClientPortfolio]
 	@Token varchar(200) = null,
 	@InternalCode VARCHAR(50)='',
 	@TaxId VARCHAR(50)='',
-	@ContactName VARCHAR(50)=''
+	@ContactName VARCHAR(50)='',
 	@IsBusiness AS BIT=0
 	
 AS
