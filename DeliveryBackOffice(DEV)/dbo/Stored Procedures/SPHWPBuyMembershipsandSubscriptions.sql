@@ -8,7 +8,7 @@
 -- Create date: <2023-05-07>
 -- Description:	<quitar restricción para adquirir misma suscripción>
 -- =============================================
-ALTER PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
+CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     -- Add the parameters for the stored procedure here
     @IdTarjeta AS INT = NULL,         -- puede ser null por ex c y por credito
     @TypeSalePackage AS NVARCHAR(50), -- membership or suscription
@@ -22,7 +22,8 @@ ALTER PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     @TaxId NVARCHAR(50) = 'CF',
     @FiscalAddress NVARCHAR(200) = 'Ciudad',
     @TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL',
-    @InvoiceEmail NVARCHAR(50) = ''
+    @InvoiceEmail NVARCHAR(50) = '',
+	@TypeSubscriptioId INT 
 AS
 BEGIN
 
@@ -300,7 +301,8 @@ BEGIN
                 RowStatus,
                 TokenCreated,
                 DateCreated,
-                RenewalFixedDay
+                RenewalFixedDay,
+				CatTypeSubscriptionId
             )
             OUTPUT inserted.IdSubscription
             INTO @AuxNewSubscriptions
@@ -334,7 +336,8 @@ BEGIN
                    1,
                    @Token,
                    GETDATE(),
-                   DAY(GETDATE())
+                   DAY(GETDATE()),
+				   CS.IdCatSubscription
             FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
             WHERE CS.IdCatSubscription = @IdSalePackage
         

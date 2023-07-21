@@ -785,7 +785,6 @@
     <Build Include="dbo\Stored Procedures\sphd_SetCoverageMassive.sql" />
     <Build Include="dbo\Stored Procedures\sphd_SetCheckRoutePreparationPickUp.sql" />
     <Build Include="dbo\Stored Procedures\sphd_SetBusinessPartnerSegments.sql" />
-    <Build Include="dbo\Stored Procedures\sphd_LastMileSettlementsReport_1.sql" />
     <Build Include="dbo\Stored Procedures\sphd_LastMileSettlementsReportContingency.sql" />
     <Build Include="dbo\Stored Procedures\sphd_LastMileSettlementsReport.sql" />
     <Build Include="dbo\Stored Procedures\sphd_GetVisitPointItineraryByVisitPoint.sql" />
@@ -1547,6 +1546,7 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+    <Build Include="dbo\Tables\CatTypeSubscription.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
