@@ -22,8 +22,7 @@ CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     @TaxId NVARCHAR(50) = 'CF',
     @FiscalAddress NVARCHAR(200) = 'Ciudad',
     @TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL',
-    @InvoiceEmail NVARCHAR(50) = '',
-	@TypeSubscriptioId INT 
+    @InvoiceEmail NVARCHAR(50) = ''
 AS
 BEGIN
 
