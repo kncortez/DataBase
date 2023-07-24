@@ -336,7 +336,7 @@ BEGIN
                    @Token,
                    GETDATE(),
                    DAY(GETDATE()),
-				   CS.IdCatSubscription
+				   CS.CatTypeSubscriptionId
             FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
             WHERE CS.IdCatSubscription = @IdSalePackage
         
