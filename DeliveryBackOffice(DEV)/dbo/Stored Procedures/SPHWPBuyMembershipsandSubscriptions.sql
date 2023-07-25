@@ -138,7 +138,8 @@ BEGIN
                 RenewalFixedDay,
                 AvailablePoints,
                 AccumulatedPoints,
-                PointsExpirationDate
+                PointsExpirationDate,
+				CatValueTypeId
             )
             OUTPUT inserted.IdMembership
             INTO @AuxNewMembership
@@ -178,8 +179,11 @@ BEGIN
                    DAY(GETDATE()),
                    0,
                    0,
-                   DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE()))
+                   DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE())),
+				   CDR.ValueTypeId
             FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
+			ON CM.IdCatMembership = CDR.CatMembershipId
             WHERE CM.IdCatMembership = @IdSalePackage
                   AND NOT EXISTS
             (
