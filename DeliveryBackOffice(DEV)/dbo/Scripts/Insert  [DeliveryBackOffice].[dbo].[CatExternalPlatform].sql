@@ -56,7 +56,7 @@ BEGIN TRY
 		OUTPUT inserted.IdConfigExternalPlatform INTO @InsertedConfigs (IdConfigExternalPlatform)
 		SELECT
 			TOP 1
-				IdExternalPlatform, 'MsmPickupRequest', 'Hola <CLIENTE> necesitamos confirmes tus datos para realizar la recolección', 1, GETDATE(), 'SYS-EVASQUEZ'
+				IdExternalPlatform, 'MsmPickupRequest', 'Hola <CLIENTE>, necesitamos que confirmes tus datos para realizar la recolección', 1, GETDATE(), 'SYS-EVASQUEZ'
 		FROM
 			@TargetExternalPlatformId
 
