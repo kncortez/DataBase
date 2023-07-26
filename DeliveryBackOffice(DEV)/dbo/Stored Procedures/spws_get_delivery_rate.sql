@@ -1949,9 +1949,7 @@ BEGIN
 								 SELECT TOP 1
 								   @SubscriptionId = sc.IdSubscription,
 								   @ServiceValueSubscription
-									   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-										  sc.SubscriptionFixedValue,
-										  -1),
+									   = sc.SubscriptionFixedValue,
 								   @DescriptionTypeSubscription = cts.CatTypeSubscriptionName
 							FROM Subscription sc
 								INNER JOIN CatSalesPackageStatus csps
@@ -1962,7 +1960,7 @@ BEGIN
 								  AND GETDATE() <= sc.ExpirationDate
 								  AND sc.RowStatus = 1
 								  AND csps.SalesPackageStatusName = 'Activa'
-								  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+								  --AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
 								  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
 								  ORDER BY sc.SubscriptionFixedValue ASC
 							END
