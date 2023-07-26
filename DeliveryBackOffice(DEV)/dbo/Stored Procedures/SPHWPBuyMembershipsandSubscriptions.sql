@@ -70,6 +70,16 @@ BEGIN
                ),
                0
                      ) AS INT);
+
+    DECLARE @TacId INT = 0;
+
+    SET @TacId =
+    (
+        SELECT TOP 1
+            [TAC].[IdTAC]
+        FROM [dbo].[TermsAndConditions] TAC
+        WHERE [TAC].[Name] = 'Terms and conditions memberships and subscriptions'
+    );
     --- Estado de membresia
     SELECT TOP 1
         @StatusMembershipt = 1,
@@ -193,6 +203,27 @@ BEGIN
                 WHERE M.CustomerId = @Idcustumer
                       AND (M.AccountId = @IdAcount)
                       AND M.RowStatus = 1
+            )
+
+
+
+            -- Asignación de terminos y condiciones
+            INSERT INTO [dbo].[TermsAndConditionsByUser]
+            (
+                [TACId],
+                [IdAccount],
+                [TAC],
+                [RowStatus],
+                [TokenCreated],
+                [DateCreated]
+            )
+            VALUES
+            (   @TacId,
+                @IdAcount,
+                1, -- TAC
+                1, -- RowStatus
+                'SPHWPBuyMembershipsandSubscriptions',
+                SYSDATETIME()
             );
 
             IF (EXISTS (SELECT TOP 1 1 FROM @AuxNewMembership))
@@ -417,7 +448,7 @@ BEGIN
                       AND RowStatus = 1
                       AND CONVERT(VARCHAR(10), ExpirationDate, 20) >= CONVERT(VARCHAR(10), GETDATE(), 20)
                       AND (SubscriptionMaxServiceFixedValue - ActualServiceCount) >= 1;
-                /*---------------------------------------------------------------*/
+                /*---------------------------------------------------------------*/                     
 
 
                 SET @JsonResponse =
@@ -495,9 +526,9 @@ BEGIN
                             )
             );
 
-        END;
+        END
 
-        SELECT ('[' + @JsonResponse + ']') JsonOutput;
+
     END TRY
     BEGIN CATCH
 
@@ -516,5 +547,32 @@ BEGIN
                         )
         );
 
-    END CATCH;
-END;
+
+
+        --Insert en tabla de log
+        INSERT INTO DeliveryBackOffice.dbo.[RoutePreparationLogError]
+        (
+            [ErrorDescription],
+            [ErrorNumber],
+            [ErrorProcedure],
+            [ErrorLine],
+            [GuideSerie],
+            [GuideNumber],
+            [TokenCreated],
+            [DateCreated]
+        )
+        VALUES
+        (CAST(ERROR_MESSAGE() AS VARCHAR(300)),
+         ERROR_NUMBER(),
+         CAST(ERROR_PROCEDURE() AS VARCHAR(100)),
+         ERROR_LINE(),
+         'MS',
+         0  ,
+         'SYSTEM',
+         GETDATE()
+        )
+
+    END CATCH
+    SELECT ('[' + @JsonResponse + ']') JsonOutput
+END
+                

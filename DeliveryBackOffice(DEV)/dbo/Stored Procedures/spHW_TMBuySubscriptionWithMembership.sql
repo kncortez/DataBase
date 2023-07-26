@@ -35,7 +35,7 @@ BEGIN
 
 	SET @TacId =	(SELECT TOP 1 [TAC].[IdTAC]
 					FROM	[dbo].[TermsAndConditions] TAC
-					WHERE	[TAC].[Name] = 'New Termns And Conditions');
+					WHERE	[TAC].[Name] = 'Terms and conditions memberships and subscriptions');
 
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
