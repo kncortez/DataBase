@@ -24,21 +24,22 @@ BEGIN
 		-- Verifica si ya aceptó los terminos y condiciones en algún momento
 		SET @IDTerms = (SELECT IdTACByUser FROM [dbo].[TermsAndConditionsByUser]
 											WHERE IdAccount = (SELECT ac.AccIdAccount FROM RegisterUser us
-                                                INNER JOIN [dbo].Person pe
-                                                    ON pe.PerIdPerson = us.UsrIdPerson
-                                                       AND pe.PerRowStatus = 1
-                                                INNER JOIN [dbo].[RolByUserByAccount] rua
-                                                    ON rua.RuaIdUser = us.UsrIdUser
-                                                       AND rua.RuaRowStatus = 1
-                                                INNER JOIN [dbo].CatRol ro
-                                                    ON ro.RolIdRol = rua.RuaIdRol
-                                                INNER JOIN [dbo].Account ac
-                                                    ON ac.AccIdAccount = rua.RuaIdAccount
-                                                       AND ac.AccRowStatus = 1
-                                                INNER JOIN [dbo].CatTypeAccount ta
-                                                    ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
-                                            WHERE us.UsrEmail = @Username
-                                                  AND us.UsrRowStatus = 1))
+                                                	INNER JOIN [dbo].Person pe
+                                                    	ON pe.PerIdPerson = us.UsrIdPerson
+                                                    	AND pe.PerRowStatus = 1
+                                                	INNER JOIN [dbo].[RolByUserByAccount] rua
+                                                    	ON rua.RuaIdUser = us.UsrIdUser
+                                                    	AND rua.RuaRowStatus = 1
+                                                	INNER JOIN [dbo].CatRol ro
+                                                    	ON ro.RolIdRol = rua.RuaIdRol
+                                                	INNER JOIN [dbo].Account ac
+                                                    	ON ac.AccIdAccount = rua.RuaIdAccount
+                                                    	AND ac.AccRowStatus = 1
+                                                	INNER JOIN [dbo].CatTypeAccount ta
+                                                    	ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
+                                            	WHERE us.UsrEmail = @Username
+                                                  	AND us.UsrRowStatus = 1)
+											AND TACId=1)
 	
 		-- El usuario ha aceptado los términos y condiciones con anterioridad
 		IF (@IDTerms IS NOT NULL)
