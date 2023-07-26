@@ -8,6 +8,11 @@
 -- Create date: <2023-05-07>
 -- Description:	<quitar restricción para adquirir misma suscripción>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-03-22>
+-- Description:	<aceptar terminos y condiciones al momento de la adquisición de membresias y suscripciones>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     -- Add the parameters for the stored procedure here
     @IdTarjeta AS INT = NULL,         -- puede ser null por ex c y por credito
@@ -29,22 +34,20 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Variables estaticas "globales"
-    DECLARE @StartingStatus INT =
-            (
-                SELECT TOP 1
-                       CSPS.IdCatSalesPackageStatus
-                FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-            );
+    DECLARE @StartingStatus INT = (
+                                      SELECT TOP 1
+                                          CSPS.IdCatSalesPackageStatus
+                                      FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                                      WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                                  );
 
-    DECLARE @StatusSubcription INT =
-            (
-                SELECT COUNT(IdSubscription)
-                FROM [DeliveryBackOffice].[dbo].[Subscription]
-                WHERE AccountId = @IdAcount
-                      AND RowStatus = 1
-                      AND CatSubscriptionId = @IdSalePackage
-            );
+    DECLARE @StatusSubcription INT = (
+                                         SELECT COUNT(IdSubscription)
+                                         FROM [DeliveryBackOffice].[dbo].[Subscription]
+                                         WHERE AccountId = @IdAcount
+                                               AND RowStatus = 1
+                                               AND CatSubscriptionId = @IdSalePackage
+                                     );
 
     -- Variables de control de flujo
     DECLARE @TransactionSuccess BIT = 0;
@@ -61,7 +64,7 @@ BEGIN
         = CAST(ISNULL(
                (
                    SELECT TOP 1
-                          [CP].[Value]
+                       [CP].[Value]
                    FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
                    WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
                ),
@@ -69,25 +72,25 @@ BEGIN
                      ) AS INT);
     --- Estado de membresia
     SELECT TOP 1
-           @StatusMembershipt = 1,
-           @ActiveMembershipId = IdMembership
+        @StatusMembershipt = 1,
+        @ActiveMembershipId = IdMembership
     FROM [DeliveryBackOffice].[dbo].[Membership]
     WHERE AccountId = @IdAcount
           AND RowStatus = 1;
 
     --- validar si cliente posee credito​
     SELECT TOP 1
-           @CustomerType = ISNULL(Cu.IdCustomerType, 0),
-           @HasCredit = ISNULL(   (CASE
-                                       WHEN CCOP.ConditionOfPaymenAbbreviation LIKE '%CREDITO%' THEN
-                                           1
-                                       ELSE
-                                           0
-                                   END
-                                  ),
-                                  0
-                              ), ---custumerType es 1 para corporativos
-           @Idcustumer = Cu.IdCustomer
+        @CustomerType = ISNULL(Cu.IdCustomerType, 0),
+        @HasCredit = ISNULL(   (CASE
+                                    WHEN CCOP.ConditionOfPaymenAbbreviation LIKE '%CREDITO%' THEN
+                                        1
+                                    ELSE
+                                        0
+                                END
+                               ),
+                               0
+                           ), ---custumerType es 1 para corporativos
+        @Idcustumer = Cu.IdCustomer
     FROM [DeliveryBackOffice].[dbo].[Account] AC WITH (NOLOCK)
         LEFT JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH (NOLOCK)
             ON AC.IdCustomer = Cu.IdCustomer
@@ -109,10 +112,7 @@ BEGIN
         BEGIN
 
             PRINT 'INSERT MEMBRESIA';
-            DECLARE @AuxNewMembership AS TABLE
-            (
-                IdNewMembership INT
-            );
+            DECLARE @AuxNewMembership AS TABLE (IdNewMembership INT);
 
             INSERT INTO [DeliveryBackOffice].[dbo].[Membership]
             (
@@ -139,7 +139,7 @@ BEGIN
                 AvailablePoints,
                 AccumulatedPoints,
                 PointsExpirationDate,
-				CatValueTypeId
+                CatValueTypeId
             )
             OUTPUT inserted.IdMembership
             INTO @AuxNewMembership
@@ -180,15 +180,15 @@ BEGIN
                    0,
                    0,
                    DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE())),
-				   CDR.ValueTypeId
+                   CDR.ValueTypeId
             FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
-			INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
-			ON CM.IdCatMembership = CDR.CatMembershipId
+                INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
+                    ON CM.IdCatMembership = CDR.CatMembershipId
             WHERE CM.IdCatMembership = @IdSalePackage
                   AND NOT EXISTS
             (
                 SELECT TOP 1
-                       1
+                    1
                 FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
                 WHERE M.CustomerId = @Idcustumer
                       AND (M.AccountId = @IdAcount)
@@ -272,19 +272,15 @@ BEGIN
         END;
         ELSE IF (
                     @TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI
-                    AND
-                    (
-                        (ISNULL(@StatusMembershipt, 0) > 0)
-                        OR @CustomerType = 2
-                    )
+                    AND (
+                            (ISNULL(@StatusMembershipt, 0) > 0)
+                            OR @CustomerType = 2
+                        )
                 )
         BEGIN
 
 
-            DECLARE @AuxNewSubscriptions AS TABLE
-            (
-                IdNewSubscriptions INT
-            );
+            DECLARE @AuxNewSubscriptions AS TABLE (IdNewSubscriptions INT);
 
             INSERT INTO [DeliveryBackOffice].[dbo].[Subscription]
             (
@@ -305,7 +301,7 @@ BEGIN
                 TokenCreated,
                 DateCreated,
                 RenewalFixedDay,
-				CatTypeSubscriptionId
+                CatTypeSubscriptionId
             )
             OUTPUT inserted.IdSubscription
             INTO @AuxNewSubscriptions
@@ -340,10 +336,10 @@ BEGIN
                    @Token,
                    GETDATE(),
                    DAY(GETDATE()),
-				   CS.CatTypeSubscriptionId
+                   CS.CatTypeSubscriptionId
             FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
             WHERE CS.IdCatSubscription = @IdSalePackage
-        
+
 
             IF (EXISTS (SELECT TOP 1 1 FROM @AuxNewSubscriptions))
             BEGIN
@@ -405,10 +401,10 @@ BEGIN
 
                 /* Actualiza fecha de vigencia de las suscripciones vigentes por 180 días mas  */
 
-                DECLARE @SubscriptionValidity INT =
-                        (
+                DECLARE @SubscriptionValidity INT
+                    =   (
                             SELECT TOP 1
-                                   CS.SubscriptionValidity
+                                CS.SubscriptionValidity
                             FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
                             WHERE CS.IdCatSubscription = @IdSalePackage
                         );
