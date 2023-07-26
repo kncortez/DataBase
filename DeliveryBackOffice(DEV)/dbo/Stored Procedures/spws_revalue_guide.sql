@@ -9,6 +9,11 @@
 -- Create date: <2022-06-16>
 -- Description:	< Adicionar lógica para tarifarios alternos cuando destino es EXC >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman,Vasquez>
+-- Create date: <2023-07-25>
+-- Description:	<Agregar bandera de tipo de sucripción (descuento= 1 o Envío gratis=2) para recotización de guía >
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD',
@@ -25,7 +30,8 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @ParIsCreditCard BIT = NULL,
     @ParPesos VARCHAR(400) = NULL,
     @IsReturn BIT = 'false',
-    @UseMembership BIT = 0
+    @UseMembership BIT = 0,
+	@TypeSubscriptionId AS INT= 0
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -434,7 +440,9 @@ BEGIN
                                            @IdSalePipeLine = @IdSalePipeLine,
                                            @FormatResponse = 'DataTable',
                                            @CalculateTaxes = @CalculateTaxes,
-                                           @CalculateMembership = @UseMembership;
+                                           @CalculateMembership = @UseMembership,
+										   @TypeSubscriptionId  = @TypeSubscriptionId
+										   
     --select tp.* from @TempRate tp
 
     IF (@UseMembership = 1)
@@ -685,22 +693,47 @@ BEGIN
                 ELSE
                 BEGIN
                     --Se busca suscripciones
-                    SELECT TOP 1
-                           @SubscriptionId = sc.IdSubscription,
-                           @ServiceValueSubscription
-                               = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-                                  sc.SubscriptionFixedValue,
-                                  -1)
-                    FROM Subscription sc
-                        INNER JOIN CatSalesPackageStatus csps
-                            ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-                    WHERE sc.CustomerId = @IdCustomer
-                          AND @DateCreated <= sc.ExpirationDate
-                          AND sc.RowStatus = 1
-                          AND csps.SalesPackageStatusName = 'Activa'
-						  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
-						  ORDER BY sc.IdSubscription asc
-                    --ORDER BY sc.ExpirationDate;
+					DECLARE @NameTypeSubscrition VARCHAR(50);
+					SET @NameTypeSubscrition =(SELECT CatTypeSubscriptionName FROM CatTypeSubscription WHERE IdCatTypeSubscription = @TypeSubscriptionId)
+					IF(@NameTypeSubscrition = 'Porcentaje')
+						   BEGIN
+								SELECT TOP 1
+									   @SubscriptionId = sc.IdSubscription,
+									   @ServiceValueSubscription
+										   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+											  sc.SubscriptionFixedValue,
+											  -1)
+								FROM Subscription sc
+									INNER JOIN CatSalesPackageStatus csps
+										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+								WHERE sc.CustomerId = @IdCustomer
+									  AND @DateCreated <= sc.ExpirationDate
+									  AND sc.RowStatus = 1
+									  AND csps.SalesPackageStatusName = 'Activa'
+									  --AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+									  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+								  ORDER BY sc.SubscriptionFixedValue DESC
+								--ORDER BY sc.ExpirationDate;
+							END
+					ELSE IF (@NameTypeSubscrition = 'Monto Fijo')
+							BEGIN
+									SELECT TOP 1
+									   @SubscriptionId = sc.IdSubscription,
+									   @ServiceValueSubscription
+										   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+											  sc.SubscriptionFixedValue,
+											  -1)
+								FROM Subscription sc
+									INNER JOIN CatSalesPackageStatus csps
+										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+								WHERE sc.CustomerId = @IdCustomer
+									  AND @DateCreated <= sc.ExpirationDate
+									  AND sc.RowStatus = 1
+									  AND csps.SalesPackageStatusName = 'Activa'
+									  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+									  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+								  ORDER BY sc.IdSubscription ASC
+							END
 
                     --Si existe una suscripción
                     IF @SubscriptionId IS NOT NULL
