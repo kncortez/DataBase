@@ -693,22 +693,47 @@ BEGIN
                 ELSE
                 BEGIN
                     --Se busca suscripciones
-                    SELECT TOP 1
-                           @SubscriptionId = sc.IdSubscription,
-                           @ServiceValueSubscription
-                               = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-                                  sc.SubscriptionFixedValue,
-                                  -1)
-                    FROM Subscription sc
-                        INNER JOIN CatSalesPackageStatus csps
-                            ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-                    WHERE sc.CustomerId = @IdCustomer
-                          AND @DateCreated <= sc.ExpirationDate
-                          AND sc.RowStatus = 1
-                          AND csps.SalesPackageStatusName = 'Activa'
-						  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
-						  ORDER BY sc.IdSubscription asc
-                    --ORDER BY sc.ExpirationDate;
+					DECLARE @NameTypeSubscrition VARCHAR(50);
+					SET @NameTypeSubscrition =(SELECT CatTypeSubscriptionName FROM CatTypeSubscription WHERE IdCatTypeSubscription = @TypeSubscriptionId)
+					IF(@NameTypeSubscrition = 'Porcentaje')
+						   BEGIN
+								SELECT TOP 1
+									   @SubscriptionId = sc.IdSubscription,
+									   @ServiceValueSubscription
+										   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+											  sc.SubscriptionFixedValue,
+											  -1)
+								FROM Subscription sc
+									INNER JOIN CatSalesPackageStatus csps
+										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+								WHERE sc.CustomerId = @IdCustomer
+									  AND @DateCreated <= sc.ExpirationDate
+									  AND sc.RowStatus = 1
+									  AND csps.SalesPackageStatusName = 'Activa'
+									  --AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+									  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+								  ORDER BY sc.SubscriptionFixedValue DESC
+								--ORDER BY sc.ExpirationDate;
+							END
+					ELSE IF (@NameTypeSubscrition = 'Monto Fijo')
+							BEGIN
+									SELECT TOP 1
+									   @SubscriptionId = sc.IdSubscription,
+									   @ServiceValueSubscription
+										   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+											  sc.SubscriptionFixedValue,
+											  -1)
+								FROM Subscription sc
+									INNER JOIN CatSalesPackageStatus csps
+										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+								WHERE sc.CustomerId = @IdCustomer
+									  AND @DateCreated <= sc.ExpirationDate
+									  AND sc.RowStatus = 1
+									  AND csps.SalesPackageStatusName = 'Activa'
+									  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+									  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+								  ORDER BY sc.IdSubscription ASC
+							END
 
                     --Si existe una suscripción
                     IF @SubscriptionId IS NOT NULL
