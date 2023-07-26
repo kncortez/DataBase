@@ -40,8 +40,20 @@ BEGIN
 	DECLARE @StatusMembershipt INT = 0
 	DECLARE @CustomerType INT = 0; 
 	DECLARE @HasCredit BIT = 0;
+	DECLARE @AddedPointExpirationDate INT = 0;
 	DECLARE @Idcustumer  AS INT;
 	DECLARE @JsonResponse NVARCHAR(MAX) = '';
+	
+    SET @AddedPointExpirationDate
+        = CAST(ISNULL(
+               (
+                   SELECT TOP 1
+                          [CP].[Value]
+                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
+                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
+               ),
+               0
+            ) AS INT);
 
 	DECLARE @TacId INT = 0;
 
@@ -90,7 +102,7 @@ BEGIN
 			​
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Membership]
-				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress)
+				(CatMembershipId, CatMembershipStatusId, MembershipCost, CustomerId, AccountId, MembershipCode, CustomerPaymentId, IsAutoRenewable, MembershipFixedValue, MembershipMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, TaxIdNumber, InvoiceName, InvoiceEmail, FiscalAddress, RenewalFixedDay, AvailablePoints, AccumulatedPoints, PointsExpirationDate)
 			OUTPUT inserted.IdMembership INTO @AuxNewMEmbership(IdNewMembership)
 			SELECT
 				CM.IdCatMembership
@@ -118,6 +130,10 @@ BEGIN
 				,@TaxName
 				,@InvoiceEmail
 				,@FiscalAddress
+				,DAY(GETDATE())
+				,0
+				,0
+				,DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE()))
 			FROM
 				[DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			WHERE
@@ -212,7 +228,7 @@ BEGIN
 
 			INSERT INTO
 				[DeliveryBackOffice].[dbo].[Subscription]
-				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RateHeaderId, AlternativeRateHeaderId)
+				(MembershipId,CatSubscriptionId, CatSubscriptionStatusId, SubscriptionCost, CustomerId, AccountId, SubscriptionCode, CustomerPaymentId, IsAutoRenewable, SubscriptionFixedValue, SubscriptionMaxServiceFixedValue, ActualServiceCount, ExpirationDate, RowStatus, TokenCreated, DateCreated, RenewalFixedDay)
 			OUTPUT inserted.IdSubscription INTO @AuxNewSubscriptions(IdNewSubscriptions)
 			SELECT
 			    IIF(@CustomerType = 2, NULL, @ActiveMembershipId) 
@@ -237,8 +253,7 @@ BEGIN
 				,1
 				,@Token
 				,GETDATE()
-				,CS.RateHeaderId
-				,CS.AlternativeRateHeaderId
+				,DAY(GETDATE())
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			WHERE

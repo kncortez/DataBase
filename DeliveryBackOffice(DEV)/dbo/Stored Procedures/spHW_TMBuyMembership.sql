@@ -36,6 +36,7 @@ BEGIN
 	DECLARE @TypeOfInOutMoney INT = 0;
 	DECLARE @MembershipId INT = 0;
 	DECLARE @CatTMSalesPersonId INT = 0;
+	DECLARE @AddedPointExpirationDate INT = 0;
 
 	DECLARE @TacId INT = 0;
 
@@ -65,6 +66,18 @@ BEGIN
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
 
+    SET @AddedPointExpirationDate
+        = CAST(ISNULL(
+               (
+                   SELECT TOP 1
+                          [CP].[Value]
+                   FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
+                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
+               ),
+               0
+            ) AS INT);
+
+
 	IF (@ActiveMembership > 0) 
 		BEGIN
 			SELECT 0 [spResult], 'No se ha podido realizar la compra debido a que el usuario ya tiene una membresía activa.' [spMessage];
@@ -93,7 +106,11 @@ BEGIN
 										[InvoiceName], 
 										[InvoiceEmail], 
 										[FiscalAddress],
-										[CatTMSalesPersonId] )
+										[CatTMSalesPersonId],
+										[AvailablePoints],
+										[AccumulatedPoints],
+										[PointsExpirationDate]
+										)
 		SELECT							[CM].[IdCatMembership],								-- CatMembershipId
 										@StartingStatus,									-- CatMembershipStatusId
 										[CM].[MembershipCost],								-- MembershipCost
@@ -113,7 +130,10 @@ BEGIN
 										@TaxName,											-- InvoiceName
 										@InvoiceEmail,										-- InvoiceEmail
 										@FiscalAddress,										-- FiscalAddress
-										@CatTMSalesPersonId									-- CatTMSalesPersonId
+										@CatTMSalesPersonId,								-- CatTMSalesPersonId
+										0,													-- AvailablePoints
+										0,													-- AccumulatedPoints
+										DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE())) -- PointsExpirationDate
 		FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
 		WHERE							[CM].[IdCatMembership] = @CatMembershipId;
 
