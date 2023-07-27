@@ -316,15 +316,33 @@ BEGIN
 										''
 								END
 								)'Icon',
+								-- ADICIONES TSE
 								COALESCE
 								(
-									FORMAT([dev].[DeliveryETA], 'ddMM')
+									(
+										CASE
+											WHEN [TSEGuide].[TSECodeRoute] IS NOT NULL THEN UPPER([TSEGuide].[TSECodeRoute])
+											ELSE FORMAT([dev].[DeliveryETA], 'ddMM')
+										END
+									)
 									, ''
 								) [DeliveryETA],
 								COALESCE
 								(
 									(
 										CASE
+											WHEN [TSEGuide].[TSEClusterAbbreviation] IS NOT NULL THEN UPPER([TSEGuide].[TSEClusterAbbreviation])
+											ELSE ''
+										END
+									)
+									, ''
+								) [DestinyHub],
+								-- FIN ADICIONES
+								COALESCE
+								(
+									(
+										CASE
+											WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
 											WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 											WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 											WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
@@ -380,6 +398,21 @@ BEGIN
                                       ON dcba.DCBA_Id = dev.DCBA_ID
                                   LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
                                       ON dev.IdDeliveryOption = cdo.IdDeliveryOption
+								  OUTER APPLY (
+									SELECT 
+										TOP (1) 
+											[HL].[HubAbbreviation] 
+									FROM 
+										[DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSCDesAux  WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[HubLogistics] HL  WITH(NOLOCK) 
+											ON
+												[DSCDesAux].[Hub] = [HL].[HubAbbreviation]
+									WHERE
+										[DSCDesAux].[HeaderCode] = [tws2].[HeaderCode]
+									ORDER BY
+										[DSCDesAux].[Hub] DESC
+								  ) DestinyCov
                                   OUTER APPLY(
 										SELECT TOP 1 
 											cov2.RouteCode,
@@ -579,6 +612,36 @@ BEGIN
 									WHERE
 										[dev].[Receiver_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
 								) AlterDestiny
+								-- ADICIONES TSE
+								OUTER APPLY (
+									SELECT 
+										TOP (1) 
+											CR.[CodeRoute] [TSECodeRoute],
+											[CRC].[ClusterAbbreviation] [TSEClusterAbbreviation]
+									FROM 
+										[DeliveryBackOffice].[dbo].[TSERoutePreparationDetail] TSERPD  WITH(NOLOCK) 
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
+											ON
+												[TSERPD].[TSERoutePreparationHeaderID] = [TSERPH].[IDTSERoutePreparationHeader]
+												AND
+												[TSERPH].[RowStatus] = 1
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[CatRouteCluster] CRC  WITH(NOLOCK) 
+											ON
+												[CRC].[IdCatRouteCluster] = [TSERPH].[IdCatRouteCluster]
+										INNER JOIN
+											[DeliveryBackOffice].[dbo].[CatRoute] CR  WITH(NOLOCK) 
+											ON
+												[TSERPH].[IdCatRoute] = [CR].[IdRoute]
+									WHERE
+										[TSERPD].[GuideSerie] = [dev].[Guide_Serie]
+										AND
+										[TSERPD].[GuideNumber] = [dev].[Guide_Number]
+										AND
+										[TSERPD].[RowStatus] = 1
+								) [TSEGuide]
+							  -- FIN ADICIONES
 								  
                               --WHERE dev.Guide_Number = @Guide_Number
 

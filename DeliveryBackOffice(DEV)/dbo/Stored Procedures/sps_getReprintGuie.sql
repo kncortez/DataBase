@@ -1,30 +1,30 @@
 ﻿
-CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
-AS
-BEGIN
-	DECLARE @FranchiseVisitPointTypeId INT = 
+as
+begin
+	declare @FranchiseVisitPointTypeId int = 
 	(
-		SELECT 
-			TOP (1) 
+		select 
+			top (1) 
 				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+		from
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
+		where
+			[KOVPC].[KindOfVPName] = 'Concesionario'  collate Latin1_General_CI_AI 
 	)
-	DECLARE @ExpressVisitPointTypeId INT = 
+	declare @ExpressVisitPointTypeId int = 
 	(
-		SELECT 
-			TOP (1) 
+		select 
+			top (1) 
 				[KOVPC].[IdKindOfVPClient] 
-		FROM
-			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
-		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+		from
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
+		where
+			[KOVPC].[KindOfVPName] = 'Express Center'  collate Latin1_General_CI_AI 
 	)
-	DECLARE @IndividualWebSys INT =
+	declare @IndividualWebSys int =
 	(
 		SELECT 
 			TOP 1
@@ -102,6 +102,16 @@ BEGIN
     SELECT GuidePiece
     FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE GuideNumber = @Guide_Number;
+	
+	DECLARE @EXCKindOfVPC INT =
+	(
+		SELECT 
+			[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	);
 
     DECLARE @DaysToExpiration INT =
             (
@@ -282,7 +292,7 @@ BEGIN
 									 +' {' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
-                                  '"name":"'
+                                  '"name":"' + IIF(ISNULL([dev].[IsLastMileReturn], 0) = 1 AND [vp].[IdKindOfVPClient] = @EXCKindOfVPC, REPLACE(dbo.fnt_String_Escape(ISNULL([vp].[DescriptionOfClient], ''), 'json'), '"','') + ' - ' , '') +
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
                                                                            (CASE
@@ -454,8 +464,10 @@ BEGIN
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
                                      + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
-                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
+                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, ''))
                                      + '",'
+									 +'"IdInternalOrderRef2":"'
+                                     + CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) + '",'
 									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
@@ -518,6 +530,7 @@ BEGIN
 									  + '"Priority": "' + 
 										COALESCE(
 											(CASE 
+												WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 THEN 'D'
 												WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
 												WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
 												ELSE 'E'
@@ -535,6 +548,7 @@ BEGIN
 																		(
 																			(
 																				CASE
+																					WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
 																					WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
 																					WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
 																					WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'

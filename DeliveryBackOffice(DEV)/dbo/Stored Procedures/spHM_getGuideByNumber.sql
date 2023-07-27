@@ -3,14 +3,14 @@
 -- Create date: <12-07-2022>
 -- Description:	<Get and validate a DeliveryOrder Guide by serie and number>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHM_getGuideByNumber]
-	@GuideSerie AS NVARCHAR(25),
-	@GuideNumber AS NVARCHAR(50)
-AS
-BEGIN
+CREATE procedure [dbo].[spHM_getGuideByNumber]
+	@GuideSerie as nvarchar(25),
+	@GuideNumber as nvarchar(50)
+as
+begin
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+	set nocount on;
 	DECLARE @IS_HUB_DESTINY AS INT;		-- Delivery Order
 	DECLARE @HUB_ID AS INT;				-- Hub Logistics
 
@@ -56,6 +56,7 @@ BEGIN
 				[SO].[OrderDescription] = 'En Tránsito'  COLLATE Latin1_General_CI_AI  OR
 				[SO].[OrderDescription] = 'En preparación de traslado'  COLLATE Latin1_General_CI_AI  OR
 				[SO].[OrderDescription] = 'Declarado para Devolución'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Guía revertida para entrega'  COLLATE Latin1_General_CI_AI  OR
 				[SO].[OrderDescription] = 'Trasladado a Hub'  COLLATE Latin1_General_CI_AI )
 		WHERE	[DO].[Guide_Serie] = @GuideSerie
 		AND		[DO].[Guide_Number] = @GuideNumber;

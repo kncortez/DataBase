@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el código SAP del artículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'SAPCode';
 
@@ -53,7 +55,10 @@ GO
 CREATE NONCLUSTERED INDEX [idx_dti_fk_orderNumber_dti_fk_orderSerie]
     ON [dbo].[invoiceDetail]([dti_fk_orderNumber] ASC, [dti_fk_orderSerie] ASC);
 
-
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fk_header_dti_fk_orderSerie_dti_fk_orderNumber]
+    ON [dbo].[invoiceDetail]([dti_fk_orderSerie],[dti_fk_orderNumber]) INCLUDE ([dti_fk_header]);
+    
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de suscripción facturada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'SubscriptionId';
 

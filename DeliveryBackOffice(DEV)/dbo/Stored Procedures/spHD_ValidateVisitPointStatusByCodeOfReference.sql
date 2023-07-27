@@ -11,7 +11,17 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-    SELECT	[VPC].[StatusClient]
-	FROM	[dbo].[VisitPointClient] VPC
-	WHERE	[VPC].[CodeOfReference] = @VPCodeOfReference;
+	IF ( ISNULL(@VPCodeOfReference,-1) = -1 )
+	BEGIN
+	    SELECT
+			CAST(0 AS BIT) [StatusClient]
+	END
+	ELSE
+    BEGIN
+        
+		SELECT	CAST(ISNULL([VPC].[StatusClient], 0) AS BIT) [StatusClient]
+		FROM	[dbo].[VisitPointClient] VPC
+		WHERE	[VPC].[CodeOfReference] = @VPCodeOfReference;
+
+    END
 END

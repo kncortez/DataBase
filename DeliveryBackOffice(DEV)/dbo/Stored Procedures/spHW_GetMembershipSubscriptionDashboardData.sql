@@ -8,7 +8,12 @@
 -- Create date: <31-01-2023>
 -- Description:	<Added membership and subscription fields for more information in dashboard>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHW_GetMembershipSubscriptionDashboardData]
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <05-07-2023>
+-- Description:	<Ordenar suscripciones de la mas antigua a la mas nueva>
+-- =============================================
+CREATE  PROCEDURE [dbo].[spHW_GetMembershipSubscriptionDashboardData]
 	@AccountId AS INT,
 	@DateStart AS DATETIME,
 	@DateEnd AS DATETIME
@@ -54,14 +59,14 @@ BEGIN
 				[M].[ActualServiceCount],
 				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService],
 				[M].[ExpirationDate] [MembershipExpirationDate],
-				IIF((([M].[ActualServiceCount] * 100) / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN  1 ELSE [M].[MembershipMaxServiceFixedValue] END)) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage],
+				IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage],
 				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[MembershipId] = [M].[IdMembership]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [MembershipDeliveriesCount],
-				CAST(IIF((([M].[ActualServiceCount] * 100) / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN  1 ELSE [M].[MembershipMaxServiceFixedValue] END)) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
+				CAST(IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) >= 100, 0, 1) AS BIT) [IsMembershipFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
@@ -128,5 +133,5 @@ BEGIN
 		AND		[S].[ExpirationDate] >= GETDATE()
 		AND		[S].[RowStatus] = 1
 	ORDER BY
-		[S].[ExpirationDate] ASC;
+		[S].[IdSubscription] ASC;
 END

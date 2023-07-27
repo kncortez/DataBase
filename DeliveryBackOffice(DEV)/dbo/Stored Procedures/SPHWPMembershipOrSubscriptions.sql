@@ -132,6 +132,7 @@ BEGIN
                                           )
                                           AND MMBRSHP.RowStatus = 1
                                 ) MMBRSHP
+								WHERE CM.RowStatus=1 
                                 --	ORDER BY CM.IdCatMembership Desc
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
@@ -239,14 +240,17 @@ BEGIN
                                           )
                                           AND SBSCRPTN.RowStatus = 1
                                 ) SBSCRPTN
-                                WHERE (
-                                          CS.IncludedMembershipId IS NULL
-                                          AND ISNULL(@AccountId, 0) > 0
-                                      ) -- usuario individual
-                                      OR (
-                                             CS.IncludedMembershipId IS NOT NULL
-                                             AND ISNULL(@AccountId, 0) = 0
+                                WHERE
+								       CS.RowStatus=1 And( 
+									       (
+	
+											  ISNULL(@AccountId, 0) > 0
+	                                      	) -- usuario individual
+	                                      OR (
+	                                             CS.IncludedMembershipId IS NOT NULL
+	                                             AND ISNULL(@AccountId, 0) = 0
                                          ) -- otros usuarios
+                                       )
                                 --ORDER BY CS.IdCatSubscription Desc
 
                                 FOR XML PATH(''), TYPE

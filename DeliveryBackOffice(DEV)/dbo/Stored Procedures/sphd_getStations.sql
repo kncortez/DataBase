@@ -13,5 +13,7 @@ BEGIN
 		cs.IdStation
 	   ,cs.StationName
 	FROM DeliveryBackOffice.dbo.CatStation cs
+	INNER JOIN DeliveryBackOffice.dbo.HubLogistics hb
+	ON hb.IdHubLogistic = cs.HubLogisticId AND hb.HubStatus = 1
 	WHERE cs.RowStatus ='true' AND cs.StationType =1;
 END

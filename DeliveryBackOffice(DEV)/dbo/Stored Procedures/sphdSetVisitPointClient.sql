@@ -4,6 +4,11 @@
 -- Create date: <2021-06-04>
 -- Description:	<creación o modificación de valores>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-03-31>
+-- Description:	<agragar campos para configuración de tiempo de facturación y volumen de facturación>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT,
@@ -45,13 +50,23 @@ CREATE PROCEDURE [dbo].[sphdSetVisitPointClient]
     @IdVPConfiguration AS BIGINT = NULL,
     @Option AS INT, --1 Insert Into , 2 Update,
 	@CatBusinessSegmentId INT = NULL,
-	@AllowScheduledPickups AS BIT = NULL
+	@AllowScheduledPickups AS BIT = NULL,
+	@CatBillingTimeId INT = 0,
+	@CatBillingVolumeId INT = 0,
+	@BillingCut_offDate AS DATE=NULL
 
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+
+	IF (@CatBillingTimeId = -1)
+	 Set @CatBillingTimeId =(Select IdCatBillingTime From [dbo].[CatBillingTime] CBT Where CBT.DescriptionBillingTime='Default(Cada domingo del mes y el día 2 del siguiente mes)')
+
+	 IF(@CatBillingVolumeId = -1)
+	 Set @CatBillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
 
     DECLARE @blnCotinue AS BIT = 'TRUE';
 	DECLARE @MessageError AS NVARCHAR(100) = '';
@@ -71,6 +86,7 @@ BEGIN
 									WHERE vpc.DescriptionOfClient =  @DescriptionOfClient 
 									AND (vpc.CustomerID = @CustomerID)))
                 BEGIN
+
 					 DECLARE @CodeOfReference AS INT = -1;
 					 SET @CodeOfReference = (SELECT TOP (1) vpc3.CodeOfReference + 1 FROM dbo.VisitPointClient vpc3 ORDER BY vpc3.CodeOfReference DESC)
 					
@@ -164,7 +180,10 @@ BEGIN
                             TokenUpdated,
                             DateUpdated,
                             AveragePackageDaily,
-                            DateStartOperation
+                            DateStartOperation,
+							CatBillingTimeId,
+							CatBillingVolumeId,
+							BillingCut_offDate
                         )
                         VALUES
                         (   @CodeOfReference,				   -- VisitPointID - int
@@ -181,7 +200,11 @@ BEGIN
                             NULL,                  -- TokenUpdated - nvarchar(50)
                             NULL,                  -- DateUpdated - datetime
                             @AveragePackageDaily,  -- AveragePackageDaily - int
-                            @DateStartOperation    -- DateStartOperation - datetime
+                            @DateStartOperation,    -- DateStartOperation - datetime
+							@CatBillingTimeId,
+							@CatBillingVolumeId,
+							@BillingCut_offDate
+
                             )
                         DECLARE @IDVPCONF AS INT = -1
                         SET @IDVPCONF = SCOPE_IDENTITY()
@@ -400,7 +423,10 @@ BEGIN
                             [TokenUpdated] = @Token,
                             [DateUpdated] = GETDATE(),
                             [AveragePackageDaily] = @AveragePackageDaily,
-                            [DateStartOperation] = @DateStartOperation
+                            [DateStartOperation] = @DateStartOperation,
+							[CatBillingTimeId]= @CatBillingTimeId,
+							[CatBillingVolumeId] = @CatBillingVolumeId,
+							[BillingCut_offDate] = @BillingCut_offDate
                         WHERE IdVPConfiguration = @IdVPConfiguration
                               AND VisitPointID = @IdVisitPoint
 										PRINT @@ROWCOUNT
@@ -431,7 +457,10 @@ BEGIN
                             TokenUpdated,
                             DateUpdated,
                             AveragePackageDaily,
-                            DateStartOperation
+                            DateStartOperation,
+							CatBillingTimeId,
+							CatBillingVolumeId,
+							BillingCut_offDate
                         )
                         VALUES
                         (   @IdVisitPoint,         -- VisitPointID - int
@@ -448,7 +477,10 @@ BEGIN
                             NULL,                  -- TokenUpdated - nvarchar(50)
                             NULL,                  -- DateUpdated - datetime
                             @AveragePackageDaily,  -- AveragePackageDaily - int
-                            @DateStartOperation    -- DateStartOperation - datetime
+                            @DateStartOperation,    -- DateStartOperation - datetime
+							@CatBillingTimeId,  -- Configuración de tiempo de facturación
+							@CatBillingVolumeId, --confioguración de volumen de facturación
+							@BillingCut_offDate  --fecha de corte
                             )
 
                         SET @IDVCONF = SCOPE_IDENTITY()

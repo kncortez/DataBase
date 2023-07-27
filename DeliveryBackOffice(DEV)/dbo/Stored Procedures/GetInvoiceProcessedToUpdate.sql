@@ -6,27 +6,27 @@
 CREATE PROCEDURE [dbo].[GetInvoiceProcessedToUpdate]
 AS
 BEGIN
-	BEGIN TRY
-		DECLARE @DaysFrom INT = 4 --Días desde donde se obtienen las guías.
+    BEGIN TRY
+        DECLARE @DaysFrom INT = 4; --Días desde donde se obtienen las guías.
 
-		SELECT
-			'1' 'StatusCode'
-		   ,'Datos obtenidos correctamente.' 'Description'
+        SELECT '1'                              'StatusCode'
+             , 'Datos obtenidos correctamente.' 'Description';
 
-		SELECT
-			inv_pk_id InvoiceId
-		FROM invoiceHeader WITH (NOLOCK)
-		WHERE 
-		inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
-		AND CAST(inv_dateRegister AS DATE) >= '2023-04-01 00:00:00'
-		--AND inv_pk_id = 2054828
-		ORDER BY InvoiceId asc
+        SELECT inv_pk_id InvoiceId
+        FROM invoiceHeader WITH (NOLOCK)
+        WHERE 
+		--(inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
+        --OR inv_documentRecieved ='TimeOut' 
+		--)
+		  --AND inv_dateRegister >='2023-06-01 00:00:00'
+		  --AND 
+		  inv_pk_id = 2224103
+		   --   AND CAST(inv_dateRegister AS DATE) >= CAST(GETDATE() - @DaysFrom AS DATE);
 
-	END TRY
-	BEGIN CATCH
-		
-		SELECT
-			'-1' 'StatusCode'
-		   ,ERROR_MESSAGE() 'Description'
-	END CATCH
-END
+    END TRY
+    BEGIN CATCH
+
+        SELECT '-1'            'StatusCode'
+             , ERROR_MESSAGE() 'Description';
+    END CATCH;
+END;

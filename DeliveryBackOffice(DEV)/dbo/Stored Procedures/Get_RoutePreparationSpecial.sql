@@ -1,4 +1,5 @@
-﻿-- Author:		<Eduardo, López>
+﻿
+-- Author:		<Eduardo, López>
 -- Create date: <2023-05-30>
 -- Description:	<Obtener guías relacionadas a una ruta especial espeficada>
 
@@ -81,16 +82,19 @@ BEGIN
 	   ,tsd.GuideNumber
 	   INTO #listGuides
 			FROM TSERoutePreparationDetail tsd WITH(NOLOCK)
+			INNER JOIN [dbo].[DeliveryOrder] do  WITH(NOLOCK) 
+			ON [do].[Guide_Serie] = [tsd].[GuideSerie] AND [do].[Guide_Number] = [tsd].[GuideNumber]
 			WHERE tsd.TSERoutePreparationHeaderID = @IdHeader
 			AND tsd.RowStatus = 1
+			AND [do].[Pieces_Dry] > 1
 			--SELECT *from #listGuides;
 
 		SELECT COUNT(lgs.GuideNumber) AS TotalGuides FROM #listGuides lgs;
 
 	  	SELECT COUNT(dyop.GuideNumber) AS TotalPieces FROM DeliveryOrderPiece dyop WITH(NOLOCK)
-							INNER JOIN #listGuides lsg
-							ON dyop.GuideSerie = lsg.GuideSerie
-							AND dyop.GuideNumber = lsg.GuideNumber;
+				INNER JOIN #listGuides lsg
+				ON dyop.GuideSerie = lsg.GuideSerie
+				AND dyop.GuideNumber = lsg.GuideNumber;
 
 		SELECT UnitNumber FROM TSERoutePreparationHeader tsh WITH(NOLOCK)
 			 INNER JOIN CatVehicle ctv
@@ -112,6 +116,8 @@ BEGIN
 							[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
 						WHERE
 							ISNULL([TSERPH].[HasFirstPickupProcess], 0) = 1
+							AND
+							[TSERPH].[RowStatus] = 1
 					)
 					=
 					(
@@ -119,6 +125,8 @@ BEGIN
 							COUNT([TSERPH].[HasFirstPickupProcess]) 
 						FROM
 							[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK)
+						WHERE
+							[TSERPH].[RowStatus] = 1
 					)
 				)
 				,1

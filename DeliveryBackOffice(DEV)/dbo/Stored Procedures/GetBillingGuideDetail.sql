@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Morales, Oscar>
 -- Create date: <2021-11-03>
 -- Description:	<Recupera información detallada de la guía a facturar>
@@ -76,6 +75,7 @@ BEGIN
     (
         SELECT [dbo].[fn_get_segment](@GuideSerie, @GuideNumber)
     );
+	DECLARE @DescriptionReturn NVARCHAR(MAX);
 
     SET @CostId =
     (
@@ -88,6 +88,11 @@ BEGIN
 	
 	IF @TypeService IS NULL
 		SET @TypeService = 'STD'
+	DECLARE @IsLastMileReturn INT = (SELECT ISNULL(IsLastMileReturn,0)  FROM [dbo].[DeliveryOrder] DO WITH(NOLOCK)
+														
+														Where  
+														Guide_Serie = @GuideSerie And Guide_Number = @GuideNumber
+													)
 
     IF @Segment IS NULL
         SET @Segment = 'LOC';
@@ -111,9 +116,32 @@ BEGIN
 	-- ESTANDAR
 	ELSE
 	BEGIN
+
 		SET @NameArticle = 'TARIFA DE ENVIO ESTANDAR';
 		SET @NameArticleWeight = 'RECARGO POR PESO ESTANDAR';
 		SET @NameArticleCollect = 'TARIFA COLLECT ESTANDAR';
+			
+	END
+
+	IF (@IsLastMileReturn = 1)
+	BEGIN
+		    
+		SELECT @DescriptionReturn = 
+			COALESCE(@DescriptionReturn, '') + 
+			IIF
+			(
+				[UD].[IdUndefinedDescriptions] = 1, 
+				REPLACE([Description],'+++',CONCAT(@GuideSerie,@GuideNumber,'. +++ ')),
+				IIF
+				(
+					[UD].[IdUndefinedDescriptions] = 2,
+					REPLACE([Description],'Q ##',CONCAT(@GuideSerie,@GuideNumber,'. Q ##')),
+					REPLACE([Description],'Q',CONCAT(@GuideSerie,@GuideNumber,'. Q'))
+				)
+			)
+			FROM 
+				[DeliveryBackOffice].[dbo].[UndefinedDescriptions] UD  WITH(NOLOCK) 
+	
 	END
 
     INSERT INTO @BreakdownOfPayment
@@ -449,13 +477,17 @@ BEGIN
             WHERE ca.Name = @NameArticleSecure;
     END;
 
-    SELECT SAPCode,
-           Name,
-           Description,
-           Price,
-           Category,
-           SendToInvoice
-    FROM @GuideDetail;
+		
 
-    SET NOCOUNT OFF;
-END;	
+	SELECT	SAPCode,
+			Name ,
+			Case
+			   when @IsLastMileReturn = 1 Then REPLACE(REPLACE ( @DescriptionReturn, '##' , Price ),'+++',+ char(10))  
+			   Else [Description] End [Description] ,
+			Price,
+			Category,
+			SendToInvoice
+	FROM @GuideDetail;
+
+	SET NOCOUNT OFF;
+END	

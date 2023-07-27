@@ -235,8 +235,6 @@ BEGIN
 			AND
 			[RowStatus] = 1
 
-
-
 		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @UpdatedRoute ) )
 		BEGIN
 		    ;THROW 50000, 'Indicador de ruta procesada en recolección no actualizado', 1;
@@ -253,6 +251,8 @@ BEGIN
 					[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
 				WHERE
 					ISNULL([TSERPH].[HasFirstPickupProcess], 0) = 1
+					AND
+                    [TSERPH].[RowStatus] = 1
 			)
 			=
 			(
@@ -260,6 +260,8 @@ BEGIN
 					COUNT([TSERPH].[HasFirstPickupProcess]) 
 				FROM
 					[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK)
+				WHERE
+					[TSERPH].[RowStatus] = 1
 			)
 
 		)
@@ -268,7 +270,7 @@ BEGIN
 			SELECT
 				200 [responseCode],
 				'Proceso finalizado exitosamente' [responseMessage],
-				1 [activeGlobalManifest]
+				CAST(1 AS BIT) [activeGlobalManifest]
 		END
 		ELSE
         BEGIN
@@ -276,7 +278,7 @@ BEGIN
 			SELECT
 				200 [responseCode],
 				'Proceso finalizado exitosamente' [responseMessage],
-				0 [activeGlobalManifest]
+				CAST(0 AS BIT ) [activeGlobalManifest]
         END
 
 	END TRY

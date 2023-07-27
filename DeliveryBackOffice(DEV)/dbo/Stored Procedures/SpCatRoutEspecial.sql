@@ -4,24 +4,25 @@
 -- Description:	<Description, Catálogo de rutas especiales TSE>
 -- =============================================
 CREATE PROCEDURE [dbo].[SpCatRoutEspecial]
-
-
 AS
 BEGIN
-	
 
-	DECLARE @IdTypeRoute Int = (Select IdTypeRoute From dbo.CatTypeRoute Where [Name] ='Especiales')
 
-	SET NOCOUNT ON;
+    DECLARE @IdTypeRoute INT =
+            (
+                SELECT IdTypeRoute FROM dbo.CatTypeRoute WHERE [Name] = 'Especiales'
+            );
 
-	Select 
-		CR.IdRoute,
-		UPPER(CR.CodeRoute) CodeRoute,
-		CR.[Description],
-		CR.IdTownship,	
-		CR.IdTypeRoute,
-		CR.[Zone]
-	From [dbo].[CatRoute] CR WITH (NOLOCK)
-	Where IdTypeRoute = @IdTypeRoute
-  
-END
+    SET NOCOUNT ON;
+
+    SELECT CR.IdRoute
+         , UPPER(CR.CodeRoute) CodeRoute
+         , CR.[Description]
+         , CR.IdTownship
+         , CR.IdTypeRoute
+         , CR.[Zone]
+    FROM [dbo].[CatRoute] CR WITH (NOLOCK)
+    WHERE IdTypeRoute = @IdTypeRoute
+    ORDER BY [CR].[CodeRoute] ASC;
+
+END;

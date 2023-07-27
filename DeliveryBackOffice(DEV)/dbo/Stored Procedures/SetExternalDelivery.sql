@@ -171,7 +171,7 @@ BEGIN
 						DA.ID = DAP.IdDeliveryAttemptProcess
 
 			-- Revisar si la guía ya ha sido entregada anteriormente
-            DECLARE @StatusId INT = ISNULL(( SELECT TOP 1 DOD.StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK) WHERE DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber AND DOD.StatusOrderId IN (5,22,24,25)),0);
+            DECLARE @StatusId INT = ISNULL(( SELECT TOP 1 DOD.StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK) WHERE DOD.Guide_Serie = @GuideSerie AND DOD.Guide_Number = @GuideNumber AND DOD.StatusOrderId IN (5,22,24,25) AND [DOD].[RowStatus] = 1),0);
 
             IF (@StatusId NOT IN ( 5, 22 )) -- La guía no ha sido entregada
             BEGIN
@@ -337,7 +337,10 @@ BEGIN
 				CAST(0 AS BIT) AS 'boolResult',
                 'Registro no guardado' AS 'DescriptionResult',
                 CONVERT(BIGINT, 0) AS 'NumTransferID',
-                CONCAT(@GuideSerie, @GuideNumber) AS 'Guide';
+                CONCAT(@GuideSerie, @GuideNumber) AS 'Guide'
+				, error_line()
+				, error_message()
+				, error_number()
 		END
 
     END TRY

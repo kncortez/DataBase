@@ -1,4 +1,4 @@
-﻿--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
+--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
@@ -793,7 +793,10 @@ BEGIN
                         AccountNumber,
                         AccountName,
                         CODCommissionPercentage,
-                        DiscountPrice
+                        DiscountPrice,
+						CODCommission,
+						CODDiscount
+						
                     )
                     SELECT @NewIdBatchCODCustomer,
                            tcpt.GuideSerie,
@@ -827,7 +830,9 @@ BEGIN
                            tcpt.AccountNumber,
                            tcpt.AccountName,
                            CODRate,
-                           DiscountPrice
+                           DiscountPrice,
+						   0,
+						   0
                     FROM #TableCustomerPaymentTemp tcpt
                     WHERE NOT EXISTS
                     (

@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Oscar Morales>
 -- Create date: <2023-06-05>
 -- Description:	<Obtiene información para la entrega de rutas especiales>
@@ -60,6 +61,7 @@ BEGIN
 				ON trpd.GuideSerie = do.Guide_Serie
 					AND trpd.GuideNumber = do.Guide_Number
 			WHERE trpd.TSERoutePreparationHeaderID = @TSERoutePreparationHeaderId
+			AND [trpd].[RowStatus] = 1
 			
 			SELECT
 				CONCAT(do.Guide_Serie, do.Guide_Number) [Guide]
@@ -86,6 +88,7 @@ BEGIN
 				AND dop.GuideNumber = do.Guide_Number
 				AND so.OrderDescription = 'Devuelto') Ret
 			WHERE trpd.TSERoutePreparationHeaderID = @TSERoutePreparationHeaderId
+			AND [trpd].[RowStatus] = 1
 			
 		END
 		ELSE

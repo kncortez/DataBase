@@ -111,6 +111,7 @@ BEGIN
 				AND dop.GuideNumber = do.Guide_Number
 				AND so.OrderDescription = 'Devuelto') Ret
 			WHERE trpd.TSERoutePreparationHeaderID = @IDTSERoutePreparationHeader
+			AND trpd.RowStatus = 1
 
 		END
 		ELSE

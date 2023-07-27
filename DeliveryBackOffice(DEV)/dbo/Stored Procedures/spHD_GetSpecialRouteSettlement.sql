@@ -65,6 +65,7 @@ BEGIN
 				AND dod.RowStatus = 1
 				AND so.OrderDescription = 'Entregado') ca
 			WHERE trpd.TSERoutePreparationHeaderID = @TSERoutePreparationHeaderId
+			AND trpd.RowStatus = 1
 			AND (do.Pieces_Dry + do.Pieces_Cold) > 1
 		END
 		ELSE

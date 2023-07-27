@@ -16,7 +16,7 @@
     [TokenUpdated]              VARCHAR (50)    NULL,
     [DateUpdated]               DATETIME        NULL,
     [ServiceStatusId]           INT             NULL,
-    [PuSignaturePath]           NVARCHAR (150)  NULL,
+    [PuSignaturePath]           NVARCHAR (500)  NULL,
     [DiSignaturePath]           NVARCHAR (150)  NULL,
     [SubTypeServiceManagmentId] INT             NULL,
     [IdHubDestination]          INT             NULL,
@@ -34,6 +34,8 @@
     CONSTRAINT [FKService_RouteIn] FOREIGN KEY ([IdPuRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment]),
     CONSTRAINT [FKService_RoutOut] FOREIGN KEY ([IdDlRouteAssigment]) REFERENCES [dbo].[RouteAssigment] ([IdRouteAssigment])
 );
+
+
 
 
 

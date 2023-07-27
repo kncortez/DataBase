@@ -366,7 +366,11 @@ BEGIN
                                     LEFT JOIN dbo.CatPaymentTime cpt WITH (NOLOCK)
                                         ON sma.CatPaymentTimeId = cpt.TimePlaId
                                 WHERE ras.IdCurrierMan = @IdCourier
-                                      AND ras.DateOfRoute = @DateRoute
+                                      AND 
+									  (ras.DateOfRoute = @DateRoute
+									 --- OR ras.DateOfRoute = '2023-06-25'
+									  )
+
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,
@@ -397,7 +401,9 @@ BEGIN
                                                           + 'Delivery' + '",' + '"CodeOfReference":"'
                                                           + CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0)) + '",'
 														  + '"DeliveryOption":"' 
-														  + CONVERT( VARCHAR,ISNULL((CASE WHEN DOR.[IsLastMileReturn] = 1 THEN 1 ELSE DOR.IdDeliveryOption END),0))  + '",' +
+														  + CONVERT( VARCHAR,ISNULL((CASE WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 THEN DOR.IdDeliveryOption ELSE 1 END),0))  + '",' +
+														  + '"IsLastMileReturn":"' 
+														  + CONVERT( VARCHAR,ISNULL([DOR].[IsLastMileReturn],0))  + '",' +
                                                           + '"Id":"'
                                                           + ISNULL(
                                                                       CONVERT(
@@ -421,8 +427,17 @@ BEGIN
                                                                                 dbo.fn_ReplaceSpecialCharsForJSON(VPC.DescriptionOfClient)
                                                                             ),
                                                                       'N/A'
-                                                                  ) + '",' + '"Address":"'
-                                                          + IIF(kvp.KindOfVPName = 'Express Center' AND DOR.[IsLastMileReturn] = 0,
+                                                                  ) + '",' 
+														  + '"SenderPhone":"' + 
+														  (
+															CASE
+																WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 THEN [DOR].[Sender_Phone]
+																ELSE ''
+															END
+														  )
+														  + '",'
+														  + '"Address":"'
+                                                          + IIF(kvp.KindOfVPName = 'Express Center',
                                                                 ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(VPr.Address), ''),
                                                                 dbo.fnt_String_Escape(/*concat(*/
                                                                                          ISNULL(ISNULL(REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, dor.Sender_Address, DOR.Receiver_Address)), '"', ''), REPLACE(dbo.fn_ReplaceSpecialCharsForJSON(IIF(dor.IsLastMileReturn = 1, VPC.Address, VPr.Address)), '"', '')), 'N/A'), /*, ' ' , vpc.Town , ' ' , vpc.Department)*/
@@ -496,7 +511,7 @@ BEGIN
                                                                                  AND ISNULL(EPS.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))
                                                                             WHEN ISNULL(VPC.Longitude, '0') <> '' AND DOR.IsLastMileReturn = 1 THEN
-                                                                                ISNULL(VPC.Latitude, '0')
+                                                                                ISNULL(VPC.Longitude, '0')
                                                                             WHEN ISNULL(VPr.Latitude, '0') <> '' AND DOR.IsLastMileReturn = 0 THEN
                                                                                 ISNULL(VPr.Latitude, '0')
                                                                             ELSE
@@ -700,7 +715,7 @@ BEGIN
                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                                                 ON DAT.Guide_Serie = DOR.Guide_Serie
                                                    AND DAT.Guide_Number = DOR.Guide_Number
-                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45, 48, 32 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
                                             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail DSD WITH (NOLOCK)
                                                 ON DSD.Guide_Serie = DAT.Guide_Serie
                                                    AND DSD.Guide_Number = DAT.Guide_Number

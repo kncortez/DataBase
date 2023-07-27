@@ -3,14 +3,20 @@
 -- Create date: <2022-11-29>
 -- Description:	<Obtiene listado de guías que no poseen reintentos de entrega y se marcan como devolución.>
 -- =============================================
-CREATE PROCEDURE [dbo].[spHD_ValidateDeliveryAttemps]
+CREATE procedure [dbo].[spHD_ValidateDeliveryAttemps]
     -- Add the parameters for the stored procedure here
-    @DeliveryOrderBySettlementId BIGINT
-AS
-BEGIN
+    @DeliveryOrderBySettlementId bigint
+as
+begin
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
-    SET NOCOUNT ON;
+    set NOCOUNT ON;
+
+	-- Tabla de incidencias forzadas a devolución
+	DECLARE @ReturnIncidence TABLE 
+	(
+		IncidenceId INT
+	);
 
     -- Insert statements for procedure here
     DECLARE @TblGuides AS TABLE
@@ -19,6 +25,37 @@ BEGIN
         GuideNumber INT,
         FlowGuide TINYINT
     );
+
+	INSERT INTO @ReturnIncidence
+	(
+	    [IncidenceId]
+	)
+	SELECT
+		[CTI].[IdIncidenceType]
+	FROM
+		[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI  WITH(NOLOCK) 
+	WHERE
+		[CTI].[NameIncidence] = 'Destinatario rechaza paquete'  COLLATE Latin1_General_CI_AI 
+		AND
+		[CTI].[RowStatus] = 1
+		AND
+		[CTI].[ServiceType] = 'DELIVERY'  COLLATE Latin1_General_CI_AI 
+
+	INSERT INTO @ReturnIncidence
+	(
+	    [IncidenceId]
+	)
+	SELECT
+		[CTI].[IdIncidenceType]
+	FROM
+		[DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI  WITH(NOLOCK) 
+	WHERE
+		[CTI].[NameIncidence] = 'Remitente solicita devolución'  COLLATE Latin1_General_CI_AI 
+		AND
+		[CTI].[RowStatus] = 1
+		AND
+		[CTI].[ServiceType] = 'DELIVERY'  COLLATE Latin1_General_CI_AI 
+
 
 	DECLARE @STATUSDECLAREDRETURNED_DO INT = (SELECT TOP 1 SO.StatusOrderId FROM DBO.StatusOrder SO WITH(NOLOCK) WHERE OrderDescription = 'Declarado para Devolución');
 
@@ -31,6 +68,7 @@ BEGIN
             ,CASE
                 WHEN do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 THEN CASE
                         WHEN doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount OR coi.ClientConfirmsReturn = 1 THEN 2
+						WHEN [da].[ID_Incident] IN (SELECT [RI].[IncidenceId] FROM @ReturnIncidence RI) THEN 2
                         ELSE 1
                     END
                 ELSE 1

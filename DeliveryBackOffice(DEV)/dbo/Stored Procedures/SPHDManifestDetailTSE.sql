@@ -125,16 +125,17 @@ BEGIN
 		    TRPD.GuideSerie + Convert(NVARCHAR(50),TRPD.GuideNumber) Guide,
 			TRPD.GuideNumber,
 			TRPD.IDTSERoutePreparationDetail,
-			[DO].[Receiver_FirstName] [VoteCenter],
-			[DO].[Receiver_Address] [Adress],
-			Upper([DO].[Receiver_Alternant_FullName]) [Coordinador],
+			UPPER([DO].[Receiver_FirstName]) [VoteCenter],
+			UPPER([DO].[Receiver_Address]) [Adress],
+			CONCAT(Upper([DO].[Receiver_Alternant_FullName]), (CASE WHEN RTRIM(LTRIM(ISNULL([DO].[Receiver_Phone],''))) <> '' THEN ' - ' + [DO].[Receiver_Phone] ELSE '' END)) [Coordinador],
 			(
 				SELECT
 					SUM
 					(
 						CASE
-							WHEN LTRIM(RTRIM([TP].[Detail])) <> '' THEN 1
 							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRE'  COLLATE Latin1_General_CI_AI  THEN 0
+							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRES'  COLLATE Latin1_General_CI_AI  THEN 0
+							WHEN LTRIM(RTRIM([TP].[Detail])) <> '' THEN 1
 							ELSE 0
 						END
 					)

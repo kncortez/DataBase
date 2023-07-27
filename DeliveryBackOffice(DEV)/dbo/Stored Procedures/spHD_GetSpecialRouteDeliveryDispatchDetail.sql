@@ -1,5 +1,4 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
+﻿-- Author:		<Oscar Morales>
 -- Create date: <2023-05-31>
 -- Description:	<Obtiene información para módulo del detalle de despacho de rutas en procesos especiales>
 -- =============================================

@@ -4,7 +4,8 @@
 -- Update date: <2021-12-30>
 -- Description:	<Devuelve información sobre las rutas, piloto y unidad >
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_RouteV2] @dateRoute AS DATE
+CREATE PROCEDURE [dbo].[spg_get_RouteV2] 
+	@dateRoute AS DATE
 AS
 BEGIN
 	SELECT
@@ -40,6 +41,11 @@ BEGIN
 	INNER JOIN [DeliveryBackOffice].[dbo].[Township] ts
 		ON ts.IdTownship = ctr.IdTownship
 	WHERE ctr.RowStatus = 1
-		AND ctr.IdTypeRoute = (SELECT ctr.IdTypeRoute FROM CatTypeRoute ctr WHERE [Name] = 'Recolección')
+		AND 
+		(
+			ctr.IdTypeRoute = (SELECT ctr.IdTypeRoute FROM CatTypeRoute ctr WHERE [Name] = 'Recolección')
+			OR
+			ctr.IdTypeRoute = (SELECT ctr.IdTypeRoute FROM CatTypeRoute ctr WHERE [Name] = 'Especiales')
+		)
 	ORDER BY ctr.CodeRoute
 END

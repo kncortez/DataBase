@@ -8,16 +8,13 @@ CREATE PROCEDURE [dbo].[SpCatSenderReceiverEspecial]
 
 AS
 BEGIN	
-SET NOCOUNT ON;
+	SET NOCOUNT ON;
 
-	Select 
-		SR.ID,
-		SR.First_Name +' '+ SR.Last_Name [Name]
-	From [dbo].[SenderReceiver] SR WITH (NOLOCK)
-	     INNER JOIN 
-		 [dbo].[CatTypeSenderReceiver] TSR WITH (NOLOCK)
-		 ON SR.CatTypeSenderReceiverId = TSR.IdCatTypeSenderReceiver
-	Where  SR.Estatus = 1 AND TSR.TypeName Not In ('SUPERVISOR DE RUTA','JEFE DE RUTA','CUSTODIO')
-	ORDER BY SR.First_Name +' '+ SR.Last_Name ASC
+		Select 
+			SR.ID,
+			LTRIM(RTRIM(SR.First_Name +' '+ SR.Last_Name)) [Name]
+		From [dbo].[SenderReceiver] SR WITH (NOLOCK)
+		Where  SR.Estatus = 1
+		ORDER BY LTRIM(RTRIM(SR.First_Name +' '+ SR.Last_Name)) ASC
   
 END
