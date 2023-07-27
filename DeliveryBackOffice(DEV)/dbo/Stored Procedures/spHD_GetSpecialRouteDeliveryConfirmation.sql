@@ -71,6 +71,8 @@ BEGIN
 				Ret.Returned, ' de ', CAST(do.Pieces_Dry + do.Pieces_Cold AS VARCHAR)) [Pieces]
 			   ,Ret.Returned [TotalReturned]
 			   ,do.Pieces_Dry + do.Pieces_Cold [Total]
+			   ,do.Guide_Serie GuideSerie
+			   ,do.Guide_Number GuideNumber
 			FROM TSERoutePreparationDetail trpd WITH (NOLOCK)
 			INNER JOIN DeliveryOrder do WITH (NOLOCK)
 				ON do.Guide_Serie = trpd.GuideSerie
