@@ -1,5 +1,4 @@
 ﻿
-
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -415,6 +414,22 @@ BEGIN
         ON GT.Guide_Number = do.Guide_Number
             AND GT.Guide_Serie = do.Guide_Serie;
 		-------------------------------------------------------------------
+		
+		-- Proceso para registro de tiempo estimado de entrega
+		-- Andrés Ruíz - 2023-04-18
+		UPDATE
+			[DO]
+		SET
+			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, NULL)
+		FROM
+			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+			INNER JOIN
+				[#GuideTable] GT
+				ON
+					[DO].[Guide_Serie] = [GT].[Guide_Serie]
+					AND
+					[DO].[Guide_Number] = [GT].[Guide_Number]
+		------------------------------------------------------
 
 		--Proceso para añadir a carrito de compras
 		--Oscar Morales - 2022-08-17
@@ -517,6 +532,73 @@ BEGIN
 	BEGIN
 		COMMIT TRANSACTION;
 
+		---Nuevos datos para consumir nuevo formato guía
+  	DECLARE @FranchiseVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressVisitPointTypeId INT = 
+	(
+		SELECT 
+			TOP (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	)
+
+	DECLARE @IndividualWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ParserSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+	)
+
+
+  --Fin Nuevos datos para consumir nuevo formato guía
+
+
 		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
 
 		SELECT 
@@ -535,7 +617,9 @@ BEGIN
 			D.Guide_Serie AS 'GuideSerie',
 			D.Guide_Number AS 'GuideNumber',
 			''  as 'Route'
-			,D.PriceShippment AS 'Price',
+			,D.PriceShippment AS 'Price'
+			,D.Ticket_Number AS 'IdInternalOrderRef'
+			,D.Order_Number AS 'IdInternalOrderRef2',
 			-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			(SELECT DeliveryBackOffice.dbo.FnGetCustomerAttempts(D.Sender_ID,@CustomerID)) AS 'Attempts',
 			--FIN MODIFICACIÓN
@@ -556,7 +640,32 @@ BEGIN
 				ELSE
 					''
 				END
-			)'Icon'
+			)'Icon',
+			(FORMAT(ISNULL([D].[DeliveryETA], DATEADD(DAY,5,GETDATE())), 'ddMM'))'DeliveryETA',
+				(
+					CASE
+						WHEN ISNULL([D].[IsCollect], 0) = 1 THEN 'COLLECT'
+						WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
+						WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
+						WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
+						WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
+						ELSE 'CRÉDITO'
+					END
+				)'WayToPayDescription',
+
+			(
+					CASE
+						WHEN [vpct].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+						WHEN [vpct].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN [vpcti].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+						WHEN [D].[CatSystemId] = @IndividualWebSys THEN 'WEB'
+						WHEN [D].[CatSystemId] = @ExpressWebSys THEN 'EXC'
+						WHEN [D].[CatSystemId] = @CorporateWebSys THEN 'COR'
+						WHEN [D].[CatSystemId] = @ParserSys THEN 'PAR'
+						WHEN [D].[CatSystemId] IS NULL THEN 'API'
+						ELSE 'API'
+					END
+			)'GuideOrigin'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 										AND D.Guide_Serie = @GuideSerie
@@ -567,6 +676,12 @@ BEGIN
 				AND MMBSHP.CatMembershipStatusId = @StatusPackage
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
+		LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
+			ON DOPD.GuideNumber = D.Guide_Number
+		LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
+            ON vpct.CodeOfReference = D.Sender_ID
+		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpcti  WITH(NOLOCK) 
+		    ON [vpcti].[CodeOfReference] = [D].[OriginSenderId]
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END

@@ -1,9 +1,69 @@
 ﻿
-CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
-AS
-BEGIN
+as
+begin
+	declare @FranchiseVisitPointTypeId int = 
+	(
+		select 
+			top (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		from
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
+		where
+			[KOVPC].[KindOfVPName] = 'Concesionario'  collate Latin1_General_CI_AI 
+	)
+	declare @ExpressVisitPointTypeId int = 
+	(
+		select 
+			top (1) 
+				[KOVPC].[IdKindOfVPClient] 
+		from
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
+		where
+			[KOVPC].[KindOfVPName] = 'Express Center'  collate Latin1_General_CI_AI 
+	)
+	declare @IndividualWebSys int =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ExpressWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @CorporateWebSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+	)
+	DECLARE @ParserSys INT =
+	(
+		SELECT 
+			TOP 1
+				[CS].[SysIdSystem]
+		FROM
+			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
+		WHERE
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+	)
 	DECLARE @GuidePriority INT = 0;
     DECLARE @jsonOutput VARCHAR(MAX) = '',
             @parcels NVARCHAR(MAX) = N'',
@@ -42,6 +102,16 @@ BEGIN
     SELECT GuidePiece
     FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE GuideNumber = @Guide_Number;
+	
+	DECLARE @EXCKindOfVPC INT =
+	(
+		SELECT 
+			[KOVPC].[IdKindOfVPClient] 
+		FROM
+			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
+		WHERE
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+	);
 
     DECLARE @DaysToExpiration INT =
             (
@@ -222,7 +292,7 @@ BEGIN
 									 +' {' + '"HeaderCodeTownship":"'
                                      + CONVERT(VARCHAR, COALESCE(tws.HeaderCode, '')) + '",' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
-                                  '"name":"'
+                                  '"name":"' + IIF(ISNULL([dev].[IsLastMileReturn], 0) = 1 AND [vp].[IdKindOfVPClient] = @EXCKindOfVPC, REPLACE(dbo.fnt_String_Escape(ISNULL([vp].[DescriptionOfClient], ''), 'json'), '"','') + ' - ' , '') +
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
                                                                            (CASE
@@ -394,8 +464,10 @@ BEGIN
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
                                      + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
-                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Sender_Internal_Code, ''))
+                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, ''))
                                      + '",'
+									 +'"IdInternalOrderRef2":"'
+                                     + CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) + '",'
 									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
@@ -458,6 +530,7 @@ BEGIN
 									  + '"Priority": "' + 
 										COALESCE(
 											(CASE 
+												WHEN ISNULL([dev].[IsLastMileReturn], 0) = 1 THEN 'D'
 												WHEN MMBSHP.IdMembership IS NOT NULL THEN 'F'
 												WHEN ctm.BusinessSegmentID = @IDCatBusinessB2B THEN 'B' 
 												ELSE 'E'
@@ -465,7 +538,43 @@ BEGIN
 										, '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
-                                     + '"Pieces_Cold": ' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Cold),'') + ','
+									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
+									 + '"DeliveryETA": "' + COALESCE
+																(
+																	FORMAT([dev].[DeliveryETA], 'ddMM')
+																	, ''
+																) + '",' 
+									 + '"WayToPayDescription": "' + COALESCE
+																		(
+																			(
+																				CASE
+																					WHEN ISNULL([dev].[IsCollect], 0) = 1 THEN 'COLLECT'
+																					WHEN [DOPD].[TimePlaId] = 1 THEN 'PREPAGO'
+																					WHEN [DOPD].[TimePlaId] = 2 THEN 'PICKUP'
+																					WHEN [DOPD].[TimePlaId] = 3 THEN 'COLLECT'
+																					WHEN [DOPD].[TimePlaId] = 4 THEN 'CRÉDITO'
+																					ELSE 'CRÉDITO'
+																				END
+																			)
+																			, ''
+																		) + '",' 
+									 + '"GuideOrigin": "' + COALESCE
+																(
+																	(
+																		CASE
+																			WHEN [vp].[IdKindOfVPClient] = @FranchiseVisitPointTypeId THEN 'CNC'
+																			WHEN [vp].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+																			WHEN [vpori].[IdKindOfVPClient] = @ExpressVisitPointTypeId THEN 'EXC'
+																			WHEN [dev].[CatSystemId] = @IndividualWebSys THEN 'WEB'
+																			WHEN [dev].[CatSystemId] = @ExpressWebSys THEN 'EXC'
+																			WHEN [dev].[CatSystemId] = @CorporateWebSys THEN 'COR'
+																			WHEN [dev].[CatSystemId] = @ParserSys THEN 'PAR'
+																			WHEN [dev].[CatSystemId] IS NULL THEN 'API'
+																			ELSE 'API'
+																		END
+																	)
+																	, ''
+																) + '",' 
 									 + '"Icon": "' + (CASE
 															WHEN 
 																(dev.IsCollect <> 1 AND dev.Collect_OnDelivery>0 )
@@ -482,6 +591,8 @@ BEGIN
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
+									  ON [vpori].[CodeOfReference] = [dev].[OriginSenderId]
                                   LEFT JOIN DeliveryBackOffice.dbo.Customer ctm WITH (NOLOCK)
                                       ON ctm.IdCustomer = dev.IdCustomer
                                   LEFT JOIN DeliveryBackOffice.dbo.Account acc WITH (NOLOCK)

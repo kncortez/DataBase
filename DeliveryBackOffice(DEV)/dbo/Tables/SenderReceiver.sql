@@ -22,9 +22,10 @@
     CONSTRAINT [PK_SenderReceiver] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_SenderReceiver_CatTypeSenderReceiver] FOREIGN KEY ([CatTypeSenderReceiverId]) REFERENCES [dbo].[CatTypeSenderReceiver] ([IdCatTypeSenderReceiver]),
     CONSTRAINT [FK_SenderReceiver_HubLogistic] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
-    CONSTRAINT [UC_CUI] UNIQUE NONCLUSTERED ([CUI] ASC),
-    CONSTRAINT [UK_SenderReceiver_UniqueCode] UNIQUE NONCLUSTERED ([UniqueCode] ASC)
+    CONSTRAINT [UC_CUI] UNIQUE NONCLUSTERED ([CUI] ASC)
 );
+
+
 
 
 
@@ -46,8 +47,7 @@ CREATE NONCLUSTERED INDEX [IDX_Phone_INCLUDE]
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_UniqueCode]
-    ON [dbo].[SenderReceiver]([UniqueCode] ASC);
+
 
 
 GO

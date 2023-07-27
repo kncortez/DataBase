@@ -10,6 +10,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatExternalPlatform', @level2type = N'COLUMN', @level2name = N'IdExternalPlatform';
 
@@ -36,4 +38,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatExternalPlatform', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Catálogo de plataformas externas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatExternalPlatform';
 

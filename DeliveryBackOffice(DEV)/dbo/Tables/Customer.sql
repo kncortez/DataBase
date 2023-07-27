@@ -62,8 +62,13 @@
     [CutOffDate]              DATETIME       NULL,
     [UpgradeDate]             DATETIME       NULL,
     [CustomerGoalQuantity]    INT            NULL,
+    [CatBillingTimeId]        INT            NULL,
+    [CatBillingVolumeId]      INT            NULL,
+    [BillingCut_offDate]      DATE           NULL,
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
+    CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
+    CONSTRAINT [FK_Customer_CatBillingVolume] FOREIGN KEY ([CatBillingVolumeId]) REFERENCES [dbo].[CatBillingVolume] ([IdCatBillingVolume]),
     CONSTRAINT [FK_Customer_CatBusinessActivity] FOREIGN KEY ([BusinessActivityID]) REFERENCES [dbo].[CatBusinessActivity] ([IdBusinessActivity]),
     CONSTRAINT [FK_Customer_CatBusinessSegment] FOREIGN KEY ([BusinessSegmentID]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_Customer_CatCommercialSegment] FOREIGN KEY ([CommercialSegmentID]) REFERENCES [dbo].[CatCommercialSegment] ([IdCommercialSegment]),
@@ -76,6 +81,10 @@
     CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
+
+
 
 
 
@@ -122,4 +131,25 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Meta de env
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado al cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Customer_CODContactEmail]
+    ON [dbo].[Customer]([CODContactEmail] ASC, [RegexEmail] ASC);
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador que indica volumen de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingVolumeId';
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de el tiempo en que se requiere la facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'CatBillingTimeId';
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fechad e corte de facturaci�n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'BillingCut_offDate';
+
 

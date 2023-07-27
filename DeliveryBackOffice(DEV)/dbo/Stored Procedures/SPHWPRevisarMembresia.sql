@@ -3,6 +3,11 @@
 -- Create date: <Create Date,2022-07-14>
 -- Description:	<Description, revisión de membresia o suscripción previo a compra>
 -- =============================================
+-- =============================================
+-- Author:		<Author,,Edelman Vásquez>
+-- Create date: <Create Date,2023-07-05>
+-- Description:	<Description, quitar restricción que valdia que la suscripción ya este adquirida>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPRevisarMembresia]
 	-- Add the parameters for the stored procedure here
 	@IdAcount AS BIGINT,   ---- user
@@ -43,34 +48,11 @@ BEGIN
 	ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
 	BEGIN
 	
-		SELECT
-			TOP 1
-				@ActiveMembershipId = IdMembership
-		FROM [DeliveryBackOffice].[dbo].[Membership] WHERE AccountId = @IdAcount  AND RowStatus = 1 AND CatMembershipStatusId = @ActiveStatus
-
-		SELECT
-			TOP 1
-				@Credencial = 1,
-				@IdActiveSalePackage = sbscrptn.IdSubscription
-		FROM
-			[DeliveryBackOffice].[dbo].[Subscription] sbscrptn WITH(NOLOCK)
-		WHERE
-			sbscrptn.AccountId = @IdAcount
-			AND
-			sbscrptn.RowStatus = 1
-			AND
-			sbscrptn.CatSubscriptionStatusId = @ActiveStatus
-			AND
-			sbscrptn.CatSubscriptionId = @IdSalePackage
-			AND
-			sbscrptn.MembershipId = @ActiveMembershipId
-
-		IF(ISNULL(@Credencial,0) = 0 AND ISNULL(@ActiveMembershipId,0) = 0)
-		BEGIN
+		
 
 			SET @Credencial = 1;
 
-		END
+	
 
 	END
 
@@ -89,7 +71,7 @@ BEGIN
 			(
 				SELECT STUFF(
 								(
-									SELECT '{{"IdResult":403,' + '"Message":"No es posible la adquicición." }'
+									SELECT '{{"IdResult":200,' + '"Message":"Es posible la adquisición." }'
 									FOR XML PATH(''), TYPE
 								).value('.', 'varchar(max)'),
 								1,

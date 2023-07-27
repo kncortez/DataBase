@@ -184,9 +184,14 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
+			LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiverLoginToken] SRLT  WITH(NOLOCK) 
+			ON
+				[SRLT].[SenderReceiverId] = [sr].[ID]
         WHERE (sr.Phone LIKE '%' + @PhoneNumber + '%'
 				OR
-			  [sr].[UniqueCode] = @PhoneNumber)
+			  [sr].[UniqueCode] = @PhoneNumber
+			  OR
+			  [SRLT].[LoginToken] = @PhoneNumber)
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
               AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23);

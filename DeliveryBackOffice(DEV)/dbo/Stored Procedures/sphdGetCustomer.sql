@@ -17,11 +17,11 @@ BEGIN
     BEGIN
         --First Catalog UI MgtCustomer
         SELECT CAST(cst.IdCustomer AS NVARCHAR) [IdValue],
-               UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
+               IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
                cst.CountryID [IdFilter]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
-              AND cst.RowSatus = 'TRUE'
+              --AND cst.RowSatus = 'TRUE'
               AND
               (
                   @IdCustomer = -1
@@ -31,11 +31,11 @@ BEGIN
 
         --Second Catalog UI MgtCustomer
         SELECT cst.SAPCardCode [IdValue],
-               cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
+               IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
                cst.CountryID [IdFilter]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
-              AND cst.RowSatus = 'TRUE'
+              --AND cst.RowSatus = 'TRUE'
               AND
               (
                   @IdCustomer = -1
@@ -95,10 +95,13 @@ BEGIN
                cst.[RowSatus],
                cst.[SAPCardCode],
 			   cst.[ExcludePriceShippingCOD],
-			   cst.[ExcludeCommissionCOD]
+			   cst.[ExcludeCommissionCOD],
+			   ISNULL(cst.[CatBillingTimeId],-1)  AS CatBillingTimeId,
+			   ISNULL(cst.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
+			   ISNULL(cst.[BillingCut_offDate],GETDATE()) AS BillingCut_offDate
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
-              AND cst.RowSatus = 'TRUE'
+              --AND cst.RowSatus = 'TRUE'
               AND
               (
                   @IdCustomer = -1
@@ -111,7 +114,7 @@ BEGIN
     BEGIN
 	--First Catalog UI MgtCustomer
         SELECT CAST(cst.IdCustomer AS NVARCHAR) [IdValue],
-               UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
+               IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
                cst.CountryID [IdFilter]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
@@ -120,7 +123,7 @@ BEGIN
 
         --Second Catalog UI MgtCustomer
         SELECT cst.SAPCardCode [IdValue],
-               cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
+               IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue],
                cst.CountryID [IdFilter]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
@@ -181,7 +184,10 @@ BEGIN
 			   cst.[ExcludePriceShippingCOD],
 			   cst.[ExcludeCommissionCOD],
 			   cst.[CatBatchTypeCODId],
-			   cst.[CatBatchFrequencyCODId]
+			   cst.[CatBatchFrequencyCODId],
+			    ISNULL(cst.[CatBillingTimeId],-1)  AS CatBillingTimeId,
+			   ISNULL(cst.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
+			   ISNULL(cst.[BillingCut_offDate],GETDATE()) AS BillingCut_offDate
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
 		AND ( @IdCustomer = -1 OR cst.IdCustomer = @IdCustomer)

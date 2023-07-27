@@ -3,12 +3,12 @@
 -- Create date: <30-07-2020>
 -- Description:	<Devuelve toda la información de un courier>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_courier_information]
+CREATE procedure [dbo].[spg_courier_information]
 	-- Add the parameters for the stored procedure here
-	@CUI NVARCHAR(25)
-AS
-BEGIN
-	SELECT [ID]
+	@CUI nvarchar(25)
+as
+begin
+	select [ID]
       ,[First_Name]
       ,[Last_Name]
       ,[Address]
@@ -27,7 +27,9 @@ BEGIN
 	  ,[Estatus]
 	  ,[CatTypeSenderReceiverId]
 	  ,[HubLogisticId]
-  FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH (NOLOCK)
+	  ,[UniqueCode]
+	  ,[Email]
+  FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
   WHERE CUI = @CUI
   AND Entity_Type = 3
 END

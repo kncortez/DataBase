@@ -15,35 +15,40 @@ BEGIN
 	SET NOCOUNT ON;
 	if (@Option = 0 ) 
 	begin 
-    -- Insert statements for procedure here
-	 select  
-			 [IdVisitPointClient],
-			 [CodeOfReference],
-			 [DescriptionOfClient],
-			 vpc.Address,
-			 vpc.Town,
-			 vpc.Department,
+		-- Insert statements for procedure here
+		select  
+			[IdVisitPointClient],
+			[CodeOfReference],
+			[DescriptionOfClient],
+			vpc.Address,
+			vpc.Town,
+			vpc.Department,
 			[CustomerID],
 			IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
-			IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission
-	from DeliveryBackOffice.dbo.VisitPointClient vpc
-	where vpc.CustomerID = @IdCustomer
-	and vpc.StatusClient = 'TRUE'
+			IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
+			vpc.StatusClient,
+			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups'
+		from DeliveryBackOffice.dbo.VisitPointClient vpc
+		where vpc.CustomerID = @IdCustomer
+		--and vpc.StatusClient = 'TRUE'
 	end 
 	if (@Option = 1 ) 
 	begin 
-     select  
-			 --[IdVisitPointClient]												 [IdValue],
-			 [CodeOfReference]													 [IdValue],
-			 Cast([CodeOfReference] as varchar) + ' ' +  [DescriptionOfClient]   [NameValue]  ,
-			 [CustomerID]														 [IdFilter],
-			 IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
-			 IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission
-	from DeliveryBackOffice.dbo.VisitPointClient vpc
-	where (@IdCustomer = -1 or vpc.CustomerID = @IdCustomer)
-	and (@IdVisitPoint = -1 OR vpc.CodeOfReference = @IdVisitPoint)
-	and vpc.StatusClient = 'TRUE'
-	ORDER BY NameValue  
+
+		select  
+			--[IdVisitPointClient]												 [IdValue],
+			[CodeOfReference]													 [IdValue],
+			IIF(vpc.StatusClient = 0, '[INACTIVO] ', '') + Cast([CodeOfReference] as varchar) + ' ' +  [DescriptionOfClient]   [NameValue]  ,
+			[CustomerID]														 [IdFilter],
+			IIF(vpc.ExcludePriceShippingCOD = 'TRUE', vpc.ExcludePriceShippingCOD, 'FALSE') CODExcludedPriceShipping,
+			IIF(vpc.ExcludeCommissionCOD = 'TRUE', vpc.ExcludeCommissionCOD, 'FALSE') CODExcludedCommission,
+			ISNULL(vpc.AllowScheduledPickups, 1) 'AllowScheduledPickups'
+		from DeliveryBackOffice.dbo.VisitPointClient vpc
+		where (@IdCustomer = -1 or vpc.CustomerID = @IdCustomer)
+		and (@IdVisitPoint = -1 OR vpc.CodeOfReference = @IdVisitPoint)
+		--and vpc.StatusClient = 'TRUE'
+		ORDER BY NameValue  
+
 	end 
 
 END

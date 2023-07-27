@@ -342,12 +342,12 @@ BEGIN
         END;
     END;
 
-    IF (@IdCustomerParams = 0 AND @IdCustomer = 6)
-    BEGIN
+    --IF (@IdCustomerParams = 0 AND @IdCustomer = 6)
+    --BEGIN
 
         SET @CalculateTaxes = 'false';
 
-    END;
+    --END;
 
     ------------------------- Determinar si el servico es TDA ------------------------------------------------------------------
 
@@ -1957,7 +1957,9 @@ BEGIN
                   AND GETDATE() <= sc.ExpirationDate
                   AND sc.RowStatus = 1
                   AND csps.SalesPackageStatusName = 'Activa'
-            ORDER BY sc.ExpirationDate;
+				  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+			      ORDER BY sc.IdSubscription ASC
+            --ORDER BY sc.ExpirationDate;
 
             --Se busca membresía por rango de servicios
             SELECT TOP 1

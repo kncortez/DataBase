@@ -98,6 +98,7 @@
     [CatSystemId]                          INT             NULL,
     [CatModuleId]                          INT             NULL,
     [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
+    [DeliveryETA]                          DATETIME        NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -114,6 +115,10 @@
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
+
+
 
 
 
@@ -349,4 +354,13 @@ CREATE NONCLUSTERED INDEX [idx_Sender_Mail]
 GO
 CREATE NONCLUSTERED INDEX [idx_DCBA_ID]
     ON [dbo].[DeliveryOrder]([DCBA_ID] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica el tiempo estimado de entrega de la guía, cálculado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'DeliveryETA';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Sender_Mail]
+    ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
 

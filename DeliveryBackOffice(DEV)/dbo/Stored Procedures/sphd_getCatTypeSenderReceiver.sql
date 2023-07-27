@@ -3,7 +3,7 @@
 -- Create date: <2022-01-28>
 -- Description:	<Obtiene el catalogo de tipos de piloto>
 -- =============================================
-CREATE PROCEDURE sphd_getCatTypeSenderReceiver
+CREATE PROCEDURE [dbo].[sphd_getCatTypeSenderReceiver]
 AS
 BEGIN
 	SELECT 

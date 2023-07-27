@@ -5,9 +5,9 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[sphdGetVpCodeOfReference]
 	-- Add the parameters for the stored procedure here
-	@CodeUser as bigint,
-	@UserName as nvarchar(50),
-	@IdSystem as int 
+	@CodeUser AS BIGINT,
+	@UserName AS NVARCHAR(50),
+	@IdSystem AS INT 
 AS
 BEGIN	
 	DECLARE @VpCodeOfReference INT
@@ -43,7 +43,7 @@ BEGIN
 
 	IF @StationId IS NULL
 		SELECT @StationId = -1 
-			   ,@VpCodeOfReference = 999
+			   ,@VpCodeOfReference = -1
 	ELSE
 		IF @StationType = 1
 			SET @VpCodeOfReference = 999

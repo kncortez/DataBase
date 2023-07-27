@@ -36,10 +36,10 @@ CREATE PROCEDURE [dbo].[SetFinishPickUp]
     @Amount DECIMAL(12, 2) = 0,
     @Voucher NVARCHAR(200) = ' ',
     @PuSignaturePath NVARCHAR(250) = ' ',
-	@StartDate DATETIME = NULL,
-	@EndDate DATETIME = NULL,
-	@PickupLatitude NVARCHAR(20) = NULL,
-	@PickupLongitude NVARCHAR(20) = NULL
+    @StartDate DATETIME = NULL,
+    @EndDate DATETIME = NULL,
+    @PickupLatitude NVARCHAR(20) = NULL,
+    @PickupLongitude NVARCHAR(20) = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -52,7 +52,7 @@ BEGIN
     DECLARE @jsonError NVARCHAR(MAX);
     DECLARE @jsonToken NVARCHAR(MAX);
     DECLARE @ManifestSerie VARCHAR(10) = 'FM';
-	DECLARE @ManifestNumber BIGINT;
+    DECLARE @ManifestNumber BIGINT;
 
     DECLARE @CodeOfReference INT;
     DECLARE @CourierID INT;
@@ -109,7 +109,7 @@ BEGIN
                 WHERE LogTokenPOD LIKE '%' + @Token + '%'
             );
 
-	
+
     -- Variables para verificar ubicación en geocerca
     DECLARE @FixedLatitude NVARCHAR(20) = @PickupLatitude;
     DECLARE @FixedLongitude NVARCHAR(20) = @PickupLongitude;
@@ -139,11 +139,11 @@ BEGIN
                                                               ' ',
                                                               CAST(P.PointLatitude AS DECIMAL(9, 6))
                                                           )
-                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH(NOLOCK)
-                                             INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH(NOLOCK)
+                                           FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
                                                       AND GP.RowStatus = 1
-                                             INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH(NOLOCK)
+                                               INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
                                                       AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
@@ -275,6 +275,13 @@ BEGIN
                                  0
                              ) ItemPiece
                 FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',');
+
+				UPDATE
+					[#listGuides]
+				SET
+					[ItemPiece] = 1
+				WHERE
+					[ItemPiece] = 0;
 
                 ---SELECT * FROM #listGuides
 
@@ -635,110 +642,103 @@ BEGIN
                         ON DOPD.GuideSerie = CG.GuideSerie
                            AND DOPD.GuideNumber = CG.GuideNumber;
 
-				
-				---------------------WEBHOOK.INI--------------------------------
+
+                ---------------------WEBHOOK.INI--------------------------------
 
 
-				DECLARE @WebhookCustomerTable AS TABLE(
-									CustomerId INT,
-									CustomerEndpointId BIGINT,
-									WebhookType INT,
-									GuideSerie NVARCHAR(2),
-									GuideNumber INT,
-									GuideStatusId TINYINT
-								)
-								BEGIN TRY
-									DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+                DECLARE @WebhookCustomerTable AS TABLE
+                (
+                    CustomerId INT,
+                    CustomerEndpointId BIGINT,
+                    WebhookType INT,
+                    GuideSerie NVARCHAR(2),
+                    GuideNumber INT,
+                    GuideStatusId TINYINT
+                );
+                BEGIN TRY
+                    DECLARE @GuideStatusChangeWebhook INT =
+                            (
+                                SELECT TOP 1
+                                       WT.IdWebhookType
+                                FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
+                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                      AND WT.RowStatus = 1
+                            );
 
-									-- Clientes de las guías por procesar
-									INSERT INTO 
-										@WebhookCustomerTable
-										(CustomerId, GuideSerie, GuideNumber, GuideStatusId)
-									SELECT
-										DISTINCT
-											DO.IdCustomer,
-											TLG.ItemSerie ,
-											TLG.ItemNumber,
-											DO.StatusOrderId
-									FROM
-										#listGuides TLG
-										INNER JOIN
-											[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
-											ON
-												TLG.ItemNumber = DO.Guide_Number
-												AND
-												TLG.ItemSerie = DO.Guide_Serie;
+                    -- Clientes de las guías por procesar
+                    INSERT INTO @WebhookCustomerTable
+                    (
+                        CustomerId,
+                        GuideSerie,
+                        GuideNumber,
+                        GuideStatusId
+                    )
+                    SELECT DISTINCT
+                           DO.IdCustomer,
+                           TLG.ItemSerie,
+                           TLG.ItemNumber,
+                           DO.StatusOrderId
+                    FROM #listGuides TLG
+                        INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                            ON TLG.ItemNumber = DO.Guide_Number
+                               AND TLG.ItemSerie = DO.Guide_Serie;
 
-									-- Ingresar endpoints de cliente
-									UPDATE
-										@WebhookCustomerTable
-									SET
-										CustomerEndpointId = WE.IdWebhookEndpoint
-										,WebhookType = @GuideStatusChangeWebhook
-									FROM
-										[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
-										INNER JOIN
-											@WebhookCustomerTable WCT
-											ON
-												WE.CustomerId = WCT.CustomerId
-												AND
-												WE.WebhookTypeId = @GuideStatusChangeWebhook;
+                    -- Ingresar endpoints de cliente
+                    UPDATE @WebhookCustomerTable
+                    SET CustomerEndpointId = WE.IdWebhookEndpoint,
+                        WebhookType = @GuideStatusChangeWebhook
+                    FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+                        INNER JOIN @WebhookCustomerTable WCT
+                            ON WE.CustomerId = WCT.CustomerId
+                               AND WE.WebhookTypeId = @GuideStatusChangeWebhook;
 
-									DECLARE @ResponseTable AS TABLE (
-										InsertedId BIGINT
-									);
+                    DECLARE @ResponseTable AS TABLE
+                    (
+                        InsertedId BIGINT
+                    );
 
-									INSERT INTO 
-										[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-										(
-											[GuideSerie]
-											,[GuideNumber]
-											,[CustomerId]
-											,[StatusOrderId]
-											,[WebhookEndpointId]
-											,[HasNotified]
-											,[TokenCreated]
-											,[DateCreated]
-										)
-									OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-									SELECT
-										WCT.GuideSerie
-										,WCT.GuideNumber
-										,WCT.CustomerId
-										,WCT.GuideStatusId
-										,WCT.CustomerEndpointId
-										,0
-										,@Token
-										,GETDATE()
-									FROM
-										@WebhookCustomerTable WCT
-										LEFT JOIN
-											[DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH(NOLOCK)
-											ON
-												WCT.CustomerId = WRBU.CustomerId
-												AND
-												WCT.GuideStatusId = WRBU.StatusOrderId
-												AND
-												WCT.WebhookType = WRBU.WebhookTypeId
-										LEFT JOIN
-											[DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH(NOLOCK)
-											ON
-												WCT.GuideSerie = WTQ.GuideSerie
-												AND
-												WCT.GuideNumber = WTQ.GuideNumber
-												AND
-												WCT.GuideStatusId = WTQ.StatusOrderId
-									WHERE
-										WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-										AND
-										WTQ.IdWebhookTrackingQueue IS NULL
+                    INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+                    (
+                        [GuideSerie],
+                        [GuideNumber],
+                        [CustomerId],
+                        [StatusOrderId],
+                        [WebhookEndpointId],
+                        [HasNotified],
+                        [TokenCreated],
+                        [DateCreated]
+                    )
+                    OUTPUT inserted.IdWebhookTrackingQueue
+                    INTO @ResponseTable
+                    (
+                        InsertedId
+                    )
+                    SELECT WCT.GuideSerie,
+                           WCT.GuideNumber,
+                           WCT.CustomerId,
+                           WCT.GuideStatusId,
+                           WCT.CustomerEndpointId,
+                           0,
+                           @Token,
+                           GETDATE()
+                    FROM @WebhookCustomerTable WCT
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookRestrinctionByUser] WRBU WITH (NOLOCK)
+                            ON WCT.CustomerId = WRBU.CustomerId
+                               AND WCT.GuideStatusId = WRBU.StatusOrderId
+                               AND WCT.WebhookType = WRBU.WebhookTypeId
+                        LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
+                            ON WCT.GuideSerie = WTQ.GuideSerie
+                               AND WCT.GuideNumber = WTQ.GuideNumber
+                               AND WCT.GuideStatusId = WTQ.StatusOrderId
+                    WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
+                          AND WTQ.IdWebhookTrackingQueue IS NULL;
 
-								END TRY
-								BEGIN CATCH
+                END TRY
+                BEGIN CATCH
 
-								END CATCH
+                END CATCH;
 
-				--------------------WEBHOOK.FIN------------------------------
+                --------------------WEBHOOK.FIN------------------------------
 
                 ---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
 
@@ -963,100 +963,107 @@ BEGIN
                     ORDER BY schp.DateCreated ASC
                 );
 
-				
-				---------------------UPDATE VISIT POINT-------------------------
 
-				IF( ISNULL(@CodeOfReference, 0) != 0 )
-				BEGIN
+                ---------------------UPDATE VISIT POINT-------------------------
 
-					DECLARE @VPLatitude NVARCHAR(20)
-					DECLARE @VPLongitude NVARCHAR(20)
-				
-					SELECT 
-						@VPLatitude = vpc.Latitude
-						,@VPLongitude = vpc.Longitude
-					FROM VisitPointClient vpc WITH (NOLOCK)
-					WHERE 
-						vpc.CodeOfReference = @CodeOfReference
+                IF (ISNULL(@CodeOfReference, 0) != 0)
+                BEGIN
 
-					IF 
-						(RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
-					BEGIN
-					
-						-- Punto de visita con ubicación existente
-						IF 
-							(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
-						BEGIN
-						
-							-- Si existe una ubicación para registrar
-							-- Distancia (en metros) entre recolección y el punto de visita
-							-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
-							IF ((GEOGRAPHY::STPointFromText (CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'), 4326).STDistance(GEOGRAPHY::STPointFromText (CONCAT('POINT (', @FixedLongitude, ' ', @FixedLatitude, ')'), 4326)) ) > 10)
-							BEGIN
-								-- Si la distancia es mayor a 10 metros
-								-- Guardar última ubicación
-								UPDATE
-									[DeliveryBackOffice].[dbo].[VisitPointClient]
-								SET
-									LogLatitude = Latitude
-									,LogLongitude = Longitude
-									,TokenUpdated = @Token
-									,DateUpdated = GETDATE()
-								WHERE
-									CodeOfReference = @CodeOfReference
+                    DECLARE @VPLatitude NVARCHAR(20);
+                    DECLARE @VPLongitude NVARCHAR(20);
 
-								-- Guardar nueva ubicación de recolección
-								UPDATE
-									[DeliveryBackOffice].[dbo].[VisitPointClient]
-								SET
-									Latitude = @FixedLatitude
-									,Longitude = @FixedLongitude
-									,TokenUpdated = @Token
-									,DateUpdated = GETDATE()
-								WHERE
-									CodeOfReference = @CodeOfReference
+                    SELECT @VPLatitude = vpc.Latitude,
+                           @VPLongitude = vpc.Longitude
+                    FROM VisitPointClient vpc WITH (NOLOCK)
+                    WHERE vpc.CodeOfReference = @CodeOfReference;
 
-							END
-							ELSE
-							BEGIN
-									-- Guardar nueva ubicación de recolección en "bitácora" para revisión
-									UPDATE
-										[DeliveryBackOffice].[dbo].[VisitPointClient]
-									SET
-										LogLatitude = @FixedLatitude
-										,LogLongitude = @FixedLongitude
-										,TokenUpdated = @Token
-										,DateUpdated = GETDATE()
-									WHERE
-										CodeOfReference = @CodeOfReference
+                    IF (
+                           RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> ''
+                           AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> ''
+                       )
+                    BEGIN
 
-							END
-						END
+                        -- Punto de visita con ubicación existente
+                        IF (
+                               RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> ''
+                               AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> ''
+                           )
+                        BEGIN
 
-					END
-					ELSE
-					BEGIN
-					
-						-- Punto de visita sin ubicación registrada
-						IF 
-							(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
-						BEGIN
+                            -- Si existe una ubicación para registrar
+                            -- Distancia (en metros) entre recolección y el punto de visita
+                            -- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
+                            IF ((geography::STPointFromText(
+                                                               CONCAT('POINT (', @VPLongitude, ' ', @VPLatitude, ')'),
+                                                               4326
+                                                           ).STDistance(geography::STPointFromText(
+                                                                                                      CONCAT(
+                                                                                                                'POINT (',
+                                                                                                                @FixedLongitude,
+                                                                                                                ' ',
+                                                                                                                @FixedLatitude,
+                                                                                                                ')'
+                                                                                                            ),
+                                                                                                      4326
+                                                                                                  )
+                                                                       )
+                                ) > 10
+                               )
+                            BEGIN
+                                -- Si la distancia es mayor a 10 metros
+                                -- Guardar última ubicación
+                                UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
+                                SET LogLatitude = Latitude,
+                                    LogLongitude = Longitude,
+                                    TokenUpdated = @Token,
+                                    DateUpdated = GETDATE()
+                                WHERE CodeOfReference = @CodeOfReference;
 
-							-- Si existe una ubicación para registrar
-							UPDATE
-								[DeliveryBackOffice].[dbo].[VisitPointClient]
-							SET
-								Latitude = @FixedLatitude
-								,Longitude = @FixedLongitude
-								,TokenUpdated = @Token
-								,DateUpdated = GETDATE()
-							WHERE
-								CodeOfReference = @CodeOfReference
+                                -- Guardar nueva ubicación de recolección
+                                UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
+                                SET Latitude = @FixedLatitude,
+                                    Longitude = @FixedLongitude,
+                                    TokenUpdated = @Token,
+                                    DateUpdated = GETDATE()
+                                WHERE CodeOfReference = @CodeOfReference;
 
-						END
-					END
-				END
-				----------------------------------------------------------------
+                            END;
+                            ELSE
+                            BEGIN
+                                -- Guardar nueva ubicación de recolección en "bitácora" para revisión
+                                UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
+                                SET LogLatitude = @FixedLatitude,
+                                    LogLongitude = @FixedLongitude,
+                                    TokenUpdated = @Token,
+                                    DateUpdated = GETDATE()
+                                WHERE CodeOfReference = @CodeOfReference;
+
+                            END;
+                        END;
+
+                    END;
+                    ELSE
+                    BEGIN
+
+                        -- Punto de visita sin ubicación registrada
+                        IF (
+                               RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> ''
+                               AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> ''
+                           )
+                        BEGIN
+
+                            -- Si existe una ubicación para registrar
+                            UPDATE [DeliveryBackOffice].[dbo].[VisitPointClient]
+                            SET Latitude = @FixedLatitude,
+                                Longitude = @FixedLongitude,
+                                TokenUpdated = @Token,
+                                DateUpdated = GETDATE()
+                            WHERE CodeOfReference = @CodeOfReference;
+
+                        END;
+                    END;
+                END;
+                ----------------------------------------------------------------
                 --------------PROCESSGUIDECOD.INI
                 --HW-67
                 -- variable para obtener el módulo de origen de los datos

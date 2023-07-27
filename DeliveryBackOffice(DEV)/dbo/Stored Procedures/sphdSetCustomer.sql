@@ -61,7 +61,9 @@
 	@ExcludeCommissionCOD bit = 'FALSE',
 	@CatBatchTypeCODId BIGINT,
 	@CatBatchFrequencyCODId BIGINT,
-
+	@BillingTimeId int = null,
+	@BillingVolumeId int = null,
+	@BillingCut_offDate Date = NULL,	
 	-----------------------------------------------------
 	@CardCode nvarchar(50) =NULL
 	-----------------------------------------------------
@@ -72,10 +74,17 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 
+
+	IF (@BillingTimeId = -1)
+	 Set @BillingTimeId =(Select IdCatBillingTime From [dbo].[CatBillingTime] CBT Where CBT.DescriptionBillingTime='Default(Cada domingo del mes y el día 2 del siguiente mes)')
+
+	 IF(@BillingVolumeId=-1)
+	 Set @BillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
+
 		DECLARE @msgerror NVARCHAR(MAX)='';		
 				SELECT @msgerror=
 				STUFF((SELECT CHAR(10) + Name
-				FROM DBO.Customer C
+				FROM DBO.Customer C WITH(NOLOCK)
 				  WHERE C.TaxIdentificationNumber= @TaxIdentificationNumber AND LEN(TaxIdentificationNumber)>0 and RowSatus=1 AND (@Option=1 OR(@Option=2 AND IdCustomer<>@IdCustomer))
 				  FOR XML PATH('')), 1, 1, '');
 		IF(LEN(@msgerror)>0)
@@ -87,7 +96,7 @@ BEGIN
 
 		-----------
 		DECLARE @SAPCARDCODEUSEREXIST NVARCHAR(50);
-		SELECT @SAPCARDCODEUSEREXIST=Name FROM DBO.Customer WHERE SAPCardCode=@CardCode and IdCustomer<>@IdCustomer;
+		SELECT @SAPCARDCODEUSEREXIST=Name FROM DBO.Customer WITH(NOLOCK) WHERE SAPCardCode=@CardCode and IdCustomer<>@IdCustomer;
 		IF (@SAPCARDCODEUSEREXIST IS NOT NULL)
 		--BEGIN
 				BEGIN
@@ -104,12 +113,13 @@ BEGIN
 		ELSE 
 		-----------
 
-		
+
 		IF (@Option = 1)
 		BEGIN 
 			print 'insert record'
-			IF NOT EXISTS ( SELECT cli.IdCustomer FROM Customer cli where cli.Name = @NameCustomer ) 
+			IF NOT EXISTS ( SELECT cli.IdCustomer FROM Customer cli WITH(NOLOCK) where cli.Name = @NameCustomer ) 
 			BEGIN
+
 			INSERT INTO [DeliveryBackOffice].[dbo].[Customer]
 				   ([Name]
 				   ,[Description]
@@ -169,7 +179,9 @@ BEGIN
 				   ,[ExcludeCommissionCOD]
 				   ,[CatBatchTypeCODId]
 				   ,[CatBatchFrequencyCODId]
-
+				   ,[CatBillingTimeId]
+				   ,[CatBillingVolumeId]
+				   ,[BillingCut_offDate]
 				   )
 			 VALUES
 				   (@NameCustomer
@@ -232,7 +244,10 @@ BEGIN
 				   ,@ExcludePriceShippingCOD
 				   ,@ExcludeCommissionCOD
 				   ,@CatBatchTypeCODId
-				   ,@CatBatchFrequencyCODId				   		
+				   ,@CatBatchFrequencyCODId
+				   ,@BillingTimeId
+				   ,@BillingVolumeId
+				   ,@BillingCut_offDate
 				   )
 
 				   SELECT	'TRUE'	[blnResult]
@@ -260,8 +275,7 @@ BEGIN
 		ELSE IF (@Option = 2)
 		BEGIN
 				print 'update record'
-				 
-
+				
 				UPDATE [DeliveryBackOffice].[dbo].[Customer]
 				   SET [Name] = @NameCustomer
 					  ,[Description] = @Description
@@ -322,7 +336,73 @@ BEGIN
 					  -------------------------
 					  ,[SAPCardCode]=@CardCode
 					  -------------------------
+					  ,[CatBillingTimeId] = @BillingTimeId
+					  ,[CatBillingVolumeId] = @BillingVolumeId
+				      ,[BillingCut_offDate] = @BillingCut_offDate
+					  
 				 WHERE IdCustomer = @IdCustomer
+
+				 -- Inactivar el registro
+				 IF(ISNULL(@RowSatus,0) = 0)
+				 BEGIN
+				 
+					-- Inactivar horarios de recolección de puntos de visita
+					UPDATE
+						VPItin -- Itinerario de recolección
+					SET
+						RowStatus = 0
+						,TokenUpdated = @Token
+						,DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointConfiguration] VPConf WITH(NOLOCK)
+							ON
+								VPC.CodeOfReference = VPConf.VisitPointID
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointFrequency] VPFreq WITH(NOLOCK)
+							ON
+								VPConf.IdVPConfiguration = VPFreq.VPConfigurationID
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointItinerary] VPItin WITH(NOLOCK)
+							ON
+								VPFreq.IdVPFrequency = VPItin.VPFrequencyID
+					WHERE
+						VPC.CustomerID = @IdCustomer;
+
+					UPDATE
+						VPFreq -- Frecuencia de recolección
+					SET
+						RowStatus = 0
+						,TokenUpdated = @Token
+						,DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointConfiguration] VPConf WITH(NOLOCK)
+							ON
+								VPC.CodeOfReference = VPConf.VisitPointID
+						LEFT JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointFrequency] VPFreq WITH(NOLOCK)
+							ON
+								VPConf.IdVPConfiguration = VPFreq.VPConfigurationID
+					WHERE
+						VPC.CustomerID = @IdCustomer;
+
+					-- Inactivar puntos de visita
+					UPDATE
+						VPC -- Puntos de visita
+					SET
+						StatusClient = 0
+						,TokenUpdated = @Token
+						,DateUpdated = GETDATE()
+					FROM
+						[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+					WHERE
+						VPC.CustomerID = @IdCustomer;
+
+
+				 END
 
 				  SELECT	'TRUE'	[blnResult]
 							,CAST(@IdCustomer AS VARCHAR) [IdResult]
