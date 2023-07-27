@@ -1,13 +1,14 @@
 ﻿CREATE TABLE [dbo].[TSERoutePreparationDetail] (
-    [IDTSERoutePreparationDetail] INT           IDENTITY (1, 1) NOT NULL,
-    [TSERoutePreparationHeaderID] INT           NOT NULL,
-    [GuideSerie]                  NVARCHAR (2)  NOT NULL,
-    [GuideNumber]                 INT           NOT NULL,
-    [RowStatus]                   BIT           CONSTRAINT [DF_TSERoutePreparationDetail_RowStatus] DEFAULT ((1)) NOT NULL,
-    [DateCreated]                 DATETIME      NOT NULL,
-    [TokenCreated]                NVARCHAR (50) NOT NULL,
-    [DateUpdated]                 DATETIME      NULL,
-    [TokenUpdated]                NVARCHAR (50) NULL,
+    [IDTSERoutePreparationDetail] INT            IDENTITY (1, 1) NOT NULL,
+    [TSERoutePreparationHeaderID] INT            NOT NULL,
+    [GuideSerie]                  NVARCHAR (2)   NOT NULL,
+    [GuideNumber]                 INT            NOT NULL,
+    [RowStatus]                   BIT            CONSTRAINT [DF_TSERoutePreparationDetail_RowStatus] DEFAULT ((1)) NOT NULL,
+    [DateCreated]                 DATETIME       NOT NULL,
+    [TokenCreated]                NVARCHAR (50)  NOT NULL,
+    [DateUpdated]                 DATETIME       NULL,
+    [TokenUpdated]                NVARCHAR (50)  NULL,
+    [Observation]                 NVARCHAR (200) NULL,
     CONSTRAINT [PK_TSERoutePreparationDetail] PRIMARY KEY CLUSTERED ([IDTSERoutePreparationDetail] ASC),
     CONSTRAINT [FK_TSERoutePreparationDetail_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number])
 );
@@ -43,4 +44,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'llave foran
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de detalle de preparación de ruta', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'IDTSERoutePreparationDetail';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacenar la descripción de la incidencia de sobres.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'Observation';
 
