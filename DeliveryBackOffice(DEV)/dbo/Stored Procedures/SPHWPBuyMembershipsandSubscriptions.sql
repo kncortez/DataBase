@@ -13,6 +13,11 @@
 -- Create date: <2023-03-22>
 -- Description:	<aceptar terminos y condiciones al momento de la adquisición de membresias y suscripciones>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-07-27>
+-- Description:	<Agregar bandera para indicar si membresía es autorenovable>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     -- Add the parameters for the stored procedure here
     @IdTarjeta AS INT = NULL,         -- puede ser null por ex c y por credito
@@ -28,6 +33,7 @@ CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     @FiscalAddress NVARCHAR(200) = 'Ciudad',
     @TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL',
     @InvoiceEmail NVARCHAR(50) = ''
+  , @IsAutoRenewable Bit = 0
 AS
 BEGIN
 
@@ -174,7 +180,7 @@ BEGIN
                             @IdTarjeta
                     END
                    ),                                             -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
-                   1,
+                   @IsAutoRenewable,
                    CM.MembershipFixedValue,
                    CM.MembershipMaxServiceFixedValue,
                    0,

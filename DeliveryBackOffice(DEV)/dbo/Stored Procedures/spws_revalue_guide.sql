@@ -699,10 +699,7 @@ BEGIN
 						   BEGIN
 								SELECT TOP 1
 									   @SubscriptionId = sc.IdSubscription,
-									   @ServiceValueSubscription
-										   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-											  sc.SubscriptionFixedValue,
-											  -1)
+                                       @ServiceValueSubscription = sc.SubscriptionFixedValue
 								FROM Subscription sc
 									INNER JOIN CatSalesPackageStatus csps
 										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
