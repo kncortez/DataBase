@@ -8,6 +8,11 @@
 -- Create date: <2023-05-07>
 -- Description:	<quitar restricción para adquirir misma suscripción>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2023-07-27>
+-- Description:	<Agregar bandera para indicar si membresía es autorenovable>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     -- Add the parameters for the stored procedure here
     @IdTarjeta AS INT = NULL,         -- puede ser null por ex c y por credito
@@ -23,6 +28,7 @@ CREATE PROCEDURE [dbo].[SPHWPBuyMembershipsandSubscriptions]
     @FiscalAddress NVARCHAR(200) = 'Ciudad',
     @TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL',
     @InvoiceEmail NVARCHAR(50) = ''
+  , @IsAutoRenewable Bit = 0
 AS
 BEGIN
 
@@ -181,6 +187,7 @@ BEGIN
                    0,
                    DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE())),
 				   CDR.ValueTypeId
+                 , @IsAutoRenewable
             FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
 			ON CM.IdCatMembership = CDR.CatMembershipId
