@@ -25,7 +25,7 @@ begin
 
     -- Datos cliente Cabecera de factura   
 
-
+    
     declare @inv_vpCodeOfReferences as int =
             (
                 select top 1
