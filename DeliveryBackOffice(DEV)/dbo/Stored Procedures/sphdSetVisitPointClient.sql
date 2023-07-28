@@ -66,7 +66,8 @@ BEGIN
 	 Set @CatBillingTimeId =(Select IdCatBillingTime From [dbo].[CatBillingTime] CBT Where CBT.DescriptionBillingTime='Default(Cada domingo del mes y el día 2 del siguiente mes)')
 
 	 IF(@CatBillingVolumeId = -1)
-	 Set @CatBillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
+	 --Set @CatBillingVolumeId =(Select IdCatBillingVolume From [dbo].[CatBillingVolume] CBV Where CBV.DescriptionBillingVolume ='Una guía por factura')
+	 Set @CatBillingVolumeId = NULL;
 
     DECLARE @blnCotinue AS BIT = 'TRUE';
 	DECLARE @MessageError AS NVARCHAR(100) = '';
