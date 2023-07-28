@@ -25,8 +25,7 @@ begin
 
     -- Datos cliente Cabecera de factura   
 
-
-    declare @inv_vpCodeOfReferences as int =
+    DECLARE @inv_vpCodeOfReferences AS INT = (SELECT TOP 1 [VPC].[CodeOfReference] FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA'  COLLATE Latin1_General_CI_AI  AND VPC.[StatusClient] = 1);
             (
                 select top 1
                        [VPC].[CodeOfReference]
