@@ -256,6 +256,24 @@ begin
 		AND mb.RowStatus = 1)
 
 
+		/* Agregar bandera para indicar que fue creado con suscripcion de monto fijo */
+			DECLARE @PaymentAllowsCollect INT = (
+			               	SELECT Top 1 COUNT(
+										 Case 
+											  When s.CatTypeSubscriptionId = 2 Then 1
+											  When s.CatTypeSubscriptionId = 1 Then 0
+											  When s.CatTypeSubscriptionId IS NULL Then 0 
+											  ELSE 0 End)
+							FROM dbo.MembershipSubscriptionLog MSL WITH (NoLock)
+							INNER JOIN dbo.Subscription s WITH (NoLock)
+							ON MSL.SubscriptionId = S.IdSubscription
+							Where LogGuideNumber = @Guide_Number
+			
+			
+			)
+
+		--------------------------------------------------------------------------------
+
     /*end integration cost*/
 
     SET @jsonOutput =
@@ -277,6 +295,7 @@ begin
                                                         END + ',' +
                                   /*valor del felte para imprimir en la guia*/
                                   '"Price":"' + COALESCE(CONVERT(VARCHAR, dev.PriceShippment), '0.00') + '",' +
+								  '"PaymentAllowsCollect":"'  + COALESCE(CONVERT(VARCHAR, @PaymentAllowsCollect), '0') + '",' +
                                   /*valor collect*/
                                   '"IdCustomer":'
                                      + COALESCE(CONVERT(VARCHAR, ctm.IdCustomer), CONVERT(VARCHAR, vp.CustomerID), '0')
