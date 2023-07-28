@@ -170,7 +170,7 @@ BEGIN
                             @IdTarjeta
                     END
                    ),                                             -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
-                   1,
+                   @IsAutoRenewable,
                    CM.MembershipFixedValue,
                    CM.MembershipMaxServiceFixedValue,
                    0,
@@ -187,7 +187,7 @@ BEGIN
                    0,
                    DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE())),
 				   CDR.ValueTypeId
-                 , @IsAutoRenewable
+                 
             FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
 			ON CM.IdCatMembership = CDR.CatMembershipId
