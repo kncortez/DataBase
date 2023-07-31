@@ -9,7 +9,8 @@ CREATE PROCEDURE [dbo].[spws_get_CustomerByEmailOrDpi]
     --@EndDate DATETIME ,
     @Token VARCHAR(200) = '',
     @Email VARCHAR(50) = '',
-    @DPI VARCHAR(50) = ''
+    @DPI VARCHAR(50) = '',
+	@IdMembership INT = 0
 
 AS
 
@@ -21,7 +22,22 @@ DECLARE @jsonResult NVARCHAR(MAX);
 
 DECLARE @ActiveSalesPackageId INT = ( SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI )
 
-IF (@Email='')
+
+IF (@Email='' And  @DPI='' )
+
+BEGIN
+
+SELECT TOP 1 @IdAccount = rub.RuaIdAccount, @IdUser=UsrIdUser
+FROM dbo.Person 
+INNER JOIN dbo.RegisterUser ru ON ru.UsrIdPerson = PerIdPerson
+INNER JOIN dbo.RolByUserByAccount rub ON rub.RuaIdUser = UsrIdUser
+INNER JOIN  dbo.Membership  M 
+ON rub.RuaIdAccount = M.AccountId
+WHERE M.IdMembership = @IdMembership
+
+END
+
+ELSE IF (@Email='' AND @IdMembership=0)
 
 BEGIN
 
