@@ -364,3 +364,13 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Sender_Mail]
     ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
+    ON [dbo].[DeliveryOrder](User_Contact)
+	INCLUDE (ID_ContactIncident,Contact_Confirmed);    
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_MyShippments]
+    ON [dbo].[DeliveryOrder]([StatusOrderId],[Sender_ID],[OriginSenderId],[DateCreated])
+	INCLUDE ([Guide_Serie],[Guide_Number],[Pieces_Dry],[Pieces_Cold],[Ticket_Number],[Receiver_FirstName],[Receiver_LastName],[Receiver_Phone],[IsCollect],[PriceShippment],[Collect_OnDelivery],[TypeService]);    
+
