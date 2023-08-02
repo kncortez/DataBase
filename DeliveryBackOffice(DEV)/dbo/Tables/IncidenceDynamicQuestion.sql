@@ -3,16 +3,16 @@
     [QuestionTrue]               NVARCHAR (150) NOT NULL,
     [QuestionFalse]              NVARCHAR (150) NOT NULL,
     [SpecialInstructions]        NVARCHAR (250) NULL,
-    [QuestionTrueSAC]            NVARCHAR (150) NULL,
-    [QuestionFalseSAC]           NVARCHAR (150) NULL,
-    [SpecialInstructionsSAC]     NVARCHAR (250) NULL,
     [CatTypeIncidenceId]         INT            NOT NULL,
-    [RowStatus]                  BIT            CONSTRAINT [DF__Incidence__RowSt__1EFA5F9A] DEFAULT ((1)) NOT NULL,
+    [RowStatus]                  BIT            DEFAULT ((1)) NOT NULL,
     [TokenCreated]               NVARCHAR (50)  NOT NULL,
     [DateCreated]                DATETIME       NOT NULL,
     [TokenUpdated]               NVARCHAR (50)  NULL,
     [DateUpdated]                DATETIME       NULL,
-    CONSTRAINT [PK__Incidenc__0DD59C3A5B4937E4] PRIMARY KEY CLUSTERED ([IdIncidenceDynamicQuestion] ASC),
+    [QuestionTrueSAC]            NVARCHAR (150) NULL,
+    [QuestionFalseSAC]           NVARCHAR (150) NULL,
+    [SpecialInstructionsSAC]     NVARCHAR (250) NULL,    
+    PRIMARY KEY CLUSTERED ([IdIncidenceDynamicQuestion] ASC),
     CONSTRAINT [FK_IncidenceDynamicQuestion_CatTypeIncidence] FOREIGN KEY ([CatTypeIncidenceId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
 
@@ -42,18 +42,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Incidencia 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto de instrucciones especiales enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'SpecialInstructionsSAC';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto para rechazar la incidencia enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'QuestionFalseSAC';
-
-
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto para aceptar la incidencia enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'QuestionTrueSAC';
-
-
-GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto de instrucciones especiales.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'SpecialInstructions';
 
 
@@ -71,4 +59,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para guardar preguntas que aceptan o rechazan la incidencia desde landing page', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto de instrucciones especiales enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'SpecialInstructionsSAC';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto para rechazar la incidencia enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'QuestionFalseSAC';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto para aceptar la incidencia enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'QuestionTrueSAC';
 
