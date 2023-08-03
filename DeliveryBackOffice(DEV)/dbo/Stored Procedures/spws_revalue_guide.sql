@@ -755,7 +755,17 @@ BEGIN
                         --Si es tarifa fija
                         IF @ServiceValueSubscription >= 0
                         BEGIN
-                            SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
+                            --SET @DiscountMembership = @PriceShippment - @ServiceValueSubscription;
+							IF(@NameTypeSubscrition = 'Porcentaje')
+							BEGIN
+								SET @DiscountMembership = @PriceShippment*(@ServiceValueSubscription/100);
+							END
+							ELSE IF (@NameTypeSubscrition = 'Monto Fijo')
+							BEGIN
+									SET @DiscountMembership = @PriceShippment
+							END
+
+
                             IF (@ServiceValueSubscription = 0)
                             BEGIN
                                 SET @PriceWithCreditCard = 1;
