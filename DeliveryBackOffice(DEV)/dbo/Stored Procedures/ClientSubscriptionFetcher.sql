@@ -20,7 +20,7 @@ BEGIN
 		 (
 		 SELECT TOP 1 A1.CatTypeSubscriptionId, A1.IdSubscription,A2.SubscriptionName
 		 ,DiscountValue
-		 ,CONVERT(NVARCHAR(50),A3.DiscountValue) + ' de descuento' [SubscriptionDescription]
+		 ,CONVERT(NVARCHAR(50),A3.DiscountValue) + ' x%' [SubscriptionDescription]
 		 ,1 [IncludeCollect] 
 		 FROM DeliveryBackOffice.dbo.Subscription A1 WITH(NOLOCK)
 		 INNER JOIN DeliveryBackOffice.dbo.CatSubscription A2 WITH(NOLOCK) 
