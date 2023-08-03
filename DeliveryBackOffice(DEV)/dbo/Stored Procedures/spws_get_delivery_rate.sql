@@ -2190,13 +2190,30 @@ BEGIN
                         END;
                     END;
 
-                    IF @Discount > 0
+                   /* IF @Discount > 0
                     BEGIN
                         UPDATE @TempRate
                         SET Discount = @Discount
                           , DiscountName = 'Descuento membresía'
                         WHERE Id = @i;
+                    END;*/
+					IF @Discount > 0 AND @NameTypeSubscrition = 'Monto Fijo' AND @IsCollected = 1
+                    BEGIN
+                        UPDATE @TempRate
+                        SET Discount = 0,
+                            DiscountName = 'No puede utilizar la suscripción de monto fijo con un servicio collect'
+                        WHERE Id = @i;
                     END;
+					ELSE IF (@Discount > 0)
+					BEGIN
+						 UPDATE @TempRate
+                        SET Discount = @Discount,
+                            DiscountName = 'Descuento membresía'
+                        WHERE Id = @i;
+
+					END
+
+
                 END;
             END;
         END;
