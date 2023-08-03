@@ -14,6 +14,10 @@
 -- Update date: <2023-02-27>
 -- Description:	< Manejo de campos editables y textos dinamicos para landing page de incidencias.>
 -- =============================================
+-- Author:		<Jerson Ochoa>
+-- Update date: <2023-03-21>
+-- Description:	< Manejo de textos dinamicos para portal SAC web.>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetServiceTokenGuide]
 	@GuideSerie NVARCHAR(2) = '',
@@ -301,6 +305,21 @@ BEGIN
 											SELECT TOP 1 ',{' +	'"QuestionTrue":"' +	[IDQ].[QuestionTrue] +'"'+ ',' +
 																'"QuestionFalse":"' + [IDQ].[QuestionFalse] +'"'+ ',' +
 																'"SpecialInstructions":"' + [IDQ].[SpecialInstructions] +'"'+ '}'
+											FROM	[dbo].[IncidenceDynamicQuestion] IDQ
+											WHERE	[IDQ].[CatTypeIncidenceId] = [CTI].[IdIncidenceType]
+												AND [IDQ].[RowStatus] = 1
+											ORDER BY [IDQ].[IdIncidenceDynamicQuestion]
+											FOR XML PATH(''), TYPE
+										).value('.', 'varchar(max)'),1,1,''
+									)
+								), '') + '],' +
+								'"dynamicSACTexts": ['+ 
+								ISNULL((
+									SELECT STUFF(
+										(
+											SELECT TOP 1 ',{' +	'"QuestionTrue":"' +	ISNULL([IDQ].[QuestionTrueSAC], '') +'"'+ ',' +
+																'"QuestionFalse":"' + ISNULL([IDQ].[QuestionFalseSAC], '') +'"'+ ',' +
+																'"SpecialInstructions":"' + ISNULL([IDQ].[SpecialInstructionsSAC], '') +'"'+ '}'
 											FROM	[dbo].[IncidenceDynamicQuestion] IDQ
 											WHERE	[IDQ].[CatTypeIncidenceId] = [CTI].[IdIncidenceType]
 												AND [IDQ].[RowStatus] = 1

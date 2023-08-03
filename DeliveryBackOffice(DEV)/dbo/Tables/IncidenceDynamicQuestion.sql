@@ -9,6 +9,9 @@
     [DateCreated]                DATETIME       NOT NULL,
     [TokenUpdated]               NVARCHAR (50)  NULL,
     [DateUpdated]                DATETIME       NULL,
+    [QuestionTrueSAC]            NVARCHAR (150) NULL,
+    [QuestionFalseSAC]           NVARCHAR (150) NULL,
+    [SpecialInstructionsSAC]     NVARCHAR (250) NULL,    
     PRIMARY KEY CLUSTERED ([IdIncidenceDynamicQuestion] ASC),
     CONSTRAINT [FK_IncidenceDynamicQuestion_CatTypeIncidence] FOREIGN KEY ([CatTypeIncidenceId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
@@ -56,4 +59,15 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para guardar preguntas que aceptan o rechazan la incidencia desde landing page', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto de instrucciones especiales enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'SpecialInstructionsSAC';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto para rechazar la incidencia enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'QuestionFalseSAC';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Texto para aceptar la incidencia enfocado en SAC', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'IncidenceDynamicQuestion', @level2type = N'COLUMN', @level2name = N'QuestionTrueSAC';
 
