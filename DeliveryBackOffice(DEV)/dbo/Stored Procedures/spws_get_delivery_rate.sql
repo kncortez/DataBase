@@ -41,7 +41,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @FormatResponse AS NVARCHAR(10) = 'DataTable',
     @CalculateTaxes BIT = 'false',
     @CalculateMembership BIT = 'false',
-	@TypeSubscriptionId AS INT= 0
+    @TypeSubscriptionId INT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -299,6 +299,7 @@ BEGIN
               AND SC.RowStatus = 1
               AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
               AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+              AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
         ORDER BY SC.ExpirationDate ASC;
 
         IF (ISNULL(@CustomerHasActiveSubscription, 0) > 0)
@@ -1893,7 +1894,7 @@ BEGIN
         DECLARE @SubscriptionId INT;
         DECLARE @ServiceValueSubscription DECIMAL(14, 2) = 0;
         DECLARE @DiscountValue DECIMAL(5, 2);
-		DECLARE @DescriptionTypeSubscription NVARCHAR(50);
+        DECLARE @DescriptionTypeSubscription NVARCHAR(50);
         DECLARE @Type NVARCHAR(50);
         DECLARE @DiscountValue2 DECIMAL(5, 2);
         DECLARE @Type2 NVARCHAR(50);
@@ -1925,87 +1926,106 @@ BEGIN
         IF @MembershipId IS NOT NULL
         BEGIN
             --Se busca membresía por rango de servicios
-              SELECT TOP 1
-                   @DiscountValue2=mbs.MembershipFixedValue
-                   ,@Type2=cvt.ValueTypeName
-            FROM Membership mbs
+            SELECT TOP 1
+                   @DiscountValue2 = DiscountValue,
+                   @Type2 = cvt.ValueTypeName
+            FROM MembershipDiscountRange mdr
+                INNER JOIN Membership ms
+                    ON ms.IdMembership = mdr.MembershipId
                 INNER JOIN CatValueType cvt
-                    ON mbs.CatValueTypeId = cvt.IdCatValueType
-            WHERE mbs.CustomerId = @IdCustomerParams
-			AND mbs.RowStatus = 1
-			
-			--select @DiscountValue2
-			--select @Type2
+                    ON mdr.ValueTypeId = cvt.IdCatValueType
+            WHERE mdr.MembershipId = @MembershipId
+                  AND
+                  (
+                      (ms.ActualServiceCount + 1
+                  BETWEEN mdr.DiscountLowServiceRange AND mdr.DiscountTopServiceRange
+                      )
+                      OR ms.ActualServiceCount + 1 >= mdr.DiscountLowServiceRange
+                         AND mdr.DiscountTopServiceRange IS NULL
+                  )
+                  AND mdr.RowStatus = 1
+            ORDER BY mdr.DateCreated DESC;
 
-            --Se busca suscripciones segun tipo 
-			--Select @TypeSubscriptionId
-			IF(@TypeSubscriptionId > 0)
-				DECLARE @NameTypeSubscrition VARCHAR(50);
-					
-					SET @NameTypeSubscrition =(SELECT CatTypeSubscriptionName FROM CatTypeSubscription WHERE IdCatTypeSubscription = @TypeSubscriptionId)
-					BEGIN
-					    IF(@NameTypeSubscrition = 'Porcentaje')
-						   BEGIN
-								 SELECT TOP 1
-								   @SubscriptionId = sc.IdSubscription,
-								   @ServiceValueSubscription
-									   = sc.SubscriptionFixedValue,
-								   @DescriptionTypeSubscription = cts.CatTypeSubscriptionName
-							FROM Subscription sc
-								INNER JOIN CatSalesPackageStatus csps
-									ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-								INNER JOIN CatTypeSubscription cts
-									ON sc.CatTypeSubscriptionId = cts.IdCatTypeSubscription
-							WHERE sc.CustomerId = @IdCustomer
-								  AND GETDATE() <= sc.ExpirationDate
-								  AND sc.RowStatus = 1
-								  AND csps.SalesPackageStatusName = 'Activa'
-								  --AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
-								  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
-								  ORDER BY sc.SubscriptionFixedValue ASC
-							END
-						 ELSE IF (@NameTypeSubscrition = 'Monto Fijo')
-							BEGIN
-								 SELECT TOP 1
-								   @SubscriptionId = sc.IdSubscription,
-								   @ServiceValueSubscription
-									   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-										  sc.SubscriptionFixedValue,
-										  -1),
-								   @DescriptionTypeSubscription = cts.CatTypeSubscriptionName
-							FROM Subscription sc
-								INNER JOIN CatSalesPackageStatus csps
-									ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-								INNER JOIN CatTypeSubscription cts
-									ON sc.CatTypeSubscriptionId = cts.IdCatTypeSubscription
-							WHERE sc.CustomerId = @IdCustomer
-								  AND GETDATE() <= sc.ExpirationDate
-								  AND sc.RowStatus = 1
-								  AND csps.SalesPackageStatusName = 'Activa'
-								  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
-								  AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
-								  ORDER BY sc.IdSubscription ASC
-							END
+            --Se busca suscripciones 
+            IF (@TypeSubscriptionId > 0)
+                DECLARE @NameTypeSubscrition VARCHAR(50);
 
-					END
-					    
+            SET @NameTypeSubscrition =
+            (
+                SELECT CatTypeSubscriptionName
+                FROM CatTypeSubscription
+                WHERE IdCatTypeSubscription = @TypeSubscriptionId
+            )
+            BEGIN
+                IF (@NameTypeSubscrition = 'Porcentaje')
+                BEGIN
+                    SELECT TOP 1
+                        @SubscriptionId = sc.IdSubscription,
+                        @ServiceValueSubscription
+                            = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+                                  sc.SubscriptionFixedValue,
+                                  -1),
+                        @DescriptionTypeSubscription = cts.CatTypeSubscriptionName
+                    FROM Subscription sc
+                        INNER JOIN CatSalesPackageStatus csps
+                            ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+                        INNER JOIN CatTypeSubscription cts
+                            ON sc.CatTypeSubscriptionId = cts.IdCatTypeSubscription
+                        INNER JOIN SubscriptionDiscountRange scdr
+                            ON sc.IdSubscription = scdr.SubscriptionId
+                    WHERE sc.CustomerId = @IdCustomer
+                          AND GETDATE() <= sc.ExpirationDate
+                          AND sc.RowStatus = 1
+                          AND csps.SalesPackageStatusName = 'Activa'
+                          --AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+                          AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+                    ORDER BY scdr.DiscountValue DESC
+                END
+                ELSE IF (@NameTypeSubscrition = 'Monto Fijo')
+                BEGIN
+                    SELECT TOP 1
+                        @SubscriptionId = sc.IdSubscription,
+                        @ServiceValueSubscription
+                            = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
+                                  sc.SubscriptionFixedValue,
+                                  -1),
+                        @DescriptionTypeSubscription = cts.CatTypeSubscriptionName
+                    FROM Subscription sc
+                        INNER JOIN CatSalesPackageStatus csps
+                            ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+                        INNER JOIN CatTypeSubscription cts
+                            ON sc.CatTypeSubscriptionId = cts.IdCatTypeSubscription
+                    WHERE sc.CustomerId = @IdCustomer
+                          AND GETDATE() <= sc.ExpirationDate
+                          AND sc.RowStatus = 1
+                          AND csps.SalesPackageStatusName = 'Activa'
+                          AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+                          AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+                    ORDER BY sc.IdSubscription ASC
+                END
 
-					--			SELECT TOP 1
-					--	   @SubscriptionId = sc.IdSubscription,
-					--	   @ServiceValueSubscription
-					--		   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-					--			  sc.SubscriptionFixedValue,
-					--			  -1)
-					--FROM Subscription sc
-					--	INNER JOIN CatSalesPackageStatus csps
-					--		ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-					--WHERE sc.CustomerId = @IdCustomer
-					--	  AND GETDATE() <= sc.ExpirationDate
-					--	  AND sc.RowStatus = 1
-					--	  AND csps.SalesPackageStatusName = 'Activa'
-					--	  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
-					--	  ORDER BY sc.IdSubscription ASC
-            
+            END
+
+
+
+
+            /* SELECT TOP 1
+                   @SubscriptionId = sc.IdSubscription
+                 , @ServiceValueSubscription
+                                   = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue
+                          , sc.SubscriptionFixedValue
+                          , -1)
+            FROM Subscription                    sc
+                INNER JOIN CatSalesPackageStatus csps
+                    ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+            WHERE sc.CustomerId = @IdCustomer
+                  AND GETDATE() <= sc.ExpirationDate
+                  AND sc.RowStatus = 1
+                  AND csps.SalesPackageStatusName = 'Activa'
+                  AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+            ORDER BY sc.IdSubscription ASC;*/
+            --ORDER BY sc.ExpirationDate;
+
             --Se busca membresía por rango de servicios
             SELECT TOP 1
                    @DiscountValue = DiscountValue,
@@ -2026,7 +2046,7 @@ BEGIN
                   )
                   AND sdr.RowStatus = 1
             ORDER BY sdr.DateCreated DESC;
-			
+
             WHILE @i < @total
             BEGIN
                 SET @i = @i + 1;
@@ -2071,7 +2091,18 @@ BEGIN
                             IF @ServiceValueSubscription >= 0
                                 IF (@ServiceValueSubscription = 0)
                                 BEGIN
-                                    SELECT @Discount = (@PriceShippment + tr.CreditCardRate),
+
+                                    /*SELECT @Discount --= @DiscountValue
+									= (@PriceShippment + tr.CreditCardRate)
+                                         , @NewPriceShippment
+                                                     = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
+                                                        + tr.OverWeightRate
+                                                       )*/
+                                    SELECT @Discount
+                                        = --IIF(@DescriptionTypeSubscription = 'Porcentaje', (tr.IrregularPieceRate * (@DiscountValue/100)),@DiscountValue)
+                                        IIF(@DescriptionTypeSubscription = 'Porcentaje',
+                                            (tr.IrregularPieceRate * (@DiscountValue / 100)),
+                                            (IIF(@DiscountValue IS NULL, tr.IrregularPieceRate, @DiscountValue))),
                                            @NewPriceShippment
                                                = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate
                                                   + tr.OverWeightRate
@@ -2080,9 +2111,9 @@ BEGIN
                                     WHERE Id = @i;
                                     SET @PriceWithCreditCard = 1;
                                 END;
-                                ELSE IF(@ServiceValueSubscription > 0 AND @DescriptionTypeSubscription ='Porcentaje')
+                                ELSE
                                 BEGIN
-                                    SET @Discount = @PriceShippment * (@ServiceValueSubscription/100);
+                                    SET @Discount = @PriceShippment - @ServiceValueSubscription;
                                     SELECT @NewPriceShippment
                                         = (@ServiceValueSubscription + tr.FragilRate + tr.CollectedRate
                                            + tr.InsuranceRate + tr.CreditCardRate + tr.OverWeightRate
@@ -2160,21 +2191,29 @@ BEGIN
                         END;
                     END;
 
-                    IF @Discount > 0 AND @NameTypeSubscrition = 'Monto Fijo' AND @IsCollected = 1
+                    /* IF @Discount > 0
+                    BEGIN
+                        UPDATE @TempRate
+                        SET Discount = @Discount
+                          , DiscountName = 'Descuento membresía'
+                        WHERE Id = @i;
+                    END;*/
+                    IF @Discount > 0
+                       AND @NameTypeSubscrition = 'Monto Fijo'
+                       AND @IsCollected = 1
                     BEGIN
                         UPDATE @TempRate
                         SET Discount = 0,
                             DiscountName = 'No puede utilizar la suscripción de monto fijo con un servicio collect'
                         WHERE Id = @i;
                     END;
-					ELSE IF (@Discount > 0)
-					BEGIN
-						 UPDATE @TempRate
+                    ELSE IF (@Discount > 0)
+                    BEGIN
+                        UPDATE @TempRate
                         SET Discount = @Discount,
                             DiscountName = 'Descuento membresía'
                         WHERE Id = @i;
-
-					END
+                    END;
                 END;
             END;
         END;
