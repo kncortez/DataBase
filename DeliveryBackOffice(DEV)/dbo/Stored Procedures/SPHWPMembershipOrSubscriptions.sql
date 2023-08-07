@@ -3,6 +3,11 @@
 -- Create date: <Create Date,12/07/2022>
 -- Description:	<Description,muestra las membresias y credenciales disponibles con su respectivo detalle>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <Create Date,18/07/2023>
+-- Description:	<Description,Descripción corta y larga de los beneficios>
+-- =============================================
 /*
 	Actualización: Ordenar atributos de acuerdo a campo AttributePosition - 30-12-2022
 	Actualización: Agregar campo de ícono a estructura de membresías y suscripciones - 11-01-2023
@@ -13,9 +18,9 @@
 CREATE PROCEDURE [dbo].[SPHWPMembershipOrSubscriptions]
     -- Add the parameters for the stored procedure here
 
-    @Type AS NVARCHAR(50)
-  --@Token AS NVARCHAR(50),
-  , @AccountId AS BIGINT = NULL
+    @Type AS NVARCHAR(50),
+    --@Token AS NVARCHAR(50),
+    @AccountId AS BIGINT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -43,10 +48,10 @@ BEGIN
             SELECT STUFF(
                             (
                                 SELECT DISTINCT
-                                       ',{' + '"Data" : [{' + '"Id":   "' + CAST(CM.IdCatMembership AS VARCHAR)
-                                     , +'"' + ',' + '"Name": "' + CM.MembershipName
-                                     , +'"' + ',' + '"Icon": "' + CM.Icon
-                                     , +'"' + ',' + '"Attibutos": ['
+                                       ',{' + '"Data" : [{' + '"Id":   "' + CAST(CM.IdCatMembership AS VARCHAR),
+                                       +'"' + ',' + '"Name": "' + CM.MembershipName,
+                                       +'"' + ',' + '"Icon": "' + CM.Icon,
+                                       +'"' + ',' + '"Attibutos": ['
                                        +
                                        (
                                            SELECT STUFF(
@@ -55,7 +60,11 @@ BEGIN
                                                                       + CAST(CMA.IdCatMembershipAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
                                                                       + CMA.MembershipAttributeDescription + '"' + ','
-                                                                      + '"Valor":"'
+                                                                      + '"DescripcionLong":"'
+                                                                      + ISNULL(
+                                                                                  CMA.MembershipAttributeDescriptionLong,
+                                                                                  CMA.MembershipAttributeDescription
+                                                                              ) + '"' + ',' + '"Valor":"'
                                                                       + CAST(CMA.MembershipAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CMA.MembershipAttributePosition AS VARCHAR)
@@ -65,10 +74,10 @@ BEGIN
                                                                      AND [CMA].[RowStatus] = 1
                                                                ORDER BY [CMA].[MembershipAttributePosition]
                                                                FOR XML PATH(''), TYPE
-                                                           ).value('.', 'varchar(max)')
-                                                         , 1
-                                                         , 1
-                                                         , ''
+                                                           ).value('.', 'varchar(max)'),
+                                                           1,
+                                                           1,
+                                                           ''
                                                        )
                                        ) + ']' + ',' + '"Descriptions":['
                                        + ISNULL(
@@ -86,24 +95,24 @@ BEGIN
                                                                                     + CAST(CMD.Type AS VARCHAR) + '"'
                                                                                     + ',' + '"Posición":"'
                                                                                     + CAST(CMD.Position AS VARCHAR) + '"'
-                                                                                    + '}'
-                                                                                  , ''
+                                                                                    + '}',
+                                                                                    ''
                                                                                 )
                                                                  FROM [dbo].[CatMembershipDescription] CMD
                                                                  WHERE [CMD].[CatMembershipId] = [CM].[IdCatMembership]
                                                                        AND [CMD].[RowStatus] = 1
-                                                                 ORDER BY [CMD].[Position]
-                                                                        , [CMD].[Type]
+                                                                 ORDER BY [CMD].[Position],
+                                                                          [CMD].[Type]
                                                                  FOR XML PATH(''), TYPE
-                                                             ).value('.', 'varchar(max)')
-                                                           , 1
-                                                           , 1
-                                                           , ''
+                                                             ).value('.', 'varchar(max)'),
+                                                             1,
+                                                             1,
+                                                             ''
                                                          )
-                                         )
-                                       , ''
+                                         ),
+                                         ''
                                                ) + ']' + ',' + '"Costo":"' + CAST(CM.MembershipCost AS VARCHAR) + '"'
-                                       + ',' + '"Tiempo de validez":"' + CAST(CM.MembershipValidity AS VARCHAR) + '"'
+                                       --+ ',' + '"Tiempo de validez":"' + CAST(CM.MembershipValidity AS VARCHAR) + '"'
                                        + ',' + '"ActiveClienteHasSalesPackage":'
                                        + CAST((CASE
                                                    WHEN ISNULL(MMBRSHP.IdMembership, 0) = 0 THEN
@@ -112,7 +121,7 @@ BEGIN
                                                        1
                                                END
                                               ) AS VARCHAR) + '}]' + '}'
-                                FROM [dbo].[CatMembership]                    CM WITH (NOLOCK)
+                                FROM [dbo].[CatMembership] CM WITH (NOLOCK)
                                     INNER JOIN [dbo].[CatMembershipAttribute] CMA WITH (NOLOCK)
                                         ON CM.IdCatMembership = CMA.CatMembershipId
                                     OUTER APPLY
@@ -131,14 +140,14 @@ BEGIN
                                               OR MMBRSHP.CustomerId = @CustomerId
                                           )
                                           AND MMBRSHP.RowStatus = 1
-                                )                                             MMBRSHP
+                                ) MMBRSHP
                                 WHERE CM.RowStatus = 1
                                 --	ORDER BY CM.IdCatMembership Desc
                                 FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)')
-                          , 1
-                          , 1
-                          , ''
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
                         )
         );
 
@@ -151,10 +160,10 @@ BEGIN
             SELECT STUFF(
                             (
                                 SELECT DISTINCT
-                                       ',{' + '"Data" : [{' + '"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR)
-                                     , +'"' + ',' + '"Name": "' + CS.SubscriptionName
-                                     , +'"' + ',' + '"Icon": "' + CS.Icon
-                                     , +'"' + ',' + '"Attibutos": ['
+                                       ',{' + '"Data" : [{' + '"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR),
+                                       +'"' + ',' + '"Name": "' + CS.SubscriptionName,
+                                       +'"' + ',' + '"Icon": "' + CS.Icon,
+                                       +'"' + ',' + '"Attibutos": ['
                                        +
                                        (
                                            SELECT STUFF(
@@ -163,7 +172,11 @@ BEGIN
                                                                       + CAST(CSA.IdCatSubscriptionAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
                                                                       + CSA.SubscriptionAttributeDescription + '"' + ','
-                                                                      + '"Valor":"'
+                                                                      + '"DescripcionLong":"'
+                                                                      + ISNULL(
+                                                                                  CSA.SubscriptionAttributeDescriptionLong,
+                                                                                  CSA.SubscriptionAttributeDescription
+                                                                              ) + '"' + ',' + '"Valor":"'
                                                                       + CAST(CSA.SubscriptionAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CSA.SubscriptionAttributePosition AS VARCHAR)
@@ -173,10 +186,10 @@ BEGIN
                                                                      AND [CSA].[RowStatus] = 1
                                                                ORDER BY [CSA].[SubscriptionAttributePosition]
                                                                FOR XML PATH(''), TYPE
-                                                           ).value('.', 'varchar(max)')
-                                                         , 1
-                                                         , 1
-                                                         , ''
+                                                           ).value('.', 'varchar(max)'),
+                                                           1,
+                                                           1,
+                                                           ''
                                                        )
                                        ) + ']' + ',' + '"Descriptions":['
                                        + ISNULL(
@@ -194,22 +207,22 @@ BEGIN
                                                                                     + CAST(CSD.Type AS VARCHAR) + '"'
                                                                                     + ',' + '"Posición":"'
                                                                                     + CAST(CSD.Position AS VARCHAR) + '"'
-                                                                                    + '}'
-                                                                                  , ''
+                                                                                    + '}',
+                                                                                    ''
                                                                                 )
                                                                  FROM [dbo].[CatSubscriptionDescription] CSD
                                                                  WHERE [CSD].[CatSubscriptionId] = [CS].[IdCatSubscription]
                                                                        AND [CSD].[RowStatus] = 1
-                                                                 ORDER BY [CSD].[Position]
-                                                                        , [CSD].[Type]
+                                                                 ORDER BY [CSD].[Position],
+                                                                          [CSD].[Type]
                                                                  FOR XML PATH(''), TYPE
-                                                             ).value('.', 'varchar(max)')
-                                                           , 1
-                                                           , 1
-                                                           , ''
+                                                             ).value('.', 'varchar(max)'),
+                                                             1,
+                                                             1,
+                                                             ''
                                                          )
-                                         )
-                                       , ''
+                                         ),
+                                         ''
                                                ) + ']' + ',' + '"Costo":"' + CAST(CS.SubscriptionCost AS VARCHAR) + '"'
                                        + ',' + '"Tiempo de validez":"' + CAST(CS.SubscriptionValidity AS VARCHAR) + '"'
                                        + ',' + '"ActiveClienteHasSalesPackage":'
@@ -220,7 +233,7 @@ BEGIN
                                                        1
                                                END
                                               ) AS VARCHAR) + '}]' + '}'
-                                FROM [dbo].[CatSubscription]                   CS WITH (NOLOCK)
+                                FROM [dbo].[CatSubscription] CS WITH (NOLOCK)
                                     INNER JOIN [dbo].[CatSubscriptionAtribute] CSA WITH (NOLOCK)
                                         ON CS.IdCatSubscription = CSA.CatSubscriptionId
                                     OUTER APPLY
@@ -239,24 +252,24 @@ BEGIN
                                               OR SBSCRPTN.CustomerId = @CustomerId
                                           )
                                           AND SBSCRPTN.RowStatus = 1
-                                )                                              SBSCRPTN
+                                ) SBSCRPTN
                                 WHERE CS.RowStatus = 1
                                       AND
                                       (
                                           (ISNULL(@AccountId, 0) > 0) -- usuario individual
-                                          OR
-                                          (
-                                              CS.IncludedMembershipId IS NOT NULL
-                                              AND ISNULL(@AccountId, 0) = 0
-                                          ) -- otros usuarios
+                                          OR (
+                                          -- CS.IncludedMembershipId IS NOT NULL
+                                          --AND 
+                                          ISNULL(@AccountId, 0) = 0
+                                             ) -- otros usuarios
                                       )
                                 --ORDER BY CS.IdCatSubscription Desc
 
                                 FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)')
-                          , 1
-                          , 1
-                          , ''
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
                         )
         );
 
@@ -268,13 +281,14 @@ BEGIN
 
         SET @JsonResponse =
         (
-            SELECT STUFF((
-                             SELECT '{{"IdResult":500,' + '"Message":"No se encontraron registros"}'
-                             FOR XML PATH(''), TYPE
-                         ).value('.', 'varchar(max)')
-                       , 1
-                       , 1
-                       , ''
+            SELECT STUFF(
+                            (
+                                SELECT '{{"IdResult":500,' + '"Message":"No se encontraron registros"}'
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)'),
+                            1,
+                            1,
+                            ''
                         )
         );
     END;

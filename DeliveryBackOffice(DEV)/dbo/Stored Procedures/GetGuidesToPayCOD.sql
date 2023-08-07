@@ -135,6 +135,7 @@ BEGIN
             ON btc.GuideSerie = btd.GuideSerie
                AND btc.GuideNumber = btd.GuideNumber
                AND btc.CatConceptCODId = 1
+			   AND btc.RowStatus =1 --cambio BNHL 04/08/2023
 		LEFT JOIN [dbo].[KindOfVPClient] kovpc WITH(NOLOCK)
 			ON kovpc.IdKindOfVPClient = vp.IdKindOfVPClient
 		LEFT JOIN [dbo].[DeliveryOrderPaymentTransaction] dopt WITH(NOLOCK)

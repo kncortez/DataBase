@@ -591,6 +591,15 @@ BEGIN
                                           , ''
                                         )
                         );
+
+						PRINT '@JsonModules'
+						PRINT @JsonModules
+						PRINT '@JsonAccounts'
+						PRINT @JsonAccounts
+						PRINT '@JsonProfile'
+						PRINT @JsonProfile
+						PRINT '@JsonProfileEXP'
+						PRINT @JsonProfileEXP
                     END;
                     ELSE
                     BEGIN

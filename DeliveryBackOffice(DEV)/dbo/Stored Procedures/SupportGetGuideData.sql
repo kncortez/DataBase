@@ -23,6 +23,10 @@ select 'Información General'   as Descripcion
      , st.OrderDescription     'Estado'
      , ord.IsLastMileReturn    'Devolucion'
 	 , ord.TypeService 'Tipo de Servicio'
+	 , ord.InsuranceAmount 'Monto Asergurado'
+	 , ord.IsInsuarance 'Esta Aasegurada?'
+	 , ord.Pieces_Dry
+	 ,ord.Pieces_Cold
 from dbo.DeliveryOrder                  ord with (nolock)
     left join dbo.Customer              cs with (nolock)
         on cs.IdCustomer = ord.IdCustomer
