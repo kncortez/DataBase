@@ -1596,6 +1596,7 @@
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
