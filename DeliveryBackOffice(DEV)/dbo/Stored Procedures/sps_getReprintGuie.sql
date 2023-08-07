@@ -1,5 +1,4 @@
-﻿
-CREATE procedure [dbo].[sps_getReprintGuie]
+﻿CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as

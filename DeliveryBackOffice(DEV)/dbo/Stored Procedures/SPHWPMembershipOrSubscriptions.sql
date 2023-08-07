@@ -110,7 +110,7 @@ BEGIN
                                          ),
                                          ''
                                                ) + ']' + ',' + '"Costo":"' + CAST(CM.MembershipCost AS VARCHAR) + '"'
-                                       + ',' + '"Tiempo de validez":"' + CAST(CM.MembershipValidity AS VARCHAR) + '"'
+                                       --+ ',' + '"Tiempo de validez":"' + CAST(CM.MembershipValidity AS VARCHAR) + '"'
                                        + ',' + '"ActiveClienteHasSalesPackage":'
                                        + CAST((CASE
                                                    WHEN ISNULL(MMBRSHP.IdMembership, 0) = 0 THEN
@@ -139,7 +139,7 @@ BEGIN
                                           )
                                           AND MMBRSHP.RowStatus = 1
                                 ) MMBRSHP
-								WHERE CM.RowStatus=1 
+                                WHERE CM.RowStatus = 1
                                 --	ORDER BY CM.IdCatMembership Desc
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
@@ -249,17 +249,16 @@ BEGIN
                                           )
                                           AND SBSCRPTN.RowStatus = 1
                                 ) SBSCRPTN
-                                WHERE
-								       CS.RowStatus=1 And( 
-									       (
-	
-											  ISNULL(@AccountId, 0) > 0
-	                                      	) -- usuario individual
-	                                      OR (
-	                                             CS.IncludedMembershipId IS NOT NULL
-	                                             AND ISNULL(@AccountId, 0) = 0
-                                         ) -- otros usuarios
-                                       )
+                                WHERE CS.RowStatus = 1
+                                      AND
+                                      (
+                                          (ISNULL(@AccountId, 0) > 0) -- usuario individual
+                                          OR (
+                                          -- CS.IncludedMembershipId IS NOT NULL
+                                          --AND 
+                                          ISNULL(@AccountId, 0) = 0
+                                             ) -- otros usuarios
+                                      )
                                 --ORDER BY CS.IdCatSubscription Desc
 
                                 FOR XML PATH(''), TYPE

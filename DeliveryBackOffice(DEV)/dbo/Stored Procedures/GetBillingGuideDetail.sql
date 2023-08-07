@@ -407,9 +407,29 @@ BEGIN
 			END
 		END
 		
-		IF(@Amount IS NOT NULL AND @Amount > 0 AND (@AppliedCoupon > 0 OR ((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
-		BEGIN
+		IF(@Amount IS NOT NULL AND @Amount > 0 AND (((@AppliedMembership > 0 OR @AppliedSubscription > 0) AND @IsFixedValueDiscount = 0)))
+		BEGIN			
+			SET @Amount = (
+				SELECT
+					(
+						CASE
+							WHEN @ValueType = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+								CASE
+									WHEN @DiscountType = 'TOT' THEN
+										@Amount -- ROUND(((@Amount * @PromoValue) / 100), 1)
+									ELSE 
+										@Amount
+								END
+							ELSE @Amount
+						END
+					)
+			)
+			
+			PRINT @Amount
+		END
 
+		IF(@Amount IS NOT NULL AND @Amount > 0 AND @AppliedCoupon > 0 AND @IsFixedValueDiscount = 0)
+		BEGIN			
 			SET @Amount = (
 				SELECT
 					(

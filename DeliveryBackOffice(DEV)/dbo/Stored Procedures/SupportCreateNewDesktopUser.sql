@@ -5,7 +5,7 @@
 -- Create date: <2023-07-19>
 -- Description:	<Crear un nuevo usuario en Hermes Desktop, debe estar previamente creado en Denarius>
 -- =============================================
-CREATE PROCEDURE [dbo].[SupportCreatNewDesktopUser]
+CREATE PROCEDURE [dbo].[SupportCreateNewDesktopUser]
     @Code INT
   , @User NVARCHAR(50)
   , @Token NVARCHAR(50)
