@@ -22,7 +22,7 @@ BEGIN
 	BEGIN
 		
 		-- Verifica si ya aceptó los terminos y condiciones en algún momento
-		SET @IDTerms = (SELECT IdTACByUser FROM [dbo].[TermsAndConditionsByUser]
+		SET @IDTerms = (SELECT TOP 1 IdTACByUser FROM [dbo].[TermsAndConditionsByUser] a1
 											WHERE IdAccount = (SELECT ac.AccIdAccount FROM RegisterUser us
                                                 INNER JOIN [dbo].Person pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
@@ -38,7 +38,11 @@ BEGIN
                                                 INNER JOIN [dbo].CatTypeAccount ta
                                                     ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
                                             WHERE us.UsrEmail = @Username
-                                                  AND us.UsrRowStatus = 1))
+                                                  AND us.UsrRowStatus = 1
+												  
+												  )
+												  ORDER BY a1.IdTACByUser desc
+												  )
 	
 		-- El usuario ha aceptado los términos y condiciones con anterioridad
 		IF (@IDTerms IS NOT NULL)

@@ -20,6 +20,8 @@
 
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [GuideRackClusteredIndex]
     ON [dbo].[Warehouse]([Rack_Position] ASC, [Guide_Serie] ASC, [Guide_Number] ASC);
@@ -50,4 +52,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora y fech
 GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Number_Guide_Serie]
     ON [dbo].[Warehouse]([Guide_Number] ASC, [Guide_Serie] ASC);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para registro de guías a inventario.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Warehouse';
 
