@@ -41,7 +41,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @FormatResponse AS NVARCHAR(10) = 'DataTable'
   , @CalculateTaxes BIT = 'false'
   , @CalculateMembership BIT = 'false'
-  , @TypeSubscriptionId INT = NULL
+  ,@TypeSubscriptionId INT = NULL
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from

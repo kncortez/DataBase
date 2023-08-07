@@ -12,7 +12,7 @@
 -- =============================================
 -- Author:		<Edelman,Vasquez>
 -- Create date: <2023-07-25>
--- Description:	<Agregar bandera de tipo de sucripción (descuento= 1 o Envío gratis=2) para recotización de guía >
+-- Description:	<Validar que se envíaron los campos  @UseMembership y @TypeSubscriptionId, buscarlos em el log para aplciar descuento que aplique >
 -- =============================================
 
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
@@ -37,6 +37,31 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+		IF(@UseMembership = 0 And @TypeSubscriptionId = 0 )
+	  BEGIN
+			----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
+			DECLARE @TypeSubsId INT;
+			SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
+			INNER JOIN Subscription sb WITH (NOLOCK)
+			ON sbl.SubscriptionId = sb.IdSubscription
+			WHERE sbl.LogGuideNumber = @GuideNumber And 
+				  sbl.LogGuideSerie  = @GuideSerie And 
+				  sbl.RowStatus=1)
+
+			IF(@TypeSubsId IS NULL)
+				BEGIN
+					SET @TypeSubsId = 0
+				END
+				ELSE
+				SET @UseMembership = 1
+				SET @TypeSubscriptionId = @TypeSubsId
+				
+       END
+
+	
+
+
 
     -- Variables "estaticas"
     DECLARE @NewMainRates INT =
