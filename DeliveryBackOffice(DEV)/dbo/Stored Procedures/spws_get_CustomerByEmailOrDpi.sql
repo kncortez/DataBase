@@ -3,6 +3,11 @@
 -- Create date: <2021-08-02>
 -- Description:	<Devuelve el nombre de un cliente individual asi como su IdCustomer>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2023-08-08>
+-- Description:	<Agregar campo IdAddress>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_CustomerByEmailOrDpi]
     -- Add the parameters for the stored procedure here
     --@StartDate DATETIME,
@@ -60,6 +65,7 @@ SET @jsonResult =
 													'"FullName":"' + ua.UadFullName  + '",' +
 													'"Address1":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAddress1,''),'json'),'\',' '),'"','') + '",' +
 													'"Address2":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAddress2,''),'json'),'\',' '),'"','') + '",' +
+												    '"IdAddress":"' +convert(varchar, ua.UadIdAddress)  + '",' +
 													'"NirPhone":"' + ua.UadNirPhone  + '",' +
 													'"Phone":"' + ua.UadPhone   + '",' +
 													'"AdditionalInstructions":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAdditionalInstructions,''),'json'),'\',' '),'"','') + '",' +
