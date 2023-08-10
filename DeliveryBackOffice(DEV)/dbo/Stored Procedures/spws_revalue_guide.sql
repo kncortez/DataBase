@@ -1,4 +1,11 @@
-﻿
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spws_revalue_guide]    Script Date: 10/08/2023 16:15:11 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
@@ -8,6 +15,11 @@
 -- Author:		<Edelman,Vasquez>
 -- Create date: <2022-06-16>
 -- Description:	< Adicionar lógica para tarifarios alternos cuando destino es EXC >
+-- =============================================
+-- =============================================
+-- Author:		<Edelman,Vasquez>
+-- Create date: <2023-07-25>
+-- Description:	<Validar que se envíaron los campos  @UseMembership y @TypeSubscriptionId, buscarlos em el log para aplciar descuento que aplique >
 -- =============================================
 
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
@@ -26,11 +38,38 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
   , @ParPesos VARCHAR(400) = NULL
   , @IsReturn BIT = 'false'
   , @UseMembership BIT = 0
+  , @TypeSubscriptionId AS INT= 0
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+		IF(@UseMembership = 0 OR @TypeSubscriptionId = 0 )
+	  BEGIN
+			----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
+			DECLARE @TypeSubsId INT;
+			DECLARE @RevaluedGuide BIT = 0;
+			SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
+			INNER JOIN Subscription sb WITH (NOLOCK)
+			ON sbl.SubscriptionId = sb.IdSubscription
+			WHERE sbl.LogGuideNumber = @GuideNumber And 
+				  sbl.LogGuideSerie  = @GuideSerie And 
+				  sbl.RowStatus=1)
+
+			IF(@TypeSubsId IS NULL)
+				BEGIN
+					SET @TypeSubsId = 0
+				END
+				ELSE
+				SET @TypeSubscriptionId = @TypeSubsId
+				SET @RevaluedGuide = 1
+				
+       END
+
+	
+
+
 
     -- Variables "estaticas"
     DECLARE @NewMainRates INT =
@@ -434,8 +473,10 @@ BEGIN
                                          , @IdSalePipeLine = @IdSalePipeLine
                                          , @FormatResponse = 'DataTable'
                                          , @CalculateTaxes = @CalculateTaxes
-                                         , @CalculateMembership = @UseMembership;
-    --select tp.* from @TempRate tp
+                                         , @CalculateMembership = @UseMembership
+                                         , @TypeSubscriptionId  = @TypeSubscriptionId
+										 , @RevaluedGuide = @RevaluedGuide
+  -- select tp.*,@IdCustomer from @TempRate tp
 
     IF (@UseMembership = 1)
     BEGIN
