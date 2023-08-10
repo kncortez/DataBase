@@ -20,7 +20,7 @@ AS
 BEGIN	
 
 		DECLARE @TSERoutePreparationDetail AS INT
-		DECLARE @IdHeader AS INT = (Select  ISNULL(IdTSERoutePreparationHeader,0)  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster)
+		DECLARE @IdHeader AS INT = (Select  ISNULL(IdTSERoutePreparationHeader,0)  From  [dbo].[TSERoutePreparationHeader] RP  Where RP.IdCatRoute = @IdCatRoute And RP.IdCatRouteCluster = @IdCatRouteCluster AND RP.RowStatus = 1)
 		
 		BEGIN TRANSACTION
 			BEGIN TRY
