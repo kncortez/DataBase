@@ -99,7 +99,7 @@ BEGIN
 			   ISNULL(cst.[CatBillingTimeId],-1)  AS CatBillingTimeId,
 			   ISNULL(cst.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
 			   ISNULL(cst.[BillingCut_offDate],GETDATE()) AS BillingCut_offDate,
-			   cst.[NumImgEvidence]
+			   ISNULL(cst.[NumImgEvidence],1) AS NumImgEvidence
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -189,7 +189,7 @@ BEGIN
 			    ISNULL(cst.[CatBillingTimeId],-1)  AS CatBillingTimeId,
 			   ISNULL(cst.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
 			   ISNULL(cst.[BillingCut_offDate],GETDATE()) AS BillingCut_offDate,
-			   cst.[NumImgEvidence]
+			   ISNULL(cst.[NumImgEvidence],1) AS NumImgEvidence
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
 		AND ( @IdCustomer = -1 OR cst.IdCustomer = @IdCustomer)
