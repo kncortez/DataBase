@@ -227,6 +227,8 @@ BEGIN
 
 	--Fin flujo devoluciones
 
+	PRINT 'validando token'
+
     IF (@TokenAct = 1 AND @hourtoken <= 8)
     BEGIN
 
@@ -236,6 +238,8 @@ BEGIN
             FROM dbo.CatDeliveryOptions WITH (NOLOCK)
             WHERE Name = 'Express Center'
         ); --FDAPI-337
+
+		PRINT 'construyendo json result'
         SET @jsonResult =
         (
             SELECT STUFF(
@@ -381,6 +385,8 @@ BEGIN
         IF OBJECT_ID('tempdb.dbo.#TmpAlertList', 'U') IS NOT NULL
             DROP TABLE #TmpAlertList;
 
+
+		PRINT 'construyendo jrsult 2'
         SET @jsonResult2 =
         (
             SELECT STUFF(
@@ -793,7 +799,10 @@ BEGIN
                             ''
                         )
         );
-        PRINT CONCAT('@jsonResult2', @jsonResult2);
+        
+		PRINT 'construido jrsult 2'
+		PRINT CONCAT('@jsonResult2', @jsonResult2);
+		
         -------------------------------Start Sumary, ListGuides Return----------------------------------------------
 
         IF OBJECT_ID('tempdb.dbo.#GuideService', 'U') IS NOT NULL

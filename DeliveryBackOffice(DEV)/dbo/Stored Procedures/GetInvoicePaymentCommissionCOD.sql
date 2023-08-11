@@ -8,7 +8,7 @@ AS
 BEGIN
     BEGIN TRY
         DECLARE @DEBUG BIT = 'FALSE'; --PARA PRUEBAS -> TRUE
-        DECLARE @MinimumHistoricDate DATE = '2023-06-09';
+        DECLARE @MinimumHistoricDate DATE = '2023-07-01';--2023-06-09
 
         DECLARE @SAPCode VARCHAR(100);
         DECLARE @CardPercent DECIMAL(3, 2);
@@ -109,7 +109,8 @@ BEGIN
               AND bdCOD.CatConceptCODId = @IdCatConceptCOD
               AND bdCOD.RowStatus = 1
               AND bdCOD.Commission > 0
-              AND [bdCOD].[CreditDate] >= @MinimumHistoricDate
+            --  AND [bdCOD].[CreditDate] >= @MinimumHistoricDate
+			AND bdCOD.CreditDate BETWEEN @MinimumHistoricDate AND '2023-07-31'
         GROUP BY bdCOD.GuideSerie
                , bdCOD.GuideNumber;
 
@@ -205,13 +206,21 @@ BEGIN
                           cbt.IdCatBillingTime IS NULL
                           AND
                           (
-                              DATEPART(dw, GETDATE()) = 1
+                              DATEPART(dw, GETDATE()) = 2
                               OR DATEPART(dd, GETDATE()) = 2
                               OR @DEBUG = 'TRUE'
                           )
                       )
                   )
-                  AND gc.CreditDate > CAST(DATEADD(MONTH, -1, GETDATE()) AS DATE);
+                  AND gc.CreditDate > CAST(DATEADD(MONTH, -1, GETDATE()) AS DATE)
+				  AND CU.IdCustomer NOT IN (
+				  24
+,8308
+,24643
+,33070
+				  )
+				  ;
+
 
             SELECT NameBillingVolume  NameBillingVolume
                  , ipcCOD.IdCustomer  Customer

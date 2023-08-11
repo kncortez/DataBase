@@ -64,7 +64,7 @@ BEGIN
                 SELECT TOP 1
                        StatusOrderId
                 FROM StatusOrder WITH (NOLOCK)
-                WHERE OrderDescription = 'Reenviado a Express Center'
+                WHERE OrderDescription = 'Traslado a Express Center'
             ); --FDAPI-337
     --Se obtiene el IdDeliveryOption configurado
     DECLARE @IdDeliveryOption AS INT =
