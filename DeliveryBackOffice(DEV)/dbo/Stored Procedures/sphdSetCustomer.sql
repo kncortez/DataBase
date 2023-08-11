@@ -65,8 +65,9 @@
 	@BillingVolumeId int = null,
 	@BillingCut_offDate Date = NULL,	
 	-----------------------------------------------------
-	@CardCode nvarchar(50) =NULL
+	@CardCode nvarchar(50) =NULL,
 	-----------------------------------------------------
+	@NumImg int = null
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -182,6 +183,7 @@ BEGIN
 				   ,[CatBillingTimeId]
 				   ,[CatBillingVolumeId]
 				   ,[BillingCut_offDate]
+				   ,[NumImgEvidence]
 				   )
 			 VALUES
 				   (@NameCustomer
@@ -248,6 +250,7 @@ BEGIN
 				   ,@BillingTimeId
 				   ,@BillingVolumeId
 				   ,@BillingCut_offDate
+				   ,@NumImg
 				   )
 
 				   SELECT	'TRUE'	[blnResult]
@@ -339,6 +342,7 @@ BEGIN
 					  ,[CatBillingTimeId] = @BillingTimeId
 					  ,[CatBillingVolumeId] = @BillingVolumeId
 				      ,[BillingCut_offDate] = @BillingCut_offDate
+					  ,[NumImgEvidence] = @NumImg
 					  
 				 WHERE IdCustomer = @IdCustomer
 
