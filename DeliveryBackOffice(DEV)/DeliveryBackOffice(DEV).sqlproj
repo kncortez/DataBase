@@ -1598,6 +1598,8 @@
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
     <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
     <Build Include="dbo\Stored Procedures\get_minCOD.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
+  
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
