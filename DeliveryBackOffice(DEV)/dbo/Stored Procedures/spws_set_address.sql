@@ -71,8 +71,8 @@ BEGIN
 			,'Registro creado correctamente' AS Message
 			,'Insert' as Id 
 	union
-	SELECT  500 AS IdResult
-			,'Usuario no asociado a cuenta' AS Message
+	SELECT  401 AS IdResult
+			,'Usuario no asociado a cuenta, revise el token' AS Message
 			,'Access' as Id 
 	union
 	SELECT  200 AS IdResult
@@ -81,7 +81,11 @@ BEGIN
 	union
 	SELECT  200 AS IdResult
 			,'Registro Eliminado' AS Message
-			,'Delete' as Id) as messagess
+			,'Delete' as Id
+	union
+	SELECT  500 AS IdResult
+			,'Error al ejecutar la operación ' AS Message
+			,'Error' as Id) as messagess
 			
 	-- Figurar municipio en caso no venga un identificador
 	SET @CodeOfReference = (SELECT MAX(CodeOfReference)+1  FROM VisitPointClient)
@@ -494,7 +498,7 @@ BEGIN
 					SELECT STUFF(( 
 					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 					+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
+					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Error'
 		
 					FOR XML PATH(''), TYPE
 					).value('.', 'varchar(max)'),1,1,''
