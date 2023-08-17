@@ -641,7 +641,8 @@ BEGIN
                                                                                        )
                                                                             ),
                                                                       'N/A'
-                                                                  )) + '",' + '"Status":"'
+                                                                  )) + '",'+ '"NumImageEvidence":"'
+                                                          + CONVERT(VARCHAR,(IIF((SELECT NumImgEvidence as num FROM Customer WITH (NOLOCK) WHERE IdCustomer = DOR.IdCustomer)IS NOT NULL,(SELECT NumImgEvidence as num FROM Customer WHERE IdCustomer = DOR.IdCustomer),1)))+ '",' + '"Status":"'
                                                           + CONVERT(VARCHAR,ISNULL(CASE WHEN DOR.StatusOrderId = 45 THEN 12 ELSE DOR.StatusOrderId END,4)) + '"'
                                                           + IIF((doadel.GuideNumber IS NOT NULL AND DOR.IsLastMileReturn = 0) OR (doaret.GuideNumber IS NOT NULL AND DOR.IsLastMileReturn = 1) ,
                                                                 ',"HighPriority":'
