@@ -3,7 +3,7 @@
 -- Create date: <2023-07-31>
 -- Description:	<Validar si existe número>
 -- =============================================
-ALTER procedure [dbo].[sphd_ValidateNumber]
+CREATE procedure [dbo].[sphd_ValidateNumber]
 @Phone nvarchar(50),
 @UniqueCode nvarchar(50)
 AS
