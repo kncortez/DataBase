@@ -1,4 +1,11 @@
-﻿
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[spws_revalue_guide]    Script Date: 10/08/2023 16:15:11 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
@@ -38,10 +45,11 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-		IF(@UseMembership = 0 And @TypeSubscriptionId = 0 )
+		IF(@UseMembership = 0 OR @TypeSubscriptionId = 0 )
 	  BEGIN
 			----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
 			DECLARE @TypeSubsId INT;
+			DECLARE @RevaluedGuide BIT = 0;
 			SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
 			INNER JOIN Subscription sb WITH (NOLOCK)
 			ON sbl.SubscriptionId = sb.IdSubscription
@@ -54,8 +62,8 @@ BEGIN
 					SET @TypeSubsId = 0
 				END
 				ELSE
-				SET @UseMembership = 1
 				SET @TypeSubscriptionId = @TypeSubsId
+				SET @RevaluedGuide = 1
 				
        END
 
@@ -467,7 +475,8 @@ BEGIN
                                          , @CalculateTaxes = @CalculateTaxes
                                          , @CalculateMembership = @UseMembership
                                          , @TypeSubscriptionId  = @TypeSubscriptionId
-    --select tp.* from @TempRate tp
+										 , @RevaluedGuide = @RevaluedGuide
+  -- select tp.*,@IdCustomer from @TempRate tp
 
     IF (@UseMembership = 1)
     BEGIN

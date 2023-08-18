@@ -41,7 +41,8 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @FormatResponse AS NVARCHAR(10) = 'DataTable'
   , @CalculateTaxes BIT = 'false'
   , @CalculateMembership BIT = 'false'
-  ,@TypeSubscriptionId INT = NULL
+  , @TypeSubscriptionId INT = NULL
+  , @RevaluedGuide BIT =0
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -282,25 +283,29 @@ BEGIN
     BEGIN
 
         DECLARE @CustomerHasActiveSubscription INT;
+		
+				SELECT @CustomerHasActiveSubscription = SC.IdSubscription
+				FROM [DeliveryBackOffice].[dbo].[Subscription]                    SC WITH (NOLOCK)
+					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+						ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
+					INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
+						ON SC.MembershipId = MB.IdMembership
+						   AND MB.CustomerId = @IdCustomer
+						   AND GETDATE() <= MB.ExpirationDate
+						   AND MB.RowStatus = 1
+					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
+						ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
+				WHERE SC.CustomerId = @IdCustomer
+					  AND GETDATE() <= SC.ExpirationDate
+					  AND SC.RowStatus = 1
+					  AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+					  AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+					  AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
+				ORDER BY SC.ExpirationDate ASC;
+	
 
-        SELECT @CustomerHasActiveSubscription = SC.IdSubscription
-        FROM [DeliveryBackOffice].[dbo].[Subscription]                    SC WITH (NOLOCK)
-            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
-            INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
-                ON SC.MembershipId = MB.IdMembership
-                   AND MB.CustomerId = @IdCustomer
-                   AND GETDATE() <= MB.ExpirationDate
-                   AND MB.RowStatus = 1
-            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
-                ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
-        WHERE SC.CustomerId = @IdCustomer
-              AND GETDATE() <= SC.ExpirationDate
-              AND SC.RowStatus = 1
-              AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-              AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-              AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
-        ORDER BY SC.ExpirationDate ASC;
+
+
 
         IF (ISNULL(@CustomerHasActiveSubscription, 0) > 0)
         BEGIN
@@ -1937,7 +1942,7 @@ BEGIN
             (
                 SELECT CatTypeSubscriptionName
                 FROM CatTypeSubscription
-                WHERE IdCatTypeSubscription = @TypeSubscriptionId
+                WHERE IdCatTypeSubscription =  @TypeSubscriptionId
             )
             BEGIN
                 IF (@NameTypeSubscrition = 'Porcentaje')
@@ -1964,7 +1969,7 @@ BEGIN
                           AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
                     ORDER BY scdr.DiscountValue DESC
                 END
-                ELSE IF (@NameTypeSubscrition = 'Monto Fijo')
+                ELSE IF (@NameTypeSubscrition = 'Monto Fijo' And @RevaluedGuide = 0)
                 BEGIN
                     SELECT TOP 1
                         @SubscriptionId = sc.IdSubscription,
@@ -1983,6 +1988,26 @@ BEGIN
                           AND sc.RowStatus = 1
                           AND csps.SalesPackageStatusName = 'Activa'
                           AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount > 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
+                          AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
+                    ORDER BY sc.IdSubscription ASC
+                END
+				 ELSE IF (@NameTypeSubscrition = 'Monto Fijo' And @RevaluedGuide = 1)
+                BEGIN
+                    SELECT TOP 1
+                        @SubscriptionId = sc.IdSubscription,
+                        @ServiceValueSubscription
+                            = 0,
+                        @DescriptionTypeSubscription = cts.CatTypeSubscriptionName
+                    FROM Subscription sc
+                        INNER JOIN CatSalesPackageStatus csps
+                            ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
+                        INNER JOIN CatTypeSubscription cts
+                            ON sc.CatTypeSubscriptionId = cts.IdCatTypeSubscription
+                    WHERE sc.CustomerId = @IdCustomer
+                          AND GETDATE() <= sc.ExpirationDate
+                          AND sc.RowStatus = 1
+                          AND csps.SalesPackageStatusName = 'Activa'
+                          AND sc.SubscriptionMaxServiceFixedValue - sc.ActualServiceCount = 0 --validar que suscripcion tenga paquetes y obtener suscripcion mas antiguo
                           AND sc.CatTypeSubscriptionId = @TypeSubscriptionId
                     ORDER BY sc.IdSubscription ASC
                 END
