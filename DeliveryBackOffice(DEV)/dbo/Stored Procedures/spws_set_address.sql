@@ -98,16 +98,29 @@ BEGIN
 		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' COLLATE Latin1_General_CI_AI);
 
 	END
-
+	
 	-- obtener el id de usuarion con base al token
 
 	declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t with(nolock) where t.TknIdToken = @Token)
+
+
+
+	IF(NOT EXISTS(Select Top 1 1 
+					From dbo.RolByUserByAccount  rua
+					Where rua.RuaIdAccount = @IdAccount and
+					rua.RuaIdUser = @IdUser))
+	BEGIN
+
+	 Select Top 1 @IdUser=RuaIdUser From [dbo].[RolByUserByAccount]  rua Where rua.RuaIdAccount = @IdAccount 
+
+	
+	END
 
 	select RuaIdAccount 
 	into #Access
 	from dbo.RolByUserByAccount  rua
 	where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser
-
+	
 	BEGIN TRANSACTION
 	BEGIN TRY
 
