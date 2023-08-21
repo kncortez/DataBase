@@ -554,6 +554,7 @@
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
+    <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\spws_validate_invoice_guide.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_route_settlement_status.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_profile.sql" />
@@ -1002,6 +1003,7 @@
     <Build Include="dbo\Stored Procedures\spRS_GetCDCTransactions.sql" />
     <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
     <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue.sql" />
+    <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetPendingNotificationsQueue.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetNotificationsQueueDetail.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPoints.sql" />
@@ -1166,6 +1168,7 @@
     <Build Include="dbo\Stored Procedures\TestTSE.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetPaymentGuide.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetConfigurationExcGuides.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetBlockInternalUser.sql" />    
     <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
     <Build Include="dbo\Stored Procedures\SupportGenerateNewCoupon.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateSentry.sql" />
@@ -1543,6 +1546,7 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
   
   </ItemGroup>
   <ItemGroup>
