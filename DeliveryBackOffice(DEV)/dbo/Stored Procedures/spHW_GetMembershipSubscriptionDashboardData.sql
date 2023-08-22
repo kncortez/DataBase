@@ -158,7 +158,7 @@ BEGIN
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [SubscriptionDeliveriesCount],
-				CAST(IIF((([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) >= 100, 0, 1) AS BIT) [IsSubscriptionFixedActive],
+				CAST(IIF( Cast(ExpirationDate As Date) > Cast(GETDATE() As Date), 0, 1) AS BIT) [IsSubscriptionFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [S].[CustomerId]
@@ -199,12 +199,12 @@ BEGIN
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [SubscriptionDeliveriesCount],
-				 CASE 
+				 CAST((CASE 
 		        WHEN (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) >= 100
 				      AND [S].[MembershipId] =  2 AND Convert(NVARCHAR(10), [S].[ExpirationDate],20) > Convert(NVARCHAR(10),GETDATE(),20) THEN  0
                 WHEN [S].[MembershipId] = 1 AND Convert(NVARCHAR(10), [S].[ExpirationDate],20) > Convert(NVARCHAR(10),GETDATE(),20) THEN 0
 				ELSE 1
-		  END  [IsSubscriptionFixedActive],
+		  END ) as bit) [IsSubscriptionFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [S].[CustomerId]
