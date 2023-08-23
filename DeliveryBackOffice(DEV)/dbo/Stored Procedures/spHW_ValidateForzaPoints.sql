@@ -97,7 +97,7 @@ BEGIN
 				END
 		
 			-- Membership log
-			SELECT		@MembershipLock = COUNT([MSL].[IdMembershipSubscriptionLog])
+			/*SELECT		@MembershipLock = COUNT([MSL].[IdMembershipSubscriptionLog])
 			FROM		[dbo].[MembershipSubscriptionLog] MSL
 			INNER JOIN	[dbo].[Membership] M
 				ON		[MSL].[MembershipId] = [M].[IdMembership]
@@ -112,10 +112,10 @@ BEGIN
 				BEGIN
 					SELECT 0 [spResult], 'El proceso no puede continuar debido a que ha utilizado guías con reajuste por uso de membresía' [spMessage];
 					RETURN;
-				END
+				END*/
 
 			-- Subscription log
-			SELECT		@MembershipLock = COUNT([MSL].[IdMembershipSubscriptionLog])
+			/*SELECT		@MembershipLock = COUNT([MSL].[IdMembershipSubscriptionLog])
 			FROM		[dbo].[MembershipSubscriptionLog] MSL
 			INNER JOIN	[dbo].[Subscription] S
 				ON		[MSL].[SubscriptionId] = [S].[IdSubscription]
@@ -129,7 +129,7 @@ BEGIN
 				BEGIN
 					SELECT 0 [spResult], 'El proceso no puede continuar debido a que ha utilizado guías con reajuste por uso de suscripción' [spMessage];
 					RETURN;
-				END
+				END*/
 			
 			-- Get data for each guide
 			INSERT INTO @GuidesProcessedList(GuideSerie, 
@@ -217,13 +217,22 @@ BEGIN
 	-- Get needed points for transaction
 	IF (UPPER(@ForzaPointsExchangeType) = 'SERVICIO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
 		BEGIN
-			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) FROM @GuidesProcessedList));
+			--SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) FROM @GuidesProcessedList));
+			DECLARE @TypeSubs VARCHAR(50)
+		SET @TypeSubs = (SELECT IdCatTypeSubscription FROM CatTypeSubscription WHERE CatTypeSubscriptionName = 'Porcentaje') 
+			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) 
+			FROM @GuidesProcessedList gpl
+			INNER JOIN MembershipSubscriptionLog msl
+				ON gpl.GuideNumber = msl.LogGuideNumber
+			INNER JOIN Subscription spn
+				ON msl.SubscriptionId = spn.IdSubscription
+			WHERE spn.CatTypeSubscriptionId = @TypeSubs));
 		END
 
-	IF (UPPER(@ForzaPointsExchangeType) = 'MONTO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
+	/*IF (UPPER(@ForzaPointsExchangeType) = 'MONTO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
 		BEGIN
 			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT SUM(PriceShipment) FROM @GuidesProcessedList));
-		END
+		END*/
 
 	-- Get new points price with promotion
 	IF (@PointPromoFactor > 0)
