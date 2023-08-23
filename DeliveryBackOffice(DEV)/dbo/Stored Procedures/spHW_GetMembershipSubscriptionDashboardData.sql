@@ -62,76 +62,54 @@ BEGIN
               AND [M].[CatMembershipStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID )
     );
 
-    -- Membership data
-    SELECT [M].[IdMembership]
-         , [M].[CustomerId]
-         , [M].[CatMembershipId]
-         , [CM].[MembershipName]
-         , [M].[CatMembershipStatusId]
-         , [CSPS].[SalesPackageStatusName]
-         , [M].[MembershipCost]
-         , [M].[IsAutoRenewable]
-         , [M].[MembershipMaxServiceFixedValue]
-         , [M].[ActualServiceCount]
-         , IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0
-             , 0
-             , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService]
-         , [M].[ExpirationDate]                                                   [MembershipExpirationDate]
-         , IIF((([M].[ActualServiceCount] * 100)
-                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
-               ) > 100
-             , 100
-             , (([M].[ActualServiceCount] * 100)
-                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
-               ))                                                                 [MembershipUsagePercentage]
-         , (
-               SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
-               FROM [dbo].[MembershipSubscriptionLog] MSL
-               WHERE [MSL].[CustomerId] = [M].[CustomerId]
-                     AND [MSL].[MembershipId] = [M].[IdMembership]
-                     AND [MSL].[RowStatus] = 1
-                     AND [MSL].[DateCreated]
-                     BETWEEN @DateStart AND @DateEnd
-           )                                                                      [MembershipDeliveriesCount]
-         , CAST(IIF((([M].[ActualServiceCount] * 100)
-                     / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
-                    ) >= 100
-                  , 0
-                  , 1) AS BIT)                                                    [IsMembershipFixedActive]
-         , ISNULL((
-                      SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
-                      FROM [dbo].[MembershipSubscriptionLog] MSL
-                      WHERE [MSL].[CustomerId] = [M].[CustomerId]
-                            AND [MSL].[MembershipId] = [M].[IdMembership]
-                            AND [MSL].[SubscriptionId] = NULL
-                            AND [MSL].[RowStatus] = 1
-                  /* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */
-                  )
-                , 0
-                 )                                                                [MembershipDeliveriesTotalDiscountGiven]
-         , [CM].[NextSalesPackageBanner]
-         , ISNULL([M].[AvailablePoints], 0)                                       [AvailablePoints]
-         , ISNULL([M].[AccumulatedPoints], 0)                                     [AccumulatedPoints]
-         , ISNULL((
-                      SELECT SUM([PBSL].[PointsReceived])
-                      FROM [dbo].[PointsByServiceLog] PBSL
-                      WHERE [PBSL].[MembershipId] = [M].[IdMembership]
-                            AND [PBSL].[RowStatus] = 1
-                            AND [PBSL].[PointsConsumed] = 0
-                            AND [PBSL].[PointsReceived] > 0
-                            AND [PBSL].[DateCreated]
-                            BETWEEN @DateStart AND @DateEnd
-                  )
-                , 0
-                 )                                                                [MembershipFilteredPoints]
-    FROM [dbo].[Membership]                      M
-        INNER JOIN [dbo].[CatMembership]         CM
-            ON [M].[CatMembershipId] = [CM].[IdCatMembership]
-        INNER JOIN [dbo].[CatSalesPackageStatus] CSPS
-            ON [M].[CatMembershipStatusId] = [CSPS].[IdCatSalesPackageStatus]
-    WHERE [M].[AccountId] = @AccountId
-          AND [M].[RowStatus] = 1
-          AND [M].[CatMembershipStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID );
+	-- Membership data
+	SELECT		[M].[IdMembership],
+				[M].[CustomerId],
+				[M].[CatMembershipId],
+				[CM].[MembershipName],
+				[M].[CatMembershipStatusId],
+				[CSPS].[SalesPackageStatusName],
+				[M].[MembershipCost],
+				[M].[IsAutoRenewable],
+				[M].[MembershipMaxServiceFixedValue],
+				[M].[ActualServiceCount],
+				IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0, 0, ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipAvailableFixedService],
+				[M].[ExpirationDate] [MembershipExpirationDate],
+				IIF((([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage],
+				(SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
+				FROM	[dbo].[MembershipSubscriptionLog] MSL
+				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
+					AND [MSL].[MembershipId] = [M].[IdMembership]
+					AND [MSL].[RowStatus] = 1
+					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [MembershipDeliveriesCount],
+				CAST(IIF(Cast(M.ExpirationDate As Date) > Cast(GETDATE() As Date)
+                  , 1
+                  , 0) AS BIT)                                                    [IsMembershipFixedActive],
+				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
+				FROM	[dbo].[MembershipSubscriptionLog] MSL
+				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
+					AND [MSL].[MembershipId] = [M].[IdMembership]
+					AND [MSL].[SubscriptionId] IS NULL
+					AND [MSL].[RowStatus] = 1
+					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven],
+				[CM].[NextSalesPackageBanner],
+				ISNULL([M].[AvailablePoints], 0) [AvailablePoints],
+				ISNULL([M].[AccumulatedPoints], 0) [AccumulatedPoints],
+				ISNULL((SELECT SUM([PBSL].[PointsReceived])
+				FROM	[dbo].[PointsByServiceLog] PBSL
+				WHERE	[PBSL].[MembershipId] = [M].[IdMembership]
+					AND [PBSL].[RowStatus] = 1
+					AND [PBSL].[PointsConsumed] = 0
+					AND [PBSL].[PointsReceived] > 0
+					AND [PBSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ), 0) [MembershipFilteredPoints]
+	FROM		[dbo].[Membership] M
+	INNER JOIN	[dbo].[CatMembership] CM
+		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
+	INNER JOIN	[dbo].[CatSalesPackageStatus] CSPS
+		ON		[M].[CatMembershipStatusId] = [CSPS].[IdCatSalesPackageStatus]
+	WHERE		[M].[AccountId] = @AccountId
+		AND		[M].[RowStatus] = 1
+		AND		[M].[CatMembershipStatusId] IN (@MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID);
 
     -- Subscription Data
 
@@ -158,14 +136,22 @@ BEGIN
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [SubscriptionDeliveriesCount],
-				CAST(IIF( Cast(ExpirationDate As Date) > Cast(GETDATE() As Date), 0, 1) AS BIT) [IsSubscriptionFixedActive],
+			CAST( 
+				(CASE 
+		        WHEN (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) >= 100
+				      AND [S].CatTypeSubscriptionId =  2 AND Cast(S.ExpirationDate As Date) < Cast(GETDATE() As Date) THEN  0
+                WHEN [S].CatTypeSubscriptionId = 1 AND Cast(S.ExpirationDate As Date) < Cast(GETDATE() As Date) THEN 0
+				ELSE 1
+		  END )
+		  as bit) AS [IsSubscriptionFixedActive],
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [S].[CustomerId]
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [SubscriptionDeliveriesTotalDiscountGiven],
-				[CS].[NextSalesPackageBanner] 
+				[CS].[NextSalesPackageBanner] ,
+                [S].CatTypeSubscriptionId
 	FROM		[dbo].[Subscription] S
 	INNER JOIN	[dbo].[CatSubscription] CS
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
@@ -199,19 +185,23 @@ BEGIN
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd ) [SubscriptionDeliveriesCount],
-				 CAST((CASE 
+				 CAST( 
+				(CASE 
 		        WHEN (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) >= 100
-				      AND [S].[MembershipId] =  2 AND Convert(NVARCHAR(10), [S].[ExpirationDate],20) > Convert(NVARCHAR(10),GETDATE(),20) THEN  0
-                WHEN [S].[MembershipId] = 1 AND Convert(NVARCHAR(10), [S].[ExpirationDate],20) > Convert(NVARCHAR(10),GETDATE(),20) THEN 0
+				      AND [S].CatTypeSubscriptionId =  2 AND Cast(S.ExpirationDate As Date) < Cast(GETDATE() As Date) THEN  0
+                WHEN [S].CatTypeSubscriptionId = 1 AND Cast(S.ExpirationDate As Date) < Cast(GETDATE() As Date) THEN 0
 				ELSE 1
-		  END ) as bit) [IsSubscriptionFixedActive],
+		  END )
+		  as bit) AS [IsSubscriptionFixedActive]
+		        ,
 				ISNULL((SELECT SUM(ISNULL([MSL].[LogGuideOriginalValue], 0) - ISNULL([MSL].[LogGuideNewValue], 0))
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [S].[CustomerId]
 					AND [MSL].[SubscriptionId] = [S].[IdSubscription]
 					AND [MSL].[RowStatus] = 1
 					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [SubscriptionDeliveriesTotalDiscountGiven],
-				[CS].[NextSalesPackageBanner] 
+				[CS].[NextSalesPackageBanner] ,
+                [S].CatTypeSubscriptionId
 	FROM		[dbo].[Subscription] S
 	INNER JOIN	[dbo].[CatSubscription] CS
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
