@@ -73,7 +73,7 @@ BEGIN
 				FROM	[dbo].[MembershipSubscriptionLog] MSL
 				WHERE	[MSL].[CustomerId] = [M].[CustomerId]
 					AND [MSL].[MembershipId] = [M].[IdMembership]
-					AND [MSL].[SubscriptionId] = NULL
+					AND [MSL].[SubscriptionId] IS NULL
 					AND [MSL].[RowStatus] = 1
 					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven],
 				[CM].[NextSalesPackageBanner],
