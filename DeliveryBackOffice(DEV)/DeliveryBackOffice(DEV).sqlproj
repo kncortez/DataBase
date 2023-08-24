@@ -1548,6 +1548,7 @@
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
     <Build Include="dbo\Functions\fn_get_segmentNew.sql" />  
     <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
+    <Build Include="dbo\Stored Procedures\get_minCOD.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
