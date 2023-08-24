@@ -218,15 +218,11 @@ BEGIN
 	IF (UPPER(@ForzaPointsExchangeType) = 'SERVICIO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
 		BEGIN
 			--SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) FROM @GuidesProcessedList));
-			DECLARE @TypeSubs VARCHAR(50)
-		SET @TypeSubs = (SELECT IdCatTypeSubscription FROM CatTypeSubscription WHERE CatTypeSubscriptionName = 'Porcentaje') 
 			SET @PointsNeededForExchange = (@ForzaPointsExchangeValue * (SELECT COUNT(GuideSerie) 
 			FROM @GuidesProcessedList gpl
-			INNER JOIN MembershipSubscriptionLog msl
-				ON gpl.GuideNumber = msl.LogGuideNumber
-			INNER JOIN Subscription spn
-				ON msl.SubscriptionId = spn.IdSubscription
-			WHERE spn.CatTypeSubscriptionId = @TypeSubs));
+			LEFT JOIN DeliveryOrder do
+		    ON gpl.GuideNumber = do.Guide_Number
+			WHERE gpl.PriceShipment >0));
 		END
 
 	/*IF (UPPER(@ForzaPointsExchangeType) = 'MONTO' AND ((SELECT COUNT(Guide_Serie) FROM @GuidesList) > 0))
