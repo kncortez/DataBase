@@ -405,6 +405,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 							SELECT  
 						',"Messege":"Cambios realizados exitosamente",'+
             '"IdVisitPointByClientPortfolio":'+CONVERT(NVARCHAR,ISNULL(@VisitPointByClientPortfolioIdTransact,''))+','+
+			'"CodeOfReference":'+ CONVERT(NVARCHAR,ISNULL('329403','')) +','+
             '"IdAddress":'+ CONVERT(NVARCHAR,ISNULL(@AddressIdTransact,''))
             +'}'
 

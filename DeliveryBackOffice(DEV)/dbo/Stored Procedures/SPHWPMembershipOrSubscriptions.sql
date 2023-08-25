@@ -59,10 +59,12 @@ BEGIN
                                                                SELECT ',' + '{' + '"Id":"'
                                                                       + CAST(CMA.IdCatMembershipAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
-                                                                      + CMA.MembershipAttributeDescription 
-																	  + '"' + ',' + '"DescripcionLong":"'
-                                                                      + ISNULL( CMA.MembershipAttributeDescriptionLong, CMA.MembershipAttributeDescription) 
-                                                                      + '"' + ',' + '"Valor":"'
+                                                                      + CMA.MembershipAttributeDescription + '"' + ','
+                                                                      + '"DescripcionLong":"'
+                                                                      + ISNULL(
+                                                                                  CMA.MembershipAttributeDescriptionLong,
+                                                                                  CMA.MembershipAttributeDescription
+                                                                              ) + '"' + ',' + '"Valor":"'
                                                                       + CAST(CMA.MembershipAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CMA.MembershipAttributePosition AS VARCHAR)
@@ -157,10 +159,12 @@ BEGIN
         (
             SELECT STUFF(
                             (
+							
                                 SELECT DISTINCT
                                        ',{' + '"Data" : [{' + '"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR),
                                        +'"' + ',' + '"Name": "' + CS.SubscriptionName,
                                        +'"' + ',' + '"Icon": "' + CS.Icon,
+									   +'"' + ',' + '"Order": "' + CAST(COALESCE(CS.SubscriptionWeight,0) AS VARCHAR),
                                        +'"' + ',' + '"Attibutos": ['
                                        +
                                        (
@@ -169,10 +173,12 @@ BEGIN
                                                                SELECT ',' + '{' + '"Id":"'
                                                                       + CAST(CSA.IdCatSubscriptionAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
-                                                                      + CSA.SubscriptionAttributeDescription 
-																	  + '"' + ',' + '"DescripcionLong":"'
-                                                                      + ISNULL(CSA.SubscriptionAttributeDescriptionLong, CSA.SubscriptionAttributeDescription )
-                                                                      + '"' + ',' + '"Valor":"'
+                                                                      + CSA.SubscriptionAttributeDescription + '"' + ','
+                                                                      + '"DescripcionLong":"'
+                                                                      + ISNULL(
+                                                                                  CSA.SubscriptionAttributeDescriptionLong,
+                                                                                  CSA.SubscriptionAttributeDescription
+                                                                              ) + '"' + ',' + '"Valor":"'
                                                                       + CAST(CSA.SubscriptionAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CSA.SubscriptionAttributePosition AS VARCHAR)
@@ -259,7 +265,8 @@ BEGIN
                                           ISNULL(@AccountId, 0) = 0
                                              ) -- otros usuarios
                                       )
-                                --ORDER BY CS.IdCatSubscription Desc
+								
+                                --ORDER BY Tbl.SubscriptionWeight Desc
 
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),

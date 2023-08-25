@@ -259,8 +259,8 @@ begin
 			DECLARE @PaymentAllowsCollect INT = (
 			               	SELECT Top 1 COUNT(
 										 Case 
-											  When s.CatTypeSubscriptionId = 2 Then 1
-											  When s.CatTypeSubscriptionId = 1 Then 0
+											  When s.CatTypeSubscriptionId = 2 Then 2
+											  When s.CatTypeSubscriptionId = 1 Then 1
 											  When s.CatTypeSubscriptionId IS NULL Then 0 
 											  ELSE 0 End)
 							FROM dbo.MembershipSubscriptionLog MSL WITH (NoLock)

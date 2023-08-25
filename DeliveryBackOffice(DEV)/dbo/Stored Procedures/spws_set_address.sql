@@ -71,8 +71,8 @@ BEGIN
 			,'Registro creado correctamente' AS Message
 			,'Insert' as Id 
 	union
-	SELECT  500 AS IdResult
-			,'Usuario no asociado a cuenta' AS Message
+	SELECT  401 AS IdResult
+			,'Usuario no asociado a cuenta, revise el token' AS Message
 			,'Access' as Id 
 	union
 	SELECT  200 AS IdResult
@@ -81,10 +81,15 @@ BEGIN
 	union
 	SELECT  200 AS IdResult
 			,'Registro Eliminado' AS Message
-			,'Delete' as Id) as messagess
+			,'Delete' as Id
+	union
+	SELECT  500 AS IdResult
+			,'Error al ejecutar la operación ' AS Message
+			,'Error' as Id) as messagess
 			
 	-- Figurar municipio en caso no venga un identificador
-
+	SET @CodeOfReference = (SELECT MAX(CodeOfReference)+1  FROM VisitPointClient)
+	
 	PRINT '@IdTownship'
 	PRINT @IdTownship
 	IF(@IdTownship IS NULL)
@@ -93,16 +98,29 @@ BEGIN
 		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' COLLATE Latin1_General_CI_AI);
 
 	END
-
+	
 	-- obtener el id de usuarion con base al token
 
 	declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t with(nolock) where t.TknIdToken = @Token)
+
+
+
+	IF(NOT EXISTS(Select Top 1 1 
+					From dbo.RolByUserByAccount  rua
+					Where rua.RuaIdAccount = @IdAccount and
+					rua.RuaIdUser = @IdUser))
+	BEGIN
+
+	 Select Top 1 @IdUser=RuaIdUser From [dbo].[RolByUserByAccount]  rua Where rua.RuaIdAccount = @IdAccount 
+
+	
+	END
 
 	select RuaIdAccount 
 	into #Access
 	from dbo.RolByUserByAccount  rua
 	where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser
-
+	
 	BEGIN TRANSACTION
 	BEGIN TRY
 
@@ -152,7 +170,7 @@ BEGIN
 					 set @jsonResult =(
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"IdAddress":' + convert(varchar,@IdAddress)    +','
 						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Delete'
 		
 						FOR XML PATH(''), TYPE
@@ -163,6 +181,7 @@ BEGIN
 				end
 				else -- se va a actualizar el registro
 				begin 
+			  
 					-- actualizar el registro con los datos proporcionado
 					UPDATE [dbo].[UserAddress]
 					   SET [UadIdTownship] = @IdTownship
@@ -178,7 +197,7 @@ BEGIN
 						  ,[UadDateUpdated] = GETDATE()
 						  ,[IdCityPlace] = @IdCityPlace
 					 WHERE [UadIdAddress] =  @IdAddress
-
+					
 					UPDATE VP
 					   SET VP.IdTownship = @IdTownship
 						  --,VP.ACC =@IdAccount
@@ -198,11 +217,21 @@ BEGIN
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
+				
+				 SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)
+
+			 
 
 					 set @jsonResult =(
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"CodeOfReference":' + convert(varchar,@CodeOfReference)    +',' 
+						+ '"Province":"' + convert(varchar,@Department)    +'",' 
+						+ '"Township":"' + convert(varchar,@TownshipName)    +'",' 
+						+ '"HeaderCode":"' + convert(varchar,@HeaderCode)    +'",' 
+						+ '"CityPlace":"' + convert(varchar,@CityName) +'",' 
+						+ '"IdProvince":"' + convert(varchar,@IdDepartment) +'",' 
 						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Update'
 		
 						FOR XML PATH(''), TYPE
@@ -213,8 +242,9 @@ BEGIN
 			end
 			else -- la cuenta no existe, entonces se crea
 			begin
-				SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)			
+			--	SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)			
 						--Inserta Visit Point en la tabla VisitPointClient
+          
 				INSERT INTO [dbo].[VisitPointClient]
 					   ([CodeOfReference]
 					   ,[DescriptionOfClient]
@@ -306,7 +336,7 @@ BEGIN
 						,@CodeOfReference
 						,@IdCityPlace)
 
-
+                     
 
 				set @IdAddress = SCOPE_IDENTITY()
 				set @jsonResult =(
@@ -326,9 +356,12 @@ BEGIN
 							  ) 
 						)			
 			end
+		
 			--------INICIO Homologación de campos para OAC (Tabla: ConfirmedAddres)--------
 			if @Status = 0
 			begin 
+
+			
 					UPDATE [dbo].[ConfirmedAddress] SET
 							   [TokenUpdate] =@Token
 							   ,[DateUpdate] =getdate()
@@ -337,9 +370,11 @@ BEGIN
 			end
 			else if @Status = 1
 			begin 
+			
 				--Comprobar si existe el telefono
 				if EXISTS(SELECT TOP 1 1 FROM DBO.ConfirmedAddress WHERE NirPhone=@NirPhone AND Phone=@Phone AND ProvinceId = @IdDepartment AND TownshipId = @IdTownship AND [Address] = @Address1)
 				begin
+
 					UPDATE [dbo].[ConfirmedAddress] SET
 							   [NirPhone] =@NirPhone
 							   ,[Phone] = @Phone
@@ -369,11 +404,11 @@ BEGIN
 							TownshipId = @IdTownship 
 							AND 
 							[Address] = @Address1;
-						
+					END	
 					-- Asociar dirección con cliente que la reporta, siempre que esta no exista bajo el mismo cliente
 					IF( NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfirmedAddressByCustomer] CABC WITH(NOLOCK) INNER JOIN @UpdatedAddress UA ON CABC.ConfirmedAddressId = UA.IdUpdated WHERE CABC.CustomerId = @IdCustomer AND CABC.RowStatus = 1) )
 					BEGIN
-
+					
 						INSERT INTO [DeliveryBackOffice].[dbo].[ConfirmedAddressByCustomer]
 							(CustomerId, ConfirmedAddressId, TokenCreated, DateCreated)
 						SELECT
@@ -383,9 +418,10 @@ BEGIN
 							@UpdatedAddress UA
 
 					END
-				end
-				else
-				begin
+			
+				Else
+				Begin
+			--	 SET @CodeOfReference = (SELECT MAX(CodeOfReference) FROM VisitPointClient)
 					--Si no existe, crearlo
 					INSERT INTO [dbo].[ConfirmedAddress]
 						([NirPhone]
@@ -436,7 +472,7 @@ BEGIN
 					-- Asociar dirección con cliente que la reporta, siempre que esta no exista bajo el mismo cliente
 					IF( NOT EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[ConfirmedAddressByCustomer] CABC WITH(NOLOCK) INNER JOIN @UpdatedAddress UA ON CABC.ConfirmedAddressId = UA.IdUpdated WHERE CABC.CustomerId = @IdCustomer AND CABC.RowStatus = 1) )
 					BEGIN
-
+					
 						INSERT INTO [DeliveryBackOffice].[dbo].[ConfirmedAddressByCustomer]
 							(CustomerId, ConfirmedAddressId, TokenCreated, DateCreated)
 						SELECT
@@ -446,8 +482,8 @@ BEGIN
 							@UpdatedAddress UA
 
 					END
-				end			
-			end
+				End			
+			End
 
 			COMMIT TRANSACTION;
 
@@ -461,7 +497,7 @@ BEGIN
 			set @jsonResult =(
 						SELECT STUFF(( 
 						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"IdAddress":' + convert(varchar,@IdAddress)    +','  
 						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
 		
 						FOR XML PATH(''), TYPE
@@ -474,15 +510,15 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
-			(ErrorProcedure, ErrorDescription, TokenCreated, DateCreated)
+			(ErrorProcedure, ErrorDescription, TokenCreated, DateCreated, ErrorLine)
 		VALUES
-			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE())
+			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE(), ERROR_LINE())
 
 		set @jsonResult =(
 					SELECT STUFF(( 
 					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 					+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
+					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Error'
 		
 					FOR XML PATH(''), TYPE
 					).value('.', 'varchar(max)'),1,1,''

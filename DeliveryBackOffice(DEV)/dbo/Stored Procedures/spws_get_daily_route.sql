@@ -510,7 +510,9 @@ BEGIN
                                                           + CONVERT(
                                                                        VARCHAR,
                                                                        (CASE
-                                                                            WHEN ISNULL(SDFG.Latitude, 0) != 0
+																	   WHEN ISNULL(DOR.Receiver_Lat, '0') <> '' THEN
+																			      ISNULL(DOR.Receiver_Lat, '0')
+                                                                           WHEN ISNULL(SDFG.Latitude, 0) != 0
                                                                                  AND ISNULL(SDFG.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(SDFG.Latitude, 0))
                                                                             WHEN ISNULL(EPS.Latitude, 0) != 0
@@ -520,6 +522,7 @@ BEGIN
                                                                                 ISNULL(VPC.Longitude, '0')
                                                                             WHEN ISNULL(VPr.Latitude, '0') <> '' AND DOR.IsLastMileReturn = 0 THEN
                                                                                 ISNULL(VPr.Latitude, '0')
+																			
                                                                             ELSE
                                                                                 '0'
                                                                         END
@@ -528,6 +531,8 @@ BEGIN
                                                           + CONVERT(
                                                                        VARCHAR,
                                                                        (CASE
+																	   WHEN ISNULL(DOR.Receiver_Lng, '0') <> '' THEN
+																			      ISNULL(DOR.Receiver_Lng, '0')
                                                                             WHEN ISNULL(SDFG.Latitude, 0) != 0
                                                                                  AND ISNULL(SDFG.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(SDFG.Longitude, 0))

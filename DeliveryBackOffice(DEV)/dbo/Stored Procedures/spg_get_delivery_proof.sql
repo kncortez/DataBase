@@ -16,7 +16,7 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-    SELECT
+    SELECT --TOP 1
            [ID],
            [Date_Photo],
            (
