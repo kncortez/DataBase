@@ -257,12 +257,12 @@ begin
 
 		/* Agregar bandera para indicar que fue creado con suscripcion de monto fijo */
 			DECLARE @PaymentAllowsCollect INT = (
-			               	SELECT Top 1 COUNT(
+			               	SELECT 
 										 Case 
 											  When s.CatTypeSubscriptionId = 2 Then 1
 											  When s.CatTypeSubscriptionId = 1 Then 0
 											  When s.CatTypeSubscriptionId IS NULL Then 0 
-											  ELSE 0 End)
+											  ELSE 0 End
 							FROM dbo.MembershipSubscriptionLog MSL WITH (NoLock)
 							INNER JOIN dbo.Subscription s WITH (NoLock)
 							ON MSL.SubscriptionId = S.IdSubscription
