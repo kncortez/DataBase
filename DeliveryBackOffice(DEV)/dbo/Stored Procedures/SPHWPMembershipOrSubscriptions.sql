@@ -59,10 +59,12 @@ BEGIN
                                                                SELECT ',' + '{' + '"Id":"'
                                                                       + CAST(CMA.IdCatMembershipAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
-                                                                      + CMA.MembershipAttributeDescription 
-																	  + '"' + ',' + '"DescripcionLong":"'
-                                                                      + ISNULL( CMA.MembershipAttributeDescriptionLong, CMA.MembershipAttributeDescription) 
-                                                                      + '"' + ',' + '"Valor":"'
+                                                                      + CMA.MembershipAttributeDescription + '"' + ','
+                                                                      + '"DescripcionLong":"'
+                                                                      + ISNULL(
+                                                                                  CMA.MembershipAttributeDescriptionLong,
+                                                                                  CMA.MembershipAttributeDescription
+                                                                              ) + '"' + ',' + '"Valor":"'
                                                                       + CAST(CMA.MembershipAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CMA.MembershipAttributePosition AS VARCHAR)
@@ -169,10 +171,12 @@ BEGIN
                                                                SELECT ',' + '{' + '"Id":"'
                                                                       + CAST(CSA.IdCatSubscriptionAttribute AS VARCHAR)
                                                                       + '"' + ',' + '"Descripcion":"'
-                                                                      + CSA.SubscriptionAttributeDescription 
-																	  + '"' + ',' + '"DescripcionLong":"'
-                                                                      + ISNULL(CSA.SubscriptionAttributeDescriptionLong, CSA.SubscriptionAttributeDescription )
-                                                                      + '"' + ',' + '"Valor":"'
+                                                                      + CSA.SubscriptionAttributeDescription + '"' + ','
+                                                                      + '"DescripcionLong":"'
+                                                                      + ISNULL(
+                                                                                  CSA.SubscriptionAttributeDescriptionLong,
+                                                                                  CSA.SubscriptionAttributeDescription
+                                                                              ) + '"' + ',' + '"Valor":"'
                                                                       + CAST(CSA.SubscriptionAttributeValue AS VARCHAR)
                                                                       + '"' + ',' + '"Posicion":"'
                                                                       + CAST(CSA.SubscriptionAttributePosition AS VARCHAR)

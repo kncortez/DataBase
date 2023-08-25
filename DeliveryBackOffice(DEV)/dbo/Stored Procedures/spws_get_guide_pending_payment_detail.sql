@@ -279,18 +279,6 @@ BEGIN
         FROM #RevalueGuides rv
         WHERE rv.fila = @count;
 
-		----Obtener bandera de tipo de suscripcion para enviar a sp revalorizador----
-		DECLARE @TypeSubsId INT;
-		SET @TypeSubsId = (SELECT sb.CatTypeSubscriptionId FROM MembershipSubscriptionLog sbl WITH (NOLOCK)
-		INNER JOIN Subscription sb WITH (NOLOCK)
-		ON sbl.SubscriptionId = sb.IdSubscription
-		WHERE LogGuideNumber = @RevalueGuide)
-
-		IF(@TypeSubsId IS NULL)
-			BEGIN
-			SET @TypeSubsId = 0
-			END
-		-----Fin--------------------------------
         EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide @GuideSerie = @RevalueSerie,
                                                                 @GuideNumber = @RevalueGuide,
                                                                 @CodeApp = '',
@@ -299,8 +287,7 @@ BEGIN
                                                                 @IdModule = @IdModuleP,
                                                                 @SetUpdate = 'true',
                                                                 @Token = @TokenP,
-                                                                @IsReturn = 'false',
-																@TypeSubscriptionId =@TypeSubsId;
+                                                                @IsReturn = 'false';
 
         SET @count = @count + 1;
     END;

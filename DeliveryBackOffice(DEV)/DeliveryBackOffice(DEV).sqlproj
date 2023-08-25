@@ -1592,6 +1592,7 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />  
     <Build Include="dbo\Tables\CatTypeSubscription.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
