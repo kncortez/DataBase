@@ -1,12 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[spws_revalue_guide]    Script Date: 10/08/2023 16:15:11 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Revaloriza una guia de transporte>
