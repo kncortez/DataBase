@@ -76,6 +76,9 @@ SET @jsonResult =
 													'"FullName":"' + ua.UadFullName  + '",' +
 													'"Address1":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAddress1,''),'json'),'\',' '),'"','') + '",' +
 													'"Address2":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAddress2,''),'json'),'\',' '),'"','') + '",' +
+													'"IdAddress":"' +convert(varchar, ua.UadIdAddress)  + '",' +
+													'"ContactName":"' +convert(varchar, ISNULL(ua.UadFullName,''))  + '",' +
+													'"CodeOfReference":"' +convert(varchar, ISNULL(ua.CodeOfReference,''))  + '",' +
 													'"NirPhone":"' + ua.UadNirPhone  + '",' +
 													'"Phone":"' + ua.UadPhone   + '",' +
 													'"AdditionalInstructions":"' + REPLACE(REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadAdditionalInstructions,''),'json'),'\',' '),'"','') + '",' +
