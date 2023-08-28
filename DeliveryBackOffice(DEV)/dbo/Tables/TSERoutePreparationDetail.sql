@@ -14,6 +14,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -48,4 +50,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacenar la descripción de la incidencia de sobres.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TSERoutePreparationDetail', @level2type = N'COLUMN', @level2name = N'Observation';
+CREATE NONCLUSTERED INDEX [idx_TSERoutePreparationDetail_TSERoutePreparationHeaderID]
+    ON [dbo].[TSERoutePreparationDetail]([TSERoutePreparationHeaderID] ASC);
 

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatTypeSubscription] (
-    [IdCatTypeSubscription]    INT IDENTITY(1,1) NOT NULL,
+    [IdCatTypeSubscription]    INT         IDENTITY (1, 1) NOT NULL,
     [CatTypeSubscriptionName]  NCHAR (100) NOT NULL,
     [DescriptionTSubscription] NCHAR (200) NOT NULL,
     [RowStatus]                BIT         NOT NULL,

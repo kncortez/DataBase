@@ -132,8 +132,7 @@ BEGIN
 																SELECT 7 AS ValueMessage,
 																	'El total de piezas de las guías han sido ingresadas correctamente' AS MessageDescription
 
-																COMMIT TRANSACTION;																
-																RETURN;
+																--RETURN;
 															END
 
 														SELECT 1 AS ValueMessage,

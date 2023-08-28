@@ -510,16 +510,23 @@ BEGIN
                 DECLARE @IdHublogistic INT =
                         (
                             SELECT TOP 1
-                                   thb.IdHublogistic
+                                  -- thb.IdHublogistic
+								  HBG.IdHubLogistic
                             FROM #listGuides ls
                                 INNER JOIN DeliveryOrder ord WITH (NOLOCK)
                                     ON (
                                            ord.Guide_Number = ls.ItemNumber
                                            AND ord.Guide_Serie = ls.ItemSerie
                                        )
-                                INNER JOIN TownshipByHubLogistic thb WITH (NOLOCK)
-                                    ON (ord.SenderIdTownship = thb.IdTownship)
-                                INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
+                                --INNER JOIN TownshipByHubLogistic thb WITH (NOLOCK)
+                                --    ON (ord.SenderIdTownship = thb.IdTownship)
+								INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
+									ON ord.SenderIdTownship = twn.IdTownship AND twn.TownshipStatus = 1
+								INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage THB WITH(NOLOCK)
+									ON THB.HeaderCode = twn.HeaderCode AND THB.RowStatus = 1
+                                INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBG WITH(NOLOCK)
+									ON HBG.HubAbbreviation = THB.Hub AND HBG.HubStatus = 1
+								INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                                     ON (
                                            dop.GuideNumber = ord.Guide_Number
                                            AND dop.GuideSerie = ord.Guide_Serie
