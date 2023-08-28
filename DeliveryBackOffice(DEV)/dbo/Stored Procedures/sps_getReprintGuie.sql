@@ -1,5 +1,4 @@
-﻿
-CREATE procedure [dbo].[sps_getReprintGuie]
+﻿CREATE procedure [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as
@@ -536,7 +535,8 @@ begin
 												ELSE 'E'
 											END)
 										, '') + '",' 
-									 + '"QRLink": "' + COALESCE(CONCAT('https://qa.forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
+									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
+									 + '"UseMembership": ' + CONVERT(VARCHAR, CAST(ISNULL((CASE WHEN [MSL].[IdMembershipSubscriptionLog] IS NOT NULL THEN 1 ELSE 0 END), 0) AS BIT)) + ',' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
 									 + '"DeliveryETA": "' + COALESCE
@@ -627,6 +627,10 @@ begin
 										AND MMBSHP.CatMembershipStatusId = @StatusPackage
 										AND MMBSHP.ExpirationDate >= GETDATE()
 										AND MMBSHP.RowStatus = 1
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog] MSL  WITH(NOLOCK) 
+									  ON [MSL].[LogGuideSerie] = [dev].[Guide_Serie] 
+									  AND [MSL].[LogGuideNumber] = [dev].[Guide_Number]
+									  AND [MSL].[RowStatus] = 1
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),

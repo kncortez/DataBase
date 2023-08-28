@@ -15,12 +15,16 @@ BEGIN
         SELECT inv_pk_id InvoiceId
         FROM invoiceHeader WITH (NOLOCK)
         WHERE 
-		--(inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
-        --OR inv_documentRecieved ='TimeOut' 
+		--(
+		--inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
+        --OR 
+		inv_documentRecieved ='TimeOut' 
 		--)
-		  --AND inv_dateRegister >='2023-06-01 00:00:00'
+		  AND inv_dateRegister >='2023-06-01 00:00:00'
+		  AND inv_dateRegister <='2023-06-30 23:59:59'
+		  AND inv_pk_id = 2246548
 		  --AND 
-		  inv_pk_id = 2224103
+		 -- inv_pk_id = 2224103
 		   --   AND CAST(inv_dateRegister AS DATE) >= CAST(GETDATE() - @DaysFrom AS DATE);
 
     END TRY
