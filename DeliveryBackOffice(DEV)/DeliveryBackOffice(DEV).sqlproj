@@ -1622,10 +1622,7 @@
     <Build Include="dbo\Tables\CatProductAttribute.sql" />
     <Build Include="dbo\Tables\CatProduct.sql" />
     <Build Include="dbo\Tables\CatConfigPoints.sql" />
-    <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent_1.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
-    <Build Include="dbo\Stored Procedures\spHW_GetMembershipTransactionHistory_1.sql" />
-    <Build Include="dbo\Stored Procedures\spHW_GetMembershipSubscriptionDashboardData_1.sql" />
     <Build Include="dbo\Stored Procedures\GetInternalLoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetImagePromotional.sql" />
     <Build Include="dbo\Stored Procedures\GetCategoryProduct.sql" />
