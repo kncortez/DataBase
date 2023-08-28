@@ -7,8 +7,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_delivery_proof]
     -- Add the parameters for the stored procedure here
-    @GuideSerie NVARCHAR(2),
-    @GuideNumber INT
+    @GuideSerie NVARCHAR(2)
+  , @GuideNumber INT
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -16,22 +16,21 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-    SELECT TOP 1
-           [ID],
-           [Date_Photo],
-           (
+    SELECT [ID]
+         , [Date_Photo]
+         , (
                SELECT CAST('' AS XML).value('xs:base64Binary(sql:column("[Proof_Dry]"))', 'varchar(max)')
-           ) AS Image_Dry,
-           (
+           )             AS Image_Dry
+         , (
                SELECT CAST('' AS XML).value('xs:base64Binary(sql:column("[Proof_Cold]"))', 'varchar(max)')
-           ) AS Image_Cold,
-           (
+           )             AS Image_Cold
+         , (
                SELECT CAST('' AS XML).value('xs:base64Binary(sql:column("[Proof_Incident]"))', 'varchar(max)')
-           ) AS Image_Incident,
-           Path_Dry AS Path_Dry,
-           Path_Cold AS Path_Cold,
-           Path_Incident AS Path_Incident, 
-		   PathSignature AS Path_Signature
+           )             AS Image_Incident
+         , Path_Dry      AS Path_Dry
+         , Path_Cold     AS Path_Cold
+         , Path_Incident AS Path_Incident
+         , PathSignature AS Path_Signature
     FROM [DeliveryBackOffice].[dbo].[DeliveryProof] WITH (NOLOCK)
     WHERE Guide_Serie = @GuideSerie
           AND Guide_Number = @GuideNumber

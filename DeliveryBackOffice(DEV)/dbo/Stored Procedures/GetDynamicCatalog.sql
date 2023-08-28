@@ -651,7 +651,7 @@ BEGIN
 								ON Acc.IdCustomer = Mmbrshp.CustomerId 
 								AND acc.AccIdAccount = Mmbrshp.AccountId
 								AND Mmbrshp.RowStatus = 1
-								AND Mmbrshp.ExpirationDate >= GETDATE()
+								AND Convert(NVARCHAR(10), Mmbrshp.ExpirationDate,20) >= Convert(NVARCHAR(10),GETDATE(),20)
 								WHERE Acc.AccIdAccount = @IdAccount
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
