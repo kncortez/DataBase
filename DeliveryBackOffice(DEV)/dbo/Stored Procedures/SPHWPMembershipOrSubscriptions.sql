@@ -159,10 +159,12 @@ BEGIN
         (
             SELECT STUFF(
                             (
+							
                                 SELECT DISTINCT
                                        ',{' + '"Data" : [{' + '"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR),
                                        +'"' + ',' + '"Name": "' + CS.SubscriptionName,
                                        +'"' + ',' + '"Icon": "' + CS.Icon,
+									   +'"' + ',' + '"Order": "' + CAST(COALESCE(CS.SubscriptionWeight,0) AS VARCHAR),
                                        +'"' + ',' + '"Attibutos": ['
                                        +
                                        (
@@ -263,7 +265,8 @@ BEGIN
                                           ISNULL(@AccountId, 0) = 0
                                              ) -- otros usuarios
                                       )
-                                --ORDER BY CS.IdCatSubscription Desc
+								
+                                --ORDER BY Tbl.SubscriptionWeight Desc
 
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
