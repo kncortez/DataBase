@@ -163,6 +163,7 @@ BEGIN
                                        ',{' + '"Data" : [{' + '"Id":   "' + CAST(CS.IdCatSubscription AS VARCHAR),
                                        +'"' + ',' + '"Name": "' + CS.SubscriptionName,
                                        +'"' + ',' + '"Icon": "' + CS.Icon,
+                                       +'"' + ',' + '"Order": "' + CAST(COALESCE(CS.SubscriptionWeight,0) AS VARCHAR),
                                        +'"' + ',' + '"Attibutos": ['
                                        +
                                        (
