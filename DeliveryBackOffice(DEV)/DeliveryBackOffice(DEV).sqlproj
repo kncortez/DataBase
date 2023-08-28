@@ -1168,7 +1168,7 @@
     <Build Include="dbo\Stored Procedures\TestTSE.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetPaymentGuide.sql" />
     <Build Include="dbo\Stored Procedures\SupportSetConfigurationExcGuides.sql" />
-    <Build Include="dbo\Stored Procedures\SupportSetBlockInternalUser.sql" />    
+    <Build Include="dbo\Stored Procedures\SupportSetBlockInternalUser.sql" />
     <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
     <Build Include="dbo\Stored Procedures\SupportGenerateNewCoupon.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateSentry.sql" />
@@ -1502,8 +1502,6 @@
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
-
-    
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1546,11 +1544,11 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
-    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />  
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
     <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
     <Build Include="dbo\Tables\CatTypeSubscription.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
-  
+    <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
