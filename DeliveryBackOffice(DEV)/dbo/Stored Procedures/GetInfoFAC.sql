@@ -3,6 +3,11 @@
 -- Updated date:<2022-05-26>
 -- Description:	< Se adiciona generación y manejo de cupones posterior a la transaccion de una tarjeta de credito/debito >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Updated date:<2023-08-10>
+-- Description:	<Optimización de SP, en update de actualziación en tabla dbo.Cost >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInfoFAC] 
 	@Type VARCHAR(100) = 'GetResponseFAC',
 	@OrderNumber VARCHAR(100) = NULL, --Guide
@@ -737,14 +742,18 @@ BEGIN
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								(
-									(
+								Co.RowStatus = 1
+								AND
+								--LEY DE MORGAN
+								--A + B = (NOT(A) * NOT(B))								
+								NOT(
+									NOT (
 										Co.GuideSerie = ISNULL(AG.GuideSerie,'FD')
 										AND
 										Co.GuideNumber = AG.GuideNumber
 									)
-									OR
-									(
+									AND
+									NOT(
 										Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie,'FD'), AG.GuideNumber)
 										AND
 										Co.GuideSerie IS NULL
@@ -752,8 +761,8 @@ BEGIN
 										Co.GuideNumber IS NULL
 									)
 								)
-								AND
-								Co.RowStatus = 1
+								
+								
 							ORDER BY
 								Co.DateCreated DESC
 						) CoAux
@@ -780,14 +789,18 @@ BEGIN
 							FROM
 								[DeliveryBackOffice].[dbo].[Cost] Co WITH(NOLOCK)
 							WHERE
-								(
-									(
+								Co.RowStatus = 1
+								AND
+								--LEY DE MORGAN
+								--A + B = (NOT(A) * NOT(B))								
+								NOT(
+									NOT(
 										Co.GuideSerie = ISNULL(AG.GuideSerie,'FD')
 										AND
 										Co.GuideNumber = AG.GuideNumber
 									)
-									OR
-									(
+									AND
+									NOT(
 										Co.ProductNumber = CONCAT(ISNULL(AG.GuideSerie,'FD'), AG.GuideNumber)
 										AND
 										Co.GuideSerie IS NULL
@@ -795,8 +808,8 @@ BEGIN
 										Co.GuideNumber IS NULL
 									)
 								)
-								AND
-								Co.RowStatus = 1
+								
+								
 							ORDER BY
 								Co.DateCreated DESC
 						) CoAux

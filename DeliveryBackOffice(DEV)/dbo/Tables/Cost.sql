@@ -31,6 +31,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_number_cost]
     ON [dbo].[Cost]([IdProduct] ASC, [ProductNumber] ASC);
@@ -73,4 +75,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_RowStatus_Included]
     ON [dbo].[Cost]([RowStatus] ASC)
     INCLUDE([IdCost], [ProductNumber], [DateCreated], [GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated]
+    ON [dbo].[Cost]([RowStatus] ASC, [DateCreated] DESC)
+    INCLUDE([IdCost], [ProductNumber], [GuideSerie], [GuideNumber]);
 

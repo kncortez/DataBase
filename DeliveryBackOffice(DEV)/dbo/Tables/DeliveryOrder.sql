@@ -135,6 +135,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -363,4 +365,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica el t
 GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Sender_Mail]
     ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_MyShippments]
+    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC, [Sender_ID] ASC, [OriginSenderId] ASC, [DateCreated] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number], [Pieces_Dry], [Pieces_Cold], [Ticket_Number], [Receiver_FirstName], [Receiver_LastName], [Receiver_Phone], [IsCollect], [PriceShippment], [Collect_OnDelivery], [TypeService]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
+    ON [dbo].[DeliveryOrder]([User_Contact] ASC)
+    INCLUDE([ID_ContactIncident], [Contact_Confirmed]);
 
