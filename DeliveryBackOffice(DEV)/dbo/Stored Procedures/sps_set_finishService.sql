@@ -1086,7 +1086,8 @@ BEGIN
 													SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
 																			FROM	[dbo].[PointsByServiceLog] PSL
 																			WHERE	[PSL].[GuideSerie] = @AuxGuideSerie
-																				AND [PSL].[GuideNumber] = @AuxGuideNumber), 0);
+																				AND [PSL].[GuideNumber] = @AuxGuideNumber
+                                                                                AND [PSL].[GuidePrice]>0), 0);
 					
 													UPDATE	[dbo].[Membership] 
 															SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
