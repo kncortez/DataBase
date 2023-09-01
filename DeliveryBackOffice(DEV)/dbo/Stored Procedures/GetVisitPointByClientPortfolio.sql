@@ -125,7 +125,7 @@ BEGIN
                                    + '"Status":"' + ISNULL(CONVERT(VARCHAR, vcp.RowStatus), ' ') + '",' + '"Token":"'
                                    + ISNULL(CONVERT(VARCHAR, vcp.TokenCreated), ' ') + '",' + '"TaxId":"'
                                    + ISNULL(vcp.TaxId, ' ') + '",' + '"ContactName":"'
-								   + ISNULL(CONVERT(VARCHAR,vcp.IsBusiness),0) + '",' + '"IsBusiness":"'
+                                   + '"IsBusiness":"'+ ISNULL(CONVERT(VARCHAR,vcp.IsBusiness),0) + '",'
                                    + dbo.fnt_String_Escape(REPLACE(ISNULL(vcp.ContactName, ' '), '"', ''), 'json') + '",'
                                    + '"Billing":['
                                    + ISNULL(
