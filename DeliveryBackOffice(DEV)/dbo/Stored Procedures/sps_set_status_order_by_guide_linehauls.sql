@@ -452,6 +452,13 @@ BEGIN
             --FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
 
             -- Actualizar registro de guía a último estado 
+            --Validar que la guía no este en estado final
+			IF (NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrderDetail] 
+			                          WHERE Guide_Serie = @Guide_Serie AND 
+			                                Guide_Number=@GuideNumber AND StatusOrderId IN(5,22,25)
+									  ORDER BY DateCreated DESC
+											))
+              BEGIN                              
             UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
             SET StatusOrderId = 19,
                 IsDry = IIF(@IsDry = 1, 1, 0)
@@ -469,7 +476,7 @@ BEGIN
                   AND Guide_Number = @GuideNumber;
 
             SET @RowUpdated = @@rowcount;
-
+END
             IF (@RowUpdated > 0)
             BEGIN
 

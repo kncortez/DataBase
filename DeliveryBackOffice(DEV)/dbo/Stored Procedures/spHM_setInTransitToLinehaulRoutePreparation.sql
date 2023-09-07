@@ -250,6 +250,17 @@ BEGIN
 		WHERE	[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 			AND [RowStatus] = 1;
 
+    --Validar que guía no esta en estado final
+	
+		
+			IF (NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrderDetail]  DOD
+			                               INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+											ON [DOD].[Guide_Serie] = [LRPCD].[GuideSerie]
+											   AND [DOD].[Guide_Number] = [LRPCD].[GuideNumber]
+										WHERE  [DOD].[StatusOrderId] IN(5,22,25)
+									  
+											))
+           BEGIN
 		-- UPDATE STATUS IN DELIVERY ORDER
 		UPDATE		[DO]
 		SET			[DO].[StatusOrderId] = @STATUS_ORDER_ID
@@ -315,7 +326,7 @@ BEGIN
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 		WHERE		[LRPCDP].[RowStatus] = 1;
-
+	END
 		SELECT	[LRP].[IdLinehaulRoutePreparation],
 				[LRP].[StationDispatchedId],
 				[LRP].[CatLinehaulStatusId],
