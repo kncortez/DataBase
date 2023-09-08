@@ -60,6 +60,14 @@ CREATE NONCLUSTERED INDEX [idx_dti_fk_header_dti_fk_orderSerie_dti_fk_orderNumbe
     ON [dbo].[invoiceDetail]([dti_fk_orderSerie],[dti_fk_orderNumber]) INCLUDE ([dti_fk_header]);
     
 GO
+CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idmembership]
+    ON [dbo].[invoiceDetail](MembershipId)
+	include (dti_fk_header)
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idsubscription]
+    ON [dbo].[invoiceDetail](SubscriptionId)
+	include (dti_fk_header)
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de suscripción facturada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'SubscriptionId';
 
 
