@@ -254,7 +254,7 @@ BEGIN
     IF (@CustomerType IN ( 2, 3 )) --Validación si Usuario es Individual o Express center
     BEGIN
 
-        IF (EXISTS
+		IF (EXISTS
         (
             SELECT TOP 1
                    1
@@ -264,19 +264,46 @@ BEGIN
                   AND VPC.DescriptionOfClient LIKE 'FD%EXC%' COLLATE Latin1_General_CI_AI
         )
            )
+
+
         BEGIN
+			IF (EXISTS
+			(
+				SELECT TOP 1
+					   1
+				FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] AR WITH (NOLOCK)
+				WHERE AR.VisitPointClientId = @CodeOfReferenceSource
+					  AND AR.RowStatus = 1
+					  
+			)
+			   )
+			    BEGIN
 
-            SELECT @RateId = ARC.RateId
-            FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
-            WHERE ARC.CustomerId = @IdCustomer
-                  AND ARC.RowStatus = 1
-                  AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+						SELECT @RateId = ARC.RateId
+						FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
+						WHERE ARC.VisitPointClientId = @CodeOfReferenceSource
+							  AND ARC.RowStatus = 1
+							  --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
-            SET @IdRate = ISNULL(@RateId, @IdRate);
+						SET @IdRate = ISNULL(@RateId, @IdRate);
+				END
+			ELSE 
+			    BEGIN
+						SELECT @RateId = ARC.RateId
+						FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
+						WHERE ARC.CustomerId = @IdCustomer
+							  AND ARC.VisitPointClientId IS NULL
+							  AND ARC.RowStatus = 1
+							  --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+
+						SET @IdRate = ISNULL(@RateId, @IdRate);
+				END
+			 
 
 
 
         END;
+       
     END;
 
     IF (@CalculateMembership = 1)
