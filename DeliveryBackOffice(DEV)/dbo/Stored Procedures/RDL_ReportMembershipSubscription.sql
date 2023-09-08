@@ -41,6 +41,7 @@ BEGIN
 				[Donde se paga]
 				,IIF(R2.[Authorization] IS NOT NULL,R2.[Authorization],R2.TransactionOrder) [Order]
 				,R2.PaymentImageURL
+				,A1.RowStatus
 				--,A1.TokenCreated
 				FROM DeliveryBackOffice.dbo.Membership A1 WITH(NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.CatMembership A2 WITH(NOLOCK) ON A2.IdCatMembership = A1.CatMembershipId
@@ -71,8 +72,8 @@ BEGIN
 				,R2.PaymentImageURL FROM DeliveryBackOffice.dbo.MembershipPaymentLog R2 WITH(NOLOCK)
 				 WHERE R2.MembershipId = A1.IdMembership
 				)R2
-				WHERE A1.RowStatus = 1
-				AND A1.DateCreated >= @StartDate--'2023-07-01 00:00:00'
+				WHERE --A1.RowStatus = 1
+				A1.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A1.DateCreated <= @EndDate--'2023-07-31 23:59:59'
 
 
@@ -99,6 +100,7 @@ BEGIN
 				,IIF(R1.[Authorization] IS NOT NULL,R1.[Authorization],R1.TransactionOrder) [Order]
 				--,R1.[Authorization]
 				,R1.PaymentImageURL
+				,A3.RowStatus
 				--,A3.TokenCreated
 				FROM DeliveryBackOffice.dbo.Subscription A3 WITH(NOLOCK)
 				INNER JOIN DeliveryBackOffice.dbo.CatSubscription A4 WITH(NOLOCK) ON A3.CatSubscriptionId = A4.IdCatSubscription
@@ -132,8 +134,8 @@ BEGIN
 				 WHERE R1.SubscriptionId = A3.IdSubscription
 
 				)R1
-				WHERE A3.RowStatus = 1
-				AND A3.DateCreated >= @StartDate--'2023-07-01 00:00:00'
+				WHERE --A3.RowStatus = 1
+				A3.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A3.DateCreated <= @EndDate--'2023-07-31 23:59:59'
 
 END
