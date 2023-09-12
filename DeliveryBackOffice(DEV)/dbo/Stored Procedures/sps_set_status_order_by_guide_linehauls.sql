@@ -42,6 +42,10 @@ BEGIN
     DECLARE @ReceiverIdTownship INT = 0;
 	DECLARE @GuideStatus INT;
 	DECLARE @TerminalCheckpointType INT;
+    DECLARE @STATUSDELIVERY AS INT =(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado'); ---- ESTADO FINAL  Entregado
+	DECLARE @STATUSDELIVERYEXC AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado En Express Center'); --- ESTADO FINAL Entregado En Express Center
+	DECLARE @STATUSPAIDCOD AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='COD pagado');  ---ESTADO FINAL COD pagado
+	
 	SET @TerminalCheckpointType =
 	(
 		SELECT 
@@ -455,7 +459,7 @@ BEGIN
             --Validar que la guía no este en estado final
 			IF (NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrderDetail] 
 			                          WHERE Guide_Serie = @Guide_Serie AND 
-			                                Guide_Number=@GuideNumber AND StatusOrderId IN(5,22,25)
+			                                Guide_Number=@GuideNumber AND StatusOrderId IN(@STATUSDELIVERY,@STATUSDELIVERYEXC,@STATUSPAIDCOD)
 									  ORDER BY DateCreated DESC
 											))
               BEGIN                              

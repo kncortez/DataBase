@@ -36,6 +36,10 @@ BEGIN
 	DECLARE @EXISTING_LRP_TRANSIT AS INT;		-- Linehaul Route Preparation
 	DECLARE @AUX_VEHICLE_COUNT AS INT;			-- CatVehicle
 	DECLARE @AUX_VEHICLE_KMS AS INT;			-- CatVehicle
+	DECLARE @STATUSDELIVERY AS INT =(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado'); ---- ESTADO FINAL  Entregado
+	DECLARE @STATUSDELIVERYEXC AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado En Express Center'); --- ESTADO FINAL Entregado En Express Center
+	DECLARE @STATUSPAIDCOD AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='COD pagado');;  ---ESTADO FINAL COD pagado
+
 
 	SET @STATUS_GENERATED = (SELECT [CLS].[IdCatLinehaulStatus]
 							FROM	[dbo].[CatLinehaulStatus] CLS
@@ -257,7 +261,7 @@ BEGIN
 			                               INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 											ON [DOD].[Guide_Serie] = [LRPCD].[GuideSerie]
 											   AND [DOD].[Guide_Number] = [LRPCD].[GuideNumber]
-										WHERE  [DOD].[StatusOrderId] IN(5,22,25)
+										WHERE  [DOD].[StatusOrderId] IN(@STATUSDELIVERY,@STATUSDELIVERYEXC,@STATUSPAIDCOD)
 									  
 											))
            BEGIN
