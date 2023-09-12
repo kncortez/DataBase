@@ -14,9 +14,9 @@
 -- Description:	<Ordenar suscripciones de la mas antigua a la mas nueva>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetMembershipSubscriptionDashboardData]
-	@AccountId AS INT,
-	@DateStart AS DATETIME,
-	@DateEnd AS DATETIME
+    @AccountId AS INT
+  , @DateStart AS DATETIME
+  , @DateEnd AS DATETIME
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -259,3 +259,4 @@ BEGIN
           AND ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > 0
     ORDER BY [S].[IdSubscription] ASC;
 END;
+

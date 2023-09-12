@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
@@ -16,7 +15,7 @@
 -- Description:	<Validar que se envíaron los campos  @UseMembership y @TypeSubscriptionId, buscarlos em el log para aplciar descuento que aplique >
 -- =============================================
 
-CREATE PROCEDURE [dbo].[spws_revalue_guide]
+CREATE PROCEDURE [dbo].[spws_revalue_guide_original]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
   , @CodeApp VARCHAR(50) = ''
@@ -585,6 +584,8 @@ BEGIN
             END;
             ELSE
             BEGIN
+			
+
                 SELECT TOP 1
                        @ServiceValueSubscription = scr.DiscountValue
                            --= IIF(@ServiceAppliedCount <= sc.SubscriptionMaxServiceFixedValue,
@@ -593,17 +594,22 @@ BEGIN
                 FROM Subscription sc
 				INNER JOIN  SubscriptionDiscountRange scr
 				ON sc.IdSubscription = scr.SubscriptionId
+				AND scr.RowStatus = 1 --BNHL
                 WHERE sc.IdSubscription = @SubscriptionId
 				      And sc.RowStatus = 1
 					  And sc.CatTypeSubscriptionId = @TypeSubscriptionId
 					  AND @DateCreated <= sc.ExpirationDate
-
+				
+				PRINT 'BIDCAR1'
+				PRINT @ServiceValueSubscription
                 --Si es tarifa fija
                 IF @ServiceValueSubscription >= 0
                 BEGIN
 				DECLARE @NameTypeSubscrition2 VARCHAR(50);
 					SET @NameTypeSubscrition2 =(SELECT CatTypeSubscriptionName FROM CatTypeSubscription WHERE IdCatTypeSubscription = @TypeSubscriptionId)
-                    SET @DiscountMembership = @PriceShippment*(@ServiceValueSubscription/100)--@PriceShippment - @ServiceValueSubscription;
+                    PRINT 'BIDCAR2'
+					PRINT @NameTypeSubscrition2
+					SET @DiscountMembership = @PriceShippment*(@ServiceValueSubscription/100)--@PriceShippment - @ServiceValueSubscription;
 						IF(@NameTypeSubscrition2 = 'Porcentaje')
 							BEGIN
 							SET @NewPriceShippment = @PriceShippment-(@PriceShippment*(@ServiceValueSubscription/100));
@@ -613,7 +619,9 @@ BEGIN
 							SET @NewPriceShippment = @ServiceValueSubscription;
 							END
 					 --SET @NewPriceShippment = @ServiceValueSubscription;
-                   
+                   PRINT 'BIDCAR3'
+					PRINT @NewPriceShippment
+
                     IF (@ServiceValueSubscription = 0)
                     BEGIN
                         SET @PriceWithCreditCard = 1;
@@ -621,6 +629,8 @@ BEGIN
                 END;
                 ELSE
                 BEGIN
+				PRINT 'BIDCAR2'
+				
                     --Se busca por rango de servicios
                     SELECT TOP 1
                            @DiscountValue = DiscountValue
@@ -641,6 +651,9 @@ BEGIN
                           )
                           AND sdr.RowStatus = 1
                     ORDER BY sdr.DateCreated DESC;
+
+					PRINT 'HOLA2'
+				PRINT @DiscountValue
 
                     IF @DiscountValue IS NOT NULL
                     BEGIN
@@ -667,9 +680,11 @@ BEGIN
                     END;
                 END;
             END;
-
+			PRINT 'bidcar4'
+			PRINT @DiscountMembership
             IF @DiscountMembership > 0
             BEGIN
+			
                 SET @DiscountMembership = @DiscountMembership * -1;
                 UPDATE tr
                 SET Discount = @DiscountMembership
@@ -745,6 +760,7 @@ BEGIN
 										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
 									INNER JOIN SubscriptionDiscountRange sdr 
 									  ON sc.IdSubscription = sdr.SubscriptionId
+									  AND SDR.RowStatus = 1 --BNHL
 								WHERE sc.CustomerId = @IdCustomer
 									  AND @DateCreated <= sc.ExpirationDate
 									  AND sc.RowStatus = 1
@@ -767,6 +783,7 @@ BEGIN
 										ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
 									INNER JOIN SubscriptionDiscountRange sdr 
 									    ON sc.IdSubscription = sdr.SubscriptionId
+										AND SDR.RowStatus = 1 --BNHL
 								WHERE sc.CustomerId = @IdCustomer
 									  AND @DateCreated <= sc.ExpirationDate
 									  AND sc.RowStatus = 1
