@@ -1549,13 +1549,12 @@
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
     <Build Include="dbo\Stored Procedures\get_minCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
-    <Build Include="dbo\Functions\fn_get_tse_status_runoff_1.sql" />
-    <Build Include="dbo\Functions\fn_get_cv_status_runoff_1.sql" />
+    <Build Include="dbo\Functions\fn_get_tse_status_runoff.sql" />
     <Build Include="dbo\Stored Procedures\SupportCancelGuideClubForza.sql" />
     <Build Include="dbo\Stored Procedures\SupportActivateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spws_test.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_original.sql" />
-    <Build Include="dbo\Stored Procedures\spg_TemporalSupportCreateSubscription_1.sql" />
+    <Build Include="dbo\Stored Procedures\spg_TemporalSupportCreateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\RDL_ReportMembershipSubscription.sql" />
   </ItemGroup>
   <ItemGroup>
