@@ -220,6 +220,7 @@ BEGIN
               , [RowStatus]
               , [TokenCreated]
               , [DateCreated]
+              , [CatTypeSubscriptionId]
             )
             SELECT [CS].[IdCatSubscription]                             -- CatSubscriptionId
                  , @MembershipId                                        -- MembershpiId
@@ -237,6 +238,7 @@ BEGIN
                  , 1                                                    -- RowStatus
                  , @Token                                               -- TokenCreated
                  , SYSDATETIME()                                        -- DateCreated
+                  , CS.CatTypeSubscriptionId                             --CatTypeSubscriptionId
             FROM [dbo].[CatSubscription] CS WITH (NOLOCK)
             WHERE [CS].RowStatus = 1
                   AND [CS].[IdCatSubscription] = @CatSubscriptionId;

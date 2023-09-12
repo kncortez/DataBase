@@ -7,23 +7,15 @@ CREATE PROCEDURE [dbo].[SetServiceRequest]
 AS
 BEGIN
 	
-	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20), IsExists BIT DEFAULT 0)
+	DECLARE @ParcelExists AS TABLE (RowNumber INT, Parcel NVARCHAR(20))
 
-	--Validaciones de artículos
+	--CÓDIGOS DE ARTÍCULOS
 	IF @IsArticle = 1
 	BEGIN 
 
-		IF EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
+		IF NOT EXISTS(SELECT 1 FROM @TblDeliveryOrders WHERE ParcelCode IS NULL OR ParcelCode = '')
 		BEGIN
-			
-			SELECT
-				-1 AS 'StatusCode'
-			   ,'Faltan datos en la columna Artículos, por favor revise todo el archivo y envie de nuevo la solicitud.' AS 'Description'
-
-			RETURN
-		END
-
-		INSERT INTO @ParcelExists (RowNumber, Parcel)
+			INSERT INTO @ParcelExists (RowNumber, Parcel)
 			SELECT
 				ROW_NUMBER() OVER (ORDER BY (SELECT
 						0)
@@ -37,96 +29,7 @@ BEGIN
 					,
 					1, 2, ''))
 			, ',')
-		
-		DECLARE @RateId INT
-
-		SELECT TOP 1
-			@RateId = rbc.RbcIdRate
-		FROM RatebyCustomer rbc WITH (NOLOCK)
-		INNER JOIN @TblServiceRequest tsr
-			ON rbc.RbcIdCustomer = tsr.CustomerID
-		LEFT JOIN @TblDeliveryOrders tdo
-			ON rbc.RbcCodeOfReference = tdo.Sender_ID
-				OR rbc.RbcCodeOfReference IS NULL
-		WHERE rbc.RbcRowStatus = 1
-		ORDER BY rbc.RbcCodeOfReference DESC
-
-		UPDATE pe
-		SET IsExists = 1
-		FROM @ParcelExists pe
-		INNER JOIN ArticleByCustomer abc WITH (NOLOCK)
-			ON abc.Code = pe.Parcel
-		INNER JOIN RateData rd WITH (NOLOCK)
-			ON abc.AbcId = rd.ArticleId
-			AND rd.RowStatus = 1
-			AND rd.RateId = @RateId
-
-		IF EXISTS(SELECT 1 FROM @ParcelExists WHERE IsExists = 0)
-		BEGIN
-			
-			SELECT
-				-1 AS 'StatusCode'
-			   ,CONCAT('El artículo ', (SELECT TOP 1
-						Parcel
-					FROM @ParcelExists
-					WHERE IsExists = 0)
-				, ' no existe o no está en la negociación, por favor revise todo el archivo y envie de nuevo la solicitud.') AS 'Description'
-			RETURN
 		END
-	END
-
-	--Validación de municipio y departamento
-	IF EXISTS (SELECT
-				1
-			FROM @TblDeliveryOrders tdo
-			LEFT JOIN Township t WITH(NOLOCK)
-				ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
-				AND t.TownshipStatus = 1
-			LEFT JOIN Province p WITH(NOLOCK)
-				ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
-				AND p.ProvinceStatus = 1
-				AND t.IdProvince = p.IdProvince
-			OUTER APPLY (SELECT
-					t.IdTownship
-				FROM Township t WITH(NOLOCK)
-				INNER JOIN Province p WITH(NOLOCK)
-					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
-					AND p.ProvinceStatus = 1
-					AND t.IdProvince = p.IdProvince
-				WHERE RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
-				AND t.TownshipStatus = 1) b
-			WHERE (t.IdTownship IS NULL
-			OR p.IdProvince IS NULL)
-			AND b.IdTownship IS NULL)
-		BEGIN
-
-		SELECT
-			-1 AS 'StatusCode'
-		   ,CONCAT('El municipio ', (SELECT TOP 1
-					CONCAT(' (', tdo.Receiver_Town, ')')
-				FROM @TblDeliveryOrders tdo
-				LEFT JOIN Township t WITH(NOLOCK)
-					ON RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
-					AND t.TownshipStatus = 1
-				LEFT JOIN Province p WITH(NOLOCK)
-					ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
-					AND p.ProvinceStatus = 1
-					AND t.IdProvince = p.IdProvince
-				OUTER APPLY (SELECT
-						t.IdTownship
-					FROM Township t WITH(NOLOCK)
-					INNER JOIN Province p WITH(NOLOCK)
-						ON RTRIM(LTRIM(tdo.Receiver_Department)) COLLATE Latin1_general_CI_AI = p.ProvinceName COLLATE Latin1_general_CI_AI
-						AND p.ProvinceStatus = 1
-						AND t.IdProvince = p.IdProvince
-					WHERE RTRIM(LTRIM(tdo.Receiver_Town)) COLLATE Latin1_general_CI_AI = t.TownshipName COLLATE Latin1_general_CI_AI
-					AND t.TownshipStatus = 1) b
-				WHERE (t.IdTownship IS NULL
-				OR p.IdProvince IS NULL)
-				AND b.IdTownship IS NULL)
-			, ' no se ha encontrado o no es un municipio válido.') AS 'Description'
-
-		RETURN
 	END
 
     DECLARE @IdTransaction BIGINT = NULL;

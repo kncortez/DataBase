@@ -19,6 +19,7 @@
 ,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
 ,@UseMembership bit=0
+,@TypeSubscriptionId AS INT= 0
 AS 
 BEGIN
 
@@ -115,7 +116,8 @@ BEGIN
 					@Token = 'sps_DeliveryOrderDetailIds',
 					@IsReturn = 'false',
 					@ParIsCreditCard = @IsCreditCardPayment,
-					@UseMembership = @UseMembership
+					@UseMembership = @UseMembership,
+					@TypeSubscriptionId = @TypeSubscriptionId
 	--END
 
 	select 1,

@@ -18,15 +18,25 @@ BEGIN
 		--(
 		--inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
         --OR 
-		inv_documentRecieved ='TimeOut' 
-		--)
-		  AND inv_dateRegister >='2023-06-01 00:00:00'
-		  AND inv_dateRegister <='2023-06-30 23:59:59'
-		  AND inv_pk_id = 2246548
+		--inv_documentRecieved ='TimeOut' 
+		----)
 		  --AND 
-		 -- inv_pk_id = 2224103
+		  --inv_dateRegister >='2023-08-01 00:00:00'
+		 --AND inv_dateRegister <='2023-07-31 23:59:59'
+		 --AND 
+		 
+		 --inv_certificationFEL IS null
+		  --AND 
+		  inv_pk_id IN (2410139
+,2421607
+,2436136
+,2453667
+,2481941
+,2513232)
+		  --AND 
+		 
 		   --   AND CAST(inv_dateRegister AS DATE) >= CAST(GETDATE() - @DaysFrom AS DATE);
-
+		
     END TRY
     BEGIN CATCH
 
