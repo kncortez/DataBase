@@ -80,13 +80,15 @@ BEGIN
         WHERE pg.[Notificated] = 0
               AND pg.BatchCODId IS NOT NULL
               AND btd.[AuthorizationNumber] IS NOT NULL
-              AND vpc.SaleChannelId NOT IN ( 3 )
+              AND vpc.SaleChannelId NOT IN ( 3 ) --no es portal
 			  AND 
 			  (LEN(COALESCE(cu.CODContactEmail,''))>0
 			  OR LEN(COALESCE(do.Sender_Mail,''))>0
 			  OR LEN(COALESCE(cu.RegexEmail,''))>0--quitar valores nulos
 			  )
 			  
+ AND do.IdCustomer <> 29328
+			  --NO INCLUIR A EXPRESS CENTER
 
 
 
