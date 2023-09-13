@@ -259,3 +259,4 @@ BEGIN
           AND ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > 0
     ORDER BY [S].[IdSubscription] ASC;
 END;
+
