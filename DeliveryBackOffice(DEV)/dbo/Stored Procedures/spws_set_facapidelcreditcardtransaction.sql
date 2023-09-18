@@ -59,6 +59,22 @@ BEGIN
         PromoId INT
     );
 
+	-- Variables para la asociación y activación de Membresías o suscripciones
+	DECLARE @IdTarjeta AS INT = NULL         -- puede ser null por ex c y por credito
+    DECLARE @TypeSalePackage AS NVARCHAR(50) -- membership or suscription
+    DECLARE @IdSalePackage AS INT            -- id membership or suscription
+    DECLARE @IdAcount AS BIGINT              ---- user
+    DECLARE @Vaucher AS NVARCHAR(50) = NULL  -- comprobante de factura pago con tarjeta
+    DECLARE @TypeOfInMoneyId INT             -- Tipo de pago
+    DECLARE @ModulId AS INT = NULL           --  pagina o form desde donde se hizo la operación 
+    DECLARE @SystemId AS INT                 --  1 y 2 web o 
+    DECLARE @Token AS NVARCHAR(50)
+    DECLARE @TaxId NVARCHAR(50) = 'CF'
+    DECLARE @FiscalAddress NVARCHAR(200) = 'Ciudad'
+    DECLARE @TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL'
+    DECLARE @InvoiceEmail NVARCHAR(50) = ''
+    DECLARE @IsAutoRenewable Bit = 0
+
     -- Variables adicionales de control de flujo
     DECLARE @CouponCreated BIT = 0;
     DECLARE @CouponIsValid BIT = 0;
@@ -404,6 +420,322 @@ BEGIN
 				AND 
 				CAST(@DateUpdated AS DATE) = CAST(DateCreated AS DATE);
 
+----- Asociar membresía o sucripción
+
+IF(@ReasonCode='00')
+BEGIN
+  SELECT Top 1 
+    @IdTarjeta = GetCardsCredit         
+  , @TypeSalePackage = TypeSalePackage  
+  , @IdSalePackage = IdSalePackage             
+  , @IdAcount = AccountId              
+  , @Vaucher =Vaucher
+  , @TypeOfInMoneyId = 2        
+  , @ModulId = 1          
+  , @SystemId = 1             
+  , @Token = TokenCreated
+  , @TaxId = TaxId
+  , @FiscalAddress =AddressTax
+  , @TaxName =  NameTax
+  , @InvoiceEmail  = InvoiceEmail
+  , @IsAutoRenewable  = GetRenovacionAutomatica 
+  FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
+
+      -- Variables estaticas "globales"
+    DECLARE @StartingStatus INT = (
+                                      SELECT TOP 1
+                                          CSPS.IdCatSalesPackageStatus
+                                      FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                                      WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                                  );
+
+    DECLARE @StatusSubcription INT = (
+                                         SELECT COUNT(IdSubscription)
+                                         FROM [DeliveryBackOffice].[dbo].[Subscription]
+                                         WHERE AccountId = @IdAcount
+                                               AND RowStatus = 1
+                                               AND CatSubscriptionId = @IdSalePackage
+                                     );
+
+    -- Variables de control de flujo
+    DECLARE @TransactionSuccess BIT = 0;
+    DECLARE @ActivationCode NVARCHAR(100) = N'';
+    DECLARE @ActiveMembershipId INT = 0;
+    DECLARE @StatusMembershipt INT = 0;
+    DECLARE @HasCredit BIT = 0;
+    DECLARE @AddedPointExpirationDate INT = 0;
+    DECLARE @Idcustumer AS INT;
+    DECLARE @JsonResponse NVARCHAR(MAX) = N'';
+
+    DECLARE @TacId INT = 0;
+
+    SET @TacId =
+    (
+        SELECT TOP 1
+            [TAC].[IdTAC]
+        FROM [dbo].[TermsAndConditions] TAC
+        WHERE [TAC].[Name] = 'Terms and conditions memberships and subscriptions'
+    );
+
+
+	  --- validar si cliente posee credito​
+    SELECT TOP 1
+           @CustomerType = ISNULL(Cu.IdCustomerType, 0)
+         , @HasCredit    = ISNULL(   (CASE
+                                          WHEN CCOP.ConditionOfPaymenAbbreviation LIKE '%CREDITO%' THEN
+                                              1
+                                          ELSE
+                                              0
+                                      END
+                                     )
+                                   , 0
+                                 ) ---custumerType es 1 para corporativos
+         , @Idcustumer   = Cu.IdCustomer
+    FROM [DeliveryBackOffice].[dbo].[Account]                        AC WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]              Cu WITH (NOLOCK)
+            ON AC.IdCustomer = Cu.IdCustomer
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatConditionOfPayment] CCOP WITH (NOLOCK)
+            ON Cu.ConditionOfPaymentID = CCOP.IdConditionOfPayment
+    WHERE AC.AccIdAccount = @IdAcount;
+
+
+
+	   --- Estado de membresia
+    SELECT TOP 1
+           @StatusMembershipt  = 1
+         , @ActiveMembershipId = IdMembership
+    FROM [DeliveryBackOffice].[dbo].[Membership]
+    WHERE AccountId = @IdAcount
+          AND RowStatus = 1;
+
+
+        IF (
+               @TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI
+               AND ISNULL(@StatusMembershipt, 0) < 1
+           )
+        BEGIN
+
+            PRINT 'INSERT MEMBRESIA';
+            DECLARE @AuxNewMembership AS TABLE (IdNewMembership INT);
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[Membership]
+            (
+                CatMembershipId
+              , CatMembershipStatusId
+              , MembershipCost
+              , CustomerId
+              , AccountId
+              , MembershipCode
+              , CustomerPaymentId
+              , IsAutoRenewable
+              , MembershipFixedValue
+              , MembershipMaxServiceFixedValue
+              , ActualServiceCount
+              , ExpirationDate
+              , RowStatus
+              , TokenCreated
+              , DateCreated
+              , TaxIdNumber
+              , InvoiceName
+              , InvoiceEmail
+              , FiscalAddress
+              , RenewalFixedDay
+              , AvailablePoints
+              , AccumulatedPoints
+              , PointsExpirationDate
+              , CatValueTypeId
+            )
+            OUTPUT inserted.IdMembership
+            INTO @AuxNewMembership
+            (
+                IdNewMembership
+            )
+            SELECT CM.IdCatMembership
+                 , @StartingStatus
+                 , CM.MembershipCost
+                 , IIF(@CustomerType = 2, NULL, @Idcustumer)
+                 , IIF(@CustomerType = 2, NULL, @IdAcount)
+                 , IIF(@CustomerType = 2, @ActivationCode, NULL) -- agregar columna en insert para codigo de membresia 
+                 , (CASE
+                        WHEN @CustomerType = 1
+                             AND @HasCredit = 1
+                             AND @IdTarjeta = 0
+                             AND @TypeOfInMoneyId = 8 THEN
+                            NULL
+                        WHEN @CustomerType = 2 THEN
+                            NULL
+                        ELSE
+                            @IdTarjeta
+                    END
+                   )                                             -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
+                 , @IsAutoRenewable
+                 , CM.MembershipFixedValue
+                 , CM.MembershipMaxServiceFixedValue
+                 , 0
+                 , DATEADD(DAY, CM.MembershipValidity, GETDATE())
+                 , 1
+                 , @Token
+                 , GETDATE()
+                 , @TaxId
+                 , @TaxName
+                 , @InvoiceEmail
+                 , @FiscalAddress
+                 , DAY(GETDATE())
+                 , 0
+                 , 0
+                 , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE()))
+                 , CDR.ValueTypeId
+            FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
+                    ON CM.IdCatMembership = CDR.CatMembershipId
+            WHERE CM.IdCatMembership = @IdSalePackage
+                  AND NOT EXISTS
+            (
+                SELECT TOP 1
+                    1
+                FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
+                WHERE M.CustomerId = @Idcustumer
+                      AND (M.AccountId = @IdAcount)
+                      AND M.RowStatus = 1
+            )
+
+
+			  IF (EXISTS (SELECT TOP 1 1 FROM @AuxNewMembership))
+            BEGIN
+                ----------Rango de descuento
+                INSERT INTO [DeliveryBackOffice].[dbo].[MembershipDiscountRange]
+                (
+                    MembershipId
+                  , ValueTypeId
+                  , DiscountValue
+                  , DiscountLowServiceRange
+                  , DiscountTopServiceRange
+                  , RowStatus
+                  , TokenCreated
+                  , DateCreated
+                )
+                SELECT ANM.IdNewMembership
+                     , CMDR.ValueTypeId
+                     , CMDR.DiscountValue
+                     , CMDR.DiscountLowServiceRange
+                     , CMDR.DiscountTopServiceRange
+                     , 1
+                     , @Token
+                     , GETDATE()
+                FROM [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CMDR WITH (NOLOCK)
+                    CROSS JOIN @AuxNewMembership                             ANM
+                WHERE CMDR.CatMembershipId = @IdSalePackage;
+
+                ---- Log de pago de membresia
+                INSERT INTO [DeliveryBackOffice].[dbo].[MembershipPaymentLog]
+                (
+                    MembershipId
+                  , TypeOfInOutOfMoneyId
+                  , [Authorization]
+                  , RowStatus
+                  , TokenCreated
+                  , DateCreated
+                )
+                SELECT ANM.IdNewMembership
+                     , @TypeOfInMoneyId
+                     , (CASE
+                            WHEN @CustomerType = 1
+                                 AND @HasCredit = 1
+                                 AND @IdTarjeta = 0
+                                 AND @TypeOfInMoneyId = 8 THEN
+                                'CREDIT'
+                            WHEN @CustomerType = 2
+                                 AND @TypeOfInMoneyId = 1 THEN
+                                'CASH'
+                            ELSE
+                                @Vaucher
+                        END
+                       )
+                     , 1
+                     , @Token
+                     , GETDATE()
+                FROM @AuxNewMembership ANM;
+
+         
+
+            END;
+
+
+
+			END
+
+  ELSE IF (
+                    @TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI
+                    AND (
+                            (ISNULL(@StatusMembershipt, 0) > 0)
+                            OR @CustomerType = 2
+                        )
+                )
+        BEGIN
+
+
+            DECLARE @AuxNewSubscriptions AS TABLE (IdNewSubscriptions INT);
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[Subscription]
+            (
+                MembershipId
+              , CatSubscriptionId
+              , CatSubscriptionStatusId
+              , SubscriptionCost
+              , CustomerId
+              , AccountId
+              , SubscriptionCode
+              , CustomerPaymentId
+              , IsAutoRenewable
+              , SubscriptionFixedValue
+              , SubscriptionMaxServiceFixedValue
+              , ActualServiceCount
+              , ExpirationDate
+              , RowStatus
+              , TokenCreated
+              , DateCreated
+              , RenewalFixedDay
+              , CatTypeSubscriptionId
+            )
+            OUTPUT inserted.IdSubscription
+            INTO @AuxNewSubscriptions
+            (
+                IdNewSubscriptions
+            )
+            SELECT IIF(@CustomerType = 2, NULL, @ActiveMembershipId)
+                 , CS.IdCatSubscription
+                 , @StartingStatus
+                 , CS.SubscriptionCost
+                 , IIF(@CustomerType = 2, NULL, @Idcustumer)
+                 , IIF(@CustomerType = 2, NULL, @IdAcount)
+                 , IIF(@CustomerType = 2, @ActivationCode, NULL) -- agregar columna en insert para codigo de membresia 
+                 , (CASE
+                        WHEN @CustomerType = 1
+                             AND @HasCredit = 1
+                             AND @IdTarjeta = 0
+                             AND @TypeOfInMoneyId = 8 THEN
+                            NULL
+                        WHEN @CustomerType = 2 THEN
+                            NULL
+                        ELSE
+                            @IdTarjeta
+                    END
+                   )                                             -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
+                 , 0
+                 , CS.SubscriptionFixedValue
+                 , CS.SubscriptionMaxServiceFixedValue
+                 , 0
+                 , DATEADD(DAY, CS.SubscriptionValidity, GETDATE())
+                 , 1
+                 , @Token
+                 , GETDATE()
+                 , DAY(GETDATE())
+                 , CS.CatTypeSubscriptionId
+            FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+            WHERE CS.IdCatSubscription = @IdSalePackage;
+			
+			END
+	END		
 			COMMIT TRANSACTION LogTransactionTypeTwo
 
 		END TRY
