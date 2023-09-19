@@ -1553,6 +1553,8 @@
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />  
     <Build Include="dbo\Stored Procedures\get_minCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />    
+    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />    
+    
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
