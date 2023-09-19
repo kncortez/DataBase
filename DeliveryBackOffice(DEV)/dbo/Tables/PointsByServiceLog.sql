@@ -21,6 +21,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la promoción de puntos adicionales aplicada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PointsByServiceLog', @level2type = N'COLUMN', @level2name = N'CatPointPromoId';
 
@@ -79,4 +81,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora de acreditación o canjeo de puntos forza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PointsByServiceLog';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_MembershipId_RowStatus]
+    ON [dbo].[PointsByServiceLog]([MembershipId] ASC, [RowStatus] ASC);
 
