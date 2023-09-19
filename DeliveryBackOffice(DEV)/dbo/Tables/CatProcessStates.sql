@@ -1,13 +1,3 @@
-USE [DeliveryBackOffice]
-GO
-
-/****** Object:  Table [dbo].[CatProcessStates]    Script Date: 19/09/2023 08:11:21 ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TABLE [dbo].[CatProcessStates](
 	[IdCatProcessStates] [int] IDENTITY(1,1) NOT NULL,
 	[NameStatus] [nvarchar](50) NOT NULL,
