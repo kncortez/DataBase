@@ -441,6 +441,13 @@ BEGIN
   , @IsAutoRenewable  = GetRenovacionAutomatica 
   FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
 
+ --- Insert tabla dbo.Cost
+
+  	    Insert Into [dbo].[Cost] (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+		values (1, @OrderNumber, 2, @Ammount, GETDATE(), @ModulId, 1, @Token,GETDATE(), null, null ) 
+
+
+
       -- Variables estaticas "globales"
     DECLARE @StartingStatus INT = (
                                       SELECT TOP 1
