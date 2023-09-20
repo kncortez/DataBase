@@ -1503,6 +1503,7 @@
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
+	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStates.sql" />
 
     
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
