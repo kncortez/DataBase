@@ -2,7 +2,6 @@ CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[IdRegistrationofTransactionProcessStates] [int] IDENTITY(1,1) NOT NULL,
 	[AccountId] [int] NOT NULL,
 	[CustomerId] [int] NOT NULL,
-	[CatSuscriptionId] [int] NULL,
 	[OrderNumber] [nvarchar](50) NOT NULL,
 	[NameTax] [nvarchar](250) NULL,
 	[AddressTax] [nchar](10) NULL,
@@ -10,7 +9,6 @@ CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[IsSuscription] [bit] NOT NULL,
 	[GetRenovacionAutomatica] [bit] NOT NULL,
 	[GetCardsCredit] [int] NOT NULL,
-	[IdCatProcessStates] [int] NOT NULL,
 	[TokenCreated] [nvarchar](50) NOT NULL,
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdate] [nvarchar](50) NULL,
@@ -35,7 +33,7 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'CustomerId'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de la suscripciòn que se esta adquiriendo puede ser vacio cuando se esta adquiriendo una memrbesìa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'CatSuscriptionId'
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'el numero de orden esta compuesto por las iniciales MP que indican membership payment seguid de ceros y el nùmero de la susripciòn o memrbesìa adquirida' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'OrderNumber'
@@ -59,7 +57,7 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'obtener últimos digitos de la tarjeta con la que se ejecuta el pago' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'GetCardsCredit'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de estado inical de una transacción en proceso' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'IdCatProcessStates'
+
 GO
 
 
