@@ -4,7 +4,7 @@ CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[CustomerId] [int] NOT NULL,
 	[OrderNumber] [nvarchar](50) NOT NULL,
 	[NameTax] [nvarchar](250) NULL,
-	[AddressTax] [nchar](10) NULL,
+	[AddressTax] [nvarchar](250) NULL,
 	[TaxId] [nvarchar](50) NULL,
 	[IsSuscription] [bit] NOT NULL,
 	[GetRenovacionAutomatica] [bit] NOT NULL,
