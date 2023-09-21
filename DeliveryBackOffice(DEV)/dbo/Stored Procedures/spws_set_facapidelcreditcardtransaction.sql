@@ -441,11 +441,6 @@ BEGIN
   , @IsAutoRenewable  = GetRenovacionAutomatica 
   FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
 
- --- Insert tabla dbo.Cost
-
-  	    Insert Into [dbo].[Cost] (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
-		values (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token,GETDATE(), null, null ) 
-
 
 
       -- Variables estaticas "globales"
@@ -663,10 +658,17 @@ BEGIN
                      , GETDATE()
                 FROM @AuxNewMembership ANM;
 
+
+                --- Insert tabla dbo.Cost
+
+  	        Insert Into [dbo].[Cost] (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+		    values (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token,GETDATE(), null, null ) 
+
          
 
             END;
 
+            
 
 
 			END
@@ -741,7 +743,17 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
             WHERE CS.IdCatSubscription = @IdSalePackage;
 			
-			END
+			
+            
+             --- Insert tabla dbo.Cost
+
+  	    Insert Into [dbo].[Cost] (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+		values (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token,GETDATE(), null, null ) 
+
+            
+            END
+
+
 	END		
 			COMMIT TRANSACTION LogTransactionTypeTwo
 
