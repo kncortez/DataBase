@@ -378,3 +378,7 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
     ON [dbo].[DeliveryOrder]([User_Contact] ASC)
     INCLUDE([ID_ContactIncident], [Contact_Confirmed]);
 
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
+		ON [dbo].[DeliveryOrder]( [SalePipeLineId] )
+		INCLUDE([Sender_Mail],[Sender_ID],[DCBA_ID],[IdCustomer]);
