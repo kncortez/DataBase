@@ -177,9 +177,12 @@ BEGIN
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
                     
-						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
+						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
 						INNER JOIN CatTypeIncidence cti 
-						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 						dod.Observations
 					ELSE
@@ -190,11 +193,11 @@ BEGIN
                --so.StatusOrderTrackingDescription AS [StageDescription],
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cti.DescriptionIncidence FROM DeliveryAttempt dla  
+						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
 						INNER JOIN CatTypeIncidence cti 
 						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-						dod.Observations
+						''--dod.Observations
 			   ELSE
                         so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) -- status order name
                 END
@@ -214,11 +217,11 @@ BEGIN
                (CASE
                     WHEN dod.StatusOrderId = 5 THEN
 					
-					 IIF((SELECT TOP 1 Path_Dry FROM DeliveryProof WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number) IS NOT NULL,
-					 (SELECT TOP 1 Path_Dry FROM DeliveryProof WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number),
-					 (SELECT TOP 1 Path_Cold FROM DeliveryProof WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number))
+					 IIF((SELECT TOP 1 Path_Dry FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number) IS NOT NULL,
+					 (SELECT TOP 1 Path_Dry FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number),
+					 (SELECT TOP 1 Path_Cold FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number))
 					 WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 Path_Incident FROM DeliveryProof WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
                         --ISNULL(
                         --          ISNULL(
                         --          (
@@ -303,7 +306,7 @@ BEGIN
                     WHEN dod.StatusOrderId = 5 THEN
                         @GuideDeliveryLatitude
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 LogLatitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Latitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
 
                     ELSE
                         ''
@@ -313,7 +316,7 @@ BEGIN
                     WHEN dod.StatusOrderId = 5 THEN
                         @GuideDeliveryLongitude
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 LogLongitude FROM DeliveryAttempt WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Longitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
 
                     ELSE
                         ''
@@ -324,22 +327,22 @@ BEGIN
                0 [PriceCOD],
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated OR dod.StatusOrderId = @StatusIncident THEN
-                        (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo WITH (NOLOCK)
-							INNER JOIN TokenLog tkl WITH (NOLOCK)
+                        (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
+							INNER JOIN TokenLog tkl
 							ON dyo.UserCreated = tkl.TknIdToken
-							INNER JOIN RegisterUser rtu WITH (NOLOCK)
+							INNER JOIN RegisterUser rtu
 							ON tkl.TknIdUser = rtu.UsrIdUser
-							INNER JOIN Person prs WITH (NOLOCK)
+							INNER JOIN Person prs
 							ON rtu.UsrIdPerson = prs.PerIdPerson
 							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
 							AND dyo.StatusOrderId = @StatusIncidentValidated)
 					WHEN dod.StatusOrderId = @StatusIncident THEN
-							 (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo WITH (NOLOCK)
-							INNER JOIN TokenLog tkl WITH (NOLOCK)
+							 (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
+							INNER JOIN TokenLog tkl
 							ON dyo.UserCreated = tkl.TknIdToken
-							INNER JOIN RegisterUser rtu WITH (NOLOCK)
+							INNER JOIN RegisterUser rtu
 							ON tkl.TknIdUser = rtu.UsrIdUser
-							INNER JOIN Person prs WITH (NOLOCK)
+							INNER JOIN Person prs
 							ON rtu.UsrIdPerson = prs.PerIdPerson
 							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
 							AND dyo.StatusOrderId = @StatusIncident)
