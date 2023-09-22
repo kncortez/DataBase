@@ -23,6 +23,8 @@
 AS 
 BEGIN
 
+	DECLARE @PriceGuide INT;
+
 	DECLARE @OriginGuideSystem INT = 
 	(
 		SELECT 
@@ -119,7 +121,8 @@ BEGIN
 					@UseMembership = @UseMembership,
 					@TypeSubscriptionId = @TypeSubscriptionId
 	--END
+	SET @PriceGuide = (SELECT TOP 1 PriceShippment FROM DeliveryOrder WITH (NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
 	select 1,
-		ISNULL(@GuideServiceType, 'STD') [GuideServiceType];
+		ISNULL(@GuideServiceType, 'STD') [GuideServiceType], @PriceGuide AS Price;
 END
