@@ -1504,7 +1504,6 @@
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_UpdateRegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
