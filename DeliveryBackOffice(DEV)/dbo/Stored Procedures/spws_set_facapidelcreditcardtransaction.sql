@@ -468,6 +468,7 @@ BEGIN
     DECLARE @AddedPointExpirationDate INT = 0;
     DECLARE @Idcustumer AS INT;
     DECLARE @JsonResponse NVARCHAR(MAX) = N'';
+    DECLARE @SubscriptionId INT = 0;
 
     DECLARE @TacId INT = 0;
 
@@ -621,7 +622,7 @@ BEGIN
                      , CMDR.DiscountValue
                      , CMDR.DiscountLowServiceRange
                      , CMDR.DiscountTopServiceRange
-                     , 1
+                     , CMDR.RowStatus
                      , @Token
                      , GETDATE()
                 FROM [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CMDR WITH (NOLOCK)
@@ -743,7 +744,31 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
             WHERE CS.IdCatSubscription = @IdSalePackage;
 			
+            SET @SubscriptionId = SCOPE_IDENTITY();
+			---------- Rango de descuento
+            INSERT INTO [dbo].[SubscriptionDiscountRange]
+            (
+                [SubscriptionId]
+              , [ValueTypeId]
+              , [DiscountValue]
+              , [DiscountLowServiceRange]
+              , [DiscountTopServiceRange]
+              , [RowStatus]
+              , [TokenCreated]
+              , [DateCreated]
+            )
+            SELECT @SubscriptionId                  -- MembershipId
+                 , [CSDR].[ValueTypeId]             -- ValueType
+                 , [CSDR].[DiscountValue]           -- DiscountValue
+                 , [CSDR].[DiscountLowServiceRange] -- DiscountLowServiceRange
+                 , [CSDR].[DiscountTopServiceRange] -- DiscountTopServiceRange
+                 , 1                                -- RowStatus 
+                 , @Token                           -- TokenCreated
+                 , SYSDATETIME()                    -- DateCreated
+            FROM [dbo].[CatSubscriptionDiscountRange] CSDR WITH (NOLOCK)
+            WHERE [CSDR].[CatSubscriptionId] =  @IdSalePackage;
 			
+
             
              --- Insert tabla dbo.Cost
 
