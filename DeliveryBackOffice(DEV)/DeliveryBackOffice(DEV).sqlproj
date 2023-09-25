@@ -551,7 +551,7 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
-	
+	<Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1503,9 +1503,9 @@
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStates.sql" />
-
-    
+	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_UpdateRegistrationofTransactionProcessStates.sql" />
+    <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
