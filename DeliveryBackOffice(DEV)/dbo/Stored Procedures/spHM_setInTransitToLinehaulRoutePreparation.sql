@@ -257,13 +257,30 @@ BEGIN
     --Validar que guía no esta en estado final
 	
 		
-			IF (NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrderDetail]  DOD
+			 --Validar que guía no esta en estado final
+
+ DECLARE @TblGuideUpdate TABLE (
+    GuideSerie  NVARCHAR(2),
+	GuideNumber  INT
+ )
+  INSERT INTO @TblGuideUpdate
+ SELECT  Distinct Guide_Serie,Guide_Number FROM [dbo].[DeliveryOrderDetail]  DOD
 			                               INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 											ON [DOD].[Guide_Serie] = [LRPCD].[GuideSerie]
 											   AND [DOD].[Guide_Number] = [LRPCD].[GuideNumber]
-										WHERE  [DOD].[StatusOrderId] IN(@STATUSDELIVERY,@STATUSDELIVERYEXC,@STATUSPAIDCOD)
-									  
-											))
+											    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
+                                            ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+                                               AND [LRPCD].[RowStatus] = 1
+											   OUTER APPLY
+											   (
+														SELECT COUNT(*) CONT FROM DELIVERYORDERDETAIL CD
+														WHERE CD.Guide_Number = DOD.Guide_Number
+														AND CD.Guide_Serie =DOD.Guide_Serie
+														AND DOD.StatusOrderId  NOT  IN(@STATUSDELIVERY,@STATUSDELIVERYEXC,@STATUSPAIDCOD)
+	
+													)TBLTMP
+													WHERE TBLTMP.CONT=0
+											        And  [LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation 
            BEGIN
 		-- UPDATE STATUS IN DELIVERY ORDER
 		UPDATE		[DO]
@@ -276,7 +293,8 @@ BEGIN
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 			AND		[LRPCD].[RowStatus] = 1
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
-			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation;
+			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+		WHERE  [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate); 
 
 		-- UPDATE STATUS IN DELIVERY ORDER PIECE
 		UPDATE		[DOP]
@@ -292,7 +310,9 @@ BEGIN
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 			AND		[LRPCD].[RowStatus] = 1
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
-			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation;
+			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+			  WHERE 
+			       [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate);
 		
 		-- INSERT CHECKPOINT IN DELIVERY ORDER DETAIL
 		INSERT INTO [dbo].[DeliveryOrderDetail]
@@ -316,7 +336,9 @@ BEGIN
 			AND		 [LRPCD].[RowStatus] = 1
 		INNER JOIN	 [dbo].[LinehaulRoutePreparation] LRP
 			ON		 [LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
-			AND		 [LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation);
+			AND		 [LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
+			 WHERE    
+			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate) );
 
 		-- UPDATE LINEHAUL ROUTE PREPARATION CONTAINER DETAIL
 		UPDATE	[LRPCDP]
@@ -329,7 +351,10 @@ BEGIN
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
-		WHERE		[LRPCDP].[RowStatus] = 1;
+		     WHERE    
+			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
+				  AND 
+		          [LRPCDP].[RowStatus] = 1;
 	END
 		SELECT	[LRP].[IdLinehaulRoutePreparation],
 				[LRP].[StationDispatchedId],
