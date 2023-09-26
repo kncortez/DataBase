@@ -23,7 +23,7 @@
 AS 
 BEGIN
 
-	DECLARE @PriceGuide INT;
+	DECLARE @PriceGuide DECIMAL(14, 2);
 
 	DECLARE @OriginGuideSystem INT = 
 	(
