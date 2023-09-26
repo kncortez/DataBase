@@ -113,6 +113,7 @@ BEGIN
            RES.[StageDate],
            RES.[StageTitle],
            RES.[StageSource],
+		   RES.[ClasificationIncident],
            RES.[StageDescription],
 		   RES.[CheckpointIcon],
            RES.[NameOfReceiver],
@@ -139,6 +140,7 @@ BEGIN
                '' [StageDate],                                                         -- date of status id
                '' [StageTitle],                                                        -- status order name
                'web' [StageSource],
+			   '' AS [ClasificationIncident],
                '' AS [StageDescription],                                               --detail description or observations in events
 			   '' AS [CheckpointIcon],
                ISNULL([NameOfReceiver], '') AS NameOfReceiver,
@@ -177,19 +179,33 @@ BEGIN
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
                     
+						/*(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
+						INNER JOIN CatTypeIncidence cti 
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)*/
+						so.OrderDescription
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+						so.OrderDescription
+					ELSE
+                        so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) -- status order name
+                END
+               ) AS [StageTitle], -- status order name
+               'web' AS [StageSource],
+			   ( CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
 						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
 						INNER JOIN CatTypeIncidence cti 
 						ON dla.ID_Incident = cti.IdIncidenceType 
 						INNER JOIN CatIncidenceClasification cic
 						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
 						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
-					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-						dod.Observations
-					ELSE
-                        so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) -- status order name
+				ELSE
+                       ''
                 END
-               ) AS [StageTitle], -- status order name
-               'web' AS [StageSource],
+
+			   ) AS [ClasificationIncident],
                --so.StatusOrderTrackingDescription AS [StageDescription],
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
@@ -197,7 +213,7 @@ BEGIN
 						INNER JOIN CatTypeIncidence cti 
 						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-						''--dod.Observations
+						dod.Observations
 			   ELSE
                         so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) -- status order name
                 END
