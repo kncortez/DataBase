@@ -8,7 +8,7 @@
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
 -- =============================================
-CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
+ALTER PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT,
 	@Receiver_Phone NVARCHAR(100) = NULL
@@ -35,6 +35,11 @@ BEGIN
 	DECLARE @GuideDeliveryLatitude NVARCHAR(20) = '';
 	DECLARE @GuideDeliveryLongitude NVARCHAR(20) = '';
 	DECLARE @GuideDeliveryCourierAttempt NVARCHAR(200) = '';
+	DECLARE @StatusIncident INT;
+	DECLARE @StatusIncidentValidated INT;
+
+	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
+	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
 
 	SELECT
 		TOP 1
@@ -123,7 +128,8 @@ BEGIN
 		   RES.Token,
 		   RES.Price,
 		   RES.COD,		   
-		   RES.NextSteps
+		   RES.NextSteps,
+		   RES.UserIncident
 	INTO #OrdChkpnt
     FROM
     (
@@ -184,7 +190,7 @@ BEGIN
             so.OrderDescription AS [StageTitle],    
             'web' AS [StageSource],
             (CASE
-                 WHEN dod.StatusOrderId IN ( 6, 8 ) THEN
+                 WHEN dod.StatusOrderId IN ( 6, 8, @StatusIncidentValidated ) THEN
                      ISNULL(dod.Observations, '')
                  WHEN dod.StatusOrderId IN ( 12 ) THEN
                      ISNULL(
@@ -282,12 +288,42 @@ BEGIN
             (CASE WHEN dod.StatusOrderId = 5 THEN (SELECT TOP 1 NameOfReceiver FROM @GuideOrderTemp) ELSE '' END) AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLatitude ELSE '' END) AS Latitude,
-            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude ELSE '' END) AS Longitude,
+            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLatitude 
+				  WHEN dod.StatusOrderId = @StatusIncidentValidated THEN (SELECT TOP 1 Latitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number) 
+				ELSE '' END) AS Latitude,
+            (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude 
+				  WHEN dod.StatusOrderId = @StatusIncidentValidated THEN (SELECT TOP 1 Longitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number) 
+			
+				ELSE '' END) AS Longitude,
 			dod.UserCreated Token,
 			0 [Price],
 			0 [COD],
-			so.NextSteps NextSteps
+			so.NextSteps NextSteps,
+			(CASE
+                    WHEN dod.StatusOrderId = @StatusIncidentValidated OR dod.StatusOrderId = @StatusIncident THEN
+                        (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
+							INNER JOIN TokenLog tkl
+							ON dyo.UserCreated = tkl.TknIdToken
+							INNER JOIN RegisterUser rtu
+							ON tkl.TknIdUser = rtu.UsrIdUser
+							INNER JOIN Person prs
+							ON rtu.UsrIdPerson = prs.PerIdPerson
+							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
+							AND dyo.StatusOrderId = @StatusIncidentValidated)
+					WHEN dod.StatusOrderId = @StatusIncident THEN
+							 (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
+							INNER JOIN TokenLog tkl
+							ON dyo.UserCreated = tkl.TknIdToken
+							INNER JOIN RegisterUser rtu
+							ON tkl.TknIdUser = rtu.UsrIdUser
+							INNER JOIN Person prs
+							ON rtu.UsrIdPerson = prs.PerIdPerson
+							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
+							AND dyo.StatusOrderId = @StatusIncident)
+                    ELSE
+                        ''
+                END
+               ) AS UserIncident
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
