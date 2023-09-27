@@ -36,9 +36,7 @@ BEGIN
 	DECLARE @EXISTING_LRP_TRANSIT AS INT;		-- Linehaul Route Preparation
 	DECLARE @AUX_VEHICLE_COUNT AS INT;			-- CatVehicle
 	DECLARE @AUX_VEHICLE_KMS AS INT;			-- CatVehicle
-	DECLARE @STATUSDELIVERY AS INT =(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado'); ---- ESTADO FINAL  Entregado
-	DECLARE @STATUSDELIVERYEXC AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado En Express Center'); --- ESTADO FINAL Entregado En Express Center
-	DECLARE @STATUSPAIDCOD AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='COD pagado');;  ---ESTADO FINAL COD pagado
+    DECLARE @TYPECHECKPOINTFINAL AS INT=(SELECT IdCatCheckpointType FROM [dbo].[CatCheckpointType] WITH (NOLOCK) WHERE CheckpointTypeDescription = 'Checkpoint final')
 
 
 	SET @STATUS_GENERATED = (SELECT [CLS].[IdCatLinehaulStatus]
@@ -264,19 +262,19 @@ BEGIN
 	GuideNumber  INT
  )
   INSERT INTO @TblGuideUpdate
- SELECT  Distinct Guide_Serie,Guide_Number FROM [dbo].[DeliveryOrderDetail]  DOD
-			                               INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+ SELECT  Distinct Guide_Serie,Guide_Number FROM [dbo].[DeliveryOrderDetail]  DOD WITH (NOLOCK)
+			                               INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 											ON [DOD].[Guide_Serie] = [LRPCD].[GuideSerie]
 											   AND [DOD].[Guide_Number] = [LRPCD].[GuideNumber]
-											    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
+											    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
                                             ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
                                                AND [LRPCD].[RowStatus] = 1
 											   OUTER APPLY
 											   (
-														SELECT COUNT(*) CONT FROM DELIVERYORDERDETAIL CD
+														SELECT COUNT(*) CONT FROM DELIVERYORDERDETAIL CD WITH (NOLOCK)
 														WHERE CD.Guide_Number = DOD.Guide_Number
 														AND CD.Guide_Serie =DOD.Guide_Serie
-														AND DOD.StatusOrderId  NOT  IN(@STATUSDELIVERY,@STATUSDELIVERYEXC,@STATUSPAIDCOD)
+														AND DOD.StatusOrderId  NOT  IN(SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder]  WITH (NOLOCK) WHERE CatCheckpointTypeId = @TYPECHECKPOINTFINAL)
 	
 													)TBLTMP
 													WHERE TBLTMP.CONT=0
@@ -330,11 +328,11 @@ BEGIN
 					 SYSDATETIME(),
 					 SYSDATETIME(),
 					 1
-		FROM		 [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-		INNER JOIN	 [dbo].[LinehaulRoutePreparationContainer] LRPC
+		FROM		 [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+		INNER JOIN	 [dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		 [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 			AND		 [LRPCD].[RowStatus] = 1
-		INNER JOIN	 [dbo].[LinehaulRoutePreparation] LRP
+		INNER JOIN	 [dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 			ON		 [LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
 			AND		 [LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
 			 WHERE    
@@ -378,7 +376,7 @@ BEGIN
 				[LRP].[RowStatus],
 				[LRP].[TokenCreated],
 				[LRP].[DateCreated]
-		FROM	[dbo].[LinehaulRoutePreparation] LRP
+		FROM	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 		WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
 		IF (@@TRANCOUNT > 0)
