@@ -9,7 +9,7 @@
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_extern_order_detail_status]
+ALTER PROCEDURE [dbo].[spg_extern_order_detail_status]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT
 AS
@@ -47,6 +47,11 @@ BEGIN
     DECLARE @GuideDeliveryLatitude NVARCHAR(20) = N'';
     DECLARE @GuideDeliveryLongitude NVARCHAR(20) = N'';
     DECLARE @GuideDeliveryCourierAttempt NVARCHAR(200) = N'';
+	DECLARE @StatusIncident INT;
+	DECLARE @StatusIncidentValidated INT;
+
+	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
+	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
 
     SELECT TOP 1
            @GuideDeliveryLatitude = DA.Latitude,
@@ -108,6 +113,7 @@ BEGIN
            RES.[StageDate],
            RES.[StageTitle],
            RES.[StageSource],
+		   RES.[ClasificationIncident],
            RES.[StageDescription],
 		   RES.[CheckpointIcon],
            RES.[NameOfReceiver],
@@ -120,7 +126,9 @@ BEGIN
            RES.[Longitude],
            RES.Receiver_Phone,
            RES.Price_Guide,
-           RES.Price_COD
+           RES.Price_COD,
+		   RES.UserIncident,
+		   RES.StatusValidated
     FROM
     (
         SELECT 0 [EventID],
@@ -132,6 +140,7 @@ BEGIN
                '' [StageDate],                                                         -- date of status id
                '' [StageTitle],                                                        -- status order name
                'web' [StageSource],
+			   '' AS [ClasificationIncident],
                '' AS [StageDescription],                                               --detail description or observations in events
 			   '' AS [CheckpointIcon],
                ISNULL([NameOfReceiver], '') AS NameOfReceiver,
@@ -144,7 +153,9 @@ BEGIN
                '' Longitude,
                do.Receiver_Phone,
                ISNULL(do.Price_Guide, 0) 'Price_Guide',
-               ISNULL(do.Price_COD, 0) 'Price_COD'
+               ISNULL(do.Price_COD, 0) 'Price_COD',
+			   '' UserIncident,
+			   0 StatusValidated
         FROM @GuideOrderTemp do
         UNION
         SELECT DISTINCT
@@ -164,9 +175,49 @@ BEGIN
 			   
 			   DOD.DateCreated AS [StageDate], 
 			   -- date of status id
-               so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) AS [StageTitle], -- status order name
+               --so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) AS [StageTitle], -- status order name
+			   (CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
+                    
+						/*(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
+						INNER JOIN CatTypeIncidence cti 
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)*/
+						so.OrderDescription
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+						so.OrderDescription
+					ELSE
+                        so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) -- status order name
+                END
+               ) AS [StageTitle], -- status order name
                'web' AS [StageSource],
-               so.StatusOrderTrackingDescription AS [StageDescription],
+			   ( CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
+						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
+						INNER JOIN CatTypeIncidence cti 
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+				ELSE
+                       ''
+                END
+
+			   ) AS [ClasificationIncident],
+               --so.StatusOrderTrackingDescription AS [StageDescription],
+			   (CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
+						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
+						INNER JOIN CatTypeIncidence cti 
+						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+						dod.Observations
+			   ELSE
+                        so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) -- status order name
+                END
+               ) AS [StageTitle], -- status order nameAS [StageDescription],
 			   ISNULL([CCT].[CheckpointIcon], '') [CheckpointIcon],
                (CASE
                     WHEN dod.StatusOrderId = 5 THEN
@@ -181,46 +232,52 @@ BEGIN
                so.NextSteps NextSteps,
                (CASE
                     WHEN dod.StatusOrderId = 5 THEN
-                        ISNULL(
-                                  ISNULL(
-                                  (
-                                      SELECT TOP 1
-                                             'data:image/jpeg;base64,'
-                                             +
-                                             (
-                                                 SELECT CAST('' AS XML).value(
-                                                                                 'xs:base64Binary(sql:column("PICTURE"))',
-                                                                                 'varchar(max)'
-                                                                             )
-                                             )
-                                      FROM
-                                      (
-                                          SELECT IIF([dp].[Proof_Dry] = 0x,
-                                                  dp.Proof_Cold,
-                                                  ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
-                                                 Date_Photo
-                                          FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                              INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-                                                  ON da.Guide_Serie = dp.Guide_Serie
-                                                     AND da.Guide_Number = dp.Guide_Number
-                                                     AND da.Delivered = 1
-                                          WHERE dp.Guide_Serie = 'FD'
-                                                AND dp.Guide_Number = @Guide_Number
-                                                AND
-                                                (
-                                                    dp.Proof_Incident != 0x
-                                                    OR dp.Proof_Incident IS NULL
-                                                )
-                                      ) L1
-                                      ORDER BY L1.Date_Photo DESC
-                                  ),
-                                  (CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
-                                                                                         + CAST(dod.Guide_Number AS VARCHAR)
-                                                                                        ) AS VARCHAR(300))
-                                  )
-                                        ),
-                                  ''
-                              )
+					
+					 IIF((SELECT TOP 1 Path_Dry FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number) IS NOT NULL,
+					 (SELECT TOP 1 Path_Dry FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number),
+					 (SELECT TOP 1 Path_Cold FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number))
+					 WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+                        --ISNULL(
+                        --          ISNULL(
+                        --          (
+                        --              SELECT TOP 1
+                        --                     'data:image/jpeg;base64,'
+                        --                     +
+                        --                     (
+                        --                         SELECT CAST('' AS XML).value(
+                        --                                                         'xs:base64Binary(sql:column("PICTURE"))',
+                        --                                                         'varchar(max)'
+                        --                                                     )
+                        --                     )
+                        --              FROM
+                        --              (
+                        --                  SELECT IIF([dp].[Proof_Dry] = 0x,
+                        --                          dp.Proof_Cold,
+                        --                          ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
+                        --                         Date_Photo
+                        --                  FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
+                        --                      INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+                        --                          ON da.Guide_Serie = dp.Guide_Serie
+                        --                             AND da.Guide_Number = dp.Guide_Number
+                        --                             AND da.Delivered = 1
+                        --                  WHERE dp.Guide_Serie = 'FD'
+                        --                        AND dp.Guide_Number = @Guide_Number
+                        --                        AND
+                        --                        (
+                        --                            dp.Proof_Incident != 0x
+                        --                            OR dp.Proof_Incident IS NULL
+                        --                        )
+                        --              ) L1
+                        --              ORDER BY L1.Date_Photo DESC
+                        --          ),
+                        --          (CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
+                        --                                                                 + CAST(dod.Guide_Number AS VARCHAR)
+                        --                                                                ) AS VARCHAR(300))
+                        --          )
+                        --                ),
+                        --          ''
+                        --      )
                     ELSE
                         ''
                 END
@@ -264,6 +321,9 @@ BEGIN
                (CASE
                     WHEN dod.StatusOrderId = 5 THEN
                         @GuideDeliveryLatitude
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Latitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+
                     ELSE
                         ''
                 END
@@ -271,13 +331,48 @@ BEGIN
                (CASE
                     WHEN dod.StatusOrderId = 5 THEN
                         @GuideDeliveryLongitude
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Longitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+
                     ELSE
                         ''
                 END
                ) AS Longitude,
                '' [ReceiverPhone],
                0 [PriceGuide],
-               0 [PriceCOD]
+               0 [PriceCOD],
+			   (CASE
+                    WHEN dod.StatusOrderId = @StatusIncidentValidated OR dod.StatusOrderId = @StatusIncident THEN
+                        (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
+							INNER JOIN TokenLog tkl
+							ON dyo.UserCreated = tkl.TknIdToken
+							INNER JOIN RegisterUser rtu
+							ON tkl.TknIdUser = rtu.UsrIdUser
+							INNER JOIN Person prs
+							ON rtu.UsrIdPerson = prs.PerIdPerson
+							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
+							AND dyo.StatusOrderId = @StatusIncidentValidated)
+					WHEN dod.StatusOrderId = @StatusIncident THEN
+							 (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
+							INNER JOIN TokenLog tkl
+							ON dyo.UserCreated = tkl.TknIdToken
+							INNER JOIN RegisterUser rtu
+							ON tkl.TknIdUser = rtu.UsrIdUser
+							INNER JOIN Person prs
+							ON rtu.UsrIdPerson = prs.PerIdPerson
+							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
+							AND dyo.StatusOrderId = @StatusIncident)
+                    ELSE
+                        ''
+                END
+               ) AS UserIncident,
+			   (CASE
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					(@StatusIncidentValidated)
+				ELSE
+					0
+				END
+				) AS StatusValidated
         FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
