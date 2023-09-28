@@ -9,11 +9,8 @@ CREATE PROCEDURE [dbo].[SPHW_GetDataforIncidentRegistration]
  @GuideNumber INT	
 AS
 BEGIN
-	 @GuideSerie NVARCHAR(2) = 'FD',
- @GuideNumber INT	
-AS
-BEGIN
 	
+
 	SET NOCOUNT ON;
 
 
@@ -62,7 +59,10 @@ BEGIN
                  END
                 )
                  END
-                ) [StatusOfIncident]
+                ) [StatusOfIncident],
+				DO.IdDeliveryOption,
+				'' AS TrackingObservations,
+				'' AS LiquidationObservations
 	From [dbo].[DeliveryOrder] DO WITH (NOLOCK)
 	    INNER JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 			ON DO.Guide_Serie = DP.Guide_Serie AND DO.Guide_Number = DP.Guide_Number 
@@ -85,7 +85,6 @@ BEGIN
 
 	Select  TOP 1
 	       DP.Path_Incident
-	     
 	From [dbo].[DeliveryOrder] DO WITH (NOLOCK)
 	    INNER JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 			ON DO.Guide_Serie = DP.Guide_Serie AND DO.Guide_Number = DP.Guide_Number 
