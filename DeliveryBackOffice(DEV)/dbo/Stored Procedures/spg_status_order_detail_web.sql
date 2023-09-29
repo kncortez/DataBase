@@ -283,8 +283,24 @@ BEGIN
             '' AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            '' AS Latitude,
-            '' AS Longitude,
+			  (CASE
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Latitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+
+                    ELSE
+                        ''
+                END
+               ) AS Latitude,
+               (CASE
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Longitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+
+                    ELSE
+                        ''
+                END
+               ) AS Longitude,
+            --'' AS Latitude,
+            --'' AS Longitude,
             dod.UserCreated Token,
             '' AS NextSteps,
 			(CASE
