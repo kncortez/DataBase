@@ -111,6 +111,15 @@ BEGIN
 	(
 		IdDeliveryOrderAttemptData INT NULL
 	);
+	--Validar si aun tiene incidencias disponibles
+	DECLARE @Incidentsavailable INT = (
+	
+			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+			  GuideNumber =  @GuideNumber
+	
+	);
 
 	IF ( @FirstOnRouteDate IS NULL )
 	BEGIN
@@ -128,7 +137,12 @@ BEGIN
 			'Incidencia no puede ser ingresada antes de fecha y hora de primera salida a ruta.' [ResponseMessage]
 
 	END
-	ELSE
+	ELSE IF(@Incidentsavailable <= 0)
+	BEGIN
+	SELECT
+	         204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias.' [ResponseMessage]
+	END
     BEGIN
 
 		BEGIN TRANSACTION 
@@ -269,7 +283,7 @@ BEGIN
 				UPDATE
 					[DOAD]
 				SET
-					[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 1
+					[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 0
 					,[DOAD].[TokenUpdated] = @Token
 					,[DOAD].[DateUptaded] = @DateInSystem
 				OUTPUT [Inserted].[IdDeliveryOrderAttemptData] INTO @DeliveryOrderAttemptDataUpdated ([IdDeliveryOrderAttemptData])
