@@ -23,13 +23,14 @@ BEGIN
 		DeliveryToken NVARCHAR(50),
 		ServicePrice DECIMAL(18,2),
 		ServiceSerie NVARCHAR(2),
-		ServiceNumber INT
+		ServiceNumber INT,
+		DescriptionIncidence NVARCHAR(500)
 	);
 
 	BEGIN TRY
 
 		INSERT INTO @ResponseTable
-			(CourierName, CourierPhones, ServiceDestinyName, ServiceCustomerName, ServiceDestinyPhone, ServiceCustomerPhone, ServiceDestinyAddress, IsReturn, DeliveryToken, ServiceSerie, ServiceNumber)
+			(CourierName, CourierPhones, ServiceDestinyName, ServiceCustomerName, ServiceDestinyPhone, ServiceCustomerPhone, ServiceDestinyAddress, IsReturn, DeliveryToken, ServiceSerie, ServiceNumber,DescriptionIncidence)
 		SELECT
 			TOP 1
 				ISNULL(LTRIM(RTRIM(CONCAT(SR.First_Name, ' ', SR.Last_Name))), '') 'CourierName',
@@ -42,7 +43,8 @@ BEGIN
 				ISNULL(DO.IsLastMileReturn, 0) 'IsReturn',
 				SDFG.GuideToken 'DeliveryToken',
 				DO.Guide_Serie,
-				DO.Guide_Number
+				DO.Guide_Number,
+				CTI.DescriptionIncidence
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			LEFT JOIN
@@ -87,6 +89,13 @@ BEGIN
 					DO.Guide_Number = SDFG.GuideNumber
 					AND
 					SDFG.IsDelivery = 1
+			LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA
+			    ON
+			        DO.Guide_Serie = DA.Guide_Serie
+					AND
+					DO.Guide_Number = DA.Guide_Number
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI
+			     ON DA.ID_Incident = CTI.IdIncidenceType AND CTI.RowStatus=1
 		WHERE
 			DO.Guide_Serie = @GuideSerie
 			AND
@@ -187,7 +196,8 @@ BEGIN
 				RT.ServiceDestinyAddress,
 				RT.IsReturn,
 				RT.DeliveryToken,
-				ISNULL(RT.ServicePrice, 0) 'ServicePrice'
+				ISNULL(RT.ServicePrice, 0) 'ServicePrice',
+				RT.DescriptionIncidence
 			FROM
 				@ResponseTable RT
 			
