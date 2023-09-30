@@ -285,7 +285,7 @@ BEGIN
 				UPDATE
 					[DOAD]
 				SET
-					[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 1
+					[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 0
 					,[DOAD].[TokenUpdated] = @Token
 					,[DOAD].[DateUptaded] = @DateInSystem
 				OUTPUT [Inserted].[IdDeliveryOrderAttemptData] INTO @DeliveryOrderAttemptDataUpdated ([IdDeliveryOrderAttemptData])
