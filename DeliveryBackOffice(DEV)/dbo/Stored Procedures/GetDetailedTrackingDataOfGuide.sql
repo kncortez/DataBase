@@ -130,7 +130,8 @@ BEGIN
 		   RES.Price,
 		   RES.COD,		   
 		   RES.NextSteps,
-		   RES.UserIncident
+		   RES.UserIncident,
+		   RES.Receiver_Phone
 	INTO #OrdChkpnt
     FROM
     (
@@ -164,7 +165,8 @@ BEGIN
 			dor.PriceShippment [Price],
 			dor.Collect_OnDelivery [COD],
 			NULL [NextSteps],
-			'' [UserIncident]
+			'' [UserIncident],
+			do.Receiver_Phone
 	FROM @GuideOrderTemp do
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 			ON da.Guide_Serie = do.Guide_Serie
@@ -346,13 +348,16 @@ BEGIN
                     ELSE
                         ''
                 END
-               ) AS UserIncident
+               ) AS UserIncident,
+			   GOT.Receiver_Phone
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
 				AND so.CatStatusTypeId = 2
 			INNER JOIN	[dbo].[CatCheckpointType] CCT
 				ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
+			INNER JOIN @GuideOrderTemp GOT
+			    ON  GOT.Guide_Serie =  dod.Guide_Serie  AND  GOT.Guide_Number = dod.Guide_Number
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         GROUP BY CONVERT(DATE, dod.DateCreated),
@@ -364,7 +369,8 @@ BEGIN
                  so.OrderDescription,
 				 so.StatusOrderTrackingDescription,
 				 so.NextSteps,
-				 [CCT].[CheckpointIcon]
+				 [CCT].[CheckpointIcon],
+				 GOT.Receiver_Phone
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -410,6 +416,7 @@ BEGIN
 			   ,ISNULL(OrdChkPnt.COD,0) COD
 			   ,OrdChkPnt.[NextSteps]
 			   ,OrdChkPnt.[UserIncident]
+			    ,OrdChkPnt.[Receiver_Phone]
 	FROM #OrdChkpnt OrdChkPnt
 	-- Obtener datos desde usuario Desktop
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
