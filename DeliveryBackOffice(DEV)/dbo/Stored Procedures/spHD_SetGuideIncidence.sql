@@ -56,7 +56,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			[SO].[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
+			[SO].[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
 	);
 	DECLARE @OnRouteStatus INT = 
 	(
@@ -112,6 +112,16 @@ BEGIN
 		IdDeliveryOrderAttemptData INT NULL
 	);
 
+	--Validar si aun tiene incidencias disponibles
+	DECLARE @Incidentsavailable INT = (
+	
+			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+			  GuideNumber =  @GuideNumber
+	
+	);
+
 	IF ( @FirstOnRouteDate IS NULL )
 	BEGIN
 	    
@@ -127,6 +137,12 @@ BEGIN
 			204 [ResponseCode],
 			'Incidencia no puede ser ingresada antes de fecha y hora de primera salida a ruta.' [ResponseMessage]
 
+	END
+	ELSE IF(@Incidentsavailable <= 0)
+	BEGIN
+	SELECT
+	         204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias.' [ResponseMessage]
 	END
 	ELSE
     BEGIN
