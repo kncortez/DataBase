@@ -1506,6 +1506,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
     <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />	
     <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
+  	<Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
