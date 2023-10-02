@@ -9,20 +9,19 @@
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_extern_order_detail_status]
+CREATE PROCEDURE [dbo].[spg_extern_order_detail_status]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
+   
     SET NOCOUNT ON;
 
     DECLARE @ExternalTypeId INT =
             (
                 SELECT TOP 1
                        CST.IdCatStatusType
-                FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST
+                FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
                 WHERE CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
             );
 
@@ -50,8 +49,8 @@ BEGIN
 	DECLARE @StatusIncident INT;
 	DECLARE @StatusIncidentValidated INT;
 
-	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
-	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
+	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WITH (NOLOCK) WHERE OrderDescription =  'Incidencia en ruta')
+	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WITH (NOLOCK) WHERE OrderDescription =  'Incidencia Validada')
 
     SELECT TOP 1
            @GuideDeliveryLatitude = DA.Latitude,
@@ -165,26 +164,14 @@ BEGIN
                '' [EstimatedDeliveryDate],                                                                      --[Field5],
                '' [CourierName],                                                                                --[Field9]
                CAST(dod.StatusOrderId AS NVARCHAR) AS [StageId],                                                -- status order id
-               --(
-               --    SELECT MAX(DT.DateCreated)
-               --    FROM dbo.DeliveryOrderDetail DT WITH (NOLOCK)
-               --    WHERE DT.Guide_Serie = dod.Guide_Serie
-               --          AND DT.Guide_Number = dod.Guide_Number
-               --          AND DT.StatusOrderId = dod.StatusOrderId
-               --) AS [StageDate],   
+             
 			   
 			   DOD.DateCreated AS [StageDate], 
-			   -- date of status id
-               --so.OrderDescription + ', ' + CAST(ISNULL(dod.Observations, '') AS NVARCHAR(50)) AS [StageTitle], -- status order name
+			   
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
                     
-						/*(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
-						INNER JOIN CatTypeIncidence cti 
-						ON dla.ID_Incident = cti.IdIncidenceType 
-						INNER JOIN CatIncidenceClasification cic
-						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
-						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)*/
+					
 						so.OrderDescription
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 						so.OrderDescription
@@ -206,7 +193,7 @@ BEGIN
                 END
 
 			   ) AS [ClasificationIncident],
-               --so.StatusOrderTrackingDescription AS [StageDescription],
+             
 			   (CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
 						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
@@ -238,46 +225,7 @@ BEGIN
 					 (SELECT TOP 1 Path_Cold FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number))
 					 WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 					 (SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
-                        --ISNULL(
-                        --          ISNULL(
-                        --          (
-                        --              SELECT TOP 1
-                        --                     'data:image/jpeg;base64,'
-                        --                     +
-                        --                     (
-                        --                         SELECT CAST('' AS XML).value(
-                        --                                                         'xs:base64Binary(sql:column("PICTURE"))',
-                        --                                                         'varchar(max)'
-                        --                                                     )
-                        --                     )
-                        --              FROM
-                        --              (
-                        --                  SELECT IIF([dp].[Proof_Dry] = 0x,
-                        --                          dp.Proof_Cold,
-                        --                          ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
-                        --                         Date_Photo
-                        --                  FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                        --                      INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-                        --                          ON da.Guide_Serie = dp.Guide_Serie
-                        --                             AND da.Guide_Number = dp.Guide_Number
-                        --                             AND da.Delivered = 1
-                        --                  WHERE dp.Guide_Serie = 'FD'
-                        --                        AND dp.Guide_Number = @Guide_Number
-                        --                        AND
-                        --                        (
-                        --                            dp.Proof_Incident != 0x
-                        --                            OR dp.Proof_Incident IS NULL
-                        --                        )
-                        --              ) L1
-                        --              ORDER BY L1.Date_Photo DESC
-                        --          ),
-                        --          (CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
-                        --                                                                 + CAST(dod.Guide_Number AS VARCHAR)
-                        --                                                                ) AS VARCHAR(300))
-                        --          )
-                        --                ),
-                        --          ''
-                        --      )
+                       
                     ELSE
                         ''
                 END

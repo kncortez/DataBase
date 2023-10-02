@@ -111,6 +111,15 @@ BEGIN
 	(
 		IdDeliveryOrderAttemptData INT NULL
 	);
+	--Validar si aun tiene incidencias disponibles
+	DECLARE @Incidentsavailable INT = (
+	
+			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+			  GuideNumber =  @GuideNumber
+	
+	);
 
 	--Validar si aun tiene incidencias disponibles
 	DECLARE @Incidentsavailable INT = (

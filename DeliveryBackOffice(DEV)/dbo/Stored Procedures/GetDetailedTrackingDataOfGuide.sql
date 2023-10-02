@@ -8,14 +8,13 @@
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
+CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT,
 	@Receiver_Phone NVARCHAR(100) = NULL
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
+   
     SET NOCOUNT ON;
 	DECLARE @GuideOrderTemp AS TABLE(
 		Guide_Serie NVARCHAR(2),
