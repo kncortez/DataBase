@@ -18,9 +18,17 @@ BEGIN
 
 	DECLARE @StatusIncident INT;
 	DECLARE @StatusIncidentValidated INT;
+		DECLARE @Id_Courier INT;
 
 	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
 	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
+
+	SET @Id_Courier = (SELECT top 1 dat.ID_Courier FROM DeliveryOrderDetail dod WITH(NOLOCK)
+										INNER JOIN DeliveryAttempt dat WITH(NOLOCK)
+											ON dod.Guide_Serie = dat.Guide_Serie AND dod.Guide_Number = dat.Guide_Number 
+										WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number
+										AND dod.StatusOrderId = @StatusIncident)
+
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
@@ -304,7 +312,7 @@ BEGIN
             dod.UserCreated Token,
             '' AS NextSteps,
 			(CASE
-                    WHEN dod.StatusOrderId = @StatusIncidentValidated OR dod.StatusOrderId = @StatusIncident  THEN
+                    WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 							(  SELECT TOP 1
 								tk.SSN_Username
 								FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
@@ -316,6 +324,32 @@ BEGIN
 							   WHERE dod.Guide_Serie = @Guide_Serie
 									AND dod.Guide_Number = @Guide_Number
 									AND dod.DeliveryAttemptId = dat.ID)
+					WHEN dod.StatusOrderId = @StatusIncident  THEN
+								(CASE 
+									WHEN @Id_Courier IS NOT NULL THEN
+									(SELECT Top 1(srv.First_Name +' '+srv.Last_Name) FROM DeliveryOrderDetail dyo WITH (NOLOCK)
+									INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
+									ON dyo.Guide_Serie = dat.Guide_Serie AND dyo.Guide_Number = dat.Guide_Number
+									INNER JOIN SenderReceiver srv WITH (NOLOCK)
+									ON dat.ID_Courier = srv.ID
+									WHERE dyo.Guide_Serie = @Guide_Serie AND dyo.Guide_Number = @Guide_Number)
+									
+									ELSE
+								
+									(SELECT TOP 1
+									tk.SSN_Username
+									FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
+									INNER JOIN DeliveryOrderDetail dod WITH (NOLOCK)
+										ON dat.Guide_Serie = dod.Guide_Serie
+									 AND dat.Guide_Number = dod.Guide_Number
+									LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
+										 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)
+								   WHERE dod.Guide_Serie = @Guide_Serie
+										AND dod.Guide_Number = @Guide_Number
+										AND dod.DeliveryAttemptId = dat.ID)
+							 END
+							)
+
                     ELSE
                         ''
                 END
