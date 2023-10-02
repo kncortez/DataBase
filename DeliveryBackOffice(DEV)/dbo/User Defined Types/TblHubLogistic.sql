@@ -1,5 +1,3 @@
-USE [DeliveryBackOffice]
-GO
 CREATE TYPE [dbo].[TblHubLogistic] AS TABLE(
 	[IdHubLogistics] INT NOT NULL,
 	PRIMARY KEY CLUSTERED 
@@ -7,4 +5,3 @@ CREATE TYPE [dbo].[TblHubLogistic] AS TABLE(
 	[IdHubLogistics] ASC
 )WITH (IGNORE_DUP_KEY = OFF)
 )
-GO

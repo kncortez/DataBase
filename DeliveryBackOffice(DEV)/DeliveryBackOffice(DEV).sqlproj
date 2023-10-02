@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
+    <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
+    
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
     <Build Include="dbo\User Defined Types\TblVPFrequency.sql" />
     <Build Include="dbo\User Defined Types\TblVPDestination.sql" />
