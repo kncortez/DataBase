@@ -195,10 +195,10 @@ BEGIN
             'web' AS [StageSource],
 			 ( CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
-						INNER JOIN CatTypeIncidence cti 
+						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla WITH (NOLOCK)  
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK) 
 						ON dla.ID_Incident = cti.IdIncidenceType 
-						INNER JOIN CatIncidenceClasification cic
+						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
 						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
 						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
 				ELSE
@@ -228,8 +228,8 @@ BEGIN
                      ''
                            )
 				 WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
-						INNER JOIN CatTypeIncidence cti 
+						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla WITH (NOLOCK)  
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK) 
 						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
 					
 				ELSE
@@ -325,22 +325,22 @@ BEGIN
 			so.NextSteps NextSteps,
 			(CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-                        (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
-							INNER JOIN TokenLog tkl
+                        (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo WITH (NOLOCK)
+							INNER JOIN TokenLog tkl WITH (NOLOCK)
 							ON dyo.UserCreated = tkl.TknIdToken
-							INNER JOIN RegisterUser rtu
+							INNER JOIN RegisterUser rtu WITH (NOLOCK)
 							ON tkl.TknIdUser = rtu.UsrIdUser
-							INNER JOIN Person prs
+							INNER JOIN Person prs WITH (NOLOCK)
 							ON rtu.UsrIdPerson = prs.PerIdPerson
 							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
 							AND dyo.StatusOrderId = @StatusIncidentValidated)
 					WHEN dod.StatusOrderId = @StatusIncident THEN
 							 (SELECT (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
-							INNER JOIN TokenLog tkl
+							INNER JOIN TokenLog tkl WITH (NOLOCK)
 							ON dyo.UserCreated = tkl.TknIdToken
-							INNER JOIN RegisterUser rtu
+							INNER JOIN RegisterUser rtu WITH (NOLOCK)
 							ON tkl.TknIdUser = rtu.UsrIdUser
-							INNER JOIN Person prs
+							INNER JOIN Person prs WITH (NOLOCK)
 							ON rtu.UsrIdPerson = prs.PerIdPerson
 							WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number
 							AND dyo.StatusOrderId = @StatusIncident)

@@ -121,10 +121,10 @@ BEGIN
             'web' AS [StageSource],
 			 ( CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla  
-						INNER JOIN CatTypeIncidence cti 
+						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla WITH (NOLOCK)
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
 						ON dla.ID_Incident = cti.IdIncidenceType 
-						INNER JOIN CatIncidenceClasification cic
+						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
 						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
 						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
 				ELSE
@@ -199,7 +199,7 @@ BEGIN
              END
             ) AS [StageDescription],
             ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
-            (CASE /*ROW_NUMBER() OVER (ORDER BY CONVERT(DATE, dod.DateCreated) ASC)*/
+            (CASE 
                  WHEN  dod.StatusOrderId = 5  THEN
                      ISNULL(
                                ISNULL(
@@ -285,7 +285,7 @@ BEGIN
             '' AS [ManifestNumber],
 			  (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 Latitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Latitude FROM DeliveryAttempt WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
 
                     ELSE
                         ''
@@ -293,7 +293,7 @@ BEGIN
                ) AS Latitude,
                (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 Longitude FROM DeliveryAttempt WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Longitude FROM DeliveryAttempt WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
 
                     ELSE
                         ''
@@ -305,22 +305,10 @@ BEGIN
             '' AS NextSteps,
 			(CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated OR dod.StatusOrderId = @StatusIncident  THEN
-
-       --                 (SELECT TOP 1 (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
-							--INNER JOIN TokenLog tkl
-							--ON dyo.UserCreated = tkl.TknIdToken
-							--INNER JOIN RegisterUser rtu
-							--ON tkl.TknIdUser = rtu.UsrIdUser
-							--INNER JOIN Person prs
-							--ON rtu.UsrIdPerson = prs.PerIdPerson
-							--INNER JOIN DeliveryAttempt datt
-						 --   ON dyo.DeliveryAttemptId = datt.ID
-							--WHERE dyo.Guide_Serie = @Guide_Serie AND dyo.Guide_Number = @Guide_Number
-							--AND dyo.StatusOrderId in (@StatusIncidentValidated,@StatusIncident))
 							(  SELECT TOP 1
 								tk.SSN_Username
 								FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
-								INNER JOIN DeliveryOrderDetail dod
+								INNER JOIN DeliveryOrderDetail dod WITH (NOLOCK)
 									ON dat.Guide_Serie = dod.Guide_Serie
 								 AND dat.Guide_Number = dod.Guide_Number
 								LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
@@ -328,19 +316,6 @@ BEGIN
 							   WHERE dod.Guide_Serie = @Guide_Serie
 									AND dod.Guide_Number = @Guide_Number
 									AND dod.DeliveryAttemptId = dat.ID)
-                     -- AND dod.StatusOrderId in (50,45))
-					--WHEN dod.StatusOrderId = @StatusIncident THEN
-					--		 (SELECT TOP 1 (prs.PerFirstName+' '+prs.PerLastName) FROM DeliveryOrderDetail dyo
-					--		INNER JOIN TokenLog tkl
-					--		ON dyo.UserCreated = tkl.TknIdToken
-					--		INNER JOIN RegisterUser rtu
-					--		ON tkl.TknIdUser = rtu.UsrIdUser
-					--		INNER JOIN Person prs
-					--		ON rtu.UsrIdPerson = prs.PerIdPerson
-					--		INNER JOIN DeliveryAttempt datt
-					--	    ON dyo.DeliveryAttemptId = datt.ID
-					--		WHERE dyo.Guide_Serie = @Guide_Serie AND dyo.Guide_Number = @Guide_Number
-					--		AND dyo.StatusOrderId = @StatusIncident)
                     ELSE
                         ''
                 END

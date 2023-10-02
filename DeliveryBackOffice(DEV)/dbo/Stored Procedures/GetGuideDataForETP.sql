@@ -89,12 +89,12 @@ BEGIN
 					DO.Guide_Number = SDFG.GuideNumber
 					AND
 					SDFG.IsDelivery = 1
-			LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA
+			LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
 			    ON
 			        DO.Guide_Serie = DA.Guide_Serie
 					AND
 					DO.Guide_Number = DA.Guide_Number
-			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
 			     ON DA.ID_Incident = CTI.IdIncidenceType AND CTI.RowStatus=1
 		WHERE
 			DO.Guide_Serie = @GuideSerie
