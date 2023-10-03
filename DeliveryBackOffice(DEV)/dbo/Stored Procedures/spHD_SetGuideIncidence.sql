@@ -188,7 +188,7 @@ BEGIN
 			NULL,   -- CourierContempt - bit
 			NULL,   -- ClientConfirmsReturn - bit
 			NULL,      -- IncidentfinalizedbySAC - bit
-			NULL,   -- IsDenied - bit
+			0,   -- IsDenied - bit
 			NULL       -- LastStatusOrderId - tinyint
 			)
 
