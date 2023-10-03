@@ -18,6 +18,7 @@ BEGIN
 	-- Variables globales
 	DECLARE @DateInSystem DATETIME = GETDATE();
 	DECLARE @IncidenceDescription NVARCHAR(200);
+	DECLARE @IdConfirmationOfIncidence INT; 
 	DECLARE @SystemOrigin INT = 
 	(
 		SELECT 
@@ -149,6 +150,74 @@ BEGIN
 		BEGIN TRANSACTION 
 		BEGIN TRY
 
+--- registro de incidencia
+	INSERT [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence]
+		(
+			ConfirmationOfIncidentToken,
+			CatTypeConfirmationOfIncidenceId,
+			IsValid,
+			IsConfirmed,
+			StatusOrderId,
+			DateStatusOrder,
+			RowStatus,
+			TokenCreated,
+			DateCreated,
+			TokenUpdated,
+			DateUpdated,
+			IsActionIssued,
+			ActionObservation,
+			CourierContempt,
+			ClientConfirmsReturn,
+			IncidentfinalizedbySAC,
+			IsDenied,
+			LastStatusOrderId
+		)
+		VALUES
+		(   @Token,       -- ConfirmationOfIncidentToken - nvarchar(50)
+			1,         -- CatTypeConfirmationOfIncidenceId - int
+			0,   -- IsValid - bit
+			0,   -- IsConfirmed - bit
+			45,         -- StatusOrderId - tinyint
+			GETDATE(), -- DateStatusOrder - datetime
+			1,   -- RowStatus - bit
+			@Token,       -- TokenCreated - nvarchar(50)
+			GETDATE(), -- DateCreated - datetime
+			NULL,      -- TokenUpdated - nvarchar(50)
+			NULL,      -- DateUpdated - datetime
+			NULL,   -- IsActionIssued - bit
+			NULL,      -- ActionObservation - nvarchar(600)
+			NULL,   -- CourierContempt - bit
+			NULL,   -- ClientConfirmsReturn - bit
+			NULL,      -- IncidentfinalizedbySAC - bit
+			0,   -- IsDenied - bit
+			NULL       -- LastStatusOrderId - tinyint
+			)
+
+			SET @IdConfirmationOfIncidence = SCOPE_IDENTITY();
+
+			-- Obtener datos generales para procesamiento de la incidencia manual
+			SELECT 
+				TOP (1) 
+					@IsGuideLastMileReturn = ISNULL(DO.[IsLastMileReturn], 0),
+					@NotificationEmail = 
+						(
+							CASE
+								WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Mail], ''))) <> '' THEN [DO].[Sender_Mail]
+								WHEN LTRIM(RTRIM(ISNULL([Cu].[CODContactEmail], ''))) <> '' THEN [Cu].[CODContactEmail]
+							END
+						),
+					@NotificationCustomerId = [DO].[IdCustomer]
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+					ON
+						[Cu].[IdCustomer] = [DO].[IdCustomer]
+			WHERE
+				[DO].[Guide_Serie] = @GuideSerie
+				AND
+				[DO].[Guide_Number] = @GuideNumber
+
 			-- Obtener datos generales para procesamiento de la incidencia manual
 			SELECT 
 				TOP (1) 
@@ -184,6 +253,31 @@ BEGIN
 				AND
 				[CTI].[RowStatus] = 1;
 
+		------------- Si existen registros en DeliveryAttem captura el Id para el proceso de lo contrario lo obtiene en el insert
+		   INSERT INTO	@DeliveryAttemptInserted ([IdDeliveryAttempt])
+			SELECT 
+				TOP (1)
+				     DA.ID
+			FROM 
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+				LEFT JOIN
+				[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+				ON 
+				[DO].[Guide_Serie] = DA.Guide_Serie
+				AND
+				[DO].[Guide_Number] = DA.Guide_Number
+			WHERE
+				[DO].[Guide_Serie] = @GuideSerie
+				AND
+				[DO].[Guide_Number] = @GuideNumber
+          ------ fin --------
+
+			-- Ingreso manual de intento de entrega para proceso
+			IF( NOT EXISTS(Select TOP 1 1 From dbo.DeliveryAttempt  WITH(NOLOCK) 
+	           Where Guide_Serie = @GuideSerie AND Guide_Number=@GuideNumber))
+	  BEGIN
+
+			 
 			-- Ingreso manual de intento de entrega para proceso
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryAttempt]
 			(
@@ -213,7 +307,7 @@ BEGIN
 			OUTPUT [Inserted].[ID] INTO	@DeliveryAttemptInserted ([IdDeliveryAttempt])
 			SELECT 
 				TOP (1) 
-					@GuideSerie
+					 @GuideSerie
 					,@GuideNumber
 					,[DO].[Pieces_Dry]
 					,[DO].[Pieces_Cold]
@@ -234,14 +328,25 @@ BEGIN
 					,NULL
 					,NULL
 					,NULL
-					,NULL
+					,@IdConfirmationOfIncidence
 			FROM 
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 			WHERE
 				[DO].[Guide_Serie] = @GuideSerie
 				AND
 				[DO].[Guide_Number] = @GuideNumber
+        END
 
+
+		IF(EXISTS(Select TOP 1 1 From dbo.DeliveryAttempt  WITH(NOLOCK) 
+	           Where Guide_Serie = @GuideSerie AND Guide_Number=@GuideNumber))
+			BEGIN
+			   UPDATE [dbo].[DeliveryAttempt] 
+			   SET ID_Incident =@Incidence, ConfirmationOfIncidenceId = @IdConfirmationOfIncidence
+			   Where Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
+
+			END
+			
 			-- Ingresar a bitácora de estados el intento de entrega fallido para la guía
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
 			(
