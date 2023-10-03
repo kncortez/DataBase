@@ -1503,11 +1503,8 @@
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
-<<<<<<< HEAD
-=======
-	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
+	  <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
     <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
->>>>>>> origin/feature/FDAPI-1853-método-para-validar-si-un-proDB
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1564,8 +1561,9 @@
     <Build Include="dbo\Stored Procedures\RDL_ReportMembershipSubscription.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
     <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />    
-    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />    
-    
+    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />        
+    <Build Include="dbo\Functions\fn_get_cv_status_runoff.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

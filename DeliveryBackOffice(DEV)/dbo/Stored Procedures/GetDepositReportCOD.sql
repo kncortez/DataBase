@@ -25,8 +25,9 @@ BEGIN
 
 
     --IF((ISNULL(@IdCustomer,0) != 0  OR @IdCustomer != -1) AND (ISNULL(@SenderEmail,'0') = '0' OR @SenderEmail = '-1' OR @SenderEmail = '1'))
-    IF (@IdCustomer != -1)
-    BEGIN
+    --IF (@IdCustomer != -1)
+    IF (@IdCustomer > 0)    
+	BEGIN
 
 		IF OBJECT_ID('tempdb.dbo.#TempBatchDetailCOD', 'U') IS NOT NULL
 			DROP TABLE #TempBatchDetailCOD;
@@ -127,7 +128,7 @@ BEGIN
                        FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
                        WHERE dt.Guide_Serie = do.Guide_Serie
                              AND dt.Guide_Number = do.Guide_Number
-                             AND dt.StatusOrderId = 5
+                             AND dt.StatusOrderId IN (5,22)
                    ) FechaEntrega,
                    TBDC.[AuthorizationDate] FechaPago,
                    btd.[AuthorizationNumber] NoDeposito,
@@ -236,9 +237,14 @@ BEGIN
 				,s1.Departamento
 				,s1.Municipio
 				,s1.Receiver
-				,FORMAT(s1.FechaArribo, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaArribo'
-				,FORMAT(s1.FechaEntrega, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaEntrega'
-				,FORMAT(s1.FechaPago, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaPago'
+				
+				--,FORMAT(s1.FechaArribo, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaArribo'
+				--,FORMAT(s1.FechaEntrega, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaEntrega'
+				--,FORMAT(s1.FechaPago, 'dd/MM/yyyy hh:mm:ss tt' ) 'FechaPago'
+				,s1.FechaArribo 'FechaArribo'
+				,s1.FechaEntrega 'FechaEntrega'
+				,s1.FechaPago 'FechaPago'
+				
 				,s1.NoDeposito
 				,s1.CODAmount
 				,s1.TypeService
@@ -273,7 +279,7 @@ BEGIN
                    FORMAT(
                    (
                        SELECT TOP 1
-                              dt.DateCreated
+                              CONVERT(DATETIME,dt.DateCreated)
                        FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
                        WHERE dt.Guide_Serie = do.Guide_Serie
                              AND dt.Guide_Number = do.Guide_Number
@@ -284,15 +290,15 @@ BEGIN
                    FORMAT(
                    (
                        SELECT TOP 1
-                              dt.DateCreated
+                              CONVERT(DATETIME,dt.DateCreated)
                        FROM dbo.DeliveryOrderDetail dt WITH (NOLOCK)
                        WHERE dt.Guide_Serie = do.Guide_Serie
                              AND dt.Guide_Number = do.Guide_Number
-                             AND dt.StatusOrderId = 5
+                             AND dt.StatusOrderId IN (5,22)
                    ),
                    'dd/MM/yyyy hh:mm:ss tt'
                          ) FechaEntrega,
-                   FORMAT(TBDC.[AuthorizationDate], 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
+                   FORMAT(CONVERT(DATETIME,TBDC.[AuthorizationDate]), 'dd/MM/yyyy hh:mm:ss tt') FechaPago,
                    btd.[AuthorizationNumber] NoDeposito,
                    do.[Collect_OnDelivery] AS CODAmount,
                    IIF(do.[TypeService] = 'EXP', 'NDD', ISNULL(do.[TypeService], 'NDD')) TypeService,
