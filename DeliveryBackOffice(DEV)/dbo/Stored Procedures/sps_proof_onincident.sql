@@ -264,7 +264,7 @@ BEGIN
                         (
                             SELECT StatusOrderId
                             FROM StatusOrder
-                            WHERE OrderDescription = 'Intento de entrega fallida'
+                            WHERE OrderDescription = 'Incidencia en ruta'
                         );
                         SET @CatTypeConfirmationOfIncidenceId =
                         (
@@ -409,7 +409,7 @@ BEGIN
                         (
                             SELECT StatusOrderId
                             FROM StatusOrder
-                            WHERE OrderDescription = 'Intento de entrega fallida'
+                            WHERE OrderDescription = 'Incidencia en ruta'
                         );
                         SET @CatTypeConfirmationOfIncidenceId =
                         (
@@ -476,7 +476,7 @@ BEGIN
                     (
                         SELECT StatusOrderId
                         FROM StatusOrder
-                        WHERE OrderDescription = 'Intento de entrega fallida'
+                        WHERE OrderDescription = 'Incidencia en ruta'
                     );
                     SET @CatTypeConfirmationOfIncidenceId =
                     (
