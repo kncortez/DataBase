@@ -14,6 +14,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 
+
 	Select TOP 1 
 	       ISNULL(DO.Sender_FirstName +' '+ DO.Sender_LastName,'') AS Sender,
 	       SO.OrderDescription AS [Status],
@@ -52,25 +53,28 @@ BEGIN
                          'Pendiente'
                      ELSE
                 (CASE
-                     WHEN cfi.IsValid = 1 THEN
-                         'Real'
+                     WHEN cfi.IsDenied = 0 THEN
+                         'Rechazada'
                      ELSE
-                         'Falsa'
+                         'Aprobada'
                  END
                 )
                  END
                 ) [StatusOfIncident],
 				DO.IdDeliveryOption,
-				'' AS TrackingObservations,
-				'' AS LiquidationObservations
+				cfi.ActionObservation AS TrackingObservations,
+				cfi.LiquidatorRemarks AS LiquidationObservations
 	From [dbo].[DeliveryOrder] DO WITH (NOLOCK)
-	    INNER JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
+	    LEFT JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 			ON DO.Guide_Serie = DP.Guide_Serie AND DO.Guide_Number = DP.Guide_Number 
-	    INNER JOIN  [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-			ON DP.Guide_Serie = DA.Guide_Serie AND DP.Guide_Number = DA.Guide_Number
+	    OUTER APPLY(
+		SELECT DA.* FROM [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+			WHERE DO.Guide_Serie = DA.Guide_Serie AND DO.Guide_Number = DA.Guide_Number			
+		)DA
+		
 		INNER JOIN [dbo].[StatusOrder] SO WITH (NOLOCK)
 		    ON DO.StatusOrderId = SO.StatusOrderId
-	   INNER JOIN [dbo].[DeliveryOrderAttemptData] ATD WITH (NOLOCK)
+	   LEFT JOIN [dbo].[DeliveryOrderAttemptData] ATD WITH (NOLOCK)
 	        ON DA.Guide_Serie = ATD.GuideSerie AND DA.Guide_Number = ATD.GuideNumber
 	  LEFT JOIN [dbo].[CatTypeIncidence] cti WITH (NOLOCK)
                 ON cti.IdIncidenceType = DA.ID_Incident
@@ -80,17 +84,20 @@ BEGIN
 	      ON DO.Receiver_ID = VPC.CodeOfReference
    LEFT JOIN dbo.ConfirmationOfIncidence cfi WITH (NOLOCK)
          ON cfi.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
-	Where  DO.Guide_Number = @GuideNumber  And DO.Guide_Number = @GuideNumber
+	Where  DO.Guide_Serie = @GuideSerie  And DO.Guide_Number = @GuideNumber
 
 
 	Select  TOP 1
 	       DP.Path_Incident
+	     
 	From [dbo].[DeliveryOrder] DO WITH (NOLOCK)
-	    INNER JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
+	    LEFT JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 			ON DO.Guide_Serie = DP.Guide_Serie AND DO.Guide_Number = DP.Guide_Number 
-	    INNER JOIN  [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+	    LEFT JOIN  [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
 			ON DP.Guide_Serie = DA.Guide_Serie AND DP.Guide_Number = DA.Guide_Number
-	Where  DO.Guide_Number = @GuideNumber  And DO.Guide_Number = @GuideNumber
+	Where  DO.Guide_Serie = @GuideSerie  And DO.Guide_Number = @GuideNumber
+	order by DP.ID Desc
+	       
 	       
 
 	
