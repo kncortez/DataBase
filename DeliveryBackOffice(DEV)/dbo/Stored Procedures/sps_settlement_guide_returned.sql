@@ -264,7 +264,13 @@ BEGIN
 						WHEN @IsMarkedReturn = 1 THEN 1
 						ELSE 0
 					END IsMarkedReturn,
-					ISNULL(COI.LiquidatorRemarks,'Sin Observaciones') AS LiquidatorRemarks
+					 CASE 
+				       WHEN COI.LiquidatorRemarks IS NULL THEN 
+					   'Sin Observaciones'
+				       WHEN COI.LiquidatorRemarks='' THEN 
+					   'Sin Observaciones' 
+				       ELSE COI.LiquidatorRemarks 
+				   END AS LiquidatorRemarks
 				FROM DeliveryOrder DOR WITH (NOLOCK)
 				INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
 					ON doad.GuideSerie = DOR.Guide_Serie
