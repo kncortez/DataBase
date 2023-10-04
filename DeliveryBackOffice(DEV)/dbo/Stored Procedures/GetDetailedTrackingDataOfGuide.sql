@@ -37,6 +37,7 @@ BEGIN
 	DECLARE @StatusIncident INT;
 	DECLARE @StatusIncidentValidated INT;
 	DECLARE @Id_Courier INT;
+	DECLARE @NameTypeIncident VARCHAR(50);
 
 	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
 	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
@@ -46,6 +47,14 @@ BEGIN
 											ON dod.Guide_Serie = dat.Guide_Serie AND dod.Guide_Number = dat.Guide_Number 
 										WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number
 										AND dod.StatusOrderId = @StatusIncident)
+
+	SET @NameTypeIncident = (SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla WITH (NOLOCK)  
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+
 
 	SELECT
 		TOP 1
@@ -202,12 +211,7 @@ BEGIN
             'web' AS [StageSource],
 			 ( CASE
                     WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla WITH (NOLOCK)  
-						INNER JOIN CatTypeIncidence cti WITH (NOLOCK) 
-						ON dla.ID_Incident = cti.IdIncidenceType 
-						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
-						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
-						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+						@NameTypeIncident
 				ELSE
                        ''
                 END
@@ -235,9 +239,18 @@ BEGIN
                      ''
                            )
 				 WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla WITH (NOLOCK)  
-						INNER JOIN CatTypeIncidence cti WITH (NOLOCK) 
-						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+						   (CASE
+								WHEN @NameTypeIncident = 'Incidencias operativas' THEN
+								(SELECT TOP 1 cti.NameIncidencePublic FROM DeliveryAttempt dla WITH (NOLOCK) 
+								INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+								ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+								ELSE
+									(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla WITH (NOLOCK) 
+								INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+								ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+								
+							END
+							)
 					
 				ELSE
 					ISNULL(so.StatusOrderTrackingDescription, '')
