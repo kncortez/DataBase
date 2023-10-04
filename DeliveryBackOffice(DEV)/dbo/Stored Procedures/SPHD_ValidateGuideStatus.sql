@@ -64,6 +64,15 @@ BEGIN
                 ORDER BY [DOD].[DateCreated] DESC
             );
 
+    DECLARE @Incidentsavailable INT = (
+	
+			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+			DOAD.GuideSerie+ Convert(NVARCHAR(20),DOAD.GuideNumber) =  @Guide
+	        );
+
+
     SET NOCOUNT ON;
 
     BEGIN TRY
@@ -118,7 +127,9 @@ BEGIN
             ELSE
             BEGIN
 
-                SELECT [Result] = 0,
+                SELECT CASE WHEN @Incidentsavailable > 0 THEN  7 
+				         ELSE
+				         0 END [Result],
                        @StatusName 'Status',
                        CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus';
             END;
