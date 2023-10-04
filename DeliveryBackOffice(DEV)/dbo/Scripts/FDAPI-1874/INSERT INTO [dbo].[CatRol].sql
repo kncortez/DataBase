@@ -1,0 +1,2 @@
+INSERT INTO CatRol (RolIdSystem,RolName,RolDescription,RolAdminClient,RolRowStatus, RolTokenCreated,RolDateCreated) 
+VALUES(13,'Control Calidad','Rol para usuarios de control de calidad',0,1,'ELOPEZ',GETDATE())
