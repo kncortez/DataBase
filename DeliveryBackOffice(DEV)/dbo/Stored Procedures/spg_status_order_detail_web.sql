@@ -18,16 +18,9 @@ BEGIN
 
 	DECLARE @StatusIncident INT;
 	DECLARE @StatusIncidentValidated INT;
-		DECLARE @Id_Courier INT;
 
 	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
 	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
-
-	SET @Id_Courier = (SELECT top 1 dat.ID_Courier FROM DeliveryOrderDetail dod WITH(NOLOCK)
-										INNER JOIN DeliveryAttempt dat WITH(NOLOCK)
-											ON dod.Guide_Serie = dat.Guide_Serie AND dod.Guide_Number = dat.Guide_Number 
-										WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number
-										AND dod.StatusOrderId = @StatusIncident)
 
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
@@ -134,7 +127,7 @@ BEGIN
 						ON dla.ID_Incident = cti.IdIncidenceType 
 						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
 						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
-						WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+						WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
 				ELSE
                        ''
                 END
@@ -178,7 +171,7 @@ BEGIN
 				WHEN dod.StatusOrderId = @StatusIncident THEN
 						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
 						INNER JOIN CatTypeIncidence cti 
-						ON dla.ID_Incident = cti.IdIncidenceType WHERE dla.Guide_Serie = @Guide_Serie AND dla.Guide_Number = @Guide_Number)
+						ON dla.ID_Incident = cti.IdIncidenceType WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
 
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
                      ''
@@ -251,13 +244,17 @@ BEGIN
                                ''
                            )
 				WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
-						(SELECT TOP 1 Path_Incident
-								FROM DeliveryProof dpf
-								INNER JOIN DeliveryAttempt datt
-								ON dpf.ID = datt.ID_Proof
-								INNER JOIN DeliveryOrderDetail dod
-								ON datt.ID = dod.DeliveryAttemptId
-								WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number)
+						(SELECT TOP 1
+                            dlp.Path_Incident
+							FROM dbo.DeliveryAttempt datt
+						 INNER JOIN ConfirmationOfIncidence cfo
+							ON datt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
+                         INNER JOIN dbo.DeliveryProof dlp
+                             ON datt.ID_Proof = dlp.ID
+							WHERE dod.Guide_Serie = @Guide_Serie
+                          AND dod.Guide_Number = @Guide_Number
+                          AND dod.DeliveryAttemptId = datt.ID
+						  AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
                  ELSE
                      ''
              END
@@ -293,7 +290,13 @@ BEGIN
             '' AS [ManifestNumber],
 			  (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 Latitude FROM DeliveryAttempt WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Latitude FROM DeliveryAttempt dt WITH (NOLOCK) 
+					 INNER JOIN ConfirmationOfIncidence cfo WITH (NOLOCK) 
+							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
+						WHERE dod.Guide_Serie = @Guide_Serie 
+						AND dod.Guide_Number = @Guide_Number
+                        AND dod.DeliveryAttemptId = dt.ID
+						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
 
                     ELSE
                         ''
@@ -301,7 +304,13 @@ BEGIN
                ) AS Latitude,
                (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-					 (SELECT TOP 1 Longitude FROM DeliveryAttempt WITH (NOLOCK) WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
+					 (SELECT TOP 1 Longitude FROM DeliveryAttempt dt WITH (NOLOCK)
+						INNER JOIN ConfirmationOfIncidence cfo
+							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
+						WHERE  dod.Guide_Serie = @Guide_Serie 
+						AND dod.Guide_Number = @Guide_Number
+                        AND dod.DeliveryAttemptId = dt.ID
+						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
 
                     ELSE
                         ''
@@ -314,34 +323,28 @@ BEGIN
 			(CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 							(  SELECT TOP 1
-								tk.SSN_Username
-								FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
-								INNER JOIN DeliveryOrderDetail dod WITH (NOLOCK)
-									ON dat.Guide_Serie = dod.Guide_Serie
-								 AND dat.Guide_Number = dod.Guide_Number
-								LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
-									 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)--ddd.UserCreated
-							   WHERE dod.Guide_Serie = @Guide_Serie
-									AND dod.Guide_Number = @Guide_Number
-									AND dod.DeliveryAttemptId = dat.ID)
+								(prs.PerFirstName+' '+prs.PerLastName) FROM Person prs
+									INNER JOIN RegisterUser usr
+										ON prs.PerIdPerson = usr.UsrIdPerson
+									INNER JOIN TokenLog tkl
+										ON usr.UsrIdUser = tkl.TknIdUser
+									WHERE dod.Guide_Serie = @Guide_Serie
+										  AND dod.Guide_Number = @Guide_Number
+										  AND dod.UserCreated = CONVERT(VARCHAR(50), tkl.TknIdToken))
+
 					WHEN dod.StatusOrderId = @StatusIncident  THEN
 								(CASE 
-									WHEN @Id_Courier IS NOT NULL THEN
-									(SELECT Top 1(srv.First_Name +' '+srv.Last_Name) FROM DeliveryOrderDetail dyo WITH (NOLOCK)
-									INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
-									ON dyo.Guide_Serie = dat.Guide_Serie AND dyo.Guide_Number = dat.Guide_Number
+									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
+									(SELECT Top 1(srv.First_Name +' '+srv.Last_Name) FROM DeliveryAttempt dat WITH (NOLOCK)
 									INNER JOIN SenderReceiver srv WITH (NOLOCK)
 									ON dat.ID_Courier = srv.ID
-									WHERE dyo.Guide_Serie = @Guide_Serie AND dyo.Guide_Number = @Guide_Number)
+									WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number)
 									
 									ELSE
-								
+
 									(SELECT TOP 1
 									tk.SSN_Username
 									FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
-									INNER JOIN DeliveryOrderDetail dod WITH (NOLOCK)
-										ON dat.Guide_Serie = dod.Guide_Serie
-									 AND dat.Guide_Number = dod.Guide_Number
 									LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
 										 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)
 								   WHERE dod.Guide_Serie = @Guide_Serie
@@ -370,7 +373,8 @@ BEGIN
                  dod.UserCreated,
                  dod.Observations,
                  so.OrderDescription,
-                 [CCT].[CheckpointIcon]
+                 [CCT].[CheckpointIcon],
+				 dod.DeliveryAttemptId
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
