@@ -24,13 +24,14 @@ BEGIN
 		ServicePrice DECIMAL(18,2),
 		ServiceSerie NVARCHAR(2),
 		ServiceNumber INT,
-		DescriptionIncidence NVARCHAR(500)
+		DescriptionIncidence NVARCHAR(500),
+		NotifiesOrigin INT
 	);
 
 	BEGIN TRY
 
 		INSERT INTO @ResponseTable
-			(CourierName, CourierPhones, ServiceDestinyName, ServiceCustomerName, ServiceDestinyPhone, ServiceCustomerPhone, ServiceDestinyAddress, IsReturn, DeliveryToken, ServiceSerie, ServiceNumber,DescriptionIncidence)
+			(CourierName, CourierPhones, ServiceDestinyName, ServiceCustomerName, ServiceDestinyPhone, ServiceCustomerPhone, ServiceDestinyAddress, IsReturn, DeliveryToken, ServiceSerie, ServiceNumber,DescriptionIncidence,NotifiesOrigin)
 		SELECT
 			TOP 1
 				ISNULL(LTRIM(RTRIM(CONCAT(SR.First_Name, ' ', SR.Last_Name))), '') 'CourierName',
@@ -44,7 +45,8 @@ BEGIN
 				SDFG.GuideToken 'DeliveryToken',
 				DO.Guide_Serie,
 				DO.Guide_Number,
-				CTI.DescriptionIncidence
+				CTI.DescriptionIncidence,
+				CTI.NotifiesOrigin
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 			LEFT JOIN
@@ -197,7 +199,8 @@ BEGIN
 				RT.IsReturn,
 				RT.DeliveryToken,
 				ISNULL(RT.ServicePrice, 0) 'ServicePrice',
-				RT.DescriptionIncidence
+				RT.DescriptionIncidence,
+				RT.NotifiesOrigin
 			FROM
 				@ResponseTable RT
 			
