@@ -373,17 +373,6 @@ BEGIN
 			so.NextSteps NextSteps,
 			(CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-        --                (  SELECT TOP 1
-								--tk.SSN_Username
-								--FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
-								--INNER JOIN DeliveryOrderDetail dod WITH (NOLOCK)
-								--	ON dat.Guide_Serie = dod.Guide_Serie
-								-- AND dat.Guide_Number = dod.Guide_Number
-								--LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
-								--	 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)--ddd.UserCreated
-							 --  WHERE dod.Guide_Serie = @Guide_Serie
-								--	AND dod.Guide_Number = @Guide_Number
-								--	AND dod.DeliveryAttemptId = dat.ID)
 								(  SELECT TOP 1
 								(prs.PerFirstName+' '+prs.PerLastName) FROM Person prs WITH (NOLOCK)
 									INNER JOIN RegisterUser usr WITH (NOLOCK)
@@ -394,36 +383,12 @@ BEGIN
 										  AND dod.Guide_Number = @Guide_Number
 										  AND dod.UserCreated = CONVERT(VARCHAR(50), tkl.TknIdToken))
 					WHEN dod.StatusOrderId = @StatusIncident THEN
-							--(CASE 
-							--		WHEN @Id_Courier IS NOT NULL THEN
-							--		(SELECT Top 1(srv.First_Name +' '+srv.Last_Name) FROM DeliveryOrderDetail dyo WITH (NOLOCK)
-							--		INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
-							--		ON dyo.Guide_Serie = dat.Guide_Serie AND dyo.Guide_Number = dat.Guide_Number
-							--		INNER JOIN SenderReceiver srv WITH (NOLOCK)
-							--		ON dat.ID_Courier = srv.ID
-							--		WHERE dyo.Guide_Serie = @Guide_Serie AND dyo.Guide_Number = @Guide_Number)
-									
-							--		ELSE
-								
-							--		(SELECT TOP 1
-							--		tk.SSN_Username
-							--		FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
-							--		INNER JOIN DeliveryOrderDetail dod WITH (NOLOCK)
-							--			ON dat.Guide_Serie = dod.Guide_Serie
-							--		 AND dat.Guide_Number = dod.Guide_Number
-							--		LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
-							--			 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)
-							--	   WHERE dod.Guide_Serie = @Guide_Serie
-							--			AND dod.Guide_Number = @Guide_Number
-							--			AND dod.DeliveryAttemptId = dat.ID)
-							-- END
-							--)
 								(CASE 
 									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
-									(SELECT Top 1(srv.First_Name +' '+srv.Last_Name) FROM DeliveryAttempt dat WITH (NOLOCK)
-									INNER JOIN SenderReceiver srv WITH (NOLOCK)
-									ON dat.ID_Courier = srv.ID
-									WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number)
+									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) FROM SenderReceiver srv WITH (NOLOCK)
+											INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
+											ON srv.ID = dat.ID_Courier
+											WHERE dod.Guide_Number = @Guide_Number AND dat.ID = dod.DeliveryAttemptId)
 									
 									ELSE
 
