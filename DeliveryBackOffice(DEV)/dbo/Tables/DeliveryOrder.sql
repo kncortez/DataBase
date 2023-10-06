@@ -208,6 +208,11 @@ GO
 CREATE NONCLUSTERED INDEX [idx_sendertown]
     ON [dbo].[DeliveryOrder]([Sender_Town] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_2023]
+ON [dbo].[DeliveryOrderDetail] ([StatusOrderId],[DateCreatedInSystem])
+INCLUDE ([UserCreated],[DeliveryAttemptId])
+
 
 GO
 
