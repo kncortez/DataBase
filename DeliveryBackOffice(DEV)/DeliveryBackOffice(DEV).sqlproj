@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
+    <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
+    
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
     <Build Include="dbo\User Defined Types\TblVPFrequency.sql" />
     <Build Include="dbo\User Defined Types\TblVPDestination.sql" />
@@ -1505,6 +1507,12 @@
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
 	  <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
     <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
+    <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
+    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />	
+    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
+  	<Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
+	  <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
