@@ -331,44 +331,7 @@ BEGIN
                '' [ReceiverPhone],
                0 [PriceGuide],
                0 [PriceCOD],
-			   (CASE
-                    WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
-
-							(  SELECT TOP 1
-								(prs.PerFirstName+' '+prs.PerLastName) FROM Person prs WITH (NOLOCK)
-									INNER JOIN RegisterUser usr WITH (NOLOCK)
-										ON prs.PerIdPerson = usr.UsrIdPerson
-									INNER JOIN TokenLog tkl WITH (NOLOCK)
-										ON usr.UsrIdUser = tkl.TknIdUser
-									WHERE dod.Guide_Serie = @Guide_Serie
-										  AND dod.Guide_Number = @Guide_Number
-										  AND dod.UserCreated = CONVERT(VARCHAR(50), tkl.TknIdToken))
-
-					WHEN dod.StatusOrderId = @StatusIncident THEN
-				
-								(CASE 
-									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
-									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) FROM SenderReceiver srv WITH (NOLOCK)
-											INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
-											ON srv.ID = dat.ID_Courier
-											WHERE dod.Guide_Number = @Guide_Number AND dat.ID = dod.DeliveryAttemptId)
-									
-									ELSE
-
-									(SELECT TOP 1
-									tk.SSN_Username
-									FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
-									LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
-										 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)
-								   WHERE dod.Guide_Serie = @Guide_Serie
-										AND dod.Guide_Number = @Guide_Number
-										AND dod.DeliveryAttemptId = dat.ID)
-							 END
-							)
-                    ELSE
-                        ''
-                END
-               ) AS UserIncident,
+			   '' AS UserIncident,
 			   (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 					(@StatusIncidentValidated)
