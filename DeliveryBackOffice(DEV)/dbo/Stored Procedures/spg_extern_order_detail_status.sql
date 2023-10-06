@@ -348,10 +348,10 @@ BEGIN
 				
 								(CASE 
 									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
-									(SELECT Top 1(srv.First_Name +' '+srv.Last_Name) FROM DeliveryAttempt dat WITH (NOLOCK)
-									INNER JOIN SenderReceiver srv WITH (NOLOCK)
-									ON dat.ID_Courier = srv.ID
-									WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number)
+									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) FROM SenderReceiver srv WITH (NOLOCK)
+											INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
+											ON srv.ID = dat.ID_Courier
+											WHERE dod.Guide_Number = @Guide_Number AND dat.ID = dod.DeliveryAttemptId)
 									
 									ELSE
 
