@@ -1,0 +1,2 @@
+INSERT INTO CatModule (ModName,ModPath, ModDescription, ModOrder,ModMetadata, ModVisible, ModRowStatus,ModTokenCreated, ModDateCreated, ModGroup)
+VALUES('Control de calidad','/control-calidad/control-calidad','Modulo control de calidad',1,'fa fa-server fa-1x',1,1,'ELOPEZ',GETDATE(),1)

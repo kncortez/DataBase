@@ -1,0 +1,4 @@
+﻿CREATE TYPE [dbo].[TblHubs] AS TABLE (
+    [Hub] NVARCHAR (5) NOT NULL,
+    PRIMARY KEY CLUSTERED ([Hub] ASC));
+

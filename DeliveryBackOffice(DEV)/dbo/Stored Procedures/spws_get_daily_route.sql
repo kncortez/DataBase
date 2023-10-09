@@ -149,7 +149,7 @@ BEGIN
             ON DAT.Guide_Serie = DOR.Guide_Serie
                AND DAT.Guide_Number = DOR.Guide_Number
                AND DOR.IsLastMileReturn = 1
-               AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+               AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45,50 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución|Incidencia Validada
         INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail  DSD WITH (NOLOCK)
             ON DSD.Guide_Serie = DAT.Guide_Serie
                AND DSD.Guide_Number = DAT.Guide_Number
