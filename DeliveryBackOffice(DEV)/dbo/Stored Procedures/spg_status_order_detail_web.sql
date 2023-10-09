@@ -15,6 +15,13 @@ CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
     @Guide_Number BIGINT
 AS
 BEGIN
+
+	DECLARE @StatusIncident INT;
+	DECLARE @StatusIncidentValidated INT;
+
+	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
+	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
+
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
@@ -37,6 +44,7 @@ BEGIN
            RES.[StageDate],
            RES.[StageTitle],
            RES.[StageSource],
+		   RES.[ClasificationIncident],
            RES.[StageDescription],
            RES.[CheckpointIcon],
            RES.[ImagePath],
@@ -48,7 +56,8 @@ BEGIN
            RES.[Latitude],
            RES.[Longitude],
            RES.Token,
-           RES.NextSteps
+           RES.NextSteps,
+		   RES.UserIncident
     INTO #OrdChkpnt
     FROM
     (
@@ -67,6 +76,7 @@ BEGIN
                '' [StageDate],
                '' [StageTitle],
                'web' [StageSource],
+			   '' AS [ClasificationIncident],
                '' AS [StageDescription],
                '' AS [CheckpointIcon],
                '' AS [ImagePath],
@@ -81,7 +91,8 @@ BEGIN
                ISNULL(da.Latitude, '') [Latitude],
                ISNULL(da.Longitude, '') [Longitude],
                '' [Token],
-               '' NextSteps
+               '' NextSteps,
+			   '' [UserIncident]
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                 ON da.Guide_Serie = do.Guide_Serie
@@ -109,10 +120,23 @@ BEGIN
             (MAX(dod.DateCreated)) AS [StageDate],
             so.OrderDescription AS [StageTitle],
             'web' AS [StageSource],
+			 ( CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
+						(SELECT TOP 1 cic.IncidenceTypeName FROM DeliveryAttempt dla WITH (NOLOCK)
+						INNER JOIN CatTypeIncidence cti WITH (NOLOCK)
+						ON dla.ID_Incident = cti.IdIncidenceType 
+						INNER JOIN CatIncidenceClasification cic WITH (NOLOCK)
+						ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+						WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
+				ELSE
+                       ''
+                END
+
+			   ) AS [ClasificationIncident],
             (CASE
-                 WHEN dod.StatusOrderId IN ( 6, 8 ) THEN
+                 WHEN dod.StatusOrderId IN ( 6, 8,@StatusIncidentValidated ) THEN
                      ISNULL(dod.Observations, '')
-                 WHEN dod.StatusOrderId IN ( 12, 45 ) THEN
+                 WHEN dod.StatusOrderId IN ( 12/*, 45 */) THEN
                      ISNULL(
                      (
                          SELECT TOP 1
@@ -144,6 +168,11 @@ BEGIN
                      ),
                      ''
                            )
+				WHEN dod.StatusOrderId = @StatusIncident THEN
+						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
+						INNER JOIN CatTypeIncidence cti 
+						ON dla.ID_Incident = cti.IdIncidenceType WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
+
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
                      ''
                  ELSE
@@ -171,8 +200,8 @@ BEGIN
              END
             ) AS [StageDescription],
             ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
-            (CASE ROW_NUMBER() OVER (ORDER BY CONVERT(DATE, dod.DateCreated) ASC)
-                 WHEN 1 THEN
+            (CASE 
+                 WHEN  dod.StatusOrderId = 5  THEN
                      ISNULL(
                                ISNULL(
                                (
@@ -214,6 +243,18 @@ BEGIN
                                      ),
                                ''
                            )
+				WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
+						(SELECT TOP 1
+                            dlp.Path_Incident
+							FROM dbo.DeliveryAttempt datt
+						 INNER JOIN ConfirmationOfIncidence cfo
+							ON datt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
+                         INNER JOIN dbo.DeliveryProof dlp
+                             ON datt.ID_Proof = dlp.ID
+							WHERE dod.Guide_Serie = @Guide_Serie
+                          AND dod.Guide_Number = @Guide_Number
+                          AND dod.DeliveryAttemptId = datt.ID
+						  AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
                  ELSE
                      ''
              END
@@ -247,10 +288,76 @@ BEGIN
             '' AS NameOfReceiver,
             '' AS Place,
             '' AS [ManifestNumber],
-            '' AS Latitude,
-            '' AS Longitude,
+			  (CASE
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Latitude FROM DeliveryAttempt dt WITH (NOLOCK) 
+					 INNER JOIN ConfirmationOfIncidence cfo WITH (NOLOCK) 
+							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
+						WHERE dod.Guide_Serie = @Guide_Serie 
+						AND dod.Guide_Number = @Guide_Number
+                        AND dod.DeliveryAttemptId = dt.ID
+						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+
+                    ELSE
+                        ''
+                END
+               ) AS Latitude,
+               (CASE
+					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+					 (SELECT TOP 1 Longitude FROM DeliveryAttempt dt WITH (NOLOCK)
+						INNER JOIN ConfirmationOfIncidence cfo
+							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
+						WHERE  dod.Guide_Serie = @Guide_Serie 
+						AND dod.Guide_Number = @Guide_Number
+                        AND dod.DeliveryAttemptId = dt.ID
+						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+
+                    ELSE
+                        ''
+                END
+               ) AS Longitude,
+            --'' AS Latitude,
+            --'' AS Longitude,
             dod.UserCreated Token,
-            '' AS NextSteps
+            '' AS NextSteps,
+			(CASE
+                    WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
+							(  SELECT TOP 1
+								(prs.PerFirstName+' '+prs.PerLastName) FROM Person prs
+									INNER JOIN RegisterUser usr
+										ON prs.PerIdPerson = usr.UsrIdPerson
+									INNER JOIN TokenLog tkl
+										ON usr.UsrIdUser = tkl.TknIdUser
+									WHERE dod.Guide_Serie = @Guide_Serie
+										  AND dod.Guide_Number = @Guide_Number
+										  AND dod.UserCreated = CONVERT(VARCHAR(50), tkl.TknIdToken))
+
+					WHEN dod.StatusOrderId = @StatusIncident  THEN
+								(CASE 
+									WHEN (SELECT TOP 1 dttt.ID_Courier FROM DeliveryAttempt dttt WITH (NOLOCK) WHERE dttt.ID = dod.DeliveryAttemptId) IS NOT NULL THEN
+									(SELECT TOP 1 (srv.First_Name +' '+srv.Last_Name) FROM SenderReceiver srv WITH (NOLOCK) 
+											INNER JOIN DeliveryAttempt dat WITH (NOLOCK) 
+											ON srv.ID = dat.ID_Courier
+											WHERE dod.Guide_Number = @Guide_Number AND dat.ID = dod.DeliveryAttemptId)
+									
+									ELSE
+
+									(SELECT TOP 1
+									tk.SSN_Username
+									FROM dbo.DeliveryAttempt dat WITH (NOLOCK)
+									LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
+										 ON tk.SSN_IdToken = CONVERT(VARCHAR(50), dat.User_Created)
+								   WHERE dod.Guide_Serie = @Guide_Serie
+										AND dod.Guide_Number = @Guide_Number
+										AND dod.DeliveryAttemptId = dat.ID)
+							 END
+							)
+
+                    ELSE
+                        ''
+                END
+               ) AS UserIncident
+
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
@@ -266,7 +373,8 @@ BEGIN
                  dod.UserCreated,
                  dod.Observations,
                  so.OrderDescription,
-                 [CCT].[CheckpointIcon]
+                 [CCT].[CheckpointIcon],
+				 dod.DeliveryAttemptId
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -288,6 +396,7 @@ BEGIN
            OrdChkPnt.[StageDate],
            OrdChkPnt.[StageTitle],
            OrdChkPnt.[StageSource],
+		   OrdChkPnt.ClasificationIncident,
            ISNULL(
                      '[ '
                      + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](ISNULL(epl.FirstName, '') + ' '
@@ -316,7 +425,8 @@ BEGIN
            OrdChkPnt.[ManifestNumber],
            OrdChkPnt.[Latitude],
            OrdChkPnt.[Longitude], --,
-           OrdChkPnt.NextSteps
+           OrdChkPnt.NextSteps,
+		   OrdChkPnt.UserIncident
     --OrdChkPnt.Token
     FROM #OrdChkpnt OrdChkPnt
         LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token WITH (NOLOCK)

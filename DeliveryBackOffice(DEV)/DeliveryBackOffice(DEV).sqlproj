@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
+    <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
     <Build Include="dbo\User Defined Types\TblVPFrequency.sql" />
     <Build Include="dbo\User Defined Types\TblVPDestination.sql" />
@@ -551,6 +552,7 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1502,6 +1504,13 @@
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
+    <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
+    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
+    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
+    <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1556,8 +1565,14 @@
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_original.sql" />
     <Build Include="dbo\Stored Procedures\spg_TemporalSupportCreateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\RDL_ReportMembershipSubscription.sql" />
-    <Build Include="dbo\Functions\fn_get_cv_status_runoff_1.sql" />
-    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber_1.sql" />
+    <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
+    <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
+    <Build Include="dbo\Functions\fn_get_cv_status_runoff.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStates_1.sql" />
+    <Build Include="dbo\User Defined Types\TblHubs.sql" />
+    <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

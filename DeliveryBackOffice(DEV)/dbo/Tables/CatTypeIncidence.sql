@@ -15,60 +15,13 @@
     [ValidatesLocation]        BIT           DEFAULT ((0)) NOT NULL,
     [HasConfirmationProcess]   BIT           DEFAULT ((0)) NOT NULL,
     [NotifiesOrigin]           BIT           DEFAULT ((0)) NOT NULL,
+    [NameIncidencePublic]      VARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdIncidenceType] ASC)
 );
 
 
 
-
-
-
-
-
-
-
 GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
 
 
 GO
