@@ -150,6 +150,39 @@ BEGIN
 		BEGIN TRANSACTION 
 		BEGIN TRY
 
+		
+		IF (NOT EXISTS(
+		     Select TOP 1 1 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+			  DOAD.GuideNumber =  @GuideNumber)
+		)
+		BEGIN
+		-- Insertar data para manejo de inténtos de entrega/devolución
+		INSERT INTO [dbo].[DeliveryOrderAttemptData] 
+		([GuideSerie]
+		, [GuideNumber]
+		, [GuideDeliveryAttemptCount]
+		, [GuideDeliveryMaxAttemptCount]
+		, [GuideReturnAttemptCount]
+		, [GuideReturnMaxAttemptCount]
+		, [RowStatus]
+		, [DateCreated]
+		, [TokenCreated]
+		)
+		VALUES(
+		 @GuideSerie,
+		 @GuideNumber,
+		 0,
+		  (SELECT TOP 1  ISNULL(Attempt,0) FROM RateHeader rh WHERE rh.RheName = 'Tarifas Individuales'),
+		 0,
+		( SELECT TOP 1  ISNULL(AttemptReturn,0) FROM RateHeader rh WHERE rh.RheName = 'Tarifas Individuales'),
+		 1,
+		 GETDATE(),
+		 @Token
+		)
+		END
+
 --- registro de incidencia
 	INSERT [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence]
 		(
