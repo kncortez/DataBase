@@ -104,7 +104,7 @@ BEGIN
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+              AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21,32 )
           );
 
     /*SELECT lg.Guide_Serie,
