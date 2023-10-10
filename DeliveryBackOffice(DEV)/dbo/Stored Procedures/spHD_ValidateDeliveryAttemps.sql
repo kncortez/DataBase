@@ -119,8 +119,18 @@ begin
         SELECT GuideSerie Guide_Serie,
                 GuideNumber Guide_Number
         FROM @TblGuides
-        WHERE FlowGuide = 2;
-
+        WHERE FlowGuide = 2
+        UNION ALL
+		Select DO.Guide_Serie, DO.Guide_Number 
+         FROM [dbo].[DeliveryOrder] [DO]
+                INNER JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                    ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
+                       AND [DO].[Guide_Number] = [DA].[Guide_Number]
+                INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                    ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+            WHERE 
+                 DA.ID_DeliveryOrderBySettlement= @DeliveryOrderBySettlementId
+                  AND COI.IsAddressModificationRequested=1;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
