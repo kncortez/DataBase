@@ -1,2 +1,7 @@
+DECLARE @IdCatSct INT=(
+			SELECT IdCatSubscription 
+				FROM CatSubscription 
+				WHERE SubscriptionName = 'Paquete Petit')
+
 Insert into CatSubscriptionDiscountRange (CatSubscriptionId,DiscountLowServiceRange,ValueTypeId,DiscountValue,RowStatus, TokenCreated, DateCreated)
-values(18,25,1,0,1,'ELOPEZ',GETDATE())
+values(@IdCatSct,25,1,0,1,'ELOPEZ',GETDATE())
