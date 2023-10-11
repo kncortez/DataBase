@@ -10,7 +10,16 @@ AS
 BEGIN
 	
 	SET NOCOUNT ON;
-
+      
+	    DECLARE @Terminal INT =
+            (
+                 SELECT Top 1 [SO].[CatCheckpointTypeId]
+                FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
+                    INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
+                        ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
+                WHERE [SO].[RowStatus] = 1
+                      AND [DO].[Guide_Serie] = @GuideSerie and [DO].[Guide_Number]  =  @GuideNumber
+            );
 
 		Select TOP 1 
 	       ISNULL(DO.Sender_FirstName +' '+ DO.Sender_LastName,'') AS Sender,
@@ -61,7 +70,13 @@ BEGIN
                 ) [StatusOfIncident],
 				ISNULL(DO.IdDeliveryOption,1) AS IdDeliveryOption,
 				cfi.ActionObservation AS TrackingObservations,
-				cfi.LiquidatorRemarks AS LiquidationObservations
+				cfi.LiquidatorRemarks AS LiquidationObservations,
+				@Terminal  AS 'boolResult',
+				CASE 
+				    WHEN @Terminal = 3 THEN 'Guía en estado terminal,no es posible confirmar incidencia.'
+			        ELSE 'Incidencia confirmada Exitosamente.'
+			   END
+			   AS 'DescriptionResult'
 	From [dbo].[DeliveryOrder] DO WITH (NOLOCK)
 	    LEFT JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 			ON DO.Guide_Serie = DP.Guide_Serie AND DO.Guide_Number = DP.Guide_Number 
