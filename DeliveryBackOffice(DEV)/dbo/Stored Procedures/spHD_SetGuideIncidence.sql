@@ -383,6 +383,16 @@ BEGIN
 			FROM
 				@DeliveryAttemptInserted DAI
 
+
+					--- actualizar ultimo checkpoint en DeliveryOrder
+
+				UPDATE [dbo].[DeliveryOrder]  SET StatusOrderId = @FailedDeliveryVisitStatus,
+				     DateUpdated = GETDATE(),
+					 TokenUpdated = @Token 
+				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+
+				-----------------------fin -----------------------------
+
 			-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
 			IF ( ISNULL(@IsGuideLastMileReturn, 0) = 1 )
 			BEGIN
