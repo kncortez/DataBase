@@ -27,7 +27,7 @@ select distinct
 				CV.Plate is null 
 		   then LRP.VehicleID else CV.Plate end as Plate,
 		case 
-		   when LRP.DriverName is null then (select top 1 First_Name 
+		   when LRP.DriverName is null OR LRP.DriverName ='' then (Select top 1 First_Name +' '+ Last_Name
 		                                     from dbo.SenderReceiver  with (nolock)
 											 where ID = LRP.SenderReceiverId )   
 			else LRP.DriverName end as DriverName,
