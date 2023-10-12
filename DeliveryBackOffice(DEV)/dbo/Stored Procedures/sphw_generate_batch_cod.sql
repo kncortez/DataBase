@@ -298,8 +298,13 @@ BEGIN
 					ON lst.Guide_Serie = PC.GuideSerieDestination
 						AND lst.Guide_Number = PC.GuideNumberDestination
 						AND PC.RowStatus = 1
+				LEFT JOIN
+						MembershipSubscriptionLog MBS WITH(NOLOCK)
+						ON lst.Guide_Serie = MBS.LogGuideSerie 
+						AND lst.Guide_Number = MBS.LogGuideNumber
 				WHERE ISNULL(ord.PriceShippment, 0) = 0
-					AND PC.IdPromoCoupon IS NULL;
+					AND PC.IdPromoCoupon IS NULL
+					AND MBS.LogGuideNumber IS NULL;
 
 
             DECLARE @count INT = 1;
