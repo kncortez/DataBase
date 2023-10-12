@@ -154,7 +154,7 @@ BEGIN
                CAST(ERROR_STATE() AS NVARCHAR) AS ErrorState,
                CAST(ERROR_PROCEDURE() AS NVARCHAR) AS ErrorProcedure,
                CAST(ERROR_LINE() AS NVARCHAR) AS ErrorLine,
-               CAST(ERROR_MESSAGE() AS NVARCHAR) AS ErrorMessage;
+               CAST(ERROR_MESSAGE() AS NVARCHAR(500)) AS ErrorMessage;
 
     END CATCH;
 
