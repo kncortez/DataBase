@@ -150,6 +150,8 @@ BEGIN
 		BEGIN TRANSACTION 
 		BEGIN TRY
 
+		
+
 --- registro de incidencia
 	INSERT [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence]
 		(
@@ -381,29 +383,19 @@ BEGIN
 			FROM
 				@DeliveryAttemptInserted DAI
 
-			-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
-			IF ( ISNULL(@IsGuideLastMileReturn, 0) = 0 )
-			BEGIN
-		    
-				-- Flujo de entrega
-				UPDATE
-					[DOAD]
-				SET
-					[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 0
-					,[DOAD].[TokenUpdated] = @Token
-					,[DOAD].[DateUptaded] = @DateInSystem
-				OUTPUT [Inserted].[IdDeliveryOrderAttemptData] INTO @DeliveryOrderAttemptDataUpdated ([IdDeliveryOrderAttemptData])
-				FROM
-					[DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD
-				WHERE
-					[DOAD].[GuideSerie] = @GuideSerie
-					AND
-					[DOAD].[GuideNumber] = @GuideNumber
 
-			END
-			ELSE
+					--- actualizar ultimo checkpoint en DeliveryOrder
+
+				UPDATE [dbo].[DeliveryOrder]  SET StatusOrderId = @FailedDeliveryVisitStatus,
+				     DateUpdated = GETDATE(),
+					 TokenUpdated = @Token 
+				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+
+				-----------------------fin -----------------------------
+
+			-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
+			IF ( ISNULL(@IsGuideLastMileReturn, 0) = 1 )
 			BEGIN
-            
 				-- Flujo de devolución
 				UPDATE
 					[DOAD]
@@ -597,41 +589,7 @@ BEGIN
 					 
 			END
 
-			IF 
-			( 
-				-- Ingreso intento de entrega
-				EXISTS 
-				( 
-					SELECT 
-						TOP 1 
-							1 
-					FROM 
-						@DeliveryAttemptInserted 
-				)
-				AND
-				-- Ingreso estado a bitácora de guía
-				EXISTS 
-				( 
-					SELECT 
-						TOP 1 
-							1 
-					FROM 
-						@DeliveryOrderDetailInserted 
-				)
-				AND
-				-- Actualizo contadores de intentos
-				EXISTS 
-				( 
-					SELECT 
-						TOP 1 
-							1 
-					FROM 
-						@DeliveryOrderAttemptDataUpdated 
-				)
-			)
-			BEGIN
-		    
-				COMMIT TRANSACTION;
+			COMMIT TRANSACTION;
 
 				SELECT
 					200 [ResponseCode],
@@ -650,18 +608,7 @@ BEGIN
 					AND
 					[DO].[Guide_Number] = @GuideNumber
 
-			END
-			ELSE
-			BEGIN
-		    
-				ROLLBACK TRANSACTION;
-
-				SELECT
-					204 [ResponseCode],
-					'No se culmino el proceso completo de forma exitosa' [ResponseMessage]
-
-			END
-
+		
 		END TRY
 		BEGIN CATCH
 
@@ -669,7 +616,28 @@ BEGIN
 
 			SELECT
 				500 [ResponseCode],
-				CONCAT('Mensaje: ', ERROR_MESSAGE(),'| Linea aproximada: ', ERROR_LINE()) [ResponseMessage]
+					'Error al registrar la información, por favor comuniquese con el área de soporte' [ResponseMessage]
+
+
+							--Insert en tabla de log
+			INSERT INTO [dbo].[RoutePreparationLogError]
+					   ([ErrorDescription]
+					   ,[ErrorNumber]
+					   ,[ErrorProcedure]
+					   ,[ErrorLine]
+					   ,[GuideSerie]
+					   ,[GuideNumber]
+					   ,[TokenCreated]
+					   ,[DateCreated])
+				 VALUES
+					   (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,@GuideSerie
+					   ,@GuideNumber
+					   ,@Token
+					   ,GETDATE())
 	    
 		END CATCH
         
