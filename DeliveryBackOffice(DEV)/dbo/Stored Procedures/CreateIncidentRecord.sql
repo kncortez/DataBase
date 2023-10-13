@@ -58,10 +58,9 @@ BEGIN
     );
 
     -- Variables de control de cambios
+    DECLARE @UpdatedRP BIT = 0;
 
-     DECLARE @UpdatedRP BIT = 0;
-
-	   DECLARE @Terminal INT =
+      DECLARE @Terminal INT =
             (
                  SELECT Top 1 [SO].[CatCheckpointTypeId]
                 FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
@@ -71,45 +70,11 @@ BEGIN
                       AND [DO].[Guide_Serie] = @GuideSerie and [DO].[Guide_Number]  =  @GuideNumber
             );
 
-            
-	DECLARE @UserCreatedIncidence NVARCHAR(250) =
-	                  (		Select  Top 1  RU.UsrNickName 
-								 From  [dbo].[DeliveryOrderDetail] ddd WITH (NOLOCK)
-									  LEFT JOIN [dbo].[TokenLog] TL WITH(NOLOCK)
-								 ON ddd.UserCreated = TL.TknTokenCreated
-									  LEFT JOIN [dbo].[RegisterUser] RU WITH(NOLOCK)
-								 ON TL.TknIdUser = RU.UsrIdUser
-							Where ddd.Guide_Serie =  @GuideSerie
-							AND ddd.Guide_Number =   @GuideNumber
-							AND ddd.StatusOrderId = 50
-							AND CONVERT(DATE, ddd.DateCreatedInSystem) =  CONVERT(DATE, GETDATE())
-					 
-						);
-
-    DECLARE @StatusIncidence INT= (
-							   Select Top 1 StatusOrderId 
-							   From dbo.DeliveryOrderDetail DOD WITH(NOLOCK)
-								where DOD.Guide_Number =  @GuideNumber AND 
-									  CONVERT(DATE, DOD.DateCreatedInSystem) =  CONVERT(DATE, GETDATE())
-								ORDER BY DOD.DateCreatedInSystem Desc
-							);
-
-    DECLARE @NameStatusIncidence NVARCHAR(250)= (
-									   Select Top 1 SO.OrderDescription
-									   From [dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
-											INNER JOIN [dbo].[StatusOrder] SO WITH(NOLOCK)
-											ON DOD.StatusOrderId = SO.StatusOrderId
-										where DOD.Guide_Number =  @GuideNumber AND 
-											  CONVERT(DATE, DOD.DateCreatedInSystem) =  CONVERT(DATE, GETDATE())
-										ORDER BY DOD.DateCreatedInSystem Desc
-							);
-
-
     BEGIN TRY
         SET @StatusOrderId = @IncidenceStatusId;
         SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIIncidenceStatusId;
-
-        IF (@Terminal != 3 AND @StatusIncidence ! = 50 )
+     
+     IF (@Terminal != 3)
 		BEGIN
 
         IF (@IsRealIncident = 0) --Si courier mintió?
@@ -142,7 +107,110 @@ BEGIN
                 AND coi.RowStatus = 1;
 
 
-        END;
+        END
+        ELSE
+        BEGIN 
+
+        		/* Validar si la incidencia fue manual desde sistema hermes desktop y quitar intento disponible de entrega */
+	IF (EXISTS( Select TOP 1 1 
+							 From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+							INNER JOIN 
+							[dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+									 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+									INNER JOIN 
+							[dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+									 ON DA.Guide_Serie = DOD.Guide_Serie AND 
+										DA.Guide_Number = DOD.Guide_Number
+							Where DA.Guide_Serie= @GuideSerie
+							AND
+							DA.Guide_Number = @GuideNumber
+							AND 
+							DOD.StatusOrderId=45
+							AND
+							DOD.SystemOrigin=2
+				))
+				BEGIN 
+
+				IF (NOT EXISTS(
+						 Select TOP 1 1 
+							From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+						 Where 
+						  DOAD.GuideNumber =  @GuideNumber)
+					)
+						BEGIN
+						-- Insertar data para manejo de inténtos de entrega/devolución
+									INSERT INTO [dbo].[DeliveryOrderAttemptData] 
+									([GuideSerie]
+									, [GuideNumber]
+									, [GuideDeliveryAttemptCount]
+									, [GuideDeliveryMaxAttemptCount]
+									, [GuideReturnAttemptCount]
+									, [GuideReturnMaxAttemptCount]
+									, [RowStatus]
+									, [DateCreated]
+									, [TokenCreated]
+									)
+                                    SELECT TOP 1
+                                    do.Guide_Serie,
+                                    do.Guide_Number,
+                                    1,
+                                    rh.Attempt,
+                                    0,
+                                    rh.AttemptReturn,
+                                    1,
+                                    GETDATE(),
+                                    @TokenCreated
+                                FROM DeliveryOrder do WITH (NOLOCK)
+                                    LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+                                        ON do.Sender_ID = vpc.CodeOfReference
+                                    INNER JOIN RatebyCustomer rbc WITH (NOLOCK)
+                                        ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
+                                        AND rbc.RbcRowStatus = 1
+                                        AND
+                                        (
+                                            rbc.RbcCodeOfReference = vpc.CodeOfReference
+                                            OR rbc.RbcCodeOfReference IS NULL
+                                        )
+                                    INNER JOIN RateHeader rh WITH (NOLOCK)
+                                        ON rbc.RbcIdRate = rh.RheId
+                                    INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+                                        ON do.Guide_Serie = da.Guide_Serie
+                                        AND do.Guide_Number = da.Guide_Number
+                                    LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
+                                        ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
+                                    LEFT JOIN StatusOrder so
+                                        ON coi.StatusOrderId = so.StatusOrderId
+                                WHERE do.Guide_Serie = @GuideSerie
+                                    AND do.Guide_Number = @GuideNumber
+                                ORDER BY rbc.RbcCodeOfReference DESC;	
+                END
+
+						
+					END
+					ELSE
+					BEGIN
+
+					-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
+			
+							UPDATE
+								[DOAD]
+							SET
+								[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 1
+								,[DOAD].[TokenUpdated] = @TokenCreated
+								,[DOAD].[DateUptaded] = GETDATE()
+							FROM
+								[DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD
+							WHERE
+								[DOAD].[GuideSerie] = @GuideSerie
+								AND
+								[DOAD].[GuideNumber] = @GuideNumber
+
+				
+
+					END
+		/*Fin*/
+
+         END
 
         UPDATE t1
         SET t1.IsConfirmed = 1,
@@ -223,15 +291,15 @@ BEGIN
 
         --IF (@CancelOrder = 1)
         --IF (@IsServiceDesired = 0)
-        IF (@IsAddressModificationRequested = 1) --Solicita cambio de dirección
+       IF (ISNULL(@IsAddressModificationRequested,0) = 1) --Solicita cambio de dirección
         BEGIN
             UPDATE [DO]
-            SET [DO].[Sender_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''),
+            SET [DO].[Receiver_Address] = IIF((LTRIM(RTRIM(ISNULL(@NewAddress, ''))) != ''),
                                             @NewAddress,
-                                            [DO].[Sender_Address]),
-                [DO].[Sender_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''),
+                                            [DO].[Receiver_Address]),
+                [DO].[Receiver_Phone] = IIF((LTRIM(RTRIM(ISNULL(@NewPhoneNumber, ''))) != ''),
                                           @NewPhoneNumber,
-                                          ISNULL([DO].[Sender_Phone], ''))
+                                          ISNULL( [DO].[Receiver_Phone], ''))
             FROM [dbo].[DeliveryOrder] [DO]
                 INNER JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
                     ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
@@ -415,19 +483,16 @@ BEGIN
                   AND Guide_Number = @GuideNumber;
 
         END;
-     END;
+   END;
         COMMIT TRANSACTION;
-         SELECT @Terminal  AS 'boolResult',
+            SELECT @Terminal  AS 'boolResult',
 				CASE 
-				    WHEN  @Terminal = 3  THEN 'No se posible confirmar la incidencia. Guía se encuentra en estado final.' 
-					WHEN  @StatusIncidence = 50 THEN 'Incidencia ya fue confirmada por el usuario: ' + UPPER(ISNULL(@UserCreatedIncidence,'Control de Calidad'))
+				    WHEN @Terminal = 3 THEN 'Guía en estado terminal,no es posible confirmar incidencia.'
 			        ELSE 'Incidencia confirmada Exitosamente.'
 			   END
 			   AS 'DescriptionResult',
-               CONVERT(BIGINT, ISNULL(@StatusIncidence,0)) AS 'NumTransferID',
-			  ISNULL(@UserCreatedIncidence,'N/A') AS 'UserIncidence',
-               CONCAT(@GuideSerie, @GuideNumber) AS 'Guide',
-			   ISNULL(@NameStatusIncidence,'N/A') AS 'NameStatusIncidence'
+               CONVERT(BIGINT, 0) AS 'NumTransferID',
+               CONCAT(@GuideSerie, @GuideNumber) AS 'Guide';
 
     END TRY
     BEGIN CATCH
