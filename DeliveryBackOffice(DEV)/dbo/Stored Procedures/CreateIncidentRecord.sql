@@ -70,11 +70,43 @@ BEGIN
                       AND [DO].[Guide_Serie] = @GuideSerie and [DO].[Guide_Number]  =  @GuideNumber
             );
 
+            DECLARE @UserCreatedIncidence NVARCHAR(250) =
+	                  (		Select  Top 1  RU.UsrNickName 
+								 From  [dbo].[DeliveryOrderDetail] ddd WITH (NOLOCK)
+									  LEFT JOIN [dbo].[TokenLog] TL WITH(NOLOCK)
+								 ON ddd.UserCreated = TL.TknTokenCreated
+									  LEFT JOIN [dbo].[RegisterUser] RU WITH(NOLOCK)
+								 ON TL.TknIdUser = RU.UsrIdUser
+							Where ddd.Guide_Serie =  @GuideSerie
+							AND ddd.Guide_Number =   @GuideNumber
+							AND ddd.StatusOrderId = 50
+							AND CONVERT(DATE, ddd.DateCreatedInSystem) =  CONVERT(DATE, GETDATE())
+					 
+						);
+
+    DECLARE @StatusIncidence INT= (
+							   Select Top 1 StatusOrderId 
+							   From dbo.DeliveryOrderDetail DOD WITH(NOLOCK)
+								where DOD.Guide_Number =  @GuideNumber AND 
+									  CONVERT(DATE, DOD.DateCreatedInSystem) =  CONVERT(DATE, GETDATE())
+								ORDER BY DOD.DateCreatedInSystem Desc
+							);
+
+    DECLARE @NameStatusIncidence NVARCHAR(250)= (
+									   Select Top 1 SO.OrderDescription
+									   From [dbo].[DeliveryOrderDetail] DOD WITH(NOLOCK)
+											INNER JOIN [dbo].[StatusOrder] SO WITH(NOLOCK)
+											ON DOD.StatusOrderId = SO.StatusOrderId
+										where DOD.Guide_Number =  @GuideNumber AND 
+											  CONVERT(DATE, DOD.DateCreatedInSystem) =  CONVERT(DATE, GETDATE())
+										ORDER BY DOD.DateCreatedInSystem Desc
+							);
+
     BEGIN TRY
         SET @StatusOrderId = @IncidenceStatusId;
         SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIIncidenceStatusId;
      
-     IF (@Terminal != 3)
+     IF (@Terminal != 3 AND @StatusIncidence ! = 50 )
 		BEGIN
 
         IF (@IsRealIncident = 0) --Si courier mintió?
@@ -485,14 +517,17 @@ BEGIN
         END;
    END;
         COMMIT TRANSACTION;
-            SELECT @Terminal  AS 'boolResult',
+             SELECT @Terminal  AS 'boolResult',
 				CASE 
-				    WHEN @Terminal = 3 THEN 'Guía en estado terminal,no es posible confirmar incidencia.'
+				    WHEN  @Terminal = 3  THEN 'No se posible confirmar la incidencia. Guía se encuentra en estado final.' 
+					WHEN  @StatusIncidence = 50 THEN 'Incidencia ya fue confirmada por el usuario: ' + UPPER(ISNULL(@UserCreatedIncidence,'Control de Calidad'))
 			        ELSE 'Incidencia confirmada Exitosamente.'
 			   END
 			   AS 'DescriptionResult',
-               CONVERT(BIGINT, 0) AS 'NumTransferID',
-               CONCAT(@GuideSerie, @GuideNumber) AS 'Guide';
+               CONVERT(BIGINT, ISNULL(@StatusIncidence,0)) AS 'NumTransferID',
+			  ISNULL(@UserCreatedIncidence,'N/A') AS 'UserIncidence',
+               CONCAT(@GuideSerie, @GuideNumber) AS 'Guide',
+			   ISNULL(@NameStatusIncidence,'N/A') AS 'NameStatusIncidence'
 
     END TRY
     BEGIN CATCH
