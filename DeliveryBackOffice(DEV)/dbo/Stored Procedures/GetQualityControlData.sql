@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
 AS
 BEGIN
     BEGIN TRY
-	--Tabla de cards filtrada por hub y guía
+        --Tabla de cards filtrada por hub y guía
 
 	 DECLARE @Cards AS TABLE
         (
@@ -1277,7 +1277,6 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-
 
         SELECT CAST(0 AS BIT) AS 'boolResult',
                ERROR_MESSAGE() AS 'DescriptionResult',
