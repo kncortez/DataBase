@@ -127,8 +127,9 @@ BEGIN
             ELSE
             BEGIN
 
-                SELECT 
-				         0  [Result],
+                 SELECT CASE WHEN @Incidentsavailable > 0 THEN  7 
+				         ELSE
+				         0 END [Result],
                        @StatusName 'Status',
                        CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus';
             END;
