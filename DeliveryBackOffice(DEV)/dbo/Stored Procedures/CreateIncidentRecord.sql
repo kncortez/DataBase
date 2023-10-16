@@ -342,6 +342,21 @@ BEGIN
                   AND DA.Guide_Number = @GuideNumber
                   --[COI].[ConfirmationOfIncidentToken] = @GuideToken
                   AND [COI].[RowStatus] = 1;
+
+                  
+		 UPDATE [COI]
+                SET 
+                     [COI].IsAddressModificationRequested =  1
+                FROM [dbo].[DeliveryOrder] [DO]
+                    INNER JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                        ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
+                           AND [DO].[Guide_Number] = [DA].[Guide_Number]
+                    INNER JOIN [dbo].[ConfirmationOfIncidence] COI
+                        ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+                WHERE DA.Guide_Serie = @GuideSerie
+                      AND DA.Guide_Number = @GuideNumber
+                      AND [COI].[RowStatus] = 1;
+            
         END;
 
         IF (ISNULL(@DeliveryDateChange, 0) = 1)
