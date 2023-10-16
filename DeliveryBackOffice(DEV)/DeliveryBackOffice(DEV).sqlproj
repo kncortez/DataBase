@@ -1521,6 +1521,14 @@
     <Build Include="dbo\Stored Procedures\Add_msjTimeout.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPRate.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetBlockInternalUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUser.sql" />
+    <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
+    <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
+	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
+	<Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" /> 
+    <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
