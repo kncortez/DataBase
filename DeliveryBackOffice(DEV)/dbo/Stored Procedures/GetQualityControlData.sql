@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
 AS
 BEGIN
     BEGIN TRY
-        --Tabla de cards filtrada por hub y gu�a
+        --Tabla de cards filtrada por hub y guía
 
         DECLARE @Cards AS TABLE
         (
@@ -472,7 +472,7 @@ BEGIN
         ORDER BY TBL.OrderCard;
 
 
-        --Tabla de rutas filtrada por hub y gu�a
+        --Tabla de rutas filtrada por hub y guía
         IF (@GuideNumber IS NULL OR @GuideNumber <= 0)
         BEGIN
             SELECT --TOP 1000
@@ -1278,7 +1278,6 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-
 
         SELECT CAST(0 AS BIT) AS 'boolResult',
                ERROR_MESSAGE() AS 'DescriptionResult',
