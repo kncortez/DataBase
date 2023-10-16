@@ -18,6 +18,6 @@ BEGIN
  FROM DeliveryOrderDetail dor WITH (NOLOCK) 
  INNER JOIN StatusOrder so
  ON dor.StatusOrderId = so.StatusOrderId
- WHERE dor.Guide_Serie = @GuideSerie AND dor.Guide_Number = @GuideNumber ORDER BY dor.DateCreated DESC
+ WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber ORDER BY DateCreated DESC
 
 END

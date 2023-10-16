@@ -92,7 +92,7 @@ BEGIN
             ON do.StatusOrderId = so.StatusOrderId
     WHERE (
               UPPER(@ServiceType) = 'PICKUP'
-              AND so.StatusOrderId IN ( 1, 4, 15, 16 )
+              AND so.StatusOrderId IN ( 1, 4, 15, 16,45,50 )
 			  
           )
           OR

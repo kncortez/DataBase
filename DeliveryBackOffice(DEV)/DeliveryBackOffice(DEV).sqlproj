@@ -118,7 +118,6 @@
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList4.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList.sql" />
-    <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrders.sql" />
     <Build Include="dbo\User Defined Types\TblCourierLocation.sql" />
