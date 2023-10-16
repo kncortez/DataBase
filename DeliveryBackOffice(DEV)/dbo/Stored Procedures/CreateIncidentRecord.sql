@@ -16,8 +16,11 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @DeliveryDateChange BIT,              --Cambiar fecha de entrega?
     @NewDeliveryDate DATETIME = NULL,     --Nueva fecha de entrega si se solicita,
     @Observations NVARCHAR(600),          --Observaciones tracking
-    @LiquidatorRemarks NVARCHAR(600) = '' --Observaciones para el liquidador
+    @LiquidatorRemarks NVARCHAR(600) = '', --Observaciones para el liquidador
+    @ValidGeolocationEvidence BIT,  --indica si la incidecia de geolocalziación es valdia
+	@ValidPhotographicEvidence BIT  --indica si la evidencia fotografica es valida
 AS
+
 BEGIN
     DECLARE @StatusOrderId TINYINT;
     DECLARE @ValidatedIncidentStatus TINYINT = 50;
@@ -206,10 +209,25 @@ BEGIN
                     END;
 
 
-                END;
+                   END;
+                    ELSE
+                    BEGIN
 
-            /*Fin*/
+                    UPDATE [COI]
+                            SET	 [COI].[ValidGeolocationEvidence] = @ValidGeolocationEvidence  ,
+                                [COI].[ValidPhotographicEvidence] = @ValidPhotographicEvidence
+                            FROM [dbo].[DeliveryOrder] [DO]
+                                INNER JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                                    ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
+                                    AND [DO].[Guide_Number] = [DA].[Guide_Number]
+                                INNER JOIN [dbo].[ConfirmationOfIncidence] COI
+                                    ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+                            WHERE DA.Guide_Serie = @GuideSerie
+                                AND DA.Guide_Number = @GuideNumber
+                                AND [COI].[RowStatus] = 1
+                    END;
 
+                  /*Fin*/
             END;
 
             UPDATE t1
