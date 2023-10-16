@@ -1,4 +1,4 @@
-
+ï»¿
 -- =============================================
 -- Author:		<Bidcar,Herrera>
 -- Create date: <2023-09-12>
@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
 AS
 BEGIN
     BEGIN TRY
-        --Tabla de cards filtrada por hub y guía
+        --Tabla de cards filtrada por hub y guï¿½a
 
         DECLARE @Cards AS TABLE
         (
@@ -472,7 +472,7 @@ BEGIN
         ORDER BY TBL.OrderCard;
 
 
-        --Tabla de rutas filtrada por hub y guía
+        --Tabla de rutas filtrada por hub y guï¿½a
         IF (@GuideNumber IS NULL OR @GuideNumber <= 0)
         BEGIN
             SELECT --TOP 1000
@@ -805,7 +805,7 @@ BEGIN
                       END
                      );
         END;
-        --Tabla de detalle de rutas filtrada por hub y guía
+        --Tabla de detalle de rutas filtrada por hub y guï¿½a
         IF (@GuideNumber IS NULL OR @GuideNumber <= 0)
         BEGIN
             SELECT *
