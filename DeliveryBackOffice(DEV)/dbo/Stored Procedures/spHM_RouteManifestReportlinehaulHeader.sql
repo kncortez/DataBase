@@ -16,7 +16,7 @@ begin
 
 select distinct
 	    LRP.IdLinehaulRoutePreparation,
-	    format(LRP.DateLinehaulRoutePreparation,'dd/MM/yyyy HH:mm:ss') DateLinehaulRoutePreparation,
+	    FORMAT(LRP.EndDateLinehaulRoutePreparation,'dd/MM/yyyy HH:mm:ss') DateLinehaulRoutePreparation,
         CR.CodeRoute,
 		case
 		  when 
@@ -27,7 +27,7 @@ select distinct
 				CV.Plate is null 
 		   then LRP.VehicleID else CV.Plate end as Plate,
 		case 
-		   when LRP.DriverName is null then (select top 1 First_Name 
+		   when LRP.DriverName is null OR LRP.DriverName ='' then (Select top 1 First_Name +' '+ Last_Name
 		                                     from dbo.SenderReceiver  with (nolock)
 											 where ID = LRP.SenderReceiverId )   
 			else LRP.DriverName end as DriverName,
@@ -60,7 +60,7 @@ select distinct
 		where lcc.CatRouteId = LRP.CatRouteId and lcc.RowStatus = 1)  as HubName
  WHERE IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
  GROUP BY   LRP.IdLinehaulRoutePreparation,
-            LRP.DateLinehaulRoutePreparation,
+            LRP.EndDateLinehaulRoutePreparation,
 		    CR.CodeRoute,
 			LRP.CatVehicleId,
 			CV.Plate,

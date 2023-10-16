@@ -247,14 +247,11 @@ BEGIN
 						(SELECT TOP 1
                             dlp.Path_Incident
 							FROM dbo.DeliveryAttempt datt
-						 INNER JOIN ConfirmationOfIncidence cfo
-							ON datt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
                          INNER JOIN dbo.DeliveryProof dlp
                              ON datt.ID_Proof = dlp.ID
 							WHERE dod.Guide_Serie = @Guide_Serie
                           AND dod.Guide_Number = @Guide_Number
-                          AND dod.DeliveryAttemptId = datt.ID
-						  AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+                          AND dod.DeliveryAttemptId = datt.ID)
                  ELSE
                      ''
              END
@@ -291,12 +288,9 @@ BEGIN
 			  (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 					 (SELECT TOP 1 Latitude FROM DeliveryAttempt dt WITH (NOLOCK) 
-					 INNER JOIN ConfirmationOfIncidence cfo WITH (NOLOCK) 
-							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
-                        AND dod.DeliveryAttemptId = dt.ID
-						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+                        AND dod.DeliveryAttemptId = dt.ID)
 
                     ELSE
                         ''
@@ -305,12 +299,9 @@ BEGIN
                (CASE
 					WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 					 (SELECT TOP 1 Longitude FROM DeliveryAttempt dt WITH (NOLOCK)
-						INNER JOIN ConfirmationOfIncidence cfo
-							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE  dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
-                        AND dod.DeliveryAttemptId = dt.ID
-						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+                        AND dod.DeliveryAttemptId = dt.ID)
 
                     ELSE
                         ''

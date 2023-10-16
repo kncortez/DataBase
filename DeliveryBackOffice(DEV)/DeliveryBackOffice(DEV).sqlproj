@@ -68,7 +68,6 @@
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
-    <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
     <Build Include="dbo\User Defined Types\TblVPFrequency.sql" />
     <Build Include="dbo\User Defined Types\TblVPDestination.sql" />
@@ -101,6 +100,8 @@
     <Build Include="dbo\User Defined Types\TblInOutOfMoneyDetail.sql" />
     <Build Include="dbo\User Defined Types\TblImagUrlList.sql" />
     <Build Include="dbo\User Defined Types\TblId.sql" />
+    <Build Include="dbo\User Defined Types\TblHubs.sql" />
+    <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
     <Build Include="dbo\User Defined Types\TblGuidesReturns.sql" />
     <Build Include="dbo\User Defined Types\TblGuidesCancel.sql" />
     <Build Include="dbo\User Defined Types\TblGuides.sql" />
@@ -244,6 +245,7 @@
     <Build Include="dbo\Tables\RolByUserByAccount.sql" />
     <Build Include="dbo\Tables\RolByRol.sql" />
     <Build Include="dbo\Tables\RolByModuleBySystem.sql" />
+    <Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Tables\RegisterUserByAffiliate.sql" />
     <Build Include="dbo\Tables\RegisterUser.sql" />
     <Build Include="dbo\Tables\RatebyCustomer.sql" />
@@ -416,6 +418,7 @@
     <Build Include="dbo\Tables\CatValueType.sql" />
     <Build Include="dbo\Tables\CatTypeVehicle.sql" />
     <Build Include="dbo\Tables\CatTypeTool.sql" />
+    <Build Include="dbo\Tables\CatTypeSubscription.sql" />
     <Build Include="dbo\Tables\CatTypeServiceClosure.sql" />
     <Build Include="dbo\Tables\CatTypeService.sql" />
     <Build Include="dbo\Tables\CatTypeSenderReceiver.sql" />
@@ -552,12 +555,12 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
-    <Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\spws_validate_invoice_guide.sql" />
+    <Build Include="dbo\Stored Procedures\spws_test.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_route_settlement_status.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_profile.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_logout.sql" />
@@ -570,6 +573,7 @@
     <Build Include="dbo\Stored Procedures\spws_set_address.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_UpdatePassword.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_ConfirmAccount.sql" />
+    <Build Include="dbo\Stored Procedures\spws_revalue_guide_original.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_JARP.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide.sql" />
@@ -779,6 +783,7 @@
     <Build Include="dbo\Stored Procedures\sphd_deliveryorder_settlement_guides_pickup_header.sql" />
     <Build Include="dbo\Stored Procedures\sphd_deliveryorder_settlement_guides_pickup_detail.sql" />
     <Build Include="dbo\Stored Procedures\sphd_delete_Rate.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
     <Build Include="dbo\Stored Procedures\sphd_ValidChange.sql" />
     <Build Include="dbo\Stored Procedures\sphd_UpdateGuideStatus.sql" />
     <Build Include="dbo\Stored Procedures\sphd_SetVisitPointItinerary.sql" />
@@ -963,6 +968,7 @@
     <Build Include="dbo\Stored Procedures\spg_contact_incident_counter.sql" />
     <Build Include="dbo\Stored Procedures\spg_contact_incident.sql" />
     <Build Include="dbo\Stored Procedures\spg_active_waybill_pieces_warehouse.sql" />
+    <Build Include="dbo\Stored Procedures\spg_TemporalSupportCreateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\spg_Settlement_PickUp.sql" />
     <Build Include="dbo\Stored Procedures\spg_InformationInvoiceOrigin.sql" />
     <Build Include="dbo\Stored Procedures\spg_InformationInvoiceNote.sql" />
@@ -1142,6 +1148,7 @@
     <Build Include="dbo\Stored Procedures\setUpdate_imag_for_url.sql" />
     <Build Include="dbo\Stored Procedures\setCommissionNotified.sql" />
     <Build Include="dbo\Stored Procedures\setBatchNotified.sql" />
+    <Build Include="dbo\Stored Procedures\get_minCOD.sql" />
     <Build Include="dbo\Stored Procedures\get_VehicleReturn.sql" />
     <Build Include="dbo\Stored Procedures\get_Township.sql" />
     <Build Include="dbo\Stored Procedures\get_RouteReturn.sql" />
@@ -1174,6 +1181,10 @@
     <Build Include="dbo\Stored Procedures\SupportGetGuideData.sql" />
     <Build Include="dbo\Stored Procedures\SupportGenerateNewCoupon.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateSentry.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCancelGuideClubForza.sql" />
+    <Build Include="dbo\Stored Procedures\SupportActivateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\Sps_DetailInvoice.sql" />
     <Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket.sql" />
@@ -1256,10 +1267,14 @@
     <Build Include="dbo\Stored Procedures\SPRequestCouponData_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\SPRequestCouponData.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_TMGetDataMembershipOrSubscription.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegistrationCustomerMembershipByAffiliates.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetListofWebHookHeaders.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetGuideFCCDataClients.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CollectionServiceQualification.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPRevisarMembresia.sql" />
@@ -1323,6 +1338,7 @@
     <Build Include="dbo\Stored Procedures\RegisterFacExist.sql" />
     <Build Include="dbo\Stored Procedures\ReAssingRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\RDL_report_Difrisa.sql" />
+    <Build Include="dbo\Stored Procedures\RDL_ReportMembershipSubscription.sql" />
     <Build Include="dbo\Stored Procedures\RDL_New_ReportFacturation.sql" />
     <Build Include="dbo\Stored Procedures\RDL_CODReport_temp.sql" />
     <Build Include="dbo\Stored Procedures\RDL_CODReport.sql" />
@@ -1377,6 +1393,7 @@
     <Build Include="dbo\Stored Procedures\GetReturnsCODSettlement.sql" />
     <Build Include="dbo\Stored Procedures\GetRecolectPriceGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetReasons.sql" />
+    <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetPickupsWithCourierCandidate.sql" />
     <Build Include="dbo\Stored Procedures\GetPickupServiceDataByID.sql" />
@@ -1472,6 +1489,7 @@
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingData.sql" />
     <Build Include="dbo\Stored Procedures\GetArticlesSAP.sql" />
+    <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertsOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetAlertedGuidesToTrack_BNHL.sql" />
@@ -1490,27 +1508,18 @@
     <Build Include="dbo\Stored Procedures\DeliveryManifestDetailTSE.sql" />
     <Build Include="dbo\Stored Procedures\DeletePaymentMethod.sql" />
     <Build Include="dbo\Stored Procedures\CutStringFelName.sql" />
+    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
     <Build Include="dbo\Stored Procedures\CreateCredentialsIntegration.sql" />
+    <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\CompleteGuideGenerationExpressCenter.sql" />
+    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
     <Build Include="dbo\Stored Procedures\AssignPieceToRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\AltaBajaRRHH.sql" />
     <Build Include="dbo\Stored Procedures\AdvancedGetCustomers.sql" />
     <Build Include="dbo\Stored Procedures\Add_msjTimeout.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPRate.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
-    <Build Include="dbo\Stored Procedures\SupportSetBlockInternalUser.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUser.sql" />
-    <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
-    <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
-    <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
-    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
-    <Build Include="dbo\Stored Procedures\CreateIncidentRecord.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
-    <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1525,7 +1534,9 @@
     <Build Include="dbo\Functions\fnt_Iva_Calculator.sql" />
     <Build Include="dbo\Functions\fn_validate_customer_bank_account.sql" />
     <Build Include="dbo\Functions\fn_replace_special_characters.sql" />
+    <Build Include="dbo\Functions\fn_get_tse_status_runoff.sql" />
     <Build Include="dbo\Functions\fn_get_tse_status.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
     <Build Include="dbo\Functions\fn_get_segment.sql" />
     <Build Include="dbo\Functions\fn_get_rackposition.sql" />
     <Build Include="dbo\Functions\fn_get_last_information_attempt_without_accepted.sql" />
@@ -1534,6 +1545,7 @@
     <Build Include="dbo\Functions\fn_get_document_image_url.sql" />
     <Build Include="dbo\Functions\fn_get_diff_minutes_without_sundays.sql" />
     <Build Include="dbo\Functions\fn_get_diff_minutes_without_holidays.sql" />
+    <Build Include="dbo\Functions\fn_get_cv_status_runoff.sql" />
     <Build Include="dbo\Functions\fn_get_cv_status.sql" />
     <Build Include="dbo\Functions\fn_get_courier.sql" />
     <Build Include="dbo\Functions\fn_Splits.sql" />
@@ -1553,25 +1565,6 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
-    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
-    <Build Include="dbo\Tables\CatTypeSubscription.sql" />
-    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
-    <Build Include="dbo\Stored Procedures\get_minCOD.sql" />
-    <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
-    <Build Include="dbo\Functions\fn_get_tse_status_runoff.sql" />
-    <Build Include="dbo\Stored Procedures\SupportCancelGuideClubForza.sql" />
-    <Build Include="dbo\Stored Procedures\SupportActivateSubscription.sql" />
-    <Build Include="dbo\Stored Procedures\spws_test.sql" />
-    <Build Include="dbo\Stored Procedures\spws_revalue_guide_original.sql" />
-    <Build Include="dbo\Stored Procedures\spg_TemporalSupportCreateSubscription.sql" />
-    <Build Include="dbo\Stored Procedures\RDL_ReportMembershipSubscription.sql" />
-    <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
-    <Build Include="dbo\Stored Procedures\GetArticleByCustomerByCodeOfReference.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
-    <Build Include="dbo\Functions\fn_get_cv_status_runoff.sql" />
-    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStates_1.sql" />
-    <Build Include="dbo\User Defined Types\TblHubs.sql" />
     <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
   </ItemGroup>
   <ItemGroup>
