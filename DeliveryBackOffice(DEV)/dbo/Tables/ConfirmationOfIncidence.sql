@@ -115,5 +115,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observació
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observación de liquidación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'LiquidatorRemarks';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Solicita cambio de dirección' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'IsAddressModificationRequested'
 GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Solicita cambio de dirección' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'IsAddressModificationRequested'

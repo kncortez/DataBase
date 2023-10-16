@@ -118,7 +118,6 @@
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList4.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersList.sql" />
-    <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrders.sql" />
     <Build Include="dbo\User Defined Types\TblCourierLocation.sql" />
@@ -1528,7 +1527,6 @@
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
 	<Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" /> 
-    <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1574,7 +1572,6 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
-    <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
