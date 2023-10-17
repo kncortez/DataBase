@@ -1,4 +1,4 @@
-﻿
+
 -- Author:		<Bidcar Herrera>
 -- Create date: <2023-09-25>
 -- Description:	< Registro de incidencia>
@@ -110,6 +110,7 @@ BEGIN
 
             IF (@IsRealIncident = 0) --Si courier mintió?
             BEGIN
+
                 UPDATE t1
                 --[dbo].[ConfirmationOfIncidence]
                 SET t1.[LastStatusOrderId] = [StatusOrderId],
@@ -137,22 +138,22 @@ BEGIN
                     AND coi.RowStatus = 1;
 
 
-            END
+            END;
             ELSE
             BEGIN
 
                 /* Validar si la incidencia fue manual desde sistema hermes desktop y quitar intento disponible de entrega */
                 IF (EXISTS
                 (
-                    Select TOP 1
+                    SELECT TOP 1
                         1
-                    From [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                    FROM [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
                         INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                             ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
                         INNER JOIN [dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
                             ON DA.Guide_Serie = DOD.Guide_Serie
                                AND DA.Guide_Number = DOD.Guide_Number
-                    Where DA.Guide_Serie = @GuideSerie
+                    WHERE DA.Guide_Serie = @GuideSerie
                           AND DA.Guide_Number = @GuideNumber
                           AND DOD.StatusOrderId = 45
                           AND DOD.SystemOrigin = 2
@@ -162,10 +163,10 @@ BEGIN
 
                     IF (NOT EXISTS
                     (
-                        Select TOP 1
+                        SELECT TOP 1
                             1
-                        From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
-                        Where DOAD.GuideNumber = @GuideNumber
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+                        WHERE DOAD.GuideNumber = @GuideNumber
                     )
                        )
                     BEGIN
