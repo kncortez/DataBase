@@ -848,7 +848,13 @@ BEGIN
                                 NULL
                             ELSE
                                 CONCAT(
-                                          CONVERT(NVARCHAR(4), atd.GuideDeliveryAttemptCount + 1)
+                                          CONVERT(
+                                                     NVARCHAR(4)
+                                                   , IIF(
+                                                         atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount + 1)
+                                                 )
                                         , '/'
                                         , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
                                       )
@@ -969,7 +975,12 @@ BEGIN
                              NULL
                          ELSE
                              CONCAT(
-                                       CONVERT(NVARCHAR(4), atd.GuideDeliveryAttemptCount + 1)
+                                       CONVERT(
+                                                  NVARCHAR(4)
+                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                    , atd.GuideDeliveryAttemptCount
+                                                    , atd.GuideDeliveryAttemptCount + 1)
+                                              )
                                      , '/'
                                      , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
                                    )
@@ -1085,7 +1096,12 @@ BEGIN
                              NULL
                          ELSE
                              CONCAT(
-                                       CONVERT(NVARCHAR(4), atd.GuideDeliveryAttemptCount + 1)
+                                       CONVERT(
+                                                  NVARCHAR(4)
+                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                    , atd.GuideDeliveryAttemptCount
+                                                    , atd.GuideDeliveryAttemptCount + 1)
+                                              )
                                      , '/'
                                      , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
                                    )
@@ -1204,7 +1220,13 @@ BEGIN
                                 NULL
                             ELSE
                                 CONCAT(
-                                          CONVERT(NVARCHAR(4), atd.GuideDeliveryAttemptCount + 1)
+                                          CONVERT(
+                                                     NVARCHAR(4)
+                                                   , IIF(
+                                                         atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount + 1)
+                                                 )
                                         , '/'
                                         , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
                                       )
