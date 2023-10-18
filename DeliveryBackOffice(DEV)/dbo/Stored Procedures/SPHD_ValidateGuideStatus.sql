@@ -16,6 +16,7 @@ BEGIN
     DECLARE @Receiver_Department AS NVARCHAR(150);
     DECLARE @Sender_Town AS INT;
     DECLARE @Receiver_Town AS INT;
+	DECLARE @ClientConfirmsReturn AS bit = 0;
 
     DECLARE @Entregado INT =
             (
@@ -72,6 +73,21 @@ BEGIN
 			DOAD.GuideSerie+ Convert(NVARCHAR(20),DOAD.GuideNumber) =  @Guide
 	        );
 
+	--No importando la cantidad de intentos disponibles si el cliente ya no quiere 
+	--el servicio se permite declarar para devolución
+	SET @ClientConfirmsReturn = (SELECT TOP 1 a2.ClientConfirmsReturn 
+	FROM DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence A2 WITH(NOLOCK)
+	ON A2.IdConfirmationOfIncidence = A1.ConfirmationOfIncidenceId
+	WHERE A1.Guide_Serie+ Convert(NVARCHAR(20),A1.Guide_Number) =  @Guide
+	AND A2.ClientConfirmsReturn = 1
+	)
+		
+	IF (@ClientConfirmsReturn =1 )
+	BEGIN
+	 SET @Incidentsavailable = 0
+	END 
+
 
     SET NOCOUNT ON;
 
@@ -127,7 +143,7 @@ BEGIN
             ELSE
             BEGIN
 
-                 SELECT CASE WHEN @Incidentsavailable > 0 THEN  7 
+                 SELECT CASE WHEN @Incidentsavailable > 0  THEN  7 
 				         ELSE
 				         0 END [Result],
                        @StatusName 'Status',

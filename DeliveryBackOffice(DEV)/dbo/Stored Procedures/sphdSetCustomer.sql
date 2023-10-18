@@ -151,9 +151,9 @@ BEGIN
             PRINT 'insert record';
             IF NOT EXISTS
             (
-                SELECT cli.IdCustomer
+                SELECT cli.IdCustomer 
                 FROM Customer cli WITH (NOLOCK)
-                WHERE cli.Name = @NameCustomer
+                WHERE cli.Name = @NameCustomer AND cli.RowSatus = 1
             )
             BEGIN
 

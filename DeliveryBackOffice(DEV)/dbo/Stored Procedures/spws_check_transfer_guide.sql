@@ -51,6 +51,15 @@ BEGIN
 			SO.[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
 	)
 
+	DECLARE @ValidatedIncident INT = (
+		SELECT 
+			TOP (1) 
+				[SO].[StatusOrderId]
+		FROM 
+			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
+		WHERE SO.StatusOrderId = 50 --Incidencia validada
+	)
+
 	DECLARE @Series NVARCHAR(50) = SUBSTRING(@Guide, 1, 2);
 	DECLARE @Guide_number NVARCHAR(50) = SUBSTRING(@Guide, 3, LEN(@Guide));
 	DECLARE @jsonResult NVARCHAR(MAX) = '';
@@ -76,7 +85,10 @@ BEGIN
 		)
 	END
 
-	IF(@Status IN(@GuideInRoute,@GuideInReturnRoute,@IncidenceInRoute,@FailedDeliveryAttempt) And @Status NOT IN (
+
+
+
+	IF(@Status IN(@GuideInRoute,@GuideInReturnRoute,@IncidenceInRoute,@FailedDeliveryAttempt,@ValidatedIncident) And @Status NOT IN (
 	
 											SELECT
 												SO.[StatusOrderId]

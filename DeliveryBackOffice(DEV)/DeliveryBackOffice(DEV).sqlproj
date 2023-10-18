@@ -1565,7 +1565,6 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
-    <Build Include="Security\ECS-DB-DENARIUS_deliveryreport_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
