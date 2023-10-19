@@ -92,7 +92,9 @@ BEGIN
                ISNULL(da.Longitude, '') [Longitude],
                '' [Token],
                '' NextSteps,
-			   '' [UserIncident]
+			   '' [UserIncident],
+                 ''   AS 'ValidGeolocationEvidence',
+				 '' AS 'ValidPhotographicEvidence'
         FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                 ON da.Guide_Serie = do.Guide_Serie
@@ -347,13 +349,23 @@ BEGIN
                     ELSE
                         ''
                 END
-               ) AS UserIncident
-
+               ) AS UserIncident,
+              IIF(COI.ValidGeolocationEvidence IS NULL AND dod.StatusOrderId=50,
+                      IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0),
+                                IIF(COI.ValidGeolocationEvidence = 1 AND dod.StatusOrderId=50, 1, 0))
+			                             AS 'ValidGeolocationEvidence',
+			   IIF(COI.ValidPhotographicEvidence IS NULL AND dod.StatusOrderId=50,
+				       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0), 
+				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence'
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
             INNER JOIN [dbo].[CatCheckpointType] CCT
                 ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
+            LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
+			    ON   dod.Guide_Serie = da.Guide_Serie And dod.Guide_Number = da.Guide_Number  
+			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         --ORDER BY DateCreated
@@ -365,7 +377,11 @@ BEGIN
                  dod.Observations,
                  so.OrderDescription,
                  [CCT].[CheckpointIcon],
-				 dod.DeliveryAttemptId
+				 dod.DeliveryAttemptId,
+                 COI.ValidGeolocationEvidence,
+				 COI.IsConfirmed,
+				 COI.IsDenied,
+				 COI.ValidPhotographicEvidence
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -418,7 +434,8 @@ BEGIN
            OrdChkPnt.[Longitude], --,
            OrdChkPnt.NextSteps,
 		   OrdChkPnt.UserIncident
-    --OrdChkPnt.Token
+           ,OrdChkPnt.ValidGeolocationEvidence
+		   ,OrdChkPnt.ValidPhotographicEvidence
     FROM #OrdChkpnt OrdChkPnt
         LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token WITH (NOLOCK)
             ON OrdChkPnt.Token = token.SSN_IdToken
