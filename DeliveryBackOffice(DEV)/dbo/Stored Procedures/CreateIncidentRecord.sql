@@ -389,6 +389,49 @@ BEGIN
                     IF (@NewRoutePreparation = 0)
                     BEGIN
 
+                     -- Extraer guía de una ruta de despacho nueva, previamente reprogramada
+							UPDATE RPD
+							SET RPD.RowStatus = 0,
+								RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+								RPD.DateUpdated = GETDATE()
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+									ON RP.IdRoutePreparation = RPD.RoutePreparationId
+									   AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+									   AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+							WHERE --RP.IdRoutePreparation = @OriginRouteId --@RoutePreparationId And
+								Convert(Date,RP.Datecreated) > Convert(Date, Getdate());
+
+							 -- Borrado logico de la preparación de ruta si existe un cambio anterior (reprogramación de fecha), esto para permitir visualizar la nueva 
+							 -- y no haya duplicidad en preparación al momento que llega la nueva fecha
+							UPDATE RP
+							SET RP.RowStatus = 0,
+								RP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+								RP.DateUpdated = GETDATE()
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+									ON RP.IdRoutePreparation = RPD.RoutePreparationId
+									   AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+									   AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+							WHERE -- RP.IdRoutePreparation = @OriginRouteId; @RoutePreparationId;
+								   Convert(Date,RP.Datecreated) > Convert(Date, Getdate());
+
+							-- Extraer piezas de guía de la ruta de despacho que se hayan reprogramado
+							UPDATE RPDP
+							SET RPDP.RowStatus = 0,
+								RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+								RPDP.DateUpdated = GETDATE()
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+									ON RP.IdRoutePreparation = RPD.RoutePreparationId
+									   AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+									   AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+									ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
+							WHERE -- RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+								   Convert(Date,RP.Datecreated) > Convert(Date, Getdate());
+
+
                         --- Ingresar nueva preparación de ruta por reasignación 
                         INSERT INTO [dbo].[RoutePreparation]
                         (
@@ -454,6 +497,34 @@ BEGIN
                         VALUES
                         (@NewRoutePreparation, @GuideSerie, @GuideNumber, 1, @TokenCreated, GETDATE(), NULL, NULL, 1);
 
+                        	-- inserta la piezas de la guía con nueva fecha de entrega
+						INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]  
+						(
+										RoutePreparationDetailId,
+										PieceNumber,
+										PieceType,
+										RowStatus,
+										TokenCreated,
+										DateCreated
+								)
+						SELECT 
+						       (SELECT Top 1 IdRoutePreparationDetail FROM @InsertedRoutePreparationDetail),
+								RPDP2.PieceNumber,
+								RPDP2.PieceType,
+								1,
+								@TokenCreated,
+								Getdate()   
+						FROM 
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP2
+						WHERE RPDP2.RoutePreparationDetailId  in (
+																Select Top 1 a.IdRoutePreparationDetail From [dbo].[RoutePreparationDetail] a
+																Inner Join [dbo].[RoutePreparation] b
+																ON a.RoutePreparationId = b.IdRoutePreparation
+																Where 
+																a.Guide_Number= @GuideNumber
+																And  Convert(Date,B.Datecreated) <= Convert(Date, Getdate())
+															)
+
                         IF @@ROWCOUNT > 0
                         BEGIN
                             SET @UpdatedRP = 1;
@@ -476,30 +547,30 @@ BEGIN
                 WHERE DOBS.ID = @DeliverySettlementId;
 
                 -- Extraer guía de la ruta de despacho actual
-                UPDATE RPD
-                SET RPD.RowStatus = 0,
-                    RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                    RPD.DateUpdated = GETDATE()
-                FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                        ON RP.IdRoutePreparation = RPD.RoutePreparationId
-                           AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                           AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
-                WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+                -- UPDATE RPD
+                -- SET RPD.RowStatus = 0,
+                --     RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                --     RPD.DateUpdated = GETDATE()
+                -- FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                --         ON RP.IdRoutePreparation = RPD.RoutePreparationId
+                --            AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                --            AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+                -- WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
                 -- Extraer piezas de guía de la ruta de despacho actual
-                UPDATE RPDP
-                SET RPDP.RowStatus = 0,
-                    RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                    RPDP.DateUpdated = GETDATE()
-                FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                        ON RP.IdRoutePreparation = RPD.RoutePreparationId
-                           AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                           AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
-                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
-                        ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
-                WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+                -- UPDATE RPDP
+                -- SET RPDP.RowStatus = 0,
+                --     RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                --     RPDP.DateUpdated = GETDATE()
+                -- FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                --         ON RP.IdRoutePreparation = RPD.RoutePreparationId
+                --            AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                --            AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+                --         ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
+                -- WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
             END;
 
