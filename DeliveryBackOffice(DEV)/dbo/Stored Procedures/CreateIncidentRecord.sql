@@ -36,26 +36,20 @@ BEGIN
     DECLARE @NewRoutePreparation INT = 0;
     DECLARE @NewRouteManifest INT = 0;
     DECLARE @DeliverySettlementId INT = NULL;
-    DECLARE @InsertedRoutePreparation TABLE
-    (
-        IdRoutePreparation INT
-    );
-    DECLARE @InsertedRoutePreparationDetail TABLE
-    (
-        IdRoutePreparationDetail INT
-    );
+    DECLARE @InsertedRoutePreparation TABLE (IdRoutePreparation INT);
+    DECLARE @InsertedRoutePreparationDetail TABLE (IdRoutePreparationDetail INT);
 
     SET @IncidenceStatusId =
     (
         SELECT TOP 1
-               StatusOrderId
+            StatusOrderId
         FROM StatusOrder WITH (NOLOCK)
         WHERE OrderDescription = 'Incidencia en ruta'
     );
     SET @CatTypeCOIIncidenceStatusId =
     (
         SELECT TOP 1
-               IdCatTypeConfirmationOfIncidence
+            IdCatTypeConfirmationOfIncidence
         FROM CatTypeConfirmationOfIncidence WITH (NOLOCK)
         WHERE [Name] = 'Incidencia en Ruta'
     );
@@ -63,23 +57,58 @@ BEGIN
     -- Variables de control de cambios
     DECLARE @UpdatedRP BIT = 0;
 
-    DECLARE @Terminal INT =
-            (
-                SELECT TOP 1
-                       [SO].[CatCheckpointTypeId]
-                FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
-                    INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
-                        ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-                WHERE [SO].[RowStatus] = 1
-                      AND [DO].[Guide_Serie] = @GuideSerie
-                      AND [DO].[Guide_Number] = @GuideNumber
+    DECLARE @Terminal INT = (
+                                SELECT TOP 1
+                                    [SO].[CatCheckpointTypeId]
+                                FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
+                                    INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
+                                        ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
+                                WHERE [SO].[RowStatus] = 1
+                                      AND [DO].[Guide_Serie] = @GuideSerie
+                                      AND [DO].[Guide_Number] = @GuideNumber
+                            );
+
+    DECLARE @UserCreatedIncidence NVARCHAR(250)
+        =   (
+                Select Top 1
+                    RU.UsrNickName
+                From [dbo].[DeliveryOrderDetail] ddd WITH (NOLOCK)
+                    LEFT JOIN [dbo].[TokenLog] TL WITH (NOLOCK)
+                        ON ddd.UserCreated = TL.TknTokenCreated
+                    LEFT JOIN [dbo].[RegisterUser] RU WITH (NOLOCK)
+                        ON TL.TknIdUser = RU.UsrIdUser
+                Where ddd.Guide_Serie = @GuideSerie
+                      AND ddd.Guide_Number = @GuideNumber
+                      AND ddd.StatusOrderId = 50
+                      AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+            );
+
+    DECLARE @StatusIncidence INT = (
+                                       Select Top 1
+                                           StatusOrderId
+                                       From dbo.DeliveryOrderDetail DOD WITH (NOLOCK)
+                                       where DOD.Guide_Number = @GuideNumber
+                                             AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                                       ORDER BY DOD.DateCreatedInSystem Desc
+                                   );
+
+    DECLARE @NameStatusIncidence NVARCHAR(250)
+        =   (
+                Select Top 1
+                    SO.OrderDescription
+                From [dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
+                    INNER JOIN [dbo].[StatusOrder] SO WITH (NOLOCK)
+                        ON DOD.StatusOrderId = SO.StatusOrderId
+                where DOD.Guide_Number = @GuideNumber
+                      AND CONVERT(DATE, DOD.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                ORDER BY DOD.DateCreatedInSystem Desc
             );
 
     BEGIN TRY
         SET @StatusOrderId = @IncidenceStatusId;
         SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIIncidenceStatusId;
 
-        IF (@Terminal != 3)
+        IF (@Terminal != 3 AND @StatusIncidence != 50)
         BEGIN
 
             IF (@IsRealIncident = 0) --Si courier mintió?
@@ -120,7 +149,7 @@ BEGIN
                 IF (EXISTS
                 (
                     SELECT TOP 1
-                           1
+                        1
                     FROM [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
                         INNER JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                             ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
@@ -138,7 +167,7 @@ BEGIN
                     IF (NOT EXISTS
                     (
                         SELECT TOP 1
-                               1
+                            1
                         FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
                         WHERE DOAD.GuideNumber = @GuideNumber
                     )
@@ -158,26 +187,25 @@ BEGIN
                             [TokenCreated]
                         )
                         SELECT TOP 1
-                               do.Guide_Serie,
-                               do.Guide_Number,
-                               1,
-                               rh.Attempt,
-                               0,
-                               rh.AttemptReturn,
-                               1,
-                               GETDATE(),
-                               @TokenCreated
+                            do.Guide_Serie,
+                            do.Guide_Number,
+                            1,
+                            rh.Attempt,
+                            0,
+                            rh.AttemptReturn,
+                            1,
+                            GETDATE(),
+                            @TokenCreated
                         FROM DeliveryOrder do WITH (NOLOCK)
                             LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
                                 ON do.Sender_ID = vpc.CodeOfReference
                             INNER JOIN RatebyCustomer rbc WITH (NOLOCK)
                                 ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
                                    AND rbc.RbcRowStatus = 1
-                                   AND
-                                   (
-                                       rbc.RbcCodeOfReference = vpc.CodeOfReference
-                                       OR rbc.RbcCodeOfReference IS NULL
-                                   )
+                                   AND (
+                                           rbc.RbcCodeOfReference = vpc.CodeOfReference
+                                           OR rbc.RbcCodeOfReference IS NULL
+                                       )
                             INNER JOIN RateHeader rh WITH (NOLOCK)
                                 ON rbc.RbcIdRate = rh.RheId
                             INNER JOIN DeliveryAttempt da WITH (NOLOCK)
@@ -262,8 +290,8 @@ BEGIN
 
             --Copiar la imagen de incidencia de ruta hacia incidencia validada
             SELECT TOP 1
-                   @DeliveryAttemptId = DeliveryAttemptId,
-                   @SytemOrigin = SystemOrigin
+                @DeliveryAttemptId = DeliveryAttemptId,
+                @SytemOrigin = SystemOrigin
             FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
             WHERE Guide_Serie = @GuideSerie
                   AND Guide_Number = @GuideNumber
@@ -299,7 +327,7 @@ BEGIN
                 1,                        -- RowStatus - bit
                 @DeliveryAttemptId,       -- DeliveryAttemptId - bigint
                 @SytemOrigin              -- SystemOrigin - int
-                );
+            );
 
             UPDATE dop
             SET StatusOrderId = @ValidatedIncidentStatus
@@ -361,6 +389,49 @@ BEGIN
                     IF (@NewRoutePreparation = 0)
                     BEGIN
 
+                     -- Extraer guía de una ruta de despacho nueva, previamente reprogramada
+							UPDATE RPD
+							SET RPD.RowStatus = 0,
+								RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+								RPD.DateUpdated = GETDATE()
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+									ON RP.IdRoutePreparation = RPD.RoutePreparationId
+									   AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+									   AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+							WHERE --RP.IdRoutePreparation = @OriginRouteId --@RoutePreparationId And
+								Convert(Date,RP.Datecreated) > Convert(Date, Getdate());
+
+							 -- Borrado logico de la preparación de ruta si existe un cambio anterior (reprogramación de fecha), esto para permitir visualizar la nueva 
+							 -- y no haya duplicidad en preparación al momento que llega la nueva fecha
+							UPDATE RP
+							SET RP.RowStatus = 0,
+								RP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+								RP.DateUpdated = GETDATE()
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+									ON RP.IdRoutePreparation = RPD.RoutePreparationId
+									   AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+									   AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+							WHERE -- RP.IdRoutePreparation = @OriginRouteId; @RoutePreparationId;
+								   Convert(Date,RP.Datecreated) > Convert(Date, Getdate());
+
+							-- Extraer piezas de guía de la ruta de despacho que se hayan reprogramado
+							UPDATE RPDP
+							SET RPDP.RowStatus = 0,
+								RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+								RPDP.DateUpdated = GETDATE()
+							FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+									ON RP.IdRoutePreparation = RPD.RoutePreparationId
+									   AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+									   AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
+								INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+									ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
+							WHERE -- RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+								   Convert(Date,RP.Datecreated) > Convert(Date, Getdate());
+
+
                         --- Ingresar nueva preparación de ruta por reasignación 
                         INSERT INTO [dbo].[RoutePreparation]
                         (
@@ -384,7 +455,7 @@ BEGIN
                         (@OriginRouteId, @NewDeliveryDate, 1, 0, 0, 1, @TokenCreated, GETDATE(), NULL, NULL);
 
                         SELECT TOP 1
-                               @NewRoutePreparation = IdRoutePreparation
+                            @NewRoutePreparation = IdRoutePreparation
                         FROM @InsertedRoutePreparation;
 
                     END;
@@ -394,7 +465,7 @@ BEGIN
                            AND NOT EXISTS
                     (
                         SELECT TOP 1
-                               1
+                            1
                         FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
                             INNER JOIN [DeliveryBackOffice].[dbo].RoutePreparation RP WITH (NOLOCK)
                                 ON RPD.RoutePreparationId = RP.IdRoutePreparation
@@ -426,6 +497,34 @@ BEGIN
                         VALUES
                         (@NewRoutePreparation, @GuideSerie, @GuideNumber, 1, @TokenCreated, GETDATE(), NULL, NULL, 1);
 
+                        	-- inserta la piezas de la guía con nueva fecha de entrega
+						INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]  
+						(
+										RoutePreparationDetailId,
+										PieceNumber,
+										PieceType,
+										RowStatus,
+										TokenCreated,
+										DateCreated
+								)
+						SELECT 
+						       (SELECT Top 1 IdRoutePreparationDetail FROM @InsertedRoutePreparationDetail),
+								RPDP2.PieceNumber,
+								RPDP2.PieceType,
+								1,
+								@TokenCreated,
+								Getdate()   
+						FROM 
+								[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP2
+						WHERE RPDP2.RoutePreparationDetailId  in (
+																Select Top 1 a.IdRoutePreparationDetail From [dbo].[RoutePreparationDetail] a
+																Inner Join [dbo].[RoutePreparation] b
+																ON a.RoutePreparationId = b.IdRoutePreparation
+																Where 
+																a.Guide_Number= @GuideNumber
+																And  Convert(Date,B.Datecreated) <= Convert(Date, Getdate())
+															)
+
                         IF @@ROWCOUNT > 0
                         BEGIN
                             SET @UpdatedRP = 1;
@@ -448,39 +547,39 @@ BEGIN
                 WHERE DOBS.ID = @DeliverySettlementId;
 
                 -- Extraer guía de la ruta de despacho actual
-                UPDATE RPD
-                SET RPD.RowStatus = 0,
-                    RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                    RPD.DateUpdated = GETDATE()
-                FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                        ON RP.IdRoutePreparation = RPD.RoutePreparationId
-                           AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                           AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
-                WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+                -- UPDATE RPD
+                -- SET RPD.RowStatus = 0,
+                --     RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                --     RPD.DateUpdated = GETDATE()
+                -- FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                --         ON RP.IdRoutePreparation = RPD.RoutePreparationId
+                --            AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                --            AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+                -- WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
                 -- Extraer piezas de guía de la ruta de despacho actual
-                UPDATE RPDP
-                SET RPDP.RowStatus = 0,
-                    RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                    RPDP.DateUpdated = GETDATE()
-                FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                        ON RP.IdRoutePreparation = RPD.RoutePreparationId
-                           AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                           AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
-                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
-                        ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
-                WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+                -- UPDATE RPDP
+                -- SET RPDP.RowStatus = 0,
+                --     RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                --     RPDP.DateUpdated = GETDATE()
+                -- FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                --         ON RP.IdRoutePreparation = RPD.RoutePreparationId
+                --            AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                --            AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+                --         ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
+                -- WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
             END;
 
             IF (@IsExpressCenterAddress = 1) --Modificar dirección a express center
             BEGIN
-                DECLARE @NewDeliveryOptionID INT =
-                        (
+                DECLARE @NewDeliveryOptionID INT
+                    =   (
                             SELECT TOP 1
-                                   CDO.IdDeliveryOption
+                                CDO.IdDeliveryOption
                             FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH (NOLOCK)
                             WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI
                         );
@@ -506,12 +605,17 @@ BEGIN
         SELECT @Terminal AS 'boolResult',
                CASE
                    WHEN @Terminal = 3 THEN
-                       'Guía en estado terminal,no es posible confirmar incidencia.'
+                       'No se posible confirmar la incidencia. Guía se encuentra en estado final.'
+                   WHEN @StatusIncidence = 50 THEN
+                       'Incidencia ya fue confirmada por el usuario: '
+                       + UPPER(ISNULL(@UserCreatedIncidence, 'Control de Calidad'))
                    ELSE
                        'Incidencia confirmada Exitosamente.'
                END AS 'DescriptionResult',
-               CONVERT(BIGINT, 0) AS 'NumTransferID',
-               CONCAT(@GuideSerie, @GuideNumber) AS 'Guide';
+               CONVERT(BIGINT, ISNULL(@StatusIncidence, 0)) AS 'NumTransferID',
+               ISNULL(@UserCreatedIncidence, 'N/A') AS 'UserIncidence',
+               CONCAT(@GuideSerie, @GuideNumber) AS 'Guide',
+               ISNULL(@NameStatusIncidence, 'N/A') AS 'NameStatusIncidence'
 
     END TRY
     BEGIN CATCH
