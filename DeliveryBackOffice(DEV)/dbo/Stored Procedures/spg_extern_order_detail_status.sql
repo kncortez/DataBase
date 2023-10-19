@@ -127,7 +127,9 @@ BEGIN
            RES.Price_Guide,
            RES.Price_COD,
 		   RES.UserIncident,
-		   RES.StatusValidated
+		   RES.StatusValidated,
+           RES.ValidGeolocationEvidence,
+	 	   RES.ValidPhotographicEvidence
     FROM
     (
         SELECT 0 [EventID],
@@ -154,7 +156,9 @@ BEGIN
                ISNULL(do.Price_Guide, 0) 'Price_Guide',
                ISNULL(do.Price_COD, 0) 'Price_COD',
 			   '' UserIncident,
-			   0 StatusValidated
+			   0 StatusValidated,
+               0 ValidGeolocationEvidence,
+	 	       0 ValidPhotographicEvidence
         FROM @GuideOrderTemp do
         UNION
         SELECT DISTINCT
@@ -338,13 +342,24 @@ BEGIN
 				ELSE
 					0
 				END
-				) AS StatusValidated
+				) AS StatusValidated,
+                IIF(COI.ValidGeolocationEvidence IS NULL AND dod.StatusOrderId=50,
+                      IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0),
+                                IIF(COI.ValidGeolocationEvidence = 1 AND dod.StatusOrderId=50, 1, 0))
+			                             AS 'ValidGeolocationEvidence',
+			   IIF(COI.ValidPhotographicEvidence IS NULL AND dod.StatusOrderId=50,
+				       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0), 
+				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence'
         FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
                    AND so.CatStatusTypeId = @ExternalTypeId
 			INNER JOIN [dbo].[CatCheckpointType] CCT WITH (NOLOCK)
 				ON	[so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
+            LEFT JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
+			    ON dod.Guide_Serie = da.Guide_Serie  And dod.Guide_Number = da.Guide_Number 
+			LEFT  JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
     ) RES
