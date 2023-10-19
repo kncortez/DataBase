@@ -131,7 +131,9 @@ BEGIN
 		   RES.COD,		   
 		   RES.NextSteps,
 		   RES.UserIncident,
-		   RES.Receiver_Phone
+		   RES.Receiver_Phone,
+		   RES.ValidGeolocationEvidence,
+	 	   RES.ValidPhotographicEvidence
 	INTO #OrdChkpnt
     FROM
     (
@@ -166,12 +168,22 @@ BEGIN
 			dor.Collect_OnDelivery [COD],
 			NULL [NextSteps],
 			'' [UserIncident],
-			do.Receiver_Phone
+			do.Receiver_Phone,
+			IIF(ValidGeolocationEvidence IS NULL,
+					IIF(IsConfirmed = 1 AND IsDenied = 0, 1, 0),
+					IIF(ValidGeolocationEvidence = 1, 1, 0))
+									AS ValidGeolocationEvidence,
+			       IIF(COI.ValidPhotographicEvidence IS NULL,
+						IIF(IsConfirmed = 1 AND IsDenied = 0, 1, 0), 
+						IIF(COI.ValidPhotographicEvidence = 1, 1, 0)) ValidPhotographicEvidence
 	FROM @GuideOrderTemp do
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 			ON da.Guide_Serie = do.Guide_Serie
 				AND da.Guide_Number = do.Guide_Number
-		INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK) ON dor.Guide_Serie = do.Guide_Serie AND dor.Guide_Number = do.Guide_Number
+		INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK) 
+		    ON dor.Guide_Serie = do.Guide_Serie AND dor.Guide_Number = do.Guide_Number
+		LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+		    ON  da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence 
 	WHERE do.Guide_Serie = @Guide_Serie
 			AND do.Guide_Number = @Guide_Number
 		UNION
@@ -406,7 +418,14 @@ BEGIN
                         ''
                 END
                ) AS UserIncident,
-			   GOT.Receiver_Phone
+			   GOT.Receiver_Phone,
+			   IIF(COI.ValidGeolocationEvidence IS NULL AND dod.StatusOrderId=50,
+                      IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0),
+                                IIF(COI.ValidGeolocationEvidence = 1 AND dod.StatusOrderId=50, 1, 0))
+			                             AS 'ValidGeolocationEvidence',
+			   IIF(COI.ValidPhotographicEvidence IS NULL AND dod.StatusOrderId=50,
+				       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0), 
+				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence'
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
@@ -415,6 +434,10 @@ BEGIN
 				ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
 			INNER JOIN @GuideOrderTemp GOT
 			    ON  GOT.Guide_Serie =  dod.Guide_Serie  AND  GOT.Guide_Number = dod.Guide_Number
+			LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
+			    ON  dod.Guide_Serie= da.Guide_Serie  And dod.Guide_Number=da.Guide_Number 
+			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         GROUP BY CONVERT(DATE, dod.DateCreated),
@@ -428,7 +451,11 @@ BEGIN
 				 so.NextSteps,
 				 [CCT].[CheckpointIcon],
 				 dod.DeliveryAttemptId,
-				 GOT.Receiver_Phone
+				 GOT.Receiver_Phone,
+				 COI.ValidGeolocationEvidence,
+			     COI.ValidPhotographicEvidence,
+				 COI.IsConfirmed ,
+				 COI.IsDenied
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -474,7 +501,9 @@ BEGIN
 			   ,ISNULL(OrdChkPnt.COD,0) COD
 			   ,OrdChkPnt.[NextSteps]
 			   ,OrdChkPnt.[UserIncident]
-			    ,OrdChkPnt.[Receiver_Phone]
+			   ,OrdChkPnt.[Receiver_Phone]
+			   ,OrdChkPnt.ValidGeolocationEvidence
+			   ,OrdChkPnt.ValidPhotographicEvidence
 	FROM #OrdChkpnt OrdChkPnt
 	-- Obtener datos desde usuario Desktop
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken
