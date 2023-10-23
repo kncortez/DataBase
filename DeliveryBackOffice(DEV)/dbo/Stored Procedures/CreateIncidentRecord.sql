@@ -16,8 +16,11 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @DeliveryDateChange BIT,              --Cambiar fecha de entrega?
     @NewDeliveryDate DATETIME = NULL,     --Nueva fecha de entrega si se solicita,
     @Observations NVARCHAR(600),          --Observaciones tracking
-    @LiquidatorRemarks NVARCHAR(600) = '' --Observaciones para el liquidador
+    @LiquidatorRemarks NVARCHAR(600) = '', --Observaciones para el liquidador
+    @ValidGeolocationEvidence BIT,  --indica si la incidecia de geolocalziación es valdia
+	@ValidPhotographicEvidence BIT  --indica si la evidencia fotografica es valida
 AS
+
 BEGIN
     DECLARE @StatusOrderId TINYINT;
     DECLARE @ValidatedIncidentStatus TINYINT = 50;
@@ -234,10 +237,25 @@ BEGIN
                     END;
 
 
-                END;
+                   END;
+                    ELSE
+                    BEGIN
 
-            /*Fin*/
+                    UPDATE [COI]
+                            SET	 [COI].[ValidGeolocationEvidence] = @ValidGeolocationEvidence  ,
+                                [COI].[ValidPhotographicEvidence] = @ValidPhotographicEvidence
+                            FROM [dbo].[DeliveryOrder] [DO]
+                                INNER JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+                                    ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
+                                    AND [DO].[Guide_Number] = [DA].[Guide_Number]
+                                INNER JOIN [dbo].[ConfirmationOfIncidence] COI
+                                    ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+                            WHERE DA.Guide_Serie = @GuideSerie
+                                AND DA.Guide_Number = @GuideNumber
+                                AND [COI].[RowStatus] = 1
+                    END;
 
+                  /*Fin*/
             END;
 
             UPDATE t1
@@ -479,33 +497,33 @@ BEGIN
                         VALUES
                         (@NewRoutePreparation, @GuideSerie, @GuideNumber, 1, @TokenCreated, GETDATE(), NULL, NULL, 1);
 
-                        	-- inserta la piezas de la guía con nueva fecha de entrega
-						--INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]  
-						--(
-						--				RoutePreparationDetailId,
-						--				PieceNumber,
-						--				PieceType,
-						--				RowStatus,
-						--				TokenCreated,
-						--				DateCreated
-						--		)
-						--SELECT 
-						--       (SELECT Top 1 IdRoutePreparationDetail FROM @InsertedRoutePreparationDetail),
-						--		RPDP2.PieceNumber,
-						--		RPDP2.PieceType,
-						--		1,
-						--		@TokenCreated,
-						--		Getdate()   
-						--FROM 
-						--		[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP2
-						--WHERE RPDP2.RoutePreparationDetailId  in (
-						--										Select Top 1 a.IdRoutePreparationDetail From [dbo].[RoutePreparationDetail] a
-						--										Inner Join [dbo].[RoutePreparation] b
-						--										ON a.RoutePreparationId = b.IdRoutePreparation
-						--										Where 
-						--										a.Guide_Number= @GuideNumber
-						--										And  Convert(Date,B.Datecreated) <= Convert(Date, Getdate())
-						--									)
+                        -- 	-- inserta la piezas de la guía con nueva fecha de entrega
+						-- INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece]  
+						-- (
+						-- 				RoutePreparationDetailId,
+						-- 				PieceNumber,
+						-- 				PieceType,
+						-- 				RowStatus,
+						-- 				TokenCreated,
+						-- 				DateCreated
+						-- 		)
+						-- SELECT 
+						--        (SELECT Top 1 IdRoutePreparationDetail FROM @InsertedRoutePreparationDetail),
+						-- 		RPDP2.PieceNumber,
+						-- 		RPDP2.PieceType,
+						-- 		1,
+						-- 		@TokenCreated,
+						-- 		Getdate()   
+						-- FROM 
+						-- 		[DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP2
+						-- WHERE RPDP2.RoutePreparationDetailId  in (
+						-- 										Select Top 1 a.IdRoutePreparationDetail From [dbo].[RoutePreparationDetail] a
+						-- 										Inner Join [dbo].[RoutePreparation] b
+						-- 										ON a.RoutePreparationId = b.IdRoutePreparation
+						-- 										Where 
+						-- 										a.Guide_Number= @GuideNumber
+						-- 										And  Convert(Date,B.Datecreated) <= Convert(Date, Getdate())
+						-- 									)
 
                         IF @@ROWCOUNT > 0
                         BEGIN
@@ -528,31 +546,31 @@ BEGIN
                            AND DSD.Guide_Number = @GuideNumber --@TokenGuideNumber
                 WHERE DOBS.ID = @DeliverySettlementId;
 
-                -- Extraer guía de la ruta de despacho actual
-                 UPDATE RPD
-                 SET RPD.RowStatus = 0,
-                     RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                     RPD.DateUpdated = GETDATE()
-                 FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-                     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                         ON RP.IdRoutePreparation = RPD.RoutePreparationId
-                            AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                            AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
-                 WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+                Extraer guía de la ruta de despacho actual
+                UPDATE RPD
+                SET RPD.RowStatus = 0,
+                    RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                    RPD.DateUpdated = GETDATE()
+                FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                        ON RP.IdRoutePreparation = RPD.RoutePreparationId
+                           AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                           AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
+                WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
-                -- Extraer piezas de guía de la ruta de despacho actual
-                 UPDATE RPDP
-                 SET RPDP.RowStatus = 0,
-                     RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                     RPDP.DateUpdated = GETDATE()
-                 FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-                     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-                         ON RP.IdRoutePreparation = RPD.RoutePreparationId
-                            AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                            AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
-                     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
-                         ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
-                 WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
+                Extraer piezas de guía de la ruta de despacho actual
+                UPDATE RPDP
+                SET RPDP.RowStatus = 0,
+                    RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                    RPDP.DateUpdated = GETDATE()
+                FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
+                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
+                        ON RP.IdRoutePreparation = RPD.RoutePreparationId
+                           AND RPD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                           AND RPD.Guide_Number = @GuideNumber --@TokenGuideNumber
+                    INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetailPiece] RPDP WITH (NOLOCK)
+                        ON RPD.IdRoutePreparationDetail = RPDP.IdRoutePreparationDetailPiece
+                WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
             END;
 
