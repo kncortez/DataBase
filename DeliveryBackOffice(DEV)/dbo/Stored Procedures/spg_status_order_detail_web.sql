@@ -57,7 +57,9 @@ BEGIN
            RES.[Longitude],
            RES.Token,
            RES.NextSteps,
-		   RES.UserIncident
+		   RES.UserIncident,
+           RES.ValidGeolocationEvidence,
+           RES.ValidPhotographicEvidence
     INTO #OrdChkpnt
     FROM
     (
