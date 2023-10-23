@@ -546,7 +546,7 @@ BEGIN
                            AND DSD.Guide_Number = @GuideNumber --@TokenGuideNumber
                 WHERE DOBS.ID = @DeliverySettlementId;
 
-                Extraer guía de la ruta de despacho actual
+               -- Extraer guía de la ruta de despacho actual
                 UPDATE RPD
                 SET RPD.RowStatus = 0,
                     RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
@@ -558,7 +558,7 @@ BEGIN
                            AND RPD.Guide_Number = @GuideNumber -- @TokenGuideNumber
                 WHERE RP.IdRoutePreparation = @OriginRouteId; --@RoutePreparationId;
 
-                Extraer piezas de guía de la ruta de despacho actual
+               -- Extraer piezas de guía de la ruta de despacho actual
                 UPDATE RPDP
                 SET RPDP.RowStatus = 0,
                     RPDP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
