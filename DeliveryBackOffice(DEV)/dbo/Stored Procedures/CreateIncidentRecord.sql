@@ -535,22 +535,22 @@ BEGIN
                 END;
 
                 -- Extraer guía del manifiesto de despacho actual
-                UPDATE DSD
-                SET DSD.RowStatus = 0,
-                    DSD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                    DSD.DateUpdated = GETDATE()
-                FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
-                        ON DOBS.ID = DSD.ID_DeliveryOrderBySettlement
-                           AND DSD.Guide_Serie = @GuideSerie --@TokenGuideSerie
-                           AND DSD.Guide_Number = @GuideNumber --@TokenGuideNumber
-                WHERE DOBS.ID = @DeliverySettlementId;
+                -- UPDATE DSD
+                -- SET DSD.RowStatus = 0,
+                --     DSD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                --     DSD.DateUpdated = GETDATE()
+                -- FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
+                --     INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+                --         ON DOBS.ID = DSD.ID_DeliveryOrderBySettlement
+                --            AND DSD.Guide_Serie = @GuideSerie --@TokenGuideSerie
+                --            AND DSD.Guide_Number = @GuideNumber --@TokenGuideNumber
+                -- WHERE DOBS.ID = @DeliverySettlementId;
 
                -- Extraer guía de la ruta de despacho actual
-                UPDATE RPD
-                SET RPD.RowStatus = 0,
-                    RPD.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
-                    RPD.DateUpdated = GETDATE()
+                UPDATE RP
+                SET RP.RowStatus = 0,
+                    RP.TokenUpdated = @TokenCreated, --'SYS-HERMESROUTESLanding',
+                    RP.DateUpdated = GETDATE()
                 FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
                     INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
                         ON RP.IdRoutePreparation = RPD.RoutePreparationId
