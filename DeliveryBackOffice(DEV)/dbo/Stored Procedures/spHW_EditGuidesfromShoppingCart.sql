@@ -20,7 +20,7 @@ BEGIN
 
 	SET NOCOUNT ON;
 	
-	IF(@IdDeliveryFavCOD = 0)
+	IF(@IdDeliveryFavCOD = 0 AND @IdFavCOD > 0)
 		BEGIN
 				INSERT INTO [DeliveryCustomerBankAccount]
 						SELECT	TOP 1 (SELECT TOP 1 DCBA_Id FROM DeliveryCustomerBankAccount WITH(NOLOCK)ORDER BY DCBA_Id DESC)+1,
