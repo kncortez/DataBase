@@ -14,9 +14,9 @@
 -- Description:	<Ordenar suscripciones de la mas antigua a la mas nueva>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetMembershipSubscriptionDashboardData]
-	@AccountId AS INT,
-	@DateStart AS DATETIME,
-	@DateEnd AS DATETIME
+    @AccountId AS INT
+  , @DateStart AS DATETIME
+  , @DateEnd AS DATETIME
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -73,17 +73,17 @@ BEGIN
          , [M].[IsAutoRenewable]
          , [M].[MembershipMaxServiceFixedValue]
          , [M].[ActualServiceCount]
-         , IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0
-             , 0
-             , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]))           [MembershipAvailableFixedService]
+         , (case when ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0
+             then 0
+             else  ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) end )           [MembershipAvailableFixedService]
          , [M].[ExpirationDate]                                                             [MembershipExpirationDate]
-         , IIF((([M].[ActualServiceCount] * 100)
-                / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN 1 ELSE [M].[MembershipMaxServiceFixedValue] END)
+         , (case when (([M].[ActualServiceCount] * 100)
+                / (case when [M].[MembershipMaxServiceFixedValue] = 0 then 1 else [M].[MembershipMaxServiceFixedValue] end )
                ) > 100
-             , 100
-             , (([M].[ActualServiceCount] * 100)
-                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
-               ))                                                                           [MembershipUsagePercentage]
+             then 100
+             else (([M].[ActualServiceCount] * 100)
+                / (case when[M].[MembershipMaxServiceFixedValue] = 0 then 1 else  [M].[MembershipMaxServiceFixedValue] end )
+               )end )                                                                           [MembershipUsagePercentage]
          , (
                SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
                FROM [dbo].[MembershipSubscriptionLog] MSL
@@ -259,3 +259,6 @@ BEGIN
           AND ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > 0
     ORDER BY [S].[IdSubscription] ASC;
 END;
+
+
+

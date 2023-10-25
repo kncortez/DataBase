@@ -208,6 +208,11 @@ GO
 CREATE NONCLUSTERED INDEX [idx_sendertown]
     ON [dbo].[DeliveryOrder]([Sender_Town] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_2023]
+ON [dbo].[DeliveryOrderDetail] ([StatusOrderId],[DateCreatedInSystem])
+INCLUDE ([UserCreated],[DeliveryAttemptId])
+
 
 GO
 
@@ -378,3 +383,7 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
     ON [dbo].[DeliveryOrder]([User_Contact] ASC)
     INCLUDE([ID_ContactIncident], [Contact_Confirmed]);
 
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
+		ON [dbo].[DeliveryOrder]( [SalePipeLineId] )
+		INCLUDE([Sender_Mail],[Sender_ID],[DCBA_ID],[IdCustomer]);

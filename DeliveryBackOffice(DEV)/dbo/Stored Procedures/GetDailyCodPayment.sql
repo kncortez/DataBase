@@ -80,13 +80,30 @@ BEGIN
         WHERE pg.[Notificated] = 0
               AND pg.BatchCODId IS NOT NULL
               AND btd.[AuthorizationNumber] IS NOT NULL
-              AND vpc.SaleChannelId NOT IN ( 3 )
+              AND vpc.SaleChannelId NOT IN ( 3 ) --no es portal
 			  AND 
 			  (LEN(COALESCE(cu.CODContactEmail,''))>0
 			  OR LEN(COALESCE(do.Sender_Mail,''))>0
 			  OR LEN(COALESCE(cu.RegexEmail,''))>0--quitar valores nulos
 			  )
 			  
+-- AND do.IdCustomer <> 29328
+ AND NOT EXISTS --búsqueda por sender
+ (
+	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)
+	INNER JOIN DeliveryBackOffice.DBO.VisitPointClient  A2 WITH(NOLOCK) 
+	ON A1.IdCustomer = A2.CustomerID
+	AND A2.IdKindOfVPClient = 1
+	WHERE DO.Sender_ID = A2.CodeOfReference
+ )
+ AND NOT EXISTS --búsqueda por customer
+ (
+	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)	
+	WHERE DO.IdCustomer = A1.IdCustomer
+	AND A1.IdCustomerType = 2 --REDISTRIBUIDOR
+ )
+
+--NO INCLUIR A EXPRESS CENTER
 
 
 

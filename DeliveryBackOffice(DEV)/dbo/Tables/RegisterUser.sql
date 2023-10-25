@@ -39,6 +39,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo que indica si telefono ya fue verificado o no.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RegisterUser', @level2type = N'COLUMN', @level2name = N'VerifiedPhone';
 
@@ -69,4 +71,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicador booleano de cambio de contraseña', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RegisterUser', @level2type = N'COLUMN', @level2name = N'ChangePassword';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UsrIdPerson]
+    ON [dbo].[RegisterUser]([UsrIdPerson] ASC);
 

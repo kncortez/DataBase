@@ -20,6 +20,7 @@ BEGIN
     -- Insert statements for procedure here
 	select	mun.IdTownship     [IdTownship], 
 			mun.TownshipName   [TownshipName], 
+			mun.[HeaderCode]   [TownshipHeaderCode], 
 			mun.IdProvince     [IdProvince],
 			depto.ProvinceName [ProvinceName], 
 			depto.IdCountry	   [IdCountry],

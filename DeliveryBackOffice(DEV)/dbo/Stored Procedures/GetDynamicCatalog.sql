@@ -206,8 +206,11 @@ BEGIN
             SELECT STUFF(
                             (
                                 SELECT ',{"Id":"' + CONVERT(NVARCHAR, IdIncidenceType) + '",' + '"Name":"'
-                                       + ISNULL(NameIncidence, 'N/A') + '",' + '"Description":"'
-                                       + ISNULL(DescriptionIncidence, 'N/A') + '"' + '}'
+                                       + ISNULL(NameIncidence, 'N/A') + '",' 
+									   + '"Description":"'+ ISNULL(DescriptionIncidence, 'N/A')  + '",' 									   
+                                       + '"EvidenceRequirement":'+ IIF(COALESCE(EvidenceRequirement,0) = 1, '1','0')  + ',' 
+									   + '"CourierInstructions":"'+ ISNULL(CourierInstructions, 'N/A') + '"'									   
+									   + '}'
                                 FROM DeliveryBackOffice.dbo.CatTypeIncidence WITH(NOLOCK)
                                 WHERE RowStatus = 1
                                       AND ServiceType = 'DELIVERY'

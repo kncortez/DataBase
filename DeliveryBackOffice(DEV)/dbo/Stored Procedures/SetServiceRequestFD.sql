@@ -135,7 +135,9 @@ BEGIN
 			[SenderIdTownship],
 			[ReceiverIdTownship],
 			[Sender_Lat],
-			[Sender_Lng]
+			[Sender_Lng],
+			[ReceiverLatitude],
+			[ReceiverLongitude]
 		INTO #GuideTable
 		FROM @TblDeliveryOrdersFD
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
@@ -243,7 +245,9 @@ BEGIN
 			[Sender_Lat],
 			[Sender_Lng],
 			[CatSystemId],
-			[CatModuleId]
+			[CatModuleId],
+			[Receiver_Lat],
+			[Receiver_Lng]
 		)
 		SELECT 
 			GT.[Ticket_Number],
@@ -310,7 +314,9 @@ BEGIN
 			GT.Sender_Lat,
 			GT.Sender_Lng,
 			@system,
-			@module
+			@module,
+			GT.ReceiverLatitude,
+			GT.ReceiverLongitude
 		FROM #GuideTable GT
 			
 		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER

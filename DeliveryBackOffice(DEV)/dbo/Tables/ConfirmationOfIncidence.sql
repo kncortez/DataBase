@@ -18,6 +18,8 @@
     [IncidentfinalizedbySAC]           BIT            NULL,
     [IsDenied]                         BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsDenied] DEFAULT ((0)) NULL,
     [LastStatusOrderId]                TINYINT        NULL,
+    [LiquidatorRemarks]                NVARCHAR(600)  NULL,
+    [IsAddressModificationRequested] [bit] NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
@@ -110,3 +112,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Confirmaci�
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observaci처n adicionada a la acci처n realizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ActionObservation';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observaci처n de liquidaci처n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'LiquidatorRemarks';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Solicita cambio de direcci처n' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'IsAddressModificationRequested'

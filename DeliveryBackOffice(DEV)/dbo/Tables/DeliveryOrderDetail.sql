@@ -22,6 +22,8 @@
 
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [ClusteredIndex-GuideSerie-Number-Status]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC);
@@ -79,4 +81,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del intento de entrega de la tabla DelvieryAttempt.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderDetail', @level2type = N'COLUMN', @level2name = N'DeliveryAttemptId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreatedInSystem] ASC, [SystemOrigin] ASC);
 

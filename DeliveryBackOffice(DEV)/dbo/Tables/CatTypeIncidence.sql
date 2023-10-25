@@ -15,60 +15,15 @@
     [ValidatesLocation]        BIT           DEFAULT ((0)) NOT NULL,
     [HasConfirmationProcess]   BIT           DEFAULT ((0)) NOT NULL,
     [NotifiesOrigin]           BIT           DEFAULT ((0)) NOT NULL,
+    [NameIncidencePublic]      VARCHAR (50)  NULL,
+    [EvidenceRequirement] [bit] NULL,
+    [CourierInstructions] [nvarchar](100) NULL,
     PRIMARY KEY CLUSTERED ([IdIncidenceType] ASC)
 );
 
 
 
-
-
-
-
-
-
-
 GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
-
-
-GO
-
 
 
 GO
@@ -85,4 +40,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si incidencia genera proceso de confirmación de incidencia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'HasConfirmationProcess';
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Indica si requiere evidencia' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatTypeIncidence', @level2type=N'COLUMN',@level2name=N'EvidenceRequirement'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Instrucciones para courierman' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatTypeIncidence', @level2type=N'COLUMN',@level2name=N'CourierInstructions'
+GO
 

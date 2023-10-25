@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Revaloriza una guia de transporte>

@@ -149,7 +149,7 @@ BEGIN
             ON DAT.Guide_Serie = DOR.Guide_Serie
                AND DAT.Guide_Number = DOR.Guide_Number
                AND DOR.IsLastMileReturn = 1
-               AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+               AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45,50 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución|Incidencia Validada
         INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail  DSD WITH (NOLOCK)
             ON DSD.Guide_Serie = DAT.Guide_Serie
                AND DSD.Guide_Number = DAT.Guide_Number
@@ -568,8 +568,10 @@ BEGIN
                                                                  , '#'
                                                                   ) + '",' + '"Latitude":"'
                                                           + CONVERT(
-                                                                       VARCHAR
-                                                                     , (CASE
+                                                                       VARCHAR,
+                                                                       (CASE
+																	        WHEN ISNULL(DOR.Receiver_Lat, '0') <> '' THEN
+																			      ISNULL(DOR.Receiver_Lat, '0')
                                                                             WHEN ISNULL(SDFG.Latitude, 0) != 0
                                                                                  AND ISNULL(SDFG.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(SDFG.Latitude, 0))
@@ -588,8 +590,10 @@ BEGIN
                                                                        )
                                                                    ) + '",' + '"Longitude":"'
                                                           + CONVERT(
-                                                                       VARCHAR
-                                                                     , (CASE
+                                                                       VARCHAR,
+                                                                       (CASE
+																	        WHEN ISNULL(DOR.Receiver_Lng, '0') <> '' THEN
+																			      ISNULL(DOR.Receiver_Lng, '0')
                                                                             WHEN ISNULL(SDFG.Latitude, 0) != 0
                                                                                  AND ISNULL(SDFG.Longitude, 0) != 0 THEN
                                                                                 CONVERT(VARCHAR, ISNULL(SDFG.Longitude, 0))
@@ -731,7 +735,7 @@ BEGIN
                                                           + CONVERT(
                                                                        VARCHAR
                                                                      , ISNULL(   CASE
-                                                                                     WHEN DOR.StatusOrderId = 45 THEN
+                                                                                     WHEN DOR.StatusOrderId IN( 45,50) THEN
                                                                                          12
                                                                                      ELSE
                                                                                          DOR.StatusOrderId
@@ -830,7 +834,7 @@ BEGIN
                                             INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder             DOR WITH (NOLOCK)
                                                 ON DAT.Guide_Serie = DOR.Guide_Serie
                                                    AND DAT.Guide_Number = DOR.Guide_Number
-                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45, 48, 32 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
+                                                   AND DOR.StatusOrderId IN ( 4, 5, 14, 12, 20, 25, 45, 48, 32,50 ) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
                                             INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail  DSD WITH (NOLOCK)
                                                 ON DSD.Guide_Serie = DAT.Guide_Serie
                                                    AND DSD.Guide_Number = DAT.Guide_Number
