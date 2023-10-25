@@ -1,14 +1,10 @@
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+﻿
 -- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2023-09-13>
 -- Description:	<Description,data para facturación de membresía o suscripción>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetDataFACMembershipOrSusbcrption] 
+CREATE PROCEDURE [dbo].[GetDataFACMembershipOrSusbcrption] 
 @OrderNumber AS NVARCHAR(25)
 AS
 BEGIN

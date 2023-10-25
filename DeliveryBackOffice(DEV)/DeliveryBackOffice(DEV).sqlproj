@@ -786,7 +786,6 @@
     <Build Include="dbo\Stored Procedures\sphd_SetCoverageMassive.sql" />
     <Build Include="dbo\Stored Procedures\sphd_SetCheckRoutePreparationPickUp.sql" />
     <Build Include="dbo\Stored Procedures\sphd_SetBusinessPartnerSegments.sql" />
-    <Build Include="dbo\Stored Procedures\sphd_LastMileSettlementsReport_1.sql" />
     <Build Include="dbo\Stored Procedures\sphd_LastMileSettlementsReportContingency.sql" />
     <Build Include="dbo\Stored Procedures\sphd_LastMileSettlementsReport.sql" />
     <Build Include="dbo\Stored Procedures\sphd_GetVisitPointItineraryByVisitPoint.sql" />
@@ -1561,6 +1560,7 @@
     <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
     <Build Include="dbo\Tables\CatTypeSubscription.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
+    <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
   
   </ItemGroup>
   <ItemGroup>
