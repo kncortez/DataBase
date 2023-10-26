@@ -399,8 +399,9 @@ BEGIN
                                TokenUpdated = @TokenCreated,
                                	DateUpdated = GETDATE()
                                WHERE
-                               RPD.Guide_Serie =  @GuideSerie
-                                AND RPD.Guide_Number = @GuideNumber
+                               Guide_Serie =  @GuideSerie
+                                AND Guide_Number = @GuideNumber
+                                AND
 
 						
 
