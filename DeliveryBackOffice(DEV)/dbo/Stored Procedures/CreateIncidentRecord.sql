@@ -401,7 +401,7 @@ BEGIN
                                WHERE
                                Guide_Serie =  @GuideSerie
                                 AND Guide_Number = @GuideNumber
-                                AND
+                                
 
 						
 
