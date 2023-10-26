@@ -30,6 +30,8 @@ BEGIN
     DECLARE @IncidenceStatusId INT;
     DECLARE @CatTypeCOIFailedVisitStatusId INT;
     DECLARE @CatTypeCOIIncidenceStatusId INT;
+    DECLARE @DeliveryAttemptId AS BIGINT = NULL;
+    DECLARE @SytemOrigin AS INT = NULL;
 
     BEGIN TRANSACTION;
     DECLARE @OriginRouteId INT = NULL;
@@ -108,6 +110,16 @@ BEGIN
         SET @StatusOrderId = @IncidenceStatusId;
         SET @CatTypeConfirmationOfIncidenceId = @CatTypeCOIIncidenceStatusId;
 
+          SELECT TOP 1
+                @DeliveryAttemptId = DeliveryAttemptId,
+                @SytemOrigin = SystemOrigin
+            FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
+            WHERE Guide_Serie = @GuideSerie
+                  AND Guide_Number = @GuideNumber
+                  AND RowStatus = 1
+                  AND StatusOrderId = @IncidentStatus
+            ORDER BY DateCreatedInSystem DESC;
+
         IF (@Terminal != 3 AND @StatusIncidence != 50)
         BEGIN
 
@@ -125,7 +137,8 @@ BEGIN
                         ON A1.ConfirmationOfIncidenceId = t1.IdConfirmationOfIncidence
                 WHERE t1.RowStatus = 1
                       AND A1.Guide_Serie = @GuideSerie
-                      AND A1.Guide_Number = @GuideNumber;
+                      AND A1.Guide_Number = @GuideNumber
+                      AND A1.ID = @DeliveryAttemptId;
 
                 UPDATE dop
                 SET StatusOrderId = @StatusOrderId
@@ -138,7 +151,8 @@ BEGIN
                 WHERE --coi.ConfirmationOfIncidentToken = @GuideToken
                     dop.GuideSerie = @GuideSerie
                     AND dop.GuideNumber = @GuideNumber
-                    AND coi.RowStatus = 1;
+                    AND coi.RowStatus = 1
+                    AND da.ID = @DeliveryAttemptId;;
 
 
             END;
@@ -253,6 +267,7 @@ BEGIN
                             WHERE DA.Guide_Serie = @GuideSerie
                                 AND DA.Guide_Number = @GuideNumber
                                 AND [COI].[RowStatus] = 1
+                                AND DA.ID = @DeliveryAttemptId;
                     END;
 
                   /*Fin*/
@@ -270,14 +285,14 @@ BEGIN
                 t1.DateUpdated = GETDATE(),
                 CourierContempt = 0,                                        --quitar desacatos
                 t1.LiquidatorRemarks = @LiquidatorRemarks
-            FROM dbo.ConfirmationOfIncidence t1
+            FROM dbo.ConfirmationOfIncidence t1 WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH (NOLOCK)
                     ON A1.ConfirmationOfIncidenceId = t1.IdConfirmationOfIncidence
-            WHERE --ConfirmationOfIncidentToken = @GuideToken
-                --AND 
+            WHERE 
                 A1.Guide_Serie = @GuideSerie
                 AND A1.Guide_Number = @GuideNumber
-                AND RowStatus = 1;
+                AND RowStatus = 1
+                AND A1.ID = @DeliveryAttemptId;
 
             UPDATE do
             SET StatusOrderId = @ValidatedIncidentStatus
@@ -285,19 +300,10 @@ BEGIN
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber;
 
-            DECLARE @DeliveryAttemptId AS BIGINT = NULL;
-            DECLARE @SytemOrigin AS INT = NULL;
+            
 
             --Copiar la imagen de incidencia de ruta hacia incidencia validada
-            SELECT TOP 1
-                @DeliveryAttemptId = DeliveryAttemptId,
-                @SytemOrigin = SystemOrigin
-            FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH (NOLOCK)
-            WHERE Guide_Serie = @GuideSerie
-                  AND Guide_Number = @GuideNumber
-                  AND RowStatus = 1
-                  AND StatusOrderId = @IncidentStatus
-            ORDER BY DateCreatedInSystem DESC;
+          
 
             INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
             (
@@ -387,6 +393,15 @@ BEGIN
                               AND RPD.Guide_Number = @GuideNumber
 						ORDER BY RP.IdRoutePreparation Desc;
 
+
+                        UPDATE [DeliveryBackOffice].[dbo].[RoutePreparationDetail] 
+                               SET RowStatus = 0,
+                               TokenUpdated = @TokenCreated,
+                               	DateUpdated = GETDATE()
+                               WHERE
+                               RPD.Guide_Serie =  @GuideSerie
+                                AND RPD.Guide_Number = @GuideNumber
+
 						
 
              
@@ -402,8 +417,6 @@ BEGIN
 						WHERE RP.CatRouteId = @OriginRouteId
 							  AND RP.DateRoutePreparation = @NewDeliveryDate
 							  AND RP.RowStatus = 1
-							  AND RPD.Guide_Serie = @GuideSerie
-                              AND RPD.Guide_Number = @GuideNumber
 						)
 				 )
                     BEGIN

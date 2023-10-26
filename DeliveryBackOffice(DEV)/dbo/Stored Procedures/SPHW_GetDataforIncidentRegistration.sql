@@ -125,7 +125,7 @@ Select TOP 1
 	AND DOD.Guide_Number = @GuideNumber
 	AND DOD.StatusOrderId = 45 
 	AND DOD.RowStatus = 1
-	ORDER BY DOD.DateCreatedInSystem DESC
+	ORDER BY DP.Date_Photo DESC
 		
 
 	
