@@ -123,6 +123,20 @@ BEGIN
         IF (@Terminal != 3 AND @StatusIncidence != 50)
         BEGIN
 
+              	   UPDATE [COI]
+						SET	 [COI].[ValidGeolocationEvidence] = ISNULL(@ValidGeolocationEvidence,0)  ,
+							  [COI].[ValidPhotographicEvidence] = ISNULL(@ValidPhotographicEvidence,0)
+						FROM [dbo].[DeliveryOrder] [DO]
+							INNER JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+								ON [DO].[Guide_Serie] = [DA].[Guide_Serie]
+								   AND [DO].[Guide_Number] = [DA].[Guide_Number]
+							INNER JOIN [dbo].[ConfirmationOfIncidence] COI
+								ON [DA].[ConfirmationOfIncidenceId] = [COI].[IdConfirmationOfIncidence]
+						WHERE DA.Guide_Serie = @GuideSerie
+							  AND DA.Guide_Number = @GuideNumber
+							  AND [COI].[RowStatus] = 1
+							  AND DA.ID = @DeliveryAttemptId;
+
             IF (@IsRealIncident = 0) --Si courier mintió?
             BEGIN
 
