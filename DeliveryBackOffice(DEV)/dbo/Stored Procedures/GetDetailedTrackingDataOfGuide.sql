@@ -169,19 +169,17 @@ BEGIN
 			NULL [NextSteps],
 			'' [UserIncident],
 			do.Receiver_Phone,
-			IIF(ValidGeolocationEvidence IS NULL,
-					IIF(IsConfirmed = 1 AND IsDenied = 0, 1, 0),
-					IIF(ValidGeolocationEvidence = 1, 1, 0))
-									AS ValidGeolocationEvidence,
-			       IIF(COI.ValidPhotographicEvidence IS NULL,
-						IIF(IsConfirmed = 1 AND IsDenied = 0, 1, 0), 
-						IIF(COI.ValidPhotographicEvidence = 1, 1, 0)) ValidPhotographicEvidence
+			'0'AS ValidGeolocationEvidence,
+			'0' AS ValidPhotographicEvidence
 	FROM @GuideOrderTemp do
+	    INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK) 
+		    ON do.Guide_Serie = dor.Guide_Serie And 
+			   do.Guide_Number = dor.Guide_Number
+		INNER JOIN dbo.DeliveryOrderDetail  dod WITH(NOLOCK)
+		    ON  dor.Guide_Serie = dod.Guide_Serie And 
+			    dor.Guide_Number = dod.Guide_Number 
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-			ON da.Guide_Serie = do.Guide_Serie
-				AND da.Guide_Number = do.Guide_Number
-		INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK) 
-		    ON dor.Guide_Serie = do.Guide_Serie AND dor.Guide_Number = do.Guide_Number
+			ON  dod.DeliveryAttemptId = da.ID
 		LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
 		    ON  da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence 
 	WHERE do.Guide_Serie = @Guide_Serie
@@ -419,14 +417,14 @@ BEGIN
                 END
                ) AS UserIncident,
 			   GOT.Receiver_Phone,
-			   IIF(COI.ValidGeolocationEvidence IS NULL AND dod.StatusOrderId=50,
+			      IIF(COI.ValidGeolocationEvidence IS NULL AND dod.StatusOrderId=50,
                       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0),
                                 IIF(COI.ValidGeolocationEvidence = 1 AND dod.StatusOrderId=50, 1, 0))
 			                             AS 'ValidGeolocationEvidence',
 			   IIF(COI.ValidPhotographicEvidence IS NULL AND dod.StatusOrderId=50,
 				       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0), 
 				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence'
-        FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+            FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
 				AND so.CatStatusTypeId = 2
@@ -435,7 +433,7 @@ BEGIN
 			INNER JOIN @GuideOrderTemp GOT
 			    ON  GOT.Guide_Serie =  dod.Guide_Serie  AND  GOT.Guide_Number = dod.Guide_Number
 			LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
-			    ON  dod.Guide_Serie= da.Guide_Serie  And dod.Guide_Number=da.Guide_Number 
+			    ON  dod.DeliveryAttemptId = da.ID 
 			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
 			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
