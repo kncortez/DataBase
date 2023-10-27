@@ -439,10 +439,10 @@ BEGIN
                         IIF(ISNULL(ord.IsCollect, 0) = 1,
                             0,
                             IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
-                   ) Price
-            --,
-            --            ISNULL(csg.CrsId, @IdSegmentDefault)
-
+                   ) Price,
+                   --,
+                   --            ISNULL(csg.CrsId, @IdSegmentDefault)
+                   ISNULL(rco.CODRate, @CODRateDefault) CommisionMin
             INTO #TableAmountCOD
             FROM #listGuides lst
                 INNER JOIN dbo.DeliveryOrder ord WITH(NOLOCK)
@@ -519,7 +519,7 @@ BEGIN
                    IDCUSTOMER,
                    CODRate,
                    CODExempt,
-                   Commision,
+                   IIF(Commision < CommisionMin, CommisionMin, Commision) Commision,
                    SUM(DeliveryPrice) DeliveryPrice,
                    SUM(ISNULL(CODPaid, 0)) CODPaid,
                    ReturnRates,
