@@ -88,10 +88,19 @@ begin
 								BEGIN
 									DECLARE @ECounter INT;
 										SET @ECounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WHERE Phone = @Phone)
+									 DECLARE @MMail Varchar(100)
+									SET @MMail = (SELECT TOP 1 Email FROM SenderReceiver WHERE Phone = @Phone)
+									IF(@MMail = '')
+										BEGIN
+											SET @MMail = NULL
+										END
 
-									UPDATE SenderReceiver
-									SET MailCounter = @ECounter +1
-									 WHERE Phone = @Phone
+									IF(@MMail IS NOT NULL)
+										BEGIN
+											UPDATE SenderReceiver
+											SET MailCounter = @ECounter +1
+											 WHERE Phone = @Phone
+										END
 								END
 
 			
