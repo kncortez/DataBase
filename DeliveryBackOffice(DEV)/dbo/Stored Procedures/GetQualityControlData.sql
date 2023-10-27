@@ -691,7 +691,7 @@ BEGIN
                       AND ddd.Guide_Number = ord.Guide_Number
                       AND ddd.StatusOrderId = 45
                       AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
+                ORDER BY ddd.DateCreatedInSystem DESC
             ) IncidenceTbl
                 LEFT JOIN dbo.DeliveryAttempt att
                     ON att.ID = IncidenceTbl.DeliveryAttemptId
@@ -899,7 +899,7 @@ BEGIN
                           AND ddd.Guide_Number = ord.Guide_Number
                           AND ddd.StatusOrderId = 45
                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                    ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
+                    ORDER BY  ddd.DateCreatedInSystem DESC
                 ) IncidenceTbl
                     LEFT JOIN dbo.DeliveryAttempt att
                         ON att.ID = IncidenceTbl.DeliveryAttemptId
@@ -1136,7 +1136,7 @@ BEGIN
                           AND ddd.Guide_Number = ord.Guide_Number
                           AND ddd.StatusOrderId = 45
                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                    ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
+                    ORDER BY ddd.DateCreatedInSystem DESC
                 ) IncidenceTbl
                     LEFT JOIN dbo.DeliveryAttempt att
                         ON att.ID = IncidenceTbl.DeliveryAttemptId
