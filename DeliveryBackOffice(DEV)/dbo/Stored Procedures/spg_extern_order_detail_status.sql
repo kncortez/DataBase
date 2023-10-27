@@ -357,7 +357,7 @@ BEGIN
 			INNER JOIN [dbo].[CatCheckpointType] CCT WITH (NOLOCK)
 				ON	[so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
             LEFT JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
-			    ON dod.Guide_Serie = da.Guide_Serie  And dod.Guide_Number = da.Guide_Number 
+			    ON dod.DeliveryAttemptId = da.ID
 			LEFT  JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
 			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
