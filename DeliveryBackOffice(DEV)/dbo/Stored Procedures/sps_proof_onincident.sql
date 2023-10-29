@@ -698,6 +698,8 @@ BEGIN
             END;
 
             -- actualizar tabla de entregas
+            IF ( ISNULL(@IdIssue,0)>0)
+			BEGIN
             UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
             SET ID_Incident = @IdIssue,
                 ID_Proof = @ID_Photo,
@@ -712,6 +714,7 @@ BEGIN
                       SELECT ID FROM @Table
                   );
 
+            END; 
             -- actualizar tabla de registro de guías electrónicas
             UPDATE DeliveryBackOffice.dbo.DeliveryOrder
             SET StatusOrderId = @StatusOrderId
