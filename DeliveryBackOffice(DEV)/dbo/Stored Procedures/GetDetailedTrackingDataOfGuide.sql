@@ -320,7 +320,7 @@ BEGIN
 							WHERE dod.Guide_Serie = @Guide_Serie
                           AND dod.Guide_Number = @Guide_Number
                           AND dod.DeliveryAttemptId = datt.ID
-						  AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+						  AND ISNULL(cfo.IsDenied,0) = 0 )
                  ELSE
                      ''
              END
@@ -362,7 +362,7 @@ BEGIN
 						WHERE dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
                         AND dod.DeliveryAttemptId = dt.ID
-						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+						AND ISNULL(cfo.IsDenied,0) = 0 )
 
 				ELSE '' END) AS Latitude,
             (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude 
@@ -374,7 +374,7 @@ BEGIN
 						WHERE  dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
                         AND dod.DeliveryAttemptId = dt.ID
-						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+						AND ISNULL(cfo.IsDenied,0) = 0 )
 			
 				ELSE '' END) AS Longitude,
 			dod.UserCreated Token,
