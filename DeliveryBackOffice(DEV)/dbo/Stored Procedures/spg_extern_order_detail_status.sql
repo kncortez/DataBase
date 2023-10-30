@@ -272,7 +272,7 @@ BEGIN
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
                                    AND da.Delivered = 1
-                        WHERE dp.Guide_Serie = 'FD'
+                        WHERE dp.Guide_Serie = @Guide_Serie 
                               AND dp.Guide_Number = @Guide_Number
                         ORDER BY dp.Date_Photo DESC
                     )
@@ -290,7 +290,7 @@ BEGIN
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
                                    AND da.Delivered = 1
-                        WHERE dp.Guide_Serie = 'FD'
+                        WHERE dp.Guide_Serie = @Guide_Serie 
                               AND dp.Guide_Number = @Guide_Number
                         ORDER BY dp.Date_Photo DESC
                     )
