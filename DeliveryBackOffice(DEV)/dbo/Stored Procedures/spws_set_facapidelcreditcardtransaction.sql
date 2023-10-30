@@ -745,6 +745,29 @@ BEGIN
             WHERE CS.IdCatSubscription = @IdSalePackage;
 			
             SET @SubscriptionId = SCOPE_IDENTITY();
+
+			---- Log de pago de suscripción
+                INSERT INTO [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog]
+                (
+                    [SubscriptionId],
+                    [Authorization],
+                    [TypeOfInOutOfMoneyId],
+                    [RowStatus],
+                    [TokenCreated],
+                    [DateCreated],                    
+                    [TransactionOrder],
+                    [PaymentImageURL]
+                )                
+                SELECT @SubscriptionId
+					 ,@OrderNumber
+                     , @TypeOfInMoneyId                     
+                     , 1
+                     , @Token
+                     , GETDATE()
+					 ,NULL
+					 ,NULL
+                
+
 			---------- Rango de descuento
             INSERT INTO [dbo].[SubscriptionDiscountRange]
             (
