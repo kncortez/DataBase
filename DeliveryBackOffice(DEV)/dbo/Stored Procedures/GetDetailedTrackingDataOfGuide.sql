@@ -321,6 +321,7 @@ BEGIN
 							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
+						AND dt.Delivered = 0
                         AND dod.DeliveryAttemptId = dt.ID
 						AND ISNULL(cfo.IsDenied,0) = 0 )
 
@@ -333,6 +334,7 @@ BEGIN
 							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE  dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
+						AND dt.Delivered = 0
                         AND dod.DeliveryAttemptId = dt.ID
 						AND ISNULL(cfo.IsDenied,0) = 0 )
 			
