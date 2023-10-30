@@ -162,6 +162,83 @@ BEGIN
 
     BEGIN TRY
 
+    IF (NOT EXISTS(Select 
+				Top 1 1
+				From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+				 Where Guide_Serie = @GuideSerie AND
+				 Guide_Number= @GuideNumber And 
+				Latitude='' AND 
+				Longitude='')
+				 )
+      BEGIN
+	-- registrar nuevo intento de entrega
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryAttempt] 
+			([Guide_Serie],
+			 [Guide_Number],
+			 [Dry],
+			 [Cold],
+			 [Latitude],
+			 [Longitude],
+			 [Delivered],
+			 [ID_Courier],
+			 [ID_DeliveryOrderBySettlement],
+			 [User_Created],
+			 [Date_Created],
+			 [Guide_Piece]) 
+			VALUES (@GuideSerie,
+			        @GuideNumber,
+					(
+					 Select Top 1
+                           ISNULL(DRY,0)
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where 
+					 Guide_Serie = @GuideSerie AND
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+					  (Select Top 1
+                           ISNULL(Cold,0)
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where Guide_Serie = @GuideSerie AND 
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+					@Latitude,
+					@Longitude,
+					0,
+			         (
+					 Select Top 1
+                            ID_Courier
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where Guide_Serie = @GuideSerie AND
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+				  (
+				  Select 
+						Top 1
+						ID_DeliveryOrderBySettlement
+                   From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+                   Where Guide_Serie = @GuideSerie AND 
+				   Guide_Number= @GuideNumber
+				   ORDER BY  Date_Created DESC
+				  ),
+			      (Select 
+						Top 1
+						User_Created
+                   From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+                   Where Guide_Serie = @GuideSerie AND 
+				   Guide_Number= @GuideNumber
+				   ORDER BY  Date_Created DESC
+				  ),
+				  GETDATE(),
+				  1)
+
+				 
+
+		   END; 
+
+
         -- convertir base64 a varbinary
         -- buscar registros de tabla de entregas
         INSERT INTO @Table

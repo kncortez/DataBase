@@ -267,47 +267,7 @@ BEGIN
              END
             ) AS [StageDescription],
 			ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
-            (CASE WHEN dod.StatusOrderId = 5 THEN
-                     ISNULL(
-                               ISNULL(
-                               (
-                                   SELECT TOP 1
-                                          'data:image/jpeg;base64,'
-                                          +
-                                          (
-                                              SELECT CAST('' AS XML).value(
-                                                                              'xs:base64Binary(sql:column("PICTURE"))',
-                                                                              'varchar(max)'
-                                                                          )
-                                          )
-                                   FROM
-                                   (
-                                       SELECT IIF([dp].[Proof_Dry] = 0x,
-                                                  dp.Proof_Cold,
-                                                  ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
-                                              Date_Photo
-                                       FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                           INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-                                               ON da.Guide_Serie = dp.Guide_Serie
-                                                  AND da.Guide_Number = dp.Guide_Number
-												  AND da.Delivered = 1
-                                       WHERE dp.Guide_Serie = 'FD'
-                                             AND dp.Guide_Number = @Guide_Number
-                                             AND
-                                             (
-                                                 dp.Proof_Incident != 0x
-                                                 OR dp.Proof_Incident IS NULL
-                                             )
-                                   ) L1
-                                   ORDER BY L1.Date_Photo DESC
-                               ),
-                               (CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
-                                                                                      + CAST(dod.Guide_Number AS VARCHAR)
-                                                                                     ) AS VARCHAR(300))
-                               )
-                                     ),
-                               ''
-                           )
+            (CASE 
 						WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
 						--(SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
 								 (SELECT TOP 1
