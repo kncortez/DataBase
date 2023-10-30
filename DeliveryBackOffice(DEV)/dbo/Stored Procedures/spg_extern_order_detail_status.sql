@@ -309,6 +309,7 @@ BEGIN
 						WHERE dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
                         AND dod.DeliveryAttemptId = dt.ID
+                        AND dt.Delivered = 0
 						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
 
                     ELSE
@@ -325,6 +326,7 @@ BEGIN
 							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE  dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
+                        AND dt.Delivered = 0
                         AND dod.DeliveryAttemptId = dt.ID
 						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
 
