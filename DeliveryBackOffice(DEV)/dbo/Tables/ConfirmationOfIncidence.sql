@@ -116,9 +116,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observació
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observación de liquidación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'LiquidatorRemarks';
 
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Validar incidencia de geolocalización' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidGeolocationEvidence'
-GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'valida evidencia fotografica' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidPhotographicEvidence'
 GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'valida evidencia fotografica' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidPhotographicEvidence'
+
 
