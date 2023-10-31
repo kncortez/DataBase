@@ -693,9 +693,9 @@ BEGIN
                       AND ddd.Guide_Number = ord.Guide_Number
                       AND ddd.StatusOrderId = 45
                       AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
-            )                                           IncidenceTbl
-                LEFT JOIN dbo.DeliveryAttempt          att
+                ORDER BY ddd.DateCreatedInSystem DESC
+            ) IncidenceTbl
+                LEFT JOIN dbo.DeliveryAttempt att
                     ON att.ID = IncidenceTbl.DeliveryAttemptId
                 LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                     ON cti.IdIncidenceType = att.ID_Incident
@@ -906,9 +906,9 @@ BEGIN
                           AND ddd.Guide_Number = ord.Guide_Number
                           AND ddd.StatusOrderId = 45
                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                    ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
-                )                                           IncidenceTbl
-                    LEFT JOIN dbo.DeliveryAttempt          att
+                    ORDER BY  ddd.DateCreatedInSystem DESC
+                ) IncidenceTbl
+                    LEFT JOIN dbo.DeliveryAttempt att
                         ON att.ID = IncidenceTbl.DeliveryAttemptId
                     LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                         ON cti.IdIncidenceType = att.ID_Incident
@@ -1153,9 +1153,9 @@ BEGIN
                           AND ddd.Guide_Number = ord.Guide_Number
                           AND ddd.StatusOrderId = 45
                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                    ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
-                )                                           IncidenceTbl
-                    LEFT JOIN dbo.DeliveryAttempt          att
+                    ORDER BY ddd.DateCreatedInSystem DESC
+                ) IncidenceTbl
+                    LEFT JOIN dbo.DeliveryAttempt att
                         ON att.ID = IncidenceTbl.DeliveryAttemptId
                     LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                         ON cti.IdIncidenceType = att.ID_Incident

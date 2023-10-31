@@ -131,7 +131,9 @@ BEGIN
 		   RES.COD,		   
 		   RES.NextSteps,
 		   RES.UserIncident,
-		   RES.Receiver_Phone
+		   RES.Receiver_Phone,
+		   RES.ValidGeolocationEvidence,
+	 	   RES.ValidPhotographicEvidence
 	INTO #OrdChkpnt
     FROM
     (
@@ -166,12 +168,20 @@ BEGIN
 			dor.Collect_OnDelivery [COD],
 			NULL [NextSteps],
 			'' [UserIncident],
-			do.Receiver_Phone
+			do.Receiver_Phone,
+			'0'AS ValidGeolocationEvidence,
+			'0' AS ValidPhotographicEvidence
 	FROM @GuideOrderTemp do
+	    INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK) 
+		    ON do.Guide_Serie = dor.Guide_Serie And 
+			   do.Guide_Number = dor.Guide_Number
+		INNER JOIN dbo.DeliveryOrderDetail  dod WITH(NOLOCK)
+		    ON  dor.Guide_Serie = dod.Guide_Serie And 
+			    dor.Guide_Number = dod.Guide_Number 
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-			ON da.Guide_Serie = do.Guide_Serie
-				AND da.Guide_Number = do.Guide_Number
-		INNER JOIN dbo.DeliveryOrder dor WITH(NOLOCK) ON dor.Guide_Serie = do.Guide_Serie AND dor.Guide_Number = do.Guide_Number
+			ON  dod.DeliveryAttemptId = da.ID
+		LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+		    ON  da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence 
 	WHERE do.Guide_Serie = @Guide_Serie
 			AND do.Guide_Number = @Guide_Number
 		UNION
@@ -257,47 +267,7 @@ BEGIN
              END
             ) AS [StageDescription],
 			ISNULL([CCT].[CheckpointIcon], '') AS [CheckpointIcon],
-            (CASE WHEN dod.StatusOrderId = 5 THEN
-                     ISNULL(
-                               ISNULL(
-                               (
-                                   SELECT TOP 1
-                                          'data:image/jpeg;base64,'
-                                          +
-                                          (
-                                              SELECT CAST('' AS XML).value(
-                                                                              'xs:base64Binary(sql:column("PICTURE"))',
-                                                                              'varchar(max)'
-                                                                          )
-                                          )
-                                   FROM
-                                   (
-                                       SELECT IIF([dp].[Proof_Dry] = 0x,
-                                                  dp.Proof_Cold,
-                                                  ISNULL([Proof_Dry], [Proof_Incident])) AS PICTURE,
-                                              Date_Photo
-                                       FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-                                           INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-                                               ON da.Guide_Serie = dp.Guide_Serie
-                                                  AND da.Guide_Number = dp.Guide_Number
-												  AND da.Delivered = 1
-                                       WHERE dp.Guide_Serie = 'FD'
-                                             AND dp.Guide_Number = @Guide_Number
-                                             AND
-                                             (
-                                                 dp.Proof_Incident != 0x
-                                                 OR dp.Proof_Incident IS NULL
-                                             )
-                                   ) L1
-                                   ORDER BY L1.Date_Photo DESC
-                               ),
-                               (CAST(DeliveryBackOffice.dbo.fn_get_document_image_url(dod.Guide_Serie
-                                                                                      + CAST(dod.Guide_Number AS VARCHAR)
-                                                                                     ) AS VARCHAR(300))
-                               )
-                                     ),
-                               ''
-                           )
+            (CASE 
 						WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
 						--(SELECT TOP 1 Path_Incident FROM DeliveryProof WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number)
 								 (SELECT TOP 1
@@ -310,7 +280,7 @@ BEGIN
 							WHERE dod.Guide_Serie = @Guide_Serie
                           AND dod.Guide_Number = @Guide_Number
                           AND dod.DeliveryAttemptId = datt.ID
-						  AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+						  AND ISNULL(cfo.IsDenied,0) = 0 )
                  ELSE
                      ''
              END
@@ -351,8 +321,9 @@ BEGIN
 							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
+						AND dt.Delivered = 0
                         AND dod.DeliveryAttemptId = dt.ID
-						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+						AND ISNULL(cfo.IsDenied,0) = 0 )
 
 				ELSE '' END) AS Latitude,
             (CASE WHEN dod.StatusOrderId = 5 THEN @GuideDeliveryLongitude 
@@ -363,8 +334,9 @@ BEGIN
 							ON dt.ConfirmationOfIncidenceId = cfo.IdConfirmationOfIncidence
 						WHERE  dod.Guide_Serie = @Guide_Serie 
 						AND dod.Guide_Number = @Guide_Number
+						AND dt.Delivered = 0
                         AND dod.DeliveryAttemptId = dt.ID
-						AND (cfo.IsDenied = 0 or cfo.IsDenied IS NULL ))
+						AND ISNULL(cfo.IsDenied,0) = 0 )
 			
 				ELSE '' END) AS Longitude,
 			dod.UserCreated Token,
@@ -406,8 +378,15 @@ BEGIN
                         ''
                 END
                ) AS UserIncident,
-			   GOT.Receiver_Phone
-        FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
+			   GOT.Receiver_Phone,
+			      IIF(COI.ValidGeolocationEvidence IS NULL AND dod.StatusOrderId=50,
+                      IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0),
+                                IIF(COI.ValidGeolocationEvidence = 1 AND dod.StatusOrderId=50, 1, 0))
+			                             AS 'ValidGeolocationEvidence',
+			   IIF(COI.ValidPhotographicEvidence IS NULL AND dod.StatusOrderId=50,
+				       IIF(IsConfirmed = 1 AND IsDenied = 0 AND dod.StatusOrderId=50, 1, 0), 
+				                   IIF(COI.ValidPhotographicEvidence = 1 AND dod.StatusOrderId=50, 1, 0)) AS 'ValidPhotographicEvidence'
+            FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
 				AND so.CatStatusTypeId = 2
@@ -415,6 +394,10 @@ BEGIN
 				ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
 			INNER JOIN @GuideOrderTemp GOT
 			    ON  GOT.Guide_Serie =  dod.Guide_Serie  AND  GOT.Guide_Number = dod.Guide_Number
+			LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
+			    ON  dod.DeliveryAttemptId = da.ID 
+			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
         GROUP BY CONVERT(DATE, dod.DateCreated),
@@ -428,7 +411,11 @@ BEGIN
 				 so.NextSteps,
 				 [CCT].[CheckpointIcon],
 				 dod.DeliveryAttemptId,
-				 GOT.Receiver_Phone
+				 GOT.Receiver_Phone,
+				 COI.ValidGeolocationEvidence,
+			     COI.ValidPhotographicEvidence,
+				 COI.IsConfirmed ,
+				 COI.IsDenied
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -474,7 +461,9 @@ BEGIN
 			   ,ISNULL(OrdChkPnt.COD,0) COD
 			   ,OrdChkPnt.[NextSteps]
 			   ,OrdChkPnt.[UserIncident]
-			    ,OrdChkPnt.[Receiver_Phone]
+			   ,OrdChkPnt.[Receiver_Phone]
+			   ,OrdChkPnt.ValidGeolocationEvidence
+			   ,OrdChkPnt.ValidPhotographicEvidence
 	FROM #OrdChkpnt OrdChkPnt
 	-- Obtener datos desde usuario Desktop
 	LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken token  WITH (NOLOCK) ON OrdChkPnt.Token = token.SSN_IdToken

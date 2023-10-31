@@ -20,6 +20,8 @@
     [LastStatusOrderId]                TINYINT        NULL,
     [LiquidatorRemarks]                NVARCHAR(600)  NULL,
     [IsAddressModificationRequested] [bit] NULL,
+    [ValidGeolocationEvidence] [bit] NULL,
+	[ValidPhotographicEvidence] [bit] NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
@@ -117,3 +119,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observació
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Solicita cambio de dirección' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'IsAddressModificationRequested'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Validar incidencia de geolocalización' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidGeolocationEvidence'
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'valida evidencia fotografica' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidPhotographicEvidence'
+
+
