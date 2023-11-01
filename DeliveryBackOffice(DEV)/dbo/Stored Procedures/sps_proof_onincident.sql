@@ -162,10 +162,87 @@ BEGIN
 
     BEGIN TRY
 
+    IF (NOT EXISTS(Select 
+				Top 1 1
+				From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+				 Where Guide_Serie = @GuideSerie AND
+				 Guide_Number= @GuideNumber And 
+				Latitude='' AND 
+				Longitude='')
+				 )
+      BEGIN
+	-- registrar nuevo intento de entrega
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryAttempt] 
+			([Guide_Serie],
+			 [Guide_Number],
+			 [Dry],
+			 [Cold],
+			 [Latitude],
+			 [Longitude],
+			 [Delivered],
+			 [ID_Courier],
+			 [ID_DeliveryOrderBySettlement],
+			 [User_Created],
+			 [Date_Created],
+			 [Guide_Piece]) 
+			VALUES (@GuideSerie,
+			        @GuideNumber,
+					(
+					 Select Top 1
+                           ISNULL(DRY,0)
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where 
+					 Guide_Serie = @GuideSerie AND
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+					  (Select Top 1
+                           ISNULL(Cold,0)
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where Guide_Serie = @GuideSerie AND 
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+					@Latitude,
+					@Longitude,
+					0,
+			         (
+					 Select Top 1
+                            ID_Courier
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where Guide_Serie = @GuideSerie AND
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+				  (
+				  Select 
+						Top 1
+						ID_DeliveryOrderBySettlement
+                   From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+                   Where Guide_Serie = @GuideSerie AND 
+				   Guide_Number= @GuideNumber
+				   ORDER BY  Date_Created DESC
+				  ),
+			      (Select 
+						Top 1
+						User_Created
+                   From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+                   Where Guide_Serie = @GuideSerie AND 
+				   Guide_Number= @GuideNumber
+				   ORDER BY  Date_Created DESC
+				  ),
+				  GETDATE(),
+				  1)
+
+				 
+
+		   END; 
+
+
         -- convertir base64 a varbinary
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
-        SELECT da.ID
+        SELECT TOP 1 da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
@@ -179,7 +256,8 @@ BEGIN
 			  [SRLT].[LoginToken] = @PhoneNumber)
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
-              AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23);
+              AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
+              ORDER BY  da.Date_Created DESC;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
         INSERT INTO DeliveryBackOffice.dbo.DeliveryProof
@@ -697,6 +775,8 @@ BEGIN
             END;
 
             -- actualizar tabla de entregas
+            IF ( ISNULL(@IdIssue,0)>0)
+			BEGIN
             UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
             SET ID_Incident = @IdIssue,
                 ID_Proof = @ID_Photo,
@@ -711,6 +791,7 @@ BEGIN
                       SELECT ID FROM @Table
                   );
 
+            END; 
             -- actualizar tabla de registro de guías electrónicas
             UPDATE DeliveryBackOffice.dbo.DeliveryOrder
             SET StatusOrderId = @StatusOrderId
