@@ -393,19 +393,15 @@ BEGIN
 						ORDER BY RP.DateRoutePreparation Desc;
                 
 				-------- Obtener  Id de ruta de preparación del encabezado, esto si ya existe solo se inserta detalle
-					   SELECT  
+					    SELECT  
 					       Top 1     
 						   @NewRoutePreparation = COALESCE(RP.IdRoutePreparation, 0)      
 						FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH (NOLOCK)
-						     INNER JOIN 
-						    [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-							 ON   RP.IdRoutePreparation = RPD.RoutePreparationId
 						WHERE RP.CatRouteId = @OriginRouteId
 							  AND RP.DateRoutePreparation = @NewDeliveryDate
 							  AND RP.RowStatus = 1
-							  AND RPD.Guide_Serie =  @GuideSerie
-                              AND RPD.Guide_Number = @GuideNumber
 						ORDER BY RP.IdRoutePreparation Desc;
+					  
 
 
                         UPDATE [DeliveryBackOffice].[dbo].[RoutePreparationDetail] 
@@ -425,14 +421,12 @@ BEGIN
 				     EXISTS(
 					   SELECT  
 					     
-					         Top 1 1
+					    Top 1 1
 						FROM [DeliveryBackOffice].[dbo].RoutePreparation RP WITH (NOLOCK)
-						  INNER JOIN 
-						    [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
-							 ON RPD.RoutePreparationId = RP.IdRoutePreparation
 						WHERE RP.CatRouteId = @OriginRouteId
 							  AND RP.DateRoutePreparation = @NewDeliveryDate
 							  AND RP.RowStatus = 1
+							 
 						)
 				 )
                     BEGIN
