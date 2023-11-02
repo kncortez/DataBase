@@ -130,7 +130,10 @@ BEGIN
            ([DOBS].[Pieces_Dry_Dispatched] + [DOBS].[Pieces_Cold_Dispatched]) Delivery_effectiveness,
            CONVERT(TIME, [DOBS].[Date_Dispatched] - [DOBS].[Route_Received]) Time_on_route,
            SUM(IIF(DO.StatusOrderId = 32, 1, 0)) IncidenceInRoute,
-           SUM(Contempts.CoutierContempt) CoutierContempt
+           SUM(Contempts.CoutierContempt) CoutierContempt,
+           SUM(IncidenciasSinValidar.UnvalidatedIncident) UnvalidatedIncident,
+		   SUM(FalseIncidents.FalseIncidents) FalseIncidents,
+		   SUM( IncidenciasReales.[RealIncidents]) RealIncidents
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] SRE WITH (NOLOCK)
             ON [SRE].[ID] = [DOBS].[ID_Courier]
@@ -155,6 +158,45 @@ BEGIN
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
             ON [DO].[Guide_Serie] = [DSD].[Guide_Serie]
                AND [DO].[Guide_Number] = [DSD].[Guide_Number]
+               OUTER APPLY
+    (
+        SELECT COUNT(1) 'UnvalidatedIncident'
+        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+                   AND COI.RowStatus = 1
+        WHERE DA.Date_Created
+              BETWEEN @StartDate AND @EndDate
+              AND DO.Guide_Serie = DA.Guide_Serie
+              AND DO.Guide_Number = DA.Guide_Number
+              AND  COI.IsConfirmed =0 AND COI.IsDenied =0
+    ) IncidenciasSinValidar
+	   OUTER APPLY
+    (
+        SELECT COUNT(1) 'FalseIncidents'
+        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+                   AND COI.RowStatus = 1
+        WHERE DA.Date_Created
+              BETWEEN @StartDate AND @EndDate
+              AND DO.Guide_Serie = DA.Guide_Serie
+              AND DO.Guide_Number = DA.Guide_Number
+              AND  COI.IsConfirmed =0 AND COI.IsDenied = 1 
+    ) FalseIncidents
+	    OUTER APPLY
+    (
+        SELECT COUNT(1) 'RealIncidents'
+        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+                   AND COI.RowStatus = 1
+        WHERE DA.Date_Created
+              BETWEEN @StartDate AND @EndDate
+              AND DO.Guide_Serie = DA.Guide_Serie
+              AND DO.Guide_Number = DA.Guide_Number
+              AND  COI.IsConfirmed =1 AND COI.IsDenied = 0
+    ) IncidenciasReales
         OUTER APPLY
     (
         SELECT COUNT(1) 'CoutierContempt'
