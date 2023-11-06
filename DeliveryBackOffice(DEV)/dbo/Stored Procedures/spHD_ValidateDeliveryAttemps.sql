@@ -94,13 +94,17 @@ begin
 
 
         -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
-        UPDATE do
+          UPDATE do
         SET do.IsLastMileReturn = 1,
             do.StatusOrderId = @STATUSDECLAREDRETURNED_DO
         FROM DeliveryOrder do
             INNER JOIN @TblGuides tg
                 ON do.Guide_Serie = tg.GuideSerie
                     AND do.Guide_Number = tg.GuideNumber
+			INNER JOIN dbo.DeliveryOrderAttemptData DOA
+			ON do.Guide_Serie = DOA.GuideSerie
+                    AND do.Guide_Number = DOA.GuideNumber
+					AND DOA.GuideDeliveryAttemptCount = DOA.GuideDeliveryMaxAttemptCount
         WHERE tg.FlowGuide = 2;
 
         INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
@@ -109,6 +113,10 @@ begin
             DISTINCT
                 tg.GuideSerie, tg.GuideNumber, @STATUSDECLAREDRETURNED_DO, 'spHD_ValidateDeliveryAttemps', GETDATE(), GETDATE(), 1
         FROM @TblGuides tg
+		INNER JOIN dbo.DeliveryOrderAttemptData DOA
+			ON tg.GuideSerie = DOA.GuideSerie
+                    AND tg.GuideNumber = DOA.GuideNumber
+					AND DOA.GuideDeliveryAttemptCount = DOA.GuideDeliveryMaxAttemptCount
         WHERE tg.FlowGuide = 2;
 
         COMMIT TRANSACTION;
