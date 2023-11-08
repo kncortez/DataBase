@@ -94,18 +94,23 @@ begin
 
 
         -- Marcar las que ya no tienen intentos de entrega disponibles como devolución
-          UPDATE do
+             UPDATE do
         SET do.IsLastMileReturn = 1,
             do.StatusOrderId = @STATUSDECLAREDRETURNED_DO
         FROM DeliveryOrder do
             INNER JOIN @TblGuides tg
                 ON do.Guide_Serie = tg.GuideSerie
                     AND do.Guide_Number = tg.GuideNumber
-			INNER JOIN dbo.DeliveryOrderAttemptData DOA
+			LEFT JOIN dbo.DeliveryOrderAttemptData DOA
 			ON do.Guide_Serie = DOA.GuideSerie
                     AND do.Guide_Number = DOA.GuideNumber
 					AND DOA.GuideDeliveryAttemptCount = DOA.GuideDeliveryMaxAttemptCount
-        WHERE tg.FlowGuide = 2;
+			INNER JOIN dbo.DeliveryAttempt DA
+			ON    do.Guide_Serie = DA.Guide_Serie
+                    AND do.Guide_Number = DA.Guide_Number
+			INNER JOIN dbo.confirmationofincidence COI
+			ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+        WHERE tg.FlowGuide = 2 OR COI.ClientConfirmsReturn=1;
 
         INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
             (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
@@ -113,11 +118,16 @@ begin
             DISTINCT
                 tg.GuideSerie, tg.GuideNumber, @STATUSDECLAREDRETURNED_DO, 'spHD_ValidateDeliveryAttemps', GETDATE(), GETDATE(), 1
         FROM @TblGuides tg
-		INNER JOIN dbo.DeliveryOrderAttemptData DOA
+		INNER JOIN dbo.DeliveryOrderAttemptData DOA WITH(NOLOCK)
 			ON tg.GuideSerie = DOA.GuideSerie
                     AND tg.GuideNumber = DOA.GuideNumber
 					AND DOA.GuideDeliveryAttemptCount = DOA.GuideDeliveryMaxAttemptCount
-        WHERE tg.FlowGuide = 2;
+		LEFT JOIN dbo.DeliveryAttempt DA WITH(NOLOCK)
+			ON    tg.GuideSerie = DA.Guide_Serie
+                    AND tg.GuideNumber = DA.Guide_Number
+		INNER JOIN dbo.confirmationofincidence COI WITH(NOLOCK)
+			ON DA.ConfirmationOfIncidenceId= COI.IdConfirmationOfIncidence 
+        WHERE tg.FlowGuide = 2 OR COI.ClientConfirmsReturn=1 ;
 
         COMMIT TRANSACTION;
 
