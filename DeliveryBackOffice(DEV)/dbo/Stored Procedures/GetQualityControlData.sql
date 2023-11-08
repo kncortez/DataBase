@@ -485,6 +485,7 @@ BEGIN
                      , ds.ID_Courier
                      , ds.Date_Received
                      , IIF(IncidenceTbl.SSN_IdUser IS NULL, ISNULL(ds.ID_Courier, 1), 0)                [IdRoute]
+					 ,att.ID_Incident
                      , IncidenceTbl.SSN_IdUser                                                          [IdUser]
                      , IncidenceTbl.SSN_Username                                                        [Username]
                      , (CASE
@@ -617,6 +618,7 @@ BEGIN
                   , 0                                                                                ID_Courier
                   , NULL                                                                             Date_Received
                   , 0                                                                                [IdRoute]
+				  ,att.ID_Incident
                   , tk.SSN_IdUser                                                                    [IdUser]
                   , tk.SSN_Username                                                                  [Username]
                   , (CASE
