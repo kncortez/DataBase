@@ -418,14 +418,18 @@ BEGIN
 					  
 
 
-                        UPDATE [DeliveryBackOffice].[dbo].[RoutePreparationDetail] 
-                               SET RowStatus = 0,
-                               TokenUpdated = @TokenCreated,
-                               	DateUpdated = GETDATE()
+                         UPDATE RP
+                               SET RP.RowStatus = 0,
+                               RP.TokenUpdated = @TokenCreated,
+                               	RP.DateUpdated = GETDATE()
+								FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								INNER JOIN 
+								[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+								ON RPD.RoutePreparationId = RP.IdRoutePreparation
                                WHERE
                                Guide_Serie =  @GuideSerie
                                 AND Guide_Number = @GuideNumber
-                                AND  DateCreated > GETDATE();
+                                AND  RP.DateRoutePreparation > CONVERT(DATE,GETDATE());
                                 
 
 						
