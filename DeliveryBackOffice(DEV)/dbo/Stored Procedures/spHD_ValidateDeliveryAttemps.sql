@@ -68,7 +68,7 @@ begin
             ,CASE
                 WHEN do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 THEN CASE
                         WHEN doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount OR coi.ClientConfirmsReturn = 1 THEN 2
-						WHEN [da].[ID_Incident] IN (SELECT [RI].[IncidenceId] FROM @ReturnIncidence RI) AND ISNULL(COI.IsDenied,0) = 0 THEN 2
+						WHEN [da].[ID_Incident] IN (SELECT [RI].[IncidenceId] FROM @ReturnIncidence RI) AND ISNULL(COI.IsDenied,0) = 0  AND ISNULL(coi.IsConfirmed,0) = 1 THEN 2
                         ELSE 1
                     END
                 ELSE 1
