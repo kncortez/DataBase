@@ -122,6 +122,18 @@ BEGIN
 	
 	);
 
+	DECLARE @CurrentIncidentCount INT = (
+		  Select Top 1 Count (DA.ID)
+			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+			       Inner Join 
+				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+			  where DA.Guide_Number =  @GuideNumber
+			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
+	 
+	 
+	 );
+
 	IF ( @FirstOnRouteDate IS NULL )
 	BEGIN
 	    
@@ -143,6 +155,11 @@ BEGIN
 	SELECT
 	         204 [ResponseCode],
 			'Excedió la cantidad disponible de incidencias.' [ResponseMessage]
+	END
+	ELSE IF(ISNULL(@CurrentIncidentCount,0)>0)
+	BEGIN
+	SELECT 204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias durante el día.' [ResponseMessage]
 	END
 	ELSE
     BEGIN
