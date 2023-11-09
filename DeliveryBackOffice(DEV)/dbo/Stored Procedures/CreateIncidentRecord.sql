@@ -18,7 +18,8 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @Observations NVARCHAR(600),          --Observaciones tracking
     @LiquidatorRemarks NVARCHAR(600) = '', --Observaciones para el liquidador
     @ValidGeolocationEvidence BIT,  --indica si la incidecia de geolocalziación es valdia
-	@ValidPhotographicEvidence BIT  --indica si la evidencia fotografica es valida
+	@ValidPhotographicEvidence BIT,  --indica si la evidencia fotografica es valida
+	@IdIncident INT                  --Id incidencia
 AS
 
 BEGIN
@@ -184,10 +185,14 @@ BEGIN
                         INNER JOIN [dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
                             ON DA.Guide_Serie = DOD.Guide_Serie
                                AND DA.Guide_Number = DOD.Guide_Number
+						INNER JOIN [dbo].[CatTypeIncidence] CTP
+						    ON DA.ID_Incident = CTP.IdIncidenceType
                     WHERE DA.Guide_Serie = @GuideSerie
                           AND DA.Guide_Number = @GuideNumber
                           AND DOD.StatusOrderId = 45
                           AND DOD.SystemOrigin = 2
+						  AND CTP.IncidenceClasificationId = 1 --Contar intento solo cuando es de tipo de "intento fallido".
+						   AND DA.ID_Incident = @IdIncident
                 )
                    )
                 BEGIN
