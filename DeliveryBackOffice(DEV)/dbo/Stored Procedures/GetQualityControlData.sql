@@ -520,7 +520,7 @@ BEGIN
                                                    , IIF(
                                                          atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
                                                        , atd.GuideDeliveryAttemptCount
-                                                       , atd.GuideDeliveryAttemptCount + 1)
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                                  )
                                         , '/'
                                         , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
@@ -646,9 +646,10 @@ BEGIN
                              CONCAT(
                                        CONVERT(
                                                   NVARCHAR(4)
-                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount + 1)
+                                                , IIF(
+                                                         atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                               )
                                      , '/'
                                      , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
@@ -768,9 +769,10 @@ BEGIN
                              CONCAT(
                                        CONVERT(
                                                   NVARCHAR(4)
-                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount + 1)
+                                                , IIF(
+                                                         atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                               )
                                      , '/'
                                      , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
@@ -896,7 +898,7 @@ BEGIN
                                                    , IIF(
                                                          atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
                                                        , atd.GuideDeliveryAttemptCount
-                                                       , atd.GuideDeliveryAttemptCount + 1)
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                                  )
                                         , '/'
                                         , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
