@@ -230,10 +230,9 @@ BEGIN
         BEGIN
             UPDATE doad
             SET doad.GuideDeliveryAttemptCount = CASE
-                                                     WHEN do.IsLastMileReturn IS NULL
-                                                          OR do.IsLastMileReturn = 0
-                                                          OR coi.ClientConfirmsReturn = 1
-                                                             AND so.OrderDescription = 'Incidencia Validada' THEN
+                                                     WHEN 
+                                                     so.OrderDescription = 'Incidencia Validada' 
+														  AND ISNULL(cti.IncidenceClasificationId,0)=1   THEN
                                                          doad.GuideDeliveryAttemptCount + 1
                                                      ELSE
                                                          doad.GuideDeliveryAttemptCount
@@ -264,6 +263,9 @@ BEGIN
                        AND coi.IsDenied = 0 --no esté denegada
                 INNER JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
+                 INNER JOIN dbo.CatTypeIncidence cti WITH (NOLOCK)
+				    ON da.ID_Incident = cti.IdIncidenceType
+				       AND ISNULL(cti.IncidenceClasificationId,0)=1
             WHERE doad.GuideSerie = @GuideSerie
                   AND doad.GuideNumber = @GuideNumber
                   AND
