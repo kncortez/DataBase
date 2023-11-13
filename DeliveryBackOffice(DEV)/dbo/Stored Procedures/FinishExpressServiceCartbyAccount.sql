@@ -961,11 +961,11 @@ BEGIN
 					GuideSerie,
 					GuideNumber, 
 					GuidePriceShipment,
-					(CASE
-						WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST(@ForzaPointsGenerationValue AS INT)
-						WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST((GuidePriceShipment / @ForzaPointsGenerationValue) AS INT)
+					CASE
+						WHEN @ForzaPointsGenerationType = 'SERVICIO' AND ISNULL(GuidePriceShipment,0) > 0 THEN CAST(@ForzaPointsGenerationValue AS INT)
+						WHEN @ForzaPointsGenerationType = 'MONTO' AND ISNULL(GuidePriceShipment,0) > 0 THEN CAST((GuidePriceShipment / @ForzaPointsGenerationValue) AS INT)
 						ELSE 0
-					END),	 -- POINTS RECEIVED
+					END,	 -- POINTS RECEIVED
 					0,		-- POINTS CONSUMED
 					@ForzaPointsGenerationType,
 					NULL,
@@ -1012,8 +1012,8 @@ BEGIN
 							SET			
 								[PSL].[CatPointPromoId] = (SELECT IdPointPromo FROM @CatPointPromoTbl),
 								[PSL].[PointsReceived] = [PSL].[PointsReceived] +	CASE 
-																						WHEN @ForzaPointsGenerationType = 'SERVICIO' THEN CAST((SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
-																						WHEN @ForzaPointsGenerationType = 'MONTO' THEN CAST([PSL].[PointsReceived] / (SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
+																						WHEN @ForzaPointsGenerationType = 'SERVICIO' AND ISNULL([PSL].[GuidePrice],0)>0 THEN CAST((SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
+																						WHEN @ForzaPointsGenerationType = 'MONTO'  AND ISNULL([PSL].[GuidePrice],0)>0 THEN CAST([PSL].[PointsReceived] / (SELECT PointPromoFactor FROM @CatPointPromoTbl) AS INT)
 																						ELSE 0
 																					END
 							FROM		
@@ -1034,10 +1034,14 @@ BEGIN
 				END
 
 				-- Agregar puntos a membresía
-				SET @PointsGenerated = ISNULL((SELECT	SUM([PSL].[PointsReceived])
+				SET @PointsGenerated = ISNULL((SELECT	 CASE 
+											                  WHEN [PSL].[GuidePrice] > 0 THEN   SUM([PSL].[PointsReceived])
+														ELSE 0 END
 										FROM	[dbo].[PointsByServiceLog] PSL
 										WHERE	[PSL].[GuideSerie] IN (SELECT GuideSerie FROM @AcceptedPointGuides)
-											AND [PSL].[GuideNumber] IN (SELECT GuideNumber FROM @AcceptedPointGuides)), 0);
+											AND [PSL].[GuideNumber] IN (SELECT GuideNumber FROM @AcceptedPointGuides)
+											GROUP by [PSL].[GuideNumber],
+										             [PSL].[GuidePrice]), 0);
 					
 				UPDATE	[DeliveryBackOffice].[dbo].[Membership] 
 				SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
