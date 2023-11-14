@@ -1142,6 +1142,35 @@ BEGIN
 						AND
 						[EASC].[IsPending] = 1
 
+
+				SELECT 
+					TOP (1) 
+						@ProcessServiceCartId = [PCPL].[ExpressAccountServiceCartId],
+						@ProcessServiceCartLastProcess = [PCPL].[ProcessAttempt]
+				FROM 
+					[DeliveryBackOffice].[dbo].[PromoCouponProcessLog] PCPL  WITH(NOLOCK) 
+					INNER JOIN
+						[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
+						ON
+							EASC.[IdExpressAccountServiceCart] = [PCPL].[ExpressAccountServiceCartId]
+				WHERE
+					[EASC].[AccountId] = @IdAccount
+					AND
+					(
+						[EASC].[CustomerId] = @ImpersonatedCustomerId
+						OR
+						[EASC].[CustomerPortfolioId] = @ClientPortfolioId
+					)
+					AND
+					[EASC].[IsPending] = 1
+					AND
+					[EASC].[RowStatus] = 1
+					AND
+					[PCPL].[RowStatus] = 1
+				ORDER BY
+					[EASC].[DateCreated] DESC
+
+
 				END
 				ELSE
 				BEGIN
