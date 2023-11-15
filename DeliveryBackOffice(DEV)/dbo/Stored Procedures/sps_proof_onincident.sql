@@ -85,6 +85,21 @@ BEGIN
 
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
 
+    	DECLARE @CurrentIncidentCount INT = (
+		  Select Top 1 Count (DA.ID)
+			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+			       Inner Join 
+				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+			  where DA.Guide_Number =  @GuideNumber
+			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
+	 
+	 
+	 );
+
+IF(ISNULL(@CurrentIncidentCount,0)<=0)
+	BEGIN
+
     BEGIN TRY
 
         IF (
@@ -960,4 +975,12 @@ BEGIN
                @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
                @MessageReturn 'MessageReturn',
                @TokenLinkGeneration 'TokenLinkGeneration';
+    END;
+	ELSE
+	   SELECT 0 AS 'StatusCode',
+                   'Excedió la cantidad disponible de incidencias durante el día.' AS 'Description',
+                   CONVERT(BIGINT, @@TRANCOUNT) AS 'NumTransferID',
+                   @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
+                   @MessageReturn 'MessageReturn',
+                   @TokenLinkGeneration 'TokenLinkGeneration';
 END;
