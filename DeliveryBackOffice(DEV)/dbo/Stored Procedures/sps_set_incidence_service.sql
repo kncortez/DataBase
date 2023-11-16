@@ -51,33 +51,85 @@ BEGIN
 	-- tabla temporal para actualizar registros encontrados
 	DECLARE @Table AS TABLE (ID INT)
 
-	-- estatus
+-- estatus
 	DECLARE @IdEstatus AS INT
-	set @IdEstatus = 12
+	set @IdEstatus = (Select StatusOrderId From [dbo].[StatusOrder] Where OrderDescription='Incidencia en ruta')
+	DECLARE @IdSystem INT =(select SysIdSystem from dbo.CatSystem Where SysNameSystem ='FDExpressCenter')
+	DECLARE @IdAttempt INT;
+	DECLARE @IdConfirmationOfIncidence INT;
 
 	BEGIN TRANSACTION
 
 		BEGIN TRY
 
-		    -- ALTER TABLE [dbo].[DeliveryAttempt] ALTER COLUMN [ID_Courier] [int] NULL;
+		    
+			--- registro de incidencia
+	INSERT [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence]
+		(
+			ConfirmationOfIncidentToken,
+			CatTypeConfirmationOfIncidenceId,
+			IsValid,
+			IsConfirmed,
+			StatusOrderId,
+			DateStatusOrder,
+			RowStatus,
+			TokenCreated,
+			DateCreated,
+			TokenUpdated,
+			DateUpdated,
+			IsActionIssued,
+			ActionObservation,
+			CourierContempt,
+			ClientConfirmsReturn,
+			IncidentfinalizedbySAC,
+			IsDenied,
+			LastStatusOrderId
+		)
+		VALUES
+		(   @Token,       -- ConfirmationOfIncidentToken - nvarchar(50)
+			1,         -- CatTypeConfirmationOfIncidenceId - int
+			0,   -- IsValid - bit
+			0,   -- IsConfirmed - bit
+			45,         -- StatusOrderId - tinyint
+			GETDATE(), -- DateStatusOrder - datetime
+			1,   -- RowStatus - bit
+			@Token,       -- TokenCreated - nvarchar(50)
+			GETDATE(), -- DateCreated - datetime
+			NULL,      -- TokenUpdated - nvarchar(50)
+			NULL,      -- DateUpdated - datetime
+			NULL,   -- IsActionIssued - bit
+			NULL,      -- ActionObservation - nvarchar(600)
+			NULL,   -- CourierContempt - bit
+			NULL,   -- ClientConfirmsReturn - bit
+			NULL,      -- IncidentfinalizedbySAC - bit
+			0,   -- IsDenied - bit
+			NULL       -- LastStatusOrderId - tinyint
+			)
+
+			SET @IdConfirmationOfIncidence = SCOPE_IDENTITY();
+
+			-- registra de intentos de entrega fallida...
+			INSERT INTO DeliveryBackOffice.dbo.DeliveryAttempt (Guide_Serie, Guide_Number, ID_Incident, User_Created, Date_Created, Dry, Cold, Delivered,ConfirmationOfIncidenceId)
+			SELECT DO.Guide_Serie, DO.Guide_Number, @IdIssue, @Token, GETDATE(), 0, 0, 0,@IdConfirmationOfIncidence
+			FROM DeliveryBackOffice.dbo.DeliveryOrder DO
+			INNER JOIN @Guides G ON G.Guide_Serie = DO.Guide_Serie AND G.Guide_Number = DO.Guide_Number		
+			
+			SET @IdAttempt = SCOPE_IDENTITY();
+			
+           
+			-- registrar estado en tabla de checkpoints
+			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius, DeliveryAttemptId, SystemOrigin)
+			SELECT DO.Guide_Serie, DO.Guide_Number, @IdEstatus, @Token, GETDATE(), GETDATE(), @Comment, NULL,@IdAttempt,@IdSystem
+			FROM DeliveryBackOffice.dbo.DeliveryOrder DO
+			INNER JOIN @Guides G ON G.Guide_Serie = DO.Guide_Serie AND G.Guide_Number = DO.Guide_Number
+
 
 			-- actualizar tabla de registro de guías electrónicas
 			UPDATE DO
 			SET DO.StatusOrderId = @IdEstatus
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO
 			INNER JOIN @Guides G ON G.Guide_Serie = DO.Guide_Serie AND G.Guide_Number = DO.Guide_Number
-
-			-- registrar estado en tabla de checkpoints
-			INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, Observations, Temperature_Celsius)
-			SELECT DO.Guide_Serie, DO.Guide_Number, @IdEstatus, @Token, GETDATE(), GETDATE(), @Comment, NULL
-			FROM DeliveryBackOffice.dbo.DeliveryOrder DO
-			INNER JOIN @Guides G ON G.Guide_Serie = DO.Guide_Serie AND G.Guide_Number = DO.Guide_Number
-
-			-- registra de intentos de entrega fallida...
-			INSERT INTO DeliveryBackOffice.dbo.DeliveryAttempt (Guide_Serie, Guide_Number, ID_Incident, User_Created, Date_Created, Dry, Cold, Delivered)
-			SELECT DO.Guide_Serie, DO.Guide_Number, @IdIssue, @Token, GETDATE(), 0, 0, 0
-			FROM DeliveryBackOffice.dbo.DeliveryOrder DO
-			INNER JOIN @Guides G ON G.Guide_Serie = DO.Guide_Serie AND G.Guide_Number = DO.Guide_Number			
+	
 
 			SET @RInserted = @@ROWCOUNT
 
