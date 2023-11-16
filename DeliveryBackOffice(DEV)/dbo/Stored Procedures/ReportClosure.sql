@@ -248,7 +248,7 @@ begin
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
+		AND (DOPD.AccountId = @IdAccount)
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
