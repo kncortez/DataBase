@@ -503,60 +503,7 @@ BEGIN
     END;
     ELSE IF (@TypeMethod = 'GetTypeIncidenceExpress')
     BEGIN
-        IF(@Others= 'RETURN EXPRESS')
-	   BEGIN
-
-	    SET @jsonResult
-            = ISNULL(
-              (
-                  SELECT STUFF(
-                                  (
-                                      SELECT ',{' + '"Id":"' + CONVERT(VARCHAR, ISNULL(c.IdIncidenceType, '')) + '",'
-                                             + '"Name":"' + ISNULL(c.NameIncidence, '') + '"' + '}'
-                                      FROM DeliveryBackOffice.dbo.CatTypeIncidence c WITH(NOLOCK)
-                                      WHERE 
-											c.RowStatus = 1 AND
-											c.ServiceType = @Others
-                                      ORDER BY c.OrderId
-                                      FOR XML PATH(''), TYPE
-                                  ).value('.', 'varchar(max)'),
-                                  1,
-                                  1,
-                                  ''
-                              )
-              ),
-              ''
-                    );
-
-	   END
-	   ELSE IF (@Others= 'DELIVERY EXPRESS')
-	    BEGIN
-
-	    SET @jsonResult
-            = ISNULL(
-              (
-                  SELECT STUFF(
-                                  (
-                                      SELECT ',{' + '"Id":"' + CONVERT(VARCHAR, ISNULL(c.IdIncidenceType, '')) + '",'
-                                             + '"Name":"' + ISNULL(c.NameIncidence, '') + '"' + '}'
-                                      FROM DeliveryBackOffice.dbo.CatTypeIncidence c WITH(NOLOCK)
-                                      WHERE 
-											c.RowStatus = 1 AND
-											c.ServiceType = 'DELIVERY EXPRESS'
-                                      ORDER BY c.OrderId
-                                      FOR XML PATH(''), TYPE
-                                  ).value('.', 'varchar(max)'),
-                                  1,
-                                  1,
-                                  ''
-                              )
-              ),
-              ''
-                    );
-
-	   END
-	   ELSE
-	   BEGIN
+        
         PRINT 'PRUEBA 15';
         SET @jsonResult
             = ISNULL(
@@ -579,7 +526,7 @@ BEGIN
               ),
               ''
                     );
-         END
+         
     END;
 
     --CatIncidenceTransfer
