@@ -1034,14 +1034,12 @@ BEGIN
 				END
 
 				-- Agregar puntos a membresía
-				SET @PointsGenerated = ISNULL((SELECT	 CASE 
-											                  WHEN [PSL].[GuidePrice] > 0 THEN   SUM([PSL].[PointsReceived])
-														ELSE 0 END
+				SET @PointsGenerated = ISNULL((SELECT	   SUM([PSL].[PointsReceived])
+														
 										FROM	[dbo].[PointsByServiceLog] PSL
 										WHERE	[PSL].[GuideSerie] IN (SELECT GuideSerie FROM @AcceptedPointGuides)
 											AND [PSL].[GuideNumber] IN (SELECT GuideNumber FROM @AcceptedPointGuides)
-											GROUP by [PSL].[GuideNumber],
-										             [PSL].[GuidePrice]), 0);
+											AND [PSL].[GuidePrice] > 0),0);
 					
 				UPDATE	[DeliveryBackOffice].[dbo].[Membership] 
 				SET		[AccumulatedPoints] = ISNULL([AccumulatedPoints], 0) + (@PointsGenerated),
