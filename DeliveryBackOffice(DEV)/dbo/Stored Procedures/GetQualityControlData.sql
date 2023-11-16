@@ -1062,7 +1062,7 @@ BEGIN
 				  ,att.ID_Incident
                   , IU.RegisterUserID                                                                    [IdUser]
                   , IU.Username                                                                  [Username]
-                  , 'Expres Center'                                                                  [RouteDescription]
+                  , 'Express Center'                                                                  [RouteDescription]
                   , ''                                                                               [User]
                   , ord.Guide_Serie                                                                  [GuideSerie]
                   , ord.Guide_Number                                                                 [GuideNumber]
