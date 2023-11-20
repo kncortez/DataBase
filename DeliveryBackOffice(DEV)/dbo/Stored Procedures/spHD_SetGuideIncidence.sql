@@ -135,19 +135,20 @@ BEGIN
 	 );
 
 	IF ( @FirstOnRouteDate IS NULL )
-	BEGIN
-	    
-		SELECT
-			204 [ResponseCode],
-			'Guía no ha sido despachada a ruta anteriormente, no es posible ingresar incidencia.' [ResponseMessage]
+	IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
+					Inner Join [dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
+					     On do.Guide_Serie=dod.Guide_Serie and	
+					do.Guide_Number= dod.Guide_Number
+					Inner Join [dbo].[StatusOrder] so  WITH(NOLOCK)
+					     On do.StatusOrderId = so.StatusOrderId
+					Where
+					so.CatCheckpointTypeId = 3 And do.Guide_Number =  @GuideNumber))
 
-	END
-	ELSE IF ( @SimulatedDate <= @FirstOnRouteDate )
 	BEGIN
 	    
 		SELECT
 			204 [ResponseCode],
-			'Incidencia no puede ser ingresada antes de fecha y hora de primera salida a ruta.' [ResponseMessage]
+			'Guía en estado final, no es posible ingresar incidencia.' [ResponseMessage]
 
 	END
 	ELSE IF(@Incidentsavailable <= 0)
