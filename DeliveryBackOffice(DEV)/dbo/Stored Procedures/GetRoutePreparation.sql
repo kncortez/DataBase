@@ -138,6 +138,12 @@ BEGIN
 	SELECT rp.IdRoutePreparation, rp.GuidesQuantity, rp.PiecesDry, rp.PiecesCold, rp.DeliveryOrderBySettlementId,
 		dobs.CatRouteId, dobs.StartingKilometers, sr.CUI, dobs.CatRouteId, rp.IsSimpliRoute, rp.CatVehicleId VehicleId
 	FROM RoutePreparation rp WITH(NOLOCK)
+	INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK)
+	ON rp.IdRoutePreparation = rpd.RoutePreparationId
+	INNER JOIN DeliveryOrder DO WITH(NOLOCK)
+	ON rpd.Guide_Number = DO.Guide_number 
+	INNER JOIN StatusOrder SO WITH(NOLOCK)
+	ON DO.StatusOrderId = SO.StatusOrderId AND SO.CatCheckpointTypeId!=3
 	LEFT JOIN DeliveryOrderBySettlement dobs WITH(NOLOCK)
 		ON rp.DeliveryOrderBySettlementId = dobs.ID
 	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
@@ -146,7 +152,7 @@ BEGIN
 		AND rp.RowStatus = 1
 
 	--TABLE 1 Información de las guías en preparación de la ruta
-	SELECT RPD.Guide_Serie 'Guide_Serie'
+		SELECT RPD.Guide_Serie 'Guide_Serie'
 		, RPD.Guide_Number 'Guide_Number'
 		, RPDP.PieceNumber 'Guide_Piece'
 		, COALESCE(do.Pieces_Dry,0) + COALESCE(do.Pieces_Cold,0) 'Pieces'
@@ -173,8 +179,10 @@ BEGIN
 			RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
 			AND 
 			RPDP.RowStatus = 1
-	inner JOIN DeliveryOrder do WITH(NOLOCK)
+	INNER JOIN DeliveryOrder do WITH(NOLOCK)
 		ON do.Guide_Serie = rpd.Guide_Serie AND do.Guide_Number = rpd.Guide_Number
+	INNER JOIN dbo.StatusOrder So WITH(NOLOCK)
+	ON do.StatusOrderId = So.StatusOrderId AND So.CatCheckpointTypeId != 3
 	LEFT JOIN
 		DeliveryOrderPiece DOP WITH(NOLOCK)
 		ON
@@ -183,9 +191,9 @@ BEGIN
 			do.Guide_Number = DOP.GuideNumber
 			AND
 			RPDP.PieceNumber = DOP.NoPiece
-	LEFT JOIN VisitPointClient vpc
+	LEFT JOIN VisitPointClient vpc WITH(NOLOCK)
 		ON vpc.CodeOfReference = do.Sender_ID
-	LEFT JOIN Customer cu
+	LEFT JOIN Customer cu WITH(NOLOCK)
 		ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
 	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
 		AND rp.RowStatus = 1
