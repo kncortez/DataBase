@@ -1529,7 +1529,7 @@
 	<Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" /> 
 	<Build Include="dbo\Stored Procedures\QualityControlValidationsHeader.sql" />
     <Build Include="dbo\Stored Procedures\QualityControlValidationsDetail.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_HistorialdeValidacionesdeControldeCalidad.sql" />		
+    <Build Include="dbo\Stored Procedures\SPHW_CCValidationHistory.sql" />		
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />

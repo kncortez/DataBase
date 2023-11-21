@@ -1,9 +1,4 @@
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2023-11-16>
 -- Description:	<Description,Detalle de historial de valdiaciones de incdiencias>
@@ -32,7 +27,7 @@ BEGIN
 	    DO.PriceShippment,
 		ISNULL(DO.Collect_OnDelivery,0) Collect_OnDelivery,
 	    COI.LiquidatorRemarks,
-		CASE WHEN COI.IsConfirmed = 0 And COI.IsDenied = 0 And DOD.StatusOrderId = 45 
+		CASE WHEN COI.IsConfirmed = 0 And COI.IsDenied = 0 And DOD.StatusOrderId = 45 AND DOD.StatusOrderId NOT IN (50)
 		        THEN 'Pendiente' 
 			WHEN (COI.IsConfirmed = 1 Or COI.IsDenied = 1) And DOD.StatusOrderId = 50 
 		        THEN 'Procesada' 
@@ -50,8 +45,8 @@ BEGIN
         INNER JOIN ConfirmationOfIncidence COI WITH (NOLOCK) ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         INNER JOIN StatusOrder SO WITH (NOLOCK) ON DOD.StatusOrderId = SO.StatusOrderId
         INNER JOIN CatTypeIncidence CI WITH (NOLOCK) ON DA.ID_Incident = CI.IdIncidenceType
-		LEFT JOIN  DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH (NOLOCK) ON tbl.IdTownship = DO.ReceiverIdTownship
-		LEFT JOIN  DeliveryBackOffice.dbo.HubLogistics hl WITH (NOLOCK) ON tbl.IdHublogistic = hl.IdHublogistic
+		INNER JOIN  DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH (NOLOCK) ON tbl.IdTownship = DO.ReceiverIdTownship
+		INNER JOIN  DeliveryBackOffice.dbo.HubLogistics hl WITH (NOLOCK) ON tbl.IdHublogistic = hl.IdHublogistic
 		LEFT JOIN DeliveryBackOffice.dbo.SenderReceiver SR WITH (NOLOCK) ON DA.ID_Courier= SR.ID
 		LEFT JOIN [dbo].[TokenLog] TL WITH (NOLOCK)
                         ON DOD.UserCreated = TL.TknTokenCreated
