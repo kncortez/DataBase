@@ -19,6 +19,6 @@ BEGIN
                    [Name] Message,
                    Value 'URL'
 				   FROM ConfigParams
-            WHERE Name = 'HistorialdeValidacionesdeControldeCalidad';
+            WHERE Name = 'CCValidationHistory';
 END
 GO
