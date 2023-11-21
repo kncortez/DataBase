@@ -122,7 +122,7 @@ BEGIN
 	
 	);
 
-	DECLARE @CurrentIncidentCount INT = (
+		DECLARE @CurrentIncidentCount INT = (
 		  Select Top 1 Count (DA.ID)
 			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 			       Inner Join 
@@ -134,8 +134,7 @@ BEGIN
 	 
 	 );
 
-	IF ( @FirstOnRouteDate IS NULL )
-	IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
+IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 					Inner Join [dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
 					     On do.Guide_Serie=dod.Guide_Serie and	
 					do.Guide_Number= dod.Guide_Number
@@ -143,7 +142,6 @@ BEGIN
 					     On do.StatusOrderId = so.StatusOrderId
 					Where
 					so.CatCheckpointTypeId = 3 And do.Guide_Number =  @GuideNumber))
-
 	BEGIN
 	    
 		SELECT
@@ -151,7 +149,7 @@ BEGIN
 			'Guía en estado final, no es posible ingresar incidencia.' [ResponseMessage]
 
 	END
-	ELSE IF(@Incidentsavailable <= 0)
+	ELSE IF(ISNULL(@Incidentsavailable,0) <= 0)
 	BEGIN
 	SELECT
 	         204 [ResponseCode],
