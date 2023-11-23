@@ -308,8 +308,11 @@ BEGIN
                 AND RowStatus = 1
                 AND A1.ID = @DeliveryAttemptId;
 
-            UPDATE do
-            SET StatusOrderId = @ValidatedIncidentStatus
+              UPDATE do
+            SET StatusOrderId = @ValidatedIncidentStatus,
+			    [IsLastMileReturn] = IIF(@IsServiceDesired = 1, 0, 1),
+				[TokenUpdated] = @TokenCreated,
+                [DateUpdated] = getdate()
             FROM dbo.DeliveryOrder do
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber;
