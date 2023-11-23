@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
   , @TblHubLogistic TblHubLogistic READONLY
 AS
 BEGIN
+    SET ARITHABORT ON;
     BEGIN TRY
         --Tabla de cards filtrada por hub y guía
 
@@ -24,7 +25,7 @@ BEGIN
           , OrderCard INT
         );
 
-        IF (ISNULL(@GuideNumber,0) <= 0)
+        IF (ISNULL(@GuideNumber, 0) <= 0)
         BEGIN
             INSERT INTO @Cards
             (
@@ -82,7 +83,7 @@ BEGIN
                       AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
                 ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
             )                                           IncidenceTbl
-                LEFT JOIN dbo.DeliveryAttempt          att
+                LEFT JOIN dbo.DeliveryAttempt          att WITH (NOLOCK)
                     ON att.ID = IncidenceTbl.DeliveryAttemptId
                 LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                     ON cti.IdIncidenceType = att.ID_Incident
@@ -159,7 +160,7 @@ BEGIN
                     ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
 
 
-                LEFT JOIN dbo.DeliveryAttempt                 att
+                LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
                     ON att.ID = ddd.DeliveryAttemptId
                 LEFT JOIN dbo.CatTypeIncidence                cti WITH (NOLOCK)
                     ON cti.IdIncidenceType = att.ID_Incident
@@ -262,7 +263,7 @@ BEGIN
                       AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
                 ORDER BY ddd.DateCreatedInSystem DESC
             )                                           IncidenceTbl
-                LEFT JOIN dbo.DeliveryAttempt          att
+                LEFT JOIN dbo.DeliveryAttempt          att WITH (NOLOCK)
                     ON att.ID = IncidenceTbl.DeliveryAttemptId
                 LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                     ON cti.IdIncidenceType = att.ID_Incident
@@ -335,7 +336,7 @@ BEGIN
                        AND ddd.SystemOrigin = 2 --desktop					
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                     ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
-                LEFT JOIN dbo.DeliveryAttempt                 att
+                LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
                     ON att.ID = ddd.DeliveryAttemptId
                 LEFT JOIN dbo.CatTypeIncidence                cti WITH (NOLOCK)
                     ON cti.IdIncidenceType = att.ID_Incident
@@ -472,7 +473,7 @@ BEGIN
         ORDER BY TBL.OrderCard;
 
         --Tabla de detalle de rutas filtrada por hub y guía
-        IF (ISNULL(@GuideNumber,0) <= 0)
+        IF (ISNULL(@GuideNumber, 0) <= 0)
         BEGIN
             SELECT *
             FROM
@@ -495,9 +496,9 @@ BEGIN
                         END
                        )                                                                                [RouteDescription]
                      , CONCAT(
-                                 COALESCE(DeliveryBackOffice.dbo.CapitalizeFirstLetter(sr.First_Name), '')
+                                 COALESCE(/*DeliveryBackOffice.dbo.CapitalizeFirstLetter(*/ sr.First_Name /*)*/, '')
                                , ' '
-                               , COALESCE(DeliveryBackOffice.dbo.CapitalizeFirstLetter(sr.Last_Name), '')
+                               , COALESCE(/*DeliveryBackOffice.dbo.CapitalizeFirstLetter(*/ sr.Last_Name /*)*/, '')
                              )                                                                          [User]
                      , ord.Guide_Serie                                                                  [GuideSerie]
                      , ord.Guide_Number                                                                 [GuideNumber]
@@ -545,8 +546,8 @@ BEGIN
                         END
                        )                                                                                [StatusOfIncident]
                      , HUbs.IdHubLogistic
-                     , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente,
-                     sr.Phone CourierPhone
+                     , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente
+                     , sr.Phone                                                                         CourierPhone
                 FROM dbo.DeliveryOrderBySettlement          ds WITH (NOLOCK)
                     INNER JOIN dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                         ON dsd.ID_DeliveryOrderBySettlement = ds.ID
@@ -573,9 +574,9 @@ BEGIN
                           AND ddd.Guide_Number = ord.Guide_Number
                           AND ddd.StatusOrderId = 45
                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                    ORDER BY  ddd.DateCreatedInSystem DESC
-                ) IncidenceTbl
-                    LEFT JOIN dbo.DeliveryAttempt att
+                    ORDER BY ddd.DateCreatedInSystem DESC
+                )                                           IncidenceTbl
+                    LEFT JOIN dbo.DeliveryAttempt          att WITH (NOLOCK)
                         ON att.ID = IncidenceTbl.DeliveryAttemptId
                     LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                         ON cti.IdIncidenceType = att.ID_Incident
@@ -672,8 +673,8 @@ BEGIN
                      END
                     )                                                                                [StatusOfIncident]
                   , HUbs.IdHubLogistic
-                  , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente,
-                  '' CourierPhone
+                  , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente
+                  , ''                                                                               CourierPhone
                 FROM dbo.DeliveryOrder                            ord WITH (NOLOCK)
                     INNER JOIN dbo.StatusOrder                    std WITH (NOLOCK)
                         ON std.StatusOrderId = ord.StatusOrderId
@@ -685,7 +686,7 @@ BEGIN
                            AND ddd.SystemOrigin = 2 --desktop					
                     LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                         ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
-                    LEFT JOIN dbo.DeliveryAttempt                 att
+                    LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
                         ON att.ID = ddd.DeliveryAttemptId
                     LEFT JOIN dbo.CatTypeIncidence                cti WITH (NOLOCK)
                         ON cti.IdIncidenceType = att.ID_Incident
@@ -716,9 +717,10 @@ BEGIN
                           )
                       AND ord.IsLastMileReturn = 0
             ) Tbl
-            ORDER BY Tbl.ID
-                   , Tbl.ID_Courier
-                   , Tbl.Date_Received;
+			ORDER BY TBL.EventDate
+            --ORDER BY Tbl.ID
+            --       , Tbl.ID_Courier
+            --       , Tbl.Date_Received;
         END;
         ELSE
         BEGIN
@@ -745,9 +747,9 @@ BEGIN
                      END
                     )                                                                                [RouteDescription]
                   , CONCAT(
-                              COALESCE(DeliveryBackOffice.dbo.CapitalizeFirstLetter(sr.First_Name), '')
+                              COALESCE(/*DeliveryBackOffice.dbo.CapitalizeFirstLetter(*/ sr.First_Name /*)*/, '')
                             , ' '
-                            , COALESCE(DeliveryBackOffice.dbo.CapitalizeFirstLetter(sr.Last_Name), '')
+                            , COALESCE(/*DeliveryBackOffice.dbo.CapitalizeFirstLetter(*/ sr.Last_Name /*)*/, '')
                           )                                                                          [User]
                   , ord.Guide_Serie                                                                  [GuideSerie]
                   , ord.Guide_Number                                                                 [GuideNumber]
@@ -794,8 +796,8 @@ BEGIN
                      END
                     )                                                                                [StatusOfIncident]
                   , HUbs.IdHubLogistic
-                  , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente,
-                  sr.Phone  CourierPhone
+                  , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente
+                  , sr.Phone                                                                         CourierPhone
                 FROM dbo.DeliveryOrderBySettlement          ds WITH (NOLOCK)
                     INNER JOIN dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                         ON dsd.ID_DeliveryOrderBySettlement = ds.ID
@@ -823,8 +825,8 @@ BEGIN
                           AND ddd.StatusOrderId = 45
                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
                     ORDER BY ddd.DateCreatedInSystem DESC
-                ) IncidenceTbl
-                    LEFT JOIN dbo.DeliveryAttempt att
+                )                                           IncidenceTbl
+                    LEFT JOIN dbo.DeliveryAttempt          att WITH (NOLOCK)
                         ON att.ID = IncidenceTbl.DeliveryAttemptId
                     LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                         ON cti.IdIncidenceType = att.ID_Incident
@@ -920,8 +922,8 @@ BEGIN
                         END
                        )                                                                                [StatusOfIncident]
                      , HUbs.IdHubLogistic
-                     , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente,
-                     '' AS CourierPhone
+                     , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente
+                     , ''                                                                               AS CourierPhone
                 FROM dbo.DeliveryOrder                            ord WITH (NOLOCK)
                     INNER JOIN dbo.StatusOrder                    std WITH (NOLOCK)
                         ON std.StatusOrderId = ord.StatusOrderId
@@ -933,7 +935,7 @@ BEGIN
                            AND ddd.SystemOrigin = 2 --desktop					
                     LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                         ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
-                    LEFT JOIN dbo.DeliveryAttempt                 att
+                    LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
                         ON att.ID = ddd.DeliveryAttemptId
                     LEFT JOIN dbo.CatTypeIncidence                cti WITH (NOLOCK)
                         ON cti.IdIncidenceType = att.ID_Incident
@@ -962,9 +964,10 @@ BEGIN
                       AND ord.Guide_Number = @GuideNumber
                       AND ord.IsLastMileReturn = 0
             ) Tbl
-            ORDER BY Tbl.ID
-                   , Tbl.ID_Courier
-                   , Tbl.Date_Received;
+			ORDER BY TBL.EventDate
+            --ORDER BY Tbl.ID
+            --       , Tbl.ID_Courier
+            --       , Tbl.Date_Received;
 
         END;
 

@@ -55,6 +55,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -109,4 +111,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripció
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de negocio al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CatBusinessSegmentId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CodeOfReference]
+    ON [dbo].[VisitPointClient]([CodeOfReference] ASC);
 
