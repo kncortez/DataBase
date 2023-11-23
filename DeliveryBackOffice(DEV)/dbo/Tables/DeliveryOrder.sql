@@ -137,6 +137,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -387,3 +389,7 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
 		ON [dbo].[DeliveryOrder]( [SalePipeLineId] )
 		INCLUDE([Sender_Mail],[Sender_ID],[DCBA_ID],[IdCustomer]);
+GO
+CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC);
+
