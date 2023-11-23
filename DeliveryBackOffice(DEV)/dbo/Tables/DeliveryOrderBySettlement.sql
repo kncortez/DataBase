@@ -34,6 +34,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la estación donde se realizo el despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderBySettlement', @level2type = N'COLUMN', @level2name = N'DispatchedStationId';
 
@@ -57,4 +59,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Kilómetros
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-20211209-170157]
     ON [dbo].[DeliveryOrderBySettlement]([Date_Received] ASC, [SettlementStationId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_Date_Received_Date_Dispatched]
+    ON [dbo].[DeliveryOrderBySettlement]([Date_Received] ASC, [Date_Dispatched] ASC);
 

@@ -78,16 +78,16 @@ BEGIN
     SELECT [M].[IdMembership]
          , [M].[CustomerId]
          , [CM].[MembershipName]
-         , (case when([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) < 0
-              then 0
-              else ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) end ) [MembershipRemainingUses]
-         , (case when (([M].[ActualServiceCount] * 100)
-                / (case when[M].[MembershipMaxServiceFixedValue] = 0 then 1 else [M].[MembershipMaxServiceFixedValue] end)
+         , IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) < 0
+             , 0
+             , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipRemainingUses]
+         , IIF((([M].[ActualServiceCount] * 100)
+                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
                ) > 100
-             then 100
-             else  (([M].[ActualServiceCount] * 100)
-                / (case when[M].[MembershipMaxServiceFixedValue] = 0 then 1 else  [M].[MembershipMaxServiceFixedValue] end )
-               ) end )                                                                 [MembershipUsagePercentage]
+             , 100
+             , (([M].[ActualServiceCount] * 100)
+                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
+               ))                                                                 [MembershipUsagePercentage]
          , [M].[IsAutoRenewable]
          , ISNULL([CM].[Icon], '')                                                [Icon]
          , [M].[DateCreated]
