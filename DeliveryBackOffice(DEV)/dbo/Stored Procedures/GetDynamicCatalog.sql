@@ -503,6 +503,7 @@ BEGIN
     END;
     ELSE IF (@TypeMethod = 'GetTypeIncidenceExpress')
     BEGIN
+        
         PRINT 'PRUEBA 15';
         SET @jsonResult
             = ISNULL(
@@ -512,8 +513,9 @@ BEGIN
                                       SELECT ',{' + '"Id":"' + CONVERT(VARCHAR, ISNULL(c.IdIncidenceType, '')) + '",'
                                              + '"Name":"' + ISNULL(c.NameIncidence, '') + '"' + '}'
                                       FROM DeliveryBackOffice.dbo.CatTypeIncidence c WITH(NOLOCK)
-                                      WHERE @Others = c.ServiceType
-                                            AND c.RowStatus = 1
+                                      WHERE
+											c.RowStatus = 1 AND
+											c.ServiceType = 'DELIVERY'
                                       ORDER BY c.OrderId
                                       FOR XML PATH(''), TYPE
                                   ).value('.', 'varchar(max)'),
@@ -524,6 +526,7 @@ BEGIN
               ),
               ''
                     );
+         
     END;
 
     --CatIncidenceTransfer

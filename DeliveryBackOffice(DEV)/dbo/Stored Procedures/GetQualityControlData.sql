@@ -716,6 +716,118 @@ BEGIN
                               SELECT IdHubLogistics FROM @TblHubLogistic
                           )
                       AND ord.IsLastMileReturn = 0
+
+
+       UNION
+		  SELECT --TOP 1000
+                    IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pending
+                  , IIF(ord.StatusOrderId != 4 AND ddd.DeliveryAttemptId IS NULL, 1, 0)              Delivered
+                  , IIF(cfi.IsConfirmed = 1, 1, 0)                                                   ConfirmationIncidents
+                  , IIF(cfi.IsConfirmed = 0, 1, 0)                                                   UnConfirmationIncidents
+                  , 0                                                                                ID
+                  , 0                                                                                ID_Courier
+                  , NULL                                                                             Date_Received
+                  , 0                                                                                [IdRoute]
+				  ,att.ID_Incident
+                  , IU.RegisterUserID                                                                    [IdUser]
+                  , IU.Username                                                                  [Username]
+                  , 'Express Center'                                                                  [RouteDescription]
+                  , ''                                                                               [User]
+                  , ord.Guide_Serie                                                                  [GuideSerie]
+                  , ord.Guide_Number                                                                 [GuideNumber]
+                  , ord.Sender_FirstName + ' ' + ord.Sender_LastName                                 [SenderName]
+                  , COALESCE(ord.Receiver_FirstName, '') + ' ' + COALESCE(ord.Receiver_LastName, '') [ReceiverName]
+                  , ord.Sender_Phone                                                                 [SenderPhone]
+                  , ord.Receiver_Phone                                                               [ReceiverPhone]
+                  , ord.Receiver_Address                                                             [ReceiverAddress]
+                  , ISNULL(cic.IncidenceTypeName, '')                                                [TypeOfIncident]
+                  , cti.NameIncidence                                                                Incident
+                  , ddd.DateCreatedInSystem                                                          EventDate
+                  , (CASE
+                         WHEN cti.NameIncidence IS NULL THEN
+                             NULL
+                         ELSE
+                             CONCAT(
+                                       CONVERT(
+                                                  NVARCHAR(4)
+                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                    , atd.GuideDeliveryAttemptCount
+                                                    , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
+                                              )
+                                     , '/'
+                                     , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
+                                   )
+                     END
+                    )                                                                                [Attempts]
+                  , ord.PriceShippment
+                  , ord.Collect_OnDelivery                                                           [CollectOnDelivery]
+                  , std.OrderDescription
+                  , (CASE
+                         WHEN cfi.IsConfirmed IS NULL THEN
+                             NULL
+                         WHEN cfi.IsConfirmed = 0 THEN
+                             'Pendiente'
+                         ELSE
+                  (CASE
+                       WHEN cfi.IsDenied = 1 THEN
+                           'Rechazada'
+                       ELSE
+                           'Aprobada'
+                   END
+                  )
+                     END
+                    )                                                                                [StatusOfIncident]
+                  , HUbs.IdHubLogistic
+                  , IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pendiente,
+                  '' CourierPhone
+                FROM dbo.DeliveryOrder                            ord WITH (NOLOCK)
+                    INNER JOIN dbo.StatusOrder                    std WITH (NOLOCK)
+                        ON std.StatusOrderId = ord.StatusOrderId
+                    INNER JOIN dbo.DeliveryOrderDetail            ddd WITH (NOLOCK)
+                        ON ddd.Guide_Serie = ord.Guide_Serie
+                           AND ddd.Guide_Number = ord.Guide_Number
+                           AND ddd.StatusOrderId = 45
+                           AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
+                           AND ddd.SystemOrigin = 5 --Express center					
+                    LEFT JOIN dbo.TokenLog TG  WITH (NOLOCK)
+                        ON TG.TknIdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
+				    LEFT JOIN dbo.RegisterUser RS WITH (NOLOCK)
+                        ON TG.TknIdUser = RS.UsrIdUser
+					LEFT JOIN dbo.InternalUser IU WITH (NOLOCK)
+                       ON RS.UsrIdUser = IU.RegisterUserID
+                    LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
+                        ON att.ID = ddd.DeliveryAttemptId
+                    LEFT JOIN dbo.CatTypeIncidence                cti WITH (NOLOCK)
+                        ON cti.IdIncidenceType = att.ID_Incident
+                    LEFT JOIN dbo.DeliveryOrderAttemptData        atd WITH (NOLOCK)
+                        ON atd.GuideSerie = ord.Guide_Serie
+                           AND atd.GuideNumber = ord.Guide_Number
+                    LEFT JOIN dbo.ConfirmationOfIncidence         cfi WITH (NOLOCK)
+                        ON cfi.IdConfirmationOfIncidence = att.ConfirmationOfIncidenceId
+                    LEFT JOIN dbo.Township                        tw WITH (NOLOCK)
+                        ON tw.IdTownship = ord.ReceiverIdTownship
+                    OUTER APPLY
+                (
+                    SELECT TOP 1
+                           HBL.IdHubLogistic
+                    FROM dbo.DumpServiceCoverage                       dum WITH (NOLOCK)
+                        INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBL WITH (NOLOCK)
+                            ON dum.Hub = HBL.HubAbbreviation
+                               AND HBL.HubStatus = 1
+                    WHERE dum.HeaderCode = tw.HeaderCode
+                )                                                 HUbs
+                    LEFT JOIN dbo.CatIncidenceClasification cic WITH (NOLOCK)
+                        ON cic.IdCatIncidenceClasification = cti.IncidenceClasificationId
+                WHERE ddd.Guide_Serie = ord.Guide_Serie
+                      AND ddd.Guide_Number = ord.Guide_Number
+                      AND HUbs.IdHubLogistic IN
+                          (
+                              SELECT IdHubLogistics FROM @TblHubLogistic
+                          )
+                      AND ord.IsLastMileReturn = 0
+
+
+
             ) Tbl
 			ORDER BY TBL.EventDate
             --ORDER BY Tbl.ID

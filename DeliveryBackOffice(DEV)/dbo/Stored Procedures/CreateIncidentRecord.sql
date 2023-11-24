@@ -430,13 +430,81 @@ BEGIN
                 ORDER BY RP.IdRoutePreparation DESC;
 
 
-                UPDATE [DeliveryBackOffice].[dbo].[RoutePreparationDetail]
-                SET RowStatus = 0
-                  , TokenUpdated = @TokenCreated
-                  , DateUpdated = GETDATE()
-                WHERE Guide_Serie = @GuideSerie
-                      AND Guide_Number = @GuideNumber
-                      AND DateCreated > GETDATE();
+                         UPDATE RP
+                               SET RP.RowStatus = 0,
+                               RP.TokenUpdated = @TokenCreated,
+                               	RP.DateUpdated = GETDATE()
+								FROM [DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD
+								INNER JOIN 
+								[DeliveryBackOffice].[dbo].[RoutePreparation] RP
+								ON RPD.RoutePreparationId = RP.IdRoutePreparation
+                               WHERE
+                               Guide_Serie =  @GuideSerie
+                                AND Guide_Number = @GuideNumber
+                                AND  RP.DateRoutePreparation > CONVERT(DATE,GETDATE());
+                                
+
+						
+
+             
+				 IF(
+				     EXISTS(
+					   SELECT  
+					     
+					    Top 1 1
+						FROM [DeliveryBackOffice].[dbo].RoutePreparation RP WITH (NOLOCK)
+						WHERE RP.CatRouteId = @OriginRouteId
+							  AND RP.DateRoutePreparation = @NewDeliveryDate
+							  AND RP.RowStatus = 1
+							 
+						)
+				 )
+                    BEGIN
+
+					    INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationDetail]
+                        (
+                            [RoutePreparationId],
+                            [Guide_Serie],
+                            [Guide_Number],
+                            [RowStatus],
+                            [TokenCreated],
+                            [DateCreated],
+                            [TokenUpdated],
+                            [DateUpdated],
+                            [IsCustomerReschedule]
+                        )
+                        VALUES
+                        (@NewRoutePreparation, @GuideSerie, @GuideNumber, 1, @TokenCreated, GETDATE(), NULL, NULL, 1);
+
+					  
+
+                      END 
+						ELSE
+						BEGIN
+							INSERT INTO [dbo].[RoutePreparation]
+							(
+								[CatRouteId],
+								[DateRoutePreparation],
+								[GuidesQuantity],
+								[PiecesDry],
+								[PiecesCold],
+								[RowStatus],
+								[TokenCreated],
+								[DateCreated],
+								[TokenUpdated],
+								[DateUpdated]
+							)
+							OUTPUT inserted.IdRoutePreparation
+							INTO @InsertedRoutePreparation
+							(
+								IdRoutePreparation
+							)
+							VALUES
+							(@OriginRouteId, @NewDeliveryDate, 1, 0, 0, 1, @TokenCreated, GETDATE(), NULL, NULL);
+
+							SELECT TOP 1
+								   @NewRoutePreparation = IdRoutePreparation
+							FROM @InsertedRoutePreparation;
 
 
 

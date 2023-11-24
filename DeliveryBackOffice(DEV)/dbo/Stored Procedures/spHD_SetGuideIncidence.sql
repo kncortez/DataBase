@@ -122,27 +122,43 @@ BEGIN
 	
 	);
 
-	IF ( @FirstOnRouteDate IS NULL )
+	DECLARE @CurrentIncidentCount INT = (
+		  Select Top 1 Count (DA.ID)
+			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+			       Inner Join 
+				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+			  where DA.Guide_Number =  @GuideNumber
+			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
+	 
+	 
+	 );
+
+IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
+					Inner Join [dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
+					     On do.Guide_Serie=dod.Guide_Serie and	
+					do.Guide_Number= dod.Guide_Number
+					Inner Join [dbo].[StatusOrder] so  WITH(NOLOCK)
+					     On do.StatusOrderId = so.StatusOrderId
+					Where
+					so.CatCheckpointTypeId = 3 And do.Guide_Number =  @GuideNumber))
 	BEGIN
 	    
 		SELECT
 			204 [ResponseCode],
-			'Guía no ha sido despachada a ruta anteriormente, no es posible ingresar incidencia.' [ResponseMessage]
+			'Guía en estado final, no es posible ingresar incidencia.' [ResponseMessage]
 
 	END
-	ELSE IF ( @SimulatedDate <= @FirstOnRouteDate )
-	BEGIN
-	    
-		SELECT
-			204 [ResponseCode],
-			'Incidencia no puede ser ingresada antes de fecha y hora de primera salida a ruta.' [ResponseMessage]
-
-	END
-	ELSE IF(@Incidentsavailable <= 0)
+	ELSE IF(ISNULL(@Incidentsavailable,0) <= 0)
 	BEGIN
 	SELECT
 	         204 [ResponseCode],
 			'Excedió la cantidad disponible de incidencias.' [ResponseMessage]
+	END
+	ELSE IF(ISNULL(@CurrentIncidentCount,0)>0)
+	BEGIN
+	SELECT 204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias durante el día.' [ResponseMessage]
 	END
 	ELSE
     BEGIN
