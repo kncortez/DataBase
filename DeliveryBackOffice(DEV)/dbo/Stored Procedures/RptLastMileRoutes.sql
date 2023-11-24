@@ -182,7 +182,7 @@ BEGIN
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
-              AND  COI.IsConfirmed =0 AND COI.IsDenied = 1 
+              AND  COI.IsConfirmed = 1 AND COI.IsDenied = 1 
     ) FalseIncidents
 	    OUTER APPLY
     (
