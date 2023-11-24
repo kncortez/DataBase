@@ -9,27 +9,30 @@ CREATE procedure [dbo].[spg_courier_information]
 as
 begin
 	select [ID]
-      ,[First_Name]
-      ,[Last_Name]
-      ,[Address]
-      ,[Zone]
-      ,[Town]
-      ,[Department]
-      ,[Phone]
-      ,[Social_Security_ID]
-      ,[Email]
-      ,[CUI]
-      ,[Latitude]
-      ,[Longitude]
-      ,[Entity_Type]
-	  ,[User_Created]
-	  ,[Date_Created]
-	  ,[Estatus]
-	  ,[CatTypeSenderReceiverId]
-	  ,[HubLogisticId]
-	  ,[UniqueCode]
-	  ,[Email]
-  FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
+      ,sr.[First_Name]
+      ,sr.[Last_Name]
+      ,sr.[Address]
+      ,sr.[Zone]
+      ,sr.[Town]
+      ,sr.[Department]
+      ,sr.[Phone]
+      ,sr.[Social_Security_ID]
+      ,sr.[Email]
+      ,sr.[CUI]
+      ,sr.[Latitude]
+      ,sr.[Longitude]
+      ,sr.[Entity_Type]
+	  ,sr.[User_Created]
+	  ,sr.[Date_Created]
+	  ,sr.[Estatus]
+	  ,sr.[CatTypeSenderReceiverId]
+	  ,sr.[HubLogisticId]
+	  ,srl.[LoginToken] as 'UniqueCode'
+	  ,sr.[Email]
+  FROM [DeliveryBackOffice].[dbo].[SenderReceiver] sr WITH(NOLOCK)
+  LEFT JOIN SenderReceiverLoginToken srl WITH(NOLOCK)
+  ON sr.ID = srl.SenderReceiverId
+  AND srl.RowStatus = 1
   WHERE CUI = @CUI
   AND Entity_Type = 3
 END
