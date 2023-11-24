@@ -165,7 +165,7 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
                    AND COI.RowStatus = 1
-        WHERE DA.Date_Created
+        WHERE CONVERT(DATE,DA.Date_Created)
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
@@ -178,7 +178,7 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
                    AND COI.RowStatus = 1
-        WHERE DA.Date_Created
+        WHERE CONVERT(DATE,DA.Date_Created)
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
@@ -191,7 +191,7 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
                    AND COI.RowStatus = 1
-        WHERE DA.Date_Created
+        WHERE CONVERT(DATE,DA.Date_Created)
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
