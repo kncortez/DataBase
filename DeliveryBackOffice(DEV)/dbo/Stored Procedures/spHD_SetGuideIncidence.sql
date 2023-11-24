@@ -122,7 +122,19 @@ BEGIN
 	
 	);
 
-	IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
+		DECLARE @CurrentIncidentCount INT = (
+		  Select Top 1 Count (DA.ID)
+			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+			       Inner Join 
+				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+			  where DA.Guide_Number =  @GuideNumber
+			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
+	 
+	 
+	 );
+
+IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 					Inner Join [dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
 					     On do.Guide_Serie=dod.Guide_Serie and	
 					do.Guide_Number= dod.Guide_Number
@@ -137,11 +149,16 @@ BEGIN
 			'Guía en estado final, no es posible ingresar incidencia.' [ResponseMessage]
 
 	END
-	ELSE IF(@Incidentsavailable <= 0)
+	ELSE IF(ISNULL(@Incidentsavailable,0) <= 0)
 	BEGIN
 	SELECT
 	         204 [ResponseCode],
 			'Excedió la cantidad disponible de incidencias.' [ResponseMessage]
+	END
+	ELSE IF(ISNULL(@CurrentIncidentCount,0)>0)
+	BEGIN
+	SELECT 204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias durante el día.' [ResponseMessage]
 	END
 	ELSE
     BEGIN
