@@ -324,7 +324,6 @@ BEGIN
 
            UPDATE do
             SET StatusOrderId = @ValidatedIncidentStatus,
-			    [IsLastMileReturn] = IIF(@IsServiceDesired = 1, 0, 1),
 				[TokenUpdated] = @TokenCreated,
                 [DateUpdated] = getdate()
             FROM dbo.DeliveryOrder do
