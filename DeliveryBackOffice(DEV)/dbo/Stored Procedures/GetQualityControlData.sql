@@ -155,7 +155,7 @@ BEGIN
                        AND ddd.Guide_Number = ord.Guide_Number
                        AND ddd.StatusOrderId = 45
                        AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                       AND ddd.SystemOrigin = 2 --desktop					
+                       AND ddd.SystemOrigin in (2,3,5)					
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                     ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
 
@@ -184,7 +184,7 @@ BEGIN
                 LEFT JOIN dbo.CatIncidenceClasification cic WITH (NOLOCK)
                     ON cic.IdCatIncidenceClasification = cti.IncidenceClasificationId
             WHERE CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                  AND ddd.SystemOrigin = 2 -- desktop
+                  AND ddd.SystemOrigin in (2,3,5) 
                   AND HUbs.IdHubLogistic IN
                       (
                           SELECT IdHubLogistics FROM @TblHubLogistic
@@ -333,7 +333,7 @@ BEGIN
                        AND ddd.Guide_Number = ord.Guide_Number
                        AND ddd.StatusOrderId = 45
                        AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                       AND ddd.SystemOrigin = 2 --desktop					
+                       AND ddd.SystemOrigin in (2,3,5) 				
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                     ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
                 LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
@@ -360,7 +360,7 @@ BEGIN
                 LEFT JOIN dbo.CatIncidenceClasification cic WITH (NOLOCK)
                     ON cic.IdCatIncidenceClasification = cti.IncidenceClasificationId
             WHERE CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                  AND ddd.SystemOrigin = 2 -- desktop
+                  AND ddd.SystemOrigin in (2,3,5) 
                   AND ord.Guide_Serie = @GuideSerie
                   AND ord.Guide_Number = @GuideNumber
                   AND ord.IsLastMileReturn = 0
@@ -486,6 +486,7 @@ BEGIN
                      , ds.ID_Courier
                      , ds.Date_Received
                      , IIF(IncidenceTbl.SSN_IdUser IS NULL, ISNULL(ds.ID_Courier, 1), 0)                [IdRoute]
+					 ,att.ID_Incident
                      , IncidenceTbl.SSN_IdUser                                                          [IdUser]
                      , IncidenceTbl.SSN_Username                                                        [Username]
                      , (CASE
@@ -520,7 +521,7 @@ BEGIN
                                                    , IIF(
                                                          atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
                                                        , atd.GuideDeliveryAttemptCount
-                                                       , atd.GuideDeliveryAttemptCount + 1)
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                                  )
                                         , '/'
                                         , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
@@ -618,6 +619,7 @@ BEGIN
                   , 0                                                                                ID_Courier
                   , NULL                                                                             Date_Received
                   , 0                                                                                [IdRoute]
+				  ,att.ID_Incident
                   , tk.SSN_IdUser                                                                    [IdUser]
                   , tk.SSN_Username                                                                  [Username]
                   , (CASE
@@ -645,9 +647,10 @@ BEGIN
                              CONCAT(
                                        CONVERT(
                                                   NVARCHAR(4)
-                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount + 1)
+                                                , IIF(
+                                                         atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                               )
                                      , '/'
                                      , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
@@ -880,9 +883,10 @@ BEGIN
                              CONCAT(
                                        CONVERT(
                                                   NVARCHAR(4)
-                                                , IIF(atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount
-                                                    , atd.GuideDeliveryAttemptCount + 1)
+                                                , IIF(
+                                                         atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
+                                                       , atd.GuideDeliveryAttemptCount
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                               )
                                      , '/'
                                      , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
@@ -1008,7 +1012,7 @@ BEGIN
                                                    , IIF(
                                                          atd.GuideDeliveryAttemptCount = atd.GuideDeliveryMaxAttemptCount
                                                        , atd.GuideDeliveryAttemptCount
-                                                       , atd.GuideDeliveryAttemptCount + 1)
+                                                       , IIF(cti.IncidenceClasificationId <> 1,atd.GuideDeliveryAttemptCount,atd.GuideDeliveryAttemptCount+1))
                                                  )
                                         , '/'
                                         , CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)

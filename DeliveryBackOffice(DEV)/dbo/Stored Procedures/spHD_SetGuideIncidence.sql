@@ -122,7 +122,7 @@ BEGIN
 	
 	);
 
-	DECLARE @CurrentIncidentCount INT = (
+		DECLARE @CurrentIncidentCount INT = (
 		  Select Top 1 Count (DA.ID)
 			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 			       Inner Join 
