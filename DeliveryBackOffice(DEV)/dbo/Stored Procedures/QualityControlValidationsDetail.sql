@@ -1,4 +1,4 @@
-﻿============================================
+﻿--============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2023-11-16>
 -- Description:	<Description,Detalle de historial de valdiaciones de incdiencias>
