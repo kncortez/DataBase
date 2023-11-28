@@ -10,26 +10,18 @@ Create PROCEDURE [dbo].[QualityControlValidationsHeader]
 AS
 BEGIN
 
-
-SELECT 
-    COUNT(DISTINCT DA.Guide_Number) AS UniqueGuideCount,
+Select
+	CONVERT(NVARCHAR(10),@StartDate,110) AS StartDate,
+	CONVERT(NVARCHAR(10),@EndDate,110)  AS EndDate,
     COUNT(DISTINCT CASE WHEN COI.IsConfirmed = 0 AND COI.IsDenied = 0 AND COI.StatusOrderId = 45 THEN DA.Guide_Number END) AS UnprocessedIncidentCount,
     COUNT(DISTINCT CASE WHEN COI.StatusOrderId = 50 AND COI.IsConfirmed = 1 THEN DA.Guide_Number END) AS ProcessedIncidentsCount
-FROM
-    DeliveryOrder DO WITH (NOLOCK)
-    INNER JOIN DeliveryOrderDetail DOD WITH (NOLOCK) ON DO.Guide_Serie = DOD.Guide_Serie AND DO.Guide_Number = DOD.Guide_Number AND DOD.StatusOrderId IN (45, 50)
-    INNER JOIN DeliveryAttempt DA WITH (NOLOCK) ON DOD.Guide_Number = DA.Guide_Number
-    INNER JOIN ConfirmationOfIncidence COI WITH (NOLOCK) ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-    INNER JOIN StatusOrder SO WITH (NOLOCK) ON DOD.StatusOrderId = SO.StatusOrderId
-    INNER JOIN CatTypeIncidence CI WITH (NOLOCK) ON DA.ID_Incident = CI.IdIncidenceType
-    INNER JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH (NOLOCK) ON tbl.IdTownship = DO.ReceiverIdTownship
-    INNER JOIN DeliveryBackOffice.dbo.HubLogistics hl WITH (NOLOCK) ON tbl.IdHublogistic = hl.IdHublogistic
-    LEFT JOIN DeliveryBackOffice.dbo.SenderReceiver SR WITH (NOLOCK) ON DA.ID_Courier = SR.ID
-    LEFT JOIN [dbo].[TokenLog] TL WITH (NOLOCK) ON DOD.UserCreated = TL.TknTokenCreated
-    LEFT JOIN [dbo].[RegisterUser] RU WITH (NOLOCK) ON TL.TknIdUser = RU.UsrIdUser
-    LEFT JOIN [DBO].[CatIncidenceClasification] CIC WITH (NOLOCK) ON CI.IncidenceClasificationId = CIC.IdCatIncidenceClasification
-WHERE
-    CONVERT(DATE, COI.DateCreated) BETWEEN @StartDate AND @EndDate;
+	From
+	ConfirmationOfIncidence COI WITH (NOLOCK) 
+	INNER JOIN 
+	DeliveryAttempt DA WITH (NOLOCK) ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+	WHERE
+    CONVERT(DATE, COI.DateCreated) BETWEEN @StartDate AND @EndDate
+
     
 END
 
