@@ -1530,6 +1530,7 @@
 	<Build Include="dbo\Stored Procedures\QualityControlValidationsHeader.sql" />
     <Build Include="dbo\Stored Procedures\QualityControlValidationsDetail.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CCValidationHistory.sql" />		
+	<Build Include="dbo\Stored Procedures\RemoveProductFromServiceCartMarketPlace.sql" />	
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
