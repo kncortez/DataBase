@@ -414,6 +414,10 @@ BEGIN
 								AND SSN_TokenStatus = 1
 								ORDER BY SSN_DateLogin desc)
 
+								IF(@Token IS NULL)
+									BEGIN
+									 SET @Token = 'Concesionario';
+									END
 
 							SET @IsCollect =(SELECT TOP 1 IsCollect FROM #GuideTable)
 							IF(@IsCollect = 1)
