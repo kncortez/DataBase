@@ -62,7 +62,7 @@ BEGIN
 	SET @EXISTING_LRPC = (SELECT COUNT([LRPC].[IdLinehaulRoutePreparationContainer]) AS CONT
 							FROM [dbo].[LinehaulRoutePreparationContainer] LRPC
 							WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
-								AND [LRPC].[ContainerId] = @ContainerId);
+								AND [LRPC].[ContainerId] = @ContainerId AND LRPC.RowStatus = 1);
     
 	IF (@EXISTING_LRPC > 0)
 	BEGIN
@@ -310,5 +310,27 @@ BEGIN
 				ERROR_MESSAGE() AS [spMessage];
 
 		ROLLBACK TRANSACTION
+
+		INSERT INTO dbo.RoutePreparationLogError
+		(
+		    ErrorDescription
+		  , ErrorNumber
+		  , ErrorProcedure
+		  , ErrorLine
+		  , GuideSerie
+		  , GuideNumber
+		  , TokenCreated
+		  , DateCreated
+		)
+		VALUES
+		(   ERROR_MESSAGE()      -- ErrorDescription - varchar(300)
+		  , ERROR_NUMBER ()     -- ErrorNumber - int
+		  , ERROR_PROCEDURE()      -- ErrorProcedure - varchar(100)
+		  , ERROR_LINE()      -- ErrorLine - int
+		  , NULL      -- GuideSerie - nvarchar(2)
+		  , NULL      -- GuideNumber - int
+		  , ''        -- TokenCreated - varchar(50)
+		  , GETDATE() -- DateCreated - datetime
+		    )
 	END CATCH
 END

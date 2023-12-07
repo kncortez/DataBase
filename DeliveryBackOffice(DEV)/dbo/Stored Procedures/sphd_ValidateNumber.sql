@@ -15,7 +15,7 @@ BEGIN
 			BEGIN
 						IF EXISTS(SELECT TOP 1 1   FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE Phone LIKE '%'+ @Phone + '%' )
 						BEGIN 
-						  SELECT 1 AS 'StatusCode'
+						  SELECT 0 AS 'StatusCode'
 		
 						END
 						ELSE
@@ -26,9 +26,9 @@ BEGIN
 			ELSE
 			BEGIN
 			
-			IF EXISTS(SELECT TOP 1 1   FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE Phone LIKE '%'+ @Phone + '%' AND UniqueCode != @UniqueCode )
+			IF EXISTS(SELECT TOP 1 1   FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE Phone LIKE '%'+ @Phone + '%')
 						BEGIN 
-						  SELECT 1 AS 'StatusCode'
+						  SELECT 0 AS 'StatusCode'
 		
 						END
 						ELSE

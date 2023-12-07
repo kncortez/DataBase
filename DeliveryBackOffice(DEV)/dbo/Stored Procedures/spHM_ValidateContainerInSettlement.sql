@@ -31,9 +31,13 @@ BEGIN
 						WHERE	[C].[CatTypeContainerId] = @CONTAINER_SERIE_ID
 							AND [C].[ContainerNumber] = @ContainerNumber);
 
+	PRINT @CONTAINER_ID
+
 	SET @STATUS_IN_TRANSIT = (SELECT	[CLS].[IdCatLinehaulStatus]
 								FROM	[dbo].[CatLinehaulStatus] CLS
 								WHERE	[CLS].[StatusName] = 'IN TRANSIT');
+
+	PRINT @STATUS_IN_TRANSIT
 
 	SET @EXISTING_CONTAINER_LRPC = (SELECT  COUNT([LRPC].[IdLinehaulRoutePreparationContainer]) AS CONT
 									FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
@@ -41,6 +45,8 @@ BEGIN
 										AND	[LRPC].[ContainerId] = @CONTAINER_ID
 										AND [LRPC].[RowStatus] = 1
 										AND [LRPC].[CatLinehaulStatusId] = @STATUS_IN_TRANSIT);
+
+	PRINT @EXISTING_CONTAINER_LRPC
 
 	SET @LIQUIDATED_PIECES = (SELECT		COUNT([LRPCDP].[IdLinehaulRoutePreparationContainerDetailPiece]) AS CONT
 								FROM		[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
@@ -54,6 +60,9 @@ BEGIN
 									AND		[LRPCDP].[CatLinehaulStatusId] != @STATUS_IN_TRANSIT
 									AND		[LRPCDP].[RowStatus] = 1);
 
+PRINT '@LIQUIDATED_PIECES'
+PRINT @LIQUIDATED_PIECES
+
 	SET @EXISTING_CONTAINER_HUB_LRPC = (SELECT  COUNT([LRPC].[IdLinehaulRoutePreparationContainer]) AS CONT
 										FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
 										WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
@@ -61,6 +70,9 @@ BEGIN
 											AND [LRPC].[RowStatus] = 1
 											AND [LRPC].[CatLinehaulStatusId] = @STATUS_IN_TRANSIT
 											AND [LRPC].[HubDestinyId] = @HubDestinyId);
+
+PRINT @EXISTING_CONTAINER_HUB_LRPC
+PRINT'@EXISTING_CONTAINER_HUB_LRPC'
 
 	-- Container doesn't exist in LinehaulRoutePreparation
 	IF (@EXISTING_CONTAINER_LRPC = 0)
