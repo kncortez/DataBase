@@ -62,6 +62,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena el motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'Comments';
 
@@ -229,4 +231,10 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'comisi�n de cobro por  COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'CODCommission';
 
 
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_powerbi_only]
+    ON [dbo].[BatchDetailCOD]([GuideSerie] ASC, [GuideNumber] ASC, [CatConceptCODId] ASC)
+    INCLUDE([CODCommissionPercentage]);
 

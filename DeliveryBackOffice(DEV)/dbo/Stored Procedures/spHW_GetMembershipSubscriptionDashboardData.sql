@@ -73,17 +73,17 @@ BEGIN
          , [M].[IsAutoRenewable]
          , [M].[MembershipMaxServiceFixedValue]
          , [M].[ActualServiceCount]
-         , (case when ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0
-             then 0
-             else  ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) end )           [MembershipAvailableFixedService]
+         , IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) <= 0
+             , 0
+             , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]))           [MembershipAvailableFixedService]
          , [M].[ExpirationDate]                                                             [MembershipExpirationDate]
-         , (case when (([M].[ActualServiceCount] * 100)
-                / (case when [M].[MembershipMaxServiceFixedValue] = 0 then 1 else [M].[MembershipMaxServiceFixedValue] end )
+         , IIF((([M].[ActualServiceCount] * 100)
+                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
                ) > 100
-             then 100
-             else (([M].[ActualServiceCount] * 100)
-                / (case when[M].[MembershipMaxServiceFixedValue] = 0 then 1 else  [M].[MembershipMaxServiceFixedValue] end )
-               )end )                                                                           [MembershipUsagePercentage]
+             , 100
+             , (([M].[ActualServiceCount] * 100)
+                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
+               ))                                                                           [MembershipUsagePercentage]
          , (
                SELECT COUNT([MSL].[IdMembershipSubscriptionLog])
                FROM [dbo].[MembershipSubscriptionLog] MSL
@@ -259,6 +259,8 @@ BEGIN
           AND ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > 0
     ORDER BY [S].[IdSubscription] ASC;
 END;
+
+
 
 
 
