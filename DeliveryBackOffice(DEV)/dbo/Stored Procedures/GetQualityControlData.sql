@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Bidcar,Herrera>
 -- Create date: <2023-09-12>
 -- Description:	<Obtener datos para Sistema de Control de Calidad>
@@ -155,7 +154,10 @@ BEGIN
                        AND ddd.Guide_Number = ord.Guide_Number
                        AND ddd.StatusOrderId = 45
                        AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                       AND ddd.SystemOrigin in (2,3,5)					
+                       AND ddd.SystemOrigin in (2,5)	
+					   
+
+
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                     ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
 
@@ -184,7 +186,7 @@ BEGIN
                 LEFT JOIN dbo.CatIncidenceClasification cic WITH (NOLOCK)
                     ON cic.IdCatIncidenceClasification = cti.IncidenceClasificationId
             WHERE CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                  AND ddd.SystemOrigin in (2,3,5) 
+                  AND ddd.SystemOrigin in (2,5) 
                   AND HUbs.IdHubLogistic IN
                       (
                           SELECT IdHubLogistics FROM @TblHubLogistic
@@ -333,7 +335,7 @@ BEGIN
                        AND ddd.Guide_Number = ord.Guide_Number
                        AND ddd.StatusOrderId = 45
                        AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                       AND ddd.SystemOrigin in (2,3,5) 				
+                       AND ddd.SystemOrigin in (2,5) 				
                 LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                     ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
                 LEFT JOIN dbo.DeliveryAttempt                 att WITH (NOLOCK)
@@ -360,7 +362,7 @@ BEGIN
                 LEFT JOIN dbo.CatIncidenceClasification cic WITH (NOLOCK)
                     ON cic.IdCatIncidenceClasification = cti.IncidenceClasificationId
             WHERE CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                  AND ddd.SystemOrigin in (2,3,5) 
+                  AND ddd.SystemOrigin in (2,5) 
                   AND ord.Guide_Serie = @GuideSerie
                   AND ord.Guide_Number = @GuideNumber
                   AND ord.IsLastMileReturn = 0

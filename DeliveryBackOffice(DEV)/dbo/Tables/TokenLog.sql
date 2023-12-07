@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[TokenLog] (
+CREATE TABLE [dbo].[TokenLog] (
     [TknIdToken]      NVARCHAR (75) NOT NULL,
     [TknIdUser]       BIGINT        NOT NULL,
     [TknIdSystem]     INT           NOT NULL,
@@ -19,6 +19,9 @@
 
 
 
-GO
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_TokenLog_TknTokenCreated]
+    ON [dbo].[TokenLog]([TknTokenCreated] ASC);
 

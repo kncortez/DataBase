@@ -4,17 +4,17 @@
 -- Create date: <Create Date, 2023-11-16>
 -- Description:	<Description,Cabecera de historial de validaciones de incidencias>
 -- =============================================
-Create PROCEDURE [dbo].[QualityControlValidationsHeader]
+CREATE PROCEDURE [dbo].[QualityControlValidationsHeader]
  @StartDate DATE,
  @EndDate DATE
 AS
 BEGIN
 
 Select
-	CONVERT(NVARCHAR(10),@StartDate,110) AS StartDate,
-	CONVERT(NVARCHAR(10),@EndDate,110)  AS EndDate,
-    COUNT(DISTINCT CASE WHEN COI.IsConfirmed = 0 AND COI.IsDenied = 0 AND COI.StatusOrderId = 45 THEN DA.Guide_Number END) AS UnprocessedIncidentCount,
-    COUNT(DISTINCT CASE WHEN COI.StatusOrderId = 50 AND COI.IsConfirmed = 1 THEN DA.Guide_Number END) AS ProcessedIncidentsCount
+	CONVERT(NVARCHAR(10),@StartDate,105) AS StartDate,
+	CONVERT(NVARCHAR(10),@EndDate,105)  AS EndDate,
+    COUNT(CASE WHEN COI.IsConfirmed = 0 and COI.StatusOrderId = 45 and Delivered = 0 THEN DA.Guide_Number END) AS UnprocessedIncidentCount,
+    COUNT(CASE WHEN COI.StatusOrderId = 50 AND COI.IsConfirmed = 1 and Delivered = 0 THEN DA.Guide_Number END) AS ProcessedIncidentsCount
 	From
 	ConfirmationOfIncidence COI WITH (NOLOCK) 
 	INNER JOIN 

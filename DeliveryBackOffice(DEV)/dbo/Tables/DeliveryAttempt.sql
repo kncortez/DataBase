@@ -40,6 +40,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_deliveryattempt_guide]
     ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -92,4 +94,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera par
 GO
 CREATE NONCLUSTERED INDEX [idx_ID_Incident]
     ON [dbo].[DeliveryAttempt]([ID_Incident] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-20231128-000040]
+    ON [dbo].[DeliveryAttempt]([ConfirmationOfIncidenceId] ASC)
+    INCLUDE([Guide_Number], [ID_Incident]);
 
