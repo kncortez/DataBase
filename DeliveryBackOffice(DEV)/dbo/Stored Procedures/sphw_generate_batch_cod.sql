@@ -385,7 +385,7 @@ DECLARE @MinCommissionCOD FLOAT;
                                        )
                                )),
                            0),
-                       0)) < @MinCommissionCOD,@MinCommissionCOD,(IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+                       0)) < @MinCommissionCOD AND Cus.IdCustomerType <> 1,@MinCommissionCOD,(IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
                        IIF(op.Deposit_Number IS NULL,
                            IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
                                0,
@@ -461,7 +461,7 @@ DECLARE @MinCommissionCOD FLOAT;
                               IIF(ISNULL(ord.IsCollect, 0) = 1,
                                   0,
                                   IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
-                         )<@MinCommissionCOD,@MinCommissionCOD, IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+                         )<@MinCommissionCOD AND Cus.IdCustomerType <>1,@MinCommissionCOD, IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
                              (IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
                                   0,
                                   (CONVERT(
@@ -579,8 +579,7 @@ DECLARE @MinCommissionCOD FLOAT;
                    IDCUSTOMER,
                    CODRate,
                    CODExempt,
-                   --IIF(Commision < CommisionMin, CommisionMin, Commision) Commision,
-				   IIF(Commision < @MinCommissionCOD, @MinCommissionCOD, Commision) Commision,
+                   Commision, 
                    SUM(DeliveryPrice) DeliveryPrice,
                    SUM(ISNULL(CODPaid, 0)) CODPaid,
                    ReturnRates,
@@ -651,7 +650,7 @@ DECLARE @MinCommissionCOD FLOAT;
                              AND RowStatus = 1
                    ) CatDebitAccountCODId,
                    @CreditAccountId CreditAccountId,
-				   (IIF(tact.Commision < @MinCommissionCOD,@MinCommissionCOD,tact.Commision) + ISNULL(do.PriceShippment, 0)) Amount,
+				   ((tact.Commision) + ISNULL(do.PriceShippment, 0)) Amount,
                    tact.Commision [Commision],
                    (
                        SELECT IdCatTransactionTypeCOD
