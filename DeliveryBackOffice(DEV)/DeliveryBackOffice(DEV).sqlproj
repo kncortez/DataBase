@@ -1579,6 +1579,9 @@
     <Build Include="dbo\Stored Procedures\spg_reportOnPotentialScamGuides.sql" />
     <Build Include="dbo\Stored Procedures\CreateRateLine_1.sql" />
     <Build Include="dbo\Stored Procedures\CreateRateCoverage_1.sql" />
+    <Build Include="dbo\Stored Procedures\CreateRateCoverage_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerGuideListByStatus.sql" />
+    <Build Include="dbo\Stored Procedures\SetPickupStatusByGuide.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
