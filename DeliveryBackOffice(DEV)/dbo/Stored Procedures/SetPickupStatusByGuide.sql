@@ -6,10 +6,6 @@
 -- Description:	<Establecer estado de recolectado a traves del número de guía>
 -- =============================================
 
---Delete procedure to prevent error
-DROP PROCEDURE [dbo].[SetPickupStatusByGuide]
-GO
-
 --Creating procedure
 CREATE PROCEDURE [dbo].[SetPickupStatusByGuide]
     @GuideSerie AS NVARCHAR(2),
