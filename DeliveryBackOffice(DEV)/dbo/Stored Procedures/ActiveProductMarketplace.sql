@@ -26,7 +26,7 @@ BEGIN
 		SELECT cp.CatProductName,
 		IIF(cp.CatProductName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.CatProductName), 
 		(IIF(cp.CatProductName = 'Club Forza',('Felicidades..! has activado la membresía'+' '+cp.CatProductName),('Felicidades..! has activado el'+' '+cp.CatProductName)))) AS Message,
-		CONVERT(VARCHAR(10),pt.ProductExpirationDate,105) AS DateExpiration
+		REPLACE(CONVERT(VARCHAR(10),pt.ProductExpirationDate,105),'-','/') AS DateExpiration
 		from CatProduct cp WITH(NOLOCK)
 		  INNER JOIN Product pt WITH(NOLOCK)
 		  ON cp.IdCatProduct = pt.CatProductId
