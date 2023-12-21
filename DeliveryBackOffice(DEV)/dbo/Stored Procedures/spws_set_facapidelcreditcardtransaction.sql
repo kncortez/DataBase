@@ -258,7 +258,7 @@ BEGIN
 					OrderNumber = @OrderNumber,
 					[Signature] = @Signature,
 					CustomerReference = @CustomerReference,
-					ReferenceNumber = @ReferenceNumber,
+					ReferenceNumber = CASE WHEN @CustomerReference ='' THEN '1' ELSE @CustomerReference END,
 					ECIIndicator = @ECIIndicator,
 					Authenticationresult = @Authenticationresult,
 					TransactionStain = @TransactionStain,
