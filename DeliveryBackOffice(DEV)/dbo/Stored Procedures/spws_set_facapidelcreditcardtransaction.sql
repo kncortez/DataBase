@@ -226,7 +226,7 @@ BEGIN
 					@Ammount, 
 					@OrderNumber, 
 					@Signature,
-					@CustomerReference, 
+					CASE WHEN @CustomerReference ='' THEN '1' ELSE @CustomerReference END, 
 					@ReferenceNumber, 
 					@ECIIndicator, 
 					@Authenticationresult, 
