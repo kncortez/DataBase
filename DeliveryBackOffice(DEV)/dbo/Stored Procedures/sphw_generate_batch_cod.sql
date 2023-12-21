@@ -487,7 +487,7 @@ DECLARE @MinCommissionCOD FLOAT;
                              ),
                              0)
                        -- envio
-                       - (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
+                       + (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
                               0,
                               IIF(ISNULL(ord.IsCollect, 0) = 1,
                                   0,
