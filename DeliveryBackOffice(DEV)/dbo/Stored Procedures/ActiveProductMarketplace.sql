@@ -1,7 +1,7 @@
--- =============================================
--- Author:		<Eduardo López>
+ï»¿-- =============================================
+-- Author:		<Eduardo Lï¿½pez>
 -- Create date: <Create Date,07/12/2023>
--- Description:	<Activación de productos de marketplace>
+-- Description:	<Activaciï¿½n de productos de marketplace>
 -- =============================================
 CREATE PROCEDURE ActiveProductMarketplace
 @Email VARCHAR (100),
@@ -10,6 +10,7 @@ CREATE PROCEDURE ActiveProductMarketplace
 AS
 
 BEGIN
+	BEGIN
 	DECLARE @EXISTPRODUCT INT;
 
 	SET @EXISTPRODUCT = (SELECT TOP 1 COUNT(ActivationCode) 
@@ -22,10 +23,9 @@ BEGIN
 		 UPDATE Product
 			SET RowStatus = 1
 			WHERE ActivationCode = @Code
-
 		SELECT cp.CatProductName,
 		IIF(cp.CatProductName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.CatProductName), 
-		(IIF(cp.CatProductName = 'Club Forza',('Felicidades..! has activado la membresía'+' '+cp.CatProductName),('Felicidades..! has activado el'+' '+cp.CatProductName)))) AS Message,
+		(IIF(cp.CatProductName = 'Club Forza',('Felicidades..! has activado la membresÃ­a'+' '+cp.CatProductName),('Felicidades..! has activado el'+' '+cp.CatProductName)))) AS Message,
 		REPLACE(CONVERT(VARCHAR(10),pt.ProductExpirationDate,105),'-','/') AS DateExpiration
 		from CatProduct cp WITH(NOLOCK)
 		  INNER JOIN Product pt WITH(NOLOCK)
@@ -45,7 +45,9 @@ BEGIN
 		BEGIN
 			SELECT 
 			0 AS CatProductName,
-			'El código del producto ingresado no existe' AS Message
+			'El cÃ³digo del producto ingresado no existe' AS Message,
+			'' AS DateExpiration
+
 
 		END
 END

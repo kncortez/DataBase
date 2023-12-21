@@ -1504,7 +1504,13 @@
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
 	<Build Include="dbo\Stored Procedures\GetInternalLoginMarketPlace.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_GetImagesandProductInformation.sql" />
-
+	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesNonLoggedinUser.sql" />
+	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlace.sql" />
+	<Build Include="dbo\Stored Procedures\RemoveProductsfromtheMarketplaceCart.sql" />
+	<Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
+	<Build Include="dbo\Stored Procedures\GetCustomerPaymentDataMarketPlace.sql" />
+	<Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
     
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
