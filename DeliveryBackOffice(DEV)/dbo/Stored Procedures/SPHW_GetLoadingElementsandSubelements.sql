@@ -1,0 +1,109 @@
+﻿
+-- =============================================
+-- Author:		<Author Edelman>
+-- Create date: <Create Date,2023-08-27>
+-- Description:	<Description,Método para obetenr elementos y subelementos del sitio marketplace>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHW_GetLoadingElementsandSubelements] 
+
+AS
+BEGIN
+		
+	IF (EXISTS( Select Top 1 1
+	 From [dbo].[CatProduct] CP WITH (NOLOCK)
+	 Left JOIN  
+	      [dbo].[CatProductDescription] CPD WITH (NOLOCK)
+	  ON CP.IdCatProduct = CPD.CatProductId
+      Left JOIN 
+	      [dbo].[CatProductAttribute] CPA WITH(NOLOCK)
+	  ON CPA.CatProductId = CPD.CatProductId
+	  Left JOIN  
+	      [dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+	  ON CP.IdCatProduct = MTP.CatProductId
+	  Left JOIN 
+	      [dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+	  ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
+	WHERE CP.RowStatus=1))
+	BEGIN
+
+	SELECT 200 [StatusCode], 'Proceso Exitoso' [Description]
+
+	END 
+	ELSE
+	BEGIN
+	SELECT 201 [StatusCode], 'Sin Registros' [Description]
+	END
+	
+	SELECT [IdCatProductCategory],
+	       [CatProductCategoryName],
+		   [CatProductCategoryDescription],
+		   [CatProductCategoryOrder]
+    FROM [dbo].[CatProductCategory]
+	WHERE Rowstatus=1
+	AND IdCatProductCategory in( Select 
+										CP.[CatProductCategoryId]
+								 From [dbo].[CatProduct] CP WITH (NOLOCK)
+								 INNER JOIN  
+									  DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+								  ON CP.IdCatProduct = MTP.CatProductId
+								  INNER JOIN
+									  DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+								  ON MTP.IdMarketplaceTagsByProduct = MPT.IdMarketplaceProductTags
+								WHERE CP.RowStatus=1
+								  )
+
+	SELECT 
+		  MPT.[MarketplaceProductTagsName],
+		  MPT.[MarketplaceProductTagsDescription],
+		  MPT.IdMarketplaceProductTags
+    FROM  DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+	WHERE MPT.Rowstatus=1
+
+	 Select 
+	        CP.[IdCatProduct],
+	        CP.[CatProductName],
+			CP.[CatProductCost],
+			CP.[CatProductDescription],
+			MPT.[MarketplaceProductTagsName],
+			MPT.[MarketplaceProductTagsDescription],
+			CP.[CatProductCategoryId]
+	 From [dbo].[CatProduct] CP WITH (NOLOCK)
+	 INNER JOIN  
+	      DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+	  ON CP.IdCatProduct = MTP.CatProductId
+	  INNER JOIN
+	      DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+	  ON MTP.IdMarketplaceTagsByProduct = MPT.IdMarketplaceProductTags
+	WHERE CP.RowStatus=1
+	  ORDER BY MPT.MarketplaceProductTagsName ASC
+
+
+
+	 SELECT CPI.[IdCatProductImage], 
+	        CPI.[CatProductId], 
+			CPI.[CatProductImageSmallImageURL],
+			CPI.[CatProductImageLargeImageURL],
+			CPI.[CatProductImageOrder]
+	FROM DeliveryBackOffice.[dbo].[CatProductImage]  CPI WITH (NOLOCK)
+	WHERE CPI.RowStatus = 1
+
+
+		   Select 
+			CPD.[CatProductDescription],
+			CPD.[CatProductDescriptionTitle],
+			CPD.[CatProductDescriptionOrder],
+			CPD.CatProductId
+     From DeliveryBackOffice.[dbo].[CatProductDescription] CPD WITH (NOLOCK)
+	 Where CPD.RowStatus=1
+
+	 Select 
+	   CPA.[CatProductAttributeDescription],
+	   CPA.[CatProductAttributeDescriptionLong],
+	   CPA.[CatProductId],
+	   CPA.[CatProductAtributeOrder],
+	   CPA.[CatProductAttributeIcon]
+	  From  DeliveryBackOffice.[dbo].[CatProductAttribute] CPA WITH(NOLOCK)
+	  Where CPA.RowStatus=1
+  
+    
+END
