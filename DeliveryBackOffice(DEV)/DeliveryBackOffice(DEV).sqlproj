@@ -1528,9 +1528,10 @@
     <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" />
     <Build Include="dbo\Stored Procedures\QualityControlValidationsHeader.sql" />
-    <Build Include="dbo\Stored Procedures\QualityControlValidationsDetail.sql" />
+    <Build Include="dbo\Stored Procedures\QualityControlValidationsDetail.sql" /> 
     <Build Include="dbo\Stored Procedures\SPHW_CCValidationHistory.sql" />
-    <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesNonLoggedinUser.sql" />
+	<Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
     <Build Include="dbo\Sequences\NewGuideNumberSequence.sql" />
