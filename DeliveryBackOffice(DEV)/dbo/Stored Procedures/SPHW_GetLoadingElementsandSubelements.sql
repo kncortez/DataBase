@@ -9,22 +9,22 @@ CREATE PROCEDURE [dbo].[SPHW_GetLoadingElementsandSubelements]
 AS
 BEGIN
 	
-
-	IF (EXISTS( Select Top 1 1
-	 From [dbo].[CatProduct] CP WITH (NOLOCK)
-	 Left JOIN  
-	      [dbo].[CatProductDescription] CPD WITH (NOLOCK)
-	  ON CP.IdCatProduct = CPD.CatProductId
-      Left JOIN 
-	      [dbo].[CatProductAttribute] CPA WITH(NOLOCK)
-	  ON CPA.CatProductId = CPD.CatProductId
-	  Left JOIN  
-	      [dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
-	  ON CP.IdCatProduct = MTP.CatProductId
-	  Left JOIN 
-	      [dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
-	  ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
-	WHERE CP.RowStatus=1))
+	IF (EXISTS(   Select Top 1 1
+						 From [dbo].[CatSubscription] CP WITH (NOLOCK)
+						 Left JOIN  
+							  [dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
+						  ON CP.IdCatSubscription = CPD.CatSubscriptionId
+						  Left JOIN 
+							  [dbo].[CatSubscriptionAtribute] CPA WITH(NOLOCK)
+						  ON CPA.CatSubscriptionId = CPD.CatSubscriptionId
+						  Left JOIN  
+							  [dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
+						  ON CP.IdCatSubscription = MTP.CatSubscriptionId
+						  Left JOIN 
+							  [dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
+						  ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
+				WHERE CP.RowStatus=1
+			))
 	BEGIN
 
 	SELECT 200 [StatusCode], 'Proceso Exitoso' [Description]
@@ -39,14 +39,14 @@ BEGIN
 	       [CatProductCategoryName],
 		   [CatProductCategoryDescription],
 		   [CatProductCategoryOrder]
-    FROM [dbo].[CatProductCategory]
+    FROM [dbo].[CatProductCategory] WITH (NOLOCK)
 	WHERE Rowstatus=1
 	AND IdCatProductCategory in( Select 
 										CP.[CatProductCategoryId]
-								 From [dbo].[CatProduct] CP WITH (NOLOCK)
+								 From [dbo].[CatSubscription] CP WITH (NOLOCK)
 								 INNER JOIN  
 									  DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
-								  ON CP.IdCatProduct = MTP.CatProductId
+								  ON CP.IdCatSubscription = MTP.CatSubscriptionId
 								  INNER JOIN
 									  DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
 								  ON MTP.IdMarketplaceTagsByProduct = MPT.IdMarketplaceProductTags
@@ -61,27 +61,29 @@ BEGIN
 	WHERE MPT.Rowstatus=1
 
 	 Select 
-	        CP.[IdCatProduct],
-	        CP.[CatProductName],
-			CONVERT(DECIMAL(18,2),CP.[CatProductCost]) [CatProductCost],
-			CP.[CatProductDescription],
+	        CP.IdCatSubscription [CatProductId] ,
+	        CP.SubscriptionName [CatProductName],
+			CONVERT(DECIMAL(18,2),CP.[SubscriptionCost]) [CatProductCost],
+			CP.SubscriptionDescription [CatProductDescription],
 			MPT.[MarketplaceProductTagsName],
 			MPT.[MarketplaceProductTagsDescription],
 			CP.[CatProductCategoryId]
-	 From [dbo].[CatProduct] CP WITH (NOLOCK)
+	 From [dbo].[CatSubscription] CP WITH (NOLOCK)
 	 INNER JOIN  
 	      DeliveryBackOffice.[dbo].[MarketplaceTagsByProduct] MTP WITH (NOLOCK)
-	  ON CP.IdCatProduct = MTP.CatProductId
+	  ON CP.IdCatSubscription = MTP.CatSubscriptionId
 	  INNER JOIN
 	      DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
 	  ON MTP.IdMarketplaceTagsByProduct = MPT.IdMarketplaceProductTags
 	WHERE CP.RowStatus=1
 	  ORDER BY MPT.MarketplaceProductTagsName ASC
 
+	  
+	  
 
 
 	 SELECT CPI.[IdCatProductImage], 
-	        CPI.[CatProductId], 
+	        CPI.CatSubscriptionId [CatProductId], 
 			CPI.[CatProductImageSmallImageURL],
 			CPI.[CatProductImageLargeImageURL],
 			CPI.[CatProductImageOrder]
@@ -90,21 +92,23 @@ BEGIN
 
 
 		   Select 
-			CPD.[CatProductDescription],
-			CPD.[CatProductDescriptionTitle],
-			CPD.[CatProductDescriptionOrder],
-			CPD.CatProductId
-     From DeliveryBackOffice.[dbo].[CatProductDescription] CPD WITH (NOLOCK)
+			CPD.[Description]  [CatProductDescription],
+			CPD.Title     [CatProductDescriptionTitle],
+			CPD.Position     [CatProductDescriptionOrder],
+			CPD.CatSubscriptionId     [CatProductId]
+     From DeliveryBackOffice.[dbo].[CatSubscriptionDescription] CPD WITH (NOLOCK)
 	 Where CPD.RowStatus=1
 
 	 Select 
-	   CPA.[CatProductAttributeDescription],
-	   CPA.[CatProductAttributeDescriptionLong],
-	   CPA.[CatProductId],
-	   CPA.[CatProductAtributeOrder],
-	   CPA.[CatProductAttributeIcon]
-	  From  DeliveryBackOffice.[dbo].[CatProductAttribute] CPA WITH(NOLOCK)
+	   CPA.SubscriptionAttributeDescription   [CatProductAttributeDescription],
+	   CPA.SubscriptionAttributeDescriptionLong  [CatProductAttributeDescriptionLong],
+	   CPA.CatSubscriptionId [CatProductId],
+	   CPA.SubscriptionAttributePosition  [CatProductAtributeOrder],
+	   CS.Icon    [CatProductAttributeIcon]
+	  From  DeliveryBackOffice.[dbo].[CatSubscriptionAtribute] CPA WITH(NOLOCK)
+	  INNER JOIN DeliveryBackOffice.[dbo].[CatSubscription] CS WITH(NOLOCK)
+	  ON CPA.CatSubscriptionId =CS.IdCatSubscription
 	  Where CPA.RowStatus=1
-  
+	
     
 END
