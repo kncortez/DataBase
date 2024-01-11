@@ -393,3 +393,18 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
     ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus] ON [DeliveryBackOffice].[dbo].[DeliveryOrder] 
+(
+	[IdCustomer] ASC,
+	[DateCreated] ASC,
+	[StatusOrderId] ASC
+)
+INCLUDE (
+	[Sender_ID],
+	[Sender_FirstName],
+	[Sender_LastName],
+	[Receiver_FirstName],
+	[Receiver_LastName],
+	[Receiver_Department]
+)
