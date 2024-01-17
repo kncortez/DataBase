@@ -13,28 +13,28 @@ BEGIN
 	DECLARE @EXISTPRODUCT INT;
 
 	SET @EXISTPRODUCT = (SELECT TOP 1 COUNT(ActivationCode) 
-								FROM Product WITH(NOLOCK)
+								FROM Subscription WITH(NOLOCK)
 								WHERE ActivationCode = @Code)
 
 	IF(@EXISTPRODUCT > 0)
 
 		BEGIN
-		 UPDATE Product
+		 UPDATE Subscription
 			SET RowStatus = 1
 			WHERE ActivationCode = @Code
 
-		SELECT CatProductName,
+		SELECT SubscriptionName AS CatProductName,
 		'EL producto ha sido activado correctamente' AS Message
-		from CatProduct cp WITH(NOLOCK)
-		  INNER JOIN Product pt WITH(NOLOCK)
-		  ON cp.IdCatProduct = pt.CatProductId
+		from CatSubscription cp WITH(NOLOCK)
+		  INNER JOIN Subscription pt WITH(NOLOCK)
+		  ON cp.IdCatSubscription = pt.CatSubscriptionId
 		  WHERE pt.ActivationCode = @Code
 
-		SELECT DISTINCT CatProductAttributeDescription FROM CatProductAttribute cpa WITH(NOLOCK)
-			INNER JOIN CatProduct ctp WITH(NOLOCK)
-			ON cpa.CatProductId = ctp.IdCatProduct
-			INNER JOIN Product pdt WITH(NOLOCK)
-			ON ctp.IdCatProduct = pdt.CatProductId
+		SELECT DISTINCT SubscriptionAttributeDescription AS CatProductAttributeDescription FROM CatSubscriptionAtribute cpa WITH(NOLOCK)
+			INNER JOIN CatSubscription ctp WITH(NOLOCK)
+			ON cpa.CatSubscriptionId = ctp.IdCatSubscription
+			INNER JOIN Subscription pdt WITH(NOLOCK)
+			ON ctp.IdCatSubscription = pdt.CatSubscriptionId
 			 WHERE pdt.ActivationCode = @Code
 
 	    END
