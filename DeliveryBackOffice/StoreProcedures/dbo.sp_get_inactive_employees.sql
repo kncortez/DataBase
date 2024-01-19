@@ -373,7 +373,7 @@ FROM DenariusUser_Dev.dbo.LGN_Restriction r
         ON t.IdUser = r.RST_IdUser
            AND t.Username = r.RST_Username;
 
-INSERT INTO DenariusLog_Dev.dbo.HSE_Restriction
+INSERT INTO DenariusLog_Dev.dbo.HSE_LGN_Restriction
 SELECT RstIdUser,
        RstUsername,
        RstIdSystem,
