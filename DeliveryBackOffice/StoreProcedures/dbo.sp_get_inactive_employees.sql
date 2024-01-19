@@ -1,13 +1,13 @@
 /*****
 DEFINICION DE TABLAS
-DenariusDesktop_Dev.dbo.LGT_INF_Employee = Listado de personal activo/inactivo en Denarius
-DeliveryBackOffice.dbo.InternalUser = Homologa la información de colaboradores Denarius a Hermes (con código, usuario y contraseña)
-DeliveryBackOffice.dbo.RegisterUser = Tabla maestra de usuarios (excepto los couriers)
-DeliveryBackOffice.dbo.Person = Registro personal de usuarios de la tabla maestra de RegisterUser (excepto los couriers)
-DeliveryBackOffice.dbo.UserSystemRestriction = Status de usuarios Hermes x sistema
-DeliveryBackOffice.dbo.SenderReceiver = Listado de couriers
-DenariusUser_Dev.dbo.LGN_Restriction = Status de usuarios Denarius x sistema
-DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave foránea (buscar llave foránea)
+1. y 2. DenariusDesktop_Dev.dbo.LGT_INF_Employee = Listado de personal activo/inactivo en Denarius
+3. DeliveryBackOffice.dbo.InternalUser = Homologa la información de colaboradores Denarius a Hermes (con código, usuario y contraseña)
+4. DeliveryBackOffice.dbo.RegisterUser = Tabla maestra de usuarios (excepto los couriers)
+5. DeliveryBackOffice.dbo.Person = Registro personal de usuarios de la tabla maestra de RegisterUser (excepto los couriers)
+6. DeliveryBackOffice.dbo.UserSystemRestriction = Status de usuarios Hermes x sistema
+7. DeliveryBackOffice.dbo.SenderReceiver = Listado de couriers
+8. DenariusUser_Dev.dbo.LGN_Restriction = Status de usuarios Denarius x sistema
+9. DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave foránea (buscar llave foránea)
 *****/
 
 /**********************************************************************************************************/
@@ -29,9 +29,9 @@ SELECT emp.CodeEmployee,
        emp.StatusJob
 FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
 WHERE 1 = 1
-      AND emp.IdCountry = 'GX' -- Forza Delivery Express
-	  --AND emp.CodeEmployee IN ('110049','110113','106333','110610');
-	  --AND emp.CodeEmployee IN ('102340')
+      AND emp.IdCountry = 'GX'; -- Forza Delivery Express
+                                --AND emp.CodeEmployee IN ('110049','110113','106333','110610');
+                                --AND emp.CodeEmployee IN ('102340')
 
 
 DECLARE @TblCash TABLE -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
@@ -39,14 +39,15 @@ DECLARE @TblCash TABLE -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY
     --IdEmployee INT NOT NULL,          -- Acá no se guardará porque difiere del de Hermes porque en esta solo se insertan los de Delivery
     CodeEmployee VARCHAR(8) NOT NULL, -- Número de ficha del colaborador
     NameEmployee VARCHAR(100) NULL,   -- Nombre de empleado según Denarius
-    DPI VARCHAR(25) NULL              -- DPI según Denarius
-    --StatusJob INT NOT NULL            -- Estado laboral = 2 para las bajas que se deben registrar en las tablas siguientes
+    DPI VARCHAR(25) NULL,             -- DPI según Denarius
+    StatusJob INT NOT NULL            -- Estado laboral = 2 para las bajas que se deben registrar en las tablas siguientes
 );
 
 INSERT INTO @TblCash
 SELECT empBaja.Ficha,          -- CodeEmployee
        empBaja.NombreCompleto, -- NameEmployee
-       empBaja.DPI             -- DPI
+       empBaja.DPI,            -- DPI
+       empBaja.Estado          -- StatusJob
 FROM @TblEmpFDE empBaja
     LEFT JOIN @TblEmpFDE empAlta
         ON empAlta.Estado = 1 -- empleado de alta
@@ -79,10 +80,14 @@ FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK)
 WHERE DPI IN ('1970738670101','2247072132101','2096977681609','2345724262001','2344323140101','2755294870601','2500270541312','3050493210117','2259191410101','1623311420101','1593142590101')
 ;*/
 
-
-SELECT *
-FROM @TblCash
-ORDER BY NameEmployee ASC;
+INSERT INTO DenariusLog_Dev.dbo.HSE_LGT_INF_Employees_Cash
+SELECT CodeEmployee,
+       NameEmployee,
+       DPI,
+       StatusJob,
+       GETDATE()
+FROM @TblCash;
+--ORDER BY NameEmployee ASC;
 
 
 /**************************************************************************/
@@ -109,10 +114,16 @@ FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
         ON cash.CodeEmployee = emp.CodeEmployee
 ORDER BY emp.CodeEmployee ASC;
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_LGT_INF_Employees_Delivery
+SELECT IdEmployee,
+       CodeEmployee,
+       NameEmployee,
+       DPI,
+       StatusJob,
+       GETDATE()
 FROM @TblEmployees
-WHERE StatusJob = 1 -- listar solo empleados activos
-ORDER BY NameEmployee ASC;
+WHERE StatusJob = 1; -- listar solo empleados activos
+                     --ORDER BY NameEmployee ASC;
 
 --UPDATE DenariusDesktop_Dev.dbo.LGT_INF_Employee
 --SET StatusJob = 2
@@ -145,10 +156,16 @@ FROM DeliveryBackOffice.dbo.InternalUser iu WITH (NOLOCK)
     INNER JOIN @TblEmployees t
         ON CONVERT(BIGINT, t.CodeEmployee) = iu.IdUser; -- Relacionar por el número de ficha, el IdUser de InternalUser es la ficha de empleado
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_InternalUser
+SELECT IdUser,
+       Username,
+       IdEmployee,
+       RegisterUserID,
+       RowStatus,
+       GETDATE()
 FROM @TblInternalUser
-WHERE RowStatus = 1
-ORDER BY RegisterUserID;
+WHERE RowStatus = 1;
+--ORDER BY RegisterUserID;
 
 --UPDATE DeliveryBackOffice.dbo.InternalUser
 --SET RowStatus = 0,
@@ -180,10 +197,15 @@ FROM DeliveryBackOffice.dbo.RegisterUser ru WITH (NOLOCK)
     INNER JOIN @TblInternalUser t
         ON t.RegisterUserID = ru.UsrIdUser; -- RegisterUserID de InternalUser
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_RegisterUser
+SELECT UsrIdUser,
+       UsrIdPerson,
+       UserEmail,
+       RowStatus,
+       GETDATE()
 FROM @TblRegisterUser
-WHERE RowStatus = 1
-ORDER BY UsrIdUser;
+WHERE RowStatus = 1;
+--ORDER BY UsrIdUser;
 
 --UPDATE DeliveryBackOffice.dbo.RegisterUser
 --SET UsrRowStatus = 0,
@@ -202,7 +224,7 @@ DECLARE @TblPerson TABLE
     PerIdPerson BIGINT NOT NULL,        -- 
     PerFirstName VARCHAR(100) NOT NULL, -- Primer Nombre
     PerLastName VARCHAR(100) NOT NULL,  -- Primer Apellido
-                                        --PerIdentification VARCHAR(50) NOT NULL, -- CUI / DPI (no se guardará porque los datos no tienen control de calidad)
+                                        -- PerIdentification VARCHAR(50) NOT NULL, -- CUI / DPI (no se guardará porque los datos no tienen control de calidad)
     PerRowStatus BIT NULL               -- Estado del registro 1 = activo ; 0 = inactivo
 );
 
@@ -216,10 +238,15 @@ FROM DeliveryBackOffice.dbo.Person p WITH (NOLOCK)
     INNER JOIN @TblRegisterUser t
         ON t.UsrIdPerson = p.PerIdPerson; -- 
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_Person
+SELECT PerIdPerson,
+       PerFirstName,
+       PerLastName,
+       PerRowStatus,
+       GETDATE()
 FROM @TblPerson
-WHERE PerRowStatus = 1
-ORDER BY PerIdPerson;
+WHERE PerRowStatus = 1;
+--ORDER BY PerIdPerson;
 
 --UPDATE DeliveryBackOffice.dbo.Person
 --SET PerRowStatus = 0,
@@ -254,11 +281,17 @@ FROM DeliveryBackOffice.dbo.UserSystemRestriction usr
     INNER JOIN @TblRegisterUser t
         ON t.UsrIdUser = usr.UstIdUser;
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_UserSystemRestriction
+SELECT UstIdRestriction,
+       UstIdUser,
+       UstIdSystem,
+       UstStatus,
+       UstRowStatus,
+       GETDATE()
 FROM @TblUserSystemRestriction
 WHERE UstStatus = 'ACTIVE'
-      OR UstRowStatus = 1
-ORDER BY UstIdUser;
+      OR UstRowStatus = 1;
+--ORDER BY UstIdUser;
 
 --UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
 --SET UstRowStatus = 0,
@@ -298,10 +331,16 @@ FROM DeliveryBackOffice.dbo.SenderReceiver sr
     INNER JOIN @TblCash t
         ON t.DPI = sr.CUI;
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_SenderReceiver
+SELECT SenRecID,
+       SenRecFirstName,
+       SenRecLastName,
+       SenRecCUI,
+       SenRecStatus,
+       GETDATE()
 FROM @TblSenderReceiver
-WHERE SenRecStatus = 1
-ORDER BY SenRecCUI;
+WHERE SenRecStatus = 1;
+--ORDER BY SenRecCUI;
 
 --UPDATE DeliveryBackOffice.dbo.SenderReceiver
 --SET Estatus = 0,
@@ -334,11 +373,16 @@ FROM DenariusUser_Dev.dbo.LGN_Restriction r
         ON t.IdUser = r.RST_IdUser
            AND t.Username = r.RST_Username;
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_Restriction
+SELECT RstIdUser,
+       RstUsername,
+       RstIdSystem,
+       RstStatus,
+       GETDATE()
 FROM @TblRestriction
-WHERE RstStatus = 'ACTIVE'
-ORDER BY RstIdUser,
-         RstUsername;
+WHERE RstStatus = 'ACTIVE';
+--ORDER BY RstIdUser,
+--         RstUsername;
 
 --UPDATE DenariusUser_Dev.dbo.LGN_Restriction
 --SET RST_Status = 'INACTIVE',
@@ -370,10 +414,14 @@ FROM DeliveryBackOffice.dbo.RolByUserBySystem rbubs
     INNER JOIN @TblRegisterUser t
         ON t.UsrIdUser = rbubs.RusIdUser;
 
-SELECT *
+INSERT INTO DenariusLog_Dev.dbo.HSE_RolByUserBySystem
+SELECT RusIdSystem,
+       RusIdUser,
+       RusRowStatus,
+       GETDATE()
 FROM @TblRolByUserBySystem
-WHERE RusRowStatus = 1
-ORDER BY RusIdUser;
+WHERE RusRowStatus = 1;
+--ORDER BY RusIdUser;
 
 --UPDATE DeliveryBackOffice.dbo.RolByUserBySystem
 --SET RusRowStatus = 0,
