@@ -1,7 +1,7 @@
 USE DenariusLog_Dev;
 
---DROP TABLE dbo.HSE_Restriction
-CREATE TABLE dbo.HSE_Restriction
+--DROP TABLE dbo.HSE_LGN_Restriction
+CREATE TABLE dbo.HSE_LGN_Restriction
 (
     IDRecord BIGINT PRIMARY KEY IDENTITY,
     RstIdUser VARCHAR(50) NOT NULL,   -- 
