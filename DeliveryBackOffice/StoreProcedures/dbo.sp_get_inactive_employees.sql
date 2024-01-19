@@ -10,19 +10,57 @@ DenariusUser_Dev.dbo.LGN_Restriction = Status de usuarios Denarius x sistema
 DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave foránea (buscar llave foránea)
 *****/
 
-/*********************************************************************/
-/**** TABLA 01 PARA ENCONTRAR SOLO LOS EMPLEADOS DE BAJA  EN CASH ****/
-/*********************************************************************/
+/**********************************************************************************************************/
+/**** TABLA 01 PARA ENCONTRAR SOLO LOS EMPLEADOS DE BAJA EN CASH, QUE SE DEBEN DAR DE BAJA EN DELIVERY ****/
+/**********************************************************************************************************/
 
-DECLARE @TblCash TABLE
+DECLARE @TblEmpFDE TABLE -- ALMACENA TODOS LOS EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
+(
+    Ficha VARCHAR(8) NOT NULL,
+    NombreCompleto VARCHAR(100) NOT NULL,
+    DPI VARCHAR(25) NULL,
+    Estado INT NOT NULL
+); -- 1,236
+
+INSERT INTO @TblEmpFDE -- todos los empleados de Forza Delivery Express
+SELECT emp.CodeEmployee,
+       emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
+       emp.DPI,
+       emp.StatusJob
+FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
+WHERE 1 = 1
+      AND emp.IdCountry = 'GX' -- Forza Delivery Express
+	  --AND emp.CodeEmployee IN ('110049','110113','106333','110610');
+	  --AND emp.CodeEmployee IN ('102340')
+
+
+DECLARE @TblCash TABLE -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
 (
     --IdEmployee INT NOT NULL,          -- Acá no se guardará porque difiere del de Hermes porque en esta solo se insertan los de Delivery
     CodeEmployee VARCHAR(8) NOT NULL, -- Número de ficha del colaborador
     NameEmployee VARCHAR(100) NULL,   -- Nombre de empleado según Denarius
     DPI VARCHAR(25) NULL              -- DPI según Denarius
+    --StatusJob INT NOT NULL            -- Estado laboral = 2 para las bajas que se deben registrar en las tablas siguientes
 );
 
 INSERT INTO @TblCash
+SELECT empBaja.Ficha,          -- CodeEmployee
+       empBaja.NombreCompleto, -- NameEmployee
+       empBaja.DPI             -- DPI
+FROM @TblEmpFDE empBaja
+    LEFT JOIN @TblEmpFDE empAlta
+        ON empAlta.Estado = 1 -- empleado de alta
+           AND
+           (
+               empAlta.DPI = empBaja.DPI
+               OR empAlta.NombreCompleto = empBaja.NombreCompleto
+           )
+WHERE empBaja.Estado = 2 -- empleado de baja
+      AND empAlta.DPI IS NULL -- remover empleados con status de alta (left excluding join)
+ORDER BY empBaja.NombreCompleto ASC;
+
+
+/*INSERT INTO @TblCash
 SELECT --DISTINCT
        emp.CodeEmployee,
        emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
@@ -31,7 +69,7 @@ FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOC
 WHERE 1 = 1
       AND emp.StatusJob = 2 -- 1 = empleado de alta; 2 = empleado de baja;
       AND emp.IdCountry = 'GX' -- GX = Forza Delivery Express
-ORDER BY emp.CodeEmployee ASC;
+ORDER BY emp.CodeEmployee ASC;*/
 
 /*INSERT INTO @TblCash
 SELECT [CodeEmployee],
@@ -40,6 +78,7 @@ SELECT [CodeEmployee],
 FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK)
 WHERE DPI IN ('1970738670101','2247072132101','2096977681609','2345724262001','2344323140101','2755294870601','2500270541312','3050493210117','2259191410101','1623311420101','1593142590101')
 ;*/
+
 
 SELECT *
 FROM @TblCash
