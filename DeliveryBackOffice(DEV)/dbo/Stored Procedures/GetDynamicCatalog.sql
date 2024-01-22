@@ -626,24 +626,42 @@ BEGIN
 	
 	ELSE IF (@TypeMethod = 'ActiveMembership')
     BEGIN
+		DECLARE @ProductExist INT = 0;
+
+			SET @ProductExist = (
+								(SELECT TOP 1 COUNT(IdMembership)
+                                FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)   
+                                WHERE AccountId = @IdAccount
+								     AND RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20))
+								
+								+
+									 
+								(SELECT TOP 1 COUNT(IdSubscription)
+                                FROM [DeliveryBackOffice].[dbo].[Subscription] WITH (NOLOCK)   
+                                WHERE AccountId = @IdAccount
+								     AND RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)))
         SET @jsonResult =
         (
-            SELECT STUFF(
+          SELECT STUFF(
                             (
-                                SELECT ',{"ActiveMembership":' + CAST((CASE WHEN Mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END) AS NVARCHAR) + '}'
-                                FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
-								LEFT JOIN [DeliveryBackOffice].[dbo].[Membership] Mmbrshp WITH(NOLOCK)
-								ON Acc.IdCustomer = Mmbrshp.CustomerId 
-								AND acc.AccIdAccount = Mmbrshp.AccountId
-								AND Mmbrshp.RowStatus = 1
-								AND Convert(NVARCHAR(10), Mmbrshp.ExpirationDate,20) >= Convert(NVARCHAR(10),GETDATE(),20)
-								WHERE Acc.AccIdAccount = @IdAccount
+									 
+                                SELECT TOP 1 ',{"ActiveMembership":' + CAST((CASE
+                                                                           WHEN @ProductExist > 0 THEN
+                                                                               1
+                                                                           ELSE
+                                                                               0
+                                                                       END
+                                                                      ) AS NVARCHAR) + '}'
+                               
                                 FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
+                            ).value('.', 'varchar(max)')
+                          , 1
+                          , 1
+                          , ''
                         )
+
         );
     END
 
