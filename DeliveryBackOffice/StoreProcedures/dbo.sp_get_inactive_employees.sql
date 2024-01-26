@@ -10,31 +10,24 @@ DEFINICION DE TABLAS
 9. DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave foránea (buscar llave foránea)
 *****/
 
+
 /**********************************************************************************************************/
 /**** TABLA 01 PARA ENCONTRAR SOLO LOS EMPLEADOS DE BAJA EN CASH, QUE SE DEBEN DAR DE BAJA EN DELIVERY ****/
 /**********************************************************************************************************/
+PRINT 'TABLA 01'
 
-DECLARE @TblEmpFDE TABLE -- ALMACENA TODOS LOS EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
+/************************ PREPARACIÓN *************************************/
+  -- ALMACENA TODOS LOS EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN LA BASE DE DATOS PRODUCTIVA DE CASH
+DECLARE @Tbl130100 TABLE
 (
     Ficha VARCHAR(8) NOT NULL,
     NombreCompleto VARCHAR(100) NOT NULL,
     DPI VARCHAR(25) NULL,
     Estado INT NOT NULL
-); -- 1,236
+);
 
-INSERT INTO @TblEmpFDE -- todos los empleados de Forza Delivery Express
-SELECT emp.CodeEmployee,
-       emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
-       emp.DPI,
-       emp.StatusJob
-FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
-WHERE 1 = 1
-      AND emp.IdCountry = 'GX'; -- Forza Delivery Express
-                                --AND emp.CodeEmployee IN ('110049','110113','106333','110610');
-                                --AND emp.CodeEmployee IN ('102340')
-
-
-DECLARE @TblCash TABLE -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
+-- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
+DECLARE @TblSource TABLE
 (
     --IdEmployee INT NOT NULL,          -- Acá no se guardará porque difiere del de Hermes porque en esta solo se insertan los de Delivery
     CodeEmployee VARCHAR(8) NOT NULL, -- Número de ficha del colaborador
@@ -43,13 +36,33 @@ DECLARE @TblCash TABLE -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY
     StatusJob INT NOT NULL            -- Estado laboral = 2 para las bajas que se deben registrar en las tablas siguientes
 );
 
-INSERT INTO @TblCash
+-- TODOS LOS EMPLEADOS DE FORZA DELIVERY EXPRESS QUE ESTÁN EN EL SERVIDOR 130.100
+INSERT INTO @Tbl130100
+
+/*--PRODUCCIÓN EN EL SERVIDOR 3.200
+SELECT emp.CodeEmployee,
+       emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
+       emp.DPI,
+       emp.StatusJob
+FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
+WHERE emp.IdCountry = 'GX'; -- Forza Delivery Express*/
+
+--PRUEBAS EN EL SERVIDOR 6.210
+SELECT [CodeEmployee],
+       [NameEmployee],
+       [DPI],
+	   2
+FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK)
+
+
+
+INSERT INTO @TblSource
 SELECT empBaja.Ficha,          -- CodeEmployee
        empBaja.NombreCompleto, -- NameEmployee
        empBaja.DPI,            -- DPI
        empBaja.Estado          -- StatusJob
-FROM @TblEmpFDE empBaja
-    LEFT JOIN @TblEmpFDE empAlta
+FROM @Tbl130100 empBaja
+    LEFT JOIN @Tbl130100 empAlta
         ON empAlta.Estado = 1 -- empleado de alta
            AND
            (
@@ -60,39 +73,26 @@ WHERE empBaja.Estado = 2 -- empleado de baja
       AND empAlta.DPI IS NULL -- remover empleados con status de alta (left excluding join)
 ORDER BY empBaja.NombreCompleto ASC;
 
+--SELECT * FROM @TblSource
 
-/*INSERT INTO @TblCash
-SELECT --DISTINCT
-       emp.CodeEmployee,
-       emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
-       emp.DPI
-FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
-WHERE 1 = 1
-      AND emp.StatusJob = 2 -- 1 = empleado de alta; 2 = empleado de baja;
-      AND emp.IdCountry = 'GX' -- GX = Forza Delivery Express
-ORDER BY emp.CodeEmployee ASC;*/
-
-/*INSERT INTO @TblCash
-SELECT [CodeEmployee],
-       [NameEmployee],
-       [DPI]
-FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK)
-WHERE DPI IN ('1970738670101','2247072132101','2096977681609','2345724262001','2344323140101','2755294870601','2500270541312','3050493210117','2259191410101','1623311420101','1593142590101')
-;*/
-
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_LGT_INF_Employees_Cash
 SELECT CodeEmployee,
        NameEmployee,
        DPI,
        StatusJob,
        GETDATE()
-FROM @TblCash;
---ORDER BY NameEmployee ASC;
+FROM @TblSource;
+
+
 
 
 /**************************************************************************/
 /*** TABLA 02 PARA ENCONTRAR EMPLEADOS COINCIDENTES DE CASH EN DELIVERY ***/
 /**************************************************************************/
+PRINT 'TABLA 02'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblEmployees TABLE
 (
     IdEmployee INT NOT NULL,          -- ID de registro interno en la tabla LGT_Inf_Employee de DenariusDesktop_Dev en Cash
@@ -110,10 +110,12 @@ SELECT --DISTINCT
     emp.DPI,
     emp.StatusJob
 FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
-    INNER JOIN @TblCash cash
+    INNER JOIN @TblSource cash
         ON cash.CodeEmployee = emp.CodeEmployee
 ORDER BY emp.CodeEmployee ASC;
 
+
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_LGT_INF_Employees_Delivery
 SELECT IdEmployee,
        CodeEmployee,
@@ -123,19 +125,26 @@ SELECT IdEmployee,
        GETDATE()
 FROM @TblEmployees
 WHERE StatusJob = 1; -- listar solo empleados activos
-                     --ORDER BY NameEmployee ASC;
 
---UPDATE DenariusDesktop_Dev.dbo.LGT_INF_Employee
---SET StatusJob = 2
---FROM @TblEmployees t
---WHERE t.CodeEmployee = LGT_INF_Employee.CodeEmployee
---AND LGT_INF_Employee.StatusJob = 1;
+
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE codeemployee = @Ficha
+UPDATE DenariusDesktop_Dev.dbo.LGT_INF_Employee
+SET StatusJob = 2
+FROM @TblEmployees t
+WHERE t.CodeEmployee = LGT_INF_Employee.CodeEmployee
+      AND LGT_INF_Employee.StatusJob = 1;
+--SELECT * FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE codeemployee = @Ficha
+
 
 
 
 /******************************************************************************/
 /*** TABLA 03 PARA RELACIONAR USUARIOS DE DENARIUS CON USUARIOS DE DELIVERY ***/
 /******************************************************************************/
+PRINT 'TABLA 03'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblInternalUser TABLE
 (
     IdUser BIGINT NOT NULL,         -- Número de ficha del colaborador
@@ -156,6 +165,7 @@ FROM DeliveryBackOffice.dbo.InternalUser iu WITH (NOLOCK)
     INNER JOIN @TblEmployees t
         ON CONVERT(BIGINT, t.CodeEmployee) = iu.IdUser; -- Relacionar por el número de ficha, el IdUser de InternalUser es la ficha de empleado
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_InternalUser
 SELECT IdUser,
        Username,
@@ -165,20 +175,27 @@ SELECT IdUser,
        GETDATE()
 FROM @TblInternalUser
 WHERE RowStatus = 1;
---ORDER BY RegisterUserID;
 
---UPDATE DeliveryBackOffice.dbo.InternalUser
---SET RowStatus = 0,
---    TokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
---    DateUpdated = GETDATE()
---FROM @TblInternalUser t
---WHERE t.IdEmployee = InternalUser.IdEmployee
---      AND InternalUser.RowStatus = 1;
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DeliveryBackOffice.dbo.InternalUser WHERE IdEmployee = @EmployeeID
+UPDATE DeliveryBackOffice.dbo.InternalUser
+SET RowStatus = 0,
+    TokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
+    DateUpdated = GETDATE()
+FROM @TblInternalUser t
+WHERE t.IdEmployee = InternalUser.IdEmployee
+      AND InternalUser.RowStatus = 1;
+--SELECT * FROM DeliveryBackOffice.dbo.InternalUser WHERE IdEmployee = @EmployeeID
+
+
 
 
 /******************************************************************************/
 /****** TABLA 04 PARA GUARDAR LA INFORMACIÓN DE LOS USUARIOS DE DELIVERY ******/
 /******************************************************************************/
+PRINT 'TABLA 04'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblRegisterUser TABLE
 (
     UsrIdUser BIGINT NOT NULL,       -- 
@@ -197,6 +214,7 @@ FROM DeliveryBackOffice.dbo.RegisterUser ru WITH (NOLOCK)
     INNER JOIN @TblInternalUser t
         ON t.RegisterUserID = ru.UsrIdUser; -- RegisterUserID de InternalUser
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_RegisterUser
 SELECT UsrIdUser,
        UsrIdPerson,
@@ -205,20 +223,27 @@ SELECT UsrIdUser,
        GETDATE()
 FROM @TblRegisterUser
 WHERE RowStatus = 1;
---ORDER BY UsrIdUser;
 
---UPDATE DeliveryBackOffice.dbo.RegisterUser
---SET UsrRowStatus = 0,
---    UsrTokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
---    UsrDateUpdated = GETDATE()
---FROM @TblRegisterUser t
---WHERE t.UsrIdUser = RegisterUser.UsrIdUser
---      AND RegisterUser.UsrRowStatus = 1;
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DeliveryBackOffice.dbo.RegisterUser WHERE UsrIdUser = @InternalUser
+UPDATE DeliveryBackOffice.dbo.RegisterUser
+SET UsrRowStatus = 0,
+    UsrTokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
+    UsrDateUpdated = GETDATE()
+FROM @TblRegisterUser t
+WHERE t.UsrIdUser = RegisterUser.UsrIdUser
+      AND RegisterUser.UsrRowStatus = 1;
+--SELECT * FROM DeliveryBackOffice.dbo.RegisterUser WHERE UsrIdUser = @InternalUser
+
+
 
 
 /******************************************************************************/
 /****** TABLA 05 PARA GUARDAR LA INFORMACIÓN DE LAS PERSONAS DE DELIVERY ******/
 /******************************************************************************/
+PRINT 'TABLA 05'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblPerson TABLE
 (
     PerIdPerson BIGINT NOT NULL,        -- 
@@ -238,6 +263,7 @@ FROM DeliveryBackOffice.dbo.Person p WITH (NOLOCK)
     INNER JOIN @TblRegisterUser t
         ON t.UsrIdPerson = p.PerIdPerson; -- 
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_Person
 SELECT PerIdPerson,
        PerFirstName,
@@ -246,21 +272,26 @@ SELECT PerIdPerson,
        GETDATE()
 FROM @TblPerson
 WHERE PerRowStatus = 1;
---ORDER BY PerIdPerson;
 
---UPDATE DeliveryBackOffice.dbo.Person
---SET PerRowStatus = 0,
---    PerTokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
---    PerDateUpdated = GETDATE()
---FROM @TblPerson t
---WHERE t.PerIdPerson = Person.PerIdPerson
---      AND Person.PerRowStatus = 1;
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DeliveryBackOffice.dbo.Person WHERE PerIdPerson = @InternalUser
+UPDATE DeliveryBackOffice.dbo.Person
+SET PerRowStatus = 0,
+    PerTokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
+    PerDateUpdated = GETDATE()
+FROM @TblPerson t
+WHERE t.PerIdPerson = Person.PerIdPerson
+      AND Person.PerRowStatus = 1;
+--SELECT * FROM DeliveryBackOffice.dbo.Person WHERE PerIdPerson = @InternalUser
 
 
 
 /******************************************************************************/
 /******** TABLA 06 PARA GESTIONAR LOS PERMISOS POR MÓDULO DE SISTEMAS *********/
 /******************************************************************************/
+PRINT 'TABLA 06'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblUserSystemRestriction TABLE
 (
     UstIdRestriction BIGINT NOT NULL, -- 
@@ -281,6 +312,7 @@ FROM DeliveryBackOffice.dbo.UserSystemRestriction usr
     INNER JOIN @TblRegisterUser t
         ON t.UsrIdUser = usr.UstIdUser;
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_UserSystemRestriction
 SELECT UstIdRestriction,
        UstIdUser,
@@ -291,26 +323,31 @@ SELECT UstIdRestriction,
 FROM @TblUserSystemRestriction
 WHERE UstStatus = 'ACTIVE'
       OR UstRowStatus = 1;
---ORDER BY UstIdUser;
 
---UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
---SET UstRowStatus = 0,
---    UstStatus = 'INACTIVE',
---    UstTokenCreated = 'SYS-SUSPENSION-EMPLOYEE',
---    UstOperationDate = GETDATE()
---FROM @TblUserSystemRestriction t
---WHERE t.UstIdUser = UserSystemRestriction.UstIdUser
---      AND
---      (
---          UserSystemRestriction.UstStatus = 'ACTIVE'
---          OR UserSystemRestriction.UstRowStatus = 1
---      );
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DeliveryBackOffice.dbo.UserSystemRestriction WHERE UstIdUser = @InternalUser
+UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
+SET UstRowStatus = 0,
+    UstStatus = 'INACTIVE',
+    UstTokenCreated = 'SYS-SUSPENSION-EMPLOYEE',
+    UstOperationDate = GETDATE()
+FROM @TblUserSystemRestriction t
+WHERE t.UstIdUser = UserSystemRestriction.UstIdUser
+      AND
+      (
+          UserSystemRestriction.UstStatus = 'ACTIVE'
+          OR UserSystemRestriction.UstRowStatus = 1
+      );
+--SELECT * FROM DeliveryBackOffice.dbo.UserSystemRestriction WHERE UstIdUser = @InternalUser
 
 
 
 /******************************************************************************/
 /************ TABLA 07 PARA GESTIONAR LOS PERMISOS PARA COURIERS **************/
 /******************************************************************************/
+PRINT 'TABLA 07'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblSenderReceiver TABLE
 (
     SenRecID INT NOT NULL,                 -- 
@@ -328,9 +365,10 @@ SELECT --DISTINCT
     sr.CUI,
     sr.Estatus
 FROM DeliveryBackOffice.dbo.SenderReceiver sr
-    INNER JOIN @TblCash t
+    INNER JOIN @TblSource t
         ON t.DPI = sr.CUI;
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_SenderReceiver
 SELECT SenRecID,
        SenRecFirstName,
@@ -340,20 +378,25 @@ SELECT SenRecID,
        GETDATE()
 FROM @TblSenderReceiver
 WHERE SenRecStatus = 1;
---ORDER BY SenRecCUI;
 
---UPDATE DeliveryBackOffice.dbo.SenderReceiver
---SET Estatus = 0,
---    User_Created = 'SYS-SUSPENSION-EMPLOYEE',
---    Date_Created = GETDATE()
---FROM @TblSenderReceiver t
---WHERE t.SenRecCUI = SenderReceiver.CUI
---      AND SenderReceiver.Estatus = 1;
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DeliveryBackOffice.dbo.SenderReceiver WHERE CUI = @CUI
+UPDATE DeliveryBackOffice.dbo.SenderReceiver
+SET Estatus = 0,
+    User_Created = 'SYS-SUSPENSION-EMPLOYEE',
+    Date_Created = GETDATE()
+FROM @TblSenderReceiver t
+WHERE t.SenRecCUI = SenderReceiver.CUI
+      AND SenderReceiver.Estatus = 1;
+--SELECT * FROM DeliveryBackOffice.dbo.SenderReceiver WHERE CUI = @CUI
 
 
 /******************************************************************************/
 /**** TABLA 08 PARA GESTIONAR LOS PERMISOS POR MÓDULO DE SISTEMAS (LEGACY) ****/
 /******************************************************************************/
+PRINT 'TABLA 08'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblRestriction TABLE
 (
     RstIdUser VARCHAR(50) NOT NULL,   -- 
@@ -373,6 +416,7 @@ FROM DenariusUser_Dev.dbo.LGN_Restriction r
         ON t.IdUser = r.RST_IdUser
            AND t.Username = r.RST_Username;
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_LGN_Restriction
 SELECT RstIdUser,
        RstUsername,
@@ -381,23 +425,26 @@ SELECT RstIdUser,
        GETDATE()
 FROM @TblRestriction
 WHERE RstStatus = 'ACTIVE';
---ORDER BY RstIdUser,
---         RstUsername;
 
---UPDATE DenariusUser_Dev.dbo.LGN_Restriction
---SET RST_Status = 'INACTIVE',
---    LGN_OperationToken = 'SYS-SUSPENSION-EMPLOYEE',
---    LGN_OperationDate = GETDATE()
---FROM @TblRestriction t
---WHERE t.RstIdUser = LGN_Restriction.RST_IdUser
---      AND t.RstUsername = LGN_Restriction.RST_Username
---      AND LGN_Restriction.RST_Status = 'ACTIVE';
-
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DenariusUser_Dev.dbo.LGN_Restriction WHERE RST_IdUser = @Ficha AND RST_Username = @Username
+UPDATE DenariusUser_Dev.dbo.LGN_Restriction
+SET RST_Status = 'INACTIVE',
+    LGN_OperationToken = 'SYS-SUSPENSION-EMPLOYEE',
+    LGN_OperationDate = GETDATE()
+FROM @TblRestriction t
+WHERE t.RstIdUser = LGN_Restriction.RST_IdUser
+      AND t.RstUsername = LGN_Restriction.RST_Username
+      AND LGN_Restriction.RST_Status = 'ACTIVE';
+--SELECT * FROM DenariusUser_Dev.dbo.LGN_Restriction WHERE RST_IdUser = @Ficha AND RST_Username = @Username
 
 
 /***************************************************************************************/
 /**** TABLA 09 PARA GESTIONAR LOS PERMISOS POR ROL POR USUARIO POR SISTEMA (LEGACY) ****/
 /***************************************************************************************/
+PRINT 'TABLA 09'
+
+/************************ PREPARACIÓN *************************************/
 DECLARE @TblRolByUserBySystem TABLE
 (
     RusIdSystem VARCHAR(50) NOT NULL, -- 
@@ -414,6 +461,7 @@ FROM DeliveryBackOffice.dbo.RolByUserBySystem rbubs
     INNER JOIN @TblRegisterUser t
         ON t.UsrIdUser = rbubs.RusIdUser;
 
+/************************* BITÁCORA ***************************************/
 INSERT INTO DenariusLog_Dev.dbo.HSE_RolByUserBySystem
 SELECT RusIdSystem,
        RusIdUser,
@@ -421,12 +469,14 @@ SELECT RusIdSystem,
        GETDATE()
 FROM @TblRolByUserBySystem
 WHERE RusRowStatus = 1;
---ORDER BY RusIdUser;
 
---UPDATE DeliveryBackOffice.dbo.RolByUserBySystem
---SET RusRowStatus = 0,
---    RusTokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
---    RusDateUpdated = GETDATE()
---FROM @TblRolByUserBySystem t
---WHERE t.RusIdUser = RolByUserBySystem.RusIdUser
---      AND RolByUserBySystem.RusRowStatus = 1;
+/********************** ACTUALIZACIÓN ************************************/
+--SELECT * FROM DeliveryBackOffice.dbo.RolByUserBySystem WHERE RusIdUser = @InternalUser
+UPDATE DeliveryBackOffice.dbo.RolByUserBySystem
+SET RusRowStatus = 0,
+    RusTokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
+    RusDateUpdated = GETDATE()
+FROM @TblRolByUserBySystem t
+WHERE t.RusIdUser = RolByUserBySystem.RusIdUser
+      AND RolByUserBySystem.RusRowStatus = 1;
+--SELECT * FROM DeliveryBackOffice.dbo.RolByUserBySystem WHERE RusIdUser = @InternalUser
