@@ -34,7 +34,7 @@ BEGIN
 	9. DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave foránea (buscar llave foránea)
 	*****/
 
-	
+
     -- Insert statements for procedure here
     BEGIN TRANSACTION;
 
@@ -68,20 +68,20 @@ BEGIN
         -- TODOS LOS EMPLEADOS DE FORZA DELIVERY EXPRESS QUE ESTÁN EN EL SERVIDOR 130.100
         INSERT INTO @Tbl130100
 
-        /*--PRODUCCIÓN EN EL SERVIDOR 3.200
-SELECT emp.CodeEmployee,
-       emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
-       emp.DPI,
-       emp.StatusJob
-FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
-WHERE emp.IdCountry = 'GX'; -- Forza Delivery Express*/
+        --PRODUCCIÓN EN EL SERVIDOR 3.200
+        SELECT emp.CodeEmployee,
+               emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
+               emp.DPI,
+               emp.StatusJob
+        FROM [HOP_LINKEDSERVER].DenariusDesktop_Dev.dbo.LGT_INF_Employee emp WITH (NOLOCK)
+        WHERE emp.IdCountry = 'GX'; -- Forza Delivery Express
 
         --PRUEBAS EN EL SERVIDOR 6.210
-        SELECT [CodeEmployee],
+        /*SELECT [CodeEmployee],
                [NameEmployee],
                [DPI],
                [StatusJob]
-        FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK);
+        FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK);*/
 
 
 
@@ -213,7 +213,7 @@ WHERE emp.IdCountry = 'GX'; -- Forza Delivery Express*/
             DateUpdated = GETDATE()
         FROM @TblInternalUser t
         WHERE t.IdUser = InternalUser.IdUser
-			  AND t.Username = InternalUser.Username
+              AND t.Username = InternalUser.Username
               AND InternalUser.RowStatus = 1;
         --SELECT * FROM DeliveryBackOffice.dbo.InternalUser WHERE IdEmployee = @EmployeeID
 
