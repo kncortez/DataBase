@@ -212,7 +212,8 @@ WHERE emp.IdCountry = 'GX'; -- Forza Delivery Express*/
             TokenUpdated = 'SYS-SUSPENSION-EMPLOYEE',
             DateUpdated = GETDATE()
         FROM @TblInternalUser t
-        WHERE t.IdEmployee = InternalUser.IdEmployee
+        WHERE t.IdUser = InternalUser.IdUser
+			  AND t.Username = InternalUser.Username
               AND InternalUser.RowStatus = 1;
         --SELECT * FROM DeliveryBackOffice.dbo.InternalUser WHERE IdEmployee = @EmployeeID
 
