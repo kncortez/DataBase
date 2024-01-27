@@ -80,7 +80,7 @@ WHERE emp.IdCountry = 'GX'; -- Forza Delivery Express*/
         SELECT [CodeEmployee],
                [NameEmployee],
                [DPI],
-               2
+               [StatusJob]
         FROM [DenariusDesktop_Dev].[dbo].[rrhh denarius] WITH (NOLOCK);
 
 
