@@ -10,33 +10,33 @@ CREATE PROCEDURE ActiveProductMarketplace
 AS
 
 BEGIN
-	BEGIN
 	DECLARE @EXISTPRODUCT INT;
 
 	SET @EXISTPRODUCT = (SELECT TOP 1 COUNT(ActivationCode) 
-								FROM Product WITH(NOLOCK)
+								FROM Subscription WITH(NOLOCK)
 								WHERE ActivationCode = @Code)
 
 	IF(@EXISTPRODUCT > 0)
 
 		BEGIN
-		 UPDATE Product
+		 UPDATE Subscription
 			SET RowStatus = 1
 			WHERE ActivationCode = @Code
-		SELECT cp.CatProductName,
-		IIF(cp.CatProductName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.CatProductName), 
-		(IIF(cp.CatProductName = 'Club Forza',('Felicidades..! has activado la membresía'+' '+cp.CatProductName),('Felicidades..! has activado el'+' '+cp.CatProductName)))) AS Message,
-		REPLACE(CONVERT(VARCHAR(10),pt.ProductExpirationDate,105),'-','/') AS DateExpiration
-		from CatProduct cp WITH(NOLOCK)
-		  INNER JOIN Product pt WITH(NOLOCK)
-		  ON cp.IdCatProduct = pt.CatProductId
+
+		  SELECT cp.SubscriptionName AS CatProductName,
+		IIF(cp.SubscriptionName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.SubscriptionName), 
+		(IIF(cp.SubscriptionName = 'Club Forza',('Felicidades..! has activado la membresía'+' '+cp.SubscriptionName),('Felicidades..! has activado el'+' '+cp.SubscriptionName)))) AS Message,
+		REPLACE(CONVERT(VARCHAR(10),pt.ExpirationDate,105),'-','/') AS DateExpiration
+		from CatSubscription cp WITH(NOLOCK)
+		  INNER JOIN Subscription pt WITH(NOLOCK)
+		  ON cp.IdCatSubscription = pt.CatSubscriptionId
 		  WHERE pt.ActivationCode = @Code
 
-		SELECT DISTINCT CatProductAttributeDescription FROM CatProductAttribute cpa WITH(NOLOCK)
-			INNER JOIN CatProduct ctp WITH(NOLOCK)
-			ON cpa.CatProductId = ctp.IdCatProduct
-			INNER JOIN Product pdt WITH(NOLOCK)
-			ON ctp.IdCatProduct = pdt.CatProductId
+		SELECT DISTINCT SubscriptionAttributeDescription AS CatProductAttributeDescription FROM CatSubscriptionAtribute cpa WITH(NOLOCK)
+			INNER JOIN CatSubscription ctp WITH(NOLOCK)
+			ON cpa.CatSubscriptionId = ctp.IdCatSubscription
+			INNER JOIN Subscription pdt WITH(NOLOCK)
+			ON ctp.IdCatSubscription = pdt.CatSubscriptionId
 			 WHERE pdt.ActivationCode = @Code
 
 	    END
