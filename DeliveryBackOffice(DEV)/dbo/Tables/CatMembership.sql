@@ -1,81 +1,69 @@
-﻿CREATE TABLE [dbo].[CatMembership] (
-    [IdCatMembership]                INT             IDENTITY (1, 1) NOT NULL,
-    [MembershipName]                 NVARCHAR (50)   NOT NULL,
-    [MembershipDescription]          NVARCHAR (300)  NOT NULL,
-    [MembershipCost]                 DECIMAL (18, 2) NOT NULL,
-    [MembershipFixedValue]           INT             NOT NULL,
-    [MembershipMaxServiceFixedValue] INT             NOT NULL,
-    [MembershipValidity]             INT             NOT NULL,
-    [RowStatus]                      BIT             NOT NULL,
-    [TokenCreated]                   NVARCHAR (50)   NOT NULL,
-    [DateCreated]                    DATETIME        NOT NULL,
-    [TokenUpdated]                   NVARCHAR (50)   NULL,
-    [DateUpdated]                    DATETIME        NULL,
-    [Icon]                           NVARCHAR (50)   NULL,
-    [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
-    CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
-);
-
-
-
-
-
-
+﻿CREATE TABLE [dbo].[CatMembership](
+	[IdCatMembership] [int] IDENTITY(1,1) NOT NULL,
+	[MembershipName] [nvarchar](50) NOT NULL,
+	[MembershipDescription] [nvarchar](300) NOT NULL,
+	[MembershipCost] [decimal](18, 2) NOT NULL,
+	[MembershipFixedValue] [int] NOT NULL,
+	[MembershipMaxServiceFixedValue] [int] NOT NULL,
+	[MembershipValidity] [int] NOT NULL,
+	[RowStatus] [bit] NOT NULL,
+	[TokenCreated] [nvarchar](50) NOT NULL,
+	[DateCreated] [datetime] NOT NULL,
+	[TokenUpdated] [nvarchar](50) NULL,
+	[DateUpdated] [datetime] NULL,
+	[Icon] [nvarchar](50) NULL,
+	[NextSalesPackageBanner] [nvarchar](200) NULL,
+	[CatProductCategoryId] [int] NULL,
+ CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED 
+(
+	[IdCatMembership] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'IdCatMembership'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre de la membresia.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'MembershipName'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Descripción de la membresia.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'MembershipDescription'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de creación del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'TokenCreated';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Costo monetario para comprar la membresia.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'MembershipCost'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado lógico del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Monto fijo de servicios de guía, limitado a una cantidad.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'MembershipFixedValue'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo, en días, que será valida la membresia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'MembershipValidity';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cantidad maxima de servicios los cuales tendran un monto fijo.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'MembershipMaxServiceFixedValue'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad maxima de servicios los cuales tendran un monto fijo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'MembershipMaxServiceFixedValue';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tiempo, en días, que será valida la membresia.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'MembershipValidity'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Monto fijo de servicios de guía, limitado a una cantidad.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'MembershipFixedValue';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado lógico del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'RowStatus'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Costo monetario para comprar la membresia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'MembershipCost';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'TokenCreated'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción de la membresia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'MembershipDescription';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creación del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'DateCreated'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre de la membresia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'MembershipName';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Último token de actualización del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'IdCatMembership';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Última fecha de actualización del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'DateUpdated'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de catalogo de membresias.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo de ícono configurable' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'Icon'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de ícono configurable', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'Icon';
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'NextSalesPackageBanner'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de catalogo de membresias.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership'
+GO
+
 
