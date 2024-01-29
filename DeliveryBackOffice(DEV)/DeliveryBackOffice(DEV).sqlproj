@@ -1511,6 +1511,7 @@
 	<Build Include="dbo\Stored Procedures\GetCustomerPaymentDataMarketPlace.sql" />
 	<Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" /> 
     
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
