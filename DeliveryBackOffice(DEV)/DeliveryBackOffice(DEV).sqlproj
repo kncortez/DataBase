@@ -1584,6 +1584,8 @@
     <Build Include="dbo\Stored Procedures\SetPickupStatusByGuide.sql" />
     <Build Include="dbo\Stored Procedures\CreateRateLine.sql" />
     <Build Include="dbo\Stored Procedures\CreateRateCoverage.sql" />
+    <Build Include="dbo\Stored Procedures\sp_set_inactive_employees.sql" />
+    
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
