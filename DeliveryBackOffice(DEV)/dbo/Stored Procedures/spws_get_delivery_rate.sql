@@ -2012,6 +2012,7 @@ BEGIN
 								  AND csps.SalesPackageStatusName = 'Activa'
 								  AND sc.IdMembership = @ProductId
 								  AND cts.IdCatProductCategory = @CategoryProductId
+								  AND sc.MembershipMaxServiceFixedValue > sc.ActualServiceCount
 							ORDER BY scdr.DiscountValue DESC
 						END
 
