@@ -35,7 +35,8 @@
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_number_cost]
-    ON [dbo].[Cost]([IdProduct] ASC, [ProductNumber] ASC);
+    ON [dbo].[Cost]([IdProduct] DESC, [ProductNumber] DESC) 
+	INCLUDE([CODAmount],[TotalAmountPaid]);
 
 
 GO
@@ -51,12 +52,15 @@ CREATE NONCLUSTERED INDEX [IDX_RowStatus]
     ON [dbo].[Cost]([RowStatus] ASC)
     INCLUDE([ProductNumber], [TotalAmountPaid], [CODAmount]);
 
-
 GO
 CREATE NONCLUSTERED INDEX [IDX_ProductNumber]
     ON [dbo].[Cost]([ProductNumber] ASC)
     INCLUDE([TotalAmountPaid], [CODAmount]);
 
+GO
+CREATE NONCLUSTERED INDEX [IDX_ProductNumber_RowStatus]
+    ON [dbo].[Cost]([ProductNumber],[RowStatus] )
+    INCLUDE([TotalAmountPaid], [CODAmount])
 
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [UQ_GuideSerie_GuideNumber]

@@ -3,6 +3,14 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
+
+-- =============================================
+-- Author:		      <Cristian, Azurdia>
+-- Modification date: <2024-01-31>
+-- Description:	      <En Join entre Cost y #listGuidesBrain se comparaba varchar con Nvarchar se realiza casteo,                     
+--                     Se elimino Distinct de la consulta de la tabla temporal final pues se insertan sin duplicados>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,
@@ -119,10 +127,6 @@ PRINT '*************************************************************************
 
 	CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN ON #listGuidesBrain (ItemNumber, ItemSerie)
 	--CREATE NONCLUSTERED INDEX IDX_TEMPBRAIN2 ON #listGuidesBrain (ItemNumber)
-	--SELECT --l.ItemSerie,
- --         --l.ItemNumber 
-	--	  *
-	--FROM #listGuidesBrain l
 
 
 	  SELECT ord.Guide_Serie [GuideSerie],
@@ -130,8 +134,9 @@ PRINT '*************************************************************************
            ord.IsCollect [IsCollect],
            ord.PriceShippment [Price],
            ord.Collect_OnDelivery [COD],
-           cst.TotalAmountPaid [AmountPaid],
+           isNULL(cst.TotalAmountPaid,0) [AmountPaid],
            cst.CODAmount [CODPaid],
+		   SUM(isNULL(ind.dti_priceUnit,0)) [priceUnit],
            IIF(cst.CODAmount IS NULL, 0, IIF(CST.CODAmount = ORD.Collect_OnDelivery,  1,0)) [CODIsPaid],
            ISNULL(
                      pyt.TimePlaId,
@@ -194,15 +199,34 @@ PRINT '*************************************************************************
                AND cdp.RowStatus = 1
     WHERE --rc.RbcCodeOfReference IS NULL
          ISNULL(rcv.RbcRowStatus,rc.RbcRowStatus) = 1
-    ORDER BY lg.ItemSerie,
-             lg.ItemNumber;
+    GROUP BY 
+			ord.Guide_Serie ,
+			ord.Guide_Number ,
+			ord.IsCollect ,
+			ord.PriceShippment ,
+			ord.Collect_OnDelivery,
+			cst.TotalAmountPaid,
+			cst.CODAmount,
+		    pyt.TimePlaId,
+			tim.TimeSequence,
+			inh.inv_certificationFEL,
+			inh.inv_certificationFEL,
+			cus.IdCustomer,
+			cdp.ConditionOfPaymenDescription,
+			cdp.ConditionOfPaymenAbbreviation,
+			rh.ReturnRate, 
+			rhd.ReturnRate
+    --ORDER BY lg.ItemSerie,
+             --lg.ItemNumber;
 
 	CREATE NONCLUSTERED INDEX IDX_TEMPPRICEBRAIN ON #TempPrice (IsCustomer, GuideNumber)
 
-			 PRINT '************************************************************************************* SELECT DISTINCT'
+			 PRINT '************************************************************************************* SELECT FINAL'
 	
-    SELECT DISTINCT
-           tp.*,
+    SELECT 
+		   --DISTINCT
+           --tp.*,
+		   tp.GuideSerie, tp.GuideNumber, tp.IsCollect, tp.Price, tp.COD, tp.AmountPaid, tp.CODpaid, tp.CODIsPaid, tp.PaymentTime, tp.TimeSequence, tp.FelNumber, tp.IsPaid, tp.IsCustomer, tp.ConditionPayment, tp.HaveCredit, tp.CollectCOD, tp.ReturnRate,
            CASE tp.IsPaid
                WHEN 1 THEN
                    0 -- esta pagado
