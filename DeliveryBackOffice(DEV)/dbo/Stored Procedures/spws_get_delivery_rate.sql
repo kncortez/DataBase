@@ -1821,7 +1821,7 @@ BEGIN
     -- Oscar Morales 2022-07-18
     /* Actualización: Aplicar descuento únicamente a costo base 
 	   Autor: Jerson Ochoa 30-12-2022 */
-    IF @CalculateMembership = 'true'
+    IF (@CalculateMembership = 'true' AND @ProductId >0 AND @CategoryProductId >0)
     BEGIN
         DECLARE @PriceShippment DECIMAL(14, 2);
         DECLARE @MembershipId INT;
