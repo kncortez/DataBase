@@ -41,7 +41,9 @@ BEGIN
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
 				ISNULL([MSL].[SubscriptionId], 0) [TrxSubscriptionId],
 				'' [TrxMembershipName],
-				'' [TrxSubscriptionName]
+				'' [TrxSubscriptionName],
+				'' [TrxOrderNumber],
+				'' [TrxPaymentUrl]
 	FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	INNER JOIN	[dbo].[Account] A
 		ON		[DO].[IdCustomer] = [A].[IdCustomer]
@@ -70,7 +72,9 @@ BEGIN
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
 				ISNULL([MSL].[SubscriptionId], 0) [TrxSubscriptionId],
 				'' [TrxMembershipName],
-				'' [TrxSubscriptionName]
+				'' [TrxSubscriptionName],
+				'' [TrxOrderNumber],
+				'' [TrxPaymentUrl]
 	FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	INNER JOIN	[dbo].[Account] A
 		ON		[DO].[IdCustomer] = [A].[IdCustomer]
@@ -101,7 +105,9 @@ BEGIN
 				[M].[IdMembership] [TrxMembershipId],
 				0 [TrxSubscriptionId],
 				[CM].[MembershipName] [TrxMembershipName],
-				'' [SubscriptionName]
+				'' [SubscriptionName],
+				CASE WHEN [MPL].[TypeOfInOutOfMoneyId] = 6  THEN '' ELSE [MPL].[Authorization] END [TrxOrderNumber],
+				ISNULL([MPL].[PaymentImageURL],'') [TrxPaymentUrl]
 	FROM		[dbo].[Membership] M 
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[M].[IdMembership] = [ID].[MembershipId]
@@ -109,6 +115,8 @@ BEGIN
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	INNER JOIN	[dbo].[invoiceHeader] IH WITH(NOLOCK)
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
+	LEFT JOIN   [dbo].[MembershipPaymentLog] MPL WITH(NOLOCK)
+		ON		[M].[IdMembership] = [MPL].[MembershipId] 
 	WHERE		[M].[AccountId] = @AccountId
 		AND		[M].[DateCreated] BETWEEN @DateStart AND @DateEnd
 		AND		[M].[RowStatus] = 1;
@@ -123,7 +131,9 @@ BEGIN
 				0 [TrxMembershipId],
 				[S].[IdSubscription] [TrxSubscriptionId],
 				'' [TrxMembershipName],
-				[CS].[SubscriptionName] [TrxSubscriptionName]
+				[CS].[SubscriptionName] [TrxSubscriptionName],
+				CASE WHEN [SPL].[TypeOfInOutOfMoneyId] = 6  THEN '' ELSE [SPL].[Authorization] END [TrxOrderNumber],
+				ISNULL([SPL].[PaymentImageURL],'')  [TrxPaymentUrl]
 	FROM		[dbo].[Subscription] S
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[S].[IdSubscription] = [ID].[SubscriptionId]
@@ -131,6 +141,8 @@ BEGIN
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
 	INNER JOIN	[dbo].[invoiceHeader] IH WITH(NOLOCK)
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
+	LEFT JOIN   [dbo].[SubscriptionPaymentLog] SPL WITH(NOLOCK)
+		ON      [S].[IdSubscription] = [SPL].[SubscriptionId]
 	WHERE		[S].[AccountId] = @AccountId
 		AND		[S].[DateCreated] BETWEEN @DateStart AND @DateEnd
 		AND		[S].[RowStatus] = 1;
