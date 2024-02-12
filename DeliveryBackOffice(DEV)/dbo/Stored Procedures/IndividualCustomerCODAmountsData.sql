@@ -58,7 +58,7 @@ BEGIN
 			   ,CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver
 			   ,FORMAT((SELECT TOP 1
 						dt.DateCreated
-					FROM dbo.DeliveryOrderDetail dt
+					FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
 					WHERE dt.Guide_Serie = do.Guide_Serie
 					AND dt.Guide_Number = do.Guide_Number
 					AND dt.StatusOrderId  IN (5,22))
@@ -78,22 +78,22 @@ BEGIN
 			   ,btd.[Amount] + btd.[Commission] AS ChargedAmount
 			   ,btd.[Amount] AS TotalAmount
 			   ,btd.[AuthorizationDate]
-			FROM [dbo].[DeliveryOrder] AS do
-			LEFT JOIN [dbo].[BatchDetailCOD] AS btd
+			FROM [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
+			LEFT JOIN [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
 				ON btd.[GuideSerie] = do.[Guide_Serie]
 				AND btd.[GuideNumber] = do.[Guide_Number]
 				AND btd.CatConceptCODId = 2
-			LEFT JOIN dbo.Township twn
+			LEFT JOIN dbo.Township twn WITH(NOLOCK)
 				ON twn.IdTownship = do.ReceiverIdTownship
-			LEFT JOIN dbo.Township tw
+			LEFT JOIN dbo.Township tw WITH(NOLOCK)
 				ON tw.TownshipName = do.Receiver_Town
-			LEFT JOIN dbo.Province prv
+			LEFT JOIN dbo.Province prv WITH(NOLOCK)
 				ON prv.IdProvince = twn.IdProvince
 			LEFT JOIN dbo.Province pr
 				ON pr.IdProvince = tw.IdProvince
-			LEFT JOIN dbo.VisitPointClient vpc
+			LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
 				ON vpc.CodeOfReference = do.Sender_ID
-			LEFT JOIN dbo.Customer cu
+			LEFT JOIN dbo.Customer cu WITH(NOLOCK)
 				ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
 			WHERE 
 			ISNULL(DO.[Collect_OnDelivery], 0) > 0
@@ -137,7 +137,7 @@ BEGIN
 				,CONCAT(do.[Receiver_FirstName], do.[Receiver_LastName]) AS Receiver
 				,FORMAT((SELECT TOP 1
 						dt.DateCreated
-					FROM dbo.DeliveryOrderDetail dt
+					FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
 					WHERE dt.Guide_Serie = do.Guide_Serie
 					AND dt.Guide_Number = do.Guide_Number
 					AND dt.StatusOrderId IN (5,22)),
@@ -156,22 +156,22 @@ BEGIN
 				,btd.[Amount] + btd.[Commission] AS ChargedAmount
 				,btd.[Amount] AS TotalAmount
 				,btd.[AuthorizationDate]
-			FROM [dbo].[DeliveryOrder] AS do
-			LEFT JOIN [dbo].[BatchDetailCOD] AS btd
+			FROM [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
+			LEFT JOIN [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
 				ON btd.[GuideSerie] = do.[Guide_Serie]
 				AND btd.[GuideNumber] = do.[Guide_Number]
 				AND btd.CatConceptCODId = 2
-			LEFT JOIN dbo.Township twn
+			LEFT JOIN dbo.Township twn WITH(NOLOCK)
 				ON twn.IdTownship = do.ReceiverIdTownship
-			LEFT JOIN dbo.Township tw
+			LEFT JOIN dbo.Township tw WITH(NOLOCK)
 				ON tw.TownshipName = do.Receiver_Town
-			LEFT JOIN dbo.Province prv
+			LEFT JOIN dbo.Province prv WITH(NOLOCK)
 				ON prv.IdProvince = twn.IdProvince
-			LEFT JOIN dbo.Province pr
+			LEFT JOIN dbo.Province pr WITH(NOLOCK)
 				ON pr.IdProvince = tw.IdProvince
-			LEFT JOIN dbo.VisitPointClient vpc
+			LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
 				ON vpc.CodeOfReference = do.Sender_ID
-			LEFT JOIN dbo.Customer cu
+			LEFT JOIN dbo.Customer cu WITH(NOLOCK)
 				ON cu.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
 			WHERE 
 			ISNULL(DO.[Collect_OnDelivery], 0) > 0

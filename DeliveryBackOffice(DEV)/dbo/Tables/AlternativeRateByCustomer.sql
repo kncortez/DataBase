@@ -15,6 +15,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AlternativeRateByCustomer', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -53,4 +55,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de tarifas alternativas por cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'AlternativeRateByCustomer';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_VisitPointClientId_RowStatus]
+    ON [dbo].[AlternativeRateByCustomer]([VisitPointClientId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CustomerId_VisitPointClientId_RowStatus]
+    ON [dbo].[AlternativeRateByCustomer]([CustomerId] ASC, [VisitPointClientId] ASC, [RowStatus] ASC);
 

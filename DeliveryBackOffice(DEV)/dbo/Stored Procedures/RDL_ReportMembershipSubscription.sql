@@ -3,11 +3,15 @@
 -- Create date: <2023-09-06>
 -- Description:	<Reporte de membresias y suscripciones>
 -- =============================================
-CREATE PROCEDURE RDL_ReportMembershipSubscription
+CREATE PROCEDURE [dbo].[RDL_ReportMembershipSubscription]
     @StartDate DATETIME,
     @EndDate DATETIME
 AS
 BEGIN
+
+SET @StartDate = CAST(CONVERT(VARCHAR(10), @StartDate, 120) + ' 00:00:00' AS datetime);
+SET @EndDate = CAST(CONVERT(VARCHAR(10), @EndDate, 120) + ' 23:59:59' AS datetime);
+
 
 				SELECT  A1.IdMembership Id, 'M'+ CAST(A1.IdMembership AS NVARCHAR) [IdClubForza],A2.MembershipName [NombrePaquete],'Membresía'[Tipo]
 				,A1.MembershipCost [Costo],A1.DateCreated [FechaCreacion]
@@ -72,10 +76,10 @@ BEGIN
 				,R2.PaymentImageURL FROM DeliveryBackOffice.dbo.MembershipPaymentLog R2 WITH(NOLOCK)
 				 WHERE R2.MembershipId = A1.IdMembership
 				)R2
-				WHERE --A1.RowStatus = 1
+				WHERE 
 				A1.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A1.DateCreated <= @EndDate--'2023-07-31 23:59:59'
-
+				AND A1.RowStatus = 1
 
 				UNION
 				SELECT
@@ -134,8 +138,9 @@ BEGIN
 				 WHERE R1.SubscriptionId = A3.IdSubscription
 
 				)R1
-				WHERE --A3.RowStatus = 1
+				WHERE 
 				A3.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A3.DateCreated <= @EndDate--'2023-07-31 23:59:59'
+				AND A3.RowStatus = 1
 
 END

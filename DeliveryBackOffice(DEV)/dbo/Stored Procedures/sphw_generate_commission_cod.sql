@@ -120,7 +120,7 @@ BEGIN
            cat.Description 'TIPO DE CUENTA OTRO BANCO',
            cco.Concept 'CONCEPTO',
            Password 'CONTRASEÑA'
-    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
+    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd with (nolock)
         LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda
             ON cda.IdCatDebitAccountCOD = bd.CatDebitAccountCODId
                AND cda.BankId = @IdBank
@@ -298,7 +298,7 @@ BEGIN
            ISNULL(invd.inv_serieFEL, '') 'SERIE FEL',
            ISNULL(invd.inv_numberFEL, '') 'NÚMERO FEL',
            ISNULL(invd.inv_certificationFEL, '') 'CERTIFIACDO FEL'
-    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd
+    FROM DeliveryBackOffice.dbo.BatchDetailCOD bd  with (nolock)
         LEFT JOIN DeliveryBackOffice.dbo.CatDebitAccountCOD cda
             ON cda.IdCatDebitAccountCOD = bd.CatDebitAccountCODId
                AND cda.BankId = @IdBank
@@ -323,7 +323,7 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do
             ON bd.GuideSerie = do.Guide_Serie
                AND bd.GuideNumber = do.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc
+        LEFT JOIN DeliveryBackOffice.dbo.BatchDetailCOD bdc  with (nolock)
             ON bdc.GuideSerie = bd.GuideSerie
                AND bdc.GuideNumber = bd.GuideNumber
                AND bdc.BankId <> 31
@@ -335,8 +335,8 @@ BEGIN
                    MIN(fac.inv_certificationFEL) inv_certificationFEL,
                    invd.dti_fk_orderSerie dti_fk_orderSerie,
                    invd.dti_fk_orderNumber dti_fk_orderNumber
-            FROM DeliveryBackOffice.dbo.invoiceDetail invd
-                JOIN DeliveryBackOffice.dbo.invoiceHeader fac
+            FROM DeliveryBackOffice.dbo.invoiceDetail invd with (nolock)
+               Inner JOIN DeliveryBackOffice.dbo.invoiceHeader fac  with (nolock)
                     ON fac.inv_pk_id = invd.dti_fk_header
                        AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                        AND fac.inv_invoiceOfCreditNote IS NOT NULL
