@@ -78,7 +78,7 @@ BEGIN
              , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]))           [MembershipAvailableFixedService]
          , [M].[ExpirationDate]                                                             [MembershipExpirationDate]
          , IIF((([M].[ActualServiceCount] * 100)
-                / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN  1 ELSE [M].[MembershipMaxServiceFixedValue] END)
+                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
                ) > 100
              , 100
              , (([M].[ActualServiceCount] * 100)
@@ -259,6 +259,7 @@ BEGIN
           AND ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > 0
     ORDER BY [S].[IdSubscription] ASC;
 END;
+
 
 
 

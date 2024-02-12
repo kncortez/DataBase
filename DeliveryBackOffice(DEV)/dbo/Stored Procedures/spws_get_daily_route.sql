@@ -726,7 +726,7 @@ BEGIN
                                                                             ) IS NOT NULL
                                                                           , (
                                                                                 SELECT NumImgEvidence AS num
-                                                                                FROM Customer
+                                                                                FROM Customer WITH (NOLOCK)
                                                                                 WHERE IdCustomer = DOR.IdCustomer
                                                                             )
                                                                           , 1)

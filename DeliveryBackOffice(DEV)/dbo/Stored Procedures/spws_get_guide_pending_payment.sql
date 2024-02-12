@@ -155,10 +155,10 @@ PRINT '*************************************************************************
     INTO #TempPrice
     FROM #listGuidesBrain lg WITH(NOLOCK)
         inner JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
-            ON ord.Guide_Number = lg.ItemNumber
-			AND ord.Guide_Serie = lg.ItemSerie               
+            ON  ord.Guide_Serie = lg.ItemSerie               
+			AND ord.Guide_Number = lg.ItemNumber
         LEFT JOIN dbo.Cost cst WITH (NOLOCK)
-            ON cst.ProductNumber = CONCAT(lg.ItemSerie, lg.ItemNumber)
+            ON cst.GuideSerie = lg.ItemSerie AND cst.GuideNumber = lg.ItemNumber
                AND cst.RowStatus = 1
         LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
             ON pyt.GuideSerie = lg.ItemSerie

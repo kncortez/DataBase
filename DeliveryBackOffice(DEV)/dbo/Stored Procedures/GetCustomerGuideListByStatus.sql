@@ -2,7 +2,7 @@
 -- Author:		<Luis Ardón>
 -- Create date: <2023-11-22>
 -- Modify:      <Carlos Vicente>
--- Modify on:   <2023-12-12>
+-- Modify on:   <2024-01-05>
 -- Description:	Este procedimiento almacenado, GetCustomerGuideListByStatus, se utiliza para obtener una lista de guías para un cliente, estado y rango de fechas en especifico.
 -- =============================================
 
@@ -83,11 +83,14 @@ SELECT
             so.OrderDescription AS [Status]
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] AS serv WITH (NOLOCK)
         LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder] AS so WITH (NOLOCK) ON serv.StatusOrderId = so.StatusOrderId
-        OUTER APPLY [dbo].[DelimitedSplit8K](@BlackListId, ',') AS ds
         WHERE 
             serv.DateCreated BETWEEN @InitDate AND @EndDate
-            AND serv.StatusOrderId <> ds.Item
             AND serv.IdCustomer = @IdCustomer
+            AND NOT EXISTS 
+            (
+                SELECT TOP 1 1 FROM [dbo].[DelimitedSplit8K](@BlackListId, ',')AS dsb
+                WHERE serv.StatusOrderId = dsb.Item
+            )
     ELSE
         SELECT 
             CAST(serv.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(serv.Sender_FirstName), '') + ' ' + ISNULL(UPPER(serv.Sender_LastName), '') [Sender],
@@ -98,13 +101,19 @@ SELECT
             so.OrderDescription AS [Status]
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] AS serv WITH (NOLOCK)
         LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder] AS so WITH (NOLOCK) ON serv.StatusOrderId = so.StatusOrderId
-        OUTER APPLY [dbo].[DelimitedSplit8K](@BlackListId, ',') AS dsb
-        OUTER APPLY [dbo].[DelimitedSplit8K](@ListStatus, ',') AS dsl
         WHERE 
-            serv.DateCreated BETWEEN @InitDate AND @EndDate
-            AND serv.StatusOrderId = dsl.Item
-            AND serv.StatusOrderId <> dsb.Item
+            serv.DateCreated BETWEEN @InitDate AND @EndDate            
             AND serv.IdCustomer = @IdCustomer
+            AND EXISTS 
+            (
+                SELECT TOP 1 1 FROM [dbo].[DelimitedSplit8K](@ListStatus, ',')AS dsl
+			    WHERE serv.StatusOrderId = dsl.Item
+            )
+            AND NOT EXISTS 
+            (
+                SELECT TOP 1 1 FROM [dbo].[DelimitedSplit8K](@BlackListId, ',')AS dsb
+                WHERE serv.StatusOrderId = dsb.Item
+            )
 END TRY 
 BEGIN CATCH
 --Devolviendo resultado de error en caso de generarse

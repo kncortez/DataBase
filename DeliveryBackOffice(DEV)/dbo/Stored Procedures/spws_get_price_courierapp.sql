@@ -156,6 +156,9 @@ BEGIN
 
             ------ unir encabezado y detalle para resultado
 
+			PRINT '@jsonDetail'
+			PRINT @jsonDetail
+
             SET @jsonResult =
             (
                 SELECT STUFF(

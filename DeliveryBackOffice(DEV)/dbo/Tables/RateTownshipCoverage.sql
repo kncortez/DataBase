@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de creación.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateTownshipCoverage', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -88,4 +90,9 @@ CREATE NONCLUSTERED INDEX [idx_SegmentTypeId]
 GO
 CREATE NONCLUSTERED INDEX [IDX_TownshipDestinyId_TownshipSourceId_RateId]
     ON [dbo].[RateTownshipCoverage]([TownshipDestinyId] ASC, [TownshipSourceId] ASC, [RateId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RateId_RowStatus]
+    ON [dbo].[RateTownshipCoverage]([RateId] ASC, [RowStatus] ASC);
 
