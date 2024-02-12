@@ -1577,23 +1577,20 @@
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_HistorialdeValidacionesdeControldeCalidad.sql" />
     <Build Include="dbo\Stored Procedures\spg_reportOnPotentialScamGuides.sql" />
-    <Build Include="dbo\Stored Procedures\CreateRateLine_1.sql" />
-    <Build Include="dbo\Stored Procedures\CreateRateCoverage_1.sql" />
-    <Build Include="dbo\Stored Procedures\CreateRateCoverage_1.sql" />
+    <Build Include="dbo\Stored Procedures\CreateRateCoverage.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuideListByStatus.sql" />
     <Build Include="dbo\Stored Procedures\SetPickupStatusByGuide.sql" />
     <Build Include="dbo\Stored Procedures\CreateRateLine.sql" />
-    <Build Include="dbo\Stored Procedures\CreateRateCoverage.sql" />
-    <Build Include="dbo\Stored Procedures\sp_set_inactive_employees.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_InternalUser.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_LGN_Restriction.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_LGT_INF_Employees_Cash.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_LGT_INF_Employees_Delivery.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_Person.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_RegisterUser.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_RolByUserBySystem.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_SenderReceiver.sql" />
-    <Build Include="dbo\Stored Procedures\HSE_UserSystemRestriction.sql" />
+    <!--Build Include="dbo\Stored Procedures\sp_set_inactive_employees.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_InternalUser.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_LGN_Restriction.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_LGT_INF_Employees_Cash.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_LGT_INF_Employees_Delivery.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_Person.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_RegisterUser.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_RolByUserBySystem.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_SenderReceiver.sql" /-->
+    <!--Build Include="dbo\Stored Procedures\HSE_UserSystemRestriction.sql" /-->
     
     
   </ItemGroup>
