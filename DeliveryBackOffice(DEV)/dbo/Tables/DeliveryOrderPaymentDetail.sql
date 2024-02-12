@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[DeliveryOrderPaymentDetail] (
+CREATE TABLE [dbo].[DeliveryOrderPaymentDetail] (
     [DopId]                 BIGINT          IDENTITY (1, 1) NOT NULL,
     [GuideNumber]           INT             NOT NULL,
     [GuideSerie]            NVARCHAR (2)    NULL,
@@ -33,6 +33,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_NC_GuideSerieGuideNumber_DeliveryOrderPaymentDetail]
     ON [dbo].[DeliveryOrderPaymentDetail]([GuideSerie] ASC, [GuideNumber] ASC);
@@ -48,5 +50,6 @@ GO
 
 
 GO
-
+CREATE NONCLUSTERED INDEX [idx_TimePlaId]
+    ON [dbo].[DeliveryOrderPaymentDetail]([TimePlaId] ASC);
 

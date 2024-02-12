@@ -21,8 +21,8 @@ BEGIN
 		inv_documentRecieved ='TimeOut' 
 		)
 		  AND 
-		  inv_dateRegister >='2023-11-01 00:00:00'
-		 AND inv_dateRegister <='2023-11-30 23:59:59'
+		  inv_dateRegister >='2024-01-01 00:00:00'
+		 AND inv_dateRegister <='2024-01-31 23:59:59'
 		 AND 
 		 
 		 (inv_certificationFEL IS NULL OR inv_certificationFEL = '')

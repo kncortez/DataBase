@@ -32,6 +32,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Flag para poder saber cuando el correo de lote fue enviado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'BatchNotified';
 
@@ -68,4 +70,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Flag para p
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'En esta columna se asigna el ID de lote que pertenece al proceso de  Collect ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ProcessedGuideCOD', @level2type = N'COLUMN', @level2name = N'CollectBatchId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus]
+    ON [dbo].[ProcessedGuideCOD]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
 

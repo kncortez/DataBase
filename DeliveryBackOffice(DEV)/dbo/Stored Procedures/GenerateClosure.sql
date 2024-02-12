@@ -47,14 +47,14 @@ BEGIN
     (
         SELECT TOP 1
                vp.RegisterUserID
-        FROM [dbo].RegisterUser usr
-            LEFT JOIN [dbo].[RolByUserByAccount] rua
+        FROM [dbo].RegisterUser usr WITH(NOLOCK)
+            LEFT JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
                 ON rua.RuaIdUser = usr.UsrIdUser
                    AND rua.RuaRowStatus = 1
-            INNER JOIN [dbo].Account ac
+            INNER JOIN [dbo].Account ac WITH(NOLOCK)
                 ON ac.AccIdAccount = rua.RuaIdAccount
                    AND ac.AccRowStatus = 1
-            INNER JOIN VisitPointByUser vp
+            INNER JOIN VisitPointByUser vp WITH(NOLOCK)
                 ON vp.RegisterUserID = usr.UsrIdUser
         WHERE ac.AccIdAccount = @UserId
     );
@@ -76,8 +76,8 @@ BEGIN
     SELECT IND.dti_fk_orderSerie,
            IND.dti_fk_orderNumber,
            MAX(IND.dti_fk_header) 'dti_fk_header'
-    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT
-        LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND
+    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH(NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH(NOLOCK)
             ON IND.dti_fk_orderSerie = DOPT.GuideSerie
                AND IND.dti_fk_orderNumber = DOPT.GuideNumber
     WHERE CAST(DOPT.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -90,17 +90,17 @@ BEGIN
            DOR.Guide_Number,
 		   DOPD.Fel
     INTO #TempClosureDetail
-    FROM dbo.DeliveryOrder DOR
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+    FROM dbo.DeliveryOrder DOR WITH(NOLOCK)
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
             ON DOR.Sender_ID = VPC.CodeOfReference
         LEFT JOIN @TEMPLATEDETAIL IND
             ON IND.guideserie = DOR.Guide_Serie
                AND IND.guidenumber = DOR.Guide_Number
-        LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH
+        LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH(NOLOCK)
             ON INH.inv_pk_id = IND.header
-        JOIN DeliveryBackOffice.dbo.StatusOrder STO
+        INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
             ON STO.StatusOrderId = DOR.StatusOrderId
-        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
             ON DOPD.guideserie = DOR.Guide_Serie
                AND DOPD.guidenumber = DOR.Guide_Number
                AND DOPD.ShipmentCompleted = 1
@@ -110,20 +110,20 @@ BEGIN
           AND NOT EXISTS
     (
         SELECT 1
-        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+        FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
         WHERE ACD.GuideSerie = DOR.Guide_Serie
               AND ACD.GuideNumber = DOR.Guide_Number
               AND ACD.RowStatus = 1
     )
 	UNION ALL
 	SELECT DOPD.GuideSerie, DOPD.GuideNumber, DOPD.Fel
-    FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+    FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
          
-        JOIN CatTypeServiceClosure CTS
+        INNER JOIN CatTypeServiceClosure CTS WITH(NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
-        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-		JOIN invoiceHeader INH  ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
+		INNER JOIN invoiceHeader INH WITH(NOLOCK) ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND DOPD.AccountId = @UserId
@@ -131,7 +131,7 @@ BEGIN
 		  AND NOT EXISTS
 		  (
 			SELECT 1
-			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 			WHERE ACD.Fel =(SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
 				  AND ACD.RowStatus = 1
 		  )
@@ -166,17 +166,17 @@ BEGIN
                    ELSE
                        0
                END 'CountCard'
-        FROM dbo.DeliveryOrder DOR
-            JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        FROM dbo.DeliveryOrder DOR WITH(NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
                 ON DOR.Sender_ID = VPC.CodeOfReference
             LEFT JOIN @TEMPLATEDETAIL IND
                 ON IND.guideserie = DOR.Guide_Serie
                    AND IND.guidenumber = DOR.Guide_Number
-            LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH
+            LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH(NOLOCK)
                 ON INH.inv_pk_id = IND.header
-            JOIN DeliveryBackOffice.dbo.StatusOrder STO
+            INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO WITH(NOLOCK)
                 ON STO.StatusOrderId = DOR.StatusOrderId
-            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
                 ON DOPD.guideserie = DOR.Guide_Serie
                    AND DOPD.guidenumber = DOR.Guide_Number
                    AND DOPD.ShipmentCompleted = 1
@@ -186,7 +186,7 @@ BEGIN
               AND NOT EXISTS
         (
             SELECT 1
-            FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+            FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
             WHERE ACD.GuideSerie = DOR.Guide_Serie
                   AND ACD.GuideNumber = DOR.Guide_Number
                   AND ACD.RowStatus = 1
@@ -219,11 +219,11 @@ BEGIN
                    ELSE
                        0
                END 'CountCard'
-			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD
+			FROM  DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH(NOLOCK)
          
-        JOIN CatTypeServiceClosure CTS
+        INNER JOIN CatTypeServiceClosure CTS 
             ON CTS.IdTypeService = DOPD.TypeServiceId
-        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
+        LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH(NOLOCK)
             ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
         
     WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -232,7 +232,7 @@ BEGIN
 		  AND NOT EXISTS
 		  (
 			SELECT 1
-			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			FROM DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 			WHERE ACD.Fel =(SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
 				  AND ACD.RowStatus = 1
 		  )

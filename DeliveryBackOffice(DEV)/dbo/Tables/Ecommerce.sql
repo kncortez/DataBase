@@ -25,3 +25,15 @@
 
 
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_UserKey]
+    ON [dbo].[Ecommerce]([UserKey] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdCustomer]
+    ON [dbo].[Ecommerce]([IdCustomer] ASC);
+
