@@ -16,6 +16,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ExtPlatServiceRelationshipWithGuide', @level2type = N'COLUMN', @level2name = N'IdExtPlatServiceRelationshipWithGuide';
 
@@ -60,4 +62,9 @@ CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_ExtPlatServiceId]
 GO
 CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber]
     ON [dbo].[ExtPlatServiceRelationshipWithGuide]([GuideSerie] ASC, [GuideNumber] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ExtPlatServiceIdindex]
+    ON [dbo].[ExtPlatServiceRelationshipWithGuide]([ExtPlatServiceId] ASC);
 

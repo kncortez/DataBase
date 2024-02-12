@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [ClusteredIndex-GuideSerie-Number-Status]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC);
@@ -86,4 +88,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreatedInSystem] ASC, [SystemOrigin] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_DateCreatedInSystem_INCLUDE]
+    ON [dbo].[DeliveryOrderDetail]([DateCreatedInSystem] ASC, [StatusOrderId] ASC)
+    INCLUDE([RowStatus]);
 

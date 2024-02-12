@@ -1,7 +1,7 @@
 USE DenariusLog_Dev;
 
-/* TABLA 1 */ SELECT * FROM dbo.HSE_LGT_INF_Employees_Cash ORDER BY recorddate, NameEmployee DESC;
-/* TABLA 2 */ SELECT * FROM dbo.HSE_LGT_INF_Employees_Delivery ORDER BY recorddate, NameEmployee DESC;
+/* TABLA 1 */ SELECT TOP 1000 * FROM dbo.HSE_LGT_INF_Employees_Cash ORDER BY recorddate, NameEmployee DESC;
+/* TABLA 2 */ SELECT TOP 1000 * FROM dbo.HSE_LGT_INF_Employees_Delivery ORDER BY recorddate, NameEmployee DESC;
 /* TABLA 3 */ SELECT * FROM dbo.HSE_InternalUser ORDER BY recorddate, RegisterUserID;
 /* TABLA 4 */ SELECT * FROM dbo.HSE_RegisterUser ORDER BY recorddate, UsrIdUser;
 /* TABLA 5 */ SELECT * FROM dbo.HSE_Person ORDER BY recorddate, PerIdPerson;

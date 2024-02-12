@@ -1,7 +1,8 @@
+﻿
 -- =============================================
 -- Author:		<Carlos Cano>
 -- Create date: <2024-01-26>
--- Description:	<Inactivaci�n de usuarios para empleados de baja>
+-- Description:	<Inactivación de usuarios para empleados de baja>
 -- =============================================
 CREATE PROCEDURE [dbo].[sp_set_inactive_employees]
 -- Add the parameters for the stored procedure here
@@ -15,13 +16,13 @@ BEGIN
     /*****
 	DEFINICION DE TABLAS
 	1. y 2. DenariusDesktop_Dev.dbo.LGT_INF_Employee = Listado de personal activo/inactivo en Denarius
-	3. DeliveryBackOffice.dbo.InternalUser = Homologa la informaci�n de colaboradores Denarius a Hermes (con c�digo, usuario y contrase�a)
+	3. DeliveryBackOffice.dbo.InternalUser = Homologa la información de colaboradores Denarius a Hermes (con código, usuario y contraseña)
 	4. DeliveryBackOffice.dbo.RegisterUser = Tabla maestra de usuarios (excepto los couriers)
 	5. DeliveryBackOffice.dbo.Person = Registro personal de usuarios de la tabla maestra de RegisterUser (excepto los couriers)
 	6. DeliveryBackOffice.dbo.UserSystemRestriction = Status de usuarios Hermes x sistema
 	7. DeliveryBackOffice.dbo.SenderReceiver = Listado de couriers
 	8. DenariusUser_Dev.dbo.LGN_Restriction = Status de usuarios Denarius x sistema
-	9. DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave for�nea (buscar llave for�nea)
+	9. DeliveryBackOffice.dbo.RolByUserBySystem = 3 campos de llave foránea (buscar llave foránea)
 	*****/
 
 
@@ -35,8 +36,8 @@ BEGIN
         /**********************************************************************************************************/
         PRINT 'TABLA 01';
 
-        /************************ PREPARACI�N *************************************/
-        -- ALMACENA TODOS LOS EMPLEADOS DE FORZA DELIVERY QUE EST�N EN LA BASE DE DATOS PRODUCTIVA DE CASH
+        /************************ PREPARACIÓN *************************************/
+        -- ALMACENA TODOS LOS EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN LA BASE DE DATOS PRODUCTIVA DE CASH
         DECLARE @Tbl130100 TABLE
         (
             Ficha VARCHAR(8) NOT NULL,
@@ -45,20 +46,20 @@ BEGIN
             Estado INT NOT NULL
         );
 
-        -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY QUE EST�N EN CASH
+        -- ALMACENA SOLO LAS BAJAS DE EMPLEADOS DE FORZA DELIVERY QUE ESTÁN EN CASH
         DECLARE @TblSource TABLE
         (
-            --IdEmployee INT NOT NULL,          -- Ac� no se guardar� porque difiere del de Hermes porque en esta solo se insertan los de Delivery
-            CodeEmployee VARCHAR(8) NOT NULL, -- N�mero de ficha del colaborador
-            NameEmployee VARCHAR(100) NULL,   -- Nombre de empleado seg�n Denarius
-            DPI VARCHAR(25) NULL,             -- DPI seg�n Denarius
+            --IdEmployee INT NOT NULL,          -- Acá no se guardará porque difiere del de Hermes porque en esta solo se insertan los de Delivery
+            CodeEmployee VARCHAR(8) NOT NULL, -- Número de ficha del colaborador
+            NameEmployee VARCHAR(100) NULL,   -- Nombre de empleado según Denarius
+            DPI VARCHAR(25) NULL,             -- DPI según Denarius
             StatusJob INT NOT NULL            -- Estado laboral = 2 para las bajas que se deben registrar en las tablas siguientes
         );
 
-        -- TODOS LOS EMPLEADOS DE FORZA DELIVERY EXPRESS QUE EST�N EN EL SERVIDOR 130.100
+        -- TODOS LOS EMPLEADOS DE FORZA DELIVERY EXPRESS QUE ESTÁN EN EL SERVIDOR 130.100
         INSERT INTO @Tbl130100
 
-        --PRODUCCI�N EN EL SERVIDOR 3.200
+        --PRODUCCIÓN EN EL SERVIDOR 3.200
         SELECT emp.CodeEmployee,
                emp.FirstName + ' ' + emp.SecondName + ' ' + emp.LastName1 + ' ' + emp.LastName2,
                emp.DPI,
@@ -94,7 +95,7 @@ BEGIN
 
         --SELECT * FROM @TblSource
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_LGT_INF_Employees_Cash
         SELECT CodeEmployee,
                NameEmployee,
@@ -111,13 +112,13 @@ BEGIN
         /**************************************************************************/
         PRINT 'TABLA 02';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblEmployees TABLE
         (
             IdEmployee INT NOT NULL,          -- ID de registro interno en la tabla LGT_Inf_Employee de DenariusDesktop_Dev en Cash
-            CodeEmployee VARCHAR(8) NOT NULL, -- N�mero de ficha del colaborador
-            NameEmployee VARCHAR(100) NULL,   -- Nombre de empleado seg�n Denarius
-            DPI VARCHAR(25) NULL,             -- DPI seg�n Denarius
+            CodeEmployee VARCHAR(8) NOT NULL, -- Número de ficha del colaborador
+            NameEmployee VARCHAR(100) NULL,   -- Nombre de empleado según Denarius
+            DPI VARCHAR(25) NULL,             -- DPI según Denarius
             StatusJob SMALLINT NOT NULL       -- Estado laboral = 1 activo; 2 = inactivo
         );
 
@@ -134,7 +135,7 @@ BEGIN
         ORDER BY emp.CodeEmployee ASC;
 
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_LGT_INF_Employees_Delivery
         SELECT IdEmployee,
                CodeEmployee,
@@ -146,7 +147,7 @@ BEGIN
         WHERE StatusJob = 1; -- listar solo empleados activos
 
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee WHERE codeemployee = @Ficha
         UPDATE DenariusDesktop_Dev.dbo.LGT_INF_Employee
         SET StatusJob = 2
@@ -163,13 +164,13 @@ BEGIN
         /******************************************************************************/
         PRINT 'TABLA 03';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblInternalUser TABLE
         (
-            IdUser BIGINT NOT NULL,         -- N�mero de ficha del colaborador
-            Username NVARCHAR(50) NOT NULL, -- Nombre de usuario para iniciar sesi�n
+            IdUser BIGINT NOT NULL,         -- Número de ficha del colaborador
+            Username NVARCHAR(50) NOT NULL, -- Nombre de usuario para iniciar sesión
             IdEmployee INT NULL,            -- ID de registro interno de la tabla LGT_Inf_Employee de DenariusDesktop_Dev en Hermes, puede ser nulo porque hay usuarios de empleados para otros sistemas
-            RegisterUserID BIGINT NOT NULL, -- ID de registro for�neo de la tabla RegisterUser en InternalUser de DeliveryBackOffice
+            RegisterUserID BIGINT NOT NULL, -- ID de registro foráneo de la tabla RegisterUser en InternalUser de DeliveryBackOffice
             RowStatus BIT NULL              -- Estado del registro 1 = activo ; 0 = inactivo
         );
 
@@ -182,9 +183,9 @@ BEGIN
             iu.RowStatus
         FROM DeliveryBackOffice.dbo.InternalUser iu WITH (NOLOCK)
             INNER JOIN @TblEmployees t
-                ON CONVERT(BIGINT, t.CodeEmployee) = iu.IdUser; -- Relacionar por el n�mero de ficha, el IdUser de InternalUser es la ficha de empleado
+                ON CONVERT(BIGINT, t.CodeEmployee) = iu.IdUser; -- Relacionar por el número de ficha, el IdUser de InternalUser es la ficha de empleado
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_InternalUser
         SELECT IdUser,
                Username,
@@ -195,7 +196,7 @@ BEGIN
         FROM @TblInternalUser
         WHERE RowStatus = 1;
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DeliveryBackOffice.dbo.InternalUser WHERE IdEmployee = @EmployeeID
         UPDATE DeliveryBackOffice.dbo.InternalUser
         SET RowStatus = 0,
@@ -211,11 +212,11 @@ BEGIN
 
 
         /******************************************************************************/
-        /****** TABLA 04 PARA GUARDAR LA INFORMACI�N DE LOS USUARIOS DE DELIVERY ******/
+        /****** TABLA 04 PARA GUARDAR LA INFORMACIÓN DE LOS USUARIOS DE DELIVERY ******/
         /******************************************************************************/
         PRINT 'TABLA 04';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblRegisterUser TABLE
         (
             UsrIdUser BIGINT NOT NULL,       -- 
@@ -234,7 +235,7 @@ BEGIN
             INNER JOIN @TblInternalUser t
                 ON t.RegisterUserID = ru.UsrIdUser; -- RegisterUserID de InternalUser
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_RegisterUser
         SELECT UsrIdUser,
                UsrIdPerson,
@@ -244,7 +245,7 @@ BEGIN
         FROM @TblRegisterUser
         WHERE RowStatus = 1;
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DeliveryBackOffice.dbo.RegisterUser WHERE UsrIdUser = @InternalUser
         UPDATE DeliveryBackOffice.dbo.RegisterUser
         SET UsrRowStatus = 0,
@@ -259,17 +260,17 @@ BEGIN
 
 
         /******************************************************************************/
-        /****** TABLA 05 PARA GUARDAR LA INFORMACI�N DE LAS PERSONAS DE DELIVERY ******/
+        /****** TABLA 05 PARA GUARDAR LA INFORMACIÓN DE LAS PERSONAS DE DELIVERY ******/
         /******************************************************************************/
         PRINT 'TABLA 05';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblPerson TABLE
         (
             PerIdPerson BIGINT NOT NULL,        -- 
             PerFirstName VARCHAR(100) NOT NULL, -- Primer Nombre
             PerLastName VARCHAR(100) NOT NULL,  -- Primer Apellido
-                                                -- PerIdentification VARCHAR(50) NOT NULL, -- CUI / DPI (no se guardar� porque los datos no tienen control de calidad)
+                                                -- PerIdentification VARCHAR(50) NOT NULL, -- CUI / DPI (no se guardará porque los datos no tienen control de calidad)
             PerRowStatus BIT NULL               -- Estado del registro 1 = activo ; 0 = inactivo
         );
 
@@ -283,7 +284,7 @@ BEGIN
             INNER JOIN @TblRegisterUser t
                 ON t.UsrIdPerson = p.PerIdPerson; -- 
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_Person
         SELECT PerIdPerson,
                PerFirstName,
@@ -293,7 +294,7 @@ BEGIN
         FROM @TblPerson
         WHERE PerRowStatus = 1;
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DeliveryBackOffice.dbo.Person WHERE PerIdPerson = @InternalUser
         UPDATE DeliveryBackOffice.dbo.Person
         SET PerRowStatus = 0,
@@ -307,11 +308,11 @@ BEGIN
 
 
         /******************************************************************************/
-        /******** TABLA 06 PARA GESTIONAR LOS PERMISOS POR M�DULO DE SISTEMAS *********/
+        /******** TABLA 06 PARA GESTIONAR LOS PERMISOS POR MÓDULO DE SISTEMAS *********/
         /******************************************************************************/
         PRINT 'TABLA 06';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblUserSystemRestriction TABLE
         (
             UstIdRestriction BIGINT NOT NULL, -- 
@@ -332,7 +333,7 @@ BEGIN
             INNER JOIN @TblRegisterUser t
                 ON t.UsrIdUser = usr.UstIdUser;
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_UserSystemRestriction
         SELECT UstIdRestriction,
                UstIdUser,
@@ -344,7 +345,7 @@ BEGIN
         WHERE UstStatus = 'ACTIVE'
               OR UstRowStatus = 1;
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DeliveryBackOffice.dbo.UserSystemRestriction WHERE UstIdUser = @InternalUser
         UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
         SET UstRowStatus = 0,
@@ -367,7 +368,7 @@ BEGIN
         /******************************************************************************/
         PRINT 'TABLA 07';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblSenderReceiver TABLE
         (
             SenRecID INT NOT NULL,                 -- 
@@ -388,7 +389,7 @@ BEGIN
             INNER JOIN @TblSource t
                 ON t.DPI = sr.CUI;
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_SenderReceiver
         SELECT SenRecID,
                SenRecFirstName,
@@ -399,7 +400,7 @@ BEGIN
         FROM @TblSenderReceiver
         WHERE SenRecStatus = 1;
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DeliveryBackOffice.dbo.SenderReceiver WHERE CUI = @CUI
         UPDATE DeliveryBackOffice.dbo.SenderReceiver
         SET Estatus = 0,
@@ -412,11 +413,11 @@ BEGIN
 
 
         /******************************************************************************/
-        /**** TABLA 08 PARA GESTIONAR LOS PERMISOS POR M�DULO DE SISTEMAS (LEGACY) ****/
+        /**** TABLA 08 PARA GESTIONAR LOS PERMISOS POR MÓDULO DE SISTEMAS (LEGACY) ****/
         /******************************************************************************/
         PRINT 'TABLA 08';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblRestriction TABLE
         (
             RstIdUser VARCHAR(50) NOT NULL,   -- 
@@ -436,7 +437,7 @@ BEGIN
                 ON t.IdUser = r.RST_IdUser
                    AND t.Username = r.RST_Username;
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_LGN_Restriction
         SELECT RstIdUser,
                RstUsername,
@@ -446,7 +447,7 @@ BEGIN
         FROM @TblRestriction
         WHERE RstStatus = 'ACTIVE';
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DenariusUser_Dev.dbo.LGN_Restriction WHERE RST_IdUser = @Ficha AND RST_Username = @Username
         UPDATE DenariusUser_Dev.dbo.LGN_Restriction
         SET RST_Status = 'INACTIVE',
@@ -464,7 +465,7 @@ BEGIN
         /***************************************************************************************/
         PRINT 'TABLA 09';
 
-        /************************ PREPARACI�N *************************************/
+        /************************ PREPARACIÓN *************************************/
         DECLARE @TblRolByUserBySystem TABLE
         (
             RusIdSystem VARCHAR(50) NOT NULL, -- 
@@ -481,7 +482,7 @@ BEGIN
             INNER JOIN @TblRegisterUser t
                 ON t.UsrIdUser = rbubs.RusIdUser;
 
-        /************************* BIT�CORA ***************************************/
+        /************************* BITÁCORA ***************************************/
         INSERT INTO DenariusLog_Dev.dbo.HSE_RolByUserBySystem
         SELECT RusIdSystem,
                RusIdUser,
@@ -490,7 +491,7 @@ BEGIN
         FROM @TblRolByUserBySystem
         WHERE RusRowStatus = 1;
 
-        /********************** ACTUALIZACI�N ************************************/
+        /********************** ACTUALIZACIÓN ************************************/
         --SELECT * FROM DeliveryBackOffice.dbo.RolByUserBySystem WHERE RusIdUser = @InternalUser
         UPDATE DeliveryBackOffice.dbo.RolByUserBySystem
         SET RusRowStatus = 0,
@@ -504,7 +505,7 @@ BEGIN
         COMMIT TRANSACTION;
 
         SELECT 1 'StatusCode',
-               'Operaci�n exitosa.' 'Description';
+               'Operación exitosa.' 'Description';
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -513,6 +514,3 @@ BEGIN
                ERROR_MESSAGE() 'Description';
     END CATCH;
 END;
-GO
-
-
