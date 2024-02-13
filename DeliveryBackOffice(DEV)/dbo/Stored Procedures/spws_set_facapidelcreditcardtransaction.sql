@@ -452,6 +452,19 @@ BEGIN
 
   print 'code 00'
 
+   --  DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @AccountId AND RowStatus=1 ORDER BY DateCreated DESC)
+
+		 --UPDATE  [dbo].[MarketplaceCartDetail]
+			--  SET RowStatus = 0,
+			--	  TokenUpdated = @Token,
+			--	  DateUpdated  = GETDATE()
+			--  WHERE  MarketplaceCartId = @IdCart
+
+			--UPDATE  [dbo].[MarketplaceCart]
+			--  SET RowStatus = 0,
+			--	  TokenUpdated = @Token,
+			--	  DateUpdated  = GETDATE()
+			--  WHERE IdMarketplaceCart = @IdCart
 
 
       -- Variables estaticas "globales"
@@ -871,7 +884,7 @@ BEGIN
             (
                 IdNewSubscriptions
             )
-            SELECT IIF(@CustomerType = 2, NULL, @ActiveMembershipId)
+            SELECT NULL--IIF(@CustomerType = 2, NULL, @ActiveMembershipId)
                  , CS.IdCatSubscription
                  , @StartingStatus
                  , CS.SubscriptionCost
@@ -1038,10 +1051,10 @@ BEGIN
 					SET ActivationCode= ((SELECT CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)  
 											+ RIGHT('000000' + CAST(B.IdSubscription AS NVARCHAR(6)), 6)
 											+ CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65) ) )
-			FROM @AuxNewMembership A 
+			FROM @AuxNewSubscriptions A 
 			    INNER JOIN 
 				[dbo].[Subscription] B With(Nolock)
-				ON A.IdNewMembership = B.IdSubscription
+				ON A.IdNewSubscriptions = B.IdSubscription
 
 
 
