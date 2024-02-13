@@ -558,6 +558,7 @@
     <Build Include="dbo\Tables\MarketplaceCartDetail.sql" />
     <Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Tables\CatProductImage.sql" />
+    <Build Include="dbo\Tables\MarketplaceCarouselImage.sql" />
     
 
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
