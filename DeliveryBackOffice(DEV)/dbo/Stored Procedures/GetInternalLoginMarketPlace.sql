@@ -10,7 +10,7 @@ CREATE PROCEDURE [dbo].[GetInternalLoginMarketPlace]
 	@UserCode BIGINT = 0,
 	@UserName VARCHAR(200), 
 	@Password VARCHAR(200), 
-	@SystemName NVARCHAR(50) = 'Hermes Web'
+	@SystemName NVARCHAR(50) = 'Market Place'
 AS
     BEGIN
         -- SET NOCOUNT ON added to prevent extra result sets from

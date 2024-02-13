@@ -19,7 +19,9 @@
 ,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
 ,@UseMembership bit=0
-,@TypeSubscriptionId AS INT= 0
+--,@TypeSubscriptionId AS INT= 0
+,@CategoryProductId int = 0
+,@ProductId int = 0
 AS 
 BEGIN
 
@@ -105,7 +107,7 @@ BEGIN
 	--SE COMENTA PARA CÁLCULAR MEMBRESÍAS
 	--IF @Price =0 AND @CouponApplied = 0 
 	--BEGIN
-		EXECUTE @RC = DeliveryBackOffice.dbo.spws_revalue_guide
+		EXECUTE DeliveryBackOffice.dbo.spws_revalue_guide
 					@GuideSerie = @GuideSerie,
 					@GuideNumber = @GuideNumber,
 					@CodeApp = '',
@@ -115,9 +117,11 @@ BEGIN
 					@SetUpdate = 'true',
 					@Token = 'sps_DeliveryOrderDetailIds',
 					@IsReturn = 'false',
-					@ParIsCreditCard = @IsCreditCardPayment,
+					@ParIsCreditCard = 1,
 					@UseMembership = @UseMembership,
-					@TypeSubscriptionId = @TypeSubscriptionId
+					--@TypeSubscriptionId = 1
+					@CategoryProductId = @CategoryProductId,
+					@ProductId = @ProductId
 	--END
 
 	select 1,

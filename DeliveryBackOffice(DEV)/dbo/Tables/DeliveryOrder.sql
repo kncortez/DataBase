@@ -137,6 +137,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -377,4 +379,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
     ON [dbo].[DeliveryOrder]([User_Contact] ASC)
     INCLUDE([ID_ContactIncident], [Contact_Confirmed]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC, [StatusOrderId] ASC)
+    INCLUDE([Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Department]);
 

@@ -13,8 +13,11 @@
     [DateUpdated]                    DATETIME        NULL,
     [Icon]                           NVARCHAR (50)   NULL,
     [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
+    [CatProductCategoryId]           INT             NULL,
     CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
 );
+
+
 
 
 

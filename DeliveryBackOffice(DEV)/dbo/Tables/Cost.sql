@@ -33,9 +33,14 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IDX_product_number_cost]
-    ON [dbo].[Cost]([IdProduct] ASC, [ProductNumber] ASC);
+CREATE UNIQUE NONCLUSTERED INDEX [IDX_product_number_cost]
+    ON [dbo].[Cost]([IdCost] DESC, [ProductNumber] DESC)
+    INCLUDE([TotalAmountPaid], [CODAmount]) WITH (IGNORE_DUP_KEY = ON);
+
+
 
 
 GO
@@ -81,4 +86,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_RowStatus_DateCreated]
     ON [dbo].[Cost]([RowStatus] ASC, [DateCreated] DESC)
     INCLUDE([IdCost], [ProductNumber], [GuideSerie], [GuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ProductNumber_RowStatus]
+    ON [dbo].[Cost]([ProductNumber] ASC, [RowStatus] ASC)
+    INCLUDE([TotalAmountPaid], [CODAmount]);
 

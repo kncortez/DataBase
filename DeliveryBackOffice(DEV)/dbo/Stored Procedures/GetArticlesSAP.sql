@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<Oscar,Morales>
 -- Create date: <2021-10-12>
@@ -32,8 +31,10 @@ BEGIN
 		,CardPercent
 		,CardAmount
 		,IsSurcharge
-	FROM CatArticleSAP
+	FROM CatArticleSAP 
 	WHERE RowSatus = 1
+	AND [Name] NOT LIKE ('%SUSCRIPCION%')
+	AND [Name] NOT LIKE '%MEMBRESIA%'
 	ORDER BY Id ASC
 
 	SET NOCOUNT OFF;

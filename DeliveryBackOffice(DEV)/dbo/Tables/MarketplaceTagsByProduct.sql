@@ -7,9 +7,14 @@
     [DateCreated]                DATETIME      NOT NULL,
     [TokenUpdated]               NVARCHAR (50) NULL,
     [DateUpdated]                DATETIME      NULL,
+    [CatSubscriptionId]          INT           NULL,
+    [CatMembershipId]            INT           NULL,
     CONSTRAINT [FK_MarketplaceTagsByProduct_CatProduct] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatProduct] ([IdCatProduct]),
+    CONSTRAINT [FK_MarketplaceTagsByProduct_CatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
     CONSTRAINT [FK_MarketplaceTagsByProduct_MarketplaceProductTags] FOREIGN KEY ([MarketplaceProductTagsId]) REFERENCES [dbo].[MarketplaceProductTags] ([IdMarketplaceProductTags])
 );
+
+
 
 
 GO
@@ -46,4 +51,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Varias etiquetas para varios productos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceTagsByProduct';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceTagsByProduct', @level2type = N'COLUMN', @level2name = N'CatSubscriptionId';
 

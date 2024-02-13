@@ -40,6 +40,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del tipo de servicio de tabla CatTypeServiceClosure', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderPaymentTransaction', @level2type = N'COLUMN', @level2name = N'TypeServiceId';
 
@@ -79,4 +81,10 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_AccountId_DateCreated_CODAmountProcess]
     ON [dbo].[DeliveryOrderPaymentTransaction]([AccountId] ASC, [DateCreated] ASC, [CODAmountProcess] ASC)
     INCLUDE([GuideNumber], [GuideSerie]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_deli_Order]
+    ON [dbo].[DeliveryOrderPaymentTransaction]([TypeofInOutMoneyId] ASC, [DateCreated] ASC)
+    INCLUDE([amount], [TypeServiceId], [AccountId], [CODAmountProcess], [VisitPoint], [Fel]);
 

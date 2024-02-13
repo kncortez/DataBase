@@ -29,6 +29,9 @@
     [AvailablePoints]                INT             NULL,
     [PointsExpirationDate]           DATETIME        NULL,
     [CatValueTypeId]                 INT             NULL,
+    [ProductGiftShippingEmail]       NVARCHAR (100)  NULL,
+    [ActivationCode]                 NVARCHAR (50)   NULL,
+    [ActivationDate]                 DATETIME        NULL,
     CONSTRAINT [PK_Membership] PRIMARY KEY CLUSTERED ([IdMembership] ASC),
     CONSTRAINT [FK_Membership_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_Membership_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
@@ -37,6 +40,8 @@
     CONSTRAINT [FK_Membership_MembershipStatus] FOREIGN KEY ([CatMembershipStatusId]) REFERENCES [dbo].[CatSalesPackageStatus] ([IdCatSalesPackageStatus]),
     CONSTRAINT [FK_Membership_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 
@@ -166,4 +171,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de tabla CatValueType', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatValueTypeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de activación del producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'ActivationDate';
 

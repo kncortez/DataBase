@@ -1,19 +1,22 @@
 ﻿CREATE TABLE [dbo].[CatProductImage] (
-    [IdCatProductImage]            INT             IDENTITY (1, 1) NOT NULL,
-    [CatProductId]                 INT             NOT NULL,
-    [CatProductImageSmallImageURL] NVARCHAR (200)  NULL,
-    [CatProductImageLargeImageURL] NVARCHAR (200)  NULL,
-    [CatProductImageOrder]         INT             NOT NULL,
-    [CatProductImageResolutionX]   DECIMAL (18, 2) NULL,
-    [CatProductImageResolutionY]   DECIMAL (18, 2) NULL,
-    [RowStatus]                    BIT             NOT NULL,
-    [TokenCreated]                 NVARCHAR (50)   NOT NULL,
-    [DateCreated]                  DATETIME        NULL,
-    [TokenUpdated]                 NVARCHAR (50)   NULL,
-    [DateUpdated]                  DATETIME        NULL,
+    [IdCatProductImage]            INT            IDENTITY (1, 1) NOT NULL,
+    [CatProductId]                 INT            NOT NULL,
+    [CatProductImageSmallImageURL] NVARCHAR (200) NULL,
+    [CatProductImageLargeImageURL] NVARCHAR (200) NULL,
+    [CatProductImageOrder]         INT            NOT NULL,
+    [RowStatus]                    BIT            NOT NULL,
+    [TokenCreated]                 NVARCHAR (50)  NOT NULL,
+    [DateCreated]                  DATETIME       NOT NULL,
+    [TokenUpdated]                 NVARCHAR (50)  NULL,
+    [DateUpdated]                  DATETIME       NULL,
+    [CatSubscriptionId]            INT            NULL,
+    [CatMembershipId]              INT            NULL,
     CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
-    CONSTRAINT [FK_CatProductImage_CatProduct] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatProduct] ([IdCatProduct])
+    CONSTRAINT [FK_CatProductImage_CatProduct] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatProduct] ([IdCatProduct]),
+    CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
 );
+
+
 
 
 GO
@@ -37,11 +40,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Resolución de imagen Y', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'CatProductImageResolutionY';
+
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Resolución de imagen X', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'CatProductImageResolutionX';
+
 
 
 GO
@@ -66,4 +69,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Listado de imágenes por producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'CatSubscriptionId';
 

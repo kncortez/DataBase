@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-01-17>
 -- Description:	<Devuelve el listado de GUIAS asiganadas a una cuenta>
@@ -15,11 +16,14 @@ CREATE PROCEDURE [dbo].[spws_get_services]
     @Pagina BIGINT = 0,
     @Token VARCHAR(200),
     @IdAccount BIGINT,
-    @GuideNumber AS NVARCHAR(50) = '-1',
+    @GuideNumber AS NVARCHAR(50) = null,--'-1'
     @Filter INT,
     @CancelGuides TINYINT = 1
 AS
-BEGIN    
+BEGIN  
+	IF(@GuideNumber = '-1')
+		SET @GuideNumber = NULL
+        
     DECLARE @IdUser BIGINT =
             (
                 SELECT TOP 1 t.TknIdUser FROM TokenLog t WITH(NOLOCK) WHERE t.TknIdToken = @Token
@@ -318,11 +322,22 @@ BEGIN
 											(
 												@CancelGuides = 0
 												AND ISNULL(ord.StatusOrderId, 15) != 7
+
 												OR @CancelGuides = 1
 												   AND ord.StatusOrderId IS NOT NULL
 											)
+											AND --BNHL
+											(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                            )
+											
 										ORDER BY ord.Guide_Number DESC OFFSET @SKIPC ROWS FETCH NEXT @CantidadRegistrosC ROWS ONLY
                                    
+								   
 
 
 										FOR XML PATH(''), TYPE
@@ -380,6 +395,8 @@ BEGIN
 						PRINT @SKIP
 						PRINT '@CantidadRegistros'
 						PRINT @CantidadRegistros
+				
+				--SELECT 'PRUEBAS';
 
 				SET @jsonResult =
 				(
@@ -618,6 +635,16 @@ BEGIN
 												OR @CancelGuides = 1
 												   AND ord.StatusOrderId IS NOT NULL
 											)
+											--BNHL
+												AND 
+												(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                                )
+
 											ORDER BY ord.Guide_Number 
 											DESC OFFSET @SKIP ROWS FETCH NEXT @CantidadRegistros ROWS ONLY
                                    
@@ -857,6 +884,15 @@ BEGIN
 											--(( CONVERT(DATE, ord.DateCreated) between @StartDate and @EndDate) or (@StartDate IS NULL AND @EndDate IS NULL))
 											--AND
 											ord.StatusOrderId = 15
+											--BNHL
+												AND 
+												(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                                )
 										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1C ROWS FETCH NEXT @CantidadRegistros1C ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
@@ -1099,6 +1135,15 @@ BEGIN
 												   )
 												OR ord.IdCustomer = @idCustomer
 											)
+											--BNHL
+												AND 
+												(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                                )
 										ORDER BY ord.Guide_Number DESC OFFSET @SKIP1 ROWS FETCH NEXT @CantidadRegistros1 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
@@ -1347,6 +1392,15 @@ BEGIN
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ISNULL(ord.StatusOrderId, 15) NOT IN ( 15, 5, 7, 22 )
+										--BNHL
+												AND 
+												(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                                )
 										ORDER BY ord.Guide_Number DESC OFFSET @Skip2C ROWS FETCH NEXT @CantidadRegistros2C ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
@@ -1605,6 +1659,15 @@ BEGIN
 													 )
 												  OR ord.IdCustomer = @idCustomer
 											  )
+											  --BNHL
+												AND 
+												(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                                )
 										ORDER BY ord.Guide_Number DESC OFFSET @Skip2 ROWS FETCH NEXT @CantidadRegistros2 ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),
@@ -1837,6 +1900,15 @@ BEGIN
 													ord.Sender_ID = tp.CodeOfReference
 										--LEFT join dbo.UserAddress addruser on (addruser.UadIdAccount = @IdAccount)
 										WHERE ord.StatusOrderId IN ( 5, 22 )
+										--BNHL
+												AND 
+												(
+												 @GuideNumber IS NULL
+												 OR
+												 LEN(@GuideNumber)=0
+												 OR
+												 @GuideNumber = ord.Guide_Serie + CONVERT(NVARCHAR,ord.Guide_Number)
+                                                )
 										ORDER BY ord.Guide_Number DESC OFFSET @Skip3c ROWS FETCH NEXT @CantidadRegistros3c ROWS ONLY
 										FOR XML PATH(''), TYPE
 									).value('.', 'varchar(max)'),

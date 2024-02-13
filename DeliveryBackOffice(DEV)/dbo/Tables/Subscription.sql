@@ -24,11 +24,16 @@
     [RateHeaderId]                     INT             NULL,
     [AlternativeRateHeaderId]          INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
+    [ActivationCode]                   NVARCHAR (50)   NULL,
+    [ProductGiftShippingEmail]         NVARCHAR (100)  NULL,
+    [ActivationDate]                   DATETIME        NULL,
     CONSTRAINT [PK_Subscription] PRIMARY KEY CLUSTERED ([IdSubscription] ASC),
     CONSTRAINT [FK_Subscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_Subscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
     CONSTRAINT [FK_Subscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 
@@ -59,4 +64,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario al
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de activación del producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'ActivationDate';
 

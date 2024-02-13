@@ -160,6 +160,7 @@ BEGIN
 
 		-- Si se puede finalizar el carrito de compras
 		IF( @CountUpdated = @CountValid)
+		IF(COUNT(@CountValid)>0)
 		BEGIN
 		
 			UPDATE 

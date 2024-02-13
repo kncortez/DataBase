@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[CatProduct] (
     [IdCatProduct]                   INT             IDENTITY (1, 1) NOT NULL,
     [CatProductName]                 NVARCHAR (50)   NOT NULL,
-    [CatProductDescription]          NVARCHAR (100)  NULL,
+    [CatProductDescription]          NVARCHAR (300)  NULL,
     [CatProductCategoryId]           INT             NOT NULL,
     [CatProductCost]                 DECIMAL (18, 2) NOT NULL,
     [ProductStock]                   INT             NULL,
@@ -25,6 +25,8 @@
     CONSTRAINT [FK_CatProduct_CatProductCategory] FOREIGN KEY ([CatProductCategoryId]) REFERENCES [dbo].[CatProductCategory] ([IdCatProductCategory]),
     CONSTRAINT [FK_CatProduct_CatProductSupplier] FOREIGN KEY ([CatProductSupplierId]) REFERENCES [dbo].[CatProductSupplier] ([IdCatProductSupplier])
 );
+
+
 
 
 GO

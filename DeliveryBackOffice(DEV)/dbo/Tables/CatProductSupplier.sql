@@ -1,13 +1,15 @@
 ﻿CREATE TABLE [dbo].[CatProductSupplier] (
     [IdCatProductSupplier]          INT            IDENTITY (1, 1) NOT NULL,
     [CatProductSupplierDescription] NVARCHAR (100) NULL,
-    [RowStatus]                     BIT            NULL,
-    [TokenCreated]                  NVARCHAR (50)  NULL,
-    [DateCreated]                   DATETIME       NULL,
+    [RowStatus]                     BIT            NOT NULL,
+    [TokenCreated]                  NVARCHAR (50)  NOT NULL,
+    [DateCreated]                   DATETIME       NOT NULL,
     [TokenUpdated]                  NVARCHAR (50)  NULL,
     [DateUpdated]                   DATETIME       NULL,
     CONSTRAINT [PK_CatProductSupplier] PRIMARY KEY CLUSTERED ([IdCatProductSupplier] ASC)
 );
+
+
 
 
 GO

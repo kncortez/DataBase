@@ -7,10 +7,15 @@
 -- Updated date: <2023-01-26>
 -- Description: <Acumulación de puntos forza>
 -- =============================================
+-- =============================================
+-- Author: <Edelman>
+-- Updated date: <2024-01-08>
+-- Description: <Integración de marketplace a estructura de BD de clubforza>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @Type AS INT = -1,
-    @System AS INT,
+    @System AS INT=1,
     @CardNumber AS NVARCHAR(50),
     @TypeCardNumber AS NVARCHAR(5),
     @Currency AS INT,
@@ -37,6 +42,7 @@ CREATE PROCEDURE [dbo].[spws_set_facapidelcreditcardtransaction]
     @VisitPointClientPortfolioId INT = NULL,
     @CouponSerie NVARCHAR(20) = NULL,
     @TblDeliveryOrdersList [TblDeliveryOrdersList2] READONLY
+	
 AS
 BEGIN
 
@@ -58,6 +64,25 @@ BEGIN
         CouponPromo NVARCHAR(200),
         PromoId INT
     );
+
+	
+
+
+	-- Variables para la asociación y activación de Membresías o suscripciones
+	DECLARE @IdTarjeta AS INT = NULL         -- puede ser null por ex c y por credito
+    DECLARE @TypeSalePackage AS NVARCHAR(50) -- membership or suscription
+    DECLARE @IdSalePackage AS INT            -- id membership or suscription
+    DECLARE @IdAcount AS BIGINT              ---- user
+    DECLARE @Vaucher AS NVARCHAR(50) = NULL  -- comprobante de factura pago con tarjeta
+    DECLARE @TypeOfInMoneyId INT             -- Tipo de pago
+    DECLARE @ModulId AS INT = NULL           --  pagina o form desde donde se hizo la operación 
+    DECLARE @SystemId AS INT                 --  1 y 2 web o 
+    DECLARE @Token AS NVARCHAR(50)
+    DECLARE @TaxId NVARCHAR(50) = 'CF'
+    DECLARE @FiscalAddress NVARCHAR(200) = 'Ciudad'
+    DECLARE @TaxName NVARCHAR(100) = 'CONSUMIDOR FINAL'
+    DECLARE @InvoiceEmail NVARCHAR(50) = ''
+    DECLARE @IsAutoRenewable Bit = 0
 
     -- Variables adicionales de control de flujo
     DECLARE @CouponCreated BIT = 0;
@@ -189,10 +214,10 @@ BEGIN
 				[CCTBC].OrderNumber = @OrderNumber
 				AND 
 				CAST(@DateCreated AS DATE) = CAST(DateCreated AS DATE);
-
+				Print 'flujo de transacción'
 			IF (@IdTransaction = 0)
 			BEGIN
-
+			Print 'flujo de transacción 1' 
 				INSERT INTO DeliveryBackOffice.dbo.CreditCardTransactionByCustomer
 				(
 					[System],
@@ -226,7 +251,7 @@ BEGIN
 					@Ammount, 
 					@OrderNumber, 
 					@Signature,
-					@CustomerReference, 
+					CASE WHEN @CustomerReference ='' THEN '1' ELSE @CustomerReference END , 
 					@ReferenceNumber, 
 					@ECIIndicator, 
 					@Authenticationresult, 
@@ -241,9 +266,9 @@ BEGIN
 					@TokenUpdated,
 					@DateUpdated
 				);
-
+				Print 'flujo de transacción2'
 				SET @IdTransaction = ISNULL(@@Identity, 0);
-
+				
 			END
 			ELSE IF (@IdTransaction > 0)
 			BEGIN
@@ -257,7 +282,7 @@ BEGIN
 					Ammount = @Ammount,
 					OrderNumber = @OrderNumber,
 					[Signature] = @Signature,
-					CustomerReference = @CustomerReference,
+					CustomerReference =CASE WHEN @CustomerReference ='' THEN '1' ELSE @CustomerReference END , 
 					ReferenceNumber = @ReferenceNumber,
 					ECIIndicator = @ECIIndicator,
 					Authenticationresult = @Authenticationresult,
@@ -388,7 +413,7 @@ BEGIN
 			SET 
 				ReasonCode = @ReasonCode,
 				ReasonDescription = @ReasonDescription,
-				DateUpdated = @DateUpdated,
+				DateUpdated = getdate(),---@DateUpdated,
 				TokenUpdated = @TokenUpdated,
 				ECIIndicator = @ECIIndicator,
 				Authenticationresult = @Authenticationresult,
@@ -404,12 +429,710 @@ BEGIN
 				AND 
 				CAST(@DateUpdated AS DATE) = CAST(DateCreated AS DATE);
 
-			COMMIT TRANSACTION LogTransactionTypeTwo
+----- Asociar membresía o sucripción
 
+IF(@ReasonCode='00')
+BEGIN
+  SELECT Top 1 
+    @IdTarjeta = GetCardsCredit         
+  , @TypeSalePackage = TypeSalePackage  
+  , @IdSalePackage = IdSalePackage             
+  , @IdAcount = AccountId              
+  , @Vaucher =Vaucher
+  , @TypeOfInMoneyId = 2        
+  , @ModulId = 1          
+  , @SystemId = 1             
+  , @Token = TokenCreated
+  , @TaxId = TaxId
+  , @FiscalAddress =AddressTax
+  , @TaxName =  NameTax
+  , @InvoiceEmail  = InvoiceEmail
+  , @IsAutoRenewable  = GetRenovacionAutomatica 
+  FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber= @OrderNumber
+
+  print 'code 00'
+
+   --  DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @AccountId AND RowStatus=1 ORDER BY DateCreated DESC)
+
+		 --UPDATE  [dbo].[MarketplaceCartDetail]
+			--  SET RowStatus = 0,
+			--	  TokenUpdated = @Token,
+			--	  DateUpdated  = GETDATE()
+			--  WHERE  MarketplaceCartId = @IdCart
+
+			--UPDATE  [dbo].[MarketplaceCart]
+			--  SET RowStatus = 0,
+			--	  TokenUpdated = @Token,
+			--	  DateUpdated  = GETDATE()
+			--  WHERE IdMarketplaceCart = @IdCart
+
+
+      -- Variables estaticas "globales"
+    DECLARE @StartingStatus INT = (
+                                      SELECT TOP 1
+                                          CSPS.IdCatSalesPackageStatus
+                                      FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                                      WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                                  );
+
+    DECLARE @StatusSubcription INT = (
+                                         SELECT COUNT(IdSubscription)
+                                         FROM [DeliveryBackOffice].[dbo].[Subscription]
+                                         WHERE AccountId = @IdAcount
+                                               AND RowStatus = 1
+                                               AND CatSubscriptionId = @IdSalePackage
+                                     );
+
+    -- Variables de control de flujo
+    DECLARE @TransactionSuccess BIT = 0;
+    DECLARE @ActivationCode NVARCHAR(100) = N'';
+    DECLARE @ActiveMembershipId INT = 0;
+    DECLARE @StatusMembershipt INT = 0;
+    DECLARE @HasCredit BIT = 0;
+    DECLARE @AddedPointExpirationDate INT = 0;
+    DECLARE @Idcustumer AS INT;
+    DECLARE @JsonResponse NVARCHAR(MAX) = N'';
+    DECLARE @SubscriptionId INT = 0;
+
+    DECLARE @TacId INT = 0;
+
+    SET @TacId =
+    (
+        SELECT TOP 1
+            [TAC].[IdTAC]
+        FROM [dbo].[TermsAndConditions] TAC
+        WHERE [TAC].[Name] = 'Terms and conditions memberships and subscriptions'
+    );
+
+
+	  --- validar si cliente posee credito​
+    SELECT TOP 1
+           @CustomerType = ISNULL(Cu.IdCustomerType, 0)
+         , @HasCredit    = ISNULL(   (CASE
+                                          WHEN CCOP.ConditionOfPaymenAbbreviation LIKE '%CREDITO%' THEN
+                                              1
+                                          ELSE
+                                              0
+                                      END
+                                     )
+                                   , 0
+                                 ) ---custumerType es 1 para corporativos
+         , @Idcustumer   = Cu.IdCustomer
+    FROM [DeliveryBackOffice].[dbo].[Account]                        AC WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]              Cu WITH (NOLOCK)
+            ON AC.IdCustomer = Cu.IdCustomer
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatConditionOfPayment] CCOP WITH (NOLOCK)
+            ON Cu.ConditionOfPaymentID = CCOP.IdConditionOfPayment
+    WHERE AC.AccIdAccount = @IdAcount;
+
+
+
+	   --- Estado de membresia
+    SELECT TOP 1
+           @StatusMembershipt  = 1
+         , @ActiveMembershipId = IdMembership
+    FROM [DeliveryBackOffice].[dbo].[Membership]
+    WHERE AccountId = @IdAcount
+          AND RowStatus = 1;
+
+
+        IF (
+			 EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
+                AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
+           )
+        BEGIN
+
+            PRINT 'INSERT MEMBRESIA';
+            DECLARE @AuxNewMembership AS TABLE (IdNewMembership INT);
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[Membership]
+            (
+                CatMembershipId
+              , CatMembershipStatusId
+              , MembershipCost
+              , CustomerId
+              , AccountId
+              , MembershipCode
+              , CustomerPaymentId
+              , IsAutoRenewable
+              , MembershipFixedValue
+              , MembershipMaxServiceFixedValue
+              , ActualServiceCount
+              , ExpirationDate
+              , RowStatus
+              , TokenCreated
+              , DateCreated
+              , TaxIdNumber
+              , InvoiceName
+              , InvoiceEmail
+              , FiscalAddress
+              , RenewalFixedDay
+              , AvailablePoints
+              , AccumulatedPoints
+              , PointsExpirationDate
+              , CatValueTypeId
+			  ,ProductGiftShippingEmail
+			  ,ActivationCode
+            )
+            OUTPUT inserted.IdMembership
+            INTO @AuxNewMembership
+            (
+                IdNewMembership
+            )
+            SELECT CM.IdCatMembership
+                 , @StartingStatus
+                 , CM.MembershipCost
+			
+				 --,CASE 
+					--	    WHEN  EXISTS(SELECT  TOP 1 1
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE') 
+							
+					--		THEN  
+							      
+					--		(SELECT   ac. IdCustomer
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE')
+				
+					--		ELSE  @Idcustumer
+
+					--		END
+                     ,RTP.CustomerId
+     --                           , CASE 
+					--	    WHEN  EXISTS(SELECT  TOP 1 1
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE') 
+							
+					--		THEN 
+					--		       		(SELECT  ac.AccIdAccount
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE')
+					--		ELSE @IdAcount
+					--END 
+					,RTP.AccountId
+                -- , IIF(@CustomerType = 2, NULL, @Idcustumer)
+                -- , IIF(@CustomerType = 2, NULL, @IdAcount)
+                 , IIF(@CustomerType = 2, @ActivationCode, NULL) -- agregar columna en insert para codigo de membresia 
+                 , (CASE
+                        WHEN @CustomerType  = 1
+                             AND @HasCredit = 1
+                             AND @IdTarjeta = 0
+                             AND @TypeOfInMoneyId = 8 THEN
+                            NULL
+                        WHEN @CustomerType = 2 THEN 
+                            NULL
+                       WHEN @AccountId=0 THEN 
+					   NULL
+                        ELSE
+                            @IdTarjeta
+                    END
+                   )                                             -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
+                 , @IsAutoRenewable
+                 , CM.MembershipFixedValue
+                 , CM.MembershipMaxServiceFixedValue
+                 , 0
+                 , DATEADD(MONTH, CM.MembershipValidity, GETDATE())
+                 ,  CASE 
+						    WHEN  EXISTS(SELECT  TOP 1 1
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = RTP.ProductGiftShippingEmail
+														     AND res.UstStatus  ='ACTIVE') 
+							
+							THEN 1
+							WHEN   (SELECT
+																					 ISNULL(res.UstStatus, 'N/A')
+																				FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+																					INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																						ON rus.RusIdUser = usr.UsrIdUser
+																						   AND rus.RusIdSystem = 1
+																					LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																						ON res.UstIdUser = rus.RusIdUser
+																						   AND res.UstIdSystem = rus.RusIdSystem
+																					LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																						ON rua.RuaIdUser = usr.UsrIdUser
+																						   AND rua.RuaRowStatus = 1
+																					INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																						ON ac.AccIdAccount = rua.RuaIdAccount
+																						   AND ac.AccRowStatus = 1
+																				WHERE usr.UsrEmail = RTP.InvoiceEmail  ) = 'ACTIVE' 
+																				AND RTP.ProductGiftShippingEmail  IS NULL
+																				THEN 1
+							ELSE 0
+							END
+                 , @Token
+                 , GETDATE()
+                 , @TaxId
+                 , @TaxName
+                 , @InvoiceEmail   
+                 , @FiscalAddress
+                 , DAY(GETDATE())
+                 , 0
+                 , 0
+                 , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE()))
+                 , CDR.ValueTypeId
+				 ,RTP.ProductGiftShippingEmail
+				 ,(SELECT TOP 1
+							CASE 
+								WHEN number < 65 THEN CHAR(number + 65)  -- Convertir número a letra (A=65, B=66, ..., H=72)
+								ELSE CHAR(number + 73)  -- Saltar las letras "I" y "O"
+							END
+						 FROM master.dbo.spt_values
+						 WHERE type = 'P' AND number BETWEEN 0 AND 25
+						 ORDER BY NEWID()
+						) + RIGHT('000000' + CAST(CM.IdCatMembership AS NVARCHAR(6)), 6) + CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)
+
+            FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
+                    ON CM.IdCatMembership = CDR.CatMembershipId
+			   INNER JOIN [dbo].[RegistrationofTransactionProcessStates] RTP  WITH (NOLOCK)
+			        ON CM.IdCatMembership = RTP.IdSalePackage	
+			
+            WHERE RTP.OrderNumber = @OrderNumber
+			AND RTP.TypeSalePackage = 'MEMBERSHIP'
+            --      AND NOT EXISTS
+            --(
+            --    SELECT TOP 1
+            --        1
+            --    FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
+            --    WHERE M.CustomerId = @Idcustumer
+            --          AND (M.AccountId = @IdAcount)
+            --          AND M.RowStatus = 1
+            --)
+			
+
+			UPDATE [dbo].[Membership] 
+					SET ActivationCode= ((SELECT CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)  
+											+ RIGHT('000000' + CAST(B.IdMembership AS NVARCHAR(6)), 6))
+											+ CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65) )
+			FROM @AuxNewMembership A 
+			    INNER JOIN 
+				[dbo].[Membership] B With(Nolock)
+				ON A.IdNewMembership = B.IdMembership
+
+
+			  IF (EXISTS (SELECT TOP 1 1 FROM @AuxNewMembership))
+            BEGIN
+                ----------Rango de descuento
+                INSERT INTO [DeliveryBackOffice].[dbo].[MembershipDiscountRange]
+                (
+                    MembershipId
+                  , ValueTypeId
+                  , DiscountValue
+                  , DiscountLowServiceRange
+                  , DiscountTopServiceRange
+                  , RowStatus
+                  , TokenCreated
+                  , DateCreated
+                )
+                SELECT ANM.IdNewMembership
+                     , CMDR.ValueTypeId
+                     , CMDR.DiscountValue
+                     , CMDR.DiscountLowServiceRange
+                     , CMDR.DiscountTopServiceRange
+                     , CMDR.RowStatus
+                     , @Token
+                     , GETDATE()
+                FROM [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CMDR WITH (NOLOCK)
+				    INNER JOIN [DeliveryBackOffice].[dbo].RegistrationofTransactionProcessStates RT WITH (NOLOCK)
+					ON CMDR.CatMembershipId = RT.IdSalePackage
+                    CROSS JOIN @AuxNewMembership ANM
+                WHERE RT.Ordernumber = @OrderNumber 
+
+                ---- Log de pago de membresia
+                INSERT INTO [DeliveryBackOffice].[dbo].[MembershipPaymentLog]
+                (
+                    MembershipId
+                  , TypeOfInOutOfMoneyId
+                  , [Authorization]
+                  , RowStatus
+                  , TokenCreated
+                  , DateCreated
+                )
+                SELECT ANM.IdNewMembership
+                     , @TypeOfInMoneyId
+                     , (CASE
+                            WHEN @CustomerType = 1
+                                 AND @HasCredit = 1
+                                 AND @IdTarjeta = 0
+                                 AND @TypeOfInMoneyId = 8 THEN
+                                'CREDIT'
+                            WHEN @CustomerType = 2
+                                 AND @TypeOfInMoneyId = 1 THEN
+                                'CASH'
+                            ELSE
+                                @Vaucher
+                        END
+                       )
+                     , 1
+                     , @Token
+                     , GETDATE()
+                FROM @AuxNewMembership ANM;
+
+
+                --- Insert tabla dbo.Cost
+
+  	        Insert Into [dbo].[Cost] (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+		    values (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token,GETDATE(), null, null ) 
+
+         
+
+            END;
+
+            
+
+
+			END
+
+   IF (
+               EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
+                AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
+                )
+        BEGIN
+
+		  
+            DECLARE @AuxNewSubscriptions AS TABLE (IdNewSubscriptions INT);
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[Subscription]
+            (
+                MembershipId
+              , CatSubscriptionId
+              , CatSubscriptionStatusId
+              , SubscriptionCost
+              , CustomerId
+              , AccountId
+              , SubscriptionCode
+              , CustomerPaymentId
+              , IsAutoRenewable
+              , SubscriptionFixedValue
+              , SubscriptionMaxServiceFixedValue
+              , ActualServiceCount
+              , ExpirationDate
+              , RowStatus
+              , TokenCreated
+              , DateCreated
+              , RenewalFixedDay
+              , CatTypeSubscriptionId
+			  ,ActivationCode
+			  ,ProductGiftShippingEmail
+            )
+            OUTPUT inserted.IdSubscription
+            INTO @AuxNewSubscriptions
+            (
+                IdNewSubscriptions
+            )
+            SELECT NULL--IIF(@CustomerType = 2, NULL, @ActiveMembershipId)
+                 , CS.IdCatSubscription
+                 , @StartingStatus
+                 , CS.SubscriptionCost
+				,RTP.CustomerId
+                -- , IIF(@CustomerType = 2, NULL, @Idcustumer)
+				 --,CASE 
+					--	    WHEN  EXISTS(SELECT  TOP 1 1
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE') 
+							
+					--		THEN  
+							      
+					--		(SELECT   ac. IdCustomer
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE')
+				
+					--		ELSE  @Idcustumer
+
+					--		END
+     --            , CASE 
+					--	    WHEN  EXISTS(SELECT  TOP 1 1
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE') 
+							
+					--		THEN 
+					--		       		(SELECT  ac.AccIdAccount
+					--									FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+					--										INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+					--											ON rus.RusIdUser = usr.UsrIdUser
+					--											   AND rus.RusIdSystem = 1
+					--										LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+					--											ON res.UstIdUser = rus.RusIdUser
+					--											   AND res.UstIdSystem = rus.RusIdSystem
+					--										LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+					--											ON rua.RuaIdUser = usr.UsrIdUser
+					--											   AND rua.RuaRowStatus = 1
+					--										INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+					--											ON ac.AccIdAccount = rua.RuaIdAccount
+					--											   AND ac.AccRowStatus = 1
+					--									WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+					--									     AND res.UstStatus  ='ACTIVE')
+					--		ELSE @IdAcount
+					--END 
+					,RTP.AccountId
+				 --IIF(@CustomerType = 2, NULL, @IdAcount)
+                 , IIF(@CustomerType = 2, @ActivationCode, NULL) -- agregar columna en insert para codigo de membresia 
+                 , (CASE
+                        WHEN @CustomerType = 1
+                             AND @HasCredit = 1
+                             AND @IdTarjeta = 0
+                             AND @TypeOfInMoneyId = 8 THEN
+                            NULL
+                        WHEN @CustomerType = 2 THEN
+                            NULL
+                        ELSE
+                            @IdTarjeta
+                    END
+                   )                                             -- Si es corporativo y tiene credito o si esta pagando con tarjeta asociada
+                 , 0
+                 , CS.SubscriptionFixedValue
+                 , CS.SubscriptionMaxServiceFixedValue
+                 , 0
+                 , DATEADD(MONTH, CS.SubscriptionValidity, GETDATE())
+                 , CASE 
+						    WHEN  EXISTS(SELECT  TOP 1 1
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE') 
+							
+							THEN 1
+							WHEN  @AccountId IS NOT NULL AND (SELECT
+																					 ISNULL(res.UstStatus, 'N/A')
+																				FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+																					INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																						ON rus.RusIdUser = usr.UsrIdUser
+																						   AND rus.RusIdSystem = 1
+																					LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																						ON res.UstIdUser = rus.RusIdUser
+																						   AND res.UstIdSystem = rus.RusIdSystem
+																					LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																						ON rua.RuaIdUser = usr.UsrIdUser
+																						   AND rua.RuaRowStatus = 1
+																					INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																						ON ac.AccIdAccount = rua.RuaIdAccount
+																						   AND ac.AccRowStatus = 1
+																				WHERE usr.UsrEmail = RTP.InvoiceEmail  ) = 'ACTIVE' 
+																				AND  RTP.ProductGiftShippingEmail IS NULL
+																				THEN 1
+							ELSE 0
+							END
+                 , RTP.TokenCreated
+                 , GETDATE()
+                 , DAY(GETDATE())
+                 , CS.CatTypeSubscriptionId
+				 ,(SELECT TOP 1
+							CASE 
+								WHEN number < 65 THEN CHAR(number + 65)  -- Convertir número a letra (A=65, B=66, ..., H=72)
+								ELSE CHAR(number + 73)  -- Saltar las letras "I" y "O"
+							END
+						 FROM master.dbo.spt_values
+						 WHERE type = 'P' AND number BETWEEN 0 AND 25
+						 ORDER BY NEWID()
+						) + RIGHT('000000' + CAST(CS.IdCatSubscription AS NVARCHAR(6)), 6) + CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65),
+				RTP.ProductGiftShippingEmail
+            FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+			INNER JOIN [dbo].[RegistrationofTransactionProcessStates] RTP  WITH (NOLOCK)
+			ON CS.IdCatSubscription = RTP.IdSalePackage
+            WHERE 
+			RTP.OrderNumber = @OrderNumber
+			AND RTP.TypeSalePackage != 'MEMBERSHIP'
+			
+			UPDATE dbo.Subscription 
+					SET ActivationCode= ((SELECT CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)  
+											+ RIGHT('000000' + CAST(B.IdSubscription AS NVARCHAR(6)), 6)
+											+ CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65) ) )
+			FROM @AuxNewSubscriptions A 
+			    INNER JOIN 
+				[dbo].[Subscription] B With(Nolock)
+				ON A.IdNewSubscriptions = B.IdSubscription
+
+
+
+            SET @SubscriptionId = SCOPE_IDENTITY();
+
+			---- Log de pago de suscripción
+                INSERT INTO [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog]
+                (
+                    [SubscriptionId],
+                    [Authorization],
+                    [TypeOfInOutOfMoneyId],
+                    [RowStatus],
+                    [TokenCreated],
+                    [DateCreated],                    
+                    [TransactionOrder],
+                    [PaymentImageURL]
+                )                
+                SELECT IdNewSubscriptions
+					 , @OrderNumber
+                     , @TypeOfInMoneyId                     
+                     , 1
+                     , @Token
+                     , GETDATE()
+					 ,NULL
+					 ,NULL
+				FROM @AuxNewSubscriptions
+			--	From [dbo].[RegistrationofTransactionProcessStates]
+			--	WHERE OrderNumber = @OrderNumber
+                
+
+			---------- Rango de descuento
+            INSERT INTO [dbo].[SubscriptionDiscountRange]
+            (
+                [SubscriptionId]
+              , [ValueTypeId]
+              , [DiscountValue]
+              , [DiscountLowServiceRange]
+              , [DiscountTopServiceRange]
+              , [RowStatus]
+              , [TokenCreated]
+              , [DateCreated]
+            )
+            SELECT S.IdSubscription                 -- MembershipId
+                 , [CSDR].[ValueTypeId]             -- ValueType
+                 , [CSDR].[DiscountValue]           -- DiscountValue
+                 , [CSDR].[DiscountLowServiceRange] -- DiscountLowServiceRange
+                 , [CSDR].[DiscountTopServiceRange] -- DiscountTopServiceRange
+                 , 1                                -- RowStatus 
+                 , @Token                           -- TokenCreated
+                 , SYSDATETIME()                    -- DateCreated
+            FROM [dbo].[CatSubscriptionDiscountRange] CSDR WITH (NOLOCK)
+			     INNER JOIN [dbo].RegistrationofTransactionProcessStates RTS WITH (NOLOCK)
+				 ON [CSDR].[CatSubscriptionId] = RTS.IdSalePackage
+				 INNER JOIN [dbo].Subscription S WITH (NOLOCK)
+				 ON [CSDR].[CatSubscriptionId] = S.CatSubscriptionId
+				 INNER JOIN @AuxNewSubscriptions ANS
+				 ON ANS.IdNewSubscriptions = S.IdSubscription
+				 WHERE RTS.OrderNumber = @OrderNumber
+				 
+			
+
+            
+             --- Insert tabla dbo.Cost
+
+  	    Insert Into [dbo].[Cost] (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, PaymentDate, IdModule, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
+		values (1, @OrderNumber, 2, @ServiceAmmount, GETDATE(), @ModulId, 1, @Token,GETDATE(), null, null ) 
+
+            
+            END
+
+
+	END		
+			COMMIT TRANSACTION LogTransactionTypeTwo
+			print 'guarda ps4'
 		END TRY
 		BEGIN CATCH
 			ROLLBACK TRANSACTION LogTransactionTypeTwo
-
+			print 'no guarda ps4 ' + ERROR_MESSAGE()
 		END CATCH
 
 		-- "Registro" de llamada en bitácora

@@ -1,13 +1,11 @@
-﻿CREATE PROCEDURE GetImagePromotional
+﻿CREATE PROCEDURE [dbo].[GetImagePromotional]
 --@Status INT
 AS
 BEGIN
-	SELECT [IdCarouselImage]
-      ,[ImageURL]
-      ,[ImageResolutionX]
-      ,[ImageResolutionY]
-      ,[ImageOrder]
+	SELECT XXLImageURL,XLImageURL,MDImageURL,XSImageURL,ImageOrder
   FROM [DeliveryBackOffice].[dbo].[MarketplaceCarouselImage]
   WHERE [RowStatus] = 1
 
 END
+
+--exec [dbo].[GetImagePromotional]

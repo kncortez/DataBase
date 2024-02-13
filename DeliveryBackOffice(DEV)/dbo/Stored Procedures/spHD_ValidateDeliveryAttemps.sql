@@ -68,7 +68,7 @@ begin
             ,CASE
                 WHEN do.IsLastMileReturn IS NULL OR do.IsLastMileReturn = 0 THEN CASE
                         WHEN doad.GuideDeliveryAttemptCount >= doad.GuideDeliveryMaxAttemptCount OR coi.ClientConfirmsReturn = 1 THEN 2
-						WHEN [da].[ID_Incident] IN (SELECT [RI].[IncidenceId] FROM @ReturnIncidence RI) THEN 2
+						WHEN [da].[ID_Incident] IN (SELECT [RI].[IncidenceId] FROM @ReturnIncidence RI) AND ISNULL(COI.IsDenied,0) = 0 AND ISNULL(coi.IsConfirmed,0) = 1 THEN 2
                         ELSE 1
                     END
                 ELSE 1
@@ -101,7 +101,16 @@ begin
             INNER JOIN @TblGuides tg
                 ON do.Guide_Serie = tg.GuideSerie
                     AND do.Guide_Number = tg.GuideNumber
-        WHERE tg.FlowGuide = 2;
+			LEFT JOIN dbo.DeliveryOrderAttemptData DOA
+			ON do.Guide_Serie = DOA.GuideSerie
+                    AND do.Guide_Number = DOA.GuideNumber
+					AND DOA.GuideDeliveryAttemptCount = DOA.GuideDeliveryMaxAttemptCount
+			INNER JOIN dbo.DeliveryAttempt DA
+			ON    do.Guide_Serie = DA.Guide_Serie
+                    AND do.Guide_Number = DA.Guide_Number
+			INNER JOIN dbo.confirmationofincidence COI
+			ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+        WHERE tg.FlowGuide = 2 OR COI.ClientConfirmsReturn=1;
 
         INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
             (Guide_Serie, Guide_Number, StatusOrderId, UserCreated, DateCreated, DateCreatedInSystem, RowStatus)
@@ -109,7 +118,16 @@ begin
             DISTINCT
                 tg.GuideSerie, tg.GuideNumber, @STATUSDECLAREDRETURNED_DO, 'spHD_ValidateDeliveryAttemps', GETDATE(), GETDATE(), 1
         FROM @TblGuides tg
-        WHERE tg.FlowGuide = 2;
+		INNER JOIN dbo.DeliveryOrderAttemptData DOA WITH(NOLOCK)
+			ON tg.GuideSerie = DOA.GuideSerie
+                    AND tg.GuideNumber = DOA.GuideNumber
+					AND DOA.GuideDeliveryAttemptCount = DOA.GuideDeliveryMaxAttemptCount
+		LEFT JOIN dbo.DeliveryAttempt DA WITH(NOLOCK)
+			ON    tg.GuideSerie = DA.Guide_Serie
+                    AND tg.GuideNumber = DA.Guide_Number
+		INNER JOIN dbo.confirmationofincidence COI WITH(NOLOCK)
+			ON DA.ConfirmationOfIncidenceId= COI.IdConfirmationOfIncidence 
+        WHERE tg.FlowGuide = 2 OR COI.ClientConfirmsReturn=1 ;
 
         COMMIT TRANSACTION;
 
@@ -119,7 +137,13 @@ begin
         SELECT GuideSerie Guide_Serie,
                 GuideNumber Guide_Number
         FROM @TblGuides
-        WHERE FlowGuide = 2;
+        WHERE FlowGuide = 2
+		
+
+	
+
+
+
 
     END TRY
     BEGIN CATCH

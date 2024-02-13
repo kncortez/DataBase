@@ -87,13 +87,23 @@ BEGIN
               AND RowStatus = 1
     );
 
-    --IF (@ActiveMembership > 0 OR (SELECT TOP 1 CS.IncludedMembershipId FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH(NOLOCK) WHERE CS.IdCatSubscription = @CatSubscriptionId) IS NULL) 
-    --BEGIN
-    --	SELECT 
-    --		204 'ResultCode'
-    --		,'No se ha podido realizar la compra debido a que el usuario ya tiene una membresía activa.' 'ResultMessage';
-    --	RETURN;
-    --END
+   IF (EXISTS (Select Top 1 1 From [dbo].[MembershipPaymentLog]
+												Where TransactionOrder = CAST(@Voucher AS nvarchar)) ) 
+    BEGIN
+    	SELECT 
+    		402 'ResultCode'
+    		,'No se ha podido realizar la transacción.' 'ResultMessage';
+    	RETURN;
+    END
+
+	 IF (EXISTS (Select Top 1 1 From [dbo].[SubscriptionPaymentLog]
+												Where TransactionOrder = CAST(@Voucher AS nvarchar)) ) 
+    BEGIN
+    	SELECT 
+    		402 'ResultCode'
+    		,'No se ha podido realizar la transacción.' 'ResultMessage';
+    	RETURN;
+    END
 
     ---- Adquisición de membresia​
     BEGIN TRANSACTION;
@@ -187,19 +197,7 @@ BEGIN
                 WHERE CS.IdCatSubscription = @CatSubscriptionId
             );
 
-            ---- Log de pago de membresia
-            INSERT INTO [dbo].[MembershipPaymentLog]
-            (
-                [MembershipId]
-              , [TypeOfInOutOfMoneyId]
-              , [TransactionOrder]
-              , [RowStatus]
-              , [TokenCreated]
-              , [DateCreated]
-              , [PaymentImageURL]
-            )
-            VALUES
-            (@MembershipId, @TypeOfInOutMoney, @Voucher, 1, @Token, SYSDATETIME(), @ImageURL);
+       
 
             --------------------------------------------- SUSCRIPCIÓN ---------------------------------------------
             INSERT INTO [dbo].[Subscription]

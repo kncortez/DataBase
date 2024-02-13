@@ -1,11 +1,13 @@
---EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
+﻿--EXEC  [dbo].[sphw_generate_batch_cod] 33,'8'
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
 	@CoDProcessID INT
 AS
 BEGIN
-
+DECLARE @MinCommissionCOD FLOAT;
+	SET @MinCommissionCOD = (SELECT Value FROM ConfigParams WHERE Name = 'MinCODCommissionAmount')
+	PRINT (@MinCommissionCOD)
 	-- Micro transacción para indicar inicio de proceso de CoD ejecutado
 	BEGIN TRANSACTION Started_CoD_Execution_Process
 	BEGIN TRY
@@ -105,6 +107,7 @@ BEGIN
             )
            )
         BEGIN
+		 PRINT 'INGRESAD'
             SELECT @ProductNumber
                 =
             (
@@ -298,8 +301,13 @@ BEGIN
 					ON lst.Guide_Serie = PC.GuideSerieDestination
 						AND lst.Guide_Number = PC.GuideNumberDestination
 						AND PC.RowStatus = 1
+				LEFT JOIN
+						MembershipSubscriptionLog MBS WITH(NOLOCK)
+						ON lst.Guide_Serie = MBS.LogGuideSerie 
+						AND lst.Guide_Number = MBS.LogGuideNumber
 				WHERE ISNULL(ord.PriceShippment, 0) = 0
-					AND PC.IdPromoCoupon IS NULL;
+					AND PC.IdPromoCoupon IS NULL
+					AND MBS.LogGuideNumber IS NULL;
 
 
             DECLARE @count INT = 1;
@@ -352,7 +360,41 @@ BEGIN
                    ISNULL(ord.IdCustomer, vpc.CustomerID) IDCUSTOMER,
                    ISNULL(rco.CODRate, @CODRateDefault) CODRate,
                    ISNULL(rco.CODExempt, @CODExemptDefault) CODExempt,
-                   IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+                   IIF((
+                   
+
+
+                       (CASE WHEN (ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0 THEN
+                           IIF(op.Deposit_Number IS NULL,
+                               IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
+                                   0,
+                                   (CONVERT(
+                                               DECIMAL(12, 2),
+                                               ((ord.Collect_OnDelivery
+                                                 - (IIF(
+                                                        ISNULL(
+                                                                  vpc.ExcludePriceShippingCOD,
+                                                                  ISNULL(cus.ExcludePriceShippingCOD, 0)
+                                                              ) = 1,
+                                                        0,
+                                                        IIF(ISNULL(ord.IsCollect, 0) = 1,
+                                                            0,
+                                                            IIF(pyt.TimePlaId = 2,
+                                                                0,
+                                                                IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
+                                                   )
+                                                )
+											    * ISNULL(rco.CODRate, @CODRateDefault) / 100
+   
+                                               )
+                                           )
+                                   )),
+                               0)ELSE 
+                           0 END)
+
+
+                       
+                       ) < @MinCommissionCOD AND Cus.IdCustomerType <> 1,@MinCommissionCOD,(IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
                        IIF(op.Deposit_Number IS NULL,
                            IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
                                0,
@@ -372,12 +414,13 @@ BEGIN
                                                             IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
                                                )
                                             )
-                                            * ISNULL(rco.CODRate, @CODRateDefault) / 100
+											* ISNULL(rco.CODRate, @CODRateDefault) / 100 
+                                            
                                            )
                                        )
                                )),
                            0),
-                       0) Commision,
+                       0)))Commision,
                    ord.PriceShippment DeliveryPrice,
                    .0 CODPaid,
                    0 ReturnRates,
@@ -396,7 +439,7 @@ BEGIN
                    IIF(op.Deposit_Number IS NULL,
                        ord.Collect_OnDelivery
                        -- comi
-                       - IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+                       - IIF(IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
                              (IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
                                   0,
                                   (CONVERT(
@@ -427,17 +470,48 @@ BEGIN
                               IIF(ISNULL(ord.IsCollect, 0) = 1,
                                   0,
                                   IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
-                         ),
+                         )<@MinCommissionCOD AND Cus.IdCustomerType <>1,@MinCommissionCOD, IIF((ord.Collect_OnDelivery - ISNULL(rco.CODExempt, @CODExemptDefault)) > 0,
+                             (IIF(ISNULL(vpc.ExcludeCommissionCOD, ISNULL(cus.ExcludeCommissionCOD, 0)) = 1,
+                                  0,
+                                  (CONVERT(
+                                              DECIMAL(12, 2),
+                                              ((ord.Collect_OnDelivery
+                                                - (IIF(
+                                                       ISNULL(
+                                                                 vpc.ExcludePriceShippingCOD,
+                                                                 ISNULL(cus.ExcludePriceShippingCOD, 0)
+                                                             ) = 1,
+                                                       0,
+                                                       IIF(ISNULL(ord.IsCollect, 0) = 1,
+                                                           0,
+                                                           IIF(pyt.TimePlaId = 2,
+                                                               0,
+                                                               IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
+                                                  )
+                                               )
+                                               * ISNULL(rco.CODRate, @CODRateDefault) / 100
+                                              )
+                                          )
+                                  ))
+                             ),
+                             0)
+                       -- envio
+                       + (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
+                              0,
+                              IIF(ISNULL(ord.IsCollect, 0) = 1,
+                                  0,
+                                  IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
+                         )),
                        0) CODtoPay,
                    (IIF(ISNULL(vpc.ExcludePriceShippingCOD, ISNULL(cus.ExcludePriceShippingCOD, 0)) = 1,
                         0,
                         IIF(ISNULL(ord.IsCollect, 0) = 1,
                             0,
                             IIF(pyt.TimePlaId = 2, 0, IIF(pyt.TimePlaId = 1, 0, ord.PriceShippment))))
-                   ) Price
-            --,
-            --            ISNULL(csg.CrsId, @IdSegmentDefault)
-
+                   ) Price,
+                   --,
+                   --            ISNULL(csg.CrsId, @IdSegmentDefault)
+                   ISNULL(rco.CODRate, @CODRateDefault) CommisionMin
             INTO #TableAmountCOD
             FROM #listGuides lst
                 INNER JOIN dbo.DeliveryOrder ord WITH(NOLOCK)
@@ -514,7 +588,7 @@ BEGIN
                    IDCUSTOMER,
                    CODRate,
                    CODExempt,
-                   Commision,
+                   Commision, 
                    SUM(DeliveryPrice) DeliveryPrice,
                    SUM(ISNULL(CODPaid, 0)) CODPaid,
                    ReturnRates,
@@ -525,7 +599,8 @@ BEGIN
                    DCBA_Nom_account,
                    DCBA_BankAccountType,
                    MIN(CODtoPay) CODtoPay,
-                   MAX(Price) Price
+                   MAX(Price) Price,
+				   IIF(Commision < @MinCommissionCOD,@MinCommissionCOD,Commision) CommisionMin
             INTO #TableAmountCODTemp
             FROM #TableAmountCOD
             GROUP BY Guide_Serie,
@@ -541,7 +616,8 @@ BEGIN
                      DCBA_Id,
                      DCBA_Num_account,
                      DCBA_Nom_account,
-                     DCBA_BankAccountType
+                     DCBA_BankAccountType,
+					 CommisionMin
             ORDER BY Guide_Number;
 
             CREATE NONCLUSTERED INDEX IX_TACT_ISINCTPCP
@@ -583,8 +659,9 @@ BEGIN
                              AND RowStatus = 1
                    ) CatDebitAccountCODId,
                    @CreditAccountId CreditAccountId,
-                   (tact.Commision + IIF(do.IsCollect = 'true', ISNULL(do.PriceShippment, 0), tact.Price)) Amount,
-                   tact.Commision [Commision],
+				   ((tact.Commision) + ISNULL(do.PriceShippment, 0)) Amount,
+                   --(tact.Commision + IIF(do.IsCollect = 'true', ISNULL(do.PriceShippment, 0), tact.Price)) Amount,
+				   tact.Commision [Commision],
                    (
                        SELECT IdCatTransactionTypeCOD
                        FROM DeliveryBackOffice.dbo.CatTransactionTypeCOD

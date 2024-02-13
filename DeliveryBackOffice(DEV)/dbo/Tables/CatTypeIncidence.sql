@@ -1,22 +1,27 @@
 ﻿CREATE TABLE [dbo].[CatTypeIncidence] (
-    [IdIncidenceType]          INT           IDENTITY (1, 1) NOT NULL,
-    [NameIncidence]            VARCHAR (200) NULL,
-    [DescriptionIncidence]     VARCHAR (200) NULL,
-    [RowStatus]                BIT           NOT NULL,
-    [TokenCreated]             VARCHAR (50)  NOT NULL,
-    [DateCreated]              DATETIME      NOT NULL,
-    [TokenUpdated]             VARCHAR (50)  NULL,
-    [DateUpdated]              DATETIME      NULL,
-    [ServiceType]              NVARCHAR (25) NULL,
-    [OrderId]                  INT           NULL,
-    [Code]                     INT           NULL,
-    [IncidenceClasificationId] INT           NULL,
-    [IsForcedIncidence]        BIT           DEFAULT ((0)) NOT NULL,
-    [ValidatesLocation]        BIT           DEFAULT ((0)) NOT NULL,
-    [HasConfirmationProcess]   BIT           DEFAULT ((0)) NOT NULL,
-    [NotifiesOrigin]           BIT           DEFAULT ((0)) NOT NULL,
+    [IdIncidenceType]          INT            IDENTITY (1, 1) NOT NULL,
+    [NameIncidence]            VARCHAR (200)  NULL,
+    [DescriptionIncidence]     VARCHAR (200)  NULL,
+    [RowStatus]                BIT            NOT NULL,
+    [TokenCreated]             VARCHAR (50)   NOT NULL,
+    [DateCreated]              DATETIME       NOT NULL,
+    [TokenUpdated]             VARCHAR (50)   NULL,
+    [DateUpdated]              DATETIME       NULL,
+    [ServiceType]              NVARCHAR (25)  NULL,
+    [OrderId]                  INT            NULL,
+    [Code]                     INT            NULL,
+    [IncidenceClasificationId] INT            NULL,
+    [IsForcedIncidence]        BIT            DEFAULT ((0)) NOT NULL,
+    [ValidatesLocation]        BIT            DEFAULT ((0)) NOT NULL,
+    [HasConfirmationProcess]   BIT            DEFAULT ((0)) NOT NULL,
+    [NotifiesOrigin]           BIT            DEFAULT ((0)) NOT NULL,
+    [NameIncidencePublic]      VARCHAR (50)   NULL,
+    [EvidenceRequirement]      BIT            NULL,
+    [CourierInstructions]      NVARCHAR (100) NULL,
     PRIMARY KEY CLUSTERED ([IdIncidenceType] ASC)
 );
+
+
 
 
 
@@ -85,4 +90,16 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si incidencia genera proceso de confirmación de incidencia.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'HasConfirmationProcess';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacenar nombre catalogo de incidencia para tracking publico', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'NameIncidencePublic';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Evidencia es requerida para esta incidencia?', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'EvidenceRequirement';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Instrucciones para el courier', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'CourierInstructions';
 

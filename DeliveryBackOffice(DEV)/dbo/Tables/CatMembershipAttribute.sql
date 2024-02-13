@@ -11,11 +11,13 @@
     [TokenUpdated]                       NVARCHAR (50)  NULL,
     [DateUpdated]                        DATETIME       NULL,
     [MembershipAttributeDescriptionLong] NVARCHAR (500) NULL,
+    [CatMembershipAttributeIcon]         NVARCHAR (200) NULL,
     CONSTRAINT [PK_CatMembershipAttribute] PRIMARY KEY CLUSTERED ([IdCatMembershipAttribute] ASC),
     CONSTRAINT [FK_CatMembershipAttribute_CatAttribute] FOREIGN KEY ([CatAttributeId]) REFERENCES [dbo].[CatAttribute] ([IdCatAttribute]),
     CONSTRAINT [FK_CatMembershipAttribute_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership])
-    
 );
+
+
 
 
 

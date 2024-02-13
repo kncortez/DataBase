@@ -10,7 +10,9 @@ CREATE PROCEDURE [dbo].[spHW_EditGuidesfromShoppingCart]
 @NewCollect_OnDelivery AS Decimal(14,2) = NULL,
 @IdDeliveryFavCOD AS INT = NULL,
 @Token AS NVARCHAR(50),
-@GuideUsedMembership BIT = 0
+@GuideUsedMembership BIT = 0,
+@IdFavCOD INT
+
 AS
 BEGIN
 	
@@ -18,6 +20,34 @@ BEGIN
 	DECLARE @IsTCCPaid BIT = 0;
 
 	SET NOCOUNT ON;
+
+	IF(@IdDeliveryFavCOD = 0 AND @IdFavCOD > 0)
+		BEGIN
+				INSERT INTO [DeliveryCustomerBankAccount]
+						SELECT	TOP 1 (SELECT TOP 1 DCBA_Id FROM DeliveryCustomerBankAccount WITH(NOLOCK)ORDER BY DCBA_Id DESC)+1,
+						               [DFC].[IdBank],
+										-1,
+										[DFC].[NumberAccFavCOD],
+										UPPER([DFC].[AliasFavCOD]),
+										1,
+										@Token,
+										GETDATE(),
+										NULL,
+										NULL,
+										1,
+										'',
+										0,
+										'',
+										UPPER([DFC].[TypeAccountFavCOD]),
+										[DFC].[DocumentIdFavCOD],
+										@IdFavCOD
+						FROM			DeliveryFavCOD DFC WITH(NOLOCK)
+						WHERE			[DFC].[IdDeliveryFavCOD] = @IdFavCOD
+
+			
+			SET @IdDeliveryFavCOD =(SELECT TOP 1 DCBA_Id FROM DeliveryCustomerBankAccount WITH(NOLOCK) WHERE DeliveryFavCODId = @IdFavCOD)
+		END
+
 	
 	IF (EXISTS(SELECT TOP 1 1 FROM  [DeliveryBackOffice].[dbo].[DeliveryOrder] WITH (NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber))
 	BEGIN

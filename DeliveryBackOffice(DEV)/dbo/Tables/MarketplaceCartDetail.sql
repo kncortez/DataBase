@@ -1,16 +1,19 @@
 ﻿CREATE TABLE [dbo].[MarketplaceCartDetail] (
-    [IdMarketplaceCartDetail] INT           NOT NULL,
-    [MarketplaceCartId]       INT           NOT NULL,
-    [ProductId]               INT           NOT NULL,
-    [RowStatus]               BIT           NOT NULL,
-    [TokenCreated]            NVARCHAR (50) NOT NULL,
-    [DateCreated]             DATETIME      NOT NULL,
-    [TokenUpdated]            NVARCHAR (50) NULL,
-    [DateUpdated]             DATETIME      NULL,
+    [IdMarketplaceCartDetail] INT            IDENTITY (1, 1) NOT NULL,
+    [MarketplaceCartId]       INT            NOT NULL,
+    [CatProductId]            INT            NOT NULL,
+    [RowStatus]               BIT            NOT NULL,
+    [TokenCreated]            NVARCHAR (50)  NOT NULL,
+    [DateCreated]             DATETIME       NOT NULL,
+    [TokenUpdated]            NVARCHAR (50)  NULL,
+    [DateUpdated]             DATETIME       NULL,
+    [TypeProduct]             NVARCHAR (300) NULL,
     CONSTRAINT [PK_MarketplaceCartDetail] PRIMARY KEY CLUSTERED ([IdMarketplaceCartDetail] ASC),
-    CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart] FOREIGN KEY ([MarketplaceCartId]) REFERENCES [dbo].[MarketplaceCart] ([IdMarketplaceCart]),
-    CONSTRAINT [FK_MarketplaceCartDetail_Product] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct])
+    CONSTRAINT [FK_MarketplaceCartDetail_CatSubscription] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
+    CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart] FOREIGN KEY ([MarketplaceCartId]) REFERENCES [dbo].[MarketplaceCart] ([IdMarketplaceCart])
 );
+
+
 
 
 GO
@@ -34,7 +37,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del 
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCartDetail', @level2type = N'COLUMN', @level2name = N'ProductId';
+
 
 
 GO
@@ -47,4 +50,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Detalle de carrito de productos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCartDetail';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCartDetail', @level2type = N'COLUMN', @level2name = N'CatProductId';
 

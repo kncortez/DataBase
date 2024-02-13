@@ -2,9 +2,9 @@
     [IdMembershipSubscriptionLog] BIGINT          IDENTITY (1, 1) NOT NULL,
     [SystemId]                    INT             NOT NULL,
     [ModuleId]                    INT             NOT NULL,
-    [MembershipId]                INT             NOT NULL,
+    [MembershipId]                INT             NULL,
     [SubscriptionId]              INT             NULL,
-    [SalesPackageStatusId]        INT             NOT NULL,
+    [SalesPackageStatusId]        INT             NULL,
     [StationId]                   INT             NULL,
     [CustomerId]                  INT             NULL,
     [AccountId]                   BIGINT          NULL,
@@ -35,4 +35,10 @@
     CONSTRAINT [FK_MembershipSubscriptionLog_System] FOREIGN KEY ([SystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
     CONSTRAINT [FK_MembershipSubscriptionLog_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
+GO
+ALTER TABLE [dbo].[MembershipSubscriptionLog] NOCHECK CONSTRAINT [FK_MembershipSubscriptionLog_Membership];
+
+
 

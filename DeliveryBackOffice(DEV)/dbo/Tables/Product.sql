@@ -28,6 +28,7 @@
     [DateCreated]                                DATETIME        NOT NULL,
     [TokenUpdated]                               NVARCHAR (50)   NULL,
     [DateUpdated]                                DATETIME        NULL,
+    [ActivationCode]                             NVARCHAR (50)   NULL,
     CONSTRAINT [PK_Product] PRIMARY KEY CLUSTERED ([IdProduct] ASC),
     CONSTRAINT [FK_Product_Account] FOREIGN KEY ([ProductAccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
     CONSTRAINT [FK_Product_CatArticleSAP] FOREIGN KEY ([ArticleSAPId]) REFERENCES [dbo].[CatArticleSAP] ([IdCatArticleSAP]),
@@ -39,6 +40,8 @@
     CONSTRAINT [FK_Product_VisitPointByClientPortfolio] FOREIGN KEY ([ProductVisitPointclientByClientPortfolioId]) REFERENCES [dbo].[VisitPointByClientPortfolio] ([IdVisitPointByClientPortfolio]),
     CONSTRAINT [FK_Product_VisitPointClient] FOREIGN KEY ([ProductCodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
+
+
 
 
 GO
@@ -159,4 +162,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Productos adquiridos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Product';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de activación del producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Product', @level2type = N'COLUMN', @level2name = N'ActivationCode';
 

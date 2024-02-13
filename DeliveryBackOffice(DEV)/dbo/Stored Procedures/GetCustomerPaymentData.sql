@@ -40,7 +40,7 @@ BEGIN
 	WHERE
 		CPV.IdCustomerPaymentValue = @PaymentId
 		AND
-		(CPV.AccountId IS NULL OR CPV.AccountId = @AccountId)
+		 ISNULL(CPV.AccountId,0) = @AccountId
 		AND
 		CPV.CustomerId = @CustomerId
 		AND

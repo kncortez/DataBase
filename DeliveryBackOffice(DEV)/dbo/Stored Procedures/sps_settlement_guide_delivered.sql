@@ -196,11 +196,23 @@ BEGIN
 				   ,'' 'Retries'
 				   ,0 ValidateAbandonedPackage
 				   ,0 IsMarkedReturn
+				   , CASE 
+				       WHEN COI.LiquidatorRemarks IS NULL THEN 
+					   'Sin Observaciones'
+				       WHEN COI.LiquidatorRemarks='' THEN 
+					   'Sin Observaciones' 
+				       ELSE COI.LiquidatorRemarks 
+				   END AS LiquidatorRemarks
 				FROM DeliveryOrder DOR WITH (NOLOCK)
 				LEFT JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
 					ON doad.GuideSerie = DOR.Guide_Serie
 						AND doad.GuideNumber = DOR.Guide_Number
 						AND doad.RowStatus = 1
+				LEFT JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+				    ON     DOR.Guide_Serie = DA.Guide_Serie 
+					   AND DOR.Guide_Number = DA.Guide_Number
+				LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+				    ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
 				WHERE DOR.Guide_Serie = @GuideSerie
 				AND DOR.Guide_Number = @GuideNumber	
 			ELSE

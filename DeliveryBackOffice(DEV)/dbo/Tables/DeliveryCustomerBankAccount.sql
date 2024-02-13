@@ -15,8 +15,11 @@
     [DCBA_LegalIDN]        NVARCHAR (50)  NULL,
     [DCBA_BankAccountType] VARCHAR (40)   NULL,
     [DCBA_Identification]  VARCHAR (40)   NULL,
+    [DeliveryFavCODId]     INT            NULL,
     CONSTRAINT [PK_SP_DEPOSITOS_CUENTAS] PRIMARY KEY CLUSTERED ([DCBA_Id] ASC)
 );
+
+
 
 
 

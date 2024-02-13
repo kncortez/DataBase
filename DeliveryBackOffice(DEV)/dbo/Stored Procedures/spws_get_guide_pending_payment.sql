@@ -158,7 +158,7 @@ PRINT '*************************************************************************
             ON ord.Guide_Number = lg.ItemNumber
 			AND ord.Guide_Serie = lg.ItemSerie               
         LEFT JOIN dbo.Cost cst WITH (NOLOCK)
-            ON cst.ProductNumber = CONCAT(lg.ItemSerie, lg.ItemNumber)
+            ON cst.ProductNumber = CONVERT(VARCHAR(MAX),CONCAT(lg.ItemSerie, lg.ItemNumber))
                AND cst.RowStatus = 1
         LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
             ON pyt.GuideSerie = lg.ItemSerie

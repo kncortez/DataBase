@@ -166,11 +166,82 @@ BEGIN
         SET @FixedLatitude = NULL;
         SET @FixedLongitude = NULL;
     END CATCH;
-
+	---DECLARE @NewDeliveryAttemptId INT;
     BEGIN TRANSACTION;
 
     BEGIN TRY
 
+	IF (NOT EXISTS(Select 
+				Top 1 1
+				From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+				 Where Guide_Serie = @GuideSerie AND
+				 Guide_Number= @GuideNumber
+				 AND ID_Incident IS NULL
+				 AND ISNULL(Delivered,0)=0)
+				 )
+      BEGIN
+	-- registrar nuevo intento de entrega
+			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryAttempt] 
+			([Guide_Serie],
+			 [Guide_Number],
+			 [Dry],
+			 [Cold],
+			 [Latitude],
+			 [Longitude],
+			 [Delivered],
+			 [ID_Courier],
+			 [ID_DeliveryOrderBySettlement],
+			 [User_Created],
+			 [Date_Created],
+			 [Guide_Piece]) 
+			VALUES (@GuideSerie,
+			        @GuideNumber,
+					(
+					 Select Top 1
+                           ISNULL(DRY,0)
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where 
+					 Guide_Serie = @GuideSerie AND
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+					  (Select Top 1
+                           ISNULL(Cold,0)
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where Guide_Serie = @GuideSerie AND 
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+					@Latitude,
+					@Longitude,
+					0,
+			         (
+					 Select Top 1
+                            ID_Courier
+                     From  [dbo].[DeliveryAttempt] WITH(NOLOCK) 
+                     Where Guide_Serie = @GuideSerie AND
+					 Guide_Number= @GuideNumber
+					 ORDER BY  Date_Created DESC
+					 ),
+				  (
+				  Select 
+						Top 1
+						ID_DeliveryOrderBySettlement
+                   From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
+                   Where Guide_Serie = @GuideSerie AND 
+				   Guide_Number= @GuideNumber
+				   ORDER BY  Date_Created DESC
+				  ),
+			      @Token,
+				  GETDATE(),
+				  1)
+
+				 
+
+		   END; 
+
+
+		
         -- asignar valor a la variable ModName
         SET @ModName = N'Courier App';
 
@@ -181,7 +252,7 @@ BEGIN
 
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
-        SELECT da.ID
+        SELECT TOP 1 da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
@@ -195,7 +266,8 @@ BEGIN
 			  [SRLT].[LoginToken] = @PhoneNumber)
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
-              AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23);
+              AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
+			  ORDER BY da.Date_Created desc;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
         INSERT INTO DeliveryBackOffice.dbo.DeliveryProof

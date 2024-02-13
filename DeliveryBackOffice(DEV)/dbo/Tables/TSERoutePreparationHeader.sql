@@ -28,6 +28,8 @@
 
 
 
+
+
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [UQ_TSERoutePreparationHeader_CustomsMark]
     ON [dbo].[TSERoutePreparationHeader]([TSECustomsMark] ASC) WHERE ([TSECustomsMark] IS NOT NULL);
@@ -102,6 +104,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_TSERoutePreparationHeader_IdCatRoute_IdCatRouteCluster_IDTSERoutePreparationHeader]
-    ON [dbo].[TSERoutePreparationHeader]([IdCatRoute] ASC, [IdCatRouteCluster] ASC, [IDTSERoutePreparationHeader] ASC);
+
 

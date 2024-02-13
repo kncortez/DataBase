@@ -12,32 +12,32 @@ BEGIN
 
 DECLARE @PATH VARCHAR(250)
 
-	SELECT TOP 1
-		@PATH=ISNULL(RTRIM(V.LastPath) + '\' + RTRIM(P.filepath),'')
-	FROM [HOP_LINKEDSERVER].HOP.HOP.DOCDATAPAGE P
-	INNER JOIN [HOP_LINKEDSERVER].HOP.HOP.REPOSITORIESVOLUMES V ON V.VolumeNum = P.logicalfolder AND v.RepNum=p.repnum
-	INNER JOIN (
-			-- BUSCAR EN TABLA DE VOUCHERS  (KeyItem2)
-			/*SELECT D.*
-			FROM   [HOP_LINKEDSERVER].HOP.HOP.DOCDATA d ,
-				HOP.HOP.KEYITEM2 ki2
-			WHERE  
-				(d.itemid = ki2.ITEMNUM AND ki2.KEYVALUECHAR = @IdDoc)
-				AND d.status = 0
+	--SELECT TOP 1
+	--	@PATH=ISNULL(RTRIM(V.LastPath) + '\' + RTRIM(P.filepath),'')
+	--FROM [HOP_LINKEDSERVER].HOP.HOP.DOCDATAPAGE P
+	--INNER JOIN [HOP_LINKEDSERVER].HOP.HOP.REPOSITORIESVOLUMES V ON V.VolumeNum = P.logicalfolder AND v.RepNum=p.repnum
+	--INNER JOIN (
+	--		-- BUSCAR EN TABLA DE VOUCHERS  (KeyItem2)
+	--		/*SELECT D.*
+	--		FROM   [HOP_LINKEDSERVER].HOP.HOP.DOCDATA d ,
+	--			HOP.HOP.KEYITEM2 ki2
+	--		WHERE  
+	--			(d.itemid = ki2.ITEMNUM AND ki2.KEYVALUECHAR = @IdDoc)
+	--			AND d.status = 0
                             
-				AND ( d.doctypeid IN ( 7 ) ) -- voucher y comprobante de entrega
-			UNION*/
-			-- BUSCAR EN TABLA DE COMPROBANTES (KeyItem4)
-			SELECT D.*
-			FROM   [HOP_LINKEDSERVER].HOP.HOP.DOCDATA d ,
-				[HOP_LINKEDSERVER].HOP.HOP.KEYITEM4 ki4
-			WHERE  
-				(d.itemid = ki4.ITEMNUM AND ki4.KEYVALUECHAR = @IdDoc)
-				AND d.status = 0
-				AND ( d.doctypeid IN ( 12 ) ) -- voucher y comprobante de entrega
-		) AS I ON I.itemid = P.itemid
-	INNER JOIN [HOP_LINKEDSERVER].HOP.HOP.DOCTYPES dt ON dt.DOCTYPEID = I.doctypeid 
-	AND dt.DOCTYPEID IN (/*7,*/12)
+	--			AND ( d.doctypeid IN ( 7 ) ) -- voucher y comprobante de entrega
+	--		UNION*/
+	--		-- BUSCAR EN TABLA DE COMPROBANTES (KeyItem4)
+	--		SELECT D.*
+	--		FROM   [HOP_LINKEDSERVER].HOP.HOP.DOCDATA d ,
+	--			[HOP_LINKEDSERVER].HOP.HOP.KEYITEM4 ki4
+	--		WHERE  
+	--			(d.itemid = ki4.ITEMNUM AND ki4.KEYVALUECHAR = @IdDoc)
+	--			AND d.status = 0
+	--			AND ( d.doctypeid IN ( 12 ) ) -- voucher y comprobante de entrega
+	--	) AS I ON I.itemid = P.itemid
+	--INNER JOIN [HOP_LINKEDSERVER].HOP.HOP.DOCTYPES dt ON dt.DOCTYPEID = I.doctypeid 
+	--AND dt.DOCTYPEID IN (/*7,*/12)
 
 	-- remove physical path and replace it for predefined folder in webpage
 	-- this: \\ecs-web01\HOPFiles\GT.BOVEDA\Copia1\V77\2898578.jpg

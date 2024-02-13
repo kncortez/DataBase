@@ -78,7 +78,7 @@ BEGIN
              , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]))           [MembershipAvailableFixedService]
          , [M].[ExpirationDate]                                                             [MembershipExpirationDate]
          , IIF((([M].[ActualServiceCount] * 100)
-                / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN 1 ELSE [M].[MembershipMaxServiceFixedValue] END)
+                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
                ) > 100
              , 100
              , (([M].[ActualServiceCount] * 100)
@@ -126,8 +126,8 @@ BEGIN
         INNER JOIN [dbo].[CatSalesPackageStatus] CSPS
             ON [M].[CatMembershipStatusId] = [CSPS].[IdCatSalesPackageStatus]
     WHERE [M].[AccountId] = @AccountId
-          AND [M].[RowStatus] = 1
-          AND [M].[CatMembershipStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID );
+         AND [M].[RowStatus] = 1
+      --    AND [M].[CatMembershipStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID );
 
     -- Subscription Data
 
@@ -189,10 +189,11 @@ BEGIN
     FROM [dbo].[Subscription]              S
         INNER JOIN [dbo].[CatSubscription] CS
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
-    WHERE [S].[MembershipId] = @MEMBERSHIP_ID
-          AND [S].[ExpirationDate] >= GETDATE()
+    WHERE [S].AccountId = @AccountId
+	   ---[S].[MembershipId] = @MEMBERSHIP_ID
+          AND [S].[ExpirationDate] >= GETDATE() --- colocarle  hora 00:00:00
           AND [S].[RowStatus] = 1
-          AND [S].CatTypeSubscriptionId = 1
+          AND [S].CatTypeSubscriptionId = 1  
     UNION ALL
     SELECT [S].[IdSubscription]
          , [S].[CatSubscriptionId]
@@ -252,10 +253,12 @@ BEGIN
     FROM [dbo].[Subscription]              S
         INNER JOIN [dbo].[CatSubscription] CS
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
-    WHERE [S].[MembershipId] = @MEMBERSHIP_ID
+    WHERE --- [S].[MembershipId] = @MEMBERSHIP_ID
+	          [S].AccountId = @AccountId
           AND [S].[ExpirationDate] >= GETDATE()
           AND [S].[RowStatus] = 1
           AND [S].CatTypeSubscriptionId = 2
           AND ([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) > 0
     ORDER BY [S].[IdSubscription] ASC;
 END;
+

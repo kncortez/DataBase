@@ -664,7 +664,8 @@ BEGIN
 						ON
 							[GPL].[GuideSerie] = [DO].[Guide_Serie]
 							AND
-							[GPL].[GuideNumber] = [DO].[Guide_Number];
+							[GPL].[GuideNumber] = [DO].[Guide_Number]
+							AND [DO].[PriceShippment]>0;
 
 			END
 
