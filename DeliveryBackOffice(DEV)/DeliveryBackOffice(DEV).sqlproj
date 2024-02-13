@@ -1529,6 +1529,8 @@
 	<Build Include="dbo\Stored Procedures\SPHW_InsertProductsMarketPlaceInInvoiceHeaderDetail.sql" />
   <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
     <Build Include="dbo\Stored Procedures\LoadProductCategory.sql" />
+    <Build Include="dbo\Stored Procedures\GetProductsByCategory.sql" />
+    
  
 	 
     
