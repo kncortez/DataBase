@@ -30,15 +30,15 @@ SELECT
 Det.Guide_Serie,
 Det.Guide_Number,
 MAX(Det.DateCreated)
-FROM DeliveryBackOffice.DBO.DeliveryOrderDetail Det
-join DeliveryBackOffice.dbo.DeliveryOrder serv on Det.Guide_Serie = serv.Guide_Serie
+FROM DeliveryBackOffice.DBO.DeliveryOrderDetail  Det WITH(NOLOCK)
+INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)  on Det.Guide_Serie = serv.Guide_Serie
 and Det.Guide_Number = serv.Guide_Number
-LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] SettDet
+LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] SettDet WITH(NOLOCK)
 on serv.Guide_Serie = SettDet.Guide_Serie
 and serv.Guide_Number = SettDet.Guide_Number
 and SettDet.Guide_Delivered = 1
 and SettDet.Guide_Discharged = 1
-JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
+INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head WITH(NOLOCK)
         on   SettDet.ID_DeliveryOrderBySettlement = Head.ID
 where Det.StatusOrderId = 5
 and CONVERT(DATE, Head.Route_Received) 
@@ -73,25 +73,25 @@ DECLARE @CustomersDetail AS TABLE (
 INSERT INTO @Customers
 SELECT distinct
 			vpclient.CustomerID IdCustomer
-		FROM DeliveryBackOffice.DBO.DeliveryOrder serv
-		JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient
+		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH(NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH(NOLOCK)
 			ON serv.Sender_ID = vpclient.CodeOfReference		
-		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det WITH(NOLOCK)
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
-		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head WITH(NOLOCK)
         on   Det.ID_DeliveryOrderBySettlement = Head.ID		   
-		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH(NOLOCK)
 			on paidguide.Guide_Serie = serv.Guide_Serie
 			and paidguide.Guide_Number = serv.Guide_Number
 			and paidguide.Deposit_Number = serv.Deposit_Number
 			and paidguide.IdStatus = 'TRUE'
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PaidHead
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PaidHead WITH(NOLOCK)
 			on PaidHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader
 			   and PaidHead.IdStatus = 1
-		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl on
+		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH(NOLOCK) ON 
 		    tbl.IdTownship = serv.ReceiverIdTownship
 		WHERE 
 		(
@@ -176,31 +176,31 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 			'"BankAccountName":"' + CONVERT(VARCHAR,COALESCE(DCB.DCBA_Nom_account,'NO DISPONIBLE')) + '"}'
 
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-		JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 			ON serv.Sender_ID = vpclient.CodeOfReference		
-		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det WITH(NOLOCK)
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
-		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head WITH(NOLOCK)
         on   Det.ID_DeliveryOrderBySettlement = Head.ID
-		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH(NOLOCK)
 			on paidguide.Guide_Serie = serv.Guide_Serie
 			and paidguide.Guide_Number = serv.Guide_Number
 			and paidguide.Deposit_Number = serv.Deposit_Number
 			and paidguide.IdStatus = 'TRUE'	   
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PHead 
-			on PHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PHead  WITH(NOLOCK)
+			on PHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader 
 			   and PHead.IdStatus = 1
 		LEFT JOIN #GuidesDelivered Deliv
 		   on Deliv.Guide_Serie = Serv.Guide_Serie COLLATE SQL_Latin1_General_CP1_CI_AS
 		   and Deliv.Guide_Number = Serv.Guide_Number		   
-		JOIN DeliveryBackOffice.dbo.Customer Ctm on Ctm.IdCustomer = vpclient.CustomerID
-		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl on
+		INNER JOIN DeliveryBackOffice.dbo.Customer Ctm WITH(NOLOCK) on Ctm.IdCustomer = vpclient.CustomerID
+		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH(NOLOCK) on
 		    tbl.IdTownship = serv.ReceiverIdTownship
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCB on DCB.DCBA_Id = serv.DCBA_ID
-	    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank DLB on DLB.Id_bank = DCB.DCBA_Bank_Id
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount DCB WITH(NOLOCK) on DCB.DCBA_Id = serv.DCBA_ID
+	    LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank DLB WITH(NOLOCK) on DLB.Id_bank = DCB.DCBA_Bank_Id
 		  WHERE 
 		(
 		 @Parameter3 = '-1'
@@ -272,21 +272,21 @@ SELECT  distinct
 			--) 
 			
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-		JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 			ON serv.Sender_ID = vpclient.CodeOfReference		
-		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det WITH(NOLOCK)
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
-		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head WITH(NOLOCK)
         on   Det.ID_DeliveryOrderBySettlement = Head.ID
-		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH (NOLOCK)
 			on paidguide.Guide_Serie = serv.Guide_Serie
 			and paidguide.Guide_Number = serv.Guide_Number
 			and paidguide.Deposit_Number = serv.Deposit_Number
 			and paidguide.IdStatus = 'TRUE'	 
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PaidHead
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PaidHead WITH (NOLOCK)
 			on PaidHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader
 			   and PaidHead.IdStatus = 1
 		LEFT JOIN #GuidesDelivered Deliv
@@ -294,8 +294,8 @@ SELECT  distinct
 		   and Deliv.Guide_Number = Serv.Guide_Number
 		
 		LEFT JOIN @CustomersDetail CustomDet on vpclient.CustomerID = CustomDet.IdCustomer
-		JOIN DeliveryBackOffice.dbo.Customer Ctm on Ctm.IdCustomer = vpclient.CustomerID
-		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl on
+		INNER JOIN DeliveryBackOffice.dbo.Customer Ctm WITH (NOLOCK) ON Ctm.IdCustomer = vpclient.CustomerID
+		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH (NOLOCK) on
 		    tbl.IdTownship = serv.ReceiverIdTownship
 		LEFT JOIN DeliveryBackOffice.dbo.CodProfile cpr on cpr.CustomerId = Ctm.IdCustomer
 
@@ -367,25 +367,25 @@ STUFF((
 			 CONVERT(VARCHAR,
 			 sum(CASE WHEN Serv.Guide_Number IS NOT NULL THEN 1 ELSE 0 END)) + '}'			 
 		FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)				
-		JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] Det WITH (NOLOCK)
 		on serv.Guide_Serie = Det.Guide_Serie
 		and serv.Guide_Number = Det.Guide_Number
 		and Det.Guide_Delivered = 1
 		and Det.Guide_Discharged = 1
-		JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] Head WITH (NOLOCK)
         on   Det.ID_DeliveryOrderBySettlement = Head.ID and Det.Guide_Delivered = 1
-		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide
+		LEFT JOIN DeliveryBackOffice.DBO.DeliveryOrderPaid paidguide WITH (NOLOCK)
 			on paidguide.Guide_Serie = serv.Guide_Serie
 			and paidguide.Guide_Number = serv.Guide_Number
 			and paidguide.Deposit_Number = serv.Deposit_Number
 			and paidguide.IdStatus = 'TRUE'	 
-		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PaidHead
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaidHeader PaidHead WITH (NOLOCK)
 			on PaidHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader
 			   and PaidHead.IdStatus = 1			
 		LEFT JOIN #GuidesDelivered Deliv
 		   on Deliv.Guide_Serie  = Serv.Guide_Serie COLLATE SQL_Latin1_General_CP1_CI_AS
 		   and Deliv.Guide_Number = Serv.Guide_Number
-		 LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl on
+		 LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH (NOLOCK) on
 		    tbl.IdTownship = serv.ReceiverIdTownship
 		WHERE
 		(

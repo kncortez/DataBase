@@ -346,7 +346,6 @@ BEGIN
 		
 		IF @AmountWeight IS NOT NULL AND @AmountWeight > 0
 		BEGIN
-			--SET @AmountWeight = @AmountWeight * 1.12
 					
 			SET @Amount = @Amount - @AmountWeight
 					
@@ -381,7 +380,6 @@ BEGIN
 		
 		IF @AmountSecure IS NOT NULL AND @AmountSecure > 0
 		BEGIN
-			--SET @AmountSecure = @AmountSecure * 1.12
 
 			SET @Amount = @Amount - @AmountSecure
 

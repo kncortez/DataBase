@@ -12,7 +12,7 @@ BEGIN
 	
 	SET NOCOUNT ON;
 
-	  DECLARE @Terminal INT =
+		  DECLARE @Terminal INT =
             (
                  SELECT Top 1 [SO].[CatCheckpointTypeId]
                 FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
@@ -22,8 +22,7 @@ BEGIN
                       AND [DO].[Guide_Serie] = @GuideSerie and [DO].[Guide_Number]  =  @GuideNumber
             );
 
-
-		Select TOP 1 
+Select TOP 1 
 	       ISNULL(DO.Sender_FirstName +' '+ DO.Sender_LastName,'') AS Sender,
 	       SO.OrderDescription AS [Status],
 		   DO.Sender_Phone,
@@ -107,10 +106,10 @@ BEGIN
    LEFT JOIN dbo.ConfirmationOfIncidence cfi WITH (NOLOCK)
          ON cfi.IdConfirmationOfIncidence = DA.ConfirmationOfIncidenceId
 	Where  DO.Guide_Serie = @GuideSerie  And DO.Guide_Number = @GuideNumber
-	     
+
 
 	Select  TOP 1
-	      IIF(DOD.SystemOrigin != 2,DP.Path_Incident,'') AS Path_Incident	     
+	       IIF(DOD.SystemOrigin != 2,DP.Path_Incident,'') AS Path_Incident	     
 	From DeliveryBackOffice.dbo.DeliveryOrderDetail DOD WITH(NOLOCK)				   
 	    LEFT JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 			ON DOD.Guide_Serie = DP.Guide_Serie 
@@ -123,10 +122,11 @@ BEGIN
 	WHERE		
 	DOD.Guide_Serie = @GuideSerie  
 	AND DOD.Guide_Number = @GuideNumber
-	AND DOD.StatusOrderId = 45 --Incidencia en ruta
-	AND DOD.RowStatus = 1 
+	AND DOD.StatusOrderId = 45 
+	AND DOD.RowStatus = 1
 	ORDER BY DP.Date_Photo DESC
+		
 
 	
-	
 END
+

@@ -80,3 +80,13 @@ CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idmembership]
     ON [dbo].[invoiceDetail]([MembershipId] ASC)
     INCLUDE([dti_fk_header]);
 
+
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fk_header_SubscriptionId]
+    ON [dbo].[invoiceDetail]([dti_fk_header] ASC, [SubscriptionId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fk_header_MembershipId]
+    ON [dbo].[invoiceDetail]([dti_fk_header] ASC, [MembershipId] ASC);
+

@@ -138,13 +138,14 @@ BEGIN
 			[Sender_Lng],
 			[ReceiverLatitude],
 			[ReceiverLongitude]
-			
 		INTO #GuideTable
 		FROM @TblDeliveryOrdersFD
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
 
 		CREATE NONCLUSTERED INDEX IX_TempTest_SerieNumber ON #GuideTable(Guide_Serie, Guide_Number);
 		CREATE NONCLUSTERED INDEX IX_TempTest_ReceiverIdTownship ON #GuideTable(ReceiverIdTownship);
+			CREATE NONCLUSTERED INDEX IX_TempTest_SenderID ON #GuideTable(Sender_ID);
+			CREATE NONCLUSTERED INDEX IX_TempTest_Receiver_ID ON #GuideTable(Receiver_ID);
 
 		/**********************************************************************/
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
@@ -317,7 +318,7 @@ BEGIN
 			@system,
 			@module,
 			GT.ReceiverLatitude,
-			GT.ReceiverLongitude	
+			GT.ReceiverLongitude
 		FROM #GuideTable GT
 			
 		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
@@ -405,18 +406,18 @@ BEGIN
 						SET @Email = (SELECT TOP 1 Receiver_Email FROM #GuideTable)
 						SELECT TOP 1 @IdUser = USR_IdUser,
 									 @Username = USR_Username
-						FROM DenariusUser_Dev.dbo.LGN_User
-								WHERE USR_Email = @Email--'felix.ramos@forzadelivery.com'
+						FROM DenariusUser_Dev.dbo.LGN_User WITH (NOLOCK)
+								WHERE USR_Email = @Email
 
-						SET @Token = (SELECT TOP 1 SSN_IdToken FROM DenariusUser_Dev.dbo.LGN_LogByToken
-								WHERE SSN_IdUser = @IdUser--303001
-								AND SSN_Username = @Username--'felix.ramos'
+						SET @Token = (SELECT TOP 1 SSN_IdToken FROM DenariusUser_Dev.dbo.LGN_LogByToken WITH (NOLOCK)
+								WHERE SSN_IdUser = @IdUser
+								AND SSN_Username = @Username
 								AND SSN_TokenStatus = 1
 								ORDER BY SSN_DateLogin desc)
 
 								IF(@Token IS NULL)
 									BEGIN
-									SET @Token = 'Concesionario';
+									 SET @Token = 'Concesionario';
 									END
 
 							SET @IsCollect =(SELECT TOP 1 IsCollect FROM #GuideTable)
@@ -433,27 +434,27 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									SELECT 1,
-										   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-										   1,
-										   GDT.PriceShippment,
-										   1,
-										   @Token,
-										   GETDATE(),
-										   GDT.Guide_Serie,
-										   GDT.Guide_Number
-									FROM #GuideTable GDT
-									 SET @IdCost = @@IDENTITY; 
+									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
+									--SELECT 1,
+									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
+									--	   1,
+									--	   GDT.PriceShippment,
+									--	   1,
+									--	   @Token,
+									--	   GETDATE(),
+									--	   GDT.Guide_Serie,
+									--	   GDT.Guide_Number
+									--FROM #GuideTable GDT
+									-- SET @IdCost = @@IDENTITY; 
 
-									INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									SELECT @IdCost,
-										   'Servicio',
-										   GTL.PriceShippment,
-										   1,
-											@Token,
-											GETDATE()
-									FROM #GuideTable GTL
+									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
+									--SELECT @IdCost,
+									--	   'Servicio',
+									--	   GTL.PriceShippment,
+									--	   1,
+									--		@Token,
+									--		GETDATE()
+									--FROM #GuideTable GTL
 
 								END
 							ELSE
@@ -469,31 +470,34 @@ BEGIN
 										   GETDATE()
 									FROM #GuideTable GIT
 
-									INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
-									SELECT 1,
-										   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
-										   1,
-										   GDT.PriceShippment,
-										   1,
-										   @Token,
-										   GETDATE(),
-										   GDT.Guide_Serie,
-										   GDT.Guide_Number
-									FROM #GuideTable GDT
-									 SET @IdCost = @@IDENTITY; 
+									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
+									--SELECT 1,
+									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
+									--	   1,
+									--	   GDT.PriceShippment,
+									--	   1,
+									--	   @Token,
+									--	   GETDATE(),
+									--	   GDT.Guide_Serie,
+									--	   GDT.Guide_Number
+									--FROM #GuideTable GDT
+									-- SET @IdCost = @@IDENTITY; 
 
-									INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
-									SELECT @IdCost,
-										   'Servicio',
-										   GTL.PriceShippment,
-										   1,
-											@Token,
-											GETDATE()
-									FROM #GuideTable GTL
+									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
+									--SELECT @IdCost,
+									--	   'Servicio',
+									--	   GTL.PriceShippment,
+									--	   1,
+									--		@Token,
+									--		GETDATE()
+									--FROM #GuideTable GTL
 							  END
 						END
 
 		---FIN INSERTAR DETALLE DE PAGO PARA LAS GUÍAS DE CONCESIONARIO
+
+
+
 
 
 		-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA

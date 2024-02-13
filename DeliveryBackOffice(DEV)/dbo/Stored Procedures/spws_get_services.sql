@@ -395,8 +395,7 @@ BEGIN
 						PRINT @SKIP
 						PRINT '@CantidadRegistros'
 						PRINT @CantidadRegistros
-				
-				--SELECT 'PRUEBAS';
+						    PRINT CONVERT(VARCHAR, GETDATE(), 9);
 
 				SET @jsonResult =
 				(
@@ -657,7 +656,7 @@ BEGIN
 									''
 								)
 				);
-				
+				    PRINT CONVERT(VARCHAR, GETDATE(), 9);
 			END
 
             -- retornar resultado en formato json

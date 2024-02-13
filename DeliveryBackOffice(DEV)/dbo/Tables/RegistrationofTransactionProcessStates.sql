@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[RegistrationofTransactionProcessStates] (
+CREATE TABLE [dbo].[RegistrationofTransactionProcessStates] (
     [IdRegistrationofTransactionProcessStates] INT             IDENTITY (1, 1) NOT NULL,
     [AccountId]                                INT             NULL,
     [CustomerId]                               INT             NULL,

@@ -189,9 +189,9 @@ BEGIN
 					ORDER BY s1.[AuthorizationDate] ASC
 					OPTION (OPTIMIZE FOR UNKNOWN)
 				END
-			ELSE
-				BEGIN
-						SELECT 
+			 ELSE
+			    BEGIN
+					SELECT 
 							s1.IdCliente
 							,s1.Cliente
 							,s1.Correo

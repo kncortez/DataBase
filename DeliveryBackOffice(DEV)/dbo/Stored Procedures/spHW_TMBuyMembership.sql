@@ -154,7 +154,7 @@ BEGIN
 														[CMDR].[DiscountValue],				-- DiscountValue
 														[CMDR].[DiscountLowServiceRange],	-- DiscountLowServiceRange
 														[CMDR].[DiscountTopServiceRange],	-- DiscountTopServiceRange
-														[CMDR].[RowStatus],									-- RowStatus 
+														[CMDR].[RowStatus],					-- RowStatus 
 														@Token,								-- TokenCreated
 														SYSDATETIME()						-- DateCreated
 		FROM											[dbo].[CatMembershipDiscountRange] CMDR WITH (NOLOCK)

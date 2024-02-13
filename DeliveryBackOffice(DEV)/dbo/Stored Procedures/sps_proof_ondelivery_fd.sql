@@ -171,7 +171,7 @@ BEGIN
 
     BEGIN TRY
 
-	IF (NOT EXISTS(Select 
+    	IF (NOT EXISTS(Select 
 				Top 1 1
 				From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
 				 Where Guide_Serie = @GuideSerie AND
@@ -240,8 +240,6 @@ BEGIN
 
 		   END; 
 
-
-		
         -- asignar valor a la variable ModName
         SET @ModName = N'Courier App';
 
@@ -252,7 +250,7 @@ BEGIN
 
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
-        SELECT TOP 1 da.ID
+        SELECT Top 1 da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
@@ -267,7 +265,7 @@ BEGIN
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
               AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
-			  ORDER BY da.Date_Created desc;
+               ORDER BY da.Date_Created desc;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
         INSERT INTO DeliveryBackOffice.dbo.DeliveryProof

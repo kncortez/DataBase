@@ -85,8 +85,7 @@ BEGIN
 
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
 
-
-		DECLARE @CurrentIncidentCount INT = (
+    	DECLARE @CurrentIncidentCount INT = (
 		  Select Top 1 Count (DA.ID)
 			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 			       Inner Join 
@@ -178,7 +177,7 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
 
     BEGIN TRY
 
-		IF (NOT EXISTS(Select 
+    IF (NOT EXISTS(Select 
 				Top 1 1
 				From  [dbo].[DeliveryAttempt] WITH (NOLOCK)
 				 Where Guide_Serie = @GuideSerie AND
@@ -255,12 +254,10 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
 		   END; 
 
 
-
-
         -- convertir base64 a varbinary
         -- buscar registros de tabla de entregas
         INSERT INTO @Table
-        SELECT Top 1 da.ID
+        SELECT TOP 1 da.ID
         FROM DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr WITH (NOLOCK)
                 ON sr.ID = da.ID_Courier
@@ -275,7 +272,7 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
               AND da.Guide_Serie = @GuideSerie
               AND da.Guide_Number = @GuideNumber
               AND CONVERT(VARCHAR, da.Date_Created, 23) = CONVERT(VARCHAR, GETDATE(), 23)
-		ORDER BY  da.Date_Created DESC
+              ORDER BY  da.Date_Created DESC;
 
         -- insertar foto y guardar ID para actualizar tabla de entregas
         INSERT INTO DeliveryBackOffice.dbo.DeliveryProof
@@ -795,6 +792,8 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
 			IF ( ISNULL(@IdIssue,0)>0)
 			BEGIN
             -- actualizar tabla de entregas
+            IF ( ISNULL(@IdIssue,0)>0)
+			BEGIN
             UPDATE DeliveryBackOffice.dbo.DeliveryAttempt
             SET ID_Incident = @IdIssue,
                 ID_Proof = @ID_Photo,
@@ -809,7 +808,7 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
                       SELECT ID FROM @Table
                   );
 
-				  END;
+            END; 
             -- actualizar tabla de registro de guías electrónicas
             UPDATE DeliveryBackOffice.dbo.DeliveryOrder
             SET StatusOrderId = @StatusOrderId
@@ -978,7 +977,7 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
                @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
                @MessageReturn 'MessageReturn',
                @TokenLinkGeneration 'TokenLinkGeneration';
-	END;
+    END;
 	ELSE
 	   SELECT 0 AS 'StatusCode',
                    'Excedió la cantidad disponible de incidencias durante el día.' AS 'Description',
@@ -986,5 +985,4 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
                    @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide',
                    @MessageReturn 'MessageReturn',
                    @TokenLinkGeneration 'TokenLinkGeneration';
-
 END;

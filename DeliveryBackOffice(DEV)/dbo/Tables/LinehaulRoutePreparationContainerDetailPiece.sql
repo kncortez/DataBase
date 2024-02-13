@@ -24,6 +24,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetailPiece', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -73,6 +75,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID del stat
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221123-223211]
-    ON [dbo].[LinehaulRoutePreparationContainerDetailPiece]([LinehaulRoutePreparationContainerDetailId] ASC, [PieceNumber] ASC);
+
 

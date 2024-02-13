@@ -122,8 +122,7 @@ BEGIN
 	
 	);
 
-
-	DECLARE @CurrentIncidentCount INT = (
+		DECLARE @CurrentIncidentCount INT = (
 		  Select Top 1 Count (DA.ID)
 			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
 			       Inner Join 
@@ -135,7 +134,7 @@ BEGIN
 	 
 	 );
 
-	IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
+IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
 					Inner Join [dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
 					     On do.Guide_Serie=dod.Guide_Serie and	
 					do.Guide_Number= dod.Guide_Number
@@ -167,7 +166,6 @@ BEGIN
 		BEGIN TRANSACTION 
 		BEGIN TRY
 
-		
 		
 
 --- registro de incidencia
@@ -273,29 +271,6 @@ BEGIN
 				AND
 				[CTI].[RowStatus] = 1;
 
-		------------- Si existen registros en DeliveryAttem captura el Id para el proceso de lo contrario lo obtiene en el insert
-		 --  INSERT INTO	@DeliveryAttemptInserted ([IdDeliveryAttempt])
-			--SELECT 
-			--	TOP (1)
-			--	     DA.ID
-			--FROM 
-			--	[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
-			--	LEFT JOIN
-			--	[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH(NOLOCK)
-			--	ON 
-			--	[DO].[Guide_Serie] = DA.Guide_Serie
-			--	AND
-			--	[DO].[Guide_Number] = DA.Guide_Number
-			--WHERE
-			--	[DO].[Guide_Serie] = @GuideSerie
-			--	AND
-			--	[DO].[Guide_Number] = @GuideNumber
-          ------ fin --------
-
-			-- Ingreso manual de intento de entrega para proceso
-			--IF( NOT EXISTS(Select TOP 1 1 From dbo.DeliveryAttempt  WITH(NOLOCK) 
-	  --         Where Guide_Serie = @GuideSerie AND Guide_Number=@GuideNumber))
-	  --BEGIN
 
 			 
 			-- Ingreso manual de intento de entrega para proceso
@@ -355,17 +330,7 @@ BEGIN
 				[DO].[Guide_Serie] = @GuideSerie
 				AND
 				[DO].[Guide_Number] = @GuideNumber
-       -- END
-
-
-		--IF(EXISTS(Select TOP 1 1 From dbo.DeliveryAttempt  WITH(NOLOCK) 
-	 --          Where Guide_Serie = @GuideSerie AND Guide_Number=@GuideNumber))
-		--	BEGIN
-		--	   UPDATE [dbo].[DeliveryAttempt] 
-		--	   SET ID_Incident =@Incidence, ConfirmationOfIncidenceId = @IdConfirmationOfIncidence
-		--	   Where Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber;
-
-		--	END
+       
 			
 			-- Ingresar a bitácora de estados el intento de entrega fallido para la guía
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
@@ -401,7 +366,8 @@ BEGIN
 			FROM
 				@DeliveryAttemptInserted DAI
 
-				--- actualizar ultimo checkpoint en DeliveryOrder
+
+					--- actualizar ultimo checkpoint en DeliveryOrder
 
 				UPDATE [dbo].[DeliveryOrder]  SET StatusOrderId = @FailedDeliveryVisitStatus,
 				     DateUpdated = GETDATE(),
@@ -413,7 +379,6 @@ BEGIN
 			-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
 			IF ( ISNULL(@IsGuideLastMileReturn, 0) = 1 )
 			BEGIN
-            
 				-- Flujo de devolución
 				UPDATE
 					[DOAD]
@@ -607,9 +572,7 @@ BEGIN
 					 
 			END
 
-		
-		    
-				COMMIT TRANSACTION;
+			COMMIT TRANSACTION;
 
 				SELECT
 					200 [ResponseCode],

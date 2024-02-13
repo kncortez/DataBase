@@ -136,7 +136,7 @@ BEGIN
            CONVERT(TIME, [DOBS].[Date_Dispatched] - [DOBS].[Route_Received]) Time_on_route,
            SUM(IIF(DO.StatusOrderId = 32, 1, 0)) IncidenceInRoute,
            SUM(Contempts.CoutierContempt) CoutierContempt,
-		   SUM(IncidenciasSinValidar.UnvalidatedIncident) UnvalidatedIncident,
+           SUM(IncidenciasSinValidar.UnvalidatedIncident) UnvalidatedIncident,
 		   SUM(FalseIncidents.FalseIncidents) FalseIncidents,
 		   SUM( IncidenciasReales.[RealIncidents]) RealIncidents
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
@@ -163,7 +163,7 @@ BEGIN
         INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
             ON [DO].[Guide_Serie] = [DSD].[Guide_Serie]
                AND [DO].[Guide_Number] = [DSD].[Guide_Number]
-			     OUTER APPLY
+               OUTER APPLY
     (
         SELECT COUNT(1) 'UnvalidatedIncident'
         FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
@@ -200,7 +200,7 @@ BEGIN
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
-              AND  COI.IsConfirmed = 1 AND COI.IsDenied = 0
+              AND  COI.IsConfirmed =1 AND COI.IsDenied = 0
     ) IncidenciasReales
         OUTER APPLY
     (

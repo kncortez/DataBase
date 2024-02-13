@@ -152,7 +152,7 @@ BEGIN
 		AND rp.RowStatus = 1
 
 	--TABLE 1 Información de las guías en preparación de la ruta
-	SELECT RPD.Guide_Serie 'Guide_Serie'
+		SELECT RPD.Guide_Serie 'Guide_Serie'
 		, RPD.Guide_Number 'Guide_Number'
 		, RPDP.PieceNumber 'Guide_Piece'
 		, COALESCE(do.Pieces_Dry,0) + COALESCE(do.Pieces_Cold,0) 'Pieces'

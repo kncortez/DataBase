@@ -1,4 +1,11 @@
-﻿
+-- =============================================
+-- Author:		<Luis Ardón>
+-- Create date: <2023-11-25>
+-- Modify:      <Carlos Vicente>
+-- Modify on:   <2023-12-11>
+-- Description:	<Establecer estado de recolectado a traves del número de guía>
+-- =============================================
+
 --Creating procedure
 CREATE PROCEDURE [dbo].[SetPickupStatusByGuide]
     @GuideSerie AS NVARCHAR(2),

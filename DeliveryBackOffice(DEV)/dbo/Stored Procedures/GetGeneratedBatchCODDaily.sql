@@ -131,6 +131,7 @@ BEGIN
                                  AND cus.CatBatchFrequencyCODId = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
+								 AND ISNULL(do.IsLastMileReturn,0) =0
                            FOR XML PATH('')
                        ),
                        1,

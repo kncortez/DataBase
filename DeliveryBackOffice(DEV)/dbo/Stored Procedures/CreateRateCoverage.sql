@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[CreateRateCoverage]
+﻿
+CREATE PROCEDURE [dbo].[CreateRateCoverage]
     @RateId INT -- = 2285;
   , @TownshipDestinyId INT
   , @Segment NVARCHAR(50)

@@ -542,7 +542,7 @@ BEGIN
                                        WHEN 'PICKUP' THEN
                                            'Recibido de ' + @Name
                                        WHEN 'DELIVERY' THEN
-                                           'Entregado a ' + @Name
+                                          CONVERT(NVARCHAR(200),CONCAT( 'Entregado a ' , @Name, ' ', ISNULL(@CUI,'')))
                                        WHEN 'RETURN' THEN
                                            'Devueldo a ' + @Name
                                    END Observations

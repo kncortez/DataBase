@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[CreateRateLine]
+﻿
+CREATE PROCEDURE [dbo].[CreateRateLine]
     @RateId INT                -- = 2285;
   , @ServiceType NVARCHAR(50)  -- = N'Servicio Estándar';
   , @PackageType NVARCHAR(100) -- = N'PAQUETE PEQUEÑO';
@@ -37,10 +38,10 @@ BEGIN
            )
         BEGIN
 
-		 SELECT 'Datos ok'
-                 , @SegmentTypeId
-                 , @PackageTypeId
-                 , @ServiceTypeId;
+		 --SELECT 'Datos ok'
+   --              , @SegmentTypeId
+   --              , @PackageTypeId
+   --              , @ServiceTypeId;
 
             INSERT INTO dbo.RateData
             (

@@ -11,21 +11,23 @@ BEGIN
 
         SELECT '1'                              'StatusCode'
              , 'Datos obtenidos correctamente.' 'Description';
-
+             
         SELECT inv_pk_id InvoiceId
         FROM invoiceHeader WITH (NOLOCK)
         WHERE 
-		--(
-		--inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
-        --OR 
-		--inv_documentRecieved ='TimeOut' 
-		----)
+		(
+		inv_descriptionFEL = 'Fallo la ejecucion del comando: [POST_DOCUMENTGT], TrCode: [9], description: [Ya existe el Documento con el NIT, codigo establecimiento, tipo de documento y IDInterno, no se puede insertar un documento duplicado]'
+        OR 
+		inv_documentRecieved ='TimeOut' 
+		)
+		  AND 
+		  inv_dateRegister >='2024-01-01 00:00:00'
+		 AND inv_dateRegister <='2024-01-31 23:59:59'
+		 AND 
+		 
+		 (inv_certificationFEL IS NULL OR inv_certificationFEL = '')
 		  --AND 
-		  --inv_dateRegister >='2023-07-01 00:00:00'
-		 --AND inv_dateRegister <='2023-07-31 23:59:59'
-		 --AND 
-		 inv_certificationFEL IS null
-		  AND inv_pk_id IN (2386863,2387654)
+		  --inv_pk_id IN (2574602)
 		  --AND 
 		 
 		   --   AND CAST(inv_dateRegister AS DATE) >= CAST(GETDATE() - @DaysFrom AS DATE);

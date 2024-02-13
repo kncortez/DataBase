@@ -12,7 +12,7 @@ begin
     BEGIN TRANSACTION;
     BEGIN TRY
        
-	   SELECT 1 'StatusCode',
+       SELECT 1 'StatusCode',
                 'Registros obtenidos correctamente.' 'Description';
 
 		Select DO.Guide_Serie, DO.Guide_Number 
@@ -38,8 +38,6 @@ begin
             WHERE 
                  DA.ID_DeliveryOrderBySettlement = @DeliveryOrderBySettlementId
                   AND COI.IsAddressModificationRequested=1;
-
-				
 
               COMMIT TRANSACTION;
     END TRY

@@ -11,11 +11,10 @@ AS
 BEGIN
 
 Select
-    GETDATE() [DateTimeExec],
-	CONVERT(NVARCHAR(10),@StartDate,105) AS [StartDate],
-	CONVERT(NVARCHAR(10),@EndDate,105)  AS [EndDate],
-    COUNT(CASE WHEN COI.IsConfirmed = 0 and COI.StatusOrderId = 45 and Delivered = 0 THEN DA.Guide_Number END) AS [UnprocessedIncidentCount],
-    COUNT(CASE WHEN COI.StatusOrderId = 50 AND COI.IsConfirmed = 1 and Delivered = 0 THEN DA.Guide_Number END) AS [ProcessedIncidentsCount]
+	CONVERT(NVARCHAR(10),@StartDate,105) AS StartDate,
+	CONVERT(NVARCHAR(10),@EndDate,105)  AS EndDate,
+    COUNT(CASE WHEN COI.IsConfirmed = 0 and COI.StatusOrderId = 45 and Delivered = 0 THEN DA.Guide_Number END) AS UnprocessedIncidentCount,
+    COUNT(CASE WHEN COI.StatusOrderId = 50 AND COI.IsConfirmed = 1 and Delivered = 0 THEN DA.Guide_Number END) AS ProcessedIncidentsCount
 	From
 	ConfirmationOfIncidence COI WITH (NOLOCK) 
 	INNER JOIN 
@@ -25,3 +24,4 @@ Select
 
     
 END
+

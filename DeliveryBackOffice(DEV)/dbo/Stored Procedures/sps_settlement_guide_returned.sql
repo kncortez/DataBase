@@ -1,17 +1,13 @@
-﻿
-
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-22>
 -- Description:	<Registrar transacción de liquidación para material devuelto>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_returned]
-    @GuideSerie AS VARCHAR(2),
-    @GuideNumber AS INT,
-    @Token NVARCHAR(50),
-    @IdManifest INT
+    @GuideSerie AS VARCHAR(2)
+  , @GuideNumber AS INT
+  , @Token NVARCHAR(50)
+  , @IdManifest INT
 AS
 BEGIN
     DECLARE @RModified INT;
@@ -32,12 +28,12 @@ BEGIN
 
         -- actualizar guía debido al proceso de liquidación
         UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
-        SET Settlement_Collect_OnDelivery = @Amount,
-            SettlementCollect_TokenCreated = @Token,
-            SettlementCollect_DateCreated = GETDATE(),
-            Guide_Settlement = 1, -- guía liquidada en bodega
-            Guide_Returned = 1,   -- guía liquidada vía material devuelto
-            Guide_Delivered = 0   -- guía liquidada vía comprobante de entrega
+        SET Settlement_Collect_OnDelivery = @Amount
+          , SettlementCollect_TokenCreated = @Token
+          , SettlementCollect_DateCreated = GETDATE()
+          , Guide_Settlement = 1 -- guía liquidada en bodega
+          , Guide_Returned = 1   -- guía liquidada vía material devuelto
+          , Guide_Delivered = 0  -- guía liquidada vía comprobante de entrega
         WHERE Guide_Serie = @GuideSerie
               AND Guide_Number = @GuideNumber
               AND ID_DeliveryOrderBySettlement = @IdManifest;
@@ -47,18 +43,18 @@ BEGIN
         -- registrar checkpoint histórico de devolución
         INSERT INTO [dbo].[DeliveryOrderDetail]
         (
-            [Guide_Serie],
-            [Guide_Number],
-            [StatusOrderId],
-            [UserCreated],
-            [DateCreated],
-            [DateCreatedInSystem],
-            [Observations],
-            [Temperature_Celsius]
+            [Guide_Serie]
+          , [Guide_Number]
+          , [StatusOrderId]
+          , [UserCreated]
+          , [DateCreated]
+          , [DateCreatedInSystem]
+          , [Observations]
+          , [Temperature_Celsius]
         )
         VALUES
-        (   @GuideSerie, @GuideNumber, 8, -- retornado a Forza
-            @Token, GETDATE(), GETDATE(), NULL, NULL);
+        (   @GuideSerie, @GuideNumber, 8 -- retornado a Forza
+          , @Token, GETDATE(), GETDATE(), NULL, NULL);
 
         -- registrar último checkpoint de devolución
         UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -71,7 +67,7 @@ BEGIN
         -- invalidar token de incidencias
         UPDATE coi
         SET coi.ConfirmationOfIncidentToken += 'TIMEOUT'
-        FROM ConfirmationOfIncidence coi
+        FROM ConfirmationOfIncidence   coi
             INNER JOIN DeliveryAttempt da WITH (NOLOCK)
                 ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
                    AND da.Guide_Serie = @GuideSerie
@@ -82,10 +78,10 @@ BEGIN
         --FDD-1071 <Oscar Morales 2023-02-16> 
         --Detectar desacatos courier
         UPDATE coi
-        SET CourierContempt = 1,
-            TokenUpdated = @Token,
-            DateUpdated = GETDATE()
-        FROM ConfirmationOfIncidence coi
+        SET CourierContempt = 1
+          , TokenUpdated = @Token
+          , DateUpdated = GETDATE()
+        FROM ConfirmationOfIncidence   coi
             INNER JOIN DeliveryAttempt da WITH (NOLOCK)
                 ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
                    AND da.Guide_Serie = @GuideSerie
@@ -100,7 +96,7 @@ BEGIN
         IF EXISTS
         (
             SELECT 1
-            FROM ConfirmationOfIncidence coi
+            FROM ConfirmationOfIncidence   coi
                 INNER JOIN DeliveryAttempt da WITH (NOLOCK)
                     ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
                        AND da.Guide_Serie = @GuideSerie
@@ -121,14 +117,14 @@ BEGIN
             -- registrar checkpoint histórico de devolución
             INSERT INTO [dbo].[DeliveryOrderDetail]
             (
-                [Guide_Serie],
-                [Guide_Number],
-                [StatusOrderId],
-                [UserCreated],
-                [DateCreated],
-                [DateCreatedInSystem],
-                [Observations],
-                [Temperature_Celsius]
+                [Guide_Serie]
+              , [Guide_Number]
+              , [StatusOrderId]
+              , [UserCreated]
+              , [DateCreated]
+              , [DateCreatedInSystem]
+              , [Observations]
+              , [Temperature_Celsius]
             )
             VALUES
             (@GuideSerie, @GuideNumber, @StatusReturn, @Token, GETDATE(), GETDATE(), NULL, NULL);
@@ -155,27 +151,24 @@ BEGIN
                   AND RowStatus = 1
         )
         BEGIN
-
-		PRINT 'si entra en [DeliveryOrderAttemptData] '
-		 
             INSERT INTO [dbo].[DeliveryOrderAttemptData]
             (
-                [GuideSerie],
-                [GuideNumber],
-                [GuideDeliveryAttemptCount],
-                [GuideDeliveryMaxAttemptCount],
-                [GuideReturnAttemptCount],
-                [GuideReturnMaxAttemptCount],
-                [RowStatus],
-                [DateCreated],
-                [TokenCreated],
-                [DateUptaded],
-                [TokenUpdated]
+                [GuideSerie]
+              , [GuideNumber]
+              , [GuideDeliveryAttemptCount]
+              , [GuideDeliveryMaxAttemptCount]
+              , [GuideReturnAttemptCount]
+              , [GuideReturnMaxAttemptCount]
+              , [RowStatus]
+              , [DateCreated]
+              , [TokenCreated]
+              , [DateUptaded]
+              , [TokenUpdated]
             )
             SELECT TOP 1
-                   do.Guide_Serie,
-                   do.Guide_Number,
-                   CASE
+                   do.Guide_Serie
+                 , do.Guide_Number
+                 , CASE
                        WHEN coi.IdConfirmationOfIncidence IS NOT NULL
                             AND so.OrderDescription = 'Incidencia Validada' /* 'Intento de entrega fallida'*/
                             AND
@@ -187,9 +180,9 @@ BEGIN
                            1
                        ELSE
                            0
-                   END,
-                   rh.Attempt,
-                   CASE
+                   END
+                 , rh.Attempt
+                 , CASE
                        WHEN coi.IdConfirmationOfIncidence IS NOT NULL
                             AND so.OrderDescription = 'Intento de entrega fallida'
                             AND do.IsLastMileReturn = 1
@@ -201,17 +194,17 @@ BEGIN
                            1
                        ELSE
                            0
-                   END,
-                   rh.AttemptReturn,
-                   1,
-                   GETDATE(),
-                   @Token,
-                   NULL,
-                   NULL
-            FROM DeliveryOrder do WITH (NOLOCK)
-                LEFT JOIN VisitPointClient vpc WITH (NOLOCK)
+                   END
+                 , rh.AttemptReturn
+                 , 1
+                 , GETDATE()
+                 , @Token
+                 , NULL
+                 , NULL
+            FROM DeliveryOrder                    do WITH (NOLOCK)
+                LEFT JOIN VisitPointClient        vpc WITH (NOLOCK)
                     ON do.Sender_ID = vpc.CodeOfReference
-                INNER JOIN RatebyCustomer rbc WITH (NOLOCK)
+                INNER JOIN RatebyCustomer         rbc WITH (NOLOCK)
                     ON ISNULL(do.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
                        AND rbc.RbcRowStatus = 1
                        AND
@@ -219,15 +212,15 @@ BEGIN
                            rbc.RbcCodeOfReference = vpc.CodeOfReference
                            OR rbc.RbcCodeOfReference IS NULL
                        )
-                INNER JOIN RateHeader rh WITH (NOLOCK)
+                INNER JOIN RateHeader             rh WITH (NOLOCK)
                     ON rbc.RbcIdRate = rh.RheId
-                INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+                INNER JOIN DeliveryAttempt        da WITH (NOLOCK)
                     ON do.Guide_Serie = da.Guide_Serie
                        AND do.Guide_Number = da.Guide_Number
                        AND da.ID_DeliveryOrderBySettlement = @IdManifest
                 LEFT JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
                     ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
-                LEFT JOIN StatusOrder so
+                LEFT JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
             WHERE do.Guide_Serie = @GuideSerie
                   AND do.Guide_Number = @GuideNumber
@@ -237,14 +230,14 @@ BEGIN
         BEGIN
             UPDATE doad
             SET doad.GuideDeliveryAttemptCount = CASE
-                                                     WHEN  
-                                                           so.OrderDescription = 'Incidencia Validada' 
+                                                     WHEN 
+                                                     so.OrderDescription = 'Incidencia Validada' 
 														  AND ISNULL(cti.IncidenceClasificationId,0)=1   THEN
                                                          doad.GuideDeliveryAttemptCount + 1
                                                      ELSE
                                                          doad.GuideDeliveryAttemptCount
-                                                 END,
-                doad.GuideReturnAttemptCount = CASE
+                                                 END
+              , doad.GuideReturnAttemptCount = CASE
                                                    WHEN do.IsLastMileReturn = 1
                                                         AND
                                                         (
@@ -254,25 +247,25 @@ BEGIN
                                                        doad.GuideReturnAttemptCount + 1
                                                    ELSE
                                                        doad.GuideReturnAttemptCount
-                                               END,
-                doad.DateUptaded = GETDATE(),
-                doad.TokenUpdated = @Token
-            FROM DeliveryOrderAttemptData doad
-                INNER JOIN DeliveryOrder do WITH (NOLOCK)
+                                               END
+              , doad.DateUptaded = GETDATE()
+              , doad.TokenUpdated = @Token
+            FROM DeliveryOrderAttemptData          doad
+                INNER JOIN DeliveryOrder           do WITH (NOLOCK)
                     ON doad.GuideSerie = do.Guide_Serie
                        AND doad.GuideNumber = do.Guide_Number
-                INNER JOIN DeliveryAttempt da WITH (NOLOCK)
+                INNER JOIN DeliveryAttempt         da WITH (NOLOCK)
                     ON doad.GuideSerie = da.Guide_Serie
                        AND doad.GuideNumber = da.Guide_Number
                        AND da.ID_DeliveryOrderBySettlement = @IdManifest
                 INNER JOIN ConfirmationOfIncidence coi WITH (NOLOCK)
                     ON da.ConfirmationOfIncidenceId = coi.IdConfirmationOfIncidence
                        AND coi.IsDenied = 0 --no esté denegada
-                INNER JOIN StatusOrder so
+                INNER JOIN StatusOrder             so
                     ON coi.StatusOrderId = so.StatusOrderId
-			    INNER JOIN dbo.CatTypeIncidence cti WITH (NOLOCK)
-				ON da.ID_Incident = cti.IdIncidenceType
-				  and ISNULL(cti.IncidenceClasificationId,0)=1
+                 INNER JOIN dbo.CatTypeIncidence cti WITH (NOLOCK)
+				    ON da.ID_Incident = cti.IdIncidenceType
+				       AND ISNULL(cti.IncidenceClasificationId,0)=1
             WHERE doad.GuideSerie = @GuideSerie
                   AND doad.GuideNumber = @GuideNumber
                   AND
@@ -287,98 +280,99 @@ BEGIN
     --FIN FDD-1075 <Oscar Morales 2023-02-24> 
     END TRY
     BEGIN CATCH
-        SELECT 0 AS 'StatusCode',
-               ERROR_MESSAGE() AS 'Description',
-               CONVERT(BIGINT, 0) AS 'NumTransferID',
-               @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide',
-               @Amount AS 'Amount',
-               0 AS 'SubStatusCode';
+        SELECT 0                                             AS 'StatusCode'
+             , ERROR_MESSAGE()                               AS 'Description'
+             , CONVERT(BIGINT, 0)                            AS 'NumTransferID'
+             , @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide'
+             , @Amount                                       AS 'Amount'
+             , 0                                             AS 'SubStatusCode';
         ROLLBACK TRANSACTION;
     END CATCH;
 
     IF @@TRANCOUNT > 0
     BEGIN
         IF (@RModified > 0)
-            SELECT 1 AS 'StatusCode',
-                   'Registro guardado correctamente' AS 'Description',
-                   @@TRANCOUNT AS 'NumTransferID',
-                   @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide',
-                   @Amount AS 'Amount',
-                   0 AS 'SubStatusCode',
-                   CASE
+            SELECT 1                                             AS 'StatusCode'
+                 , 'Registro guardado correctamente'             AS 'Description'
+                 , @@TRANCOUNT                                   AS 'NumTransferID'
+                 , @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide'
+                 , @Amount                                       AS 'Amount'
+                 , 0                                             AS 'SubStatusCode'
+                 , CASE
                        WHEN DOR.IsLastMileReturn = 1 THEN
                            ISNULL(doad.GuideReturnAttemptCount, 1)
                        ELSE
                            ISNULL(doad.GuideDeliveryAttemptCount, 1)
-                   END AS RetriesMade,    --Numero intentos de entrega fallidas
-                   CASE
+                   END                                           AS RetriesMade    --Numero intentos de entrega fallidas
+                 , CASE
                        WHEN DOR.IsLastMileReturn = 1 THEN
                            ISNULL(doad.GuideReturnMaxAttemptCount, 2)
                        ELSE
                            ISNULL(doad.GuideDeliveryMaxAttemptCount, 2)
-                   END AS RetriesAllowed, ---Numero de intentos permitidos
-                   '' 'Retries',
-                   CASE
+                   END                                           AS RetriesAllowed ---Numero de intentos permitidos
+                 , ''                                            'Retries'
+                 , CASE
                        WHEN DOR.IsLastMileReturn = 1 THEN
                            1
                        ELSE
                            0
-                   END ValidateAbandonedPackage,
-                   CASE
+                   END                                           ValidateAbandonedPackage
+                 , CASE
                        WHEN @IsMarkedReturn = 1 THEN
                            1
                        ELSE
                            0
-                   END IsMarkedReturn,
-				   CASE 
-				       WHEN COI.LiquidatorRemarks IS NULL THEN 
-					   'Sin Observaciones'
-				       WHEN COI.LiquidatorRemarks='' THEN 
-					   'Sin Observaciones' 
-				       ELSE COI.LiquidatorRemarks 
-				   END AS LiquidatorRemarks
-            FROM DeliveryOrder DOR WITH (NOLOCK)
-                INNER JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
+                   END                                           IsMarkedReturn
+                 , CASE
+                       WHEN COI.LiquidatorRemarks IS NULL THEN
+                           'Sin Observaciones'
+                       WHEN COI.LiquidatorRemarks = '' THEN
+                           'Sin Observaciones'
+                       ELSE
+                           COI.LiquidatorRemarks
+                   END                                           AS LiquidatorRemarks
+            FROM DeliveryOrder                            DOR WITH (NOLOCK)
+                INNER JOIN DeliveryOrderAttemptData       doad WITH (NOLOCK)
                     ON doad.GuideSerie = DOR.Guide_Serie
                        AND doad.GuideNumber = DOR.Guide_Number
                        AND doad.RowStatus = 1
-				LEFT JOIN [dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-				    ON     DOR.Guide_Serie = DA.Guide_Serie 
-					   AND DOR.Guide_Number = DA.Guide_Number
-				LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
-				    ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+                LEFT JOIN [dbo].[DeliveryAttempt]         DA WITH (NOLOCK)
+                    ON DOR.Guide_Serie = DA.Guide_Serie
+                       AND DOR.Guide_Number = DA.Guide_Number
+                LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+                    ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
             WHERE DOR.Guide_Serie = @GuideSerie
                   AND DOR.Guide_Number = @GuideNumber;
 
-				 
+
 
         ELSE
-            SELECT 0 AS 'StatusCode',
-                   'Registro no encontrado' AS 'Description',
-                   0 AS 'NumTransferID',
-                   @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide',
-                   @Amount AS 'Amount',
-                   0 AS 'SubStatusCode',
-                   0 AS RetriesMade,
-                   0 AS RetriesAllowed,
-                   '' AS 'Retries',
-                   0 AS ValidateAbandonedPackage,
-                   0 AS IsMarkedReturn;
+            SELECT 0                                             AS 'StatusCode'
+                 , 'Registro no encontrado'                      AS 'Description'
+                 , 0                                             AS 'NumTransferID'
+                 , @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide'
+                 , @Amount                                       AS 'Amount'
+                 , 0                                             AS 'SubStatusCode'
+                 , 0                                             AS RetriesMade
+                 , 0                                             AS RetriesAllowed
+                 , ''                                            AS 'Retries'
+                 , 0                                             AS ValidateAbandonedPackage
+                 , 0                                             AS IsMarkedReturn;
 
 
 
         COMMIT TRANSACTION;
     END;
     ELSE
-        SELECT 0 AS 'StatusCode',
-               ERROR_MESSAGE() AS 'Description',
-               CONVERT(BIGINT, 0) AS 'NumTransferID',
-               @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide',
-               @Amount AS 'Amount',
-               0 AS 'SubStatusCode',
-               0 AS RetriesMade,
-               0 AS RetriesAllowed,
-               '' AS 'Retries',
-               0 AS ValidateAbandonedPackage,
-               0 AS IsMarkedReturn;
+        SELECT 0                                             AS 'StatusCode'
+             , ERROR_MESSAGE()                               AS 'Description'
+             , CONVERT(BIGINT, 0)                            AS 'NumTransferID'
+             , @GuideSerie + CONVERT(NVARCHAR, @GuideNumber) AS 'Guide'
+             , @Amount                                       AS 'Amount'
+             , 0                                             AS 'SubStatusCode'
+             , 0                                             AS RetriesMade
+             , 0                                             AS RetriesAllowed
+             , ''                                            AS 'Retries'
+             , 0                                             AS ValidateAbandonedPackage
+             , 0                                             AS IsMarkedReturn;
 END;

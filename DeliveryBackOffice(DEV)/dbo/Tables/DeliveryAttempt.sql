@@ -40,6 +40,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_deliveryattempt_guide]
     ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -87,6 +89,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de tabla
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para indicar devolución', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryAttempt', @level2type = N'COLUMN', @level2name = N'IsLastMileReturn';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ID_Incident]
+    ON [dbo].[DeliveryAttempt]([ID_Incident] ASC);
 
 
 GO

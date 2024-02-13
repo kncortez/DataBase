@@ -47,8 +47,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Orden o sec
 
 
 GO
-CREATE NONCLUSTERED INDEX [ID]
-    ON [dbo].[DeliverySettlementDetail]([ID] ASC);
+
 
 
 GO

@@ -21,21 +21,22 @@ CREATE PROCEDURE [dbo].[spHM_setInTransitToLinehaulRoutePreparation]
     @TknUser AS NVARCHAR(50)
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
-    SET NOCOUNT ON;
-    DECLARE @EXISTING_LRP AS INT; -- Linehaul Route Preparation
-    DECLARE @EXISTING_LCM AS INT; -- Linehaul Route Preparation Customs Mark
-    DECLARE @EXISTING_SR AS INT; -- Sender Receiver
-    DECLARE @EXISTING_TAG AS INT; -- Custom Marks
-    DECLARE @EXISTING_EMPTY_CONTAINERS AS INT; -- Linehaul Route Preparation Container Detail
-    DECLARE @STATUS_ORDER_ID AS INT; -- StatusOrder
-    DECLARE @STATUS_LINEHAUL_ID AS INT; -- CatLinehaulStatus
-    DECLARE @STATUS_GENERATED AS INT; -- CatLinehaulStatus
-    DECLARE @EXISTING_LRP_TRANSIT AS INT; -- Linehaul Route Preparation
-    DECLARE @AUX_VEHICLE_COUNT AS INT; -- CatVehicle
-    DECLARE @AUX_VEHICLE_KMS AS INT; -- CatVehicle
-	DECLARE @TYPECHECKPOINTFINAL AS INT=(SELECT IdCatCheckpointType FROM [dbo].[CatCheckpointType] WITH (NOLOCK) WHERE CheckpointTypeDescription = 'Checkpoint final')
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	DECLARE @EXISTING_LRP AS INT;				-- Linehaul Route Preparation
+	DECLARE @EXISTING_LCM AS INT;				-- Linehaul Route Preparation Customs Mark
+	DECLARE @EXISTING_SR AS INT;				-- Sender Receiver
+	DECLARE @EXISTING_TAG AS INT;				-- Custom Marks
+	DECLARE @EXISTING_EMPTY_CONTAINERS AS INT;	-- Linehaul Route Preparation Container Detail
+	DECLARE @STATUS_ORDER_ID AS INT;			-- StatusOrder
+	DECLARE @STATUS_LINEHAUL_ID AS INT;			-- CatLinehaulStatus
+	DECLARE @STATUS_GENERATED AS INT;			-- CatLinehaulStatus
+	DECLARE @EXISTING_LRP_TRANSIT AS INT;		-- Linehaul Route Preparation
+	DECLARE @AUX_VEHICLE_COUNT AS INT;			-- CatVehicle
+	DECLARE @AUX_VEHICLE_KMS AS INT;			-- CatVehicle
+    DECLARE @TYPECHECKPOINTFINAL AS INT=(SELECT IdCatCheckpointType FROM [dbo].[CatCheckpointType] WITH (NOLOCK) WHERE CheckpointTypeDescription = 'Checkpoint final')
+
 
 
     SET @STATUS_GENERATED =
@@ -275,12 +276,10 @@ BEGIN
             [DateUpdated] = SYSDATETIME()
         WHERE [IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
-        UPDATE [LinehaulRoutePreparationContainer]
-        SET [CatLinehaulStatusId] = @STATUS_LINEHAUL_ID
-        WHERE [LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
-              AND [RowStatus] = 1;
-
- --Validar que guía no esta en estado final
+    --Validar que guía no esta en estado final
+	
+		
+			 --Validar que guía no esta en estado final
 
  DECLARE @TblGuideUpdate TABLE (
     GuideSerie  NVARCHAR(2),
@@ -304,20 +303,105 @@ BEGIN
 													)TBLTMP
 													WHERE TBLTMP.CONT=0
 											        And  [LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation 
+           BEGIN
+		-- UPDATE STATUS IN DELIVERY ORDER
+		UPDATE		[DO]
+		SET			[DO].[StatusOrderId] = @STATUS_ORDER_ID
+		FROM		[dbo].[DeliveryOrder] DO
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
+			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+			AND		[LRPCD].[RowStatus] = 1
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+		WHERE  [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate); 
 
-        -- UPDATE STATUS IN DELIVERY ORDER
-        UPDATE [DO]
-        SET [DO].[StatusOrderId] = @STATUS_ORDER_ID
-        FROM [dbo].[DeliveryOrder] DO
-            INNER JOIN [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
-                ON [DO].[Guide_Serie] = [LRPCD].[GuideSerie]
-                   AND [DO].[Guide_Number] = [LRPCD].[GuideNumber]
-            INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC
-                ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                   AND [LRPCD].[RowStatus] = 1
-            INNER JOIN [dbo].[LinehaulRoutePreparation] LRP
-                ON [LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
-			WHERE  [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate) 
+		-- UPDATE STATUS IN DELIVERY ORDER PIECE
+		UPDATE		[DOP]
+		SET			[DOP].[StatusOrderId] = @STATUS_ORDER_ID
+		FROM		[dbo].[DeliveryOrderPiece] DOP
+		INNER JOIN	[dbo].[DeliveryOrder] DO
+			ON		[DOP].[GuideSerie] = [DO].[Guide_Serie]
+			AND		[DOP].[GuideNumber] = [DO].[Guide_Number]
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[DO].[Guide_Serie] = [LRPCD].[GuideSerie]
+			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+			AND		[LRPCD].[RowStatus] = 1
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+			  WHERE 
+			       [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate);
+		
+		-- INSERT CHECKPOINT IN DELIVERY ORDER DETAIL
+		INSERT INTO [dbo].[DeliveryOrderDetail]
+					([Guide_Serie], 
+					 [Guide_Number], 
+					 [StatusOrderId], 
+					 [UserCreated],
+					 [DateCreated], 
+					 [DateCreatedInSystem],
+					 [RowStatus])
+		(SELECT		 [LRPCD].[GuideSerie], 
+					 [LRPCD].[GuideNumber], 
+					 @STATUS_ORDER_ID, 
+					 @TknUser,
+					 SYSDATETIME(),
+					 SYSDATETIME(),
+					 1
+		FROM		 [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
+		INNER JOIN	 [dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
+			ON		 [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+			AND		 [LRPCD].[RowStatus] = 1
+		INNER JOIN	 [dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
+			ON		 [LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
+			AND		 [LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
+			 WHERE    
+			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate) );
+
+		-- UPDATE LINEHAUL ROUTE PREPARATION CONTAINER DETAIL
+		UPDATE	[LRPCDP]
+		SET		[LRPCDP].[CatLinehaulStatusId] = @STATUS_LINEHAUL_ID
+		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
+			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
+			AND		[LRPCD].[RowStatus] = 1
+		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
+			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
+		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
+			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
+		     WHERE    
+			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
+				  AND 
+		          [LRPCDP].[RowStatus] = 1;
+	END
+		SELECT	[LRP].[IdLinehaulRoutePreparation],
+				[LRP].[StationDispatchedId],
+				[LRP].[CatLinehaulStatusId],
+				[LRP].[CatRouteId],
+				COALESCE([LRP].[SenderReceiverId], 0) AS SenderReceiverId,
+				COALESCE([LRP].[CatVehicleId], 0) AS CatVehicleId,
+				COALESCE([LRP].[DriverCUI], '') AS DriverCUI,
+				COALESCE([LRP].[DriverName], '') AS DriverName,
+				COALESCE([LRP].[DriverPhone], '') AS DriverPhone,
+				COALESCE([LRP].[VehicleID], '') AS VehicleID,
+				COALESCE([LRP].[VehicleDescription], '') AS VehicleDescription,
+				COALESCE([LRP].[SecurityManName], '') AS SecurityManName,
+				COALESCE([LRP].[SecurityManPhone], '') AS SecurityManPhone,
+				COALESCE([LRP].[SecurityManCUI], '') AS SecurityManCUI,
+				[LRP].[DateLinehaulRoutePreparation],
+				[LRP].[ContainerQuantity],
+				[LRP].[GuideQuantity],
+				[LRP].[DryPieceQuantity],
+				[LRP].[ColdPieceQuantity],
+				[LRP].[RowStatus],
+				[LRP].[TokenCreated],
+				[LRP].[DateCreated]
+		FROM	[dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
+		WHERE	[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation;
 
         -- UPDATE STATUS IN DELIVERY ORDER PIECE
         UPDATE [DOP]

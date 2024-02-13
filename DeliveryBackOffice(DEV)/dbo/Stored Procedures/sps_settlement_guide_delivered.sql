@@ -196,7 +196,7 @@ BEGIN
 				   ,'' 'Retries'
 				   ,0 ValidateAbandonedPackage
 				   ,0 IsMarkedReturn
-				   , CASE 
+				   ,CASE 
 				       WHEN COI.LiquidatorRemarks IS NULL THEN 
 					   'Sin Observaciones'
 				       WHEN COI.LiquidatorRemarks='' THEN 

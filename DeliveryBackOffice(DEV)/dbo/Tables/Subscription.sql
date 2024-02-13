@@ -68,4 +68,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de activación del producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'ActivationDate';
+GO
+CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
+    ON [dbo].[Subscription]([CatSubscriptionId] ASC);
 
