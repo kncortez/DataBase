@@ -17,19 +17,14 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesMarketPlace]
 @System AS INT,
 @TblSalePackageMarketPlace [TblProductMarketPlace2] READONLY,
 @InvoiceEmail AS NVARCHAR(500),
-@Vaucher AS NVARCHAR (50) 
+@Vaucher AS NVARCHAR (50),
+@ImageURL NVARCHAR(600) = NULL
 
 	
 AS
 BEGIN
 	
-	SET @CustomerId = (SELECT TOP 1  A2.IdCustomer 
-	        FROM DeliveryBackOffice.dbo.RolByUserByAccount A1 WITH (NOLOCK)
-			INNER JOIN DeliveryBackOffice.dbo.Account A2 ON A2.AccIdAccount = A1.RuaIdAccount
-			AND A2.AccRowStatus = 1
-		WHERE A1.RuaIdAccount = @AccountId AND A1.RuaRowStatus = 1
-		ORDER BY A2.AccDateCreated DESC
-		)
+	
 
     BEGIN TRAN
 	BEGIN TRY
@@ -55,7 +50,8 @@ BEGIN
 	  Vaucher,
 	  IdSalePackage,
 	 TypeSalePackage,
-	 ProductGiftShippingEmail
+	 ProductGiftShippingEmail,
+	 [PaymentImageURL]
 	)
 	 SELECT
         CASE 
@@ -158,7 +154,8 @@ BEGIN
 		              T.ProductGiftShippingEmail = 'NULL'
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
-					  END	
+					  END,
+		@ImageURL
     FROM @TblSalePackageMarketPlace AS T;
 
 
