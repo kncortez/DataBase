@@ -72,9 +72,20 @@ BEGIN
 			ON A1.CatMembershipId = A2.IdCatMembership
 		  INNER JOIN CatProductCategory A3
 		    ON A2.CatProductCategoryId = A3.IdCatProductCategory
+		  LEFT JOIN DeliveryBackOffice.dbo.MembershipDiscountRange A4
+		   ON A4.MembershipId = A1.IdMembership AND A4.RowStatus = 1
 		  WHERE A1.AccountId = @IdAccount
 		  AND A1.RowStatus = 1 AND A2.CatProductCategoryId = 2
 		  AND CAST(A1.ExpirationDate AS DATE) >= CAST(GETDATE() AS DATE) 
+		    AND 
+		  (
+		    A1.MembershipMaxServiceFixedValue >0 --si es de monto fijo
+		  OR
+		   (     A4.MembershipId IS NULL --si tiene % de descuento
+		     AND A4.RowStatus = 1
+		     AND A4.DiscountValue > 0
+		  )
+		  )
 		 )Tbl1
 		 
 		
