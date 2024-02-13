@@ -32,6 +32,8 @@
 
 
 
+
+
 GO
 
 
@@ -50,4 +52,24 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Paquetes ha
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Paquetes desde en tarifario por paquetes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateData', @level2type = N'COLUMN', @level2name = N'PackagesFrom';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_TypeSegmentId]
+    ON [dbo].[RateData]([TypeSegmentId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RateId_TypeSegmentId_TypeServiceId_RowStatus]
+    ON [dbo].[RateData]([RateId] ASC, [TypeSegmentId] ASC, [TypeServiceId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RateHeader]
+    ON [dbo].[RateData]([RateId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ArticleId]
+    ON [dbo].[RateData]([ArticleId] ASC);
 

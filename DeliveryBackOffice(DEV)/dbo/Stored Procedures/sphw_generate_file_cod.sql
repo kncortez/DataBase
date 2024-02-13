@@ -1644,11 +1644,11 @@ BEGIN
                               )), 100) 'Concepto',
                Amount 'Valor Q.'
         FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
-            LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD pgd
+            LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD pgd  WITH (NOLOCK)
                 ON bd.GuideSerie = pgd.GuideSerie
                    AND bd.GuideNumber = pgd.GuideNumber
                    AND bd.BatchCODId = pgd.BatchCODId
-            LEFT JOIN DeliveryBackOffice.dbo.Customer cust
+            LEFT JOIN DeliveryBackOffice.dbo.Customer cust  WITH (NOLOCK)
                 ON pgd.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = 1
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
@@ -1672,11 +1672,11 @@ BEGIN
                        ), 100) 'Concepto',
                SUM(Amount) 'Valor Q.'
         FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
-            LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD pgd
+            LEFT JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD pgd  WITH (NOLOCK)
                 ON bd.GuideSerie = pgd.GuideSerie
                    AND bd.GuideNumber = pgd.GuideNumber
                    AND bd.BatchCODId = pgd.BatchCODId
-            LEFT JOIN DeliveryBackOffice.dbo.Customer cust
+            LEFT JOIN DeliveryBackOffice.dbo.Customer cust  WITH (NOLOCK)
                 ON pgd.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = 1
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
@@ -1743,9 +1743,9 @@ BEGIN
             LEFT JOIN DeliveryOrder do WITH (NOLOCK)
                 ON btd.GuideSerie = do.Guide_Serie
                    AND btd.GuideNumber = do.Guide_Number
-            LEFT JOIN VisitPointClient vp
+            LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
                 ON vp.CodeOfReference = do.Sender_ID
-            LEFT JOIN Customer cu
+            LEFT JOIN Customer cu  WITH (NOLOCK)
                 ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
             LEFT JOIN CatDebitAccountCOD cda
                 ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
@@ -1797,7 +1797,7 @@ BEGIN
                SUM(btd.Amount) 'MONTO A PAGAR',
                MAX(CONCAT(do.Guide_Serie, do.Guide_Number)) 'GUIA'
         FROM BatchDetailCOD btd WITH (NOLOCK)
-            INNER JOIN BatchCOD bt
+            INNER JOIN BatchCOD bt  WITH (NOLOCK)
                 ON bt.IdBatchCOD = btd.BatchCODId
             LEFT JOIN CatConceptCOD cco
                 ON cco.IdCatConceptCOD = btd.CatConceptCODId
@@ -1805,9 +1805,9 @@ BEGIN
             LEFT JOIN DeliveryOrder do WITH (NOLOCK)
                 ON btd.[GuideSerie] = do.[Guide_Serie]
                    AND btd.[GuideNumber] = do.[Guide_Number]
-            LEFT JOIN VisitPointClient vp
+            LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
                 ON vp.CodeOfReference = do.Sender_ID
-            LEFT JOIN Customer cu
+            LEFT JOIN Customer cu  WITH (NOLOCK)
                 ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]
             LEFT JOIN CatDebitAccountCOD cda
                 ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
@@ -1853,7 +1853,7 @@ BEGIN
 		   ,CONCAT(btd.GuideSerie, btd.GuideNumber, ' L',bt.BatchNumber) 'DESCRIPCIÓN'
 		   ,btd.Amount 'MONTO'
 		FROM BatchDetailCOD btd WITH (NOLOCK)
-		INNER JOIN BatchCOD bt
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
 			ON bt.IdBatchCOD = btd.BatchCODId
 		LEFT JOIN CatConceptCOD cco
 			ON cco.IdCatConceptCOD = bTd.CatConceptCODId
@@ -1861,9 +1861,9 @@ BEGIN
 		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
 			ON btd.GuideSerie = do.Guide_Serie
 				AND btd.GuideNumber = do.Guide_Number
-		LEFT JOIN VisitPointClient vp
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
 			ON vp.CodeOfReference = do.Sender_ID
-		LEFT JOIN Customer cu 
+		LEFT JOIN Customer cu  WITH (NOLOCK)
 			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
 		LEFT JOIN CatDebitAccountCOD cda
 			ON cda.IdCatDebitAccountCOD = btd.CatDebitAccountCODId
@@ -1896,7 +1896,7 @@ BEGIN
 		   ,MAX(CONCAT(do.Guide_Serie, do.Guide_Number, ' L', bt.BatchNumber)) 'DESCRIPCIÓN'
 		   ,SUM(btd.Amount) 'MONTO'
 		FROM BatchDetailCOD btd WITH (NOLOCK)
-		INNER JOIN BatchCOD bt
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
 			ON bt.IdBatchCOD = btd.BatchCODId
 		LEFT JOIN CatConceptCOD cco
 			ON cco.IdCatConceptCOD = bTd.CatConceptCODId
@@ -1904,7 +1904,7 @@ BEGIN
 		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
 			ON btd.[GuideSerie] = do.[Guide_Serie]
 				AND btd.[GuideNumber] = do.[Guide_Number]
-		LEFT JOIN VisitPointClient vp
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
 			ON vp.CodeOfReference = do.Sender_ID
 		LEFT JOIN Customer cu
 			ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]

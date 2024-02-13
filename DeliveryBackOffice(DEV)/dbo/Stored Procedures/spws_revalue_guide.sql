@@ -1,4 +1,6 @@
-﻿-- =============================================
+﻿
+
+-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Revaloriza una guia de transporte>
@@ -104,6 +106,8 @@ BEGIN
     DECLARE @PiecesInOrder AS INT;
     DECLARE @PriceWithCreditCard AS INT = 0;
 
+	DECLARE @IdKindOfVPClient AS INT = 0;
+
 
     DECLARE @OldPrice DECIMAL(12, 2);
     PRINT 'inicio carga inicial';
@@ -123,6 +127,7 @@ BEGIN
          , @OldPrice                = ISNULL(ord.PriceShippment, 0)
          , @ServiceShortName        = ISNULL(ord.TypeService, 'NDD')
          , @DateCreated             = ord.DateCreated
+		 , @IdKindOfVPClient		= VPC.IdKindOfVPClient
     FROM dbo.DeliveryOrder             ord WITH (NOLOCK)
         LEFT JOIN dbo.Township         stwn WITH (NOLOCK)
             ON stwn.IdTownship = ord.SenderIdTownship
@@ -138,6 +143,12 @@ BEGIN
 
     --print 'fin carga inicial'
     ------------------ fin Carga de datos ---------------------------------------------------------------------
+
+
+	PRINT 'origen';
+    PRINT @HeaderCodeSource;
+    PRINT 'destino';
+    PRINT @HeaderCodeDestiny;
 
     ---------------------Determinar Visit Point ---------------------------------------------------------------
 
@@ -1280,8 +1291,16 @@ BEGIN
             (   1, @ProdctNumber, 1     -- costo de envio
               , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
               , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber);
-
+			
             SET @IdCost = SCOPE_IDENTITY();
+
+			if (@IdKindOfVPClient = 3 and @IsCollect = 0 ) --SI ES CONCESIONARIO y NO ES COLLECT DEBE QUEDAR REGISTRADO EL PAGO DE LA GUÍA
+			BEGIN
+				UPDATE DeliveryBackOffice.dbo.Cost
+				SET PaymentDate = GETDATE()
+				,TotalAmountPaid = @NewPrice
+				WHERE IdCost = @IdCost
+			END
 
             INSERT INTO [dbo].[BreakdownOfPayment]
             (

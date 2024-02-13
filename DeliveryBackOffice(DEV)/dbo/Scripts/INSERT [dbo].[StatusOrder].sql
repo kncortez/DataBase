@@ -1,0 +1,7 @@
+
+/*OBSERVACIÓN: PARA QUE TENGA EL MISMO ID (CORRELATIVO IDENTITY) hacer un insert con error para que el siguiente correlativo sea 50 como esta en ambiente dev y QA 
+en la tabla StatusOrder, luego de probar con el que da error,d escomentar y probar con el isnert comentado con ese no dara error y el correlativo sera el 50
+*/
+INSERT [dbo].[StatusOrder] ([StatusOrderId], [OrderDescription], [CatCheckpointTypeId], [CatStatusTypeId], [StatusMessage], [StatusOrderTrackingDescription], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [NextSteps]) VALUES (50,N'Incidencia Validada', 1, 2, N'La incidencia se encuentra validada', N'La incidencia se encuentra validada 2', 1, N'ELOPEZ', CAST(N'2023-09-20T10:35:32.990' AS DateTime), NULL, NULL, NULL)
+
+--INSERT [dbo].[StatusOrder] ([OrderDescription], [CatCheckpointTypeId], [CatStatusTypeId], [StatusMessage], [StatusOrderTrackingDescription], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [NextSteps]) VALUES (N'Incidencia Validada', 1, 2, N'La incidencia se encuentra validada', N'La incidencia se encuentra validada 2', 1, N'ELOPEZ', CAST(N'2023-09-20T10:35:32.990' AS DateTime), NULL, NULL, NULL)

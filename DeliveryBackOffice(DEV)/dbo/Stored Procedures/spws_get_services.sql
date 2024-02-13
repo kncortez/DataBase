@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-01-17>
 -- Description:	<Devuelve el listado de GUIAS asiganadas a una cuenta>
@@ -380,6 +381,7 @@ BEGIN
 						PRINT @SKIP
 						PRINT '@CantidadRegistros'
 						PRINT @CantidadRegistros
+						    PRINT CONVERT(VARCHAR, GETDATE(), 9);
 
 				SET @jsonResult =
 				(
@@ -630,7 +632,7 @@ BEGIN
 									''
 								)
 				);
-				
+				    PRINT CONVERT(VARCHAR, GETDATE(), 9);
 			END
 
             -- retornar resultado en formato json

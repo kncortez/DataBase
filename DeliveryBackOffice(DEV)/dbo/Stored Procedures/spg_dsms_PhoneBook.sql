@@ -66,7 +66,7 @@ BEGIN
 	insert into @PhoneBook
 	--SELECT TOP 1 --TMP BNHL
 	SELECT
-		do.Receiver_FirstName, 
+		IIF(do.Receiver_FirstName = '',do.Receiver_Alternant_FullName,do.Receiver_FirstName), 
 		do.Receiver_LastName,
 		do.Receiver_Phone,
 		do.Receiver_Address,
