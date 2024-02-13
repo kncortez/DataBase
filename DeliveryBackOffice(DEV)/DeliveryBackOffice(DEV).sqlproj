@@ -1522,6 +1522,7 @@
 	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFacTeleMarket.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlaceTeleMarketing.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_InsertProductsMarketPlaceInInvoiceHeaderDetail.sql" />
+  <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
 	 
     
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
