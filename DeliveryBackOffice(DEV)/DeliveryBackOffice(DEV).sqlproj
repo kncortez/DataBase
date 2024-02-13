@@ -554,8 +554,10 @@
     <Build Include="dbo\Tables\MarketplaceTagsByProduct.sql" />
     <Build Include="dbo\Tables\MarketplaceProductTags.sql" />
     <Build Include="dbo\Tables\CatProductCategory.sql" />
-     <Build Include="dbo\Tables\MarketplaceCart.sql" />
-      <Build Include="dbo\Tables\MarketplaceCartDetail.sql" />
+    <Build Include="dbo\Tables\MarketplaceCart.sql" />
+    <Build Include="dbo\Tables\MarketplaceCartDetail.sql" />
+    <Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
+
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
