@@ -117,7 +117,7 @@ BEGIN
 	      DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
 	  ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
 	WHERE CP.RowStatus=1
-	  ORDER BY MPT.MarketplaceProductTagsName ASC
+	  ORDER BY CP.[SubscriptionCost] ASC
 
 
 
@@ -176,5 +176,6 @@ BEGIN
   
  
 END
+
 
 
