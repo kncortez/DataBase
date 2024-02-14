@@ -42,6 +42,11 @@ BEGIN
     DECLARE @ReceiverIdTownship INT = 0;
 	DECLARE @GuideStatus INT;
 	DECLARE @TerminalCheckpointType INT;
+    DECLARE @STATUSDELIVERY AS INT =(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado'); ---- ESTADO FINAL  Entregado
+	DECLARE @STATUSDELIVERYEXC AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='Entregado En Express Center'); --- ESTADO FINAL Entregado En Express Center
+	DECLARE @STATUSPAIDCOD AS INT=(Select Top 1 StatusOrderId From [dbo].[StatusOrder] where OrderDescription ='COD pagado');  ---ESTADO FINAL COD pagadoDECLARE @TYPECHECKPOINTFINAL AS INT=(SELECT IdCatCheckpointType FROM [dbo].[CatCheckpointType] WITH (NOLOCK) WHERE CheckpointTypeDescription = 'Checkpoint final')
+    DECLARE @TYPECHECKPOINTFINAL AS INT=(SELECT IdCatCheckpointType FROM [dbo].[CatCheckpointType] WITH (NOLOCK) WHERE CheckpointTypeDescription = 'Checkpoint final')
+	
 	SET @TerminalCheckpointType =
 	(
 		SELECT 
@@ -452,6 +457,13 @@ BEGIN
             --FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',')
 
             -- Actualizar registro de guía a último estado 
+            --Validar que la guía no este en estado final
+			IF (NOT EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryOrderDetail] 
+			                          WHERE Guide_Serie = @Guide_Serie AND 
+			                                Guide_Number=@GuideNumber AND StatusOrderId IN(SELECT StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder]  WITH (NOLOCK) WHERE CatCheckpointTypeId = @TYPECHECKPOINTFINAL)
+									  ORDER BY DateCreated DESC
+											))
+              BEGIN                              
             UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
             SET StatusOrderId = 19,
                 IsDry = IIF(@IsDry = 1, 1, 0)
@@ -469,7 +481,7 @@ BEGIN
                   AND Guide_Number = @GuideNumber;
 
             SET @RowUpdated = @@rowcount;
-
+END
             IF (@RowUpdated > 0)
             BEGIN
 

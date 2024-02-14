@@ -1,0 +1,3 @@
+INSERT INTO CatIncidenceClasification (IncidenceTypeName, RowStatus, TokenCreated, DateCreated)VALUES ('Intento de entrega fallida',1,'ELOPEZ',GETDATE())
+INSERT INTO CatIncidenceClasification (IncidenceTypeName, RowStatus, TokenCreated, DateCreated)VALUES ('Rechazo a la entrega',1,'ELOPEZ',GETDATE())
+INSERT INTO CatIncidenceClasification (IncidenceTypeName, RowStatus, TokenCreated, DateCreated)VALUES ('Incidencias operativas',1,'ELOPEZ',GETDATE())

@@ -25,6 +25,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_description]
     ON [dbo].[BreakdownOfPayment]([IdCost] ASC, [Description] ASC);
@@ -49,4 +51,14 @@ CREATE NONCLUSTERED INDEX [idx_IdCost_RowStatus_Amount]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del tipo de detalle de la tabla CatBreakdownOfPaymentType', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BreakdownOfPayment', @level2type = N'COLUMN', @level2name = N'BreakdownOfPaymentTypeId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_IdCost]
+    ON [dbo].[BreakdownOfPayment]([IdCost] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Description]
+    ON [dbo].[BreakdownOfPayment]([Description] ASC);
 

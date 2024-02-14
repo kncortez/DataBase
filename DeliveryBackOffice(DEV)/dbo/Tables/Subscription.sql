@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Subscription](
+CREATE TABLE [dbo].[Subscription](
 	[IdSubscription] [int] IDENTITY(1,1) NOT NULL,
 	[MembershipId] [int] NULL,
 	[CatSubscriptionId] [int] NOT NULL,
@@ -30,7 +30,10 @@
  CONSTRAINT [PK_Subscription] PRIMARY KEY CLUSTERED 
 (
 	[IdSubscription] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+    CONSTRAINT [FK_Subscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
+    CONSTRAINT [FK_Subscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
+    CONSTRAINT [FK_Subscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 ) ON [PRIMARY]
 GO
 
@@ -64,16 +67,23 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Día  el cual se desea poder renovar la suscripción.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'RenewalFixedDay'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tarifario a utilizar cuando se usa suscripción' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'RateHeaderId'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tarifario alterno a utilizar cuando se usa suscripción' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'AlternativeRateHeaderId'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id relacion con tabla CatTypeSubscription' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'CatTypeSubscriptionId'
-GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ActivationDate'
 GO
 
+
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'RateHeaderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario alterno a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'AlternativeRateHeaderId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
+    ON [dbo].[Subscription]([CatSubscriptionId] ASC);
 

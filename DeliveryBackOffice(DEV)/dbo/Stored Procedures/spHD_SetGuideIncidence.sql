@@ -18,6 +18,7 @@ BEGIN
 	-- Variables globales
 	DECLARE @DateInSystem DATETIME = GETDATE();
 	DECLARE @IncidenceDescription NVARCHAR(200);
+	DECLARE @IdConfirmationOfIncidence INT; 
 	DECLARE @SystemOrigin INT = 
 	(
 		SELECT 
@@ -56,7 +57,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			[SO].[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
+			[SO].[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
 	);
 	DECLARE @OnRouteStatus INT = 
 	(
@@ -111,28 +112,129 @@ BEGIN
 	(
 		IdDeliveryOrderAttemptData INT NULL
 	);
+	--Validar si aun tiene incidencias disponibles
+	DECLARE @Incidentsavailable INT = (
+	
+			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+			  GuideNumber =  @GuideNumber
+	
+	);
 
-	IF ( @FirstOnRouteDate IS NULL )
+		DECLARE @CurrentIncidentCount INT = (
+		  Select Top 1 Count (DA.ID)
+			  From [dbo].[DeliveryAttempt] DA WITH(NOLOCK)
+			       Inner Join 
+				   [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK)
+			  ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+			  where DA.Guide_Number =  @GuideNumber
+			  And Convert(date,DA.Date_Created) = Convert(date,GETDATE())  
+	 
+	 
+	 );
+
+IF ( Exists(Select Top 1 1 From [dbo].[DeliveryOrder] do WITH(NOLOCK)
+					Inner Join [dbo].[DeliveryOrderDetail] dod WITH(NOLOCK)
+					     On do.Guide_Serie=dod.Guide_Serie and	
+					do.Guide_Number= dod.Guide_Number
+					Inner Join [dbo].[StatusOrder] so  WITH(NOLOCK)
+					     On do.StatusOrderId = so.StatusOrderId
+					Where
+					so.CatCheckpointTypeId = 3 And do.Guide_Number =  @GuideNumber))
 	BEGIN
 	    
 		SELECT
 			204 [ResponseCode],
-			'Guía no ha sido despachada a ruta anteriormente, no es posible ingresar incidencia.' [ResponseMessage]
+			'Guía en estado final, no es posible ingresar incidencia.' [ResponseMessage]
 
 	END
-	ELSE IF ( @SimulatedDate <= @FirstOnRouteDate )
+	ELSE IF(ISNULL(@Incidentsavailable,0) <= 0)
 	BEGIN
-	    
-		SELECT
-			204 [ResponseCode],
-			'Incidencia no puede ser ingresada antes de fecha y hora de primera salida a ruta.' [ResponseMessage]
-
+	SELECT
+	         204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias.' [ResponseMessage]
+	END
+	ELSE IF(ISNULL(@CurrentIncidentCount,0)>0)
+	BEGIN
+	SELECT 204 [ResponseCode],
+			'Excedió la cantidad disponible de incidencias durante el día.' [ResponseMessage]
 	END
 	ELSE
     BEGIN
 
 		BEGIN TRANSACTION 
 		BEGIN TRY
+
+		
+
+--- registro de incidencia
+	INSERT [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence]
+		(
+			ConfirmationOfIncidentToken,
+			CatTypeConfirmationOfIncidenceId,
+			IsValid,
+			IsConfirmed,
+			StatusOrderId,
+			DateStatusOrder,
+			RowStatus,
+			TokenCreated,
+			DateCreated,
+			TokenUpdated,
+			DateUpdated,
+			IsActionIssued,
+			ActionObservation,
+			CourierContempt,
+			ClientConfirmsReturn,
+			IncidentfinalizedbySAC,
+			IsDenied,
+			LastStatusOrderId
+		)
+		VALUES
+		(   @Token,       -- ConfirmationOfIncidentToken - nvarchar(50)
+			1,         -- CatTypeConfirmationOfIncidenceId - int
+			0,   -- IsValid - bit
+			0,   -- IsConfirmed - bit
+			45,         -- StatusOrderId - tinyint
+			GETDATE(), -- DateStatusOrder - datetime
+			1,   -- RowStatus - bit
+			@Token,       -- TokenCreated - nvarchar(50)
+			GETDATE(), -- DateCreated - datetime
+			NULL,      -- TokenUpdated - nvarchar(50)
+			NULL,      -- DateUpdated - datetime
+			NULL,   -- IsActionIssued - bit
+			NULL,      -- ActionObservation - nvarchar(600)
+			NULL,   -- CourierContempt - bit
+			NULL,   -- ClientConfirmsReturn - bit
+			NULL,      -- IncidentfinalizedbySAC - bit
+			0,   -- IsDenied - bit
+			NULL       -- LastStatusOrderId - tinyint
+			)
+
+			SET @IdConfirmationOfIncidence = SCOPE_IDENTITY();
+
+			-- Obtener datos generales para procesamiento de la incidencia manual
+			SELECT 
+				TOP (1) 
+					@IsGuideLastMileReturn = ISNULL(DO.[IsLastMileReturn], 0),
+					@NotificationEmail = 
+						(
+							CASE
+								WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Mail], ''))) <> '' THEN [DO].[Sender_Mail]
+								WHEN LTRIM(RTRIM(ISNULL([Cu].[CODContactEmail], ''))) <> '' THEN [Cu].[CODContactEmail]
+							END
+						),
+					@NotificationCustomerId = [DO].[IdCustomer]
+			FROM
+				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
+				LEFT JOIN
+					[DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
+					ON
+						[Cu].[IdCustomer] = [DO].[IdCustomer]
+			WHERE
+				[DO].[Guide_Serie] = @GuideSerie
+				AND
+				[DO].[Guide_Number] = @GuideNumber
 
 			-- Obtener datos generales para procesamiento de la incidencia manual
 			SELECT 
@@ -169,6 +271,8 @@ BEGIN
 				AND
 				[CTI].[RowStatus] = 1;
 
+
+			 
 			-- Ingreso manual de intento de entrega para proceso
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryAttempt]
 			(
@@ -198,7 +302,7 @@ BEGIN
 			OUTPUT [Inserted].[ID] INTO	@DeliveryAttemptInserted ([IdDeliveryAttempt])
 			SELECT 
 				TOP (1) 
-					@GuideSerie
+					 @GuideSerie
 					,@GuideNumber
 					,[DO].[Pieces_Dry]
 					,[DO].[Pieces_Cold]
@@ -219,14 +323,15 @@ BEGIN
 					,NULL
 					,NULL
 					,NULL
-					,NULL
+					,@IdConfirmationOfIncidence
 			FROM 
 				[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 			WHERE
 				[DO].[Guide_Serie] = @GuideSerie
 				AND
 				[DO].[Guide_Number] = @GuideNumber
-
+       
+			
 			-- Ingresar a bitácora de estados el intento de entrega fallido para la guía
 			INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryOrderDetail]
 			(
@@ -261,29 +366,19 @@ BEGIN
 			FROM
 				@DeliveryAttemptInserted DAI
 
-			-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
-			IF ( ISNULL(@IsGuideLastMileReturn, 0) = 0 )
-			BEGIN
-		    
-				-- Flujo de entrega
-				UPDATE
-					[DOAD]
-				SET
-					[DOAD].[GuideDeliveryAttemptCount] = [DOAD].[GuideDeliveryAttemptCount] + 1
-					,[DOAD].[TokenUpdated] = @Token
-					,[DOAD].[DateUptaded] = @DateInSystem
-				OUTPUT [Inserted].[IdDeliveryOrderAttemptData] INTO @DeliveryOrderAttemptDataUpdated ([IdDeliveryOrderAttemptData])
-				FROM
-					[DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD
-				WHERE
-					[DOAD].[GuideSerie] = @GuideSerie
-					AND
-					[DOAD].[GuideNumber] = @GuideNumber
 
-			END
-			ELSE
+					--- actualizar ultimo checkpoint en DeliveryOrder
+
+				UPDATE [dbo].[DeliveryOrder]  SET StatusOrderId = @FailedDeliveryVisitStatus,
+				     DateUpdated = GETDATE(),
+					 TokenUpdated = @Token 
+				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
+
+				-----------------------fin -----------------------------
+
+			-- Incrementar intentos de entrega de guía respecto a flujo correspondiente
+			IF ( ISNULL(@IsGuideLastMileReturn, 0) = 1 )
 			BEGIN
-            
 				-- Flujo de devolución
 				UPDATE
 					[DOAD]
@@ -477,41 +572,7 @@ BEGIN
 					 
 			END
 
-			IF 
-			( 
-				-- Ingreso intento de entrega
-				EXISTS 
-				( 
-					SELECT 
-						TOP 1 
-							1 
-					FROM 
-						@DeliveryAttemptInserted 
-				)
-				AND
-				-- Ingreso estado a bitácora de guía
-				EXISTS 
-				( 
-					SELECT 
-						TOP 1 
-							1 
-					FROM 
-						@DeliveryOrderDetailInserted 
-				)
-				AND
-				-- Actualizo contadores de intentos
-				EXISTS 
-				( 
-					SELECT 
-						TOP 1 
-							1 
-					FROM 
-						@DeliveryOrderAttemptDataUpdated 
-				)
-			)
-			BEGIN
-		    
-				COMMIT TRANSACTION;
+			COMMIT TRANSACTION;
 
 				SELECT
 					200 [ResponseCode],
@@ -530,18 +591,7 @@ BEGIN
 					AND
 					[DO].[Guide_Number] = @GuideNumber
 
-			END
-			ELSE
-			BEGIN
-		    
-				ROLLBACK TRANSACTION;
-
-				SELECT
-					204 [ResponseCode],
-					'No se culmino el proceso completo de forma exitosa' [ResponseMessage]
-
-			END
-
+		
 		END TRY
 		BEGIN CATCH
 
@@ -549,7 +599,28 @@ BEGIN
 
 			SELECT
 				500 [ResponseCode],
-				CONCAT('Mensaje: ', ERROR_MESSAGE(),'| Linea aproximada: ', ERROR_LINE()) [ResponseMessage]
+					'Error al registrar la información, por favor comuniquese con el área de soporte' [ResponseMessage]
+
+
+							--Insert en tabla de log
+			INSERT INTO [dbo].[RoutePreparationLogError]
+					   ([ErrorDescription]
+					   ,[ErrorNumber]
+					   ,[ErrorProcedure]
+					   ,[ErrorLine]
+					   ,[GuideSerie]
+					   ,[GuideNumber]
+					   ,[TokenCreated]
+					   ,[DateCreated])
+				 VALUES
+					   (CAST(ERROR_MESSAGE() AS VARCHAR(300))
+					   ,ERROR_NUMBER()
+					   ,CAST(ERROR_PROCEDURE() AS VARCHAR(100))
+					   ,ERROR_LINE()
+					   ,@GuideSerie
+					   ,@GuideNumber
+					   ,@Token
+					   ,GETDATE())
 	    
 		END CATCH
         

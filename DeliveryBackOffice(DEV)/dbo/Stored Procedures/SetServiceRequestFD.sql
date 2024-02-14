@@ -135,13 +135,17 @@ BEGIN
 			[SenderIdTownship],
 			[ReceiverIdTownship],
 			[Sender_Lat],
-			[Sender_Lng]
+			[Sender_Lng],
+			[ReceiverLatitude],
+			[ReceiverLongitude]
 		INTO #GuideTable
 		FROM @TblDeliveryOrdersFD
 		LEFT JOIN @CorrelativeTable C ON C.[Row_Number] = RowNumber
 
 		CREATE NONCLUSTERED INDEX IX_TempTest_SerieNumber ON #GuideTable(Guide_Serie, Guide_Number);
 		CREATE NONCLUSTERED INDEX IX_TempTest_ReceiverIdTownship ON #GuideTable(ReceiverIdTownship);
+			CREATE NONCLUSTERED INDEX IX_TempTest_SenderID ON #GuideTable(Sender_ID);
+			CREATE NONCLUSTERED INDEX IX_TempTest_Receiver_ID ON #GuideTable(Receiver_ID);
 
 		/**********************************************************************/
 		/******** INSERCIÓN DE ÚNICO REGISTRO PARA TABLA DE MANIFIESTO ********/
@@ -243,7 +247,9 @@ BEGIN
 			[Sender_Lat],
 			[Sender_Lng],
 			[CatSystemId],
-			[CatModuleId]
+			[CatModuleId],
+			[Receiver_Lat],
+			[Receiver_Lng]
 		)
 		SELECT 
 			GT.[Ticket_Number],
@@ -310,7 +316,9 @@ BEGIN
 			GT.Sender_Lat,
 			GT.Sender_Lng,
 			@system,
-			@module
+			@module,
+			GT.ReceiverLatitude,
+			GT.ReceiverLongitude
 		FROM #GuideTable GT
 			
 		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
@@ -381,6 +389,117 @@ BEGIN
 			INNER JOIN RateHeader rh WITH (NOLOCK)
 				ON rc.RbcIdRate = rh.RheId
         -- Fin FDAPI-1418 Oscar Morales 2023-02-23
+
+
+		--INSERTAR DETALLE DE PAGO PARA LAS GUÍAS DE CONCESIONARIO
+					DECLARE @TypeClient INT;
+					SET @TypeClient = (SELECT TOP 1 IdKindOfVPClient FROM VisitPointClient WITH (NOLOCK) WHERE CustomerID = @CustomerID)
+
+					IF(@TypeClient = 3)
+						BEGIN
+						DECLARE @IdCost INT;
+						DECLARE @IsCollect BIT;
+						DECLARE @Token VARCHAR (100);
+						DECLARE @IdUser VARCHAR (10);
+						DECLARE @Username VARCHAR (50);
+						DECLARE @Email VARCHAR(100);
+
+						SET @Email = (SELECT TOP 1 Receiver_Email FROM #GuideTable)
+						SELECT TOP 1 @IdUser = USR_IdUser,
+									 @Username = USR_Username
+						FROM DenariusUser_Dev.dbo.LGN_User WITH (NOLOCK)
+								WHERE USR_Email = @Email
+
+						SET @Token = (SELECT TOP 1 SSN_IdToken FROM DenariusUser_Dev.dbo.LGN_LogByToken WITH (NOLOCK)
+								WHERE SSN_IdUser = @IdUser
+								AND SSN_Username = @Username
+								AND SSN_TokenStatus = 1
+								ORDER BY SSN_DateLogin desc)
+
+								IF(@Token IS NULL)
+									BEGIN
+									 SET @Token = 'Concesionario';
+									END
+
+							SET @IsCollect =(SELECT TOP 1 IsCollect FROM #GuideTable)
+							IF(@IsCollect = 1)
+								BEGIN
+									INSERT INTO DeliveryOrderPaymentDetail (GuideNumber, GuideSerie, PayTypeId, TypeofInOutMoneyId, TimePlaId, amount, TokenCreated, DateCreated)
+									SELECT GIT.Guide_Number,
+										   GIT.Guide_Serie,
+										   2,
+										   1,
+										   3,
+										   GIT.PriceShippment,
+										   @Token,
+										   GETDATE()
+									FROM #GuideTable GIT
+
+									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
+									--SELECT 1,
+									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
+									--	   1,
+									--	   GDT.PriceShippment,
+									--	   1,
+									--	   @Token,
+									--	   GETDATE(),
+									--	   GDT.Guide_Serie,
+									--	   GDT.Guide_Number
+									--FROM #GuideTable GDT
+									-- SET @IdCost = @@IDENTITY; 
+
+									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
+									--SELECT @IdCost,
+									--	   'Servicio',
+									--	   GTL.PriceShippment,
+									--	   1,
+									--		@Token,
+									--		GETDATE()
+									--FROM #GuideTable GTL
+
+								END
+							ELSE
+								BEGIN
+									INSERT INTO DeliveryOrderPaymentDetail (GuideNumber, GuideSerie, PayTypeId, TypeofInOutMoneyId, TimePlaId, amount, TokenCreated, DateCreated)
+									SELECT GIT.Guide_Number,
+										   GIT.Guide_Serie,
+										   1,
+										   1,
+										   1,
+										   GIT.PriceShippment,
+										   @Token,
+										   GETDATE()
+									FROM #GuideTable GIT
+
+									--INSERT INTO Cost (IdProduct, ProductNumber, IdTypeCharge, TotalAmount, RowStatus, TokenCreated, DateCreated, GuideSerie, GuideNumber )
+									--SELECT 1,
+									--	   GDT.Guide_Serie+CAST(GDT.Guide_Number AS VARCHAR),
+									--	   1,
+									--	   GDT.PriceShippment,
+									--	   1,
+									--	   @Token,
+									--	   GETDATE(),
+									--	   GDT.Guide_Serie,
+									--	   GDT.Guide_Number
+									--FROM #GuideTable GDT
+									-- SET @IdCost = @@IDENTITY; 
+
+									--INSERT INTO BreakdownOfPayment (IdCost, Description, Amount, RowStatus, TokenCreated, DateCreated)
+									--SELECT @IdCost,
+									--	   'Servicio',
+									--	   GTL.PriceShippment,
+									--	   1,
+									--		@Token,
+									--		GETDATE()
+									--FROM #GuideTable GTL
+							  END
+						END
+
+		---FIN INSERTAR DETALLE DE PAGO PARA LAS GUÍAS DE CONCESIONARIO
+
+
+
+
 
 		-- INSERTAR CHECKPOINT INICIAL EN TABLA HISTÓRICA
 		INSERT [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] (

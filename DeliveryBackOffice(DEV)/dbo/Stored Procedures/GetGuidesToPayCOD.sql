@@ -85,7 +85,8 @@ BEGIN
             ,btc.CommissionDate CommissionDate,
 			vpcr.DescriptionOfClient VisitPointReceiver,
 			CONCAT(p.PerFirstName, ' ', p.PerLastName) UserReceiver,
-			(CASE WHEN cpt.TimePlaName = 'Ahora' THEN 'Contado'
+		(CASE WHEN do.IsCollect = 1 THEN 'Destino'
+			WHEN cpt.TimePlaName = 'Ahora' THEN 'Contado'
 			WHEN cpt.TimePlaName = 'Post-Venta' THEN 'Crédito'
 			ELSE cpt.TimePlaName
 			END) PaymentType,
@@ -234,10 +235,11 @@ BEGIN
 			p.PerFirstName,
 			p.PerLastName,
 			cpt.TimePlaName,
-			ctiom.tio_pk_name
+			ctiom.tio_pk_name,
+			do.IsCollect
     ORDER BY bt.IdBatchCOD,
              bt.Date, btd.AuthorizationNumber DESC
-			 option (optimize for unknown);
+			 --option (optimize for unknown);
 			 
     SET NOCOUNT OFF;
 END;

@@ -29,6 +29,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el código SAP del artículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'SAPCode';
 
@@ -65,4 +67,26 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de membresía facturada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceDetail', @level2type = N'COLUMN', @level2name = N'MembershipId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idsubscription]
+    ON [dbo].[invoiceDetail]([SubscriptionId] ASC)
+    INCLUDE([dti_fk_header]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fkheader_idmembership]
+    ON [dbo].[invoiceDetail]([MembershipId] ASC)
+    INCLUDE([dti_fk_header]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fk_header_SubscriptionId]
+    ON [dbo].[invoiceDetail]([dti_fk_header] ASC, [SubscriptionId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_dti_fk_header_MembershipId]
+    ON [dbo].[invoiceDetail]([dti_fk_header] ASC, [MembershipId] ASC);
 

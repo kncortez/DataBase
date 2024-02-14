@@ -48,5 +48,9 @@
     [IsCollect]                            BIT             NULL,
     [PriceShippment]                       DECIMAL (14, 2) NULL,
     [SenderIdTownship]                     INT             NULL,
-    [ReceiverIdTownship]                   INT             NULL);
+    [ReceiverIdTownship]                   INT             NULL,
+    [ReceiverLatitude]                     NVARCHAR (25)   NULL,
+    [ReceiverLongitude]                    NVARCHAR (25)   NULL);
+
+
 

@@ -98,15 +98,13 @@ BEGIN
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
 
-    DECLARE @NewRateGeneral INT =
-            (
+   DECLARE @NewRateGeneral INT = (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Mita Mita Exc' COLLATE Latin1_General_CI_AI
             );
-    DECLARE @NewRateGeneralDiscount INT =
-            (
+   DECLARE @NewRateGeneralDiscount INT = (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
@@ -196,8 +194,8 @@ BEGIN
     END;
 
 
-    PRINT 'TARIFA QUE SE USARÁ';
-    PRINT @IdRate;
+	PRINT 'TARIFA QUE SE USARÁ'
+	PRINT @IdRate
 
     -------- Fin determinar tarifa que se va usar ---------------------------------------------------------------------
 
@@ -221,41 +219,42 @@ BEGIN
                   AND VPC.DescriptionOfClient LIKE 'FD%EXC%' COLLATE Latin1_General_CI_AI
         )
            )
-        BEGIN
-            IF (EXISTS
-            (
-                SELECT TOP 1
-                       1
-                FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] AR WITH (NOLOCK)
-                WHERE AR.VisitPointClientId = @CodeOfReferenceSource
-                      AND AR.RowStatus = 1
-            )
-               )
-            BEGIN
+         BEGIN
+			IF (EXISTS
+			(
+				SELECT TOP 1
+					   1
+				FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] AR WITH (NOLOCK)
+				WHERE AR.VisitPointClientId = @CodeOfReferenceSource
+					  AND AR.RowStatus = 1
+					  
+			)
+			   )
+			    BEGIN
 
-                SELECT @RateId = ARC.RateId
-                FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
-                WHERE ARC.VisitPointClientId = @CodeOfReferenceSource
-                      AND ARC.RowStatus = 1;
-                --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+						SELECT @RateId = ARC.RateId
+						FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
+						WHERE ARC.VisitPointClientId = @CodeOfReferenceSource
+							  AND ARC.RowStatus = 1
+							  --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
-                SET @IdRate = ISNULL(@RateId, @IdRate);
-            END;
-            ELSE
-            BEGIN
-                SELECT @RateId = ARC.RateId
-                FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
-                WHERE ARC.CustomerId = @IdCustomer
-                      AND ARC.VisitPointClientId IS NULL
-                      AND ARC.RowStatus = 1;
-                --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+						SET @IdRate = ISNULL(@RateId, @IdRate);
+				END
+			ELSE 
+			    BEGIN
+						SELECT @RateId = ARC.RateId
+						FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
+						WHERE ARC.CustomerId = @IdCustomer
+							  AND ARC.VisitPointClientId IS NULL
+							  AND ARC.RowStatus = 1
+							  --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
-                SET @IdRate = ISNULL(@RateId, @IdRate);
-            END;
+						SET @IdRate = ISNULL(@RateId, @IdRate);
+				END
+			 
 
-
-            PRINT 'TARIFA ALTERNATIVA';
-            PRINT @IdRate;
+			PRINT 'TARIFA ALTERNATIVA'
+			PRINT @IdRate
 
         END;
     END;
@@ -1189,10 +1188,7 @@ BEGIN
         --select * from #ListCode
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;
 
-        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral,
-                         @NewRateGeneralDiscount
-                       )
-           )
+        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates,@NewRateGeneral, @NewRateGeneralDiscount))
         BEGIN
 
             SET @IdSegment = NULL;
@@ -1629,14 +1625,14 @@ BEGIN
                 DROP TABLE #ParcelOverweightPerTypeCorp;
 
         END;
-        PRINT 'rate';
-        PRINT @IdRate;
-        PRINT 'segment';
-        PRINT @IdSegment;
-        PRINT 'grupo';
-        PRINT @IdRateGroup;
-        PRINT '@IdTypeRate';
-        PRINT @IdTypeRate;
+    print 'rate'
+    print @IdRate
+    print 'segment'
+    print @IdSegment
+    print 'grupo'
+    print @IdRateGroup
+	PRINT '@IdTypeRate'
+	PRINT @IdTypeRate
     END;
     ELSE IF @IdTypeRate = 4 -- tarifas especiales
     BEGIN
@@ -2271,9 +2267,7 @@ BEGIN
                --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
                --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
                --           )
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral,
-                            @NewRateGeneralDiscount
-                          )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates,@NewRateGeneral, @NewRateGeneralDiscount)
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
@@ -2613,9 +2607,7 @@ BEGIN
                --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
                --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
                --)
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral,
-                            @NewRateGeneralDiscount
-                          )
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates,@NewRateGeneral, @NewRateGeneralDiscount)
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';

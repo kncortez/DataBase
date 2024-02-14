@@ -206,8 +206,11 @@ BEGIN
             SELECT STUFF(
                             (
                                 SELECT ',{"Id":"' + CONVERT(NVARCHAR, IdIncidenceType) + '",' + '"Name":"'
-                                       + ISNULL(NameIncidence, 'N/A') + '",' + '"Description":"'
-                                       + ISNULL(DescriptionIncidence, 'N/A') + '"' + '}'
+                                       + ISNULL(NameIncidence, 'N/A') + '",' 
+									   + '"Description":"'+ ISNULL(DescriptionIncidence, 'N/A')  + '",' 									   
+                                       + '"EvidenceRequirement":'+ IIF(COALESCE(EvidenceRequirement,0) = 1, '1','0')  + ',' 
+									   + '"CourierInstructions":"'+ ISNULL(CourierInstructions, 'N/A') + '"'									   
+									   + '}'
                                 FROM DeliveryBackOffice.dbo.CatTypeIncidence WITH(NOLOCK)
                                 WHERE RowStatus = 1
                                       AND ServiceType = 'DELIVERY'
@@ -500,6 +503,7 @@ BEGIN
     END;
     ELSE IF (@TypeMethod = 'GetTypeIncidenceExpress')
     BEGIN
+        
         PRINT 'PRUEBA 15';
         SET @jsonResult
             = ISNULL(
@@ -509,8 +513,9 @@ BEGIN
                                       SELECT ',{' + '"Id":"' + CONVERT(VARCHAR, ISNULL(c.IdIncidenceType, '')) + '",'
                                              + '"Name":"' + ISNULL(c.NameIncidence, '') + '"' + '}'
                                       FROM DeliveryBackOffice.dbo.CatTypeIncidence c WITH(NOLOCK)
-                                      WHERE @Others = c.ServiceType
-                                            AND c.RowStatus = 1
+                                      WHERE
+											c.RowStatus = 1 AND
+											c.ServiceType = 'DELIVERY'
                                       ORDER BY c.OrderId
                                       FOR XML PATH(''), TYPE
                                   ).value('.', 'varchar(max)'),
@@ -521,6 +526,7 @@ BEGIN
               ),
               ''
                     );
+         
     END;
 
     --CatIncidenceTransfer

@@ -135,6 +135,12 @@
 
 
 
+
+
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -205,6 +211,11 @@ CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_ReceiverIdTownship_Receiver_Town_Gui
 GO
 CREATE NONCLUSTERED INDEX [idx_sendertown]
     ON [dbo].[DeliveryOrder]([Sender_Town] ASC);
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_2023]
+ON [dbo].[DeliveryOrderDetail] ([StatusOrderId],[DateCreatedInSystem])
+INCLUDE ([UserCreated],[DeliveryAttemptId])
 
 
 GO
@@ -364,13 +375,43 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_Sender_Mail]
     ON [dbo].[DeliveryOrder]([Sender_Mail] ASC);
 
-GO
-CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
-    ON [dbo].[DeliveryOrder](User_Contact)
-	INCLUDE (ID_ContactIncident,Contact_Confirmed);    
 
 GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_MyShippments]
-    ON [dbo].[DeliveryOrder]([StatusOrderId],[Sender_ID],[OriginSenderId],[DateCreated])
-	INCLUDE ([Guide_Serie],[Guide_Number],[Pieces_Dry],[Pieces_Cold],[Ticket_Number],[Receiver_FirstName],[Receiver_LastName],[Receiver_Phone],[IsCollect],[PriceShippment],[Collect_OnDelivery],[TypeService]);    
+    ON [dbo].[DeliveryOrder]([StatusOrderId] ASC, [Sender_ID] ASC, [OriginSenderId] ASC, [DateCreated] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number], [Pieces_Dry], [Pieces_Cold], [Ticket_Number], [Receiver_FirstName], [Receiver_LastName], [Receiver_Phone], [IsCollect], [PriceShippment], [Collect_OnDelivery], [TypeService]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_User_Contact]
+    ON [dbo].[DeliveryOrder]([User_Contact] ASC)
+    INCLUDE([ID_ContactIncident], [Contact_Confirmed]);
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
+		ON [dbo].[DeliveryOrder]( [SalePipeLineId] )
+		INCLUDE([Sender_Mail],[Sender_ID],[DCBA_ID],[IdCustomer]);
+GO
+CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC);
+
+GO
+--CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus] ON [DeliveryBackOffice].[dbo].[DeliveryOrder] 
+--(
+--	[IdCustomer] ASC,
+--	[DateCreated] ASC,
+--	[StatusOrderId] ASC
+--)
+--INCLUDE (
+--	[Sender_ID],
+--	[Sender_FirstName],
+--	[Sender_LastName],
+--	[Receiver_FirstName],
+--	[Receiver_LastName],
+--	[Receiver_Department]
+--)
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC, [StatusOrderId] ASC)
+    INCLUDE([Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Department]);
 
