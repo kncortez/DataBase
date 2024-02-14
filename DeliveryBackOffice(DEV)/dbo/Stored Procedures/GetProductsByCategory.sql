@@ -11,24 +11,33 @@ CREATE PROCEDURE [dbo].[GetProductsByCategory] @IdCategory INT
 AS
 BEGIN
 
-
-	  SELECT CS.[IdCatSubscription] [IdCatProduct],
-			 CS.[SubscriptionName]  [CatProductName],
-			 CS.[SubscriptionCost]  [CatProductCost],
-			 CS.[SubscriptionDescription] [CatProductDescription],
-			 CS.[CatProductCategoryId] [CatProductCategoryId]
-  FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
-   WHERE CS.RowStatus = 1
-	AND CS.CatProductCategoryId = @IdCategory
-	  UNION ALL
-	  SELECT CS.[IdCatMembership] [IdCatProduct],
+	SELECT CSF.[IdCatProduct],
+		   CSF.[CatProductName],
+		   CSF.[CatProductCost],
+		   CSF.[CatProductDescription],
+		   CSF.[CatProductCategoryId]
+	FROM (
+	SELECT  CS.[Position],           
+	        CS.[IdCatSubscription] [IdCatProduct],
+			CS.[SubscriptionName]  [CatProductName],
+			CS.[SubscriptionCost]  [CatProductCost],
+			CS.[SubscriptionDescription] [CatProductDescription],
+			CS.[CatProductCategoryId] [CatProductCategoryId]
+	FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+	WHERE CS.RowStatus = 1
+	 AND CS.CatProductCategoryId = @IdCategory
+	UNION ALL
+	SELECT   CS.[Position],
+			 CS.[IdCatMembership] [IdCatProduct],
 			 CS.[MembershipName]  [CatProductName],
 			 CS.[MembershipCost]  [CatProductCost],
 			 CS.[MembershipDescription] [CatProductDescription],
 			 CS.[CatProductCategoryId] [CatProductCategoryId]
-  FROM [DeliveryBackOffice].[dbo].[CatMembership] CS WITH (NOLOCK)
-  WHERE CS.RowStatus = 1
-	AND CS.CatProductCategoryId = @IdCategory
+	FROM [DeliveryBackOffice].[dbo].[CatMembership] CS WITH (NOLOCK)
+	WHERE CS.RowStatus = 1
+	  AND CS.CatProductCategoryId = @IdCategory
+	) AS CSF
+	ORDER BY CSF.[Position]
 
     SELECT CPI.[IdCatProductImage],
               CPI.CatSubscriptionId   [CatProductId],
@@ -41,7 +50,7 @@ BEGIN
 	WHERE CPI.RowStatus = 1
 	AND A2.CatProductCategoryId = @IdCategory
 	UNION  ALL
-	 SELECT CPI.[IdCatProductImage],
+	SELECT CPI.[IdCatProductImage],
            CPI.CatMembershipId [CatProductId],
            CPI.[CatProductImageSmallImageURL],
            CPI.[CatProductImageLargeImageURL],
