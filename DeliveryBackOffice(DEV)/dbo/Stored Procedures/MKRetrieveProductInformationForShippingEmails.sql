@@ -10,25 +10,26 @@ CREATE PROCEDURE [dbo].[MKRetrieveProductInformationForShippingEmails]
 AS
 
 BEGIN
+
 	IF(@Telemarketing = 0)
 	BEGIN 
-		
-		IF EXISTS(SELECT UsrEmail from RegisterUser WHERE UsrEmail = (SELECT Top 1 InvoiceEmail FROM RegistrationofTransactionProcessStates WHERE OrderNumber = 'SP00024190996'))
+		--PRINT 'USUARIO LOGUEADO'
+		IF EXISTS(SELECT UsrEmail from RegisterUser WHERE UsrEmail = (SELECT Top 1 InvoiceEmail FROM RegistrationofTransactionProcessStates WHERE OrderNumber = @TransactionId))
 		BEGIN 
-
+		
 			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
 			FROM
 			(
-			SELECT A5.UsrEmail [UsrEmail], 
+			SELECT InvoiceEmail [UsrEmail], 
 			--COALESCE(A5.UsrEmail,RT.InvoiceEmail) [UsrEmail], 
 			A2.IdSubscription [IdProduct], 
 			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL', A5.UsrEmail,ProductGiftShippingEmail)  [Email],
 			IIF(A6.PerFirstName IS NULL,RT.NameTax, COALESCE(A6.PerFirstName,'') + IIF(A6.PerLastName IS NULL,'',' ')+ COALESCE(A6.PerLastName,'')) [ClientName],
 			'S' [ProductType],
 			A7.SubscriptionName [ProductName],
-			IIF(A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL'),'ACTIVADO',IIF( A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') AND A5.UsrEmail != A2.ProductGiftShippingEmail AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode)) [ActivationCode],
+			IIF(A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL'),'ACTIVADO',IIF( A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') /*AND A5.UsrEmail != A2.ProductGiftShippingEmail*/ AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode)) [ActivationCode],
 			A2.SubscriptionCost [ProductCost],
-			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) OrderMail
+			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog A1 WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.Subscription A2 WITH(NOLOCK)
 			 ON A1.SubscriptionId = A2.IdSubscription --AND A2.RowStatus = 1
@@ -49,14 +50,15 @@ BEGIN
 			 WHERE RT.OrderNumber = @TransactionId	) RT
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
 			UNION
-			SELECT COALESCE(A5.UsrEmail,RT.InvoiceEmail) [UsrEmail],A2.IdMembership [IdProduct], IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL' ,A5.UsrEmail,ProductGiftShippingEmail)  [Email]
-			,IIF(A6.PerLastName IS NULL,RT.NameTax,  COALESCE(A6.PerFirstName,'')
-			+IIF(A6.PerLastName IS NULL,'',' ')+ COALESCE(A6.PerLastName,'')) [ClientName]
-			,'M' [ProductType]	 
-			,A7.MembershipName [ProductName],
-			IIF(A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL'),'ACTIVADO',IIF( A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') AND A5.UsrEmail != A2.ProductGiftShippingEmail AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode)) [ActivationCode],
-			A2.MembershipCost [ProductCost]
-			,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [ActivationCode]
+			SELECT COALESCE(A5.UsrEmail,RT.InvoiceEmail) [UsrEmail],
+			A2.IdMembership [IdProduct], 
+			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL' ,A5.UsrEmail,ProductGiftShippingEmail)  [Email],
+			IIF(A6.PerLastName IS NULL,RT.NameTax,  COALESCE(A6.PerFirstName,'') + IIF(A6.PerLastName IS NULL,'',' ')+ COALESCE(A6.PerLastName,'')) [ClientName],
+			'M' [ProductType],	 
+			A7.MembershipName [ProductName],
+			IIF(A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL'),'ACTIVADO',IIF( A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') /*AND A5.UsrEmail != A2.ProductGiftShippingEmail*/ AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode)) [ActivationCode],
+			A2.MembershipCost [ProductCost],
+			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM DeliveryBackOffice.dbo.MembershipPaymentLog A1 WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.Membership A2 WITH(NOLOCK)
 			 ON A2.IdMembership = A1.MembershipId --AND A2.RowStatus = 1
@@ -120,7 +122,7 @@ BEGIN
 		END
 		ELSE -- PARA ENVIAR CORREOS QUE NO TIENEN CUENTA
 		BEGIN
-
+			--PRINT 'USUARIO NO LOGUEADO'
 			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
 			FROM
 			(
@@ -132,7 +134,7 @@ BEGIN
 			A4.SubscriptionName [ProductName],
 			IIF( EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = COALESCE(A2.ProductGiftShippingEmail, '') ),'ACTIVADO',A2.ActivationCode) [ActivationCode],
 			A2.SubscriptionCost [ProductCost],
-			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) OrderMail
+			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM [dbo].[SubscriptionPaymentLog] A1 WITH(NOLOCK)
 			INNER JOIN [dbo].[Subscription] A2 WITH(NOLOCK)
 			 ON A1.SubscriptionId = A2.IdSubscription
@@ -155,7 +157,7 @@ BEGIN
 			A4.MembershipName [ProductName],
 			IIF( (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode) [ActivationCode],
 			A2.MembershipCost [ProductCost],
-			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [ActivationCode]
+			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM [dbo].[MembershipPaymentLog] A1 WITH(NOLOCK)
 			INNER JOIN [dbo].[Membership] A2 WITH(NOLOCK)
 			 ON A2.IdMembership = A1.MembershipId --AND A2.RowStatus = 1
@@ -215,7 +217,7 @@ BEGIN
 	END
 	ELSE   -- SI FUERA UN CORREO GENERADO POR TELEMARKETING
 	BEGIN
-	      
+	    --PRINT 'USUARIO TELEMARKETING'
 		select TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
 		from
 		(
@@ -228,7 +230,7 @@ BEGIN
 		 ,A4.SubscriptionName [ProductName]
 		 ,IIF(A2.RowStatus = 1,'ACTIVADO',A2.ActivationCode) [ActivationCode]
 		 ,A2.SubscriptionCost [ProductCost]
-		 ,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) OrderMail
+		 ,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 		FROM [dbo].[SubscriptionPaymentLog] A1 WITH(NOLOCK)
 		INNER JOIN [dbo].[Subscription] A2 WITH(NOLOCK)
 		 ON A1.SubscriptionId = A2.IdSubscription
@@ -254,7 +256,7 @@ BEGIN
 		 ,A4.MembershipName [ProductName]
 		 ,IIF(A2.RowStatus = 1,'ACTIVADO',ActivationCode) [ActivationCode] 
 		 ,A2.MembershipCost [ProductCost]
-		 ,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [ActivationCode]
+		 ,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 		FROM [dbo].[MembershipPaymentLog] A1 WITH(NOLOCK)
 		INNER JOIN [dbo].[Membership] A2 WITH(NOLOCK)
 		 ON A2.IdMembership = A1.MembershipId --AND A2.RowStatus = 1
@@ -271,12 +273,13 @@ BEGIN
 		order by TBL.OrderMail desc 
 
 		/*LISTADO DE CORREOS PARA REGALOS*/
-		SELECT RTPS.ProductGiftShippingEmail [Email] 	 
+		SELECT  MAX(RTPS.[OrderNumber]) [OrderNumber], RTPS.[ProductGiftShippingEmail] [Email] 	 
 		FROM [dbo].[RegistrationofTransactionProcessStates] RTPS WITH(NOLOCK)
-		WHERE OrderNumber = @TransactionId
+		WHERE RTPS.[OrderNumber] = @TransactionId
 		AND  LEN(COALESCE(RTPS.ProductGiftShippingEmail,'')) > 0 
 		AND RTPS.ProductGiftShippingEmail <> 'NULL' 
+		GROUP BY RTPS.[ProductGiftShippingEmail]
 
-	END
+	END 
 
 END
