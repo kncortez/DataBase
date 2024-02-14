@@ -4,7 +4,10 @@
 -- Description:	<Description,Validar estado de una transacción en proceso de pago>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetResponseFacTransactionProcessStatus] 
-@OrderNumber VARCHAR(100)
+	@OrderNumber VARCHAR(100) = NULL, 
+	@AccountId INT = 0,
+	@Token NVARCHAR(50) = '',
+	@SystemId INT = NULL
 AS
 BEGIN
 
