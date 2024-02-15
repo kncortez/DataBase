@@ -556,6 +556,9 @@ begin
 										, '') + '",' 
 									 + '"QRLink": "' + COALESCE(CONCAT('https://forzadelivery.com/rastreo/',Guide_Serie,Guide_Number), '') + '",' 
 									 + '"UseMembership": ' + CONVERT(VARCHAR, CAST(ISNULL((CASE WHEN [MSL].[IdMembershipSubscriptionLog] IS NOT NULL THEN 1 ELSE 0 END), 0) AS BIT)) + ',' 
+									 + '"Iscollect": ' + CONVERT(VARCHAR, [Dev].[IsCollect]) + ',' 
+									 + '"CategoryProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL, CMSL.CatProductCategoryId,IIF(CSBT.CatProductCategoryId IS NOT NULL,CSBT.CatProductCategoryId, 0) )) + ',' 
+									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], MSL.SubscriptionId)) + ',' 
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
 									 + '"DeliveryETA": "' + COALESCE
@@ -650,6 +653,15 @@ begin
 									  ON [MSL].[LogGuideSerie] = [dev].[Guide_Serie] 
 									  AND [MSL].[LogGuideNumber] = [dev].[Guide_Number]
 									  AND [MSL].[RowStatus] = 1
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[CatMembership] CMSL  WITH(NOLOCK) 
+									  ON MMBSHP.CatMembershipId = CMSL.IdCatMembership
+									  AND CMSL.RowStatus = 1
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[Subscription] SBT  WITH(NOLOCK) 
+									  ON MSL.SubscriptionId = SBT.IdSubscription
+									  AND SBT.RowStatus = 1
+								  LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CSBT  WITH(NOLOCK) 
+								      ON SBT.CatSubscriptionId = CSBT.IdCatSubscription
+									  AND CSBT.RowStatus = 1
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
