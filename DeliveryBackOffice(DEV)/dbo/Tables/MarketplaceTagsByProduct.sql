@@ -3,7 +3,6 @@
 CREATE TABLE [dbo].[MarketplaceTagsByProduct](
 	[IdMarketplaceTagsByProduct] [int] IDENTITY(1,1) NOT NULL,
 	[MarketplaceProductTagsId] [int] NOT NULL,
-	[CatProductId] [int] NOT NULL,
 	[RowStatus] [bit] NOT NULL,
 	[TokenCreated] [nvarchar](50) NOT NULL,
 	[DateCreated] [datetime] NOT NULL,
@@ -14,9 +13,7 @@ CREATE TABLE [dbo].[MarketplaceTagsByProduct](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[MarketplaceTagsByProduct]  WITH CHECK ADD  CONSTRAINT [FK_MarketplaceTagsByProduct_CatProduct] FOREIGN KEY([CatProductId])
-REFERENCES [dbo].[CatProduct] ([IdCatProduct])
-GO
+
 
 ALTER TABLE [dbo].[MarketplaceTagsByProduct] CHECK CONSTRAINT [FK_MarketplaceTagsByProduct_CatProduct]
 GO
@@ -41,8 +38,6 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identicador de la etiqueta' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceTagsByProduct', @level2type=N'COLUMN',@level2name=N'MarketplaceProductTagsId'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceTagsByProduct', @level2type=N'COLUMN',@level2name=N'CatProductId'
-GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceTagsByProduct', @level2type=N'COLUMN',@level2name=N'RowStatus'
 GO
