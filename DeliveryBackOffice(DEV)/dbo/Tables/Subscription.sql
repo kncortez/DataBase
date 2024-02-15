@@ -83,6 +83,13 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
 
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ActivationCode'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'correo al cual se envía el regalo del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
+GO
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
     ON [dbo].[Subscription]([CatSubscriptionId] ASC);

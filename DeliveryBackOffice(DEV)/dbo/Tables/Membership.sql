@@ -184,3 +184,8 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Listado de mem
 GO
 
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ActivationCode'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'correo al cual se envía el regalo del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
+GO
