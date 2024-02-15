@@ -9,7 +9,8 @@ CREATE TABLE [dbo].[MarketplaceTagsByProduct](
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
 	[CatSubscriptionId] [int] NULL,
-	[CatMembershipId] [int] NULL
+	[CatMembershipId] [int] NULL,
+	[Position] [int] NOT NULL,
 ) ON [PRIMARY]
 GO
 
@@ -61,3 +62,5 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Varias etiquet
 GO
 
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Posición de etiqueta' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceTagsByProduct', @level2type=N'COLUMN',@level2name=N'Position'
+GO
