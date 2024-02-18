@@ -1681,8 +1681,6 @@
     <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD_ANT2023.sql" />
-    <Build Include="Security\ECS-DB-DENARIUS_deliveryreport.sql" />
-    <Build Include="dbo\Stored Procedures\spHW_GetMembershipSubscriptionDashboardData_2.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
@@ -1690,5 +1688,8 @@
       <SuppressMissingDependenciesErrors>True</SuppressMissingDependenciesErrors>
       <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
     </ArtifactReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DeliveryBackOffice%28DEV).publish.xml" />
   </ItemGroup>
 </Project>
