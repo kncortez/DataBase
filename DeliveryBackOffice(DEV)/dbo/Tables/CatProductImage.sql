@@ -1,6 +1,5 @@
 ﻿CREATE TABLE [dbo].[CatProductImage] (
     [IdCatProductImage]            INT            IDENTITY (1, 1) NOT NULL,
-    [CatProductId]                 INT            NOT NULL,
     [CatProductImageSmallImageURL] NVARCHAR (200) NULL,
     [CatProductImageLargeImageURL] NVARCHAR (200) NULL,
     [CatProductImageOrder]         INT            NOT NULL,
@@ -11,10 +10,13 @@
     [DateUpdated]                  DATETIME       NULL,
     [CatSubscriptionId]            INT            NULL,
     [CatMembershipId]              INT            NULL,
+    [CatProductImageBigImageURL]   NVARCHAR (200) NULL,
     CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
-    CONSTRAINT [FK_CatProductImage_CatProduct] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatProduct] ([IdCatProduct]),
+    CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
     CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
 );
+
+
 
 
 

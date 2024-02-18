@@ -14,8 +14,11 @@
     [Icon]                           NVARCHAR (50)   NULL,
     [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
     [CatProductCategoryId]           INT             NULL,
+    [Tag]                            NVARCHAR (100)  NULL,
     CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
 );
+
+
 
 
 

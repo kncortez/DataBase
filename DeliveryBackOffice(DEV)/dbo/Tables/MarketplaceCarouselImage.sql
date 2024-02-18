@@ -10,8 +10,11 @@
     [DateCreated]     DATETIME       NOT NULL,
     [TokenUpdated]    NVARCHAR (50)  NULL,
     [DateUpdated]     DATETIME       NULL,
+    [HyperlinkURL]    NVARCHAR (200) NULL,
     CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
 );
+
+
 
 
 

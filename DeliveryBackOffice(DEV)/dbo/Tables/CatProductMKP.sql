@@ -1,18 +1,4 @@
-﻿CREATE TABLE [dbo].[CatProductMKP] (
-    [IdCatProductMKP]          INT            NOT NULL,
-    [CatTypeProductMKP_Id]     INT            NOT NULL,
-    [CatProductNameMKP]        NCHAR (100)    NOT NULL,
-    [DescriptionCatProductMKP] NCHAR (200)    NOT NULL,
-    [DiscountType]             INT            NULL,
-    [DiscountValue]            DECIMAL (5, 2) NULL,
-    [RowStatus]                BIT            NOT NULL,
-    [DateCreated]              NCHAR (10)     NOT NULL,
-    [TokenCreated]             NCHAR (10)     NOT NULL,
-    [DateUpdated]              NCHAR (10)     NULL,
-    [TokenUpdated]             NCHAR (10)     NULL,
-    CONSTRAINT [PK_IdCatProductMKP] PRIMARY KEY CLUSTERED ([IdCatProductMKP] ASC),
-    CONSTRAINT [FK_CatProductMKP_CatTypeProductMKP] FOREIGN KEY ([CatTypeProductMKP_Id]) REFERENCES [dbo].[CatTypeProductMKP] ([IdCatTypeProductMKP])
-);
+﻿
 
 
 GO

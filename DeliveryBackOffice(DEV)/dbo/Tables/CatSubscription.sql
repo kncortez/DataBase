@@ -19,6 +19,7 @@
     [IncludedMembershipId]             INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
     [CatProductCategoryId]             INT             NULL,
+    [Tag]                              NVARCHAR (100)  NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
     CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_CatSubscription_CatMembership] FOREIGN KEY ([IncludedMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
@@ -26,6 +27,8 @@
     CONSTRAINT [FK_CatSubscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
     CONSTRAINT [FK_CatSubscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
 );
+
+
 
 
 

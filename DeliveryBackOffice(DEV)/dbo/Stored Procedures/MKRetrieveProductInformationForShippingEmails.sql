@@ -12,7 +12,7 @@ BEGIN
 
 	IF(@Telemarketing = 0)
 	BEGIN 
-		PRINT 'USUARIO LOGUEADO'
+		--PRINT 'USUARIO LOGUEADO'
 		IF EXISTS(SELECT UsrEmail from RegisterUser WHERE UsrEmail = (SELECT Top 1 InvoiceEmail FROM RegistrationofTransactionProcessStates WHERE OrderNumber = @TransactionId))
 		BEGIN 
 		
@@ -121,7 +121,7 @@ BEGIN
 		END
 		ELSE -- PARA ENVIAR CORREOS QUE NO TIENEN CUENTA
 		BEGIN
-			PRINT 'USUARIO NO LOGUEADO'
+			--PRINT 'USUARIO NO LOGUEADO'
 			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
 			FROM
 			(
@@ -216,7 +216,7 @@ BEGIN
 	END
 	ELSE   -- SI FUERA UN CORREO GENERADO POR TELEMARKETING
 	BEGIN
-	    PRINT 'USUARIO TELEMARKETING'
+	    --PRINT 'USUARIO TELEMARKETING'
 		select TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
 		from
 		(
@@ -272,11 +272,12 @@ BEGIN
 		order by TBL.OrderMail desc 
 
 		/*LISTADO DE CORREOS PARA REGALOS*/
-		SELECT DISTINCT RTPS.ProductGiftShippingEmail [Email] 	 
+		SELECT  MAX(RTPS.[OrderNumber]) [OrderNumber], RTPS.[ProductGiftShippingEmail] [Email] 	 
 		FROM [dbo].[RegistrationofTransactionProcessStates] RTPS WITH(NOLOCK)
-		WHERE OrderNumber = @TransactionId
+		WHERE RTPS.[OrderNumber] = @TransactionId
 		AND  LEN(COALESCE(RTPS.ProductGiftShippingEmail,'')) > 0 
 		AND RTPS.ProductGiftShippingEmail <> 'NULL' 
+		GROUP BY RTPS.[ProductGiftShippingEmail]
 
 	END 
 END

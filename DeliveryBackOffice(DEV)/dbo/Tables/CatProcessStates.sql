@@ -1,14 +1,4 @@
-﻿CREATE TABLE [dbo].[CatProcessStates] (
-    [IdCatProcessStates] INT            IDENTITY (1, 1) NOT NULL,
-    [NameStatus]         NVARCHAR (50)  NOT NULL,
-    [DescriptionStatus]  NVARCHAR (250) NOT NULL,
-    [RowStatus]          BIT            NOT NULL,
-    [TokenCreated]       NVARCHAR (50)  NOT NULL,
-    [DateCreated]        DATETIME       NOT NULL,
-    [TokenUpdate]        NVARCHAR (50)  NULL,
-    [DateUpdate]         DATETIME       NULL,
-    CONSTRAINT [PK_CatProcessStates] PRIMARY KEY CLUSTERED ([IdCatProcessStates] ASC)
-);
+﻿
 
 
 GO

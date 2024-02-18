@@ -1,16 +1,4 @@
-﻿CREATE TABLE [dbo].[MarketplaceCarouselImage_bkp] (
-    [IdCarouselImage]  BIGINT         IDENTITY (1, 1) NOT NULL,
-    [ImageURL]         NVARCHAR (500) NOT NULL,
-    [ImageResolutionX] NVARCHAR (25)  NOT NULL,
-    [ImageResolutionY] NVARCHAR (25)  NOT NULL,
-    [ImageOrder]       INT            NOT NULL,
-    [RowStatus]        BIT            NOT NULL,
-    [DateCreated]      NCHAR (10)     NOT NULL,
-    [TokenCreated]     NCHAR (10)     NOT NULL,
-    [DateUpdated]      NCHAR (10)     NULL,
-    [TokenUpdated]     NCHAR (10)     NULL,
-    CONSTRAINT [PK_MarketplaceCarouselImage_bkp] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
-);
+﻿
 
 
 GO

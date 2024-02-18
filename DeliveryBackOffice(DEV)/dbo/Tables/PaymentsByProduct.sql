@@ -1,25 +1,4 @@
-﻿CREATE TABLE [dbo].[PaymentsByProduct] (
-    [IdPaymentsByProduct]               INT             IDENTITY (1, 1) NOT NULL,
-    [ProductId]                         INT             NOT NULL,
-    [PaymentsByProductPaymentMethodId]  INT             NOT NULL,
-    [PaymentsByProductPaymentAmount]    DECIMAL (18, 2) NOT NULL,
-    [PaymentsByProductTransactionId]    BIGINT          NULL,
-    [PaymentsByProductTransactionOrder] NVARCHAR (100)  NULL,
-    [PaymentsByProductImageURL]         NVARCHAR (200)  NULL,
-    [PaymentsByProductInvoiceId]        BIGINT          NULL,
-    [PaymentsByProductArticleSAPId]     INT             NULL,
-    [RowStatus]                         BIT             NOT NULL,
-    [TokenCreated]                      NVARCHAR (50)   NOT NULL,
-    [DateCreated]                       DATETIME        NOT NULL,
-    [TokenUpdated]                      NVARCHAR (50)   NULL,
-    [DateUpdated]                       DATETIME        NULL,
-    CONSTRAINT [PK_PaymentsByProduct] PRIMARY KEY CLUSTERED ([IdPaymentsByProduct] ASC),
-    CONSTRAINT [FK_PaymentsByProduct_CatArticleSAP] FOREIGN KEY ([PaymentsByProductArticleSAPId]) REFERENCES [dbo].[CatArticleSAP] ([IdCatArticleSAP]),
-    CONSTRAINT [FK_PaymentsByProduct_CreditCardTransactionByCustomer] FOREIGN KEY ([PaymentsByProductTransactionId]) REFERENCES [dbo].[CreditCardTransactionByCustomer] ([IdTransaction]),
-    CONSTRAINT [FK_PaymentsByProduct_ctgTypeOfInOutOfMoney] FOREIGN KEY ([PaymentsByProductPaymentMethodId]) REFERENCES [dbo].[ctgTypeOfInOutOfMoney] ([tio_pk_id]),
-    CONSTRAINT [FK_PaymentsByProduct_invoiceHeader] FOREIGN KEY ([PaymentsByProductInvoiceId]) REFERENCES [dbo].[invoiceHeader] ([inv_pk_id]),
-    CONSTRAINT [FK_PaymentsByProduct_Product] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct])
-);
+﻿
 
 
 GO

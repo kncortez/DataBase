@@ -1,24 +1,4 @@
-﻿CREATE TABLE [dbo].[ProductGuidesLog] (
-    [IdProductGuideLog] BIGINT          NOT NULL,
-    [SystemId]          INT             NOT NULL,
-    [ModuleId]          INT             NOT NULL,
-    [ProductId]         INT             NOT NULL,
-    [GuideSerie]        NVARCHAR (2)    NOT NULL,
-    [GuideNumber]       INT             NOT NULL,
-    [OriginalValue]     DECIMAL (14, 2) NULL,
-    [NewValue]          DECIMAL (14, 2) NULL,
-    [ServiceNumber]     INT             NULL,
-    [RowStatus]         BIT             NOT NULL,
-    [TokenCreated]      NVARCHAR (50)   NOT NULL,
-    [DateCreated]       DATETIME        NOT NULL,
-    [TokenUpdated]      NVARCHAR (50)   NULL,
-    [DateUpdated]       DATETIME        NULL,
-    CONSTRAINT [PK_ProductGuidesLog] PRIMARY KEY CLUSTERED ([IdProductGuideLog] ASC),
-    CONSTRAINT [FK_ProductGuidesLog_CatModule] FOREIGN KEY ([ModuleId]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
-    CONSTRAINT [FK_ProductGuidesLog_CatSystem1] FOREIGN KEY ([SystemId]) REFERENCES [dbo].[CatSystem] ([SysIdSystem]),
-    CONSTRAINT [FK_ProductGuidesLog_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_ProductGuidesLog_Product] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Product] ([IdProduct])
-);
+﻿
 
 
 GO

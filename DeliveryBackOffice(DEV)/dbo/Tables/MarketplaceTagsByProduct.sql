@@ -9,10 +9,13 @@
     [DateUpdated]                DATETIME      NULL,
     [CatSubscriptionId]          INT           NULL,
     [CatMembershipId]            INT           NULL,
+    [Position]                   INT           CONSTRAINT [DF_MarketplaceTagsByProduct_Position] DEFAULT ((1)) NOT NULL,
     CONSTRAINT [FK_MarketplaceTagsByProduct_CatProduct] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatProduct] ([IdCatProduct]),
     CONSTRAINT [FK_MarketplaceTagsByProduct_CatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
     CONSTRAINT [FK_MarketplaceTagsByProduct_MarketplaceProductTags] FOREIGN KEY ([MarketplaceProductTagsId]) REFERENCES [dbo].[MarketplaceProductTags] ([IdMarketplaceProductTags])
 );
+
+
 
 
 

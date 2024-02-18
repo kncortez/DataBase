@@ -1,15 +1,4 @@
-﻿CREATE TABLE [dbo].[CatProductCategory_bkp] (
-    [IdCatProductCategory]          BIGINT         IDENTITY (1, 1) NOT NULL,
-    [CatProductCategoryName]        NVARCHAR (50)  NOT NULL,
-    [CatProductCategoryDescription] NVARCHAR (200) NOT NULL,
-    [CategoryOrder]                 INT            NOT NULL,
-    [RowStatus]                     BIT            NOT NULL,
-    [DateCreated]                   NCHAR (10)     NOT NULL,
-    [TokenCreated]                  NCHAR (10)     NOT NULL,
-    [DateUpdated]                   NCHAR (10)     NULL,
-    [TokenUpdated]                  NCHAR (10)     NULL,
-    CONSTRAINT [PK_[CatProductCategory_bkp] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC)
-);
+﻿
 
 
 GO

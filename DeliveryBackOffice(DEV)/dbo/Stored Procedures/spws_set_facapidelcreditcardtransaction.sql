@@ -452,19 +452,6 @@ BEGIN
 
   print 'code 00'
 
-   --  DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @AccountId AND RowStatus=1 ORDER BY DateCreated DESC)
-
-		 --UPDATE  [dbo].[MarketplaceCartDetail]
-			--  SET RowStatus = 0,
-			--	  TokenUpdated = @Token,
-			--	  DateUpdated  = GETDATE()
-			--  WHERE  MarketplaceCartId = @IdCart
-
-			--UPDATE  [dbo].[MarketplaceCart]
-			--  SET RowStatus = 0,
-			--	  TokenUpdated = @Token,
-			--	  DateUpdated  = GETDATE()
-			--  WHERE IdMarketplaceCart = @IdCart
 
 
       -- Variables estaticas "globales"

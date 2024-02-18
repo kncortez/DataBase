@@ -34,7 +34,8 @@ IF (EXISTS( Select Top 1 1
 			CP.SubscriptionDescription   [CatProductDescription],
 			CP.SubscriptionCost  [CatProductCost],
 			CP.SubscriptionFixedValue [CatProductDiscountValue],
-			CP.[CatProductCategoryId]
+			CP.[CatProductCategoryId],
+			CP.Tag
 From DBO.[CatSubscription] CP WITH(NOLOCK) 
 WHERE CP.IdCatSubscription = @IdCatProduct
       AND   CP.RowStatus=1 AND CP.SubscriptionName = @ProductName
@@ -46,7 +47,8 @@ Select
 			CP.MembershipDescription   [CatProductDescription],
 			CP.MembershipCost  [CatProductCost],
 			CP.MembershipFixedValue [CatProductDiscountValue],
-			CP.[CatProductCategoryId]
+			CP.[CatProductCategoryId],
+			CP.Tag
 From [dbo].[CatMembership] CP WITH(NOLOCK) 
 WHERE CP.IdCatMembership = @IdCatProduct
       AND   CP.RowStatus=1 AND CP.MembershipName  = @ProductName
@@ -55,7 +57,8 @@ WHERE CP.IdCatMembership = @IdCatProduct
  SELECT 
 			CPI.[CatProductImageSmallImageURL],
 			CPI.[CatProductImageLargeImageURL],
-			ISNULL(CPI.CatSubscriptionId,CPI.CatMembershipId) [CatProductId]
+			ISNULL(CPI.CatSubscriptionId,CPI.CatMembershipId) [CatProductId],
+			CPI.[CatProductImageBigImageURL]
 	FROM DeliveryBackOffice.dbo.CatProductImage  CPI WITH(NOLOCK)
 	  LEFT JOIN DeliveryBackOffice.dbo.CatMembership CM WITH(NOLOCK)
 	  ON CPI.CatMembershipId = CM.IdCatMembership 
@@ -66,7 +69,8 @@ WHERE CP.IdCatMembership = @IdCatProduct
 	SELECT 
 			CPI.[CatProductImageSmallImageURL],
 			CPI.[CatProductImageLargeImageURL],
-			ISNULL(CPI.CatSubscriptionId,CPI.CatMembershipId) [CatProductId]
+			ISNULL(CPI.CatSubscriptionId,CPI.CatMembershipId) [CatProductId],
+			CPI.[CatProductImageBigImageURL]
 	FROM DeliveryBackOffice.dbo.CatProductImage  CPI WITH(NOLOCK)
 	    LEFT JOIN DeliveryBackOffice.dbo.CatSubscription CS WITH(NOLOCK)
 	  ON CS.IdCatSubscription = CPI.CatSubscriptionId

@@ -1,17 +1,4 @@
-﻿CREATE TABLE [dbo].[CatProductDescription] (
-    [IdCatProductDescription]    INT            IDENTITY (1, 1) NOT NULL,
-    [CatProductId]               INT            NOT NULL,
-    [CatProductDescriptionTitle] NVARCHAR (300) NULL,
-    [CatProductDescription]      NVARCHAR (500) NULL,
-    [CatProductDescriptionOrder] INT            NOT NULL,
-    [RowStatus]                  BIT            NOT NULL,
-    [TokenCreated]               NVARCHAR (50)  NOT NULL,
-    [DateCreated]                DATETIME       NOT NULL,
-    [TokenUpdated]               NVARCHAR (50)  NULL,
-    [DateUpdated]                DATETIME       NULL,
-    CONSTRAINT [PK_CatProductDescription] PRIMARY KEY CLUSTERED ([IdCatProductDescription] ASC),
-    CONSTRAINT [FK_CatProductDescription_CatProduct] FOREIGN KEY ([CatProductId]) REFERENCES [dbo].[CatProduct] ([IdCatProduct])
-);
+﻿
 
 
 
