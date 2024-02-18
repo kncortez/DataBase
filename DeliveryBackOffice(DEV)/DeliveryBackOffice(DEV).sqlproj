@@ -1681,6 +1681,8 @@
     <Build Include="dbo\User Defined Types\TblHubLogistic.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD_ANT2023.sql" />
+    <Build Include="dbo\User Defined Types\TblDeliveryOrdersList2.sql" />
+
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
