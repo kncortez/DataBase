@@ -45,6 +45,8 @@
 
 
 
+
+
 GO
 
 
@@ -76,4 +78,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatProductCategory', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'CatProductCategoryId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'etiqueta de identificación del producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'Tag';
 

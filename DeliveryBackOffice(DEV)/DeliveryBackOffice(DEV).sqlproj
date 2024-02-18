@@ -1604,25 +1604,15 @@
     <Build Include="dbo\Tables\TMPCatSubscriptionDescription.sql" />
     <Build Include="dbo\Tables\TMPCatSubscriptionAtribute.sql" />
     <Build Include="dbo\Tables\TMPCatSubscription.sql" />
-    <Build Include="dbo\Tables\ProductMKP.sql" />
-    <Build Include="dbo\Tables\Product.sql" />
-    <Build Include="dbo\Tables\PaymentsByProduct.sql" />
     <Build Include="dbo\Tables\MarketplaceTagsByProduct.sql" />
     <Build Include="dbo\Tables\MarketplaceProductTags.sql" />
     <Build Include="dbo\Tables\MarketplaceCartDetail.sql" />
     <Build Include="dbo\Tables\MarketplaceCart.sql" />
-    <Build Include="dbo\Tables\MarketplaceCarouselImage_bkp.sql" />
     <Build Include="dbo\Tables\MarketplaceCarouselImage.sql" />
     <Build Include="dbo\Tables\CatTypeProductMKP.sql" />
     <Build Include="dbo\Tables\CatProductSupplier.sql" />
-    <Build Include="dbo\Tables\CatProductMKPDescription.sql" />
-    <Build Include="dbo\Tables\CatProductMKPAtribute.sql" />
-    <Build Include="dbo\Tables\CatProductMKP.sql" />
     <Build Include="dbo\Tables\CatProductImage.sql" />
-    <Build Include="dbo\Tables\CatProductDescription.sql" />
-    <Build Include="dbo\Tables\CatProductCategory_bkp.sql" />
     <Build Include="dbo\Tables\CatProductCategory.sql" />
-    <Build Include="dbo\Tables\CatProductAttribute.sql" />
     <Build Include="dbo\Tables\CatProduct.sql" />
     <Build Include="dbo\Tables\CatConfigPoints.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
@@ -1631,8 +1621,6 @@
     <Build Include="dbo\Stored Procedures\GetCategoryProduct.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD_Old.sql" />
     <Build Include="dbo\Tables\RegistrationofTransactionProcessStates.sql" />
-    <Build Include="dbo\Tables\ProductGuidesLog.sql" />
-    <Build Include="dbo\Tables\CatProcessStates.sql" />
     <Build Include="dbo\Functions\fn_get_tse_status_runoff_1.sql" />
     <Build Include="dbo\Functions\fn_get_cv_status_runoff_1.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_bnhl.sql" />
@@ -1694,6 +1682,7 @@
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD2.sql" />
     <Build Include="dbo\User Defined Types\TblDeliveryOrdersFD_ANT2023.sql" />
     <Build Include="Security\ECS-DB-DENARIUS_deliveryreport.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_GetMembershipSubscriptionDashboardData_2.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de modificación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -62,7 +64,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Imagen en m
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Producto al que pertenece la imagen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'CatProductId';
+
 
 
 GO
@@ -75,4 +77,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Listado de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'CatSubscriptionId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Imagen grande para marketplace', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductImage', @level2type = N'COLUMN', @level2name = N'CatProductImageBigImageURL';
 

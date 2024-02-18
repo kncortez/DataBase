@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de modificación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -77,4 +79,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Imagen en c
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Imagen en carrousel MD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'MDImageURL';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'URL de hipervínculo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'HyperlinkURL';
 

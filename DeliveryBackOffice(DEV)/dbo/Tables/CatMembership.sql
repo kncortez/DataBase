@@ -27,6 +27,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -84,4 +86,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo de í
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'etiqueta de identificación ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'Tag';
 
