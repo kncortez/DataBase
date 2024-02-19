@@ -25,6 +25,7 @@
     <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
     <DefaultFilegroup>PRIMARY</DefaultFilegroup>
     <ValidateCasingOnIdentifiers>False</ValidateCasingOnIdentifiers>
+    <GenerateSqlClrSymbols>False</GenerateSqlClrSymbols>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -68,7 +69,6 @@
     <Folder Include="Security\" />
   </ItemGroup>
   <ItemGroup>
-  
     <Build Include="dbo\User Defined Types\TblProductMarketPlace.sql" />
     <Build Include="dbo\User Defined Types\TblProductMarketPlace2.sql" />
     <Build Include="dbo\User Defined Types\TblSalePackageMarketPlace.sql" />

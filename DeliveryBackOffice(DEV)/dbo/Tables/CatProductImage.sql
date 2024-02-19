@@ -10,26 +10,14 @@ CREATE TABLE [dbo].[CatProductImage](
 	[DateUpdated] [datetime] NULL,
 	[CatSubscriptionId] [int] NULL,
 	[CatMembershipId] [int] NULL,
- CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED 
-(
-	[IdCatProductImage] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+	CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC )ON [PRIMARY],
+	CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
+	CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
+)
 GO
 
-ALTER TABLE [dbo].[CatProductImage]  WITH CHECK ADD  CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY([CatMembershipId])
-REFERENCES [dbo].[CatMembership] ([IdCatMembership])
-GO
+ 
 
-ALTER TABLE [dbo].[CatProductImage] CHECK CONSTRAINT [FK_CatProductImage_CatMembership]
-GO
-
-ALTER TABLE [dbo].[CatProductImage]  WITH CHECK ADD  CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY([CatSubscriptionId])
-REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
-GO
-
-ALTER TABLE [dbo].[CatProductImage] CHECK CONSTRAINT [FK_CatProductImage_CatSubscription]
-GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de la imagen' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatProductImage', @level2type=N'COLUMN',@level2name=N'IdCatProductImage'
 GO
