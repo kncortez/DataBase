@@ -1,5 +1,3 @@
-
-
 CREATE TABLE [dbo].[MarketplaceTagsByProduct](
 	[IdMarketplaceTagsByProduct] [int] IDENTITY(1,1) NOT NULL,
 	[MarketplaceProductTagsId] [int] NOT NULL,
@@ -11,26 +9,9 @@ CREATE TABLE [dbo].[MarketplaceTagsByProduct](
 	[CatSubscriptionId] [int] NULL,
 	[CatMembershipId] [int] NULL,
 	[Position] [int] NOT NULL,
-) ON [PRIMARY]
-GO
-
-
-
-ALTER TABLE [dbo].[MarketplaceTagsByProduct] CHECK CONSTRAINT [FK_MarketplaceTagsByProduct_CatProduct]
-GO
-
-ALTER TABLE [dbo].[MarketplaceTagsByProduct]  WITH CHECK ADD  CONSTRAINT [FK_MarketplaceTagsByProduct_CatSubscription] FOREIGN KEY([CatSubscriptionId])
-REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
-GO
-
-ALTER TABLE [dbo].[MarketplaceTagsByProduct] CHECK CONSTRAINT [FK_MarketplaceTagsByProduct_CatSubscription]
-GO
-
-ALTER TABLE [dbo].[MarketplaceTagsByProduct]  WITH CHECK ADD  CONSTRAINT [FK_MarketplaceTagsByProduct_MarketplaceProductTags] FOREIGN KEY([MarketplaceProductTagsId])
-REFERENCES [dbo].[MarketplaceProductTags] ([IdMarketplaceProductTags])
-GO
-
-ALTER TABLE [dbo].[MarketplaceTagsByProduct] CHECK CONSTRAINT [FK_MarketplaceTagsByProduct_MarketplaceProductTags]
+	CONSTRAINT [FK_MarketplaceTagsByProduct_CatSubscription] FOREIGN KEY([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
+	CONSTRAINT [FK_MarketplaceTagsByProduct_MarketplaceProductTags] FOREIGN KEY([MarketplaceProductTagsId]) REFERENCES [dbo].[MarketplaceProductTags] ([IdMarketplaceProductTags])
+)
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de la tabla' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceTagsByProduct', @level2type=N'COLUMN',@level2name=N'IdMarketplaceTagsByProduct'

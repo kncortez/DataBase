@@ -24,6 +24,6 @@
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción larga de membresía ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembershipAttribute', @level2type = N'COLUMN', @level2name = N'MembershipAttributeDescriptionLong';
 
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'icono de atrubuto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembershipAttribute', @level2type = N'COLUMN', @level2name = N'CatMembershipAttributeIcon';
 
-GO

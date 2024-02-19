@@ -24,6 +24,7 @@
     <TargetDatabaseSet>True</TargetDatabaseSet>
     <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
     <DefaultFilegroup>PRIMARY</DefaultFilegroup>
+    <ValidateCasingOnIdentifiers>False</ValidateCasingOnIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -67,6 +68,10 @@
     <Folder Include="Security\" />
   </ItemGroup>
   <ItemGroup>
+  
+    <Build Include="dbo\User Defined Types\TblProductMarketPlace.sql" />
+    <Build Include="dbo\User Defined Types\TblProductMarketPlace2.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageMarketPlace.sql" />
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
     <Build Include="dbo\User Defined Types\TblVPFrequency.sql" />
@@ -564,9 +569,6 @@
     <Build Include="dbo\Tables\CatProductImage.sql" />
     <Build Include="dbo\Tables\MarketplaceCarouselImage.sql" />
     <Build Include="dbo\Tables\MarketplaceCart.sql" />
-    
-    
-
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1537,26 +1539,22 @@
     <Build Include="dbo\Stored Procedures\supportCreateNewExc.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewDesktopUser.sql" />
     <Build Include="dbo\Stored Procedures\CreateCouponData.sql" />
-	<Build Include="dbo\Stored Procedures\GetInternalLoginMarketPlace.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_GetImagesandProductInformation.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesNonLoggedinUser.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlace.sql" />
-	<Build Include="dbo\Stored Procedures\RemoveProductsfromtheMarketplaceCart.sql" />
-	<Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
-	<Build Include="dbo\Stored Procedures\GetCustomerPaymentDataMarketPlace.sql" />
-	<Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\GetInternalLoginMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetImagesandProductInformation.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesNonLoggedinUser.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\RemoveProductsfromtheMarketplaceCart.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerPaymentDataMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" /> 
-	<Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFacTeleMarket.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlaceTeleMarketing.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_InsertProductsMarketPlaceInInvoiceHeaderDetail.sql" />
-  <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFacTeleMarket.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlaceTeleMarketing.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertProductsMarketPlaceInInvoiceHeaderDetail.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
     <Build Include="dbo\Stored Procedures\LoadProductCategory.sql" />
     <Build Include="dbo\Stored Procedures\GetProductsByCategory.sql" />
-    
- 
-	 
-    
     <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
     <Build Include="dbo\Stored Procedures\spHD_ValidateDeliveryAttempsUpdateAdress.sql" />
     <Build Include="dbo\Stored Procedures\QualityControlValidationsHeader.sql" />
@@ -1623,8 +1621,6 @@
     <!--Build Include="dbo\Stored Procedures\HSE_RolByUserBySystem.sql" /-->
     <!--Build Include="dbo\Stored Procedures\HSE_SenderReceiver.sql" /-->
     <!--Build Include="dbo\Stored Procedures\HSE_UserSystemRestriction.sql" /-->
-    
-    
     <Build Include="dbo\Tables\PointsGuidesLog.sql" />
     <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_select.sql" />
   </ItemGroup>

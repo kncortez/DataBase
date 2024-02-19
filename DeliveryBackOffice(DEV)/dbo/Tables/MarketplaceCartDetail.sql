@@ -1,13 +1,3 @@
-USE [DeliveryBackOffice]
-GO
-
-/****** Object:  Table [dbo].[MarketplaceCartDetail]    Script Date: 29/01/2024 11:29:04 ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TABLE [dbo].[MarketplaceCartDetail](
 	[IdMarketplaceCartDetail] [int] IDENTITY(1,1) NOT NULL,
 	[MarketplaceCartId] [int] NOT NULL,
