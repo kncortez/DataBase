@@ -7,18 +7,9 @@ CREATE TABLE [dbo].[MarketplaceCart](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
- CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED 
-(
-	[IdMarketplaceCart] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-
-ALTER TABLE [dbo].[MarketplaceCart]  WITH CHECK ADD  CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId])
-REFERENCES [dbo].[Account] ([AccIdAccount])
-GO
-
-ALTER TABLE [dbo].[MarketplaceCart] CHECK CONSTRAINT [FK_MarketplaceCart_Account]
+	CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
+	CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
+)
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCart', @level2type=N'COLUMN',@level2name=N'RowStatus'

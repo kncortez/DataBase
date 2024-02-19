@@ -8,26 +8,13 @@ CREATE TABLE [dbo].[MarketplaceCartDetail](
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
 	[TypeProduct] [nvarchar](300) NULL,
- CONSTRAINT [PK_MarketplaceCartDetail] PRIMARY KEY CLUSTERED 
-(
-	[IdMarketplaceCartDetail] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+ 	CONSTRAINT [PK_MarketplaceCartDetail] PRIMARY KEY CLUSTERED ([IdMarketplaceCartDetail] ASC)ON [PRIMARY],
+	CONSTRAINT [FK_MarketplaceCartDetail_CatSubscription] FOREIGN KEY([CatProductId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
+	CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart] FOREIGN KEY([MarketplaceCartId]) REFERENCES [dbo].[MarketplaceCart] ([IdMarketplaceCart])
+) 
 GO
 
-ALTER TABLE [dbo].[MarketplaceCartDetail]  WITH CHECK ADD  CONSTRAINT [FK_MarketplaceCartDetail_CatSubscription] FOREIGN KEY([CatProductId])
-REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
-GO
 
-ALTER TABLE [dbo].[MarketplaceCartDetail] CHECK CONSTRAINT [FK_MarketplaceCartDetail_CatSubscription]
-GO
-
-ALTER TABLE [dbo].[MarketplaceCartDetail]  WITH CHECK ADD  CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart] FOREIGN KEY([MarketplaceCartId])
-REFERENCES [dbo].[MarketplaceCart] ([IdMarketplaceCart])
-GO
-
-ALTER TABLE [dbo].[MarketplaceCartDetail] CHECK CONSTRAINT [FK_MarketplaceCartDetail_MarketplaceCart]
-GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCartDetail', @level2type=N'COLUMN',@level2name=N'IdMarketplaceCartDetail'
 GO
