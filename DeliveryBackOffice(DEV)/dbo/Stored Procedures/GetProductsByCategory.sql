@@ -11,36 +11,31 @@ CREATE PROCEDURE [dbo].[GetProductsByCategory] @IdCategory INT
 AS
 BEGIN
 
-	SELECT CSF.[IdCatProduct],
-		   CSF.[CatProductName],
-		   CSF.[CatProductCost],
-		   CSF.[CatProductDescription],
-		   CSF.[CatProductCategoryId]
-	FROM (
-	SELECT  CS.[Position],           
+	SELECT           
 	        CS.[IdCatSubscription] [IdCatProduct],
 			CS.[SubscriptionName]  [CatProductName],
 			CS.[SubscriptionCost]  [CatProductCost],
 			CS.[SubscriptionDescription] [CatProductDescription],
-			CS.[CatProductCategoryId] [CatProductCategoryId]
+			CS.[CatProductCategoryId] [CatProductCategoryId],
+			CS.Tag
 	FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 	WHERE CS.RowStatus = 1
 	 AND CS.CatProductCategoryId = @IdCategory
 	UNION ALL
-	SELECT   CS.[Position],
+	SELECT  
 			 CS.[IdCatMembership] [IdCatProduct],
 			 CS.[MembershipName]  [CatProductName],
 			 CS.[MembershipCost]  [CatProductCost],
 			 CS.[MembershipDescription] [CatProductDescription],
-			 CS.[CatProductCategoryId] [CatProductCategoryId]
+			 CS.[CatProductCategoryId] [CatProductCategoryId],
+			 CS.Tag
 	FROM [DeliveryBackOffice].[dbo].[CatMembership] CS WITH (NOLOCK)
 	WHERE CS.RowStatus = 1
 	  AND CS.CatProductCategoryId = @IdCategory
-	) AS CSF
-	ORDER BY CSF.[Position]
+
 
     SELECT CPI.[IdCatProductImage],
-              CPI.CatSubscriptionId   [CatProductId],
+           CPI.CatSubscriptionId   [CatProductId],
            CPI.[CatProductImageSmallImageURL],
            CPI.[CatProductImageLargeImageURL],
            CPI.[CatProductImageOrder]
@@ -48,7 +43,7 @@ BEGIN
     INNER JOIN DeliveryBackOffice.dbo.CatSubscription A2
 	ON CPI.CatSubscriptionId  = A2.IdCatSubscription 
 	WHERE CPI.RowStatus = 1
-	AND A2.CatProductCategoryId = @IdCategory
+	  AND A2.CatProductCategoryId = @IdCategory
 	UNION  ALL
 	SELECT CPI.[IdCatProductImage],
            CPI.CatMembershipId [CatProductId],
@@ -59,6 +54,6 @@ BEGIN
     INNER JOIN DeliveryBackOffice.dbo.CatMembership A2
 	ON A2.IdCatMembership = CPI.CatMembershipId AND A2.RowStatus = 1
 	WHERE CPI.RowStatus = 1
-	AND A2.CatProductCategoryId = @IdCategory
+	  AND A2.CatProductCategoryId = @IdCategory
 
 END;

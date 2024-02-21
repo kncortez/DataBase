@@ -14,6 +14,7 @@ CREATE PROCEDURE [dbo].[SPHW_GetLoadingElementsandSubelements]
 AS
 BEGIN
 	
+	/***************************** DETERMINAR SI HAY CONTENIDO O NO **********************************/
 	IF (EXISTS(   Select Top 1 1
 						 From [dbo].[CatSubscription] CP WITH (NOLOCK)
 						 Left JOIN  
@@ -40,6 +41,10 @@ BEGIN
 	SELECT 201 [StatusCode], 'Sin Registros' [Description]
 	END
 	
+
+	/********************************************************************************
+	 ************************** CATEGORIA DE PRODUCTOS ******************************
+	 ********************************************************************************/
 	SELECT [IdCatProductCategory],
 	       [CatProductCategoryName],
 		   [CatProductCategoryDescription],
@@ -77,8 +82,9 @@ BEGIN
 								WHERE CP.RowStatus=1
 								  )
 
-
-
+	/********************************************************************************
+	 *********************** ENCABEZADOS ********************************************
+	 ********************************************************************************/
 	SELECT 
 		  MPT.[MarketplaceProductTagsName],
 		  MPT.[MarketplaceProductTagsDescription],
@@ -86,8 +92,11 @@ BEGIN
     FROM  DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
 	WHERE MPT.Rowstatus=1
 
-
+	/********************************************************************************
+	 ************************ CONTENIDO *********************************************
+	*********************************************************************************/
 	SELECT 
+			CP.Position [CatPosition],
 	        CP.IdCatSubscription [IdCatProduct] ,
 	        CP.SubscriptionName [CatProductName],
 			CONVERT(DECIMAL(18,2),CP.[SubscriptionCost]) [CatProductCost],
@@ -102,6 +111,7 @@ BEGIN
 	  on MTP.CatSubscriptionId = CP.IdCatSubscription
 	UNION ALL
 	Select 
+			CP.Position [CatPosition],
 	        CP.IdCatMembership [IdCatProduct] ,
 	        CP.MembershipName [CatProductName],
 			CONVERT(DECIMAL(18,2),CP.[MembershipCost]) [CatProductCost],
@@ -117,15 +127,11 @@ BEGIN
 	      DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
 	  ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
 	WHERE CP.RowStatus=1
-	  ORDER BY CP.[SubscriptionCost] ASC
+	  ORDER BY CP.[Position] ASC
 
-
-
-
-	  
-	  
-
-
+	 /********************************************************************************
+	  **************************** IMAGENES ******************************************
+	 *********************************************************************************/
 	 SELECT 
 	        CPI.[IdCatProductImage], 
 	        ISNULL(CPI.CatSubscriptionId,CPI.CatMembershipId) [CatProductId], 
@@ -135,8 +141,10 @@ BEGIN
 	FROM DeliveryBackOffice.[dbo].[CatProductImage]  CPI WITH (NOLOCK)
 	WHERE CPI.RowStatus = 1
 
-
-		   Select 
+	/********************************************************************************
+	 ************************* DESCRIPCION ******************************************
+	*********************************************************************************/
+	Select 
 			CPD.[Description]  [CatProductDescription],
 			CPD.Title     [CatProductDescriptionTitle],
 			CPD.Position     [CatProductDescriptionOrder],
@@ -152,6 +160,9 @@ BEGIN
      From DeliveryBackOffice.[dbo].[CatMembershipDescription] CPD WITH (NOLOCK)
 	 Where CPD.RowStatus=1
 
+	 /********************************************************************************
+	  ************************ ATRIBUTOS *********************************************
+	 *********************************************************************************/
 	 Select 
 	   CPA.SubscriptionAttributeDescription   [CatProductAttributeDescription],
 	   CPA.SubscriptionAttributeDescriptionLong  [CatProductAttributeDescriptionLong],
@@ -174,5 +185,4 @@ BEGIN
 	  ON CPA.CatMembershipId =CS.IdCatMembership AND CS.RowStatus=1
 	  Where CPA.RowStatus=1
   
- 
 END
