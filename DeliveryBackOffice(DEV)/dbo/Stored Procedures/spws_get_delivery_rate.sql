@@ -2006,7 +2006,7 @@ BEGIN
                 );
             END;
 
-            SET @NameTypeSubscrition =
+            SET @NameCategoryProduct =
             (
                 SELECT TOP 1
                        CatProductCategoryName
