@@ -1,21 +1,42 @@
 --Posición Paquete Petit
-UPDATE  [dbo].[MarketplaceTagsByProduct]
+UPDATE MTP  
 SET Position = 2
-WHERE  CatSubscriptionId = 18
+FROM [dbo].[MarketplaceTagsByProduct]   MTP
+INNER JOIN 
+[dbo].[CatSubscription] CS
+ON MTP.CatSubscriptionId = CS.IdCatSubscription
+WHERE  CS.SubscriptionName ='Paquete Petit'
+
 --Posición Paquete Básico
-UPDATE  [dbo].[MarketplaceTagsByProduct]
+UPDATE MTP 
 SET Position = 3
-WHERE  CatSubscriptionId = 9
+FROM [dbo].[MarketplaceTagsByProduct]   MTP
+INNER JOIN 
+[dbo].[CatSubscription] CS
+ON MTP.CatSubscriptionId = CS.IdCatSubscription
+WHERE  CS.SubscriptionName ='Paquete Básico'
 --Posición Paquete Gold
-UPDATE  [dbo].[MarketplaceTagsByProduct]
+UPDATE MTP  
 SET Position = 4
-WHERE  CatSubscriptionId = 11
+FROM [dbo].[MarketplaceTagsByProduct]   MTP
+INNER JOIN 
+[dbo].[CatSubscription] CS
+ON MTP.CatSubscriptionId = CS.IdCatSubscription
+WHERE  CS.SubscriptionName ='Paquete Gold'
 --Posición Paquete Platino
-UPDATE  [dbo].[MarketplaceTagsByProduct]
+UPDATE MTP  
 SET Position = 5
-WHERE  CatSubscriptionId = 19
+FROM [dbo].[MarketplaceTagsByProduct]   MTP
+INNER JOIN 
+[dbo].[CatSubscription] CS
+ON MTP.CatSubscriptionId = CS.IdCatSubscription
+WHERE  CS.SubscriptionName ='Paquete Platino'
 
 -- Posición Paquete Plus 
-UPDATE  [dbo].[MarketplaceTagsByProduct]
+UPDATE MTP  
 SET Position = 6
-WHERE  CatSubscriptionId = 10
+FROM [dbo].[MarketplaceTagsByProduct]   MTP
+INNER JOIN 
+[dbo].[CatSubscription] CS
+ON MTP.CatSubscriptionId = CS.IdCatSubscription
+WHERE  CS.SubscriptionName ='Paquete Plus'
