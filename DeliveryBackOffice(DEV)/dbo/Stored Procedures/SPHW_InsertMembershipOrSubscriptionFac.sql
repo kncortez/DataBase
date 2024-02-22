@@ -334,8 +334,8 @@ BEGIN
 
 
         SET @dti_fk_header = SCOPE_IDENTITY();
-
-        INSERT INTO [dbo].[invoiceDetail]
+        
+      INSERT INTO [dbo].[invoiceDetail]
         (
             dti_fk_header
           , dti_identification
@@ -353,44 +353,56 @@ BEGIN
           , MembershipId
           , SubscriptionId
         )
-       
-	      SELECT 
+			SELECT 
 		   @dti_fk_header,
 		   @dti_identification,
 		   @dti_category,
 		   @dti_quantity,
 		   @dti_measurement,
-		   CASE 
-		        WHEN RTPS.TypeSalePackage != 'MEMBERSHIP' THEN  CS.SubscriptionCost
-				ELSE  CM.MembershipCost
-				END
-		   ,  CASE 
-		        WHEN RTPS.TypeSalePackage != 'MEMBERSHIP' THEN  CS.SubscriptionDescription
-				ELSE  CM.MembershipDescription
-				END
-		   ,ISNULL(CS.SubscriptionCost,CM.MembershipCost) - (ISNULL(CS.SubscriptionCost,CM.MembershipCost) / 1.12),
-		    CASE 
-		        WHEN RTPS.TypeSalePackage != 'MEMBERSHIP' THEN  CS.SubscriptionCost
-				ELSE  CM.MembershipCost
-				END,
-		   @dti_dateRegister,
-		   @dti_tokenRegister,
-		   @SAPCode, 
-		   @SendToInvoice
-           ,CASE 
-		          WHEN RTPS.TypeSalePackage = 'MEMBERSHIP'   THEN @MembershipId 
-				  ELSE NULL END
-		   ,CASE 
-		          WHEN RTPS.TypeSalePackage ='MEMBERSHIP'   THEN NULL 
-				  ELSE CS.IdCatSubscription END
-	      FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
-		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
-			      ON CS.IdCatSubscription = RTPS.IdSalePackage
-				  AND RTPS.TypeSalePackage !='MEMBERSHIP' 
-				  LEFT JOIN [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
-				  ON  CM.IdCatMembership =  RTPS.IdSalePackage
-				    AND RTPS.TypeSalePackage ='MEMBERSHIP' 
-			WHERE RTPS.OrderNumber = @OrderNumber
+		   CS.SubscriptionCost	
+		   ,CS.SubscriptionDescription	
+		   ,CS.SubscriptionCost -((CS.SubscriptionCost) / 1.12)
+		   ,CS.SubscriptionCost
+		   ,@dti_dateRegister
+		   ,@dti_tokenRegister
+		   ,@SAPCode
+		   ,@SendToInvoice
+		   ,NULL IdMembership
+           ,S.IdSubscription	
+		FROM [dbo].[Subscription] S WITH (NOLOCK)
+                    INNER JOIN dbo.CatSubscription  CS
+                        ON S.CatSubscriptionId = CS.IdCatSubscription
+					INNER JOIN 
+					[dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
+					ON  S.IdSubscription = SPL.SubscriptionId
+					  WHERE 
+                       SPL.[Authorization] = @OrderNumber
+        UNION ALL
+			SELECT 
+		   @dti_fk_header,
+		   @dti_identification,
+		   @dti_category,
+		   @dti_quantity,
+		   @dti_measurement,
+		   CS.MembershipCost	
+		   ,CS.MembershipDescription	
+		   ,CS.MembershipCost -((CS.MembershipCost) / 1.12)
+		   ,CS.MembershipCost
+		   ,@dti_dateRegister
+		   ,@dti_tokenRegister
+		   ,@SAPCode
+		   ,@SendToInvoice
+		   ,S.IdMembership
+           ,NULL IdSubscription	 
+		 FROM [dbo].[Membership] S WITH (NOLOCK)
+                    INNER JOIN dbo.CatMembership  CS
+                        ON S.CatMembershipId = CS.IdCatMembership
+					INNER JOIN 
+					[dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
+					ON  S.IdMembership = SPL.MembershipId
+				
+                WHERE 
+                       SPL.[Authorization] = @OrderNumber
 
         INSERT INTO [dbo].[InOutOfMoneyDetail]
         (
