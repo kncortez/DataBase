@@ -738,7 +738,30 @@ BEGIN
                                AND WCT.GuideNumber = WTQ.GuideNumber
                                AND WCT.GuideStatusId = WTQ.StatusOrderId
                     WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-                          AND WTQ.IdWebhookTrackingQueue IS NULL;
+                          AND WTQ.IdWebhookTrackingQueue IS NULL
+						  AND WCT.CustomerId <> 25607;
+
+					
+				INSERT INTO WebhookTrackingQueueDetailForSFTP 
+							(CustomerId,
+							GuideSerie,
+							GuideNumber,
+							GuidePiece,
+							ExternalNumber,
+							ExternalPieceId,
+							StatusOrderId,
+							RowStatus,
+							DateCreated,
+							TokenCreated)
+						SELECT wct.CustomerId,
+						dop.GuideSerie,dop.GuideNumber, dop.NoPiece, do.Order_Number,dop.ExternalPieceId, 
+						wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
+						FROM DeliveryOrderPiece dop WITH(NOLOCK)
+						INNER JOIN @WebhookCustomerTable wct
+							ON dop.GuideNumber = wct.GuideNumber
+						INNER JOIN DeliveryOrder do WITH(NOLOCK)
+							ON dop.GuideNumber = do.Guide_Number
+							WHERE do.IdCustomer = 25607
 
                 END TRY
                 BEGIN CATCH
