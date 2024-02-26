@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Eduardo, L�pez>
 -- Create date: <2023-08-21>
 -- Description:	< Obtener imagenes y datos para Carousel superior de marketplace>
