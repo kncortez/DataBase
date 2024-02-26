@@ -11,23 +11,30 @@ AS
 BEGIN
 
 
-	  SELECT CS.[IdCatSubscription] [IdCatProduct],
-			 CS.[SubscriptionName]  [CatProductName],
-			 CS.[SubscriptionCost]  [CatProductCost],
-			 CS.[SubscriptionDescription] [CatProductDescription],
-			 CS.[CatProductCategoryId] [CatProductCategoryId]
-  FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
-   WHERE CS.RowStatus = 1
-	AND CS.CatProductCategoryId = @IdCategory
-	  UNION ALL
-	  SELECT CS.[IdCatMembership] [IdCatProduct],
+		  SELECT           
+	        CS.[IdCatSubscription] [IdCatProduct],
+			CS.[SubscriptionName]  [CatProductName],
+			CS.[SubscriptionCost]  [CatProductCost],
+			CS.[SubscriptionDescription] [CatProductDescription],
+			CS.[CatProductCategoryId] [CatProductCategoryId],
+			CS.Tag,
+			CS.Position
+	FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
+	WHERE CS.RowStatus = 1
+	 AND CS.CatProductCategoryId = @IdCategory
+	UNION ALL
+	SELECT  
+			 CS.[IdCatMembership] [IdCatProduct],
 			 CS.[MembershipName]  [CatProductName],
 			 CS.[MembershipCost]  [CatProductCost],
 			 CS.[MembershipDescription] [CatProductDescription],
-			 CS.[CatProductCategoryId] [CatProductCategoryId]
-  FROM [DeliveryBackOffice].[dbo].[CatMembership] CS WITH (NOLOCK)
-  WHERE CS.RowStatus = 1
-	AND CS.CatProductCategoryId = @IdCategory
+			 CS.[CatProductCategoryId] [CatProductCategoryId],
+			 CS.Tag,
+			 CS.Position
+	FROM [DeliveryBackOffice].[dbo].[CatMembership] CS WITH (NOLOCK)
+	WHERE CS.RowStatus = 1
+	  AND CS.CatProductCategoryId = @IdCategory
+	  Order By CS.Position ASC
 
     SELECT CPI.[IdCatProductImage],
               CPI.CatSubscriptionId   [CatProductId],
