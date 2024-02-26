@@ -361,7 +361,7 @@ PRINT 'TEST';
                                                                  COALESCE(TMP.SUBMODULES, '')
                                                               ELSE
                                                                   ''
-                                                          END
+                                                          END  AS SUBMODULES
                                                          
                                                 FROM RegisterUser                         us
                                                     INNER JOIN [dbo].[RolByUserByAccount] rua

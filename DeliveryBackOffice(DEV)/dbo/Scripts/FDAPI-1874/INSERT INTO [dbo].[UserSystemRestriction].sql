@@ -1,0 +1,2 @@
+INSERT INTO dbo.UserSystemRestriction (UstIdUser,UstIdSystem,UstAccessRetries,UstRetries,UstStatus,UstRowStatus,UstTokenCreated,UstDateCreated,UstOperationDate)
+VALUES(12558,13,10,0,'ACTIVE',1,'ELOPEZ',GETDATE(),GETDATE())

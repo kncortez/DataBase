@@ -924,9 +924,9 @@ BEGIN
 							SET @CustomerId = (	SELECT TOP 1 CustomerID
 										FROM @AcceptedGuides);
 
-							SET @AccountId = (	SELECT [A].[AccIdAccount]
+							SET @AccountId = (	 SELECT TOP 1 [A].[AccIdAccount]
 												FROM	[dbo].[Account] A
-												WHERE	[A].[IdCustomer] = @CustomerId );
+												WHERE	[A].[IdCustomer] = @CustomerId AND a.AccRowStatus = 1 );
 
 							SELECT	@MembershipId = [M].[IdMembership],
 									@MaxServiceMembership = [M].[MembershipMaxServiceFixedValue]

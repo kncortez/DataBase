@@ -1,0 +1,1 @@
+INSERT INTO ConfigParams (Name,Description,Value,Status, CreateDate) VALUES ('MinCODCommissionAmount', 'Monto de comision de COD minimo a descontar',3.8,1, GETDATE())

@@ -18,10 +18,16 @@
     [IncidentfinalizedbySAC]           BIT            NULL,
     [IsDenied]                         BIT            CONSTRAINT [DF_ConfirmationOfIncidence_IsDenied] DEFAULT ((0)) NULL,
     [LastStatusOrderId]                TINYINT        NULL,
+    [LiquidatorRemarks]                NVARCHAR (600) NULL,
+    [IsAddressModificationRequested]   BIT            NULL,
+    [ValidGeolocationEvidence]         BIT            NULL,
+    [ValidPhotographicEvidence]        BIT            NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 
@@ -109,4 +115,21 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Confirmaci�
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observaci처n adicionada a la acci처n realizada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'ActionObservation';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observaci처n de liquidaci처n', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'LiquidatorRemarks';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Solicita cambio de direcci처n' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'IsAddressModificationRequested'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Validar incidencia de geolocalizaci처n' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidGeolocationEvidence'
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'valida evidencia fotografica' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidPhotographicEvidence'
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_isdenied]
+    ON [dbo].[ConfirmationOfIncidence]([IsDenied] ASC);
 

@@ -1,0 +1,2 @@
+INSERT [dbo].[CatModule] ([ModIdModule], [ModName], [ModIdModuleParent], [ModPath], [ModDescription], [ModOrder], [ModMetadata], [ModVisible], [ModRowStatus], [ModTokenCreated], [ModDateCreated], [ModTokenUpdated], [ModDateUpdated], [ModGroup]) VALUES (143, N'Control de calidad', NULL, N'/control-calidad/Historial-de-validaciones', N'Modulo control de calidad', 1, N'fa fa-server fa-1x', 1, 1, N'evasquez', CAST(N'2023-09-28T15:44:09.780' AS DateTime), NULL, NULL, 1)
+

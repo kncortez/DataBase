@@ -10,9 +10,12 @@ BEGIN
 --  Información General ---
 select 'Información General'   as Descripcion
      , ord.DateCreated         'Fecha Creación'
+	 ,cs.IdCustomer 'IdCliente'
      , cs.Name                 'Cliente'
+	 , ord.Sender_Mail 'Correo remitente'
      , cty.Description         'Tipo de Cliente'
      , cpy.ConditionOfPayment  'Codiciones de pago'
+	 , vpc.CodeOfReference 'Codigo de punto de visita'
      , vpc.DescriptionOfClient 'Punto de visita'
      , ord.Guide_Serie         'Serie'
      , ord.Guide_Number        'Guía'
@@ -27,6 +30,7 @@ select 'Información General'   as Descripcion
 	 , ord.IsInsuarance 'Esta Aasegurada?'
 	 , ord.Pieces_Dry
 	 ,ord.Pieces_Cold
+	 , imp.DescriptionOfClient 'Impersonado'
 from dbo.DeliveryOrder                  ord with (nolock)
     left join dbo.Customer              cs with (nolock)
         on cs.IdCustomer = ord.IdCustomer
@@ -40,6 +44,8 @@ from dbo.DeliveryOrder                  ord with (nolock)
         on sy.SysIdSystem = ord.CatSystemId
     inner join dbo.StatusOrder          st with (nolock)
         on st.StatusOrderId = ord.StatusOrderId
+	LEFT JOIN dbo.VisitPointClient imp WITH(NOLOCK)
+	ON imp.CodeOfReference = ord.OriginSenderId
 where ord.Guide_Serie = @GuideSerie
       and ord.Guide_Number = @GuideNumber;
 
@@ -105,6 +111,19 @@ where sdt.Guide_Serie = @GuideSerie
       and sdt.Guide_Number = @GuideNumber
       and sdt.RowStatus = 1;
 
+SELECT 'Cuenta Bancaria'
+, dcb.DCBA_Id
+     , dcb.DCBA_Num_account
+     , dcb.DCBA_Nom_account
+     , dcb.DCBA_BankAccountType
+     , bk.Name
+FROM dbo.DeliveryOrder                         ord
+    INNER JOIN dbo.DeliveryCustomerBankAccount dcb
+        ON dcb.DCBA_Id = ord.DCBA_ID
+    INNER JOIN dbo.DeliveryBank                bk
+        ON bk.Id_bank = dcb.DCBA_Bank_Id
+WHERE ord.Guide_Serie = @GuideSerie
+      AND ord.Guide_Number = @GuideNumber;
 
 select 'Información de COD'    as Descripcion
      , pr.GuideSerie           'Serie'
@@ -114,6 +133,7 @@ select 'Información de COD'    as Descripcion
      , btd.AuthorizationNumber 'Autorizacion'
      , bcd.BatchNumber         'Lote'
      , bcd.BatchTimeRange      'Horario'
+	 
 from dbo.ProcessedGuideCOD        pr
     inner join dbo.BatchDetailCOD btd with (nolock)
         on btd.GuideSerie = pr.GuideSerie

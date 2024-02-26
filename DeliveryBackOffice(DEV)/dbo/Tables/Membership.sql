@@ -1,186 +1,181 @@
-﻿CREATE TABLE [dbo].[Membership](
-	[IdMembership] [int] IDENTITY(1,1) NOT NULL,
-	[CatMembershipId] [int] NOT NULL,
-	[CatMembershipStatusId] [int] NOT NULL,
-	[MembershipCode] [nvarchar](50) NULL,
-	[MembershipCost] [decimal](18, 2) NOT NULL,
-	[CustomerId] [int] NULL,
-	[AccountId] [bigint] NULL,
-	[VisitPointClientId] [int] NULL,
-	[CustomerPaymentId] [int] NULL,
-	[IsAutoRenewable] [bit] NULL,
-	[MembershipFixedValue] [int] NOT NULL,
-	[MembershipMaxServiceFixedValue] [int] NOT NULL,
-	[ActualServiceCount] [int] NOT NULL,
-	[ExpirationDate] [datetime] NOT NULL,
-	[RowStatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdated] [nvarchar](50) NULL,
-	[DateUpdated] [datetime] NULL,
-	[LastPaymentDate] [datetime] NULL,
-	[InvoiceName] [nvarchar](100) NULL,
-	[TaxIdNumber] [nvarchar](50) NULL,
-	[InvoiceEmail] [nvarchar](50) NULL,
-	[FiscalAddress] [nvarchar](200) NULL,
-	[RenewalFixedDay] [int] NULL,
-	[CatTMSalesPersonId] [int] NULL,
-	[AccumulatedPoints] [int] NULL,
-	[AvailablePoints] [int] NULL,
-	[PointsExpirationDate] [datetime] NULL,
-	[CatValueTypeId] [int] NULL,
+﻿CREATE TABLE [dbo].[Membership] (
+    [IdMembership]                   INT             IDENTITY (1, 1) NOT NULL,
+    [CatMembershipId]                INT             NOT NULL,
+    [CatMembershipStatusId]          INT             NOT NULL,
+    [MembershipCode]                 NVARCHAR (50)   NULL,
+    [MembershipCost]                 DECIMAL (18, 2) NOT NULL,
+    [CustomerId]                     INT             NULL,
+    [AccountId]                      BIGINT          NULL,
+    [VisitPointClientId]             INT             NULL,
+    [CustomerPaymentId]              INT             NULL,
+    [IsAutoRenewable]                BIT             CONSTRAINT [DF_Membership_IsAutoRenewable] DEFAULT ((0)) NULL,
+    [MembershipFixedValue]           INT             NOT NULL,
+    [MembershipMaxServiceFixedValue] INT             NOT NULL,
+    [ActualServiceCount]             INT             CONSTRAINT [DF_Membership_ActualServiceCount] DEFAULT ((0)) NOT NULL,
+    [ExpirationDate]                 DATETIME        NOT NULL,
+    [RowStatus]                      BIT             CONSTRAINT [DF_Membership_RowStatus] DEFAULT ((1)) NOT NULL,
+    [TokenCreated]                   NVARCHAR (50)   NOT NULL,
+    [DateCreated]                    DATETIME        NOT NULL,
+    [TokenUpdated]                   NVARCHAR (50)   NULL,
+    [DateUpdated]                    DATETIME        NULL,
+    [LastPaymentDate]                DATETIME        NULL,
+    [InvoiceName]                    NVARCHAR (100)  NULL,
+    [TaxIdNumber]                    NVARCHAR (50)   NULL,
+    [InvoiceEmail]                   NVARCHAR (50)   NULL,
+    [FiscalAddress]                  NVARCHAR (200)  NULL,
+    [RenewalFixedDay]                INT             NULL,
+    [CatTMSalesPersonId]             INT             NULL,
+    [AccumulatedPoints]              INT             NULL,
+    [AvailablePoints]                INT             NULL,
+    [PointsExpirationDate]           DATETIME        NULL,
+    [CatValueTypeId]                 INT             NULL,
 	[ProductGiftShippingEmail] [nvarchar](100) NULL,
 	[ActivationCode] [nvarchar](50) NULL,
 	[ActivationDate] [datetime] NULL,
- CONSTRAINT [PK_Membership] PRIMARY KEY CLUSTERED 
-(
-	[IdMembership] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+    CONSTRAINT [PK_Membership] PRIMARY KEY CLUSTERED ([IdMembership] ASC),
+    CONSTRAINT [FK_Membership_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
+    CONSTRAINT [FK_Membership_CatMembership] FOREIGN KEY ([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
+    CONSTRAINT [FK_Membership_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
+    CONSTRAINT [FK_Membership_CustomerPayment] FOREIGN KEY ([CustomerPaymentId]) REFERENCES [dbo].[CustomerPaymentValue] ([IdCustomerPaymentValue]),
+    CONSTRAINT [FK_Membership_MembershipStatus] FOREIGN KEY ([CatMembershipStatusId]) REFERENCES [dbo].[CatSalesPackageStatus] ([IdCatSalesPackageStatus]),
+    CONSTRAINT [FK_Membership_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
+);
 
-ALTER TABLE [dbo].[Membership] ADD  CONSTRAINT [DF_Membership_IsAutoRenewable]  DEFAULT ((0)) FOR [IsAutoRenewable]
-GO
 
-ALTER TABLE [dbo].[Membership] ADD  CONSTRAINT [DF_Membership_ActualServiceCount]  DEFAULT ((0)) FOR [ActualServiceCount]
-GO
 
-ALTER TABLE [dbo].[Membership] ADD  CONSTRAINT [DF_Membership_RowStatus]  DEFAULT ((1)) FOR [RowStatus]
-GO
 
-ALTER TABLE [dbo].[Membership]  WITH CHECK ADD  CONSTRAINT [FK_Membership_Account] FOREIGN KEY([AccountId])
-REFERENCES [dbo].[Account] ([AccIdAccount])
-GO
 
-ALTER TABLE [dbo].[Membership] CHECK CONSTRAINT [FK_Membership_Account]
-GO
 
-ALTER TABLE [dbo].[Membership]  WITH CHECK ADD  CONSTRAINT [FK_Membership_CatMembership] FOREIGN KEY([CatMembershipId])
-REFERENCES [dbo].[CatMembership] ([IdCatMembership])
-GO
 
-ALTER TABLE [dbo].[Membership] CHECK CONSTRAINT [FK_Membership_CatMembership]
-GO
 
-ALTER TABLE [dbo].[Membership]  WITH CHECK ADD  CONSTRAINT [FK_Membership_Customer] FOREIGN KEY([CustomerId])
-REFERENCES [dbo].[Customer] ([IdCustomer])
-GO
 
-ALTER TABLE [dbo].[Membership] CHECK CONSTRAINT [FK_Membership_Customer]
-GO
 
-ALTER TABLE [dbo].[Membership]  WITH CHECK ADD  CONSTRAINT [FK_Membership_CustomerPayment] FOREIGN KEY([CustomerPaymentId])
-REFERENCES [dbo].[CustomerPaymentValue] ([IdCustomerPaymentValue])
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatMembership.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatMembershipId';
 
-ALTER TABLE [dbo].[Membership] CHECK CONSTRAINT [FK_Membership_CustomerPayment]
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla Membership.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'IdMembership';
 
-ALTER TABLE [dbo].[Membership]  WITH CHECK ADD  CONSTRAINT [FK_Membership_MembershipStatus] FOREIGN KEY([CatMembershipStatusId])
-REFERENCES [dbo].[CatSalesPackageStatus] ([IdCatSalesPackageStatus])
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Día el cual se desea poder renovar la membresía.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'RenewalFixedDay';
 
-ALTER TABLE [dbo].[Membership] CHECK CONSTRAINT [FK_Membership_MembershipStatus]
+
+
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del vendedor de telemercadeo asociado a la membresía vendida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatTMSalesPersonId';
 
-ALTER TABLE [dbo].[Membership]  WITH CHECK ADD  CONSTRAINT [FK_Membership_VisitPointClient] FOREIGN KEY([VisitPointClientId])
-REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de expiración de puntos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'PointsExpirationDate';
 
-ALTER TABLE [dbo].[Membership] CHECK CONSTRAINT [FK_Membership_VisitPointClient]
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Puntos disponibles para usar', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'AvailablePoints';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla Membership.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'IdMembership'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Puntos acumulados durante un periodo de vigencia de membresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'AccumulatedPoints';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla CatMembership.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'CatMembershipId'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Listado de membresías generadas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla CatSalesPackageStatus' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'CatMembershipStatusId'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del punto de visita asociado a la membresía (no activo)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'VisitPointClientId';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código de activación de Express Center para uso en clientes individuales (no vigente)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'MembershipCode'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario que actualiza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Costo de la membresía adquirida' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'MembershipCost'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'TokenCreated';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del dueño de la mebresía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'CustomerId'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nit con la que se compra la membresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'TaxIdNumber';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de la cuenta de la membresía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'AccountId'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del punto de visita asociado a la membresía (no activo)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'VisitPointClientId'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad máxima de servicios de la membresía adquirida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'MembershipMaxServiceFixedValue';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de la forma de pago asociada, con que tarjeta se pagó, tabla CustomerPaymentValue' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'CustomerPaymentId'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Monto del servicio al tener membresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'MembershipFixedValue';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Si el cliente desea autorenovar su membresía anual' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'IsAutoRenewable'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Costo de la membresía adquirida', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'MembershipCost';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Monto del servicio al tener membresía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'MembershipFixedValue'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código de activación de Express Center para uso en clientes individuales (no vigente)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'MembershipCode';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cantidad máxima de servicios de la membresía adquirida' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'MembershipMaxServiceFixedValue'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de pago', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'LastPaymentDate';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cantidad de servicio generados bajo membresías, luego de vencer se siguen acumulando con descuento' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ActualServiceCount'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si el cliente desea autorenovar su membresía anual', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'IsAutoRenewable';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de expiración de membresía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ExpirationDate'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Correo de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'InvoiceEmail';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'RowStatus'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Dirección para facturar', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'FiscalAddress';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario de creación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'TokenCreated'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de expiración de membresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'ExpirationDate';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'DateCreated'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha que actualiza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario que actualiza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha que actualiza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'DateUpdated'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la forma de pago asociada, con que tarjeta se pagó, tabla CustomerPaymentValue', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CustomerPaymentId';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Última fecha de pago' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'LastPaymentDate'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del dueño de la mebresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CustomerId';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nit con la que se compra la membresía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'TaxIdNumber'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de la tabla CatSalesPackageStatus', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatMembershipStatusId';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo de facturación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'InvoiceEmail'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de servicio generados bajo membresías, luego de vencer se siguen acumulando con descuento', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'ActualServiceCount';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Dirección para facturar' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'FiscalAddress'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la cuenta de la membresía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'AccountId';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Día el cual se desea poder renovar la membresía.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'RenewalFixedDay'
+
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ID de tabla CatValueType', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Membership', @level2type = N'COLUMN', @level2name = N'CatValueTypeId';
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del vendedor de telemercadeo asociado a la membresía vendida' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'CatTMSalesPersonId'
 GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'correo al cual se envía el regalo del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Puntos acumulados durante un periodo de vigencia de membresía' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'AccumulatedPoints'
 GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ActivationCode'
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Puntos disponibles para usar' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'AvailablePoints'
+
 GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de expiración de puntos' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'PointsExpirationDate'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de tabla CatValueType' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'CatValueTypeId'
-GO
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ActivationDate'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Listado de membresías generadas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership'
-GO
-
-

@@ -1,13 +1,3 @@
-﻿USE [DeliveryBackOffice]
-GO
-
-/****** Object:  Table [dbo].[RegistrationofTransactionProcessStates]    Script Date: 13/02/2024 12:54:06 ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[IdRegistrationofTransactionProcessStates] [int] IDENTITY(1,1) NOT NULL,
 	[AccountId] [int] NULL,
@@ -44,6 +34,8 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'CustomerId'
 GO
+
+
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'el numero de orden esta compuesto por las iniciales MP que indican membership payment seguid de ceros y el nùmero de la susripciòn o memrbesìa adquirida' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'OrderNumber'
 GO

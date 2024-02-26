@@ -13,3 +13,10 @@
     CONSTRAINT [PK_SubscriptionDiscountRange] PRIMARY KEY CLUSTERED ([IdSubscriptionDiscountRange] ASC)
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_SubscriptionId]
+    ON [dbo].[SubscriptionDiscountRange]([SubscriptionId] ASC);
+
