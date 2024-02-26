@@ -360,7 +360,7 @@ BEGIN
 		   @dti_quantity,
 		   @dti_measurement,
 		   CS.SubscriptionCost	
-		   ,CS.SubscriptionName	
+		   ,CS.SubscriptionName +' '+ CS.SubscriptionDescription
 		   ,CS.SubscriptionCost -((CS.SubscriptionCost) / 1.12)
 		   ,CS.SubscriptionCost
 		   ,@dti_dateRegister
