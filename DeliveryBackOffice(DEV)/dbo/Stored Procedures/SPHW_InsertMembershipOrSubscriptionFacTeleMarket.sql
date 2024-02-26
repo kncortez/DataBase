@@ -951,7 +951,7 @@ BEGIN
 		   @dti_quantity,
 		   @dti_measurement,
 		   CS.SubscriptionCost	
-		   ,CS.SubscriptionDescription	
+		   ,CS.SubscriptionName +' '+ CS.SubscriptionDescription	
 		   ,CS.SubscriptionCost -((CS.SubscriptionCost) / 1.12)
 		   ,CS.SubscriptionCost
 		   ,@dti_dateRegister
@@ -976,7 +976,7 @@ BEGIN
 		   @dti_quantity,
 		   @dti_measurement,
 		   CS.MembershipCost	
-		   ,CS.MembershipDescription	
+		   ,CS.MembershipName
 		   ,CS.MembershipCost -((CS.MembershipCost) / 1.12)
 		   ,CS.MembershipCost
 		   ,@dti_dateRegister

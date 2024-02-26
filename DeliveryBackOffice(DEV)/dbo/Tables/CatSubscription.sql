@@ -19,6 +19,8 @@
     [IncludedMembershipId]             INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
     [CatProductCategoryId]             INT             NULL,
+    [Tag] [nvarchar](100) NULL,
+	[Position] [int] NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
     CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_CatSubscription_CatMembership] FOREIGN KEY ([IncludedMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
@@ -67,6 +69,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'etiqueta de identificación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'Tag'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'campo para el ordenamiento por  Posición ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'Position'
+GO
+
 
 GO
 EXEC sys.sp_addextendedproperty @name = N'MS_Description',
