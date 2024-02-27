@@ -1,7 +1,7 @@
 
 --Script para actualizar menu, validar Id del menu en QA 
 UPDATE  [DeliveryBackOffice].[dbo].[CatModule]
-SET ModName ='Centro de Canje',
+SET ModName ='Centro de Beneficios',
     ModPath = '/affiliate/redeem-center',
 	ModDescription='Centro de Canje',
 	ModMetadata='fa fa-store fa-1x',
