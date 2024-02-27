@@ -484,7 +484,7 @@ BEGIN
 										 , @ProductId = @ProductId
 
 
-    IF (@UseMembership = 1)
+     IF (@UseMembership = 1 AND @CategoryProductId >0 AND @ProductId >0 )
     BEGIN
         /* Membresias y Suscripciones */
         -- Oscar Morales 2022-07-21
