@@ -3,7 +3,12 @@
 -- Create date: <Create Date,07/12/2023>
 -- Description:	<Activaci�n de productos de marketplace>
 -- =============================================
-CREATE PROCEDURE ActiveProductMarketplace
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <Update Date,14/02/2024>
+-- Description:	<Recalcular fecha de vigencia al Activar productos de marketplace>
+-- =============================================
+ALTER PROCEDURE [dbo].[ActiveProductMarketplace]
 @Email NVARCHAR (100),
 @Code NVARCHAR(25),
 @Token NVARCHAR(50)= ''
@@ -37,13 +42,18 @@ BEGIN
 	--Si es una suscripción y no se ha usado
 	IF(LEN(@ActivationCode) > 0 and @RowStatus = 0)	
 		BEGIN
-		 UPDATE Subscription
-			SET RowStatus = 1
-			,AccountId = @IdAccount
-			,CustomerId = @IdCustomer
-			,TokenUpdated = @Token
-			,DateUpdated = GETDATE()	
-			,ActivationDAte = GETDATE()
+		 UPDATE S
+			SET S.RowStatus = 1
+			,S.AccountId = @IdAccount
+			,S.CustomerId = @IdCustomer
+			,S.TokenUpdated = @Token
+			,S.DateUpdated = GETDATE()	
+			,S.ActivationDAte = GETDATE()
+			,S.ExpirationDate = DATEADD(MONTH, cp.SubscriptionValidity, GETDATE())
+		FROM [Subscription] S
+			INNER JOIN 
+			[CatSubscription] cp
+			ON S.CatSubscriptionId = cp.IdCatSubscription
 			WHERE ActivationCode = @Code
 			
 		  SELECT cp.SubscriptionName AS CatProductName,
@@ -55,7 +65,7 @@ BEGIN
 		  ON cp.IdCatSubscription = pt.CatSubscriptionId and pt.RowStatus = 1
 		  WHERE pt.ActivationCode = @Code		 
 
-		SELECT DISTINCT SubscriptionAttributeDescription AS CatProductAttributeDescription FROM CatSubscriptionAtribute cpa WITH(NOLOCK)
+		SELECT  SubscriptionAttributeDescription AS CatProductAttributeDescription FROM CatSubscriptionAtribute cpa WITH(NOLOCK)
 			INNER JOIN CatSubscription ctp WITH(NOLOCK)
 			ON cpa.CatSubscriptionId = ctp.IdCatSubscription
 			INNER JOIN Subscription pdt WITH(NOLOCK)
@@ -85,14 +95,19 @@ print LEN(@ActivationCode)
 	  IF(LEN(@ActivationCode) > 0 and @RowStatus = 0)	
 	   BEGIN
 
-		    UPDATE Membership
-		   	SET RowStatus = 1
-			,AccountId = @IdAccount
-			,CustomerId = @IdCustomer
-			,TokenUpdated = @Token
-			,DateUpdated = GETDATE()	
-			,ActivationDAte = GETDATE()
-		   	WHERE ActivationCode = @Code
+		    UPDATE M
+		   	SET M.RowStatus = 1
+			,M.AccountId = @IdAccount
+			,M.CustomerId = @IdCustomer
+			,M.TokenUpdated = @Token
+			,M.DateUpdated = GETDATE()	
+			,M.ActivationDAte = GETDATE()
+			,ExpirationDate = DATEADD(MONTH, CM.MembershipValidity, GETDATE())
+			FROM Membership M
+			INNER JOIN
+			CatMembership CM
+			ON M.CatMembershipId = CM.IdCatMembership
+		   	WHERE M.ActivationCode = @Code
 		   
 		     SELECT cp.MembershipName AS CatProductName,
 		   IIF(cp.MembershipName = 'Gift Card',('Felicidades..! has activado la '+' '+cp.MembershipName), 
@@ -131,4 +146,4 @@ print LEN(@ActivationCode)
 
 	END
 
-E
+END

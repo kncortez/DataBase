@@ -37,7 +37,7 @@ BEGIN
 	  Order By CS.Position ASC
 
     SELECT CPI.[IdCatProductImage],
-              CPI.CatSubscriptionId   [CatProductId],
+           CPI.CatSubscriptionId   [CatProductId],
            CPI.[CatProductImageSmallImageURL],
            CPI.[CatProductImageLargeImageURL],
            CPI.[CatProductImageOrder]
@@ -45,9 +45,9 @@ BEGIN
     INNER JOIN DeliveryBackOffice.dbo.CatSubscription A2
 	ON CPI.CatSubscriptionId  = A2.IdCatSubscription 
 	WHERE CPI.RowStatus = 1
-	AND A2.CatProductCategoryId = @IdCategory
+	  AND A2.CatProductCategoryId = @IdCategory
 	UNION  ALL
-	 SELECT CPI.[IdCatProductImage],
+	SELECT CPI.[IdCatProductImage],
            CPI.CatMembershipId [CatProductId],
            CPI.[CatProductImageSmallImageURL],
            CPI.[CatProductImageLargeImageURL],
@@ -56,6 +56,6 @@ BEGIN
     INNER JOIN DeliveryBackOffice.dbo.CatMembership A2
 	ON A2.IdCatMembership = CPI.CatMembershipId AND A2.RowStatus = 1
 	WHERE CPI.RowStatus = 1
-	AND A2.CatProductCategoryId = @IdCategory
+	  AND A2.CatProductCategoryId = @IdCategory
 
 END;

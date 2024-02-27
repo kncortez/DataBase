@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatSubscription](
+CREATE TABLE [dbo].[CatSubscription](
 	[IdCatSubscription] [int] IDENTITY(1,1) NOT NULL,
 	[SubscriptionName] [nvarchar](50) NOT NULL,
 	[SubscriptionDescription] [nvarchar](300) NULL,
