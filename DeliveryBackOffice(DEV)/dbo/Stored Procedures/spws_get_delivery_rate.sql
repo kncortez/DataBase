@@ -2009,7 +2009,7 @@ BEGIN
             SET @NameCategoryProduct =
             (
                 SELECT TOP 1
-                       CatProductCategoryName
+                       TechnicalDescription
                 FROM CatProductCategory WITH(NOLOCK)
                 WHERE IdCatProductCategory = @CategoryProductId
             );
@@ -2025,7 +2025,7 @@ BEGIN
                            = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
                               scdr.DiscountValue,
                               -1),
-                       @DescriptionTypeSubscription = cts.CatProductCategoryName
+                       @DescriptionTypeSubscription = cts.TechnicalDescription
                 FROM Subscription sc WITH(NOLOCK)
                     INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
                         ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
@@ -2054,7 +2054,7 @@ BEGIN
                             = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
                                   sc.SubscriptionFixedValue,
                                   -1),
-                           @DescriptionTypeSubscription = cts.CatProductCategoryName
+                           @DescriptionTypeSubscription = cts.TechnicalDescription
                     FROM Subscription sc WITH(NOLOCK)
                         INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
                             ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
@@ -2079,7 +2079,7 @@ BEGIN
                             = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
                                   sc.SubscriptionFixedValue,
                                   -1),
-                           @DescriptionTypeSubscription = cts.CatProductCategoryName
+                           @DescriptionTypeSubscription = cts.TechnicalDescription
                     FROM Subscription sc WITH(NOLOCK)
                         INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
                             ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
@@ -2105,7 +2105,7 @@ BEGIN
                            = IIF(sc.ActualServiceCount + 1 <= sc.MembershipMaxServiceFixedValue,
                               sc.MembershipFixedValue,
                               -1),
-                       @DescriptionTypeSubscription = cts.CatProductCategoryName
+                       @DescriptionTypeSubscription = cts.TechnicalDescription
                 FROM Membership sc WITH(NOLOCK)
                     INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
                         ON csps.IdCatSalesPackageStatus = sc.CatMembershipStatusId
