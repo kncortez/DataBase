@@ -143,6 +143,7 @@ BEGIN
 	        ISNULL(CPI.CatSubscriptionId,CPI.CatMembershipId) [CatProductId], 
 			CPI.[CatProductImageSmallImageURL],
 			CPI.[CatProductImageLargeImageURL],
+			CPI.CatProductImageBigImageURL,
 			CPI.[CatProductImageOrder]
 	FROM DeliveryBackOffice.[dbo].[CatProductImage]  CPI WITH (NOLOCK)
 	WHERE CPI.RowStatus = 1
