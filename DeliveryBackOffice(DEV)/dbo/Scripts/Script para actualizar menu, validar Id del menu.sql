@@ -1,4 +1,3 @@
-
 --Script para actualizar menu, validar Id del menu en QA 
 UPDATE  [DeliveryBackOffice].[dbo].[CatModule]
 SET ModName ='Canje de Beneficios',
