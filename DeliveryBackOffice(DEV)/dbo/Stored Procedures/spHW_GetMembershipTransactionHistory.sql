@@ -244,7 +244,7 @@ BEGIN
     WHERE --[MSL].[MembershipId] = @MEMBERSHIP_ID
            [MSL].[SubscriptionId] IS NOT NULL
           AND [MSL].[RowStatus] = 1
-		  AND [MSL].AccountId= @AccountId
+		    AND [MSL].CustomerId= @CUSTOMER_ID
     ORDER BY [MSL].[SubscriptionId]
            , [MSL].[LogServiceNumber];
 END;
