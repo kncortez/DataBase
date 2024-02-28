@@ -118,7 +118,12 @@ BEGIN
          , [S].[CatSubscriptionStatusId]
          , [S].[SubscriptionCost]
          , [S].[IsAutoRenewable]
-         , 1                                                                 [CanAutorenew]
+         ,  CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew]
          , [S].[SubscriptionMaxServiceFixedValue]
          , [S].[ActualServiceCount]
          , IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0
@@ -177,7 +182,12 @@ Union all
          , [S].[CatSubscriptionStatusId]
          , [S].[SubscriptionCost]
          , [S].[IsAutoRenewable]
-         , 1                                                                  [CanAutorenew]
+         ,  CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew]
          , [S].[SubscriptionMaxServiceFixedValue]
          , [S].[ActualServiceCount]
          , IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0
