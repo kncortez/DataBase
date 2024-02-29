@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Subscription] (
+CREATE TABLE [dbo].[Subscription] (
     [IdSubscription]                   INT             IDENTITY (1, 1) NOT NULL,
     [MembershipId]                     INT             NULL,
     [CatSubscriptionId]                INT             NOT NULL,
@@ -24,6 +24,9 @@
     [RateHeaderId]                     INT             NULL,
     [AlternativeRateHeaderId]          INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
+	[ActivationCode] 				   [nvarchar](50)  NULL,
+    [ProductGiftShippingEmail]         [nvarchar](100) NULL,
+    [ActivationDate] 				   [datetime]      NULL,	
     CONSTRAINT [PK_Subscription] PRIMARY KEY CLUSTERED ([IdSubscription] ASC),
     CONSTRAINT [FK_Subscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_Subscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
@@ -67,3 +70,11 @@ GO
 CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
     ON [dbo].[Subscription]([CatSubscriptionId] ASC);
 
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'correo al cual se envía el regalo del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ActivationDate'
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ActivationCode'
