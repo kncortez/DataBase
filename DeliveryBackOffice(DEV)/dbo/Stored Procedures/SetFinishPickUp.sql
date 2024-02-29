@@ -742,6 +742,78 @@ BEGIN
 						  AND WCT.CustomerId <> 25607;
 
 					
+				--Agregar datos en cola de webhooks de cliente DHL---INI
+				DECLARE @GuidePiecesTable AS TABLE
+                (
+                    CustomerId INT,
+                    CustomerEndpointId BIGINT,
+                    WebhookType INT,
+                    GuideSerie NVARCHAR(2),
+                    GuideNumber INT,
+                    GuideStatusId TINYINT,
+					NumberPieces INT,
+					NumberRelatedPieces INT
+					
+                );
+
+				INSERT INTO @GuidePiecesTable 
+							( 
+						CustomerId,
+                        GuideSerie,
+                        GuideNumber,
+                        GuideStatusId,
+						NumberPieces
+						)
+						SELECT wct.CustomerId,
+						dop.GuideSerie,dop.GuideNumber, 
+						wct.GuideStatusId,
+						Count(dop.GuideNumber)
+						FROM DeliveryOrderPiece dop WITH(NOLOCK)
+						INNER JOIN @WebhookCustomerTable wct
+							ON dop.GuideNumber = wct.GuideNumber
+						INNER JOIN DeliveryOrder do WITH(NOLOCK)
+							ON dop.GuideNumber = do.Guide_Number
+							WHERE do.IdCustomer = 25607
+							GROUP BY wct.CustomerId,
+						dop.GuideSerie,dop.GuideNumber, 
+						wct.GuideStatusId
+
+				   DECLARE @PiecesGuideRelatedTable AS TABLE
+                (
+                    CustomerId INT,
+                    CustomerEndpointId BIGINT,
+                    WebhookType INT,
+                    GuideSerie NVARCHAR(2),
+                    GuideNumber INT,
+                    GuideStatusId TINYINT,
+					NumberRelatedPieces INT
+					
+                );
+
+				INSERT INTO @PiecesGuideRelatedTable 
+							( 
+						CustomerId,
+                        GuideSerie,
+                        GuideNumber,
+                        GuideStatusId,
+						NumberRelatedPieces
+						)
+						SELECT wct.CustomerId,
+						dop.GuideSerie,dop.GuideNumber, 
+						wct.GuideStatusId,
+						Count(dop.GuideNumber)
+						FROM DeliveryOrderPiece dop WITH(NOLOCK)
+						INNER JOIN @WebhookCustomerTable wct
+							ON dop.GuideNumber = wct.GuideNumber
+						INNER JOIN DeliveryOrder do WITH(NOLOCK)
+							ON dop.GuideNumber = do.Guide_Number
+							WHERE do.IdCustomer = 25607
+							AND dop.ExternalPieceId IS NOT NULL
+							GROUP BY wct.CustomerId,
+						dop.GuideSerie,dop.GuideNumber, 
+						wct.GuideStatusId
+
+	
 				INSERT INTO WebhookTrackingQueueDetailForSFTP 
 							(CustomerId,
 							GuideSerie,
@@ -761,7 +833,13 @@ BEGIN
 							ON dop.GuideNumber = wct.GuideNumber
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideNumber = do.Guide_Number
+						INNER JOIN @GuidePiecesTable gpt
+						    ON wct.GuideNumber = gpt.GuideNumber
+						INNER JOIN @PiecesGuideRelatedTable pgt
+						    ON gpt.GuideNumber = pgt.GuideNumber
 							WHERE do.IdCustomer = 25607
+							AND gpt.NumberPieces = pgt.NumberRelatedPieces
+				--Agregar datos en cola de webhooks de cliente DHL---FIN
 
                 END TRY
                 BEGIN CATCH
