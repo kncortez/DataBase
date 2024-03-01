@@ -9,6 +9,7 @@ CREATE TABLE [dbo].[MarketplaceTagsByProduct](
 	[CatSubscriptionId] [int] NULL,
 	[CatMembershipId] [int] NULL,
 	[Position] [int] NOT NULL,
+	CONSTRAINT [MarketplaceTagsByProduct] PRIMARY KEY ([IdMarketplaceTagsByProduct] ASC),
 	CONSTRAINT [FK_MarketplaceTagsByProduct_CatSubscription] FOREIGN KEY([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]),
 	CONSTRAINT [FK_MarketplaceTagsByProduct_MarketplaceProductTags] FOREIGN KEY([MarketplaceProductTagsId]) REFERENCES [dbo].[MarketplaceProductTags] ([IdMarketplaceProductTags])
 )
