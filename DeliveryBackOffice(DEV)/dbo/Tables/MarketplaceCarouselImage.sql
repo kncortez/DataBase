@@ -10,6 +10,7 @@ CREATE TABLE [dbo].[MarketplaceCarouselImage](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
+	[HyperlinkURL] [nvarchar](200) NULL,
  CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED 
 (
 	[IdCarouselImage] ASC
