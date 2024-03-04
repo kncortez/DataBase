@@ -771,9 +771,12 @@ BEGIN
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
 							ON dop.GuideNumber = wct.GuideNumber
+						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+						    ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideNumber = do.Guide_Number
-							WHERE do.IdCustomer = 25607
+							WHERE do.IdCustomer = wct.CustomerId
+							AND WHE.TypeConnectionId = 2
 							GROUP BY wct.CustomerId,
 						dop.GuideSerie,dop.GuideNumber, 
 						wct.GuideStatusId
@@ -805,14 +808,18 @@ BEGIN
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
 							ON dop.GuideNumber = wct.GuideNumber
+						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+						    ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideNumber = do.Guide_Number
-							WHERE do.IdCustomer = 25607
+							WHERE do.IdCustomer = wct.CustomerId
+							AND WHE.TypeConnectionId = 2
 							AND dop.ExternalPieceId IS NOT NULL
 							GROUP BY wct.CustomerId,
 						dop.GuideSerie,dop.GuideNumber, 
 						wct.GuideStatusId
-
+			select *from @GuidePiecesTable
+			select *from @PiecesGuideRelatedTable
 	
 				INSERT INTO WebhookTrackingQueueDetailForSFTP 
 							(CustomerId,
@@ -831,13 +838,16 @@ BEGIN
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
 							ON dop.GuideNumber = wct.GuideNumber
+						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+							ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideNumber = do.Guide_Number
 						INNER JOIN @GuidePiecesTable gpt
 						    ON wct.GuideNumber = gpt.GuideNumber
 						INNER JOIN @PiecesGuideRelatedTable pgt
 						    ON gpt.GuideNumber = pgt.GuideNumber
-							WHERE do.IdCustomer = 25607
+							WHERE do.IdCustomer = wct.CustomerId
+							AND WHE.TypeConnectionId = 2
 							AND gpt.NumberPieces = pgt.NumberRelatedPieces
 				--Agregar datos en cola de webhooks de cliente DHL---FIN
 
