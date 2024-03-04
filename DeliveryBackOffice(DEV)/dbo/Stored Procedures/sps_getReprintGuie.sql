@@ -558,7 +558,7 @@ begin
 									 + '"UseMembership": ' + CONVERT(VARCHAR, CAST(ISNULL((CASE WHEN [MSL].[IdMembershipSubscriptionLog] IS NOT NULL THEN 1 ELSE 0 END), 0) AS BIT)) + ',' 
 									 + '"AllowsCollect": ' + CONVERT(VARCHAR, IIF(CSBT.CatTypeSubscriptionId = 2, 0,1)) + ','  
 									 + '"CategoryProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL, CMSL.CatProductCategoryId,IIF(CSBT.CatProductCategoryId IS NOT NULL,CSBT.CatProductCategoryId, 0) )) + ',' 
-									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], MSL.SubscriptionId)) + ',' 
+									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], IIF(MSL.SubscriptionId IS NOT NULL,MSL.SubscriptionId, 0))) + ','  
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
 									 + '"DeliveryETA": "' + COALESCE
