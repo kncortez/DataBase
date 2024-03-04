@@ -733,13 +733,15 @@ BEGIN
                             ON WCT.CustomerId = WRBU.CustomerId
                                AND WCT.GuideStatusId = WRBU.StatusOrderId
                                AND WCT.WebhookType = WRBU.WebhookTypeId
+						INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE
+							ON WRBU.CustomerId = WHE.CustomerId
                         LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                             ON WCT.GuideSerie = WTQ.GuideSerie
                                AND WCT.GuideNumber = WTQ.GuideNumber
                                AND WCT.GuideStatusId = WTQ.StatusOrderId
                     WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
                           AND WTQ.IdWebhookTrackingQueue IS NULL
-						  AND WCT.CustomerId <> 25607;
+						  AND WHE.TypeConnectionId = 1
 
 					
 				--Agregar datos en cola de webhooks de cliente DHL---INI
@@ -833,7 +835,7 @@ BEGIN
 							DateCreated,
 							TokenCreated)
 						SELECT wct.CustomerId,
-						dop.GuideSerie,dop.GuideNumber, dop.NoPiece, do.Order_Number,dop.ExternalPieceId, 
+						dop.GuideSerie,dop.GuideNumber, dop.NoPiece, do.Ticket_Number,dop.ExternalPieceId, 
 						wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
