@@ -5,7 +5,7 @@ CREATE TABLE [dbo].[WebhookTrackingQueueDetailForSFTP](
 	[GuideSerie] [NVARCHAR](2) NOT NULL,
 	[GuideNumber] [INT] NOT NULL,
 	[GuidePiece] [BIGINT] NOT NULL,
-	[ExternalNumber] [INT] NOT NULL,
+	[ExternalNumber] [NVARCHAR] (50) NOT NULL,
 	[ExternalPieceId] [NVARCHAR] (50) NOT NULL,
 	[StatusOrderId] [TINYINT] NOT NULL,
 	[RowStatus] [BIT] NOT NULL,
