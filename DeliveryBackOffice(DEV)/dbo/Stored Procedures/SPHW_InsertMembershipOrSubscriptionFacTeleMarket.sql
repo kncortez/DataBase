@@ -469,7 +469,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND RTP.ProductGiftShippingEmail=IS NULL
+															 AND RTP.ProductGiftShippingEmail IS NULL
 				THEN NULL
 				WHEN NOT EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
