@@ -73,21 +73,21 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Tarifario de servicio estandar' --COLLATE Latin1_General_CI_AI
             );
     DECLARE @NewAlternativeRates INT =
             (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Tarifario destinos express center' --COLLATE Latin1_General_CI_AI
             );
     DECLARE @NewAutoSalesMainRates INT =
             (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' --COLLATE Latin1_General_CI_AI
             );
 
     -- Variables de control

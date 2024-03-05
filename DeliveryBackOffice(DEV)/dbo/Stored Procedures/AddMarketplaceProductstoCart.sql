@@ -65,10 +65,10 @@ DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[Mar
 			 FROM @TblProductsList TPL
 			 LEFT JOIN [CatSubscription] CS WITH (NOLOCK)
 			 ON TPL.IdSalePackage = CS.IdCatSubscription 
-			 AND TPL.TypeSalePackage = CS.SubscriptionDescription COLLATE Latin1_General_CI_AI
+			 AND TPL.TypeSalePackage = CS.SubscriptionDescription --COLLATE Latin1_General_CI_AI
 			 LEFT JOIN [CatMembership] CS2 WITH (NOLOCK)
 			 ON TPL.IdSalePackage = CS2.IdCatMembership
-			 AND TPL.TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+			 AND TPL.TypeSalePackage = 'MEMBERSHIP' --COLLATE Latin1_General_CI_AI
 
 			
 		
@@ -103,10 +103,10 @@ DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[Mar
 			 FROM @TblProductsList TPL
 			 LEFT JOIN [CatSubscription] CS WITH (NOLOCK)
 			 ON TPL.IdSalePackage = CS.IdCatSubscription 
-			 AND TPL.TypeSalePackage = CS.SubscriptionDescription COLLATE Latin1_General_CI_AI
+			 AND TPL.TypeSalePackage = CS.SubscriptionDescription --COLLATE Latin1_General_CI_AI
 			 LEFT JOIN [CatMembership] CS2 WITH (NOLOCK)
 			 ON TPL.IdSalePackage = CS2.IdCatMembership
-			 AND TPL.TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+			 AND TPL.TypeSalePackage = 'MEMBERSHIP' --COLLATE Latin1_General_CI_AI
 
 			
 		 END
