@@ -725,7 +725,7 @@ BEGIN
 		  
             DECLARE @AuxNewSubscriptions AS TABLE (IdNewSubscriptions INT);
 
-            INSERT INTO [DeliveryBackOffice].[dbo].[Subscription]
+           INSERT INTO [DeliveryBackOffice].[dbo].[Subscription]
             (
                 MembershipId
               , CatSubscriptionId
@@ -832,82 +832,6 @@ BEGIN
 								ELSE NULL
 				
 							
-
-							END
-					, CASE 
-					          WHEN EXISTS(SELECT  TOP 1 1
-										FROM [dbo].RegisterUser  usr WITH (NOLOCK)
-															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
-																ON rus.RusIdUser = usr.UsrIdUser
-																   AND rus.RusIdSystem = 1
-															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
-																ON res.UstIdUser = rus.RusIdUser
-																   AND res.UstIdSystem = rus.RusIdSystem
-															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
-																ON rua.RuaIdUser = usr.UsrIdUser
-																   AND rua.RuaRowStatus = 1
-															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
-																ON ac.AccIdAccount = rua.RuaIdAccount
-																   AND ac.AccRowStatus = 1
-										WHERE usr.UsrEmail = RTP.ProductGiftShippingEmail
-														     AND res.UstStatus  ='ACTIVE') 
-							
-							THEN  
-							      
-							(SELECT   ac.AccIdAccount
-														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
-															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
-																ON rus.RusIdUser = usr.UsrIdUser
-																   AND rus.RusIdSystem = 1
-															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
-																ON res.UstIdUser = rus.RusIdUser
-																   AND res.UstIdSystem = rus.RusIdSystem
-															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
-																ON rua.RuaIdUser = usr.UsrIdUser
-																   AND rua.RuaRowStatus = 1
-															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
-																ON ac.AccIdAccount = rua.RuaIdAccount
-																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
-														     AND res.UstStatus  ='ACTIVE')
-                             WHEN EXISTS(SELECT  TOP 1 1
-										FROM [dbo].RegisterUser  usr WITH (NOLOCK)
-															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
-																ON rus.RusIdUser = usr.UsrIdUser
-																   AND rus.RusIdSystem = 1
-															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
-																ON res.UstIdUser = rus.RusIdUser
-																   AND res.UstIdSystem = rus.RusIdSystem
-															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
-																ON rua.RuaIdUser = usr.UsrIdUser
-																   AND rua.RuaRowStatus = 1
-															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
-																ON ac.AccIdAccount = rua.RuaIdAccount
-																   AND ac.AccRowStatus = 1
-										WHERE usr.UsrEmail = RTP.InvoiceEmail
-														     AND res.UstStatus  ='ACTIVE') 
-                                                             AND RTP.ProductGiftShippingEmail IS NULL
-							
-							THEN  
-							      
-							(SELECT   ac.AccIdAccount
-														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
-															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
-																ON rus.RusIdUser = usr.UsrIdUser
-																   AND rus.RusIdSystem = 1
-															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
-																ON res.UstIdUser = rus.RusIdUser
-																   AND res.UstIdSystem = rus.RusIdSystem
-															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
-																ON rua.RuaIdUser = usr.UsrIdUser
-																   AND rua.RuaRowStatus = 1
-															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
-																ON ac.AccIdAccount = rua.RuaIdAccount
-																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
-														     AND res.UstStatus  ='ACTIVE')
-				
-							ELSE  NULL
 
 							END
 					, CASE 
