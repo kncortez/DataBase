@@ -108,7 +108,6 @@ BEGIN
     FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH (NOLOCK)
             ON Acc.IdCustomer = Cu.IdCustomer
-               AND Acc.AccIdAccount = @AccountId
     WHERE Acc.AccIdAccount = @AccountId;
 
     -- Punto de visita por cuenta ingresada
@@ -119,13 +118,12 @@ BEGIN
         FROM DeliveryBackOffice.dbo.VisitPointClient VPC
             INNER JOIN VisitPointByUser VPU
                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                   AND VPU.RowStatus = 1
             INNER JOIN RegisterUser ru
                 ON VPU.RegisterUserID = ru.UsrIdUser
-                   AND ru.UsrRowStatus = 1
             INNER JOIN [dbo].[RolByUserByAccount] rua
                 ON rua.RuaIdUser = ru.UsrIdUser
-        WHERE rua.RuaIdAccount = @AccountId
+        WHERE rua.RuaIdAccount = @AccountId AND VPU.RowStatus = 1
+        AND ru.UsrRowStatus = 1
     );
 
     DECLARE @IdTransaction BIGINT = 0;
@@ -617,18 +615,16 @@ BEGIN
                     FROM [dbo].RegisterUser usr WITH (NOLOCK)
                         INNER JOIN [dbo].RolByUserBySystem rus WITH (NOLOCK)
                             ON rus.RusIdUser = usr.UsrIdUser
-                               AND rus.RusIdSystem = 1
                         LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
                             ON res.UstIdUser = rus.RusIdUser
                                AND res.UstIdSystem = rus.RusIdSystem
                         LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                             ON rua.RuaIdUser = usr.UsrIdUser
-                               AND rua.RuaRowStatus = 1
                         INNER JOIN [dbo].Account ac WITH (NOLOCK)
                             ON ac.AccIdAccount = rua.RuaIdAccount
-                               AND ac.AccRowStatus = 1
                     WHERE usr.UsrEmail = RTP.ProductGiftShippingEmail
-                          AND res.UstStatus = 'ACTIVE'
+                          AND res.UstStatus = 'ACTIVE' AND rus.RusIdSystem = 1
+                          AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
                 )          THEN
                                    1
                                WHEN
@@ -637,17 +633,15 @@ BEGIN
                                    FROM [dbo].RegisterUser usr WITH (NOLOCK)
                                        INNER JOIN [dbo].RolByUserBySystem rus WITH (NOLOCK)
                                            ON rus.RusIdUser = usr.UsrIdUser
-                                              AND rus.RusIdSystem = 1
                                        LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
                                            ON res.UstIdUser = rus.RusIdUser
                                               AND res.UstIdSystem = rus.RusIdSystem
                                        LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                            ON rua.RuaIdUser = usr.UsrIdUser
-                                              AND rua.RuaRowStatus = 1
                                        INNER JOIN [dbo].Account ac WITH (NOLOCK)
                                            ON ac.AccIdAccount = rua.RuaIdAccount
-                                              AND ac.AccRowStatus = 1
-                                   WHERE usr.UsrEmail = RTP.InvoiceEmail
+                                   WHERE usr.UsrEmail = RTP.InvoiceEmail AND rus.RusIdSystem = 1
+                                   AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
                                ) = 'ACTIVE'
                                AND RTP.ProductGiftShippingEmail IS NULL THEN
                                    1
@@ -884,18 +878,16 @@ BEGIN
                     FROM [dbo].RegisterUser usr WITH (NOLOCK)
                         INNER JOIN [dbo].RolByUserBySystem rus WITH (NOLOCK)
                             ON rus.RusIdUser = usr.UsrIdUser
-                               AND rus.RusIdSystem = 1
                         LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
                             ON res.UstIdUser = rus.RusIdUser
                                AND res.UstIdSystem = rus.RusIdSystem
                         LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                             ON rua.RuaIdUser = usr.UsrIdUser
-                               AND rua.RuaRowStatus = 1
                         INNER JOIN [dbo].Account ac WITH (NOLOCK)
                             ON ac.AccIdAccount = rua.RuaIdAccount
-                               AND ac.AccRowStatus = 1
                     WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail, 'N/D')
-                          AND res.UstStatus = 'ACTIVE'
+                          AND res.UstStatus = 'ACTIVE' AND rus.RusIdSystem = 1
+                          AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
                 )          THEN
                                    1
                                WHEN @AccountId IS NOT NULL
@@ -905,17 +897,15 @@ BEGIN
                                         FROM [dbo].RegisterUser usr WITH (NOLOCK)
                                             INNER JOIN [dbo].RolByUserBySystem rus WITH (NOLOCK)
                                                 ON rus.RusIdUser = usr.UsrIdUser
-                                                   AND rus.RusIdSystem = 1
                                             LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
                                                 ON res.UstIdUser = rus.RusIdUser
                                                    AND res.UstIdSystem = rus.RusIdSystem
                                             LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                                 ON rua.RuaIdUser = usr.UsrIdUser
-                                                   AND rua.RuaRowStatus = 1
                                             INNER JOIN [dbo].Account ac WITH (NOLOCK)
                                                 ON ac.AccIdAccount = rua.RuaIdAccount
-                                                   AND ac.AccRowStatus = 1
-                                        WHERE usr.UsrEmail = RTP.InvoiceEmail
+                                        WHERE usr.UsrEmail = RTP.InvoiceEmail AND rus.RusIdSystem = 1
+                                        AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
                                     ) = 'ACTIVE'
                                     AND RTP.ProductGiftShippingEmail IS NULL THEN
                                    1
@@ -1263,11 +1253,10 @@ BEGIN
         LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
             ON [CCTBCD].[ProductNumber] = [MSL].[LogGuideNumber]
                AND [CCTBCD].[SerieNumber] = [MSL].[LogGuideSerie]
-               AND [MSL].[RowStatus] = 1
-               AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
         LEFT JOIN [dbo].[Membership] M
             ON [MSL].[MembershipId] = [M].[IdMembership]
-    WHERE CCTBCD.OrderNumber = @OrderNumber;
+    WHERE CCTBCD.OrderNumber = @OrderNumber
+    AND [MSL].[RowStatus] = 1 AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId;
 
     IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
     BEGIN
@@ -1301,10 +1290,9 @@ BEGIN
             LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
                 ON [LG].[ItemNumber] = [MSL].[LogGuideNumber]
                    AND [LG].[ItemSerie] = [MSL].[LogGuideSerie]
-                   AND [MSL].[RowStatus] = 1
-                   AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
             LEFT JOIN [dbo].[Membership] M
-                ON [MSL].[MembershipId] = [M].[IdMembership];
+                ON [MSL].[MembershipId] = [M].[IdMembership]
+                WHERE [MSL].[RowStatus] = 1 AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId;
 
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
             DROP TABLE #listGuides;
@@ -1605,10 +1593,8 @@ BEGIN
                             INNER JOIN @AcceptedGuides AG
                                 ON [PSL].[GuideSerie] = [AG].[GuideSerie]
                                    AND [PSL].[GuideNumber] = [AG].[GuideNumber]
-                                   AND (
-                                           [AG].[LogServiceNumber] > @MaxServiceMembership
-                                           OR [AG].[LogServiceNumber] = 0
-                                       );
+                                   WHERE ( [AG].[LogServiceNumber] > @MaxServiceMembership
+                                           OR [AG].[LogServiceNumber] = 0 );
                     END;
                 END;
 

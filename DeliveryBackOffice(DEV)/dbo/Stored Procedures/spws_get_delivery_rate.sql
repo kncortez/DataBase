@@ -197,11 +197,10 @@ BEGIN
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
-                   AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
-        WHERE rc.RbcIdCustomer = @IdCustomer
-              AND rc.RbcRowStatus = 'true'
+        WHERE rc.RbcIdCustomer = @IdCustomer 
+              AND rc.RbcRowStatus = 'true' AND rh.RheRowStatus = 'true'
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
     END;
     ELSE
@@ -214,11 +213,10 @@ BEGIN
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
-                   AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
         WHERE rc.RbcIdCustomer = @IdCustomer
-              AND rc.RbcRowStatus = 'true'
+              AND rc.RbcRowStatus = 'true' AND rh.RheRowStatus = 'true'
               AND rc.RbcCodeOfReference IS NULL;
     END;
 
@@ -232,10 +230,9 @@ BEGIN
         FROM dbo.RateBySalePipeLine        sp WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = sp.RateId
-                   AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
-        WHERE sp.RowStatus = 'true'
+        WHERE sp.RowStatus = 'true' AND rh.RheRowStatus = 'true'
               AND sp.SalePipeLineId = @IdSalePipeLine;
 
     END;
@@ -359,12 +356,10 @@ BEGIN
 						ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
 					INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
 						ON SC.MembershipId = MB.IdMembership
-						   AND MB.CustomerId = @IdCustomer
-						   AND GETDATE() <= MB.ExpirationDate
-						   AND MB.RowStatus = 1
 					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
 						ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
-				WHERE SC.CustomerId = @IdCustomer
+				WHERE SC.CustomerId = @IdCustomer AND MB.CustomerId = @IdCustomer
+                      AND GETDATE() <= MB.ExpirationDate AND MB.RowStatus = 1
 					  AND GETDATE() <= SC.ExpirationDate
 					  AND SC.RowStatus = 1
 					  AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
@@ -622,9 +617,9 @@ BEGIN
                     ON tw.HeaderCode = @HeaderCodeDestiny
                 LEFT JOIN dbo.Settlement st WITH (NOLOCK)
                     ON st.IdTownship = tw.IdTownship
-                       AND st.Settlement LIKE CONCAT('%', i.Item, '%')
             WHERE LEN(i.Item) > 3
                   AND st.IdSettlement IS NOT NULL
+                  AND st.Settlement LIKE CONCAT('%', i.Item, '%')
             GROUP BY st.IdSettlement
                    , st.Settlement
             ORDER BY 2 DESC;
@@ -843,14 +838,13 @@ BEGIN
     FROM dbo.SpecialSale                 ss WITH (NOLOCK)
         INNER JOIN dbo.SpecialSaleDetail sd WITH (NOLOCK)
             ON sd.SpecialSaleId = ss.IdSpecialSale
-               AND sd.RowStatus = 1
         LEFT JOIN dbo.Unit               unt WITH (NOLOCK)
             ON unt.IdUnit = sd.UnitId
         LEFT JOIN dbo.CatTypeDiscount    tyd WITH (NOLOCK)
             ON tyd.IdCatTypeDiscount = sd.TypeDiscountId
         LEFT JOIN dbo.SpecialSaleTarget  tgt WITH (NOLOCK)
             ON tgt.SpecialSaleId = ss.IdSpecialSale
-    WHERE ss.RowStatus = 1
+    WHERE ss.RowStatus = 1 AND sd.RowStatus = 1
           AND GETDATE()
           BETWEEN ss.StartDate AND ss.FinishDate
           AND
@@ -1031,7 +1025,7 @@ BEGIN
                     ON ar.Code = ls.Item
                 INNER JOIN dbo.RateData          ra
                     ON ra.ArticleId = ar.AbcId
-                       AND ra.TypeSegmentId = @IdSegment
+                WHERE ra.TypeSegmentId = @IdSegment
                        AND ra.RateId = @IdRate
         );
 
@@ -1062,14 +1056,13 @@ BEGIN
             FROM dbo.RateHeader              rh WITH (NOLOCK)
                 INNER JOIN dbo.RateData      rd WITH (NOLOCK)
                     ON rd.RateId = rh.RheId
-                       AND rd.RowStatus = 'true'
                 LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
                     ON sg.CrsId = rd.TypeSegmentId
                 LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
                     ON sv.CtsId = rd.TypeServiceId
                 LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId
-            WHERE rh.RheRowStatus = 'true'
+            WHERE rh.RheRowStatus = 'true' AND rd.RowStatus = 'true'
                   AND rh.RheId = @IdRate
                   AND rd.ArticleId IS NULL
                   AND (rd.TypeServiceId IN
@@ -1122,14 +1115,13 @@ BEGIN
             FROM dbo.RateHeader              rh WITH (NOLOCK)
                 INNER JOIN dbo.RateData      rd WITH (NOLOCK)
                     ON rd.RateId = rh.RheId
-                       AND rd.RowStatus = 'true'
                 LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
                     ON sg.CrsId = rd.TypeSegmentId
                 LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
                     ON sv.CtsId = rd.TypeServiceId
                 LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId
-            WHERE rh.RheRowStatus = 'true'
+            WHERE rh.RheRowStatus = 'true' AND rd.RowStatus = 'true'
                   AND rh.RheId = @IdRate
                   AND rd.ArticleId IS NULL
                   AND (rd.TypeServiceId IN
@@ -1198,14 +1190,13 @@ BEGIN
         FROM dbo.RateHeader              rh WITH (NOLOCK)
             INNER JOIN dbo.RateData      rd WITH (NOLOCK)
                 ON rd.RateId = rh.RheId
-                   AND rd.RowStatus = 'true'
             LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
                 ON sg.CrsId = rd.TypeSegmentId
             LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
                 ON sv.CtsId = rd.TypeServiceId
             LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                 ON cr.IdTypeRate = rh.RateTypeId
-        WHERE rh.RheId = @IdRate
+        WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
               AND rd.ArticleId IS NULL
               AND rd.TypeSegmentId = @IdSegment
               AND (rd.TypeServiceId IN
@@ -1319,7 +1310,7 @@ BEGIN
                 FROM #ParceCode                                               p
                     INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
                         ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
-                           AND ABC.AbcRowStatus = 1;
+                        WHERE ABC.AbcRowStatus = 1;
 
                 SET @ExpectedWeight =
                 (
@@ -1355,12 +1346,11 @@ BEGIN
                     FROM dbo.RateHeader                  rh
                         INNER JOIN dbo.RateData          rd
                             ON rd.RateId = rh.RheId
-                               AND rd.RowStatus = 'true'
                         INNER JOIN dbo.ArticleByCustomer abc
                             ON rd.ArticleId = abc.AbcId
                         INNER JOIN #ListCode             LC
                             ON abc.Code = LC.Item
-                    WHERE rh.RheId = @IdRate
+                    WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
                           AND rd.TypeSegmentId = @IdSegment
                     GROUP BY rd.TypeSegmentId
                            , rd.TypeServiceId
@@ -1441,7 +1431,6 @@ BEGIN
                 FROM dbo.RateHeader                 rh
                     INNER JOIN dbo.RateData         rd
                         ON rd.RateId = rh.RheId
-                           AND rd.RowStatus = 'true'
                     INNER JOIN #ParcelAmountPerType papt
                         ON rd.TypeSegmentId = papt.SegmentType
                            AND rd.TypeServiceId = papt.ServiceType
@@ -1451,7 +1440,7 @@ BEGIN
                         ON sv.CtsId = rd.TypeServiceId
                     LEFT JOIN dbo.CatTypeRate       cr
                         ON cr.IdTypeRate = rh.RateTypeId
-                WHERE rh.RheId = @IdRate
+                WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
                       --and rd.ArticleId is null
                       AND rd.TypeSegmentId = @IdSegment
                       AND (rd.TypeServiceId IN
@@ -1520,7 +1509,6 @@ BEGIN
                     ON p.[ID] = PW.[ID]
                 INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
                     ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
-                       AND ABC.AbcRowStatus = 1
                 OUTER APPLY
             (
                 SELECT TOP (1)
@@ -1528,7 +1516,8 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[RateData] RD WITH (NOLOCK)
                 WHERE [RD].[ArticleId] = [ABC].[AbcId]
                       AND [RD].[RateId] = @IdRate
-            )                                                             RD;
+            )                                                             RD
+            WHERE ABC.AbcRowStatus = 1;
 
             SET @ExpectedWeightCorp =
             (
@@ -1601,14 +1590,13 @@ BEGIN
                     INNER JOIN dbo.RateData          rd WITH (NOLOCK)
                         ON rd.ArticleId = ar.AbcId
                            AND rd.RateId = rh.RheId
-                           AND rd.RowStatus = 'true'
                     LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId
                     LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
                         ON sv.CtsId = rd.TypeServiceId
                     LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
-                WHERE rd.TypeSegmentId = @IdSegment
+                WHERE rd.TypeSegmentId = @IdSegment AND rd.RowStatus = 'true'
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
@@ -1646,11 +1634,9 @@ BEGIN
                     LEFT JOIN dbo.RateData           rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
                         ON rdignore.ArticleId = ar.AbcId
                            AND rdignore.RateId = rh.RheId
-                           AND rdignore.RowStatus = 'true'
                     LEFT JOIN dbo.RateData           rd WITH (NOLOCK)
                         ON rd.ArticleId IS NULL
                            AND rd.RateId = rh.RheId
-                           AND rd.RowStatus = 'true'
                     LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId
                     LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
@@ -1658,7 +1644,8 @@ BEGIN
                     LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
-                      AND rd.TypeSegmentId = @IdSegment
+                      AND rd.TypeSegmentId = @IdSegment AND rdignore.RowStatus = 'true'
+                      AND rd.RowStatus = 'true'
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
@@ -1772,7 +1759,6 @@ BEGIN
             FROM RateHeader              rh
                 INNER JOIN RateData      rd
                     ON rd.RateId = rh.RheId
-                       AND rd.RowStatus = 1
                 LEFT JOIN CatRateSegment crs
                     ON crs.CrsId = rd.TypeSegmentId
                 LEFT JOIN CatTypeService cts
@@ -1782,7 +1768,7 @@ BEGIN
                 INNER JOIN #ParceWeigth  pw
                     ON pw.Item
                        BETWEEN rd.WeightFrom AND rd.WeightTo
-            WHERE rh.RheId = @IdRate
+            WHERE rh.RheId = @IdRate AND rd.RowStatus = 1
                   AND rd.TypeSegmentId = @IdSegment
                   AND (rd.TypeServiceId IN
                        (
@@ -1830,7 +1816,6 @@ BEGIN
             FROM RateHeader               rh
                 INNER JOIN RateData       rd
                     ON rd.RateId = rh.RheId
-                       AND rd.RowStatus = 1
                 LEFT JOIN CatRateSegment  crs
                     ON crs.CrsId = rd.TypeSegmentId
                 LEFT JOIN CatTypeService  cts
@@ -1839,6 +1824,7 @@ BEGIN
                     ON ctr.IdTypeRate = rh.RateTypeId
                 INNER JOIN @tblNotInRange pw
                     ON pw.CatTypeServiceId = rd.TypeServiceId
+                WHERE rh.RheId = @IdRate AND rd.RowStatus = 1
                        AND rd.IdRateData =
                        (
                            SELECT TOP 1
@@ -1850,7 +1836,6 @@ BEGIN
                                  AND RowStatus = 1
                            ORDER BY WeightTo DESC
                        )
-            WHERE rh.RheId = @IdRate
                   AND rd.TypeSegmentId = @IdSegment
                   AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                                  CONVERT(
@@ -1908,14 +1893,13 @@ BEGIN
         FROM dbo.RateHeader              rh WITH (NOLOCK)
             INNER JOIN dbo.RateData      rd WITH (NOLOCK)
                 ON rd.RateId = rh.RheId
-                   AND rd.RowStatus = 'true'
             LEFT JOIN dbo.CatRateSegment sg WITH (NOLOCK)
                 ON sg.CrsId = rd.TypeSegmentId
             LEFT JOIN dbo.CatTypeService sv WITH (NOLOCK)
                 ON sv.CtsId = rd.TypeServiceId
             LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                 ON cr.IdTypeRate = rh.RateTypeId
-        WHERE rh.RheId = @IdRate
+        WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
               AND rd.ArticleId IS NULL
               AND rd.TypeSegmentId = @IdSegment
               AND (rd.TypeServiceId IN

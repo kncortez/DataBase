@@ -44,17 +44,15 @@ SET @AccountStatement =	(SELECT
 						FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 							INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 								ON rus.RusIdUser = usr.UsrIdUser
-								   AND rus.RusIdSystem = 1
 							LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
 								ON res.UstIdUser = rus.RusIdUser
 								   AND res.UstIdSystem = rus.RusIdSystem
 							LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 								ON rua.RuaIdUser = usr.UsrIdUser
-								   AND rua.RuaRowStatus = 1
 							INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 								ON ac.AccIdAccount = rua.RuaIdAccount
-								   AND ac.AccRowStatus = 1
-						WHERE usr.UsrEmail = @ProductPurchaseEmail)
+						WHERE usr.UsrEmail = @ProductPurchaseEmail AND rus.RusIdSystem = 1
+							  AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1)
          
 
 	DECLARE @UpdatedGuidesInCart AS TABLE (
@@ -147,17 +145,15 @@ SET @AccountStatement =	(SELECT
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser
-																   AND rus.RusIdSystem = 1
 															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
 																ON res.UstIdUser = rus.RusIdUser
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
-																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
-																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = PL.ProductGiftShippingEmail) ='ACTIVE'
+														WHERE usr.UsrEmail = PL.ProductGiftShippingEmail AND rus.RusIdSystem = 1
+														AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1) ='ACTIVE'
 							
 							THEN 1
 							WHEN PL.IsGift = 0 AND @IdAccount IS NOT NULL AND @AccountStatement = 'ACTIVE'  THEN 1
