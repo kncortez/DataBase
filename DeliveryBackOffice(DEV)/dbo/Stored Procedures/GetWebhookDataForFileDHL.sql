@@ -73,20 +73,22 @@ BEGIN
 		IF EXISTS( Select IdWebhookTrackingQueueForSFTP from WebhookTrackingQueueForSFTP WHERE IdWebhookTrackingQueueForSFTP = @LOTE )
 		BEGIN 
 			--Encabezado del archivo
-			SELECT 'H' [Tipo], GETDATE() [Fecha_Hora], 'Forza' [Partner];
+			SELECT 'H' [Type], GETDATE() [Date_Time], 'Forza' [Partner];
 			--Detalle del archivo
-			SELECT  'D' [Tipo], 
-					0 [Counter], 
+			SELECT  'D' [Type], 
+					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[ExternalPieceId] DESC) AS [Counter], 
 					'IST' [Service_Area_Code], 
 					'CET' [Facility_Code], 
 					FORMAT(DOP.DateRegistrationExternalCode,'yyyyMMdd') [CheckPointDate],
 					FORMAT(DOP.DateRegistrationExternalCode,'hhmmss') [CheckPointTime],
 					'-06:00' [GTM_Offset],
-					DO.[Order_Number] [Waybill],
-					DOP.[ExternalPieceId][PieceId],
-					CASE  WHEN WTQDFS.[StatusOrderId] = 1 THEN 'OK' ELSE 'FD' END [CheckPointCode],
+					WTQDFS.[ExternalNumber] [Waybill],
+					WTQDFS.[ExternalPieceId][PieceId],
+					CASE WHEN WTQDFS.[StatusOrderId] = 5 THEN 'OK' ELSE 'FD' END [CheckPointCode],
+					CASE WHEN WTQDFS.[StatusOrderId] = 5 THEN DO.Receiver_Alternant_FullName 
+						 WHEN WTQDFS.[StatusOrderId] = 2 THEN CONCAT('WC FORZA ' , [WTQDFS].[GuideSerie] , [WTQDFS].[GuideNumber] , '-' , [WTQDFS].[GuidePiece])
+						 ELSE '' END [DHL_Checkpoint_Remark],
 					'GTW7' [Route_Code],
-					'' [DHL_Checkpoint_Remark],
 					'A' [Cycle_Code]
 			FROM	
 					[DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP] WTQDFS WITH(NOLOCK)
@@ -95,7 +97,7 @@ BEGIN
 						  AND [WTQDFS].[WebhookTrackingQueueForSFTPId] = [WTQFS].[IdWebhookTrackingQueueForSFTP]
 					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 					       ON  [WTQDFS].GuideNumber = [DO].Guide_Number
-					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)	
 						   ON [DOP].[GuideNumber] = [DO].Guide_Number
 						  AND [DOP].[GuideSerie] = [DO].Guide_Serie
 						  AND [WTQDFS].ExternalPieceId = [DOP].ExternalPieceId
@@ -106,7 +108,7 @@ BEGIN
 					
 					
 			--Pie de página del archivo
-			SELECT 'T' [Tipo], COUNT(IdWebhookTrackingQueueDetailForSFTP) [Total_Pieces] 
+			SELECT 'T' [Type], COUNT(IdWebhookTrackingQueueDetailForSFTP) [Total_Pieces] 
 			FROM WebhookTrackingQueueDetailForSFTP
 			WHERE [WebhookTrackingQueueForSFTPId] = @LOTE;
 
@@ -155,6 +157,8 @@ BEGIN
 			LEFT JOIN WebhookTrackingQueueDetailForSFTP WTQDFS WITH(NOLOCK)
 				   ON  WTQDFS.WebhookTrackingQueueForSFTPId = WebhookTrackingQueueForSFTP.IdWebhookTrackingQueueForSFTP
 				  AND  WTQDFS.IdWebhookTrackingQueueDetailForSFTP = WTQDPFS.IdWebhookTrackingQueueDetailPendingForSFTP
+
+			Select '202' [status], 'Lote Estatus Actualizado' [message];
 		END
 		ELSE
 		BEGIN
@@ -172,9 +176,9 @@ BEGIN
 			FROM WebhookTrackingQueueDetailForSFTP 
 			WHERE WebhookTrackingQueueForSFTPId = @LOTE;
 
+			Select '202' [status], 'Lote Estatus Actualizado' [message];
 		END
 
-		Select '202' [status], 'Lote Estatus Actualizado' [message];
 	END
 	ELSE 
 	BEGIN

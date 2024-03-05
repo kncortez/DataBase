@@ -39,40 +39,39 @@ BEGIN
 	************************** GUIAS PENDIENTES SFTP ***************************
 	****************************************************************************/
 
-    SELECT ROW_NUMBER() OVER(ORDER BY F.[CustomerId] DESC) AS Id,
-			F.[CustomerId], 
-			F.[Hostname], 
-			F.[UserName], 
-			F.[Password], 
-			F.[Port]
-	FROM
+	SELECT [WE].[CustomerId],
+			[WE].[Hostname],
+			[WE].[UserName],
+			[WE].[Password],
+			[WE].[Port]
+	FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+	WHERE WE.TypeConnectionId = 2
+	AND WE.RowStatus = 1
+	AND EXISTS
 	(
-		SELECT 
-			[WE].[CustomerId], [WE].[Hostname], [WE].[UserName], [WE].[Password], [WE].[Port]
-		FROM
-			[DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP] WTQDFS WITH(NOLOCK)
-			INNER JOIN
-				[DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
-				ON
-					WTQDFS.[CustomerId] = WE.[CustomerId]
-		WHERE 
-			COALESCE(WTQDFS.[WebhookTrackingQueueForSFTPId],0) = 0
-		UNION ALL
-		SELECT 
-			[WE].[CustomerId], [WE].[Hostname], [WE].[UserName], [WE].[Password], [WE].[Port]
-		FROM
-			[DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailPendingForSFTP] WTQDPFS WITH(NOLOCK)
-			LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP] WTQDFS WITH(NOLOCK)
-				ON WTQDPFS.WebhookTrackingQueueForSFTPId = WTQDFS.IdWebhookTrackingQueueDetailForSFTP
-			LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] WTQFS WITH(NOLOCK)
-				ON WTQFS.IdWebhookTrackingQueueForSFTP = WTQDPFS.WebhookTrackingQueueForSFTPId
-			INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK)
-				ON WTQDFS.[CustomerId] = WE.[CustomerId] 
-		WHERE 
-			WTQFS.HasNotified = 0
-			AND WTQDPFS.RowStatus = 1
-			AND WTQDFS.RowStatus = 1
-			AND WTQFS.RowStatus = 1
-	)AS F
+		SELECT 1 FROM DeliveryBackOffice.dbo.WebhookTrackingQueueDetailForSFTP A1 WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.WebhookTrackingQueueForSFTP A2 WITH(NOLOCK)
+		ON A2.IdWebhookTrackingQueueForSFTP = A1.WebhookTrackingQueueForSFTPId
+		AND A2.RowStatus = 1
+		AND A2.HasNotified = 0
+		WHERE A1.CustomerId = WE.CustomerId
+		AND A1.RowStatus = 1		
+	)
+	UNION
+	SELECT [WE].[CustomerId],
+			[WE].[Hostname],
+			[WE].[UserName],
+			[WE].[Password],
+			[WE].[Port]
+	FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
+	WHERE WE.TypeConnectionId = 2
+	AND WE.RowStatus = 1
+	AND EXISTS
+	(
+		SELECT 1 FROM DeliveryBackOffice.dbo.WebhookTrackingQueueDetailForSFTP A1 WITH(NOLOCK)		
+		WHERE A1.CustomerId = WE.CustomerId
+		AND A1.WebhookTrackingQueueForSFTPId IS NULL
+		AND A1.RowStatus = 1		
+	)
 
 END
