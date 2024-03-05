@@ -399,7 +399,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND RTP..ProductGiftShippingEmail='NULL' 
+															 AND RTP.ProductGiftShippingEmail IS NULL 
 							
 							THEN  (SELECT   ac.IdCustomer
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -431,7 +431,7 @@ BEGIN
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = ISNULL(RTP..ProductGiftShippingEmail,'N/D')
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
 														--	 AND T.ProductGiftShippingEmail !='NULL'
 							
@@ -451,7 +451,7 @@ BEGIN
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = ISNULL(RTP..ProductGiftShippingEmail,'N/D')
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE')
 					WHEN 	NOT	EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -469,7 +469,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND RTP..ProductGiftShippingEmail='NULL'
+															 AND RTP.ProductGiftShippingEmail=IS NULL
 				THEN NULL
 				WHEN NOT EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -754,7 +754,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND RTP..ProductGiftShippingEmail='NULL' 
+															 AND RTP.ProductGiftShippingEmail='NULL' 
 							
 							THEN  (SELECT   ac.IdCustomer
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -786,7 +786,7 @@ BEGIN
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = ISNULL(RTP..ProductGiftShippingEmail,'N/D')
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
 														--	 AND T.ProductGiftShippingEmail !='NULL'
 							
@@ -806,7 +806,7 @@ BEGIN
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = ISNULL(RTP..ProductGiftShippingEmail,'N/D')
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE')
 					WHEN 	NOT	EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -824,7 +824,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND RTP..ProductGiftShippingEmail='NULL'
+															 AND RTP.ProductGiftShippingEmail='NULL'
 				THEN NULL
 				WHEN NOT EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
