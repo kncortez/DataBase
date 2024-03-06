@@ -54,8 +54,8 @@ BEGIN
            CPI.[CatProductImageOrder]
     FROM DeliveryBackOffice.dbo.CatProductImage CPI
     INNER JOIN DeliveryBackOffice.dbo.CatMembership A2
-	ON A2.IdCatMembership = CPI.CatMembershipId AND A2.RowStatus = 1
+	ON A2.IdCatMembership = CPI.CatMembershipId 
 	WHERE CPI.RowStatus = 1
 	  AND A2.CatProductCategoryId = @IdCategory
-
+	  AND A2.RowStatus = 1
 END;

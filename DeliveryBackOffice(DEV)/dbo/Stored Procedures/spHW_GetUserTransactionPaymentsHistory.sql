@@ -47,10 +47,8 @@ BEGIN
 	FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	INNER JOIN	[dbo].[Account] A
 		ON		[DO].[IdCustomer] = [A].[IdCustomer]
-		AND		[A].[AccIdAccount] = @AccountId
 	INNER JOIN	[dbo].[CreditCardTransactionByCustomer] CCTC WITH(NOLOCK)
 		ON		CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) = [CCTC].[OrderNumber]
-		AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[DO].[Guide_Serie] = [ID].[dti_fk_orderSerie]
 		AND		[DO].[Guide_Number] = [ID].[dti_fk_orderNumber]
@@ -59,6 +57,8 @@ BEGIN
 	LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
+	WHERE [A].[AccIdAccount] = @AccountId
+	AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	ORDER BY	[CCTC].[DateCreated] DESC;
 
 	-- APUNTA A CREDIT CARD TRANSACTION BY CUSTOMER DETAIL
@@ -78,13 +78,11 @@ BEGIN
 	FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	INNER JOIN	[dbo].[Account] A
 		ON		[DO].[IdCustomer] = [A].[IdCustomer]
-		AND		[A].[AccIdAccount] = @AccountId
 	INNER JOIN	[dbo].[CreditCardTransactionByCustomerDetail] CCTCD WITH(NOLOCK)
 		ON		[DO].[Guide_Serie] = [CCTCD].[SerieNumber]
 		AND		[DO].[Guide_Number] = [CCTCD].[ProductNumber]
 	INNER JOIN	[dbo].[CreditCardTransactionByCustomer] CCTC WITH(NOLOCK)
 		ON		[CCTCD].[OrderNumber] = [CCTC].[OrderNumber]
-		AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[DO].[Guide_Serie] = [ID].[dti_fk_orderSerie]
 		AND		[DO].[Guide_Number] = [ID].[dti_fk_orderNumber]
@@ -93,6 +91,8 @@ BEGIN
 	LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
+	WHERE  [A].[AccIdAccount] = @AccountId
+	AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	ORDER BY	[CCTC].[DateCreated] DESC;
 
 	-- Membresías

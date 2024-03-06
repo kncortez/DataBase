@@ -26,10 +26,11 @@ BEGIN
 
 	select @IdAccount=A2.RuaIdAccount,@IdCustomer=A3.IdCustomer from RegisterUser A1			
 			INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount A2
-			ON A1.UsrIdUser = A2.RuaIdUser AND A2.RuaRowStatus = 1
+			ON A1.UsrIdUser = A2.RuaIdUser 
 			INNER JOIN DeliveryBackOffice.dbo.Account A3
-			ON A3.AccIdAccount = A2.RuaIdAccount AND A3.AccRowStatus = 1
-			where UsrEmail = @Email and UsrRowStatus = 1			
+			ON A3.AccIdAccount = A2.RuaIdAccount 
+			where UsrEmail = @Email and UsrRowStatus = 1
+			AND A2.RuaRowStatus = 1 AND A3.AccRowStatus = 1
 
 	IF (@IdAccount is null)
 	BEGIN
@@ -62,16 +63,16 @@ BEGIN
 		REPLACE(CONVERT(VARCHAR(10),pt.ExpirationDate,105),'-','/') AS DateExpiration
 		from CatSubscription cp WITH(NOLOCK)
 		  INNER JOIN Subscription pt WITH(NOLOCK)
-		  ON cp.IdCatSubscription = pt.CatSubscriptionId and pt.RowStatus = 1
-		  WHERE pt.ActivationCode = @Code		 
+		  ON cp.IdCatSubscription = pt.CatSubscriptionId 
+		  WHERE pt.ActivationCode = @Code and pt.RowStatus = 1		 
 
 		SELECT  SubscriptionAttributeDescription AS CatProductAttributeDescription FROM CatSubscriptionAtribute cpa WITH(NOLOCK)
 			INNER JOIN CatSubscription ctp WITH(NOLOCK)
 			ON cpa.CatSubscriptionId = ctp.IdCatSubscription
 			INNER JOIN Subscription pdt WITH(NOLOCK)
-			ON ctp.IdCatSubscription = pdt.CatSubscriptionId and pdt.RowStatus = 1
+			ON ctp.IdCatSubscription = pdt.CatSubscriptionId 
 			 WHERE pdt.ActivationCode = @Code
-			 and cpa.RowStatus = 1
+			 and cpa.RowStatus = 1 and pdt.RowStatus = 1
 
 	    END
 	ELSE IF (@ActivationCode > 0 and @RowStatus = 1)
@@ -116,17 +117,15 @@ print LEN(@ActivationCode)
 		   from CatMembership cp WITH(NOLOCK)
 		     INNER JOIN Membership pt WITH(NOLOCK)
 		     ON cp.IdCatMembership = pt.CatMembershipId
-			 and pt.RowStatus = 1
-		     WHERE pt.ActivationCode = @Code
+		     WHERE pt.ActivationCode = @Code and pt.RowStatus = 1
 		   
 		   SELECT DISTINCT MembershipAttributeDescription AS CatProductAttributeDescription FROM CatMembershipAttribute cpa WITH(NOLOCK)
 		   	INNER JOIN CatMembership ctp WITH(NOLOCK)
 		   	ON cpa.CatMembershipId = ctp.IdCatMembership
 		   	INNER JOIN Membership pdt WITH(NOLOCK)
 		   	ON ctp.IdCatMembership = pdt.CatMembershipId
-			and pdt.RowStatus = 1
 		   	 WHERE pdt.ActivationCode = @Code
-			 and cpa.RowStatus = 1
+			 and cpa.RowStatus = 1 and pdt.RowStatus = 1
 
 	    END
 		ELSE IF (LEN(@ActivationCode) > 0 and @RowStatus = 1)

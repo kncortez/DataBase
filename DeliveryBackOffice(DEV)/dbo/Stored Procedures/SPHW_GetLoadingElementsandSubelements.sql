@@ -178,8 +178,8 @@ BEGIN
 	   CS.Icon    [CatProductAttributeIcon]
 	  From  DeliveryBackOffice.[dbo].[CatSubscriptionAtribute] CPA WITH(NOLOCK)
 	  INNER JOIN DeliveryBackOffice.[dbo].[CatSubscription] CS WITH(NOLOCK)
-	  ON CPA.CatSubscriptionId =CS.IdCatSubscription AND CS.RowStatus=1
-	  Where CPA.RowStatus=1
+	  ON CPA.CatSubscriptionId =CS.IdCatSubscription 
+	  Where CPA.RowStatus=1 AND CS.RowStatus=1
 	  UNION ALL
 	  	 Select 
 	   CPA.MembershipAttributeDescription   [CatProductAttributeDescription],
@@ -189,8 +189,8 @@ BEGIN
 	   CS.Icon    [CatProductAttributeIcon]
 	  From  DeliveryBackOffice.[dbo].[CatMembershipAttribute] CPA WITH(NOLOCK)
 	  INNER JOIN DeliveryBackOffice.[dbo].[CatMembership] CS WITH(NOLOCK)
-	  ON CPA.CatMembershipId =CS.IdCatMembership AND CS.RowStatus=1
-	  Where CPA.RowStatus=1
+	  ON CPA.CatMembershipId =CS.IdCatMembership 
+	  Where CPA.RowStatus=1 AND CS.RowStatus=1
   
  
 END

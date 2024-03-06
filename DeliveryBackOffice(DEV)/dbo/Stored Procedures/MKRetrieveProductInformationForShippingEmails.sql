@@ -35,13 +35,12 @@ BEGIN
 			 ON A1.SubscriptionId = A2.IdSubscription --AND A2.RowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
 				ON A3.AccIdAccount = A2.AccountId
-				AND A3.AccRowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A4 WITH(NOLOCK)
-				ON A4.RuaIdAccount = A3.AccIdAccount AND A4.RuaRowStatus = 1
+				ON A4.RuaIdAccount = A3.AccIdAccount 
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A5 WITH(NOLOCK)
 				ON A5.UsrIdUser = A4.RuaIdUser
 			LEFT JOIN DeliveryBackOffice.dbo.Person A6 WITH(NOLOCK)
-				ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+				ON A6.PerIdPerson = A5.UsrIdPerson 
 			LEFT JOIN DeliveryBackOffice.dbo.CatSubscription A7 WITH(NOLOCK)
 				ON A7.IdCatSubscription = A2.CatSubscriptionId
 			OUTER APPLY (
@@ -49,6 +48,7 @@ BEGIN
 			 FROM DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates RT
 			 WHERE RT.OrderNumber = @TransactionId	) RT
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
+			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			UNION
 			SELECT COALESCE(A5.UsrEmail,RT.InvoiceEmail) [UsrEmail],
 			A2.IdMembership [IdProduct], 
@@ -64,13 +64,12 @@ BEGIN
 			 ON A2.IdMembership = A1.MembershipId --AND A2.RowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
 				ON A3.AccIdAccount = A2.AccountId
-				AND A3.AccRowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A4 WITH(NOLOCK)
-				ON A4.RuaIdAccount = A3.AccIdAccount AND A4.RuaRowStatus = 1
+				ON A4.RuaIdAccount = A3.AccIdAccount 
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A5 WITH(NOLOCK)
 				ON A5.UsrIdUser = A4.RuaIdUser
 			LEFT JOIN DeliveryBackOffice.dbo.Person A6 WITH(NOLOCK)
-				ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+				ON A6.PerIdPerson = A5.UsrIdPerson 
 			LEFT JOIN DeliveryBackOffice.dbo.CatMembership A7 WITH(NOLOCK)
 				ON A7.IdCatMembership = A2.CatMembershipId
 			OUTER APPLY (
@@ -79,6 +78,7 @@ BEGIN
 			 WHERE RT.OrderNumber = @TransactionId	
 			) RT
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
+			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			)TBL
 			ORDER BY TBL.OrderMail DESC
 
@@ -88,16 +88,16 @@ BEGIN
 			 ON A1.SubscriptionId = A2.IdSubscription --AND A2.RowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
 				ON A3.AccIdAccount = A2.AccountId
-				AND A3.AccRowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A4 WITH(NOLOCK)
-				ON A4.RuaIdAccount = A3.AccIdAccount AND A4.RuaRowStatus = 1
+				ON A4.RuaIdAccount = A3.AccIdAccount 
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A5 WITH(NOLOCK)
 				ON A5.UsrIdUser = A4.RuaIdUser
 			LEFT JOIN DeliveryBackOffice.dbo.Person A6 WITH(NOLOCK)
-				ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+				ON A6.PerIdPerson = A5.UsrIdPerson 
 			LEFT JOIN DeliveryBackOffice.dbo.CatSubscription A7 WITH(NOLOCK)
 				ON A7.IdCatSubscription = A2.CatSubscriptionId
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
+			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			AND  LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 
 			AND A2.ProductGiftShippingEmail <> 'NULL' 
 			UNION
@@ -107,16 +107,16 @@ BEGIN
 			 ON A2.IdMembership = A1.MembershipId --AND A2.RowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
 				ON A3.AccIdAccount = A2.AccountId
-				AND A3.AccRowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A4 WITH(NOLOCK)
-				ON A4.RuaIdAccount = A3.AccIdAccount AND A4.RuaRowStatus = 1
+				ON A4.RuaIdAccount = A3.AccIdAccount 
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A5 WITH(NOLOCK)
 				ON A5.UsrIdUser = A4.RuaIdUser
 			LEFT JOIN DeliveryBackOffice.dbo.Person A6 WITH(NOLOCK)
-				ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+				ON A6.PerIdPerson = A5.UsrIdPerson 
 			LEFT JOIN DeliveryBackOffice.dbo.CatMembership A7 WITH(NOLOCK)
 				ON A7.IdCatMembership = A2.CatMembershipId
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
+			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			AND  LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 
 			AND A2.ProductGiftShippingEmail <> 'NULL' 
 		END
@@ -175,16 +175,16 @@ BEGIN
 				ON A1.SubscriptionId = A2.IdSubscription --AND A2.RowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
 				ON A3.AccIdAccount = A2.AccountId
-				AND A3.AccRowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A4 WITH(NOLOCK)
-				ON A4.RuaIdAccount = A3.AccIdAccount AND A4.RuaRowStatus = 1
+				ON A4.RuaIdAccount = A3.AccIdAccount 
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A5 WITH(NOLOCK)
 				ON A5.UsrIdUser = A4.RuaIdUser
 			LEFT JOIN DeliveryBackOffice.dbo.Person A6 WITH(NOLOCK)
-				ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+				ON A6.PerIdPerson = A5.UsrIdPerson 
 			LEFT JOIN DeliveryBackOffice.dbo.CatSubscription A7 WITH(NOLOCK)
 				ON A7.IdCatSubscription = A2.CatSubscriptionId
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
+			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			AND  LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 
 			AND A2.ProductGiftShippingEmail <> 'NULL' 
 			UNION
@@ -194,16 +194,16 @@ BEGIN
 				ON A2.IdMembership = A1.MembershipId --AND A2.RowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.Account A3 WITH(NOLOCK)
 				ON A3.AccIdAccount = A2.AccountId
-				AND A3.AccRowStatus = 1
 			LEFT JOIN DeliveryBackOffice.dbo.RolByUserByAccount A4 WITH(NOLOCK)
-				ON A4.RuaIdAccount = A3.AccIdAccount AND A4.RuaRowStatus = 1
+				ON A4.RuaIdAccount = A3.AccIdAccount 
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser A5 WITH(NOLOCK)
 				ON A5.UsrIdUser = A4.RuaIdUser
 			LEFT JOIN DeliveryBackOffice.dbo.Person A6 WITH(NOLOCK)
-				ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+				ON A6.PerIdPerson = A5.UsrIdPerson 
 			LEFT JOIN DeliveryBackOffice.dbo.CatMembership A7 WITH(NOLOCK)
 				ON A7.IdCatMembership = A2.CatMembershipId
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
+			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			AND  LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 
 			AND A2.ProductGiftShippingEmail <> 'NULL' 
 			
@@ -241,11 +241,12 @@ BEGIN
 		LEFT JOIN [dbo].[RegisterUser] A5 WITH(NOLOCK)
 			ON A5.UsrEmail = A3.InvoiceEmail
 		LEFT JOIN [dbo].[Person] A6 WITH(NOLOCK)
-			ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+			ON A6.PerIdPerson = A5.UsrIdPerson 
 			OUTER APPLY (
 		 SELECT top 1 InvoiceEmail,NameTax, ProductGiftShippingEmail from DeliveryBackOffice.dbo.RegistrationofTransactionProcessStates RT
 		 WHERE RT.OrderNumber = @TransactionId	) RT
 		WHERE [Authorization] = @TransactionId--'SP00024113083'
+		AND A6.PerRowStatus = 1
 		UNION
 		SELECT COALESCE(A5.UsrEmail,A3.InvoiceEmail) [UsrEmail],
 		A2.IdMembership [IdProduct], 
@@ -267,8 +268,9 @@ BEGIN
 		LEFT JOIN [dbo].[RegisterUser] A5 WITH(NOLOCK)
 			ON A5.UsrEmail = A3.InvoiceEmail
 		LEFT JOIN [dbo].[Person] A6 WITH(NOLOCK)
-			ON A6.PerIdPerson = A5.UsrIdPerson AND A6.PerRowStatus = 1
+			ON A6.PerIdPerson = A5.UsrIdPerson 
 		WHERE [Authorization] = @TransactionId--'SP00024113083'
+		AND A6.PerRowStatus = 1
 		)TBL
 		order by TBL.OrderMail desc 
 
