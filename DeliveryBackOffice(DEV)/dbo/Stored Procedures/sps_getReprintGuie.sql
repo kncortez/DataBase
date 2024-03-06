@@ -11,7 +11,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Concesionario'  collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'  --collate Latin1_General_CI_AI 
 	)
 	declare @ExpressVisitPointTypeId int = 
 	(
@@ -21,7 +21,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Express Center'  collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'  --collate Latin1_General_CI_AI 
 	)
 	declare @IndividualWebSys int =
 	(
@@ -31,7 +31,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -41,7 +41,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -51,7 +51,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -61,7 +61,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @GuidePriority INT = 0;
     DECLARE @jsonOutput VARCHAR(MAX) = '',
@@ -109,7 +109,7 @@ begin
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
 	);
 
     DECLARE @DaysToExpiration INT =

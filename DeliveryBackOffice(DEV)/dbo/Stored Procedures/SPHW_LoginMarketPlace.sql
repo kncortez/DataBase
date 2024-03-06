@@ -53,18 +53,16 @@ PRINT 'TEST';
     FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
         INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
             ON rus.RusIdUser = usr.UsrIdUser
-               AND rus.RusIdSystem = @IdSystem
         LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
             ON res.UstIdUser = rus.RusIdUser
                AND res.UstIdSystem = rus.RusIdSystem
         LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
             ON rua.RuaIdUser = usr.UsrIdUser
-               AND rua.RuaRowStatus = 1
         INNER JOIN [dbo].Account              ac WITH (NOLOCK)
             ON ac.AccIdAccount = rua.RuaIdAccount
-               AND ac.AccRowStatus = 1
-    WHERE usr.UsrEmail = @Username
-          AND usr.UsrLastPassword = @Password;
+    WHERE usr.UsrEmail = @Username 
+          AND rus.RusIdSystem = @IdSystem AND rua.RuaRowStatus = 1
+          AND usr.UsrLastPassword = @Password AND ac.AccRowStatus = 1;
     -- insertar en tabla temporal posbibles mensajes de error
 
     IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
@@ -214,18 +212,17 @@ PRINT 'TEST';
                         FROM RegisterUser                         us
                             INNER JOIN [dbo].[RolByUserByAccount] rua
                                 ON rua.RuaIdUser = us.UsrIdUser
-                                   AND rua.RuaRowStatus = 1
                             INNER JOIN dbo.RolByModuleBySystem    rms
                                 ON rms.RmsIdRol = rua.RuaIdRol
-                                   AND rms.RmsRowStatus = 1
                             INNER JOIN [dbo].CatModule            cmo
                                 ON cmo.ModIdModule = rms.RmsIdModule
-                                   AND cmo.ModRowStatus = 1
-                                   AND cmo.ModVisible = 1
-                                   AND cmo.ModIdModuleParent IS NOT NULL
                             INNER JOIN [dbo].CatRol               rol
                                 ON rol.RolIdRol = rms.RmsIdRol
-                        WHERE us.UsrEmail = @Username
+                        WHERE us.UsrEmail = @Username AND rua.RuaRowStatus = 1
+                              AND rms.RmsRowStatus = 1
+                              AND cmo.ModRowStatus = 1
+                              AND cmo.ModVisible = 1
+                              AND cmo.ModIdModuleParent IS NOT NULL
                               AND us.UsrRowStatus = 1;
                         IF (@TOTALSUBMODULES) > 0
                         BEGIN /*PARENT LIST*/
@@ -237,22 +234,21 @@ PRINT 'TEST';
                             FROM RegisterUser                         us
                                 INNER JOIN [dbo].[RolByUserByAccount] rua
                                     ON rua.RuaIdUser = us.UsrIdUser
-                                       AND rua.RuaRowStatus = 1
                                 INNER JOIN dbo.RolByModuleBySystem    rms
                                     ON rms.RmsIdRol = rua.RuaIdRol
-                                       AND rms.RmsRowStatus = 1
                                 INNER JOIN [dbo].CatModule            cmo
                                     ON cmo.ModIdModule = rms.RmsIdModule
-                                       AND cmo.ModRowStatus = 1
-                                       AND cmo.ModVisible = 1
-                                       AND cmo.ModIdModuleParent IS NULL
-                                       AND cmo.ModIdModule IN
-                                           (
-                                               SELECT ModIdModuleParent FROM [dbo].CatModule
-                                           )
                                 INNER JOIN [dbo].CatRol               rol
                                     ON rol.RolIdRol = rms.RmsIdRol
-                            WHERE us.UsrEmail = @Username
+                            WHERE us.UsrEmail = @Username 
+                                  AND cmo.ModRowStatus = 1
+                                  AND cmo.ModVisible = 1
+                                  AND cmo.ModIdModuleParent IS NULL
+                                  AND cmo.ModIdModule IN
+                                      (
+                                        SELECT ModIdModuleParent FROM [dbo].CatModule
+                                      )
+                                  AND rua.RuaRowStatus = 1 AND rms.RmsRowStatus = 1
                                   AND us.UsrRowStatus = 1;
 
                             SELECT @TOTALSUBMODULES = COUNT(ModIdModule)
@@ -290,18 +286,16 @@ PRINT 'TEST';
                             FROM RegisterUser                         us
                                 INNER JOIN [dbo].[RolByUserByAccount] rua
                                     ON rua.RuaIdUser = us.UsrIdUser
-                                       AND rua.RuaRowStatus = 1
                                 INNER JOIN dbo.RolByModuleBySystem    rms
                                     ON rms.RmsIdRol = rua.RuaIdRol
-                                       AND rms.RmsRowStatus = 1
                                 INNER JOIN [dbo].CatModule            cmo
                                     ON cmo.ModIdModule = rms.RmsIdModule
-                                       AND cmo.ModRowStatus = 1
-                                       AND cmo.ModVisible = 1
                                 -- AND 
                                 INNER JOIN [dbo].CatRol               rol
                                     ON rol.RolIdRol = rms.RmsIdRol
-                            WHERE us.UsrEmail = @Username
+                            WHERE us.UsrEmail = @Username 
+                                  AND rua.RuaRowStatus = 1 AND rms.RmsRowStatus = 1
+                                  AND cmo.ModRowStatus = 1 AND cmo.ModVisible = 1
                                   AND us.UsrRowStatus = 1 --order by cmo.ModOrder
                                   AND cmo.ModIdModuleParent =
                                   (
@@ -359,21 +353,20 @@ PRINT 'TEST';
                                                 FROM RegisterUser                         us
                                                     INNER JOIN [dbo].[RolByUserByAccount] rua
                                                         ON rua.RuaIdUser = us.UsrIdUser
-                                                           AND rua.RuaRowStatus = 1
                                                     INNER JOIN dbo.RolByModuleBySystem    rms
                                                         ON rms.RmsIdRol = rua.RuaIdRol
-                                                           AND rms.RmsRowStatus = 1
                                                     INNER JOIN [dbo].CatModule            cmo
                                                         ON cmo.ModIdModule = rms.RmsIdModule
-                                                           AND cmo.ModRowStatus = 1
-                                                           AND cmo.ModVisible = 1
-                                                           AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
                                                     INNER JOIN [dbo].CatRol               rol
                                                         ON rol.RolIdRol = rms.RmsIdRol
                                                     LEFT JOIN @TBSUBMODULES               TMP
                                                         ON TMP.ModIdModule = cmo.ModIdModule
-                                                WHERE us.UsrEmail = @Username
+                                                WHERE us.UsrEmail = @Username AND rua.RuaRowStatus = 1
+                                                      AND rms.RmsRowStatus = 1
                                                       AND us.UsrRowStatus = 1
+                                                      AND cmo.ModRowStatus = 1
+                                                      AND cmo.ModVisible = 1
+                                                      AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
                                                 ORDER BY cmo.ModOrder
                                             
                        
@@ -398,18 +391,16 @@ PRINT 'TEST';
                                                 FROM RegisterUser                         us
                                                     INNER JOIN [dbo].Person               pe
                                                         ON pe.PerIdPerson = us.UsrIdPerson
-                                                           AND pe.PerRowStatus = 1
                                                     INNER JOIN [dbo].[RolByUserByAccount] rua
                                                         ON rua.RuaIdUser = us.UsrIdUser
-                                                           AND rua.RuaRowStatus = 1
                                                     INNER JOIN [dbo].CatRol               ro
                                                         ON ro.RolIdRol = rua.RuaIdRol
                                                     INNER JOIN [dbo].Account              ac
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
-                                                           AND ac.AccRowStatus = 1
                                                     INNER JOIN [dbo].CatTypeAccount       ta
                                                         ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
-                                                WHERE us.UsrEmail = @Username
+                                                WHERE us.UsrEmail = @Username AND pe.PerRowStatus = 1
+                                                      AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
                                                       AND us.UsrRowStatus = 1
                                              
                         -- obtener los datos del perfil asociado al usuario 
@@ -446,8 +437,8 @@ PRINT 'TEST';
                                                 FROM RegisterUser           us
                                                     INNER JOIN [dbo].Person pe
                                                         ON pe.PerIdPerson = us.UsrIdPerson
-                                                           AND pe.PerRowStatus = 1
                                                 WHERE us.UsrEmail = @Username
+                                                      AND pe.PerRowStatus = 1
                                                       AND us.UsrRowStatus = 1
                                           
 
@@ -499,17 +490,16 @@ PRINT 'TEST';
                                                     FROM DeliveryBackOffice.dbo.VisitPointClient VPC
                                                         JOIN VisitPointByUser                    VPU
                                                             ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                                                               AND VPU.RowStatus = 1
                                                         JOIN RegisterUser                        ru
                                                             ON VPU.RegisterUserID = ru.UsrIdUser
-                                                               AND ru.UsrRowStatus = 1
                                                         JOIN DeliveryBackOffice.dbo.Settlement   STL
                                                             ON VPC.IdSettlement = STL.IdSettlement
                                                         JOIN DeliveryBackOffice.dbo.Township     TWS
                                                             ON TWS.IdTownship = STL.IdTownship
                                                         JOIN DeliveryBackOffice.dbo.Province     PRV
                                                             ON PRV.IdProvince = TWS.IdProvince
-                                                    WHERE IdKindOfVPClient = 1
+                                                    WHERE IdKindOfVPClient = 1 AND VPU.RowStatus = 1
+                                                          AND ru.UsrRowStatus = 1
                                                           AND ru.UsrEmail = @Username
                                                    
                              
@@ -609,8 +599,7 @@ PRINT 'TEST';
         FROM [dbo].RegisterUser                   usr
             LEFT JOIN [dbo].UserSystemRestriction res
                 ON res.UstIdUser = usr.UsrIdUser
-                   AND res.UstIdSystem = @IdSystem
-        WHERE usr.UsrEmail = @Username;
+        WHERE usr.UsrEmail = @Username AND res.UstIdSystem = @IdSystem;
 
         -- retornar mensaje de error
         

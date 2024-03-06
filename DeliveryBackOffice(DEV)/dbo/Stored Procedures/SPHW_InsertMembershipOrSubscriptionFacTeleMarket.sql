@@ -59,7 +59,7 @@ BEGIN
                 SELECT TOP 1
                        [VPC].[CodeOfReference]
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
-                WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' COLLATE Latin1_General_CI_AI
+                WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' --COLLATE Latin1_General_CI_AI
                       AND VPC.[StatusClient] = 1
             );
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
@@ -104,7 +104,7 @@ BEGIN
                 SELECT TOP 1
                        [Description]
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI
+                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' --COLLATE Latin1_General_CI_AI
             );
     DECLARE @dti_IVA MONEY;
     DECLARE @dti_amount MONEY;
@@ -115,7 +115,7 @@ BEGIN
                 SELECT TOP 1
                        SAPCode
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI
+                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' --COLLATE Latin1_General_CI_AI
             );
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
@@ -136,58 +136,58 @@ BEGIN
 
     IF (
            @SuscriptionDesc = 'Plan Básico'
-           AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+           AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
        )
         SET @dti_description =
     (
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL A' COLLATE Latin1_General_CI_AI
+        WHERE [Name] = 'SUSCRIPCION MENSUAL A' --COLLATE Latin1_General_CI_AI
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Básico +'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
         SET @dti_description =
     (
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL B' COLLATE Latin1_General_CI_AI
+        WHERE [Name] = 'SUSCRIPCION MENSUAL B' --COLLATE Latin1_General_CI_AI
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Gold'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
         SET @dti_description =
     (
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL C' COLLATE Latin1_General_CI_AI
+        WHERE [Name] = 'SUSCRIPCION MENSUAL C' --COLLATE Latin1_General_CI_AI
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Corporativo'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
         SET @dti_description =
     (
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL D' COLLATE Latin1_General_CI_AI
+        WHERE [Name] = 'SUSCRIPCION MENSUAL D' --COLLATE Latin1_General_CI_AI
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Diamante'
-                AND @TypeSalePackage <> 'Membership' COLLATE Latin1_General_CI_AI
+                AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
         SET @dti_description =
     (
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'MEMBRESIA DIAMANTE' COLLATE Latin1_General_CI_AI
+        WHERE [Name] = 'MEMBRESIA DIAMANTE' --COLLATE Latin1_General_CI_AI
     )   ;
 
     IF (@InvoiceEmail = '')
@@ -219,7 +219,7 @@ BEGIN
 				OrderNumber = @OrderNumber;
 
         IF (Exists(SELECT Top 1 1 FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber = @OrderNumber 
-                AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI))
+                AND TypeSalePackage = 'MEMBERSHIP')) --COLLATE Latin1_General_CI_AI
         BEGIN
 
             SELECT TOP 1
@@ -253,7 +253,7 @@ BEGIN
         END
        
 	    IF (Exists(SELECT Top 1 1 FROM dbo.RegistrationofTransactionProcessStates Where OrderNumber = @OrderNumber 
-                AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI))
+                AND TypeSalePackage != 'MEMBERSHIP')) --COLLATE Latin1_General_CI_AI
             BEGIN
                 SELECT TOP 1
                        @inv_amount            = S.SubscriptionCost
@@ -338,7 +338,7 @@ BEGIN
 
  IF (
 			 EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
-                AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
+                AND TypeSalePackage = 'MEMBERSHIP') --COLLATE Latin1_General_CI_AI
            )
         BEGIN
 
@@ -717,7 +717,7 @@ BEGIN
 
    IF (
                EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
-                AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
+                AND TypeSalePackage != 'MEMBERSHIP') --COLLATE Latin1_General_CI_AI
                 )
         BEGIN
 
