@@ -44,31 +44,29 @@ CREATE TABLE [dbo].[CatSubscription] (
 
 GO
 
-
+ALTER TABLE [dbo].[CatSubscription] ADD  CONSTRAINT [DF_CatSubscription_RowStatus]  DEFAULT ((1)) FOR [RowStatus]
 GO
 
-
-
+ALTER TABLE [dbo].[CatSubscription]  WITH CHECK ADD  CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY([AlternativeRateHeaderId])
+REFERENCES [dbo].[RateHeader] ([RheId])
 GO
 
-
+ALTER TABLE [dbo].[CatSubscription] CHECK CONSTRAINT [FK_CatSubscription_AlternativeRate]
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
 
+ALTER TABLE [dbo].[CatSubscription]  WITH CHECK ADD  CONSTRAINT [FK_CatSubscription_CatMembership] FOREIGN KEY([IncludedMembershipId])
+REFERENCES [dbo].[CatMembership] ([IdCatMembership])
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'RateHeaderId';
 
-
+ALTER TABLE [dbo].[CatSubscription] CHECK CONSTRAINT [FK_CatSubscription_CatMembership]
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario alterno a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'AlternativeRateHeaderId';
 
+ALTER TABLE [dbo].[CatSubscription]  WITH CHECK ADD  CONSTRAINT [FK_CatSubscription_CatProductCategory] FOREIGN KEY([CatProductCategoryId])
+REFERENCES [dbo].[CatProductCategory] ([IdCatProductCategory])
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si suscripci?n contiene una membres?a incluida y cual membres?a es de la tabla CatMembership', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'IncludedMembershipId';
 
-
-
+ALTER TABLE [dbo].[CatSubscription] CHECK CONSTRAINT [FK_CatSubscription_CatProductCategory]
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id relacion con tabla CatProductCategory' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'CatProductCategoryId'

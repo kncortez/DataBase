@@ -390,7 +390,7 @@ PRINT 'TEST';
                                                          END  AS 'TacName', 
                                                         CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0))  AS 'IdCustomer',
                                                         ro.RolName 'RolName', 
-                                                        ISNULL(ac.ImageProfile, '') AS  'ImageProfile', 
+                                                        ISNULL(ac.ImageProfile, 'N/D') AS  'ImageProfile',  
                                                         CONVERT(VARCHAR(1), ISNULL(ac.StarRating, 0)) AS 'StarRating',
                                                         IIF(ac.AccConfirm = 'C', '1', '0') AS 'VerifiedEmail',
                                                         CONVERT(VARCHAR, ISNULL(us.ChangePassword, 0)) AS 'ChangePassword',
