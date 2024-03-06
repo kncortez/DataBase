@@ -369,7 +369,15 @@ BEGIN
             END;
         END;
     ----------------------- PROCESSGUIDECOD- SE REGISTRA RECOLECCIÓN . FIN ----------------------	
-    
+	--Actualizar estado de las piezas
+	UPDATE DeliveryOrderPiece
+	SET StatusOrderId = @StatusId
+	WHERE GuideSerie = @Guide_Serie
+	AND GuideNumber IN (SELECT
+			Guide_Number
+		FROM @ItemsTable);
+
+
     -------------------WEBHOOK.INI--------------------------------------------------------------------------------------------
                         DECLARE @WebhookCustomerId INT = -1;
                         DECLARE @CustomerEndpointId INT = -1;
@@ -386,17 +394,13 @@ BEGIN
                                               AND WT.RowStatus = 1
                                     );
 
-                            SET @WebhookCustomerId
-                                = ISNULL(
-                                  (
-                                      SELECT TOP 1
-                                             DO.IdCustomer
-                                      FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                      WHERE DO.Guide_Number = @Guide_Number
-                                            AND DO.Guide_Serie = @Guide_Serie
-                                  ),
-                                  -1
-                                        );
+                          
+                                SELECT TOP 1
+                                             @WebhookCustomerId =  ISNULL(DO.IdCustomer,-1),
+											 @GuideCurrentStatus = ISNULL(DO.StatusOrderId,-1)
+                                    FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                                      WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie
+
                             SET @CustomerEndpointId
                                 = ISNULL(
                                   (
@@ -408,15 +412,6 @@ BEGIN
                                   ),
                                   -1
                                         );
-
-                            SET @GuideCurrentStatus =
-                            (
-                                SELECT TOP 1
-                                       DO.StatusOrderId
-                                FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-                                WHERE DO.Guide_Number = @Guide_Number
-                                      AND DO.Guide_Serie = @Guide_Serie
-                            );
 
                             -- Cliente tiene webhook configurado para el tipo especificado
                             -- Estado actual de la guía coincide dentro de las restricciónes por usuario
@@ -578,13 +573,8 @@ BEGIN
 
                     -------------------WEBHOOK.INI FIN----------------------------------------------------------------------------------------	
 
-	--Actualizar estado de las piezas
-	UPDATE DeliveryOrderPiece
-	SET StatusOrderId = @StatusId
-	WHERE GuideSerie = @Guide_Serie
-	AND GuideNumber IN (SELECT
-			Guide_Number
-		FROM @ItemsTable);
+
+
 
     END TRY
     BEGIN CATCH
