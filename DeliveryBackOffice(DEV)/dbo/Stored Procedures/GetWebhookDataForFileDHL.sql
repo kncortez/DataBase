@@ -79,7 +79,7 @@ BEGIN
 			--Datos base del detalle
 			WITH D as (
 			SELECT  'D' [Type], 
-					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[ExternalPieceId] DESC) AS [Counter], 
+					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC) AS [Counter], 
 					'IST' [Service_Area_Code], 
 					'CET' [Facility_Code], 
 					FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'yyyyMMdd') [CheckPointDate],
@@ -90,8 +90,11 @@ BEGIN
 					WTQDFS.[GuidePiece],
 					WTQDFS.[ExternalNumber] [Waybill],
 					WTQDFS.[ExternalPieceId][PieceId],
+					WTQDFS.[TokenCreated],
 					CASE WHEN [WTQDFS].[StatusOrderId] = 5 THEN 'OK' WHEN [WTQDFS].[StatusOrderId] = 22 THEN 'OK' ELSE 'FD' END [CheckPointCode],
-					WTQDFS.StatusOrderId [DHL_Status],
+					WTQDFS.[StatusOrderId] [DHL_Status],
+					WTQDFS.[DeliveryAttemptId] [DHL_Incident],
+					WTQDFS.[NewDeliveryDate],
 					'GTW7' [Route_Code],
 					'A' [Cycle_Code]
 			FROM	
@@ -102,20 +105,51 @@ BEGIN
 						  AND [DOP].[NoPiece] = [WTQDFS].[GuidePiece]
 						  AND [WTQDFS].ExternalPieceId = [WTQDFS].[ExternalPieceId]
 			WHERE	[WTQDFS].[WebhookTrackingQueueForSFTPId] = @LOTE
+			--ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC 
+			),
+			HEP AS
+			(
+				SELECT	[A1].[PieceId], 
+						[A1].[Waybill], 
+						[A1].[DHL_Status],
+						ISNULL([A7].[DescriptionOfClient],'') [Station]
+				FROM [D] A1 WITH (NOLOCK)
+					LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken A2 WITH (NOLOCK)
+						ON A1.TokenCreated = A2.SSN_IdToken
+					LEFT JOIN [DeliveryBackOffice].[dbo].[InternalUser] A3 WITH (NOLOCK)
+						ON A2.SSN_IdUser = A3.IdUser
+						   AND A2.SSN_Username = A3.Username
+					OUTER APPLY
+					(
+						SELECT TOP 1 [A4].[StationId]
+						FROM [dbo].[RolByUserBySystem] A4 WITH (NOLOCK)
+						WHERE A4.RusIdUser = A3.RegisterUserID
+							  AND StationId IS NOT NULL
+						ORDER BY StationId
+					) A5
+					LEFT JOIN [dbo].[CatStation] A6 WITH (NOLOCK)
+						ON A5.StationId = A6.IdStation
+					LEFT JOIN [dbo].[VisitPointClient] A7 WITH (NOLOCK)
+						ON A7.CodeOfReference = A6.CodeOfReference
+				WHERE  A3.RowStatus = 1
 			),
 			DSO AS( --Obtener detalle del estatus
 				SELECT  [D].[PieceId], 
 						[D].[Waybill], 
 						[D].[DHL_Status],
-					    CASE WHEN [SOE].IdStatusOrderExternal = 1
+					    CASE WHEN [SOE].IdStatusOrderExternal = 1  --Recolecta
 							 THEN CONCAT([SOE].[Remark],'FORZA ',D.GuideSerie,D.GuideNumber,'-',D.GuidePiece)
-							 WHEN [SOE].IdStatusOrderExternal = 2
-							 THEN CONCAT([SOE].[Remark],'FORZA ')
-							 WHEN [SOE].IdStatusOrderExternal = 6
-							 THEN CONCAT([SOE].[Remark],'FORZA ')
-							 WHEN [SOE].IdStatusOrderExternal = 9
+							 --THEN CONCAT([SOE].[Remark],'FORZA ','R',D.GuideNumber,'-',D.GuidePiece)
+							 WHEN [SOE].IdStatusOrderExternal = 2  --Arrivo
+							 THEN CONCAT([SOE].[Remark],'FORZA ',(SELECT HEP.[Station] FROM HEP WHERE HEP.Waybill = D.Waybill AND HEP.PieceId = D.PieceId AND HEP.[DHL_Status] = D.DHL_Status))
+							 --THEN 'ERROR '
+							 WHEN [SOE].IdStatusOrderExternal = 6  --Inventario
+							 THEN CONCAT([SOE].[Remark],'FORZA ',(SELECT HEP.[Station] FROM HEP WHERE HEP.Waybill = D.Waybill AND HEP.PieceId = D.PieceId AND HEP.[DHL_Status] = D.DHL_Status))
+							 WHEN [SOE].IdStatusOrderExternal = 8  --En Ruta
+							 THEN CONCAT([SOE].[Remark],'')
+							 WHEN [SOE].IdStatusOrderExternal = 9  --Entrega
 							 THEN CONCAT([SOE].[Remark], ' ' ,[DO].NameOfReceiver)
-							 ELSE [SOE].[Remark]
+							 ELSE [SOE].[Remark]                   --Todo lo demás
 							 END [DHL_Checkpoint_Remark_DSO]
 				FROM D
 				LEFT JOIN [dbo].[StatusOrderRelation] SOR
@@ -134,29 +168,36 @@ BEGIN
 				SELECT  [D].[PieceId], 
 						[D].[Waybill],
 						[D].[DHL_Status],
-					    CASE WHEN [SOE].IdStatusOrderExternal = 4
-							 THEN CONCAT([SOE].[Remark],'FORZA ')
+						CASE WHEN [SOE].IdStatusOrderExternal = 3
+							 THEN CONCAT([SOE].[Remark],'')
+							 WHEN [SOE].IdStatusOrderExternal = 4
+							 THEN CONCAT([SOE].[Remark], FORMAT(ISNULL(D.[NewDeliveryDate],'1900-01-01 00:00:00'),'yyMM'), ' PM' )
+							 WHEN [SOE].IdStatusOrderExternal = 5
+							 THEN CONCAT([SOE].[Remark],'')
 							 ELSE [SOE].[Remark]
 							 END [DHL_Checkpoint_Remark_DI]
 				FROM D
 				RIGHT JOIN [dbo].[DeliveryAttempt] DA
-					ON [DA].[Guide_Serie] = [D].[GuideSerie]
-					AND [DA].[Guide_Number] = [D].[GuideNumber]
-					AND [DA].[Guide_Piece] = [D].[GuidePiece]
+					ON [DA].[ID] = [D].[DHL_Incident]
 				LEFT JOIN [dbo].[ConfirmationOfIncidence] COI
 					ON [COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
 				LEFT JOIN [dbo].[IncidentTypeRelation] ITR
-					ON [ITR].[IncidenceTypeId] = [COI].[CatTypeConfirmationOfIncidenceId]
+					ON [ITR].[IncidenceTypeId] = [DA].[ID_Incident]
 			   LEFT JOIN [dbo].[StatusOrderExternal] SOE
 					ON [SOE].[IdStatusOrderExternal] = [ITR].[StatusOrderExternalId]
 				WHERE D.DHL_Status = 50
+				  AND [COI].[StatusOrderId] = 50
+				  AND [COI].[IsConfirmed] = 1
+				  AND [COI].[IsDenied] = 0
 				  AND [COI].[RowStatus] = 1
+				  AND [ITR].[RowStatus] = 1
 				  --AND [SOE].[CustomerId] = @CUSTOMER_ID
 			)
 			
 			--SELECT * FROM D;
 			--Detalle del archivo
 			SELECT	D.[Type], 
+				    --'R' [Type],
 					D.[Counter], 
 					D.[Service_Area_Code],
 					D.[Facility_Code],
@@ -187,6 +228,14 @@ BEGIN
 		END
 	END
 	ELSE IF (@T_TYPE = 4)
+	BEGIN
+		UPDATE WebhookTrackingQueueForSFTP 
+		SET		ShippingDate = GETDATE(),
+				TokenUpdated = 'SYST-CAZURDIA',
+				DateUpdated = GETDATE()
+		WHERE IdWebhookTrackingQueueForSFTP = @LOTE;
+	END
+	ELSE IF (@T_TYPE = 5)
 	BEGIN
 		PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO --'
 
@@ -246,7 +295,6 @@ BEGIN
 
 			Select '202' [status], 'Lote Estatus Actualizado' [message];
 		END
-
 	END
 	ELSE 
 	BEGIN
