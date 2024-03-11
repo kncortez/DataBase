@@ -1595,6 +1595,8 @@
     
     <Build Include="dbo\Tables\PointsGuidesLog.sql" />
     <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_select.sql" />
+    <Build Include="dbo\Stored Procedures\sp_set_inactive_employees.sql" />
+    <Build Include="dbo\Stored Procedures\sp_Set_RelationshipPieceCode.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
