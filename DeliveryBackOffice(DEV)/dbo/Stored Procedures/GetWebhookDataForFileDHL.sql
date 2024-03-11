@@ -22,16 +22,16 @@ BEGIN
 	****************************************************************************/
 	IF(@T_TYPE = 1)
 	BEGIN
-		PRINT '-- CREACION DE LOTE  --'
+		--PRINT '-- CREACION DE LOTE  --'
 		SELECT @HOSTNAME = wep.Hostname FROM WebhookEndpoint wep WHERE wep.CustomerId = @CUSTOMER_ID;
 
 		IF (@HOSTNAME <> '') 
 		BEGIN
-			--Definir el nombre del archivo
+			--Definir el nombre del archivo y creación del lote
 			SET @FILENAME = CONCAT('GT_FORZA_',FORMAT(GETDATE(),'yyyyMMdd_hhmmss'),'.txt');
 			
-			INSERT INTO WebhookTrackingQueueForSFTP ([FileName], [Hostname], [HasNotified], [RowStatus], [TokenCreated], [DateCreated])
-			VALUES(@FILENAME, @HOSTNAME,0,1,'SYS-CAZURDIA',GETDATE());
+			INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] ([FileName], [Hostname], [HasNotified], [RowStatus], [TokenCreated], [DateCreated])
+			VALUES(@FILENAME, @HOSTNAME,0,1,'SYS-HERMESWEBHOOKS',GETDATE());
 
 			SET @LOTE_AUX = IDENT_CURRENT('WebhookTrackingQueueForSFTP');
 
@@ -48,36 +48,36 @@ BEGIN
 	END
 	ELSE IF(@T_TYPE = 2)
 	BEGIN
-		PRINT '-- ASIGNACIÓN DE GUIAS A LOTE GENERADO --'
 
+		--PRINT '-- ASIGNACIÓN DE GUIAS A LOTE GENERADO --'
 		-- Guias no asignadas 
-		UPDATE WebhookTrackingQueueDetailForSFTP SET WebhookTrackingQueueForSFTPId = @LOTE WHERE WebhookTrackingQueueForSFTPId IS NULL 
-		-- Guias pendientes de asignar
-		UPDATE WebhookTrackingQueueDetailForSFTP
-		SET WebhookTrackingQueueDetailForSFTP.WebhookTrackingQueueForSFTPId = @LOTE 
-		FROM WebhookTrackingQueueDetailForSFTP 
-			LEFT JOIN WebhookTrackingQueueDetailPendingForSFTP 
-			   ON WebhookTrackingQueueDetailForSFTP.IdWebhookTrackingQueueDetailForSFTP = WebhookTrackingQueueDetailPendingForSFTP.IdWebhookTrackingQueueDetailPendingForSFTP
-			   AND WebhookTrackingQueueDetailForSFTP.WebhookTrackingQueueForSFTPId = WebhookTrackingQueueDetailPendingForSFTP.WebhookTrackingQueueForSFTPId
-			LEFT JOIN WebhookTrackingQueueForSFTP
-			   ON WebhookTrackingQueueDetailForSFTP.WebhookTrackingQueueForSFTPId = WebhookTrackingQueueForSFTP.IdWebhookTrackingQueueForSFTP
-		WHERE WebhookTrackingQueueForSFTP.HasNotified = 0;
+		UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP] SET [WebhookTrackingQueueForSFTPId] = @LOTE WHERE [WebhookTrackingQueueForSFTPId] IS NULL 
+		-- Guias con problemas y pendientes de asignar
+		UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP]
+		SET [WebhookTrackingQueueDetailForSFTP].[WebhookTrackingQueueForSFTPId] = @LOTE 
+		FROM [WebhookTrackingQueueDetailForSFTP] 
+			LEFT JOIN  [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailPendingForSFTP]
+			   ON [WebhookTrackingQueueDetailForSFTP].[IdWebhookTrackingQueueDetailForSFTP] = [WebhookTrackingQueueDetailPendingForSFTP].[IdWebhookTrackingQueueDetailPendingForSFTP]
+			   AND [WebhookTrackingQueueDetailForSFTP].[WebhookTrackingQueueForSFTPId] = [WebhookTrackingQueueDetailPendingForSFTP].[WebhookTrackingQueueForSFTPId]
+			LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP]
+			   ON [WebhookTrackingQueueDetailForSFTP].[WebhookTrackingQueueForSFTPId] = [WebhookTrackingQueueForSFTP].[IdWebhookTrackingQueueForSFTP]
+		WHERE [WebhookTrackingQueueForSFTP].[HasNotified] = 0;
 
 		SELECT '202' [status], 'Acción Creacion de lote' [message];
 
 	END
 	ELSE IF(@T_TYPE = 3)
 	BEGIN
-		PRINT '-- GENERACIÓN DE ARCHIVO QUE SE ENVIARA A FORZA --'
+
+		--PRINT '-- GENERACIÓN DE ARCHIVO QUE SE ENVIARA A FORZA --'
 		-- Verificar si el lote existe
-		IF EXISTS( Select IdWebhookTrackingQueueForSFTP from WebhookTrackingQueueForSFTP WHERE IdWebhookTrackingQueueForSFTP = @LOTE )
+		IF EXISTS( Select [IdWebhookTrackingQueueForSFTP] from [dbo].[WebhookTrackingQueueForSFTP] WHERE [IdWebhookTrackingQueueForSFTP] = @LOTE )
 		BEGIN 
 
 			--Encabezado del archivo
 			SELECT 'H' [Type], GETDATE() [Date_Time], 'FORZA' [Partner];
 
-			--Datos base del detalle
-			WITH D as (
+			WITH D as ( --Datos base del detalle
 			SELECT  'D' [Type], 
 					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC) AS [Counter], 
 					'IST' [Service_Area_Code], 
@@ -107,37 +107,36 @@ BEGIN
 			WHERE	[WTQDFS].[WebhookTrackingQueueForSFTPId] = @LOTE
 			--ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC 
 			),
-			HEP AS
-			(
+			HEP AS( --Datos del lugar donde se registra el Checkpoint
 				SELECT	[A1].[PieceId], 
 						[A1].[Waybill], 
 						[A1].[DHL_Status],
 						ISNULL([A7].[DescriptionOfClient],'') [Station]
 				FROM [D] A1 WITH (NOLOCK)
-					LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken A2 WITH (NOLOCK)
-						ON A1.TokenCreated = A2.SSN_IdToken
+					LEFT JOIN [DenariusUser_Dev].[dbo].[LGN_LogByToken] A2 WITH (NOLOCK)
+						ON A1.[TokenCreated] = A2.[SSN_IdToken]
 					LEFT JOIN [DeliveryBackOffice].[dbo].[InternalUser] A3 WITH (NOLOCK)
-						ON A2.SSN_IdUser = A3.IdUser
-						   AND A2.SSN_Username = A3.Username
+						ON A2.[SSN_IdUser] = A3.[IdUser]
+						   AND A2.[SSN_Username] = A3.[Username]
 					OUTER APPLY
 					(
 						SELECT TOP 1 [A4].[StationId]
 						FROM [dbo].[RolByUserBySystem] A4 WITH (NOLOCK)
-						WHERE A4.RusIdUser = A3.RegisterUserID
-							  AND StationId IS NOT NULL
+						WHERE A4.[RusIdUser] = A3.[RegisterUserID]
+							  AND [StationId] IS NOT NULL
 						ORDER BY StationId
 					) A5
 					LEFT JOIN [dbo].[CatStation] A6 WITH (NOLOCK)
-						ON A5.StationId = A6.IdStation
+						ON A5.[StationId] = A6.[IdStation]
 					LEFT JOIN [dbo].[VisitPointClient] A7 WITH (NOLOCK)
-						ON A7.CodeOfReference = A6.CodeOfReference
+						ON A7.[CodeOfReference] = A6.[CodeOfReference]
 				WHERE  A3.RowStatus = 1
 			),
 			DSO AS( --Obtener detalle del estatus
 				SELECT  [D].[PieceId], 
 						[D].[Waybill], 
 						[D].[DHL_Status],
-					    CASE WHEN [SOE].IdStatusOrderExternal = 1  --Recolecta
+					    CASE WHEN [SOE].[IdStatusOrderExternal] = 1  --Recolecta
 							 THEN CONCAT([SOE].[Remark],'FORZA ',D.GuideSerie,D.GuideNumber,'-',D.GuidePiece)
 							 --THEN CONCAT([SOE].[Remark],'FORZA ','R',D.GuideNumber,'-',D.GuidePiece)
 							 WHEN [SOE].IdStatusOrderExternal = 2  --Arrivo
@@ -152,11 +151,11 @@ BEGIN
 							 ELSE [SOE].[Remark]                   --Todo lo demás
 							 END [DHL_Checkpoint_Remark_DSO]
 				FROM D
-				LEFT JOIN [dbo].[StatusOrderRelation] SOR
+				LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrderRelation] SOR
 					ON [SOR].[StatusOrderId] = [D].[DHL_Status]
-				LEFT JOIN [dbo].[StatusOrderExternal] SOE
+				LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrderExternal] SOE
 					ON [SOE].[IdStatusOrderExternal] = [SOR].[StatusOrderExternalId]
-				INNER JOIN [dbo].[DeliveryOrder] DO
+				INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] DO
 					ON [DO].[Guide_Serie] = [D].[GuideSerie]
 				   AND [DO].[Guide_Number] = [D].[GuideNumber]
 				WHERE D.DHL_Status <> 50
@@ -168,7 +167,7 @@ BEGIN
 				SELECT  [D].[PieceId], 
 						[D].[Waybill],
 						[D].[DHL_Status],
-						CASE WHEN [SOE].IdStatusOrderExternal = 3
+						CASE WHEN [SOE].[IdStatusOrderExternal] = 3
 							 THEN CONCAT([SOE].[Remark],'')
 							 WHEN [SOE].IdStatusOrderExternal = 4
 							 THEN CONCAT([SOE].[Remark], FORMAT(ISNULL(D.[NewDeliveryDate],'1900-01-01 00:00:00'),'yyMM'), ' PM' )
@@ -177,15 +176,15 @@ BEGIN
 							 ELSE [SOE].[Remark]
 							 END [DHL_Checkpoint_Remark_DI]
 				FROM D
-				RIGHT JOIN [dbo].[DeliveryAttempt] DA
+				RIGHT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA
 					ON [DA].[ID] = [D].[DHL_Incident]
-				LEFT JOIN [dbo].[ConfirmationOfIncidence] COI
+				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI
 					ON [COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
-				LEFT JOIN [dbo].[IncidentTypeRelation] ITR
+				LEFT JOIN [DeliveryBackOffice].[dbo].[IncidentTypeRelation] ITR
 					ON [ITR].[IncidenceTypeId] = [DA].[ID_Incident]
-			   LEFT JOIN [dbo].[StatusOrderExternal] SOE
+			   LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrderExternal] SOE
 					ON [SOE].[IdStatusOrderExternal] = [ITR].[StatusOrderExternalId]
-				WHERE D.DHL_Status = 50
+				WHERE D.[DHL_Status] = 50
 				  AND [COI].[StatusOrderId] = 50
 				  AND [COI].[IsConfirmed] = 1
 				  AND [COI].[IsDenied] = 0
@@ -195,7 +194,7 @@ BEGIN
 			)
 			
 			--SELECT * FROM D;
-			--Detalle del archivo
+			--Detalle del archivo Final
 			SELECT	D.[Type], 
 				    --'R' [Type],
 					D.[Counter], 
@@ -217,9 +216,10 @@ BEGIN
 			ORDER BY [Counter] ASC
 			
 			--Pie de página del archivo
-			SELECT 'T' [Type], COUNT(IdWebhookTrackingQueueDetailForSFTP) [Total_Pieces] 
-			FROM WebhookTrackingQueueDetailForSFTP
-			WHERE [WebhookTrackingQueueForSFTPId] = @LOTE;
+			SELECT	'T' [Type], 
+					COUNT(IdWebhookTrackingQueueDetailForSFTP) [Total_Pieces] 
+			FROM	[DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP]
+			WHERE	[WebhookTrackingQueueForSFTPId] = @LOTE;
 
 		END
 		ELSE 
@@ -229,69 +229,70 @@ BEGIN
 	END
 	ELSE IF (@T_TYPE = 4)
 	BEGIN
-		UPDATE WebhookTrackingQueueForSFTP 
-		SET		ShippingDate = GETDATE(),
-				TokenUpdated = 'SYST-CAZURDIA',
-				DateUpdated = GETDATE()
-		WHERE IdWebhookTrackingQueueForSFTP = @LOTE;
+		--PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO (CREACIÓN DEL ARCHIVO Y LOTE) --'
+		UPDATE [DeliveryBackOffice].[dbo].WebhookTrackingQueueForSFTP 
+		SET		[ShippingDate] = GETDATE(),
+				[TokenUpdated] = 'SYS-HERMESWEBHOOKS',
+				[DateUpdated] = GETDATE()
+		WHERE [IdWebhookTrackingQueueForSFTP] = @LOTE;
 	END
 	ELSE IF (@T_TYPE = 5)
 	BEGIN
-		PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO --'
 
+		--PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO (ARCHIVO ENVIADO O CON PROBLEMAS) --'
 		IF(@MESSAGE = '')
 		BEGIN
-			PRINT '-- ARCHIVO ACEPTADO --'
+			--PRINT '-- ARCHIVO ACEPTADO --'
 		-- Se actualiza encabezado y deja constancia de que concluyo la entrega del archivo
-			UPDATE WebhookTrackingQueueForSFTP 
-			SET		HasNotified = 1, 
-					SenderResponse = 'OK', 
-					RegistrationDate = GETDATE(),
-					TokenUpdated = 'SYST-CAZURDIA',
-					DateUpdated = GETDATE()
-			WHERE IdWebhookTrackingQueueForSFTP = @LOTE;
+			UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] 
+			SET		[HasNotified] = 1, 
+					[SenderResponse] = 'OK', 
+					[RegistrationDate] = GETDATE(),
+					[TokenUpdated] = 'SYS-HERMESWEBHOOKS',
+					[DateUpdated] = GETDATE()
+			WHERE [IdWebhookTrackingQueueForSFTP] = @LOTE;
 
 		-- Se actualiza encabezados pendientes y que se concluyeron en la entrega del archivo
-			UPDATE WebhookTrackingQueueDetailPendingForSFTP 
-			SET		TokenUpdated = 'SYST-CAZURDIA',
-					DateUpdated = GETDATE()
-			FROM  WebhookTrackingQueueDetailPendingForSFTP WITH(NOLOCK)
-			LEFT JOIN WebhookTrackingQueueDetailForSFTP WTQDFS WITH(NOLOCK)
-				  ON  WebhookTrackingQueueDetailPendingForSFTP.IdWebhookTrackingQueueDetailPendingForSFTP = WTQDFS.IdWebhookTrackingQueueDetailForSFTP
-				   AND WebhookTrackingQueueDetailPendingForSFTP.WebhookTrackingQueueForSFTPId = WTQDFS.WebhookTrackingQueueForSFTPId
-			INNER JOIN WebhookTrackingQueueForSFTP WTQFS WITH(NOLOCK)
-			      ON  WebhookTrackingQueueDetailPendingForSFTP.WebhookTrackingQueueForSFTPId = WTQFS.IdWebhookTrackingQueueForSFTP
+			UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailPendingForSFTP]
+			SET		[TokenUpdated] = 'SYST-CAZURDIA',
+					[DateUpdated] = GETDATE()
+			FROM  [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailPendingForSFTP] WITH(NOLOCK)
+			LEFT JOIN [dbo].[WebhookTrackingQueueDetailForSFTP] WTQDFS WITH(NOLOCK)
+				  ON  [WebhookTrackingQueueDetailPendingForSFTP].[IdWebhookTrackingQueueDetailPendingForSFTP] = [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP]
+				   AND [WebhookTrackingQueueDetailPendingForSFTP].[WebhookTrackingQueueForSFTPId] = [WTQDFS].[WebhookTrackingQueueForSFTPId]
+			INNER JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] WTQFS WITH(NOLOCK)
+			      ON  [WebhookTrackingQueueDetailPendingForSFTP].[WebhookTrackingQueueForSFTPId] = [WTQFS].[IdWebhookTrackingQueueForSFTP]
 			WHERE 
 				 WTQFS.HasNotified = 0
 			
-			UPDATE WebhookTrackingQueueForSFTP 
-			SET		HasNotified = 1,
-				    TokenUpdated = 'SYST-CAZURDIA',
-					DateUpdated = GETDATE()
-			FROM   WebhookTrackingQueueForSFTP  WITH(NOLOCK)
-			INNER JOIN WebhookTrackingQueueDetailPendingForSFTP WTQDPFS WITH(NOLOCK)
-				   ON WebhookTrackingQueueForSFTP.IdWebhookTrackingQueueForSFTP = WTQDPFS.WebhookTrackingQueueForSFTPId
-			LEFT JOIN WebhookTrackingQueueDetailForSFTP WTQDFS WITH(NOLOCK)
-				   ON  WTQDFS.WebhookTrackingQueueForSFTPId = WebhookTrackingQueueForSFTP.IdWebhookTrackingQueueForSFTP
-				  AND  WTQDFS.IdWebhookTrackingQueueDetailForSFTP = WTQDPFS.IdWebhookTrackingQueueDetailPendingForSFTP
+			UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] 
+			SET		[HasNotified] = 1,
+				    [TokenUpdated] = 'SYS-HERMESWEBHOOKS',
+					[DateUpdated] = GETDATE()
+			FROM   [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP]  WITH(NOLOCK)
+			INNER JOIN [WebhookTrackingQueueDetailPendingForSFTP] WTQDPFS WITH(NOLOCK)
+				   ON [WebhookTrackingQueueForSFTP].[IdWebhookTrackingQueueForSFTP] = [WTQDPFS].[WebhookTrackingQueueForSFTPId]
+			LEFT JOIN [WebhookTrackingQueueDetailForSFTP] WTQDFS WITH(NOLOCK)
+				   ON  [WTQDFS].[WebhookTrackingQueueForSFTPId] = [WebhookTrackingQueueForSFTP].[IdWebhookTrackingQueueForSFTP]
+				  AND  [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] = [WTQDPFS].[IdWebhookTrackingQueueDetailPendingForSFTP]
 
 			Select '202' [status], 'Lote Estatus Actualizado' [message];
 		END
 		ELSE
 		BEGIN
-			PRINT '-- ARCHIVO PENDIENTE --'
+			--PRINT '-- ARCHIVO PENDIENTE --'
 			-- Se actualiza encabezado y deja constancia del porque no se concluyo la entrega del archivo
-			UPDATE WebhookTrackingQueueForSFTP 
-			SET		HasNotified = 0, 
-					SenderResponse = @MESSAGE, 
-					RegistrationDate = GETDATE() 
-			WHERE IdWebhookTrackingQueueForSFTP = @LOTE;
+			UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] 
+			SET		[HasNotified] = 0, 
+					[SenderResponse] = @MESSAGE, 
+					[RegistrationDate] = GETDATE() 
+			WHERE [IdWebhookTrackingQueueForSFTP] = @LOTE;
 
 			-- Se actualiza encabezado y deja constancia del porque no se concluyo la entrega del archivo
-			INSERT INTO WebhookTrackingQueueDetailPendingForSFTP(WebhookTrackingQueueForSFTPId,IdWebhookTrackingQueueDetailPendingForSFTP,RowStatus,TokenCreated,DateCreated)
-			SELECT WebhookTrackingQueueForSFTPId, IdWebhookTrackingQueueDetailForSFTP, 1, 'SYS-CAZURDIA', GETDATE() 
-			FROM WebhookTrackingQueueDetailForSFTP 
-			WHERE WebhookTrackingQueueForSFTPId = @LOTE;
+			INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailPendingForSFTP]([WebhookTrackingQueueForSFTPId],[IdWebhookTrackingQueueDetailPendingForSFTP],[RowStatus],[TokenCreated],[DateCreated])
+			SELECT [WebhookTrackingQueueForSFTPId], [IdWebhookTrackingQueueDetailForSFTP], 1, 'SYS-HERMESWEBHOOKS', GETDATE() 
+			FROM [dbo].[WebhookTrackingQueueDetailForSFTP] 
+			WHERE [WebhookTrackingQueueForSFTPId] = @LOTE;
 
 			Select '202' [status], 'Lote Estatus Actualizado' [message];
 		END
