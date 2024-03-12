@@ -82,8 +82,10 @@ BEGIN
 					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC) AS [Counter], 
 					'IST' [Service_Area_Code], 
 					'CET' [Facility_Code], 
-					FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'yyyyMMdd') [CheckPointDate],
-					FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'HHmmss') [CheckPointTime],
+					--FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'yyyyMMdd') [CheckPointDate],
+					--FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'HHmmss') [CheckPointTime],
+					FORMAT(ISNULL(WTQDFS.[DateCreated],'1900-01-01 00:00:00'),'yyyyMMdd') [CheckPointDate],
+					FORMAT(ISNULL(WTQDFS.[DateCreated],'1900-01-01 00:00:00'),'HHmmss') [CheckPointTime],
 					'-06:00' [GTM_Offset],
 					WTQDFS.[GuideSerie],
 					WTQDFS.[GuideNumber],
@@ -105,7 +107,7 @@ BEGIN
 						  AND [DOP].[NoPiece] = [WTQDFS].[GuidePiece]
 						  AND [WTQDFS].ExternalPieceId = [WTQDFS].[ExternalPieceId]
 			WHERE	[WTQDFS].[WebhookTrackingQueueForSFTPId] = @LOTE
-			--ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC 
+			
 			),
 			HEP AS( --Datos del lugar donde se registra el Checkpoint
 				SELECT	[A1].[PieceId], 
@@ -138,10 +140,8 @@ BEGIN
 						[D].[DHL_Status],
 					    CASE WHEN [SOE].[IdStatusOrderExternal] = 1  --Recolecta
 							 THEN CONCAT([SOE].[Remark],'FORZA ',D.GuideSerie,D.GuideNumber,'-',D.GuidePiece)
-							 --THEN CONCAT([SOE].[Remark],'FORZA ','R',D.GuideNumber,'-',D.GuidePiece)
 							 WHEN [SOE].IdStatusOrderExternal = 2  --Arrivo
 							 THEN CONCAT([SOE].[Remark],'FORZA ',(SELECT HEP.[Station] FROM HEP WHERE HEP.Waybill = D.Waybill AND HEP.PieceId = D.PieceId AND HEP.[DHL_Status] = D.DHL_Status))
-							 --THEN 'ERROR '
 							 WHEN [SOE].IdStatusOrderExternal = 6  --Inventario
 							 THEN CONCAT([SOE].[Remark],'FORZA ',(SELECT HEP.[Station] FROM HEP WHERE HEP.Waybill = D.Waybill AND HEP.PieceId = D.PieceId AND HEP.[DHL_Status] = D.DHL_Status))
 							 WHEN [SOE].IdStatusOrderExternal = 8  --En Ruta
@@ -210,10 +210,11 @@ BEGIN
 					THEN (SELECT TOP 1 [DI].[DHL_Checkpoint_Remark_DI] FROM DI WHERE DI.[Waybill] = D.[Waybill] AND DI.[PieceId] = D.[PieceId] AND DI.[DHL_Status] = D.[DHL_Status])
 					ELSE (SELECT TOP 1 [DSO].[DHL_Checkpoint_Remark_DSO] FROM DSO WHERE DSO.[Waybill] = D.[Waybill] AND DSO.[PieceId] = D.[PieceId] AND DSO.[DHL_Status] = D.[DHL_Status])
 					END [DHL_Checkpoint_Remark],
+					--'ERROR' [DHL_Checkpoint_Remark],
 					D.[Route_Code],
 					D.[Cycle_Code]
 			FROM D
-			ORDER BY [Counter] ASC
+	    	ORDER BY [Counter] ASC
 			
 			--Pie de página del archivo
 			SELECT	'T' [Type], 
@@ -235,10 +236,27 @@ BEGIN
 				[TokenUpdated] = 'SYS-HERMESWEBHOOKS',
 				[DateUpdated] = GETDATE()
 		WHERE [IdWebhookTrackingQueueForSFTP] = @LOTE;
+
 	END
 	ELSE IF (@T_TYPE = 5)
 	BEGIN
+		
+		SELECT @HOSTNAME = wep.Hostname FROM WebhookEndpoint wep WHERE wep.CustomerId = @CUSTOMER_ID
 
+		IF (@HOSTNAME <> '' AND ISNULL(@LOTE,0) <> 0) --Si el Customer cuenta con Hostname
+		BEGIN
+			SELECT [Hostname], [UserName], [Password], [Port] FROM WebhookEndpoint wep WHERE wep.CustomerId = @CUSTOMER_ID
+
+			SELECT '202' [status], 'Acción Creacion de lote' [message];
+		END
+		ELSE
+		BEGIN
+			Select '404' [status], 'Customer No definido' [message];
+		END
+	END
+	ELSE IF (@T_TYPE = 6)
+	BEGIN
+		
 		--PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO (ARCHIVO ENVIADO O CON PROBLEMAS) --'
 		IF(@MESSAGE = '')
 		BEGIN
@@ -296,10 +314,10 @@ BEGIN
 
 			Select '202' [status], 'Lote Estatus Actualizado' [message];
 		END
+
 	END
 	ELSE 
 	BEGIN
 		Select '404' [status], 'Acción No definida' [message];
 	END
-
 END
