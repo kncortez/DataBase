@@ -63,7 +63,8 @@ OUTER APPLY
 ,R2.PaymentImageURL FROM DeliveryBackOffice.dbo.MembershipPaymentLog R2 WITH(NOLOCK)
  WHERE R2.MembershipId = A1.IdMembership
 )R2
---WHERE
+WHERE
+ A1.CatMembershipStatusId <> 4
 --A1.RowStatus = 1
 --AND A1.DateCreated >= '2023-07-01 00:00:00'
 --AND A1.DateCreated <= '2023-07-31 23:59:59'
@@ -125,7 +126,8 @@ OUTER APPLY
  WHERE R1.SubscriptionId = A3.IdSubscription
 
 )R1
---WHERE 
+WHERE 
+ A3.CatSubscriptionStatusId <>4
 --A3.RowStatus = 1
 --AND A3.DateCreated >= '2023-07-01 00:00:00'
 --AND A3.DateCreated <= '2023-07-31 23:59:59'
