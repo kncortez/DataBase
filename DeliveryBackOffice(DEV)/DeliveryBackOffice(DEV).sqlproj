@@ -1598,6 +1598,7 @@
     <Build Include="dbo\Stored Procedures\sp_set_inactive_employees.sql" />
     <Build Include="dbo\Stored Procedures\sp_Set_RelationshipPieceCode.sql" />
     <Build Include="dbo\Stored Procedures\sp_Get_RelationshipPieceCode.sql" />
+    <Build Include="dbo\Stored Procedures\spGetQueryRelationshipPieceCode.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
