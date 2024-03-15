@@ -1,7 +1,7 @@
 ﻿USE DeliveryBackOffice
 GO
 --SE AGREGA LA CATEGORIA A CADA PAQUETE
-DECLARE @IdCategory INT =(select idcatProductCategory from dbo.CatProductCategory where CatProductCategoryName='Paquetes')
+DECLARE @IdCategory INT =(select idcatProductCategory from dbo.CatProductCategory where CatProductCategoryName='Guías Prepago')
 Update [dbo].[CatSubscription] SET
 	[CatProductCategoryId]=@IdCategory,
 	TokenUpdated='SYS-EVASQUEZ',
@@ -21,12 +21,17 @@ UPDATE [dbo].[CatSubscription]
 SET SubscriptionValidity = (SubscriptionValidity / 30),
 TokenUpdated='SYS-EVASQUEZ',
 	  DateUpdated=GETDATE()
+WHERE MembershipValidity>=30
 
 
 UPDATE [dbo].[CatMembership]
 SET   MembershipValidity =(MembershipValidity / 30),
 TokenUpdated='SYS-EVASQUEZ',
 	  DateUpdated=GETDATE()
+WHERE MembershipValidity>=30
+
+
+	
 
 
 
