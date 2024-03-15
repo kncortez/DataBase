@@ -564,7 +564,7 @@ SET
 SubscriptionAttributeDescription='Hasta 10 Libras.',
 SubscriptionAttributePosition=4,
 SubscriptionAttributeDescriptionLong='Hasta 10 Libras.',
-CatSubscriptionAttributeIcon='bi bi-cash fa-2x',
+CatSubscriptionAttributeIcon='fa fa-archive fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
 DateUpdated=GETDATE()
 FROM [dbo].[CatSubscriptionAtribute] CSA
@@ -694,7 +694,7 @@ SET
 SubscriptionAttributeDescription='Hasta 10 Libras.',
 SubscriptionAttributePosition=5,
 SubscriptionAttributeDescriptionLong='Hasta 10 Libras.',
-CatSubscriptionAttributeIcon='fa fa-check-circle fa-2x',
+CatSubscriptionAttributeIcon='fa fa-archive fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
 DateUpdated=GETDATE()
 FROM [dbo].[CatSubscriptionAtribute] CSA
