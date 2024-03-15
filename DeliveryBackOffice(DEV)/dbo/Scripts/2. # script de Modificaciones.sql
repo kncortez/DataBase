@@ -213,7 +213,7 @@ AND CS.SubscriptionName='Paquete Plus'
 UPDATE CSA
 SET 
 SubscriptionAttributeDescription='La tarifa más barata del mercado.',
-SubscriptionAttributePosition=4,
+SubscriptionAttributePosition=5,
 SubscriptionAttributeDescriptionLong='La tarifa más barata del mercado.',
 CatSubscriptionAttributeIcon='bi bi-cash fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -229,7 +229,7 @@ AND CS.SubscriptionName='Paquete Plus'
 UPDATE CSA
 SET 
 SubscriptionAttributeDescription='Hasta 10 Libras.',
-SubscriptionAttributePosition=5,
+SubscriptionAttributePosition=4,
 SubscriptionAttributeDescriptionLong='Hasta 10 Libras.',
 CatSubscriptionAttributeIcon='fa fa-archive fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -329,7 +329,7 @@ AND CS.SubscriptionName='Paquete Gold'
 UPDATE [dbo].[CatSubscriptionAtribute]
 SET 
 SubscriptionAttributeDescription='La tarifa más barata del mercado.',
-SubscriptionAttributePosition=4,
+SubscriptionAttributePosition=5,
 SubscriptionAttributeDescriptionLong='La tarifa más barata del mercado.',
 CatSubscriptionAttributeIcon='bi bi-cash fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -345,7 +345,7 @@ AND CS.SubscriptionName='Paquete Gold'
 UPDATE [dbo].[CatSubscriptionAtribute]
 SET 
 SubscriptionAttributeDescription='Hasta 10 Libras.',
-SubscriptionAttributePosition=5,
+SubscriptionAttributePosition=4,
 SubscriptionAttributeDescriptionLong='Hasta 10 Libras.',
 CatSubscriptionAttributeIcon='fa fa-archive fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -675,7 +675,7 @@ AND CS.SubscriptionName='Paquete Platino'
 UPDATE [dbo].[CatSubscriptionAtribute]
 SET 
 SubscriptionAttributeDescription='La tarifa más barata del mercado.',
-SubscriptionAttributePosition=4,
+SubscriptionAttributePosition=5,
 SubscriptionAttributeDescriptionLong='La tarifa más barata del mercado.',
 CatSubscriptionAttributeIcon='fa fa-archive fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -692,7 +692,7 @@ AND CS.SubscriptionName='Paquete Platino'
 UPDATE [dbo].[CatSubscriptionAtribute]
 SET 
 SubscriptionAttributeDescription='Hasta 10 Libras.',
-SubscriptionAttributePosition=5,
+SubscriptionAttributePosition=4,
 SubscriptionAttributeDescriptionLong='Hasta 10 Libras.',
 CatSubscriptionAttributeIcon='fa fa-archive fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
