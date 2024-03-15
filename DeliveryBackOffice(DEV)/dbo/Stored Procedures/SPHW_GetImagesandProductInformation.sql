@@ -103,6 +103,7 @@ From [dbo].[CatMembershipAttribute] CPA WITH(NOLOCK)
 WHERE CPA.CatMembershipId = @IdCatProduct
        AND   CPA.RowStatus=1
 	   AND CS.MembershipName = @ProductName
+ORDER BY CPA.SubscriptionAttributePosition ASC
 
 					
 select  CPD.Title [CatProductDescriptionTitle],
