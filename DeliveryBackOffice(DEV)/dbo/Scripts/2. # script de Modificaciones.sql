@@ -635,14 +635,30 @@ FROM [dbo].[CatSubscriptionAtribute] CSA
 INNER JOIN DBO.CatSubscription CS
 ON CSA.CatSubscriptionId = CS.IdCatSubscription
 WHERE 
-CSA.SubscriptionAttributeDescription='400 envíos incluidos </br> Q.25 cada uno.'
+CSA.SubscriptionAttributeDescription='400 envíos incluidos'
+AND CSA.RowStatus=1
+AND CS.SubscriptionName='Paquete Platino'
+
+UPDATE [dbo].[CatSubscriptionAtribute]
+SET 
+SubscriptionAttributeDescription='Tarifa única en todo el país.',
+SubscriptionAttributePosition=2,
+SubscriptionAttributeDescriptionLong='Tarifa única en todo el país.',
+CatSubscriptionAttributeIcon='fa fa-map fa-2x',
+TokenUpdated='SYS-EVASQUEZ',
+DateUpdated=GETDATE()
+FROM [dbo].[CatSubscriptionAtribute] CSA
+INNER JOIN DBO.CatSubscription CS
+ON CSA.CatSubscriptionId = CS.IdCatSubscription
+WHERE 
+CSA.SubscriptionAttributeDescription='Q.25 c/u.'
 AND CSA.RowStatus=1
 AND CS.SubscriptionName='Paquete Platino'
 
 UPDATE [dbo].[CatSubscriptionAtribute]
 SET 
 SubscriptionAttributeDescription='Costo único para todos tus clientes.',
-SubscriptionAttributePosition=2,
+SubscriptionAttributePosition=3,
 SubscriptionAttributeDescriptionLong='Costo único para todos tus clientes.',
 CatSubscriptionAttributeIcon='bi bi-cash fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -652,22 +668,6 @@ INNER JOIN DBO.CatSubscription CS
 ON CSA.CatSubscriptionId = CS.IdCatSubscription
 WHERE 
 CSA.SubscriptionAttributeDescription='Tarifa única a todo el país.'
-AND CSA.RowStatus=1
-AND CS.SubscriptionName='Paquete Platino'
-
-UPDATE [dbo].[CatSubscriptionAtribute]
-SET 
-SubscriptionAttributeDescription='Tarifa única en todo el país.',
-SubscriptionAttributePosition=3,
-SubscriptionAttributeDescriptionLong='Tarifa única en todo el país.',
-CatSubscriptionAttributeIcon='fa fa-map fa-2x',
-TokenUpdated='SYS-EVASQUEZ',
-DateUpdated=GETDATE()
-FROM [dbo].[CatSubscriptionAtribute] CSA
-INNER JOIN DBO.CatSubscription CS
-ON CSA.CatSubscriptionId = CS.IdCatSubscription
-WHERE 
-CSA.SubscriptionAttributeDescription='No se permite servicio Collect.'
 AND CSA.RowStatus=1
 AND CS.SubscriptionName='Paquete Platino'
 
@@ -684,15 +684,31 @@ FROM [dbo].[CatSubscriptionAtribute] CSA
 INNER JOIN DBO.CatSubscription CS
 ON CSA.CatSubscriptionId = CS.IdCatSubscription
 WHERE 
-CSA.SubscriptionAttributeDescription='Hasta 10 Libras.'
+CSA.SubscriptionAttributeDescription='No se permite servicio Collect.'
 AND CSA.RowStatus=1
 AND CS.SubscriptionName='Paquete Platino'
 
 
 UPDATE [dbo].[CatSubscriptionAtribute]
 SET 
-SubscriptionAttributeDescription='Vigencia de 6 meses.',
+SubscriptionAttributeDescription='Hasta 10 Libras.',
 SubscriptionAttributePosition=5,
+SubscriptionAttributeDescriptionLong='Hasta 10 Libras.',
+CatSubscriptionAttributeIcon='fa fa-check-circle fa-2x',
+TokenUpdated='SYS-EVASQUEZ',
+DateUpdated=GETDATE()
+FROM [dbo].[CatSubscriptionAtribute] CSA
+INNER JOIN DBO.CatSubscription CS
+ON CSA.CatSubscriptionId = CS.IdCatSubscription
+WHERE 
+CSA.SubscriptionAttributeDescription='Hasta 10 Libras.'
+AND CSA.RowStatus=1
+AND CS.SubscriptionName='Paquete Platino'
+
+UPDATE [dbo].[CatSubscriptionAtribute]
+SET 
+SubscriptionAttributeDescription='Vigencia de 6 meses.',
+SubscriptionAttributePosition=6,
 SubscriptionAttributeDescriptionLong='Vigencia de 6 meses.',
 CatSubscriptionAttributeIcon='fa fa-check-circle fa-2x',
 TokenUpdated='SYS-EVASQUEZ',
@@ -701,7 +717,7 @@ FROM [dbo].[CatSubscriptionAtribute] CSA
 INNER JOIN DBO.CatSubscription CS
 ON CSA.CatSubscriptionId = CS.IdCatSubscription
 WHERE 
-CSA.SubscriptionAttributeDescription='+3.5% C.O.D. con ''Acreditamiento Inmediato''.'
+CSA.SubscriptionAttributeDescription='+3.8% C.O.D. con ''Acreditamiento Inmediato'''
 AND CSA.RowStatus=1
 AND CS.SubscriptionName='Paquete Platino'
 
