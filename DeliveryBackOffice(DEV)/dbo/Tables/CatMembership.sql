@@ -1,26 +1,29 @@
-﻿CREATE TABLE [dbo].[CatMembership](
-	[IdCatMembership] [int] IDENTITY(1,1) NOT NULL,
-	[MembershipName] [nvarchar](50) NOT NULL,
-	[MembershipDescription] [nvarchar](300) NOT NULL,
-	[MembershipCost] [decimal](18, 2) NOT NULL,
-	[MembershipFixedValue] [int] NOT NULL,
-	[MembershipMaxServiceFixedValue] [int] NOT NULL,
-	[MembershipValidity] [int] NOT NULL,
-	[RowStatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdated] [nvarchar](50) NULL,
-	[DateUpdated] [datetime] NULL,
-	[Icon] [nvarchar](50) NULL,
-	[NextSalesPackageBanner] [nvarchar](200) NULL,
-	[CatProductCategoryId] [int] NULL,
-	[Tag] [nvarchar](100) NULL,
-	[Position] [int] NULL,
- CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED 
-(
-	[IdCatMembership] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+CREATE TABLE [dbo].[CatMembership] (
+    [IdCatMembership]                INT             IDENTITY (1, 1) NOT NULL,
+    [MembershipName]                 NVARCHAR (50)   NOT NULL,
+    [MembershipDescription]          NVARCHAR (300)  NOT NULL,
+    [MembershipCost]                 DECIMAL (18, 2) NOT NULL,
+    [MembershipFixedValue]           INT             NOT NULL,
+    [MembershipMaxServiceFixedValue] INT             NOT NULL,
+    [MembershipValidity]             INT             NOT NULL,
+    [RowStatus]                      BIT             NOT NULL,
+    [TokenCreated]                   NVARCHAR (50)   NOT NULL,
+    [DateCreated]                    DATETIME        NOT NULL,
+    [TokenUpdated]                   NVARCHAR (50)   NULL,
+    [DateUpdated]                    DATETIME        NULL,
+    [Icon]                           NVARCHAR (50)   NULL,
+    [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
+	[CatProductCategoryId] 			[int]			 NULL,
+	[Tag] 							[nvarchar](100)  NULL,
+	[Position] 						[int] 			 NULL,	
+    CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
+);
+
+
+
+
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del registro.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'IdCatMembership'
@@ -75,3 +78,8 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de catal
 GO
 
 
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'etiqueta de identificación ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'Tag'
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Ordenar membresia por posición' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'Position'

@@ -79,7 +79,8 @@ SET @EndDate = CAST(CONVERT(VARCHAR(10), @EndDate, 120) + ' 23:59:59' AS datetim
 				WHERE 
 				A1.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A1.DateCreated <= @EndDate--'2023-07-31 23:59:59'
-				AND A1.RowStatus = 1
+				AND A1.CatMembershipStatusId <> 4
+				
 
 				UNION
 				SELECT
@@ -141,6 +142,7 @@ SET @EndDate = CAST(CONVERT(VARCHAR(10), @EndDate, 120) + ' 23:59:59' AS datetim
 				WHERE 
 				A3.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A3.DateCreated <= @EndDate--'2023-07-31 23:59:59'
-				AND A3.RowStatus = 1
+				AND A3.CatSubscriptionStatusId <>4
+				
 
 END
