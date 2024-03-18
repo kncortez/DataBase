@@ -415,3 +415,8 @@ CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus]
     ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC, [StatusOrderId] ASC)
     INCLUDE([Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Department]);
 
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetQueryRelationshipPieceCode]
+	ON [dbo].[DeliveryOrder] ([Ticket_Number],[Guide_Number]);
+

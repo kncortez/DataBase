@@ -55,3 +55,7 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_NoPiece]
     ON [dbo].[DeliveryOrderPiece]([GuideSerie] ASC, [GuideNumber] ASC, [NoPiece] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderPiece_GetQueryRelationshipPieceCode]
+	ON [dbo].[DeliveryOrderPiece] ([ExternalPieceId])
+	INCLUDE ([GuideSerie],[GuideNumber],[NoPiece])
