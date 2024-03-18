@@ -420,3 +420,7 @@ GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetQueryRelationshipPieceCode]
 	ON [dbo].[DeliveryOrder] ([Ticket_Number],[Guide_Number]);
 
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetRelationshipPieceCode]
+ON [dbo].[DeliveryOrder] ([IdCustomer])
+INCLUDE ([Ticket_Number],[Pieces_Dry],[Pieces_Cold])
