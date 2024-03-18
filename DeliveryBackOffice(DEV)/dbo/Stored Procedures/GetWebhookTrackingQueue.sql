@@ -43,7 +43,8 @@ BEGIN
 			[WE].[Hostname],
 			[WE].[UserName],
 			[WE].[Password],
-			[WE].[Port]
+			[WE].[Port],
+			[WE].[RemoteRoute]
 	FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
 	WHERE WE.TypeConnectionId = 2
 	AND WE.RowStatus = 1
@@ -62,7 +63,8 @@ BEGIN
 			[WE].[Hostname],
 			[WE].[UserName],
 			[WE].[Password],
-			[WE].[Port]
+			[WE].[Port],
+			[WE].[RemoteRoute]
 	FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH (NOLOCK)
 	WHERE WE.TypeConnectionId = 2
 	AND WE.RowStatus = 1
