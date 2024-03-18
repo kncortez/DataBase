@@ -27,6 +27,9 @@ GO
 ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK2_WebhookTrackingQueueDetailForSFTP_Customer] FOREIGN KEY([CustomerId])
 REFERENCES [dbo].[Customer] ([IdCustomer])
 GO
+ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK3_WebhookTrackingQueueDetailForSFTP_DeliveryOrderPiece] FOREIGN KEY([GuideSerie],[GuideNumber],[GuidePiece])
+REFERENCES [dbo].[DeliveryOrderPiece] ([GuideSerie],[GuideNumber],[GuidePiece])
+GO
 ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK4_WebhookTrackingQueueDetailForSFTP_StatusOrder] FOREIGN KEY([StatusOrderId])
 REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 GO

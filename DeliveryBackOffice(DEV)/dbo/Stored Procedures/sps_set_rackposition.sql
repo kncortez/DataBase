@@ -301,7 +301,7 @@ BEGIN
 								DateCreated,
 								TokenCreated)
 							SELECT @WebhookCustomerId,
-							dop.GuideSerie,dop.GuideNumber, dop.NoPiece, do.Ticket_Number,dop.ExternalPieceId, 
+							dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
 							@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@UserCreated AS TokenCreated
 							FROM DeliveryOrderPiece dop WITH(NOLOCK)
 							INNER JOIN DeliveryOrder do WITH(NOLOCK)
