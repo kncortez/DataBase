@@ -97,3 +97,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryOrderPiece',
     @level2type = N'COLUMN',
     @level2name = N'AccountIdRegistrationExternalCode'
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderPiece_GetQueryRelationshipPieceCode]
+	ON [dbo].[DeliveryOrderPiece] ([ExternalPieceId])
+	INCLUDE ([GuideSerie],[GuideNumber],[NoPiece])

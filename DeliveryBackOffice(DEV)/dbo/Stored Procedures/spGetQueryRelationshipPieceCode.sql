@@ -45,9 +45,10 @@ BEGIN
 				ON DOP.[GuideSerie] = DO.[Guide_Serie] AND DOP.[GuideNumber] = DO.[Guide_Number]
 			WHERE DOP.[GuideSerie] = @GuideSerie AND DOP.[GuideNumber] = @GuideNumber AND DOP.[NoPiece] = @NoPiece
 
-			IF (@pGuideExternal IS NOT NULL)
+			IF (@pGuideExternal IS NOT NULL AND @pGuideExternal != '' AND @pGuideExternal != @GuideExternal) OR 
+				(@pPieceExternal IS NOT NULL AND @pPieceExternal != '' AND @pPieceExternal != @PieceExternal)
 			BEGIN
-				SET @pDescripcion = 3; --La pieza de Forza ya está asociada a una pieza externa. ¿Desea actualizarla?
+				SET @pDescripcion = 3; --La guÍa/pieza de Forza ya está asociada a una pieza externa. ¿Desea actualizarla?
 			END;
 		END;
 		ELSE
