@@ -38,7 +38,8 @@ BEGIN
 			)
 		) TBL
 		WHERE DOP.GuideSerie = TBL.Guide_Serie
-			  AND DOP.GuideNumber = TBL.Guide_Number;
+			  AND DOP.GuideNumber = TBL.Guide_Number
+		ORDER BY 1 ASC,4 ASC;
 
 	END TRY
 	BEGIN CATCH
