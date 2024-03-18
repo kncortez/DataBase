@@ -82,7 +82,7 @@ BEGIN
              , 0
              , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipRemainingUses]
          , IIF((([M].[ActualServiceCount] * 100)
-                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
+                / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN 1 ELSE [M].[MembershipMaxServiceFixedValue] END)
                ) > 100
              , 100
              , (([M].[ActualServiceCount] * 100)
