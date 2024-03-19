@@ -15,28 +15,14 @@ CREATE TABLE [dbo].[WebhookTrackingQueueDetailForSFTP](
 	[TokenUpdated] [NVARCHAR](50) NULL,
 	[DeliveryAttemptId] [bigint] NULL,
 	[NewDeliveryDate] [datetime] NULL,
- CONSTRAINT [PK_IdWebhookTrackingQueueDetailForSFTP] PRIMARY KEY CLUSTERED 
-(
-	[IdWebhookTrackingQueueDetailForSFTP] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    CONSTRAINT [PK_IdWebhookTrackingQueueDetailForSFTP] PRIMARY KEY CLUSTERED ([IdWebhookTrackingQueueDetailForSFTP] ASC), 
+    CONSTRAINT [FK1_WebhookTrackingQueueDetailForSFTP_WebhookTrackingQueueForSFTP] FOREIGN KEY ([WebhookTrackingQueueForSFTPId]) REFERENCES [WebhookTrackingQueueForSFTP]([IdWebhookTrackingQueueForSFTP]), 
+    CONSTRAINT [FK2_WebhookTrackingQueueDetailForSFTP_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [Customer]([IdCustomer]), 
+    CONSTRAINT [FK3_WebhookTrackingQueueDetailForSFTP_DeliveryOrderPiece] FOREIGN KEY ([GuideSerie],[GuideNumber],[GuidePiece]) REFERENCES [DeliveryOrderPiece]([GuideSerie],[GuideNumber],[GuidePiece]), 
+    CONSTRAINT [FK4_WebhookTrackingQueueDetailForSFTP_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [StatusOrder]([StatusOrderId]), 
+    CONSTRAINT [FK_WebhookTrackingQueueDetailForSFTP_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [DeliveryAttempt]([ID]), 
+    CONSTRAINT [UQ_1] UNIQUE ([CustomerId],[ExternalNumber],[ExternalPieceId])
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK1_WebhookTrackingQueueDetailForSFTP_WebhookTrackingQueueForSFTP] FOREIGN KEY([WebhookTrackingQueueForSFTPId])
-REFERENCES [dbo].[WebhookTrackingQueueForSFTP] ([IdWebhookTrackingQueueForSFTP])
-GO
-ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK2_WebhookTrackingQueueDetailForSFTP_Customer] FOREIGN KEY([CustomerId])
-REFERENCES [dbo].[Customer] ([IdCustomer])
-GO
-ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK3_WebhookTrackingQueueDetailForSFTP_DeliveryOrderPiece] FOREIGN KEY([GuideSerie],[GuideNumber],[GuidePiece])
-REFERENCES [dbo].[DeliveryOrderPiece] ([GuideSerie],[GuideNumber],[GuidePiece])
-GO
-ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK4_WebhookTrackingQueueDetailForSFTP_StatusOrder] FOREIGN KEY([StatusOrderId])
-REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
-GO
-ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP] ADD CONSTRAINT UQ_1 UNIQUE ([CustomerId],[ExternalNumber],[ExternalPieceId])
-GO
-ALTER TABLE [dbo].[WebhookTrackingQueueDetailForSFTP]  WITH CHECK ADD  CONSTRAINT [FK_WebhookTrackingQueueDetailForSFTP_DeliveryAttempt] FOREIGN KEY([DeliveryAttemptId])
-REFERENCES [dbo].[DeliveryAttempt] ([ID])
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla WebhookTrackingQueueDetailForSFTP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'IdWebhookTrackingQueueDetailForSFTP'
 GO

@@ -11,11 +11,8 @@ CREATE TABLE [dbo].[WebhookTrackingQueueForSFTP](
 	[DateCreated] [DATETIME] NOT NULL,
 	[TokenUpdated] [NVARCHAR](50) NULL,
 	[DateUpdated] [DATETIME] NULL,
- CONSTRAINT [PK_IdWebhookTrackingQueueForSFTP] PRIMARY KEY CLUSTERED 
-(
-	[IdWebhookTrackingQueueForSFTP] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+ CONSTRAINT [PK_IdWebhookTrackingQueueForSFTP] PRIMARY KEY CLUSTERED ([IdWebhookTrackingQueueForSFTP] ASC)
+)
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla CatProductMKP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueForSFTP', @level2type=N'COLUMN',@level2name=N'IdWebhookTrackingQueueForSFTP'

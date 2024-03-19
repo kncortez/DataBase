@@ -6,13 +6,9 @@ CREATE TABLE [dbo].[WebhookCatTypeConnection](
 	[TokenCreated] [NVARCHAR](50) NOT NULL,
 	[DateUpdated] [DATETIME] NULL,
 	[TokenUpdated] [NVARCHAR](50) NULL,
- CONSTRAINT [PK_IdCatTypeConnection] PRIMARY KEY CLUSTERED 
-(
-	[IdCatTypeConnection] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+ CONSTRAINT [PK_IdCatTypeConnection] PRIMARY KEY CLUSTERED ([IdCatTypeConnection] ASC)
+)
 GO
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla WebhookCatTypeConnection' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookCatTypeConnection', @level2type=N'COLUMN',@level2name=N'IdCatTypeConnection'
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del tipo de conexión' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookCatTypeConnection', @level2type=N'COLUMN',@level2name=N'CatTypeConnectionName'
