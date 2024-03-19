@@ -8,7 +8,7 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
-    [TypeConnectionId] INT NOT NULL, 
+    [TypeConnectionId] INT NOT NULL DEFAULT 1, 
     [Hostname] NVARCHAR(50) NULL, 
     [UserName] NVARCHAR(50) NULL, 
     [Password] NVARCHAR(50) NULL, 
