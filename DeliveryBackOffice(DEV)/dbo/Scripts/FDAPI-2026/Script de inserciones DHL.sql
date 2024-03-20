@@ -96,8 +96,8 @@ SET @TYPECONECTIONSFTP = (SELECT TOP 1 IdCatTypeConnection FROM WebhookCatTypeCo
 IF (@ERROR_SQL <>0 ) GOTO TratarError
 -- INGRESO DE DHL Y SUS CREDENCIALES, ES TIPO 2 (SFTP)
 
-INSERT INTO WebhookEndpoint(WebhookTypeId,CustomerId,WebhookEndpointURI,RowStatus,DateCreated,TokenCreated,typeConnectionId,Hostname,UserName,Password,Port)
-VALUES(1,@CUSTOMERID,'http://developer.marvel.com/',1,GETDATE(),'SYS-CAZURDIA',@TYPECONECTIONSFTP,'c2Z0cDMtdGVzdC5kaGwuY29t','q8v3d809','eCNjQ0tuYWNmMV9SWFExSA==',4222, '/in/build/')
+INSERT INTO WebhookEndpoint(WebhookTypeId,CustomerId,WebhookEndpointURI,RowStatus,DateCreated,TokenCreated,typeConnectionId,Hostname,UserName,[Password],[Port],RemoteRoute)
+VALUES(1,@CUSTOMERID,'http://developer.marvel.com/',1,GETDATE(),'SYS-CAZURDIA',@TYPECONECTIONSFTP,'c2Z0cDMtdGVzdC5kaGwuY29t','q8v3d809','eCNjQ0tuYWNmMV9SWFExSA==',4222, 'L2luL2J1aWxkLw==')
 SET @ERROR_SQL=@@ERROR
 IF (@ERROR_SQL <>0 ) GOTO TratarError
 

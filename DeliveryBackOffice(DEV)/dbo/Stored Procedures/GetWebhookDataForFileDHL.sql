@@ -223,13 +223,21 @@ BEGIN
 					    CASE WHEN [SOE].[IdStatusOrderExternal] = 1  --Recolecta
 							 THEN CONCAT([SOE].[Remark],'FORZA ',[D1].[GuideSerie],[D1].[GuideNumber],'-',[DOP].[NoPiece])
 							 WHEN [SOE].IdStatusOrderExternal = 2  --Arrivo
-							 THEN CONCAT([SOE].[Remark],'FORZA ', (SELECT [S].[Station] FROM @WebhookTrackingQuequeLoteStationsforSFTP  S WHERE [D1].[idWebhookTrackingQuequeLoteDetailforSFTP] = [S].[idWebhookTrackingQuequeLoteDetailforSFTP] ))
+							 THEN CONCAT([SOE].[Remark],'FORZA ', (
+																	SELECT STUFF([S].[Station], CHARINDEX('FD EXEC', [S].[Station]), LEN('FD EXEC'), '') AS [Station] 
+																	FROM @WebhookTrackingQuequeLoteStationsforSFTP  S 
+																	WHERE [D1].[idWebhookTrackingQuequeLoteDetailforSFTP] = [S].[idWebhookTrackingQuequeLoteDetailforSFTP] )
+																  )
 							 WHEN [SOE].IdStatusOrderExternal = 6  --Inventario
-							 THEN CONCAT([SOE].[Remark],'FORZA ', (SELECT [S].[Station] FROM @WebhookTrackingQuequeLoteStationsforSFTP  S WHERE [D1].[idWebhookTrackingQuequeLoteDetailforSFTP] = [S].[idWebhookTrackingQuequeLoteDetailforSFTP] ))
+							 THEN CONCAT([SOE].[Remark],'FORZA ', (
+																	SELECT STUFF([S].[Station], CHARINDEX('FD EXEC', [S].[Station]), LEN('FD EXEC'), '') AS [Station] 
+																	FROM @WebhookTrackingQuequeLoteStationsforSFTP  S 
+																	WHERE [D1].[idWebhookTrackingQuequeLoteDetailforSFTP] = [S].[idWebhookTrackingQuequeLoteDetailforSFTP] )
+																  )
 							 WHEN [SOE].IdStatusOrderExternal = 8  --En Ruta
 							 THEN CONCAT([SOE].[Remark],'')
 							 WHEN [SOE].IdStatusOrderExternal = 9  --Entrega
-							 THEN CONCAT([SOE].[Remark], ' ',[DO].[NameOfReceiver])
+							 THEN CONCAT([SOE].[Remark], '',[DO].[NameOfReceiver])
 							 ELSE [SOE].[Remark]                   --Todo lo demás
 							 END [DHL_Checkpoint_Remark],
 						[D1].[Route_Code],
