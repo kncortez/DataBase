@@ -244,7 +244,7 @@ BEGIN
 				    AND [DO].[Guide_Number] = [D1].[GuideNumber]
 				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
 					ON [DOP].[GuidePiece] = [D1].[GuidePiece]
-				WHERE D1.[DHL_Status] <> 50
+				WHERE D1.[DHL_Incident] IS NULL
 				  AND [SOR].[RowStatus] = 1
 				  AND [SOE].[RowStatus] = 1
 				  --AND [SOE].[CustomerId] = @CUSTOMER_ID
@@ -278,8 +278,7 @@ BEGIN
 					ON [ITR].[IncidenceTypeId] = [DA].[ID_Incident]
 				LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrderExternal] SOE WITH (NOLOCK)
 					ON [SOE].[IdStatusOrderExternal] = [ITR].[StatusOrderExternalId]
-				WHERE [D2].[DHL_Status] = 50
-				  AND [COI].[StatusOrderId] = 50
+				WHERE [D2].[DHL_Incident] IS NOT NULL
 				  AND [COI].[IsConfirmed] = 1
 				  AND [COI].[IsDenied] = 0
 				  AND [COI].[RowStatus] = 1

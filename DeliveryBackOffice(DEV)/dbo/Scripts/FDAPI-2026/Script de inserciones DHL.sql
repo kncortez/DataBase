@@ -174,7 +174,7 @@ INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCre
 VALUES(@CUSTOMERID, 'WC FORZA EN RUTA', 'WC= With courier. El material sale a ruta por FORZA (por pieza)',1,GETDATE(),'SYS-CAZURDIA');
 
 INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'OK', 'El NAME no soporta caracteres especiales (tíldes, signos, etc.). Después de este checkpoint no se permiten nuevos estados.',1,GETDATE(),'SYS-CAZURDIA');
+VALUES(@CUSTOMERID, '', 'El NAME no soporta caracteres especiales (tíldes, signos, etc.). Después de este checkpoint no se permiten nuevos estados.',1,GETDATE(),'SYS-CAZURDIA');
 
 COMMIT TRAN ESTATUS_DHL
 
