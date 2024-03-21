@@ -165,7 +165,7 @@ INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenC
 VALUES('FAILED DEL', 'El envió no se logra entregar por algún atraso o responsabilidad de FORZA, no del cliente',1,GETDATE(),'SYS-CAZURDIA');
 
 INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES('OH AT AGENT ', 'OH= On Hold. Por alguna razón interna de FORZA. envío/pieza físico está en espera dentro de las instalaciones/instalaciones de FORZA. La idea es dar visibilidad que el envió no se movió en el día.',1,GETDATE(),'SYS-CAZURDIA');
+VALUES('OH AT AGENT ', 'OH= On Hold. Por alguna razón interna de FORZA. La pieza está en espera dentro de las instalaciones de FORZA.',1,GETDATE(),'SYS-CAZURDIA');
 
 INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
 VALUES('RTO TO DHL ZONA 13', 'RTO TO DHL = Return To DHL. Envíos que no se pueden entregar después de dos intentos y son retornados a DHL con la previa autorización',1,GETDATE(),'SYS-CAZURDIA');
