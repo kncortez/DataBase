@@ -79,7 +79,7 @@ BEGIN
 
 		--PRINT '-- GENERACIÓN DE ARCHIVO QUE SE ENVIARA A FORZA --'
 		-- Verificar si el lote existe
-		IF EXISTS( Select [IdWebhookTrackingQueueForSFTP] from [dbo].[WebhookTrackingQueueForSFTP] WHERE [RowStatus] = 1 AND [IdWebhookTrackingQueueForSFTP] = @LOTE) AND [HasNotified] = 0   )
+		IF EXISTS( Select [IdWebhookTrackingQueueForSFTP] from [dbo].[WebhookTrackingQueueForSFTP] WHERE [RowStatus] = 1 AND [IdWebhookTrackingQueueForSFTP] = @LOTE AND [HasNotified] = 0 )
 		BEGIN 
 
 			--Encabezado del archivo
@@ -224,13 +224,14 @@ BEGIN
 							 THEN CONCAT([SOE].[Remark],'FORZA ',[D1].[GuideSerie],[D1].[GuideNumber],'-',[DOP].[NoPiece])
 							 WHEN [SOE].IdStatusOrderExternal = 2  --Arrivo
 							 THEN CONCAT([SOE].[Remark],'FORZA ', (
-																	SELECT STUFF([S].[Station], CHARINDEX('FD EXEC', [S].[Station]), LEN('FD EXEC'), '') AS [Station] 
+																	SELECT   STUFF([S].[Station], CHARINDEX('FD EXC', [S].[Station]), LEN('FD EXC') + CASE WHEN SUBSTRING([S].[Station], CHARINDEX('FD EXC', [S].[Station]) + LEN('FD EXC'), 1) = ' ' THEN 1 ELSE 0 END,  '')
+																	--SELECT [S].[Station] 
 																	FROM @WebhookTrackingQuequeLoteStationsforSFTP  S 
 																	WHERE [D1].[idWebhookTrackingQuequeLoteDetailforSFTP] = [S].[idWebhookTrackingQuequeLoteDetailforSFTP] )
 																  )
 							 WHEN [SOE].IdStatusOrderExternal = 6  --Inventario
 							 THEN CONCAT([SOE].[Remark],'FORZA ', (
-																	SELECT STUFF([S].[Station], CHARINDEX('FD EXEC', [S].[Station]), LEN('FD EXEC'), '') AS [Station] 
+																	SELECT   STUFF([S].[Station], CHARINDEX('FD EXC', [S].[Station]), LEN('FD EXC') + CASE WHEN SUBSTRING([S].[Station], CHARINDEX('FD EXC', [S].[Station]) + LEN('FD EXC'), 1) = ' ' THEN 1 ELSE 0 END,  '')
 																	FROM @WebhookTrackingQuequeLoteStationsforSFTP  S 
 																	WHERE [D1].[idWebhookTrackingQuequeLoteDetailforSFTP] = [S].[idWebhookTrackingQuequeLoteDetailforSFTP] )
 																  )
