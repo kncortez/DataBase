@@ -16,7 +16,8 @@
     [RemoteRoute] NVARCHAR(50) NULL, 
     PRIMARY KEY CLUSTERED ([IdWebhookEndpoint] ASC),
     CONSTRAINT [FK_WebhookEndpoint_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
+    CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType]), 
+    CONSTRAINT [FK_WebhookEndpoint_WebhookCatTypeConnection] FOREIGN KEY ([TypeConnectionId]) REFERENCES [WebhookCatTypeConnection]([IdCatTypeConnection])
 );
 
 

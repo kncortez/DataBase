@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Operations Version="1.0" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+  <Operation Name="Rename Refactor" Key="64542a5a-f5af-4384-8b95-b04b13ab4322" ChangeDateTime="03/21/2024 21:57:23">
+    <Property Name="ElementName" Value="[dbo].[FK_WebhookEndpoint_]" />
+    <Property Name="ElementType" Value="SqlForeignKeyConstraint" />
+    <Property Name="ParentElementName" Value="[dbo].[WebhookEndpoint]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="[FK_WebhookEndpoint_WebhookCatTypeConnection]" />
+  </Operation>
+</Operations>
