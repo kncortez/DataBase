@@ -26,8 +26,13 @@
     [StatusOrderId]       INT             NULL,
     [CodeOfSeller]        NVARCHAR (20)   NULL,
     [ParcelCode]          NVARCHAR (10)   NULL,
+    [ExternalPieceId] INT NULL, 
+    [TokenRegistrationExternalCode] NVARCHAR(50) NULL, 
+    [DateRegistrationExternalCode] DATETIME NULL, 
+    [AccountIdRegistrationExternalCode] BIGINT NULL, 
     CONSTRAINT [PK_DeliveryOrderPiece] PRIMARY KEY NONCLUSTERED ([GuideSerie] ASC, [GuideNumber] ASC, [GuidePiece] ASC),
-    CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId])
+    CONSTRAINT [FK_CategoryCheck] FOREIGN KEY ([CategoryCheck]) REFERENCES [dbo].[CatArticle] ([ArtId]),
+    CONSTRAINT [FK_DeliveryOrderPiece_Account] FOREIGN KEY([AccountIdRegistrationExternalCode]) REFERENCES [dbo].[Account] ([AccIdAccount])
 );
 
 
@@ -55,3 +60,44 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_NoPiece]
     ON [dbo].[DeliveryOrderPiece]([GuideSerie] ASC, [GuideNumber] ASC, [NoPiece] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de pieza externo.',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPiece',
+    @level2type = N'COLUMN',
+    @level2name = N'ExternalPieceId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Usuario que registró el código externo.',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPiece',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenRegistrationExternalCode'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de registro de código externo.',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPiece',
+    @level2type = N'COLUMN',
+    @level2name = N'DateRegistrationExternalCode'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Cuenta del usuario que registra el código externo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPiece',
+    @level2type = N'COLUMN',
+    @level2name = N'AccountIdRegistrationExternalCode'
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderPiece_GetQueryRelationshipPieceCode]
+	ON [dbo].[DeliveryOrderPiece] ([ExternalPieceId])
+	INCLUDE ([GuideSerie],[GuideNumber],[NoPiece])

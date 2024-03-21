@@ -555,6 +555,10 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\WebhookCatTypeConnection.sql" />
+    <Build Include="dbo\Tables\WebhookTrackingQueueForSFTP.sql" />
+    <Build Include="dbo\Tables\WebhookTrackingQueueDetailForSFTP.sql" />
+    <Build Include="dbo\Tables\WebhookTrackingQueueDetailPendingForSFTP.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1591,10 +1595,15 @@
     <!--Build Include="dbo\Stored Procedures\HSE_RolByUserBySystem.sql" /-->
     <!--Build Include="dbo\Stored Procedures\HSE_SenderReceiver.sql" /-->
     <!--Build Include="dbo\Stored Procedures\HSE_UserSystemRestriction.sql" /-->
-    
-    
     <Build Include="dbo\Tables\PointsGuidesLog.sql" />
     <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_select.sql" />
+    <Build Include="dbo\Stored Procedures\sp_set_inactive_employees.sql" />
+    <Build Include="dbo\Stored Procedures\sp_Set_RelationshipPieceCode.sql" />
+    <Build Include="dbo\Stored Procedures\sp_Get_RelationshipPieceCode.sql" />
+    <Build Include="dbo\Stored Procedures\spGetQueryRelationshipPieceCode.sql" />
+    <Build Include="IncidentTypeRelation.sql" />
+    <Build Include="StatusOrderRelation.sql" />
+    <Build Include="StatusOrderExternal.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

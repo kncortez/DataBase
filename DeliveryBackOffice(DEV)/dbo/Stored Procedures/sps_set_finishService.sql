@@ -794,13 +794,125 @@ BEGIN
                                         ON WCT.CustomerId = WRBU.CustomerId
                                            AND WCT.GuideStatusId = WRBU.StatusOrderId
                                            AND WCT.WebhookType = WRBU.WebhookTypeId
+										INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH (NOLOCK)
+									ON WRBU.CustomerId = WHE.CustomerId
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                                         ON WCT.GuideSerie = WTQ.GuideSerie
                                            AND WCT.GuideNumber = WTQ.GuideNumber
                                            AND WCT.GuideStatusId = WTQ.StatusOrderId
                                            AND WTQ.RowStatus = 1
                                 WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-                                      AND WTQ.IdWebhookTrackingQueue IS NULL;
+                                      AND WTQ.IdWebhookTrackingQueue IS NULL
+									  AND WHE.TypeConnectionId = 1;
+
+
+								--Agregar datos en cola de webhooks de clientes SFTP---INI
+										DECLARE @GuidePiecesTable AS TABLE
+										(
+										    CustomerId INT,
+										    CustomerEndpointId BIGINT,
+										    WebhookType INT,
+										    GuideSerie NVARCHAR(2),
+										    GuideNumber INT,
+										    GuideStatusId TINYINT,
+											NumberPieces INT,
+											NumberRelatedPieces INT
+											
+										);
+
+										INSERT INTO @GuidePiecesTable 
+													( 
+												CustomerId,
+										        GuideSerie,
+										        GuideNumber,
+										        GuideStatusId,
+												NumberPieces
+												)
+												SELECT wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId,
+												Count(dop.GuideNumber)
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN @WebhookCustomerTable wct
+													ON dop.GuideNumber = wct.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+												    ON wct.CustomerId = WHE.CustomerId
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideNumber = do.Guide_Number
+													WHERE do.IdCustomer = wct.CustomerId
+													AND WHE.TypeConnectionId = 2
+													GROUP BY wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId
+
+										   DECLARE @PiecesGuideRelatedTable AS TABLE
+										(
+										    CustomerId INT,
+										    CustomerEndpointId BIGINT,
+										    WebhookType INT,
+										    GuideSerie NVARCHAR(2),
+										    GuideNumber INT,
+										    GuideStatusId TINYINT,
+											NumberRelatedPieces INT
+											
+										);
+
+										INSERT INTO @PiecesGuideRelatedTable 
+													( 
+												CustomerId,
+										        GuideSerie,
+										        GuideNumber,
+										        GuideStatusId,
+												NumberRelatedPieces
+												)
+												SELECT wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId,
+												Count(dop.GuideNumber)
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN @WebhookCustomerTable wct
+													ON dop.GuideNumber = wct.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+												    ON wct.CustomerId = WHE.CustomerId
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideNumber = do.Guide_Number
+													WHERE do.IdCustomer = wct.CustomerId
+													AND WHE.TypeConnectionId = 2
+													AND dop.ExternalPieceId IS NOT NULL
+													GROUP BY wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId
+	
+										INSERT INTO WebhookTrackingQueueDetailForSFTP 
+													(CustomerId,
+													GuideSerie,
+													GuideNumber,
+													GuidePiece,
+													ExternalNumber,
+													ExternalPieceId,
+													StatusOrderId,
+													RowStatus,
+													DateCreated,
+													TokenCreated)
+												SELECT wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
+												wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenP AS TokenCreated
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN @WebhookCustomerTable wct
+													ON dop.GuideNumber = wct.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+													ON wct.CustomerId = WHE.CustomerId
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideNumber = do.Guide_Number
+												INNER JOIN @GuidePiecesTable gpt
+												    ON wct.GuideNumber = gpt.GuideNumber
+												INNER JOIN @PiecesGuideRelatedTable pgt
+												    ON gpt.GuideNumber = pgt.GuideNumber
+													WHERE do.IdCustomer = wct.CustomerId
+													AND WHE.TypeConnectionId = 2
+													AND gpt.NumberPieces = pgt.NumberRelatedPieces
+									--Agregar datos en cola de webhooks de cliente SFTP---FIN
+							
 
                             END TRY
                             BEGIN CATCH
