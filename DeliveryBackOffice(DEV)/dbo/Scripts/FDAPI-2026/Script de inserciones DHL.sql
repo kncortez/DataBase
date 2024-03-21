@@ -149,32 +149,32 @@ COMMIT TRAN NOTIFICACIONES
 ---- INGRESO DE LOS REMARKS DE DHL 
 BEGIN TRAN ESTATUS_DHL
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'WC ', 'WC= With courier. El material es recolectado por FORZA',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('WC ', 'WC= With courier. El material es recolectado por FORZA',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'AR AGENT DEL ', 'AR= Arrive Facility. El material llega a una de las bodegas de FORZA',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('AR AGENT DEL ', 'AR= Arrive Facility. El material llega a una de las bodegas de FORZA',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'BAD ', 'BA= Bad Address. El envió no se pudo entregar por mala dirección, no existe la empresa o contacto, o cualquier otro motivo del cliente.',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('BAD ', 'BA= Bad Address. El envió no se pudo entregar por mala dirección, no existe la empresa o contacto, o cualquier otro motivo del cliente.',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'DEL', 'DEL= Delivery. Destino solicita fecha de entrega',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('DEL', 'DEL= Delivery. Destino solicita fecha de entrega',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'FAILED DEL', 'El envió no se logra entregar por algún atraso o responsabilidad de FORZA, no del cliente',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('FAILED DEL', 'El envió no se logra entregar por algún atraso o responsabilidad de FORZA, no del cliente',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'OH AT AGENT ', 'OH= On Hold. Por alguna razón interna de FORZA. envío/pieza físico está en espera dentro de las instalaciones/instalaciones de FORZA. La idea es dar visibilidad que el envió no se movió en el día.',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('OH AT AGENT ', 'OH= On Hold. Por alguna razón interna de FORZA. envío/pieza físico está en espera dentro de las instalaciones/instalaciones de FORZA. La idea es dar visibilidad que el envió no se movió en el día.',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'RTO TO DHL ZONA 13', 'RTO TO DHL = Return To DHL. Envíos que no se pueden entregar después de dos intentos y son retornados a DHL con la previa autorización',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('RTO TO DHL ZONA 13', 'RTO TO DHL = Return To DHL. Envíos que no se pueden entregar después de dos intentos y son retornados a DHL con la previa autorización',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, 'WC FORZA EN RUTA', 'WC= With courier. El material sale a ruta por FORZA (por pieza)',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('WC FORZA EN RUTA', 'WC= With courier. El material sale a ruta por FORZA (por pieza)',1,GETDATE(),'SYS-CAZURDIA');
 
-INSERT INTO StatusOrderExternal (CustomerId,Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES(@CUSTOMERID, '', 'El NAME no soporta caracteres especiales (tíldes, signos, etc.). Después de este checkpoint no se permiten nuevos estados.',1,GETDATE(),'SYS-CAZURDIA');
+INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
+VALUES('', 'El NAME no soporta caracteres especiales (tíldes, signos, etc.). Después de este checkpoint no se permiten nuevos estados.',1,GETDATE(),'SYS-CAZURDIA');
 
 COMMIT TRAN ESTATUS_DHL
 
