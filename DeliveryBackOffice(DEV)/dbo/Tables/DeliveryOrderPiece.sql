@@ -26,7 +26,7 @@
     [StatusOrderId]       INT             NULL,
     [CodeOfSeller]        NVARCHAR (20)   NULL,
     [ParcelCode]          NVARCHAR (10)   NULL,
-    [ExternalPieceId] INT NULL, 
+    [ExternalPieceId] NVARCHAR(50) NULL, 
     [TokenRegistrationExternalCode] NVARCHAR(50) NULL, 
     [DateRegistrationExternalCode] DATETIME NULL, 
     [AccountIdRegistrationExternalCode] BIGINT NULL, 
