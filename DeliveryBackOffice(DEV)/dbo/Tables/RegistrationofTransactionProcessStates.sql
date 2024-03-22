@@ -19,6 +19,7 @@ CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[InvoiceEmail] [nvarchar](50) NULL,
 	[ProductGiftShippingEmail] [nvarchar](50) NULL,
 	[PaymentImageURL] [nvarchar](600) NULL,
+	[PhoneNumber] [nvarchar](10) NULL,
  CONSTRAINT [PK_RegistrationofTransactionProcessStates] PRIMARY KEY CLUSTERED 
 (
 	[IdRegistrationofTransactionProcessStates] ASC
@@ -63,5 +64,6 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'URL de la imagen del vaucher de compra ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'PaymentImageURL'
 GO
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de teléfono para campo obligatorio de plataforma de pago versión 2.7' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'PhoneNumber'
+GO
 

@@ -18,7 +18,8 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesMarketPlace]
 @TblSalePackageMarketPlace [TblProductMarketPlace2] READONLY,
 @InvoiceEmail AS NVARCHAR(500),
 @Vaucher AS NVARCHAR (50),
-@ImageURL NVARCHAR(600) = NULL
+@ImageURL NVARCHAR(600) = NULL,
+@PhoneNumber AS NVARCHAR(10)=NULL
 
 	
 AS
@@ -51,7 +52,8 @@ BEGIN
 	  IdSalePackage,
 	 TypeSalePackage,
 	 ProductGiftShippingEmail,
-	 [PaymentImageURL]
+	 [PaymentImageURL],
+	 PhoneNumber
 	)
 	 SELECT
         CASE 
@@ -146,7 +148,8 @@ BEGIN
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
 					  END,
-		@ImageURL
+		@ImageURL,
+		@PhoneNumber
     FROM @TblSalePackageMarketPlace AS T;
 
 

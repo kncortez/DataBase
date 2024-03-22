@@ -17,7 +17,8 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesNonLoggedinUs
 @System AS INT,
 @TblSalePackageMarketPlace [TblProductMarketPlace2] READONLY,
 @InvoiceEmail AS NVARCHAR(500),
-@Vaucher AS NVARCHAR (50) 
+@Vaucher AS NVARCHAR (50),
+@PhoneNumber AS NVARCHAR(10) 
 
 	
 AS
@@ -49,7 +50,8 @@ BEGIN
 	  Vaucher,
 	  IdSalePackage,
 	 TypeSalePackage,
-	 ProductGiftShippingEmail
+	 ProductGiftShippingEmail,
+	 PhoneNumber
 	)
 	 SELECT
                CASE 
@@ -263,7 +265,8 @@ BEGIN
 		              T.ProductGiftShippingEmail = 'NULL'
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
-					  END
+					  END,
+		@PhoneNumber
     FROM @TblSalePackageMarketPlace AS T;
 
 	COMMIT TRAN
