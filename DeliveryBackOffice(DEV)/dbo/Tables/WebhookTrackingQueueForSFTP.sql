@@ -1,5 +1,5 @@
 CREATE TABLE [dbo].[WebhookTrackingQueueForSFTP](
-	[IdWebhookTrackingQueueForSFTP] [INT] NOT NULL,
+	[IdWebhookTrackingQueueForSFTP] [INT] IDENTITY(1,1) NOT NULL,
 	[FileName] [NVARCHAR](100) NOT NULL,
 	[Hostname] [NVARCHAR](50) NOT NULL,
 	[ShippingDate] [DATETIME] NULL,
