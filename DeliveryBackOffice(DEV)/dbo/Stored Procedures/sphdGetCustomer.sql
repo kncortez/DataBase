@@ -209,7 +209,7 @@ BEGIN
 
     END;
 
-    IF (@Option = 3) --First Load
+    IF (@Option = 3) --First Load Socios de negocio
     BEGIN
 
 		--First Catalog UI MgtCustomer
@@ -240,6 +240,48 @@ BEGIN
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
              , cst.[Name]
+        FROM Customer cst
+        WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
+              AND
+              (
+                  @IdCustomer = -1
+                  OR cst.IdCustomer = @IdCustomer
+              )
+        ORDER BY cst.Name;
+	END;
+
+    IF (@Option = 4) --First Load Punto de visita
+    BEGIN
+
+		--First Catalog UI MgtCustomer
+        SELECT CAST(cst.IdCustomer AS NVARCHAR)                                                                [IdValue]
+             , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + UPPER(cst.Name) + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
+             , cst.CountryID                                                                                   [IdFilter]
+        FROM Customer cst
+        WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
+              AND
+              (
+                  @IdCustomer = -1
+                  OR cst.IdCustomer = @IdCustomer
+              )
+        ORDER BY cst.Name;
+
+        --Second Catalog UI MgtCustomer
+        SELECT cst.SAPCardCode                                                                          [IdValue]
+             , IIF(cst.RowSatus = 0, '[INACTIVO] ', '') + cst.Name + ' ' + '[' + cst.Abbreviation + ']' [NameValue]
+             , cst.CountryID                                                                            [IdFilter]
+        FROM Customer cst
+        WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
+              AND
+              (
+                  @IdCustomer = -1
+                  OR cst.IdCustomer = @IdCustomer
+              );
+
+        --Third Data UI MgtCustomer
+        SELECT cst.[IdCustomer]
+             , cst.[Name]
+			 , cst.[SaleAdvisorID]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
