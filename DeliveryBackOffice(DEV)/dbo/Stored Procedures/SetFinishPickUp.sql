@@ -820,8 +820,7 @@ BEGIN
 							GROUP BY wct.CustomerId,
 						dop.GuideSerie,dop.GuideNumber, 
 						wct.GuideStatusId
-			select *from @GuidePiecesTable
-			select *from @PiecesGuideRelatedTable
+
 	
 				INSERT INTO WebhookTrackingQueueDetailForSFTP 
 							(CustomerId,
