@@ -45,10 +45,29 @@ BEGIN
 				ON DOP.[GuideSerie] = DO.[Guide_Serie] AND DOP.[GuideNumber] = DO.[Guide_Number]
 			WHERE DOP.[GuideSerie] = @GuideSerie AND DOP.[GuideNumber] = @GuideNumber AND DOP.[NoPiece] = @NoPiece
 
-			IF (@pGuideExternal IS NOT NULL AND @pGuideExternal != '' AND @pGuideExternal != @GuideExternal) OR 
-				(@pPieceExternal IS NOT NULL AND @pPieceExternal != '' AND @pPieceExternal != @PieceExternal)
+			IF (@pGuideExternal IS NOT NULL AND @pGuideExternal != '' AND @pGuideExternal != @GuideExternal)
 			BEGIN
-				SET @pDescripcion = 3; --La guÍa/pieza de Forza ya está asociada a una pieza externa. ¿Desea actualizarla?
+				IF EXISTS ( SELECT 1 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] WITH (NOLOCK)
+							WHERE [GuideSerie] = @GuideSerie AND [GuideNumber] = @GuideNumber AND [ExternalPieceId] != '' AND [ExternalPieceId] IS NOT NULL)
+				BEGIN
+					SET @pGuideNumber = @GuideNumber;
+					SET @pGuideSerie = @GuideSerie;
+					SET @pDescripcion = 4; --La guÍa de Forza ya está asociada a una guía externa. ¿Desea actualizarla?
+				END;
+			END;
+			IF (@pPieceExternal IS NOT NULL AND @pPieceExternal != '' AND @pPieceExternal != @PieceExternal)
+			BEGIN
+				SET @pNoPiece = @NoPiece;
+				IF (@pDescripcion = 4)
+				BEGIN
+					SET @pDescripcion = 5; --La guÍa/pieza de Forza ya está asociada a una pieza externa. ¿Desea actualizarla?
+				END;
+				ELSE
+				BEGIN
+					SET @pGuideNumber = @GuideNumber;
+					SET @pGuideSerie = @GuideSerie;
+					SET @pDescripcion = 3; --La pieza de Forza ya está asociada a una pieza externa. ¿Desea actualizarla?
+				END;
 			END;
 		END;
 		ELSE
