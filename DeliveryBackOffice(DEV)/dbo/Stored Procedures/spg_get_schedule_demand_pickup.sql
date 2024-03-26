@@ -3,7 +3,7 @@
 -- Update date: <2024-03-21>
 -- Description:	<Obtiene la informacion sobre recolecciones a demanda y programadas, para integración con DispatchTrack>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_programmed_demand_recolection]
+CREATE PROCEDURE [dbo].[spg_get_schedule_demand_pickup]
 	@CollectionProvince AS NVARCHAR(200),
 	@TypePickup AS INT, -- 1 es a demanda, 2 programado
 	@AssignDate AS DATE,
@@ -23,7 +23,7 @@ IF @TypePickup = 1 BEGIN
 
 SELECT	IIF(sp.IsScheduled = 0, CONCAT('RDG', sm.IdServiceManagement), CONCAT('RPG', sm.IdServiceManagement) ) [ORDEN DE RECOLECCION], 
 		'' [RUTA], 
-		IIF(ctv.IdTypeVehicle = 1, 'Paquete grande', IIF(ctv.IdTypeVehicle = 2, 'Paquete mediano', IIF(ctv.IdTypeVehicle = 3, 'Paquete pequeño', 'Paquete mediano'))) [DESCRIPCION DEL PAQUETE], 
+		IIF(ctv.Name = 'Camión', 'Paquete grande', IIF(ctv.Name = 'Panel', 'Paquete mediano', IIF(ctv.Name = 'Motocicleta', 'Paquete pequeño', ''))) [DESCRIPCION DEL PAQUETE], 
 		IIF(sp.QuantityRegularPackages is null, '', sp.QuantityRegularPackages) [CANTIDAD DE PIEZAS], 
 		'' [CODIGO DE ITEM], sp.SenderId [CODIGO DE PUNTO DE VISITA], 
 		vpc.DescriptionOfClient [NOMBRE DE REMITENTE], 

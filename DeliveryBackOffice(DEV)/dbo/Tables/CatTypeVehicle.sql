@@ -7,6 +7,7 @@
     [DateCreated]   DATETIME      NOT NULL,
     [TokenUpdated]  VARCHAR (50)  NULL,
     [DateUpdated]   DATETIME      NULL,
+    [PackageSize] VARCHAR(100) NULL, 
     PRIMARY KEY CLUSTERED ([IdTypeVehicle] ASC)
 );
 
