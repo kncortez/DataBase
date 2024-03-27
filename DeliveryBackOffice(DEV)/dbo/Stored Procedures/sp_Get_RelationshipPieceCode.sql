@@ -35,6 +35,7 @@ BEGIN
 				WHERE CAST(DOP2.[DateRegistrationExternalCode] AS DATE) = @Date
 					  AND DOP2.[GuideSerie] = DO.[Guide_Serie]
 					  AND DOP2.[GuideNumber] = DO.[Guide_Number]
+					  AND DOP2.[AccountIdRegistrationExternalCode] = @AccountId
 			)
 		) TBL
 		WHERE DOP.GuideSerie = TBL.Guide_Serie
