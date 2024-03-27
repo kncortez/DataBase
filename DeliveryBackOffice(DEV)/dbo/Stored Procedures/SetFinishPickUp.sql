@@ -141,12 +141,12 @@ BEGIN
                                                           )
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
                                                INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
-                                                   ON G.IdGeofence = GP.IdGeofence
-                                                      AND GP.RowStatus = 1
+                                                   ON G.IdGeofence = GP.IdGeofence             
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
-                                                   ON GP.IdPoint = P.IdPoint
-                                                      AND P.RowStatus = 1
+                                                   ON GP.IdPoint = P.IdPoint                  
                                            WHERE G.RowStatus = 1
+												 AND GP.RowStatus = 1
+												 AND P.RowStatus = 1
                                                  AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
@@ -523,7 +523,7 @@ BEGIN
 								INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
 									ON ord.SenderIdTownship = twn.IdTownship AND twn.TownshipStatus = 1
 								INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage THB WITH(NOLOCK)
-									ON THB.HeaderCode = twn.HeaderCode AND THB.RowStatus = 1
+									ON THB.HeaderCode = twn.HeaderCode
                                 INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBG WITH(NOLOCK)
 									ON HBG.HubAbbreviation = THB.Hub AND HBG.HubStatus = 1
 								INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
@@ -535,6 +535,7 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+								  AND THB.RowStatus = 1
                         );
 
 
@@ -772,11 +773,13 @@ BEGIN
 						Count(dop.GuideNumber)
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideNumber = wct.GuideNumber
+							ON dop.GuideSerie = wct.GuideSerie
+							AND dop.GuideNumber = wct.GuideNumber
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 						    ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideNumber = do.Guide_Number
+							ON dop.GuideSerie = do.Guide_Serie 
+							AND dop.GuideNumber = do.Guide_Number
 							WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							GROUP BY wct.CustomerId,
@@ -809,11 +812,13 @@ BEGIN
 						Count(dop.GuideNumber)
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideNumber = wct.GuideNumber
+							ON dop.GuideSerie = wct.GuideSerie
+							AND dop.GuideNumber = wct.GuideNumber
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 						    ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideNumber = do.Guide_Number
+							ON dop.GuideSerie = do.Guide_Serie
+							AND dop.GuideNumber = do.Guide_Number
 							WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							AND dop.ExternalPieceId IS NOT NULL
@@ -838,11 +843,13 @@ BEGIN
 						wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideNumber = wct.GuideNumber
+							ON dop.GuideSerie = wct.GuideSerie
+							AND dop.GuideNumber = wct.GuideNumber
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 							ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideNumber = do.Guide_Number
+							ON dop.GuideSerie = do.Guide_Serie
+							AND dop.GuideNumber = do.Guide_Number
 						INNER JOIN @GuidePiecesTable gpt
 						    ON wct.GuideNumber = gpt.GuideNumber
 						INNER JOIN @PiecesGuideRelatedTable pgt

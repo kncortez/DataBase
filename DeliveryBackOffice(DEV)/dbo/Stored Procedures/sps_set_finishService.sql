@@ -597,7 +597,8 @@ BEGIN
                                        cus.IdCustomer
                                 FROM #listGuidesEnabled lge
                                     INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+										AND lge.Guide_Number = dlo.Guide_Number
                                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                         ON vp.CodeOfReference = dlo.Sender_ID
                                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
@@ -615,7 +616,8 @@ BEGIN
                                        cus.IdCustomer
                                 FROM #listGuidesEnabled lge
                                     INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+										AND lge.Guide_Number = dlo.Guide_Number
                                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                         ON vp.CodeOfReference = dlo.Sender_ID
                                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
@@ -834,11 +836,13 @@ BEGIN
 												Count(dop.GuideNumber)
 												FROM DeliveryOrderPiece dop WITH(NOLOCK)
 												INNER JOIN @WebhookCustomerTable wct
-													ON dop.GuideNumber = wct.GuideNumber
+													ON dop.GuideSerie = wct.GuideSerie
+													AND dop.GuideNumber = wct.GuideNumber
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 												    ON wct.CustomerId = WHE.CustomerId
 												INNER JOIN DeliveryOrder do WITH(NOLOCK)
-													ON dop.GuideNumber = do.Guide_Number
+													ON dop.GuideSerie = do.Guide_Serie
+													AND dop.GuideNumber = do.Guide_Number
 													WHERE do.IdCustomer = wct.CustomerId
 													AND WHE.TypeConnectionId = 2
 													GROUP BY wct.CustomerId,
@@ -871,11 +875,13 @@ BEGIN
 												Count(dop.GuideNumber)
 												FROM DeliveryOrderPiece dop WITH(NOLOCK)
 												INNER JOIN @WebhookCustomerTable wct
-													ON dop.GuideNumber = wct.GuideNumber
+													ON dop.GuideSerie = wct.GuideSerie
+													AND dop.GuideNumber = wct.GuideNumber
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 												    ON wct.CustomerId = WHE.CustomerId
 												INNER JOIN DeliveryOrder do WITH(NOLOCK)
-													ON dop.GuideNumber = do.Guide_Number
+													ON dop.GuideSerie = do.Guide_Serie
+													AND dop.GuideNumber = do.Guide_Number
 													WHERE do.IdCustomer = wct.CustomerId
 													AND WHE.TypeConnectionId = 2
 													AND dop.ExternalPieceId IS NOT NULL

@@ -216,7 +216,8 @@ BEGIN
                         SELECT TOP 1
                                1
                         FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
-                        WHERE DOAD.GuideNumber = @GuideNumber
+                        WHERE DOAD.GuideSerie = @GuideSerie
+                        AND DOAD.GuideNumber = @GuideNumber
                     )
                        )
                     BEGIN
@@ -359,7 +360,7 @@ BEGIN
             (   @GuideSerie              -- Guide_Serie - nvarchar(2)
               , @GuideNumber             -- Guide_Number - int
               , @ValidatedIncidentStatus -- StatusOrderId - tinyint
-              , @TokenCreated            -- UserCreated - nvarchar(50)
+              , @TokenCreated            -- UserCreated - nvarchar(z)
               , GETDATE()                -- DateCreated - datetime
               , GETDATE()                -- DateCreatedInSystem - datetime
               , @Observations            -- Observations - nvarchar(200)
@@ -500,7 +501,8 @@ BEGIN
 											Count(dop.GuideNumber)
 											FROM DeliveryOrder do WITH(NOLOCK)
 											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-												ON do.Guide_Number = dop.GuideNumber
+												ON do.Guide_Serie = dop.GuideSerie
+												AND do.Guide_Number = dop.GuideNumber
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 											    ON do.IdCustomer = WHE.CustomerId
 												WHERE do.Guide_Number = @GuideNumber
@@ -533,7 +535,8 @@ BEGIN
 											Count(dop.GuideNumber)
 											FROM DeliveryOrder do WITH(NOLOCK)
 											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-												ON do.Guide_Number = dop.GuideNumber
+												ON do.Guide_Serie = dop.GuideSerie
+												AND do.Guide_Number = dop.GuideNumber
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 											    ON do.IdCustomer = WHE.CustomerId
 												WHERE do.Guide_Number = @GuideNumber
@@ -566,7 +569,8 @@ BEGIN
 										@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenCreated AS TokenCreated, @NewDeliveryDate, @DeliveryAttemptId
 										FROM DeliveryOrderPiece dop WITH(NOLOCK)
 										INNER JOIN DeliveryOrder do WITH(NOLOCK)
-											ON dop.GuideNumber = do.Guide_Number
+											ON dop.GuideSerie = do.Guide_Serie
+											AND dop.GuideNumber = do.Guide_Number
 										INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 										    ON do.IdCustomer = WHE.CustomerId
 										INNER JOIN @GuidePiecesTable gpt

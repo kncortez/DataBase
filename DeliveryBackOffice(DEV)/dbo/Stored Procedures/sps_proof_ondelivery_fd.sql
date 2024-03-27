@@ -122,11 +122,11 @@ BEGIN
                                            FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
                                                INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
                                                    ON G.IdGeofence = GP.IdGeofence
-                                                      AND GP.RowStatus = 1
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
-                                                      AND P.RowStatus = 1
                                            WHERE G.RowStatus = 1
+												 AND GP.RowStatus = 1
+												 AND P.RowStatus = 1
                                                  AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
@@ -485,7 +485,8 @@ BEGIN
 								Count(dop.GuideNumber)
 								FROM DeliveryOrder do WITH(NOLOCK)
 								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-									ON do.Guide_Number = dop.GuideNumber
+									ON do.Guide_Serie = dop.GuideSerie
+									AND do.Guide_Number = dop.GuideNumber
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
@@ -518,7 +519,8 @@ BEGIN
 								Count(dop.GuideNumber)
 								FROM DeliveryOrder do WITH(NOLOCK)
 								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-									ON do.Guide_Number = dop.GuideNumber
+									ON do.Guide_Serie = dop.GuideSerie
+									AND do.Guide_Number = dop.GuideNumber
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
@@ -542,7 +544,8 @@ BEGIN
 									@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
 									FROM DeliveryOrderPiece dop WITH(NOLOCK)
 									INNER JOIN DeliveryOrder do WITH(NOLOCK)
-										ON dop.GuideNumber = do.Guide_Number
+										ON dop.GuideSerie = do.Guide_Serie
+										AND dop.GuideNumber = do.Guide_Number
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 									    ON do.IdCustomer = WHE.CustomerId
 									INNER JOIN @GuidePiecesTable gpt
