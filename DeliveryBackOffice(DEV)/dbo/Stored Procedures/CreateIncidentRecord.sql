@@ -548,6 +548,7 @@ BEGIN
 						        IF EXISTS(SELECT TOP 1 1 FROM IncidentTypeRelation WITH (NOLOCK)
 												WHERE 
 												IncidenceTypeId = @IdIncident) AND @IsRealIncident = 1
+                                                AND  @IsServiceDesired = 1
 									 BEGIN
 
 					  					INSERT INTO WebhookTrackingQueueDetailForSFTP 
