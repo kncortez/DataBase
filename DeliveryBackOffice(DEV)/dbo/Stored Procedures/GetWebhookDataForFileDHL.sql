@@ -271,7 +271,7 @@ BEGIN
 						CASE WHEN [SOE].[IdStatusOrderExternal] = 3
 							 THEN CONCAT([SOE].[Remark],'')
 							 WHEN [SOE].IdStatusOrderExternal = 4
-							 THEN CONCAT([SOE].[Remark], FORMAT(ISNULL([D2].[NewDeliveryDate],'1900-01-01 00:00:00'),'yyMM'), ' PM' )
+							 THEN CONCAT([SOE].[Remark], ' ', FORMAT(ISNULL([D2].[NewDeliveryDate],'1900-01-01 00:00:00'),'ddMM'), ' PM' )
 							 WHEN [SOE].IdStatusOrderExternal = 5
 							 THEN CONCAT([SOE].[Remark],'')
 							 ELSE [SOE].[Remark]
