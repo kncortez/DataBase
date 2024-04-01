@@ -1591,10 +1591,9 @@
     <!--Build Include="dbo\Stored Procedures\HSE_RolByUserBySystem.sql" /-->
     <!--Build Include="dbo\Stored Procedures\HSE_SenderReceiver.sql" /-->
     <!--Build Include="dbo\Stored Procedures\HSE_UserSystemRestriction.sql" /-->
-    
-    
     <Build Include="dbo\Tables\PointsGuidesLog.sql" />
     <Build Include="dbo\Stored Procedures\sphw_generate_batch_cod_select.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_schedule_demand_pickup.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
