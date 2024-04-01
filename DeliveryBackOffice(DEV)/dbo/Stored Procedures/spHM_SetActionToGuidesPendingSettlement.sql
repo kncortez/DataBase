@@ -745,20 +745,20 @@ BEGIN
 			   ,@InsuranceAmount = ISNULL(do.InsuranceAmount, 0)
 			FROM RouteAssigment ra WITH (NOLOCK)
 			INNER JOIN ServiceManagement sm WITH (NOLOCK)
-				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment
-					AND sm.RowStatus = 1
+				ON ra.IdRouteAssigment = sm.IdPuRouteAssigment	
 			INNER JOIN ServiceManagementDetail smd WITH (NOLOCK)
 				ON sm.IdServiceManagement = smd.ServiceManagement
-					AND smd.RowStatus = 1
 			INNER JOIN RoutePreparationDetail rpd WITH (NOLOCK)
-				ON smd.IdServiceManagementDetail = rpd.ServiceManagementDetailId
-					AND rpd.RowStatus = 1
+				ON smd.IdServiceManagementDetail = rpd.ServiceManagementDetailId		
 			INNER JOIN DeliveryOrder do WITH (NOLOCK)
 				ON rpd.Guide_Serie = do.Guide_Serie
 					AND rpd.Guide_Number = do.Guide_Number
 			WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
 			AND do.Guide_Serie = @GuideSerie
 			AND do.Guide_Number = @GuideNumber
+			AND sm.RowStatus = 1
+			AND smd.RowStatus = 1
+			AND rpd.RowStatus = 1
 			ORDER BY ra.DateCreated DESC 
 
 

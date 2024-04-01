@@ -244,11 +244,13 @@ BEGIN
 						Count(dop.GuideNumber)
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideNumber = wct.GuideNumber
+							ON dop.GuideSerie = wct.GuideSerie
+							AND dop.GuideNumber = wct.GuideNumber
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 						    ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideNumber = do.Guide_Number
+							ON dop.GuideSerie = do.Guide_Serie
+							AND dop.GuideNumber = do.Guide_Number
 							WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							GROUP BY wct.CustomerId,
@@ -282,11 +284,13 @@ BEGIN
 						Count(dop.GuideNumber)
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideNumber = wct.GuideNumber
+							ON dop.GuideSerie = wct.GuideSerie
+							AND dop.GuideNumber = wct.GuideNumber
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 						    ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideNumber = do.Guide_Number
+							ON dop.GuideSerie = do.Guide_Serie
+							AND dop.GuideNumber = do.Guide_Number
 							WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							AND dop.ExternalPieceId IS NOT NULL
@@ -314,11 +318,14 @@ BEGIN
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 							ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
-							ON dop.GuideNumber = do.Guide_Number
+							ON dop.GuideSerie = do.Guide_Serie
+							AND dop.GuideNumber = do.Guide_Number
 						INNER JOIN @GuidePiecesTable gpt
-						    ON wct.GuideNumber = gpt.GuideNumber
+						    ON wct.GuideNumber = gpt.GuideSerie
+							AND wct.GuideNumber = gpt.GuideNumber
 						INNER JOIN @PiecesGuideRelatedTable pgt
-						    ON gpt.GuideNumber = pgt.GuideNumber
+						    ON gpt.GuideSerie = pgt.GuideSerie
+							AND gpt.GuideNumber = pgt.GuideNumber
 							WHERE do.IdCustomer = wct.CustomerId
 							AND WHE.TypeConnectionId = 2
 							AND gpt.NumberPieces = pgt.NumberRelatedPieces

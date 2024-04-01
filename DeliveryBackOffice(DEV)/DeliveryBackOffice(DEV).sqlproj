@@ -1596,4 +1596,7 @@
       <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
     </ArtifactReference>
   </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="DeliveryBackOffice%28DEV).refactorlog" />
+  </ItemGroup>
 </Project>

@@ -20,8 +20,7 @@ CREATE TABLE [dbo].[WebhookTrackingQueueDetailForSFTP](
     CONSTRAINT [FK2_WebhookTrackingQueueDetailForSFTP_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [Customer]([IdCustomer]), 
     CONSTRAINT [FK3_WebhookTrackingQueueDetailForSFTP_DeliveryOrderPiece] FOREIGN KEY ([GuideSerie],[GuideNumber],[GuidePiece]) REFERENCES [DeliveryOrderPiece]([GuideSerie],[GuideNumber],[GuidePiece]), 
     CONSTRAINT [FK4_WebhookTrackingQueueDetailForSFTP_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [StatusOrder]([StatusOrderId]), 
-    CONSTRAINT [FK_WebhookTrackingQueueDetailForSFTP_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [DeliveryAttempt]([ID]), 
-    CONSTRAINT [UQ_1] UNIQUE ([CustomerId],[ExternalNumber],[ExternalPieceId])
+    CONSTRAINT [FK_WebhookTrackingQueueDetailForSFTP_DeliveryAttempt] FOREIGN KEY ([DeliveryAttemptId]) REFERENCES [DeliveryAttempt]([ID]) 
 ) ON [PRIMARY]
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID de la tabla WebhookTrackingQueueDetailForSFTP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'WebhookTrackingQueueDetailForSFTP', @level2type=N'COLUMN',@level2name=N'IdWebhookTrackingQueueDetailForSFTP'
