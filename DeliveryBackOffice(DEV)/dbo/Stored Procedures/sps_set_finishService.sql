@@ -801,11 +801,11 @@ BEGIN
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                                         ON WCT.GuideSerie = WTQ.GuideSerie
                                            AND WCT.GuideNumber = WTQ.GuideNumber
-                                           AND WCT.GuideStatusId = WTQ.StatusOrderId
-                                           AND WTQ.RowStatus = 1
+                                           AND WCT.GuideStatusId = WTQ.StatusOrderId                    
                                 WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
                                       AND WTQ.IdWebhookTrackingQueue IS NULL
-									  AND WHE.TypeConnectionId = 1;
+									  AND WHE.TypeConnectionId = 1
+									  AND WTQ.RowStatus = 1;
 
 
 								--Agregar datos en cola de webhooks de clientes SFTP---INI
@@ -976,7 +976,7 @@ BEGIN
                                 (
                                     SELECT 1
                                     FROM dbo.Cost ct WITH (NOLOCK)
-                                    WHERE ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                    WHERE ct.GuideSerie = ti.Guide_Serie AND ct.GuideNumber = ti.Guide_Number
                                 );
 
                             --SET @IdCost = SCOPE_IDENTITY();
@@ -1013,9 +1013,9 @@ BEGIN
                                                    )
                             FROM Cost ct WITH (NOLOCK)
                                 INNER JOIN #PendingPaymentTemp ppt
-                                    ON ct.ProductNumber = CONCAT(ppt.GuideSerie, ppt.GuideNumber)
+                                    ON ct.GuideSerie = ppt.GuideSerie AND ct.GuideNumber = ppt.GuideNumber
                                 INNER JOIN #TblInclude ti
-                                    ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                    ON ct.GuideSerie = ti.Guide_Serie AND ct.GuideNumber = ti.Guide_Number
                                 OUTER APPLY
                             (
                                 SELECT TOP 1
@@ -1028,7 +1028,7 @@ BEGIN
                                           )
                                           OR
                                           (
-                                              Co.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                              Co.GuideSerie = ti.Guide_Serie AND co.GuideNumber = ti.Guide_Number
                                               AND Co.GuideSerie IS NULL
                                               AND Co.GuideNumber IS NULL
                                           )
@@ -1061,7 +1061,7 @@ BEGIN
                                        @Responsible
                                 FROM Cost ct
                                     INNER JOIN #TblInclude ti
-                                        ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                        ON ct.GuideSerie = ti.Guide_Serie AND ti.Guide_Number = ti.Guide_Number
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
                                         ON ct.IdCost = CD.IdCost
                                 WHERE CD.IdCostDetail IS NULL
@@ -1075,7 +1075,7 @@ BEGIN
                                     CD.DateUpdated = GETDATE()
                                 FROM Cost ct
                                     INNER JOIN #TblInclude ti
-                                        ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                        ON ct.GuideSerie = ti.Guide_Serie AND ct.GuideNumber = ti.Guide_Number
                                     INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
                                         ON ct.IdCost = CD.IdCost
                                 WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
@@ -1112,12 +1112,12 @@ BEGIN
 									LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 										ON		[LEG].[Guide_Number] = [MSL].[LogGuideNumber]
 										AND		[LEG].[Guide_Serie] = [MSL].[LogGuideSerie]
-										AND		[MSL].[RowStatus] = 1
 										AND		[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
 									LEFT JOIN	[dbo].[Membership] M
 										ON		[LEG].[IdCustomer] = [M].[CustomerId]
 										AND		[M].[ExpirationDate] >= SYSDATETIME()
-										AND		[M].[RowStatus] = 1;
+										AND		[M].[RowStatus] = 1
+										AND		[MSL].[RowStatus] = 1;
 
 									WHILE @AuxCont > 0 
 										-- Recorrer listado de guías
