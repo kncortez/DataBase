@@ -314,14 +314,15 @@ BEGIN
 						wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
 						FROM DeliveryOrderPiece dop WITH(NOLOCK)
 						INNER JOIN @WebhookCustomerTable wct
-							ON dop.GuideNumber = wct.GuideNumber
+							ON dop.GuideSerie = wct.GuideSerie
+							AND dop.GuideNumber = wct.GuideNumber
 						INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 							ON wct.CustomerId = WHE.CustomerId
 						INNER JOIN DeliveryOrder do WITH(NOLOCK)
 							ON dop.GuideSerie = do.Guide_Serie
 							AND dop.GuideNumber = do.Guide_Number
 						INNER JOIN @GuidePiecesTable gpt
-						    ON wct.GuideNumber = gpt.GuideSerie
+						    ON wct.GuideSerie = gpt.GuideSerie
 							AND wct.GuideNumber = gpt.GuideNumber
 						INNER JOIN @PiecesGuideRelatedTable pgt
 						    ON gpt.GuideSerie = pgt.GuideSerie
