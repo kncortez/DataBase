@@ -360,7 +360,8 @@ BEGIN
                             INNER JOIN CostDetail CD WITH (NOLOCK)
                                 ON CD.IdCost = C.IdCost
                                    AND CD.IdTypeOfMoney IN ( 2, 6 )
-                        WHERE C.ProductNumber = CONCAT(do.Guide_Serie, CAST(do.Guide_Number AS VARCHAR(50)))
+                        WHERE C.GuideSerie = do.Guide_Serie
+						  AND C.GuideNumber = do.Guide_Number
                     );
                 END;
 

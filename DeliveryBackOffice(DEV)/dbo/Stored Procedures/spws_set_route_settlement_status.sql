@@ -332,7 +332,8 @@ BEGIN
 															Count(dop.GuideNumber)
 															FROM DeliveryOrder do WITH(NOLOCK)
 															INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-																ON do.Guide_Number = dop.GuideNumber
+																ON do.Guide_Serie = dop.GuideSerie
+																AND do.Guide_Number = dop.GuideNumber
 																INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 															    ON do.IdCustomer = WHE.CustomerId
 																WHERE do.Guide_Number = @GuideNumber
@@ -368,10 +369,12 @@ BEGIN
 															Count(dop.GuideNumber)
 															FROM DeliveryOrder do WITH(NOLOCK)
 															INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-																ON do.Guide_Number = dop.GuideNumber
+																ON do.Guide_Serie = dop.GuideSerie
+																AND do.Guide_Number = dop.GuideNumber
 																INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 															    ON do.IdCustomer = WHE.CustomerId
-																WHERE do.Guide_Number = @GuideNumber
+																WHERE do.Guide_Serie = @GuideSerie 
+																AND do.Guide_Number = @GuideNumber
 																AND dop.ExternalPieceId IS NOT NULL
 																AND WHE.TypeConnectionId = 2
 																GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -392,13 +395,16 @@ BEGIN
 														@GuideCurrentStatusRec, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
 														FROM DeliveryOrderPiece dop WITH(NOLOCK)
 														INNER JOIN DeliveryOrder do WITH(NOLOCK)
-															ON dop.GuideNumber = do.Guide_Number
+															ON dop.GuideSerie = do.Guide_Serie
+															AND dop.GuideNumber = do.Guide_Number
 														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 														    ON do.IdCustomer = WHE.CustomerId
 														INNER JOIN @GuidePiecesTableRec gpt
-														    ON dop.GuideNumber = gpt.GuideNumber
+														    ON dop.GuideSerie = gpt.GuideSerie
+															AND dop.GuideNumber = gpt.GuideNumber
 														INNER JOIN @PiecesGuideRelatedTableRec pgt
-														    ON gpt.GuideNumber = pgt.GuideNumber
+														    ON gpt.GuideSerie = pgt.GuideSerie
+															AND gpt.GuideNumber = pgt.GuideNumber
 															WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
 																AND gpt.NumberPieces = @MaxPieceOrderDetail
 																AND WHE.TypeConnectionId = 2
