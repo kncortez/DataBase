@@ -68,11 +68,7 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'NextSalesPackageBanner'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'etiqueta de identificación ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'Tag'
-GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Ordenar membresia por posición' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership', @level2type=N'COLUMN',@level2name=N'Position'
-GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de catalogo de membresias.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatMembership'
 GO
