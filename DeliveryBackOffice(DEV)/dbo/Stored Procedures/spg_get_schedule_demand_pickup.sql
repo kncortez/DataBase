@@ -27,8 +27,20 @@ IF @CollectionProvince = '-1' BEGIN
 			IIF(vpc.Address is null, '', vpc.Address) [DIRECCION REMITENTE], 
 			IIF(vpc.Latitude is null, '', vpc.Latitude) [LATITUD], 
 			IIF(vpc.Longitude is null, '', vpc.Longitude ) [LONGITUD], 
-			sm.DateCreated [FECHA Y HORA MINIMA DE RECOLECCION], 
-			DATEADD(HOUR, 2, sm.DateCreated) [FECHA Y HORA MAXIMA DE RECOLECCION], 
+			CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(
+				(Select distinct top 1 es.DateCreated
+				from deliveryBackOffice.dbo.EventService es
+				where es.ServiceManagementId = sm.IdServiceManagement
+				AND es.ServiceStatusId = 2
+				order by es.DateCreated desc)
+			AS TIME) AS DATETIME) [FECHA Y HORA MINIMA DE RECOLECCION], 
+			DATEADD(HOUR,2,CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(
+				(Select distinct top 1 es.DateCreated
+				from deliveryBackOffice.dbo.EventService es
+				where es.ServiceManagementId = sm.IdServiceManagement
+				AND es.ServiceStatusId = 2
+				order by es.DateCreated desc)
+			AS TIME) AS DATETIME)) [FECHA Y HORA MAXIMA DE RECOLECCION], 
 			'' [CT DESTINO], 
 			'Solo Recogida' [MODO]
 	FROM		[DeliveryBackOffice].dbo.ServiceManagement	sm		WITH (NOLOCK)
@@ -43,8 +55,14 @@ IF @CollectionProvince = '-1' BEGIN
 	WHERE	sp.IsScheduled = 0
 	AND		sm.IdPuCourrier is not null 
 	AND		ra.IdVehicle is not null
-	AND		CAST(sm.DateCreated AS DATE) = @AssignDate
-	AND		CAST(sm.DateCreated AS TIME) BETWEEN @StartDate AND @EndDate
+	AND		ra.DateOfRoute = @AssignDate
+	AND		CAST(
+				(Select distinct top 1 es.DateCreated
+				from deliveryBackOffice.dbo.EventService es
+				where es.ServiceManagementId = sm.IdServiceManagement
+				AND es.ServiceStatusId = 2
+				order by es.DateCreated desc)
+			AS TIME) BETWEEN @StartDate AND @EndDate
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
@@ -63,8 +81,8 @@ IF @CollectionProvince = '-1' BEGIN
 			IIF(vpc.Address is null, '', vpc.Address) [DIRECCION REMITENTE], 
 			IIF(vpc.Latitude is null, '', vpc.Latitude) [LATITUD], 
 			IIF(vpc.Longitude is null, '', vpc.Longitude ) [LONGITUD], 
-			sp.StartDate [FECHA Y HORA MINIMA DE RECOLECCION], 
-			IIF(sp.EndDate is null, '', sp.EndDate) [FECHA Y HORA MAXIMA DE RECOLECCION], 
+			CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(sp.StartDate AS TIME) AS DATETIME) [FECHA Y HORA MINIMA DE RECOLECCION], 
+			CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(sp.EndDate AS TIME) AS DATETIME) [FECHA Y HORA MAXIMA DE RECOLECCION], 
 			'' [CT DESTINO], 
 			'Solo Recogida' [MODO]
 	FROM		[DeliveryBackOffice].dbo.ServiceManagement	sm		WITH (NOLOCK)
@@ -80,7 +98,7 @@ IF @CollectionProvince = '-1' BEGIN
 	WHERE	sp.IsScheduled = 1
 	AND		sm.IdPuCourrier is not null 
 	AND		ra.IdVehicle is not null
-	AND		CAST(sp.StartDate AS DATE) = @AssignDate
+	AND		CAST(ra.DateOfRoute AS DATE) = @AssignDate
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
@@ -109,8 +127,20 @@ ELSE BEGIN
 			IIF(vpc.Address is null, '', vpc.Address) [DIRECCION REMITENTE], 
 			IIF(vpc.Latitude is null, '', vpc.Latitude) [LATITUD], 
 			IIF(vpc.Longitude is null, '', vpc.Longitude ) [LONGITUD], 
-			sm.DateCreated [FECHA Y HORA MINIMA DE RECOLECCION], 
-			DATEADD(HOUR, 2, sm.DateCreated) [FECHA Y HORA MAXIMA DE RECOLECCION], 
+			CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(
+				(Select distinct top 1 es.DateCreated
+				from deliveryBackOffice.dbo.EventService es
+				where es.ServiceManagementId = sm.IdServiceManagement
+				AND es.ServiceStatusId = 2
+				order by es.DateCreated desc)
+			AS TIME) AS DATETIME) [FECHA Y HORA MINIMA DE RECOLECCION], 
+			DATEADD(HOUR,2,CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(
+				(Select distinct top 1 es.DateCreated
+				from deliveryBackOffice.dbo.EventService es
+				where es.ServiceManagementId = sm.IdServiceManagement
+				AND es.ServiceStatusId = 2
+				order by es.DateCreated desc)
+			AS TIME) AS DATETIME)) [FECHA Y HORA MAXIMA DE RECOLECCION], 
 			'' [CT DESTINO], 
 			'Solo Recogida' [MODO]
 	FROM		[DeliveryBackOffice].dbo.ServiceManagement	sm		WITH (NOLOCK)
@@ -126,8 +156,14 @@ ELSE BEGIN
 	AND		sp.IsScheduled = 0
 	AND		sm.IdPuCourrier is not null 
 	AND		ra.IdVehicle is not null
-	AND		CAST(sm.DateCreated AS DATE) = @AssignDate
-	AND		CAST(sm.DateCreated AS TIME) BETWEEN @StartDate AND @EndDate
+	AND		CAST(ra.DateOfRoute AS DATE) = @AssignDate
+	AND		CAST(
+				(Select distinct top 1 es.DateCreated
+				from deliveryBackOffice.dbo.EventService es
+				where es.ServiceManagementId = sm.IdServiceManagement
+				AND es.ServiceStatusId = 2
+				order by es.DateCreated desc)
+			AS TIME) BETWEEN @StartDate AND @EndDate
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
@@ -146,8 +182,8 @@ ELSE BEGIN
 			IIF(vpc.Address is null, '', vpc.Address) [DIRECCION REMITENTE], 
 			IIF(vpc.Latitude is null, '', vpc.Latitude) [LATITUD], 
 			IIF(vpc.Longitude is null, '', vpc.Longitude ) [LONGITUD], 
-			sp.StartDate [FECHA Y HORA MINIMA DE RECOLECCION], 
-			IIF(sp.EndDate is null, '', sp.EndDate) [FECHA Y HORA MAXIMA DE RECOLECCION], 
+			CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(sp.StartDate AS TIME) AS DATETIME) [FECHA Y HORA MINIMA DE RECOLECCION], 
+			CAST(ra.DateOfRoute AS DATETIME) + CAST(CAST(sp.EndDate AS TIME) AS DATETIME) [FECHA Y HORA MAXIMA DE RECOLECCION], 
 			'' [CT DESTINO], 
 			'Solo Recogida' [MODO]
 	FROM		[DeliveryBackOffice].dbo.ServiceManagement	sm		WITH (NOLOCK)
@@ -164,7 +200,7 @@ ELSE BEGIN
 	AND		sp.IsScheduled = 1
 	AND		sm.IdPuCourrier is not null 
 	AND		ra.IdVehicle is not null
-	AND		CAST(sp.StartDate AS DATE) = @AssignDate
+	AND		CAST(ra.DateOfRoute AS DATE) = @AssignDate
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
