@@ -801,11 +801,11 @@ BEGIN
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                                         ON WCT.GuideSerie = WTQ.GuideSerie
                                            AND WCT.GuideNumber = WTQ.GuideNumber
-                                           AND WCT.GuideStatusId = WTQ.StatusOrderId                    
+                                           AND WCT.GuideStatusId = WTQ.StatusOrderId   
+										   AND WTQ.RowStatus = 1
                                 WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
                                       AND WTQ.IdWebhookTrackingQueue IS NULL
-									  AND WHE.TypeConnectionId = 1
-									  AND WTQ.RowStatus = 1;
+									  AND WHE.TypeConnectionId = 1;
 
 
 								--Agregar datos en cola de webhooks de clientes SFTP---INI
