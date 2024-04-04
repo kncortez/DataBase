@@ -50,7 +50,8 @@ BEGIN
 					   cp.SubscriptionDescription  [CatProductDescription],
 					   cp.SubscriptionCost [CatProductCost],
 					   mpcm.IdMarketplaceCartDetail,
-					   cp.SubscriptionFixedValue   [CatProductDiscountValue]
+					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
+					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct]
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
@@ -67,7 +68,8 @@ BEGIN
 					   cp.MembershipDescription  [CatProductDescription],
 					   cp.MembershipCost [CatProductCost],
 					   mpcm.IdMarketplaceCartDetail,
-					   cp.MembershipFixedValue   [CatProductDiscountValue]
+					   cp.MembershipFixedValue   [CatProductDiscountValue],
+					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct]
 				FROM [dbo].[MarketplaceCartDetail] mpcm
 				INNER JOIN [dbo].[MarketplaceCart] mpc
 				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
