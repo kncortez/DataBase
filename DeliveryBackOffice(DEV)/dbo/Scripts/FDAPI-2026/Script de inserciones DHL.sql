@@ -156,7 +156,7 @@ INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenC
 VALUES('AR AGENT DEL ', 'AR= Arrive Facility. El material llega a una de las bodegas de FORZA',1,GETDATE(),'SYS-CAZURDIA');
 
 INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
-VALUES('BAD ', 'BA= Bad Address. El envió no se pudo entregar por mala dirección, no existe la empresa o contacto, o cualquier otro motivo del cliente.',1,GETDATE(),'SYS-CAZURDIA');
+VALUES('BA ', 'BA= Bad Address. El envió no se pudo entregar por mala dirección, no existe la empresa o contacto, o cualquier otro motivo del cliente.',1,GETDATE(),'SYS-CAZURDIA');
 
 INSERT INTO StatusOrderExternal (Remark,Description,RowStatus,DateCreated,TokenCreated)
 VALUES('DEL', 'DEL= Delivery. Destino solicita fecha de entrega',1,GETDATE(),'SYS-CAZURDIA');
