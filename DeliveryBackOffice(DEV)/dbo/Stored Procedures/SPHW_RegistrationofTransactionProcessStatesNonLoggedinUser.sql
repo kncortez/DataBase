@@ -62,10 +62,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 															 AND T.ProductGiftShippingEmail = 'NULL'
@@ -79,10 +80,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE')
 							
@@ -95,10 +97,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 															  --AND T.ProductGiftShippingEmail  <> 'NULL'
@@ -114,10 +117,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE')
 				               
@@ -130,10 +134,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 															 AND T.ProductGiftShippingEmail = 'NULL'
@@ -152,10 +157,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 															 AND T.ProductGiftShippingEmail='NULL' 
@@ -169,10 +175,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE')
 						    WHEN  EXISTS(SELECT  TOP 1 1
@@ -184,10 +191,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 														--	 AND T.ProductGiftShippingEmail !='NULL'
@@ -203,10 +211,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE')
 					WHEN 	NOT	EXISTS(SELECT  TOP 1 1
@@ -218,10 +227,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 															 AND T.ProductGiftShippingEmail='NULL'
@@ -235,10 +245,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
-															 AND rus.RusIdSystem = 1 AND rua.RuaRowStatus = 1
+															 AND rus.RusIdSystem = 1
 															 AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE') 
 								THEN NULL

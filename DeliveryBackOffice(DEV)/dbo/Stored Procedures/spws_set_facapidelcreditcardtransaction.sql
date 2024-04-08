@@ -620,11 +620,12 @@ BEGIN
                                AND res.UstIdSystem = rus.RusIdSystem
                         LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                             ON rua.RuaIdUser = usr.UsrIdUser
+                               AND rua.RuaRowStatus = 1
                         INNER JOIN [dbo].Account ac WITH (NOLOCK)
                             ON ac.AccIdAccount = rua.RuaIdAccount
                     WHERE usr.UsrEmail = RTP.ProductGiftShippingEmail
                           AND res.UstStatus = 'ACTIVE' AND rus.RusIdSystem = 1
-                          AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
+                          AND ac.AccRowStatus = 1
                 )          THEN
                                    1
                                WHEN
@@ -638,10 +639,11 @@ BEGIN
                                               AND res.UstIdSystem = rus.RusIdSystem
                                        LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                            ON rua.RuaIdUser = usr.UsrIdUser
+                                              AND rua.RuaRowStatus = 1
                                        INNER JOIN [dbo].Account ac WITH (NOLOCK)
                                            ON ac.AccIdAccount = rua.RuaIdAccount
                                    WHERE usr.UsrEmail = RTP.InvoiceEmail AND rus.RusIdSystem = 1
-                                   AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
+                                   AND ac.AccRowStatus = 1
                                ) = 'ACTIVE'
                                AND RTP.ProductGiftShippingEmail IS NULL THEN
                                    1
@@ -899,11 +901,12 @@ BEGIN
                                AND res.UstIdSystem = rus.RusIdSystem
                         LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                             ON rua.RuaIdUser = usr.UsrIdUser
+                               AND rua.RuaRowStatus = 1
                         INNER JOIN [dbo].Account ac WITH (NOLOCK)
                             ON ac.AccIdAccount = rua.RuaIdAccount
                     WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail, 'N/D')
                           AND res.UstStatus = 'ACTIVE' AND rus.RusIdSystem = 1
-                          AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
+                          AND ac.AccRowStatus = 1
                 )          THEN
                                    1
                                WHEN @AccountId IS NOT NULL
@@ -918,10 +921,11 @@ BEGIN
                                                    AND res.UstIdSystem = rus.RusIdSystem
                                             LEFT JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK)
                                                 ON rua.RuaIdUser = usr.UsrIdUser
+                                                   AND rua.RuaRowStatus = 1
                                             INNER JOIN [dbo].Account ac WITH (NOLOCK)
                                                 ON ac.AccIdAccount = rua.RuaIdAccount
                                         WHERE usr.UsrEmail = RTP.InvoiceEmail AND rus.RusIdSystem = 1
-                                        AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
+                                        AND ac.AccRowStatus = 1
                                     ) = 'ACTIVE'
                                     AND RTP.ProductGiftShippingEmail IS NULL THEN
                                    1
@@ -1291,10 +1295,11 @@ BEGIN
         LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
             ON [CCTBCD].[ProductNumber] = [MSL].[LogGuideNumber]
                AND [CCTBCD].[SerieNumber] = [MSL].[LogGuideSerie]
+               AND [MSL].[RowStatus] = 1 
+               AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
         LEFT JOIN [dbo].[Membership] M
             ON [MSL].[MembershipId] = [M].[IdMembership]
-    WHERE CCTBCD.OrderNumber = @OrderNumber
-    AND [MSL].[RowStatus] = 1 AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId;
+    WHERE CCTBCD.OrderNumber = @OrderNumber;
 
     IF (SUBSTRING(@OrderNumber, 1, 2) != 'HR')
     BEGIN
@@ -1328,9 +1333,10 @@ BEGIN
             LEFT JOIN [dbo].[MembershipSubscriptionLog] MSL
                 ON [LG].[ItemNumber] = [MSL].[LogGuideNumber]
                    AND [LG].[ItemSerie] = [MSL].[LogGuideSerie]
+                   AND [MSL].[RowStatus] = 1 
+                   AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
             LEFT JOIN [dbo].[Membership] M
-                ON [MSL].[MembershipId] = [M].[IdMembership]
-                WHERE [MSL].[RowStatus] = 1 AND [MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId;
+                ON [MSL].[MembershipId] = [M].[IdMembership];
 
         IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
             DROP TABLE #listGuides;

@@ -49,10 +49,11 @@ BEGIN
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+                                                                   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = @InvoiceEmail AND rus.RusIdSystem = 1
-                                                             AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1
+                                                             AND ac.AccRowStatus = 1
 														     AND res.UstStatus  ='ACTIVE')
 
 

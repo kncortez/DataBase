@@ -58,10 +58,11 @@ PRINT 'TEST';
                AND res.UstIdSystem = rus.RusIdSystem
         LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
             ON rua.RuaIdUser = usr.UsrIdUser
+               AND rua.RuaRowStatus = 1
         INNER JOIN [dbo].Account              ac WITH (NOLOCK)
             ON ac.AccIdAccount = rua.RuaIdAccount
     WHERE usr.UsrEmail = @Username 
-          AND rus.RusIdSystem = @IdSystem AND rua.RuaRowStatus = 1
+          AND rus.RusIdSystem = @IdSystem
           AND usr.UsrLastPassword = @Password AND ac.AccRowStatus = 1;
     -- insertar en tabla temporal posbibles mensajes de error
 
@@ -599,7 +600,8 @@ PRINT 'TEST';
         FROM [dbo].RegisterUser                   usr
             LEFT JOIN [dbo].UserSystemRestriction res
                 ON res.UstIdUser = usr.UsrIdUser
-        WHERE usr.UsrEmail = @Username AND res.UstIdSystem = @IdSystem;
+                   AND res.UstIdSystem = @IdSystem
+        WHERE usr.UsrEmail = @Username;
 
         -- retornar mensaje de error
         
