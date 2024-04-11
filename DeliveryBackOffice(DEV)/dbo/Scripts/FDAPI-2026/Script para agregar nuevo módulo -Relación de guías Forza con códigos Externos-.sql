@@ -1,17 +1,42 @@
---Script para agregar nuevo módulo -Relación de guías Forza con códigos Externos-
-DECLARE @Token NVARCHAR(50) = N'SYS-BHERRERA'; --Token de creación
+--Script para agregar nuevo mï¿½dulo -Relaciï¿½n de guï¿½as Forza con cï¿½digos Externos-
+DECLARE @Token NVARCHAR(50) = N'SYS-BHERRERA'; --Token de creaciï¿½n
 DECLARE @Order INT = 0;
 DECLARE @IdRol INT = 0;
 DECLARE @IdSystem INT = 0;
 DECLARE @ID INT;
 
+
+INSERT INTO [dbo].[CatRol]
+           ([RolIdSystem]
+           ,[RolName]
+           ,[RolDescription]
+           ,[RolAdminBrothers]
+           ,[RolAdminClient]
+           ,[RolRowStatus]
+           ,[RolTokenCreated]
+           ,[RolDateCreated]
+           ,[RolokenUpdated]
+           ,[RolDateUpdated]
+           ,[RolAdminInternal])
+     VALUES
+           (1
+           ,'ACorp+AsignaciÃ³nGuÃ­as'
+           ,'ACorp+AsignaciÃ³nGuÃ­as'
+           ,NULL
+           ,0
+           ,1
+           ,'SYS-AIXCHOP'
+           ,GETDATE()
+           ,NULL
+           ,NULL
+           ,0);
+
+SET @IdRol = SCOPE_IDENTITY();
+
 SELECT @IdSystem = SysIdSystem
 FROM dbo.CatSystem
 WHERE SysNameSystem = 'Hermes Web';
 
-SELECT @IdRol = RolIdRol
-FROM dbo.CatRol
-WHERE RolName LIKE '%Admin Corp%';
 
 SELECT @Order = MAX(A3.ModOrder) + 1
 FROM dbo.CatRol A1
@@ -41,10 +66,10 @@ INSERT INTO dbo.CatModule
     ModGroup
 )
 VALUES
-(   'Asignación de guías',                          -- ModName - varchar(100)
+(   'Asignaciï¿½n de guï¿½as',                          -- ModName - varchar(100)
     NULL,                                           -- ModIdModuleParent - int
     '/guide-assignment',                            -- ModPath - varchar(200)
-    'Relación de guías Forza con códigos Externos', -- ModDescription - varchar(150)
+    'Relaciï¿½n de guï¿½as Forza con cï¿½digos Externos', -- ModDescription - varchar(150)
     @Order,                                         -- ModOrder - int
     'file.png',                                     -- ModMetadata - varchar(50)
     1,                                              -- ModVisible - bit
