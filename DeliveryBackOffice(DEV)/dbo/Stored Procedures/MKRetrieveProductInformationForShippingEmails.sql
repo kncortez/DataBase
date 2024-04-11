@@ -86,7 +86,7 @@ BEGIN
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
 			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			)TBL
-			ORDER BY TBL.OrderMail DESC
+			ORDER BY TBL.Email DESC
 
 			SELECT DISTINCT A2.ProductGiftShippingEmail [Email] 	
 			FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog A1 WITH(NOLOCK)
@@ -125,6 +125,7 @@ BEGIN
 			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			AND  LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 
 			AND A2.ProductGiftShippingEmail <> 'NULL' 
+			ORDER BY A2.ProductGiftShippingEmail DESC
 		END
 		ELSE -- PARA ENVIAR CORREOS QUE NO TIENEN CUENTA
 		BEGIN
@@ -174,7 +175,8 @@ BEGIN
 				ON A4.IdCatMembership = A2.CatMembershipId
 			WHERE [Authorization] = @TransactionId--'SP00024113083'
 			)TBL
-			order by TBL.OrderMail desc 
+			ORDER BY TBL.Email DESC 
+			
 
 			SELECT DISTINCT A2.ProductGiftShippingEmail [Email] 	
 			FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog A1 WITH(NOLOCK)
@@ -213,7 +215,7 @@ BEGIN
 			AND A3.AccRowStatus = 1 AND A4.RuaRowStatus = 1 AND A6.PerRowStatus = 1
 			AND  LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 
 			AND A2.ProductGiftShippingEmail <> 'NULL' 
-			
+			ORDER BY A2.ProductGiftShippingEmail DESC
 			/*LISTADO DE CORREOS PARA REGALOS*//*
 			SELECT RTPS.ProductGiftShippingEmail [Email] 	 
 			FROM [dbo].[RegistrationofTransactionProcessStates] RTPS WITH(NOLOCK)
@@ -280,7 +282,7 @@ BEGIN
 		WHERE [Authorization] = @TransactionId--'SP00024113083'
 		AND A6.PerRowStatus = 1
 		)TBL
-		order by TBL.OrderMail desc 
+		ORDER BY TBL.Email DESC
 
 		/*LISTADO DE CORREOS PARA REGALOS*/
 		SELECT  MAX(RTPS.[OrderNumber]) [OrderNumber], RTPS.[ProductGiftShippingEmail] [Email] 	 
@@ -289,6 +291,7 @@ BEGIN
 		AND  LEN(COALESCE(RTPS.ProductGiftShippingEmail,'')) > 0 
 		AND RTPS.ProductGiftShippingEmail <> 'NULL' 
 		GROUP BY RTPS.[ProductGiftShippingEmail]
+		ORDER BY RTPS.[ProductGiftShippingEmail]  DESC
 
 	END 
 
