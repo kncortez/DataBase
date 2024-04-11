@@ -597,7 +597,8 @@ BEGIN
                                        cus.IdCustomer
                                 FROM #listGuidesEnabled lge
                                     INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+										AND lge.Guide_Number = dlo.Guide_Number
                                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                         ON vp.CodeOfReference = dlo.Sender_ID
                                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
@@ -615,7 +616,8 @@ BEGIN
                                        cus.IdCustomer
                                 FROM #listGuidesEnabled lge
                                     INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
-                                        ON lge.Guide_Number = dlo.Guide_Number
+                                        ON lge.Guide_Serie = dlo.Guide_Serie
+										AND lge.Guide_Number = dlo.Guide_Number
                                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                                         ON vp.CodeOfReference = dlo.Sender_ID
                                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
@@ -794,13 +796,129 @@ BEGIN
                                         ON WCT.CustomerId = WRBU.CustomerId
                                            AND WCT.GuideStatusId = WRBU.StatusOrderId
                                            AND WCT.WebhookType = WRBU.WebhookTypeId
+										INNER JOIN [DeliveryBackOffice].[dbo].[WebhookEndpoint] WHE WITH (NOLOCK)
+									ON WRBU.CustomerId = WHE.CustomerId
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[WebhookTrackingQueue] WTQ WITH (NOLOCK)
                                         ON WCT.GuideSerie = WTQ.GuideSerie
                                            AND WCT.GuideNumber = WTQ.GuideNumber
-                                           AND WCT.GuideStatusId = WTQ.StatusOrderId
-                                           AND WTQ.RowStatus = 1
+                                           AND WCT.GuideStatusId = WTQ.StatusOrderId   
+										   AND WTQ.RowStatus = 1
                                 WHERE WRBU.IdWebhookRestrinctionByUser IS NOT NULL
-                                      AND WTQ.IdWebhookTrackingQueue IS NULL;
+                                      AND WTQ.IdWebhookTrackingQueue IS NULL
+									  AND WHE.TypeConnectionId = 1;
+
+
+								--Agregar datos en cola de webhooks de clientes SFTP---INI
+										DECLARE @GuidePiecesTable AS TABLE
+										(
+										    CustomerId INT,
+										    CustomerEndpointId BIGINT,
+										    WebhookType INT,
+										    GuideSerie NVARCHAR(2),
+										    GuideNumber INT,
+										    GuideStatusId TINYINT,
+											NumberPieces INT,
+											NumberRelatedPieces INT
+											
+										);
+
+										INSERT INTO @GuidePiecesTable 
+													( 
+												CustomerId,
+										        GuideSerie,
+										        GuideNumber,
+										        GuideStatusId,
+												NumberPieces
+												)
+												SELECT wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId,
+												Count(dop.GuideNumber)
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN @WebhookCustomerTable wct
+													ON dop.GuideSerie = wct.GuideSerie
+													AND dop.GuideNumber = wct.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+												    ON wct.CustomerId = WHE.CustomerId
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideSerie = do.Guide_Serie
+													AND dop.GuideNumber = do.Guide_Number
+													WHERE do.IdCustomer = wct.CustomerId
+													AND WHE.TypeConnectionId = 2
+													GROUP BY wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId
+
+										   DECLARE @PiecesGuideRelatedTable AS TABLE
+										(
+										    CustomerId INT,
+										    CustomerEndpointId BIGINT,
+										    WebhookType INT,
+										    GuideSerie NVARCHAR(2),
+										    GuideNumber INT,
+										    GuideStatusId TINYINT,
+											NumberRelatedPieces INT
+											
+										);
+
+										INSERT INTO @PiecesGuideRelatedTable 
+													( 
+												CustomerId,
+										        GuideSerie,
+										        GuideNumber,
+										        GuideStatusId,
+												NumberRelatedPieces
+												)
+												SELECT wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId,
+												Count(dop.GuideNumber)
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN @WebhookCustomerTable wct
+													ON dop.GuideSerie = wct.GuideSerie
+													AND dop.GuideNumber = wct.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+												    ON wct.CustomerId = WHE.CustomerId
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideSerie = do.Guide_Serie
+													AND dop.GuideNumber = do.Guide_Number
+													WHERE do.IdCustomer = wct.CustomerId
+													AND WHE.TypeConnectionId = 2
+													AND dop.ExternalPieceId IS NOT NULL
+													GROUP BY wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, 
+												wct.GuideStatusId
+	
+										INSERT INTO WebhookTrackingQueueDetailForSFTP 
+													(CustomerId,
+													GuideSerie,
+													GuideNumber,
+													GuidePiece,
+													ExternalNumber,
+													ExternalPieceId,
+													StatusOrderId,
+													RowStatus,
+													DateCreated,
+													TokenCreated)
+												SELECT wct.CustomerId,
+												dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
+												wct.GuideStatusId, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenP AS TokenCreated
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN @WebhookCustomerTable wct
+													ON dop.GuideNumber = wct.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+													ON wct.CustomerId = WHE.CustomerId
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideNumber = do.Guide_Number
+												INNER JOIN @GuidePiecesTable gpt
+												    ON wct.GuideNumber = gpt.GuideNumber
+												INNER JOIN @PiecesGuideRelatedTable pgt
+												    ON gpt.GuideNumber = pgt.GuideNumber
+													WHERE do.IdCustomer = wct.CustomerId
+													AND WHE.TypeConnectionId = 2
+													AND gpt.NumberPieces = pgt.NumberRelatedPieces
+									--Agregar datos en cola de webhooks de cliente SFTP---FIN
+							
 
                             END TRY
                             BEGIN CATCH
@@ -858,7 +976,7 @@ BEGIN
                                 (
                                     SELECT 1
                                     FROM dbo.Cost ct WITH (NOLOCK)
-                                    WHERE ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                    WHERE ct.GuideSerie = ti.Guide_Serie AND ct.GuideNumber = ti.Guide_Number
                                 );
 
                             --SET @IdCost = SCOPE_IDENTITY();
@@ -895,9 +1013,9 @@ BEGIN
                                                    )
                             FROM Cost ct WITH (NOLOCK)
                                 INNER JOIN #PendingPaymentTemp ppt
-                                    ON ct.ProductNumber = CONCAT(ppt.GuideSerie, ppt.GuideNumber)
+                                    ON ct.GuideSerie = ppt.GuideSerie AND ct.GuideNumber = ppt.GuideNumber
                                 INNER JOIN #TblInclude ti
-                                    ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                    ON ct.GuideSerie = ti.Guide_Serie AND ct.GuideNumber = ti.Guide_Number
                                 OUTER APPLY
                             (
                                 SELECT TOP 1
@@ -910,7 +1028,7 @@ BEGIN
                                           )
                                           OR
                                           (
-                                              Co.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                              Co.GuideSerie = ti.Guide_Serie AND co.GuideNumber = ti.Guide_Number
                                               AND Co.GuideSerie IS NULL
                                               AND Co.GuideNumber IS NULL
                                           )
@@ -943,7 +1061,7 @@ BEGIN
                                        @Responsible
                                 FROM Cost ct
                                     INNER JOIN #TblInclude ti
-                                        ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                        ON ct.GuideSerie = ti.Guide_Serie AND ti.Guide_Number = ti.Guide_Number
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
                                         ON ct.IdCost = CD.IdCost
                                 WHERE CD.IdCostDetail IS NULL
@@ -957,7 +1075,7 @@ BEGIN
                                     CD.DateUpdated = GETDATE()
                                 FROM Cost ct
                                     INNER JOIN #TblInclude ti
-                                        ON ct.ProductNumber = CONCAT(ti.Guide_Serie, ti.Guide_Number)
+                                        ON ct.GuideSerie = ti.Guide_Serie AND ct.GuideNumber = ti.Guide_Number
                                     INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
                                         ON ct.IdCost = CD.IdCost
                                 WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
@@ -994,12 +1112,12 @@ BEGIN
 									LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 										ON		[LEG].[Guide_Number] = [MSL].[LogGuideNumber]
 										AND		[LEG].[Guide_Serie] = [MSL].[LogGuideSerie]
-										AND		[MSL].[RowStatus] = 1
 										AND		[MSL].[SalesPackageStatusId] = @CatSalesPackageStatusId
 									LEFT JOIN	[dbo].[Membership] M
 										ON		[LEG].[IdCustomer] = [M].[CustomerId]
 										AND		[M].[ExpirationDate] >= SYSDATETIME()
-										AND		[M].[RowStatus] = 1;
+										AND		[M].[RowStatus] = 1
+										AND		[MSL].[RowStatus] = 1;
 
 									WHILE @AuxCont > 0 
 										-- Recorrer listado de guías
