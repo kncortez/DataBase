@@ -33,7 +33,7 @@ BEGIN
 			'S' [ProductType],
 			A7.SubscriptionName [ProductName],
 			IIF(A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL'),'ACTIVADO',IIF( A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') /*AND A5.UsrEmail != A2.ProductGiftShippingEmail*/ AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode)) [ActivationCode],
-			A2.SubscriptionCost [ProductCost],
+			A2.SubscriptionCost - A2.SubscriptionFixedValue [ProductCost],
 			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM DeliveryBackOffice.dbo.SubscriptionPaymentLog A1 WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.Subscription A2 WITH(NOLOCK)
@@ -62,7 +62,7 @@ BEGIN
 			'M' [ProductType],	 
 			A7.MembershipName [ProductName],
 			IIF(A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL'),'ACTIVADO',IIF( A5.UsrEmail IS NOT NULL AND (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') /*AND A5.UsrEmail != A2.ProductGiftShippingEmail*/ AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode)) [ActivationCode],
-			A2.MembershipCost [ProductCost],
+			A2.MembershipCost - A2.MembershipFixedValue [ProductCost],
 			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM DeliveryBackOffice.dbo.MembershipPaymentLog A1 WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.Membership A2 WITH(NOLOCK)
@@ -139,7 +139,7 @@ BEGIN
 			'S' [ProductType],
 			A4.SubscriptionName [ProductName],
 			IIF( EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = COALESCE(A2.ProductGiftShippingEmail, '') ),'ACTIVADO',A2.ActivationCode) [ActivationCode],
-			A2.SubscriptionCost [ProductCost],
+			A2.SubscriptionCost - A2.SubscriptionFixedValue [ProductCost],
 			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM [dbo].[SubscriptionPaymentLog] A1 WITH(NOLOCK)
 			INNER JOIN [dbo].[Subscription] A2 WITH(NOLOCK)
@@ -162,7 +162,7 @@ BEGIN
 			'M' [ProductType],	 
 			A4.MembershipName [ProductName],
 			IIF( (LEN(COALESCE(A2.ProductGiftShippingEmail,'')) > 0 OR A2.ProductGiftShippingEmail != 'NULL') AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode) [ActivationCode],
-			A2.MembershipCost [ProductCost],
+			A2.MembershipCost - A2.MembershipFixedValue [ProductCost],
 			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM [dbo].[MembershipPaymentLog] A1 WITH(NOLOCK)
 			INNER JOIN [dbo].[Membership] A2 WITH(NOLOCK)
@@ -236,7 +236,7 @@ BEGIN
 		 ,'S' [ProductType]
 		 ,A4.SubscriptionName [ProductName]
 		 ,IIF(A2.RowStatus = 1,'ACTIVADO',A2.ActivationCode) [ActivationCode]
-		 ,A2.SubscriptionCost [ProductCost]
+		 ,A2.SubscriptionCost - A2.SubscriptionFixedValue [ProductCost]
 		 ,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 		FROM [dbo].[SubscriptionPaymentLog] A1 WITH(NOLOCK)
 		INNER JOIN [dbo].[Subscription] A2 WITH(NOLOCK)
@@ -263,7 +263,7 @@ BEGIN
 		 ,'M' [ProductType]	 
 		 ,A4.MembershipName [ProductName]
 		 ,IIF(A2.RowStatus = 1,'ACTIVADO',ActivationCode) [ActivationCode] 
-		 ,A2.MembershipCost [ProductCost]
+		 ,A2.MembershipCost - A2.MembershipFixedValue [ProductCost]
 		 ,IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 		FROM [dbo].[MembershipPaymentLog] A1 WITH(NOLOCK)
 		INNER JOIN [dbo].[Membership] A2 WITH(NOLOCK)
