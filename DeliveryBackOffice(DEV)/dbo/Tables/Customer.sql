@@ -160,3 +160,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fechad e co
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Almacenar cantidad de imagenes de evidencias permitidas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Customer', @level2type = N'COLUMN', @level2name = N'NumImgEvidence';
 
+GO
+CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
+ON [dbo].[Customer] ([IdCustomerType])
+INCLUDE ([Name],[Abbreviation],[CountryID],[RowSatus],[SAPCardCode])
