@@ -8,6 +8,7 @@
 AS
 BEGIN
     DECLARE @jsonResult NVARCHAR(MAX);
+    IF @IdAccount = '' SET @IdAccount = NULL;
     --IF (@Others <> 'CourierApp')
     --BEGIN
     --    IF NOT EXISTS
