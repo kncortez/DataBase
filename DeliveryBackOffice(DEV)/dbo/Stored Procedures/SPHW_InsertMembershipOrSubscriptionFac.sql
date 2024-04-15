@@ -296,8 +296,8 @@ BEGIN
 
 		
           SELECT 
-                @inv_amount =    SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
-                @inv_IVA =     SUM(ISNULL(CS.SubscriptionCost, CM.MembershipCost) - (ISNULL(CS.SubscriptionCost, CM.MembershipCost) / 1.12))
+                 @inv_amount =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
+                @inv_IVA =      SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / 1.12))
 			 FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
@@ -357,10 +357,10 @@ BEGIN
 		   @dti_category,
 		   @dti_quantity,
 		   @dti_measurement,
-		   (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
-		   ,CS.SubscriptionName
-		   ,CS.SubscriptionCost -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	 / 1.12)
-		   ,CS.SubscriptionCost
+		    (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
+		   ,CS.SubscriptionName	
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / 1.12)
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
 		   ,@dti_dateRegister
 		   ,@dti_tokenRegister
 		   ,@SAPCode
