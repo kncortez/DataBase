@@ -22,10 +22,6 @@
 ) ON [PRIMARY]
 GO
 
-
-
-
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de factura pagada (factura electronica o nota de credito)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InOutOfMoneyDetail', @level2type=N'COLUMN',@level2name=N'io_type'
 GO
 

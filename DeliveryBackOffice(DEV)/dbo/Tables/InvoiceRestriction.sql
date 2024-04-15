@@ -21,10 +21,6 @@ GO
 ALTER TABLE [dbo].[InvoiceRestriction] CHECK CONSTRAINT [FKInvoiceHeader]
 GO
 
-
-
-
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador unico de la restriccion de la factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceRestriction', @level2type=N'COLUMN',@level2name=N'InvIdRestriction'
 GO
 

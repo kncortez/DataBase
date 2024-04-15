@@ -38,9 +38,6 @@
 ) ON [PRIMARY]
 GO
 
-
-
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo relacionado con el codigo de punto de visita o express center' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'del_ParametrosFactura', @level2type=N'COLUMN',@level2name=N'dpf_VpCodeOfReference'
 GO
 

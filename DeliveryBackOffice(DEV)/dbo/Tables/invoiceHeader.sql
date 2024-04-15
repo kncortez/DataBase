@@ -63,10 +63,6 @@ ALTER TABLE [dbo].[invoiceHeader]  WITH CHECK ADD FOREIGN KEY([systemOperation])
 REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 GO
 
-
-
-
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador principal de cabecera de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'inv_pk_id'
 GO
 

@@ -21,10 +21,6 @@ GO
 ALTER TABLE [dbo].[InvoiceLog] CHECK CONSTRAINT [FKIRestrictionInvoiceLog]
 GO
 
-
-
-
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador unico para los logs de facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceLog', @level2type=N'COLUMN',@level2name=N'InvoiceLogId'
 GO
 
