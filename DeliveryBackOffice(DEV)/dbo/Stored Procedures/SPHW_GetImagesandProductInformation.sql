@@ -35,7 +35,8 @@ IF (EXISTS( Select Top 1 1
 			CP.SubscriptionCost  [CatProductCost],
 			CP.SubscriptionFixedValue [CatProductDiscountValue],
 			CP.[CatProductCategoryId],
-			CP.Tag
+			CP.Tag,
+			CAST(CP.SubscriptionValidity AS nvarchar) +' '+ 'Meses' [Validity]
 From DBO.[CatSubscription] CP WITH(NOLOCK) 
 WHERE CP.IdCatSubscription = @IdCatProduct
       AND   CP.RowStatus=1 AND CP.SubscriptionName = @ProductName
@@ -48,7 +49,8 @@ Select
 			CP.MembershipCost  [CatProductCost],
 			CP.MembershipFixedValue [CatProductDiscountValue],
 			CP.[CatProductCategoryId],
-			CP.Tag
+			CP.Tag,
+			CAST(CP.MembershipValidity AS nvarchar) +' '+ 'Meses' [Validity]
 From [dbo].[CatMembership] CP WITH(NOLOCK) 
 WHERE CP.IdCatMembership = @IdCatProduct
       AND   CP.RowStatus=1 AND CP.MembershipName  = @ProductName
