@@ -1,0 +1,5 @@
+ALTER TABLE MembershipSubscriptionLog NOCHECK CONSTRAINT FK_MembershipSubscriptionLog_Membership;
+ALTER TABLE MembershipSubscriptionLog NOCHECK CONSTRAINT FK_MembershipSubscriptionLog_Status;
+
+ALTER TABLE MembershipSubscriptionLog ALTER COLUMN MembershipId INT NULL
+ALTER TABLE MembershipSubscriptionLog ALTER COLUMN SalesPackageStatusId INT NULL

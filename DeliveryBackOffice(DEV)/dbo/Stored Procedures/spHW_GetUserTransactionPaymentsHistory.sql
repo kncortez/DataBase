@@ -41,14 +41,14 @@ BEGIN
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
 				ISNULL([MSL].[SubscriptionId], 0) [TrxSubscriptionId],
 				'' [TrxMembershipName],
-				'' [TrxSubscriptionName]
+				'' [TrxSubscriptionName],
+				'' [TrxOrderNumber],
+				'' [TrxPaymentUrl]
 	FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	INNER JOIN	[dbo].[Account] A
 		ON		[DO].[IdCustomer] = [A].[IdCustomer]
-		AND		[A].[AccIdAccount] = @AccountId
 	INNER JOIN	[dbo].[CreditCardTransactionByCustomer] CCTC WITH(NOLOCK)
 		ON		CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) = [CCTC].[OrderNumber]
-		AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[DO].[Guide_Serie] = [ID].[dti_fk_orderSerie]
 		AND		[DO].[Guide_Number] = [ID].[dti_fk_orderNumber]
@@ -57,6 +57,8 @@ BEGIN
 	LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
+	WHERE [A].[AccIdAccount] = @AccountId
+	AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	ORDER BY	[CCTC].[DateCreated] DESC;
 
 	-- APUNTA A CREDIT CARD TRANSACTION BY CUSTOMER DETAIL
@@ -70,17 +72,17 @@ BEGIN
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
 				ISNULL([MSL].[SubscriptionId], 0) [TrxSubscriptionId],
 				'' [TrxMembershipName],
-				'' [TrxSubscriptionName]
+				'' [TrxSubscriptionName],
+				'' [TrxOrderNumber],
+				'' [TrxPaymentUrl]
 	FROM		[dbo].[DeliveryOrder] DO WITH(NOLOCK)
 	INNER JOIN	[dbo].[Account] A
 		ON		[DO].[IdCustomer] = [A].[IdCustomer]
-		AND		[A].[AccIdAccount] = @AccountId
 	INNER JOIN	[dbo].[CreditCardTransactionByCustomerDetail] CCTCD WITH(NOLOCK)
 		ON		[DO].[Guide_Serie] = [CCTCD].[SerieNumber]
 		AND		[DO].[Guide_Number] = [CCTCD].[ProductNumber]
 	INNER JOIN	[dbo].[CreditCardTransactionByCustomer] CCTC WITH(NOLOCK)
 		ON		[CCTCD].[OrderNumber] = [CCTC].[OrderNumber]
-		AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[DO].[Guide_Serie] = [ID].[dti_fk_orderSerie]
 		AND		[DO].[Guide_Number] = [ID].[dti_fk_orderNumber]
@@ -89,6 +91,8 @@ BEGIN
 	LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
+	WHERE  [A].[AccIdAccount] = @AccountId
+	AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	ORDER BY	[CCTC].[DateCreated] DESC;
 
 	-- Membresías
@@ -101,7 +105,9 @@ BEGIN
 				[M].[IdMembership] [TrxMembershipId],
 				0 [TrxSubscriptionId],
 				[CM].[MembershipName] [TrxMembershipName],
-				'' [SubscriptionName]
+				'' [SubscriptionName],
+				CASE WHEN [MPL].[TypeOfInOutOfMoneyId] = 6  THEN '' ELSE [MPL].[Authorization] END [TrxOrderNumber],
+				ISNULL([MPL].[PaymentImageURL],[RTPS].[PaymentImageURL]) [TrxPaymentUrl]
 	FROM		[dbo].[Membership] M 
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[M].[IdMembership] = [ID].[MembershipId]
@@ -109,6 +115,16 @@ BEGIN
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	INNER JOIN	[dbo].[invoiceHeader] IH WITH(NOLOCK)
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
+	LEFT JOIN   [dbo].[MembershipPaymentLog] MPL WITH(NOLOCK)
+		ON		[M].[IdMembership] = [MPL].[MembershipId] 
+	OUTER APPLY(
+				  SELECT Top 1[OrderNumber], [PaymentImageURL]
+				  FROM [dbo].[RegistrationofTransactionProcessStates]
+				  WHERE [OrderNumber] = [MPL].[Authorization]
+				    AND [AccountId] = @AccountId
+				) RTPS
+	--LEFT JOIN   [dbo].[RegistrationofTransactionProcessStates] RTPS WITH(NOLOCK)
+		--ON      [MPL].[Authorization]  = [RTPS].[OrderNumber]
 	WHERE		[M].[AccountId] = @AccountId
 		AND		[M].[DateCreated] BETWEEN @DateStart AND @DateEnd
 		AND		[M].[RowStatus] = 1;
@@ -123,7 +139,9 @@ BEGIN
 				0 [TrxMembershipId],
 				[S].[IdSubscription] [TrxSubscriptionId],
 				'' [TrxMembershipName],
-				[CS].[SubscriptionName] [TrxSubscriptionName]
+				[CS].[SubscriptionName] [TrxSubscriptionName],
+				CASE WHEN [SPL].[TypeOfInOutOfMoneyId] = 6  THEN '' ELSE [SPL].[Authorization] END [TrxOrderNumber],
+				ISNULL([SPL].[PaymentImageURL],[RTPS].[PaymentImageURL])  [TrxPaymentUrl]
 	FROM		[dbo].[Subscription] S
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[S].[IdSubscription] = [ID].[SubscriptionId]
@@ -131,6 +149,14 @@ BEGIN
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
 	INNER JOIN	[dbo].[invoiceHeader] IH WITH(NOLOCK)
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
+	LEFT JOIN   [dbo].[SubscriptionPaymentLog] SPL WITH(NOLOCK)
+		ON      [S].[IdSubscription] = [SPL].[SubscriptionId]
+	OUTER APPLY(
+				  SELECT Top 1 [OrderNumber], [PaymentImageURL]
+				  FROM [dbo].[RegistrationofTransactionProcessStates]
+				  WHERE [OrderNumber] = [SPL].[Authorization]  
+					AND [AccountId] = @AccountId
+				) RTPS
 	WHERE		[S].[AccountId] = @AccountId
 		AND		[S].[DateCreated] BETWEEN @DateStart AND @DateEnd
 		AND		[S].[RowStatus] = 1;
