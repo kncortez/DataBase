@@ -549,69 +549,203 @@ BEGIN
 					AND
 					[DO].[Guide_Number] = [GT].[Guide_Number]
 		------------------------------------------------------
-
+		
 		--Proceso para añadir a carrito de compras
 		--Oscar Morales - 2022-08-17
 
 		IF @AddToServiceCart = 1 AND @IdAccount IS NOT NULL
 		BEGIN
-			DECLARE @AccountServiceCartId INT
 
-			SELECT TOP 1
-				@AccountServiceCartId = IdAccountServiceCart
-			FROM AccountServiceCart
-			WHERE AccountId = @IdAccount
-			AND IsPending = 1
-			AND RowStatus = 1
-			ORDER BY DateCreated DESC
-
-			IF @AccountServiceCartId IS NULL
+			IF ( 
+				EXISTS
+				(
+					SELECT 
+						TOP (1)
+    						1
+					FROM 
+						[DeliveryBackOffice].[dbo].[Account] Acc  WITH(NOLOCK) 
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA  WITH(NOLOCK) 
+							ON	
+								[RBUBA].[RuaIdAccount] = [Acc].[AccIdAccount]
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointByUser] VPBU  WITH(NOLOCK) 
+							ON
+								[RBUBA].[RuaIdUser] =  [VPBU].[RegisterUserID]
+						INNER JOIN
+							[DeliveryBackOffice].[dbo].[VisitPointClient] VPC  WITH(NOLOCK) 
+							ON
+								[VPBU].[IdVisitPointClient] = [VPC].[IdVisitPointClient]
+								AND
+								[VPC].[IdKindOfVPClient] = 1
+					WHERE
+						[Acc].[AccIdAccount] = @IdAccount
+				) 
+			)
 			BEGIN
-				
-				INSERT INTO [dbo].[AccountServiceCart] ([AccountId]
-				, [IsPending]
-				, [RowStatus]
-				, [TokenCreated]
-				, [DateCreated]
-				, [TokenUpdated]
-				, [DateUpdated])
-					VALUES (@IdAccount, 1, 1, 'SetServiceRequestFD', GETDATE(), NULL, NULL)
+			    
+				DECLARE @ExcAccountServiceCartId INT
 
-				SET @AccountServiceCartId = @@IDENTITY
+				SELECT 
+					TOP (1)
+						@ExcAccountServiceCartId = [EASC].[IdExpressAccountServiceCart]
+				FROM 
+					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC WITH(NOLOCK) 
+				WHERE 
+					[EASC].[AccountId] = @IdAccount
+					AND 
+					[EASC].[IsPending] = 1
+					AND 
+					[EASC].[RowStatus] = 1
+				ORDER BY 
+					[EASC].[DateCreated] DESC
+
+				IF ( @ExcAccountServiceCartId IS NULL )
+				BEGIN
+				    
+					INSERT INTO [DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] 
+					(
+						[AccountId]
+						, [CustomerId]
+						, [CustomerPortfolioId]
+						, [IsPending]
+						, [RowStatus]
+						, [TokenCreated]
+						, [DateCreated]
+						, [TokenUpdated]
+						, [DateUpdated]
+					)
+					VALUES 
+					(
+						@IdAccount
+						,(CASE WHEN ISNULL(@VisitPointByClientPortfolioId, 0) = 0 THEN @CustomerID ELSE NULL END)
+						,(CASE WHEN ISNULL(@VisitPointByClientPortfolioId, 0) = 0 THEN NULL ELSE @VisitPointByClientPortfolioId END)
+						, 1
+						, 1
+						, 'SetServiceRequestFD'
+						, GETDATE()
+						, NULL
+						, NULL
+					)
+
+					SET @ExcAccountServiceCartId = @@IDENTITY
+				END
+				ELSE
+				BEGIN
+					--Desactivar otros carritos
+					UPDATE 
+						[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart]
+					SET 
+						IsPending = 0
+						,RowStatus = 0
+						,TokenUpdated = 'SetServiceRequestFD'
+						,DateUpdated = GETDATE()
+					WHERE 
+					IsPending = 1
+					AND 
+					RowStatus = 1
+					AND 
+					[IdExpressAccountServiceCart] <> @ExcAccountServiceCartId
+					AND 
+					AccountId = @IdAccount
+
+				END
+			    
+				--Agregar guías al carrito
+				INSERT INTO [dbo].[ExpressAccountServiceCartDetail]
+				(
+				    [ExpressAccountServiceCartId],
+				    [GuideSerie],
+				    [GuideNumber],
+				    [RowStatus],
+				    [DateCreated],
+				    [TokenCreated],
+				    [DateUpdated],
+				    [TokenUpdated]
+				)
+				SELECT
+					@ExcAccountServiceCartId
+					,Guide_Serie
+					,Guide_Number
+					,1
+					,GETDATE()
+					,'SetServiceRequestFD'
+					,NULL
+					,NULL
+				FROM #GuideTable
 			END
 			ELSE
 			BEGIN
-				--Desactivar otros carritos
-				UPDATE AccountServiceCart
-				SET IsPending = 0
-				   ,RowStatus = 0
-				   ,TokenUpdated = 'SetServiceRequestFD'
-				   ,DateUpdated = GETDATE()
-				WHERE IsPending = 1
-				AND RowStatus = 1
-				AND IdAccountServiceCart <> @AccountServiceCartId
-				AND AccountId = @IdAccount
-			END
+			    
+				DECLARE @AccountServiceCartId INT
 
-			--Agregar guías al carrito
-			INSERT INTO [dbo].[AccountServiceCartDetail] ([AccountServiceCartId]
-			, [GuideSerie]
-			, [GuideNumber]
-			, [RowStatus]
-			, [TokenCreated]
-			, [DateCreated]
-			, [TokenUpdated]
-			, [DateUpdated])
+				SELECT 
+					TOP (1)
+						@AccountServiceCartId = [AccSC].[IdAccountServiceCart]
+				FROM 
+					[DeliveryBackOffice].[dbo].[AccountServiceCart] AccSC  WITH(NOLOCK) 
+				WHERE 
+					[AccSC].[AccountId] = @IdAccount
+					AND 
+					[AccSC].[IsPending] = 1
+					AND 
+					[AccSC].[RowStatus] = 1
+				ORDER BY 
+					[AccSC].[DateCreated] DESC
+
+				IF @AccountServiceCartId IS NULL
+				BEGIN
+				
+					INSERT INTO [dbo].[AccountServiceCart] ([AccountId]
+					, [IsPending]
+					, [RowStatus]
+					, [TokenCreated]
+					, [DateCreated]
+					, [TokenUpdated]
+					, [DateUpdated])
+						VALUES (@IdAccount, 1, 1, 'SetServiceRequestFD', GETDATE(), NULL, NULL)
+
+					SET @AccountServiceCartId = @@IDENTITY
+				END
+				ELSE
+				BEGIN
+					--Desactivar otros carritos
+					UPDATE AccountServiceCart
+					SET IsPending = 0
+					   ,RowStatus = 0
+					   ,TokenUpdated = 'SetServiceRequestFD'
+					   ,DateUpdated = GETDATE()
+					WHERE IsPending = 1
+					AND RowStatus = 1
+					AND IdAccountServiceCart <> @AccountServiceCartId
+					AND AccountId = @IdAccount
+				END
+
+				--Agregar guías al carrito
+				INSERT INTO [dbo].[AccountServiceCartDetail] 
+				(
+					[AccountServiceCartId]
+					, [GuideSerie]
+					, [GuideNumber]
+					, [RowStatus]
+					, [TokenCreated]
+					, [DateCreated]
+					, [TokenUpdated]
+					, [DateUpdated]
+				)
 				SELECT
 					@AccountServiceCartId
-				   ,Guide_Serie
-				   ,Guide_Number
-				   ,1
-				   ,'SetServiceRequestFD'
-				   ,GETDATE()
-				   ,NULL
-				   ,NULL
+					,Guide_Serie
+					,Guide_Number
+					,1
+					,'SetServiceRequestFD'
+					,GETDATE()
+					,NULL
+					,NULL
 				FROM #GuideTable
+
+			END
+
 		END
 		--Termina proceso para añadir a carrito de compras
 

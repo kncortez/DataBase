@@ -15,6 +15,7 @@
     [DCBA_LegalIDN]        NVARCHAR (50)  NULL,
     [DCBA_BankAccountType] VARCHAR (40)   NULL,
     [DCBA_Identification]  VARCHAR (40)   NULL,
+	[DeliveryFavCODId]     INT            NULL,
     CONSTRAINT [PK_SP_DEPOSITOS_CUENTAS] PRIMARY KEY CLUSTERED ([DCBA_Id] ASC)
 );
 
@@ -25,7 +26,6 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DCBA_ID_DCBA_ID_ESTADO]
     ON [dbo].[DeliveryCustomerBankAccount]([DCBA_Id] ASC, [DCBA_Id_estado] ASC);
 
-
 GO
-
-
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la tabla DeliveryCustomerBankAccount', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryCustomerBankAccount', @level2type = N'COLUMN', @level2name = N'DeliveryFavCODId';
+GO
