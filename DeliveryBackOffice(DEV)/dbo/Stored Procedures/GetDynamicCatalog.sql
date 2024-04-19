@@ -377,7 +377,8 @@ BEGIN
                                        + CONVERT(NVARCHAR, ISNULL(vpc.[CodeOfReference], '')) + '",'
                                        + '"Description":"' + ISNULL(REPLACE(vpc.[DescriptionOfClient], '"', ''), '')
                                        + '",' + '"Address":"' + ISNULL(REPLACE(vpc.[Address], '"', ''), '') + '",'
-									   + '"AccountId":"' + CONVERT(NVARCHAR, ISNULL([RBUBA].[RuaIdAccount], 0)) + '",' +
+                                       + '"IdAccount":"'
+                                       + ISNULL(REPLACE(AC.[AccIdAccount], '"', ''), '') + '",'
                                        + '"Province":"' + ISNULL(pr.ProvinceName, '') + '",' + '"Township":"'
                                        + ISNULL(TWS.TownshipName, '') + '",' + '"HeaderCode":"'
                                        + ISNULL(TWS.HeaderCode, '') + '",' 
@@ -440,6 +441,12 @@ BEGIN
                                         ON pr.IdProvince = TWS.IdProvince
 									LEFT JOIN DeliveryBackOffice.dbo.Membership mmbrshp WITH(NOLOCK)
 										ON cu.IdCustomer = mmbrshp.CustomerId
+										AND mmbrshp.RowStatus = 1
+										AND mmbrshp.ExpirationDate >= GETDATE()
+										AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
+                                    LEFT JOIN dbo.Account AC WITH(NOLOCK)
+						                ON   vpc.CustomerID = AC.IdCustomer
+									   
                                 WHERE IdCustomerType = 1 AND dbk.Id_country = 'GT'
                                       AND dbk.Id_status = 1 AND cba.RowStatus = 1
                                       AND vpc.StatusClient = 1 AND mmbrshp.RowStatus = 1
