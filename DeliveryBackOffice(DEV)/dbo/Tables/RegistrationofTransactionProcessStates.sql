@@ -1,7 +1,7 @@
 CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[IdRegistrationofTransactionProcessStates] [int] IDENTITY(1,1) NOT NULL,
-	[AccountId] [int] NOT NULL,
-	[CustomerId] [int] NOT NULL,
+	[AccountId] [int] NULL,
+	[CustomerId] [int] NULL,
 	[OrderNumber] [nvarchar](50) NOT NULL,
 	[NameTax] [nvarchar](250) NULL,
 	[AddressTax] [nvarchar](1000) NULL,
@@ -17,6 +17,9 @@ CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[TypeSalePackage] [nvarchar](25) NULL,
 	[Vaucher] [nvarchar](25) NULL,
 	[InvoiceEmail] [nvarchar](50) NULL,
+	[ProductGiftShippingEmail] [nvarchar](50) NULL,
+	[PaymentImageURL] [nvarchar](600) NULL,
+	[PhoneNumber] [nvarchar](10) NULL,
  CONSTRAINT [PK_RegistrationofTransactionProcessStates] PRIMARY KEY CLUSTERED 
 (
 	[IdRegistrationofTransactionProcessStates] ASC
@@ -34,7 +37,6 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador 
 GO
 
 
-GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'el numero de orden esta compuesto por las iniciales MP que indican membership payment seguid de ceros y el nùmero de la susripciòn o memrbesìa adquirida' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'OrderNumber'
 GO
@@ -57,7 +59,11 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'obtener últimos digitos de la tarjeta con la que se ejecuta el pago' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'GetCardsCredit'
 GO
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo electronico de la persona a la que se envía el regalo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'URL de la imagen del vaucher de compra ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'PaymentImageURL'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de teléfono para campo obligatorio de plataforma de pago versión 2.7' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RegistrationofTransactionProcessStates', @level2type=N'COLUMN',@level2name=N'PhoneNumber'
+GO
 

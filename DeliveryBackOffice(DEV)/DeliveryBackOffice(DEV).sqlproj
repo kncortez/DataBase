@@ -24,6 +24,8 @@
     <TargetDatabaseSet>True</TargetDatabaseSet>
     <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
     <DefaultFilegroup>PRIMARY</DefaultFilegroup>
+    <ValidateCasingOnIdentifiers>False</ValidateCasingOnIdentifiers>
+    <GenerateSqlClrSymbols>True</GenerateSqlClrSymbols>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -80,7 +82,10 @@
     <Build Include="dbo\User Defined Types\TblServiceRequest2.sql" />
     <Build Include="dbo\User Defined Types\TblServiceRequest.sql" />
     <Build Include="dbo\User Defined Types\TblServiceExecutionProcess.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageMarketPlace.sql" />
     <Build Include="dbo\User Defined Types\TblRoutesPreparation.sql" />
+    <Build Include="dbo\User Defined Types\TblProductMarketPlace2.sql" />
+    <Build Include="dbo\User Defined Types\TblProductMarketPlace.sql" />
     <Build Include="dbo\User Defined Types\TblPlaceLocation.sql" />
     <Build Include="dbo\User Defined Types\TblPaymentReturn.sql" />
     <Build Include="dbo\User Defined Types\TblPaymentList.sql" />
@@ -298,6 +303,11 @@
     <Build Include="dbo\Tables\MembershipDiscountRange.sql" />
     <Build Include="dbo\Tables\MembershipAffiliateDiscount.sql" />
     <Build Include="dbo\Tables\Membership.sql" />
+    <Build Include="dbo\Tables\MarketplaceTagsByProduct.sql" />
+    <Build Include="dbo\Tables\MarketplaceProductTags.sql" />
+    <Build Include="dbo\Tables\MarketplaceCartDetail.sql" />
+    <Build Include="dbo\Tables\MarketplaceCart.sql" />
+    <Build Include="dbo\Tables\MarketplaceCarouselImage.sql" />
     <Build Include="dbo\Tables\LogTokenPOD.sql" />
     <Build Include="dbo\Tables\LocationRecord.sql" />
     <Build Include="dbo\Tables\LinehaulRouteSettlementToolDetail.sql" />
@@ -479,6 +489,8 @@
     <Build Include="dbo\Tables\CatReason.sql" />
     <Build Include="dbo\Tables\CatRateSegment.sql" />
     <Build Include="dbo\Tables\CatPromo.sql" />
+    <Build Include="dbo\Tables\CatProductImage.sql" />
+    <Build Include="dbo\Tables\CatProductCategory.sql" />
     <Build Include="dbo\Tables\CatProcessCOD.sql" />
     <Build Include="dbo\Tables\CatPointPromo.sql" />
     <Build Include="dbo\Tables\CatPaymentType.sql" />
@@ -1290,13 +1302,19 @@
     <Build Include="dbo\Stored Procedures\SPRequestCouponData_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\SPRequestCouponData.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_TMGetDataMembershipOrSubscription.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesNonLoggedinUser.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlaceTeleMarketing.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStatesMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegistrationofTransactionProcessStates.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegistrationCustomerMembershipByAffiliates.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertProductsMarketPlaceInInvoiceHeaderDetail.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionInInvoiceHeaderDetail.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFacTeleMarket.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_InsertMembershipOrSubscriptionFac.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_HistorialdeValidacionesdeControldeCalidad.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetResponseFacTransactionProcessStatus.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetListofWebHookHeaders.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetImagesandProductInformation.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetGuideFCCDataClients.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetDataforIncidentRegistration.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetDataMembershipOrSubscription.sql" />
@@ -1357,6 +1375,7 @@
     <Build Include="dbo\Stored Procedures\ReportClosureDesktop.sql" />
     <Build Include="dbo\Stored Procedures\ReportClosure.sql" />
     <Build Include="dbo\Stored Procedures\RenameforBackup.sql" />
+    <Build Include="dbo\Stored Procedures\RemoveProductsfromtheMarketplaceCart.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromServiceCart.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromExpressCenterServiceCart.sql" />
     <Build Include="dbo\Stored Procedures\ReleaseCouponData.sql" />
@@ -1373,6 +1392,7 @@
     <Build Include="dbo\Stored Procedures\PickUpManifestDetailTSE.sql" />
     <Build Include="dbo\Stored Procedures\NullifyPieceOfRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\MigrateUserToSystem.sql" />
+    <Build Include="dbo\Stored Procedures\LoadProductCategory.sql" />
     <Build Include="dbo\Stored Procedures\ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\IndividualCustomerCODAmountsData.sql" />
     <Build Include="dbo\Stored Procedures\HelloWorldprocedure.sql" />
@@ -1409,6 +1429,7 @@
     <Build Include="dbo\Stored Procedures\GetServiceRecolectPay.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceExecutionSchedule.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountExpressCenter.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\GetScheduleTimeList.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToRenew.sql" />
@@ -1424,6 +1445,7 @@
     <Build Include="dbo\Stored Procedures\GetRecolectPriceGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetReasons.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
+    <Build Include="dbo\Stored Procedures\GetProductsByCategory.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetPickupsWithCourierCandidate.sql" />
     <Build Include="dbo\Stored Procedures\GetPickupServiceDataByID.sql" />
@@ -1443,6 +1465,7 @@
     <Build Include="dbo\Stored Procedures\GetInvoiceProcessedToUpdate.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoicePaymentCommissionCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
+    <Build Include="dbo\Stored Procedures\GetInternalLoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
     <Build Include="dbo\Stored Procedures\GetInformationGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetInfoFAC.sql" />
@@ -1492,6 +1515,7 @@
     <Build Include="dbo\Stored Procedures\GetDataForClosure.sql" />
     <Build Include="dbo\Stored Procedures\GetDailyCodPayment.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomers.sql" />
+    <Build Include="dbo\Stored Procedures\GetCustomerPaymentDataMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerPaymentData.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuides.sql" />
@@ -1533,6 +1557,7 @@
     <Build Include="dbo\Stored Procedures\GenerateClosureVisitPoint.sql" />
     <Build Include="dbo\Stored Procedures\GenerateClosureOperator.sql" />
     <Build Include="dbo\Stored Procedures\GenerateClosure.sql" />
+    <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\FinishExpressServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\FilterVisitPointByClientPortfolio.sql" />
@@ -1554,6 +1579,7 @@
     <Build Include="dbo\Stored Procedures\Add_msjTimeout.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPRate.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
+    <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
