@@ -393,7 +393,9 @@ BEGIN
                                                                   '1'),
                                                               ''
                                                           )
-                                                ) + '",' + '"Billing":' + '[{' + '"EntityName":"'
+                                                ) + '",' 
+                                       + '"InsuranceRate": "' + CONVERT(NVARCHAR,ISNULL(rh.InsuranceRate, 0)) + '",'
+                                       + '"Billing":' + '[{' + '"EntityName":"'
                                        + REPLACE(ISNULL(Cu.[InvoiceName], ''), '"', '') + '",' + '"TaxId":"'
                                        + ISNULL(Cu.[TaxIdentificationNumber], '') + '",' + '"TaxAddress":"'
                                        + REPLACE(ISNULL(Cu.[FiscalAddress], ''), '"', '') + '",' + '"TaxEmail":"'
@@ -418,6 +420,9 @@ BEGIN
                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer rc WITH(NOLOCK)
                                         ON cu.IdCustomer = rc.RbcIdCustomer
                                            AND rc.RbcRowStatus = 1
+                                    LEFT JOIN DeliveryBackOffice.dbo.RateHeader rh WITH (NOLOCK)
+										ON rc.RbcIdRate = rh.RheId
+										  AND rh.RheRowStatus = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp WITH(NOLOCK)
                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
