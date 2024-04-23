@@ -486,10 +486,26 @@ begin
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
                                      + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
-                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, ''))
+                                     + '"IdInternalOrderRef":"' 
+                                     + REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                        CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, '')) ,
+                                                                        'json'
+                                                                       ),
+                                                  '"',
+                                                  '\"'
+                                              ) 
                                      + '",'
 									 +'"IdInternalOrderRef2":"'
-                                     + CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) + '",'
+                                     + REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                        CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) ,
+                                                                        'json'
+                                                                       ),
+                                                  '"',
+                                                  '\"'
+                                              ) 
+                                     + '",'
 									 + '"Service_Ref1":"' 
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
