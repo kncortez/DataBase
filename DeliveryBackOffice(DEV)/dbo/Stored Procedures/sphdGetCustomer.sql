@@ -3,6 +3,12 @@
 -- Create date: <2021-19-04>
 -- Description:	<Obtiene el listado de los clientes>
 -- =============================================
+
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Update date: <2024-04-23>
+-- Description:	<Se agrego obtencion de campo isCOD>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
@@ -100,6 +106,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
+			 , cst.[isCOD]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -198,6 +205,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
+			 , cst.[isCOD]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
@@ -209,7 +217,7 @@ BEGIN
 
     END;
 
-    IF (@Option = 3) --First Load Socios de negocio
+	IF (@Option = 3) --First Load
     BEGIN
 
 		--First Catalog UI MgtCustomer
@@ -250,7 +258,7 @@ BEGIN
         ORDER BY cst.Name;
 	END;
 
-    IF (@Option = 4) --First Load Punto de visita
+	IF (@Option = 4) --First Load
     BEGIN
 
 		--First Catalog UI MgtCustomer
