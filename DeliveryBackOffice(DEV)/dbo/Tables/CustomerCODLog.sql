@@ -9,8 +9,8 @@ CREATE TABLE [dbo].[CustomerCODLog](
 	[CODAccountNumber] [int] NULL,
 	[CODAccountTypeId] [int] NULL,
 	[CODCurrencyId] [int] NULL,
-	[CODCatBatchType] [int] NULL,
-	[CODCatBatchFrequency] [int] NULL,
+	[CODCatBatchType] [bigint] NULL,
+	[CODCatBatchFrequency] [bigint] NULL,
 	[CODBillingTimeId] [int] NULL,
 	[CODBillingVolumeId] [int] NULL,
 	[CODBillingCutOfDate] [datetime] NULL,
@@ -27,6 +27,34 @@ GO
 
 ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CustomerId])
 REFERENCES [dbo].[Customer] ([IdCustomer])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODIdBank])
+REFERENCES [dbo].[DeliveryBank] ([Id_bank])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODAccountTypeId])
+REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODCurrencyId])
+REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODCatBatchType])
+REFERENCES [dbo].[CatBatchTypeCOD] ([CatBatchTypeCODId])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODCatBatchFrequency])
+REFERENCES [dbo].[CatBatchFrequencyCOD] ([CatBatchFrequencyCODId])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODBillingTimeId])
+REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODBillingVolumeId])
+REFERENCES [dbo].[CatBillingVolume] ([IdCatBillingVolume])
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador unico de registro log COD' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'registerid'
