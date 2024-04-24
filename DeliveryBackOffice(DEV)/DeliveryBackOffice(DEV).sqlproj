@@ -1592,6 +1592,7 @@
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
     <Build Include="dbo\Tables\CustomerCODLog.sql" />
     <Build Include="Stored Procedures\sphdSetCustomerCODLog.sql" />
+    <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLog.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
