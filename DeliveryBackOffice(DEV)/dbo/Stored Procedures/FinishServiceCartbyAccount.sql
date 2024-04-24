@@ -3,6 +3,11 @@
 -- Create date: <2022-08-17>
 -- Description:	<Finaliza un carrito de compra>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Updated date:<2024-04-22>
+-- Description:	<Validar si no existe registro de la guía en tabla DeliveryOrderPaymentDetail e insertarlo >
+-- =============================================
 CREATE PROCEDURE [dbo].[FinishServiceCartbyAccount]
 	-- Add the parameters for the stored procedure here
 	@IdAccount BIGINT,
