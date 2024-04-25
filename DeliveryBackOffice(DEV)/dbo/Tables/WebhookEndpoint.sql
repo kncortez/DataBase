@@ -8,10 +8,18 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
+    [TypeConnectionId]   INT            NULL,
+    [Hostname]           NVARCHAR (50)  NULL,
+    [UserName]           NVARCHAR (50)  NULL,
+    [Password]           NVARCHAR (50)  NULL,
+    [Port]               INT            NULL,
+    [RemoteRoute]        NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdWebhookEndpoint] ASC),
     CONSTRAINT [FK_WebhookEndpoint_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
     CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
 );
+
+
 
 
 GO
@@ -52,4 +60,24 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de endpoints para envio de webhook basado en tipo de webhook.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario cliente SFTP cifrado.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'UserName';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de notificación al cliente, api o SFTP u otra valor.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'TypeConnectionId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Puerto de conexión SFTP.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'Port';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Password SFTP cifrado.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'Password';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Dirección SFTP del cliente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookEndpoint', @level2type = N'COLUMN', @level2name = N'Hostname';
 

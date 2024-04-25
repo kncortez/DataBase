@@ -192,6 +192,7 @@ BEGIN
 	  From  DeliveryBackOffice.[dbo].[CatMembershipAttribute] CPA WITH(NOLOCK)
 	  INNER JOIN DeliveryBackOffice.[dbo].[CatMembership] CS WITH(NOLOCK)
 	  ON CPA.CatMembershipId =CS.IdCatMembership AND CS.RowStatus=1
-	  Where CPA.RowStatus=1
+	  Where   CPA.RowStatus=1 AND CS.RowStatus=1
+	  ORDER BY CPA.SubscriptionAttributePosition ASC
   
 END

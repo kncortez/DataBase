@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del hub al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiver', @level2type = N'COLUMN', @level2name = N'HubLogisticId';
 
@@ -69,4 +71,22 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Contador de
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha para manejar reinicio de contador de Mensajes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiver', @level2type = N'COLUMN', @level2name = N'Date_UpdateToken';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IXD_SenderReceiver_HubLogisticId]
+    ON [dbo].[SenderReceiver]([HubLogisticId] ASC)
+    INCLUDE([First_Name], [Last_Name], [CUI], [CatTypeSenderReceiverId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_sender_senderreceiver]
+    ON [dbo].[SenderReceiver]([CUI] ASC)
+    INCLUDE([First_Name], [Last_Name]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ID_INCLUDE_RPT]
+    ON [dbo].[SenderReceiver]([ID] ASC)
+    INCLUDE([First_Name], [Last_Name], [CUI], [HubLogisticId], [CatTypeSenderReceiverId]);
 

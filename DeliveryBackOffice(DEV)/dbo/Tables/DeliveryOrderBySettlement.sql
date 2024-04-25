@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[DeliveryOrderBySettlement] (
+CREATE TABLE [dbo].[DeliveryOrderBySettlement] (
     [ID]                     BIGINT        IDENTITY (1, 1) NOT NULL,
     [Date_Printed]           DATETIME      NULL,
     [User_Dispatched]        NVARCHAR (50) NULL,
@@ -34,6 +34,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la estación donde se realizo el despacho', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderBySettlement', @level2type = N'COLUMN', @level2name = N'DispatchedStationId';
 
@@ -55,6 +57,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Kilómetros
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20211209-170157]
-    ON [dbo].[DeliveryOrderBySettlement]([Date_Received] ASC, [SettlementStationId] ASC);
+CREATE NONCLUSTERED INDEX [IXD_DeliveryOrderBySettlement_ID_Courier_Date_Dispatched]
+    ON [dbo].[DeliveryOrderBySettlement]([ID_Courier] ASC, [Date_Dispatched] ASC)
+    INCLUDE([Pieces_Dry_Dispatched], [Pieces_Cold_Dispatched], [Guides_Dispatched], [Route_Received], [CatVehicleId], [CatRouteId], [StartingKilometers]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderBySettlement_RPT]
+    ON [dbo].[DeliveryOrderBySettlement]([Date_Dispatched] ASC)
+    INCLUDE([Pieces_Dry_Dispatched], [Pieces_Cold_Dispatched], [Guides_Dispatched], [ID_Courier], [Route_Received], [CatVehicleId], [CatRouteId], [StartingKilometers]);
 

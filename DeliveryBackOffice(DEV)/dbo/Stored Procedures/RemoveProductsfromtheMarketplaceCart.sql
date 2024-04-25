@@ -24,11 +24,6 @@ BEGIN
 	      DateUpdated  = GETDATE()
 	  WHERE  IdMarketplaceCartDetail = @IdMarketplaceCart
 
-	  --  UPDATE  [dbo].[MarketplaceCart]
-	  --SET RowStatus = 0,
-	  --    TokenUpdated = @Token,
-	  --    DateUpdated  = GETDATE()
-	  --WHERE  AccountId = @IdAccount AND IdMarketplaceCart = @IdCart
 
 	
 

@@ -151,7 +151,7 @@ BEGIN
 					   vp.Address,
 					   [vp].[IdTownship],
 					   @TypeVehicleId,
-					   @Scheduled
+					   0--@Scheduled --Tolas las recolecciones desde portal son a Demanda
 				FROM VisitPointClient VP
 					INNER JOIN UserAddress UA ON UA.CodeOfReference =VP.CodeOfReference
 					INNER JOIN Customer CU ON VP.CustomerID =CU.IdCustomer					

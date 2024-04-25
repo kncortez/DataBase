@@ -1,17 +1,4 @@
-﻿
-/*
--- =============================================
--- Author:		<Jorge,Murillo>
--- Create date: <2021-02-10>
--- Description:	<Override a group guides>
--- =============================================
-*/
--- Author:		<Edelman Vásquez>
--- Update date: <07/06/2022>
--- Description:	<Control de Anulación de guías y cupones>
--- =============================================
-
-CREATE PROCEDURE [dbo].[SetRecollectionOverrideGuides]
+﻿CREATE PROCEDURE [dbo].[SetRecollectionOverrideGuides]
  @System						as int					= 1 
 ,@IdCustomer					as int					= 1  	  	
 ,@Token							as nvarchar(50)    	    = ''

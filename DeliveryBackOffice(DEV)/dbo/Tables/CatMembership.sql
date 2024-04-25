@@ -15,8 +15,11 @@
     [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
     [CatProductCategoryId]           INT             NULL,
     [Tag]                            NVARCHAR (100)  NULL,
+    [Position]                       INT             NULL,
     CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
 );
+
+
 
 
 
@@ -90,4 +93,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de ba
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'etiqueta de identificación ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'Tag';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Ordenar membresia por posición', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatMembership', @level2type = N'COLUMN', @level2name = N'Position';
 

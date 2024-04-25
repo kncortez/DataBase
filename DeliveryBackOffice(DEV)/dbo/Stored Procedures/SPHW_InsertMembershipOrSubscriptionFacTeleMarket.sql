@@ -382,9 +382,8 @@ BEGIN
             SELECT CM.IdCatMembership
                  , 1
                  , CM.MembershipCost
-			
-                     ,CASE
-						  WHEN  EXISTS(SELECT  TOP 1 1
+			     ,CASE WHEN
+		                        EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser
@@ -398,13 +397,47 @@ BEGIN
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = RTP.ProductGiftShippingEmail
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															
+															 AND RTP.ProductGiftShippingEmail IS NULL 
+							
+							THEN  (SELECT   ac.IdCustomer
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE')
+						    WHEN  EXISTS(SELECT  TOP 1 1
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE') 
+														
 							
 							THEN  
 							      
-							(SELECT   ac. IdCustomer
+							(SELECT   ac.IdCustomer
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser
@@ -420,10 +453,12 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE')
+					
+								ELSE NULL
 				
-							ELSE  RTP.CustomerId
 
 							END
+                     
 					, CASE 
 					          WHEN EXISTS(SELECT  TOP 1 1
 										FROM [dbo].RegisterUser  usr WITH (NOLOCK)
@@ -460,8 +495,43 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE')
+
+                            WHEN 		EXISTS(SELECT  TOP 1 1
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE') 
+															 AND RTP.ProductGiftShippingEmail IS NULL   
+                                THEN  
+                                           (SELECT   ac.AccIdAccount
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE')
 				
-							ELSE  RTP.AccountId
+							ELSE  NULL
 
 							END
                  , IIF(@CustomerType = 2, @ActivationCode, NULL) -- agregar columna en insert para codigo de membresia 
@@ -540,25 +610,43 @@ BEGIN
 			
             WHERE RTP.OrderNumber = @OrderNumber
 			AND RTP.TypeSalePackage = 'MEMBERSHIP'
-            --      AND NOT EXISTS
-            --(
-            --    SELECT TOP 1
-            --        1
-            --    FROM [DeliveryBackOffice].[dbo].[Membership] M WITH (NOLOCK)
-            --    WHERE M.CustomerId = @Idcustumer
-            --          AND (M.AccountId = @IdAcount)
-            --          AND M.RowStatus = 1
-            --)
-			
+          
+		   DECLARE @RandomLettersM CHAR(1);
+
+			SELECT @RandomLettersM = (
+				SELECT TOP 1
+					CHAR(number + 65)
+				FROM master.dbo.spt_values
+				WHERE type = 'P' AND number BETWEEN 0 AND 24
+				AND CHAR(number + 65) NOT IN ('I', 'O')  -- Excluir letras "I" y "O"
+				ORDER BY NEWID()
+			);
+
+			DECLARE @RandomNumberM NVARCHAR(6);
+			SELECT @RandomNumberM = RIGHT('000000' + CAST(201 AS NVARCHAR(6)), 6);
+
+			-- Selección de la segunda letra aleatoria que no sea "I" ni "O"
+			DECLARE @RandomLetterM2 CHAR(1);
+			WITH RandomLettersM AS (
+				SELECT TOP 24 CHAR(number + 65) AS Letter
+				FROM master.dbo.spt_values
+				WHERE type = 'P' AND number BETWEEN 0 AND 24
+				AND CHAR(number + 65) NOT IN ('I', 'O')  -- Excluir letras "I" y "O"
+				ORDER BY NEWID()
+			)
+			SELECT TOP 1 @RandomLetterM2 = Letter
+			FROM RandomLettersM
+			ORDER BY NEWID()
 
 			UPDATE [dbo].[Membership] 
-					SET ActivationCode= ((SELECT CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)  
-											+ RIGHT('000000' + CAST(B.IdMembership AS NVARCHAR(6)), 6))
-											+ CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65) )
+					SET ActivationCode = @RandomLettersM
+											+ RIGHT('000000' + CAST(B.IdMembership AS NVARCHAR(6)), 6)
+											+  @RandomLetterM2
 			FROM @AuxNewMembership A 
 			    INNER JOIN 
 				[dbo].[Membership] B With(Nolock)
 				ON A.IdNewMembership = B.IdMembership
+
 
 
 			  IF (EXISTS (SELECT TOP 1 1 FROM @AuxNewMembership))
@@ -668,8 +756,8 @@ BEGIN
                  , CS.IdCatSubscription
                  , 1
                  , CS.SubscriptionCost
-				,CASE
-						  WHEN  EXISTS(SELECT  TOP 1 1
+				,CASE WHEN
+		                        EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser
@@ -683,13 +771,47 @@ BEGIN
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 																   AND ac.AccRowStatus = 1
-														WHERE usr.UsrEmail = RTP.ProductGiftShippingEmail
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															
+															 AND RTP.ProductGiftShippingEmail IS NULL 
+							
+							THEN  (SELECT   ac.IdCustomer
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE')
+						    WHEN  EXISTS(SELECT  TOP 1 1
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE') 
+														
 							
 							THEN  
 							      
-							(SELECT   ac. IdCustomer
+							(SELECT   ac.IdCustomer
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
 															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
 																ON rus.RusIdUser = usr.UsrIdUser
@@ -705,8 +827,10 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE')
+					
+								ELSE NULL
 				
-							ELSE  RTP.CustomerId
+							
 
 							END
 					, CASE 
@@ -745,8 +869,44 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(RTP.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE')
+                             WHEN EXISTS(SELECT  TOP 1 1
+										FROM [dbo].RegisterUser  usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+										WHERE usr.UsrEmail = RTP.InvoiceEmail
+														     AND res.UstStatus  ='ACTIVE') 
+                                                             AND RTP.ProductGiftShippingEmail IS NULL
+							
+							THEN  
+							      
+							(SELECT   ac.AccIdAccount
+														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
+															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
+																ON rus.RusIdUser = usr.UsrIdUser
+																   AND rus.RusIdSystem = 1
+															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
+																ON res.UstIdUser = rus.RusIdUser
+																   AND res.UstIdSystem = rus.RusIdSystem
+															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
+																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
+															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+																ON ac.AccIdAccount = rua.RuaIdAccount
+																   AND ac.AccRowStatus = 1
+														WHERE usr.UsrEmail = ISNULL(RTP.InvoiceEmail,'N/D')
+														     AND res.UstStatus  ='ACTIVE')
 				
-							ELSE  RTP.AccountId
+							ELSE  NULL
 
 							END
                  , IIF(@CustomerType = 2, @ActivationCode, NULL) -- agregar columna en insert para codigo de membresia 
@@ -817,10 +977,35 @@ BEGIN
 			RTP.OrderNumber = @OrderNumber
 			AND RTP.TypeSalePackage != 'MEMBERSHIP'
 			
+          DECLARE @RandomLetterS CHAR(1);
+
+			SELECT @RandomLetterS = (
+				SELECT TOP 1
+					CHAR(number + 65)
+				FROM master.dbo.spt_values
+				WHERE type = 'P' AND number BETWEEN 0 AND 24
+				AND CHAR(number + 65) NOT IN ('I', 'O')  -- Excluir letras "I" y "O"
+				ORDER BY NEWID()
+			);
+
+			DECLARE @RandomNumberS NVARCHAR(6);
+			SELECT @RandomNumberS = RIGHT('000000' + CAST(201 AS NVARCHAR(6)), 6);
+
+			-- Selección de la segunda letra aleatoria que no sea "I" ni "O"
+			DECLARE @RandomLetterS2 CHAR(1);
+			WITH RandomLettersS AS (
+				SELECT TOP 24 CHAR(number + 65) AS Letter
+				FROM master.dbo.spt_values
+				WHERE type = 'P' AND number BETWEEN 0 AND 24
+				AND CHAR(number + 65) NOT IN ('I', 'O')  -- Excluir letras "I" y "O"
+				ORDER BY NEWID()
+			)
+			SELECT TOP 1 @RandomLetterS2 = Letter
+			FROM RandomLettersS
+			ORDER BY NEWID()
+
 			UPDATE dbo.Subscription 
-					SET ActivationCode= ((SELECT CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)  
-											+ RIGHT('000000' + CAST(B.IdSubscription AS NVARCHAR(6)), 6)
-											+ CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65) ) )
+					SET ActivationCode= @RandomLetterS+ RIGHT('000000' + CAST(B.IdSubscription AS NVARCHAR(6)), 6) + @RandomLetterS2
 			FROM @AuxNewSubscriptions A 
 			    INNER JOIN 
 				[dbo].[Subscription] B With(Nolock)
@@ -886,11 +1071,11 @@ BEGIN
 		
 				END
 
+				
 
-
-				          SELECT 
-                @inv_amount =    SUM(ISNULL(CS.SubscriptionCost, CM.MembershipCost) ),
-                @inv_IVA =     SUM(ISNULL(CS.SubscriptionCost, CM.MembershipCost) - (ISNULL(CS.SubscriptionCost, CM.MembershipCost) / 1.12))
+		   SELECT 
+                @inv_amount =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ),
+                @inv_IVA =       SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / 1.12))
 			 FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
@@ -950,10 +1135,10 @@ BEGIN
 		   @dti_category,
 		   @dti_quantity,
 		   @dti_measurement,
-		   CS.SubscriptionCost	
-		   ,CS.SubscriptionDescription	
-		   ,CS.SubscriptionCost -((CS.SubscriptionCost) / 1.12)
-		   ,CS.SubscriptionCost
+		   CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)	
+		   ,CS.SubscriptionName
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) - ((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / 1.12)
+		   ,CS.SubscriptionCost -  ISNULL(CS.SubscriptionFixedValue,0)
 		   ,@dti_dateRegister
 		   ,@dti_tokenRegister
 		   ,@SAPCode
@@ -976,7 +1161,7 @@ BEGIN
 		   @dti_quantity,
 		   @dti_measurement,
 		   CS.MembershipCost	
-		   ,CS.MembershipDescription	
+		   ,CS.MembershipName	
 		   ,CS.MembershipCost -((CS.MembershipCost) / 1.12)
 		   ,CS.MembershipCost
 		   ,@dti_dateRegister

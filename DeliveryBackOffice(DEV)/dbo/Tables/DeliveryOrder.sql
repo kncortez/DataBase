@@ -139,6 +139,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -385,4 +387,21 @@ GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus]
     ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC, [StatusOrderId] ASC)
     INCLUDE([Sender_ID], [Sender_FirstName], [Sender_LastName], [Receiver_FirstName], [Receiver_LastName], [Receiver_Department]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-GuideSerie-Number-RPT]
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC)
+    INCLUDE([Pieces_Dry], [Pieces_Cold]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetRelationshipPieceCode]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC)
+    INCLUDE([Ticket_Number], [Pieces_Dry], [Pieces_Cold]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetQueryRelationshipPieceCode]
+    ON [dbo].[DeliveryOrder]([Ticket_Number] ASC, [Guide_Number] ASC);
 

@@ -1,9 +1,4 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2023-05-25>
--- Description:	<Obtiene información del carrito de compras express center>
--- =============================================
-CREATE PROCEDURE [dbo].[GetServiceCartbyAccountExpressCenter]
+﻿CREATE PROCEDURE [dbo].[GetServiceCartbyAccountExpressCenter]
 	-- Add the parameters for the stored procedure here
 	@IdAccount BIGINT,
 	@Token NVARCHAR(50)
@@ -344,6 +339,7 @@ BEGIN
 							ELSE 'EXC'
 						END
 					) [ClientType],
+					ISNULL([rh].[InsuranceRate], 0) [InsuranceRate],
 					[Acc].[AccIdAccount] [AccountId]
 				FROM
 					[DeliveryBackOffice].[dbo].[ExpressAccountServiceCart] EASC  WITH(NOLOCK) 
@@ -351,6 +347,12 @@ BEGIN
 						[DeliveryBackOffice].[dbo].[Customer] Cu  WITH(NOLOCK) 
 						ON
 							[EASC].[CustomerId] = [Cu].[IdCustomer]
+					LEFT JOIN [DeliveryBackOffice].[dbo].[RatebyCustomer] rc WITH (NOLOCK)
+                        ON [cu].[IdCustomer] = [rc].[RbcIdCustomer]
+                            AND [rc].[RbcRowStatus] = 1
+					LEFT JOIN [DeliveryBackOffice].[dbo].[RateHeader] rh WITH (NOLOCK)
+						ON [rc].[RbcIdRate] = [rh].[RheId]
+							AND [rh].[RheRowStatus] = 1
 					OUTER APPLY
 					(
 						SELECT 

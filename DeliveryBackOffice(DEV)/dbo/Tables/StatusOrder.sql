@@ -21,6 +21,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de estados de guías.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'StatusOrder';
 
@@ -71,4 +73,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fec
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'StatusOrder', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [DIX_CoveringIndex_StatusOrder]
+    ON [dbo].[StatusOrder]([OrderDescription] ASC);
 

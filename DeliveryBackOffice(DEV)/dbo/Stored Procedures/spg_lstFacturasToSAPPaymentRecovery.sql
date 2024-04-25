@@ -30,13 +30,11 @@ DECLARE @hour AS INT =
 	(IOMD.io_SAPDocEntryPaymentDetail = -1 OR IOMD.io_SAPDocEntryPaymentDetail IS NULL)
 	AND ihd.inv_SAPDocEntry <> -1
 	AND ihd.inv_SAPDocEntry IS NOT NULL
-		  AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2023-08-01' AS DATE)     
-		 -- AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-07-31' AS DATE)     
-		 -- AND 1=0
-	--AND ihd.inv_pk_id = 2250995
-	AND IHD.inv_SAPDocEntry <> 1
-	--AND IOMD.io_SAPErrorPaymentDetail = 'Falta especificación para medio de pago  [RCT3.VoucherNum][line: 0]'
-	--AND ihd.inv_pk_id = 2384510
+	AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2023-08-01' AS DATE) 
+	-- AND IOMD.io_SAPErrorPaymentDetail = 'Falta especificación para medio de pago  [RCT3.VoucherNum][line: 0]'
+	-- AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-07-31' AS DATE)     
+	-- AND 1=0
+	-- AND ihd.inv_pk_id in (2318485,2318486)
 	ORDER BY ihd.inv_date DESC
 	END
 END

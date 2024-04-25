@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [dbo].[GetDynamicCatalog]
     @TypeMethod VARCHAR(100) = 'GetTypePayment'
-  , @IdAccount INT = 1
+  , @IdAccount INT = null
   , @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5'
   , @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber VARCHAR(100) = '12345'
@@ -8,6 +8,7 @@
 AS
 BEGIN
     DECLARE @jsonResult NVARCHAR(MAX);
+	IF @IdAccount = '' SET @IdAccount = NULL;
     --IF (@Others <> 'CourierApp')
     --BEGIN
     --    IF NOT EXISTS
@@ -403,13 +404,22 @@ BEGIN
             SELECT STUFF(
                             (
                                 SELECT DISTINCT
-                                       ',{"Id":"' + CONVERT(NVARCHAR, ISNULL(IdCustomer, 0)) + '",' + '"Name":"'
-                                       + REPLACE(ISNULL(cu.[Name], 'N/A'), '"', '') + '",' + '"Phone":"'
-                                       + ISNULL([CustomerPhone], '') + '",' + '"Email":"' + ISNULL([ContactEmail], '')
-                                       + '",' + '"CodeOfReference":"'
+                                       ',{"Id":"' 
+									   + CONVERT(NVARCHAR, ISNULL(AC.IdCustomer, 0)) + '",'
+									   + '"Name":"'
+                                       + REPLACE(ISNULL(cu.[Name], 'N/A'), '"', '') + '",' 
+									   + '"Phone":"'
+                                       + ISNULL([CustomerPhone], '') + '",' + 
+									     '"Email":"' 
+									   + ISNULL([ContactEmail], '')  + '",' 
+									   + '"CodeOfReference":"'
                                        + CONVERT(NVARCHAR, ISNULL(vpc.[CodeOfReference], '')) + '",' + '"Description":"'
-                                       + ISNULL(REPLACE(vpc.[DescriptionOfClient], '"', ''), '') + '",' + '"Address":"'
-                                       + ISNULL(REPLACE(vpc.[Address], '"', ''), '') + '",' + '"Province":"'
+                                       + ISNULL(REPLACE(vpc.[DescriptionOfClient], '"', ''), '') + '",' 
+									   + '"Address":"'
+									   + ISNULL(REPLACE(vpc.[Address], '"', ''), '') + '",'
+									   + '"IdAccount":"'
+                                       + ISNULL(REPLACE(AC.[AccIdAccount], '"', ''), '') + '",' 
+									   + '"Province":"'
                                        + ISNULL(pr.ProvinceName, '') + '",' + '"Township":"'
                                        + ISNULL(TWS.TownshipName, '') + '",' + '"HeaderCode":"'
                                        + ISNULL(TWS.HeaderCode, '') + '",' + '"HasMembership":'
@@ -433,7 +443,9 @@ BEGIN
                                                                , '1')
                                                             , ''
                                                           )
-                                                ) + '",' + '"Billing":' + '[{' + '"EntityName":"'
+                                                ) + '",' 
+									   + '"InsuranceRate": "' + CONVERT(NVARCHAR,ISNULL(rh.InsuranceRate, 0)) + '",'
+									   + '"Billing":' + '[{' + '"EntityName":"'
                                        + REPLACE(ISNULL(cu.[InvoiceName], ''), '"', '') + '",' + '"TaxId":"'
                                        + ISNULL(cu.[TaxIdentificationNumber], '') + '",' + '"TaxAddress":"'
                                        + REPLACE(ISNULL(cu.[FiscalAddress], ''), '"', '') + '",' + '"TaxEmail":"'
@@ -456,6 +468,9 @@ BEGIN
                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer        rc WITH (NOLOCK)
                                         ON cu.IdCustomer = rc.RbcIdCustomer
                                            AND rc.RbcRowStatus = 1
+									LEFT JOIN DeliveryBackOffice.dbo.RateHeader			   rh WITH (NOLOCK)
+										ON rc.RbcIdRate = rh.RheId
+										  AND rh.RheRowStatus = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp WITH (NOLOCK)
                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient     vpc WITH (NOLOCK)
@@ -472,6 +487,8 @@ BEGIN
                                            AND mmbrshp.RowStatus = 1
                                            AND mmbrshp.ExpirationDate >= GETDATE()
                                            AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
+									LEFT JOIN dbo.Account AC WITH(NOLOCK)
+						                ON   vpc.CustomerID = AC.IdCustomer
                                 WHERE IdCustomerType = 1
                                       AND cu.RowSatus = 1
                                       AND
@@ -683,6 +700,7 @@ BEGIN
     ELSE IF (@TypeMethod = 'ActiveMembership')
     BEGIN
 	DECLARE @ProductExist INT = 0;
+	
 
 	SET @ProductExist = (
 								(SELECT TOP 1 COUNT(IdMembership)

@@ -12,6 +12,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario que actualiza', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeProduct', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
 
@@ -30,4 +32,12 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha que a
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeProduct', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre de tipo de producto', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeProduct', @level2type = N'COLUMN', @level2name = N'Name';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'llave primaria de tabla para identificar tipo de productos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeProduct', @level2type = N'COLUMN', @level2name = N'IdTypeProduct';
 

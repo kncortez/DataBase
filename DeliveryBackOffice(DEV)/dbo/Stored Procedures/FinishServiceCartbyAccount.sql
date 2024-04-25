@@ -3,6 +3,12 @@
 -- Create date: <2022-08-17>
 -- Description:	<Finaliza un carrito de compra>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Updated date:<2024-04-22>
+-- Description:	<Validar si no existe registro de la guía en tabla DeliveryOrderPaymentDetail e insertarlo >
+-- =============================================
+
 CREATE PROCEDURE [dbo].[FinishServiceCartbyAccount]
 	-- Add the parameters for the stored procedure here
 	@IdAccount BIGINT,
@@ -37,6 +43,122 @@ BEGIN
 	BEGIN TRANSACTION
 
 	BEGIN TRY
+
+	  -- Insertar registro en tabla DeliveryOrderPaymentDetail si este registro no existe
+	       
+		  INSERT INTO [dbo].[DeliveryOrderPaymentDetail]
+            (
+                [GuideNumber],
+                [GuideSerie],
+                [PayTypeId],
+                [TypeofInOutMoneyId],
+                [TimePlaId],
+                [amount],
+                [TokenCreated],
+                [DateCreated],
+                [TokenUpdated],
+                [DateUpdated],
+                [PaymentRecollections],
+                [PaymentNow],
+                [PaymentDelivery],
+                [StartDate],
+                [EndDate],
+                [ShipmentCompleted],
+                [RecollectionCompleted],
+                [PaidGuide],
+                [TransaccionFAC],
+                [IdHeaderRecolection],
+                [RecolectNow],
+                [RecolectDelivery],
+                [RecolectPayment]
+           
+            )
+            SELECT CG.GuideNumber,
+                   CG.GuideSerie,
+                   CASE
+                       WHEN do.IsCollect = 1 THEN
+                       (
+                           SELECT PayTypeId
+                           FROM CatPaymentType WITH (NOLOCK)
+                           WHERE PayTypeAbrev = 'COLLT'
+                       )
+                       WHEN cu.ConditionOfPaymentID > 1 THEN
+                       (
+                           SELECT PayTypeId
+                           FROM CatPaymentType WITH (NOLOCK)
+                           WHERE PayTypeAbrev = 'CREDT'
+                       )
+                       ELSE
+                   (
+                       SELECT PayTypeId
+                       FROM CatPaymentType WITH (NOLOCK)
+                       WHERE PayTypeAbrev = 'CONT'
+                   )
+                   END,
+                   CASE
+                       WHEN do.IsCollect = 1 THEN
+                           1
+                       WHEN cu.ConditionOfPaymentID > 1 THEN
+                           8
+                       ELSE
+                           1
+                   END,
+                   CASE
+                       WHEN do.IsCollect = 1 THEN
+                       (
+                           SELECT TimePlaId
+                           FROM CatPaymentTime WITH (NOLOCK)
+                           WHERE TimePlaAbrev = 'DEST'
+                       )
+                       WHEN cu.ConditionOfPaymentID > 1 THEN
+                       (
+                           SELECT TimePlaId
+                           FROM CatPaymentTime WITH (NOLOCK)
+                           WHERE TimePlaAbrev = 'POST'
+                       )
+                       ELSE
+                   (
+                       SELECT TimePlaId
+                       FROM CatPaymentTime WITH (NOLOCK)
+                       WHERE TimePlaAbrev = 'AHR'
+                   )
+                   END,
+                   0,
+                   @Token,
+                   GETDATE(),
+                   NULL,
+                   NULL,
+                   0,
+                   0,
+                   0,
+                   NULL,
+                   NULL,
+                   0,
+                   0,
+                   0,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL
+          
+            FROM  @CartGuides CG
+			    INNER JOIN [dbo].[DeliveryOrder] do WITH (NOLOCK)
+				   ON CG.GuideSerie = do.Guide_Serie
+				   AND CG.GuideNumber = do.Guide_Number
+                INNER JOIN [dbo].[Customer] cu WITH (NOLOCK)
+                    ON cu.IdCustomer =
+                    (
+                        SELECT TOP 1
+                               ISNULL(do.IdCustomer, vpc.CustomerID)
+                        FROM dbo.VisitPointClient vpc WITH (NOLOCK)
+                        WHERE vpc.CodeOfReference = do.Sender_ID
+                    )
+				LEFT JOIN 
+				[dbo].[DeliveryOrderPaymentDetail] dopd 
+				ON CG.GuideSerie = dopd.GuideSerie AND 
+				   CG.GuideNumber = dopd.GuideNumber
+            WHERE DopId IS NULL
 
 		-- Tomar guías del carrito
 		INSERT INTO
@@ -113,6 +235,8 @@ BEGIN
 			CCTBCmain.IdTransaction IS NOT NULL
 			OR
 			MSL.IdMembershipSubscriptionLog IS NOT NULL
+
+     
 		
 		-- Actualizar guías validas que fueron procesadas
 		UPDATE

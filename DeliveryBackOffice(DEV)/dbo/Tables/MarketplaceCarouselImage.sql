@@ -11,8 +11,11 @@
     [TokenUpdated]    NVARCHAR (50)  NULL,
     [DateUpdated]     DATETIME       NULL,
     [HyperlinkURL]    NVARCHAR (200) NULL,
+    [XXXLImageURL]    NVARCHAR (200) NULL,
     CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
 );
+
+
 
 
 
@@ -83,4 +86,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Imagen en c
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'URL de hipervínculo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'HyperlinkURL';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Imagen extra grande de marketplace', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'XXXLImageURL';
 

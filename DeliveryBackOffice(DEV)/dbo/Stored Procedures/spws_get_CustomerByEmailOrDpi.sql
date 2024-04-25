@@ -156,17 +156,38 @@ BEGIN
                                                                     + '",' + '"CityPlace":"'
                                                                     + CONVERT(VARCHAR, ctp.CityPlace) + '",'
                                                                     + '"IdProvince":"'
-                                                                    + CONVERT(VARCHAR, prv.IdProvince) + +'"}'
-                                                             FROM dbo.RolByUserByAccount     rua
-                                                                 INNER JOIN dbo.UserAddress  ua
+                                                                    + CONVERT(VARCHAR, prv.IdProvince) + '",'
+																	+ '"IdAddress":"'
+                                                                    + CONVERT(VARCHAR, ua.UadIdAddress)  + '",'
+																	+ '"ContactName":"'
+                                                                    + CONVERT(VARCHAR, ua.UadFullName)  + '",'
+																	+ '"Latitude":"' 
+																	+   ISNULL(vp.Longitude,'') + '",'
+																	+ '"Zone":"' 
+																	+ ISNULL(CAST(conf.Zone as varchar(2)),'') +'",' 
+																	+ '"Neighborhood":"' 
+																	+  ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood),'') + '",'
+																	+ '"IsOrigin":' 
+																	+  CAST(ISNULL(vp.IsOriginVisitPoint,1) AS NVARCHAR) + ''
+							                                        + '}'
+                                                             FROM dbo.RolByUserByAccount     rua WITH(NOLOCK)
+                                                                 INNER JOIN dbo.UserAddress  ua WITH(NOLOCK)
                                                                      ON ua.UadIdAccount = rua.RuaIdAccount
-                                                                 INNER JOIN dbo.Township     twn
-                                                                     ON twn.IdTownship = ua.UadIdTownship
-                                                                 INNER JOIN dbo.Province     prv
+                                                                 INNER JOIN dbo.Township     twn WITH(NOLOCK)
+                                                                     ON twn.IdTownship = ua.UadIdTownship 
+                                                                 INNER JOIN dbo.Province     prv WITH(NOLOCK)
                                                                      ON prv.IdProvince = twn.IdProvince
-                                                                 INNER JOIN dbo.CatCityPlace ctp
+                                                                 INNER JOIN dbo.CatCityPlace ctp WITH(NOLOCK)
                                                                      ON ua.IdCityPlace = ctp.IdCityPlace
                                                                         AND ctp.CityPlaceRowStatus = 'true'
+																LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK) 
+																     ON vp.CodeOfReference = ua.CodeOfReference
+																LEFT JOIN  dbo.ConfirmedAddress conf WITH(NOLOCK) 
+																     ON 
+																		conf.NirPhone=ua.UadNirPhone
+																		AND conf.Phone=ua.UadPhone
+																		AND conf.TownshipId = VP.IdTownship
+																		AND conf.[Address] = VP.[Address]
                                                              WHERE rua.RuaIdAccount = @IdAccount
                                                                    AND rua.RuaIdUser = @IdUser
                                                                    AND ua.UadRowStatus = 1

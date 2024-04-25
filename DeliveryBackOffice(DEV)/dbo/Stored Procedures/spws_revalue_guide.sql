@@ -1,4 +1,6 @@
-﻿-- =============================================
+﻿
+
+-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Revaloriza una guia de transporte>
@@ -30,7 +32,6 @@ CREATE PROCEDURE [dbo].[spws_revalue_guide]
   , @ParPesos VARCHAR(400) = NULL
   , @IsReturn BIT = 'false'
   , @UseMembership BIT = 0
-  --, @TypeSubscriptionId AS INT= 0
   , @CategoryProductId AS INT = 0
   , @ProductId AS INT = 0
 AS
@@ -483,7 +484,7 @@ BEGIN
 										 , @ProductId = @ProductId
 
 
-    IF (@UseMembership = 1)
+     IF (@UseMembership = 1 AND @CategoryProductId >0 AND @ProductId >0 )
     BEGIN
         /* Membresias y Suscripciones */
         -- Oscar Morales 2022-07-21
@@ -505,8 +506,17 @@ BEGIN
         DECLARE @ServiceAppliedType INT; -- 1 MEMBRESÍA, 2 SUSCRIPCIÓN
         DECLARE @ServiceAppliedCount INT;
         DECLARE @MembershipSubscriptionLogId BIGINT;
+		DECLARE @CategoryProductName VARCHAR (50);
         --DECLARE @DiscountDescription2 VARCHAR(100)
         --DECLARE @DiscountAnt DECIMAL(12,2)
+
+		  SET @CategoryProductName =
+            (
+                SELECT TOP 1
+                       TechnicalDescription
+                FROM CatProductCategory WITH(NOLOCK)
+                WHERE IdCatProductCategory = @CategoryProductId
+            );
 
         SELECT @PriceShippment = tr.Price + ABS(ISNULL(tr.Discount, 0)) --si tiene otro descuento
         FROM @TempRate tr
@@ -562,7 +572,7 @@ BEGIN
 					DECLARE @NameTypeSubscrition VARCHAR(50);
 					--SET @NameTypeSubscrition =(SELECT CatTypeSubscriptionName 
 					--FROM CatTypeSubscription WHERE IdCatTypeSubscription = @TypeSubscriptionId)
-			 IF(@CategoryProductId <> 2)
+			 IF(@CategoryProductName <> 'Membresías')
 					BEGIN
 						SET @NameTypeSubscrition =(SELECT TOP 1 cts.CatTypeSubscriptionName
                 FROM CatSubscription csp WITH (NOLOCK)
@@ -586,7 +596,7 @@ BEGIN
 					END
 
 
-				IF (@CategoryProductId <> 2)
+				IF (@CategoryProductName <> 'Membresías')
 					BEGIN
 							IF(@NameTypeSubscrition = 'Porcentaje')
 								   BEGIN
@@ -839,7 +849,7 @@ BEGIN
 						DECLARE @MaxProduct INT = 0;
 					     SET @MaxProduct = (SELECT MembershipMaxServiceFixedValue FROM Membership where IdMembership = @ProductId )
                         --IF @ServiceAppliedType = 1
-						IF(@CategoryProductId = 2 AND @MaxProduct > 0)
+						IF(@CategoryProductName = 'Membresías' AND @MaxProduct > 0)
                         BEGIN
                             --Actualizar contador membresía
                             UPDATE Membership
@@ -863,7 +873,7 @@ BEGIN
                         SET @DecriptionDiscount
                             = CONCAT('Se aplicó descuento de membresía y suscripción (', @DecriptionDiscount, ')');
                         --Insertar log
-						IF(@CategoryProductId = 2)
+						IF(@CategoryProductName = 'Membresías')
 							BEGIN
 								DECLARE @MaxMembership INT = -1;
 
@@ -922,7 +932,7 @@ BEGIN
 								      SELECT TOP 1 SysIdSystem FROM CatSystem WHERE SysNameSystem = 'Parser'
 								  ), (
 								         SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'Parser'
-								     ),IIF(@CategoryProductId =2, @SubscriptionId, NULL), IIF(@CategoryProductId <>2,@SubscriptionId, NULL)/*IIF(@ServiceAppliedType = 1, NULL, @SubscriptionId)*/
+								     ),IIF(@CategoryProductName = 'Membresías', @SubscriptionId, NULL), IIF(@CategoryProductName <> 'Membresías',@SubscriptionId, NULL)/*IIF(@ServiceAppliedType = 1, NULL, @SubscriptionId)*/
 								, NULL, NULL, @IdCustomer, NULL, NULL, @DecriptionDiscount, @GuideSerie
 								, @GuideNumber, @PriceShippment, @PriceShippment, 1, @Token, GETDATE(), NULL, NULL
 								, @ServiceAppliedCount);
@@ -958,7 +968,7 @@ BEGIN
 								      SELECT TOP 1 SysIdSystem FROM CatSystem WHERE SysNameSystem = 'Parser'
 								  ), (
 								         SELECT TOP 1 ModIdModule FROM CatModule WHERE ModPath = 'Parser'
-								     ), IIF(@CategoryProductId =2, @SubscriptionId, NULL), IIF(@CategoryProductId <>2,@SubscriptionId, NULL)
+								     ), IIF(@CategoryProductName = 'Membresías', @SubscriptionId, NULL), IIF(@CategoryProductName <> 'Membresías',@SubscriptionId, NULL)
 								, NULL, NULL, @IdCustomer, NULL, NULL, @DecriptionDiscount, @GuideSerie
 								, @GuideNumber, @PriceShippment, IIF(@NewPriceShippment IS NULL,0,@NewPriceShippment), 1, @Token, GETDATE(), NULL, NULL
 								, @ServiceAppliedCount);

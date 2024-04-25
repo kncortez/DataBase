@@ -12,13 +12,15 @@ CREATE PROCEDURE [dbo].[GetProductsByCategory] @IdCategory INT
 AS
 BEGIN
 
-	SELECT           
+	
+	  SELECT           
 	        CS.[IdCatSubscription] [IdCatProduct],
 			CS.[SubscriptionName]  [CatProductName],
 			CS.[SubscriptionCost]  [CatProductCost],
 			CS.[SubscriptionDescription] [CatProductDescription],
 			CS.[CatProductCategoryId] [CatProductCategoryId],
-			CS.Tag
+			CS.Tag,
+			CS.Position
 	FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 	WHERE CS.RowStatus = 1
 	 AND CS.CatProductCategoryId = @IdCategory
@@ -29,10 +31,12 @@ BEGIN
 			 CS.[MembershipCost]  [CatProductCost],
 			 CS.[MembershipDescription] [CatProductDescription],
 			 CS.[CatProductCategoryId] [CatProductCategoryId],
-			 CS.Tag
+			 CS.Tag,
+			 CS.Position
 	FROM [DeliveryBackOffice].[dbo].[CatMembership] CS WITH (NOLOCK)
 	WHERE CS.RowStatus = 1
 	  AND CS.CatProductCategoryId = @IdCategory
+	  Order By CS.Position ASC
 
 
     SELECT CPI.[IdCatProductImage],

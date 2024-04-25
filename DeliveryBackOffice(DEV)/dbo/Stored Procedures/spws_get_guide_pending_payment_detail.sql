@@ -98,13 +98,13 @@ BEGIN
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20, 21 )			  
+              AND so.StatusOrderId IN ( 2, 3, 10, 11, 20)			  
 			  AND COALESCE(DO.IsLastMileReturn,0) = 0
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+              AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20 )
           );
 
     /*SELECT lg.Guide_Serie,
@@ -143,13 +143,13 @@ BEGIN
           OR
           (
               UPPER(@ServiceType) = 'DELIVERY'
-              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20, 21 )
+              AND (so.StatusOrderId NOT IN ( 2, 3, 10, 11, 20 )
 			  )
           )
           OR
           (
               UPPER(@ServiceType) = 'RETURN'
-              AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
+              AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20)
 			
           );
 		  

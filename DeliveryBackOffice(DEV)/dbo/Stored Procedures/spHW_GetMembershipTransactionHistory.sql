@@ -146,7 +146,7 @@ BEGIN
          -- AND [MSL].[MembershipId] = @MEMBERSHIP_ID
           AND [MSL].[SubscriptionId] IS NULL
           AND [MSL].[RowStatus] = 1
-		  AND [MSL].CustomerId =@CUSTOMER_ID      --   AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
+		      --   AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
 
     -- Subscription Data
     SELECT [S].[IdSubscription]

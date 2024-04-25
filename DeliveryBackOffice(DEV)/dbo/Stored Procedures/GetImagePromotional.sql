@@ -2,10 +2,11 @@
 --@Status INT
 AS
 BEGIN
-	SELECT XXLImageURL,XLImageURL,MDImageURL,XSImageURL,ImageOrder, HyperlinkURL
-  FROM [DeliveryBackOffice].[dbo].[MarketplaceCarouselImage]
+
+
+	SELECT  [IdCarouselImage],XXLImageURL,XLImageURL,MDImageURL,XSImageURL,ImageOrder, HyperlinkURL, XXXLImageURL
+         FROM [DeliveryBackOffice].[dbo].[MarketplaceCarouselImage]
   WHERE [RowStatus] = 1
+       Order by  ImageOrder Asc;
 
 END
-
---exec [dbo].[GetImagePromotional]

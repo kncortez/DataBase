@@ -15,3 +15,49 @@
     CONSTRAINT [FK_CatSubscriptionDiscountRange_ValueTypeId] FOREIGN KEY ([ValueTypeId]) REFERENCES [dbo].[CatValueType] ([IdCatValueType]) ON DELETE CASCADE
 );
 
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla de tipo de valor', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'ValueTypeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'token de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'token de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'estado del registro ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de tabla de  catalogo de rango de descuento ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'IdCatSubscriptionDiscountRange';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'valor de descuento ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'DiscountValue';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descuento mas Alto Rango de Servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'DiscountTopServiceRange';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descuento mas Bajo Rango de Servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'DiscountLowServiceRange';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de actualización ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla de catalogo de subscripciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionDiscountRange', @level2type = N'COLUMN', @level2name = N'CatSubscriptionId';
+

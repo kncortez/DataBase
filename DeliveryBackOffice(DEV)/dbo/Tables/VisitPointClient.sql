@@ -55,6 +55,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_customerid]
     ON [dbo].[VisitPointClient]([CustomerID] ASC);
@@ -109,4 +111,108 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripció
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de negocio al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CatBusinessSegmentId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla que obtiene los valores de puntos de visita de un cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Zona a la que pertenece el punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Zone';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Ciudad a la que pertenece el punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Town';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de actualizacion de fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de creación de fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Estado del cliente activo o desactivado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'StatusClient';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del canal de ventas del punto de visita relacion con tabla CatSalesChannel', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'SaleChannelId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Telefono del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Phone';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Longitud de la ubicacion del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Longitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Latitud de la ubicacion del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Latitude';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es punto de visita origen del cliente si o no', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IsOriginVisitPoint';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id unico de punto de visita de clientes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IdVisitPointClient';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del lugar donde se encuentra el punto de visita, ubicacion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IdTownship';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Asentamiento en donde se encuentra ubicado el punto de visita del cliente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IdSettlement';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de punto de visita del cliente como EXC, HUB, etc', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IdKindOfVPClient';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de punto de visita de negocio de cliente como casa, oficina, EXC, etc', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'IdKindOfVPBusiness';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del cliente respecto al punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'DescriptionOfClient';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Departamento al que pertenece el punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Department';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualizacion de fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creacion de fila', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del cliente del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CustomerID';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la ciudad a la que pertenece el punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CountryId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre del contacto que se tiene del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'ContactName';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Codigo de referencia de punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'CodeOfReference';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Direccion del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Address';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Exactitud de la ubicacion del punto de visita', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointClient', @level2type = N'COLUMN', @level2name = N'Accuracy';
 

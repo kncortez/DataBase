@@ -21,9 +21,14 @@
 
 
 
+
+
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [NonClusteredIndex-HubAbbreviation]
-    ON [dbo].[HubLogistics]([HubAbbreviation] ASC);
+    ON [dbo].[HubLogistics]([IdHubLogistic] ASC)
+    INCLUDE([HubAbbreviation]);
+
+
 
 
 GO

@@ -68,6 +68,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomer]
   , @CardCode NVARCHAR(50) = NULL
                             -----------------------------------------------------
   , @NumImg INT = NULL
+  , @isCOD INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -221,6 +222,7 @@ BEGIN
                   , [CatBillingVolumeId]
                   , [BillingCut_offDate]
                   , [NumImgEvidence]
+				  , [isCOD]
                 )
                 VALUES
                 (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
@@ -239,7 +241,7 @@ BEGIN
                   , @CardCode
                                                                                    -------------------------
                   , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
-                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg);
+                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD);
 
                 SELECT 'TRUE'                            [blnResult]
                      , CAST(SCOPE_IDENTITY() AS VARCHAR) [IdResult]
@@ -331,6 +333,7 @@ BEGIN
               , [CatBillingVolumeId] = @BillingVolumeId
               , [BillingCut_offDate] = @BillingCut_offDate
               , [NumImgEvidence] = @NumImg
+			  , [isCOD] = @isCOD
             WHERE IdCustomer = @IdCustomer;
 
             -- Inactivar el registro

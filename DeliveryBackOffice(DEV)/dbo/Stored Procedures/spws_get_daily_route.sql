@@ -33,6 +33,7 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+	--SET @DateRoute = DATEADD(DAY, 1, @DateRoute ); --TEMPORAL
 
     DECLARE @jsonResult NVARCHAR(MAX);
     DECLARE @jsonResult2 NVARCHAR(MAX);
@@ -272,17 +273,17 @@ BEGIN
                                                                                                          , ''
                                                                                                        )
                                                                                               , REPLACE(
-                                                                                                           vpc.Address
+                                                                                                           vpc.[Address]
                                                                                                          , '"'
                                                                                                          , ''
                                                                                                        )
                                                                                             )
                                                                                     , 'N/A'
                                                                                   )
+                                                                          ,' '
+                                                                          , CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL   THEN t.TownshipName ELSE vpc.Town   END
                                                                           , ' '
-                                                                          , vpc.Town
-                                                                          , ' '
-                                                                          , vpc.Department
+                                                                          , CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
                                                                         )
                                                                 , 'json'
                                                               ) + '",' + '"Phone":"'
@@ -401,10 +402,15 @@ BEGIN
                                         ON vpc.CodeOfReference = spk.SenderId
                                     LEFT JOIN dbo.CatPaymentTime    cpt WITH (NOLOCK)
                                         ON sma.CatPaymentTimeId = cpt.TimePlaId
+									LEFT JOIN dbo.Township t WITH (NOLOCK)
+									   ON  spk.TownshipId = t.IdTownship
+									LEFT JOIN dbo.Province p WITH (NOLOCK)
+									   ON t.IdProvince =p.IdProvince
                                 WHERE ras.IdCurrierMan = @IdCourier
                                       AND (ras.DateOfRoute = @DateRoute
-                                          --- OR ras.DateOfRoute = '2023-06-25'
+                                    
                                           )
+										--  AND ras.RowStatus=1
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)')
                           , 1
@@ -1276,7 +1282,9 @@ BEGIN
 
     END;
 
-    ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
+    
+	/** p**/
+	ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
     BEGIN
         PRINT 'token inválido';
         SET @jsonToken =

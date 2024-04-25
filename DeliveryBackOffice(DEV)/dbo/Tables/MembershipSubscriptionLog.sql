@@ -42,3 +42,105 @@ ALTER TABLE [dbo].[MembershipSubscriptionLog] NOCHECK CONSTRAINT [FK_MembershipS
 
 
 
+
+GO
+ALTER TABLE [dbo].[MembershipSubscriptionLog] NOCHECK CONSTRAINT [FK_MembershipSubscriptionLog_Membership];
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identiificador de la tabla de puntos de visita de cliente ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'VisitPointClientId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de usuario de actualización ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de creación de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla de tipo de sistema que se usa para el registro ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'SystemId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identidicador de las suscripciones adquiridas', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'SubscriptionId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla de estaciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'StationId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla que indica el estado del paquete vendido', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'SalesPackageStatusId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'indica si el registro esta activo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'RowStatus';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla que indica el módulo donde se realizo el registron', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'ModuleId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de  tabla de membresía adquirida ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'MembershipId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Rergistro de código de transacción de compra', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogTransactionOrder';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de tabla de registro de transacción de compra', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogTransactionId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de numero de servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogServiceNumber';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro de la serie de la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogGuideSerie';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro del valor original de la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogGuideOriginalValue';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro del número de guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogGuideNumber';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro del nuevo valor de la guía', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogGuideNewValue';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro de campo OrderNumber de la trancción de compra ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogAuthorizationValue';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'registro de lla descripción de la acción ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'LogActionDescription';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de tabla de registros de compras de membresías y subscripciones', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'IdMembershipSubscriptionLog';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de actualziación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de creación de registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de la tabla de datos de los clientes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'CustomerId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de la tabla de cuentas de clientes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MembershipSubscriptionLog', @level2type = N'COLUMN', @level2name = N'AccountId';
+

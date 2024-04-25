@@ -33,6 +33,9 @@ BEGIN
     DECLARE @STATUS_TRANSFERED_EX_ID AS INT;
     DECLARE @STATUS_COD_PAID AS INT;
 
+	SET @StartDate =CAST( CAST(@StartDate AS varchar) +' '+ '00:00:00' AS datetime)
+	SET @EndDate = CAST( CAST(@EndDate AS varchar) +' '+ '11:59:59' AS datetime)
+
     SET @STATUS_DELIVERED_ID =
     (
         SELECT [SO].[StatusOrderId]
@@ -62,7 +65,8 @@ BEGIN
     );
 
     SELECT ROW_NUMBER() OVER (ORDER BY [DOBS].[Date_Dispatched]) Renglon,
-           CONVERT(VARCHAR(10), [DOBS].[Date_Dispatched], 103) Date_Dispatched,
+        --  CONVERT(VARCHAR(10), [DOBS].[Date_Dispatched], 103),
+		   [DOBS].[Date_Dispatched],
            [HBL].[HubAbbreviation] Hub,
            [CR].[RegionName] AS Region,
            [SRE].[CUI] Courierman_Id,
@@ -72,8 +76,8 @@ BEGIN
            [CVH].[UnitNumber] Vehicle,
            [DOBS].[StartingKilometers] Out_KM,
            [DOBS].[ID] Settlement_Id,
-           CONVERT(VARCHAR(8), [DOBS].[Date_Dispatched], 114) Time_Dispatched,
-           CONVERT(VARCHAR(8), [DOBS].[Route_Received], 114) Time_Settlement,
+           [DOBS].[Date_Dispatched] Time_Dispatched,
+           [DOBS].[Route_Received] Time_Settlement,
 
            -- TOTALES GENERALES
            [DOBS].[Guides_Dispatched] Dispatched_Guides,
@@ -84,8 +88,8 @@ BEGIN
            SUM(IIF(DSD.Guide_Returned = 1 AND DSD.RowStatus = 1, (DO.Pieces_Dry + DO.Pieces_Cold), 0)) Returned_Pieces,
 
            -- ENTREGADOS SEGÚN DELIVERY SETTLEMET DETAIL
-           SUM(IIF(DSD.Guide_Delivered = 1 AND DSD.RowStatus = 1, 1, 0)) Delivered_Guides,
-           SUM(IIF(DSD.Guide_Delivered = 1 AND DSD.RowStatus = 1, (DO.Pieces_Dry + DO.Pieces_Cold), 0)) Delivered_Pieces,
+           SUM(IIF(DSD.Guide_Delivered = 1 AND DSD.RowStatus =1 AND DSD.Guide_Returned  = 1, 1, 0)) Delivered_Guides,
+           SUM(IIF(DSD.Guide_Delivered = 1 AND DSD.RowStatus = 1 AND DSD.Guide_Returned = 0, (DO.Pieces_Dry + DO.Pieces_Cold), 0)) Delivered_Pieces,
 
            -- ANULADOS SEGÚN DELIVERY SETTLEMET DETAIL
            SUM(IIF(DSD.RowStatus = 0, 1, 0)) Anulled_Guides,
@@ -104,38 +108,38 @@ BEGIN
            SUM(IIF(DODtransfer.TransferExists = 1, (DO.Pieces_Dry + DO.Pieces_Cold), 0)) Transfer_Pieces_Checkpoint,
 
            -- OTROS SEGÚN CHECKPOINTS
-           ABS(SUM(   IIF(
-					(
-                      DODdelivery.DeliveryExists IS NULL
-                      AND DODreturn.ReturnExists IS NULL
-                      AND DODtransfer.TransferExists IS NULL
-					) OR 
-					(
-						[DSD].[RowStatus] = 0
-						AND
-						DODtransfer.TransferExists IS NULL
-					),
-                      1,
-                      0)
-              ) - SUM(IIF(DSD.Guide_Returned = 1 AND DSD.RowStatus = 1, 1, 0))) Other_Guides_Checkpoint,
-           ABS(SUM(   IIF(
-					(
-                      DODdelivery.DeliveryExists IS NULL
-                      AND DODreturn.ReturnExists IS NULL
-                      AND DODtransfer.TransferExists IS NULL
-					) OR 
-					(
-						[DSD].[RowStatus] = 0
-						AND
-						DODtransfer.TransferExists IS NULL
-					),
-                      (DO.Pieces_Dry + DO.Pieces_Cold),
-                      0)
-              ) - SUM(IIF(DSD.Guide_Returned = 1 AND DSD.RowStatus = 1, (DO.Pieces_Dry + DO.Pieces_Cold), 0))) Other_Pieces_Checkpoint,
+     --      ABS(SUM(   IIF(
+					--(
+     --                 DODdelivery.DeliveryExists IS NULL
+     --                 AND DODreturn.ReturnExists IS NULL
+     --                 AND DODtransfer.TransferExists IS NULL
+					--) OR 
+					--(
+					--	[DSD].[RowStatus] = 0
+					--	AND
+					--	DODtransfer.TransferExists IS NULL
+					--),
+     --                 1,
+     --                 0)
+     --         ) - SUM(IIF(DSD.Guide_Returned = 1 AND DSD.RowStatus = 1, 1, 0))) Other_Guides_Checkpoint,
+     --      ABS(SUM(   IIF(
+					--(
+     --                 DODdelivery.DeliveryExists IS NULL
+     --                 AND DODreturn.ReturnExists IS NULL
+     --                 AND DODtransfer.TransferExists IS NULL
+					--) OR 
+					--(
+					--	[DSD].[RowStatus] = 0
+					--	AND
+					--	DODtransfer.TransferExists IS NULL
+					--),
+     --                 (DO.Pieces_Dry + DO.Pieces_Cold),
+     --                 0)
+     --         ) - SUM(IIF(DSD.Guide_Returned = 1 AND DSD.RowStatus = 1, (DO.Pieces_Dry + DO.Pieces_Cold), 0))) Other_Pieces_Checkpoint,
            ([DOBS].[Pieces_Dry_Dispatched] + [DOBS].[Pieces_Cold_Dispatched]) Delivery_effectiveness,
            CONVERT(TIME, [DOBS].[Date_Dispatched] - [DOBS].[Route_Received]) Time_on_route,
-           SUM(IIF(DO.StatusOrderId = 32, 1, 0)) IncidenceInRoute,
-           SUM(Contempts.CoutierContempt) CoutierContempt,
+       --    SUM(IIF(DO.StatusOrderId = 45, 1, 0)) IncidenceInRoute,
+        --   SUM(Contempts.CoutierContempt) CoutierContempt,
 		   SUM(IncidenciasSinValidar.UnvalidatedIncident) UnvalidatedIncident,
 		   SUM(FalseIncidents.FalseIncidents) FalseIncidents,
 		   SUM( IncidenciasReales.[RealIncidents]) RealIncidents
@@ -169,12 +173,12 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-                   AND COI.RowStatus = 1
-        WHERE CONVERT(DATE,DA.Date_Created)
+        WHERE DA.Date_Created
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
               AND  COI.IsConfirmed =0 AND COI.IsDenied =0
+			  AND COI.RowStatus = 1
     ) IncidenciasSinValidar
 	   OUTER APPLY
     (
@@ -182,12 +186,12 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-                   AND COI.RowStatus = 1
-        WHERE CONVERT(DATE,DA.Date_Created)
+        WHERE DA.Date_Created
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
               AND  COI.IsConfirmed = 1 AND COI.IsDenied = 1 
+			  AND COI.RowStatus = 1
     ) FalseIncidents
 	    OUTER APPLY
     (
@@ -195,26 +199,26 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
                 ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-                   AND COI.RowStatus = 1
-        WHERE CONVERT(DATE,DA.Date_Created)
-              BETWEEN @StartDate AND @EndDate
-              AND DO.Guide_Serie = DA.Guide_Serie
-              AND DO.Guide_Number = DA.Guide_Number
-              AND  COI.IsConfirmed = 1 AND COI.IsDenied = 0
-    ) IncidenciasReales
-        OUTER APPLY
-    (
-        SELECT COUNT(1) 'CoutierContempt'
-        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-            INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
-                ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-                   AND COI.RowStatus = 1
         WHERE DA.Date_Created
               BETWEEN @StartDate AND @EndDate
               AND DO.Guide_Serie = DA.Guide_Serie
               AND DO.Guide_Number = DA.Guide_Number
-              AND COI.CourierContempt = 1
-    ) Contempts
+              AND  COI.IsConfirmed = 1 AND COI.IsDenied = 0
+			  AND COI.RowStatus = 1
+    ) IncidenciasReales
+    --    OUTER APPLY
+    --(
+    --    SELECT COUNT(1) 'CoutierContempt'
+    --    FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+    --        INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+    --            ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+    --    WHERE DA.Date_Created
+    --          BETWEEN @StartDate AND @EndDate
+    --          AND DO.Guide_Serie = DA.Guide_Serie
+    --          AND DO.Guide_Number = DA.Guide_Number
+    --          AND COI.CourierContempt = 1
+			 -- AND COI.RowStatus = 1
+    --) Contempts
         OUTER APPLY
     (
         SELECT TOP (1)
@@ -223,7 +227,7 @@ BEGIN
         WHERE DO.[Guide_Serie] = [DOD].[Guide_Serie]
               AND [DO].[Guide_Number] = [DOD].[Guide_Number]
               AND [DOD].[StatusOrderId] IN ( @STATUS_DELIVERED_ID, @STATUS_COD_PAID )
-              AND CAST([DOD].DateCreated AS DATE) = CAST([DOBS].[Date_Dispatched] AS DATE)
+              --AND CAST([DOD].DateCreated AS DATE) = CAST([DOBS].[Date_Dispatched] AS DATE)
               AND [DOD].[RowStatus] = 1
     ) DODdelivery
         OUTER APPLY
@@ -234,7 +238,7 @@ BEGIN
         WHERE DO.[Guide_Serie] = [DOD].[Guide_Serie]
               AND [DO].[Guide_Number] = [DOD].[Guide_Number]
               AND [DOD].[StatusOrderId] = @STATUS_RETURNED_ID
-              AND CAST([DOD].DateCreated AS DATE) = CAST([DOBS].[Date_Dispatched] AS DATE)
+            ---  AND CAST([DOD].DateCreated AS DATE) = CAST([DOBS].[Date_Dispatched] AS DATE)
               AND [DOD].[RowStatus] = 1
     ) DODreturn
         OUTER APPLY
@@ -245,11 +249,10 @@ BEGIN
         WHERE DO.[Guide_Serie] = [DOD].[Guide_Serie]
               AND [DO].[Guide_Number] = [DOD].[Guide_Number]
               AND [DOD].[StatusOrderId] = @STATUS_TRANSFERED_EX_ID
-              AND CAST([DOD].DateCreated AS DATE) = CAST([DOBS].[Date_Dispatched] AS DATE)
+          --    AND CAST([DOD].DateCreated AS DATE) = CAST([DOBS].[Date_Dispatched] AS DATE)
               AND [DOD].[RowStatus] = 1
     ) DODtransfer
-    WHERE CAST([DOBS].[Date_Dispatched] AS DATE)
-    BETWEEN @StartDate AND @EndDate
+    WHERE [DOBS].[Date_Dispatched] BETWEEN  @StartDate AND  @EndDate
     GROUP BY [DOBS].[ID],
              [DOBS].[Date_Dispatched],
              [SRE].[CUI],
@@ -267,6 +270,3 @@ BEGIN
              [DOBS].[StartingKilometers];
 
 END;
---Incidencias sin validar
---Incidencias Reales
---Incidencias Falsas

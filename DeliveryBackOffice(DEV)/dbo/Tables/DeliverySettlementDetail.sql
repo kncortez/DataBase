@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_PBI_SETTLEMENT]
     ON [dbo].[DeliverySettlementDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -47,8 +49,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Orden o sec
 
 
 GO
-CREATE NONCLUSTERED INDEX [ID]
-    ON [dbo].[DeliverySettlementDetail]([ID] ASC);
+
 
 
 GO
@@ -72,8 +73,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hor
 
 
 GO
-CREATE NONCLUSTERED INDEX [idx_ID_DeliveryOrderBySettlement_Guide_Settlement_Guide_Discharged_RowStatus]
-    ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [Guide_Settlement] ASC, [Guide_Discharged] ASC, [RowStatus] ASC);
+
 
 
 GO
@@ -133,12 +133,17 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora posibl
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
-    ON [dbo].[DeliverySettlementDetail]([Guide_Number] ASC);
+
 
 
 GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliveryOrderBySettlement_RowStatus_include]
     ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [RowStatus] ASC)
     INCLUDE([Guide_Serie], [Guide_Number]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_rptID_DeliveryOrderBySettlement_Guide_Settlement_Guide_Discharged_RowStatus]
+    ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [Guide_Settlement] ASC, [Guide_Discharged] ASC, [Guide_Delivered] ASC, [Guide_Returned] ASC, [RowStatus] ASC)
+    INCLUDE([ID], [Guide_Serie], [Guide_Number]);
 

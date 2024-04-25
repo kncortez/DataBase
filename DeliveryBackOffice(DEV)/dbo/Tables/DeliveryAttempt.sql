@@ -2,8 +2,8 @@
     [ID]                           BIGINT        IDENTITY (1, 1) NOT NULL,
     [Guide_Serie]                  NVARCHAR (2)  NOT NULL,
     [Guide_Number]                 INT           NOT NULL,
-    [Dry]                          BIT           NOT NULL,
-    [Cold]                         BIT           NOT NULL,
+    [Dry]                          BIT           NULL,
+    [Cold]                         BIT           NULL,
     [Latitude]                     NVARCHAR (20) NULL,
     [Longitude]                    NVARCHAR (20) NULL,
     [Delivered]                    BIT           NOT NULL,
@@ -40,6 +40,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_deliveryattempt_guide]
     ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC);
@@ -51,15 +53,11 @@ CREATE NONCLUSTERED INDEX [IDX_ACCEPTED_DELIVERED]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Latitude]
-    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC)
-    INCLUDE([Latitude]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Longitude]
-    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC)
-    INCLUDE([Longitude]);
+
 
 
 GO
@@ -77,8 +75,7 @@ CREATE NONCLUSTERED INDEX [IDX_ID_Courier_Date_Created]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
-    ON [dbo].[DeliveryAttempt]([Guide_Number] ASC);
+
 
 
 GO
@@ -93,4 +90,20 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_QualityControlValidationsHeader]
     ON [dbo].[DeliveryAttempt]([ConfirmationOfIncidenceId] ASC)
     INCLUDE([Guide_Number], [ID_Incident]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-GuideSerie-Number-ConfirmationOfIncidence-RPT]
+    ON [dbo].[DeliveryAttempt]([Guide_Serie] ASC, [Guide_Number] ASC)
+    INCLUDE([Date_Created], [ConfirmationOfIncidenceId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryAttempt_Date_Created_Guide_Serie_Guide_Number]
+    ON [dbo].[DeliveryAttempt]([Date_Created] ASC, [Guide_Serie] ASC, [Guide_Number] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ID_Date]
+    ON [dbo].[DeliveryAttempt]([ID] ASC, [Date_Created] ASC);
 

@@ -24,30 +24,26 @@
 
 
 
-GO
-CREATE CLUSTERED INDEX [ClusteredIndex-GuideSerie-Number-Status]
-    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-GuideSerie-Number]
-    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC);
 
-
-GO
-CREATE NONCLUSTERED INDEX [idx_deliveryorderdetail_statusorderid]
-    ON [dbo].[DeliveryOrderDetail]([StatusOrderId] ASC);
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_GuideandStatus]
-    ON [dbo].[DeliveryOrderDetail]([Guide_Number] ASC, [StatusOrderId] ASC)
-    INCLUDE([DateCreated]);
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IDX_GuideandStatusDate]
-    ON [dbo].[DeliveryOrderDetail]([Guide_Number] ASC, [StatusOrderId] ASC, [DateCreated] ASC);
+
+
+
+GO
+
+
+
+GO
+
 
 
 GO
@@ -67,8 +63,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Reason for 
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_DeliveryOrderDetailRLDReport]
-    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreated] ASC);
+
 
 
 GO
@@ -92,4 +87,16 @@ CREATE NONCLUSTERED INDEX [idx_Guide_2023]
 GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreatedInSystem] ASC, [SystemOrigin] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [NonClusteredIndex-GuideSerie-Number-Status]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC)
+    INCLUDE([StatusOrderId], [DateCreated], [RowStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_RDL_DeliveryOrderDetail]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [DeliveryAttemptId] ASC, [SystemOrigin] ASC)
+    INCLUDE([StatusOrderId], [DateCreated], [RowStatus]);
 

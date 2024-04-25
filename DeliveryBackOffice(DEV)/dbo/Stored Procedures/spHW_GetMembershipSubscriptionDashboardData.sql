@@ -26,6 +26,7 @@ BEGIN
     DECLARE @MEMBERSHIP_STATUS_ACTIVE_ID AS INT; -- CatSalesPackageStatus
     DECLARE @MEMBERSHIP_STATUS_INACTIVE_ID AS INT; -- CatSalesPackageStatus
     DECLARE @SPECIALSUSCRIPTION AS INT;
+	IF @AccountId = '' SET @AccountId = NULL;
 
     SET @SPECIALSUSCRIPTION =
     (
@@ -78,7 +79,7 @@ BEGIN
              , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]))           [MembershipAvailableFixedService]
          , [M].[ExpirationDate]                                                             [MembershipExpirationDate]
          , IIF((([M].[ActualServiceCount] * 100)
-                / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN 1 ELSE [M].[MembershipMaxServiceFixedValue] END)
+                / (CASE WHEN[M].[MembershipMaxServiceFixedValue] = 0 THEN   1 ELSE  [M].[MembershipMaxServiceFixedValue] END)
                ) > 100
              , 100
              , (([M].[ActualServiceCount] * 100)
@@ -131,19 +132,18 @@ BEGIN
 
     -- Subscription Data
 
-    SELECT [S].[IdSubscription]
+	    SELECT [S].[IdSubscription]
          , [S].[CatSubscriptionId]
          , [CS].[SubscriptionName]
          , [S].[CatSubscriptionStatusId]
          , [S].[SubscriptionCost]
          , [S].[IsAutoRenewable]
-         , CAST((CASE
-                     WHEN [S].[CatSubscriptionId] IN ( @SPECIALSUSCRIPTION ) THEN
-                         0
-                     ELSE
-                         1
-                 END
-                ) AS BIT)                                                                   [CanAutorenew]
+         , CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew]      
          , [S].[SubscriptionMaxServiceFixedValue]
          , [S].[ActualServiceCount]
          , IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0
@@ -160,7 +160,7 @@ BEGIN
                      AND [MSL].[SubscriptionId] = [S].[IdSubscription]
                      AND [MSL].[RowStatus] = 1
                      AND [MSL].[DateCreated]
-                     BETWEEN @DateStart AND @DateEnd
+                     BETWEEN @DateStart  AND @DateEnd
            )                                                                                [SubscriptionDeliveriesCount]
          , CAST((CASE
                      WHEN (([S].[ActualServiceCount] * 100) / [S].[SubscriptionMaxServiceFixedValue]) >= 100
@@ -189,25 +189,25 @@ BEGIN
     FROM [dbo].[Subscription]              S
         INNER JOIN [dbo].[CatSubscription] CS
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
-    WHERE [S].AccountId = @AccountId
-	   ---[S].[MembershipId] = @MEMBERSHIP_ID
+    WHERE [S].AccountId = @AccountId 
           AND [S].[ExpirationDate] >= GETDATE() --- colocarle  hora 00:00:00
           AND [S].[RowStatus] = 1
           AND [S].CatTypeSubscriptionId = 1  
-    UNION ALL
-    SELECT [S].[IdSubscription]
+
+
+Union all
+	    SELECT [S].[IdSubscription]
          , [S].[CatSubscriptionId]
          , [CS].[SubscriptionName]
          , [S].[CatSubscriptionStatusId]
          , [S].[SubscriptionCost]
          , [S].[IsAutoRenewable]
-         , CAST((CASE
-                     WHEN [S].[CatSubscriptionId] IN ( @SPECIALSUSCRIPTION ) THEN
-                         0
-                     ELSE
-                         1
-                 END
-                ) AS BIT)                                                                   [CanAutorenew]
+         , CAST((
+					CASE
+						WHEN [S].[CatSubscriptionId] IN (@SPECIALSUSCRIPTION) THEN 0
+						ELSE 1
+					END
+				) AS BIT) [CanAutorenew]
          , [S].[SubscriptionMaxServiceFixedValue]
          , [S].[ActualServiceCount]
          , IIF(([S].[SubscriptionMaxServiceFixedValue] - [S].[ActualServiceCount]) <= 0
@@ -253,8 +253,8 @@ BEGIN
     FROM [dbo].[Subscription]              S
         INNER JOIN [dbo].[CatSubscription] CS
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
-    WHERE --- [S].[MembershipId] = @MEMBERSHIP_ID
-	          [S].AccountId = @AccountId
+    WHERE
+	          [S].AccountId = @AccountId 
           AND [S].[ExpirationDate] >= GETDATE()
           AND [S].[RowStatus] = 1
           AND [S].CatTypeSubscriptionId = 2

@@ -36,6 +36,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del hub al que pertenece', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'HubLogisticId';
 
@@ -46,4 +48,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubi
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubicación, latitud, registrada del vehículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'LastLatitude';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_CatVehicle_RPT]
+    ON [dbo].[CatVehicle]([IdVehicle] ASC)
+    INCLUDE([UnitNumber]);
 

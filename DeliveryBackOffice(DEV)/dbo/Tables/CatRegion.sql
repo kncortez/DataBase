@@ -10,6 +10,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Catalogo de regiones.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatRegion';
 
@@ -40,4 +42,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatRegion', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_IdCatRegion_RPT]
+    ON [dbo].[CatRegion]([IdCatRegion] ASC)
+    INCLUDE([RegionName]);
 

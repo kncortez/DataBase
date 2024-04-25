@@ -32,6 +32,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_ConfirmationOfIncidence_ConfirmationOfIncidentToken]
     ON [dbo].[ConfirmationOfIncidence]([ConfirmationOfIncidentToken] ASC);
@@ -118,8 +120,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observació
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_ConfirmationOfIncidence_Status]
-    ON [dbo].[ConfirmationOfIncidence]([IsConfirmed] ASC, [IsDenied] ASC, [DateCreated] ASC);
+
 
 
 GO
@@ -136,4 +137,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Observació
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Solicita cambio de dirección', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ConfirmationOfIncidence', @level2type = N'COLUMN', @level2name = N'IsAddressModificationRequested';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_ConfirmationOfIncidence]
+    ON [dbo].[ConfirmationOfIncidence]([IdConfirmationOfIncidence] ASC)
+    INCLUDE([IsConfirmed], [IsDenied], [DateCreated], [RowStatus]);
 

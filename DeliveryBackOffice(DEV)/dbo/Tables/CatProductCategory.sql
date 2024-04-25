@@ -8,8 +8,11 @@
     [DateCreated]                   DATETIME       NOT NULL,
     [TokenUpdated]                  NVARCHAR (50)  NULL,
     [DateUpdated]                   DATETIME       NULL,
+    [TechnicalDescription]          NVARCHAR (50)  NULL,
     CONSTRAINT [PK_CatProductCategory] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC)
 );
+
+
 
 
 GO
@@ -50,4 +53,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Categoría de productos', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductCategory';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Nombre tecnico de categoria para validaciones.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatProductCategory', @level2type = N'COLUMN', @level2name = N'TechnicalDescription';
 

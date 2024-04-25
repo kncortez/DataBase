@@ -18,6 +18,29 @@ BEGIN
     DECLARE @Receiver_Town AS INT;
 	DECLARE @ClientConfirmsReturn AS bit = 0;
 
+    DECLARE @GuideSerie VARCHAR(50);
+	DECLARE @GuideNumber VARCHAR(50);
+
+	-- Extraer letras
+		SET @GuideSerie = '';
+		SELECT @GuideSerie = @GuideSerie + letra
+		FROM (
+			SELECT SUBSTRING(@Guide, number, 1) AS letra
+			FROM master..spt_values
+			WHERE type = 'P' AND number BETWEEN 1 AND LEN(@Guide)
+			AND SUBSTRING(@Guide, number, 1) LIKE '[A-Za-z]'
+		) AS letras;
+
+		-- Extraer números
+		SET @GuideNumber = '';
+		SELECT @GuideNumber = @GuideNumber + numero
+		FROM (
+			SELECT SUBSTRING(@Guide, number, 1) AS numero
+			FROM master..spt_values
+			WHERE type = 'P' AND number BETWEEN 1 AND LEN(@Guide)
+			AND SUBSTRING(@Guide, number, 1) LIKE '[0-9]'
+		) AS numeros;
+
     DECLARE @Entregado INT =
             (
                 SELECT [StatusOrderId]
@@ -50,7 +73,7 @@ BEGIN
                         ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
                 WHERE [CatCheckpointTypeId] = 3
                       AND [SO].[RowStatus] = 1
-                      AND [DO].[Guide_Serie] + CAST([DO].[Guide_Number] AS NVARCHAR(20)) = @Guide
+                      AND [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
             );
 
     DECLARE @RESULT INT = 0;
@@ -61,33 +84,33 @@ BEGIN
                 SELECT TOP 1
                        [DOD].[DateCreated]
                 FROM [dbo].[DeliveryOrderDetail] [DOD] WITH (NOLOCK)
-                WHERE [DOD].[Guide_Serie] + CAST([DOD].[Guide_Number] AS NVARCHAR(20)) = @Guide
+                WHERE [DOD].[Guide_Serie] = @GuideSerie AND [DOD].[Guide_Number] = @GuideNumber 
                 ORDER BY [DOD].[DateCreated] DESC
             );
 
-	DECLARE @Incidentsavailable INT = 0 --AL HABILITAR CÓDIGO QUITAR ESTO
- --   DECLARE @Incidentsavailable INT = (
 	
-	--		 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) -ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
-	--			From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
-	--		 Where 
-	--		DOAD.GuideSerie+ Convert(NVARCHAR(20),DOAD.GuideNumber) =  @Guide
-	--        );
+    DECLARE @Incidentsavailable INT = (
+	
+			 Select ISNULL([DOAD].[GuideDeliveryMaxAttemptCount],0) - ISNULL([DOAD].[GuideDeliveryAttemptCount],0) 
+				From [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData] DOAD WITH (NOLOCK)
+			 Where 
+             [DOAD].[GuideSerie] = @GuideSerie AND [DOAD].[GuideNumber] = @GuideNumber 
+	        );
 
 	----No importando la cantidad de intentos disponibles si el cliente ya no quiere 
 	----el servicio se permite declarar para devolución
-	--SET @ClientConfirmsReturn = (SELECT TOP 1 a2.ClientConfirmsReturn 
-	--FROM DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH(NOLOCK)
-	--INNER JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence A2 WITH(NOLOCK)
-	--ON A2.IdConfirmationOfIncidence = A1.ConfirmationOfIncidenceId
-	--WHERE A1.Guide_Serie+ Convert(NVARCHAR(20),A1.Guide_Number) =  @Guide
-	--AND A2.ClientConfirmsReturn = 1
-	--)
+	SET @ClientConfirmsReturn = (SELECT TOP 1 a2.ClientConfirmsReturn 
+										FROM DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH(NOLOCK)
+										INNER JOIN DeliveryBackOffice.dbo.ConfirmationOfIncidence A2 WITH(NOLOCK)
+										ON A2.IdConfirmationOfIncidence = A1.ConfirmationOfIncidenceId
+										WHERE [A1].[Guide_Serie] = @GuideSerie AND [A1].[Guide_Number] = @GuideNumber 
+										AND A2.ClientConfirmsReturn = 1
+										)
 		
-	--IF (@ClientConfirmsReturn =1 )
-	--BEGIN
-	-- SET @Incidentsavailable = 0
-	--END 
+	IF (@ClientConfirmsReturn = 1 )
+	BEGIN
+	 SET @Incidentsavailable = 0
+	END 
 
 
     SET NOCOUNT ON;
@@ -105,13 +128,13 @@ BEGIN
         FROM [dbo].[DeliveryOrder] [DO] WITH (NOLOCK)
             INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
                 ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-        WHERE [Guide_Serie] + CAST([Guide_Number] AS NVARCHAR) = @Guide;
+        WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
 
         DECLARE @isreturnt BIT =
                 (
                     SELECT [IsLastMileReturn]
-                    FROM [dbo].[DeliveryOrder] WITH (NOLOCK)
-                    WHERE [Guide_Serie] + CAST([Guide_Number] AS NVARCHAR) = @Guide
+                    FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
+                    WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
                 );
 
         IF (EXISTS
@@ -121,7 +144,7 @@ BEGIN
             FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
                 INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
                     ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
-            WHERE [DDO].[Guide_Serie] + CAST([DDO].[Guide_Number] AS NVARCHAR) = @Guide
+            WHERE [DDO].[Guide_Serie] = @GuideSerie AND [DDO].[Guide_Number] = @GuideNumber 
         )
            )
         BEGIN

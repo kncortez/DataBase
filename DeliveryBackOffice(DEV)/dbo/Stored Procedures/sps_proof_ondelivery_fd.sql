@@ -356,12 +356,11 @@ BEGIN
                  NULL, IIF(LEN(@Observation) > 0, CONCAT('ENTREGA SIN COBRO COD ', @Observation), ''));
 
                 SET @RInserted = @@ROWCOUNT;
-
                 SELECT @DataOriginId = cm.ModIdModule
                 FROM DeliveryBackOffice.dbo.CatModule cm
                 WHERE cm.ModName = @ModName;
 
-                -----------------WEBHOOK.INI-----------------------		
+                -----------------WEBHOOK.INI-----------------------	
                 DECLARE @WebhookCustomerId INT = -1;
                 DECLARE @CustomerEndpointId INT = -1;
                 -- Debido a que se procesa únicamente 1 guía
@@ -406,9 +405,14 @@ BEGIN
                         WHERE DO.Guide_Number = @GuideNumber
                               AND DO.Guide_Serie = @GuideSerie
                     );
-
+					
                     -- Cliente tiene webhook configurado para el tipo especificado
                     -- Estado actual de la guía coincide dentro de las restricciónes por usuario
+					print 'webhook';
+					print @WebhookCustomerId
+					print @CustomerEndpointId
+					print @GuideCurrentStatus
+					print 'webhook'
                     IF (
                            @WebhookCustomerId > 0
                            AND @CustomerEndpointId > 0
@@ -426,6 +430,17 @@ BEGIN
                         (
                             InsertedId BIGINT
                         );
+
+			DECLARE @TypeConnect INT = 0;
+
+			SET @TypeConnect = (SELECT top 1 TypeConnectionId 
+									FROM WebhookEndpoint wh
+									INNER JOIN WebhookCatTypeConnection wc
+										ON wh.TypeConnectionId = wc.IdCatTypeConnection
+									WHERE wh.CustomerId = @WebhookCustomerId)
+
+				IF(@TypeConnect = 1)
+					 BEGIN
 
                         INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
                         (
@@ -446,6 +461,106 @@ BEGIN
                         VALUES
                         (@GuideSerie, @GuideNumber, @WebhookCustomerId, @GuideCurrentStatus, @CustomerEndpointId, 0,
                          @Token, GETDATE());
+
+					END
+				ELSE
+				    BEGIN
+					
+						-----------------------------------
+						 DECLARE @GuidePiecesTable AS TABLE
+						(
+						    CustomerId INT,
+						    CustomerEndpointId BIGINT,
+						    WebhookType INT,
+						    GuideSerie NVARCHAR(2),
+						    GuideNumber INT,
+						    GuideStatusId TINYINT,
+							NumberPieces INT,
+							NumberRelatedPieces INT
+							
+						);
+
+						INSERT INTO @GuidePiecesTable 
+									( 
+								CustomerId,
+						        GuideSerie,
+						        GuideNumber,
+						        GuideStatusId,
+								NumberPieces
+								)
+								SELECT @WebhookCustomerId,
+								dop.GuideSerie,dop.GuideNumber, 
+								@GuideCurrentStatus,
+								Count(dop.GuideNumber)
+								FROM DeliveryOrder do WITH(NOLOCK)
+								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+									ON do.Guide_Number = dop.GuideNumber
+									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+								    ON do.IdCustomer = WHE.CustomerId
+									WHERE do.Guide_Number = @GuideNumber
+										AND WHE.TypeConnectionId = 2
+									GROUP BY dop.GuideSerie,dop.GuideNumber
+
+						   DECLARE @PiecesGuideRelatedTable AS TABLE
+						(
+						    CustomerId INT,
+						    CustomerEndpointId BIGINT,
+						    WebhookType INT,
+						    GuideSerie NVARCHAR(2),
+						    GuideNumber INT,
+						    GuideStatusId TINYINT,
+							NumberRelatedPieces INT
+							
+						);
+
+						INSERT INTO @PiecesGuideRelatedTable 
+									( 
+								CustomerId,
+						        GuideSerie,
+						        GuideNumber,
+						        GuideStatusId,
+								NumberRelatedPieces
+								)
+								SELECT @WebhookCustomerId,
+								dop.GuideSerie,dop.GuideNumber, 
+								@GuideCurrentStatus,
+								Count(dop.GuideNumber)
+								FROM DeliveryOrder do WITH(NOLOCK)
+								INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+									ON do.Guide_Number = dop.GuideNumber
+									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+								    ON do.IdCustomer = WHE.CustomerId
+									WHERE do.Guide_Number = @GuideNumber
+									AND dop.ExternalPieceId IS NOT NULL
+									AND WHE.TypeConnectionId = 2
+									GROUP BY dop.GuideSerie,dop.GuideNumber
+					  
+					  		INSERT INTO WebhookTrackingQueueDetailForSFTP 
+								(CustomerId,
+								GuideSerie,
+								GuideNumber,
+								GuidePiece,
+								ExternalNumber,
+								ExternalPieceId,
+								StatusOrderId,
+								RowStatus,
+								DateCreated,
+								TokenCreated)
+							SELECT @WebhookCustomerId,
+							dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
+							@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
+							FROM DeliveryOrderPiece dop WITH(NOLOCK)
+							INNER JOIN DeliveryOrder do WITH(NOLOCK)
+								ON dop.GuideNumber = do.Guide_Number
+							INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+							    ON do.IdCustomer = WHE.CustomerId
+							INNER JOIN @GuidePiecesTable gpt
+							    ON dop.GuideNumber = gpt.GuideNumber
+							INNER JOIN @PiecesGuideRelatedTable pgt
+							    ON gpt.GuideNumber = pgt.GuideNumber
+								WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
+									AND WHE.TypeConnectionId = 2
+						END
 
                     END;
                 END TRY

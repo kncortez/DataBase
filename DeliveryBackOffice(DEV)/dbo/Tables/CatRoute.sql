@@ -15,3 +15,11 @@
     CONSTRAINT [FKRouteTypeR] FOREIGN KEY ([IdTypeRoute]) REFERENCES [dbo].[CatTypeRoute] ([IdTypeRoute])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_IdCatRoute_RPT]
+    ON [dbo].[CatRoute]([IdRoute] ASC)
+    INCLUDE([CodeRoute]);
+

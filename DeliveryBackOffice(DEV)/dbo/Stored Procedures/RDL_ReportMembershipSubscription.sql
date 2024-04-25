@@ -3,7 +3,7 @@
 -- Create date: <2023-09-06>
 -- Description:	<Reporte de membresias y suscripciones>
 -- =============================================
-CREATE PROCEDURE RDL_ReportMembershipSubscription
+CREATE PROCEDURE [dbo].[RDL_ReportMembershipSubscription]
     @StartDate DATETIME,
     @EndDate DATETIME
 AS
@@ -47,8 +47,8 @@ BEGIN
 				INNER JOIN DeliveryBackOffice.dbo.CatMembership A2 WITH(NOLOCK) ON A2.IdCatMembership = A1.CatMembershipId
 				OUTER APPLY
 				(
-				 SELECT	TOP 1 p.PerFirstName +' '+ p.PerLastName PerName 
-				 ,ru.UsrEmail,ctm.Name
+				 SELECT	TOP 1 ISNULL(p.PerFirstName,'N/D') +' '+ ISNULL(p.PerLastName,'') PerName 
+				 ,ISNULL(ru.UsrEmail,'') UsrEmail,ISNULL(ctm.[Name],'') [Name]
 				 FROM DeliveryBackOffice.dbo.Customer CTM WITH(NOLOCK) 
 				 INNER JOIN DeliveryBackOffice.dbo.Account ACC ON ACC.IdCustomer = CTM.IdCustomer
 				  INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH (NOLOCK)
@@ -75,7 +75,8 @@ BEGIN
 				WHERE --A1.RowStatus = 1
 				A1.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A1.DateCreated <= @EndDate--'2023-07-31 23:59:59'
-
+				AND A1.CatMembershipStatusId <> 4
+				 
 
 				UNION
 				SELECT
@@ -110,7 +111,7 @@ BEGIN
 				 ,ru.UsrEmail,ctm.Name
 				 FROM DeliveryBackOffice.dbo.Customer CTM WITH(NOLOCK) 
 				 INNER JOIN DeliveryBackOffice.dbo.Account ACC ON ACC.IdCustomer = CTM.IdCustomer
-				  INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH (NOLOCK)
+				 INNER JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH (NOLOCK)
 							ON [Acc].AccIdAccount = RBUBA.RuaIdAccount
 						INNER JOIN [DeliveryBackOffice].[dbo].[RegisterUser] RU WITH (NOLOCK)
 							ON [RU].[UsrIdUser] = [RBUBA].[RuaIdUser]
@@ -137,5 +138,7 @@ BEGIN
 				WHERE --A3.RowStatus = 1
 				A3.DateCreated >= @StartDate--'2023-07-01 00:00:00'
 				AND A3.DateCreated <= @EndDate--'2023-07-31 23:59:59'
+				AND A3.CatSubscriptionStatusId <>4
+				
 
 END

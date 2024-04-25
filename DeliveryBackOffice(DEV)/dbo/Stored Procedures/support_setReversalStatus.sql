@@ -142,6 +142,23 @@ BEGIN
 						RowStatus = 1
 						AND
 						StatusOrderId = @currentState;
+
+
+
+				    UPDATE
+						[DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP]
+					SET
+						RowStatus = 0
+						,TokenUpdated = @SupportToken
+						,DateUpdated = GETDATE()
+					WHERE
+						GuideSerie = @Guide_Serie
+						AND
+						GuideNumber = @Guide_Number
+						AND
+						RowStatus = 1
+						AND
+						StatusOrderId = @currentState;
 				-------------------WEBHOOK.FIN------------------------------
 
 		END

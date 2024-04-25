@@ -21,11 +21,11 @@ BEGIN TRY
 
 	DECLARE @IdCatProcessStates AS INT =(Select IdCatProcessStates From [dbo].[CatProcessStates] Where NameStatus = 'Finalizado')
 	DECLARE @IdTrans AS INT = (Select Top 1 IdRegistrationofTransactionProcessStates From [dbo].[RegistrationofTransactionProcessStates]  Where
-	                           AccountId = @AccountId 
+	                           AccountId = @AccountId And IdCatProcessStates = 1
 	                           Order by DateCreated Desc)
 
 
-    
+    UPDATE  [dbo].[RegistrationofTransactionProcessStates] SET IdCatProcessStates = @IdCatProcessStates WHERE  IdRegistrationofTransactionProcessStates = @IdTrans
 
 
 	COMMIT TRANSACTION

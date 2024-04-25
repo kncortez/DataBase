@@ -16,7 +16,8 @@ CREATE PROCEDURE [dbo].[SPHW_RegistrationofTransactionProcessStatesNonLoggedinUs
 @System AS INT,
 @TblSalePackageMarketPlace [TblProductMarketPlace2] READONLY,
 @InvoiceEmail AS NVARCHAR(500),
-@Vaucher AS NVARCHAR (50) 
+@Vaucher AS NVARCHAR (50),
+@PhoneNumber AS NVARCHAR(10)
 
 	
 AS
@@ -48,7 +49,8 @@ BEGIN
 	  Vaucher,
 	  IdSalePackage,
 	 TypeSalePackage,
-	 ProductGiftShippingEmail
+	 ProductGiftShippingEmail,
+	 PhoneNumber
 	)
 	 SELECT
                CASE 
@@ -163,7 +165,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND T.ProductGiftShippingEmail='NULL' 
+															 AND T.ProductGiftShippingEmail IS NULL  
 							
 							THEN  (SELECT   ac.IdCustomer
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -197,7 +199,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(T.ProductGiftShippingEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-														--	 AND T.ProductGiftShippingEmail !='NULL'
+														
 							
 							THEN  
 							      
@@ -233,7 +235,7 @@ BEGIN
 																   AND ac.AccRowStatus = 1
 														WHERE usr.UsrEmail = ISNULL(@InvoiceEmail,'N/D')
 														     AND res.UstStatus  ='ACTIVE') 
-															 AND T.ProductGiftShippingEmail='NULL'
+															 AND T.ProductGiftShippingEmail IS NULL
 				THEN NULL
 				WHEN NOT EXISTS(SELECT  TOP 1 1
 														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
@@ -273,7 +275,8 @@ BEGIN
 		              T.ProductGiftShippingEmail = 'NULL'
 					  THEN NULL
 					  ELSE T.ProductGiftShippingEmail
-					  END
+					  END,
+		@PhoneNumber
     FROM @TblSalePackageMarketPlace AS T;
 
 	COMMIT TRAN
