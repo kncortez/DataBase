@@ -26,4 +26,20 @@ BEGIN
     AND			cs.CODAccountTypeID			IS NOT NULL
     AND			cs.IdCustomerType = 1;
 
+    -- En caso no tenga datos COD en cuenta pero tenga datos COD en punto de visita
+    UPDATE		cs
+    SET			cs.isCOD = 1
+    FROM		[DeliveryBackOffice].[dbo].[Customer]					AS cs	WITH (NOLOCK)
+	INNER JOIN  [DeliveryBackOffice].[dbo].[VisitPointClient]			AS vpc	WITH (NOLOCK)	ON	vpc.CustomerID = cs.IdCustomer
+	INNER JOIN	[DeliveryBackOffice].[dbo].[VisitPointConfiguration]	AS vpcf	WITH (NOLOCK)	ON	vpcf.VisitPointID = vpc.VisitPointID
+    WHERE		cs.CODAccountBankID			IS NULL
+    AND			cs.CODAccountNumber			IS NULL
+    AND			cs.CODAccountName			IS NULL
+    AND			cs.CODAccountTypeID			IS NULL
+	AND			vpcf.CODAccountBankID		IS NOT NULL
+	AND			vpcf.CODAccountNumber		IS NOT NULL
+	AND			vpcf.CODAccountName			IS NOT NULL
+	AND			vpcf.CODAccountBankTypeID	IS NOT NULL
+    AND			cs.IdCustomerType = 1;
+
 END;
