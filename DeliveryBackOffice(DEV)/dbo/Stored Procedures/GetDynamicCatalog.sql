@@ -377,6 +377,7 @@ BEGIN
                                        + CONVERT(NVARCHAR, ISNULL(vpc.[CodeOfReference], '')) + '",'
                                        + '"Description":"' + ISNULL(REPLACE(vpc.[DescriptionOfClient], '"', ''), '')
                                        + '",' + '"Address":"' + ISNULL(REPLACE(vpc.[Address], '"', ''), '') + '",'
+									   + '"AccountId":"' + CONVERT(NVARCHAR, ISNULL([RBUBA].[RuaIdAccount], 0)) + '",' +
                                        + '"Province":"' + ISNULL(pr.ProvinceName, '') + '",' + '"Township":"'
                                        + ISNULL(TWS.TownshipName, '') + '",' + '"HeaderCode":"'
                                        + ISNULL(TWS.HeaderCode, '') + '",' 
@@ -416,6 +417,21 @@ BEGIN
                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
                                         ON vpc.CustomerID = cu.IdCustomer
+                                           AND vpc.StatusClient = 1
+									OUTER APPLY
+									(
+										SELECT 
+											TOP (1) 
+												[RBUBA].[RuaIdAccount] 
+										FROM 
+											[DeliveryBackOffice].[dbo].[VisitPointByUser] VPBU  WITH(NOLOCK) 
+											LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA  WITH(NOLOCK) 
+												ON [VPBU].[RegisterUserID] = [RBUBA].[RuaIdUser]
+												AND [RBUBA].[RuaRowStatus] = 1
+										WHERE
+											[vpc].[IdVisitPointClient] = [VPBU].[IdVisitPointClient]
+											AND [VPBU].[RowStatus] = 1
+									) RBUBA
                                     LEFT JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)
                                         ON vpc.IdSettlement = STL.IdSettlement
                                     LEFT JOIN DeliveryBackOffice.dbo.Township TWS WITH(NOLOCK)

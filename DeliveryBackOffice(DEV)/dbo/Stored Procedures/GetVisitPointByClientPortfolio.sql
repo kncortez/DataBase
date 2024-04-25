@@ -126,6 +126,7 @@ BEGIN
                                    + ISNULL(CONVERT(VARCHAR, vcp.TokenCreated), ' ') + '",' + '"TaxId":"'
                                    + ISNULL(vcp.TaxId, ' ') + '",' + '"ContactName":"'
                                    + dbo.fnt_String_Escape(REPLACE(ISNULL(vcp.ContactName, ' '), '"', ''), 'json') + '",'
+                                   + '"IsBusiness":"'+ ISNULL(CONVERT(VARCHAR,vcp.IsBusiness),0) + '",'                                   
                                    + '"Billing":['
                                    + ISNULL(
                                                STUFF(
@@ -289,6 +290,14 @@ BEGIN
                                                           + '"Township":"' + ISNULL(CONVERT(VARCHAR, tw.TownshipName), ' ')
                                                           + '",' + '"HeaderCode":"'
                                                           + ISNULL(CONVERT(VARCHAR, tw.HeaderCode), ' ') + '",'
+														  + '"IdCityPlace":"'
+																+ ISNULL(
+																			CONVERT(
+																						VARCHAR,
+																						ISNULL([SUB].[IdCityPlace], 7)
+																					),
+																			' '
+																		) + '",' +
                                                           + '"IdAccount":"' + ISNULL(CONVERT(VARCHAR, SUB.UadIdAccount), ' ')
                                                           + '",' + '"IdCountry":"'
                                                           + ISNULL(CONVERT(VARCHAR, SUB.UadIdCountry), ' ') + '",'

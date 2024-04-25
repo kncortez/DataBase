@@ -248,7 +248,7 @@ begin
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
+		AND (DOPD.AccountId = @IdAccount)
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
@@ -301,7 +301,7 @@ begin
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 				ON REU.UsrIdUser = ACH.UserId
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
+			AND (DOPD.AccountId = @IdAccount)
 			AND (CTS.IdTypeService NOT IN (5,23))
 			 AND DOPD.[TypeofInOutMoneyId] != 8
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC

@@ -128,7 +128,7 @@ BEGIN
 					(
 						(
 							-- Cliente individual e impersonado
-							@ClientType = 3
+							@ClientType in (1,3)
 						)
 						OR
 						(

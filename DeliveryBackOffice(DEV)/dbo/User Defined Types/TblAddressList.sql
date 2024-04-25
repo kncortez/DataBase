@@ -14,5 +14,8 @@
     [Token]                         NVARCHAR (200) NULL,
     [IdVisitPointByClientPortfolio] INT            NULL,
     [IdSettlement]                  INT            NULL,
+    [IdCityPlace]                   INT            NULL,
     [IdDeliveryOption]              INT            NULL);
+
+
 

@@ -7,6 +7,11 @@
 -- Create date: <2021-06-11>
 -- Description:	<Guarda, modifica y elimina la cartera del cliente>
 -- ==============================================
+-- =============================================
+-- Author:		<Edelman,Vásquez>
+-- Create date: <2023-07-19>
+-- Description:	<Bandera para indicar si el cliente es individual o corporativo>
+-- ==============================================
 
 CREATE PROCEDURE [dbo].[SetVisitPointByClientPortfolio]
 	-- Add the parameters for the stored procedure here
@@ -28,7 +33,8 @@ CREATE PROCEDURE [dbo].[SetVisitPointByClientPortfolio]
 	@Token varchar(200) = null,
 	@InternalCode VARCHAR(50)='',
 	@TaxId VARCHAR(50)='',
-	@ContactName VARCHAR(50)=''
+	@ContactName VARCHAR(50)='',
+	@IsBusiness AS BIT=0
 	
 AS
 BEGIN
@@ -100,9 +106,10 @@ BEGIN
 							,[InternalCode]
 							,[TaxId]
 							,[ContactName]
+							,[IsBusiness]
 						)
 						values(@FirstName, @SecondName, @LastName, @SecondLastName, @Email,@NirPhone
-						, @Phone, @CUI, @VisitPointId,@Status, @Token, GETDATE(),null, null, @InternalCode, @TaxId, @ContactName)
+						, @Phone, @CUI, @VisitPointId,@Status, @Token, GETDATE(),null, null, @InternalCode, @TaxId, @ContactName, @IsBusiness)
 						
 					 SET @VisitPointByClientPortfolioIdTransact = SCOPE_IDENTITY();
 
@@ -148,7 +155,7 @@ BEGIN
 						,null
 						,null
 						,null
-						,null
+						,[ni].[IdCityPlace]
 						,@VisitPointByClientPortfolioIdTransact
 						,ni.IdSettlement
 						,ni.IdDeliveryOption
@@ -233,7 +240,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 
 						update VisitPointByClientPortfolio set FirstName = @FirstName, SecondName = @SecondName, LastName = @LastName, SecondLastName = @SecondLastName,
 						Email = @Email, NirPhone = @NirPhone, Phone = @Phone, CUI = @CUI, TokenUpdated = @Token , DateUpdated = GETDATE(), TaxId = @TaxId, ContactName=@ContactName,
-						RowStatus = @Status
+						RowStatus = @Status, IsBusiness = @IsBusiness
 						where IdVisitPointByClientPortfolio = @IdVisitPointByClientPortfolio
 						
 						
@@ -276,7 +283,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 						,null
 						,null
 						,null
-						,null
+						,[ni].[IdCityPlace]
 						,ni.IdVisitPointByClientPortfolio
 						,ni.IdSettlement
 						,ni.IdDeliveryOption
@@ -287,7 +294,8 @@ if( @IdVisitPointByClientPortfolio > 0 )
 
 							update UserAddress set UadIdTownship = ni.IdTownship, UadIdAccount = ni.IdAccount , UadIdCountry = ni.IdCountry, UadFullName = ni.FullName, UadAddress1 = ni.Address1,
 							UadAddress2 = ni.Address2, UadNirPhone = ni.NirPhone, UadPhone = ni.Phone,UadAdditionalInstructions = ni.AdditionalInstructions, UadRowStatus = ni.Status, UadTokenUpdated = ni.Token,
-							UadDateUpdated = GETDATE(), VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio, UadIdSettlement= ni.IdSettlement,UadIdDeliveryOption=ni.IdDeliveryOption
+							UadDateUpdated = GETDATE(), VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio, UadIdSettlement= ni.IdSettlement,UadIdDeliveryOption=ni.IdDeliveryOption,
+							[IdCityPlace] = [ni].[IdCityPlace]
 							from @TblAddressesList ni
 							join UserAddress ud on ud.UadIdAddress = ni.IdAddress
 							where ni.IdAddress > 0 and ud.VisitPointByClientPortfolioId = ni.IdVisitPointByClientPortfolio

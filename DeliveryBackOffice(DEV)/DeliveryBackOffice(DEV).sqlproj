@@ -279,6 +279,7 @@
     <Build Include="dbo\Tables\Province.sql" />
     <Build Include="dbo\Tables\ProofIncidence.sql" />
     <Build Include="dbo\Tables\PromoCoverage.sql" />
+    <Build Include="dbo\Tables\PromoCouponProcessLog.sql" />
     <Build Include="dbo\Tables\PromoCoupon.sql" />
     <Build Include="dbo\Tables\ProcessedGuideCOD.sql" />
     <Build Include="dbo\Tables\PointsGuidesLog.sql" />
@@ -358,6 +359,8 @@
     <Build Include="dbo\Tables\ExtPlatformService.sql" />
     <Build Include="dbo\Tables\ExtPlatServiceRelationshipWithGuide.sql" />
     <Build Include="dbo\Tables\ExtPlatIncidence_TypeIncidence.sql" />
+    <Build Include="dbo\Tables\ExpressAccountServiceCartDetail.sql" />
+    <Build Include="dbo\Tables\ExpressAccountServiceCart.sql" />
     <Build Include="dbo\Tables\EventService.sql" />
     <Build Include="dbo\Tables\EcommerceBySeller.sql" />
     <Build Include="dbo\Tables\Ecommerce.sql" />
@@ -1040,6 +1043,7 @@
     <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetPendingNotificationsQueue.sql" />
     <Build Include="dbo\Stored Procedures\spNS_GetNotificationsQueueDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPointsFromExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ValidateForzaPoints.sql" />
     <Build Include="dbo\Stored Procedures\spHW_TMBuySubscriptionWithMembership.sql" />
     <Build Include="dbo\Stored Procedures\spHW_TMBuyMembership.sql" />
@@ -1048,6 +1052,7 @@
     <Build Include="dbo\Stored Procedures\spHW_SetNewUserPassword.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetConfirmationOfAccount.sql" />
     <Build Include="dbo\Stored Procedures\spHW_SetActionToConfirmationOfIncidence.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_ServiceCartCouponBrain.sql" />
     <Build Include="dbo\Stored Procedures\spHW_RecordScheduledCollections.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\spHW_ListofInvoicesIssuedClient.sql" />
@@ -1063,6 +1068,7 @@
     <Build Include="dbo\Stored Procedures\spHW_GetContentDataByType.sql" />
     <Build Include="dbo\Stored Procedures\spHW_EditGuidesfromShoppingCart.sql" />
     <Build Include="dbo\Stored Procedures\spHW_CreateTMCustomerAccount.sql" />
+    <Build Include="dbo\Stored Procedures\spHW_CompleteCouponProcessFromServiceCart.sql" />
     <Build Include="dbo\Stored Procedures\spHW_CollectionLinkGeneration.sql" />
     <Build Include="dbo\Stored Procedures\spHW_AssignmentCollectionServicesCourier.sql" />
     <Build Include="dbo\Stored Procedures\spHW_AssignRouteCollection.sql" />
@@ -1371,6 +1377,7 @@
     <Build Include="dbo\Stored Procedures\RenameforBackup.sql" />
     <Build Include="dbo\Stored Procedures\RemoveProductsfromtheMarketplaceCart.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromServiceCart.sql" />
+    <Build Include="dbo\Stored Procedures\RemoveGuideFromExpressCenterServiceCart.sql" />
     <Build Include="dbo\Stored Procedures\ReleaseCouponData.sql" />
     <Build Include="dbo\Stored Procedures\RegisterInvoiceManual.sql" />
     <Build Include="dbo\Stored Procedures\RegisterFacExist.sql" />
@@ -1389,6 +1396,7 @@
     <Build Include="dbo\Stored Procedures\ListofPaidGuidesthatdonotHaveanInvoice.sql" />
     <Build Include="dbo\Stored Procedures\IndividualCustomerCODAmountsData.sql" />
     <Build Include="dbo\Stored Procedures\HelloWorldprocedure.sql" />
+    <Build Include="dbo\Stored Procedures\GuidesImpersonatingaCustomerfromAnExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\Get_RoutePreparationSpecial.sql" />
     <Build Include="dbo\Stored Procedures\GetWireTransferExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
@@ -1421,6 +1429,7 @@
     <Build Include="dbo\Stored Procedures\GetServiceRecolectPay.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceExecutionSchedule.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\GetServiceCartbyAccountExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\GetServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\GetScheduleTimeList.sql" />
     <Build Include="dbo\Stored Procedures\GetSalePackageToRenew.sql" />
@@ -1550,6 +1559,7 @@
     <Build Include="dbo\Stored Procedures\GenerateClosure.sql" />
     <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccountMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\FinishServiceCartbyAccount.sql" />
+    <Build Include="dbo\Stored Procedures\FinishExpressServiceCartbyAccount.sql" />
     <Build Include="dbo\Stored Procedures\FilterVisitPointByClientPortfolio.sql" />
     <Build Include="dbo\Stored Procedures\ExpressCenterConfiguration.sql" />
     <Build Include="dbo\Stored Procedures\DeliveryManifestDetailTSE.sql" />
@@ -1615,6 +1625,13 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />    
+    <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />  
+    <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
+    <Build Include="dbo\Tables\CatTypeSubscription.sql" />
+    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
+    <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
+  
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

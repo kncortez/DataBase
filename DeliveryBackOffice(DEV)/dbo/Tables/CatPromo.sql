@@ -1,29 +1,32 @@
 ﻿CREATE TABLE [dbo].[CatPromo] (
-    [IdPromo]           INT            IDENTITY (1, 1) NOT NULL,
-    [PromoDescription]  NVARCHAR (200) NOT NULL,
-    [PromoWeight]       INT            NOT NULL,
-    [StartPromoDate]    DATETIME       NOT NULL,
-    [FinishPromoDate]   DATETIME       NOT NULL,
-    [LimitPromoTime]    DECIMAL (6, 2) NULL,
-    [Monday]            BIT            NOT NULL,
-    [Tuesday]           BIT            NOT NULL,
-    [Wednesday]         BIT            NOT NULL,
-    [Thursday]          BIT            NOT NULL,
-    [Friday]            BIT            NOT NULL,
-    [Saturday]          BIT            NOT NULL,
-    [Sunday]            BIT            NOT NULL,
-    [CatValueTypeId]    INT            NOT NULL,
-    [PromoValue]        DECIMAL (5, 2) NOT NULL,
-    [CatDiscountTypeId] INT            NOT NULL,
-    [RowStatus]         BIT            NOT NULL,
-    [DateCreated]       DATETIME       NOT NULL,
-    [TokenCreated]      NVARCHAR (50)  NOT NULL,
-    [DateUpdated]       DATETIME       NULL,
-    [TokenUpdated]      NVARCHAR (50)  NULL,
+    [IdPromo]              INT            IDENTITY (1, 1) NOT NULL,
+    [PromoDescription]     NVARCHAR (200) NOT NULL,
+    [PromoWeight]          INT            NOT NULL,
+    [StartPromoDate]       DATETIME       NOT NULL,
+    [FinishPromoDate]      DATETIME       NOT NULL,
+    [LimitPromoTime]       DECIMAL (6, 2) NULL,
+    [Monday]               BIT            NOT NULL,
+    [Tuesday]              BIT            NOT NULL,
+    [Wednesday]            BIT            NOT NULL,
+    [Thursday]             BIT            NOT NULL,
+    [Friday]               BIT            NOT NULL,
+    [Saturday]             BIT            NOT NULL,
+    [Sunday]               BIT            NOT NULL,
+    [CatValueTypeId]       INT            NOT NULL,
+    [PromoValue]           DECIMAL (5, 2) NOT NULL,
+    [CatDiscountTypeId]    INT            NOT NULL,
+    [RowStatus]            BIT            NOT NULL,
+    [DateCreated]          DATETIME       NOT NULL,
+    [TokenCreated]         NVARCHAR (50)  NOT NULL,
+    [DateUpdated]          DATETIME       NULL,
+    [TokenUpdated]         NVARCHAR (50)  NULL,
+    [MinimumGuideExpected] INT            NULL,
     PRIMARY KEY CLUSTERED ([IdPromo] ASC),
     CONSTRAINT [FK_CatPromo_CatDiscountType] FOREIGN KEY ([CatDiscountTypeId]) REFERENCES [dbo].[CatTypeDiscount] ([IdCatTypeDiscount]),
     CONSTRAINT [FK_CatPromo_CatValueType] FOREIGN KEY ([CatValueTypeId]) REFERENCES [dbo].[CatValueType] ([IdCatValueType])
 );
+
+
 
 
 
@@ -114,4 +117,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último tok
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tiempo de valides de los cupones de la promoción (En horas).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatPromo', @level2type = N'COLUMN', @level2name = N'LimitPromoTime';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de guías minimas para generar cupon mediante proceso de carrito de compras', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatPromo', @level2type = N'COLUMN', @level2name = N'MinimumGuideExpected';
 
