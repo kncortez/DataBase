@@ -63,8 +63,7 @@ BEGIN
 			ISNULL(vcf.[CatBillingTimeId],-1)  AS CatBillingTimeId,
 			ISNULL(vcf.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
 			vcf.[BillingCut_offDate] AS  BillingCut_offDate,
-			cs.isCOD,
-			cs.IdCustomer
+			cs.isCOD
     FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
 		INNER JOIN dbo.Customer cs WITH(NOLOCK)
 			ON vpc.CustomerID = cs.IdCustomer
