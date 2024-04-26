@@ -57,26 +57,30 @@ BEGIN
 
 				  
 
-            SELECT 'TRUE'                       [blnResult]
-                 , CAST(@CustomerId AS VARCHAR) [IdResult]
-                 , ''                           AS [ErrorNumber]
-                 , ''                           AS [ErrorSeverity]
-                 , ''                           AS [ErrorState]
-                 , ''                           AS [ErrorProcedure]
-                 , ''                           AS [ErrorLine]
-                 , 'Success'                    AS [Message];
+		SELECT 'TRUE' [blnResult],
+			CAST(@VisitPointId AS VARCHAR(50)) [IdResult],
+			'' AS [ErrorNumber],
+			'' AS [ErrorSeverity],
+			'' AS [ErrorState],
+			'' AS [ErrorProcedure],
+			'' AS [ErrorLine],
+			'Success' AS [Message]
+
+		PRINT 'Commit Transaction'
 
         COMMIT TRANSACTION;
 
     END TRY
     BEGIN CATCH
-        SELECT 'FALSE'                                [blnResult]
-             , CAST(ERROR_NUMBER() AS VARCHAR)        AS [ErrorNumber]
-             , CAST(ERROR_SEVERITY() AS VARCHAR)      AS [ErrorSeverity]
-             , CAST(ERROR_STATE() AS VARCHAR)         AS [ErrorState]
-             , CAST(ERROR_PROCEDURE() AS VARCHAR)     AS [ErrorProcedure]
-             , CAST(ERROR_LINE() AS VARCHAR)          AS [ErrorLine]
-             , CAST(ERROR_MESSAGE() AS NVARCHAR(MAX)) AS [Message];
+        SELECT 'FALSE' [blnResult],
+			CAST(@VisitPointId AS VARCHAR(10)) AS [IdResult],
+            CAST(ERROR_NUMBER() AS VARCHAR) AS [ErrorNumber],
+            CAST(ERROR_SEVERITY() AS VARCHAR) AS [ErrorSeverity],
+            CAST(ERROR_STATE() AS VARCHAR) AS [ErrorState],
+            CAST(ERROR_PROCEDURE() AS VARCHAR) AS [ErrorProcedure],
+            CAST(ERROR_LINE() AS VARCHAR) AS [ErrorLine],
+            CAST(ERROR_MESSAGE() AS NVARCHAR(MAX)) AS [Message]
+			PRINT 'Catch Exception Rollback Transaction;'
         ROLLBACK TRANSACTION;
     END CATCH;
 END;
