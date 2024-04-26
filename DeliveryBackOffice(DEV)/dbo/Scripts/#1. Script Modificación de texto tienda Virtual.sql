@@ -10,8 +10,9 @@ set Description='Nuestro paquete te ofrece 25 guías de envío prepagadas con Ta
 where RowStatus=1
 and Description like '%"%'
 and Type ='PAQUETE PETIT'
+and Title='¿Qué es?'
 
-update[dbo].[CatSubscriptionDescription]
+update [dbo].[CatSubscriptionDescription]
 set Description='En caso de que tu envío exceda el peso, +Q1.00 por libra adicional, consulta los términos y condiciones.'
 where RowStatus=1
 and Description='En caso de que tu envío exceda el peso, +Q1.00 por libra adicional, consulta los terminos y condiciones.'
@@ -19,7 +20,27 @@ and Description='En caso de que tu envío exceda el peso, +Q1.00 por libra adici
 
 
 update [dbo].[CatSubscriptionDescription]
-set Description='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Básico y podrás obtener tus guías prepagadas de 50 envíos con tarifa única a todo el país a Q31.00 c/u.'
+set Description='Compra en la tienda virtual y recibe las guías en tu cor reo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Básico y podrás obtener tus guías prepagadas de 50 envíos con tarifa única a todo el país a Q31.00 c/u.'
 where RowStatus=1
 and Type ='PLAN BÁSICO'
 and Title='¿Cómo Funciona?'
+
+update [dbo].[CatSubscriptionDescription]
+set Description='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Plus y podrás obtener tus guías prepagadas de 100 envíos con tarifa única a todo el país a Q29.00 c/u.'
+where RowStatus=1
+and Type ='PLAN PLUS'
+and Title='¿Cómo Funciona?'
+
+
+update [dbo].[CatSubscriptionDescription]
+set Description='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Gold y podrás obtener tus guías prepagadas de 200 envíos con tarifa única a todo el país a Q27.00 c/u.'
+where RowStatus=1
+and Type ='PLAN GOLD'
+and Title='¿Cómo Funciona?'
+
+update [dbo].[CatSubscriptionDescription]
+set Description='Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Platino y podrás obtener tus guías prepagadas de 400 envíos con tarifa única a todo el país a Q25.00 c/u.'
+where RowStatus=1
+and Type ='PAQUETE PLATINO'
+and Title='¿Cómo Funciona?'
+
