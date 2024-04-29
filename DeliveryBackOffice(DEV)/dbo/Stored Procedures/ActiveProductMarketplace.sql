@@ -8,7 +8,7 @@
 -- Create date: <Update Date,14/02/2024>
 -- Description:	<Recalcular fecha de vigencia al Activar productos de marketplace>
 -- =============================================
-ALTER PROCEDURE [dbo].[ActiveProductMarketplace]
+CREATE PROCEDURE [dbo].[ActiveProductMarketplace]
 @Email NVARCHAR (100),
 @Code NVARCHAR(25),
 @Token NVARCHAR(50)= ''
