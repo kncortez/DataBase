@@ -14,11 +14,6 @@ CREATE PROCEDURE [dbo].[sphdSetCustomerCODLogVisitPoint]
   , @CODAccountNumber INT = NULL
   , @CODAccountTypeId INT = NULL
   , @CODCurrencyId INT = NULL
-  , @CODCatBatchType INT = NULL
-  , @CODCatBatchFrequency INT = NULL
-  , @CODBillingTimeId INT = NULL
-  , @CODBillingVolumeId INT = NULL
-  , @CODBillingCutOfDate DATETIME = NULL
   , @Token VARCHAR(50) = ''
 AS
 BEGIN
@@ -52,8 +47,7 @@ BEGIN
                 VALUES
                 (   @CustomerId, @VisitPointId, @isCOD, @CODExcludePriceShipping, @CODExcludeComission, @CODIdBank
                   , @CODAccountName, @CODAccountNumber, @CODAccountTypeId, @CODCurrencyId
-                  , @CODCatBatchType, @CODCatBatchFrequency, @CODBillingTimeId, @CODBillingVolumeId
-                  , @CODBillingCutOfDate, GETDATE(), @Token, NULL, NULL);
+                  , NULL, NULL, NULL, NULL, NULL, GETDATE(), @Token, NULL, NULL);
 
 				  
 
