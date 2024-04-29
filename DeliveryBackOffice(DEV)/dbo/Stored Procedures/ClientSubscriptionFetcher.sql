@@ -73,8 +73,8 @@ BEGIN
 		  INNER JOIN CatProductCategory A3
 		    ON A2.CatProductCategoryId = A3.IdCatProductCategory
 		  LEFT JOIN DeliveryBackOffice.dbo.MembershipDiscountRange A4
-		   ON A4.MembershipId = A1.IdMembership 
-		  WHERE A1.AccountId = @IdAccount AND A4.RowStatus = 1
+		   ON A4.MembershipId = A1.IdMembership AND A4.RowStatus = 1
+		  WHERE A1.AccountId = @IdAccount
 		  AND A1.RowStatus = 1 AND A2.CatProductCategoryId = 2
 		  AND CAST(A1.ExpirationDate AS DATE) >= CAST(GETDATE() AS DATE) 
 		    AND 

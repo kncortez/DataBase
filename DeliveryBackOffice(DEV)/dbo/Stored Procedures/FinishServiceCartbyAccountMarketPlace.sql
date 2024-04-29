@@ -49,10 +49,11 @@ SET @AccountStatement =	(SELECT
 								   AND res.UstIdSystem = rus.RusIdSystem
 							LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 								ON rua.RuaIdUser = usr.UsrIdUser
+								   AND rua.RuaRowStatus = 1
 							INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 								ON ac.AccIdAccount = rua.RuaIdAccount
 						WHERE usr.UsrEmail = @ProductPurchaseEmail AND rus.RusIdSystem = 1
-							  AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1)
+							  AND ac.AccRowStatus = 1)
          
 
 	DECLARE @UpdatedGuidesInCart AS TABLE (
@@ -150,10 +151,11 @@ SET @AccountStatement =	(SELECT
 																   AND res.UstIdSystem = rus.RusIdSystem
 															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
 																ON rua.RuaIdUser = usr.UsrIdUser
+																   AND rua.RuaRowStatus = 1
 															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
 																ON ac.AccIdAccount = rua.RuaIdAccount
 														WHERE usr.UsrEmail = PL.ProductGiftShippingEmail AND rus.RusIdSystem = 1
-														AND rua.RuaRowStatus = 1 AND ac.AccRowStatus = 1) ='ACTIVE'
+															  AND ac.AccRowStatus = 1) ='ACTIVE'
 							
 							THEN 1
 							WHEN PL.IsGift = 0 AND @IdAccount IS NOT NULL AND @AccountStatement = 'ACTIVE'  THEN 1

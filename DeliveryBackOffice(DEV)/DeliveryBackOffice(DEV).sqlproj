@@ -1580,6 +1580,10 @@
     <Build Include="dbo\Stored Procedures\AddSAPRate.sql" />
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
+    <Build Include="dbo\Stored Procedures\ActiveProductMarketplace.sql" />
+    <Build Include="dbo\Stored Procedures\MKRetrieveProductInformationForShippingEmails.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />

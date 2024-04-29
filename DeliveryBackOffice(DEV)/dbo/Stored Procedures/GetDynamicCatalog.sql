@@ -412,10 +412,14 @@ BEGIN
                                 FROM DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK)
                                     LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk WITH(NOLOCK)
                                         ON cu.CODAccountBankID = dbk.Id_bank
+                                           AND dbk.Id_country = 'GT'
+                                           AND dbk.Id_status = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType cba WITH(NOLOCK)
                                         ON cu.CODAccountTypeID = cba.IdBankAccountType
+                                           AND cba.RowStatus = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer rc WITH(NOLOCK)
                                         ON cu.IdCustomer = rc.RbcIdCustomer
+                                           AND rc.RbcRowStatus = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.RateHeader rh WITH (NOLOCK)
 										ON rc.RbcIdRate = rh.RheId
 										  AND rh.RheRowStatus = 1
@@ -451,13 +455,8 @@ BEGIN
 										AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
                                     LEFT JOIN dbo.Account AC WITH(NOLOCK)
 						                ON   vpc.CustomerID = AC.IdCustomer
-									   
-                                WHERE IdCustomerType = 1 AND dbk.Id_country = 'GT'
-                                      AND dbk.Id_status = 1 AND cba.RowStatus = 1
-                                      AND vpc.StatusClient = 1 AND mmbrshp.RowStatus = 1
-                                      AND mmbrshp.ExpirationDate >= GETDATE()
-                                      AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
-                                      AND rc.RbcRowStatus = 1 AND cu.RowSatus = 1
+                                WHERE IdCustomerType = 1 AND vpc.StatusClient = 1
+                                      AND cu.RowSatus = 1
 									  AND
 											  ( cu.IdCustomer = IIF(ISNUMERIC(@Others) =1,@Others,0)											    
 											  OR cu.Name LIKE CONCAT('%', @Others, '%')											 

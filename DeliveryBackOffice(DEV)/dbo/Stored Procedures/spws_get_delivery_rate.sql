@@ -197,10 +197,11 @@ BEGIN
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
+                   AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
         WHERE rc.RbcIdCustomer = @IdCustomer 
-              AND rc.RbcRowStatus = 'true' AND rh.RheRowStatus = 'true'
+              AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
     END;
     ELSE
@@ -213,10 +214,11 @@ BEGIN
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
+                   AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
         WHERE rc.RbcIdCustomer = @IdCustomer
-              AND rc.RbcRowStatus = 'true' AND rh.RheRowStatus = 'true'
+              AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference IS NULL;
     END;
 
@@ -230,9 +232,10 @@ BEGIN
         FROM dbo.RateBySalePipeLine        sp WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = sp.RateId
+                   AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
-        WHERE sp.RowStatus = 'true' AND rh.RheRowStatus = 'true'
+        WHERE sp.RowStatus = 'true'
               AND sp.SalePipeLineId = @IdSalePipeLine;
 
     END;
@@ -617,9 +620,9 @@ BEGIN
                     ON tw.HeaderCode = @HeaderCodeDestiny
                 LEFT JOIN dbo.Settlement st WITH (NOLOCK)
                     ON st.IdTownship = tw.IdTownship
+                       AND st.Settlement LIKE CONCAT('%', i.Item, '%')
             WHERE LEN(i.Item) > 3
                   AND st.IdSettlement IS NOT NULL
-                  AND st.Settlement LIKE CONCAT('%', i.Item, '%')
             GROUP BY st.IdSettlement
                    , st.Settlement
             ORDER BY 2 DESC;
@@ -1634,9 +1637,11 @@ BEGIN
                     LEFT JOIN dbo.RateData           rdignore WITH (NOLOCK) -- Ignorar artículos sin codigo dentro de tarifario
                         ON rdignore.ArticleId = ar.AbcId
                            AND rdignore.RateId = rh.RheId
+                           AND rdignore.RowStatus = 'true'
                     LEFT JOIN dbo.RateData           rd WITH (NOLOCK)
                         ON rd.ArticleId IS NULL
                            AND rd.RateId = rh.RheId
+                           AND rd.RowStatus = 'true'
                     LEFT JOIN dbo.CatRateSegment     sg WITH (NOLOCK)
                         ON sg.CrsId = rd.TypeSegmentId
                     LEFT JOIN dbo.CatTypeService     sv WITH (NOLOCK)
@@ -1644,8 +1649,7 @@ BEGIN
                     LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
                 WHERE rdignore.IdRateData IS NULL -- Ignorar artículos sin codigo dentro de tarifario
-                      AND rd.TypeSegmentId = @IdSegment AND rdignore.RowStatus = 'true'
-                      AND rd.RowStatus = 'true'
+                      AND rd.TypeSegmentId = @IdSegment
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
