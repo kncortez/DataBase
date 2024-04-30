@@ -1,7 +1,7 @@
 CREATE TABLE [dbo].[CustomerCODLog](
 	[IdCustomerCODLog] [int] IDENTITY(1,1) NOT NULL,
 	[CustomerId] [int] NULL,
-	[isCOD] [int] NULL,
+	[IsCOD] [int] NULL,
 	[CODExcludePriceShipping] [int] NULL,
 	[CODExcludeComission] [int] NULL,
 	[CODIdBank] [int] NULL,
@@ -63,7 +63,7 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de usuario corporativo con tabla Customer' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'CustomerId'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado booleano que indica si esta activo o inactivo para guias COD (0: Inactivo, 1:activo)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'isCOD'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado booleano que indica si esta activo o inactivo para guias COD (0: Inactivo, 1:activo)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'IsCOD'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado booleano que indica si puede excluir cobro de envio' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'CODExcludePriceShipping'

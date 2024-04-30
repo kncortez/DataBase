@@ -30,7 +30,7 @@ BEGIN
 		INSERT INTO [DeliveryBackOffice].[dbo].[CustomerCODLog]
                 (
                     [CustomerId]
-                  , [isCOD]
+                  , [IsCOD]
                   , [CODExcludePriceShipping]
                   , [CODExcludeComission]
                   , [CODIdBank]
