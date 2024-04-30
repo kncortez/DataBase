@@ -106,7 +106,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
-			 , cst.[isCOD]
+			 , cst.[IsCOD]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -205,7 +205,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
-			 , cst.[isCOD]
+			 , cst.[IsCOD]
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND

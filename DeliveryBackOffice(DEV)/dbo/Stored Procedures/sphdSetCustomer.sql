@@ -227,7 +227,7 @@ BEGIN
                   , [CatBillingVolumeId]
                   , [BillingCut_offDate]
                   , [NumImgEvidence]
-				  , [isCOD]
+				  , [IsCOD]
                 )
                 VALUES
                 (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
@@ -338,7 +338,7 @@ BEGIN
               , [CatBillingVolumeId] = @BillingVolumeId
               , [BillingCut_offDate] = @BillingCut_offDate
               , [NumImgEvidence] = @NumImg
-			  , [isCOD] = @isCOD
+			  , [IsCOD] = @isCOD
             WHERE IdCustomer = @IdCustomer;
 
             -- Inactivar el registro
