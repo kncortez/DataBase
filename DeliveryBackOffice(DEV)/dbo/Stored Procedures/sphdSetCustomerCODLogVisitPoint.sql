@@ -26,7 +26,7 @@ BEGIN
                 (
                     [CustomerId]
 				  , [VisitPointId]
-                  , [isCOD]
+                  , [IsCOD]
                   , [CODExcludePriceShipping]
                   , [CODExcludeComission]
                   , [CODIdBank]
