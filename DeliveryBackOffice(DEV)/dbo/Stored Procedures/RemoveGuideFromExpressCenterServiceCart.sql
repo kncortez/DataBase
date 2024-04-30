@@ -24,6 +24,7 @@ BEGIN
 		DECLARE @NULL_STATUS_ORDER_ID AS INT;			-- StatusOrder
 		DECLARE @TR_ID AS INT;							-- MembershipSubscriptionLog
 		DECLARE @ActualGuideStatus AS INT;
+		DECLARE @CouponSerie AS NVARCHAR(20);			-- Cupon relacionado con guia
 
 		SET @GEN_STATUS_ORDER_ID = (SELECT	[SO].[StatusOrderId]
 									FROM	[dbo].[StatusOrder] SO
@@ -185,8 +186,36 @@ BEGIN
 											WHERE	[IdExpressAccountServiceCart] = @ExpressAccountServiceCartId;
 
 										END
-					
-									SELECT 1 'StatusCode' ,'Guide remove successfully' 'Description';
+
+					  -- *********************** INICIA ACTUALIZACIÓN DESASOCIAR CUPON *******************************************
+
+									SELECT @CouponSerie = PromoCouponSerie  FROM [DeliveryBackOffice].[dbo].[PromoCoupon]
+									WHERE GuideSerieDestination  = @GuideSerie AND GuideNumberDestination =  @GuideNumber
+							
+									IF (@CouponSerie IS NOT NULL)
+										BEGIN
+											--Actualiza el cupon para liberarlo
+											UPDATE
+											[DeliveryBackOffice].[dbo].[PromoCoupon]
+											SET
+												GuideSerieDestination = NULL
+												,GuideNumberDestination = NULL
+												,TokenUpdated = @Token
+												,DateUpdated = GETDATE()
+											WHERE    GuideSerieDestination = @GuideSerie 
+												 AND GuideNumberDestination = @GuideNumber
+												 AND PromoCouponSerie = @CouponSerie;
+
+											SELECT 5 'StatusCode' ,'Guía anulada satisfactoriamente. El cupón ' +
+											@CouponSerie + ' fue liberado exitosamente.' 'Description';
+
+										END;
+									ELSE
+										BEGIN
+											SELECT 1 'StatusCode' ,'Guide remove successfully' 'Description';
+										END;
+
+					-- *********************** FINALIZA ACTUALIZACIÓN DESASOCIAR CUPON *******************************************
 
 								END
 
