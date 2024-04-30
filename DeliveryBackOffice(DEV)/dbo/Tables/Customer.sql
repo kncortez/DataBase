@@ -67,7 +67,7 @@ CREATE TABLE [dbo].[Customer](
 	[CatBillingVolumeId] [int] NULL,
 	[BillingCut_offDate] [date] NULL,
 	[NumImgEvidence] [int] NULL,
-	[isCOD] [int] NULL,
+	[IsCOD] [int] NULL,
  CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED 
 (
 	[IdCustomer] ASC
