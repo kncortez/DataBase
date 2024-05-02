@@ -19,7 +19,8 @@ BEGIN
         ,[XLImageURL]
         ,[MDImageURL]
         ,[XSImageURL]
-        , HyperlinkURL
+        ,[HyperlinkURL]
+        ,[XXXLImageURL]
   FROM [DeliveryBackOffice].[dbo].[MarketplaceCarouselImage]
   WHERE [RowStatus] = 1
    Order by  ImageOrder Asc;
