@@ -12,7 +12,7 @@ CREATE PROCEDURE [dbo].[SPHWPRevisarMembresia]
     -- Add the parameters for the stored procedure here
     @IdAcount AS BIGINT ---- user
   , @IdSalePackage AS INT
-  , @TypeSalePackage AS NVARCHAR(20) = 'MEMBERSHIP'
+  , @TypeSalePackage AS NVARCHAR(100) = 'MEMBERSHIP'
 AS
 BEGIN
 
