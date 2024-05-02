@@ -384,7 +384,7 @@ begin
                                                                            'json'
                                                                        ),
                                                   '"',
-                                                  ' '
+                                                  '\"'
                                               ) + '",' + '"address2":"'
                                      + REPLACE(dbo.fnt_String_Escape(COALESCE(dev.TypeService, 'EXP'), 'json'), '"', ' ')
                                      + '",' + '"city":"' + COALESCE(ctm.Abbreviation, '') + '",' + '"IdMerchant":'
@@ -394,38 +394,42 @@ begin
                                       + ', ' +
                                   -- Cambios para flujos de impersonar, creacion de Guias y Devoluciones
                                   '"contact":"'
-                                     + (CASE
-											WHEN dev.[IsLastMileReturn] = 1 THEN ''
-                                            WHEN @Impersonate = 'TRUE' THEN
-                                                --IMPERSONADO
-                                                CASE
-                                                    WHEN (dev.IsReturn = 1) THEN
-                                                        --SI DEVOLUCION
-                                                        CASE
-                                                            WHEN (@customerType = 1) THEN
-                                                                --CORPORATIVO
-                                                                COALESCE(@ExpressName, '')
-                                                            ELSE
-                                                                --INDIVIDUAL
-                                                                COALESCE(@ExpressName, '')
-                                                        END
-                                                    ELSE
-                                                        -- NO DEVOLUCION
-                                                        CASE
-                                                            WHEN (@customerType = 1) THEN
-                                                                --CORPORATIVO
-                                                                COALESCE(dev.Sender_FirstName, '')
-                                                            ELSE
-                                                                --INDIVIDUAL
-                                                                COALESCE(@ExpressName, '')
-                                                        END
-                                                END
-                                            ELSE
-                                                --NO IMPERSONADO
-                                                CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
-                                                + CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
-                                        END
-                                       ) + '"' + '},' +
+                                     + REPLACE(
+										dbo.fnt_String_Escape(
+																(CASE
+																	WHEN dev.[IsLastMileReturn] = 1 THEN ''
+																	WHEN @Impersonate = 'TRUE' THEN
+																		--IMPERSONADO
+																		CASE
+																			WHEN (dev.IsReturn = 1) THEN
+																				--SI DEVOLUCION
+																				CASE
+																					WHEN (@customerType = 1) THEN
+																						--CORPORATIVO
+																						COALESCE(@ExpressName, '')
+																					ELSE
+																						--INDIVIDUAL
+																						COALESCE(@ExpressName, '')
+																				END
+																			ELSE
+																				-- NO DEVOLUCION
+																				CASE
+																					WHEN (@customerType = 1) THEN
+																						--CORPORATIVO
+																						COALESCE(dev.Sender_FirstName, '')
+																					ELSE
+																						--INDIVIDUAL
+																						COALESCE(@ExpressName, '')
+																				END
+																		END
+																	ELSE
+																		--NO IMPERSONADO
+																		CONVERT(VARCHAR, COALESCE(dev.Sender_FirstName, '')) + ' '
+																		+ CONVERT(VARCHAR, COALESCE(dev.Sender_LastName, ''))
+																END)
+											                ,'json')
+									   ,'"'
+									   ,' ') + '"' + '},' +
 									   
 									 (
 									 CASE WHEN dev.IsLastMileReturn=1 THEN
@@ -448,7 +452,7 @@ begin
                                               ) + '",' + '"phone":"' + REPLACE(COALESCE(dev.Receiver_Phone, ''), '"', ' ')
                                      + '",' + '"email":"' + REPLACE(COALESCE(dev.Receiver_Email, ''), '"', ' ') + '",'
                                      + '"address1":"'
-                                     + REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', ' ')
+                                     + REPLACE(dbo.fnt_String_Escape(COALESCE(dev.Receiver_Address, ''), 'json'), '"', '\"')
                                      + '",' + '"address2":"'
                                      + REPLACE(
                                                   dbo.fnt_String_Escape(
@@ -459,7 +463,7 @@ begin
                                                                            'json'
                                                                        ),
                                                   '"',
-                                                  ' '
+                                                  '\"'
                                               ) + '",' + '"city":"' + '' + '",' 
 											  
 											  +'"IdMerchant":'
@@ -473,7 +477,7 @@ begin
                                                                            'json'
                                                                        ),
                                                   '"',
-                                                  ' '
+                                                  '\"'
                                               ) + '"' + '},' + '"parcels": [' + COALESCE(@arpieces, '') + ' ] , '
                                      + '"TotalWeight":' + CONVERT(VARCHAR, @TotalWeight) + ', ' + '"TotalValue":'
                                      + CONVERT(VARCHAR, @TotalValue) + ',' + '"Currency":"' + 'GTQ' + '",'
@@ -482,11 +486,39 @@ begin
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
                                      + '"CodeOfReference":' + CONVERT(VARCHAR, COALESCE(dev.Sender_ID, 0)) + ',' +
 									 + '"CodeOfReferenceDestiny":' + CONVERT(VARCHAR, COALESCE(dev.Receiver_ID, 0)) + ',' +
-                                     + '"IdInternalOrderRef":"' + CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, ''))
+                                     + '"IdInternalOrderRef":"' 
+                                     + REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                        CONVERT(VARCHAR, COALESCE(dev.Ticket_Number, '')) ,
+                                                                        'json'
+                                                                       ),
+                                                  '"',
+                                                  '\"'
+                                              ) 
                                      + '",'
 									 +'"IdInternalOrderRef2":"'
-                                     + CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) + '",'
-									 + '"Service_Ref1":"' + ISNULL(dev.IndicationsToSendDestination, '') + '",'
+                                     + REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                        CONVERT(VARCHAR, COALESCE([dev].[Order_Number], '')) ,
+                                                                        'json'
+                                                                       ),
+                                                  '"',
+                                                  '\"'
+                                              ) 
+                                     + '",'
+									 + '"Service_Ref1":"' 
+                                     + REPLACE(
+                                                  dbo.fnt_String_Escape(
+                                                                           COALESCE(
+                                                                                       LOWER(dev.IndicationsToSendDestination),
+                                                                                       ''
+                                                                                   ),
+                                                                           'json'
+                                                                       ),
+                                                  '"',
+                                                  '\"'
+                                              ) 
+                                     + '",'
                                      + '"Username":"'
                                      + dbo.fnt_String_Escape(CONVERT(VARCHAR, COALESCE(dev.OrderUserCreated, '')), 'json')
                                      + '",' + '"ExpirationDate":"'
