@@ -424,3 +424,463 @@ GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetRelationshipPieceCode]
 ON [dbo].[DeliveryOrder] ([IdCustomer])
 INCLUDE ([Ticket_Number],[Pieces_Dry],[Pieces_Cold])
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de ticket',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Ticket_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de orden',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Order_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de preparación de la guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Preparation_Date'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de envio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Shipping_Date'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de piezas secas',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Pieces_Dry'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de piezas frías',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Pieces_Cold'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número consolidado',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Consolidated_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de recetas, separados por coma',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Recipe_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del punto de visita que envia el paquete(Referencia CodeOfReference de la tabla VisitPointClient)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_ID'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre del punto de visita que envia el paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_FirstName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Apellido del punto de visita que envia el paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_LastName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Direccion del remitente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_Address'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Zona del remitente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_Zone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Municipio del remitente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_Town'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Departamento del remitente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_Department'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Telefono del remitente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_Phone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del punto de visita que recibe el paquete(Referencia CodeOfReference de la tabla VisitPointClient)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_ID'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre del punto de visita que recibe el paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_FirstName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Apellido del punto de visita que recibe el paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_LastName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Dirección de receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Address'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Zona de receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Zone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Municipio de receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Town'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Departamento de receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Department'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Telefono de receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Phone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Email de receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Email'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id seguro social del receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_SocialSecurity_ID'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de punto de visita receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_ID'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_FullName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Dirección de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_Address'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Zona de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_Zone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Municipio de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_Town'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Departemento de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_Department'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Telefono de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_Phone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Email de receptor alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_Email'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id seguro social de receptro alternativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_SocialSecurity_ID'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Serie de guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Guide_Serie'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Guide_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Serie de manifiesto',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Manifest_Serie'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de manifiesto al que esta asignado',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Manifest_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'DateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado de la guía(Referencia a StatusOrderId de la tabla StatusOrder)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'StatusOrderId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'CUI del receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_CUI'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Descripción del paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Package_Description'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código interno del remitente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Sender_Internal_Code'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'CUI de receptor altenativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Receiver_Alternant_CUI'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de ruta del courier(Referencia a CodeRoute de la tabla CatRoute)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Courier_Route'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre del courier',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Courier_Name'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Placa del vehiculo de courier',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Courier_Vehicle_Plate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha en que el paquete fue entregado',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Dispatched_Date'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien entrego el paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Dispatched_Token'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre de quien recibe el paquete',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'NameOfReceiver'
