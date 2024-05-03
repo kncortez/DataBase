@@ -1,1 +1,0 @@
---EXECUTE sp_rename 'IncidenceServices.Accurancy', 'Accuracy', 'COLUMN';
