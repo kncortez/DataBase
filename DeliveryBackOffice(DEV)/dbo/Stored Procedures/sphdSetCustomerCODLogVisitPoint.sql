@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomerCODLogVisitPoint]
   , @CODExcludeComission INT = NULL
   , @CODIdBank INT = NULL
   , @CODAccountName VARCHAR(100) = ''
-  , @CODAccountNumber INT = NULL
+  , @CODAccountNumber VARCHAR(50) = ''
   , @CODAccountTypeId INT = NULL
   , @CODCurrencyId INT = NULL
   , @Token VARCHAR(50) = ''

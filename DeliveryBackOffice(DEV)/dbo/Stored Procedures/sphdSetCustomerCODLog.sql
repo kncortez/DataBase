@@ -1,3 +1,8 @@
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Create date: <2024-04-23>
+-- Description:	<Inserta registros de historial sobre modificaciones en cuentas bancarias para clientes COD en Socios de Negocio Hermes Desktop>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetCustomerCODLog]
     @CustomerId INT
   , @isCOD INT = NULL
@@ -5,7 +10,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomerCODLog]
   , @CODExcludeComission INT = NULL
   , @CODIdBank INT = NULL
   , @CODAccountName VARCHAR(100) = ''
-  , @CODAccountNumber INT = NULL
+  , @CODAccountNumber VARCHAR(50) = ''
   , @CODAccountTypeId INT = NULL
   , @CODCurrencyId INT = NULL
   , @CODCatBatchType INT = NULL

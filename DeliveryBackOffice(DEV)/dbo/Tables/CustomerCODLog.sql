@@ -7,7 +7,7 @@ CREATE TABLE [dbo].[CustomerCODLog](
 	[CODExcludeComission] [int] NULL,
 	[CODIdBank] [int] NULL,
 	[CODAccountName] [varchar](100) NULL,
-	[CODAccountNumber] [int] NULL,
+	[CODAccountNumber] [varchar](50) NULL,
 	[CODAccountTypeId] [int] NULL,
 	[CODCurrencyId] [int] NULL,
 	[CODCatBatchType] [bigint] NULL,
