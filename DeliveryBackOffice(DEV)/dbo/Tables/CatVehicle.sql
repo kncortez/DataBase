@@ -47,3 +47,202 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubi
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubicación, latitud, registrada del vehículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'LastLatitude';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'identificador del registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'IdVehicle'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de unidad',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'UnitNumber'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'CodeName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tipo de vehículo(Referencia a IdTypeVehicle de la tabla CatTypeVehicle)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'IdTypeVehicle'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de placa',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'Plate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Año del vehículo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'Year'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Capacidad',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'Capacity'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Capacidad linea blanca',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'WhiteLineCapacity'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Capacidad irregular',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'IrregularCapacity'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'RowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creo el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'DateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de categoria de vehiculo(Referencia a idCatVehicleCategories de la tabla CatVehicleCategories)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'CatVehicleCategoriesId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de marca de vehiculo(Referencia a idCatVehicleBrand de la tabla CatVehicleBrand)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'CatVehicleBrandId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Largo(m)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'Long'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Ancho(m)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'Width'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Altura(m)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'High'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Volumen(m cúbicos)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'CubicMeters'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Capacidad eCommerce',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'CapabilityEcomerce'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Catalogo de vehículos registrados en el sistema',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicle',
+    @level2type = NULL,
+    @level2name = NULL

@@ -80,3 +80,121 @@ CREATE NONCLUSTERED INDEX [IDX_AccountId_DateCreated_CODAmountProcess]
     ON [dbo].[DeliveryOrderPaymentTransaction]([AccountId] ASC, [DateCreated] ASC, [CODAmountProcess] ASC)
     INCLUDE([GuideNumber], [GuideSerie]);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'identificador del registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'DopId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'GuideNumber'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Serie de guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'GuideSerie'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id tipo de pago',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'PayTypeId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'DateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Monto ',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'amount'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Envio completado (1 Si, 0 No)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'ShipmentCompleted'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Recolección completada(1 Si, 0 No)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'RecollectionCompleted'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Guía pagada(1 Si, 0 No)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'PaidGuide'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Factura electrónica',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrderPaymentTransaction',
+    @level2type = N'COLUMN',
+    @level2name = N'Fel'

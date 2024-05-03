@@ -884,3 +884,66 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryOrder',
     @level2type = N'COLUMN',
     @level2name = N'NameOfReceiver'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tipo de paquete(Referencia a Package_Type de la tabla Package)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Package_Type'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación del registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificoó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Precio de envio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'PriceShippment'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Numeor de deposito',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Deposit_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tipo de incidente al intentar completar el servicio(Referencia ID de la tabla ContactIncident)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'ID_ContactIncident'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica si el servicio ha sido confirmado por el receptor',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryOrder',
+    @level2type = N'COLUMN',
+    @level2name = N'Contact_Confirmed'
