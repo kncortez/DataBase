@@ -43,7 +43,34 @@ BEGIN
 
 	BEGIN TRY
 
-        -- Insertar registro en tabla DeliveryOrderPaymentDetail si este registro no existe
+       
+
+
+		-- Tomar guías del carrito
+		INSERT INTO
+			@CartGuides
+			(GuideSerie, GuideNumber)
+		SELECT
+			DISTINCT
+				AccSCD.GuideSerie,
+				AccSCD.GuideNumber
+		FROM
+			DeliveryBackOffice.dbo.AccountServiceCart AccSC WITH(NOLOCK)
+			LEFT JOIN
+				[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
+				ON
+					AccSC.IdAccountServiceCart = AccSCD.AccountServiceCartId
+					AND
+					AccSCD.RowStatus = 1
+		WHERE
+			AccSC.AccountId = @IdAccount
+			AND
+			AccSC.IsPending = 1
+			AND
+			AccSC.RowStatus = 1
+
+
+ -- Insertar registro en tabla DeliveryOrderPaymentDetail si este registro no existe
 	       
 		  INSERT INTO [dbo].[DeliveryOrderPaymentDetail]
             (
@@ -160,28 +187,6 @@ BEGIN
             WHERE DopId IS NULL
 
 
-		-- Tomar guías del carrito
-		INSERT INTO
-			@CartGuides
-			(GuideSerie, GuideNumber)
-		SELECT
-			DISTINCT
-				AccSCD.GuideSerie,
-				AccSCD.GuideNumber
-		FROM
-			DeliveryBackOffice.dbo.AccountServiceCart AccSC WITH(NOLOCK)
-			LEFT JOIN
-				[DeliveryBackOffice].[dbo].[AccountServiceCartDetail] AccSCD WITH(NOLOCK)
-				ON
-					AccSC.IdAccountServiceCart = AccSCD.AccountServiceCartId
-					AND
-					AccSCD.RowStatus = 1
-		WHERE
-			AccSC.AccountId = @IdAccount
-			AND
-			AccSC.IsPending = 1
-			AND
-			AccSC.RowStatus = 1
 
 		-- Verificar guías validas, guías collect o confirmadas de pago en carrito de compras
 		INSERT INTO
