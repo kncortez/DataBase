@@ -10,6 +10,7 @@ CREATE TABLE [dbo].[MarketplaceCarouselImage](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
+	[XXXLImageURL] [nvarchar](200) NULL,
  	CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
 )
 GO
@@ -48,6 +49,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de modif
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Lista de imágenes del carrousel' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCarouselImage'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Imagen extra grande de marketplace' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCarouselImage', @level2type=N'COLUMN',@level2name=N'XXXLImageURL'
 GO
 
 

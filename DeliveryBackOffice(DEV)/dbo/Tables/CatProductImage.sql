@@ -11,7 +11,8 @@ CREATE TABLE [dbo].[CatProductImage](
 	[CatSubscriptionId] [int] NULL,
 	[CatMembershipId] [int] NULL,
 	[CatProductImageBigImageURL] [nvarchar](200) NULL,
- 	CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
+ 	[CatProductImageXXXLImageURL] [nvarchar](200) NULL,
+	CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
 	CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
 	CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
 )
@@ -54,4 +55,6 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Listado de imágenes por producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatProductImage'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Imagen extra grande para marketplace' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatProductImage', @level2type=N'COLUMN',@level2name=N'CatProductImageXXXLImageURL'
+GO
 
