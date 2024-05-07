@@ -18,11 +18,11 @@ BEGIN
 		IF(@Telemarketing = 0)
 	BEGIN 
 		--PRINT 'USUARIO LOGUEADO'
-		IF EXISTS(SELECT UsrEmail from RegisterUser WHERE UsrEmail = (SELECT Top 1 InvoiceEmail FROM RegistrationofTransactionProcessStates WHERE OrderNumber = @TransactionId)),
-		IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
+		IF EXISTS(SELECT UsrEmail from RegisterUser WHERE UsrEmail = (SELECT Top 1 InvoiceEmail FROM RegistrationofTransactionProcessStates WHERE OrderNumber = @TransactionId))
 		BEGIN 
 		
-			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
+			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
+			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
 			FROM
 			(
 			SELECT InvoiceEmail [UsrEmail], 
