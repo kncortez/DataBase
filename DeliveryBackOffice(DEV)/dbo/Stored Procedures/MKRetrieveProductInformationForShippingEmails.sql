@@ -11,8 +11,8 @@ AS
 
 BEGIN
 
-     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://develop.portal.forzadelivery.com/notification/gift-create-account';
-	 DECLARE  @URL_USER_NOT_LOGIN VARCHAR (200)='https://develop.portal.forzadelivery.com';
+     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/notification/gift-create-account';
+	 DECLARE  @URL_USER_NOT_LOGIN VARCHAR (200)='https://portal.forzadelivery.com';
 
 	
 		IF(@Telemarketing = 0)
