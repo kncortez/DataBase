@@ -3,6 +3,10 @@
 ALTER TABLE CatSubscriptionDescription
 ALTER COLUMN [Description] NVARCHAR(2000) NOT NULL;
 
+ALTER TABLE [dbo].[MarketplaceCarouselImage]
+ADD HyperlinkURL nvarchar(200) NULL; -- campo de link para imagenes
+
+
 INSERT [dbo].[CatProductCategory] ( [CatProductCategoryName], [CatProductCategoryDescription], [CatProductCategoryOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [TechnicalDescription]) VALUES ( N'Membresías', N'Membresías', 1, 1, N'evasquez', CAST(N'2023-11-27T00:00:00.000' AS DateTime), N'SYS-BHERRERA', CAST(N'2023-11-29T11:47:41.700' AS DateTime),'Membresías')
 INSERT [dbo].[CatProductCategory] ( [CatProductCategoryName], [CatProductCategoryDescription], [CatProductCategoryOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [TechnicalDescription]) VALUES ( N'Guías Prepago', N'Guías Prepago', 2, 1, N'evasquez', CAST(N'2023-11-27T00:00:00.000' AS DateTime), N'SYS-BHERRERA', CAST(N'2023-11-29T11:47:36.647' AS DateTime),'Paquetes')
 INSERT [dbo].[CatProductCategory] ( [CatProductCategoryName], [CatProductCategoryDescription], [CatProductCategoryOrder], [RowStatus], [TokenCreated], [DateCreated], [TokenUpdated], [DateUpdated], [TechnicalDescription]) VALUES ( N'Giftcard', N'Giftcard', 3, 0, N'SYS-BHERRERA', CAST(N'2023-11-29T11:46:16.747' AS DateTime), NULL, NULL)
