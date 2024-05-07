@@ -1,12 +1,13 @@
 CREATE TABLE [dbo].[CustomerCODLog](
 	[IdCustomerCODLog] [int] IDENTITY(1,1) NOT NULL,
 	[CustomerId] [int] NULL,
+	[VisitPointId] [int] NULL,
 	[IsCOD] [int] NULL,
 	[CODExcludePriceShipping] [int] NULL,
 	[CODExcludeComission] [int] NULL,
 	[CODIdBank] [int] NULL,
 	[CODAccountName] [varchar](100) NULL,
-	[CODAccountNumber] [int] NULL,
+	[CODAccountNumber] [varchar](50) NULL,
 	[CODAccountTypeId] [int] NULL,
 	[CODCurrencyId] [int] NULL,
 	[CODCatBatchType] [bigint] NULL,
@@ -27,6 +28,10 @@ GO
 
 ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODAccountTypeId])
 REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType])
+GO
+
+ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([VisitPointId])
+REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 GO
 
 ALTER TABLE [dbo].[CustomerCODLog]  WITH CHECK ADD FOREIGN KEY([CODBillingTimeId])
@@ -61,6 +66,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador 
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de usuario corporativo con tabla Customer' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'CustomerId'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de punto de visita asociado al registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'VisitPointId'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado booleano que indica si esta activo o inactivo para guias COD (0: Inactivo, 1:activo)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CustomerCODLog', @level2type=N'COLUMN',@level2name=N'IsCOD'

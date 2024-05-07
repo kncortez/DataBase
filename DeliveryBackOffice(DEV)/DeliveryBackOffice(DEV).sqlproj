@@ -65,7 +65,6 @@
     <Folder Include="dbo\User Defined Types\" />
     <Folder Include="dbo\Sequences\" />
     <Folder Include="Security\" />
-    <Folder Include="Stored Procedures\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
@@ -1591,8 +1590,8 @@
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
     <Build Include="dbo\Tables\CustomerCODLog.sql" />
-    <Build Include="Stored Procedures\sphdSetCustomerCODLog.sql" />
     <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLog.sql" />
+    <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLogVisitPoint.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
