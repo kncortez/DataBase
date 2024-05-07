@@ -1,5 +1,4 @@
-﻿
-CREATE TABLE [dbo].[Customer](
+﻿CREATE TABLE [dbo].[Customer](
 	[IdCustomer] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](100) NOT NULL,
 	[Description] [nvarchar](100) NULL,
