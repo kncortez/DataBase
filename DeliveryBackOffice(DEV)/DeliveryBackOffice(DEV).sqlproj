@@ -1221,7 +1221,8 @@
     <Build Include="dbo\Stored Procedures\SupportActivateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\Sps_DetailInvoice.sql" />
-    <Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket.sql" />
+	<Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket.sql" />
+	<Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTickets.sql" />
     <Build Include="dbo\Stored Procedures\SpSaveRegisterPreparationRouteEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpGetDataGuideEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpCatVehicleEspecial.sql" />
