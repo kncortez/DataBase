@@ -21,7 +21,8 @@ CREATE PROCEDURE [dbo].[GenerateClosureOperator]
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
 	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
-	@TotalCOD INT
+	@TotalCOD INT,
+	@Observations NVARCHAR(400)
 AS
 BEGIN
 
@@ -420,14 +421,15 @@ BEGIN
 				InvoiceAmountFacturaCash,
 				TotalAmountFacturaCard,
 				InvoiceAmountFacturaCard,
-				InvoiceAmountCOD
+				InvoiceAmountCOD,
+				Observations
             )
             VALUES
             (@UserId2, @ClosurerPOS, @TotalCash, @TotalAmountCashDeclared, @TotalCard, @TotalAmountCreditDeclared,
              @CountCash, @Countcard, @VisitPointId, @Voucher1, @Bag1, @Voucher2, @Bag2, 1, @TokenCreated, GETDATE(),
              NULL, NULL, @TotalAmountCODCash, @TotalAmountCODCashDeclared, 
 			 @TotalAmountFacturaCashDeclared, @TotalAmountFacturaCardDeclared,
-			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD);
+			 @TotalFacturaCash, @CountFacturaCash, @TotalFacturaCard, @CountFacturaCard, @TotalCOD, @Observations);
             PRINT 'INSERTA ENCABEZADO';
             SET @HeaderClosures = SCOPE_IDENTITY();
             PRINT @HeaderClosures;

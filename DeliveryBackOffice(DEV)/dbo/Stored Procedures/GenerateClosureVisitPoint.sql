@@ -18,7 +18,8 @@ CREATE PROCEDURE [dbo].[GenerateClosureVisitPoint]
     @TotalAmountCreditDeclared DECIMAL(18, 5),
 	@TotalAmountCODCashDeclared DECIMAL(18, 5),
 	@TotalAmountFacturaCashDeclared DECIMAL(18,5),
-	@TotalAmountFacturaCardDeclared DECIMAL(18,5)
+	@TotalAmountFacturaCardDeclared DECIMAL(18,5),
+	@Observations NVARCHAR(400)
 AS
 BEGIN
 
@@ -83,7 +84,7 @@ BEGIN
 			TotalAmountFacturaCard, TotalAmountFacturaCardDeclared,
 			InvoiceAmountCash, InvoiceAmountCredit,
 			InvoiceAmountFacturaCash, InvoiceAmountFacturaCard,
-			InvoiceAmountCOD
+			InvoiceAmountCOD, Observations
 		)
 		VALUES
 		(
@@ -98,7 +99,7 @@ BEGIN
 			@TotalAmountFacturaCard, @TotalAmountFacturaCardDeclared,
 			@InvoiceAmountCash, @InvoiceAmountCredit,
 			@InvoiceAmountFacturaCash, @InvoiceAmountFacturaCard,
-			@InvoiceAmountCOD
+			@InvoiceAmountCOD, @Observations
 		);
 
 		-- Variable que obtiene el ID del cierre generado

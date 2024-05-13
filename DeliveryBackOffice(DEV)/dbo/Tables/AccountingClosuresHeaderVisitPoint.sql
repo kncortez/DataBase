@@ -29,6 +29,7 @@
     [TotalAmountFacturaCashDeclared]       DECIMAL (18, 5) CONSTRAINT [ACHVP_TotalAmountFacturaCashDeclared] DEFAULT ((0)) NOT NULL,
     [TotalAmountFacturaCardDeclared]       DECIMAL (18, 5) CONSTRAINT [ACHVP_TotalAmountFacturaCardDeclared] DEFAULT ((0)) NOT NULL,
     [InvoiceAmountCOD]                     INT             CONSTRAINT [ACHVP_InvoiceAmountCOD] DEFAULT ((0)) NOT NULL,
+    [Observations]                         NVARCHAR (400)  NULL,
     CONSTRAINT [PK_AccountingClosuresHeaderVisitPoint] PRIMARY KEY CLUSTERED ([IdAccountingClosuresHeaderVisitPoint] ASC),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser]),
     CONSTRAINT [FK_AccountingClosuresHeaderVisitPoint_VisitPointClient] FOREIGN KEY ([VisitPoint]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
