@@ -382,7 +382,7 @@ BEGIN
 							   ,[Address] = @Address1 
 							   ,[AdditionalInstructions] = @AdditionalInstructions
 							   ,[CityPlaceId] = @IdCityPlace
-							   ,[CodeOfReference] = @CodeOfReference
+							   --,[CodeOfReference] = @CodeOfReference
 							   ,[DeliveryOptionId] = NULL
 							   ,[Latitude] = @Latitude
 							   ,[Longitude] = @Longitude
