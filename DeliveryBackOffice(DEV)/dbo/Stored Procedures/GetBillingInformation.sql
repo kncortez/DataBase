@@ -148,7 +148,8 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[invoiceHeader] AS A2 WITH(NOLOCK)
             ON A2.inv_pk_id = A1.io_invoice
             WHERE CAST(A1.io_registryDate AS DATE) BETWEEN @InitDate AND @EndDate
-            AND (A1.io_SAPErrorPaymentDetail IS NULL OR A1.io_SAPErrorPaymentDetail <= 0)
+            AND ISNULL(A2.inv_certificationFEL, '') != ''
+            AND (A1.io_SAPErrorPaymentDetail IS NULL OR LEN(A1.io_SAPErrorPaymentDetail) > 1)
             AND A2.inv_type = 1;
         END
     END TRY
