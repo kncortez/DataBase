@@ -356,6 +356,10 @@ BEGIN
 						)			
 			end
 			--------INICIO Homologación de campos para OAC (Tabla: ConfirmedAddres)--------
+
+			SELECT @CodeOfReference = CodeOfReference FROM DeliveryBackOffice.dbo.UserAddress
+			WHERE UadIdAddress =  @IdAddress
+
 			if @Status = 0
 			begin 
 					UPDATE [dbo].[ConfirmedAddress] SET
@@ -382,7 +386,7 @@ BEGIN
 							   ,[Address] = @Address1 
 							   ,[AdditionalInstructions] = @AdditionalInstructions
 							   ,[CityPlaceId] = @IdCityPlace
-							   --,[CodeOfReference] = @CodeOfReference
+							   ,[CodeOfReference] = @CodeOfReference
 							   ,[DeliveryOptionId] = NULL
 							   ,[Latitude] = @Latitude
 							   ,[Longitude] = @Longitude
