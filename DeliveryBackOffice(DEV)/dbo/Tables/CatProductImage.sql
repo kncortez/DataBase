@@ -11,8 +11,8 @@ CREATE TABLE [dbo].[CatProductImage](
 	[CatSubscriptionId] [int] NULL,
 	[CatMembershipId] [int] NULL,
 	[CatProductImageBigImageURL] [nvarchar](200) NULL,
-	[CatProductImageXXXLImageURL] [nvarchar](200) NULL,
- 	CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
+ 	[CatProductImageXXXLImageURL] [nvarchar](200) NULL,
+	CONSTRAINT [PK_CatProductImage] PRIMARY KEY CLUSTERED ([IdCatProductImage] ASC),
 	CONSTRAINT [FK_CatProductImage_CatMembership] FOREIGN KEY([CatMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
 	CONSTRAINT [FK_CatProductImage_CatSubscription] FOREIGN KEY([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
 )
