@@ -13,6 +13,17 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @CustomerId INT = 0;
+	DECLARE @Phone AS VARCHAR(10);
+	DECLARE @Email AS NVARCHAR(50);
+
+	SELECT TOP 1 @Email =  usr.UsrEmail, @Phone= usr.Phone    
+			FROM dbo.RegisterUser usr WITH (NOLOCK)
+                INNER JOIN dbo.Person per WITH (NOLOCK)
+                    ON per.PerIdPerson = usr.UsrIdPerson
+				INNER JOIN dbo.RolByUserByAccount RUB WITH (NOLOCK)
+				    ON  usr.UsrIdUser  = RUB.RuaIdUser
+            WHERE 
+			RUB.RuaIdAccount= @AccountId
 
 	SELECT
 		TOP 1 
@@ -35,6 +46,8 @@ BEGIN
 		,CPV.TokenizedExpirationDate
 		,CPV.TokenizedCVV
 		,CPV.[Type]
+		,@Phone Phone
+		,@Email Email
 	FROM
 		[DeliveryBackOffice].[dbo].[CustomerPaymentValue] CPV WITH(NOLOCK)
 	WHERE

@@ -99,6 +99,8 @@
     [CatModuleId]                          INT             NULL,
     [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
     [DeliveryETA]                          DATETIME        NULL,
+    [CountryOfOrigin]                      VARCHAR (2)     NULL,
+    [DestinationCountry]                   VARCHAR (2)     NULL, 
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -113,7 +115,9 @@
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient] FOREIGN KEY ([Sender_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient1] FOREIGN KEY ([Receiver_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
+    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type]),
+    CONSTRAINT [fk_Id_Country_Origin] FOREIGN KEY ([CountryOfOrigin]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [fk_Id_Country_Destination] FOREIGN KEY ([DestinationCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 
@@ -271,7 +275,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Latitud de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Longitud de la dirección del destinatario', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'Receiver_Lng';
-
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'País de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'CountryOfOrigin';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'País de destino', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'DestinationCountry';
 
 GO
 CREATE NONCLUSTERED INDEX [IX_Guide_Number]
