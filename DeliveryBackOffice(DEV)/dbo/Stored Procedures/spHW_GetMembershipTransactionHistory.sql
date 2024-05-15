@@ -10,7 +10,7 @@
 CREATE PROCEDURE [dbo].[spHW_GetMembershipTransactionHistory] @AccountId AS INT
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
+       -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
     DECLARE @MEMBERSHIP_ID AS INT; -- Membership
@@ -26,7 +26,7 @@ BEGIN
         SELECT TOP 1
                CS.IdCatSubscription
         FROM [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
-        WHERE CS.SubscriptionName = 'Plan Diamante' COLLATE Latin1_General_CI_AI
+        WHERE CS.SubscriptionName = 'Plan Diamante' --COLLATE Latin1_General_CI_AI
     );
 
     SET @CUSTOMER_ID =
@@ -81,13 +81,7 @@ BEGIN
          , IIF(([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount]) < 0
              , 0
              , ([M].[MembershipMaxServiceFixedValue] - [M].[ActualServiceCount])) [MembershipRemainingUses]
-         , IIF((([M].[ActualServiceCount] * 100)
-                / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN 1 ELSE [M].[MembershipMaxServiceFixedValue] END)
-               ) > 100
-             , 100
-             , (([M].[ActualServiceCount] * 100)
-                / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue])
-               ))                                                                 [MembershipUsagePercentage]
+         , IIF((([M].[ActualServiceCount] * 100) / (CASE WHEN [M].[MembershipMaxServiceFixedValue] = 0 THEN  1 ELSE  [M].[MembershipMaxServiceFixedValue]END)) > 100, 100, (([M].[ActualServiceCount] * 100) / IIF([M].[MembershipMaxServiceFixedValue] = 0, 1, [M].[MembershipMaxServiceFixedValue]))) [MembershipUsagePercentage]
          , [M].[IsAutoRenewable]
          , ISNULL([CM].[Icon], '')                                                [Icon]
          , [M].[DateCreated]
@@ -149,10 +143,10 @@ BEGIN
         INNER JOIN [dbo].[StatusOrder]     SO
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
     WHERE [MSL].[CustomerId] = @CUSTOMER_ID
-          AND [MSL].[MembershipId] = @MEMBERSHIP_ID
+         -- AND [MSL].[MembershipId] = @MEMBERSHIP_ID
           AND [MSL].[SubscriptionId] IS NULL
           AND [MSL].[RowStatus] = 1
-          AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
+       --   AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
 
     -- Subscription Data
     SELECT [S].[IdSubscription]
@@ -187,9 +181,10 @@ BEGIN
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
         INNER JOIN [dbo].[CatSalesPackageStatus] CSPS
             ON [S].[CatSubscriptionStatusId] = [CSPS].[IdCatSalesPackageStatus]
-    WHERE [S].[MembershipId] = @MEMBERSHIP_ID
-          AND [S].[RowStatus] = 1
-          AND [S].[CatSubscriptionStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID );
+    WHERE-- [S].[MembershipId] = @MEMBERSHIP_ID
+           [S].[RowStatus] = 1
+         -- AND [S].[CatSubscriptionStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID );
+		 AND S.AccountId= @AccountId
 
     -- Subscription Attributes
     SELECT [CSA].[IdCatSubscriptionAttribute]
@@ -205,7 +200,9 @@ BEGIN
           (
               SELECT [S].[CatSubscriptionId]
               FROM [dbo].[Subscription] S
-              WHERE [S].[MembershipId] = @MEMBERSHIP_ID
+			  Where S.RowStatus=1
+            --  WHERE [S].[MembershipId] = @MEMBERSHIP_ID
+			AND S.AccountId= @AccountId
           )
           AND [CSA].[RowStatus] = 1
     ORDER BY [CSA].[CatSubscriptionId]
@@ -244,9 +241,10 @@ BEGIN
                AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
         INNER JOIN [dbo].[StatusOrder]     SO
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-    WHERE [MSL].[MembershipId] = @MEMBERSHIP_ID
-          AND [MSL].[SubscriptionId] IS NOT NULL
+    WHERE --[MSL].[MembershipId] = @MEMBERSHIP_ID
+           [MSL].[SubscriptionId] IS NOT NULL
           AND [MSL].[RowStatus] = 1
+		    AND [MSL].CustomerId= @CUSTOMER_ID
     ORDER BY [MSL].[SubscriptionId]
            , [MSL].[LogServiceNumber];
 END;

@@ -11,6 +11,7 @@
     [TokenUpdated]                         NVARCHAR (50)  NULL,
     [DateUpdated]                          DATETIME       NULL,
     [SubscriptionAttributeDescriptionLong] NVARCHAR (500) NULL,
+    [CatSubscriptionAttributeIcon]         NVARCHAR (200) NULL,
     CONSTRAINT [PK_CatSubscriptionAtribute] PRIMARY KEY CLUSTERED ([IdCatSubscriptionAttribute] ASC),
     CONSTRAINT [FK_CatSubscriptionAtribute_IdCatAttribute] FOREIGN KEY ([CatAttributeId]) REFERENCES [dbo].[CatAttribute] ([IdCatAttribute]) ON DELETE CASCADE,
     CONSTRAINT [FK_CatSubscriptionAtribute_IdCatSubscription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription]) ON DELETE CASCADE
@@ -22,4 +23,7 @@
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción larga de suscripción ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionAtribute', @level2type = N'COLUMN', @level2name = N'SubscriptionAttributeDescriptionLong';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'icono de suscripción ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscriptionAtribute', @level2type = N'COLUMN', @level2name = N'CatSubscriptionAttributeIcon';
 

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Subscription] (
+CREATE TABLE [dbo].[Subscription] (
     [IdSubscription]                   INT             IDENTITY (1, 1) NOT NULL,
     [MembershipId]                     INT             NULL,
     [CatSubscriptionId]                INT             NOT NULL,
@@ -24,34 +24,24 @@
     [RateHeaderId]                     INT             NULL,
     [AlternativeRateHeaderId]          INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
+	[ActivationCode] 				   [nvarchar](50)  NULL,
+    [ProductGiftShippingEmail]         [nvarchar](100) NULL,
+    [ActivationDate] 				   [datetime]      NULL,	
     CONSTRAINT [PK_Subscription] PRIMARY KEY CLUSTERED ([IdSubscription] ASC),
     CONSTRAINT [FK_Subscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_Subscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
     CONSTRAINT [FK_Subscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId])
-);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+)
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Día  el cual se desea poder renovar la suscripción.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'RenewalFixedDay';
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Día  el cual se desea poder renovar la suscripción.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'RenewalFixedDay'
 GO
 
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ActivationDate'
 GO
+
+
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario a utilizar cuando se usa suscripción', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'RateHeaderId';
 
 
@@ -62,6 +52,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Tarifario al
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Subscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
 
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ActivationCode'
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'correo al cual se envía el regalo del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Subscription', @level2type=N'COLUMN',@level2name=N'ProductGiftShippingEmail'
 
 GO
 CREATE NONCLUSTERED INDEX [idx_CatSubscriptionId]
