@@ -1,4 +1,0 @@
-insert into DeliveryBackOffice.dbo.CatSeries
-values ('FD',1,getdate(),'SYS-BHERRERA',null,nulll)
-insert into DeliveryBackOffice.dbo.CatSeries
-values ('FE',1,getdate(),'SYS-BHERRERA',null,nulll)
