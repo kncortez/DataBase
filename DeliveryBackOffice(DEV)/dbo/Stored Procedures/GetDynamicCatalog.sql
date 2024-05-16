@@ -8,6 +8,7 @@
 AS
 BEGIN
     DECLARE @jsonResult NVARCHAR(MAX);
+    IF @IdAccount = '' SET @IdAccount = NULL;
     --IF (@Others <> 'CourierApp')
     --BEGIN
     --    IF NOT EXISTS
@@ -419,7 +420,6 @@ BEGIN
                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
                                         ON vpc.CustomerID = cu.IdCustomer
-                                           AND vpc.StatusClient = 1
                                     LEFT JOIN DeliveryBackOffice.dbo.Settlement STL WITH(NOLOCK)
                                         ON vpc.IdSettlement = STL.IdSettlement
                                     LEFT JOIN DeliveryBackOffice.dbo.Township TWS WITH(NOLOCK)
@@ -431,9 +431,8 @@ BEGIN
 										AND mmbrshp.RowStatus = 1
 										AND mmbrshp.ExpirationDate >= GETDATE()
 										AND mmbrshp.CatMembershipStatusId IN (@ActiveSalesPackageId)
-                                WHERE IdCustomerType = 1
+                                WHERE IdCustomerType = 1 AND vpc.StatusClient = 1
                                       AND cu.RowSatus = 1
-									   
 									  AND
 											  ( cu.IdCustomer = IIF(ISNUMERIC(@Others) =1,@Others,0)											    
 											  OR cu.Name LIKE CONCAT('%', @Others, '%')											 
@@ -632,24 +631,42 @@ BEGIN
 	
 	ELSE IF (@TypeMethod = 'ActiveMembership')
     BEGIN
+		DECLARE @ProductExist INT = 0;
+
+			SET @ProductExist = (
+								(SELECT TOP 1 COUNT(IdMembership)
+                                FROM [DeliveryBackOffice].[dbo].[Membership] WITH (NOLOCK)   
+                                WHERE AccountId = @IdAccount
+								     AND RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20))
+								
+								+
+									 
+								(SELECT TOP 1 COUNT(IdSubscription)
+                                FROM [DeliveryBackOffice].[dbo].[Subscription] WITH (NOLOCK)   
+                                WHERE AccountId = @IdAccount
+								     AND RowStatus = 1
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)))
         SET @jsonResult =
         (
-            SELECT STUFF(
+          SELECT STUFF(
                             (
-                                SELECT ',{"ActiveMembership":' + CAST((CASE WHEN Mmbrshp.IdMembership IS NOT NULL THEN 1 ELSE 0 END) AS NVARCHAR) + '}'
-                                FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
-								LEFT JOIN [DeliveryBackOffice].[dbo].[Membership] Mmbrshp WITH(NOLOCK)
-								ON Acc.IdCustomer = Mmbrshp.CustomerId 
-								AND acc.AccIdAccount = Mmbrshp.AccountId
-								AND Mmbrshp.RowStatus = 1
-								AND Convert(NVARCHAR(10), Mmbrshp.ExpirationDate,20) >= Convert(NVARCHAR(10),GETDATE(),20)
-								WHERE Acc.AccIdAccount = @IdAccount
+									 
+                                SELECT TOP 1 ',{"ActiveMembership":' + CAST((CASE
+                                                                           WHEN @ProductExist > 0 THEN
+                                                                               1
+                                                                           ELSE
+                                                                               0
+                                                                       END
+                                                                      ) AS NVARCHAR) + '}'
+                               
                                 FOR XML PATH(''), TYPE
-                            ).value('.', 'varchar(max)'),
-                            1,
-                            1,
-                            ''
+                            ).value('.', 'varchar(max)')
+                          , 1
+                          , 1
+                          , ''
                         )
+
         );
     END
 
