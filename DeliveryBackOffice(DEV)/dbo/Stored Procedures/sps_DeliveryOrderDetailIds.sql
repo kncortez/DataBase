@@ -19,7 +19,8 @@
 ,@IsCreditCardPayment				bit = 0
 ,@OrderUserCreated                  varchar(100) = ''
 ,@UseMembership bit=0
-,@TypeSubscriptionId AS INT= 0
+,@CategoryProductId int = 0
+,@ProductId int = 0
 AS 
 BEGIN
 
@@ -117,7 +118,8 @@ BEGIN
 					@IsReturn = 'false',
 					@ParIsCreditCard = @IsCreditCardPayment,
 					@UseMembership = @UseMembership,
-					@TypeSubscriptionId = @TypeSubscriptionId
+					@CategoryProductId = @CategoryProductId,
+					@ProductId = @ProductId
 	--END
 
 	select 1,

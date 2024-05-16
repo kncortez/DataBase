@@ -6,7 +6,7 @@
 CREATE PROCEDURE [dbo].[SPHWPModificationOfMembershipOrSubscription]
 	-- Add the parameters for the stored procedure here
 	@IdCard AS INT,
-	@TypeSalePackage AS NVARCHAR(50), -- membership or subscription
+	@TypeSalePackage AS NVARCHAR(100), -- membership or subscription
 	@IdSalePackage AS INT,
 	@IdAccount AS BIGINT,
 	@TypeOfInMoneyId INT,  -- Tipo de pago
