@@ -1221,8 +1221,8 @@
     <Build Include="dbo\Stored Procedures\SupportActivateSubscription.sql" />
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\Sps_DetailInvoice.sql" />
-	<Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket.sql" />
-	<Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTickets.sql" />
+    <Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket.sql" />
+    <Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTickets.sql" />
     <Build Include="dbo\Stored Procedures\SpSaveRegisterPreparationRouteEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpGetDataGuideEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpCatVehicleEspecial.sql" />
@@ -1629,14 +1629,18 @@
     <Build Include="dbo\Functions\FnFixAddressExternalPlatformService.sql" />
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
-    <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />    
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
-    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />  
+    <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+    <Build Include="dbo\Functions\fn_get_segmentNew.sql" />
     <Build Include="dbo\Stored Procedures\sphd_ValidateNumber.sql" />
     <Build Include="dbo\Tables\CatTypeSubscription.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
     <Build Include="dbo\Stored Procedures\GetDataFACMembershipOrSusbcrption.sql" />
-  
+    <Build Include="dbo\Stored Procedures\ObservationsClosureOperator.sql" />
+    <Build Include="dbo\Stored Procedures\ObservationsClosureVisitPointOperator.sql" />
+    <Build Include="dbo\Stored Procedures\ObservationsClosureVisitPoint.sql" />
+    <Build Include="dbo\Stored Procedures\ObservationsClosureDesktop.sql" />
+    <Build Include="dbo\Stored Procedures\ObservationsClosureDesktopOperator.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
