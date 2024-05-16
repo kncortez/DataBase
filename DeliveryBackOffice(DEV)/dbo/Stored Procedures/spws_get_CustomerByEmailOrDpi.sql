@@ -162,6 +162,8 @@ BEGIN
                                                                     + '"ContactName":"'
                                                                     + CONVERT(VARCHAR, ua.UadFullName)  + '",'
                                                                     + '"Latitude":"' 
+                                                                    +   ISNULL(vp.Latitude,'') + '",'
+                                                                    + '"Longitude":"' 
                                                                     +   ISNULL(vp.Longitude,'') + '",'
                                                                     + '"Zone":"' 
                                                                     + ISNULL(CAST(conf.Zone as varchar(2)),'') +'",' 
