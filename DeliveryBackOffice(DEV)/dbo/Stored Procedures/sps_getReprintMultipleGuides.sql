@@ -175,7 +175,12 @@ BEGIN
 									TP.GuideNumber 'GuideNumber',
 									CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121)		'DateOfSale',
 									CONVERT(VARCHAR, ISNULL(dev.Package_Description, ''))				'ContentDescription',
-									CONVERT(VARCHAR, COALESCE(p.IdCountry, ''))							'IdCountry',
+									--SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
+									CASE WHEN dev.IsLastMileReturn=0  
+										 THEN CONVERT(VARCHAR, COALESCE(dev.DestinationCountry, 'GT'))
+										 ELSE CONVERT(VARCHAR, COALESCE(dev.CountryOfOrigin, 'GT')) 
+									END 'IdCountry',
+										 --FIN CAMBIO
 									CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0))		'CountPieces',
 									CONVERT(VARCHAR, COALESCE([dev].[Ticket_Number], '0'))							'Ticket_Number',
 									CONVERT(VARCHAR, ISNULL(dev.[Order_Number], 0))		'Order_Number',
