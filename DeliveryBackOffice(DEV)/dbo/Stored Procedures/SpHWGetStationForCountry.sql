@@ -10,10 +10,10 @@
 AS
 SELECT DISTINCT STA.IdStation	[IdStation],
 				STA.StationName [StationName]
-FROM InternalUser IU
-INNER JOIN RolByUserBySystem RUS
+FROM InternalUser IU WITH(NOLOCK)
+INNER JOIN RolByUserBySystem RUS WITH(NOLOCK)
 ON IU.RegisterUserID = RUS.RusIdUser
-INNER JOIN CatStation STA
+INNER JOIN CatStation STA WITH(NOLOCK)
 ON RUS.StationId = STA.IdStation
 WHERE IU.IdUser = @IdUser
 AND IU.Username = @Username

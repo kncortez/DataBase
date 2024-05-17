@@ -8,9 +8,10 @@
 -- =============================================
 
 AS
-SELECT DISTINCT C.IdCountry		[IdCountry], 
-			    C.CountryNameES [Name],
-				CASE C.IdCountry WHEN 'HN' THEN '-2' ELSE '-1' END AS[Station]
-FROM DenariusUser_Dev.dbo.LGN_RolByUserByRegion R
-INNER JOIN DeliveryBackOffice.dbo.CatCountry C on  R.RUR_IdCountry = C.IdCountry
+SELECT DISTINCT C.CNT_IdCountry		[IdCountry], 
+			    C.CNT_ContryName [Name],
+				CASE C.CNT_IdCountry WHEN 'HN' THEN '-2' ELSE '-1' END AS[Station]
+FROM DenariusUser_Dev.dbo.LGN_RolByUserByRegion R WITH(NOLOCK)
+INNER JOIN DenariusUser_Dev.dbo.LGN_Country C WITH(NOLOCK)
+ON  R.RUR_IdCountry = C.CNT_IdCountry
 WHERE R.RUR_IdUser =@IdUser AND R.RUR_Username = @Username
