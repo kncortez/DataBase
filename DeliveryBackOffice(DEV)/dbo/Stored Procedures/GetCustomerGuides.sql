@@ -38,7 +38,9 @@ BEGIN
 	DECLARE @IncidenceCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia' COLLATE Latin1_General_CI_AI);
 
 	DECLARE @CanceledStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI);
-
+	DECLARE @GeneradoStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Generado' COLLATE Latin1_General_CI_AI);
+	DECLARE @SolicitadoStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Solicitado' COLLATE Latin1_General_CI_AI);
+	
 	DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora' COLLATE Latin1_General_CI_AI)
 
 	-- Configuraciones generales
@@ -107,11 +109,11 @@ BEGIN
 	FROM
 		[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 	WHERE
-		@ShowAll = 1
+		(@ShowAll = 1 AND SO.StatusOrderId != @CanceledStatusOrderId)
 		OR
-		(@OnlyShowNotStarted = 1 AND SO.CatCheckpointTypeId = @NotStartCheckpontTypeId)
+		(@OnlyShowNotStarted = 1 AND (SO.StatusOrderId = @GeneradoStatusOrderId OR SO.StatusOrderId = @SolicitadoStatusOrderId))
 		OR
-		(@OnlyShowInProgress = 1 AND SO.CatCheckpointTypeId = @InProgessCheckpontTypeId)
+		(@OnlyShowInProgress = 1 AND SO.CatCheckpointTypeId = @InProgessCheckpontTypeId AND SO.CatStatusTypeId = 1)
 		OR
 		(@OnlyShowCompleted = 1 AND SO.CatCheckpointTypeId = @CompletedCheckpontTypeId AND SO.StatusOrderId != @CanceledStatusOrderId)
 		OR
