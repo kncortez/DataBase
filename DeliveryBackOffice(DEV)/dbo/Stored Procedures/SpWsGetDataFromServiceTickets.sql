@@ -113,6 +113,7 @@ BEGIN
 
 	-- Declaraci�n de variables para iterar sobre las gu�as
     DECLARE @CurrentID INT = 1, @MaxID INT;
+	DECLARE @FlagInsertEXC INT = 0;
     SELECT @MaxID = MAX(ID) FROM @TempTrackingNumbers;
 
     WHILE @CurrentID <= @MaxID
@@ -279,102 +280,105 @@ BEGIN
 		ELSE
 		BEGIN
 		--Genera informacion para comprobante cuando para flujo impersonar Portal Web Express Center
-			
-			INSERT INTO @GuideDetails
-			(
-				IdCountry,
-				CountPieces,
-				TotalWeight,
-				TotalValue,
-				TrackingNumber,
-				DeliveryDate,
-				Price,
-				Collected,
-				ContentDescription,
-				TaxPayerNumber,
-				idInvoice,
-				VPDescriptionOfClient,
-				PriviceVisitPoint,
-				CountryVisitPoint,
-				VPAdress,
-				Mail,
-				FromName,
-				FromPhone,
-				FromEmail,
-				FromAddress,
-				FromCity,
-				ToName,
-				ToPhone,
-				ToEmail,
-				ToAddress,
-				ToCity
-			)
-			SELECT 
-				PRV.IdCountry,
-				DOR.Pieces_Cold + DOR.Pieces_Dry,
-				TTN.TotalWeight,
-				COALESCE(DOR.Collect_OnDelivery, 0),
-				TTN.TrackingNumber,
-				REPLACE(CONVERT(NVARCHAR, DOR.Delivery_Max_Date, 103), ' ', '/'),
-				DOR.PriceShippment,
-				DOR.IsCollect,
-				TTN.ContentDescription,
-				IVH.inv_cli_nit,
-				IVH.inv_pk_id,
-				'',
-				'',
-				'',
-				'',
-				ISNULL(DOR.Receiver_Email, 'N/A'),
-				COALESCE(Receiver_FirstName, '') + ' ' + COALESCE(Receiver_LastName, ''),
-				Receiver_Phone,
-				COALESCE(Receiver_Email, ''),
-				Receiver_Address,
-				PRV2.ProvinceDescription,
-				CASE
-					WHEN cu.IdCustomerType = 1 THEN
-						CASE
-							WHEN DOR.IsReturn = 1 THEN
-								COALESCE(DOR.Sender_FirstName, '')
-							ELSE
-								COALESCE(vpc.DescriptionOfClient, '') + ' ' + COALESCE(Sender_LastName, '')
-						END
-					ELSE
-						CASE
-							WHEN DOR.IsReturn = 1 THEN
-								COALESCE(DOR.Sender_FirstName, '')
-							ELSE
-								COALESCE(cu.Name, '')
-						END
-				END AS ToName,
-				Sender_Phone,
-				COALESCE(DOR.Sender_Mail, ''),
-				Sender_Address,
-				PRV.ProvinceDescription AS ToCity
-			FROM 
-				@TempTrackingNumbers TTN
-			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
-				ON DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) = TTN.TrackingNumber
-			LEFT JOIN DeliveryBackOffice.dbo.Township TOW
-				ON TOW.IdTownship = DOR.SenderIdTownship
-			LEFT JOIN DeliveryBackOffice.dbo.Province PRV
-				ON PRV.IdProvince = TOW.IdProvince
-			LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IVD WITH (NOLOCK)
-				ON IVD.dti_fk_orderSerie = DOR.Guide_Serie AND IVD.dti_fk_orderNumber = DOR.Guide_Number
-			LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader IVH WITH (NOLOCK)
-				ON IVH.inv_pk_id = IVD.dti_fk_header
-			LEFT JOIN DeliveryBackOffice.dbo.Township TOW2
-				ON TOW2.IdTownship = DOR.ReceiverIdTownship
-			LEFT JOIN DeliveryBackOffice.dbo.Province PRV2
-				ON PRV2.IdProvince = TOW2.IdProvince
-			LEFT JOIN VisitPointClient vpc
-				ON vpc.CodeOfReference = DOR.Sender_ID
-			LEFT JOIN DeliveryBackOffice.dbo.Customer cu
-				ON vpc.CustomerID = cu.IdCustomer
-			WHERE 
-				DOR.Guide_Serie = SUBSTRING(TTN.TrackingNumber, 1, 2)
-				AND DOR.Guide_Number = SUBSTRING(TTN.TrackingNumber, 3, LEN(TTN.TrackingNumber));
+			IF(@FlagInsertEXC = 0)
+			BEGIN
+				INSERT INTO @GuideDetails
+				(
+					IdCountry,
+					CountPieces,
+					TotalWeight,
+					TotalValue,
+					TrackingNumber,
+					DeliveryDate,
+					Price,
+					Collected,
+					ContentDescription,
+					TaxPayerNumber,
+					idInvoice,
+					VPDescriptionOfClient,
+					PriviceVisitPoint,
+					CountryVisitPoint,
+					VPAdress,
+					Mail,
+					FromName,
+					FromPhone,
+					FromEmail,
+					FromAddress,
+					FromCity,
+					ToName,
+					ToPhone,
+					ToEmail,
+					ToAddress,
+					ToCity
+				)
+				SELECT 
+					PRV.IdCountry,
+					DOR.Pieces_Cold + DOR.Pieces_Dry,
+					TTN.TotalWeight,
+					COALESCE(DOR.Collect_OnDelivery, 0),
+					TTN.TrackingNumber,
+					REPLACE(CONVERT(NVARCHAR, DOR.Delivery_Max_Date, 103), ' ', '/'),
+					DOR.PriceShippment,
+					DOR.IsCollect,
+					TTN.ContentDescription,
+					IVH.inv_cli_nit,
+					IVH.inv_pk_id,
+					'',
+					'',
+					'',
+					'',
+					ISNULL(DOR.Receiver_Email, 'N/A'),
+					COALESCE(Receiver_FirstName, '') + ' ' + COALESCE(Receiver_LastName, ''),
+					Receiver_Phone,
+					COALESCE(Receiver_Email, ''),
+					Receiver_Address,
+					PRV2.ProvinceDescription,
+					CASE
+						WHEN cu.IdCustomerType = 1 THEN
+							CASE
+								WHEN DOR.IsReturn = 1 THEN
+									COALESCE(DOR.Sender_FirstName, '')
+								ELSE
+									COALESCE(vpc.DescriptionOfClient, '') + ' ' + COALESCE(Sender_LastName, '')
+							END
+						ELSE
+							CASE
+								WHEN DOR.IsReturn = 1 THEN
+									COALESCE(DOR.Sender_FirstName, '')
+								ELSE
+									COALESCE(cu.Name, '')
+							END
+					END AS ToName,
+					Sender_Phone,
+					COALESCE(DOR.Sender_Mail, ''),
+					Sender_Address,
+					PRV.ProvinceDescription AS ToCity
+				FROM 
+					@TempTrackingNumbers TTN
+				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
+					ON DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) = TTN.TrackingNumber
+				LEFT JOIN DeliveryBackOffice.dbo.Township TOW
+					ON TOW.IdTownship = DOR.SenderIdTownship
+				LEFT JOIN DeliveryBackOffice.dbo.Province PRV
+					ON PRV.IdProvince = TOW.IdProvince
+				LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IVD WITH (NOLOCK)
+					ON IVD.dti_fk_orderSerie = DOR.Guide_Serie AND IVD.dti_fk_orderNumber = DOR.Guide_Number
+				LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader IVH WITH (NOLOCK)
+					ON IVH.inv_pk_id = IVD.dti_fk_header
+				LEFT JOIN DeliveryBackOffice.dbo.Township TOW2
+					ON TOW2.IdTownship = DOR.ReceiverIdTownship
+				LEFT JOIN DeliveryBackOffice.dbo.Province PRV2
+					ON PRV2.IdProvince = TOW2.IdProvince
+				LEFT JOIN VisitPointClient vpc
+					ON vpc.CodeOfReference = DOR.Sender_ID
+				LEFT JOIN DeliveryBackOffice.dbo.Customer cu
+					ON vpc.CustomerID = cu.IdCustomer
+				WHERE 
+					DOR.Guide_Serie = SUBSTRING(TTN.TrackingNumber, 1, 2)
+					AND DOR.Guide_Number = SUBSTRING(TTN.TrackingNumber, 3, LEN(TTN.TrackingNumber));
 
+				SET @FlagInsertEXC = 1;
+			END
 
 			IF (@CurrentCOD > 0) ---- VALIDA QUE TIENE COD PARA AGREGAR A EL DETALLE
             BEGIN
