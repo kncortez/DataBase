@@ -286,8 +286,8 @@ begin
                                      + CONVERT(VARCHAR, ISNULL(dev.Package_Description, '')) + '",' + '"IdCountry":"'
 									 --SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
                                      + CASE WHEN dev.IsLastMileReturn=0   
-											THEN CONVERT(VARCHAR, COALESCE(dev.DestinationCountry, 'GT')) 
-											ELSE CONVERT(VARCHAR, COALESCE(dev.CountryOfOrigin, 'GT'))
+											THEN CONVERT(VARCHAR, COALESCE(dev.ReceiverCountryId, 'GT')) 
+											ELSE CONVERT(VARCHAR, COALESCE(dev.SenderCountryId, 'GT'))
 									   END+ '",' + '"CountPieces":'
 									 --FIN CAMBIO
                                      + CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0)) + ','
