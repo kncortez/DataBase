@@ -4,7 +4,7 @@
 ALTER TABLE CatRegion 
   ADD IdCountry VARCHAR(2) NULL;
 
---SenderReceiver 
+--SenderReceiver
 ALTER TABLE SenderReceiver 
   ADD IdCountry VARCHAR(2) NULL;
 
