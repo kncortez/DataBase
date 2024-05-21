@@ -8,10 +8,15 @@
 -- Create date: <25-01-2022>
 -- Description:	<Optimización de sp>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <21-05-2024>
+-- Description:	<Se agrega parametro que indica pais de origen de la guia>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_pending_delivery_proof]
     -- Add the parameters for the stored procedure here
     @IdCourier INT,
-    @DispatchedDate DATE = NULL
+    @DispatchedDate DATE = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -42,6 +47,7 @@ BEGIN
           )
           AND CONVERT(DATE, DATT.Date_Created) = CONVERT(DATE, ISNULL(@DispatchedDate, GETDATE()))
           AND DATT.ID_Courier = @IdCourier
+		  AND (DO.SenderCountryId = @IdCountry OR (DO.SenderCountryId IS NULL AND @IdCountry ='GT'))
     GROUP BY DO.Guide_Serie,
              DO.Guide_Number,
              DATT.ID_Courier,
