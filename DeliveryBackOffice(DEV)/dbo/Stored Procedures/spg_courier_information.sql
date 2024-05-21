@@ -6,12 +6,12 @@
 -- =============================================
 -- Author:      <Daniel, Ramirez>
 -- Create date: <2024-05-18>
--- Description: <Condicion para que valores con idCountry nulo, tomen por defecto GT>
+-- Description: <Se agrega filtro por pais, por defecto GT>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_courier_information]
 (
  @CUI       NVARCHAR(25),
- @idCountry NVARCHAR(2) = NULL
+ @IdCountry NVARCHAR(2) = 'GT'
 )
 AS
 BEGIN
@@ -41,16 +41,6 @@ BEGIN
           LEFT JOIN SenderReceiverLoginToken srl WITH(NOLOCK) ON sr.ID = srl.SenderReceiverId
                                                              AND srl.RowStatus = 1
     WHERE CUI = @CUI
-      AND ((ISNULL(@idCountry,'') <> ''
-          AND ISNULL(@idCountry,'') <> 'GT'
-          AND IdCountry = @idCountry)
-          OR
-          (ISNULL(@idCountry,'') <> ''
-           AND @idCountry = 'GT'
-           AND (IdCountry IS NULL
-            OR IdCountry = 'GT'))
-          OR
-          (ISNULL(@idCountry,'') = ''
-           AND IdCountry IS NULL))
+      AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
       AND Entity_Type = 3
 END

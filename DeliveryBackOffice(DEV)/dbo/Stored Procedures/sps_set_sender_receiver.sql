@@ -43,22 +43,12 @@ BEGIN
     DECLARE @Count INT
 
     SELECT @Count=COUNT(ID), @UniqueCode = MAX(UniqueCode) 
-      FROM [DeliveryBackOffice].[dbo].[SenderReceiver] 
+      FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
      WHERE CUI = @CUI
-       AND ((ISNULL(@idCountry,'') <> ''
-           AND ISNULL(@idCountry,'') <> 'GT'
-           AND IdCountry = @idCountry)
-           OR
-           (ISNULL(@idCountry,'') <> ''
-            AND @idCountry = 'GT'
-            AND (IdCountry IS NULL
-             OR IdCountry = 'GT'))
-           OR
-           (ISNULL(@idCountry,'') = ''
-            AND IdCountry IS NULL))
+       AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
 
     DECLARE @EmailFound INT = (SELECT COUNT(1) 
-                                 FROM SenderReceiver 
+                                 FROM SenderReceiver WITH(NOLOCK)
                                 WHERE CUI <> @CUI 
                                   AND Email = @Email)
 
@@ -97,20 +87,9 @@ BEGIN
                         [HubLogisticId] = @HubId, 
                         [Email] = @Email
                   WHERE [CUI] = @CUI
-                    AND ((ISNULL(@idCountry,'') <> ''
-                        AND ISNULL(@idCountry,'') <> 'GT'
-                        AND IdCountry = @idCountry)
-                        OR
-                        (ISNULL(@idCountry,'') <> ''
-                         AND @idCountry = 'GT'
-                         AND (IdCountry IS NULL
-                          OR IdCountry = 'GT'))
-                        OR
-                        (ISNULL(@idCountry,'') = ''
-                         AND IdCountry IS NULL))
+                    AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
 
                  SET @RInserted = @@ROWCOUNT
-                 print @RInserted
             END
         END TRY
         BEGIN CATCH

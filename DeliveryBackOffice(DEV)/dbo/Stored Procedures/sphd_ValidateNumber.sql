@@ -6,13 +6,13 @@
 -- =============================================
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-05-17>
--- Description: <Agregar filtro de pais>
+-- Description: <Agregar filtro de pais, por defecto GT>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphd_ValidateNumber]
 (
  @Phone      NVARCHAR(50),
  @UniqueCode NVARCHAR(50),
- @idCountry  NVARCHAR(2) = NULL
+ @IdCountry  NVARCHAR(2) = 'GT'
 )
 AS
 BEGIN
@@ -21,18 +21,9 @@ BEGIN
             BEGIN
                  IF EXISTS(
                            SELECT TOP 1 1
-                             FROM [DeliveryBackOffice].[dbo].[SenderReceiver]
+                             FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
                             WHERE Phone LIKE '%'+ @Phone + '%'
-                              AND ((ISNULL(@idCountry,'') <> ''
-                                   AND ISNULL(@idCountry,'') <> 'GT'
-                                   AND IdCountry = @idCountry)
-                                   OR
-                                   (ISNULL(@idCountry,'') <> ''
-                                    AND @idCountry = 'GT'
-                                    AND IdCountry IS NULL)
-                                   OR
-                                   (ISNULL(@idCountry,'') = ''
-                                    AND IdCountry IS NULL))
+                              AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
                           )
                  BEGIN
                       SELECT 0 AS 'StatusCode'
@@ -46,18 +37,9 @@ BEGIN
             BEGIN
                  IF EXISTS(
                            SELECT TOP 1 1
-                             FROM [DeliveryBackOffice].[dbo].[SenderReceiver] 
+                             FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
                             WHERE Phone LIKE '%'+ @Phone + '%'
-                              AND ((ISNULL(@idCountry,'') <> ''
-                                  AND ISNULL(@idCountry,'') <> 'GT'
-                                  AND IdCountry = @idCountry)
-                                  OR
-                                  (ISNULL(@idCountry,'') <> ''
-                                   AND @idCountry = 'GT'
-                                   AND IdCountry IS NULL)
-                                  OR
-                                  (ISNULL(@idCountry,'') = ''
-                                   AND IdCountry IS NULL))
+                              AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
                           ) 
                  BEGIN
                       SELECT 0 AS 'StatusCode'
