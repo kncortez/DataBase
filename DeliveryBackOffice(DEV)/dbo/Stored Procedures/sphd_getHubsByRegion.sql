@@ -6,58 +6,36 @@
 -- =============================================
 -- Author: <Daniel,Ramirez>
 -- Update date: <2025-05-16>
--- Description: <Se agrega el filtro de pais, si es nulo sera igual a GT>
+-- Description: <Se agrega el filtro de pais, por defecto GT>
 -- =============================================------------------------------------
 CREATE PROCEDURE [dbo].[sphd_getHubsByRegion]
 (
- @idCountry VARCHAR(2) = NULL
+ @idCountry VARCHAR(2) = 'GT'
 )
 AS
 BEGIN
     --Hubs y Regiones relacionados
     SELECT HubLogisticId HubId,
-           HBR.RegionId RegionID, *
-      FROM DBO.HubByRegion HBR
+           HBR.RegionId RegionID
+      FROM DBO.HubByRegion HBR WITH(NOLOCK)
            LEFT JOIN DBO.HubLogistics HL ON HBR.HubLogisticId = HL.IdHubLogistic
                                         AND HL.HubStatus = 1
            LEFT JOIN DBO.CatRegion CR ON CR.IdCatRegion = HBR.RegionId 
                                      AND CR.RowStatus = 1
      WHERE HBR.RowStatus=1
-       AND ((ISNULL(@idCountry,'') <> ''
-           AND ISNULL(@idCountry,'') <> 'GT'
-           AND CR.IdCountry = HL.IdCountry
-           AND CR.IdCountry = @idCountry)
-           OR
-           (ISNULL(@idCountry,'') <> ''
-           AND ISNULL(@idCountry,'') = 'GT'
-           AND HL.IdCountry = @idCountry)
-           OR
-           (ISNULL(@idCountry,'') = ''
-           AND CR.IdCountry IS NULL))
+       AND IIF(CR.IdCountry IS NULL, 'GT', CR.IdCountry) = HL.IdCountry
+       AND IIF(HL.IdCountry IS NULL, 'GT', HL.IdCountry) = @IdCountry
        AND HL.IdHubLogistic IS NOT NULL;
     --Catalogo de HUBs
     SELECT IdHubLogistic IdValue,
-           HubAbbreviation+'-'+HubName NameValue, *
-      FROM DBO.HubLogistics 
+           HubAbbreviation+'-'+HubName NameValue
+      FROM DBO.HubLogistics WITH(NOLOCK)
      WHERE HubStatus=1
-       AND ((ISNULL(@idCountry,'') <> ''
-           AND IdCountry = @idCountry)
-           OR
-           (ISNULL(@idCountry,'') = ''
-           AND IdCountry = 'GT'));
+       AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
     --Catalogo de Regiones
     SELECT IdCatRegion IdValue,
-           RegionName NameValue,*
-      FROM DBO.CatRegion
+           RegionName NameValue
+      FROM DBO.CatRegion WITH(NOLOCK)
      WHERE RowStatus=1
-       AND ((ISNULL(@idCountry,'') <> ''
-           AND ISNULL(@idCountry,'') <> 'GT'
-           AND IdCountry = @idCountry)
-           OR
-           (ISNULL(@idCountry,'') <> ''
-            AND @idCountry = 'GT'
-            AND IdCountry IS NULL)
-           OR
-           (ISNULL(@idCountry,'') = ''
-           AND IdCountry IS NULL));
+       AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry;
 END
