@@ -9,7 +9,16 @@ CREATE PROCEDURE [dbo].[sp_get_visitPointClientParser]
 AS
 BEGIN
 
-	SELECT CodeOfReference, CustomerID, Address, Zone, Town, Department, Phone, DescriptionOfClient FROM VisitPointClient
+	SELECT CodeOfReference, 
+		   CustomerID, 
+		   Address, 
+		   Zone, 
+		   Town, 
+		   Department, 
+		   Phone, 
+		   DescriptionOfClient, 
+		   CASE WHEN CountryId != 'GT' OR CountryId != 'HN' THEN 'GT' ELSE CountryId END AS CountryId
+	FROM VisitPointClient
 	WHERE CodeOfReference = @IdVisitClient
 
 END
