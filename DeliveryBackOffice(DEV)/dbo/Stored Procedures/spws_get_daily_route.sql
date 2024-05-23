@@ -15,7 +15,7 @@ BEGIN
     SET NOCOUNT ON;
 
 	DECLARE @TokenAct INT = 1;
-    DECLARE @hourtoken INT = 7;
+    DECLARE @hourtoken INT = 5;
 
 	/******************************************************************************************************************************
 	****************************************************** OBTENER TIPOS DE ALERTAS ***********************************************
@@ -83,7 +83,7 @@ BEGIN
 		   TAL.[AlertDescription],
 		   CONCAT(CONVERT(VARCHAR, TAL.[DateCreated], 24), ' - ', CONVERT(VARCHAR, TAL.[DateCreated], 103))[DateCreated]
 	FROM(
-		
+		-- ALERTAS EN GENERAL
 		SELECT	DOA.[ServiceManagementId],
 				DOA.AlertTypeId,
 				DOA.AlertDescription,
@@ -93,6 +93,7 @@ BEGIN
 			AND DOA.RowStatus = 1
 			AND DOA.ServiceManagementId IS NOT NULL
 		UNION ALL
+		-- ALERTAS PARA GUÍAS EN RUTA
 		SELECT  VPC.CodeOfReference	[ServiceManagementId],
 				DOA.AlertTypeId,
 				DOA.AlertDescription,
@@ -108,6 +109,7 @@ BEGIN
 				AND DOA.RowStatus = 1
 				AND DOA.ServiceManagementId IS NULL
 		UNION ALL
+		-- ALERTAS PARA RECOLECCIONES
 		SELECT	DOA.GuideNumber [ServiceManagementId],
 				DOA.AlertTypeId,
 				DOA.AlertDescription,
@@ -262,11 +264,12 @@ BEGIN
 				ISNULL(spk.SchedulePickupId, '-1') [Id],
 				ISNULL(sma.IdServiceManagement, -1) [ServiceManagementId],
 				ISNULL(cpt.TimePlaName, 'N/A') [ServicePaymentTime],
-				ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A') [Sender],
+				dbo.fn_ReplaceSpecialCharsForJSON(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A')) [Sender],
+				dbo.fn_ReplaceSpecialCharsForJSON(
 				CONCAT( ISNULL(spk.AddressPickup, vpc.[Address]), ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
-					  ) [Address],
+					  ) ) [Address],
 				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
 				IIF(
 						ISNULL(dcp.Pieces_Dry, 0) = 0,
@@ -308,18 +311,18 @@ BEGIN
 				   ) [HighPriority],
 				'' [Alerts],
 				ISNULL(sma.ServiceStatusId, 1) [Status]
-        FROM [DeliveryBackOffice].[dbo].[RouteAssigment] ras WITH (NOLOCK)
-        LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] sma WITH (NOLOCK)
+        FROM [DeliveryBackOffice].[dbo].[RouteAssigment]			ras WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]	sma WITH (NOLOCK)
             ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
-        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] spk WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		spk WITH (NOLOCK)
             ON spk.SchedulePickupId = sma.IdSchedulePickup
-        RIGHT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
+        RIGHT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]	vpc WITH (NOLOCK)
             ON vpc.CodeOfReference = spk.SenderId
-        LEFT JOIN [DeliveryBackOffice].[dbo].[CatPaymentTime] cpt WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatPaymentTime]		cpt WITH (NOLOCK)
             ON sma.CatPaymentTimeId = cpt.TimePlaId
-		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] t WITH (NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Township]				t WITH (NOLOCK)
 			ON  spk.TownshipId = t.IdTownship
-		LEFT JOIN [DeliveryBackOffice].[dbo].[Province] p WITH (NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Province]				p WITH (NOLOCK)
 			ON t.IdProvince =p.IdProvince
 		OUTER APPLY(
 			SELECT TOP 1 vpi.PathImage
@@ -365,6 +368,7 @@ BEGIN
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
 				 0 [ServiceManagementId],
+				 dbo.fn_ReplaceSpecialCharsForJSON(
 				 ISNULL(
 					ISNULL(
 							COALESCE(
@@ -384,7 +388,8 @@ BEGIN
 									   )
 							, VPC.DescriptionOfClient
 							) , 'N/A'
-					) [Sender],
+					) 
+						)[Sender],
 				IIF(
 					KVPC.KindOfVPName = 'Express Center',
 					ISNULL(VPC.[Address], ''),											
@@ -507,26 +512,30 @@ BEGIN
 								), 0
 							  )
 				END [Pickup],
-				IIF(
-						DOR.IsLastMileReturn = 1, 
-						IIF(
-								KVPC.KindOfVPName = 'Express Center' , 
-								ISNULL( VPC.DescriptionOfClient , '' ), 
-								ISNULL( DOR.Sender_FirstName , 'N/A' )
-							), 
-						IIF(
-								KVPC.KindOfVPName = 'Express Center', 
-								ISNULL( VPC.DescriptionOfClient , '' ), 
-								ISNULL( DOR.Receiver_FirstName , 'N/A' )
-							)
+				dbo.fn_ReplaceSpecialCharsForJSON(
+					IIF(
+							DOR.IsLastMileReturn = 1, 
+							IIF(
+									KVPC.KindOfVPName = 'Express Center' , 
+									ISNULL( VPC.DescriptionOfClient , '' ), 
+									ISNULL( DOR.Sender_FirstName , 'N/A' )
+								), 
+							IIF(
+									KVPC.KindOfVPName = 'Express Center', 
+									ISNULL( VPC.DescriptionOfClient , '' ), 
+									ISNULL( DOR.Receiver_FirstName , 'N/A' )
+								)
+						) 
 					) [customerName],
-				IIF(
-						DOR.IsLastMileReturn = 1, 
-						'N/A', 
-						ISNULL(
-								ISNULL( DOR.Receiver_Alternant_FullName, ''), 
-								ISNULL( DOR.Receiver_FirstName, 'N/A')
-							   )
+				dbo.fn_ReplaceSpecialCharsForJSON(
+					IIF(
+							DOR.IsLastMileReturn = 1, 
+							'N/A', 
+							ISNULL(
+									ISNULL( DOR.Receiver_Alternant_FullName, ''), 
+									ISNULL( DOR.Receiver_FirstName, 'N/A')
+								   )
+							) 
 						) [alterName],
 				IIF(
 						(
@@ -659,7 +668,7 @@ BEGIN
 		SELECT 
 				TMAP.ServiceManagementId,
 				TMAP.TypeAlert,
-				TMAP.DescriptionAlert,
+				dbo.fn_ReplaceSpecialCharsForJSON(TMAP.DescriptionAlert) DescriptionAlert,
 				TMAP.DateCreated
 		FROM	#TmpAlertList TMAP
 
