@@ -3,17 +3,6 @@
 -- Create date: <2024-05-09>
 -- Description: < Procedimiento para automatizar el registro de arribos para guias no registrados>
 -- =============================================
-IF EXISTS
-(
- SELECT TOP 1 1 
-   FROM sys.procedures 
-  WHERE [name] = 'spGenerateArrivedGuides'
-)
-BEGIN
-   DROP PROCEDURE dbo.spGenerateArrivedGuides
-END
-GO
-
 CREATE PROCEDURE [dbo].[spGenerateArrivedGuides]
 (
  @InitDate AS DATETIME, --Fecha de inicio del periodo a considerar / Opcional - valor defecto fecha inicial del mes

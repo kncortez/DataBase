@@ -3,6 +3,11 @@
 -- Create date: <2021-04-27>
 -- Description:	<inserta o actualiza registros a clientes en base a flag @option 1 insert 2 update>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Create date: <2024-04-23>
+-- Description:	<Se agrego modificacion para campo isCOD>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdSetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT
@@ -68,6 +73,7 @@ CREATE PROCEDURE [dbo].[sphdSetCustomer]
   , @CardCode NVARCHAR(50) = NULL
                             -----------------------------------------------------
   , @NumImg INT = NULL
+  , @isCOD INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -151,7 +157,7 @@ BEGIN
             PRINT 'insert record';
             IF NOT EXISTS
             (
-                SELECT cli.IdCustomer 
+                SELECT cli.IdCustomer
                 FROM Customer cli WITH (NOLOCK)
                 WHERE cli.Name = @NameCustomer AND cli.RowSatus = 1
             )
@@ -221,6 +227,7 @@ BEGIN
                   , [CatBillingVolumeId]
                   , [BillingCut_offDate]
                   , [NumImgEvidence]
+				  , [IsCOD]
                 )
                 VALUES
                 (   @NameCustomer, @Description, @Domain, @RegexSubject, @RegexEmail, @RegexFilename, @Abbreviation
@@ -239,7 +246,7 @@ BEGIN
                   , @CardCode
                                                                                    -------------------------
                   , @ExcludePriceShippingCOD, @ExcludeCommissionCOD, @CatBatchTypeCODId, @CatBatchFrequencyCODId
-                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg);
+                  , @BillingTimeId, @BillingVolumeId, @BillingCut_offDate, @NumImg, @isCOD);
 
                 SELECT 'TRUE'                            [blnResult]
                      , CAST(SCOPE_IDENTITY() AS VARCHAR) [IdResult]
@@ -331,6 +338,7 @@ BEGIN
               , [CatBillingVolumeId] = @BillingVolumeId
               , [BillingCut_offDate] = @BillingCut_offDate
               , [NumImgEvidence] = @NumImg
+			  , [IsCOD] = @isCOD
             WHERE IdCustomer = @IdCustomer;
 
             -- Inactivar el registro
