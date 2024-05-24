@@ -3,6 +3,11 @@
 -- Create date: <2021-05-13>
 -- Description:	<Get VisitPoints Clients from Hermes by ID>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar,,Rodriguez>
+-- Update date: <2024-05-26>
+-- Description:	<Add Value isCOD from Customer Table for VisitPoints in Hermes>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetVisitPointById]
     -- Add the parameters for the stored procedure here
     @IdVisitPoint AS INT = -1
@@ -57,8 +62,11 @@ BEGIN
 			ISNULL(vpc.CatBusinessSegmentId, 0) CatBusinessSegmentId,
 			ISNULL(vcf.[CatBillingTimeId],-1)  AS CatBillingTimeId,
 			ISNULL(vcf.[CatBillingVolumeId],-1) AS CatBillingVolumeId,
-			vcf.[BillingCut_offDate] AS  BillingCut_offDate
+			vcf.[BillingCut_offDate] AS  BillingCut_offDate,
+			cs.IsCOD
     FROM DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
+		INNER JOIN dbo.Customer cs WITH(NOLOCK)
+			ON vpc.CustomerID = cs.IdCustomer
         LEFT JOIN dbo.Township twn  WITH(NOLOCK)
             ON twn.IdTownship = vpc.IdTownship
 		LEFT JOIN dbo.Province prv  WITH(NOLOCK)
