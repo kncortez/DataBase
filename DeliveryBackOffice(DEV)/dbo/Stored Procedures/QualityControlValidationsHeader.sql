@@ -9,7 +9,7 @@ CREATE PROCEDURE [dbo].[QualityControlValidationsHeader]
  @EndDate DATE
 AS
 BEGIN
-
+set arithabort on;
 Select
 	CONVERT(NVARCHAR(10),@StartDate,105) AS StartDate,
 	CONVERT(NVARCHAR(10),@EndDate,105)  AS EndDate,
