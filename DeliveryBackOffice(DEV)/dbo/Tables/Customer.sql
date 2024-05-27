@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Customer] (
+CREATE TABLE [dbo].[Customer] (
     [IdCustomer]              INT            IDENTITY (1, 1) NOT NULL,
     [Name]                    NVARCHAR (100) NOT NULL,
     [Description]             NVARCHAR (100) NULL,
@@ -83,6 +83,8 @@
     CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
 
 
 
@@ -309,7 +311,8 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado que indica si el cliente esta autorizado para guías COD' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IsCOD'
 GO
 
-CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
-ON [dbo].[Customer] ([IdCustomerType])
-INCLUDE ([Name],[Abbreviation],[CountryID],[RowSatus],[SAPCardCode])
 GO
+CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
+    ON [dbo].[Customer]([IdCustomerType] ASC)
+    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
+

@@ -22,6 +22,8 @@
 
 
 
+
+
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [NonClusteredIndex-HubAbbreviation]
     ON [dbo].[HubLogistics]([HubAbbreviation] ASC);
@@ -82,5 +84,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Latitud del
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del Hub para Express Center', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HubLogistics', @level2type = N'COLUMN', @level2name = N'DescriptionCC';
 
+
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del Hub para Express Center', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HubLogistics', @level2type = N'COLUMN', @level2name = N'DescriptionCC';
+CREATE UNIQUE NONCLUSTERED INDEX [IDX_HubLogistics_HubAbbreviation_RowStatus]
+    ON [dbo].[HubLogistics]([HubAbbreviation] ASC, [HubStatus] ASC);
+
+GO

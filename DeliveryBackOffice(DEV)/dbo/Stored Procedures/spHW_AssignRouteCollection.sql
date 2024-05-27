@@ -45,7 +45,7 @@ BEGIN TRANSACTION
 		ON RA.IdRoute = CR.IdRoute
 		WHERE RA.IdCurrierMan = @IdCurrierMan AND 
 		      RA.IdRoute = @IdRoute AND 
-			  CR.IdTypeRoute = @IDRUTETYPE AND RA.DateOfRoute=FORMAT(GETDATE(),'yyyy-MM-dd') 
+			  CR.IdTypeRoute = @IDRUTETYPE AND RA.DateOfRoute=FORMAT(GETDATE(),'yyyy-MM-dd')  AND 1=0
        ))
 	BEGIN
 	
@@ -73,7 +73,7 @@ BEGIN TRANSACTION
 				SET IdPuCourrier = @IdCurrierMan,
 					IdPuRouteAssigment = @idRouteAssigment,
 					ServiceStatusId = 2,
-					TokenUpdated = @Token,
+					TokenUpdated = 'AUTOASIGNACION',
 					DateUpdated = GETDATE()
 				WHERE IdServiceManagement = @IdServiceManagment 
 

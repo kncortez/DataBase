@@ -49,3 +49,10 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de restr
 GO
 
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_pk_id]
+    ON [dbo].[InvoiceRestriction]([inv_pk_id] ASC);
+
