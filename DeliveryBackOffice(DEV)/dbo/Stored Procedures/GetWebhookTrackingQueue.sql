@@ -58,6 +58,7 @@ BEGIN
 		WHERE A1.CustomerId = WE.CustomerId
 		AND A1.RowStatus = 1		
 	)
+	--AND 1=0 --TEMPORAL BNHL
 	UNION
 	SELECT [WE].[CustomerId],
 			[WE].[Hostname],
@@ -75,5 +76,6 @@ BEGIN
 		AND A1.WebhookTrackingQueueForSFTPId IS NULL
 		AND A1.RowStatus = 1		
 	)
+	--AND 1=0 --TEMPORAL BNHL
 
 END

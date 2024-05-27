@@ -11,3 +11,10 @@
     CONSTRAINT [FKInvoiceHeader] FOREIGN KEY ([inv_pk_id]) REFERENCES [dbo].[invoiceHeader] ([inv_pk_id])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_pk_id]
+    ON [dbo].[InvoiceRestriction]([inv_pk_id] ASC);
+

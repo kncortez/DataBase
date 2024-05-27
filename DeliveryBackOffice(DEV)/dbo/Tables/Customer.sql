@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Customer] (
+CREATE TABLE [dbo].[Customer] (
     [IdCustomer]              INT            IDENTITY (1, 1) NOT NULL,
     [Name]                    NVARCHAR (100) NOT NULL,
     [Description]             NVARCHAR (100) NULL,
@@ -66,7 +66,7 @@
     [CatBillingVolumeId]      INT            NULL,
     [BillingCut_offDate]      DATE           NULL,
     [NumImgEvidence]          INT            NULL,
-	[IsCOD]                   INT            NULL,
+    [IsCOD]                   INT            NULL,
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED ([IdCustomer] ASC),
     CONSTRAINT [FK_Customer_CatBankAccountType] FOREIGN KEY ([CODAccountTypeID]) REFERENCES [dbo].[CatBankAccountType] ([IdBankAccountType]),
     CONSTRAINT [FK_Customer_CatBillingTime] FOREIGN KEY ([CatBillingTimeId]) REFERENCES [dbo].[CatBillingTime] ([IdCatBillingTime]),
@@ -83,6 +83,8 @@
     CONSTRAINT [FK_Customer_DeliveryBank] FOREIGN KEY ([CODAccountBankID]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_Customer_DeliveryCurrency] FOREIGN KEY ([CODCurrencyID]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id])
 );
+
+
 
 
 
@@ -105,166 +107,166 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id para la tabla Customer ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IdCustomer'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'Name'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion que complementa el nombre del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'Description'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Es el dominio que utiliza el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'Domain'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Expresion regular para la solicitud del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'RegexSubject'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Expresion regular para el correo del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'RegexEmail'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Expresion regular para nombre del archivo del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'RegexFilename'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Abreviatura del nombre del cliente con el que se identifica' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'Abbreviation'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de cliente segun clasificatoria interna de Forza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IdCustomerType'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de condicion de pago que tiene el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'ConditionOfPaymentID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Ciudad a la que pertenece el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CountryID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre comercial del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CommercialName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Telefono del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CustomerPhone'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sitio web del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'WebsiteURI'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del contacto que se tiene del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'ContactName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo de contacto que se tiene del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'ContactEmail'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Direccion del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'NotificationAddress'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Asesor de venta del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'SaleAdvisorID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha en que se levanta el servicio para el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'DateUpService'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha en que se baja el servicio para el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'DateDownService'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de negocio al que pertenece el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'TypeOfBusinessID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Segmento de negocio al que pertenece el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'BusinessSegmentID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Actividad que realiza el negocio del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'BusinessActivityID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Segmento cormercial o mercado objetivo del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CommercialSegmentID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del contacto de operaciones del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'OperationContactName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Telefono del contacto de operaciones del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'OperationContactPhone'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo electronico del contacto de operaciones del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'OperationContactEmail'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre de la persona que asume la responsabilidad legal del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'LegalSponsorName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Apellido de la persona que asume la responsabilidad legal del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'LegalSponsorLastName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Documento de identificacion personal de la persona que asume la responsabilidad legal del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'LegalSponsorDPI'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo que indica si el cliente tiene o no acuerdos con la empresa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'HasAgreement'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Numero de acuerdo que se tiene con el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'AgreementNumber'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de inicio del acuerdo que se tiene con el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'AgreementDateStart'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de finalizacion del acuerdo que se tiene con el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'AgreementDateEnd'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre que se le asigna a la factura del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'InvoiceName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Numero de identificacion fiscal del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'TaxIdentificationNumber'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Direccion fiscal del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'FiscalAddress'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo electronico de facturacion del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'InvoiceEmail'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del contacto de facturacion del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'InvoiceContactName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Telefono del contacto de facturacion del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'InvoiceContactPhone'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo electronico del contacto de facturacion del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'InvoiceContactEmail'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Banco al que pertenece la cuenta del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODAccountBankID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Numero de cuenta de banco del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODAccountNumber'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre de la cuenta de banco del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODAccountName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de cuenta de banco del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODAccountTypeID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Moneda que maneja el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODCurrencyID'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del contacto de COD del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODContactName'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Telefono del contacto de COD del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODContactPhone'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Correo electronico del contacto de COD del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'CODContactEmail'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado de la fila habilitado o deshabilitado' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'RowSatus'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creacion de la fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'TokenCreated'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creacion de la fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'DateCreated'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de actualizacion de la fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de actualizacion de la fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'DateUpdated'
+
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Codigo de tarjeta de SAP asociado al cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'SAPCardCode'
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Bandera para indicar si se excluye el precio de envio.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'ExcludePriceShippingCOD'
@@ -306,5 +308,9 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado que indica si el cliente esta autorizado para guías COD' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IsCOD'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'La tabla Cliente almacena informacon relacionada con los clientes de la empresa Forza Delivery' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer'
+
 GO
+CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
+    ON [dbo].[Customer]([IdCustomerType] ASC)
+    INCLUDE([Name], [Abbreviation], [CountryID], [RowSatus], [SAPCardCode]);
+

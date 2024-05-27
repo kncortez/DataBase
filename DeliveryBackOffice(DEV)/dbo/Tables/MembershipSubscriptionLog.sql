@@ -36,3 +36,16 @@
     CONSTRAINT [FK_MembershipSubscriptionLog_VisitPointClient] FOREIGN KEY ([VisitPointClientId]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_MembershipSubscriptionLog_RowStatus]
+    ON [dbo].[MembershipSubscriptionLog]([RowStatus] ASC)
+    INCLUDE([LogGuideSerie], [LogGuideNumber]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_LogGuideSerie_LogGuideNumber_RowStatus]
+    ON [dbo].[MembershipSubscriptionLog]([LogGuideSerie] ASC, [LogGuideNumber] ASC, [RowStatus] ASC);
+

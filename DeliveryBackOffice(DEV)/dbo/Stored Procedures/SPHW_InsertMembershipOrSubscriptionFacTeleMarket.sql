@@ -380,7 +380,7 @@ BEGIN
                 IdNewMembership
             )
             SELECT CM.IdCatMembership
-                 , 1
+                 , 2
                  , CM.MembershipCost
 			     ,CASE WHEN
 		                        EXISTS(SELECT  TOP 1 1
@@ -752,9 +752,9 @@ BEGIN
             (
                 IdNewSubscriptions
             )
-            SELECT IIF(@CustomerType = 2, NULL, @ActiveMembershipId)
+            SELECT NULL
                  , CS.IdCatSubscription
-                 , 1
+                 , 2
                  , CS.SubscriptionCost
 				,CASE WHEN
 		                        EXISTS(SELECT  TOP 1 1
