@@ -284,7 +284,12 @@ begin
                                      ',{"DateOfSale":"' + CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121)
                                      + '",' + '"ContentDescription":"'
                                      + CONVERT(VARCHAR, ISNULL(dev.Package_Description, '')) + '",' + '"IdCountry":"'
-                                     + CONVERT(VARCHAR, COALESCE(p.IdCountry, '')) + '",' + '"CountPieces":'
+									 --SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
+                                     + CASE WHEN dev.IsLastMileReturn=0   
+											THEN CONVERT(VARCHAR, COALESCE(dev.ReceiverCountryId, 'GT')) 
+											ELSE CONVERT(VARCHAR, COALESCE(dev.SenderCountryId, 'GT'))
+									   END+ '",' + '"CountPieces":'
+									 --FIN CAMBIO
                                      + CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0)) + ','
                                      + '"Collected":' + CASE
                                                             WHEN dev.IsCollect = 1 THEN

@@ -1,4 +1,8 @@
-﻿
+﻿-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-05-24>
+-- Description: < Se agrega filtro por pais, por defect GT >
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_saveVisitPoint]
     @DescriptionOfClient AS NVARCHAR(100),
     @IdSettlement AS BIGINT,
@@ -11,11 +15,20 @@ CREATE PROCEDURE [dbo].[sphd_saveVisitPoint]
     @ContactName AS NVARCHAR(200),
     @Email AS NVARCHAR(200),
     @Latitude NVARCHAR(20) = NULL,
-    @Longitude NVARCHAR(20) = NULL
+    @Longitude NVARCHAR(20) = NULL,
+    @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     -- Control de identificador de registro
-    DECLARE @CodeOfReference AS INT = -1;
+    DECLARE @CodeOfReference AS INT = -1,
+            @CodePhone       AS NVARCHAR(5);
+
+    SELECT @CodePhone = CASE
+                            WHEN @IdCountry = 'GT' THEN '502'
+                            WHEN @IdCountry = 'HN' THEN '504'
+                            ELSE '502'
+                        END
+
     SET @CodeOfReference =
     (
         SELECT TOP (1)
@@ -59,7 +72,7 @@ BEGIN
             [Longitude]
         )
         VALUES
-        (@CodeOfReference, @DescriptionOfClient, 'TRUE', 'GT', @IdSettlement, @TokenCreated, GETDATE(), @CustomerID,
+        (@CodeOfReference, @DescriptionOfClient, 'TRUE', @IdCountry, @IdSettlement, @TokenCreated, GETDATE(), @CustomerID,
          @Address, @Town, @Department, @Phone, @ContactName, @Email, @IdTownship, @Latitude, @Longitude);
 
 
@@ -73,7 +86,8 @@ BEGIN
                     FROM dbo.CatCityPlace
                     WHERE CityPlace = 'No Aplica'
                 );
-        DECLARE @IdCountry AS VARCHAR =
+
+        SET @IdCountry =
                 (
                     SELECT CC.IdCountry
                     FROM dbo.CatCountry CC
@@ -83,6 +97,7 @@ BEGIN
                             ON TS.IdProvince = PRV.IdProvince
                     WHERE IdTownship = @IdTownship
                 );
+
         DECLARE @IdAccount INT =
                 (
                     SELECT AccIdAccount FROM dbo.Account ACC WHERE IdCustomer = @CustomerID
@@ -108,7 +123,7 @@ BEGIN
             UadRowStatus
         )
         VALUES
-        (@IdTownship, @IdCountry, @Address, '502', @Phone, '', @TokenCreated, GETDATE(), @CodeOfReference,
+        (@IdTownship, @IdCountry, @Address, @CodePhone, @Phone, '', @TokenCreated, GETDATE(), @CodeOfReference,
          @IdSettlement, @DescriptionOfClient, @Idplace, @IdAccount, 1);
 
         IF (@@TRANCOUNT > 0) COMMIT TRANSACTION;

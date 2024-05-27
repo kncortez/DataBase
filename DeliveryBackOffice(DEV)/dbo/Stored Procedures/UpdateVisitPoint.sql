@@ -3,6 +3,11 @@
 -- Create date: <2022-03-01>
 -- Description:	<Actualiza la información de un Visit Point>
 -- =============================================
+-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-05-24>
+-- Description: <se agrega filtro para pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[UpdateVisitPoint] 
 	@IdVisitPointClient INT,
 	@DescriptionOfClient NVARCHAR(100),
@@ -17,7 +22,8 @@ CREATE PROCEDURE [dbo].[UpdateVisitPoint]
 	@IdTownship INT,
 	@IdProvince INT,
 	@Latitude NVARCHAR(20) = NULL,
-	@Longitude NVARCHAR(20) = NULL
+	@Longitude NVARCHAR(20) = NULL,
+    @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 -- SET NOCOUNT ON added to prevent extra result sets from
@@ -54,7 +60,7 @@ SET NOCOUNT ON;
 			,UadIdCountry=CC.IdCountry
 			,UadAddress1=VPC.Address,
 			--UadNirPhone=(CASE WHEN CHARINDEX('(',@Phone) >0 THEN SUBSTRING(@Phone,2,3) ELSE '' END),
-			UadNirPhone='502',
+			UadNirPhone=IIF(@IdCountry = 'GT','502','504'),
 			UadPhone=@Phone,
 			UadAdditionalInstructions='',
 			UadTokenUpdated=@Token,

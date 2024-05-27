@@ -467,22 +467,26 @@ BEGIN
                                                           + ISNULL(
                                                                       ISNULL(
                                                                                 COALESCE(
-                                                                                            dbo.fn_ReplaceSpecialCharsForJSON(IIF(
+                                                                                            REPLACE(dbo.fnt_String_Escape(IIF(
                                                                                                                            DOR.IsLastMileReturn = 1
                                                                                                                                , DOR.Receiver_FirstName
                                                                                                                                , DOR.Sender_FirstName)
-                                                                                                                             )
+                                                                                                                ,'json')
+                                                                                                 ,'"'
+                                                                                                 ,'')
                                                                                           , ''
                                                                                         ) + ' '
                                                                                 + COALESCE(
-                                                                                              dbo.fn_ReplaceSpecialCharsForJSON(IIF(
+                                                                                              REPLACE(dbo.fnt_String_Escape(IIF(
                                                                                                                              DOR.IsLastMileReturn = 1
                                                                                                                                  , DOR.Receiver_FirstName
                                                                                                                                  , DOR.Sender_FirstName)
-                                                                                                                               )
+                                                                                                                    ,'json')
+                                                                                                 ,'"'
+                                                                                                 ,'')
                                                                                             , ''
                                                                                           )
-                                                                              , dbo.fn_ReplaceSpecialCharsForJSON(VPC.DescriptionOfClient)
+                                                                              , REPLACE(dbo.fnt_String_Escape(VPC.DescriptionOfClient,'json'),'"','')
                                                                             )
                                                                     , 'N/A'
                                                                   ) + '",' + '"SenderPhone":"'
@@ -494,25 +498,25 @@ BEGIN
                                                              END
                                                             ) + '",' + '"Address":"'
                                                           + IIF(kvp.KindOfVPName = 'Express Center'
-                                                              , ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(VPr.Address), '')
+                                                              , ISNULL(REPLACE(dbo.fnt_String_Escape(VPr.Address,'json'),'"',''), '')
                                                               , dbo.fnt_String_Escape(/*concat(*/
                                                                                          ISNULL(
                                                                                                    ISNULL(
                                                                                                              REPLACE(
-                                                                                                                        dbo.fn_ReplaceSpecialCharsForJSON(IIF(
+                                                                                                                        dbo.fnt_String_Escape(IIF(
                                                                                                                                                        DOR.IsLastMileReturn = 1
                                                                                                                                                            , DOR.Sender_Address
                                                                                                                                                            , DOR.Receiver_Address)
-                                                                                                                                                         )
+                                                                                                                                                         ,'json')
                                                                                                                       , '"'
                                                                                                                       , ''
                                                                                                                     )
                                                                                                            , REPLACE(
-                                                                                                                        dbo.fn_ReplaceSpecialCharsForJSON(IIF(
+                                                                                                                        dbo.fnt_String_Escape(IIF(
                                                                                                                                                        DOR.IsLastMileReturn = 1
                                                                                                                                                            , VPC.Address
                                                                                                                                                            , VPr.Address)
-                                                                                                                                                         )
+                                                                                                                                                         ,'json')
                                                                                                                       , '"'
                                                                                                                       , ''
                                                                                                                     )
@@ -680,12 +684,12 @@ BEGIN
                                                           + IIF(DOR.IsLastMileReturn = 1
                                                               , IIF(kvpori.KindOfVPName = 'Express Center'
                                                                   , ISNULL(
-                                                                              dbo.fn_ReplaceSpecialCharsForJSON(VPC.DescriptionOfClient)
+                                                                              REPLACE(dbo.fnt_String_Escape(VPC.DescriptionOfClient,'json'),'"','')
                                                                             , ''
                                                                           )
                                                                   , ISNULL(
                                                                               REPLACE(
-                                                                                         dbo.fn_ReplaceSpecialCharsForJSON(DOR.Sender_FirstName)
+                                                                                         dbo.fnt_String_Escape(DOR.Sender_FirstName,'json')
                                                                                        , '"'
                                                                                        , ''
                                                                                      )
@@ -693,12 +697,12 @@ BEGIN
                                                                           ))
                                                               , IIF(kvp.KindOfVPName = 'Express Center'
                                                                   , ISNULL(
-                                                                              dbo.fn_ReplaceSpecialCharsForJSON(VPr.DescriptionOfClient)
+                                                                              REPLACE(dbo.fnt_String_Escape(VPr.DescriptionOfClient,'json'),'"','')
                                                                             , ''
                                                                           )
                                                                   , ISNULL(
                                                                               REPLACE(
-                                                                                         dbo.fn_ReplaceSpecialCharsForJSON(DOR.Receiver_FirstName)
+                                                                                         dbo.fnt_String_Escape(DOR.Receiver_FirstName,'json')
                                                                                        , '"'
                                                                                        , ''
                                                                                      )
@@ -709,12 +713,12 @@ BEGIN
                                                               , ISNULL(
                                                                           ISNULL(
                                                                                     REPLACE(
-                                                                                               dbo.fn_ReplaceSpecialCharsForJSON(DOR.Receiver_Alternant_FullName)
+                                                                                               dbo.fnt_String_Escape(DOR.Receiver_Alternant_FullName,'json')
                                                                                              , '"'
                                                                                              , ''
                                                                                            )
                                                                                   , REPLACE(
-                                                                                               dbo.fn_ReplaceSpecialCharsForJSON(DOR.Receiver_FirstName)
+                                                                                               dbo.fnt_String_Escape(DOR.Receiver_FirstName,'json')
                                                                                              , '"'
                                                                                              , ''
                                                                                            )
@@ -784,10 +788,14 @@ BEGIN
                                                                                       ' { "TypeAlert": '
                                                                                       + CONVERT(VARCHAR, doa.AlertTypeId)
                                                                                       + ', ' + '"DescriptionAlert": "'
-                                                                                      + dbo.fnt_String_Escape(
-                                                                                                                 dbo.fn_replace_special_characters(doa.AlertDescription)
-                                                                                                               , 'json'
-                                                                                                             ) + '", '
+                                                                                      + REPLACE(
+                                                                                          dbo.fnt_String_Escape(
+                                                                                                                     dbo.fn_replace_special_characters(doa.AlertDescription)
+                                                                                                                   , 'json'
+                                                                                                                 )
+                                                                                         ,'"',''
+                                                                                      
+                                                                                      ) + '", '
                                                                                       + '"DateCreated": "'
                                                                                       +
                                                                                       (
@@ -1053,15 +1061,25 @@ BEGIN
                                        + ISNULL(
                                                    ISNULL(
                                                              COALESCE(
-                                                                         dbo.fn_ReplaceSpecialCharsForJSON(do.Sender_FirstName)
+                                                                         REPLACE(
+                                                                            dbo.fnt_String_Escape(do.Sender_FirstName,'json')
+                                                                            ,'"'
+                                                                            ,''
+                                                                         )
                                                                        , ''
                                                                      ) + ' '
                                                              + COALESCE(
-                                                                           dbo.fn_ReplaceSpecialCharsForJSON(do.Sender_LastName)
+                                                                           REPLACE(dbo.fnt_String_Escape(do.Sender_LastName,'json')
+                                                                           ,'"'
+                                                                           ,''
+                                                                           )
                                                                          , ''
                                                                        )
                                                            , COALESCE(
-                                                                         dbo.fn_ReplaceSpecialCharsForJSON(VPC.DescriptionOfClient)
+                                                                         REPLACE(dbo.fnt_String_Escape(VPC.DescriptionOfClient,'json')
+                                                                         ,'"'
+                                                                         ,''
+                                                                         )
                                                                        , ''
                                                                      )
                                                          )
@@ -1071,28 +1089,33 @@ BEGIN
                                                                   CONCAT(
                                                                             ISNULL(
                                                                                       REPLACE(
-                                                                                                 dbo.fn_ReplaceSpecialCharsForJSON(do.Sender_Address)
+                                                                                                 dbo.fnt_String_Escape(do.Sender_Address,'json')
                                                                                                , '"'
                                                                                                , ''
                                                                                              )
                                                                                     , ' '
                                                                                   )
                                                                           , ISNULL(
-                                                                                      dbo.fn_ReplaceSpecialCharsForJSON(do.Sender_Address)
+                                                                                      REPLACE(dbo.fnt_String_Escape(do.Sender_Address,'json'),'"','')
                                                                                     , REPLACE(
-                                                                                                 dbo.fn_ReplaceSpecialCharsForJSON(VPC.Address)
+                                                                                                 dbo.fnt_String_Escape(VPC.Address,'json')
                                                                                                , '"'
                                                                                                , ''
                                                                                              )
                                                                                   )
                                                                           , ' '
                                                                           , ISNULL(
-                                                                                      dbo.fn_ReplaceSpecialCharsForJSON(do.Sender_Town)
+                                                                                      REPLACE(dbo.fnt_String_Escape(do.Sender_Town,'json')
+                                                                                      ,'"'
+                                                                                      ,''
+                                                                                      )
                                                                                     , ''
                                                                                   )
                                                                           , ' '
                                                                           , ISNULL(
-                                                                                      dbo.fn_ReplaceSpecialCharsForJSON(do.Sender_Department)
+                                                                                      REPLACE(dbo.fnt_String_Escape(do.Sender_Department,'json')
+                                                                                      ,'"'
+                                                                                      ,'')
                                                                                     , ''
                                                                                   )
                                                                         )

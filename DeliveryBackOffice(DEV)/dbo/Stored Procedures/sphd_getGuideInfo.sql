@@ -4,9 +4,13 @@
 -- Create date: <2021-11-30>
 -- Description: <Obtener información para reversión de guía cargada>
 -- =============================================
-
+-- Modified: <Pedroza, Brandon>
+-- Create date: <2024-05-24>
+-- Description: <Se agrega parametro IdCountry para obtener la guia segun el país del usuario logeado en Hermes desktop>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_getGuideInfo] @Guide_Serie VARCHAR(2),
-@Guide_Number INT
+@Guide_Number INT,
+@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -85,4 +89,5 @@ BEGIN
       ON do.StatusOrderId = so.StatusOrderId
    WHERE do.Guide_Serie = @Guide_Serie
    AND do.Guide_Number = @Guide_Number
+   AND (do.SenderCountryId = @IdCountry OR (do.SenderCountryId IS NULL AND @IdCountry ='GT'))
 END
