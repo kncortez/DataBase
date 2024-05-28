@@ -16,7 +16,6 @@ BEGIN
 
     DECLARE @IdAccount INT;
     DECLARE @IdUser INT;
-    DECLARE @jsonResult NVARCHAR(MAX);
 
     DECLARE @ActiveSalesPackageId INT =
             (
@@ -25,7 +24,6 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
                 WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
             );
-
 
     IF (@Email = '' AND @DPI = '')
     BEGIN
@@ -71,155 +69,81 @@ BEGIN
 
     END;
 
-    SET @jsonResult =
-    (
-        SELECT STUFF(
-                        (
-                            SELECT ',{"IdAccount":"' + CONVERT(NVARCHAR, ISNULL(@IdAccount, '')) + '",' + '"IdUser":"'
-                                   + CONVERT(NVARCHAR, ISNULL(@IdUser, '')) + '",' + '"IdCustomer":"'
-                                   + CONVERT(NVARCHAR, ISNULL(cu.[IdCustomer], '')) + '",' + '"Name":"'
-                                   + ISNULL(cu.[Name], '') + '",' + '"Email":"' + ISNULL(ru.[UsrEmail], '') + '",'
-                                   + '"Phone":"' + ISNULL(ru.[Phone], '') + '",' + '"HasMembership":'
-                                   + CONVERT(NVARCHAR
-                                           , ISNULL(   (CASE
-                                                            WHEN mmbrshp.IdMembership IS NOT NULL THEN
-                                                                1
-                                                            ELSE
-                                                                0
-                                                        END
-                                                       )
-                                                     , 0
-                                                   )
-                                            ) + ',' + '"Addresses":['
-                                   + ISNULL(
-                                     (
-                                         SELECT STUFF(
-                                                         (
-                                                             SELECT ',{' + '"FullName":"' + ua.UadFullName + '",'
-                                                                    + '"Address1":"'
-                                                                    + REPLACE(
-                                                                                 REPLACE(
-                                                                                            dbo.fnt_String_Escape(
-                                                                                                                     ISNULL(
-                                                                                                                               ua.UadAddress1
-                                                                                                                             , ''
-                                                                                                                           )
-                                                                                                                   , 'json'
-                                                                                                                 )
-                                                                                          , '\'
-                                                                                          , ' '
-                                                                                        )
-                                                                               , '"'
-                                                                               , ''
-                                                                             ) + '",' + '"Address2":"'
-                                                                    + REPLACE(
-                                                                                 REPLACE(
-                                                                                            dbo.fnt_String_Escape(
-                                                                                                                     ISNULL(
-                                                                                                                               ua.UadAddress2
-                                                                                                                             , ''
-                                                                                                                           )
-                                                                                                                   , 'json'
-                                                                                                                 )
-                                                                                          , '\'
-                                                                                          , ' '
-                                                                                        )
-                                                                               , '"'
-                                                                               , ''
-                                                                             ) + '",' + '"NirPhone":"' + ua.UadNirPhone
-                                                                    + '",' + '"Phone":"' + ua.UadPhone + '",'
-                                                                    + '"AdditionalInstructions":"'
-                                                                    + REPLACE(
-                                                                                 REPLACE(
-                                                                                            dbo.fnt_String_Escape(
-                                                                                                                     ISNULL(
-                                                                                                                               ua.UadAdditionalInstructions
-                                                                                                                             , ''
-                                                                                                                           )
-                                                                                                                   , 'json'
-                                                                                                                 )
-                                                                                          , '\'
-                                                                                          , ' '
-                                                                                        )
-                                                                               , '"'
-                                                                               , ''
-                                                                             ) + '",' + '"IdCountry":"'
-                                                                    + ua.UadIdCountry + '",' + '"Province":"'
-                                                                    + prv.ProvinceName + '",' + '"Township":"'
-                                                                    + twn.TownshipName + '",' + '"IdTownship":"'
-                                                                    + CONVERT(VARCHAR, ua.UadIdTownship) + '",'
-                                                                    + '"HeaderCode":"' + twn.HeaderCode + '",'
-                                                                    + '"CodeOfReference":"'
-                                                                    + CONVERT(VARCHAR, ua.CodeOfReference) + '",'
-                                                                    + '"IdCityPlace":"'
-                                                                    + CONVERT(VARCHAR, ISNULL(ua.IdCityPlace, 31))
-                                                                    + '",' + '"CityPlace":"'
-                                                                    + CONVERT(VARCHAR, ctp.CityPlace) + '",'
-                                                                    + '"IdProvince":"'
-                                                                    + CONVERT(VARCHAR, prv.IdProvince) + '",'
-                                                                    + '"IdAddress":"'
-                                                                    + CONVERT(VARCHAR, ua.UadIdAddress)  + '",'
-                                                                    + '"ContactName":"'
-                                                                    + CONVERT(VARCHAR, ua.UadFullName)  + '",'
-                                                                    + '"Latitude":"' 
-                                                                    +   ISNULL(vp.Latitude,'') + '",'
-                                                                    + '"Longitude":"' 
-                                                                    +   ISNULL(vp.Longitude,'') + '",'
-                                                                    + '"Zone":"' 
-                                                                    + ISNULL(CAST(conf.Zone as varchar(2)),'') +'",' 
-                                                                    + '"Neighborhood":"' 
-                                                                    +  ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood),'') + '",'
-                                                                    + '"IsOrigin":' 
-                                                                    +  CAST(ISNULL(vp.IsOriginVisitPoint,1) AS NVARCHAR) + ''
-                                                                    + '}'
-                                                             FROM dbo.RolByUserByAccount     rua WITH(NOLOCK)
-                                                                 INNER JOIN dbo.UserAddress  ua
-                                                                     ON ua.UadIdAccount = rua.RuaIdAccount
-                                                                 INNER JOIN dbo.Township     twn WITH(NOLOCK)
-                                                                     ON twn.IdTownship = ua.UadIdTownship
-                                                                 INNER JOIN dbo.Province     prv WITH(NOLOCK)
-                                                                     ON prv.IdProvince = twn.IdProvince
-                                                                 INNER JOIN dbo.CatCityPlace ctp WITH(NOLOCK)
-                                                                     ON ua.IdCityPlace = ctp.IdCityPlace
-                                                                        AND ctp.CityPlaceRowStatus = 'true'
-                                                                 LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK) 
-                                                                     ON vp.CodeOfReference = ua.CodeOfReference
-                                                                LEFT JOIN  dbo.ConfirmedAddress conf WITH(NOLOCK) 
-                                                                     ON conf.NirPhone=ua.UadNirPhone
-                                                                    AND conf.Phone=ua.UadPhone
-                                                                    AND conf.TownshipId = VP.IdTownship
-                                                                    AND conf.[Address] = VP.[Address]
-                                                             WHERE rua.RuaIdAccount = @IdAccount
-                                                                   AND rua.RuaIdUser = @IdUser
-                                                                   AND ua.UadRowStatus = 1
-                                                             FOR XML PATH(''), TYPE
-                                                         ).value('.', 'varchar(max)')
-                                                       , 1
-                                                       , 1
-                                                       , ''
-                                                     )
-                                     )
-                                   , '{"Message": "No se encontraron resultados", "Code": 400}'
-                                           ) + ']' + '}'
-                            FROM DeliveryBackOffice.dbo.Account                ac WITH (NOLOCK)
-                                INNER JOIN DeliveryBackOffice.dbo.Customer     cu WITH (NOLOCK)
-                                    ON cu.IdCustomer = ac.IdCustomer
-                                INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH (NOLOCK)
-                                    ON ru.UsrIdUser = @IdUser
-                                LEFT JOIN DeliveryBackOffice.dbo.Membership    mmbrshp WITH (NOLOCK)
-                                    ON cu.IdCustomer = mmbrshp.CustomerId
-                                       AND mmbrshp.RowStatus = 1
-                                       AND mmbrshp.ExpirationDate >= GETDATE()
-                                       AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
-                            WHERE ac.AccIdAccount = @IdAccount
-                            FOR XML PATH(''), TYPE
-                        ).value('.', 'varchar(max)')
-                      , 1
-                      , 1
-                      , ''
-                    )
-    );
+    SELECT 
+		CONVERT(NVARCHAR, ISNULL(@IdAccount, '')) [IdAccount],
+		CONVERT(NVARCHAR, ISNULL(@IdUser, '')) [IdUser],
+		CONVERT(NVARCHAR, ISNULL(cu.[IdCustomer], '')) [IdCustomer],
+		ISNULL(cu.[Name], '') [Name],
+		ISNULL(ru.[UsrEmail], '') [Email],
+		ISNULL(ru.[Phone], '') [Phone],
+		CONVERT(NVARCHAR, ISNULL(
+			(CASE
+				WHEN mmbrshp.IdMembership IS NOT NULL THEN 1
+				ELSE 0
+			 END), 0)) [HasMembership]
+	FROM DeliveryBackOffice.dbo.Account                ac
+		INNER JOIN DeliveryBackOffice.dbo.Customer     cu
+			ON cu.IdCustomer = ac.IdCustomer
+		INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru
+			ON ru.UsrIdUser = @IdUser
+		LEFT JOIN DeliveryBackOffice.dbo.Membership    mmbrshp WITH (NOLOCK)
+			ON cu.IdCustomer = mmbrshp.CustomerId
+	WHERE ac.AccIdAccount = @IdAccount AND mmbrshp.RowStatus = 1
+		AND mmbrshp.ExpirationDate >= GETDATE()
+		AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
 
-    SELECT ('[' + @jsonResult + ']') jsonResult;
+
+	SELECT
+		ua.UadFullName [FullName],
+		REPLACE( 
+			REPLACE( dbo.fnt_String_Escape
+				( ISNULL( ua.UadAddress1, ''), 'json'), '\', ' ')
+			, '"', '') [Address1],
+		REPLACE(
+			REPLACE( dbo.fnt_String_Escape
+				( ISNULL( ua.UadAddress2, ''), 'json'), '\', ' ')
+			, '"', '') [Address2],
+		ua.UadNirPhone [NirPhone],
+		ua.UadPhone [Phone],
+		REPLACE(
+			REPLACE( dbo.fnt_String_Escape
+				( ISNULL( ua.UadAdditionalInstructions, ''), 'json'), '\', ' ')
+			, '"', '') [AdditionalInstructions],
+		ua.UadIdCountry [IdCountry],
+		prv.ProvinceName [Province],
+		twn.TownshipName [Township],
+		CONVERT(VARCHAR, ua.UadIdTownship) [IdTownship],
+		twn.HeaderCode [HeaderCode],
+		CONVERT(VARCHAR, ua.CodeOfReference) [CodeOfReference],
+		CONVERT(VARCHAR, ISNULL(ua.IdCityPlace, 31)) [IdCityPlace],
+		CONVERT(VARCHAR, ctp.CityPlace) [CityPlace],
+		CONVERT(VARCHAR, prv.IdProvince) [IdProvince],
+		CONVERT(VARCHAR, ua.UadIdAddress) [IdAddress],
+		CONVERT(VARCHAR, ua.UadFullName) [ContactName],
+		ISNULL(vp.Latitude,'') [Latitude],
+		ISNULL(vp.Longitude,'') [Longitude],
+		ISNULL(CAST(conf.Zone as varchar(2)),'') [Zone],
+		ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood),'') [Neighborhood],
+		CAST(ISNULL(vp.IsOriginVisitPoint,1) AS NVARCHAR) [IsOrigin]
+	FROM dbo.RolByUserByAccount     rua WITH(NOLOCK)
+		INNER JOIN dbo.UserAddress  ua WITH(NOLOCK)
+			ON ua.UadIdAccount = rua.RuaIdAccount
+		INNER JOIN dbo.Township     twn WITH(NOLOCK)
+			ON twn.IdTownship = ua.UadIdTownship 
+		INNER JOIN dbo.Province     prv WITH(NOLOCK)
+			ON prv.IdProvince = twn.IdProvince
+		INNER JOIN dbo.CatCityPlace ctp WITH(NOLOCK)
+			ON ua.IdCityPlace = ctp.IdCityPlace
+			AND ctp.CityPlaceRowStatus = 'true'
+		LEFT JOIN dbo.VisitPointClient vp WITH(NOLOCK) 
+			ON vp.CodeOfReference = ua.CodeOfReference
+		LEFT JOIN  dbo.ConfirmedAddress conf WITH(NOLOCK) 
+			ON conf.NirPhone=ua.UadNirPhone
+			AND conf.Phone=ua.UadPhone
+			AND conf.TownshipId = VP.IdTownship
+			AND conf.[Address] = VP.[Address]
+	WHERE rua.RuaIdAccount = @IdAccount
+		AND rua.RuaIdUser = @IdUser
+		AND ua.UadRowStatus = 1
 
 END;
