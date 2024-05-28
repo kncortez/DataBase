@@ -13,6 +13,13 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el rango de hora en que se ejecutó la generación de lotes', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchCOD', @level2type = N'COLUMN', @level2name = N'BatchTimeRange';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_RowStatus]
+    ON [dbo].[BatchCOD]([Date] ASC, [RowStatus] ASC);
 

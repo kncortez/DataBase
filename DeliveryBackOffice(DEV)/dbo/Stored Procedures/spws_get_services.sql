@@ -21,6 +21,7 @@ CREATE PROCEDURE [dbo].[spws_get_services]
     @CancelGuides TINYINT = 1
 AS
 BEGIN    
+set arithabort off
     DECLARE @IdUser BIGINT =
             (
                 SELECT TOP 1 t.TknIdUser FROM TokenLog t WITH(NOLOCK) WHERE t.TknIdToken = @Token

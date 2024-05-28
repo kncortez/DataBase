@@ -139,9 +139,15 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
            -- ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
 		   ON COST.GuideSerie = DOR.Guide_Serie AND COST.GuideNumber = DOR.Guide_Number 
-        LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
-            ON costd.IdCost = cost.IdCost
+        OUTER APPLY (
+		  SELECT TOP 1 costd.IdCost,Voucher  FROM DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
+            WHERE costd.IdCost = cost.IdCost
 			 AND costd.Amount > 0
+			 ORDER BY costd.IdCostDetail desc
+		)costd
+		--LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
+  --          ON costd.IdCost = cost.IdCost
+		--	 AND costd.Amount > 0
              --  AND
              --  (
                   -- DOPD.TypeofInOutMoneyId = 6

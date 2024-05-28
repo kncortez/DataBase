@@ -1,7 +1,7 @@
--- =============================================
+ï»¿-- =============================================
 -- Author:		<Oscar Rodriguez>
 -- Update date: <2024-04-t01>
--- Description:	<Obtiene la informacion sobre recolecciones a demanda y programadas, para integración con DispatchTrack>
+-- Description:	<Obtiene la informacion sobre recolecciones a demanda y programadas, para integraciÃ³n con DispatchTrack>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_schedule_demand_pickup]
 	@CollectionProvince AS NVARCHAR(200),
@@ -18,7 +18,7 @@ IF @CollectionProvince = '-1' BEGIN
 
 	SELECT	IIF(sp.IsScheduled = 0, CONCAT('RDG', sm.IdServiceManagement), CONCAT('RPG', sm.IdServiceManagement) ) [ORDEN DE RECOLECCION], 
 			'' [RUTA], 
-			IIF(ctv.Name = 'Camión', 'Paquete grande', IIF(ctv.Name = 'Panel', 'Paquete mediano', IIF(ctv.Name = 'Motocicleta', 'Paquete pequeño', ''))) [DESCRIPCION DEL PAQUETE], 
+			IIF(ctv.Name = 'CamiÃ³n', 'Paquete grande', IIF(ctv.Name = 'Panel', 'Paquete mediano', IIF(ctv.Name = 'Motocicleta', 'Paquete pequeÃ±o', ''))) [DESCRIPCION DEL PAQUETE], 
 			IIF(sp.QuantityRegularPackages is null, '', sp.QuantityRegularPackages) [CANTIDAD DE PIEZAS], 
 			'' [CODIGO DE ITEM], sp.SenderId [CODIGO DE PUNTO DE VISITA], 
 			vpc.DescriptionOfClient [NOMBRE DE REMITENTE], 
@@ -118,7 +118,7 @@ ELSE BEGIN
 
 	SELECT	IIF(sp.IsScheduled = 0, CONCAT('RDG', sm.IdServiceManagement), CONCAT('RPG', sm.IdServiceManagement) ) [ORDEN DE RECOLECCION], 
 			'' [RUTA], 
-			IIF(ctv.Name = 'Camión', 'Paquete grande', IIF(ctv.Name = 'Panel', 'Paquete mediano', IIF(ctv.Name = 'Motocicleta', 'Paquete pequeño', ''))) [DESCRIPCION DEL PAQUETE], 
+			IIF(ctv.Name = 'CamiÃ³n', 'Paquete grande', IIF(ctv.Name = 'Panel', 'Paquete mediano', IIF(ctv.Name = 'Motocicleta', 'Paquete pequeÃ±o', ''))) [DESCRIPCION DEL PAQUETE], 
 			IIF(sp.QuantityRegularPackages is null, '', sp.QuantityRegularPackages) [CANTIDAD DE PIEZAS], 
 			'' [CODIGO DE ITEM], sp.SenderId [CODIGO DE PUNTO DE VISITA], 
 			vpc.DescriptionOfClient [NOMBRE DE REMITENTE], 

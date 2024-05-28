@@ -620,12 +620,21 @@ BEGIN
                         );
                     END;
 
+					PRINT 'Token'
 					PRINT @Token
+					PRINT 'JsonModules'
 					PRINT @JsonModules
+					PRINT 'JsonAccounts'
 					PRINT @JsonAccounts
 					PRINT '@VERIFYUSER'
 					PRINT @VERIFYUSER
+					PRINT '@JsonProfile'
 					PRINT @JsonProfile
+
+					PRINT 'JsonProfileEXP'
+					PRINT @JsonProfileEXP
+
+
                     SET @jsonResult =
                     (
                         SELECT STUFF(

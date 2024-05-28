@@ -102,7 +102,7 @@ BEGIN
 					0 IdSettlementDestiny, 
 					'' SettlementDestiny,
 					Cast(mun.IdTownship as varchar) IdTownShipDestiny, 
-					mun.TownshipName TownshipNameDestiny, 
+					CONVERT(NVARCHAR(27),mun.TownshipName) TownshipNameDestiny, 
 					Cast(mun.IdProvince as varchar)  IdProvinceDestiny, 
 					dep.ProvinceName IdProvinceNameDestiny, 
 					dep.IdCountry  IdCountryDestiny,

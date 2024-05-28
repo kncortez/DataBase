@@ -233,7 +233,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 
 						update VisitPointByClientPortfolio set FirstName = @FirstName, SecondName = @SecondName, LastName = @LastName, SecondLastName = @SecondLastName,
 						Email = @Email, NirPhone = @NirPhone, Phone = @Phone, CUI = @CUI, TokenUpdated = @Token , DateUpdated = GETDATE(), TaxId = @TaxId, ContactName=@ContactName,
-						RowStatus = @Status
+						RowStatus = @Status,[InternalCode]=@InternalCode
 						where IdVisitPointByClientPortfolio = @IdVisitPointByClientPortfolio
 						
 						

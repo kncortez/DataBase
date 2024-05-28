@@ -1,18 +1,20 @@
 ﻿CREATE TABLE [dbo].[CatSubscriptionDescription] (
-    [IdCatSubscriptionDescription] INT            IDENTITY (1, 1) NOT NULL,
-    [Title]                        NVARCHAR (100) NOT NULL,
-    [Description]                  NVARCHAR (500) NOT NULL,
-    [Position]                     INT            NOT NULL,
-    [Type]                         NVARCHAR (50)  NOT NULL,
-    [CatSubscriptionId]            INT            NOT NULL,
-    [RowStatus]                    BIT            NOT NULL,
-    [DateCreated]                  DATETIME       NOT NULL,
-    [TokenCreated]                 NVARCHAR (50)  NOT NULL,
-    [DateUpdated]                  DATETIME       NULL,
-    [TokenUpdated]                 NVARCHAR (50)  NULL,
+    [IdCatSubscriptionDescription] INT             IDENTITY (1, 1) NOT NULL,
+    [Title]                        NVARCHAR (100)  NOT NULL,
+    [Description]                  NVARCHAR (2000) NOT NULL,
+    [Position]                     INT             NOT NULL,
+    [Type]                         NVARCHAR (50)   NOT NULL,
+    [CatSubscriptionId]            INT             NOT NULL,
+    [RowStatus]                    BIT             NOT NULL,
+    [DateCreated]                  DATETIME        NOT NULL,
+    [TokenCreated]                 NVARCHAR (50)   NOT NULL,
+    [DateUpdated]                  DATETIME        NULL,
+    [TokenUpdated]                 NVARCHAR (50)   NULL,
     PRIMARY KEY CLUSTERED ([IdCatSubscriptionDescription] ASC),
     CONSTRAINT [FK_CatSubscription_CatSubscriptionDescription] FOREIGN KEY ([CatSubscriptionId]) REFERENCES [dbo].[CatSubscription] ([IdCatSubscription])
 );
+
+
 
 
 

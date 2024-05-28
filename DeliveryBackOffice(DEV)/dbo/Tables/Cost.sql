@@ -17,17 +17,17 @@
     [ReturnPaid]           DECIMAL (12, 2) NULL,
     [GuideSerie]           NVARCHAR (2)    NULL,
     [GuideNumber]          INT             NULL,
-    [ShippingCurrency]     INT             NULL,
+    [ShippingCurrency]     INT             DEFAULT (1) ,
     [ShippingExchangeRate] DECIMAL(12, 4)  NULL,
-    [CodCurrency]          INT             NULL,
-    [CodExchangeRate]      DECIMAL(12, 4)  NULL,
+    [CodCurrency]          INT             DEFAULT (1),
+    [CodExchangeRate]      DECIMAL(12, 4)  NULL,    
     PRIMARY KEY CLUSTERED ([IdCost] ASC),
     CONSTRAINT [FK_Cost_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FKCostCharge] FOREIGN KEY ([IdTypeCharge]) REFERENCES [dbo].[CatTypeCharge] ([IdTypeCharge]),
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct]),
-    CONSTRAINT [FK_ShippingCurrency_DeliveryCurrency] FOREIGN KEY (ShippingCurrency) REFERENCES [dbo].[DeliveryCurrency] (Currency_Id),
-    CONSTRAINT [FK_CodCurrency_DeliveryCurrency] FOREIGN KEY (CodCurrency) REFERENCES [dbo].[DeliveryCurrency] (Currency_Id)
+    CONSTRAINT [FK_ShippingCurrency_CatCurrencyCOD] FOREIGN KEY (ShippingCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
+    CONSTRAINT [FK_CodCurrency_CatCurrencyCOD] FOREIGN KEY (CodCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
 );
 
 GO
