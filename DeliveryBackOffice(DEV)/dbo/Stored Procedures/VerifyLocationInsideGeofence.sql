@@ -5,11 +5,15 @@
 -- Create date: <2022-05-11>
 -- Description:	< Verifica si el punto indicado existe dentro de una geocerca especificada >
 -- =============================================
-
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-05-27>
+-- Description:	<Se agrega parametro para filtrar por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[VerifyLocationInsideGeofence]
 	@Latitude NVARCHAR(20),
 	@Longitude NVARCHAR(20),
-	@Geofence INT = 1 -- Geocerca de GT = 1
+	@Geofence INT = 1 ,-- Geocerca de GT = 1
+	@IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
 
@@ -44,7 +48,7 @@ BEGIN
 							ON GP.IdPoint = P.IdPoint
 							AND P.RowStatus = 1
 						WHERE G.RowStatus = 1
-						AND G.IdGeofence = @Geofence 
+						AND G.CountryId = @IdCountry 
 						ORDER BY GP.GeofencePointOrder ASC
 						FOR XML PATH (''), TYPE)
 					.value('.', 'varchar(max)'),
