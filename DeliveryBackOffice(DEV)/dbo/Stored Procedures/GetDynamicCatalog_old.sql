@@ -7,6 +7,7 @@
     @Others VARCHAR(500) = ''
 AS
 BEGIN
+
     IF @IdAccount = '' 
 	BEGIN
 		SET @IdAccount = NULL;
@@ -15,7 +16,21 @@ BEGIN
     IF (@TypeMethod = 'GetCustomerType')
     BEGIN
 
-		SELECT [idCustomerType], [Description], [CustomerTypeStatus] FROM dbo.CustomerType
+		SELECT [idCustomerType], [Description], [CustomerTypeStatus] 
+		FROM dbo.CustomerType
+        
+    END;
+	ELSE IF (@TypeMethod = 'GetClientActive')
+    BEGIN
+
+		SELECT	[idCustomer], CONCAT([Name],' ',[Description]) 
+		FROM	dbo.Customer 
+		WHERE	RowSatus = 1
+				AND  (  
+						(@Others = '' AND IdCustomerType IN (1, 2))
+						OR 
+						(@Others <> '' AND IdCustomerType = CONVERT(INT,@Others))
+                      ) 
         
     END;
     ELSE 
