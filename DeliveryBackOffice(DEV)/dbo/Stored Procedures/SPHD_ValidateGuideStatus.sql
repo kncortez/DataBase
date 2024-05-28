@@ -8,7 +8,13 @@
 -- Create date: <2022-10-10>
 -- Description:	<Validaciones de datos de guía antes de devolución>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20)
+-- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-05-28>
+-- Description:	<Se agrega parametro para filtrar por pais de origen de la guia>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20),
+	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
     DECLARE @STATUS AS INT;
@@ -129,7 +135,7 @@ BEGIN
             INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
                 ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
         WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
-
+			AND ([DO].[SenderCountryId] = @IdCountry OR ([DO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
         DECLARE @isreturnt BIT =
                 (
                     SELECT [IsLastMileReturn]
@@ -145,6 +151,7 @@ BEGIN
                 INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
                     ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
             WHERE [DDO].[Guide_Serie] = @GuideSerie AND [DDO].[Guide_Number] = @GuideNumber 
+			AND ([DDO].[SenderCountryId] = @IdCountry OR ([DDO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
         )
            )
         BEGIN
