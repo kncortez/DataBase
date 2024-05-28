@@ -9,6 +9,7 @@
 -- Description:    <Se agrega la condicion del pais>
 -- =============================================
 CREATE PROCEDURE [dbo].[get_VehicleReturn]
+				@Country NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
