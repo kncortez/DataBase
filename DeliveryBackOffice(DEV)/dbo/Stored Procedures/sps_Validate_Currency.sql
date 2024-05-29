@@ -6,7 +6,7 @@
 CREATE PROCEDURE [dbo].[sps_Validate_Currency] 
 		@GuideSerie NVARCHAR(2) = 'FD',
 		@GuideNumber INT,
-		@CountryId NVARCHAR(3) = 'HN'
+		@CountryId NVARCHAR(3) = 'GT'
 AS
 BEGIN
 	DECLARE @ValidCod NVARCHAR(10), 
