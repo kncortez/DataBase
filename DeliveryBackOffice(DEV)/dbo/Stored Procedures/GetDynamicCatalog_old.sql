@@ -23,7 +23,7 @@ BEGIN
 	ELSE IF (@TypeMethod = 'GetClientActive')
     BEGIN
 
-		SELECT	[idCustomer], CONCAT([Name],' ',[Description]) 
+		SELECT	[idCustomer], CONCAT([Name],' ',[Description]) [Customer]
 		FROM	dbo.Customer 
 		WHERE	RowSatus = 1
 				AND  (  
@@ -32,6 +32,21 @@ BEGIN
 						(@Others <> '' AND IdCustomerType = CONVERT(INT,@Others))
                       ) 
         
+    END;
+	ELSE IF (@TypeMethod = 'GetVisitPointActiveByClient')
+    BEGIN
+
+		SELECT vpc.[CodeOfReference], CONCAT(c.[Description], '', vpc.[DescriptionOfClient]) [ClientVisitPoint]
+		FROM [DeliveryBackOffice].[dbo].[Customer]					c   WITH (NOLOCK)
+			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
+				ON c.IdCustomer = vpc.CustomerID
+		WHERE	(  
+					(@Others = '' AND IdCustomerType IN (1, 2))
+					OR 
+					(@Others <> '' AND c.IdCustomer  IN (SELECT Item FROM dbo.SplitUnlimited(@Others, ',')))
+                )
+			  AND c.RowSatus = 1
+			  AND vpc.StatusClient = 1
     END;
     ELSE 
     BEGIN
