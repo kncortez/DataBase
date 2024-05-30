@@ -1,477 +1,781 @@
 ﻿
 -- =============================================
--- Author:		<César,Aquino>
--- Create date: <2021-01-08>
+-- Author:		<Cristian Azurdia>
+-- Create date: <2024-04-25>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
-
--- =============================================
--- Modiff:		<Hugo,Gomez>
--- Create date: <2021-05-13>
--- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
--- =============================================
-
--- =============================================
--- Modiff:		<Marco,Jiménez>
--- Create date: <2021-09-16>
--- Description:	<Se agregan validaciones para no cobrar el servicio ni COD en la courierapp cuando la entrega sea en un Express Center>
--- Hotfix: FDAPI-337
--- =============================================
-
--- =============================================
--- Modiff:		<Andres,Ruiz>
--- Create date: <2021-12-13>
--- Description:	< Adición de campos para alertas de servicios >
--- =============================================
-
-/*
-EXEC [dbo].[spws_get_daily_route]
-@IdCourier = 3
-,@DateRoute = '2021-09-09'
-*/
-
-
 
 CREATE PROCEDURE [dbo].[spws_get_daily_route_bnhl]
-	@Token VARCHAR(200)='',
-	@IdCourier bigint,
-	@DateRoute date 
+    @Token VARCHAR(200) = '',
+    @IdCourier BIGINT,
+    @DateRoute DATE
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-
-	DECLARE @jsonResult NVARCHAR(MAX) 
-	DECLARE @jsonResult2 NVARCHAR(MAX) 
-	DECLARE @jsonResult3 NVARCHAR(MAX) 
-	DECLARE @jsonResultErrror NVARCHAR(MAX) 
-
-	-- TOD VALIDAR TOKEN DE COURIERMAN
-	--declare @IdCurrier bigint  = (select top 1 t.TknIdUser from TokenLog t
-				--		where t.TknIdToken = @Token)
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
 	
-	DECLARE @jsonToken NVARCHAR(MAX)
-	 declare @TokenAct int  = 1 --(select top 1 RowStatus from LogTokenPOD where LogTokenPOD LIKE '%' + @Token + '%' order by DateCreated desc)
-     declare @hourtoken int = 5--(select top 1 DATEDIFF(HOUR, DateCreated, GETDATE() ) as horas from LogTokenPOD where LogTokenPOD  LIKE '%' + @Token + '%')
-	DECLARE @IdDeliveryOption AS INT --FDAPI-337
+    --DECLARE @Token VARCHAR(200) = '44229ccd1d8c8210ce25b7b5fe2a8619';
+	--DECLARE @IdCourier BIGINT = 2083;
+    --DECLARE @DateRoute DATE = '2024-04-24';
 
-	-- PARA VALIDAR TIPO DE SERVICIO PARA ALERTAS
-	DECLARE @PickUpTypeId BIGINT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WHERE STSM.Name = 'Recolección');
-	DECLARE @DeliveryTypeId BIGINT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WHERE STSM.Name = 'Entrega');
-	
+	DECLARE @TokenAct INT = 1;
+    DECLARE @hourtoken INT = 7;
+    DECLARE @IdDeliveryOption AS INT;
 
-	if (@TokenAct = 1 and @hourtoken <= 8)
-		begin 
+    -- PARA VALIDAR TIPO DE SERVICIO PARA ALERTAS
+    DECLARE @PickUpTypeId BIGINT =
+            (
+                SELECT	TOP 1 STSM.IdSubTypeServiceManagment
+                FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
+                WHERE	STSM.Name = 'Recolección'
+					AND STSM.RowStatus = 1
+            );
+    DECLARE @DeliveryTypeId BIGINT =
+            (
+                SELECT	TOP 1 STSM.IdSubTypeServiceManagment
+                FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
+                WHERE	STSM.Name = 'Entrega'
+					AND STSM.RowStatus = 1
+            );
+    DECLARE @ReturnTypeId BIGINT =
+            (
+                SELECT	TOP 1 STSM.IdSubTypeServiceManagment
+                FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
+                WHERE	STSM.Name = 'Devolución'
+					AND STSM.RowStatus = 1
+            );
 
-		SET @IdDeliveryOption = (SELECT IdDeliveryOption FROM dbo.CatDeliveryOptions where Name = 'Express Center') --FDAPI-337
-						--set @jsonResult = (SELECT STUFF(( 
-						
-		--Carga rutero de recolecciones
-							--select 
-							--		',
-							--		{									
-       --                             "ServiceType":"' + 'Pickup'  + '",' +
-							--		'"CodeOfReference":"' + convert( varchar,isnull(vpc.CodeOfReference,0))  + '",' +
-							--		'"Id":"' +  isnull( convert(varchar,spk.SchedulePickupId) , '-1') + '",' +
-							--		'"ServiceManagementId":"' +  isnull( convert(varchar,sma.IdServiceManagement) , 'N/A') + '",' +
-							--		'"Sender":"' +  isnull(isnull(spk.SenderName,vpc.DescriptionOfClient), 'N/A') + '",' +
-							--		'"Address":"' +  dbo.fnt_String_Escape(concat( ISNULL( isnull(replace(spk.AddressPickup,'"','') , REPLACE(vpc.Address,'"','')) ,'N/A'), ' ' , vpc.Town , ' ' , vpc.Department),'json') + '",' +
-							--		'"Phone":"' +  isnull( isnull(spk.SenderPhone , vpc.Phone)  ,'N/A') + '",' +
-							--		'"PiecesDry":"' + CONVERT(varchar,isnull((select iif(sum(isnull(ord.Pieces_Dry,0)) =0, (isnull(sum(sc.QuantityOverDimensionedPackage),0) + isnull(sum(sc.QuantityRegularPackages),0))  ,sum(isnull(ord.Pieces_Dry,0)) ) pieces
-							--									from dbo.DeliveryOrderPaymentDetail pay
-							--										left join dbo.DeliveryOrder ord on ord.Guide_Serie = pay.GuideSerie and ord.Guide_Number = pay.GuideNumber
-							--										left join dbo.SchedulePickup sc on sc.SchedulePickupId = pay.IdHeaderRecolection
-							--									where pay.IdHeaderRecolection = spk.SchedulePickupId),0))  + '",' +
-							--		'"PiecesCold":"' + CONVERT(varchar,isnull((select sum(isnull(ord.Pieces_Cold,0)) pieces
-							--			 from dbo.DeliveryOrderPaymentDetail pay
-							--			 left join dbo.DeliveryOrder ord on ord.Guide_Serie = pay.GuideSerie and ord.Guide_Number = pay.GuideNumber
-							--			 where pay.IdHeaderRecolection = spk.SchedulePickupId),0))  + '",' +
-							--		'"ScheduleStart":"' +    substring( CONVERT(varchar, spk.StartDate  ,8),0,6)  + '",' +
-							--		'"ScheduleEnd":"' +     substring(CONVERT(varchar, spk.EndDate  ,8),0,6)   + '",' +
-							--		'"Photo":"' + ISNULL( (select top 1 vpi.PathImage from dbo.ImagesByVisitPoint vpi
-							--								where vpi.CodeOfReference =VPC.CodeOfReference 
-							--								order by DateCreated desc) ,'#')  + '",' +
-							--		'"Latitude":"' + convert(varchar, isnull(vpc.Latitude,0) )  + '",' +
-							--		'"Longitude":"' + convert(varchar, isnull(vpc.Longitude,0) )  + '",' +
-							--		'"Precision":"' + convert(varchar, isnull(vpc.Accuracy,0) )  +  '",' +
-							--		'"Price":"' + '0'  +  '",' +
-							--		'"Pickup":"' + '0'  +  '",' +
-							--		'"customerName":"' +   ' ' + '",' +
-							--		'"alterName":"' +   ' ' + '",' +
-							--		'"HighPriority":' + Convert(varchar, IIF((select ISNULL(count(doa.GuideNumber),0)
-							--									 FROM [DeliveryBackOffice].[dbo].[SchedulePickup] SP
-							--										LEFT JOIN
-							--										[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
-							--										ON 
-							--										SP.SchedulePickupId = DOPD.IdHeaderRecolection
-							--										LEFT JOIN
-							--										[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA
-							--										ON
-							--										DOPD.GuideSerie = DOA.GuideSerie
-							--										AND
-							--										DOPD.GuideNumber = DOA.GuideNumber
-							--										AND
-							--										DOA.ServiceTypeId = @PickUpTypeId
-							--										AND
-							--										DOA.RowStatus = 1
-							--										WHERE
-							--										SP.SchedulePickupId = spk.SchedulePickupId ) > 0, 'true','false'))+ ',' + 
-									
-							--		'"Alerts":[' + IIF( (select ISNULL(count(doa.GuideNumber),0)
-							--									 FROM [DeliveryBackOffice].[dbo].[SchedulePickup] SP
-							--										LEFT JOIN
-							--										[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
-							--										ON 
-							--										SP.SchedulePickupId = DOPD.IdHeaderRecolection
-							--										LEFT JOIN
-							--										[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA
-							--										ON
-							--										DOPD.GuideSerie = DOA.GuideSerie
-							--										AND
-							--										DOPD.GuideNumber = DOA.GuideNumber
-							--										AND
-							--										DOA.ServiceTypeId = @PickUpTypeId
-							--										AND
-							--										DOA.RowStatus = 1
-							--										WHERE
-							--										SP.SchedulePickupId = spk.SchedulePickupId ) > 0 ,
-							--										(SELECT STUFF((SELECT ',{"TypeAlert":' +Convert(varchar,doa.AlertTypeId) + ',' + 
-							--									 '"DescriptionAlert":"' + dbo.fnt_String_Escape(dbo.fn_replace_special_characters(doa.AlertDescription),'json')  + '",' + 
-							--									 '"DateCreated":"' + (Convert(varchar,doa.DateCreated,24)) + ' - '+ (Convert(varchar,doa.DateCreated,103)) + '"}'
-							--									 FROM [DeliveryBackOffice].[dbo].[SchedulePickup] SP
-							--										LEFT JOIN
-							--										[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD
-							--										ON 
-							--										SP.SchedulePickupId = DOPD.IdHeaderRecolection
-							--										LEFT JOIN
-							--										[DeliveryBackOffice].[dbo].[DeliveryOrderAlert] DOA
-							--										ON
-							--										DOPD.GuideSerie = DOA.GuideSerie
-							--										AND
-							--										DOPD.GuideNumber = DOA.GuideNumber
-							--										AND
-							--										DOA.ServiceTypeId = @PickUpTypeId
-							--										AND
-							--										DOA.RowStatus = 1
-							--										WHERE
-							--										SP.SchedulePickupId = spk.SchedulePickupId
-							--										ORDER BY
-							--										DOA.DateCreated DESC
-							--		 FOR XML PATH ('')), 1, 1, '')) , '') 
-							--			+
-							--		'],' +
-							--		'"Status":"' + convert(varchar,isnull(sma.ServiceStatusId,1))  +
-							--			+ '"}'
-							--		from dbo.RouteAssigment ras
-							--		left join dbo.ServiceManagement sma on sma.IdPuRouteAssigment = ras.IdRouteAssigment
-							--		left join dbo.SchedulePickup spk on spk.SchedulePickupId = sma.IdSchedulePickup
-							--		left join dbo.VisitPointClient vpc on vpc.CodeOfReference = spk.SenderId 
-							--			where 
-							--			ras.IdCurrierMan= @IdCourier 
-							--			and ras.DateOfRoute = @DateRoute
-								
-									
-					
-							--	FOR XML PATH(''), TYPE
-							--		).value('.', 'varchar(max)'),1,1,''
-							--				) )
+	SET @IdDeliveryOption =
+        (
+            SELECT TOP 1 IdDeliveryOption
+            FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] WITH (NOLOCK)
+            WHERE [Name] = 'Express Center'
+        ); 
 
---Carga rutero de entregas
-						set @jsonResult2 = (SELECT STUFF(( 
-						
-						--SELECT JDRS2.JsonDataRow FROM ( 
-						SELECT DISTINCT --JDRS.JsonDataRow, MIN(ISNULL(JDRS.ShownOrder,999)) topOrder from( 
-						--SELECT top 100 percent 
-						
-						REPLACE( 
-									',
-									{									
-                                    "ServiceType":"' +  'Delivery'  + '",' +
-									'"CodeOfReference":"' + convert( varchar,isnull(vpr.CodeOfReference,0))  + '",' +
-									'"Id":"' +  isnull( convert(varchar,DOR.Guide_Serie + CONVERT(varchar,DOR.Guide_Number)) , '-1') + '",' +
-									'"ServiceManagementId":"' +  isnull( convert(varchar,0) , 'N/A') + '",' +
-									'"Sender":"'  +   isnull(isnull(COALESCE(DOR.Sender_FirstName,'')+ ' ' + COALESCE(DOR.Sender_LastName,''),vpc.DescriptionOfClient), 'N/A') + '",' +
-									--'"Address":"' + dbo.fn_replace_special_characters(IIF(kvp.KindOfVPName ='Express Center', ISNULL(vpr.Address,''),  dbo.fnt_String_Escape( /*concat(*/ ISNULL( isnull(REPLACE(DOR.Receiver_Address,'"',''), REPLACE(vpc.Address,'"','')) ,'N/A')/*, ' ' , vpc.Town , ' ' , vpc.Department)*/,'json'))) + '",' +
-									'"Phone":"' +  isnull( isnull(DOR.Receiver_Phone , dor.Receiver_Alternant_Phone)  ,'N/A') + '",' +
-									'"PiecesDry":"' + CONVERT(varchar,isnull((select (sum(isnull(DOR2.Pieces_Dry,0))) pieces
-										 from DeliveryBackOffice.dbo.DeliveryOrder DOR2
-										 where DOR2.Guide_Serie = DAT.Guide_Serie
-										 and DOR2.Guide_Number = DAT.Guide_Number
-																),0))  + '",' +
-									'"PiecesCold":"' + CONVERT(varchar,isnull((select (sum(isnull(DOR2.Pieces_Cold,0))) pieces
-										 from DeliveryBackOffice.dbo.DeliveryOrder DOR2
-										 where DOR2.Guide_Serie = DAT.Guide_Serie
-										 and DOR2.Guide_Number = DAT.Guide_Number
-																),0))  + '",' +
-									'"ScheduleStart":"' +   ''  + '",' +
-									'"ScheduleEnd":"' +     ''   + '",' +
-									'"Photo":"' + ISNULL( (select top 1 vpi.PathImage from dbo.ImagesByVisitPoint vpi
-															where vpi.CodeOfReference =VPC.CodeOfReference 
-															order by DateCreated desc) ,'#')  + '",' +
-									--'"Latitude":"' + convert(varchar,
-									--	(CASE
-									--		WHEN ISNULL(SDFG.Latitude,0) != 0 AND ISNULL(SDFG.Longitude,0) != 0 THEN convert(varchar,ISNULL(SDFG.Latitude,0))
-									--		WHEN ISNULL(VPr.Latitude,'0') <> '' THEN ISNULL(VPr.Latitude,'0')
-									--		ELSE '0'
-									--	END)
-									--)  + '",' +
-									--'"Longitude":"' + convert(varchar,
-									--	(CASE
-									--		WHEN ISNULL(SDFG.Latitude,0) != 0 AND ISNULL(SDFG.Longitude,0) != 0 THEN convert(varchar,ISNULL(SDFG.Longitude,0))
-									--		WHEN ISNULL(VPr.Longitude,'0') <> '' THEN ISNULL(VPr.Longitude,'0')
-									--		ELSE '0'
-									--	END)
-									--)  + '",' +
-									--IIF(ISNULL(SDFG.Latitude,0) != 0 AND ISNULL(SDFG.Longitude,0) != 0, '"LocationConfirmed":1,', '') +
-									--'"Precision":"' + convert(varchar, isnull(vpc.Accuracy,0) )  +  '",' +
-									CASE WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN  
-									'"Price_COD":"0",' 
-									ELSE
-									'"Price_COD":"' + IIF(kvp.KindOfVPName ='Express Center', '0',   CONVERT(varchar,isnull(DOR.Collect_OnDelivery,0)))  +  '",' 
-									END +
-									
-									CASE WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN
-									'"Price":"0",' 
-									ELSE
-									'"Price":"' + IIF(kvp.KindOfVPName ='Express Center', '0',    CONVERT(varchar,iif(isnull(DOR.IsCollect ,0)=1, isnull(DOR.PriceShippment,0),0 )))  +  '",' 
-									END 
-									+
-									CASE WHEN DOR.IdDeliveryOption = @IdDeliveryOption THEN
-									'"Pickup":"0",' 
-									ELSE
-									'"Pickup":"' + CONVERT(varchar,isnull((SELECT top 1
-										iif(isnull(dp.TimePlaId,0) = 3 ,sc.AmountPickup,0)
-										FROM dbo.DeliveryOrderPaymentDetail dp
-										left join dbo.SchedulePickup sc on sc.SchedulePickupId = dp.IdHeaderRecolection
-										where dp.GuideNumber = DOR.Guide_Number AND DP.GuideSerie = DOR.Guide_Serie
-										),0) )  +  '",' 
-										END 
-										+
-									--'"customerName":"' + dbo.fn_replace_special_characters(IIF(kvp.KindOfVPName ='Express Center', ISNULL(vpr.DescriptionOfClient,''), ISNULL(REPLACE(DOR.Receiver_FirstName,'"',''),'N/A'))) + '",' +
-									'"customerName":"' + IIF(kvp.KindOfVPName ='Express Center', ISNULL(vpr.DescriptionOfClient,''), ISNULL(REPLACE(DOR.Receiver_FirstName,'"',''),'N/A')) + '",' +
-									
-									--'"alterName":"' +   dbo.fn_replace_special_characters(isnull(isnull(REPLACE(DOR.Receiver_Alternant_FullName,'"',''),REPLACE(dor.Receiver_FirstName,'"','')),'N/A')) + '",' +
-									'"Status":"' + convert(varchar,isnull(DOR.StatusOrderId,4))  +'",'+ 
-									IIF( doa.GuideNumber IS NOT NULL, '"HighPriority":' + Convert(varchar, IIF((select ISNULL(count(doa.GuideNumber),0)
-																 FROM DeliveryOrderAlert doa
-																	 where doa.GuideNumber = DOR.Guide_Number
-																	 AND doa.RowStatus = 1
-																	 AND doa.ServiceTypeId = @DeliveryTypeId ) > 0, 'true','false'))+ ',' + 
-									'"Alerts": [ ' +   
-										(SELECT STUFF((SELECT TOP 1 ' { "TypeAlert": ' +Convert(varchar,doa.AlertTypeId) + ', ' + 
-																 '"DescriptionAlert": "' + dbo.fnt_String_Escape(dbo.fn_replace_special_characters(doa.AlertDescription),'json')  + '", ' + 
-																 '"DateCreated": "' + (select top 1 Convert(varchar,doa.DateCreated,24)) + ' - '+ (select top 1 Convert(varchar,doa.DateCreated,103)) + '" }, '
-																 FROM DeliveryOrderAlert doa
-																	 where doa.GuideNumber = DOR.Guide_Number
-																	 AND doa.RowStatus = 1
-																	 AND doa.ServiceTypeId = @DeliveryTypeId
-																	 ORDER BY doa.DateCreated DESC
-									 FOR XML PATH ('')), 1, 1, ''))+
-									'],' ,'')
-									 
-										+ '}',CHAR(31),'')  JsonDataRow
-										--, isnull(DSD.GuideOrder,999) 'ShownOrder' 
-									from (select distinct Guide_Serie,Guide_Number,ID_Courier 
-									     from dbo.DeliveryAttempt 
-										 where CAST(Date_Created AS DATE) = CAST(@DateRoute AS DATE)
-										 ) DAT /*dbo.DeliveryAttempt DAT*/
-									join DeliveryBackOffice.dbo.DeliveryOrder DOR
-									    on      DAT.Guide_Serie = DOR.Guide_Serie
-											and DAT.Guide_Number = DOR.Guide_Number
-											and DOR.StatusOrderId in (4,5,12,20,25) --En ruta|entregado|Intento de entrega fallida(incidencia)|Devolución
-									join DeliveryBackOffice.dbo.DeliverySettlementDetail DSD
-										on     DSD.Guide_Serie = DAT.Guide_Serie 
-										   and DSD.Guide_Number = DAT.Guide_Number
-									join DeliveryBackOffice.dbo.DeliveryOrderBySettlement DOS
-									    on     DOS.ID = DSD.ID_DeliveryOrderBySettlement
-										   and DOS.ID_Courier = DAT.ID_Courier
-									left join DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
-									    on     VPC.CodeOfReference = DOR.Sender_ID
-									left join DeliveryBackOffice.dbo.ServiceDataForGuide SDFG -- MODIFICACION 23/10/2021 JOSE ANDRES RUIZ PEER    
-										on DOR.Guide_Serie = SDFG.GuideSerie
-										and DOR.Guide_Number = SDFG.GuideNumber
-										and SDFG.IsDelivery = 1
-									left join DeliveryBackOffice.dbo.VisitPointClient VPr WITH (NOLOCK)
-									    on     VPr.CodeOfReference = DOR.Receiver_ID
-									LEFT JOIN dbo.KindOfVPClient kvp 
-										ON kvp.IdKindOfVPClient = VPr.IdKindOfVPClient
-									LEFT JOIN dbo.DeliveryOrderAlert doa 
-										ON doa.GuideNumber = DAT.Guide_Number 
-										AND doa.RowStatus = 1
-										AND doa.ServiceTypeId = @DeliveryTypeId
-									where
-									DAT.ID_Courier = @IdCourier
-									--order by isnull('ShownOrder',999) asc) JDRS
-									--group by JDRS.JsonDataRow ) JDRS2
-									--order by topOrder ASC
-                                    
-								FOR XML PATH(''), TYPE
-									).value('.', 'varchar(max)'),1,1,''
-											) )
-			
-			PRINT CONCAT('@jsonResult2',@jsonResult2)				
------------------------------Start Sumary, ListGuides Return----------------------------------------------
+	SELECT @PickUpTypeId [PickUpTypeId], @DeliveryTypeId [DeliveryTypeId], @ReturnTypeId [ReturnTypeId], @IdDeliveryOption [IdDeliveryOption]
+
+	/************************************** SERVICIOS CON ALERTAS *******************************************/
+	DROP TABLE IF EXISTS #TmpAlertList;
+
+    CREATE TABLE #TmpAlertList
+    (
+		ServiceManagementId INT,
+		AlertTypeId INT,
+        AlertDescription NVARCHAR(500),
+        DateCreated DATETIME,
+    );
+
+    CREATE NONCLUSTERED INDEX tempSCheduledpickupid
+    ON #TmpAlertList (ServiceManagementId);
+
+	INSERT INTO #TmpAlertList
+    (
+		ServiceManagementId,
+		AlertTypeId,
+        AlertDescription,
+		DateCreated
+    )
+    SELECT	DOA.ServiceManagementId,
+			DOA.AlertTypeId,
+			DOA.AlertDescription,
+			DOA.DateCreated
+    FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert]      DOA WITH (NOLOCK)
+	LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]  SMA WITH (NOLOCK)
+		ON doa.ServiceManagementId = sma.IdServiceManagement
+	lEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment]     ROAS WITH (NOLOCK)
+		ON	ROAS.IdCurrierMan = SMA.IdPuCourrier
+		AND ROAS.IdRouteAssigment = SMA.IdPuRouteAssigment	
+	WHERE   ROAS.IdCurrierMan = @IdCourier
+		AND	ROAS.DateOfRoute >= @DateRoute
+		AND ROAS.RowStatus = 1
+        AND DOA.RowStatus = 1
+    
+
+	/************************************** SERVICIOS CON DEVOLUCIÓN *******************************************/
+
+	DROP TABLE IF EXISTS  #GuideService;
+
+    CREATE TABLE #GuideService
+	(
+		IdServiceManagement INT,
+		GuideSerie NVARCHAR(2),
+		GuideNumber INT,
+		ServiceStatusId INT,
+		IdPuCourrier INT,
+    );
+    CREATE NONCLUSTERED INDEX tempSerie
+    ON #GuideService (
+                        GuideSerie,
+						GuideNumber
+                        );
+
+    INSERT INTO #GuideService
+    (
+        IdServiceManagement,
+		GuideSerie,
+		GuideNumber,
+		ServiceStatusId,
+		IdPuCourrier
+    )
+    SELECT	SMG.IdServiceManagement,
+			dpc.GuideSerie,
+			dpc.GuideNumber,
+			SMG.ServiceStatusId,
+			@IdCourier IdPuCourrier
+    FROM	[DeliveryBackOffice].[dbo].[SettlementByPickup]			stp WITH (NOLOCK)
+	LEFT JOIN [DeliveryBackOffice].[dbo].[SettlementByPickupDetail] std WITH (NOLOCK)
+        ON std.SettlementByPickupId = stp.Id
+	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPiece]		dpc WITH (NOLOCK)
+		ON	dpc.GuideSerie = std.GuideSerie
+        AND dpc.GuideNumber = std.GuideNumber
+    LEFT JOIN [DeliveryBackOffice].[dbo].[PieceByService]			pbs WITH (NOLOCK)
+        ON pbs.GuidePieceId = dpc.GuidePiece
+    LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]		SMG WITH (NOLOCK)
+        ON SMG.IdServiceManagement = pbs.ServiceManagmentId
+    WHERE stp.IdCourier = @IdCourier
+            AND CAST(stp.DateCreated AS DATE) = @DateRoute
+            AND SMG.SubTypeServiceManagmentId = 3; --Solo filtro devoluciones
+
+	/************************************** FIN SERVICIOS CON DEVOLUCIÓN *******************************************/
+
+
+	/************************************** SERVICIOS CON DEVOLUCIÓN *******************************************/
+
+	DROP TABLE IF EXISTS #GuideReturnService;
+
+	 CREATE TABLE #GuideReturnService
+    (
+        GuideSerie NVARCHAR(2)
+      , GuideNumber INT
+    );
+    CREATE NONCLUSTERED INDEX IDX_TMP_GuideReturnService_Guide
+    ON #GuideReturnService (
+                               GuideSerie
+                             , GuideNumber
+                           );
+   SELECT
+           DAT.Guide_Serie,
+           DAT.Guide_Number
+    FROM
+    (
+        SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
+				Guide_Serie,
+				Guide_Number,
+				ID_Courier
+        FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
+        WHERE	CAST(Date_Created AS DATE) = @DateRoute
+			AND ID_Courier = @IdCourier 
+			AND Guide_Piece = 1
+		GROUP BY	
+				Guide_Serie,
+				Guide_Number,
+				ID_Courier
+    )                                                               DAT
+	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]           DOR WITH (NOLOCK)
+        ON DAT.Guide_Serie = DOR.Guide_Serie
+        AND DAT.Guide_Number = DOR.Guide_Number
+        AND DOR.IsLastMileReturn = 1
+		--En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Incidencia en ruta
+        AND DOR.StatusOrderId IN ( 4, 5, 12,  14, 20, 25, 45 ) 
+	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
+        ON DSD.Guide_Serie = DAT.Guide_Serie
+        AND DSD.Guide_Number = DAT.Guide_Number
+        AND DSD.RowStatus = 1
+    LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOS WITH (NOLOCK)
+        ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
+        AND DOS.ID_Courier = DAT.ID_Courier
+    WHERE DAT.ID_Courier = @IdCourier;
+    
+	/************************************** SERVICIOS CON DEVOLUCIÓN *******************************************/
+
+	DECLARE @ConcatReturnGuides NVARCHAR(MAX) =
+            (
+                SELECT STUFF((
+                                 SELECT ',' + CONCAT(GuideSerie, GuideNumber)
+                                 FROM #GuideReturnService
+                                 FOR XML PATH('')
+                             )
+                           , 1
+                           , 1
+                           , ''
+                            )
+            );
+
+	DECLARE @TempReturnPrice AS TABLE
+    (
+        GuideSerie NVARCHAR(25) NULL
+      , GuideNumber NVARCHAR(25) NULL
+      , IsCollect NVARCHAR(25) NULL
+      , Price DECIMAL(14, 2) NULL
+      , COD DECIMAL(14, 2) NULL
+      , AmountPaid DECIMAL(14, 2) NULL
+      , CODPaid DECIMAL(14, 2) NULL
+      , CODIsPaid DECIMAL(14, 2) NULL
+      , PaymentTime INT NULL
+      , TimeSequence INT NULL
+      , FelNumber NVARCHAR(50) NULL
+      , IsPaid INT NULL
+      , IsCustomer INT NULL
+      , ConditionPayment NVARCHAR(200) NULL
+      , HaveCredit NVARCHAR(50) NULL
+      , CollectCOD NVARCHAR(50) NULL
+      , ReturnRate DECIMAL(14, 2) NULL
+      , AmountToPay DECIMAL(14, 2) NULL
+      , CODAmount DECIMAL(14, 2) NULL
+      , ReturnRates DECIMAL(14, 2) NULL
+    );
+    INSERT INTO @TempReturnPrice
+    (
+        GuideSerie
+      , GuideNumber
+      , IsCollect
+      , Price
+      , COD
+      , AmountPaid
+      , CODPaid
+      , CODIsPaid
+      , PaymentTime
+      , TimeSequence
+      , FelNumber
+      , IsPaid
+      , IsCustomer
+      , ConditionPayment
+      , HaveCredit
+      , CollectCOD
+      , ReturnRate
+      , AmountToPay
+      , CODAmount
+      , ReturnRates
+    )
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Guías
+                                              , @InTime = 3                        -- Entrega
+                                              , @IsReturn = 1                      -- Devolución
+                                              , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
+                                              , @IdModule = 1
+                                              , @Token = @Token;
+
+    /************************************** FIN SERVICIOS PENDIENTES DE PAGO *******************************************/
+
+    PRINT 'validando token';
+
+    IF (@TokenAct = 1 AND @hourtoken <= 8)
+    BEGIN
+
+
+        PRINT 'construyendo json result';
+
+        SELECT 'Pickup' [ServiceType], 
+				--ras.*,
+				ISNULL(vpc.CodeOfReference, 0) [CodeOfReference],
+				ISNULL(spk.SchedulePickupId, '-1') [SchedulePickupId],
+				ISNULL(sma.IdServiceManagement, -1) [IdServiceManagement],
+				ISNULL(cpt.TimePlaName, 'N/A') [ServicePaymentTime],
+				ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A') [Sender],
+				ISNULL(ISNULL(spk.AddressPickup, vpc.[Address]),'N/A') [Address],
+				CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END [Township_Sender],
+				CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END [Department_Sender],
+				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
+				IIF(
+						ISNULL(dcp.Pieces_Dry, 0) = 0,
+						(
+						ISNULL(spk.QuantityOverDimensionedPackage,0)
+						+ 
+						ISNULL(spk.QuantityRegularPackages,0)
+						),
+						dcp.Pieces_Dry
+					) [PiecesDry],
+				ISNULL(dcp.Pieces_Cold, 0) [Pieces_Cold],
+				SUBSTRING(CONVERT(VARCHAR, spk.StartDate, 8), 0, 6) 'ScheduleStart',
+				ISNULL( spk.EndDate, DATEADD( HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME) ) ) 'ScheduleEnd',
+				ISNULL( vpi.PathImage, '#') [Photo],
+				ISNULL(vpc.Latitude, 0)  [Latitude],
+				ISNULL(vpc.Longitude, 0) [Longitude],
+				ISNULL(vpc.Accuracy, 0) [Precision],
+				0 [Price],
+				0 [Pickup],
+				'' [AlterName],  
+				'' [Customer_Name],
+				'' [HighPriority],
+				ISNULL(sma.ServiceStatusId, 1) [Status]
+        FROM [DeliveryBackOffice].[dbo].[RouteAssigment] ras WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] sma WITH (NOLOCK)
+            ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] spk WITH (NOLOCK)
+            ON spk.SchedulePickupId = sma.IdSchedulePickup
+        RIGHT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
+            ON vpc.CodeOfReference = spk.SenderId
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatPaymentTime] cpt WITH (NOLOCK)
+            ON sma.CatPaymentTimeId = cpt.TimePlaId
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] t WITH (NOLOCK)
+			ON  spk.TownshipId = t.IdTownship
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Province] p WITH (NOLOCK)
+			ON t.IdProvince =p.IdProvince
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ImagesByVisitPoint] vpi WITH (NOLOCK)
+			ON vpi.CodeOfReference = vpc.CodeOfReference
+		OUTER APPLY( 
+					SELECT	SUM(sc.QuantityOverDimensionedPackage) [QuantityOverDimensionedPackage], 
+							SUM(sc.QuantityRegularPackages) [QuantityRegularPackages],
+							SUM(ord.Pieces_Dry) [Pieces_Dry], 
+							SUM(ord.Pieces_Cold) [Pieces_Cold]
+					FROM [DeliveryBackOffice].[dbo].[SchedulePickup]    sc WITH (NOLOCK)  
+					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] pay WITH (NOLOCK)
+						ON sc.SchedulePickupId = pay.IdHeaderRecolection
+					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]     ord WITH (NOLOCK)
+						ON ord.Guide_Serie = pay.GuideSerie
+						AND ord.Guide_Number = pay.GuideNumber
+					WHERE  sc.SchedulePickupId = sma.IdSchedulePickup
+					   AND pay.IdHeaderRecolection = spk.SchedulePickupId
+		) dcp
+        WHERE	ras.IdCurrierMan = @IdCourier
+			AND ras.DateOfRoute  = @DateRoute
+			AND ras.RowStatus = 1 
 		
-		IF OBJECT_ID('tempdb.dbo.#GuideService', 'U') IS NOT NULL DROP TABLE #GuideService;
+		--SELECT TOP 10 * FROM DeliveryOrderAlert
 
-select sm.IdServiceManagement, dp.GuideSerie, dp.GuideNumber, sm.ServiceStatusId, sm.IdPuCourrier
-Into #GuideService
-from dbo.RouteAssigment ra
-	left join dbo.ServiceManagement sm on sm.IdPuRouteAssigment = ra.IdRouteAssigment
-	left join dbo.PieceByService ps on ps.ServiceManagmentId = sm.IdServiceManagement
-	left join dbo.DeliveryOrderPiece dp on dp.GuidePiece = ps.GuidePieceId
-where  
-CONVERT(varchar,ra.DateOfRoute,103)  =  CONVERT(varchar,GETDATE(),103)
-and ra.IdCurrierMan = @IdCourier
-and sm.SubTypeServiceManagmentId = 3
+		PRINT 'construido jrsult';
 
-
-declare @guides nvarchar (MAX) = (select stuff((select ','+concat(GuideSerie,GuideNumber) from #GuideService
-											FOR XML PATH ('')),1,1,''))
-
-											PRINT CONCAT('GUIDES',@guides)
-
-		declare @Temp as table
-		(	GuideSerie			nvarchar (25) null,
-			GuideNumber			nvarchar (25) null,
-			IsCollect			nvarchar (25) null,
-			Price				decimal (14,2) null,
-			COD					decimal (14,2) null,
-			AmountPaid			decimal (14,2) null,
-			CODPaid				decimal (14,2) null,
-			CODIsPaid			decimal (14,2) null,
-			PaymentTime			int null,
-			TimeSequence		int null,
-			FelNumber			nvarchar (50) null,
-			IsPaid				int null,
-			IsCustomer			int null,
-			ConditionPayment	nvarchar(200) null,
-			HaveCredit			nvarchar (50) null,
-			CollectCOD			nvarchar (50) null,
-			ReturnRate			decimal (14,2) null,
-			AmountToPay			decimal (14,2) null,
-			CODAmount			decimal (14,2) null,
-			ReturnRates			decimal (14,2) null)
-			INSERT INTO @Temp (GuideSerie,GuideNumber,IsCollect,Price,COD,AmountPaid,CODPaid
-				,CODIsPaid,PaymentTime,TimeSequence	,FelNumber,IsPaid,IsCustomer
-				,ConditionPayment,HaveCredit,CollectCOD,ReturnRate,AmountToPay,CODAmount,ReturnRates)
-			EXEC  [dbo].[spws_get_guide_pending_payment]
-				@InGuides = @guides,
-				@InTime = 1,
-				@IsReturn = 1,
-				@CodeApp = 'SIFDCECOM300720201459',
-				@IdModule = 1,
-				@Token = @Token
-
-
-	
-
---------------------------------End Sumary,ListGuides Return----------------------------------------------------------------------
-
-
------------------------Start Retuns Services ---------------------------------------------
---Devoluciones
-								--set @jsonResult3 = (SELECT STUFF(( 
-								--	 select  distinct
-								--	',
-								--	{									
-        --                                        "ServiceType":"' +  'Return'  + '",' +
-								--	'"CodeOfReference":"' + convert( varchar,isnull(vpc.CodeOfReference,0))  + '",' +
-								--	'"ServiceManagementId":"' +  isnull( convert(varchar, gs.IdServiceManagement ,0) , 'N/A') + '",' +
-								--	'"Sender":"'  +  isnull(isnull(COALESCE(do.Sender_FirstName,'')+ ' ' + COALESCE(do.Sender_LastName,''), COALESCE( vpc.DescriptionOfClient,'') ), 'N/A') + '",' +
-								--	'"Address":"' + dbo.fnt_String_Escape( concat(  ISNULL(REPLACE(do.Sender_Address,'"','') ,' ') , isnull(do.Sender_Address, REPLACE(vpc.Address,'"','')) , ' ' , ISNULL( do.Sender_Town, '') , ' ' , isnull(do.Sender_Department,'')),'json') + '",' +
-								--	'"Phone":"' +  isnull( isnull(do.Sender_Phone, '')  ,'N/A') + '",' +
-								--	--'"PiecesDry":"' + CONVERT(varchar,isnull((select (sum(isnull(do.Pieces_Dry,0)))),0))  + '",' +
-								--	--'"PiecesCold":"' + CONVERT(varchar,isnull((select (sum(isnull(do.Pieces_Cold,0)))),0))  + '",' +
-								--	'"ScheduleStart":"' +   ''  + '",' +
-								--	'"ScheduleEnd":"' +     ''   + '",' +
-								--	'"Photo":"' + ISNULL( (select top 1 vpi.PathImage from dbo.ImagesByVisitPoint vpi
-								--							where vpi.CodeOfReference =VPC.CodeOfReference 
-								--							order by DateCreated desc) ,'#')  + '",' +
-								--	'"Latitude":"' + convert(varchar, isnull(vpc.Latitude,0) )  + '",' +
-								--	'"Longitude":"' + convert(varchar, isnull(vpc.Longitude,0) )  + '",' +
-								--	'"Precision":"' + convert(varchar, isnull(vpc.Accuracy,0) )  +  '",' +
-								--	'"Status":"' + convert(varchar,isnull(gs.ServiceStatusId,7)) +  '",' +
-								--	'"CurrencySymbol":"' +     'Q.'   + '",' +
-								----	'"Summary":' + @jsonResult8 + ',' +
-								--CASE WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
-								--	'"TotalServiceAmount":"0",' 
-								--	ELSE
-								--	'"TotalServiceAmount":"' + convert( varchar,isnull(gt.AmountToPay,0))  + '",' 
-								--	END +
-								--	CASE WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
-								--    '"TotalReturnAmount":"0",' 
-								--	ELSE
-								--	'"TotalReturnAmount":"' + convert( varchar,isnull(gt.ReturnRates,0))  + '",' 
-								--	END +
-								--	CASE WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
-								--	'"TotalAmount":"0",' 
-								--	ELSE
-								--	'"TotalAmount":"' + convert( varchar,isnull(gt.AmountToPay + gt.ReturnRates,0))  + '",' 
-								--	END +
-								--	'"PiecesList":[' + (select stuff((SELECT ','+    '"' +   isnull(CONCAT(isnull(convert(varchar,dop.GuideSerie), 'N/A') ,isnull(convert(varchar,dop.GuideNumber), 'N/A'), '-' ,isnull(convert(varchar,dop.NoPiece), 'N/A' )  ) , 'N/A') +  '"'  
-								--			 	from ServiceManagement sm 
-								--			join SenderReceiver sr on (sr.ID = sm.IdPuCourrier)
-								--			join PieceByService ps on (ps.ServiceManagmentId = sm.IdServiceManagement)
-								--			join DeliveryOrderPiece dop WITH (NOLOCK) on (dop.GuidePiece = ps.GuidePieceId)
-								--			where sm.ServiceStatusId in ( 1,4,7,8) and sm.IdPuCourrier = @IdCourier and CONVERT(varchar,sm.DateCreated,103)  =  CONVERT(varchar,GETDATE(),103) and sm.IdServiceManagement = gs.IdServiceManagement
-								--			FOR XML PATH ('')),1,1,'')) + ']' +
-								--		+ '}' 
-								--	from   
-								--			#GuideService gs
-								--			left join @Temp gt  on gt.GuideSerie = gs.GuideSerie and gt.GuideNumber = gs.GuideNumber
-								--			join DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) on do.Guide_Serie = gs.GuideSerie and do.Guide_Number = gs.GuideNumber 
-								--			left join DeliveryBackOffice.dbo.VisitPointClient VPC
-								--	    on     VPC.CodeOfReference = do.Sender_ID
-								--		group by gs.IdServiceManagement, do.Sender_Address,  VPC.CodeOfReference, do.Sender_FirstName, do.Sender_LastName,
-								--		 VPC.DescriptionOfClient,  VPC.Address, do.Sender_Town, do.Sender_Department, do.Sender_Phone,  VPC.Latitude,  VPC.Longitude,  VPC.Accuracy
-								--		 ,gs.ServiceStatusId, gt.AmountToPay, gt.ReturnRates,do.IdDeliveryOption
-								--	--and CAST(DAT.Date_Created AS DATE) = CAST(@DateRoute AS DATE)
-								--		FOR XML PATH(''), TYPE
-								--			).value('.', 'varchar(max)'),1,1,''
-								--					) )
-		---------------------------------------------End Retuns Services --------------------------------------------------					
-						If @jsonResult is null and @jsonResult2 is null and @jsonResult3 is null
-						begin
-							set @jsonResultErrror =(
-										SELECT STUFF(( 
-										SELECT '{{"IdResult":500,' 
-										+ '"Message":" No se encontraron registros"}' 
-										FOR XML PATH(''), TYPE
-										).value('.', 'varchar(max)'),1,1,''
-											  ) 
+		PRINT 'construyendo jrsult 2';
+       
+		SELECT	'Delivery' [ServiceType],
+				CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0)) [CodeOfReference],
+				ISNULL(
+						(
+							CASE
+							WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
+							THEN DOR.IdDeliveryOption
+							ELSE 1
+							END
+						), 0
+					  )[DeliveryOption],
+				 ISNULL([DOR].[IsLastMileReturn], 0) [IsLastMileReturn],
+				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 0 [ServiceManagementId],
+				 ISNULL(
+					ISNULL(
+							COALESCE(
+										IIF(
+												DOR.IsLastMileReturn = 1,
+												DOR.Receiver_FirstName,
+												DOR.Sender_FirstName
+											) , ''
+									) + ' '
+							+ 
+							COALESCE(
+										IIF(
+												DOR.IsLastMileReturn = 1,
+												DOR.Receiver_FirstName,
+												DOR.Sender_FirstName
+											) , ''
+									   )
+							, VPC.DescriptionOfClient
+							) , 'N/A'
+					) [Sender],
+				CASE
+				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
+				THEN [DOR].[Sender_Phone]
+				ELSE ''
+				END [Sender_Phone],
+				IIF(
+						kvp.KindOfVPName = 'Express Center',
+						ISNULL(VPr.Address, ''),											
+						ISNULL(
+								ISNULL(
+										IIF(
+												DOR.IsLastMileReturn = 1,
+												DOR.Sender_Address,
+												DOR.Receiver_Address
+											), 
+										IIF(
+												DOR.IsLastMileReturn = 1,
+												VPC.Address,
+												VPr.Address
+											)
+																								
 										)
-						end
-
-						
-						
-							select ('[' + COALESCE(@jsonResultErrror,'') 
-						+ CASE WHEN @jsonResult IS NOT NULL and @jsonResult2 Is null and @jsonResult3 Is null THEN CONCAT( @jsonResult ,'')  ELSE '' END 
-						+ CASE WHEN @jsonResult IS NOT NULL and (@jsonResult2 IS NOT NULL OR @jsonResult3 IS NOT NULL) THEN CONCAT( @jsonResult ,',')  ELSE '' END 
-						+ CASE WHEN @jsonResult2 IS NOT NULL and @jsonResult3 Is null THEN CONCAT( @jsonResult2 ,'')  ELSE '' END
-						+ CASE WHEN @jsonResult2 IS NOT NULL and @jsonResult3 IS NOT NULL THEN CONCAT( @jsonResult2 ,',') ELSE '' END 
-						+ COALESCE(@jsonResult3,'') +  ']') jsonResult
-
-						IF OBJECT_ID('tempdb.dbo.#GuideService', 'U') IS NOT NULL DROP TABLE #GuideService;
-
-	end
-						
-		else if(@TokenAct = 0 or @TokenAct is null or @hourtoken > 8)
-		begin 
-			  print 'token inválido'
-					SET @jsonToken = (
-				   SELECT STUFF((
-		   			SELECT  
-					',{"IdResult":' + '403' + ',' +
-					'"DescriptionError":"' + 'Token inválido'  + '"' +	  	  
-					'}' 
-					FOR XML PATH(''), TYPE
-				   ).value('.', 'varchar(max)'),1,1,''
-		   					  ) 
-				   )
-					 select '['+ @jsonToken + ']' jsonToken
+										, 'N/A'
+								)
+						) [Address],
+				ISNULL(
+						IIF(DOR.IsLastMileReturn = 1
+						, ISNULL(DOR.Sender_Phone, 'N/A')
+						, ISNULL(
+									DOR.Receiver_Phone
+									, DOR.Receiver_Alternant_Phone
+								)
+							), 'N/A'
+					  ) [Phone],
+				ISNULL(
+						(
+							SELECT (SUM(ISNULL(DOR2.Pieces_Dry, 0))) pieces
+							FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR2 WITH (NOLOCK)
+							WHERE DOR2.Guide_Serie = DAT.Guide_Serie
+							  
+							  AND DOR2.Guide_Number = DAT.Guide_Number
+						), 0
+					  ) [DryPieces],
+				ISNULL(
+						(
+							SELECT (SUM(ISNULL(DOR2.Pieces_Cold, 0))) pieces
+							FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR2 WITH (NOLOCK)
+							WHERE DOR2.Guide_Serie = DAT.Guide_Serie
+									AND DOR2.Guide_Number = DAT.Guide_Number
+						), 0
+					  ) [ColdPieces],
+				'' [ScheduleStart],
+				'' [ScheduleEnd],
+				ISNULL(
+						(
+							SELECT TOP 1 vpi.PathImage
+							FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint] vpi WITH (NOLOCK)
+							WHERE vpi.CodeOfReference = VPC.CodeOfReference
+							ORDER BY DateCreated DESC
+						), '#'
+					   )[Photo],
+				CASE
+					WHEN ISNULL(DOR.Receiver_Lat, '0') <> ''
+					THEN ISNULL(DOR.Receiver_Lat, '0')
+					WHEN ISNULL(DFG.Latitude, 0) != 0
+					 AND ISNULL(DFG.Longitude, 0) != 0 
+					THEN CONVERT(VARCHAR, ISNULL(DFG.Latitude, 0))
+					WHEN ISNULL(EPS.Latitude, 0) != 0
+					 AND ISNULL(EPS.Longitude, 0) != 0 
+					THEN CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))
+					WHEN ISNULL(VPC.Longitude, '0') <> ''
+					AND DOR.IsLastMileReturn = 1 
+					THEN ISNULL(VPC.Longitude, '0')
+					WHEN ISNULL(VPr.Latitude, '0') <> ''
+					 AND DOR.IsLastMileReturn = 0 
+					THEN ISNULL(VPr.Latitude, '0')														
+					ELSE'0'
+				END [Latitude],
+				CASE
+					WHEN ISNULL(DOR.Receiver_Lng, '0') <> '' 
+					THEN ISNULL(DOR.Receiver_Lng, '0')
+					WHEN ISNULL(DFG.Latitude, 0) != 0
+					 AND ISNULL(DFG.Longitude, 0) != 0 
+					THEN CONVERT(VARCHAR, ISNULL(DFG.Longitude, 0))
+					WHEN ISNULL(EPS.Latitude, 0) != 0
+					 AND ISNULL(EPS.Longitude, 0) != 0 
+					THEN CONVERT(VARCHAR, ISNULL(EPS.Longitude, 0))
+					WHEN ISNULL(VPC.Longitude, '0') <> ''
+					 AND DOR.IsLastMileReturn = 1 
+					THEN ISNULL(VPC.Longitude, '0')
+					WHEN ISNULL(VPr.Longitude, '0') <> ''
+					 AND DOR.IsLastMileReturn = 0 
+					THEN ISNULL(VPr.Longitude, '0')
+					ELSE '0'
+				END [Longitude],
+				CASE 
+				WHEN ISNULL(DFG.Latitude, 0) != 0 AND ISNULL(DFG.Longitude, 0) != 0
+				THEN 1
+				ELSE 0
+				END [LocationConfirmed],
+				CONVERT(VARCHAR, ISNULL(VPC.Accuracy, 0)) [Precision],
+				CASE
+					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
+					THEN 0
+					ELSE
+						 IIF(
+								kvp.KindOfVPName = 'Express Center', 
+								'0', 
+								IIF(
+									DOR.IsLastMileReturn = 1, 
+									0 , 
+									ISNULL( DOR.Collect_OnDelivery, 0 )
+									)
+							  )
+				END [Price_COD],
+				CASE
+					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
+					THEN 0
+					ELSE
+						IIF(
+								kvp.KindOfVPName = 'Express Center', 
+								'0', 
+								IIF(
+										DOR.IsLastMileReturn = 1, 
+										TRPreturns.AmountToPay , 
+										IIF(
+												ISNULL(DOR.IsCollect, 0) = 1, 
+												ISNULL( DOR.PriceShippment, 0), 
+												0
+											)
+								   )
+							 )
+				END [Price],
+				CASE
+					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
+					THEN 0
+					ELSE 
+						ISNULL(
+								(
+									SELECT TOP 1
+										IIF(ISNULL(dp.TimePlaId, 0) = 3,
+											sc.AmountPickup,
+											0)
+									FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] dp WITH (NOLOCK)
+									LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]    sc WITH (NOLOCK)
+										   ON sc.SchedulePickupId = dp.IdHeaderRecolection
+									WHERE dp.GuideNumber = DOR.Guide_Number
+									  AND dp.GuideSerie = DOR.Guide_Serie
+								), 0
+							  )
+				END [Pickup],
+				IIF(
+						DOR.IsLastMileReturn = 1, 
+						IIF(
+								kvpori.KindOfVPName = 'Express Center' , 
+								ISNULL( VPC.DescriptionOfClient , '' ), 
+								ISNULL( DOR.Sender_FirstName , 'N/A' )
+							), 
+						IIF(
+								kvp.KindOfVPName = 'Express Center', 
+								ISNULL(  VPr.DescriptionOfClient , '' ), 
+								ISNULL( DOR.Receiver_FirstName , 'N/A' )
+							)
+					) [CustomerName],
+				IIF(
+						DOR.IsLastMileReturn = 1, 
+						'N/A', 
+						ISNULL(
+								ISNULL( DOR.Receiver_Alternant_FullName, ''), 
+								ISNULL( DOR.Receiver_FirstName, 'N/A')
+							   )
+						) [AlterName],
+				IIF(
+						(
+							SELECT NumImgEvidence AS num
+							FROM Customer WITH (NOLOCK)
+							WHERE IdCustomer = DOR.IdCustomer
+						) IS NOT NULL , 
+						(
+							SELECT NumImgEvidence AS num
+							FROM Customer
+							WHERE IdCustomer = DOR.IdCustomer
+						), 1
+					) [NumImageEvidence],
+				ISNULL(   
+						CASE
+							WHEN DOR.StatusOrderId = 45 
+							THEN 12
+							ELSE DOR.StatusOrderId
+						END
+						, 4
+					   ) [Hig],
+				IIF(
+					(
+						SELECT ISNULL( COUNT(doa.GuideNumber) , 0 )
+						FROM [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] doa WITH (NOLOCK)
+						WHERE doa.GuideNumber = DOR.Guide_Number
+							AND doa.GuideSerie = DOR.Guide_Serie
+							AND doa.RowStatus = 1
+							AND doa.ServiceTypeId = IIF(
+														DOR.IsLastMileReturn = 1, 
+														@ReturnTypeId , 
+														@DeliveryTypeId
+													   )
+					) > 0
+					, 'true'
+					, 'false'
+				   ) [HighPriority],
+				ISNULL(DSD.GuideOrder, 999) [ShownOrder]
+		FROM
+		(
+			SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
+					Guide_Serie,
+					Guide_Number,
+					ID_Courier
+			FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] WITH (NOLOCK)
+			WHERE	CAST(Date_Created AS DATE) = @DateRoute
+				AND ID_Courier = @IdCourier 
+				AND Guide_Piece = 1
+			GROUP BY	
+					Guide_Serie,
+					Guide_Number,
+					ID_Courier
+		)                                                               DAT	
+		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
+			ON	DAT.Guide_Serie = DOR.Guide_Serie
+			AND	DAT.Guide_Number = DOR.Guide_Number
+			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devolución|Incidencia en ruta|Guía revertida para entrega
+			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48 )
+		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
+			ON DSD.Guide_Serie = DAT.Guide_Serie
+			AND DSD.Guide_Number = DAT.Guide_Number
+			AND DSD.RowStatus = 1
+		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOS WITH (NOLOCK)
+			ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
+			AND DOS.ID_Courier = DAT.ID_Courier
+		LEFT JOIN @TempReturnPrice										TRPreturns
+			ON DOR.Guide_Serie = TRPreturns.GuideSerie
+			AND DOR.Guide_Number = TRPreturns.GuideNumber
+		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]			VPC WITH (NOLOCK)
+			ON VPC.CodeOfReference = DOR.Sender_ID
+		LEFT JOIN
+		(
+			SELECT	EPSRWG.GuideSerie, 
+					EPSRWG.GuideNumber, 
+					EPS.Latitude,
+					EPS.Longitude,
+					MAX(EPS.IdService) [LastService]
+			FROM [DeliveryBackOffice].[dbo].[ExtPlatServiceRelationshipWithGuide] EPSRWG WITH (NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.ExtPlatformService         EPS WITH (NOLOCK)
+					ON EPSRWG.ExtPlatServiceId = EPS.IdExtPlatformService
+			WHERE CAST(EPS.EstimatedTimeArrival AS DATE) = @DateRoute
+			GROUP BY EPSRWG.GuideSerie,
+						EPSRWG.GuideNumber,
+						EPS.Latitude,
+						EPS.Longitude
+		)   EPS
+			ON	DAT.Guide_Serie = EPS.GuideSerie
+			AND DAT.Guide_Number = EPS.GuideNumber
+		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPr WITH (NOLOCK)
+			ON VPr.CodeOfReference = DOR.Receiver_ID
+		RIGHT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] kvpori WITH (NOLOCK)
+			ON kvpori.IdKindOfVPClient = VPC.IdKindOfVPClient
+		RIGHT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] kvp WITH (NOLOCK)
+			ON kvp.IdKindOfVPClient = VPr.IdKindOfVPClient
+		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] doadel WITH (NOLOCK)
+			ON doadel.GuideNumber = DAT.Guide_Number
+			AND doadel.GuideSerie = DAT.Guide_Serie
+		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderAlert] doaret WITH (NOLOCK)
+			ON doaret.GuideNumber = DAT.Guide_Number
+			AND doaret.GuideSerie = DAT.Guide_Serie	
+		OUTER APPLY
+		(
+			SELECT MAX(ISNULL(SDFG.Latitude, 0))  'Latitude'
+					, MAX(ISNULL(SDFG.Longitude, 0)) 'Longitude'
+			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+			WHERE DOR.Guide_Serie    =	SDFG.GuideSerie
+				AND DOR.Guide_Number =	SDFG.GuideNumber
+				AND SDFG.IsDelivery	 = 1
+			GROUP BY SDFG.GuideSerie,
+					 SDFG.GuideNumber
+		) DFG
+		WHERE	--DSD.RowStatus = 1
+				--AND doaret.RowStatus = 1									
+				--AND doadel.RowStatus = 1
+				-- doadel.ServiceTypeId = @DeliveryTypeId
+				-- doaret.ServiceTypeId = @ReturnTypeId
+				 DAT.ID_Courier = @IdCourier
 	
-				   return
-		end
-END
+		ORDER BY ISNULL('ShownOrder', 999) ASC
+ 
+		PRINT 'construido jrsult 2';
+
+		-------------------------Start Retuns Services ---------------------------------------------
+
+		PRINT 'construyendo jrsult 3';
+
+        SELECT
+				'Return' [Servicetype],
+				ISNULL(VPC.CodeOfReference, 0) [CodeOfReference],
+				ISNULL(gs.IdServiceManagement,0) [ServiceManagementId],
+				ISNULL( ISNULL( do.Sender_FirstName  + ' ' + do.Sender_LastName,  VPC.DescriptionOfClient), 'N/A') [Sender],
+				CONCAT(
+						ISNULL( do.Sender_Address, ' ')
+						, ISNULL( do.Sender_Address, VPC.Address)
+						, ' '
+						, ISNULL( do.Sender_Town , '' )
+						, ' '
+						, ISNULL( do.Sender_Department, '' )
+                        ) [Address],
+				ISNULL(ISNULL(do.Sender_Phone, ''), 'N/A') [Phone],
+				'' [ScheduleStart],
+                '' [ScheduleEnd],
+				ISNULL(vpi.PathImage, '#')[Photo],
+				ISNULL(VPC.Latitude, 0) [Latitude],
+                ISNULL(VPC.Longitude, 0) [Longitude],
+                ISNULL(VPC.Accuracy, 0) [Precision],
+				'Q.' [CurrencySymbol],
+				CASE
+					WHEN do.IdDeliveryOption = @IdDeliveryOption 
+					THEN 0 
+                    ELSE ISNULL(gt.AmountToPay, 0)
+                END [TotalServiceAmount],
+                CASE
+					WHEN do.IdDeliveryOption = @IdDeliveryOption 
+					THEN 0
+                    ELSE ISNULL(gt.ReturnRates, 0)
+                END [TotalReturnAmount],
+                CASE
+                        WHEN do.IdDeliveryOption = @IdDeliveryOption 
+						THEN 0
+                        ELSE ISNULL(gt.AmountToPay + gt.ReturnRates, 0)
+				END [TotalAmount]
+		FROM #GuideService  gs
+			LEFT JOIN  @TempReturnPrice gt
+				ON  gt.GuideSerie = gs.GuideSerie
+				AND gt.GuideNumber = gs.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder   do WITH (NOLOCK)
+				ON do.Guide_Serie = gs.GuideSerie
+				AND do.Guide_Number = gs.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH (NOLOCK)
+				ON VPC.CodeOfReference = do.Sender_ID
+			LEFT JOIN [DeliveryBackOffice].[dbo].[ImagesByVisitPoint] vpi WITH (NOLOCK)
+				ON vpi.CodeOfReference = vpc.CodeOfReference
+		GROUP BY	gs.[IdServiceManagement],
+					do.[Sender_Address],
+					VPC.[CodeOfReference],
+					do.[Sender_FirstName],
+					do.[Sender_LastName],
+					VPC.[DescriptionOfClient],
+					VPC.[Address],
+					do.[Sender_Town],
+					do.[Sender_Department],
+					do.[Sender_Phone],
+					vpi.[PathImage],
+					VPC.[Latitude],
+					VPC.[Longitude],
+					VPC.[Accuracy],
+					gs.[ServiceStatusId],
+					gt.[AmountToPay],
+					gt.[ReturnRates],
+					do.[IdDeliveryOption]
+              
+		PRINT 'construido jrsult 3';
+
+		PRINT 'Construyento Lista de Alertas'
+
+		SELECT 
+				TMAP.ServiceManagementId,
+				TMAP.AlertTypeId,
+				TMAP.AlertDescription,
+				TMAP.DateCreated
+		FROM	#TmpAlertList TMAP
+	
+		PRINT 'FIN Lista de Alertas'
+
+		PRINT 'Construyento Listas de Piezas'
+
+		SELECT CONCAT(dop.GuideSerie,  dop.GuideNumber, '-',  ISNULL(dop.NoPiece,'0')) [PieceList]
+        FROM dbo.ServiceManagement            sm WITH (NOLOCK)
+        LEFT JOIN dbo.SenderReceiver     sr WITH (NOLOCK)
+            ON (sr.ID = sm.IdPuCourrier)
+		LEFT JOIN dbo.PieceByService     ps WITH (NOLOCK)
+            ON (ps.ServiceManagmentId = sm.IdServiceManagement)
+        LEFT JOIN dbo.DeliveryOrderPiece dop WITH (NOLOCK)
+            ON (dop.GuidePiece = ps.GuidePieceId)
+		LEFT JOIN #GuideService  gs
+			ON	gs.GuideSerie = dop.GuideSerie
+			AND gs.GuideNumber = dop.GuideNumber
+		-- Solicitado|En ruta|Anulado|Paquete Retornado para Reproceso
+        WHERE sm.IdServiceManagement = gs.IdServiceManagement
+			AND	sm.ServiceStatusId IN ( 1, 4, 7, 8 )
+            AND sm.IdPuCourrier = @IdCourier
+            AND sm.DateCreated  = @DateRoute 
+    
+		PRINT 'fIN Listas de Piezas'
+		
+        ---------------------------------------------End Retuns Services --------------------------------------------------
+
+		SELECT 200 [IdResult], 'Se encontraron registros' [Message];
+
+	END
+	ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
+	BEGIN
+       
+		SELECT '403' [IdResult], 'Token Inválido' [DescriptionError];
+        
+	END;
+END;

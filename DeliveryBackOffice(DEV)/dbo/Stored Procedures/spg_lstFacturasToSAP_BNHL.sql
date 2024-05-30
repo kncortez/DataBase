@@ -3,7 +3,7 @@
 -- Create date: 17 Nov 2020
 -- Description:	Retorna listado de facturas listas para enviar a SAP
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_lstFacturasToSAP]
+CREATE PROCEDURE [dbo].[spg_lstFacturasToSAP_BNHL]
 AS
 BEGIN
     DECLARE @hour AS INT =
@@ -31,8 +31,8 @@ BEGIN
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
               -- -1 ES ANULADA
               AND ihd.inv_type IN ( 1, 2 )			 
-              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-05-01' AS DATE)
-			 --AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2024-05-26' AS DATE)
+              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-03-01' AS DATE)
+			 --AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2024-03-19' AS DATE)
 
 			  --AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-09-27' AS DATE)
              -- AND cast(ihd.inv_dateRegister as date) <= CAST('2023-10-31' as date)
@@ -47,18 +47,13 @@ BEGIN
                   ir.invRetries IS NULL
                   OR ir.invRetries <= 3
               )
-			  AND IHD.IsManualInvoice IS NULL			 
-	
-			  --and 1= 0 --VARIABLE A UTILIZAR CADA VEZ QUE SE SUBA NUEVA VERSIÓN DEL SERVICIO
+			  AND IHD.IsManualInvoice IS NULL
+			  AND IHD.inv_pk_id = 3376629
+--			  AND ihd.inv_pk_id IN (
+--3081119
+--)
+			 -- and 1= 0 --VARIABLE A UTILIZAR CADA VEZ QUE SE SUBA NUEVA VERSIÓN DEL SERVICIO
 			  ORDER BY ihd.inv_pk_id ASC;
 
     END  
 END
-
-
-
-
-
-
-
-

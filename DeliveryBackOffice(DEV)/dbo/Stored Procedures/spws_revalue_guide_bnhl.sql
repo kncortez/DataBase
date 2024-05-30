@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
@@ -16,7 +15,7 @@
 -- Description:	<Validar que se envíaron los campos  @UseMembership y @TypeSubscriptionId, buscarlos em el log para aplciar descuento que aplique >
 -- =============================================
 
-CREATE PROCEDURE [dbo].[spws_revalue_guide_CRAS]
+CREATE PROCEDURE [dbo].[spws_revalue_guide_bnhl]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
   , @CodeApp VARCHAR(50) = ''
@@ -106,8 +105,6 @@ BEGIN
     DECLARE @PiecesInOrder AS INT;
     DECLARE @PriceWithCreditCard AS INT = 0;
 
-	DECLARE @IdKindOfVPClient AS INT = 0;
-
 
     DECLARE @OldPrice DECIMAL(12, 2);
     PRINT 'inicio carga inicial';
@@ -127,7 +124,6 @@ BEGIN
          , @OldPrice                = ISNULL(ord.PriceShippment, 0)
          , @ServiceShortName        = ISNULL(ord.TypeService, 'NDD')
          , @DateCreated             = ord.DateCreated
-		 , @IdKindOfVPClient		= VPC.IdKindOfVPClient
     FROM dbo.DeliveryOrder             ord WITH (NOLOCK)
         LEFT JOIN dbo.Township         stwn WITH (NOLOCK)
             ON stwn.IdTownship = ord.SenderIdTownship
@@ -143,33 +139,6 @@ BEGIN
 
     --print 'fin carga inicial'
     ------------------ fin Carga de datos ---------------------------------------------------------------------
-
-	PRINT @GuideSerie
-	PRINT @GuideNumber
-	PRINT @IdCustomer             
-	PRINT @VisitPointClient       
-	PRINT @VisitPointClientDestiny
-	PRINT @IdSettlement           
-	PRINT @HeaderCodeSource       
-	PRINT @HeaderCodeDestiny      
-	PRINT @IsCollect              
-	PRINT @IsInsurance            
-	PRINT @InsuranceAmount        
-	PRINT @AddressParse           
-	PRINT @IdSalePipeLine         
-	PRINT @PiecesInOrder          
-	PRINT @OldPrice               
-	PRINT @ServiceShortName       
-	PRINT @DateCreated            
-	PRINT @IdKindOfVPClient		
-
-
-
-
-	PRINT 'origen';
-    PRINT @HeaderCodeSource;
-    PRINT 'destino';
-    PRINT @HeaderCodeDestiny;
 
     ---------------------Determinar Visit Point ---------------------------------------------------------------
 
@@ -473,6 +442,33 @@ BEGIN
         IF (ISNULL(@UseMembership, 0) = 0)
             SET @UseMembership = 0;
     END;
+
+	--select @CodeApp
+ --                                        ,   @IdCustomer
+ --                                        ,   @HeaderCodeDestiny
+ --                                        ,   @HeaderCodeSource
+ --                                        ,   'GT'
+ --                                        ,   @PiecesCount
+ --                                        ,   'false'
+ --                                        ,   @IsCollect
+ --                                        ,   @IsInsurance
+ --                                        ,   @Pesos
+ --                                        ,   @InsuranceAmount
+ --                                        ,   @IsCreditCard
+ --                                        ,   @Parcel
+ --                                        ,   0
+ --                                        ,   @AddressParse
+ --                                        ,   @IdSettlement
+ --                                        ,   0
+ --                                        ,   @VisitPointClient
+ --                                        ,   @VisitPointClientDestiny
+ --                                        ,   @IdSalePipeLine
+ --                                        ,   'DataTable'
+ --                                        ,   @CalculateTaxes
+ --                                        ,   @UseMembership
+ --                                        ,   @TypeSubscriptionId
+	--									 ,   @RevaluedGuide
+
     --select @Pesos , @Parcel
     INSERT INTO @TempRate
     EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp
@@ -500,7 +496,7 @@ BEGIN
                                          , @CalculateMembership = @UseMembership
                                          , @TypeSubscriptionId  = @TypeSubscriptionId
 										 , @RevaluedGuide = @RevaluedGuide
-  -- select tp.*,@IdCustomer from @TempRate tp
+  ---- select tp.*,@IdCustomer from @TempRate tp
 
     IF (@UseMembership = 1)
     BEGIN
@@ -553,7 +549,8 @@ BEGIN
                     = IIF(@ServiceAppliedCount <= ms.MembershipMaxServiceFixedValue, ms.MembershipFixedValue, -1)
                 FROM Membership ms
                 WHERE ms.IdMembership = @MembershipId;
-
+				PRINT 'bidcar'
+				PRINT @ServiceValue
                 --Si es tarifa fija
                 IF @ServiceValue >= 0
                 BEGIN
@@ -627,6 +624,11 @@ BEGIN
 				      And sc.RowStatus = 1
 					  And sc.CatTypeSubscriptionId = @TypeSubscriptionId
 					  AND @DateCreated <= sc.ExpirationDate
+				PRINT 'bidcar2'
+				PRINT @ServiceValueSubscription
+				PRINT @TypeSubscriptionId
+				PRINT @DateCreated
+				PRINT @SubscriptionId
 
                 --Si es tarifa fija
                 IF @ServiceValueSubscription >= 0
@@ -1312,16 +1314,8 @@ BEGIN
             (   1, @ProdctNumber, 1     -- costo de envio
               , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
               , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber);
-			
-            SET @IdCost = SCOPE_IDENTITY();
 
-			if (@IdKindOfVPClient = 3 and @IsCollect = 0 ) --SI ES CONCESIONARIO y NO ES COLLECT DEBE QUEDAR REGISTRADO EL PAGO DE LA GUÍA
-			BEGIN
-				UPDATE DeliveryBackOffice.dbo.Cost
-				SET PaymentDate = GETDATE()
-				,TotalAmountPaid = @NewPrice
-				WHERE IdCost = @IdCost
-			END
+            SET @IdCost = SCOPE_IDENTITY();
 
             INSERT INTO [dbo].[BreakdownOfPayment]
             (
