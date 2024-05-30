@@ -13,8 +13,13 @@
 -- Create date: <2024-05-28>
 -- Description:	<Se agrega parametro para filtrar por pais de origen de la guia>
 -- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-05-29>
+-- Description:	<Se parametro para indicar si se debe tomar pais de origen o destino para filtrar>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20),
-	@IdCountry AS NVARCHAR(2)='GT'
+	@IdCountry AS NVARCHAR(2)='GT',
+	@IsOriginCountry AS INT = 1-----1 INDICA QUE ES ORIGIN, 0 INDICA QUE ES DESTINO
 AS
 BEGIN
     DECLARE @STATUS AS INT;
@@ -23,7 +28,7 @@ BEGIN
     DECLARE @Sender_Town AS INT;
     DECLARE @Receiver_Town AS INT;
 	DECLARE @ClientConfirmsReturn AS bit = 0;
-
+    DECLARE @ExistRegister AS BIT = 0;
     DECLARE @GuideSerie VARCHAR(50);
 	DECLARE @GuideNumber VARCHAR(50);
 
@@ -122,7 +127,25 @@ BEGIN
     SET NOCOUNT ON;
 
     BEGIN TRY
-
+        --Verifica que existan registros de la guia
+        SELECT @ExistRegister = 
+				CASE 
+					WHEN EXISTS (
+						SELECT 1
+						FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
+						INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
+							ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
+						WHERE 
+							[DDO].[Guide_Serie] = @GuideSerie 
+							AND [DDO].[Guide_Number] = @GuideNumber 
+							AND (
+								(@IsOriginCountry = 1 AND (IIF([DDO].[SenderCountryId] IS NULL, 'GT',[DDO].[SenderCountryId]) = @IdCountry))--filtra por pais de origen
+								OR 
+								(@IsOriginCountry = 0 AND (IIF([DDO].[ReceiverCountryId] IS NULL, 'GT',[DDO].[ReceiverCountryId]) = @IdCountry)) --filtra por pais de destino
+							)
+					) THEN 1
+					ELSE 0
+				END;
 
 
         SELECT @STATUS = [DO].[StatusOrderId],
@@ -135,7 +158,7 @@ BEGIN
             INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
                 ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
         WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
-			AND ([DO].[SenderCountryId] = @IdCountry OR ([DO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
+			--AND ([DO].[SenderCountryId] = @IdCountry OR ([DO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
         DECLARE @isreturnt BIT =
                 (
                     SELECT [IsLastMileReturn]
@@ -143,17 +166,7 @@ BEGIN
                     WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
                 );
 
-        IF (EXISTS
-        (
-            SELECT TOP 1
-                   1
-            FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
-                INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
-                    ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
-            WHERE [DDO].[Guide_Serie] = @GuideSerie AND [DDO].[Guide_Number] = @GuideNumber 
-			AND ([DDO].[SenderCountryId] = @IdCountry OR ([DDO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
-        )
-           )
+        IF (@ExistRegister = 1)
         BEGIN
 
             IF (@STATUS IN ( @Entregado, @Anulado, @EntregadoEnExpressCenter, @Terminal ))
