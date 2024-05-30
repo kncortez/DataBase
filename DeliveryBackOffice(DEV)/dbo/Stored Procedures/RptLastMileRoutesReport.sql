@@ -200,8 +200,8 @@ FROM
 			 OUTER APPLY
 		(
 			SELECT COUNT(1) 'UnvalidatedIncident'
-			FROM [DeliveryBackOffice_bkp].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-				INNER JOIN [DeliveryBackOffice_bkp].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+			FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+				INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
 					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
 			WHERE 
 					  DA.Guide_Serie  = DSD.Guide_Serie
