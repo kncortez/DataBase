@@ -69,7 +69,7 @@ BEGIN
 	LEFT JOIN [dbo].[StatusOrder] [REEC] ON [REEC].[OrderDescription] = 'Devuelto en Express Center'
 	LEFT JOIN [dbo].[StatusOrder] [SFD]  ON [SFD].[OrderDescription] =  'Programado para entrega'
     LEFT JOIN [dbo].[StatusOrder] [II]   ON [II].[OrderDescription] =  'En Inventario'
-	LEFT JOIN [dbo].[StatusOrder] [AAI]   ON [II].[OrderDescription] =  'Arribó a las instalaciones';
+	LEFT JOIN [dbo].[StatusOrder] [AAI]   ON [AAI].[OrderDescription] =  'Arribó a las instalaciones';
 	
 SELECT    MAX([DOBS].[ID] ) Settlement_Id,
           MAX([HBL].[HubAbbreviation]) Hub,
@@ -104,11 +104,11 @@ SELECT    MAX([DOBS].[ID] ) Settlement_Id,
 		SUM(CASE WHEN DOD.StatusOrderId in(@STATUS_TRANSFERED_EX_ID,@RECEIVER_IN_EXPRESS_ID,@STATUS_DELIVERY_EX_ID,@RETURNT_IN_EXPRESS_ID ) THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS Transfer_Pieces_Checkpoint,
 
 	
-	   -- Guías en estados de incidencias confirmadas, pendientes de confirmar o visita fallida
-		SUM(CASE WHEN  DOD.StatusOrderId IN(@UnvalidatedIncident)
+	 -- Guías en estados de incidencias confirmadas, pendientes de confirmar o visita fallida
+		SUM(CASE WHEN  [UnvalidatedIncident].[UnvalidatedIncident] = 1
 				 THEN 1 ELSE 0 END) [UnvalidatedIncident],
 
-		SUM(CASE WHEN  DOD.StatusOrderId IN(@UnvalidatedIncident)
+		SUM(CASE WHEN  [UnvalidatedIncident].[UnvalidatedIncident] = 1
 				 THEN DO.Pieces_Dry + DO.Pieces_Cold  ELSE 0 END) [UnvalidatedIncidentPiece],
 
 		--  Incidencias confirmadas reales
@@ -197,6 +197,22 @@ FROM
 				  AND  COI.StatusOrderId = @ConfirmationOfIncidence
 				  
 		) IncidenciasReales	
+			 OUTER APPLY
+		(
+			SELECT COUNT(1) 'UnvalidatedIncident'
+			FROM [DeliveryBackOffice_bkp].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+				INNER JOIN [DeliveryBackOffice_bkp].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+			WHERE 
+					  DA.Guide_Serie  = DSD.Guide_Serie
+				  AND DA.Guide_Number = DSD.Guide_Number
+				  AND DA.Date_Created    BETWEEN @StartDateTime AND @EndDateTime
+				  AND COI.IsConfirmed = 0 
+				  AND COI.IsDenied = 0
+				  AND COI.RowStatus = 1
+				  AND COI.StatusOrderId = @UnvalidatedIncident
+				
+		) UnvalidatedIncident
 		OUTER APPLY 
 	(
 	   SELECT  TOP 1 COUNT(1) DeliveryInExpressCenter
