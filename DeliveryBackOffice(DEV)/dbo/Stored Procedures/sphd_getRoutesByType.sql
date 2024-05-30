@@ -6,7 +6,7 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[sphd_getRoutesByType]
-	@TypeRouteName VARCHAR(100)
+	@TypeRouteName VARCHAR(100),
 	@Country NVARCHAR(5) = 'GT'
 AS	
 BEGIN
