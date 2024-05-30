@@ -107,3 +107,7 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_Guide_Serie_Guide_Number_StatusOrderId_DateCreatedInSystem]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreatedInSystem] ASC);
 
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl2]
+    ON [dbo].[DeliveryOrderDetail]([SystemOrigin] ASC)
+    INCLUDE([Guide_Serie],[Guide_Number]);

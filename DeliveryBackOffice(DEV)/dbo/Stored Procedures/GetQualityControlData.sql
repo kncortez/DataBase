@@ -9,7 +9,7 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
   , @TblHubLogistic TblHubLogistic READONLY
 AS
 BEGIN
-    SET ARITHABORT ON;
+SET ARITHABORT ON;
     BEGIN TRY
         --Tabla de cards filtrada por hub y guía
 

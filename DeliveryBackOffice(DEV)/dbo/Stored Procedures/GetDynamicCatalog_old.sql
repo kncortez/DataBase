@@ -1,14 +1,14 @@
 ﻿CREATE PROCEDURE [dbo].[GetDynamicCatalog_old]
-    @TypeMethod VARCHAR(100) = 'GetCustomerType'
-  , @IdAccount INT = null
-  , @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5'
-  , @GuideSerie VARCHAR(2) = 'FD'
-  , @GuideNumber VARCHAR(100) = '12345'
-  , @Others VARCHAR(500) = ''
+    @TypeMethod VARCHAR(100) = 'GetTypePayment',
+    @IdAccount INT = 1,
+    @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5',
+    @GuideSerie VARCHAR(2) = 'FD',
+    @GuideNumber VARCHAR(100) = '12345',
+    @Others VARCHAR(500) = ''
 AS
 BEGIN
 
-	IF @IdAccount = '' 
+    IF @IdAccount = '' 
 	BEGIN
 		SET @IdAccount = NULL;
 	END
