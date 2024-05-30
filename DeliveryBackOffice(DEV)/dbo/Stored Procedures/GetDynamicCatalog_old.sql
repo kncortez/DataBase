@@ -33,7 +33,7 @@ BEGIN
                       ) 
         
     END;
-	ELSE IF (@TypeMethod = 'GetVisitPointActiveByClient')
+	ELSE IF (@TypeMethod = 'GetActiveVisitPointByClient')
     BEGIN
 
 		SELECT vpc.[CodeOfReference], CONCAT(c.[Description], '', vpc.[DescriptionOfClient]) [ClientVisitPoint]
@@ -47,6 +47,15 @@ BEGIN
                 )
 			  AND c.RowSatus = 1
 			  AND vpc.StatusClient = 1
+    END;
+	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
+    BEGIN
+
+		SELECT [IdIncidenceType], [NameIncidence]
+		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence
+		WHERE ServiceType = 'DELIVERY'
+			  AND RowStatus = 1
+
     END;
     ELSE 
     BEGIN
