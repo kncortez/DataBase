@@ -41,7 +41,6 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @jsonResult NVARCHAR(MAX) 
 	DECLARE @CodeOfReference INT
 	DECLARE @IdCustomer INT
 	DECLARE @TownshipName NVARCHAR(200)
@@ -90,30 +89,20 @@ BEGIN
 	-- Figurar municipio en caso no venga un identificador
 	SET @CodeOfReference = (SELECT MAX(CodeOfReference)+1  FROM VisitPointClient)
 	
-	PRINT '@IdTownship'
-	PRINT @IdTownship
 	IF(@IdTownship IS NULL)
 	BEGIN
-
 		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' COLLATE Latin1_General_CI_AI);
-
 	END
 	
 	-- obtener el id de usuarion con base al token
-
 	declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t with(nolock) where t.TknIdToken = @Token)
-
-
 
 	IF(NOT EXISTS(Select Top 1 1 
 					From dbo.RolByUserByAccount  rua
 					Where rua.RuaIdAccount = @IdAccount and
 					rua.RuaIdUser = @IdUser))
 	BEGIN
-
 	 Select Top 1 @IdUser=RuaIdUser From [dbo].[RolByUserByAccount]  rua Where rua.RuaIdAccount = @IdAccount 
-
-	
 	END
 
 	select RuaIdAccount 
@@ -124,8 +113,8 @@ BEGIN
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-		if(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
-		begin
+		IF(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
+		BEGIN
 
 			select uad.UadIdAddress
 			into #Address
@@ -137,21 +126,13 @@ BEGIN
 									  INNER JOIN Township TS with(nolock) ON PV.IdProvince = TS.IdProvince
 									  WHERE TS.IdTownship = @IdTownship;
 				SET @IdKindOfVPBusiness = (SELECT IdKindOfVPBusiness  FROM KindOfVPBusiness with(nolock) WHERE Shorthand = 'HUB')
-				Select @HeaderCode=HeaderCode, @TownshipName=TownshipName from dbo.Township with(nolock) WHERE IdTownship = @IdTownship;
+				SELECT @HeaderCode=HeaderCode, @TownshipName=TownshipName from dbo.Township with(nolock) WHERE IdTownship = @IdTownship;
 				SET @CityName=(SELECT CityPlace FROM DBO.CatCityPlace with(nolock) WHERE IdCityPlace=@IdCityPlace)
 
-
-				PRINT '@Department'
-				PRINT @Department
-
-				PRINT '@HeaderCode'
-				PRINT @HeaderCode
-			
-
-			if (select count(*) from #Address) >0 -- verifica que la direccion exista
-			begin 
-				if @Status =0  -- se infiere que, se va a desctivar el registro
-				begin
+			IF (select count(*) from #Address) >0 -- verifica que la direccion exista
+			BEGIN 
+				IF @Status =0  -- se infiere que, se va a desctivar el registro
+				BEGIN
 					-- desactivar registro (borrado logico)
 					UPDATE [dbo].[UserAddress]
 					   SET [UadRowStatus] = @Status
@@ -167,20 +148,11 @@ BEGIN
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
 
-					 set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Delete'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)
+					SELECT * FROM @ResponseMessages WHERE Id ='Delete'
 
-				end
-				else -- se va a actualizar el registro
-				begin 
+				END
+				ELSE -- se va a actualizar el registro
+				BEGIN 
 					-- actualizar el registro con los datos proporcionado
 					UPDATE [dbo].[UserAddress]
 					   SET [UadIdTownship] = @IdTownship
@@ -219,30 +191,25 @@ BEGIN
 				
 				 SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)
 
-			 
+				 SELECT 
+					IdResult 'IdResult',
+					@IdAddress 'IdAddress',
+					@CodeOfReference 'CodeOfReference',
+					@Department 'Province',
+					@TownshipName 'Township',
+					@HeaderCode 'HeaderCode',
+					@CityName 'CityPlace',
+					@IdDepartment 'IdProvince',
+					Message 'Message'
+				 FROM 
+					@ResponseMessages
+				 WHERE 
+					Id = 'Update';
 
-					 set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"CodeOfReference":' + convert(varchar,@CodeOfReference)    +',' 
-						+ '"Province":"' + convert(varchar,@Department)    +'",' 
-						+ '"Township":"' + convert(varchar,@TownshipName)    +'",' 
-						+ '"HeaderCode":"' + convert(varchar,@HeaderCode)    +'",' 
-						+ '"CityPlace":"' + convert(varchar,@CityName) +'",' 
-						+ '"IdProvince":"' + convert(varchar,@IdDepartment) +'",' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Update'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)
-				end
-			end
-			else -- la cuenta no existe, entonces se crea
-			begin
-			--	SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)			
-						--Inserta Visit Point en la tabla VisitPointClient
+				 END
+			END
+			ELSE -- la cuenta no existe, entonces se crea
+			BEGIN
           
 				INSERT INTO [dbo].[VisitPointClient]
 					   ([CodeOfReference]
@@ -298,7 +265,6 @@ BEGIN
 					   )
 				set @IdVisitPointClient = SCOPE_IDENTITY()
 
-
 				--insertar nueva direccion
 				INSERT INTO [dbo].[UserAddress]
 						([UadIdTownship]
@@ -335,44 +301,44 @@ BEGIN
 						,@CodeOfReference
 						,@IdCityPlace)
 
-
-
 				set @IdAddress = SCOPE_IDENTITY()
-				set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"CodeOfReference":' + convert(varchar,@CodeOfReference)    +',' 
-						+ '"Province":"' + convert(varchar,@Department)    +'",' 
-						+ '"Township":"' + convert(varchar,@TownshipName)    +'",' 
-						+ '"HeaderCode":"' + convert(varchar,@HeaderCode)    +'",' 
-						+ '"CityPlace":"' + convert(varchar,@CityName) +'",' 
-						+ '"IdProvince":"' + convert(varchar,@IdDepartment) +'",' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Insert'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)			
-			end
+
+				SELECT 
+						IdResult 'IdResult',
+						@IdAddress 'IdAddress',
+						@CodeOfReference 'CodeOfReference',
+						@Department 'Province',
+						@TownshipName 'Township',
+						@HeaderCode 'HeaderCode',
+						@CityName 'CityPlace',
+						@IdDepartment 'IdProvince',
+						Message 'Message'
+					FROM 
+						@ResponseMessages
+					WHERE 
+						Id = 'Insert';		
+
+			END
 			--------INICIO Homologación de campos para OAC (Tabla: ConfirmedAddres)--------
 
 			SELECT @CodeOfReference = CodeOfReference FROM DeliveryBackOffice.dbo.UserAddress
 			WHERE UadIdAddress =  @IdAddress
 
-			if @Status = 0
-			begin 
+			IF @Status = 0
+			BEGIN 
 					UPDATE [dbo].[ConfirmedAddress] SET
 							   [TokenUpdate] =@Token
 							   ,[DateUpdate] =getdate()
 							   ,[RowStatus] =0
-					WHERE NirPhone=@NirPhone AND Phone=@Phone			
-			end
-			else if @Status = 1
-			begin 
+					WHERE NirPhone=@NirPhone AND Phone=@Phone	
+					
+			END
+			ELSE IF @Status = 1
+			BEGIN 
 				--Comprobar si existe el telefono
-				if EXISTS(SELECT TOP 1 1 FROM DBO.ConfirmedAddress WHERE NirPhone=@NirPhone AND Phone=@Phone AND ProvinceId = @IdDepartment AND TownshipId = @IdTownship AND [Address] = @Address1)
-				begin
+				IF EXISTS(SELECT TOP 1 1 FROM DBO.ConfirmedAddress WHERE NirPhone=@NirPhone AND Phone=@Phone AND ProvinceId = @IdDepartment AND TownshipId = @IdTownship AND [Address] = @Address1)
+				BEGIN
+
 					UPDATE [dbo].[ConfirmedAddress] SET
 							   [NirPhone] =@NirPhone
 							   ,[Phone] = @Phone
@@ -416,9 +382,10 @@ BEGIN
 							@UpdatedAddress UA
 
 					END
-				end
-				else
-				begin
+				END
+				ELSE
+				BEGIN
+
 					--Si no existe, crearlo
 					INSERT INTO [dbo].[ConfirmedAddress]
 						([NirPhone]
@@ -479,31 +446,26 @@ BEGIN
 							@UpdatedAddress UA
 
 					END
-				end			
-			end
+
+				END		
+				
+			END
 
 			COMMIT TRANSACTION;
 
 			--------FIN Homologación de campos para OAC --------
-		end
-		else
-		begin
+		END
+		ELSE
+		BEGIN
 
 			ROLLBACK TRANSACTION;
 
-			set @jsonResult =(
-						SELECT STUFF(( 
-						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
-		
-						FOR XML PATH(''), TYPE
-						).value('.', 'varchar(max)'),1,1,''
-							  ) 
-						)
-		end
+			SELECT * FROM @ResponseMessages WHERE Id ='Access'
+
+		END
 	END TRY
 	BEGIN CATCH
+
 		ROLLBACK TRANSACTION;
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
@@ -511,28 +473,12 @@ BEGIN
 		VALUES
 			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE(), ERROR_LINE())
 
-		set @jsonResult =(
-					SELECT STUFF(( 
-					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
-					+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Error'
-		
-					FOR XML PATH(''), TYPE
-					).value('.', 'varchar(max)'),1,1,''
-							) 
-					)
+		SELECT * FROM @ResponseMessages WHERE Id ='Error'
+
 	END CATCH
 
 	-- destruir tablas temporales
-
 	IF OBJECT_ID('tempdb.dbo.#Address', 'U') IS NOT NULL DROP TABLE #Address;
 	IF OBJECT_ID('tempdb.dbo.#Access', 'U') IS NOT NULL DROP TABLE #Access;
 
-	-- retornar resultado en formato json
-
-	select ('[{' + @jsonResult +  ']') jsonResult
-
 END
-
-
-
