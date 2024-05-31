@@ -50,17 +50,96 @@ CREATE NONCLUSTERED INDEX [IDX_RheDefault]
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Número de intentos disponibles para devolución.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'AttemptReturn';
 
-
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheId'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Rango de paquetes al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'PackagesRangeId';
 
-
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheName'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de corte para tarifario por paquetes 1=Inicio de mes, 2=Quincena, 3=Fin de mes.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'CutOffDate';
 
-
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre corto del tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheShortName'
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Segmento de negocio al que pertenece.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RateHeader', @level2type = N'COLUMN', @level2name = N'CatBusinessSegmentId';
 
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion del tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheDescription'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tarifario por defecto con el valor 1 el resto con 0' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheDefault'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'1 activo, 0 inactivo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheRowStatus'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheTokenCreated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheDateCreated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Token de actualizacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheTokenUpdated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de actualizacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RheCreateUpdated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de tarifario al que pertenece' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RateTypeId'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Valor de la tarifa fragil' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'FragilRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Valor del seguro de tarifa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'InsuranceRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Seguro exento hasta de la tarifa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'InsuranceExempt'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Peso adicional de tarifa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'AdditionalWeightRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Peso limite de la tarifa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'WeightLimit'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Recargo por tarjeta' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'CreditCardRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tarifa de recoger' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'PickupRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Intentos de entrega' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'Attempt'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del país al que pertenece el tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'CountryId'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de moneda del tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'CurrencyId'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Es plantilla el tarifario' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'IsTemplate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tarifa por pieza' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'RateByPiece'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Retorno de tarifa' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'ReturnRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Cobro en destino collect' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'CollectRate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Cantidad de piezas incluidas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'PiecesIncluded'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Número de intentos disponibles para devolución.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'AttemptReturn'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de corte para tarifario por paquetes 1=Inicio de mes, 2=Quincena, 3=Fin de mes.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'CutOffDate'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Segmento de negocio al que pertenece.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'CatBusinessSegmentId'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Rango de paquetes al que pertenece.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'PackagesRangeId'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader'
+GO
