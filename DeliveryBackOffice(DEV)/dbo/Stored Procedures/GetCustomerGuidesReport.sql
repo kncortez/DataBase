@@ -280,6 +280,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
+             , ISNULL(VPCP.InternalCode,'')                                       'InternalCode'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -298,6 +299,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
             LEFT JOIN #HubsByHeaderCode                                       DSC
                 ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
+            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPCP WITH(NOLOCK)
+				ON DO.VisitpointClientPortfolioId = VPCP.IdVisitPointByClientPortfolio
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId
