@@ -355,9 +355,13 @@ BEGIN
 		******************************************************************************************************************************************/
        
 		SELECT	'Delivery' [ServiceType],
-				CONVERT(VARCHAR, ISNULL(VPC.CodeOfReference, 0)) [CodeOfReference],
+				IIF(
+					VPC.KindOfVPName != 'Express Center',
+					CONVERT(VARCHAR, ISNULL(VPC.CodeOfReference, 0)),
+					0
+				)	[CodeOfReference],
 				ISNULL(
-						(
+						(   
 							CASE
 							WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
 							THEN DOR.IdDeliveryOption
@@ -391,8 +395,8 @@ BEGIN
 					) 
 						)[Sender],
 				IIF(
-					KVPC.KindOfVPName = 'Express Center',
-					ISNULL(VPC.[Address], ''),											
+					VPC.KindOfVPName != 'Express Center',
+					ISNULL(VPC.[Address], ''),
 					ISNULL(
 								IIF(
 										DOR.IsLastMileReturn = 1,
@@ -467,7 +471,7 @@ BEGIN
 					THEN 0
 					ELSE
 						 IIF(
-								KVPC.KindOfVPName = 'Express Center', 
+								VPC.KindOfVPName != 'Express Center', 
 								'0', 
 								IIF(
 									DOR.IsLastMileReturn = 1, 
@@ -481,7 +485,7 @@ BEGIN
 					THEN 0
 					ELSE
 						IIF(
-								KVPC.KindOfVPName = 'Express Center', 
+								VPC.KindOfVPName != 'Express Center', 
 								'0', 
 								IIF(
 										DOR.IsLastMileReturn = 1, 
@@ -516,14 +520,16 @@ BEGIN
 					IIF(
 							DOR.IsLastMileReturn = 1, 
 							IIF(
-									KVPC.KindOfVPName = 'Express Center' , 
-									ISNULL( VPC.DescriptionOfClient , '' ), 
+									VPC.KindOfVPName != 'Express Center' ,
+									ISNULL( VPC.DescriptionOfClient , '' ),
 									ISNULL( DOR.Sender_FirstName , 'N/A' )
+									
 								), 
 							IIF(
-									KVPC.KindOfVPName = 'Express Center', 
-									ISNULL( VPC.DescriptionOfClient , '' ), 
+									VPC.KindOfVPName != 'Express Center',
+									ISNULL( VPC.DescriptionOfClient , '' ),
 									ISNULL( DOR.Receiver_FirstName , 'N/A' )
+									
 								)
 						) 
 					) [customerName],
@@ -623,18 +629,34 @@ BEGIN
 			ON	DAT.Guide_Serie = EPS.GuideSerie
 			AND DAT.Guide_Number = EPS.GuideNumber
 		OUTER APPLY(
-			SELECT VPCA1.CodeOfReference, VPCA1.[Address], VPCA1.[Longitude], VPCA1.[Latitude], VPCA1.Accuracy, VPCA1.DescriptionOfClient, VPCA1.IdKindOfVPClient
+			SELECT	VPCA1.CodeOfReference, 
+					VPCA1.[Address], 
+					VPCA1.[Longitude], 
+					VPCA1.[Latitude], 
+					VPCA1.Accuracy, 
+					VPCA1.DescriptionOfClient, 
+					VPCA1.IdKindOfVPClient, 
+					KVPC1.KindOfVPName
 			FROM [DeliveryBackOffice].[dbo].[VisitPointClient]		VPCA1 WITH (NOLOCK)
-			WHERE VPCA1.CodeOfReference = DOR.Sender_ID
+			RIGHT JOIN[DeliveryBackOffice].[dbo].[KindOfVPClient]	KVPC1 WITH (NOLOCK)
+				ON KVPC1.IdKindOfVPClient = VPCA1.IdKindOfVPClient
+			WHERE VPCA1.CodeOfReference = DOR.Receiver_ID 
 			AND DOR.IsLastMileReturn != 1 
 			UNION ALL
-			SELECT VPCA2.CodeOfReference, VPCA2.[Address], VPCA2.[Longitude], VPCA2.[Latitude], VPCA2.Accuracy, VPCA2.DescriptionOfClient, VPCA2.IdKindOfVPClient
+			SELECT	VPCA2.CodeOfReference, 
+					VPCA2.[Address], 
+					VPCA2.[Longitude], 
+					VPCA2.[Latitude], 
+					VPCA2.Accuracy, 
+					VPCA2.DescriptionOfClient, 
+					VPCA2.IdKindOfVPClient, 
+					KVPC2.KindOfVPName
 			FROM [DeliveryBackOffice].[dbo].[VisitPointClient]		VPCA2 WITH (NOLOCK)
-			WHERE VPCA2.CodeOfReference = DOR.Receiver_ID
+			RIGHT JOIN[DeliveryBackOffice].[dbo].[KindOfVPClient]	KVPC2 WITH (NOLOCK)
+				ON KVPC2.IdKindOfVPClient = VPCA2.IdKindOfVPClient
+			WHERE VPCA2.CodeOfReference = DOR.Sender_ID
 			AND DOR.IsLastMileReturn = 1 
 		) VPC
-		RIGHT JOIN[DeliveryBackOffice].[dbo].[KindOfVPClient]		KVPC WITH (NOLOCK)
-		ON KVPC.IdKindOfVPClient = VPC.IdKindOfVPClient
 		OUTER APPLY(
 			SELECT TOP 1 vpi.PathImage
 			FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint]	vpi WITH (NOLOCK)
