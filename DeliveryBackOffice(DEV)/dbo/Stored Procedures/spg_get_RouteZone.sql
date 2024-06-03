@@ -4,10 +4,14 @@
 -- Create date: <2021-03-24>
 -- Description:	<Devuelve los valores de las rutas con sus detalles de zonas y vehículos>
 -- =============================================
-create PROCEDURE [dbo].[spg_get_RouteZone]
-
-
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-03>
+-- Description: <Se agrega filtro por pais, por defecto GT>
+-- =============================================
+ALTER PROCEDURE [dbo].[spg_get_RouteZone]
+(
+ @IdCountry NVARCHAR(2) = 'GT'
+)
 AS
 BEGIN
 
@@ -44,12 +48,13 @@ BEGIN
 							 ), 1, 1, ''),
 			cr.DateCreated
 		from CatRoute cr
-		left join ZoneByRoute zbr on (cr.IdRoute = zbr.RouteId)
-		left join Township tw on (tw.IdTownship = zbr.TownshipId)
-		left join Province pv on (pv.IdProvince = tw.IdProvince)
+		full outer join ZoneByRoute zbr on (cr.IdRoute = zbr.RouteId)
+		full outer join Township tw on (tw.IdTownship = zbr.TownshipId)
+		full outer join Province pv on (pv.IdProvince = tw.IdProvince)
 		left join CatTypeRoute ctr on (ctr.IdTypeRoute = cr.IdTypeRoute)
 		where cr.RowStatus = 1
+        AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
 		group by cr.CodeRoute, ctr.Name,cr.Description,cr.IdRoute ,tw.IdTownship, cr.DateCreated
-		order by cr.DateCreated desc
+		order by cr.IdRoute desc
 
 END

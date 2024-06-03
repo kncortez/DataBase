@@ -10,8 +10,10 @@
     [Width]                  DECIMAL (14, 2) NULL,
     [High]                   DECIMAL (14, 2) NULL,
     [UnitType]               INT             NULL,
+    [IdCountry]              VARCHAR(2)      NULL,
     PRIMARY KEY CLUSTERED ([IdCatVehicleCategories] ASC),
-    CONSTRAINT [FK_CatVehicleCategories_Unit] FOREIGN KEY ([UnitType]) REFERENCES [dbo].[Unit] ([IdUnit])
+    CONSTRAINT [FK_CatVehicleCategories_Unit] FOREIGN KEY ([UnitType]) REFERENCES [dbo].[Unit] ([IdUnit]),
+    CONSTRAINT [FK_IdCountry_Cat_Region] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
 );
 
 
