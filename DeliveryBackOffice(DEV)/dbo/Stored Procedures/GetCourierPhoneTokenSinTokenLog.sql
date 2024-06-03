@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Eduardo Lopez>
 -- Create date: <2024-04-08>
 -- Description:	<Consultar datos de courier con solo mandar numero de telefono>
@@ -120,7 +120,7 @@ begin
                                            + '"Vehicle":"' + isnull(convert(varchar, vh.Plate), 'N/A') + '",'
                                            + '"Route":"' + isnull(convert(varchar, cr.CodeRoute), 'N/A') + '",'
                                            + '"GuideRegex":"' + isnull(convert(varchar(500), @GuideRegexData), '')
-                                           + '",' -- Para validar solo los digitos de la gu�a
+                                           + '",' -- Para validar solo los digitos de la guía
                                            + '"GuideRegexEscaner":"'
                                            + isnull(convert(varchar(500), @GuideRegexScannerData), '')
                                            + '",' -- Para el input del escaner de la courier
@@ -224,6 +224,3 @@ begin
     select ('[' + @jsonResult + ']') jsonResult;
 
 end;
-
-
-
