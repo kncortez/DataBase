@@ -4,7 +4,14 @@
 -- Create date: <2020-11-23>
 -- Description:	<Devuelve información para liquidación de COD>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_deliveryordersForCOD] @IdManifest INT
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2024-05-20>
+-- Description:	<Devuelve información para liquidación de COD filtrado por pais>
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_get_deliveryordersForCOD] 
+@IdManifest INT,
+@Country NVARCHAR(2) = 'GT'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -33,6 +40,8 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
                AND dsd.RowStatus = 1
+        LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+            ON cs.IdStation = dbs.DispatchedStationId
     WHERE dbs.ID = @IdManifest
           AND dsd.Guide_Settlement = 1
           AND dsd.Guide_Returned = 0
@@ -40,19 +49,23 @@ BEGIN
           (
               dsd.Guide_Discharged = 0
               OR dsd.Guide_Discharged IS NULL
-          );
+          )
+		  AND cs.CountryId = @Country;
 
     SELECT dbs.ID,
-           Date_Dispatched,
-           Pieces_Dry_Dispatched,
-           Pieces_Cold_Dispatched,
-           Guides_Dispatched,
+           dbs.Date_Dispatched,
+           dbs.Pieces_Dry_Dispatched,
+           dbs.Pieces_Cold_Dispatched,
+           dbs.Guides_Dispatched,
            dbs.ID_Courier,
            ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
             ON sr.ID = dbs.ID_Courier
-    WHERE dbs.ID = @IdManifest;
+        LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+            ON cs.IdStation = dbs.DispatchedStationId
+    WHERE dbs.ID = @IdManifest
+		  AND cs.CountryId = @Country;
 
     DECLARE @GuidesDetail TABLE
     (

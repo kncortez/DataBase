@@ -1,68 +1,127 @@
-﻿CREATE TABLE [dbo].[invoiceHeader](
-	[inv_pk_id] [bigint] IDENTITY(1,1) NOT NULL,
-	[inv_vpCodeOfReferences] [int] NOT NULL,
-	[inv_cmp_name] [varchar](500) NULL,
-	[inv_cmp_nameComercial] [varchar](500) NULL,
-	[inv_cmp_adress] [varchar](1000) NULL,
-	[inv_cmp_nit] [varchar](100) NOT NULL,
-	[inv_cli_name] [varchar](500) NOT NULL,
-	[inv_cli_adress] [varchar](1000) NOT NULL,
-	[inv_cli_nit] [varchar](100) NOT NULL,
-	[inv_cli_email] [varchar](500) NOT NULL,
-	[inv_date] [datetime] NOT NULL,
-	[inv_documentSend] [varchar](max) NULL,
-	[inv_documentRecieved] [varchar](max) NULL,
-	[inv_certificationFEL] [varchar](200) NULL,
-	[inv_serieFEL] [varchar](200) NULL,
-	[inv_numberFEL] [varchar](50) NULL,
-	[inv_descriptionFEL] [varchar](500) NULL,
-	[inv_RequestorFEL] [varchar](250) NULL,
-	[inv_TransactionFEL] [varchar](100) NULL,
-	[inv_CountryFEL] [varchar](4) NULL,
-	[inv_EntityFEL] [varchar](50) NULL,
-	[inv_UserFEL] [varchar](150) NULL,
-	[inv_UserName] [varchar](150) NULL,
-	[inv_Data1FEL] [varchar](150) NULL,
-	[inv_Data3FEL] [varchar](150) NULL,
-	[inv_MailSendFEL] [varchar](150) NULL,
-	[inv_subjectFEL] [varchar](150) NULL,
-	[inv_IVA] [money] NULL,
-	[inv_amount] [money] NULL,
-	[inv_status] [int] NOT NULL,
-	[inv_dateRegister] [datetime] NOT NULL,
-	[inv_tokenRegister] [varchar](200) NOT NULL,
-	[inv_dateUpdate] [datetime] NULL,
-	[inv_tokenUpdate] [varchar](200) NULL,
-	[inv_type] [int] NOT NULL,
-	[inv_invoiceOfCreditNote] [int] NULL,
-	[inv_motiveCreditNote] [varchar](200) NULL,
-	[inv_dateOriginDocument] [datetime] NULL,
-	[inv_documentOriginFEL] [varchar](500) NULL,
-	[inv_creditNote] [int] NULL,
-	[inv_establecimientoFEL] [varchar](5) NULL,
-	[inv_cmp_nameFEL] [varchar](2000) NULL,
-	[inv_FechaHoraFEL] [varchar](50) NULL,
-	[inv_SAPDocEntry] [int] NULL,
-	[inv_SAPError] [varchar](300) NULL,
-	[systemOperation] [int] NULL,
-	[IsManualInvoice] [bit] NULL,
-	[inv_dateFEL] [datetime] NULL,
-	[CatInvoiceTypeId] [int] NULL,
-	[Retries] [int] NULL,
- CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED 
-(
-	[inv_pk_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+﻿CREATE TABLE [dbo].[invoiceHeader] (
+    [inv_pk_id]               BIGINT         IDENTITY (1, 1) NOT NULL,
+    [inv_vpCodeOfReferences]  INT            NOT NULL,
+    [inv_cmp_name]            VARCHAR (500)  NULL,
+    [inv_cmp_nameComercial]   VARCHAR (500)  NULL,
+    [inv_cmp_adress]          VARCHAR (1000) NULL,
+    [inv_cmp_nit]             VARCHAR (100)  NOT NULL,
+    [inv_cli_name]            VARCHAR (500)  NOT NULL,
+    [inv_cli_adress]          VARCHAR (1000) NOT NULL,
+    [inv_cli_nit]             VARCHAR (100)  NOT NULL,
+    [inv_cli_email]           VARCHAR (500)  NOT NULL,
+    [inv_date]                DATETIME       NOT NULL,
+    [inv_documentSend]        VARCHAR (MAX)  NULL,
+    [inv_documentRecieved]    VARCHAR (MAX)  NULL,
+    [inv_certificationFEL]    VARCHAR (200)  NULL,
+    [inv_serieFEL]            VARCHAR (200)  NULL,
+    [inv_numberFEL]           VARCHAR (50)   NULL,
+    [inv_descriptionFEL]      VARCHAR (500)  NULL,
+    [inv_RequestorFEL]        VARCHAR (250)  NULL,
+    [inv_TransactionFEL]      VARCHAR (100)  NULL,
+    [inv_CountryFEL]          VARCHAR (4)    NULL,
+    [inv_EntityFEL]           VARCHAR (50)   NULL,
+    [inv_UserFEL]             VARCHAR (150)  NULL,
+    [inv_UserName]            VARCHAR (150)  NULL,
+    [inv_Data1FEL]            VARCHAR (150)  NULL,
+    [inv_Data3FEL]            VARCHAR (150)  NULL,
+    [inv_MailSendFEL]         VARCHAR (150)  NULL,
+    [inv_subjectFEL]          VARCHAR (150)  NULL,
+    [inv_IVA]                 MONEY          NULL,
+    [inv_amount]              MONEY          NULL,
+    [inv_status]              INT            NOT NULL,
+    [inv_dateRegister]        DATETIME       NOT NULL,
+    [inv_tokenRegister]       VARCHAR (200)  NOT NULL,
+    [inv_dateUpdate]          DATETIME       NULL,
+    [inv_tokenUpdate]         VARCHAR (200)  NULL,
+    [inv_type]                INT            NOT NULL,
+    [inv_invoiceOfCreditNote] INT            NULL,
+    [inv_motiveCreditNote]    VARCHAR (200)  NULL,
+    [inv_dateOriginDocument]  DATETIME       NULL,
+    [inv_documentOriginFEL]   VARCHAR (500)  NULL,
+    [inv_creditNote]          INT            NULL,
+    [inv_establecimientoFEL]  VARCHAR (5)    NULL,
+    [inv_cmp_nameFEL]         VARCHAR (2000) NULL,
+    [inv_FechaHoraFEL]        VARCHAR (50)   NULL,
+    [inv_SAPDocEntry]         INT            NULL,
+    [inv_SAPError]            VARCHAR (300)  NULL,
+    [systemOperation]         INT            NULL,
+    [IsManualInvoice]         BIT            NULL,
+    [inv_dateFEL]             DATETIME       NULL,
+    [CatInvoiceTypeId]        INT            NULL,
+    [Retries]                 INT            DEFAULT ((1)) NULL,
+    CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
+    FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
+);
+
+
+
+
+
+
+
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si factura es manual TRUE', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IsManualInvoice';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la cual FEL finalizo y se actualizo el registro con la respuesta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'inv_dateFEL';
+
+
 GO
 
-ALTER TABLE [dbo].[invoiceHeader] ADD  DEFAULT ((1)) FOR [Retries]
-GO
 
-ALTER TABLE [dbo].[invoiceHeader]  WITH CHECK ADD FOREIGN KEY([systemOperation])
-REFERENCES [dbo].[CatSystem] ([SysIdSystem])
-GO
 
+GO
+CREATE NONCLUSTERED INDEX [IX_invoiceHeaderRDL]
+    ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_certificationFEL] ASC, [inv_creditNote] ASC, [inv_motiveCreditNote] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_type_inv_creditNote_inv_date]
+    ON [dbo].[invoiceHeader]([inv_type] ASC, [inv_creditNote] ASC, [inv_date] ASC)
+    INCLUDE([inv_pk_id], [inv_vpCodeOfReferences]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_status_inv_dateRegister_inv_type_inv_SAPDocEntry]
+    ON [dbo].[invoiceHeader]([inv_status] ASC, [inv_dateRegister] ASC, [inv_type] ASC, [inv_SAPDocEntry] ASC)
+    INCLUDE([inv_vpCodeOfReferences], [inv_certificationFEL], [inv_invoiceOfCreditNote]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_id_status_certification_seriefel_]
+    ON [dbo].[invoiceHeader]([inv_pk_id] ASC, [inv_certificationFEL] ASC, [inv_serieFEL] ASC, [inv_status] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_inv_numberFEL_inv_numberFEL]
+    ON [dbo].[invoiceHeader]([inv_numberFEL] ASC)
+    INCLUDE([inv_certificationFEL], [inv_serieFEL], [inv_UserName], [inv_SAPDocEntry]);
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CatInvoiceTypeId_Retries]
+    ON [dbo].[invoiceHeader] ([CatInvoiceTypeId],[Retries])
+    INCLUDE ([inv_descriptionFEL])
+
+GO
+CREATE NONCLUSTERED INDEX [idx_inv_pk_id_CatInvoiceTypeId]
+    ON [dbo].[invoiceHeader]( [CatInvoiceTypeId]);
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el tipo de factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'CatInvoiceTypeId';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los int�ntos de la generaci�n de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
+
+
+
+
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador principal de cabecera de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'inv_pk_id'
 GO
 
@@ -201,19 +260,5 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Operacion del Sistema' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'systemOperation'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Si factura es manual TRUE' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'IsManualInvoice'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha y hora en la cual FEL finalizo y se actualizo el registro con la respuesta.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'inv_dateFEL'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo para poder registrar el tipo de factura.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'CatInvoiceTypeId'
-GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo para poder registrar los int�ntos de la generaci�n de una factura.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader', @level2type=N'COLUMN',@level2name=N'Retries'
-GO
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de cabecera de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceHeader'
 GO
-
-
