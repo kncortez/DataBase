@@ -171,7 +171,7 @@ BEGIN
         AND DAT.Guide_Number = DOR.Guide_Number
         AND DOR.IsLastMileReturn = 1
 		--En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Incidencia en ruta
-        AND DOR.StatusOrderId IN ( 4, 5, 12,  14, 20, 25, 45 ) 
+        AND DOR.StatusOrderId IN ( 4, 5, 12,  14, 20, 25, 45, 50 ) 
 	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
         ON DSD.Guide_Serie = DAT.Guide_Serie
         AND DSD.Guide_Number = DAT.Guide_Number
@@ -361,14 +361,13 @@ BEGIN
 					0
 				)	[CodeOfReference],
 				ISNULL(
-						(   
-							CASE
-							WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-							THEN DOR.IdDeliveryOption
-							ELSE 1
-							END
-						), 0
-					  )[DeliveryOption],
+					CASE
+					WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
+					THEN DOR.IdDeliveryOption
+					ELSE 1
+					END	
+				 ,0)
+				 [DeliveryOption],
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
 				 0 [ServiceManagementId],
@@ -557,7 +556,7 @@ BEGIN
 					) [NumImageEvidence],
 				ISNULL(   
 						CASE
-							WHEN DOR.StatusOrderId = 45 
+							WHEN DOR.StatusOrderId in (45,50) 
 							THEN 12
 							ELSE DOR.StatusOrderId
 						END
@@ -596,10 +595,10 @@ BEGIN
 					ID_Courier
 		)                                                               DAT	
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
-			ON	DAT.Guide_Serie = DOR.Guide_Serie
-			AND	DAT.Guide_Number = DOR.Guide_Number
+			ON	DOR.Guide_Serie = DAT.Guide_Serie
+			AND	DOR.Guide_Number = DAT.Guide_Number
 			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devolución|Incidencia en ruta|Guía revertida para entrega
-			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48 )
+			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
 			ON DSD.Guide_Serie = DAT.Guide_Serie
 			AND DSD.Guide_Number = DAT.Guide_Number
