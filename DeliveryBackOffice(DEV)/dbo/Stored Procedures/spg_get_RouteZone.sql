@@ -8,7 +8,7 @@
 -- Create date: <2024-06-03>
 -- Description: <Se agrega filtro por pais, por defecto GT>
 -- =============================================
-ALTER PROCEDURE [dbo].[spg_get_RouteZone]
+CREATE PROCEDURE [dbo].[spg_get_RouteZone]
 (
  @IdCountry NVARCHAR(2) = 'GT'
 )
