@@ -12,7 +12,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetGuideDataCOD]
     @GuideSerie NVARCHAR(50),
-	@GuideNumber NVARCHAR(50)
+	@GuideNumber NVARCHAR(50),
+	@CountryId NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -35,6 +36,7 @@ WHERE DOR.Guide_Serie = @GuideSerie
           AND Guide_Serie = DORD.Guide_Serie
           AND Guide_Number = DORD.Guide_Number
 ) --(Entregado,Entregado En Express Center)
+	  AND IIF(DOR.SenderCountryId IS NULL, 'GT', DOR.SenderCountryId) = @CountryId
 GROUP BY DOR.Guide_Serie,
          DOR.Guide_Number,
          DOR.Sender_FirstName,
