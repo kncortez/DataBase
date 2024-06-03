@@ -7,6 +7,7 @@
 
 CREATE PROCEDURE [dbo].[sphd_getStations]
 
+@Country NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	SELECT
@@ -15,5 +16,5 @@ BEGIN
 	FROM DeliveryBackOffice.dbo.CatStation cs
 	INNER JOIN DeliveryBackOffice.dbo.HubLogistics hb
 	ON hb.IdHubLogistic = cs.HubLogisticId AND hb.HubStatus = 1
-	WHERE cs.RowStatus ='true' AND cs.StationType =1;
+	WHERE cs.RowStatus ='true' AND cs.StationType =1 AND cs.CountryId = @Country;
 END
