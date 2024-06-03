@@ -308,7 +308,10 @@ BEGIN
 				    AND RTPS.TypeSalePackage ='MEMBERSHIP' 
 			WHERE RTPS.OrderNumber = @OrderNumber
 
-			
+		IF(@inv_cli_adress='' OR @inv_cli_adress IS NULL)
+			BEGIN 
+			  SET   @inv_cli_adress='ciudad';
+			END
 
         INSERT INTO [dbo].[invoiceHeader]
         (
