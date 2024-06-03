@@ -1631,7 +1631,6 @@
     <Build Include="dbo\Stored Procedures\GetBillingInformation_1.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingDataUpload_1.sql" />
     <Build Include="dbo\User Defined Types\TblSalePackageList_1.sql" />
-    <Build Include="dbo\Stored Procedures\spRS_ForzaDeliveryInComeReport.sql" />
     <Build Include="dbo\Stored Procedures\SpHWGetStationForCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetCountries.sql" />
   </ItemGroup>
