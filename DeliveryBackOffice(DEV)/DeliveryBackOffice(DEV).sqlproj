@@ -1672,8 +1672,20 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
-	<Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
-</ItemGroup>	
+    <Build Include="dbo\Tables\CustomerCODLog.sql" />
+    <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLog.sql" />
+    <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLogVisitPoint.sql" />
+    <Build Include="dbo\Tables\tmp_PagosErroneos.sql" />
+    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReport.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
+    <Build Include="dbo\Stored Procedures\GetImagePromotional.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenSinTokenLog.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
+    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />   
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" /> 
+  </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
       <HintPath>$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac</HintPath>
