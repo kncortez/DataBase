@@ -14,6 +14,6 @@ UPDATE CatVehicleCategories
 
 --Insertar valores de HN
 INSERT INTO CatVehicleCategories
-SELECT [name], RowStatus, 'SYS-DRAMIREZ',GETDATE(),NULL,NULL,NULL,NULL, NULL, NULL
+SELECT [name], RowStatus, 'SYS-DRAMIREZ',GETDATE(),NULL,NULL,NULL,NULL, NULL, NULL,'HN'
   FROM dbo.CatVehicleCategories
  WHERE RowStatus = 1
