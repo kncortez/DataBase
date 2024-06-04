@@ -1,18 +1,16 @@
-﻿CREATE TABLE [dbo].[ctg_statusInvoice](
-	[ist_pk_id] [int] NOT NULL,
-	[ist_nombre] [varchar](50) NOT NULL,
-	[ist_descripcion] [varchar](1000) NOT NULL,
-	[ist_dateInsert] [datetime] NOT NULL,
-	[ist_tokenInsert] [varchar](50) NOT NULL,
-	[ist_dateUpdate] [datetime] NULL,
-	[ist_tokenUpdate] [varchar](50) NULL,
- CONSTRAINT [PK_ctg_statusInvoice] PRIMARY KEY CLUSTERED 
-(
-	[ist_pk_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+﻿CREATE TABLE [dbo].[ctg_statusInvoice] (
+    [ist_pk_id]       INT            NOT NULL,
+    [ist_nombre]      VARCHAR (50)   NOT NULL,
+    [ist_descripcion] VARCHAR (1000) NOT NULL,
+    [ist_dateInsert]  DATETIME       NOT NULL,
+    [ist_tokenInsert] VARCHAR (50)   NOT NULL,
+    [ist_dateUpdate]  DATETIME       NULL,
+    [ist_tokenUpdate] VARCHAR (50)   NULL,
+    CONSTRAINT [PK_ctg_statusInvoice] PRIMARY KEY CLUSTERED ([ist_pk_id] ASC)
+);
 
+
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador unico del tipo de estado de la factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ctg_statusInvoice', @level2type=N'COLUMN',@level2name=N'ist_pk_id'
 GO
 
@@ -36,5 +34,3 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que describe el tipo de estado de las facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ctg_statusInvoice'
 GO
-
-

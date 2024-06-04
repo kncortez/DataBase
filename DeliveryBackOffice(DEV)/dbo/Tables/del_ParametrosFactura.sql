@@ -1,43 +1,53 @@
-﻿CREATE TABLE [dbo].[del_ParametrosFactura](
-	[dpf_VpCodeOfReference] [int] NOT NULL,
-	[dpf_FELRequestor] [varchar](200) NOT NULL,
-	[dpf_FELTransaction] [varchar](200) NOT NULL,
-	[dpf_FELCountry] [varchar](10) NOT NULL,
-	[dpf_FELEntity] [varchar](20) NOT NULL,
-	[dpf_FELUser] [varchar](200) NOT NULL,
-	[dpf_FELUserName] [varchar](50) NOT NULL,
-	[dpf_FELData1] [varchar](50) NOT NULL,
-	[dpf_FELData3] [varchar](10) NOT NULL,
-	[dpf_FELCorreo] [varchar](50) NOT NULL,
-	[dpf_FELAsuntoCorreoFactura] [varchar](200) NOT NULL,
-	[dpf_FELAsuntoCorreoNotaCredito] [varchar](200) NOT NULL,
-	[dpf_FELEstablecimiento] [varchar](15) NOT NULL,
-	[dpf_FELCorreoCCO] [varchar](50) NOT NULL,
-	[dpf_SAPServidorLicencias] [varchar](50) NOT NULL,
-	[dpf_SAPCompania] [varchar](50) NOT NULL,
-	[dpf_SAPUsuario] [varchar](50) NOT NULL,
-	[dpf_SAPContrasenia] [nvarchar](100) NOT NULL,
-	[dpf_SAPServidor] [varchar](50) NOT NULL,
-	[dpf_SAPUsuarioBD] [varchar](50) NOT NULL,
-	[dpf_SAPContraseniaBD] [nvarchar](100) NOT NULL,
-	[dpf_SAPserieFactura] [varchar](50) NOT NULL,
-	[dpf_SAPserieNC] [varchar](50) NOT NULL,
-	[dpf_SAPseriePago] [varchar](50) NOT NULL,
-	[dpf_SAPcardCode] [varchar](50) NOT NULL,
-	[dpf_SAParticulo] [varchar](50) NOT NULL,
-	[dpf_SAPvendor] [varchar](50) NOT NULL,
-	[dpf_SAPcreditCard] [varchar](50) NOT NULL,
-	[dpf_OcrCode] [nvarchar](50) NULL,
-	[dpf_OcrCode2] [nvarchar](50) NULL,
-	[dpf_StatusFACE] [nvarchar](1) NULL,
-	[dpf_WarehouseCode] [int] NULL,
- CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED 
-(
-	[dpf_VpCodeOfReference] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+﻿CREATE TABLE [dbo].[del_ParametrosFactura] (
+    [dpf_VpCodeOfReference]          INT            NOT NULL,
+    [dpf_FELRequestor]               VARCHAR (200)  NOT NULL,
+    [dpf_FELTransaction]             VARCHAR (200)  NOT NULL,
+    [dpf_FELCountry]                 VARCHAR (10)   NOT NULL,
+    [dpf_FELEntity]                  VARCHAR (20)   NOT NULL,
+    [dpf_FELUser]                    VARCHAR (200)  NOT NULL,
+    [dpf_FELUserName]                VARCHAR (50)   NOT NULL,
+    [dpf_FELData1]                   VARCHAR (50)   NOT NULL,
+    [dpf_FELData3]                   VARCHAR (10)   NOT NULL,
+    [dpf_FELCorreo]                  VARCHAR (50)   NOT NULL,
+    [dpf_FELAsuntoCorreoFactura]     VARCHAR (200)  NOT NULL,
+    [dpf_FELAsuntoCorreoNotaCredito] VARCHAR (200)  NOT NULL,
+    [dpf_FELEstablecimiento]         VARCHAR (15)   NOT NULL,
+    [dpf_FELCorreoCCO]               VARCHAR (50)   NOT NULL,
+    [dpf_SAPServidorLicencias]       VARCHAR (50)   NOT NULL,
+    [dpf_SAPCompania]                VARCHAR (50)   NOT NULL,
+    [dpf_SAPUsuario]                 VARCHAR (50)   NOT NULL,
+    [dpf_SAPContrasenia]             NVARCHAR (100) NOT NULL,
+    [dpf_SAPServidor]                VARCHAR (50)   NOT NULL,
+    [dpf_SAPUsuarioBD]               VARCHAR (50)   NOT NULL,
+    [dpf_SAPContraseniaBD]           NVARCHAR (100) NOT NULL,
+    [dpf_SAPserieFactura]            VARCHAR (50)   NOT NULL,
+    [dpf_SAPserieNC]                 VARCHAR (50)   NOT NULL,
+    [dpf_SAPseriePago]               VARCHAR (50)   NOT NULL,
+    [dpf_SAPcardCode]                VARCHAR (50)   NOT NULL,
+    [dpf_SAParticulo]                VARCHAR (50)   NOT NULL,
+    [dpf_SAPvendor]                  VARCHAR (50)   NOT NULL,
+    [dpf_SAPcreditCard]              VARCHAR (50)   NOT NULL,
+    [dpf_OcrCode]                    NVARCHAR (50)  NULL,
+    [dpf_OcrCode2]                   NVARCHAR (50)  NULL,
+    [dpf_StatusFACE]                 NVARCHAR (1)   NULL,
+    [dpf_WarehouseCode]              INT            NULL,
+    CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC)
+);
 
+
+
+
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar código de almacen de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'del_ParametrosFactura', @level2type = N'COLUMN', @level2name = N'dpf_WarehouseCode';
+
+
+
+
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo relacionado con el codigo de punto de visita o express center' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'del_ParametrosFactura', @level2type=N'COLUMN',@level2name=N'dpf_VpCodeOfReference'
 GO
 
@@ -131,10 +141,5 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'parametro de configuracion para facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'del_ParametrosFactura', @level2type=N'COLUMN',@level2name=N'dpf_StatusFACE'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Campo para almacenar código de almacen de Express Center.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'del_ParametrosFactura', @level2type=N'COLUMN',@level2name=N'dpf_WarehouseCode'
-GO
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla con parametros para facturacion' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'del_ParametrosFactura'
 GO
-
-

@@ -7,6 +7,8 @@
     [DateCreated]                 DATETIME       NOT NULL,
     [TokenUpdated]                NVARCHAR (50)  NULL,
     [DateUpdated]                 DATETIME       NULL,
-    CONSTRAINT [PK_CatBusinessActivity] PRIMARY KEY CLUSTERED ([IdBusinessActivity] ASC)
+    [IdCountry]                   VARCHAR(2)     NULL,
+    CONSTRAINT [PK_CatBusinessActivity] PRIMARY KEY CLUSTERED ([IdBusinessActivity] ASC),
+    CONSTRAINT [FK_CatBusinessActivity_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 
