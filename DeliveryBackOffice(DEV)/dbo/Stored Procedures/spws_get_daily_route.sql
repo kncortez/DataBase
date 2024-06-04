@@ -25,7 +25,7 @@ BEGIN
             (
                 SELECT	TOP 1 STSM.IdSubTypeServiceManagment
                 FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE	STSM.Name = 'RecolecciÛn'
+                WHERE	STSM.Name = 'Recolecci√≥n'
 					AND STSM.RowStatus = 1
             );
     DECLARE @DeliveryTypeId BIGINT =
@@ -39,7 +39,7 @@ BEGIN
             (
                 SELECT	TOP 1 STSM.IdSubTypeServiceManagment
                 FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE	STSM.Name = 'DevoluciÛn'
+                WHERE	STSM.Name = 'Devoluci√≥n'
 					AND STSM.RowStatus = 1
             );
 
@@ -93,7 +93,7 @@ BEGIN
 			AND DOA.RowStatus = 1
 			AND DOA.ServiceManagementId IS NOT NULL
 		UNION ALL
-		-- ALERTAS PARA GUÕAS EN RUTA
+		-- ALERTAS PARA GUÔøΩAS EN RUTA
 		SELECT  VPC.CodeOfReference	[ServiceManagementId],
 				DOA.AlertTypeId,
 				DOA.AlertDescription,
@@ -245,9 +245,9 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- GuÌas
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- GuÔøΩas
                                               , @InTime = 3                        -- Entrega
-                                              , @IsReturn = 1                      -- DevoluciÛn
+                                              , @IsReturn = 1                      -- DevoluciÔøΩn
                                               , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
                                               , @IdModule = 1
                                               , @Token = @Token;
@@ -597,7 +597,7 @@ BEGIN
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
-			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para DevoluciÛn|Incidencia en ruta|GuÌa revertida para entrega
+			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devoluci√≥n|Incidencia en ruta|Gu√≠a revertida para entrega
 			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
 			ON DSD.Guide_Serie = DAT.Guide_Serie
@@ -699,7 +699,7 @@ BEGIN
 	ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
 	BEGIN
        
-		SELECT '403' [IdResult], 'Token Inv·lido' [DescriptionError];
+		SELECT '403' [IdResult], 'Token Inv√°lido' [DescriptionError];
         
 	END;
 END;
