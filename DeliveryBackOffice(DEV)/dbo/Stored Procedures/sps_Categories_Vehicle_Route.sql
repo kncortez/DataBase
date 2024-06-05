@@ -3,6 +3,10 @@
 -- Create date: <2021-03-23>
 -- Description:	<Se guarda la información del detalle y maestro de las rutas >
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-06-05>
+-- Description: < Se agrega parametro para guardar minucipio al momento de registrar rutas>
+-- =============================================
 --drop PROCEDURE [dbo].[sps_Categories_Vehicle_Route]
 CREATE PROCEDURE [dbo].[sps_Categories_Vehicle_Route]
 	@TblZoneByRoute nvarchar(MAX),
@@ -10,8 +14,8 @@ CREATE PROCEDURE [dbo].[sps_Categories_Vehicle_Route]
 	@NameRoute varchar(50) = 'TEST',
 	@Description varchar(100) = 'TEST',
 	@Token varchar (50)= 'TEST',
-	@IdTypeRoute int = 1
-
+	@IdTypeRoute int = 1,
+    @IdTownShip int = null
 AS
 BEGIN
 
@@ -60,7 +64,7 @@ BEGIN
 	
 			
 				insert into CatRoute (CodeRoute, Description, IdTownship, IdTypeRoute, Zone, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated) 
-				values(@NameRoute, @Description, null, @IdTypeRoute, null, 1, @Token, GETDATE(),null, null)
+				values(@NameRoute, @Description, @IdTownShip, @IdTypeRoute, null, 1, @Token, GETDATE(),null, null)
 				set @IdRoute = SCOPE_IDENTITY()
 
 

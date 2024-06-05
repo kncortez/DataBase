@@ -3,10 +3,15 @@
 -- Create date: <2022-03-24>
 -- Description:	<Obtiene los datos detalles del manifiesto de recolecciones>
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-06-05>
+-- Description: < Adicion de filtro para mostrar moneda corecta por pais, por defect GT >
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_deliveryorder_settlement_guides_pickup_detail]
 	-- Add the parameters for the stored procedure here
 		@idRoute AS int,
-		@dateRoute AS date = ''	
+		@dateRoute AS date = '',
+        @IdCountry AS VARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -25,7 +30,13 @@ BEGIN
 			ELSE ''
 		END) AS Town
 		,ISNULL(IIF(spu.SenderPhone='NULL','',spu.SenderPhone),'') Phone		
-		,ISNULL(smt.Amount,'0') total
+		,CONCAT(
+                CASE 
+                    WHEN @IdCountry = 'GT' THEN 'Q.'
+                    WHEN @IdCountry = 'HN' THEN 'L.'
+                END,
+                CAST(ISNULL(smt.Amount,'0') AS NVARCHAR)
+               ) total
 		,ISNULL(PT.TimePlaDescription,'') TimePay
 		,ISNULL(smt.[Order], 1) [Order]
   from 
