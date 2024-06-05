@@ -46,6 +46,7 @@ BEGIN
 			ON Tw.IdTownship = VPC.IdTownship
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
 			on VPC.Town = Twn.TownshipName COLLATE Latin1_General_CI_AI
+            AND Tw.IdTownship = Twn.IdTownship
 		LEFT JOIN (
 			SELECT
 				DSC.HeaderCode
