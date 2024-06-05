@@ -1,26 +1,25 @@
-﻿CREATE TABLE [dbo].[InvoiceLog](
-	[InvoiceLogId] [bigint] IDENTITY(1,1) NOT NULL,
-	[InvIdRestriction] [bigint] NOT NULL,
-	[inv_pk_id] [bigint] NOT NULL,
-	[inv_DataSent] [nvarchar](max) NULL,
-	[inv_DataReceived] [nvarchar](max) NULL,
-	[ErrorDesc] [nvarchar](max) NULL,
-	[Date] [datetime] NOT NULL,
-	[TransactionStatus] [int] NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[InvoiceLogId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
+﻿CREATE TABLE [dbo].[InvoiceLog] (
+    [InvoiceLogId]      BIGINT         IDENTITY (1, 1) NOT NULL,
+    [InvIdRestriction]  BIGINT         NOT NULL,
+    [inv_pk_id]         BIGINT         NOT NULL,
+    [inv_DataSent]      NVARCHAR (MAX) NULL,
+    [inv_DataReceived]  NVARCHAR (MAX) NULL,
+    [ErrorDesc]         NVARCHAR (MAX) NULL,
+    [Date]              DATETIME       NOT NULL,
+    [TransactionStatus] INT            NULL,
+    PRIMARY KEY CLUSTERED ([InvoiceLogId] ASC),
+    CONSTRAINT [FKIRestrictionInvoiceLog] FOREIGN KEY ([InvIdRestriction]) REFERENCES [dbo].[InvoiceRestriction] ([InvIdRestriction])
+);
 
-ALTER TABLE [dbo].[InvoiceLog]  WITH CHECK ADD  CONSTRAINT [FKIRestrictionInvoiceLog] FOREIGN KEY([InvIdRestriction])
-REFERENCES [dbo].[InvoiceRestriction] ([InvIdRestriction])
-GO
 
-ALTER TABLE [dbo].[InvoiceLog] CHECK CONSTRAINT [FKIRestrictionInvoiceLog]
-GO
 
+
+GO
+CREATE NONCLUSTERED INDEX [ixd_InvoiceLog_inv_pk_id]
+    ON [dbo].[InvoiceLog]([inv_pk_id] ASC);
+
+
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador unico para los logs de facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceLog', @level2type=N'COLUMN',@level2name=N'InvoiceLogId'
 GO
 
@@ -47,5 +46,3 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que almacena el historial de operaciones para facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceLog'
 GO
-
-

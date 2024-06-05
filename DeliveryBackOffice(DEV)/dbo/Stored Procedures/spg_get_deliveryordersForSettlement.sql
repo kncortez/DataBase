@@ -7,7 +7,13 @@
 -- Create date: <2020-05-27>
 -- Description:	<Devuelve información para liquidación de ruta>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_deliveryordersForSettlement] @IdManifest AS INT
+-- =============================================
+-- Author:		<CRISTIAN SUAZO>
+-- Create date: <2024-05-28>
+-- Description:	<si la guia tiene de destino el pais de usuario logueado, se liquida >
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_get_deliveryordersForSettlement] @IdManifest AS INT, 
+												@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -23,7 +29,8 @@ BEGIN
         Guide NVARCHAR(16),
         Delivered BIT,
         COD DECIMAL(14, 2),
-		IsCollect BIT
+		IsCollect BIT,
+		Settlement BIT
     );
 
 	DECLARE @StatusDelivery TINYINT = (SELECT StatusOrderId FROM StatusOrder  WITH(NOLOCK)  WHERE OrderDescription = 'Entregado')
@@ -82,14 +89,17 @@ BEGIN
                     CONVERT(VARCHAR, CAST((ISNULL(CASE WHEN do.IsLastMileReturn = 1 THEN 0 ELSE do.Collect_OnDelivery END, 0)) AS DECIMAL), 1)
             END
            ) AS Collect_OnDelivery,
-		   do.IsCollect
+		   do.IsCollect,
+		   CASE WHEN ISNULL(do.ReceiverCountryId, 'GT') = @IdCountry OR ISNULL(SenderCountryId, 'GT') = @IdCountry THEN 1 ELSE 0 END AS Settlement
     FROM @GuidesFound gf
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
             ON do.Guide_Serie = gf.Guide_Serie
                AND do.Guide_Number = gf.Guide_Number;
 
-    SELECT SUM(COD) AS COD_Manifest
-    FROM @GuidesDetail;
+    SELECT SUM(COD) AS COD_Manifest,
+		   Settlement
+    FROM @GuidesDetail
+	GROUP BY Settlement;
 
     SELECT
 		Guide

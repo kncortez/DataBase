@@ -1,27 +1,32 @@
-﻿CREATE TABLE [dbo].[InOutOfMoneyDetail](
-	[io_type] [int] NOT NULL,
-	[io_vpCodeOfReferences] [int] NOT NULL,
-	[io_ticket] [varchar](100) NULL,
-	[io_amount] [money] NOT NULL,
-	[io_status] [int] NOT NULL,
-	[io_invoice] [bigint] NULL,
-	[io_registryToken] [varchar](50) NOT NULL,
-	[io_registryDate] [datetime] NOT NULL,
-	[io_updateToken] [varchar](50) NULL,
-	[io_updateDate] [datetime] NULL,
-	[io_pk_id] [int] IDENTITY(1,1) NOT NULL,
-	[inv_SAPDocEntryPaymentDetail] [int] NULL,
-	[io_SAPDocEntryPaymentDetail] [int] NULL,
-	[io_SAPErrorPaymentDetail] [varchar](500) NULL,
-	[io_canceledInSAP] [bit] NULL,
-	[io_canceledInSAPDescription] [varchar](200) NULL,
- CONSTRAINT [pk_InOutOfMoneyDetail] PRIMARY KEY CLUSTERED 
-(
-	[io_pk_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+﻿CREATE TABLE [dbo].[InOutOfMoneyDetail] (
+    [io_type]                      INT           NOT NULL,
+    [io_vpCodeOfReferences]        INT           NOT NULL,
+    [io_ticket]                    VARCHAR (100) NULL,
+    [io_amount]                    MONEY         NOT NULL,
+    [io_status]                    INT           NOT NULL,
+    [io_invoice]                   BIGINT        NULL,
+    [io_registryToken]             VARCHAR (50)  NOT NULL,
+    [io_registryDate]              DATETIME      NOT NULL,
+    [io_updateToken]               VARCHAR (50)  NULL,
+    [io_updateDate]                DATETIME      NULL,
+    [io_pk_id]                     INT           IDENTITY (1, 1) NOT NULL,
+    [inv_SAPDocEntryPaymentDetail] INT           NULL,
+    [io_SAPDocEntryPaymentDetail]  INT           NULL,
+    [io_SAPErrorPaymentDetail]     VARCHAR (500) NULL,
+    [io_canceledInSAP]             BIT           NULL,
+    [io_canceledInSAPDescription]  VARCHAR (200) NULL,
+    CONSTRAINT [pk_InOutOfMoneyDetail] PRIMARY KEY CLUSTERED ([io_pk_id] ASC)
+);
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_InOutOfMoneyDetail]
+    ON [dbo].[InOutOfMoneyDetail]([io_invoice] ASC);
+
+
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de factura pagada (factura electronica o nota de credito)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InOutOfMoneyDetail', @level2type=N'COLUMN',@level2name=N'io_type'
 GO
 
@@ -72,5 +77,3 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de registro para el pago de facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InOutOfMoneyDetail'
 GO
-
-
