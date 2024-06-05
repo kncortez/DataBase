@@ -264,12 +264,12 @@ BEGIN
 				ISNULL(spk.SchedulePickupId, '-1') [Id],
 				ISNULL(sma.IdServiceManagement, -1) [ServiceManagementId],
 				ISNULL(cpt.TimePlaName, 'N/A') [ServicePaymentTime],
-				dbo.fn_ReplaceSpecialCharsForJSON(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A')) [Sender],
-				dbo.fn_ReplaceSpecialCharsForJSON(
+				dbo.fnt_String_Escape(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A'),'json') [Sender],
+				dbo.fnt_String_Escape(
 				CONCAT( ISNULL(spk.AddressPickup, vpc.[Address]), ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
-					  ) ) [Address],
+					  ),'json' ) [Address],
 				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
 				IIF(
 						ISNULL(dcp.Pieces_Dry, 0) = 0,
@@ -371,36 +371,34 @@ BEGIN
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
 				 0 [ServiceManagementId],
-				 dbo.fn_ReplaceSpecialCharsForJSON(
 				 ISNULL(
 					ISNULL(
 							COALESCE(
 										IIF(
 												DOR.IsLastMileReturn = 1,
-												DOR.Receiver_FirstName,
-												DOR.Sender_FirstName
+												dbo.fnt_String_Escape(DOR.Receiver_FirstName, 'json'),
+												dbo.fnt_String_Escape(DOR.Sender_FirstName, 'json')
 											) , ''
 									) + ' '
 							+ 
 							COALESCE(
 										IIF(
 												DOR.IsLastMileReturn = 1,
-												DOR.Receiver_FirstName,
-												DOR.Sender_FirstName
+												dbo.fnt_String_Escape(DOR.Receiver_FirstName, 'json'),
+												dbo.fnt_String_Escape(DOR.Sender_FirstName, 'json')
 											) , ''
 									   )
-							, VPC.DescriptionOfClient
+							, dbo.fnt_String_Escape(VPC.DescriptionOfClient, 'json')
 							) , 'N/A'
-					) 
-						)[Sender],
+					)[Sender],
 				IIF(
 					VPC.KindOfVPName != 'Express Center',
-					ISNULL(VPC.[Address], ''),
+					dbo.fnt_String_Escape(ISNULL(VPC.[Address], ''),'json'),
 					ISNULL(
 								IIF(
 										DOR.IsLastMileReturn = 1,
-										DOR.Sender_Address,
-										DOR.Receiver_Address
+										dbo.fnt_String_Escape(DOR.Sender_Address,'json'),
+										dbo.fnt_String_Escape(DOR.Receiver_Address,'json')
 									)
 								, 'N/A'
 							)
@@ -424,7 +422,6 @@ BEGIN
 							SELECT (SUM(ISNULL(DOR2.Pieces_Dry, 0))) pieces
 							FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR2 WITH (NOLOCK)
 							WHERE DOR2.Guide_Serie = DAT.Guide_Serie
-							  
 							  AND DOR2.Guide_Number = DAT.Guide_Number
 						), 0
 					  ) [PiecesDry],
@@ -515,7 +512,7 @@ BEGIN
 								), 0
 							  )
 				END [Pickup],
-				dbo.fn_ReplaceSpecialCharsForJSON(
+				dbo.fnt_String_Escape(
 					IIF(
 							DOR.IsLastMileReturn = 1, 
 							IIF(
@@ -530,9 +527,9 @@ BEGIN
 									ISNULL( DOR.Receiver_FirstName , 'N/A' )
 									
 								)
-						) 
-					) [customerName],
-				dbo.fn_ReplaceSpecialCharsForJSON(
+						)
+					, 'json' ) [customerName],
+				dbo.fnt_String_Escape(
 					IIF(
 							DOR.IsLastMileReturn = 1, 
 							'N/A', 
@@ -541,7 +538,7 @@ BEGIN
 									ISNULL( DOR.Receiver_FirstName, 'N/A')
 								   )
 							) 
-						) [alterName],
+						,'json') [alterName],
 				IIF(
 						(
 							SELECT NumImgEvidence AS num
@@ -689,7 +686,7 @@ BEGIN
 		SELECT 
 				TMAP.ServiceManagementId,
 				TMAP.TypeAlert,
-				dbo.fn_ReplaceSpecialCharsForJSON(TMAP.DescriptionAlert) DescriptionAlert,
+				dbo.fnt_String_Escape(TMAP.DescriptionAlert,'json') DescriptionAlert,
 				TMAP.DateCreated
 		FROM	#TmpAlertList TMAP
 
