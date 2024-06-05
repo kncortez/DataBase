@@ -10,7 +10,8 @@
 -- =============================================
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
-	@GUIDESLIST TblGUides READONLY
+	@GUIDESLIST TblGUides READONLY,
+	@CountryThatConsults VARCHAR(2)= 'GT'
 AS
 BEGIN
 
@@ -23,6 +24,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -33,6 +35,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -115,7 +118,7 @@ BEGIN
     
 
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND ISNULL(IdCountry,'GT')=@CountryThatConsults);
 
 
 
