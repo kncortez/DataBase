@@ -8,17 +8,18 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
-    [TypeConnectionId] INT NOT NULL DEFAULT 1, 
-    [Hostname] NVARCHAR(50) NULL, 
-    [UserName] NVARCHAR(50) NULL, 
-    [Password] NVARCHAR(50) NULL, 
-    [Port] INT NULL, 
-    [RemoteRoute] NVARCHAR(50) NULL, 
+    [TypeConnectionId]   INT            DEFAULT ((1)) NOT NULL,
+    [Hostname]           NVARCHAR (50)  NULL,
+    [UserName]           NVARCHAR (50)  NULL,
+    [Password]           NVARCHAR (50)  NULL,
+    [Port]               INT            NULL,
+    [RemoteRoute]        NVARCHAR (50)  NULL,
     PRIMARY KEY CLUSTERED ([IdWebhookEndpoint] ASC),
     CONSTRAINT [FK_WebhookEndpoint_Customer] FOREIGN KEY ([CustomerId]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType]), 
-    CONSTRAINT [FK_WebhookEndpoint_WebhookCatTypeConnection] FOREIGN KEY ([TypeConnectionId]) REFERENCES [WebhookCatTypeConnection]([IdCatTypeConnection])
+    CONSTRAINT [FK_WebhookEndpoint_WebhookType] FOREIGN KEY ([WebhookTypeId]) REFERENCES [dbo].[WebhookType] ([IdWebhookType])
 );
+
+
 
 
 GO

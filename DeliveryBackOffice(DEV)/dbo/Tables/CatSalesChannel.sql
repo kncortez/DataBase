@@ -6,7 +6,9 @@
     [TokenUpdated]   NVARCHAR (50) NULL,
     [DateUpdated]    DATETIME      NULL,
     [RowStatus]      BIT           NOT NULL,
-    CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC)
+    [IdCountry]      VARCHAR (2)   NULL,
+    CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC),
+    CONSTRAINT [FK_CatSalesChannel_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 
@@ -41,3 +43,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de ac
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro válido?', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSalesChannel', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de pais (Referencia a IdCountry de la tabla CatCountry)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatSalesChannel',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'

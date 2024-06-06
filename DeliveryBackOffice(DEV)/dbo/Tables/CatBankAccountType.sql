@@ -6,7 +6,9 @@
     [DateCreated]       DATETIME      NOT NULL,
     [TokenUpdated]      NVARCHAR (50) NULL,
     [DateUpdated]       DATETIME      NULL,
-    CONSTRAINT [PK_CatBankAccountType] PRIMARY KEY CLUSTERED ([IdBankAccountType] ASC)
+    [IdCountry]         VARCHAR(2)    NULL,
+    CONSTRAINT [PK_CatBankAccountType] PRIMARY KEY CLUSTERED ([IdBankAccountType] ASC),
+    CONSTRAINT [FK_CatBankAccountType_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 
 
@@ -82,3 +84,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'CatBankAccountType',
     @level2type = NULL,
     @level2name = NULL
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de pais (Referencia a IdCountry de la tabla CatCountry)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatBankAccountType',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'

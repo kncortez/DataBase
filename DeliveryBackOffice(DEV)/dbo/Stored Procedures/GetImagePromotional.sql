@@ -25,5 +25,4 @@ BEGIN
   WHERE [RowStatus] = 1
    Order by  ImageOrder Asc;
 
-END 
-
+END

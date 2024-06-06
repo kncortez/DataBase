@@ -8,7 +8,7 @@ CREATE PROCEDURE [dbo].[QualityControlValidationsDetail]
  @EndDate DATE
 AS
 BEGIN
-
+set arithabort on;
 	--Incidencias en ruta pendientes de operar
     SELECT 
 
@@ -90,7 +90,7 @@ BEGIN
         DO.PriceShippment,
         ISNULL(DO.Collect_OnDelivery,0) Collect_OnDelivery,
         COI.LiquidatorRemarks,
-        IIF(ISNULL(COI.IsDenied,0) = 1,'Aprobada','Rechazada') Resolucion,
+        IIF(ISNULL(COI.IsDenied,0) = 1,'Rechazada','Aprobada') Resolucion,
         SR.First_Name+' '+SR.Last_Name Piloto,
         SR.Phone,
         COI.ActionObservation,

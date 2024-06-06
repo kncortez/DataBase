@@ -3,6 +3,10 @@
 -- Create date: <2022-08-29>
 -- Description:	<SP para Modificar bandera de devolución (IsLastMileReturn)>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-05-29>
+-- Description:	<Se realiza modificacion para invertir los codigos de pais para origen y destino al hacer una devolucion>
+-- =============================================
 CREATE procedure [dbo].[SPHD_ModifyReturnStatement]
     @TblListGuideActa TblListGuideActa readonly
   , @Token nvarchar(50)
@@ -14,7 +18,8 @@ begin
     begin transaction;
     begin try
 
-
+        declare @SenderCountryId as nvarchar(2)='GT';
+		declare @ReceiverCountryId as nvarchar(2)='GT';
         declare @Numero as int;
         declare @Serie as nvarchar(2);
         declare @STATUS as int;
@@ -55,10 +60,14 @@ begin
                  , @Numero = [rg].[GuideNumber]
             from @RevalueGuides [rg];
 
-            select @STATUS = [StatusOrderId]
-            from [dbo].[DeliveryOrderDetail] with (nolock)
-            where [Guide_Serie] = @Serie
-                  and [Guide_Number] = @Numero;
+            select @STATUS = [DOD].[StatusOrderId],
+				   @SenderCountryId = ISNULL([DO].[SenderCountryId],'GT'),
+				   @ReceiverCountryId = ISNULL([DO].[ReceiverCountryId],'GT')
+            from [dbo].[DeliveryOrderDetail] DOD with (nolock)
+			inner join [dbo].[DeliveryOrder] DO with (nolock)
+			on [DOD].[Guide_Serie] = [DO].[Guide_Serie] and [DOD].[Guide_Number] = [DO].[Guide_Number]
+            where [DOD].[Guide_Serie] = @Serie
+                  and [DOD].[Guide_Number] = @Numero;
 
             if (exists
             (
@@ -82,6 +91,8 @@ begin
                   , [StatusOrderId] = @STATUSDECLAREDRETURNED_DO
                   , [TokenUpdated] = @Token
                   , [DateUpdated] = getdate()
+                  , [SenderCountryId] = @ReceiverCountryId
+				  , [ReceiverCountryId] = @SenderCountryId
                 where [Guide_Serie] = @Serie
                       and [Guide_Number] = @Numero;
                 insert into @GuidesModify
@@ -113,6 +124,8 @@ begin
                   , [StatusOrderId] = @StatusReversal
                   , [TokenUpdated] = @Token
                   , [DateUpdated] = getdate()
+                  , [SenderCountryId] = @ReceiverCountryId
+				  , [ReceiverCountryId] = @SenderCountryId
                 where [Guide_Serie] = @Serie
                       and [Guide_Number] = @Numero;
                 insert into @GuidesModify

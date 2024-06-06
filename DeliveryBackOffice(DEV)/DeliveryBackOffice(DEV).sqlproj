@@ -1574,7 +1574,7 @@
     <Build Include="dbo\Stored Procedures\MKRetrieveProductInformationForShippingEmails.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
-	<Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1623,9 +1623,24 @@
     <Build Include="dbo\Tables\CustomerCODLog.sql" />
     <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLog.sql" />
     <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLogVisitPoint.sql" />
+    <Build Include="dbo\Tables\tmp_PagosErroneos.sql" />
+    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReport.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
+    <Build Include="dbo\Stored Procedures\GetImagePromotional.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenSinTokenLog.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetImagePromotional_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenSinTokenLog_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingInformation_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingDataUpload_1.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageList_1.sql" />
     <Build Include="dbo\Stored Procedures\spRS_ForzaDeliveryInComeReport.sql" />
     <Build Include="dbo\Stored Procedures\SpHWGetStationForCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetCountries.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_DimensionWeightGuidePiece.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

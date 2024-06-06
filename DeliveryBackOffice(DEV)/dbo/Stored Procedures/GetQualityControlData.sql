@@ -36,34 +36,28 @@ BEGIN
               , UnConfirmationIncidents
             )
             SELECT --TOP 1000
-                IIF(ord.StatusOrderId = 4
+                IIF(IncidenceTbl.StatusOrderId = 4
                   , 'EPE'
                   , IIF(
-                        ord.StatusOrderId != 4
+                        IncidenceTbl.StatusOrderId != 4
                         AND IncidenceTbl.DeliveryAttemptId IS NULL
                       , 'EEF'
                       , IIF(cfi.IsConfirmed = 1, 'IPR', 'IPP')))                                                   [Type]
-              , IIF(ord.StatusOrderId = 4
+              , IIF(IncidenceTbl.StatusOrderId = 4
                   , 'Entregas Pendientes'
                   , IIF(
-                        ord.StatusOrderId != 4
+                        IncidenceTbl.StatusOrderId != 4
                         AND IncidenceTbl.DeliveryAttemptId IS NULL
                       , 'Entregas Efectivas'
                       , IIF(cfi.IsConfirmed = 1, 'Incidencias Procesadas', 'Incidencias Pendientes de Procesar'))) [Description]
-              , SUM(IIF(ord.StatusOrderId = 4, 1, 0))                                                              [Pending]
-              , SUM(IIF(ord.StatusOrderId = 4, 0, IIF(IncidenceTbl.DeliveryAttemptId IS NULL, 1, 0)))              [Delivered]
+              , SUM(IIF(IncidenceTbl.StatusOrderId = 4, 1, 0))                                                              [Pending]
+              , SUM(IIF(IncidenceTbl.StatusOrderId = 4, 0, IIF(IncidenceTbl.DeliveryAttemptId IS NULL, 1, 0)))              [Delivered]
               , SUM(IIF(ISNULL(cfi.IsConfirmed, 0) = 1, 1, 0))                                                     [ConfirmationIncidents]   --ConfirmedIncidents
               , SUM(IIF(ISNULL(cfi.IsConfirmed, 1) = 1, 0, 1))                                                     [UnConfirmationIncidents] --UnconfirmedIncidents
             FROM dbo.DeliveryOrderBySettlement          ds WITH (NOLOCK)
                 INNER JOIN dbo.DeliverySettlementDetail dsd WITH (NOLOCK)
                     ON dsd.ID_DeliveryOrderBySettlement = ds.ID
-                       AND dsd.RowStatus = 1
-                INNER JOIN dbo.DeliveryOrder            ord WITH (NOLOCK)
-                    ON ord.Guide_Serie = dsd.Guide_Serie
-                       AND ord.Guide_Number = dsd.Guide_Number
-                       AND ord.IsLastMileReturn = 0
-                INNER JOIN dbo.StatusOrder              std WITH (NOLOCK)
-                    ON std.StatusOrderId = ord.StatusOrderId
+                       AND dsd.RowStatus = 1               
                 OUTER APPLY
             (
                 SELECT TOP 1
@@ -73,28 +67,36 @@ BEGIN
                      , ddd.DeliveryAttemptId
                      , tk.SSN_IdUser
                      , tk.SSN_Username
+					 ,ord.ReceiverIdTownship
+					 ,ord.StatusOrderId
                 FROM dbo.DeliveryOrderDetail                      ddd WITH (NOLOCK)
                     LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk WITH (NOLOCK)
                         ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated
+				 INNER JOIN dbo.DeliveryOrder            ord WITH (NOLOCK)
+                    ON ord.Guide_Serie = dsd.Guide_Serie
+                       AND ord.Guide_Number = dsd.Guide_Number
+                       AND ord.IsLastMileReturn = 0
+                INNER JOIN dbo.StatusOrder              std WITH (NOLOCK)
+                    ON std.StatusOrderId = ord.StatusOrderId
                 WHERE ddd.Guide_Serie = ord.Guide_Serie
                       AND ddd.Guide_Number = ord.Guide_Number
                       AND ddd.StatusOrderId = 45
                       AND CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
-                ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC
+                ORDER BY CONVERT(DATE, ddd.DateCreatedInSystem) DESC				
             )                                           IncidenceTbl
                 LEFT JOIN dbo.DeliveryAttempt          att WITH (NOLOCK)
                     ON att.ID = IncidenceTbl.DeliveryAttemptId
                 LEFT JOIN dbo.CatTypeIncidence         cti WITH (NOLOCK)
                     ON cti.IdIncidenceType = att.ID_Incident
                 LEFT JOIN dbo.DeliveryOrderAttemptData atd WITH (NOLOCK)
-                    ON atd.GuideSerie = ord.Guide_Serie
-                       AND atd.GuideNumber = ord.Guide_Number
+                    ON atd.GuideSerie = IncidenceTbl.Guide_Serie
+                       AND atd.GuideNumber = IncidenceTbl.Guide_Number
                 LEFT JOIN dbo.ConfirmationOfIncidence  cfi WITH (NOLOCK)
                     ON cfi.IdConfirmationOfIncidence = att.ConfirmationOfIncidenceId
                 INNER JOIN dbo.SenderReceiver          sr WITH (NOLOCK)
                     ON sr.ID = ds.ID_Courier
                 LEFT JOIN dbo.Township                 tw WITH (NOLOCK)
-                    ON tw.IdTownship = ord.ReceiverIdTownship
+                    ON tw.IdTownship = IncidenceTbl.ReceiverIdTownship
                 OUTER APPLY
             (
                 SELECT TOP 1
@@ -114,17 +116,17 @@ BEGIN
                       )
                   AND ds.Date_Received IS NULL
                   AND IncidenceTbl.SSN_IdUser IS NULL
-            GROUP BY IIF(ord.StatusOrderId = 4
+            GROUP BY IIF(IncidenceTbl.StatusOrderId = 4
                        , 'EPE'
                        , IIF(
-                             ord.StatusOrderId != 4
+                             IncidenceTbl.StatusOrderId != 4
                              AND IncidenceTbl.DeliveryAttemptId IS NULL
                            , 'EEF'
                            , IIF(cfi.IsConfirmed = 1, 'IPR', 'IPP')))
-                   , IIF(ord.StatusOrderId = 4
+                   , IIF(IncidenceTbl.StatusOrderId = 4
                        , 'Entregas Pendientes'
                        , IIF(
-                             ord.StatusOrderId != 4
+                             IncidenceTbl.StatusOrderId != 4
                              AND IncidenceTbl.DeliveryAttemptId IS NULL
                            , 'Entregas Efectivas'
                            , IIF(cfi.IsConfirmed = 1, 'Incidencias Procesadas', 'Incidencias Pendientes de Procesar')))

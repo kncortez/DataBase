@@ -1,4 +1,4 @@
-
+ï»¿
 -- =============================================
 -- Author:		<Cristian,Azurdia>
 -- Create date: <2024-02-26>
@@ -18,7 +18,7 @@ BEGIN
 	DECLARE @LOTE_AUX BIGINT;
 	DECLARE @PIECEID VARCHAR(50);
 	/***************************************************************************
-	************* EVALUAR QUE TIPO DE ACCIÓN SE VA A REALIZAR ******************
+	************* EVALUAR QUE TIPO DE ACCIï¿½N SE VA A REALIZAR ******************
 	****************************************************************************/
 
 	--SET @CUSTOMER_ID = 24;
@@ -31,7 +31,7 @@ BEGIN
 
 		IF (@HOSTNAME <> '') 
 		BEGIN
-			--Definir el nombre del archivo y creación del lote
+			--Definir el nombre del archivo y creaciï¿½n del lote
 			SET @FILENAME = CONCAT('GT_FORZA_',FORMAT(GETDATE(),'yyyyMMdd_hhmmss'),'.txt');
 			
 			INSERT INTO [DeliveryBackOffice].[dbo].[WebhookTrackingQueueForSFTP] ([FileName], [Hostname], [HasNotified], [RowStatus], [TokenCreated], [DateCreated])
@@ -41,7 +41,7 @@ BEGIN
 
 			SELECT @LOTE_AUX [Lote], @FILENAME [Filename];
 
-			SELECT '202' [status], 'Acción Creacion de lote' [message];
+			SELECT '202' [status], 'Acciï¿½n Creacion de lote' [message];
 
 		END
 		ELSE
@@ -53,7 +53,7 @@ BEGIN
 	ELSE IF(@T_TYPE = 2)
 	BEGIN
 
-		--PRINT '-- ASIGNACIÓN DE GUIAS A LOTE GENERADO --'
+		--PRINT '-- ASIGNACIï¿½N DE GUIAS A LOTE GENERADO --'
 		-- Guias no asignadas 
 		UPDATE [DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP] 
 		SET [WebhookTrackingQueueForSFTPId] = @LOTE 
@@ -71,13 +71,13 @@ BEGIN
 		WHERE	[WebhookTrackingQueueDetailForSFTP].[CustomerId] = @CUSTOMER_ID 
 			AND	[WebhookTrackingQueueForSFTP].[HasNotified] = 0;
 
-		SELECT '202' [status], 'Acción Creacion de lote' [message];
+		SELECT '202' [status], 'Acciï¿½n Creacion de lote' [message];
 
 	END
 	ELSE IF(@T_TYPE = 3)
 	BEGIN
 
-		--PRINT '-- GENERACIÓN DE ARCHIVO QUE SE ENVIARA A FORZA --'
+		--PRINT '-- GENERACIï¿½N DE ARCHIVO QUE SE ENVIARA A FORZA --'
 		-- Verificar si el lote existe
 		IF EXISTS( Select [IdWebhookTrackingQueueForSFTP] from [dbo].[WebhookTrackingQueueForSFTP] WHERE [RowStatus] = 1 AND [IdWebhookTrackingQueueForSFTP] = @LOTE AND [HasNotified] = 0 )
 		BEGIN 
@@ -136,8 +136,8 @@ BEGIN
 																[NewDeliveryDate])
 			SELECT  [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP],
 					'D' [Type], 
-					--ROW_NUMBER() OVER(ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC) AS [Counter], 
-					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[DateCreated] ASC) AS [Counter], 
+					ROW_NUMBER() OVER(ORDER BY [WTQDFS].[IdWebhookTrackingQueueDetailForSFTP] ASC) AS [Counter], 
+					--ROW_NUMBER() OVER(ORDER BY [WTQDFS].[DateCreated] ASC) AS [Counter], 
 					'GTL' [Service_Area_Code], 
 					'GTL' [Facility_Code], 
 					--FORMAT(ISNULL(DOP.DateRegistrationExternalCode,'1900-01-01 00:00:00'),'yyyyMMdd') [CheckPointDate],
@@ -193,6 +193,21 @@ BEGIN
 			--Select * from @WebhookTrackingQuequeLoteStationsforSFTP
 
 			--Detalle del archivo Final
+			SELECT TBL.Type
+			,ROW_NUMBER() OVER(ORDER BY TBL.CheckPointDate ASC,TBL.CheckPointTime ASC) [Counter], 
+					TBL.[Service_Area_Code],
+					TBL.[Facility_Code],
+					TBL.[CheckPointDate],
+					TBL.[CheckPointTime],
+					TBL.[GTM_Offset],
+					TBL.[Waybill],
+					TBL.[PieceId],
+					TBL.[CheckPointCode],
+					TBL. [DHL_Checkpoint_Remark],
+					TBL.[Route_Code],
+					TBL.[Cycle_Code]
+			FROM
+            (
 			SELECT D.[Type], 
 				    --'R' [Type],
 					D.[Counter], 
@@ -239,7 +254,7 @@ BEGIN
 							 THEN CONCAT([SOE].[Remark],'')
 							 WHEN [SOE].IdStatusOrderExternal = 9  --Entrega
 							 THEN CONCAT([SOE].[Remark], '',[DO].[NameOfReceiver])
-							 ELSE [SOE].[Remark]                   --Todo lo demás
+							 ELSE [SOE].[Remark]                   --Todo lo demï¿½s
 							 END [DHL_Checkpoint_Remark],
 						[D1].[Route_Code],
 						[D1].[Cycle_Code] 
@@ -294,9 +309,12 @@ BEGIN
 				  AND [ITR].[RowStatus] = 1
 				  --AND [SOE].[CustomerId] = @CUSTOMER_ID
 			)AS D
-			ORDER BY D.[Counter] ASC;
+			--ORDER BY D.[Counter] ASC;
+			)TBL
+			ORDER BY TBL.CheckPointDate ASC
+
 	    			
-			--Pie de página del archivo
+			--Pie de pï¿½gina del archivo
 			SELECT	'T' [Type], 
 					COUNT(IdWebhookTrackingQueueDetailForSFTP) [Total_Pieces] 
 			FROM	[DeliveryBackOffice].[dbo].[WebhookTrackingQueueDetailForSFTP] WITH (NOLOCK)
@@ -311,7 +329,7 @@ BEGIN
 	END
 	ELSE IF (@T_TYPE = 4)
 	BEGIN
-		--PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO (CREACIÓN DEL ARCHIVO Y LOTE) --'
+		--PRINT '-- ACTUALIZACION DEL ESTATUS DEL LOTE ESPECIFICADO (CREACIï¿½N DEL ARCHIVO Y LOTE) --'
 		UPDATE [DeliveryBackOffice].[dbo].WebhookTrackingQueueForSFTP 
 		SET		[ShippingDate] = GETDATE(),
 				[TokenUpdated] = 'SYS-HERMESWEBHOOKS',
@@ -385,7 +403,7 @@ BEGIN
 	END
 	ELSE 
 	BEGIN
-		Select '404' [status], 'Acción No definida' [message];
+		Select '404' [status], 'Acciï¿½n No definida' [message];
 	END
 
 END

@@ -6,7 +6,8 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[sphd_getRoutesByType]
-	@TypeRouteName VARCHAR(100)
+	@TypeRouteName VARCHAR(100),
+	@Country NVARCHAR(5) = 'GT'
 AS	
 BEGIN
 	IF UPPER(@TypeRouteName) = 'ALL'
@@ -17,6 +18,8 @@ BEGIN
 		FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr
 		INNER JOIN [DeliveryBackOffice].[dbo].[CatTypeRoute] ctr1
 		ON ctr.IdTypeRoute = ctr1.IdTypeRoute
+		LEFT JOIN TownShip T ON ctr.IdTownship = T.IdTownship
+		LEFT JOIN Province P ON T.IdProvince=P.IdProvince
 		WHERE ctr.RowStatus = 1
 		ORDER BY ctr.CodeRoute
 	END
@@ -28,8 +31,10 @@ BEGIN
 		FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr
 		INNER JOIN [DeliveryBackOffice].[dbo].[CatTypeRoute] ctr1
 		ON ctr.IdTypeRoute = ctr1.IdTypeRoute
+		LEFT JOIN TownShip T ON ctr.IdTownship = T.IdTownship
+		LEFT JOIN Province P ON T.IdProvince=P.IdProvince
 		WHERE ctr.RowStatus = 1
-		AND ctr1.Name = @TypeRouteName
+		AND ctr1.Name = @TypeRouteName AND ISNULL(P.IdCountry, 'GT') = @Country
 		ORDER BY ctr.CodeRoute
 	END
 END

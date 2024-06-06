@@ -433,6 +433,11 @@ ON [dbo].[DeliveryOrder] ([IdCustomer])
 INCLUDE ([Ticket_Number],[Pieces_Dry],[Pieces_Cold])
 
 GO
+CREATE NONCLUSTERED INDEX [idx_salepipelineid]
+    ON [dbo].[DeliveryOrder]([SalePipeLineId] ASC)
+    INCLUDE([Sender_Zone], [Sender_Town], [Sender_Department], [SenderIdTownship], [TypeService]);
+
+GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Número de ticket',
     @level0type = N'SCHEMA',
@@ -954,3 +959,4 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryOrder',
     @level2type = N'COLUMN',
     @level2name = N'Contact_Confirmed'
+GO

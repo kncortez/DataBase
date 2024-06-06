@@ -3,9 +3,14 @@
 -- Create date: <2022-09-29>
 -- Description:	<Obtiene el detalle del módulo de manifiesto linehaul desktop>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-06-05>
+-- Description:	<Se agrega parametro para filtrar por pais los Hubs>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetManifestLinehaulDetail] 
 	-- Add the parameters for the stored procedure here
-	@IdLinehaulRoutePreparation INT
+	@IdLinehaulRoutePreparation INT,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -121,6 +126,7 @@ BEGIN
 		ON [lrs].[LinehaulRoutePreparationId] = [lrp].[IdLinehaulRoutePreparation]
 	WHERE lrp.IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
 	AND lrp.RowStatus = 1
+	AND IIF(hl.IdCountry IS NULL, 'GT', hl.IdCountry)= @IdCountry
 
 	-- Table 1 Detalle manifiesto
 	SELECT 
@@ -205,6 +211,7 @@ BEGIN
 							AND ad.RowStatus = 1
 					WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
 					AND lrpc.RowStatus = 1
+					AND IIF(hl.IdCountry IS NULL, 'GT', hl.IdCountry)= @IdCountry
 					ORDER BY hl.HubName
 				) DispatchedLienahul
 			UNION
