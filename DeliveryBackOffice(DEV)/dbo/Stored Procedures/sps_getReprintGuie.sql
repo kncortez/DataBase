@@ -1,6 +1,7 @@
 ﻿CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
-    @Serie_Number VARCHAR(2) = 'FD'
+    @Serie_Number VARCHAR(2) = 'FD',
+    @CountryThatConsults VARCHAR(2)= 'GT'
 as
 begin
 	declare @FranchiseVisitPointTypeId int = 
@@ -110,6 +111,7 @@ begin
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
+		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
 	);
 
     DECLARE @DaysToExpiration INT =
@@ -151,7 +153,7 @@ begin
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND ISNULL(IdCountry,'GT')=@CountryThatConsults);
 
     IF (@Impersonate = 'TRUE')
     BEGIN

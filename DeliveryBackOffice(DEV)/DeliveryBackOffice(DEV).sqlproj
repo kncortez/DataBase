@@ -1627,6 +1627,10 @@
     <Build Include="dbo\Stored Procedures\AddSAPCode.sql" />
     <Build Include="dbo\Stored Procedures\AddMarketplaceProductstoCart.sql" />
     <Build Include="dbo\Stored Procedures\ActiveProductMarketplace.sql" />
+    <Build Include="dbo\Stored Procedures\MKRetrieveProductInformationForShippingEmails.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1695,6 +1699,7 @@
     <Build Include="dbo\Stored Procedures\spRS_ForzaDeliveryInComeReport.sql" />
     <Build Include="dbo\Stored Procedures\SpHWGetStationForCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetCountries.sql" />
+    <Build Include="dbo\Stored Procedures\spg_get_DimensionWeightGuidePiece.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
