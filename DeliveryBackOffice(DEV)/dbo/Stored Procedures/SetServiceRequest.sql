@@ -38,6 +38,8 @@ BEGIN
     DECLARE @GuideSerie VARCHAR(2) = 'FD';
 	DECLARE @GuidePriority INT = 0;
 	DECLARE @Priority VARCHAR(1);
+	DECLARE @IdCountry NVARCHAR(2);
+	DECLARE @ServiceType NVARCHAR(3);
 
     /*********************************************************************************************/
     /******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -128,7 +130,8 @@ BEGIN
                [Sender_Internal_Code],
                [Receiver_Alternant_CUI],
                [Collect_OnDelivery],
-
+			   [ParcelCode],
+			   [IdCountrySender],
                -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                --[Collect],
                NULL 'SenderIdTownship',
@@ -141,7 +144,9 @@ BEGIN
                NULL 'CatModuleId',
                NULL 'IdCustomer',
                NULL 'OrderUserCreated',
-               NULL 'SalePipeLineId'
+               NULL 'SalePipeLineId',
+			   -- SE MANDA EL PAIS CRISTIAN SUAZO
+			   '  ' AS 'ReceiverCountryId'
         -- FIN MODIFICACION
 
         INTO #GuideTable
@@ -275,7 +280,16 @@ BEGIN
             Segment =
             (
                 SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
-            )
+            ),
+		    --SE AGREGA EL DESTINO PAIS CRISTIAN SUAZO
+			ReceiverCountryId = 
+			(
+				SELECT TOP 1 IdCountry
+                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
+			)
+			----------------------------------------------
+
         FROM #GuideTable t;
 
         -- FIN MODIFICACION
@@ -355,7 +369,10 @@ BEGIN
             [IdCustomer],
             [Segment],
             [OrderUserCreated],
-            [SalePipeLineId]
+            [SalePipeLineId],
+			[SenderCountryId],
+			[ReceiverCountryId],
+			[ServiceType]
         -- FIN MODIFICACION
         )
         SELECT GT.[Ticket_Number],
@@ -424,10 +441,14 @@ BEGIN
                GT.IdCustomer,
                GT.Segment,
                GT.OrderUserCreated,
-               GT.SalePipeLineId
+               GT.SalePipeLineId,
+			   GT.IdCountrySender,
+			   GT.ReceiverCountryId,
+			   CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END
         -- FIN MODIFICACION
         FROM #GuideTable GT;
 
+		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
         -- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
         -- INSERTAR DATA PARA MANEJO DE LANDING PAGE
         INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide]
@@ -883,8 +904,8 @@ BEGIN
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
-
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
@@ -955,7 +976,8 @@ BEGIN
 						WHEN D.[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
 					END
-			)'GuideOrigin'
+			)'GuideOrigin',
+			D.ReceiverCountryId
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
