@@ -99,6 +99,7 @@
     [CatModuleId]                          INT             NULL,
     [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
     [DeliveryETA]                          DATETIME        NULL,
+    [ServiceType]                          NVARCHAR(3)     NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
