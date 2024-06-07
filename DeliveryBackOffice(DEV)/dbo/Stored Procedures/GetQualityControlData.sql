@@ -614,9 +614,9 @@ BEGIN
                      , IIF(ord.StatusOrderId = 4, 1, 0)                                                 [Pendiente]
                      , sr.Phone                                                                         [CourierPhone]
                 FROM [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]								ds WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]					dsd WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]						dsd WITH (NOLOCK)
                         ON dsd.ID_DeliveryOrderBySettlement = ds.ID                   
-                    INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            					ord WITH (NOLOCK)
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            					ord WITH (NOLOCK)
                         ON ord.Guide_Serie = dsd.Guide_Serie
                         AND ord.Guide_Number = dsd.Guide_Number
 					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderAttemptData]						atd WITH (NOLOCK)
