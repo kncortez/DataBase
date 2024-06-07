@@ -7,6 +7,10 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
   , @TblHubLogistic TblHubLogistic READONLY
+  , @TblCustomerType TblCustomerType READONLY
+  , @TblCustomer     TblCustomer     READONLY
+  , @TblVisitPointClient TblVisitPointClient READONLY
+  
 AS
 BEGIN
     SET ARITHABORT ON;
@@ -75,6 +79,10 @@ BEGIN
                     AND atd.GuideNumber = ord.Guide_Number
 				 INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver]         sr WITH (NOLOCK)
                     ON sr.ID = ds.ID_Courier
+				LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]			vpc WITH (NOLOCK)
+					ON vpc.CodeOfReference = ord.Sender_ID
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]					cus WITH (NOLOCK)
+					ON cus.IdCustomer = vpc.CustomerID
                 LEFT JOIN [DeliveryBackOffice].[dbo].[Township]					tw WITH (NOLOCK)
                     ON tw.IdTownship = ord.ReceiverIdTownship
 				OUTER APPLY
@@ -84,7 +92,7 @@ BEGIN
 					FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage]       dum WITH (NOLOCK)
 					LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics]			HBL WITH (NOLOCK)
 						ON dum.Hub = HBL.HubAbbreviation
-					WHERE HBL.IdHubLogistic IN( SELECT IdHubLogistics FROM @TblHubLogistic ) 
+					WHERE ( NOT EXISTS(SELECT 1 FROM @TblHubLogistic) OR HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic ) )
 						 AND dum.HeaderCode = tw.HeaderCode
 						 AND HBL.HubStatus = 1
 				)																HUbs
@@ -119,6 +127,9 @@ BEGIN
 				  AND ds.Date_Received IS NULL
 				  AND ord.IsLastMileReturn = 0 --NO INCLUIR DEVOLUCIÓN   
 				  AND IncidenceTbl.SSN_IdUser IS NULL
+				  AND ( NOT EXISTS (SELECT 1 FROM @TblCustomerType) OR cus.IdCustomerType IN (SELECT IdCustomerType FROM @TblCustomerType) )
+				  AND ( NOT EXISTS (SELECT 1 FROM @TblCustomer)    OR cus.IdCustomer IN (SELECT IdCustomer FROM @TblCustomer) )
+				  AND ( NOT EXISTS (SELECT 1 FROM @TblVisitPointClient) OR vpc.CodeOfReference IN (SELECT IdVisitPointClient FROM @TblVisitPointClient) )
             GROUP BY IIF(ord.StatusOrderId = 4
                        , 'EPE'
                        , IIF(
@@ -170,6 +181,10 @@ BEGIN
                     ON cic.IdCatIncidenceClasification = cti.IncidenceClasificationId
                 LEFT JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence]	cfi WITH (NOLOCK)
                     ON cfi.IdConfirmationOfIncidence = att.ConfirmationOfIncidenceId
+				LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]								vpc WITH (NOLOCK)
+					ON vpc.CodeOfReference = ord.Sender_ID
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]										cus WITH (NOLOCK)
+					ON cus.IdCustomer = vpc.CustomerID
                 LEFT JOIN [DeliveryBackOffice].[dbo].[Township]					tw WITH (NOLOCK)
                     ON tw.IdTownship = ord.ReceiverIdTownship
                 OUTER APPLY
@@ -179,14 +194,17 @@ BEGIN
 					FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage]		dum WITH (NOLOCK)
 					INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics]		HBL WITH (NOLOCK)
 						ON	dum.Hub = CONVERT(NVARCHAR(50),HBL.HubAbbreviation)						
-					WHERE HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic )
+					WHERE ( NOT EXISTS(SELECT 1 FROM @TblHubLogistic) OR HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic ) )
 					  AND dum.HeaderCode = tw.HeaderCode
 					  AND HBL.HubStatus = 1
 				)																HUbs
             WHERE	CONVERT(DATE, ddd.DateCreatedInSystem) = CONVERT(DATE, GETDATE())
 					AND	ddd.StatusOrderId = 45
 					AND ddd.SystemOrigin in (2) 
-					AND ord.IsLastMileReturn = 0					
+					AND ord.IsLastMileReturn = 0
+					AND ( NOT EXISTS (SELECT 1 FROM @TblCustomerType) OR cus.IdCustomerType IN (SELECT IdCustomerType FROM @TblCustomerType) )
+					AND ( NOT EXISTS (SELECT 1 FROM @TblCustomer)    OR cus.IdCustomer IN (SELECT IdCustomer FROM @TblCustomer) )
+					AND ( NOT EXISTS (SELECT 1 FROM @TblVisitPointClient) OR vpc.CodeOfReference IN (SELECT IdVisitPointClient FROM @TblVisitPointClient) )
             GROUP BY IIF(ord.StatusOrderId = 4
                        , 'EPE'
                        , IIF(ord.StatusOrderId != 4 AND ddd.DeliveryAttemptId IS NULL
@@ -543,9 +561,9 @@ BEGIN
                         END
                        )                                                                                [RouteDescription]
                      , CONCAT(
-                                 COALESCE(/*DeliveryBackOffice.dbo.CapitalizeFirstLetter(*/ sr.First_Name /*)*/, '')
+                                 COALESCE(sr.First_Name, '')
                                , ' '
-                               , COALESCE(/*DeliveryBackOffice.dbo.CapitalizeFirstLetter(*/ sr.Last_Name /*)*/, '')
+                               , COALESCE(sr.Last_Name, '')
                              )                                                                          [User]
                      , ord.Guide_Serie                                                                  [GuideSerie]
                      , ord.Guide_Number                                                                 [GuideNumber]
@@ -608,7 +626,11 @@ BEGIN
                         ON sr.ID = ds.ID_Courier
 					LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder]									std WITH (NOLOCK)
                         ON std.StatusOrderId = ord.StatusOrderId
-                    LEFT JOIN [DeliveryBackOffice].[dbo].[Township]										tw WITH (NOLOCK)
+					LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]								vpc WITH (NOLOCK)
+						ON vpc.CodeOfReference = ord.Sender_ID
+					LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]										cus WITH (NOLOCK)
+						ON cus.IdCustomer = vpc.CustomerID
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[Township]										tw  WITH (NOLOCK)
                         ON tw.IdTownship = ord.ReceiverIdTownship                  
 					OUTER APPLY
 					(
@@ -617,7 +639,7 @@ BEGIN
 						FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage]							dum WITH (NOLOCK)
 						INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] HBL WITH (NOLOCK)
 							ON  dum.Hub = CONVERT(NVARCHAR, HBL.HubAbbreviation)
-						WHERE HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic  )
+						WHERE ( NOT EXISTS(SELECT 1 FROM @TblHubLogistic) OR HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic ) )
 							AND HBL.HubStatus = 1
 							AND dum.HeaderCode = tw.HeaderCode
 					)                                          HUbs
@@ -651,7 +673,10 @@ BEGIN
 					  AND ds.Date_Received IS NULL
 					  AND dsd.RowStatus = 1
 					  AND ord.IsLastMileReturn = 0
-					  AND IncidenceTbl.SSN_IdUser IS NULL	
+					  AND IncidenceTbl.SSN_IdUser IS NULL
+					  AND ( NOT EXISTS (SELECT 1 FROM @TblCustomerType) OR cus.IdCustomerType IN (SELECT IdCustomerType FROM @TblCustomerType) )
+					  AND ( NOT EXISTS (SELECT 1 FROM @TblCustomer)    OR cus.IdCustomer IN (SELECT IdCustomer FROM @TblCustomer) )
+					  AND ( NOT EXISTS (SELECT 1 FROM @TblVisitPointClient) OR vpc.CodeOfReference IN (SELECT IdVisitPointClient FROM @TblVisitPointClient) )
                 UNION
                 SELECT --TOP 1000
                     IIF(ord.StatusOrderId = 4, 1, 0)                                                 Pending
@@ -732,6 +757,10 @@ BEGIN
                         ON tk.SSN_IdToken = CONVERT(VARCHAR(50), ddd.UserCreated) --ddd.UserCreated 
 					INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]                    std WITH (NOLOCK)
                         ON std.StatusOrderId = ord.StatusOrderId
+					LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]				   vpc WITH (NOLOCK)
+						ON vpc.CodeOfReference = ord.Sender_ID
+					LEFT JOIN [DeliveryBackOffice].[dbo].[Customer]						   cus WITH (NOLOCK)
+						ON cus.IdCustomer = vpc.CustomerID
 					LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                        tw WITH (NOLOCK)
                         ON tw.IdTownship = ord.ReceiverIdTownship
 					OUTER APPLY
@@ -741,7 +770,7 @@ BEGIN
 						FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage]               dum WITH (NOLOCK)
 							INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics]			HBL WITH (NOLOCK)
 								ON dum.Hub = HBL.HubAbbreviation								
-						WHERE	HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic  )
+						WHERE   ( NOT EXISTS(SELECT 1 FROM @TblHubLogistic) OR HBL.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic ) )
 								AND dum.HeaderCode = tw.HeaderCode
 								AND HBL.HubStatus = 1
 					)																		HUbs                   
@@ -757,6 +786,9 @@ BEGIN
 						AND ddd.StatusOrderId = 45 
                         AND ddd.SystemOrigin = 2 --desktop
 						AND ord.IsLastMileReturn = 0
+						AND ( NOT EXISTS (SELECT 1 FROM @TblCustomerType) OR cus.IdCustomerType IN (SELECT IdCustomerType FROM @TblCustomerType) )
+						AND ( NOT EXISTS (SELECT 1 FROM @TblCustomer)    OR cus.IdCustomer IN (SELECT IdCustomer FROM @TblCustomer) )
+						AND ( NOT EXISTS (SELECT 1 FROM @TblVisitPointClient) OR vpc.CodeOfReference IN (SELECT IdVisitPointClient FROM @TblVisitPointClient) )
             ) Tbl
 			ORDER BY TBL.EventDate
             --ORDER BY Tbl.ID
@@ -804,7 +836,7 @@ BEGIN
 					,[CourierPhone]
             FROM
             (
-                SELECT --TOP 1000
+                SELECT
                     IIF(ord.StatusOrderId = 4, 1, 0)                                                [Pending]
                   , IIF(ord.StatusOrderId != 4 AND IncidenceTbl.DeliveryAttemptId IS NULL, 1, 0)    [Delivered]
                   , IIF(cfi.IsConfirmed = 1, 1, 0)                                                  [ConfirmationIncidents]

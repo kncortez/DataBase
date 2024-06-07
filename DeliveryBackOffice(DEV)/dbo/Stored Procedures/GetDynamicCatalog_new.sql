@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [dbo].[GetDynamicCatalog_old]
+﻿CREATE PROCEDURE [dbo].[GetDynamicCatalog_new]
     @TypeMethod VARCHAR(100) = 'GetTypePayment',
     @IdAccount INT = 1,
     @Token VARCHAR(100) = '0BE2F8F3BD53652635746ACD069954B5',
