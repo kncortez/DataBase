@@ -393,8 +393,7 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
 		INCLUDE([Sender_Mail],[Sender_ID],[DCBA_ID],[IdCustomer]);
 GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
-    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC)
-    INCLUDE ([Sender_ID],[StatusOrderId]);
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC);
 GO
 
 CREATE NONCLUSTERED INDEX [DeliveryOrderAttemptData_GetQualityControlData]
