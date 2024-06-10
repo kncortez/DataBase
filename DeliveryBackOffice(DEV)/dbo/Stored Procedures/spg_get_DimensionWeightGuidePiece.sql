@@ -169,7 +169,7 @@ BEGIN
                   AND Guide_Number = @numberGuide
 				  AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId)=@IdCountry
         )
-        BEGIN select * from CatCountry where IdCountry in('GT','HN')
+        BEGIN 
             INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderPiece
             (
                 GuideSerie,
@@ -311,4 +311,12 @@ BEGIN
             END
         END
     END
+    	  ---devuelve respuesta si la guia pertenece a otro pais
+  SELECT 
+	1 AS 'StatusCode', 
+	'La guía '+ @serieGuide + convert(nvarchar,@numberGuide)+ ' pertenece a otro país' AS 'Description', 
+	@serieGuide + convert(nvarchar,@numberGuide) AS 'Guide'
+	FROM DeliveryOrder WITH(NOLOCK)
+	WHERE Guide_Number = @numberGuide AND Guide_Serie = @serieGuide 
+	AND IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) <> @IdCountry
 END
