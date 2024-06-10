@@ -7,8 +7,10 @@
     [DateCreated]   DATETIME      NOT NULL,
     [TokenUpdated]  VARCHAR (50)  NULL,
     [DateUpdated]   DATETIME      NULL,
-    [PackageSize] VARCHAR(100) NULL, 
-    PRIMARY KEY CLUSTERED ([IdTypeVehicle] ASC)
+    [PackageSize]   VARCHAR(100)  NULL,
+    [IdCountry]     VARCHAR(2)    NULL,
+    PRIMARY KEY CLUSTERED ([IdTypeVehicle] ASC),
+    CONSTRAINT [FK_CatTypeVehicle_IdCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
 );
 
 

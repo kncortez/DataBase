@@ -4,6 +4,10 @@
 -- Create date: <2020-02-15>
 -- Description:	<Guardar los vehiculos>
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-04>
+-- Description: <Se agrega filtro para filtrar por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_set_CatVehicle]
 @HubId INT,
 @UnitNumber VARCHAR (10) = '1234',
@@ -24,8 +28,7 @@ CREATE PROCEDURE [dbo].[spg_set_CatVehicle]
 ,@High decimal (14,2) = 0.00
 ,@CubicMeters decimal (14,2) = 0.00
 ,@CapabilityEcomerce decimal (14,2) = 0.00
-
-
+,@IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 		
@@ -42,9 +45,9 @@ BEGIN
 					BEGIN TRANSACTION
 					BEGIN TRY
 							INSERT  INTO dbo.CatVehicle (UnitNumber, CodeName, IdTypeVehicle, Plate, Year, Capacity, WhiteLineCapacity, IrregularCapacity, RowStatus, TokenCreated, DateCreated
-							, TokenUpdated, DateUpdated, CatVehicleCategoriesId, CatVehicleBrandId, Long, Width, High, CubicMeters, CapabilityEcomerce,HubLogisticId) 
+							, TokenUpdated, DateUpdated, CatVehicleCategoriesId, CatVehicleBrandId, Long, Width, High, CubicMeters, CapabilityEcomerce,HubLogisticId, IdCountry) 
 							VALUES(@UnitNumber,@CodeName, @IdTypeVehicle, @Plate, @Year, @Capacity, @WhiteLineCapacity, @IrregularCapacity, @RowStatus, @Token, GETDATE()
-							, null, null,@CatVehicleCategoriesId, @CatVehicleBrandId, @Long, @Width, @High, @CubicMeters, @CapabilityEcomerce,@HubId)
+							, null, null,@CatVehicleCategoriesId, @CatVehicleBrandId, @Long, @Width, @High, @CubicMeters, @CapabilityEcomerce,@HubId, @IdCountry)
 
 							END TRY
 					BEGIN CATCH
