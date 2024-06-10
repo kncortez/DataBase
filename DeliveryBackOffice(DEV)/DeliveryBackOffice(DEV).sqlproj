@@ -1635,6 +1635,7 @@
     <Build Include="dbo\Stored Procedures\spGetCountries.sql" />
     <Build Include="dbo\Stored Procedures\spGetLoadStationCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetLoginMC.sql" />
+    <Build Include="dbo\Stored Procedures\spGetCatalogExcMC.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
