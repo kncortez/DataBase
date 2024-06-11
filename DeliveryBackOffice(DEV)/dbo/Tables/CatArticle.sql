@@ -12,7 +12,9 @@
     [ArtWidth]         DECIMAL (18, 2) NULL,
     [ArtLength]        DECIMAL (18, 2) NULL,
     [ArtMassWeight]    DECIMAL (18, 2) NULL,
+    [IdCountry]        VARCHAR (2)     NULL,
     PRIMARY KEY CLUSTERED ([ArtId] ASC),
-    FOREIGN KEY ([ArtIdTypeArticle]) REFERENCES [dbo].[CatTypeArticle] ([TarId])
+    FOREIGN KEY ([ArtIdTypeArticle]) REFERENCES [dbo].[CatTypeArticle] ([TarId]),
+    CONSTRAINT [FK_CatArticle_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 
