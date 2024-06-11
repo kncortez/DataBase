@@ -99,7 +99,13 @@
     [CatModuleId]                          INT             NULL,
     [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
     [DeliveryETA]                          DATETIME        NULL,
+<<<<<<< HEAD
     [ServiceType]                          NVARCHAR(3)     NULL,
+=======
+    [SenderCountryId]                      varchar  (2)    NULL,
+	[ReceiverCountryId]                    varchar  (2)    NULL,
+	[GuideType]                            nvarchar (3)    NULL,
+>>>>>>> feature/FDAPI-2484-determinar-si-una-guía-es-nac
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),

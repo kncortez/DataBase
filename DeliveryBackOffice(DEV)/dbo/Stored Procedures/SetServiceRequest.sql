@@ -39,7 +39,6 @@ BEGIN
 	DECLARE @GuidePriority INT = 0;
 	DECLARE @Priority VARCHAR(1);
 	DECLARE @IdCountry NVARCHAR(2);
-	DECLARE @ServiceType NVARCHAR(3);
 
     /*********************************************************************************************/
     /******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -372,7 +371,7 @@ BEGIN
             [SalePipeLineId],
 			[SenderCountryId],
 			[ReceiverCountryId],
-			[ServiceType]
+			[GuideType]
         -- FIN MODIFICACION
         )
         SELECT GT.[Ticket_Number],
