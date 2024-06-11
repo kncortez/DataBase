@@ -30,38 +30,32 @@ BEGIN
 		--VERIFICAR SI ES COD
 			IF(@ValidCod = 'COD')
 			BEGIN
-
+                PRINT 'ENTRO'
 				SELECT 1 AS 'StatusCode', 
-					   ISNULL(DC.Currency_IdCountry, 'GT') AS Country,
-					   DC.Currency_Symbol
+					   ISNULL(DC.CodeISO, 'GT') AS Country,
+					   DC.Name
 				FROM Cost C WITH(NOLOCK)
-				INNER JOIN DeliveryCurrency DC WITH(NOLOCK) 
-					ON C.CodCurrency = DC.Currency_Id
-				WHERE C.GuideSerie = @GuideSerie 
-					  AND C.GuideNumber = @GuideNumber
-					  AND DC.Currency_IdCountry = @CountryId
-
-			END
-			IF (@ValidCod = 'STD')
-			BEGIN
-
-				SELECT 1 AS 'StatusCode',
-					   ISNULL(DC.Currency_IdCountry, 'GT') AS Country,
-					   DC.Currency_Symbol
-				FROM Cost C WITH(NOLOCK)
-				INNER JOIN DeliveryCurrency DC WITH(NOLOCK) 
-					ON C.ShippingCurrency = DC.Currency_Id
-				WHERE C.GuideSerie = @GuideSerie 
-					  AND C.GuideNumber = @GuideNumber
-					  AND DC.Currency_IdCountry = @CountryId
+				INNER JOIN CatCurrencyCOD DC WITH(NOLOCK) 
+					  ON C.CODPaymentCurrency = DC.IdCatCurrencyCOD
+				WHERE  C.GuideSerie = @GuideSerie  
+						AND C.GuideNumber = @GuideNumber
+						AND DC.CodeISO LIKE (@CountryId + '%')
 
 			END
 			ELSE
 			BEGIN
-				SELECT
-					0 AS 'StatusCode',
-					'Tipo de guia desconocido' AS 'Description'
+				SELECT 1 AS 'StatusCode',
+					   ISNULL(DC.CodeISO, 'GT') AS Country,
+					   DC.Name
+				FROM Cost C WITH(NOLOCK)
+				INNER JOIN CatCurrencyCOD DC WITH(NOLOCK) 
+					  ON C.DeliveryPaymentCurrency = DC.IdCatCurrencyCOD
+				WHERE  C.GuideSerie = @GuideSerie  
+						AND C.GuideNumber = @GuideNumber
+						AND DC.CodeISO LIKE (@CountryId + '%')
+
 			END
+
 		END
 		ELSE
 		BEGIN
