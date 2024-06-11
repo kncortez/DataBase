@@ -61,7 +61,7 @@ BEGIN
 													And DO.Guide_Number =@Guide_Number 
 														),0)
 																					
-	SELECT @BelongCountry = CASE WHEN ReceiverCountryId = @IdCountry THEN 1 ELSE 0 END	
+	SELECT @BelongCountry = CASE WHEN IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN 1 ELSE 0 END	
 	FROM DeliveryOrder 
 	WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number																			
 
