@@ -4,6 +4,10 @@
 -- Update date: <2022-07-26>
 -- Description:	< Mejora de rendimiento del SP, adicionando WITH(NOLOCK) y especificando tipos de JOIN >
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-10>
+-- Description:	<Se devuelve la moneda segun el pais que tenga asignado el corier>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_deliveryorder_settlement_linehauls]
 		@IdManifest INT
 AS
@@ -20,7 +24,10 @@ BEGIN
 		sr.First_Name + ' ' + sr.Last_Name as Courier_Name,
 		dobs.DateCreated as Route_Dispatched,
 		CONVERT(NVARCHAR,lbt.SSN_IdUser) + ' - ' + lbt.SSN_Username as IdUser_Username_Dispatched,
-		ISNULL(hl_destino.HubAbbreviation, 0) AS ID_HUB_DESTINO
+		ISNULL(hl_destino.HubAbbreviation, 0) AS ID_HUB_DESTINO,
+		CASE WHEN hl_destino.IdCountry = 'HN' THEN 'L'
+		   ELSE 'Q'
+		END AS Currency
 	FROM 
 		[DeliveryBackOffice].[dbo].SettlementByPickup dobs WITH(NOLOCK)
 		INNER JOIN 
