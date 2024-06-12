@@ -1,6 +1,11 @@
-﻿
+﻿-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-10>
+-- Description:	<Se agrega paramtro para filtrar articulos por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[sp_get_article_by_typearticle_from_catarticle]
-	@IdTypeArticle INT
+	@IdTypeArticle INT,
+	@IdCountry AS NVARCHAR(2)= 'GT'
 AS
 BEGIN
 
@@ -12,6 +17,7 @@ SELECT ArtId, ArtName
 FROM dbo.CatArticle
 WHERE ArtRowStatus = @FlagEnabledArticle
 AND ArtIdTypeArticle = @IdTypeArticle
+AND IIF(IdCountry IS NULL,'GT',IdCountry)= @IdCountry
 --AND ArtShowDefault = @FlagShowDefaultArticle;
 
 END

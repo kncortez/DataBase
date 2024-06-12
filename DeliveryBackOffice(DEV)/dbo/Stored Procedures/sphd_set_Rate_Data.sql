@@ -4,6 +4,10 @@
 -- Create date: <2021-06-14>
 -- Description:	<Insertar un nuevo tarifario>
 -- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-06-07>
+-- Description:	<Se agregan filtros por pais para evitar duplicidad en catalogos>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @IdRate INT = -1,
     @RateName NVARCHAR(50),
@@ -914,6 +918,7 @@ BEGIN
         IF @IdTypeRate =
         (
             SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por Peso'
+            AND IIF(IdCountry IS NULL, 'GT',IdCountry) = @CountryId
         ) -- insertar por rango de pesos
         BEGIN
 
@@ -1522,6 +1527,7 @@ BEGIN
         IF @IdTypeRate =
         (
             SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por paquetes'
+            AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @CountryId
         ) -- insertar por paquetes
         BEGIN
 
