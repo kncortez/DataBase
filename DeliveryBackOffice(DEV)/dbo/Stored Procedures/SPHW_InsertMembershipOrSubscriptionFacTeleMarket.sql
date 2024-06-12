@@ -303,24 +303,6 @@ BEGIN
 
 
 
-
-        INSERT INTO [dbo].[InOutOfMoneyDetail]
-        (
-            [io_type]
-          , [io_vpCodeOfReferences]
-          , [io_ticket]
-          , [io_amount]
-          , [io_status]
-          , [io_invoice]
-          , [io_registryToken]
-          , [io_registryDate]
-        )
-        VALUES
-        (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
-       , GETDATE());
-
-
-
 	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount ORDER BY DateCreated DESC)
 
 		 UPDATE  [dbo].[MarketplaceCartDetail]
@@ -380,7 +362,7 @@ BEGIN
                 IdNewMembership
             )
             SELECT CM.IdCatMembership
-                 , 1
+                 , 2
                  , CM.MembershipCost
 			     ,CASE WHEN
 		                        EXISTS(SELECT  TOP 1 1
@@ -752,9 +734,9 @@ BEGIN
             (
                 IdNewSubscriptions
             )
-            SELECT IIF(@CustomerType = 2, NULL, @ActiveMembershipId)
+            SELECT NULL
                  , CS.IdCatSubscription
-                 , 1
+                 , 2
                  , CS.SubscriptionCost
 				,CASE WHEN
 		                        EXISTS(SELECT  TOP 1 1
@@ -1073,9 +1055,9 @@ BEGIN
 
 
 
-				          SELECT 
-                @inv_amount =    SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ),
-                @inv_IVA =     SUM(ISNULL(CS.SubscriptionCost, CM.MembershipCost) - (ISNULL(CS.SubscriptionCost, CM.MembershipCost) / 1.12))
+			SELECT 
+                 @inv_amount =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
+                @inv_IVA =      SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / 1.12))
 			 FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
@@ -1135,10 +1117,10 @@ BEGIN
 		   @dti_category,
 		   @dti_quantity,
 		   @dti_measurement,
-		   (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
-		   ,CS.SubscriptionName
-		   ,CS.SubscriptionCost -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / 1.12)
-		   ,CS.SubscriptionCost
+		     (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
+		   ,CS.SubscriptionName	
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / 1.12)
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
 		   ,@dti_dateRegister
 		   ,@dti_tokenRegister
 		   ,@SAPCode
@@ -1180,6 +1162,22 @@ BEGIN
                 WHERE 
                        SPL.[Authorization] = @OrderNumber
 
+
+
+       INSERT INTO [dbo].[InOutOfMoneyDetail]
+        (
+            [io_type]
+          , [io_vpCodeOfReferences]
+          , [io_ticket]
+          , [io_amount]
+          , [io_status]
+          , [io_invoice]
+          , [io_registryToken]
+          , [io_registryDate]
+        )
+        VALUES
+        (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
+       , GETDATE());
 
         COMMIT TRANSACTION;
 
