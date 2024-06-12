@@ -22,11 +22,15 @@ BEGIN
 	IF EXISTS (SELECT abc.AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer abc WITH(NOLOCK) WHERE abc.AbcIdCustomer = @idCustomer)
 	BEGIN
 		SELECT art.ArtId,
-			art.ArtName,
-			abc.[Height],
-			abc.[Width],
-			abc.[Length],
-			abc.[MassWeight]
+			ISNULL(art.ArtName, '') AS ArtName,
+			ISNULL(abc.AbcIdArticle,0) AS AbcIdArticle,
+			ISNULL(abc.Code,'') AS Code,
+			ISNULL(abc.PriceDefault,0.0) AS PriceDefault,
+			ISNULL(abc.[Height],0.0) AS [Height],
+			ISNULL(abc.[Width],0.0) AS [Width],
+			ISNULL(abc.[Length],0.0) AS [Length],
+			ISNULL(abc.[MassWeight],0.0) AS [MassWeight],
+			ISNULL(abc.VolumetricWeight,0.0) AS VolumetricWeight
 		FROM DeliveryBackOffice.dbo.CatArticle art WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.ArticleByCustomer abc WITH(NOLOCK) ON abc.AbcIdArticle = art.ArtId
 		INNER JOIN DeliveryBackOffice.dbo.CatTypeArticle ctp WITH(NOLOCK) ON art.ArtIdTypeArticle = ctp.TarId
@@ -44,11 +48,15 @@ BEGIN
 		OR art.ArtShowDefault=1 AND art.ArtRowStatus = 1 order by [ArtName]
 */
 		SELECT art.ArtId,
-			art.ArtName,
-			art.ArtHeight AS "Height",
-			art.ArtWidth AS "Width",
-			art.ArtLength AS "Length",
-			art.ArtMassWeight AS "MassWeight"
+			ISNULL(art.ArtName,'') AS ArtName,
+			ISNULL(art.ArtId, 0)AS AbcIdArticle,
+			ISNULL(art.ArtId,0) AS Code,
+			0 AS PriceDefault,
+			ISNULL(art.ArtHeight,0.0) AS "Height",
+			ISNULL(art.ArtWidth,0.0) AS "Width",
+			ISNULL(art.ArtLength,0.0) AS "Length",
+			ISNULL(art.ArtMassWeight,0.0) AS "MassWeight",
+			ISNULL(art.ArtMassWeight,0.0) AS "VolumetricWeight"
 		FROM DeliveryBackOffice.dbo.CatPackage cp WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.CatTypeArticle ctp WITH(NOLOCK) ON ctp.TarIdPackage = cp.PckId
 		INNER JOIN DeliveryBackOffice.dbo.CatArticle art WITH(NOLOCK) ON art.ArtIdTypeArticle = ctp.TarId
