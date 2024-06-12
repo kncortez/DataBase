@@ -1061,7 +1061,7 @@ BEGIN
                                        @Responsible
                                 FROM Cost ct
                                     INNER JOIN #TblInclude ti
-                                        ON ct.GuideSerie = ti.Guide_Serie AND ti.Guide_Number = ti.Guide_Number
+                                        ON ct.GuideSerie = ti.Guide_Serie AND ti.Guide_Number = ct.GuideNumber
                                     LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
                                         ON ct.IdCost = CD.IdCost
                                 WHERE CD.IdCostDetail IS NULL

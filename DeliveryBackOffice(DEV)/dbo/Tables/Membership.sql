@@ -179,3 +179,8 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'código de act
 
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de activación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Membership', @level2type=N'COLUMN',@level2name=N'ActivationDate'
+
+GO
+CREATE NONCLUSTERED INDEX [idx_membership_rowstatus_expirationdate]
+ON [dbo].[Membership]([RowStatus] ASC,[ExpirationDate] ASC)
+    INCLUDE ([CustomerId],[MembershipMaxServiceFixedValue])

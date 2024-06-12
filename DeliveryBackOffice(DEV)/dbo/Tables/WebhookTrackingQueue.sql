@@ -75,3 +75,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de cola de webhooks por enviar.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'WebhookTrackingQueue';
 
+GO
+CREATE NONCLUSTERED INDEX IDX_RowStatus_GuideSerie_GuideNumber_StatusOrderId
+ON [dbo].[WebhookTrackingQueue] ([GuideSerie],[GuideNumber],[StatusOrderId],[RowStatus])
