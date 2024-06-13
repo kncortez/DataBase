@@ -1642,6 +1642,7 @@
     <Build Include="dbo\Stored Procedures\SpHWGetStationForCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetCountries.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_DimensionWeightGuidePiece.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetCurrencyByCountry.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
