@@ -48,37 +48,25 @@ BEGIN
             SELECT CR.IdRoute IdRoute,
                    CR.CodeRoute CodeRoute
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
-				ON CR.IdTownship = TW.IdTownship
-			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
-				ON PR.IdProvince = TW.IdProvince
             WHERE CR.IdTypeRoute = @RouteType
 			AND CR.RowStatus = 'TRUE'
-			AND IIF(PR.IdCountry IS NULL, 'GT',PR.IdCountry)=@IdCountry;
+			AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
         ELSE
             SELECT CR.IdRoute IdRoute,
                    CR.CodeRoute CodeRoute
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
-				ON CR.IdTownship = TW.IdTownship
-			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
-				ON PR.IdProvince = TW.IdProvince
-            WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
+            WHERE LEFT(UPPER(CR.CodeRoute), 1) = @RouteChar
 			AND CR.RowStatus = 'TRUE'
-			AND IIF(PR.IdCountry IS NULL, 'GT',PR.IdCountry)=@IdCountry;
+			AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
 
     END TRY
     BEGIN CATCH
         SELECT CR.IdRoute IdRoute,
                CR.CodeRoute CodeRoute
         FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
-				ON CR.IdTownship = TW.IdTownship
-			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
-				ON PR.IdProvince = TW.IdProvince
-        WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
+        WHERE LEFT(UPPER(CR.CodeRoute), 1) = @RouteChar
 		AND CR.RowStatus = 'TRUE'
-		AND IIF(PR.IdCountry IS NULL, 'GT',PR.IdCountry)=@IdCountry;
+		AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
     END CATCH;
 
 END;
