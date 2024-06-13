@@ -3,13 +3,18 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-13>
+-- Description: <Se agrega el filtro para procesar guias unicamente por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,
     @IsReturn BIT,
     @CodeApp VARCHAR(100),
     @IdModule INT,
-    @Token VARCHAR(100)
+    @Token VARCHAR(100),
+    @IdCountry VARCHAR(2) = 'GT'
 --SET STATISTICS TIME ON; 
 --DECLARE
 --    @InGuides VARCHAR(MAX)	= 'FD1002000,FD1007542,FD1009118,FD1017485,FD1019336,FD1024099,FD1024118',
@@ -194,6 +199,7 @@ PRINT '*************************************************************************
                AND cdp.RowStatus = 1
     WHERE --rc.RbcCodeOfReference IS NULL
          ISNULL(rcv.RbcRowStatus,rc.RbcRowStatus) = 1
+         AND IIF(ord.SenderCountryId IS NULL, 'GT',ord.SenderCountryId) = @IdCountry
     ORDER BY lg.ItemSerie,
              lg.ItemNumber;
 
