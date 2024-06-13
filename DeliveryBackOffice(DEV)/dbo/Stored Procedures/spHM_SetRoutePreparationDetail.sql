@@ -10,7 +10,8 @@ CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
     @GuidePiece SMALLINT,
-    @Token NVARCHAR(50)
+    @Token NVARCHAR(50),
+    @CountryId NVARCHAR(2)='GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -65,10 +66,13 @@ BEGIN
         --- Verificar si la pieza existe
         SELECT @GuidePieceExists = 1,
                @GuidePieceIsDry = ISNULL(dop.IsDry, 1)
-        FROM DeliveryOrderPiece dop WITH (NOLOCK)
+        FROM [DeliveryOrderPiece] dop WITH (NOLOCK)
+		INNER JOIN [DeliveryOrder] do WITH(NOLOCK)
+		ON dop.GuideSerie =do.Guide_Serie and dop.GuideNumber = do.Guide_Number
         WHERE dop.GuideSerie = @GuideSerie
               AND dop.GuideNumber = @GuideNumber
-              AND dop.NoPiece = @GuidePiece;
+              AND dop.NoPiece = @GuidePiece
+			  AND ISNULL(do.ReceiverCountryId,'GT') = @CountryId
 
         IF @GuidePieceExists = 1
         BEGIN
