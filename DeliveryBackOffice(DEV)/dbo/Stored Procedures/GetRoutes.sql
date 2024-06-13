@@ -50,14 +50,14 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
             WHERE CR.IdTypeRoute = @RouteType
 			AND CR.RowStatus = 'TRUE'
-			AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
+			AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
         ELSE
             SELECT CR.IdRoute IdRoute,
                    CR.CodeRoute CodeRoute
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
             WHERE LEFT(UPPER(CR.CodeRoute), 1) = @RouteChar
 			AND CR.RowStatus = 'TRUE'
-			AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
+			AND ISNULL(CR.CountryId, 'GT')=@IdCountry;
 
     END TRY
     BEGIN CATCH
@@ -66,7 +66,7 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
         WHERE LEFT(UPPER(CR.CodeRoute), 1) = @RouteChar
 		AND CR.RowStatus = 'TRUE'
-		AND IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
+		AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
     END CATCH;
 
 END;
