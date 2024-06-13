@@ -5,7 +5,11 @@
 -- Create date: <2020-01-08>
 -- Description:	<Integración de marketplace  a estrcutura club forza para facturación usuarios logueados y no logueados>
 -- =============================================
-
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-05-03>
+-- Description:	<Se registrar el pago y se muestre el No. de transacción correspondiente.  >
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionFac]
  @OrderNumber AS NVARCHAR(25)
 AS
@@ -237,7 +241,7 @@ BEGIN
 				   RTP.OrderNumber = @OrderNumber 
             ORDER BY M.DateCreated DESC;
 
-            SELECT @Authorizacion = MOL.[TransactionOrder]
+            SELECT TOP 1 @Authorizacion = MOL.[Authorization]
                  , @typeMoneyId   = MOL.TypeOfInOutOfMoneyId
             FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK)
             WHERE MembershipId = @IdMemberOrSuscription
