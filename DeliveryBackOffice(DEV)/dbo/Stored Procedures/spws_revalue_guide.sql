@@ -1325,9 +1325,8 @@ BEGIN
 				  , DateCreated
 				  , GuideSerie
 				  , GuideNumber
-				  , ShippingCurrency
-				  , ShippingExchangeRate
 				  , CodCurrency
+				  , CodExchangeRate
 				  , CODPaymentCurrency
 				  , CODPaymentExchangeRate
 				)
@@ -1335,7 +1334,7 @@ BEGIN
 				(   1, @ProdctNumber, 1     -- costo de envio
 				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
 				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
-				  , @CurrencySender, @ExchangeSender, @CurrencySender
+				  , @CurrencySender, @ExchangeSender
 				  , @CurrencyReceiver, @ExchangeRateReceiver
 				);
 			END
@@ -1356,7 +1355,6 @@ BEGIN
 				  , GuideNumber
 				  , ShippingCurrency
 				  , ShippingExchangeRate
-				  , CodCurrency
 				  , DeliveryPaymentCurrency
 				  , DeliveryPaymentExchangeRate
 				)
@@ -1364,7 +1362,7 @@ BEGIN
 				(   1, @ProdctNumber, 1     -- costo de envio
 				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
 				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
-				  , @CurrencySender, @ExchangeSender, @CurrencySender
+				  , @CurrencySender, @ExchangeSender
 				  , @CurrencyReceiver, @ExchangeRateReceiver
 				);
 			END
