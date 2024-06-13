@@ -11,9 +11,9 @@ SELECT CU.IdCatCurrencyCOD [IdCurrency],
        DC.Currency_Symbol [Symbol],
        DC.Currency_Name + ' - ' + DC.Currency_Symbol AS [Description],
 	   CU.CodeISO [CodeISO]
-FROM DeliveryCurrency DC
+FROM DeliveryCurrency DC WITH (NOLOCK)
     INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
-        ON DC.IdCurrencyCOD = CU.IdCatCurrencyCOD WITH (NOLOCK)
+        ON DC.IdCurrencyCOD = CU.IdCatCurrencyCOD 
 WHERE CU.RowStatus = 1
       AND IIF(DC.Currency_IdCountry IS NULL, 'GT', DC.Currency_IdCountry) = @IdCountry
 END
