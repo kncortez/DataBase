@@ -16,7 +16,8 @@ CREATE PROCEDURE [dbo].[spg_get_CatVehicle]
 AS
 BEGIN
 	SELECT cv.IdVehicle,
-	cv.UnitNumber	
+	       cv.UnitNumber,
+		    ISNULL(cv.IdCountry,'GT') IdCountry	
 	FROM [DeliveryBackOffice].[dbo].[CatVehicle] as cv
 	where cv.RowStatus = 1
 	AND ISNULL(cv.IdCountry,'GT') = @IdCountry;
