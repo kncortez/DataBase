@@ -18,8 +18,10 @@ BEGIN
 				[SR].[Department],
 				[SR].[Phone],
 				[SR].[Email],
-				[SR].[CUI]
+				[SR].[CUI],
+				ISNULL([SR].[IdCountry],'GT') IdCountry
 	FROM		[dbo].[SenderReceiver] SR
 	WHERE		[SR].[Estatus] = 1
+	 AND ISNULL([SR].IdCountry,'GT') =  @IdCountry
 	ORDER BY	[SR].[Last_Name];
 END

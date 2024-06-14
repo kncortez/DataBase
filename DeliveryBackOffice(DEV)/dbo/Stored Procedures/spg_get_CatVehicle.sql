@@ -8,6 +8,10 @@
 -- Create date: <20/06/2022>
 -- Description: <Se agrega filtro por pais, por defecto GT>
 -- =============================================
+-- Author:		<Edelman>
+-- Create date: <2024-06-13>
+-- Description:	<filtro de vehiculos por país>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_CatVehicle]
 (
   @IdCountry  NVARCHAR(2) = 'GT'
@@ -15,8 +19,9 @@ CREATE PROCEDURE [dbo].[spg_get_CatVehicle]
 AS
 BEGIN
 	SELECT cv.IdVehicle,
-	cv.UnitNumber	
+	       cv.UnitNumber,
+		    ISNULL(cv.IdCountry,'GT') IdCountry	
 	FROM [DeliveryBackOffice].[dbo].[CatVehicle] as cv
 	where cv.RowStatus = 1
-    AND IIF(cv.IdCountry IS NULL,'GT',cv.IdCountry) = @IdCountry;
+	AND ISNULL(cv.IdCountry,'GT') = @IdCountry;
 END
