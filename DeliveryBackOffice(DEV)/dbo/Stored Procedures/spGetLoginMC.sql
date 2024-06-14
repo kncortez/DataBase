@@ -96,8 +96,8 @@ BEGIN
     SET @VERIFYUSER =
     (
         SELECT COUNT(iu.IdEmployee)
-        FROM RegisterUser           ru
-            INNER JOIN InternalUser iu
+        FROM RegisterUser           ru WITH(NOLOCK)
+            INNER JOIN InternalUser iu WITH(NOLOCK)
                 ON ru.UsrIdUser = iu.RegisterUserID
         WHERE ru.UsrEmail = @Username
               AND ru.UsrRowStatus = 1
@@ -177,10 +177,10 @@ BEGIN
 				SET @VisitPointValid =
 				(
 					SELECT [VPC].[StatusClient]
-					FROM [dbo].[RegisterUser]               RU
-						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointByUser] VP
+					FROM [dbo].[RegisterUser]               RU WITH(NOLOCK)
+						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointByUser] VP WITH(NOLOCK)
 							ON [RU].[UsrIdUser] = [VP].[RegisterUserID]
-						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC
+						INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 							ON [VP].[IdVisitPointClient] = [VPC].[IdVisitPointClient]
 					WHERE [RU].[UsrEmail] = @Username AND VP.RowStatus = 1
 				);
@@ -218,7 +218,7 @@ BEGIN
 								HASHBYTES('MD5', CONCAT(@Username, @Password, SYSDATETIME()))
 								, 2 ) AS token );
 
-							IF ( SELECT COUNT(*)FROM [dbo].TokenLog tkn WHERE tkn.TknIdToken = @Token ) = 0 --si el token no exite crearlo 
+							IF ( SELECT COUNT(*)FROM [dbo].TokenLog tkn WITH(NOLOCK) WHERE tkn.TknIdToken = @Token ) = 0 --si el token no exite crearlo 
 							BEGIN
 								INSERT INTO [dbo].[TokenLog]
 								(
@@ -250,14 +250,14 @@ BEGIN
 							  , SUBMODULES VARCHAR(MAX)
 							);
 							SELECT @TOTALSUBMODULES = COUNT(cmo.ModIdModule)
-							FROM RegisterUser                         us
-								INNER JOIN [dbo].[RolByUserByAccount] rua
+							FROM RegisterUser                         us WITH(NOLOCK)
+								INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 									ON rua.RuaIdUser = us.UsrIdUser
-								INNER JOIN dbo.RolByModuleBySystem    rms
+								INNER JOIN dbo.RolByModuleBySystem    rms WITH(NOLOCK)
 									ON rms.RmsIdRol = rua.RuaIdRol
-								INNER JOIN [dbo].CatModule            cmo
+								INNER JOIN [dbo].CatModule            cmo WITH(NOLOCK)
 									ON cmo.ModIdModule = rms.RmsIdModule
-								INNER JOIN [dbo].CatRol               rol
+								INNER JOIN [dbo].CatRol               rol WITH(NOLOCK)
 									ON rol.RolIdRol = rms.RmsIdRol
 							WHERE us.UsrEmail = @Username
 								  AND rms.RmsRowStatus = 1
@@ -274,14 +274,14 @@ BEGIN
 									ModIdModule
 								)
 								SELECT cmo.ModIdModule
-								FROM RegisterUser                         us
-									INNER JOIN [dbo].[RolByUserByAccount] rua
+								FROM RegisterUser                         us WITH(NOLOCK)
+									INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 										ON rua.RuaIdUser = us.UsrIdUser
-									INNER JOIN dbo.RolByModuleBySystem    rms
+									INNER JOIN dbo.RolByModuleBySystem    rms WITH(NOLOCK)
 										ON rms.RmsIdRol = rua.RuaIdRol
-									INNER JOIN [dbo].CatModule            cmo
+									INNER JOIN [dbo].CatModule            cmo WITH(NOLOCK)
 										ON cmo.ModIdModule = rms.RmsIdModule
-									INNER JOIN [dbo].CatRol               rol
+									INNER JOIN [dbo].CatRol               rol WITH(NOLOCK)
 										ON rol.RolIdRol = rms.RmsIdRol
 								WHERE us.UsrEmail = @Username
 									  AND rua.RuaRowStatus = 1
@@ -326,14 +326,14 @@ BEGIN
 										   WHERE TMP.ITERATOR = @ITERATORSUBMODULES
 									   )               AS ModIdModuleDAD
 									 , cmo.ModIdModule AS ModIdModuleCHILD
-								FROM RegisterUser                         us
-									INNER JOIN [dbo].[RolByUserByAccount] rua
+								FROM RegisterUser                         us WITH(NOLOCK)
+									INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 										ON rua.RuaIdUser = us.UsrIdUser
-									INNER JOIN dbo.RolByModuleBySystem    rms
+									INNER JOIN dbo.RolByModuleBySystem    rms WITH(NOLOCK)
 										ON rms.RmsIdRol = rua.RuaIdRol
-									INNER JOIN [dbo].CatModule            cmo
+									INNER JOIN [dbo].CatModule            cmo WITH(NOLOCK)
 										ON cmo.ModIdModule = rms.RmsIdModule
-									INNER JOIN [dbo].CatRol               rol
+									INNER JOIN [dbo].CatRol               rol WITH(NOLOCK)
 										ON rol.RolIdRol = rms.RmsIdRol
 								WHERE us.UsrEmail = @Username
 									  AND rua.RuaRowStatus = 1
@@ -356,7 +356,7 @@ BEGIN
 									SELECT @CHILDSMD
 										= @CHILDSMD + '{"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata
 										  + '",' + '"Path":"' + cmo.ModPath + '"}|'
-									FROM [dbo].CatModule cmo
+									FROM [dbo].CatModule cmo WITH(NOLOCK)
 									WHERE cmo.ModIdModule =
 									(
 										SELECT TMP.ModIdModuleCHILD
@@ -392,14 +392,14 @@ BEGIN
 									WHEN LEN(ISNULL(TMP.SUBMODULES, '')) > 0 THEN
 									COALESCE(TMP.SUBMODULES, '')	ELSE
 									''	END ) 'SubModule'
-							FROM RegisterUser                         us
-							INNER JOIN [dbo].[RolByUserByAccount] rua
+							FROM RegisterUser                         us WITH(NOLOCK)
+							INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 								ON rua.RuaIdUser = us.UsrIdUser
-							INNER JOIN dbo.RolByModuleBySystem    rms
+							INNER JOIN dbo.RolByModuleBySystem    rms WITH(NOLOCK)
 								ON rms.RmsIdRol = rua.RuaIdRol
-							INNER JOIN [dbo].CatModule            cmo
+							INNER JOIN [dbo].CatModule            cmo WITH(NOLOCK)
 								ON cmo.ModIdModule = rms.RmsIdModule
-							INNER JOIN [dbo].CatRol               rol
+							INNER JOIN [dbo].CatRol               rol WITH(NOLOCK)
 								ON rol.RolIdRol = rms.RmsIdRol
 							LEFT JOIN @TBSUBMODULES               TMP
 								ON TMP.ModIdModule = cmo.ModIdModule
@@ -430,16 +430,16 @@ BEGIN
 								IIF(ac.AccConfirm = 'C', '1', '0')		'VerifiedEmail',
 								CONVERT(VARCHAR, ISNULL(us.ChangePassword, 0))	'ChangePassword',
 								CONVERT(VARCHAR, ISNULL(ro.RolAdminInternal, '0')) 'AdminInternal'
-							FROM RegisterUser                         us
-							INNER JOIN [dbo].Person               pe
+							FROM RegisterUser                         us WITH(NOLOCK)
+							INNER JOIN [dbo].Person               pe WITH(NOLOCK)
 								ON pe.PerIdPerson = us.UsrIdPerson
-							INNER JOIN [dbo].[RolByUserByAccount] rua
+							INNER JOIN [dbo].[RolByUserByAccount] rua WITH(NOLOCK)
 								ON rua.RuaIdUser = us.UsrIdUser
-							INNER JOIN [dbo].CatRol               ro
+							INNER JOIN [dbo].CatRol               ro WITH(NOLOCK)
 								ON ro.RolIdRol = rua.RuaIdRol
-							INNER JOIN [dbo].Account              ac
+							INNER JOIN [dbo].Account              ac WITH(NOLOCK)
 								ON ac.AccIdAccount = rua.RuaIdAccount
-							INNER JOIN [dbo].CatTypeAccount       ta
+							INNER JOIN [dbo].CatTypeAccount       ta WITH(NOLOCK)
 								ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
 							WHERE us.UsrEmail = @Username
 								AND us.UsrRowStatus = 1
@@ -473,8 +473,8 @@ BEGIN
 								CONVERT(VARCHAR, COALESCE(us.Phone, ' '))	'Phone',
 								CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone, 'false'))	'VerifiedPhone',
 								@TAC					'TAC'
-							FROM RegisterUser           us
-							INNER JOIN [dbo].Person pe
+							FROM RegisterUser           us WITH(NOLOCK)
+							INNER JOIN [dbo].Person pe WITH(NOLOCK)
 								ON pe.PerIdPerson = us.UsrIdPerson
 							WHERE us.UsrEmail = @Username
 								AND us.UsrRowStatus = 1
@@ -509,31 +509,41 @@ BEGIN
 							INSERT INTO @ProfileEXPTable (Name,ContactName,Phone,Email,IdTownship,TownshipName,IdProvince,
 															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP)
 							SELECT 
-								DescriptionOfClient				'Name',
-								ISNULL(ContactName, '')			'ContactName',
-								ISNULL(VPC.Phone, '')			'Phone',
-								ISNULL(Email, '')				'Email',
-								ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '')	'IdTownship',
-								ISNULL(TWS.TownshipDescription, '')				'TownshipName',
-								ISNULL(CONVERT(VARCHAR, PRV.IdProvince), '')	'IdProvince',
-								ISNULL(PRV.ProvinceDescription, '')				'ProvinceName',
-								ISNULL(VPC.Address, '')			'Address',
-								ISNULL(TWS.HeaderCode, '')		'HeaderCode',
+								DescriptionOfClient										'Name',
+								ISNULL(ContactName, '')									'ContactName',
+								ISNULL(VPC.Phone, '')									'Phone',
+								ISNULL(Email, '')										'Email',
+								ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '')			'IdTownship',
+								ISNULL(TWS.TownshipDescription, '')						'TownshipName',
+								ISNULL(CONVERT(VARCHAR, PRV.IdProvince), '')			'IdProvince',
+								ISNULL(PRV.ProvinceDescription, '')						'ProvinceName',
+								ISNULL(VPC.Address, '')									'Address',
+								ISNULL(TWS.HeaderCode, '')								'HeaderCode',
 								ISNULL(CONVERT(NVARCHAR(20), VPC.CodeOfReference), '')	'CodeOfReference',
-								@RolEXP							'RolEXP',
-								'GTQ'							'Currency'
-							FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-							INNER JOIN VisitPointByUser              VPU
+								@RolEXP													'RolEXP',
+								ISNULL(CCC.CodeISO, 'GTQ')								'Currency'
+							FROM DeliveryBackOffice.dbo.VisitPointClient		VPC WITH(NOLOCK)
+							INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer	RC WITH(NOLOCK)
+								ON VPC.CustomerID = RC.RbcIdCustomer
+							INNER JOIN DeliveryBackOffice.dbo.RateHeader		RH WITH(NOLOCK)
+								ON RC.RbcIdRate = RH.RheId 
+							INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD	CCC WITH(NOLOCK)
+								ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
+								OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
+							INNER JOIN VisitPointByUser							VPU WITH(NOLOCK)
 								ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-							INNER JOIN RegisterUser                        ru
+							INNER JOIN RegisterUser								ru WITH(NOLOCK)
 								ON VPU.RegisterUserID = ru.UsrIdUser
-							INNER JOIN DeliveryBackOffice.dbo.Settlement   STL
+							INNER JOIN DeliveryBackOffice.dbo.Settlement		STL WITH(NOLOCK)
 								ON VPC.IdSettlement = STL.IdSettlement
-							INNER JOIN DeliveryBackOffice.dbo.Township     TWS
+							INNER JOIN DeliveryBackOffice.dbo.Township			TWS WITH(NOLOCK)
 								ON TWS.IdTownship = STL.IdTownship
-							INNER JOIN DeliveryBackOffice.dbo.Province     PRV
+							INNER JOIN DeliveryBackOffice.dbo.Province			PRV WITH(NOLOCK)
 								ON PRV.IdProvince = TWS.IdProvince
 							WHERE IdKindOfVPClient = 1
+								AND RC.RbcRowStatus = 1
+								AND RH.RheRowStatus = 1
+								AND CCC.RowStatus = 1
 								AND ru.UsrEmail = @Username
 								AND VPU.RowStatus = 1
 								AND ru.UsrRowStatus = 1
@@ -616,8 +626,8 @@ BEGIN
 			UPDATE [dbo].UserSystemRestriction
 			SET UstRetries = (UstRetries + 1)
 				, UstStatus = (IIF(UstRetries + 1 >= UstAccessRetries, 'BLOCKED', 'ACTIVE'))
-			FROM [dbo].RegisterUser                   usr
-				LEFT JOIN [dbo].UserSystemRestriction res
+			FROM [dbo].RegisterUser                   usr WITH(NOLOCK)
+				LEFT JOIN [dbo].UserSystemRestriction res WITH(NOLOCK)
 					ON res.UstIdUser = usr.UsrIdUser
 						AND res.UstIdSystem = @IdSystem
 			WHERE usr.UsrEmail = @Username;
