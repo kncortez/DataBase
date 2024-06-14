@@ -4,9 +4,13 @@
 -- Create date: <02/09/2020>
 -- Description:	<Reporte de producto con tiempo de entrega vencido>
 -- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <14/06/2024>
+-- Description:	<Se agrega parametro para filtrar guias por pais de origen>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_report_due_product]
 	-- Add the parameters for the stored procedure here
-	
+	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
 
@@ -26,13 +30,17 @@ BEGIN
 		w.Guide_Number,
 		w.Rack_Position
 	from DeliveryBackOffice.dbo.Warehouse w with(nolock)
+	inner join DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
+	on do.Guide_Number = w.Guide_Number and do.Guide_Serie = w.Guide_Serie
 	where Active = 1
+	and iif(do.SenderCountryId is null, 'GT', do.SenderCountryId)=@IdCountry
 	) AS SUBQ
 	--
-	join deliverybackoffice.dbo.deliveryorderdetail dod with(nolock) on dod.Guide_Serie = SUBQ.Guide_Serie and dod.Guide_Number = SUBQ.Guide_Number and dod.StatusOrderId = 11
-	join DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = SUBQ.Guide_Serie and do.Guide_Number = SUBQ.Guide_Number
+	inner join deliverybackoffice.dbo.deliveryorderdetail dod with(nolock) on dod.Guide_Serie = SUBQ.Guide_Serie and dod.Guide_Number = SUBQ.Guide_Number and dod.StatusOrderId = 11
+	inner join DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = SUBQ.Guide_Serie and do.Guide_Number = SUBQ.Guide_Number
 	where dod.DateCreated <=  GETDATE() - 1
 	AND (SUBQ.Rack_Position NOT LIKE '%(92)%' AND SUBQ.Rack_Position NOT LIKE '%(93)%')
+	and iif(do.SenderCountryId is null, 'GT', do.SenderCountryId)=@IdCountry
 	order by Days_Overdue
 
 END
