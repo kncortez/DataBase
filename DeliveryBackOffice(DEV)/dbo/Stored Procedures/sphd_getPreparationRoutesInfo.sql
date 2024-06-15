@@ -4,10 +4,14 @@
 -- Create date: <2021-12-21>
 -- Description: <Obtiene la información de rutas para la preparación de ruta, se manda como parametro el día y el id de la ruta.>
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-14>
+-- Description: <Se agrega filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_getPreparationRoutesInfo]
 	@DayOfVisit TINYINT,
-	@IdRoute SMALLINT
+	@IdRoute SMALLINT,
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 	SELECT
@@ -42,5 +46,6 @@ BEGIN
 	AND RT.IdRoute = @IdRoute
 	AND TT.InitializationTimeOfVisit IS NOT NULL AND TT.InitializationTimeOfVisit NOT IN ('__:__','0','',' ')
 	AND TT.FinalizationTimeOfVisit IS NOT NULL AND TT.FinalizationTimeOfVisit NOT IN ('__:__','0','',' ')
+    AND IIF(VP.CountryId IS NULL, 'GT', VP.CountryId) = @IdCountry
 	ORDER BY TT.InitializationTimeOfVisit, TT.FinalizationTimeOfVisit, CS.IdCustomer, vp.CodeOfReference, RT.IdRoute
 END
