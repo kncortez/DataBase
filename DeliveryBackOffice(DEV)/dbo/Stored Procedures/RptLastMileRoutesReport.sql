@@ -4,9 +4,14 @@
 -- Create date: <Create Date,2024-04-01>
 -- Description:	<Description,Nuevo Reporte de Guías Última Milla>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-04-01>
+-- Description:	<Se agrega paramtro para filtrar couriers por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[RptLastMileRoutesReport] 
     @StartDate DATE,
-    @EndDate DATE
+    @EndDate DATE,
+    @IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
      
@@ -238,6 +243,7 @@ BEGIN
 		AND [HBR].[RowStatus] = 1
 		AND [CR].[RowStatus]  = 1
 		AND [CRT].[RowStatus] = 1
+        AND ISNULL([SRE].[IdCountry],'GT') = @IdCountry 
 	   GROUP BY [DOBS].[ID],
              [DOBS].[Date_Dispatched],
              [SRE].[CUI],
