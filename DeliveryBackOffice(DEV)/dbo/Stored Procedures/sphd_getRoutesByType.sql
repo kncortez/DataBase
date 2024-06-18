@@ -24,7 +24,7 @@ BEGIN
 		LEFT JOIN TownShip T ON ctr.IdTownship = T.IdTownship
 		LEFT JOIN Province P ON T.IdProvince=P.IdProvince
 		WHERE ctr.RowStatus = 1
-          AND IIF(ctr.CountryId IS NULL, 'GT', ctr.CountryId) = @Country    
+          AND ISNULL(P.IdCountry, 'GT') = @Country
 		ORDER BY ctr.CodeRoute
 	END
 	ELSE
@@ -38,8 +38,7 @@ BEGIN
 		LEFT JOIN TownShip T ON ctr.IdTownship = T.IdTownship
 		LEFT JOIN Province P ON T.IdProvince=P.IdProvince
 		WHERE ctr.RowStatus = 1
-		AND ctr1.Name = @TypeRouteName 
-        AND IIF(ctr.CountryId IS NULL, 'GT', ctr.CountryId) = @Country
+		AND ctr1.Name = @TypeRouteName AND ISNULL(P.IdCountry, 'GT') = @Country
 		ORDER BY ctr.CodeRoute
 	END
 END

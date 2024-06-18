@@ -3,8 +3,13 @@
 -- Create date: <2021-12-21>
 -- Description:	<Obtiene el itinerario de puntos de visita>
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-17>
+-- Description: <Se agrega filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetVisitPointItineraryByVisitPoint]
-	@weekday int
+	@weekday int,
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -41,10 +46,21 @@ BEGIN
             AND TT.RowStatus = 'TRUE'
 			AND ISNULL(TT.InitializationTimeOfVisit, '__:__') != '__:__'
 			AND ISNULL(TT.FinalizationTimeOfVisit, '__:__') != '__:__'
+            AND IIF(VP.CountryId IS NULL, 'GT', VP.CountryId) = @IdCountry;
 
 	  --CANTIDAD DE PUNTOS DE VISITA SIN RUTA ASIGNADA
-	SELECT COUNT(*) WITHOUTROUTE  FROM dbo.VisitPointItinerary WITH(NOLOCK)
-		WHERE RouteCodeID IS NULL AND DayOfVisit=@weekday AND RowStatus='TRUE'
-			AND ISNULL(InitializationTimeOfVisit, '__:__') != '__:__'
-			AND ISNULL(FinalizationTimeOfVisit, '__:__') != '__:__'
+	SELECT COUNT(*) WITHOUTROUTE  
+      FROM dbo.VisitPointItinerary TT WITH(NOLOCK)
+          LEFT JOIN dbo.VisitPointFrequency FQ WITH (NOLOCK)
+              ON FQ.IdVPFrequency = TT.VPFrequencyID AND fq.RowStatus ='true' 
+          LEFT JOIN dbo.VisitPointConfiguration CF WITH (NOLOCK)
+              ON CF.IdVPConfiguration = FQ.VPConfigurationID AND cf.RowStatus ='true'
+          LEFT JOIN dbo.VisitPointClient VP WITH (NOLOCK)
+              ON VP.CodeOfReference = CF.VisitPointID
+    WHERE TT.RouteCodeID IS NULL 
+      AND TT.DayOfVisit=@weekday 
+      AND TT.RowStatus='TRUE'
+      AND ISNULL(TT.InitializationTimeOfVisit, '__:__') != '__:__'
+      AND ISNULL(TT.FinalizationTimeOfVisit, '__:\__') != '__:__'
+      AND ISNULL(VP.CountryId,'GT') = @IdCountry;
 END
