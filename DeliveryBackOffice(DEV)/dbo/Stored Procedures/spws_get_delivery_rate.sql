@@ -17,6 +17,11 @@
 -- Create date: <2022-12-26>
 -- Description:	<Validar si se requiere uso de memrbesia y subscripción4>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-06-17>
+-- Description:	<Devuelve el valor de la moneda segun tarifario configurado por el cliente>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
@@ -44,6 +49,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @RevaluedGuide BIT = 0
   , @CategoryProductId INT = 0
   , @ProductId INT = 0
+  , @FetchActivePRoduct BIT=1
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -73,7 +79,53 @@ BEGIN
         SET @IdCustomer = @IdCustomerParams;
     END;
     ------- fin determinar cliente ------------------------------------------------------------------------------------------------
+		------------------------------------------------------------------------------------------------------------------------------------
+	/*
+		Inicio FIx 20250603 Membersías y suscripciones
+		Verifica los productos validos y activos del cliente
+	*/
+	IF @ProductId>0 AND @FetchActivePRoduct=1
+	BEGIN 
+		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT where idCustomer=@IdCustomer and AccRowStatus=1)
+		Declare @TechnicalDescription NVARCHAR(50);
 
+		DECLARE  @ActiveProducts  TABLE 
+		(
+			StatusId INT,
+			CatProductCategoryId INT,
+			ProductId INT,
+			ProductName NVARCHAR(50),
+			ProductDescription NVARCHAR(300),
+			IncludeCollect BIT
+		);	
+		INSERT INTO @ActiveProducts 
+		EXEC ClientSubscriptionFetcher_Data @IdAccount=@IdAcount
+
+
+		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory
+		WHERE IdCatProductCategory= @CategoryProductId
+		and rowstatus=1
+
+		declare @NewProductId INT=NULL;
+
+		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
+		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1)
+	
+		IF(@NewProductId IS NULL)
+		BEGIN
+			SET @ProductId=0;
+			SET  @CategoryProductId=0;
+			--SET @UseMembership=0;
+		END
+		ELSE
+		BEGIN
+			SET @ProductId=@NewProductId
+		END
+	END
+
+
+	--FIN FIx 20250603
+	------------------------------------------------------------------------------------------------------------------------------------
     ------- determinar el Tarifario y tipo de tarifario que se va a aplicar -------------------------------------------------------
 
     DECLARE @NewMainRates INT =
@@ -177,8 +229,12 @@ BEGIN
     DECLARE @IdTypeRate AS INT;
     DECLARE @WeigthLimit AS DECIMAL(12, 2) = 0;
     DECLARE @Currency AS VARCHAR(10) = '';
+	DECLARE @CurrencyId as INT;
     DECLARE @PiecesIncluded AS DECIMAL(12, 2) = 1;
     DECLARE @PriceWithCreditCard AS INT = 0;
+
+	DECLARE @DefaultCurrency AS INT = (select IdCatCurrencyCOD from DeliveryBackOffice.dbo.CatCurrencyCOD where CodeISO = 'GTQ')
+
 
     IF EXISTS
     (
@@ -194,6 +250,7 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Currency_Symbol
              , @PiecesIncluded = rh.PiecesIncluded
+			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
@@ -211,6 +268,7 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Currency_Symbol
              , @PiecesIncluded = rh.PiecesIncluded
+			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
@@ -2684,6 +2742,7 @@ BEGIN
              , @FechaCompra                                                                  [FechaCompra]
              , @Currency                                                                     [Currency]
              , tr.ReturnRate                                                                 [ReturnRate]
+			 , @CurrencyId [CurrencyId]
         FROM @TempRate tr;
     END;
 

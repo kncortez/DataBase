@@ -15,7 +15,10 @@
 -- Create date: <2023-07-25>
 -- Description:	<Validar que se envíaron los campos  @UseMembership y @TypeSubscriptionId, buscarlos em el log para aplciar descuento que aplique >
 -- =============================================
-
+-- Author:		<Cristian, Suazo>
+-- Create date: <2024-06-11>
+-- Description:	<Agrega el tipo de moneda origen y destino, dependiendo del pais >
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
@@ -107,6 +110,8 @@ BEGIN
 
     DECLARE @PiecesInOrder AS INT;
     DECLARE @PriceWithCreditCard AS INT = 0;
+	DECLARE @ReceiverCountryId NVARCHAR(2);
+	DECLARE @SenderCountryId NVARCHAR(2);
 
 	DECLARE @IdKindOfVPClient AS INT = 0;
 
@@ -130,6 +135,8 @@ BEGIN
          , @ServiceShortName        = ISNULL(ord.TypeService, 'NDD')
          , @DateCreated             = ord.DateCreated
 		 , @IdKindOfVPClient		= VPC.IdKindOfVPClient
+		 , @ReceiverCountryId		= ISNULL(ord.ReceiverCountryId, 'GT')
+		 , @SenderCountryId			= ISNULL(ord.SenderCountryId, 'GT')
     FROM dbo.DeliveryOrder             ord WITH (NOLOCK)
         LEFT JOIN dbo.Township         stwn WITH (NOLOCK)
             ON stwn.IdTownship = ord.SenderIdTownship
@@ -393,6 +400,7 @@ BEGIN
       , FechaCompra DATETIME
       , Currency VARCHAR(10)
       , ReturnRate DECIMAL(12, 2)
+	  , CurrencyId int
     );
 
     PRINT 'pesos';
@@ -455,12 +463,60 @@ BEGIN
             SET @UseMembership = 0;
     END;
     --select @Pesos , @Parcel
+	------------------------------------------------------------------------------------------------------------------------------------
+	/*
+		Inicio FIx 20250603 Membersías y suscripciones
+		Verifica los productos validos y activos del cliente
+	*/
+	IF @UseMembership=1
+	BEGIN 
+		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT where idCustomer=@IdCustomer and AccRowStatus=1)
+		Declare @TechnicalDescription NVARCHAR(50);
+
+		DECLARE  @ActiveProducts  TABLE 
+		(
+			StatusId INT,
+			CatProductCategoryId INT,
+			ProductId INT,
+			ProductName NVARCHAR(50),
+			ProductDescription NVARCHAR(300),
+			IncludeCollect BIT
+		);	
+		INSERT INTO @ActiveProducts 
+		EXEC ClientSubscriptionFetcher_Data @IdAccount=@IdAcount
+
+
+		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory
+		WHERE IdCatProductCategory= @CategoryProductId
+		and rowstatus=1
+
+		declare @NewProductId INT=NULL;
+
+		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
+		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1)
+	
+		IF(@NewProductId IS NULL)
+		BEGIN
+			SET @ProductId=0;
+			SET  @CategoryProductId=0;
+			SET @UseMembership=0;
+		END
+		ELSE
+		BEGIN
+			SET @ProductId=@NewProductId
+		END
+	END
+
+
+	--FIN FIx 20250603
+	------------------------------------------------------------------------------------------------------------------------------------
+
     INSERT INTO @TempRate
     EXECUTE [dbo].[spws_get_delivery_rate] @CodApp = @CodeApp
                                          , @IdCustomerParams = @IdCustomer
                                          , @HeaderCodeDestiny = @HeaderCodeDestiny
                                          , @HeaderCodeSource = @HeaderCodeSource
-                                         , @Country = 'GT'
+                                         , @Country = @ReceiverCountryId 
                                          , @CountPiecesParams = @PiecesCount
                                          , @IsFragile = 'false'
                                          , @IsCollected = @IsCollect
@@ -482,6 +538,8 @@ BEGIN
 										 , @RevaluedGuide = @RevaluedGuide
 										 , @CategoryProductId = @CategoryProductId
 										 , @ProductId = @ProductId
+										 , @FetchActivePRoduct=0										 
+
 
 
      IF (@UseMembership = 1 AND @CategoryProductId >0 AND @ProductId >0 )
@@ -999,6 +1057,7 @@ BEGIN
         DECLARE @CreditCardRate DECIMAL(12, 2) = 0;
         DECLARE @Taxes DECIMAL(12, 2) = 0;
         DECLARE @ReturnAmount DECIMAL(12, 2);
+		DECLARE @CurrencyId INT;
 
         DECLARE @RESULT AS NVARCHAR(MAX);
         PRINT 'precio';
@@ -1026,6 +1085,7 @@ BEGIN
              , @CreditCardRate      = ISNULL(tr.CreditCardRate, 0)
              , @Taxes               = ISNULL(tr.Taxes, 0)
              , @ReturnAmount        = IIF(@IsReturn = 'TRUE', (tr.Price * ISNULL(tr.ReturnRate, 0) / 100), 0)
+			 , @CurrencyId			= tr.CurrencyId
         FROM @TempRate tr
         WHERE tr.Service = ISNULL(@ServiceShortName, 'NDD')
               OR @ServiceShortName = 'EXP';
@@ -1056,6 +1116,7 @@ BEGIN
                  , @IrregularPiece      = ISNULL(tr.IrregularPieceRate, 0)
                  , @CreditCardRate      = ISNULL(tr.CreditCardRate, 0)
                  , @Taxes               = ISNULL(tr.Taxes, 0)
+				 , @CurrencyId			= tr.CurrencyId
             FROM @TempRate tr
             ORDER BY tr.Price ASC;
 
@@ -1229,25 +1290,79 @@ BEGIN
         END;
         ELSE
         BEGIN
-            PRINT 'registro no existe , hay que crearlo';
-            INSERT INTO dbo.Cost
-            (
-                IdProduct
-              , ProductNumber
-              , IdTypeCharge
-              , TotalAmount
-              , IdModule
-              , RowStatus
-              , TokenCreated
-              , DateCreated
-              , GuideSerie
-              , GuideNumber
-            )
-            VALUES
-            (   1, @ProdctNumber, 1     -- costo de envio
-              , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
-              , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber);
+			DECLARE @CurrencyReceiver INT,
+				    @ExchangeRateReceiver DECIMAL(12,6),
+					@CurrencySender INT,
+					@ExchangeSender DECIMAL(12,6)
+			/******************DATOS DE MONEDA ORIGEN*************************/
+			SELECT TOP 1 
+				  @CurrencySender = C.IdCatCurrencyCOD, 
+				  @ExchangeSender = CE.ExchangeRate
+			FROM CurrencyExchangeRates CE 
+			INNER JOIN CatCurrencyCOD C  ON C.IdCatCurrencyCOD = CE.SourceCurrency
+			WHERE CodeISO LIKE ''+ @SenderCountryId +'%'
+			ORDER BY CE.ExchangeDate DESC
+
+			SELECT @ExchangeSender= ExchangeRate FROM CurrencyExchangeRates
+			WHERE IdCountry = @SenderCountryId
+			AND ExchangeDate = GETDATE()
+			AND SourceCurrency = @CurrencyId
 			
+            PRINT 'registro no existe , hay que crearlo';
+			IF @ServiceShortName = 'COD'
+			BEGIN
+			PRINT 'ES COD'
+				INSERT INTO dbo.Cost
+				(
+					IdProduct
+				  , ProductNumber
+				  , IdTypeCharge
+				  , TotalAmount
+				  , IdModule
+				  , RowStatus
+				  , TokenCreated
+				  , DateCreated
+				  , GuideSerie
+				  , GuideNumber
+				  , ShippingCurrency
+				  , ShippingExchangeRate
+				  , CodCurrency
+				  , CodExchangeRate
+				)
+				VALUES
+				(   1, @ProdctNumber, 1     -- costo de envio
+				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
+				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
+				  , @CurrencyId, @ExchangeSender
+				  , @CurrencyId, @ExchangeSender
+				);
+			END
+			ELSE 
+			BEGIN
+			PRINT 'ES STD'
+				INSERT INTO dbo.Cost
+				(
+					IdProduct
+				  , ProductNumber
+				  , IdTypeCharge
+				  , TotalAmount
+				  , IdModule
+				  , RowStatus
+				  , TokenCreated
+				  , DateCreated
+				  , GuideSerie
+				  , GuideNumber
+				  , ShippingCurrency
+				  , ShippingExchangeRate				 
+				)
+				VALUES
+				(   1, @ProdctNumber, 1     -- costo de envio
+				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
+				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
+				  , @CurrencySender, @ExchangeSender				
+				);
+			END
+
             SET @IdCost = SCOPE_IDENTITY();
 
 			if (@IdKindOfVPClient = 3 and @IsCollect = 0 ) --SI ES CONCESIONARIO y NO ES COLLECT DEBE QUEDAR REGISTRADO EL PAGO DE LA GUÍA
