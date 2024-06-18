@@ -11,6 +11,7 @@
     [Currency_TokenUpdate]  NVARCHAR (50)  NULL,
     [Currency_DateUpdate]   DATETIME       NULL,
     [IdCurrencyCOD]         INT            NULL,
+    [DefaultPerCountry]     INT            NULL,
     CONSTRAINT [PK_CMS_PRM_TYPE_OF_CURRENCY] PRIMARY KEY CLUSTERED ([Currency_Id] ASC),
     CONSTRAINT [FK_CatCurrencyCOD_DeliveryCurrency] FOREIGN KEY (IdCurrencyCOD) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
 );
@@ -124,3 +125,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryCurrency',
     @level2type = N'COLUMN',
     @level2name = N'IdCurrencyCOD'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Moneda por defecto por pais',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryCurrency',
+    @level2type = N'COLUMN',
+    @level2name = N'DefaultPerCountry'
