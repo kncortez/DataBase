@@ -1,17 +1,15 @@
-﻿
--- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-11>
--- Description:	<Recotizacion>
+﻿-- =============================================
+-- Author:		<Eduardo Lopez>
+-- Create date: <2024-04-08>
+-- Description:	<Consultar datos de courier con solo mandar numero de telefono>
 -- =============================================
 
 
-CREATE PROCEDURE [dbo].[GetCourierPhoneToken]
+CREATE procedure [dbo].[GetCourierInfoWithoutTokenLog]
     -- Add the parameters for the stored procedure here
-    @Phone NVARCHAR(20) = '48119415',
-    @Token VARCHAR(MAX) = '21a31fd231as23d1f21ads',
-    @LoginToken NVARCHAR(6) = '123456',
-    @IdCountry nvarchar(8) = 'GT'
+    @Phone nvarchar(20) = '48119415'
+  , @Token varchar(max) = '21a31fd231as23d1f21ads'
+  , @IdCountry nvarchar(8)	= 'GT'
 as
 begin
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -24,8 +22,7 @@ begin
     -- insertar en tabla temporal posbibles mensajes de respuesta
 
     if object_id('tempdb.dbo.#responsemessage', 'U') is not null
-    drop table #responsemessage;
-
+        drop table #responsemessage;
     select *
     into #responsemessage
     from
@@ -42,7 +39,7 @@ begin
     begin transaction;
     begin try
         -------------------------------------------------------------------------------------------------------------------------
-        declare @phon int =
+		declare @phon int =
                 (
                     SELECT	TOP 1
 							ID
@@ -67,24 +64,6 @@ begin
         where LogTokenPOD = @TokenInavt;
         ------------------------------------------------------------------------------------------------------------------------
         declare @jsonResult1 nvarchar(max);
-
-        if exists
-        (
-            select 1
-            from SenderReceiverLoginToken
-            where SenderReceiverId = @phon
-                  and LoginToken = @LoginToken
-                  and RowStatus = 1
-        )
-        begin
-
-            update SenderReceiverLoginToken
-            set RowStatus = 0
-              , DateUpdated = getdate()
-              , TokenUpdated = @Token
-            where SenderReceiverId = @phon
-                  and LoginToken = @LoginToken
-                  and RowStatus = 1;
 
             insert into dbo.LogTokenPOD
             (
@@ -149,18 +128,18 @@ begin
                                            + '",' + '"PickUpManifestEmail":"'
                                            + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
                                            + '"Token":"' + isnull(LogTokenPOD, '') + +'"}'
-                                    from LogTokenPOD						pod with (nolock)
-                                        inner join SenderReceiver			sr with (nolock)
+                                    from LogTokenPOD                 pod with (nolock)
+                                        inner join SenderReceiver    sr with (nolock)
                                             on (sr.ID = pod.IdCourierman)
-                                        left join dbo.RouteAssigment		ras with (nolock)
+                                        left join dbo.RouteAssigment ras with (nolock)
                                             on ras.IdCurrierMan = sr.ID
                                                and DateOfRoute = convert(date, getdate())
-                                        left join dbo.CatVehicle			vh with (nolock)
+                                        left join dbo.CatVehicle     vh with (nolock)
                                             on vh.IdVehicle = ras.IdVehicle
-                                        left join dbo.CatRoute				cr with (nolock)
+                                        left join dbo.CatRoute       cr with (nolock)
                                             on cr.IdRoute = ras.IdRoute
                                     where pod.LogTokenPOD = @Token
-										and pod.RowStatus = 1
+									  AND pod.RowStatus = 1
                                     order by 1 desc
                                     for xml path(''), type
                                 ).value('.', 'varchar(max)')
@@ -171,7 +150,6 @@ begin
             );
             print 'ingresa2';
             print @jsonResult;
-        end;
 
         -- retornar resultado en formato json
         if @jsonResult1 is null
