@@ -23,7 +23,7 @@ BEGIN
         cr.Name Razón,
         lgnlbt.SSN_Username Usuario,
         alc.DateCreated, alc.OldCODAmount, alc.NewCODAmount,
-		REPLACE(REPLACE(REPLACE(dc.Currency_Symbol,'.',''),'(',''),')','') [Currency_Symbol]
+		IIF(dc.Currency_Symbol IS NULL, IIF(@Country = 'GT','Q','L'), REPLACE(REPLACE(REPLACE(dc.Currency_Symbol,'.',''),'(',''),')','')) [Currency_Symbol]
     FROM DeliveryBackOffice.dbo.AuthorizationLogCOD alc
     INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do
     ON alc.GuideSerie = do.Guide_Serie and alc.GuideNumber = do.Guide_Number
@@ -35,7 +35,7 @@ BEGIN
     ON c.ProductNumber = CONCAT(do.Guide_Serie, do.Guide_Number)
     LEFt JOIN DeliveryBackOffice.dbo.DeliveryCurrency dc WITH (NOLOCK)
     ON dc.Currency_Id = c.ShippingCurrency
-    WHERE ((alc.GuideSerie + CONVERT(VARCHAR, alc.GuideNumber) = @Guide) OR
-    (CONVERT(DATE, alc.DateCreated) BETWEEN @InitialDate AND @FinalDate))
-	AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @Country;
+    WHERE IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @Country 
+	AND (CONCAT(alc.GuideSerie, CONVERT(VARCHAR, alc.GuideNumber)) = @Guide OR
+    (CONVERT(DATE, alc.DateCreated) BETWEEN @InitialDate AND @FinalDate));
 END
