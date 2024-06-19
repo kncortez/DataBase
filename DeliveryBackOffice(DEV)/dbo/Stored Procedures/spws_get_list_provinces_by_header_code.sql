@@ -14,23 +14,14 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-  DECLARE @jsonResult NVARCHAR(MAX)
-
-  SET @jsonResult = (
-	 SELECT STUFF((
-		SELECT  
-	  ',{"HeaderCode":"' + depto.LocalCode + '",' +
-	  '"ProvinceName":"' + depto.ProvinceName  + '",' +
-	  '"IdCountry":"' + depto.IdCountry + '"}' 
-	  	from DeliveryBackOffice.dbo.Province depto WITH (NOLOCK) 
-		where depto.ProvinceStatus = 'TRUE'
-		and  (@IdHeaderCode = '-1' or depto.LocalCode = @IdHeaderCode)
-		and depto.IdCountry = @IdCountry
-	  FOR XML PATH(''), TYPE
-	 ).value('.', 'varchar(max)'),1,1,''
-				  ) 
-)
-
-select '['+ @jsonResult + ']' FormatJson
+	SELECT  
+		depto.LocalCode		'HeaderCode',
+		depto.ProvinceName	'ProvinceName',
+		depto.IdCountry		'IdCountry'
+	FROM DeliveryBackOffice.dbo.Province depto WITH (NOLOCK) 
+	WHERE depto.ProvinceStatus = 'TRUE'
+		AND  (@IdHeaderCode = '-1' OR depto.LocalCode = @IdHeaderCode)
+		AND depto.IdCountry = @IdCountry
+	ORDER BY depto.LocalCode
 
 END

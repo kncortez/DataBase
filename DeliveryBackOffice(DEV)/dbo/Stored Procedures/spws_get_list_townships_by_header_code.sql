@@ -17,35 +17,28 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-
-	 DECLARE @jsonResult NVARCHAR(MAX)
-
-  SET @jsonResult = (
-	 SELECT STUFF((
-		SELECT  
-	  ',{"HeaderCodeTownship":"' + isnull(mun.HeaderCode,'0101') + '",' +
-	  '"HeaderCode":"' + isnull(depto.LocalCode,'01')  + '",' +
-	  '"ProvinceName":"' + isnull(depto.ProvinceName,'')  + '",' +
-	  '"Coutry":"' + isnull(depto.IdCountry,'GT')  + '",' +
-	  '"TownshipName":"' + isnull(mun.TownshipName,'') + '",' +
-	  '"IsTDA":"' +  (isnull((	SELECT top 1 iif( isnull(COV.TDA,0) =0,'false','true') FROM DBO.DumpServiceCoverage COV
-						where COV.HeaderCode = mun.HeaderCode
-						and COV.RowStatus = 1
-						order by TDA desc),'false'))  + '",' +
-	  	  '"IdTownship":"' + convert( varchar, isnull(mun.IdTownship,0))  
-	  + '"}' 
-	  	from DeliveryBackOffice.dbo.Township mun WITH (NOLOCK)
-			join DeliveryBackOffice.dbo.Province depto  on mun.IdProvince = depto.IdProvince AND depto.ProvinceStatus=1
-		where  mun.TownshipStatus = 'TRUE'
-	and depto.IdCountry = @IdCountry
-	and (@IdHeaderCodeTownship = '-1' or  mun.HeaderCode = @IdHeaderCodeTownship)
-	and (@IdHeaderCode = '-1' or depto.LocalCode = @IdHeaderCode)
-	  FOR XML PATH(''), TYPE
-	 ).value('.', 'varchar(max)'),1,1,''
-				  ) 
-)
-
-select '['+ @jsonResult + ']' FormatJson
-
+	SELECT 
+		ISNULL(mun.HeaderCode, '0101') AS HeaderCodeTownship,
+		ISNULL(depto.LocalCode, '01') AS HeaderCode,
+		ISNULL(depto.ProvinceName, '') AS ProvinceName,
+		ISNULL(depto.IdCountry, 'GT') AS Country,
+		ISNULL(mun.TownshipName, '') AS TownshipName,
+		ISNULL((SELECT TOP 1 IIF(ISNULL(COV.TDA, 0) = 0, 'false', 'true') 
+		 FROM DBO.DumpServiceCoverage COV
+		 WHERE COV.HeaderCode = mun.HeaderCode
+		   AND COV.RowStatus = 1
+		 ORDER BY TDA DESC), 'false') AS IsTDA,
+		CONVERT(varchar, ISNULL(mun.IdTownship, 0)) AS IdTownship
+	FROM 
+		DeliveryBackOffice.dbo.Township mun WITH (NOLOCK)
+	INNER JOIN 
+		DeliveryBackOffice.dbo.Province depto 
+		ON mun.IdProvince = depto.IdProvince 
+	WHERE 
+		mun.TownshipStatus = 'TRUE'
+		AND depto.ProvinceStatus = 1
+		AND depto.IdCountry = @IdCountry
+		AND (@IdHeaderCodeTownship = '-1' OR mun.HeaderCode = @IdHeaderCodeTownship)
+		AND (@IdHeaderCode = '-1' OR depto.LocalCode = @IdHeaderCode)
    
 END
