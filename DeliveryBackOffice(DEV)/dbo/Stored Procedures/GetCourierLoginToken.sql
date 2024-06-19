@@ -1,22 +1,4 @@
-﻿-- =============================================
--- Author:		<Oscar Morales>
--- Create date: <2023-04-24>
--- Description:	<Genera o obtiene el token para login en Courier App>
--- =============================================
-CREATE procedure [dbo].[GetCourierLoginToken]
-	-- Add the parameters for the stored procedure here
-    @Phone nvarchar(20),
-	@NotificationEmail int,
-	@IdCountry nvarchar(8)
-as
-begin
-USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[GetCourierLoginToken]    Script Date: 17/06/2024 16:21:31 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+﻿
 -- =============================================
 -- Author:		<Oscar Morales>
 -- Create date: <2023-04-24>
@@ -26,14 +8,14 @@ ALTER PROCEDURE [dbo].[GetCourierLoginToken]
     -- Add the parameters for the stored procedure here
     @Phone NVARCHAR(20)
   , @NotificationEmail INT
-  , @IdCountry nvarchar(8)
+  , @IdCountry nvarchar(8) = 'GT'
 
 AS
 BEGIN
  	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	set nocount on;
-	--SET@IdCountry = 'GT';
+
     BEGIN TRANSACTION
 
 	BEGIN TRY
