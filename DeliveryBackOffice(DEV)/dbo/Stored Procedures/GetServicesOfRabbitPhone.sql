@@ -1,4 +1,7 @@
-﻿-- =============================================
+﻿
+
+
+-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-02-16>
 -- Description:	< Recupera datos de los servicios asignados a un piloto de Rabbit >
@@ -7,10 +10,6 @@
 -- Author:		<Andres,Ruiz>
 -- Update date: <2022-02-21>
 -- Description:	< Adición de WITH(NOLOCK) para evitar posibles bloqueos >
--- =============================================
--- Author:      <Daniel, Ramirez>
--- Update date: <2024-06-13>
--- Description: < Se agrego el filtro para obtener unicamente datos por pais, por defecto GT>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[GetServicesOfRabbitPhone]

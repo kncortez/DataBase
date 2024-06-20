@@ -18,23 +18,25 @@
     [GuideSerie]                  NVARCHAR (2)    NULL,
     [GuideNumber]                 INT             NULL,
     [ShippingCurrency]            INT             NULL,
-    [ShippingExchangeRate]        DECIMAL(12, 4)  NULL,
+    [ShippingExchangeRate]        DECIMAL (12, 6) NULL,
     [CodCurrency]                 INT             NULL,
-    [CodExchangeRate]             DECIMAL(12, 4)  NULL,
+    [CodExchangeRate]             DECIMAL (12, 6) NULL,
     [DeliveryPaymentCurrency]     INT             NULL,
-    [DeliveryPaymentExchangeRate] DECIMAL(12, 4)  NULL,
+    [DeliveryPaymentExchangeRate] DECIMAL (12, 6) NULL,
     [CODPaymentCurrency]          INT             NULL,
-    [CODPaymentExchangeRate]      DECIMAL(12, 4)  NULL,
+    [CODPaymentExchangeRate]      DECIMAL (12, 6) NULL,
     PRIMARY KEY CLUSTERED ([IdCost] ASC),
+    CONSTRAINT [FK_CodCurrency_CatCurrencyCOD] FOREIGN KEY ([CodCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
+    CONSTRAINT [FK_CODPaymentCurrency_CatCurrencyCOD] FOREIGN KEY ([CODPaymentCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
     CONSTRAINT [FK_Cost_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
+    CONSTRAINT [FK_DeliveryPaymentCurrency_CatCurrencyCOD] FOREIGN KEY ([DeliveryPaymentCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
+    CONSTRAINT [FK_ShippingCurrency_CatCurrencyCOD] FOREIGN KEY ([ShippingCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD]),
     CONSTRAINT [FKCostCharge] FOREIGN KEY ([IdTypeCharge]) REFERENCES [dbo].[CatTypeCharge] ([IdTypeCharge]),
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
-    CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct]),
-    CONSTRAINT [FK_ShippingCurrency_CatCurrencyCOD] FOREIGN KEY (ShippingCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
-    CONSTRAINT [FK_CodCurrency_CatCurrencyCOD] FOREIGN KEY (CodCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
-    CONSTRAINT [FK_DeliveryPaymentCurrency_CatCurrencyCOD] FOREIGN KEY (DeliveryPaymentCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
-    CONSTRAINT [FK_CODPaymentCurrency_CatCurrencyCOD] FOREIGN KEY (CODPaymentCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
+    CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct])
 );
+
+
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_product_number_cost]

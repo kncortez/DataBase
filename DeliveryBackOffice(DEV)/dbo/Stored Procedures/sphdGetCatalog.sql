@@ -188,13 +188,15 @@ BEGIN
 
         IF (@NameOfCatalog = 'DeliveryCurrency')
         BEGIN
-            SELECT curr.[Currency_Id] [IdValue],
-                   UPPER(curr.[Currency_Name]) [NameValue],
+            SELECT CU.IdCatCurrencyCOD [IdValue],
+                   UPPER(CU.Name) [NameValue],
                    curr.[Currency_IdCountry] [IdFilter],
                    curr.[Currency_Symbol] [Asssitant],
                    'DeliveryCurrency' [Catalog]
-            FROM [DeliveryBackOffice].[dbo].[DeliveryCurrency] curr
-            WHERE [Currency_Status] = 1
+            FROM [DeliveryBackOffice].[dbo].[DeliveryCurrency] curr WITH(NOLOCK)
+					INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
+					ON curr.IdCurrencyCOD = CU.IdCatCurrencyCOD
+            WHERE curr.[Currency_Status] = 1
                   AND
                   (
                       @IdCorrelative = -1
@@ -400,7 +402,7 @@ BEGIN
                   )
                   AND koc.IdKindOfVPClient NOT IN ( 5 ) --estos son los puntos (bodegas dinamicas) que hace los clientes integrados
             --AND koc.DateCreated >= '2021-08-19'
-                  AND IIF(koc.IdCountry IS NULL, 'GT',koc.IdCountry) = @IdFilter
+				  AND IIF(koc.IdCountry IS NULL, 'GT',koc.IdCountry) = @IdFilter
             ORDER BY koc.KindOfVPName;
         END;
 
@@ -426,7 +428,7 @@ BEGIN
                       @IdParentFilter = -1
                       OR crt.IdTypeRoute = @IdParentFilter
                   )
-                  AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdFilter;
+				  AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdFilter; 
         END;
 
 
@@ -458,7 +460,7 @@ BEGIN
                 LEFT JOIN dbo.CatTypeArticle ta
                     ON ta.TarId = ca.ArtIdTypeArticle
             WHERE ac.AbcRowStatus = 'TRUE'
-            AND IIF(ca.IdCountry IS NULL, 'GT',ca.IdCountry)= @IdFilter;
+			AND IIF(ca.IdCountry IS NULL, 'GT',ca.IdCountry)= @IdFilter;
         END;
 
         IF (@NameOfCatalog = 'SalesChannel')
@@ -536,7 +538,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-                  AND IIF(cbf.IdCountry IS NULL, 'GT',cbf.IdCountry) = @IdFilter
+				  AND IIF(cbf.IdCountry IS NULL, 'GT',cbf.IdCountry) = @IdFilter
             GROUP BY cbf.CatBatchFrequencyCODId,
                      cbf.Name
             ORDER BY cbf.Name;
@@ -557,7 +559,7 @@ BEGIN
 				   db.[Name] [NameValue],
                    'AccountBankFormatRule' [Catalog]
             FROM AccountBankFormatRule abfr
-                JOIN DeliveryBank db
+                INNER JOIN DeliveryBank db
                     ON db.Id_bank = abfr.DeliveryBankId
             WHERE db.[Id_status] = 1
                   AND db.[Id_country] = @IdFilter
@@ -593,6 +595,7 @@ BEGIN
 					,pr.PiecesIncluded [PiecesIncluded]
 					,cbs.IdBusinessSegment [IdValue]
 					,cbs.BusinessSegmentName [NameValue]
+					,ISNULL(pr.IdCurrency,1) [IdCurrency]--DEJA POR DEFECTO 1 -QUETZAL
 					,'PackagesRange' [Catalog]
 				FROM PackagesRange pr
 				INNER JOIN PackagesRangeDetail prd
@@ -609,7 +612,7 @@ BEGIN
 					ON prCOD.CatRateSegmentId = crs2.CrsId
 				WHERE pr.RowStatus = 1
 				AND prd.RowStatus = 1
-                AND IIF(cbs.IdCountry IS NULL, 'GT', cbs.IdCountry) = @IdFilter
+				AND IIF(cbs.IdCountry IS NULL, 'GT', cbs.IdCountry) = @IdFilter
 				ORDER BY cts.CtsShortName DESC, pr.[Order]
 			END
 
@@ -625,7 +628,7 @@ BEGIN
            'BillingTime' [Catalog]
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
-    AND IIF(BT.IdCountry IS NULL, 'GT', BT.IdCountry) = @IdFilter
+	AND IIF(BT.IdCountry IS NULL, 'GT', BT.IdCountry) = @IdFilter
 
 
 
@@ -635,7 +638,7 @@ BEGIN
            'BillingVolume' [Catalog]
     FROM [dbo].[CatBillingVolume] BV with (nolock)
     WHERE BV.RowStatus = 'TRUE'
-    AND IIF(BV.IdCountry IS NULL, 'GT', BV.IdCountry) = @IdFilter
+	AND IIF(BV.IdCountry IS NULL, 'GT', BV.IdCountry) = @IdFilter
 
 
 END

@@ -18,7 +18,7 @@ FROM DeliveryBackOffice.dbo.Person p WITH(NOLOCK)
 INNER JOIN DeliveryBackOffice.dbo.RegisterUser R WITH(NOLOCK)
 ON  P.PerIdPerson = R.UsrIdPerson
 INNER JOIN DeliveryBackOffice.dbo.InternalUser I WITH (NOLOCK)
-ON I.RegisterUserID = R.UsrIdUser AND I.Username = R.UsrNickName
+ON I.RegisterUserID = R.UsrIdUser-- AND I.Username = r.UsrNickName
 LEFT JOIN DeliveryBackOffice.dbo.CatCountry C WITH (NOLOCK)
 ON P.PerCountryOrigin = C.IdCountry
-WHERE I.IdUser = @IdUser AND I.Username = @Username
+WHERE i.IdUser = @IdUser AND I.Username = @Username

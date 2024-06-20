@@ -11,15 +11,14 @@
 -- =============================================
 -- Modified:	<Brandon Pedroza>
 -- Create date: <2024-06-18>
--- Description:	<Se agrega parametro para filtrar guias por pais de origen>
+-- Description:	<Se agrega parametro para filtra guias por pais de origen>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHD_CouponReportDetail]
 	-- Add the parameters for the stored procedure here
 	@DateOf		 as DATE,
 	@DateTo		 as DATE,
 	@IdStation   as INT,
-	@IdCountry	  as NVARCHAR(2) = 'GT'
-
+	@IdCountry   as NVARCHAR(2) = 'GT'
 	
 AS
 BEGIN

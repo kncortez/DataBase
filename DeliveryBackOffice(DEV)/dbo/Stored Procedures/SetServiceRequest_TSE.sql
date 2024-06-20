@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[SetServiceRequest_TSE]
+﻿--DROP procedure [dbo].[SetServiceRequest_TSE]
+CREATE PROCEDURE [dbo].[SetServiceRequest_TSE]
     @TblServiceRequest AS TblServiceRequest READONLY,
     @TblDeliveryOrders AS TblDeliveryOrders READONLY,
 	@IsArticle BIT = 0

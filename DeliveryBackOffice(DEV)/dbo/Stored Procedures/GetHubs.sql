@@ -3,6 +3,7 @@
 -- Create date: <20/06/2022>
 -- Description:	<Obtiene el listado de Hubs>
 -- =============================================
+-- =============================================
 -- Author:      <Daniel, Ramirez>
 -- Create date: <20/06/2022>
 -- Description: <Se agrega filtro por pais, por defecto GT>

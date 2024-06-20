@@ -19,11 +19,11 @@ BEGIN
 	DECLARE @Serie NVARCHAR(10),
 			@Number NVARCHAR(10),
 			@GuideNumber INT
-    
+
     SET @Serie = LEFT(@Guide, 2)
 
     SET @Number = RIGHT(@Guide, LEN(@Guide) - 2)
-	--valida que el que number sera numererico
+
 	SET @GuideNumber = IIF(ISNUMERIC(@Number) = 1 AND @Number NOT LIKE '%[^0-9]%',CAST(@Number AS INT),0)
 
 	SELECT
@@ -35,7 +35,7 @@ BEGIN
 	INNER JOIN
 	      [dbo].StatusOrder C WITH (NOLOCK)
 	ON  B.StatusOrderId =C.StatusOrderId
-    WHERE B.GuideSerie  + CAST(B.GuideNumber AS varchar) = RTRIM(LTRIM(@Guide)) AND 
+    WHERE B.GuideSerie = @Serie AND B.GuideNumber = @GuideNumber AND
 		  C.OrderDescription NOT IN('Entregado','Anulado','Entregado En Express Center')
 		  AND IIF(O.SenderCountryId IS NULL, 'GT', O.SenderCountryId)=@IdCountry
 	ORDER BY B.NoPiece

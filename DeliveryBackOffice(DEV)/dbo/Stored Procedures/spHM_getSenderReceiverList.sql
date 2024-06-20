@@ -3,8 +3,12 @@
 -- Create date: <22-07-2022>
 -- Description:	<Get complete information list of sender receiver>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <13-06-2024>
+-- Description:	< Country>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHM_getSenderReceiverList] 
-	@IdCountry VARCHAR  (2)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -21,8 +25,7 @@ BEGIN
 				[SR].[Email],
 				[SR].[CUI],
 				ISNULL([SR].[IdCountry],'GT') IdCountry
-	FROM		[dbo].[SenderReceiver] SR
+	FROM		[dbo].[SenderReceiver] SR WITH(NOLOCK)
 	WHERE		[SR].[Estatus] = 1
-	AND ISNULL([SR].IdCountry,'GT') =  @IdCountry
 	ORDER BY	[SR].[Last_Name];
 END

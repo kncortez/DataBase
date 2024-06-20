@@ -1,89 +1,93 @@
 ﻿
-
-
-
 -- =============================================
--- Author:		<Hugo,Gomez>
--- Create date: <2021-02-11>
+-- Author:		<Cristian,Azurdia>
+-- Create date: <2024-06-18>
 -- Description:	<Recotizacion>
 -- =============================================
-
 
 CREATE procedure [dbo].[GetCourierPhoneTokenOld]
     -- Add the parameters for the stored procedure here
     @Phone nvarchar(20) = '48119415'
   , @Token varchar(max) = '21a31fd231as23d1f21ads'
-as
-begin
+  , @LoginToken NVARCHAR(6) = '123456'
+  , @IdCountry nvarchar(8) = 'GT'
+AS
+BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
 
-    set nocount on;
-
-    declare @GuideRegexData nvarchar(500) =
-            (
-                select top 1
-                       CP.[Value]
-                from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex' collate Latin1_General_CI_AI
-            );
-
-    declare @GuideRegexScannerData nvarchar(500) =
-            (
-                select top 1
-                       CP.[Value]
-                from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner' collate Latin1_General_CI_AI
-            );
-
-    declare @jsonResult nvarchar(max);
+    SET NOCOUNT ON;
 
     -- insertar en tabla temporal posbibles mensajes de respuesta
 
-    if object_id('tempdb.dbo.#responsemessage', 'U') is not null
-        drop table #responsemessage;
-    select *
-    into #responsemessage
-    from
+    IF OBJECT_ID('tempdb.dbo.#responsemessage', 'U') IS NOT NULL
+    DROP TABLE #responsemessage;
+
+    SELECT	[IdResult]
+		  , [Message]
+		  , [Id]
+	INTO #responsemessage
+    FROM
     (
-        select 200                              as IdResult
-             , 'Estado  cambiado correctamente' as Message
-             , 'OK'                             as Id
-        union
-        select 500                                       as IdResult
-             , 'Error faltal intente de nuevo mas tarde' as Message
-             , 'Transac'                                 as Id
+        SELECT 200											as [IdResult]
+             , 'Estado  cambiado correctamente'				as [Message]
+             , 'OK'											as [Id]
+        UNION
+        SELECT 500											as [IdResult]
+             , 'Error faltal intente de nuevo mas tarde'	as [Message]
+             , 'Transac'									as [Id]
     ) as errror;
 
-    begin transaction;
-    begin try
+    BEGIN TRANSACTION;
+    BEGIN TRY
         -------------------------------------------------------------------------------------------------------------------------
-        declare @phon int =
+        DECLARE @phon int =
                 (
-                    select top 1
-                           ID
-                    from SenderReceiver with (nolock)
-                    where Phone like '%' + @Phone + '%'
-                          and Estatus = 1
+                    SELECT	TOP 1
+							ID
+                    FROM	[DeliveryBackOffice].[dbo].[SenderReceiver] with (nolock)
+                    WHERE	IdCountry = @IdCountry
+						AND	Phone like '%' + @Phone + '%'
+                        AND Estatus = 1
                 );
 
-        declare @TokenInavt varchar(max) =
+        DECLARE @TokenInavt varchar(max) =
                 (
-                    select top 1
+                    SELECT TOP 1
                            LogTokenPOD
-                    from LogTokenPOD with (nolock)
-                    where IdCourierman = @phon
+                    FROM [DeliveryBackOffice].[dbo].[LogTokenPOD] WITH (nolock)
+                    WHERE IdCourierman = @phon
                           and RowStatus = 1
-                    order by DateCreated desc
+                    ORDER BY DateCreated DESC
                 );
 
-        update LogTokenPOD
-        set RowStatus = 0
-        where LogTokenPOD = @TokenInavt;
-        ------------------------------------------------------------------------------------------------------------------------
-        declare @jsonResult1 nvarchar(max);
 
-            insert into dbo.LogTokenPOD
+        UPDATE [DeliveryBackOffice].[dbo].[LogTokenPOD]
+        SET RowStatus = 0
+        WHERE LogTokenPOD = @TokenInavt;
+
+
+        ------------------------------------------------------------------------------------------------------------------------
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM [DeliveryBackOffice].[dbo].[SenderReceiverLoginToken]
+            WHERE SenderReceiverId = @phon
+                  and LoginToken = @LoginToken
+                  and RowStatus = 1
+        )
+        BEGIN
+
+            UPDATE [DeliveryBackOffice].[dbo].[SenderReceiverLoginToken]
+            SET RowStatus = 0
+              , DateUpdated = getdate()
+              , TokenUpdated = @Token
+            WHERE SenderReceiverId = @phon
+                  and LoginToken = @LoginToken
+                  and RowStatus = 1;
+
+            INSERT INTO [DeliveryBackOffice].[dbo].[LogTokenPOD]
             (
                 LogTokenPOD
               , IdCourierman
@@ -91,140 +95,102 @@ begin
               , DateCreated
               , DateUpdate
             )
-            values
+            VALUES
             (@Token, @phon, 1, getdate(), null);
 
+			DECLARE @GuideRegexData nvarchar(500) =
+					(
+					SELECT TOP 1
+						   CP.[Value]
+					FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
+					WHERE CP.[Name] = 'GuideRegex'
+				);
 
+			DECLARE @GuideRegexScannerData nvarchar(500) =
+				(
+                SELECT TOP 1
+                       CP.[Value]
+                FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
+                WHERE CP.[Name] = 'GuideRegexScanner'
+            );
 
-            --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
-            declare @DefaultEmail nvarchar(50) =
+			--CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]
+            DECLARE @DefaultEmail nvarchar(50) =
                     (
-                        select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
-                        where cf.Name = 'BillingEmailCAPP'
+                        SELECT isnull(cf.Value, '')
+						FROM [DeliveryBackOffice].[dbo].[ConfigParams] cf WITH (NOLOCK)
+                        WHERE cf.Name = 'BillingEmailCAPP'
                     );
 
-            declare @DefaultPickupManifestEmail nvarchar(50) =
+            DECLARE @DefaultPickupManifestEmail nvarchar(50) =
                     (
-                        select isnull(cf.Value, '')
-                        from dbo.ConfigParams cf
-                        where cf.Name = 'PickUpManifestEmailCAPP'
+                        SELECT isnull(cf.Value, '')
+                        FROM [DeliveryBackOffice].[dbo].[ConfigParams] cf WITH (NOLOCK)
+                        WHERE cf.Name = 'PickUpManifestEmailCAPP'
                     );
 
-            set @jsonResult1 =
-            (
-                select stuff(
-                                (
-                                    select top 1
-                                           ',{"IdCourier":"'
-                                           + convert(varchar, isnull(convert(varchar(10), pod.IdCourierman), 'N/A'))
-                                           + '",' + '"DateToken":"' + isnull(convert(varchar, pod.DateCreated, 23), 'N/A')
-                                           + '",' + '"FirstName":"' + isnull(convert(varchar, sr.First_Name), 'N/A')
-                                           + '",' + '"LastName":"' + isnull(convert(varchar, sr.Last_Name), 'N/A') + '",'
-                                           + '"Vehicle":"' + isnull(convert(varchar, vh.Plate), 'N/A') + '",'
-                                           + '"Route":"' + isnull(convert(varchar, cr.CodeRoute), 'N/A') + '",'
-                                           + '"GuideRegex":"' + isnull(convert(varchar(500), @GuideRegexData), '')
-                                           + '",' -- Para validar solo los digitos de la guía
-                                           + '"GuideRegexEscaner":"'
-                                           + isnull(convert(varchar(500), @GuideRegexScannerData), '')
-                                           + '",' -- Para el input del escaner de la courier
-                                           + '"BillingEmail":"' + isnull(convert(varchar(50), @DefaultEmail), 'N/A')
-                                           + '",' + '"PickUpManifestEmail":"'
-                                           + isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A') + '",'
-                                           + '"Token":"' + isnull(LogTokenPOD, '') + +'"}'
-                                    from LogTokenPOD                 pod with (nolock)
-                                        inner join SenderReceiver    sr with (nolock)
-                                            on (sr.ID = pod.IdCourierman)
-                                        left join dbo.RouteAssigment ras with (nolock)
-                                            on ras.IdCurrierMan = sr.ID
-                                               and DateOfRoute = convert(date, getdate())
-                                        left join dbo.CatVehicle     vh with (nolock)
-                                            on vh.IdVehicle = ras.IdVehicle
-                                        left join dbo.CatRoute       cr with (nolock)
-                                            on cr.IdRoute = ras.IdRoute
-                                    where LogTokenPOD = @Token
-                                    order by 1 desc
-                                    for xml path(''), type
-                                ).value('.', 'varchar(max)')
-                              , 1
-                              , 1
-                              , ''
-                            )
-            );
-            print 'ingresa2';
-            print @jsonResult;
+            SELECT	TOP 1
+				    isnull(convert(varchar(10), pod.IdCourierman), 'N/A')				[IdCourier]
+				  , isnull(convert(varchar, pod.DateCreated, 23), 'N/A')				[TakeToken]
+				  , isnull(convert(varchar, sr.First_Name), 'N/A')						[FirstName]
+				  , isnull(convert(varchar, sr.Last_Name), 'N/A')						[LastName]
+				  , isnull(convert(varchar, vh.Plate), 'N/A')							[Vehicle]
+				  , isnull(convert(varchar, cr.CodeRoute), 'N/A')						[Route]
+				  , isnull(convert(varchar(500), @GuideRegexData), '')					[GuideRegex]
+				  , isnull(convert(varchar(500), @GuideRegexScannerData), '')			[GuideRegexEscaner]
+				  , isnull(convert(varchar(50), @DefaultEmail), 'N/A')					[BillingEmail]
+				  , isnull(convert(varchar(50), @DefaultPickupManifestEmail), 'N/A')	[PickUpManifestEmail]
+				  , isnull(pod.LogTokenPOD, '')											[Token]				
+            FROM [dbo].[LogTokenPOD]               pod WITH (NOLOCK)
+                INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver]  sr  WITH (NOLOCK)
+                    ON sr.ID = pod.IdCourierman
+                LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment]	ras WITH (NOLOCK)
+                    ON	ras.IdCurrierMan = sr.ID
+                    AND DateOfRoute = convert(date, getdate())
+                LEFT JOIN [DeliveryBackOffice].[dbo].[CatVehicle]		vh  WITH (NOLOCK)
+                    ON vh.IdVehicle = ras.IdVehicle
+                LEFT JOIN [DeliveryBackOffice].[dbo].[CatRoute]			cr  WITH (NOLOCK)
+                    ON cr.IdRoute = ras.IdRoute
+            WHERE	pod.LogTokenPOD = @Token
+				AND pod.RowStatus = 1
+            ORDER BY 1 DESC
 
-        -- retornar resultado en formato json
-        if @jsonResult1 is null
-        begin
+            
+        END;
+		ELSE
+		BEGIN
 
-            set @jsonResult1 =
-            (
-                select stuff((
-                                 select ',{"IdResult":204,' + '"Message":" No se encontraron registros"}'
-                                 for xml path(''), type
-                             ).value('.', 'varchar(max)')
-                           , 1
-                           , 1
-                           , ''
-                            )
-            );
-        end;
+			select 204 [IdResult], 'No se encontraron registros' [Message]
+ 
+        END;
 
-        select ('[' + @jsonResult1 + ']') jsonResult1;
+		SELECT  convert(varchar, IdResult) [IdResult]
+			,   Message [Message]
+        FROM #responsemessage
+        WHERE Id = 'OK'
 
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
 
-
-        set @jsonResult =
-        (
-            select stuff((
-                             select ',{"IdResult":' + convert(varchar, IdResult) + ',' + '"Message":"' + Message + '"}'
-                             from #responsemessage
-                             where Id = 'OK'
-                             for xml path(''), type
-                         ).value('.', 'varchar(max)')
-                       , 1
-                       , 1
-                       , ''
-                        )
-        );
-
-    end try
-    begin catch
-        rollback transaction;
-        select error_message();
         -- retornar mensaje de error
-        set @jsonResult =
-        (
-            select stuff(
-                            (
-                                select '"IdResult":' + convert(varchar, IdResult) + ',' + '"Message":"'
-                                       + convert(nvarchar(max), error_message()) + '"}'
-                                from #responsemessage
-                                where Id = 'Invalid'
-                                for xml path(''), type
-                            ).value('.', 'varchar(max)')
-                          , 1
-                          , 1
-                          , ''
-                        )
-        );
-    end catch;
-    if @@trancount > 0
-    begin
-        commit transaction;
+        SELECT  convert(varchar, IdResult) [IdResult]
+				,convert(nvarchar(max), error_message()) [Message]
+        FROM #responsemessage
+        WHERE Id = 'Invalid'
 
-    end;
+    END CATCH;
+
+    IF @@trancount > 0
+    BEGIN
+        COMMIT TRANSACTION;
+    END;
 
     -- destruir tablas temporales
 
-    if object_id('tempdb.dbo.#listGuides', 'U') is not null
-        drop table #listGuides;
-    if object_id('tempdb.dbo.#responsemessage', 'U') is not null
-        drop table #responsemessage;
+    IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
+        DROP TABLE #listGuides;
+    IF OBJECT_ID('tempdb.dbo.#responsemessage', 'U') IS NOT NULL
+        DROP TABLE #responsemessage;
 
-    -- retornar resultado en formato json
-
-    select ('[' + @jsonResult + ']') jsonResult;
-
-end;
+END;

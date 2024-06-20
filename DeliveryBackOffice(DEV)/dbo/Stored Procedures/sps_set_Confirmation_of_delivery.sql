@@ -1,4 +1,7 @@
-﻿-- =============================================
+﻿
+
+
+-- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
@@ -33,7 +36,7 @@ CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
     @DateOfDelivery VARCHAR(50),  --Date of delivery
     @NameOfReceiver VARCHAR(200), --Name of receiver
     @TokenId AS VARCHAR(50),       --token user
-	@IdCountry AS NVARCHAR(2) = 'GT' --Country
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
     DECLARE @StatusId TINYINT = 5; --Status of delivery 

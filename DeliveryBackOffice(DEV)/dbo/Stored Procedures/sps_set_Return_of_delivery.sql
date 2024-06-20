@@ -19,16 +19,11 @@
 -- Create date: <2023-03-20>
 -- Description:	<Validar que guía esta en estado terminal y evitar cualquier proceso>
 -- =============================================
--- Modified:	<Brandon Pedroza>
--- Create date: <2024-05-28>
--- Description:	<Se agrega parametro para filtrar por pais de origen>
--- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Return_of_delivery]
     @Guide_Serie AS VARCHAR(2),  --guide serie
     @Guide_Number AS INT,        --guide number
     @DateOfDelivery VARCHAR(50), --Date of delivery
-    @TokenId AS VARCHAR(50),      --token user
-	@IdCountry AS NVARCHAR(2) = 'GT'	 --id country
+    @TokenId AS VARCHAR(50)      --token user
 AS
 BEGIN
     DECLARE @StatusId TINYINT =
@@ -79,7 +74,6 @@ BEGIN
                                     0
                                           );
 
-    DECLARE @TimesByCountry INT; -- cantidad de veces que se encuentra el registro con estado de entregado
 
     BEGIN TRANSACTION;
     BEGIN TRY
@@ -91,20 +85,9 @@ BEGIN
         WHERE dr.Guide_Serie = @Guide_Serie
               AND dr.Guide_Number = @Guide_Number;
 
-        --cantidad de registros de la guia consultada del pais de origen recibido en el parametro
-		DECLARE @TimeByCountry INT;
-        SET @TimeByCountry =
-                (
-                    SELECT COUNT(Guide_Number)
-                    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail
-                    WHERE Guide_Serie = @Guide_Serie
-                          AND Guide_Number = @Guide_Number
-                          AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId) = @IdCountry
-                          
-                );
 
-        IF(@TimeByCountry <>0)--valida que existan registros de la guia consultada con el pais de origien recibido
-		BEGIN
+
+
         IF (@IsStatusTerminal = 0)
         BEGIN
 
@@ -412,9 +395,6 @@ BEGIN
         END;
         ELSE
             SET @ValidateOperation = -4;
-        END;
-        ELSE
-            SET @ValidateOperation = -5;
     END TRY
     BEGIN CATCH
         SELECT 0 AS 'StatusCode',
@@ -465,12 +445,6 @@ BEGIN
             SELECT -4 AS 'StatusCode',
                    'Para operar una guia en este módulo no debe estar en  estado : [' + @StatusDescription
                    + '] por ser estado Terminal.' AS 'Description',
-                   @ValidateOperation AS 'NumTransferID';
-        END;
-        ELSE IF (@ValidateOperation = -5)
-        BEGIN
-            SELECT -5 AS 'StatusCode',
-                   'La guia que se intenta operar no pertenece al país actual' AS 'Description',
                    @ValidateOperation AS 'NumTransferID';
         END;
         ELSE

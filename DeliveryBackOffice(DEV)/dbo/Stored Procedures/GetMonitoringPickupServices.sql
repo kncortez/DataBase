@@ -3,10 +3,6 @@
 -- Create date: <2022-04-07>
 -- Description:	<Obtiene información para Form Monitoreo de Servicios de Recolección>
 -- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-06-06>
--- Description: <Se agrego filtro por pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServices]
 	-- Add the parameters for the stored procedure here
 	@CustomerId INT = -1,

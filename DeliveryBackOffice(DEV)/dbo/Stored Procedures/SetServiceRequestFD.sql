@@ -718,7 +718,7 @@ BEGIN
   --Fin Nuevos datos para consumir nuevo formato guía
 
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' and idcountry is null );
 
 		SELECT 
 			1 AS 'StatusCode',

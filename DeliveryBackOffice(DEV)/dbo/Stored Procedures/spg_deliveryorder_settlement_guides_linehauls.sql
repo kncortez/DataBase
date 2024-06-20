@@ -4,10 +4,6 @@
 -- Update date: <2022-07-26>
 -- Description:	< Mejora de rendimiento del SP, adicionando WITH(NOLOCK) y especificando tipos de JOIN >
 -- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2024-06-10>
--- Description:	<Se devuelve la moneda segun el pais de origen de la guia>
--- =============================================
 CREATE PROCEDURE [dbo].[spg_deliveryorder_settlement_guides_linehauls] @IdManifest INT
 AS
 BEGIN

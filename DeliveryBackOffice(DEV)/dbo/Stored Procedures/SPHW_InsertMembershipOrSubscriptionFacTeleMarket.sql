@@ -1180,7 +1180,23 @@ BEGIN
                 WHERE 
                        SPL.[Authorization] = @OrderNumber
 
+					   
+        INSERT INTO [dbo].[InOutOfMoneyDetail]
+        (
+            [io_type]
+          , [io_vpCodeOfReferences]
+          , [io_ticket]
+          , [io_amount]
+          , [io_status]
+          , [io_invoice]
+          , [io_registryToken]
+          , [io_registryDate]
+        )
+        VALUES
+        (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
+       , GETDATE());
 
+	
         COMMIT TRANSACTION;
 
         SELECT Result                = 1

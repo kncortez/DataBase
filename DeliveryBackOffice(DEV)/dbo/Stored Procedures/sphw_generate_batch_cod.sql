@@ -9,9 +9,7 @@ BEGIN
     -- Micro transacción para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
     BEGIN TRY
-
-
-
+		
         UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
         SET ProcessStarted = 1
           , TokenUpdated = 'SYS-HERMESWIRETRANSFER'
@@ -52,6 +50,11 @@ BEGIN
     END;
 
     BEGIN TRY
+
+		DECLARE @IdCountry NVARCHAR(2)= 'GT'
+	    set @IdCountry = (select Id_country from DeliveryBackOffice.dbo.DeliveryBank A1 WITH(NOLOCK) where A1.Id_status = 1 AND A1.Id_bank = @IdBankParam ) 
+
+
         --DECLARE @IdBankParam INT = 5;
         DECLARE @UpdateLast INT;
         DECLARE @ProductNumber VARCHAR(MAX);
@@ -65,7 +68,7 @@ BEGIN
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        DECLARE @IdCountry NVARCHAR(50) = N'GT';
+        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
         DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
@@ -93,6 +96,7 @@ BEGIN
                     SELECT CatBatchFrequencyCODId
                     FROM CatBatchFrequencyCOD
                     WHERE Name = 'Inmediata'
+					and IIF(IdCountry is null,'GT',IdCountry) = @IdCountry
                 );
 
         IF (@IdBankParam IN
@@ -361,6 +365,7 @@ BEGIN
                         FROM dbo.CatRateSegment
                         WHERE CrsShortName = 'FOR'
                               AND CrsRowStatus = 'true'
+							  and IIF(IdCountry is null,'GT',IdCountry) = @IdCountry
                     );
 
             SELECT a1.Guide_Serie

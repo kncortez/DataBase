@@ -9,7 +9,7 @@
 -- Description:	<Se agrega el parametro de Country para el filtrado por pais>
 -- =============================================
 CREATE PROCEDURE [dbo].[GetStations]
-				 @Country NVARCHAR(2)	
+				 @Country NVARCHAR(2) = 'GT'
 	-- Add the parameters for the stored procedure here
 AS
 BEGIN

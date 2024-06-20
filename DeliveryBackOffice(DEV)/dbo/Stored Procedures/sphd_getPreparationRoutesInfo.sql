@@ -4,10 +4,7 @@
 -- Create date: <2021-12-21>
 -- Description: <Obtiene la información de rutas para la preparación de ruta, se manda como parametro el día y el id de la ruta.>
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-14>
--- Description: <Se agrega filtro por pais, por defecto GT>
--- =============================================
+
 CREATE PROCEDURE [dbo].[sphd_getPreparationRoutesInfo]
 	@DayOfVisit TINYINT,
 	@IdRoute SMALLINT,

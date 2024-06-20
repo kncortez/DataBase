@@ -1,5 +1,4 @@
 ﻿
-
 -- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
@@ -506,6 +505,31 @@ BEGIN
 			SET @ProductId=@NewProductId
 		END
 	END
+    ELSE
+    BEGIN 
+        --Verificando si ya hace uso de alguna membresía o suscripción
+        SELECT 
+            @ProductId=ISNULL(SubscriptionId,MembershipId),
+            @CategoryProductId= (
+                CASE 
+                    WHEN MembershipId IS NOT NULL THEN 1 
+                    WHEN SubscriptionId IS NOT NULL THEN 2 
+                END)
+        FROM dbo.MembershipSubscriptionLog
+        WHERE LogGuideNumber=@GuideNumber
+            AND LogGuideSerie=@GuideSerie
+        
+        IF @ProductId >0 AND @CategoryProductId >0
+        BEGIN 
+            SET @UseMembership=1
+        END
+        ELSE
+        BEGIN 
+            SET @ProductId=0
+            SET @CategoryProductId=0
+            SET @UseMembership=0
+        END
+    END
 
 
 	--FIN FIx 20250603
@@ -516,7 +540,7 @@ BEGIN
                                          , @IdCustomerParams = @IdCustomer
                                          , @HeaderCodeDestiny = @HeaderCodeDestiny
                                          , @HeaderCodeSource = @HeaderCodeSource
-                                         , @Country = @ReceiverCountryId 
+                                         , @Country = @ReceiverCountryId --'GT'
                                          , @CountPiecesParams = @PiecesCount
                                          , @IsFragile = 'false'
                                          , @IsCollected = @IsCollect
@@ -538,7 +562,8 @@ BEGIN
 										 , @RevaluedGuide = @RevaluedGuide
 										 , @CategoryProductId = @CategoryProductId
 										 , @ProductId = @ProductId
-										 , @FetchActivePRoduct=0
+										 , @FetchActivePRoduct=0										 
+
 
 
      IF (@UseMembership = 1 AND @CategoryProductId >0 AND @ProductId >0 )

@@ -4,9 +4,6 @@
 -- Create date: <2020-02-15>
 -- Description:	<Devuelve todos los vehiculos disponibles>
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <20/06/2022>
--- Description: <Se agrega filtro por pais, por defecto GT>
 -- =============================================
 -- Author:		<Edelman>
 -- Create date: <2024-06-13>
@@ -18,10 +15,9 @@ CREATE PROCEDURE [dbo].[spg_get_CatVehicle]
 )
 AS
 BEGIN
-	SELECT cv.IdVehicle,
+	SELECT cv.IdVehicle, 
 	       cv.UnitNumber,
-		    ISNULL(cv.IdCountry,'GT') IdCountry	
-	FROM [DeliveryBackOffice].[dbo].[CatVehicle] as cv
-	where cv.RowStatus = 1
-	AND ISNULL(cv.IdCountry,'GT') = @IdCountry;
+		   ISNULL(cv.IdCountry,'GT') IdCountry
+	FROM [DeliveryBackOffice].[dbo].[CatVehicle] as cv WITH(NOLOCK)
+	WHERE cv.RowStatus = 1;
 END

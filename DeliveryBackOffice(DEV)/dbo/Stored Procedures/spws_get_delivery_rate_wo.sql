@@ -17,11 +17,17 @@
 -- Create date: <2022-12-26>
 -- Description:	<Validar si se requiere uso de memrbesia y subscripción4>
 -- =============================================
+-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-06-17>
 -- Description:	<Devuelve el valor de la moneda segun tarifario configurado por el cliente>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-06-19>
+-- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
+-- =============================================
+CREATE PROCEDURE [dbo].[spws_get_delivery_rate_wo]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
   , @HeaderCodeDestiny AS VARCHAR(10) = ''
@@ -37,7 +43,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @ParcelCode AS NVARCHAR(MAX) = '0'
   , @Zone AS INT = 0
   , @AddressParse AS NVARCHAR(600) = ''
-  , @IdSettlementSource AS INT = 0
+  --, @IdSettlementSource AS INT = 0  --NO ES UTILIZADO
   , @IdSettlementDestiny AS INT = 0
   , @CodeOfReferenceSource AS INT = 0
   , @CodeOfReferenceDestiny AS INT = 0
@@ -136,6 +142,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+				AND CountryId = @Country
             );
     DECLARE @NewAlternativeRates INT =
             (
@@ -143,6 +150,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+				AND CountryId = @Country
             );
     DECLARE @NewAutoSalesMainRates INT =
             (
@@ -150,6 +158,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
+				AND CountryId = @Country
             );
 
    DECLARE @NewRateGeneral INT = (
@@ -157,12 +166,14 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero' COLLATE Latin1_General_CI_AI
+				AND CountryId = @Country
             );
    DECLARE @NewRateGeneralDiscount INT = (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero destinos exc' COLLATE Latin1_General_CI_AI
+				AND CountryId = @Country
             );
 			
     --DECLARE @TarifaPlanBasico INT =
@@ -234,9 +245,7 @@ BEGIN
 	DECLARE @CurrencyId as INT;
     DECLARE @PiecesIncluded AS DECIMAL(12, 2) = 1;
     DECLARE @PriceWithCreditCard AS INT = 0;
-
 	DECLARE @DefaultCurrency AS INT = (select IdCatCurrencyCOD from DeliveryBackOffice.dbo.CatCurrencyCOD where CodeISO = 'GTQ')
-
 
     IF EXISTS
     (
@@ -2744,7 +2753,6 @@ BEGIN
              , @FechaCompra                                                                  [FechaCompra]
              , @Currency                                                                     [Currency]
              , tr.ReturnRate                                                                 [ReturnRate]
-			 , @CurrencyId [CurrencyId]
         FROM @TempRate tr;
     END;
 

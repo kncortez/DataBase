@@ -1,4 +1,5 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Edelman Vásquez>
 -- Create date: <2022-10-25>
 -- Description:	<SP edición de guías desde carrito de compras>
@@ -64,26 +65,16 @@ BEGIN
 			END
 
 			--Inicio fix 20240605 para evitar revaorizar guías que hayan aplicado algun beneficio de clubforza
-			DECLARE @useclubforzabenefit bit =0;
-			SELECT @useclubforzabenefit='TRUE'
-			FROM membershipsubscriptionlog
-			WHERE LogguideNumber=@GuideNumber
-			AND LogguideSerie=@GuideSerie;
-
-			IF @useclubforzabenefit='FALSE'
-			BEGIN
-				EXEC [dbo].[spws_revalue_guide]
-					@GuideSerie   = @GuideSerie
-					,@GuideNumber = @GuideNumber
-					,@CodeApp = ''
-					,@Format =''
-					,@CalculateTaxes = 'false' -- Dado a nuevas tarifas, no cálcular impuestos
-					,@IdModule = 1
-					,@SetUpdate = 'true' -- Actualizar registros
-					,@Token = @Token
-					,@ParIsCreditCard = @IsTCCPaid
-					,@UseMembership = 0
-			END
+			EXEC [dbo].[spws_revalue_guide]
+				@GuideSerie   = @GuideSerie
+				,@GuideNumber = @GuideNumber
+				,@CodeApp = ''
+				,@Format =''
+				,@CalculateTaxes = 'false' -- Dado a nuevas tarifas, no cálcular impuestos
+				,@IdModule = 1
+				,@SetUpdate = 'true' -- Actualizar registros
+				,@Token = @Token
+				,@ParIsCreditCard = @IsTCCPaid
 			--Fin fix 20240605
 
 			COMMIT TRANSACTION

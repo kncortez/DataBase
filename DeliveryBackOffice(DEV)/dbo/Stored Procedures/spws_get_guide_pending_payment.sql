@@ -3,10 +3,6 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-13>
--- Description: <Se agrega el filtro para procesar guias unicamente por pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,

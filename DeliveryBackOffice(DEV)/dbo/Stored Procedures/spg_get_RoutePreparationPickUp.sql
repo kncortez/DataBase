@@ -14,6 +14,7 @@
 -- Update date: <2022-07-20>
 -- Description:	< Cambio de agrupaciones para evitar duplicados (Falsos positivos) >
 -- =============================================
+-- =============================================
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-05-28>
 -- Description: < Se agrego filtro por pais, por defecto GT>

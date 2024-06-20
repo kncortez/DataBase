@@ -3,10 +3,6 @@
 -- Create date: <2021-12-21>
 -- Description:	<Obtiene el itinerario de puntos de visita>
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-17>
--- Description: <Se agrega filtro por pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetVisitPointItineraryByVisitPoint]
 	@weekday int,
     @IdCountry VARCHAR(2) = 'GT'

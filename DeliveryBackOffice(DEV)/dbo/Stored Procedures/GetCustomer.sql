@@ -3,10 +3,6 @@
 -- Create date: <2021-29-10>
 -- Description:	<Obtiene el listado de clientes>
 -- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-06-06>
--- Description: <Se agrego filtro por pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[GetCustomer]
 	-- Add the parameters for the stored procedure here
 	@IdCustomer INT = -1,

@@ -7,10 +7,6 @@
 -- Create date: <2020-05-27>
 -- Description:	<Devuelve información para preparación de ruta>
 -- =============================================
--- Modified:	<Brandon, Pedroza>
--- Create date: <2024-06-18>
--- Description:	<Se agrega parametro para filtrar guias por pais de origen>
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RoutePreparation]
 		@Token AS VARCHAR(50)    = 'ad1a2328ed27ea99622f68deae5d9976',
 		@Rol AS BIGINT 			 =  1,
@@ -23,36 +19,37 @@ AS
 --
 --exec [dbo].[spg_get_RoutePreparation] @Manifest = 'FM1003'
 BEGIN
-		-- Crear tabla temporal
-		CREATE TABLE #TempResults (
-			Guide VARCHAR(150),
-			Name VARCHAR(200),
-			Address VARCHAR(300),
-			Alter_Address VARCHAR(2000),
-			Zone VARCHAR(50),
-			Town VARCHAR(100),
-			Department VARCHAR(100),
-			DateSettlement VARCHAR(50),
-			Delivery_Max_Date DATETIME,
-			Courier_Route VARCHAR(50),
-			Courier_Name VARCHAR(100),
-			Dispatched_Date DATETIME,
-			Manifest_Number VARCHAR(100),
-			Date_Created DATETIME,
-			Sender_Fullname VARCHAR(200),
-			Ticket_Number VARCHAR(50),
-			Pieces_Dry INT,
-			Pieces_Cold INT,
-			Status_Order_Id VARCHAR(100),
-			Receiver_Phone VARCHAR(50),
-			Package_Type VARCHAR(100),
-			Rack_Position VARCHAR(100),
-			Contact_Confirmed BIT,
-			Contact_Instructions VARCHAR(1000),
-			CUI VARCHAR(50),
-			SocialSecurityID VARCHAR(50),
-			IdCountry NVARCHAR(2)
-		);
+-- Crear tabla temporal
+CREATE TABLE #TempResults (
+	Guide VARCHAR(150),
+	Name VARCHAR(200),
+	Address VARCHAR(300),
+	Alter_Address VARCHAR(2000),
+	Zone VARCHAR(50),
+	Town VARCHAR(100),
+	Department VARCHAR(100),
+	DateSettlement VARCHAR(50),
+	Delivery_Max_Date DATETIME,
+	Courier_Route VARCHAR(50),
+	Courier_Name VARCHAR(100),
+	Dispatched_Date DATETIME,
+	Manifest_Number VARCHAR(100),
+	Date_Created DATETIME,
+	Sender_Fullname VARCHAR(200),
+	Ticket_Number VARCHAR(50),
+	Pieces_Dry INT,
+	Pieces_Cold INT,
+	Status_Order_Id VARCHAR(100),
+	Receiver_Phone VARCHAR(50),
+	Package_Type VARCHAR(100),
+	Rack_Position VARCHAR(100),
+	Contact_Confirmed BIT,
+	Contact_Instructions VARCHAR(1000),
+	CUI VARCHAR(50),
+	SocialSecurityID VARCHAR(50),
+	IdCountry NVARCHAR(2)
+);
+
 IF (@Guide IS NOT NULL AND LEN(@Guide) > 0)
 BEGIN
 		INSERT INTO #TempResults
@@ -311,9 +308,11 @@ BEGIN
 		(serv.Guide_Serie + CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide) 	
 END
 
+-- Realizar SELECT de los resultados temporales
 SELECT * FROM #TempResults
 WHERE IdCountry = @IdCountry
 
+-- Eliminar la tabla temporal
 DROP TABLE #TempResults
 	
 END

@@ -1,8 +1,4 @@
-﻿-- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2024-06-10>
--- Description:	<Se agrega paramtro para filtrar articulos por pais>
--- =============================================
+﻿
 CREATE PROCEDURE [dbo].[sp_get_article_by_typearticle_from_catarticle]
 	@IdTypeArticle INT,
 	@IdCountry AS NVARCHAR(2)= 'GT'

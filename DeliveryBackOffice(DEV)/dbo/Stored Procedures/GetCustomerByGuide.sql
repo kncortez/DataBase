@@ -8,15 +8,10 @@
 -- Create date: <21/06/2022>
 -- Description:	<Se agrega otra trabla en donde se obtiene información de recolección de la guía>
 -- =============================================
--- Author:      <Daniel Ramirez>
--- Create date: <2024-06-11>
--- Description: <Se agrega filtro por pais, por defecto >
--- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerByGuide]
 	-- Add the parameters for the stored procedure here
 	@GuideSerie NVARCHAR(2),
-	@GuideNumber INT,
-    @IdCountry VARCHAR(2) = 'GT'
+	@GuideNumber INT
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -34,7 +29,6 @@ BEGIN
 		ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
 	WHERE do.Guide_Serie = @GuideSerie
 	AND do.Guide_Number = @GuideNumber
-    AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry;
 
 	--Obtener hub origen
 	DECLARE @Hub VARCHAR(5)
@@ -55,9 +49,9 @@ BEGIN
 		ON HB.HeaderCode = ISNULL(twn.HeaderCode, twc.HeaderCode)
 	LEFT JOIN dbo.HubLogistics hub WITH (NOLOCK)
 		ON hub.HubAbbreviation = HB.HUB
+
 	WHERE dsg.Guide_Serie = @GuideSerie
-	AND dsg.Guide_Number = @GuideNumber
-    AND IIF(dsg.SenderCountryId IS NULL, 'GT', dsg.SenderCountryId) = @IdCountry;
+	AND dsg.Guide_Number = @GuideNumber;
 
 	--Table 1 Información de la guía
 	SELECT
@@ -70,9 +64,9 @@ BEGIN
 	   ,do.Sender_Lat SenderLatitude
 	   ,do.Sender_Lng SenderLongitude
 	   ,ISNULL(do.IsReturn, 0) IsReturn
+
 	FROM DeliveryOrder do WITH (NOLOCK)
 	WHERE do.Guide_Serie = @GuideSerie
 	AND do.Guide_Number = @GuideNumber
-    AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry;
 
 END

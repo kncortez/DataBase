@@ -4,6 +4,10 @@
 -- Create date: <2021-04-22>
 -- Description: <Devuelve un tarifa todo destino identificada por id>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<Se define que la moneda sea tomada de la tabla CatCurrencyCOD>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_get_Rate_Data]
     @IdRate INT,
     @TypeRateId INT
@@ -22,17 +26,17 @@ BEGIN
            rd.RateTypeId [TypeRate],
            rd.FragilRate [FragilRate],
            rd.Attempt [Attempt],
-           rd.CurrencyId [CurrencyId],
+           rd.IdCurrency [CurrencyId],
            rd.CollectRate [CollectRate],
-           cr.Currency_Name [Currency],
+           cr.Name [Currency],
            rd.PiecesIncluded [PiecesIncluded],
 		   rd.CutOffDate [CutOffDate],
 		   ISNULL(rd.CatBusinessSegmentId, -1) [CatBusinessSegmentId],
 		   ISNULL(rd.PackagesRangeId, -1) [PackagesRangeId]
     FROM dbo.RateHeader rd
-        LEFT JOIN dbo.DeliveryCurrency cr
-            ON cr.Currency_Id = rd.CurrencyId
-    WHERE rd.RheId = @IdRate;
+        LEFT JOIN dbo.CatCurrencyCOD cr
+            ON cr.IdCatCurrencyCOD = rd.IdCurrency
+    WHERE rd.RheId = @IdRate; 
 
 
     IF @TypeRateId = 1

@@ -85,98 +85,6 @@ SET @AccountStatement =	(SELECT
 			DECLARE @letraFinal NVARCHAR(1)
 			SET @letraFinal = CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65);  -- Obtener un número entre 65 (A) y 90 (Z)
 
-
-			
-
-	-- Insertar registro de los productos que se adquirieron
-	INSERT [dbo].[Product] (
-	                        [CatProductId],
-							[ProductCost],
-							[ProductPurchaseEmail],
-							[ProductGiftShippingEmail],
-							[ProductCustomerId],
-							[ProductAccountId],
-							[ProductCodeOfReference],
-							[ProductVisitPointclientByClientPortfolioId],
-							[ProductInvoiceName],
-							[ProductTaxIdNumber],
-							[ProductFiscalAddress], 
-							[ProductCustomerPaymentId],
-							[ProductIsAutoRenewable],
-							[ProductMaxServiceFixedValue],
-							[ProductActualServiceCount],
-							[ProductExpirationDate],
-							[ProductDiscountValue],
-							[ProductCatProductSupplierId],
-							[ProductCatPointsAccumulation],
-							[ProductCatConfigPointsId],
-							[ProductCatSystemId],
-							[ProductCatModuleId],
-							[ArticleSAPId],
-							[RowStatus], 
-							[TokenCreated],
-							[DateCreated],
-							[ActivationCode])
-				SELECT 
-				        CP.IdCatProduct,
-						CP.CatProductCost,
-						@ProductPurchaseEmail,
-						PL.ProductGiftShippingEmail,
-						@IdCustomer,
-						@IdAccount, 
-						NULL,
-						NULL,
-						@ProductInvoiceName,
-						@ProductTaxIdNumber,
-						@ProductFiscalAddress,
-						@CardId,--identifcador de tarjeta
-						0,--es autorenovable
-						0,
-						1,
-						GETDATE()+(ISNULL(CP.CatProductVality,1)*30),
-						0,--descuento
-						CP.CatProductSupplierId,
-						CP.PointsAccumulation,
-						CP.CatConfigPointsId,
-						18,
-						22,
-						CP.ArticleSAPId, 
-						CASE 
-						    WHEN PL.IsGift = 1 AND (SELECT  ISNULL(res.UstStatus, 'N/A')
-														FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
-															INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
-																ON rus.RusIdUser = usr.UsrIdUser
-															LEFT JOIN [dbo].UserSystemRestriction res WITH (NOLOCK)
-																ON res.UstIdUser = rus.RusIdUser
-																   AND res.UstIdSystem = rus.RusIdSystem
-															LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
-																ON rua.RuaIdUser = usr.UsrIdUser
-																   AND rua.RuaRowStatus = 1
-															INNER JOIN [dbo].Account              ac WITH (NOLOCK)
-																ON ac.AccIdAccount = rua.RuaIdAccount
-														WHERE usr.UsrEmail = PL.ProductGiftShippingEmail AND rus.RusIdSystem = 1
-															  AND ac.AccRowStatus = 1) ='ACTIVE'
-							
-							THEN 1
-							WHEN PL.IsGift = 0 AND @IdAccount IS NOT NULL AND @AccountStatement = 'ACTIVE'  THEN 1
-							ELSE 0
-							END,
-						@Token,
-						GETDATE(),
-						(SELECT TOP 1
-							CASE 
-								WHEN number < 8 THEN CHAR(number + 65)  -- Convertir número a letra (A=65, B=66, ..., H=72)
-								ELSE CHAR(number + 73)  -- Saltar las letras "I" y "O"
-							END
-						 FROM master.dbo.spt_values
-						 WHERE type = 'P' AND number BETWEEN 0 AND 25
-						 ORDER BY NEWID()
-						) + RIGHT('000000' + CAST(CP.IdCatProduct AS NVARCHAR(6)), 6) + CHAR((ABS(CHECKSUM(NEWID())) % 26) + 65)
-				FROM @TblProductsList PL 
-				INNER JOIN dbo.CatProduct CP WITH(NOLOCK)
-				ON PL.IdCatProduct = CP.IdCatProduct 
-			
-
 			-------------------------Facturación------------------------------------------------------------
 
 			 DECLARE @inv_vpCodeOfReferences AS INT =
@@ -252,7 +160,7 @@ SET @AccountStatement =	(SELECT
         WHERE [Name] = 'SUSCRIPCION MENSUAL A' COLLATE Latin1_General_CI_AI
     );
    
-       
+       SELECT TOP 1 * FROM dbo.Subscription
         
     IF (@ProductPurchaseEmail = '')
     BEGIN
@@ -260,32 +168,16 @@ SET @AccountStatement =	(SELECT
         SET @ProductPurchaseEmail =
         (
             SELECT TOP 1
-                   P.ProductPurchaseEmail
-            FROM [DeliveryBackOffice].[dbo].[Product] P
-            WHERE [P].[ProductAccountId] = ISNULL(@IdAccount,0)
-            ORDER BY P.DateCreated DESC
+                   S.ProductGiftShippingEmail
+            FROM [DeliveryBackOffice].[dbo].[Subscription] S WITH(NOLOCK)
+			WHERE [S].[AccountId] = ISNULL(@IdAccount,0)
+            ORDER BY S.DateCreated DESC
 
         );
 
     END;
-
-	 SELECT 
-                   @inv_amount            = SUM(P.CatProductCost)
-                -- , @inv_cli_email         = P.ProductPurchaseEmail
-                -- , @inv_cli_adress        = P.ProductFiscalAddress
-             --    , @inv_cli_nit           = REPLACE(P.ProductTaxIdNumber, '-', '')
-             --    , @inv_cli_name          = P.ProductInvoiceName
-                 , @inv_IVA               = SUM(P.CatProductCost - (P.CatProductCost / 1.12))
-               --  , @Descriptionp          = CP.CatProductName
-               --  , @IdMemberOrSuscription = P.CatProductId
-               --  , @MembershipId          = P.CatProductId
-            FROM @TblProductsList PL 
-			      INNER JOIN [DeliveryBackOffice].[dbo].[CatProduct] P WITH (NOLOCK)
-				    ON PL.IdCatProduct = P.IdCatProduct
-                 
 				
-            
-			
+	
          
 
             SELECT @Authorizacion = MOL.[TransactionOrder]
@@ -305,88 +197,114 @@ SET @AccountStatement =	(SELECT
                 ORDER BY SOL.DateCreated DESC;
 
 
-       INSERT INTO [dbo].[invoiceHeader]
-        (
-            inv_vpCodeOfReferences
-          , inv_cmp_nit
-          , inv_cli_name
-          , inv_cli_adress
-          , inv_cli_nit
-          , inv_cli_email
-          , inv_date
-          , inv_IVA
-          , inv_amount
-          , inv_status
-          , inv_dateRegister
-          , inv_tokenRegister
-          , inv_type
-        )
-        VALUES
-        (@inv_vpCodeOfReferences, @inv_cmp_nit, @inv_cli_name, @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
-       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1);
+  --     INSERT INTO [dbo].[invoiceHeader]
+  --      (
+  --          inv_vpCodeOfReferences
+  --        , inv_cmp_nit
+  --        , inv_cli_name
+  --        , inv_cli_adress
+  --        , inv_cli_nit
+  --        , inv_cli_email
+  --        , inv_date
+  --        , inv_IVA
+  --        , inv_amount
+  --        , inv_status
+  --        , inv_dateRegister
+  --        , inv_tokenRegister
+  --        , inv_type
+  --      )
+  --      VALUES
+  --      (@inv_vpCodeOfReferences, @inv_cmp_nit, @inv_cli_name, @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
+  --     , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1);
 
 
 
-        SET @dti_fk_header = SCOPE_IDENTITY();
+  --      SET @dti_fk_header = SCOPE_IDENTITY();
 
-        INSERT INTO [dbo].[invoiceDetail]
-        (
-            dti_fk_header
-          , dti_identification
-          , dti_category
-          , dti_quantity
-          , dti_measurement
-          , dti_priceUnit
-          , dti_description
-          , dti_IVA
-          , dti_amount
-          , dti_dateRegister
-          , dti_tokenRegister
-          , SAPCode
-          , SendToInvoice
-          , MembershipId
-          , SubscriptionId
-        )
-        SELECT
-           @dti_fk_header,
-		   @dti_identification,
-		   @dti_category,
-		   @dti_quantity,
-		   @dti_measurement,
-		   CP.CatProductCost,
-           CP.CatProductDescription,
-		   CP.CatProductCost - (CP.CatProductCost / 1.12),
-		   CP.CatProductCost,
-		   @dti_dateRegister,
-		   @dti_tokenRegister,
-		   @SAPCode, 
-		   @SendToInvoice,
-           NULL, 
-		   NULL--PL.IdCatProduct
-		FROM @TblProductsList PL 
-			INNER JOIN [dbo].[CatProduct] CP WITH(NOLOCK)
-		ON PL.IdCatProduct = CP.IdCatProduct 
+  --      INSERT INTO [dbo].[invoiceDetail]
+  --      (
+  --          dti_fk_header
+  --        , dti_identification
+  --        , dti_category
+  --        , dti_quantity
+  --        , dti_measurement
+  --        , dti_priceUnit
+  --        , dti_description
+  --        , dti_IVA
+  --        , dti_amount
+  --        , dti_dateRegister
+  --        , dti_tokenRegister
+  --        , SAPCode
+  --        , SendToInvoice
+  --        , MembershipId
+  --        , SubscriptionId
+  --      )
+		--SELECT 
+		--   @dti_fk_header,
+		--   @dti_identification,
+		--   @dti_category,
+		--   @dti_quantity,
+		--   @dti_measurement,
+		--     (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
+		--   ,CS.SubscriptionName	
+		--   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / 1.12)
+		--   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
+		--   ,@dti_dateRegister
+		--   ,@dti_tokenRegister
+		--   ,@SAPCode
+		--   ,@SendToInvoice
+		--   ,NULL IdMembership
+  --         ,S.IdSubscription	
+		--FROM @TblProductsList PL 
+		--   INNER JOIN [dbo].[Subscription] S WITH (NOLOCK)
+		--	 ON PL.IdCatProduct = S.CatSubscriptionId
+  --         INNER JOIN [dbo].[CatSubscription]  CS WITH (NOLOCK)
+  --           ON S.CatSubscriptionId = CS.IdCatSubscription
+		--   INNER JOIN [dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
+		--	 ON  S.IdSubscription = SPL.SubscriptionId
+  --      UNION ALL
+		--	SELECT 
+		--   @dti_fk_header,
+		--   @dti_identification,
+		--   @dti_category,
+		--   @dti_quantity,
+		--   @dti_measurement,
+		--   CS.MembershipCost	
+		--   ,CS.MembershipName	
+		--   ,CS.MembershipCost -((CS.MembershipCost) / 1.12)
+		--   ,CS.MembershipCost
+		--   ,@dti_dateRegister
+		--   ,@dti_tokenRegister
+		--   ,@SAPCode
+		--   ,@SendToInvoice
+		--   ,S.IdMembership
+  --         ,NULL IdSubscription	 
+		-- FROM @TblProductsList PL 
+		--    INNER JOIN  [dbo].[Membership] S WITH (NOLOCK)
+		--	     ON PL.IdCatProduct = S.CatMembershipId
+  --          INNER JOIN dbo.CatMembership  CS WITH (NOLOCK)
+  --               ON S.CatMembershipId = CS.IdCatMembership
+		--	INNER JOIN  [dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
+		--		 ON  S.IdMembership = SPL.MembershipId	
+
+
 		
-		INSERT INTO [dbo].[InOutOfMoneyDetail]
-        (
-            [io_type]
-          , [io_vpCodeOfReferences]
-          , [io_ticket]
-          , [io_amount]
-          , [io_status]
-          , [io_invoice]
-          , [io_registryToken]
-          , [io_registryDate]
-        )
-        VALUES
-       (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token, GETDATE());
+		--INSERT INTO [dbo].[InOutOfMoneyDetail]
+  --      (
+  --          [io_type]
+  --        , [io_vpCodeOfReferences]
+  --        , [io_ticket]
+  --        , [io_amount]
+  --        , [io_status]
+  --        , [io_invoice]
+  --        , [io_registryToken]
+  --        , [io_registryDate]
+  --      )
+  --      VALUES
+  --     (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token, GETDATE());
 
     ------------------------------------------------------------------------------------
     ------------------------------------------------------------------------------------
-			
-
-	
-		
 
 		-- Si se puede finalizar el carrito de compras
 		IF(EXISTS(Select Top 1 1 From [dbo].[MarketplaceCartDetail] a	WITH(NOLOCK)  

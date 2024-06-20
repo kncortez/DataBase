@@ -9,9 +9,13 @@ BEGIN
             (
                 SELECT Id_bank FROM DeliveryBank WHERE Name = 'BANCO DE DESARROLLO RURAL'
             );
+
+	DECLARE @IdCountry NVARCHAR(2)= 'GT'
+	set @IdCountry = (select Id_country from DeliveryBackOffice.dbo.DeliveryBank A1 WITH(NOLOCK) where A1.Id_status = 1 AND A1.Id_bank = @IdBank ) 
+
     DECLARE @Excluded INT = 0;
     DECLARE @EnabledRow INT = 1;
-    DECLARE @IdCountry NVARCHAR(2) = N'GT';
+    --DECLARE @IdCountry NVARCHAR(2) = N'GT';
     DECLARE @CatConceptCODDeposit INT = 2;
     DECLARE @CommissionId INT;
     DECLARE @BatchTypeCOD_AC INT =
@@ -19,12 +23,14 @@ BEGIN
                 SELECT CatBatchTypeCODId
                 FROM CatBatchTypeCOD WITH (NOLOCK)
                 WHERE Name = 'Acumulado'
+				and IIF(IdCountry is null,'GT',IdCountry) = @IdCountry
             );
     DECLARE @BatchTypeCOD_DET INT =
             (
                 SELECT CatBatchTypeCODId
                 FROM CatBatchTypeCOD WITH (NOLOCK)
                 WHERE Name = 'Detallado'
+				and IIF(IdCountry is null,'GT',IdCountry) = @IdCountry
             );
     DECLARE @CollectId INT;
     DECLARE @RecolectionId INT;

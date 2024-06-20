@@ -5,7 +5,7 @@
 -- =============================================
 -- Author:      <Daniel, Ramirez>
 -- Update date: <2024-06-17>
--- Description: <Se agrega filtro por multipais, por defecto GT>
+-- Description: <Se agrega filtro >
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_schedule_demand_pickup]
 	@CollectionProvince AS NVARCHAR(200),
@@ -20,7 +20,7 @@ BEGIN
 IF @CollectionProvince = '-1' BEGIN
 
 	IF @TypePickup = 1 BEGIN
-
+          print 'acas'
 	SELECT	IIF(sp.IsScheduled = 0, CONCAT('RDG', sm.IdServiceManagement), CONCAT('RPG', sm.IdServiceManagement) ) [ORDEN DE RECOLECCION], 
 			'' [RUTA], 
 			IIF(ctv.Name = 'Camión', 'Paquete grande', IIF(ctv.Name = 'Panel', 'Paquete mediano', IIF(ctv.Name = 'Motocicleta', 'Paquete pequeño', ''))) [DESCRIPCION DEL PAQUETE], 
@@ -74,7 +74,7 @@ IF @CollectionProvince = '-1' BEGIN
 	END
 
 	ELSE BEGIN
-
+            PRINT 'ACA'
 	SELECT	IIF(sp.IsScheduled = 0, CONCAT('RDG', sm.IdServiceManagement), CONCAT('RPG', sm.IdServiceManagement) ) [ORDEN DE RECOLECCION], 
 			IIF(cr.CodeRoute is null, '',cr.CodeRoute) [RUTA],		
 			'Caja' [DESCRIPCION DEL PAQUETE], 

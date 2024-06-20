@@ -68,7 +68,7 @@
     <Folder Include="dbo\Sequences\" />
     <Folder Include="Security\" />
   </ItemGroup>
-<ItemGroup>
+  <ItemGroup>
     <Build Include="dbo\User Defined Types\TblWeightRate.sql" />
     <Build Include="dbo\User Defined Types\TblVPItinerary.sql" />
     <Build Include="dbo\User Defined Types\TblVPFrequency.sql" />
@@ -83,7 +83,6 @@
     <Build Include="dbo\User Defined Types\TblServiceRequest.sql" />
     <Build Include="dbo\User Defined Types\TblServiceExecutionProcess.sql" />
     <Build Include="dbo\User Defined Types\TblSalePackageMarketPlace.sql" />
-    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
     <Build Include="dbo\User Defined Types\TblRoutesPreparation.sql" />
     <Build Include="dbo\User Defined Types\TblProductMarketPlace2.sql" />
@@ -1057,7 +1056,6 @@
     <Build Include="dbo\Stored Procedures\spRS_GetCreditNotes.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetConcessionaireGuides.sql" />
     <Build Include="dbo\Stored Procedures\spRS_GetCDCTransactions.sql" />
-    
     <Build Include="dbo\Stored Procedures\spRS_CODReport.sql" />
     <Build Include="dbo\Stored Procedures\spNS_UpdateAttemptsRemainingNotificationQueue.sql" />
     <Build Include="dbo\Stored Procedures\spNS_SetNotificationsQueueItemAsSent.sql" />
@@ -1428,7 +1426,6 @@
     <Build Include="dbo\Stored Procedures\GetWidgetData.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookTrackingQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForJSON.sql" />
-    
     <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDeliveredGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetVoucherSettlementDelivered.sql" />
@@ -1473,7 +1470,6 @@
     <Build Include="dbo\Stored Procedures\GetReasons.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData_mejorado.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData_bnhl.sql" />
-    <Build Include="dbo\Stored Procedures\GetQualityControlData_antes.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData_N.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Stored Procedures\GetProductsByCategory.sql" />
@@ -1501,7 +1497,6 @@
     <Build Include="dbo\Stored Procedures\GetInternalLogIn.sql" />
     <Build Include="dbo\Stored Procedures\GetInformationGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetInfoFAC.sql" />
-    
     <Build Include="dbo\Stored Procedures\GetImagePromotional.sql" />
     <Build Include="dbo\Stored Procedures\GetHubsbyLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetHubsToTrack.sql" />
@@ -1561,7 +1556,6 @@
     <Build Include="dbo\Stored Procedures\GetCustomerGuideListByStatus.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerByGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomer.sql" />
-    
     <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenSinTokenLog.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenOld.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierPhoneToken.sql" />
@@ -1581,12 +1575,10 @@
     <Build Include="dbo\Stored Procedures\GetCityPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetCatSeries.sql" />
     <Build Include="dbo\Stored Procedures\GetCODUnifiedRouteSettlement.sql" />
-  
     <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail.sql" />
-    
     <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingData.sql" />
     <Build Include="dbo\Stored Procedures\GetArticlesSAP.sql" />
@@ -1687,8 +1679,8 @@
     <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
-    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />   
-    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" /> 
+    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
     <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
     <Build Include="dbo\Stored Procedures\GetImagePromotional.sql" />
@@ -1704,9 +1696,22 @@
     <Build Include="dbo\Stored Procedures\spGetLoginMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetCatalogExcMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetCatalogTypePieceMC.sql" />
-    <Build Include="dbo\User Defined Types\TblCustomerType.sql" />    
-    <Build Include="dbo\User Defined Types\TblCustomer.sql" />    
-    <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />    
+    <Build Include="dbo\User Defined Types\TblCustomerType.sql" />
+    <Build Include="dbo\User Defined Types\TblCustomer.sql" />
+    <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
+    <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
+    <Build Include="dbo\Tables\TEMP_Rate_TST.sql" />
+    <Build Include="dbo\Tables\customer_68324.sql" />
+    <Build Include="dbo\Stored Procedures\supportSetVisitPointByClientPortfolio.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_list_provinces_by_header_code_v2.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_wo.sql" />
+    <Build Include="dbo\Stored Procedures\spws_get_daily_route_old.sql" />
+    <Build Include="dbo\Stored Procedures\sps_Validate_Currency_1.sql" />
+    <Build Include="dbo\Stored Procedures\sps_Validate_Country_1.sql" />
+    <Build Include="dbo\Stored Procedures\sps_set_status_order_by_guide_linehauls_bnhl.sql" />
+    <Build Include="dbo\Stored Procedures\GetQualityControlData_old.sql" />
+    <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new_1.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierInfoWithoutTokenLog_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

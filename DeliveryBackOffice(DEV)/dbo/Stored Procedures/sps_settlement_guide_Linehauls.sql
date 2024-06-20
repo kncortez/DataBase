@@ -62,12 +62,13 @@ BEGIN
 
 
 				   		UPDATE DeliveryBackOffice.dbo.DeliveryOrderPiece
-				SET StatusOrderId = 11 --retornado a Forza 
+				SET StatusOrderId = 11 --retornado a Forza 	
 				FROM DeliveryBackOffice.dbo.DeliveryOrderPiece DOP
 				INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DRO
 				ON DOP.GuideSerie = DRO.Guide_Serie AND DOP.GuideNumber = DRO.Guide_Number
 				WHERE DOP.GuideSerie = @GuideSerie AND DOP.GuideNumber = @GuideNumber	and DOP.NoPiece = @NoPiece
 				AND IIF(DRO.SenderCountryId IS NULL, 'GT',DRO.SenderCountryId)=@IdCountry
+
 
 			-- registrar último checkpoint de devolución
 			UPDATE DeliveryBackOffice.dbo.DeliveryOrder SET StatusOrderId = 11 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber

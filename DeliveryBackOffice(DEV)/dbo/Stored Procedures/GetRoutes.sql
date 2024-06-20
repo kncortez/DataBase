@@ -1,13 +1,8 @@
--- =============================================
--- Modified:	<Brandon Pedroza>
--- Create date: <2024-06-04>
--- Description:	<Se agregar parametro para filtrar por pais>
--- =============================================
+﻿
 CREATE PROCEDURE [dbo].[GetRoutes] @RouteChar AS NVARCHAR,
 		@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
-
 
     DECLARE @RouteType INT;
 
@@ -52,37 +47,40 @@ BEGIN
             SELECT CR.IdRoute IdRoute,
                    CR.CodeRoute CodeRoute
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-            LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
-				ON CR.IdTownship = TW.IdTownship
-			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
-				ON PR.IdProvince = TW.IdProvince
+			--LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
+			--	ON CR.IdTownship = TW.IdTownship
+			--LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
+			--	ON PR.IdProvince = TW.IdProvince
             WHERE CR.IdTypeRoute = @RouteType
-            AND CR.RowStatus = 'TRUE'
-			AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
+			AND CR.RowStatus = 'TRUE'
+			AND-- IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
+			   ISNULL(CR.CountryId, 'GT')=@IdCountry;
         ELSE
             SELECT CR.IdRoute IdRoute,
                    CR.CodeRoute CodeRoute
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
-				ON CR.IdTownship = TW.IdTownship
-			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
-				ON PR.IdProvince = TW.IdProvince
-            WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
+			--LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
+			--	ON CR.IdTownship = TW.IdTownship
+			--LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
+			--	ON PR.IdProvince = TW.IdProvince
+            WHERE LEFT(UPPER(CR.CodeRoute), 1) = @RouteChar
 			AND CR.RowStatus = 'TRUE'
-			AND ISNULL(CR.CountryId, 'GT')=@IdCountry;
+			AND --IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
+			    ISNULL(CR.CountryId, 'GT')=@IdCountry;
 
     END TRY
     BEGIN CATCH
         SELECT CR.IdRoute IdRoute,
                CR.CodeRoute CodeRoute
         FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
-				ON CR.IdTownship = TW.IdTownship
-			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
-				ON PR.IdProvince = TW.IdProvince
-        WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
-        AND CR.RowStatus = 'TRUE'
-		AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
+			--LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
+			--	ON CR.IdTownship = TW.IdTownship
+			--LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
+			--	ON PR.IdProvince = TW.IdProvince
+        WHERE LEFT(UPPER(CR.CodeRoute), 1) = @RouteChar
+		AND CR.RowStatus = 'TRUE'
+		AND --IIF(CR.CountryId IS NULL, 'GT',CR.CountryId)=@IdCountry;
+		   ISNULL(CR.CountryId, 'GT')=@IdCountry;
     END CATCH;
 
 END;

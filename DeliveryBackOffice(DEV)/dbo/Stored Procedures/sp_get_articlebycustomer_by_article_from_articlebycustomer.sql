@@ -1,9 +1,4 @@
-﻿-- =============================================
--- Modified:	<Brandon, Pedroza>
--- Update date: <2024-06-10>
--- Description:	<Se agrega paramtro para filtrar articulos por pais>
--- =============================================
-
+﻿
 
 CREATE PROCEDURE [dbo].[sp_get_articlebycustomer_by_article_from_articlebycustomer]
 	@IdArticle INT,

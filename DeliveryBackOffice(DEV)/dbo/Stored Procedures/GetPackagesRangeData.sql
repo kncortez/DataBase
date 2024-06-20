@@ -3,7 +3,7 @@
 -- Create date: <2023-02-10>
 -- Description:	<Obtiene información de los precios por segmento DESKTOP>
 -- =============================================
--- Modified:	<Brandon, Pedroza>
+-- Author:		<Brandon, Pedroza>
 -- Create date: <2024-06-11>
 -- Description:	<Se agrega paramtro para filtra rangos de paquete por pais>
 -- =============================================

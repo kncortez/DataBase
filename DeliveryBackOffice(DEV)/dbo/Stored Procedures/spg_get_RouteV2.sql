@@ -4,10 +4,6 @@
 -- Update date: <2021-12-30>
 -- Description:	<Devuelve información sobre las rutas, piloto y unidad >
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Update date: <2024-06-05>
--- Description: < Adicion de filtros por pais, por defect GT >
--- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteV2] 
 	@dateRoute AS DATE,
     @IdCountry AS NVARCHAR(2) = 'GT'

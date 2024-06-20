@@ -1,13 +1,4 @@
-﻿-- =============================================
--- Author:		<Marco, Jiménez>
--- Create date: <2021-06-22>
--- Description:	<Retorna las dimesiones y pesos de una pieza>
--- =============================================
--- Modified:	<Brandon, Pedroza>
--- Create date: <2024-06-04>
--- Description:	<Se agrega parametro para filtrar por pais>
--- =============================================
-CREATE PROCEDURE [dbo].[spg_get_DimensionWeightGuidePiece]
+﻿CREATE PROCEDURE [dbo].[spg_get_DimensionWeightGuidePiece]
     @numberPiece as int,
     @serieGuide as nvarchar(2),
     @numberGuide as int,
@@ -311,7 +302,8 @@ BEGIN
             END
         END
     END
-    	  ---devuelve respuesta si la guia pertenece a otro pais
+
+	  ---devuelve respuesta si la guia pertenece a otro pais
   SELECT 
 	1 AS 'StatusCode', 
 	'La guía '+ @serieGuide + convert(nvarchar,@numberGuide)+ ' pertenece a otro país' AS 'Description', 

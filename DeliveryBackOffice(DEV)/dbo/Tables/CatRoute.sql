@@ -10,12 +10,13 @@
     [DateCreated]  DATETIME      NOT NULL,
     [TokenUpdated] VARCHAR (50)  NULL,
     [DateUpdated]  DATETIME      NULL,
-    [CountryId]    VARCHAR (2)  NULL,
+    [CountryId]    NVARCHAR (2)  NULL,
     PRIMARY KEY CLUSTERED ([IdRoute] ASC),
     CONSTRAINT [FKRouteTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
-    CONSTRAINT [FKRouteTypeR] FOREIGN KEY ([IdTypeRoute]) REFERENCES [dbo].[CatTypeRoute] ([IdTypeRoute]),
-    CONSTRAINT [FKCatCountry]    FOREIGN KEY ([CountryId])  REFERENCES [dbo].[CatCountry]   ([IdCountry])
-    );
+    CONSTRAINT [FKRouteTypeR] FOREIGN KEY ([IdTypeRoute]) REFERENCES [dbo].[CatTypeRoute] ([IdTypeRoute])
+);
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatRoute', @level2type=N'COLUMN',@level2name=N'IdRoute'

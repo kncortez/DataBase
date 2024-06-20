@@ -1,4 +1,4 @@
-
+﻿
 -- =============================================
 -- =============================================
 -- Author:		<Edelman Vásquez>
@@ -237,7 +237,7 @@ BEGIN
 				   RTP.OrderNumber = @OrderNumber 
             ORDER BY M.DateCreated DESC;
 
-            SELECT @Authorizacion = MOL.[TransactionOrder]
+            SELECT @Authorizacion = MOL.[Authorization]
                  , @typeMoneyId   = MOL.TypeOfInOutOfMoneyId
             FROM [dbo].[MembershipPaymentLog] MOL WITH (NOLOCK)
             WHERE MembershipId = @IdMemberOrSuscription
@@ -308,6 +308,13 @@ BEGIN
 				    AND RTPS.TypeSalePackage ='MEMBERSHIP' 
 			WHERE RTPS.OrderNumber = @OrderNumber
 
+			IF(@inv_cli_adress='' OR @inv_cli_adress IS NULL)
+			BEGIN 
+			  SET   @inv_cli_adress = 'ciudad'
+			  SET   @inv_cli_name   =  @TaxName
+	          SET   @inv_cli_email  = @InvoiceEmail
+			  SET   @inv_cmp_nit    = @TaxId 
+			END
 			
 
         INSERT INTO [dbo].[invoiceHeader]

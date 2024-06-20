@@ -4,10 +4,6 @@
 -- Create date: <2020-02-15>
 -- Description:	<Devuelve todas las Pickups asociadas a una ruta >
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-11>
--- Description: <Se agrega filtro de pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[spg_Settlement_PickUp] 
 @Route     VARCHAR(100) = 'GUA001',
 @IdCountry VARCHAR(2) = 'GT'
@@ -272,7 +268,7 @@ BEGIN
             ON (
                    sbp.RouteAssigmentId = ra.IdRouteAssigment
                    AND sbp.IdCourier = ra.IdCurrierMan
-                   AND CAST(sbp.DatePrinted AS DATE) = @tiempo
+                   AND CAST(sbp.DatePrinted AS DATE) BETWEEN (GETDATE() - 7) AND GETDATE()
                )
     --inner join  EventService es on (es.ServiceManagementId = sm.IdServiceManagement )
     WHERE cr.CodeRoute = @Route

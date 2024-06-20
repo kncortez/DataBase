@@ -7,13 +7,13 @@ CREATE PROCEDURE [dbo].[sphdGetCurrencyByCountry] @IdCountry AS NVARCHAR(2) = 'G
 AS
 BEGIN
 SELECT CU.IdCatCurrencyCOD [IdCurrency],
-       DC.Currency_Name [Name],
-       DC.Currency_Symbol [Symbol],
-       DC.Currency_Name + ' - ' + DC.Currency_Symbol AS [Description],
-	   CU.CodeISO [CodeISO]
-FROM DeliveryCurrency DC WITH (NOLOCK)
-    INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
-        ON DC.IdCurrencyCOD = CU.IdCatCurrencyCOD 
-WHERE CU.RowStatus = 1
-      AND IIF(DC.Currency_IdCountry IS NULL, 'GT', DC.Currency_IdCountry) = @IdCountry
+           CU.Name [Name],
+           DC.Currency_Symbol [Symbol],
+           CU.Name + ' - ' + DC.Currency_Symbol AS [Description],
+           CU.CodeISO [CodeISO]
+    FROM DeliveryCurrency DC WITH (NOLOCK)
+        INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
+            ON DC.IdCurrencyCOD = CU.IdCatCurrencyCOD
+    WHERE CU.RowStatus = 1
+          AND IIF(DC.Currency_IdCountry IS NULL, 'GT', DC.Currency_IdCountry) = @IdCountry
 END

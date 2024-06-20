@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Carlos Cano>
 -- Create date: <02/09/2020>
 -- Description:	<Reporte de producto con tiempo de entrega vencido>
@@ -32,7 +31,7 @@ BEGIN
 	from DeliveryBackOffice.dbo.Warehouse w with(nolock)
 	inner join DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
 	on do.Guide_Number = w.Guide_Number and do.Guide_Serie = w.Guide_Serie
-	where Active = 1
+	where w.Active = 1 
 	and iif(do.SenderCountryId is null, 'GT', do.SenderCountryId)=@IdCountry
 	) AS SUBQ
 	--
