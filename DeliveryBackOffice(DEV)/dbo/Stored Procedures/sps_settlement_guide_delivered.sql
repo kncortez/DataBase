@@ -313,6 +313,8 @@ BEGIN
 			END
 			ELSE
 			BEGIN
+				/******EL MONTO NO SUFRE NINGUNA TAZA DE CAMBIO******/
+				SET @ResultDestination = @Amount
 				/**********NO SE DEBE CALCULAR TASA DE CAMBIO PARA GUIAS DOMESTICAS**************/
 				IF @TypeService = 'COD'
 				BEGIN
