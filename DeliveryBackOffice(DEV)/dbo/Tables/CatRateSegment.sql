@@ -8,9 +8,7 @@
     [CrsDateCreated]  DATETIME      NOT NULL,
     [CrsTokenUpdated] VARCHAR (50)  NULL,
     [CrsDateUpdated]  DATETIME      NULL,
-    [IdCountry]        VARCHAR(2)    NULL, 
-    PRIMARY KEY CLUSTERED ([CrsId] ASC),
-    CONSTRAINT [FK_CatRateSegment_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    PRIMARY KEY CLUSTERED ([CrsId] ASC)
 );
 
 
@@ -105,11 +103,3 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = NULL,
     @level2name = NULL
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'id del pais(Referncia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatRateSegment',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

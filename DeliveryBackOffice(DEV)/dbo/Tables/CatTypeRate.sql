@@ -7,9 +7,7 @@
     [DateCreated]  DATETIME      NOT NULL,
     [TokenUpdated] VARCHAR (50)  NULL,
     [DateUpdated]  DATETIME      NULL,
-    [IdCountry]    VARCHAR(2)    NULL, 
-    PRIMARY KEY CLUSTERED ([IdTypeRate] ASC),
-    CONSTRAINT [FK_CatTypeRate_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    PRIMARY KEY CLUSTERED ([IdTypeRate] ASC)
 );
 
 GO
@@ -40,11 +38,3 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los diferentes tipos de tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatTypeRate'
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id del pais(Referencia a idCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatTypeRate',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'
