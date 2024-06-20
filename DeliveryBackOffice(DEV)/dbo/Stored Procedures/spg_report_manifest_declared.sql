@@ -3,9 +3,15 @@
 -- Create date: <21/10/2020>
 -- Description:	<Reporte por manifiesto declarado>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <14/06/2024>
+-- Description:	<Filtro de pais origen>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_report_manifest_declared]
 	-- Add the parameters for the stored procedure here
-	@PreparationDate DATE = '2020-06-24'
+	@PreparationDate DATE = '2020-06-24',
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -32,6 +38,7 @@ select do.Preparation_Date,
 into #HeaderDeliveryOrder
 from DeliveryBackOffice.dbo.DeliveryOrder do
 where CONVERT(VARCHAR, Preparation_Date, 23) = CONVERT(VARCHAR, @PreparationDate, 23)
+AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 
 
 select det.Guide_Serie,det.Guide_Number,

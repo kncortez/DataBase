@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres,Ruiz>
 -- Create date: <2022-02-16>
 -- Description:	< Recupera datos de los servicios asignados a un piloto de Rabbit >
@@ -11,9 +8,14 @@
 -- Update date: <2022-02-21>
 -- Description:	< Adición de WITH(NOLOCK) para evitar posibles bloqueos >
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-06-13>
+-- Description: < Se agrego el filtro para obtener unicamente datos por pais, por defecto GT>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetServicesOfRabbitPhone]
-    @Phone NVARCHAR(50) = 'Guatemala'
+    @Phone NVARCHAR(50) = 'Guatemala',
+    @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -74,6 +76,7 @@ BEGIN
 		WHERE (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
+              AND IIF(ord.SenderCountryId IS NULL, 'GT', ord.SenderCountryId) = @IdCountry
 
 		-- TABLAS A DEVOLVER
 		-- DATOS DE COURIER
@@ -81,6 +84,7 @@ BEGIN
 		WHERE (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
+          AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 		-- DATOS DE SERVICIOS
 		SELECT
@@ -134,6 +138,7 @@ BEGIN
 		WHERE (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
+              AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 		AND spd.SettlementDate IS NULL
 		GROUP BY
 			srv.IdServiceManagement
@@ -216,6 +221,7 @@ BEGIN
 			  [sr].[UniqueCode] = @Phone)
 		and
 		spd.SettlementDate is null
+        AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 		-- MANIFIESTO
 		SELECT
@@ -233,6 +239,7 @@ BEGIN
 		WHERE (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
+          AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 		-- Totales de piezas por guía las cuales no han sido liquidadas
 		SELECT DISTINCT
@@ -278,6 +285,7 @@ BEGIN
 			  [sr].[UniqueCode] = @Phone)
 		and
 		spd.SettlementDate is null
+        AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 	END TRY
 	BEGIN CATCH
