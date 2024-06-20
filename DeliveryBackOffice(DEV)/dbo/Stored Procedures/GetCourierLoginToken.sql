@@ -4,7 +4,7 @@
 -- Create date: <2023-04-24>
 -- Description:	<Genera o obtiene el token para login en Courier App>
 -- =============================================
-ALTER PROCEDURE [dbo].[GetCourierLoginToken]
+CREATE PROCEDURE [dbo].[GetCourierLoginToken]
     -- Add the parameters for the stored procedure here
     @Phone NVARCHAR(20)
   , @NotificationEmail INT
