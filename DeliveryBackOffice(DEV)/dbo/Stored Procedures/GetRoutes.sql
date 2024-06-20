@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Modified:	<Brandon Pedroza>
 -- Create date: <2024-06-04>
 -- Description:	<Se agregar parametro para filtrar por pais>
@@ -7,6 +7,7 @@ CREATE PROCEDURE [dbo].[GetRoutes] @RouteChar AS NVARCHAR,
 		@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
+
 
     DECLARE @RouteType INT;
 
@@ -57,7 +58,7 @@ BEGIN
 				ON PR.IdProvince = TW.IdProvince
             WHERE CR.IdTypeRoute = @RouteType
             AND CR.RowStatus = 'TRUE'
-			AND IIF(PR.IdCountry IS NULL, 'GT',PR.IdCountry)=@IdCountry;
+			AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
         ELSE
             SELECT CR.IdRoute IdRoute,
                    CR.CodeRoute CodeRoute
@@ -68,7 +69,7 @@ BEGIN
 				ON PR.IdProvince = TW.IdProvince
             WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
 			AND CR.RowStatus = 'TRUE'
-			AND IIF(PR.IdCountry IS NULL, 'GT',PR.IdCountry)=@IdCountry;
+			AND ISNULL(CR.CountryId, 'GT')=@IdCountry;
 
     END TRY
     BEGIN CATCH
@@ -81,9 +82,10 @@ BEGIN
 				ON PR.IdProvince = TW.IdProvince
         WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
         AND CR.RowStatus = 'TRUE'
-		AND IIF(PR.IdCountry IS NULL, 'GT',PR.IdCountry)=@IdCountry;
+		AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
     END CATCH;
 
 END;
+
 
 

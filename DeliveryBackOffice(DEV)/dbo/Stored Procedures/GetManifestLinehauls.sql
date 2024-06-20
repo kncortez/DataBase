@@ -3,10 +3,15 @@
 -- Create date: <04/08/2022>
 -- Description:	<SP para obtener datos y pintarlos en grid de modulo de impresion y visor de manifiestos de Linehauls>
 -- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <05/06/2024>
+-- Description:	<Se agrega parametro para filtrar por pais asignado al courier>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetManifestLinehauls]
 
 	@DateFilter AS DATE = '',
-	@InternalUser AS BIGINT
+	@InternalUser AS BIGINT,
+	@IdCountry AS NVARCHAR(2) ='GT'
 
 AS
 BEGIN
@@ -190,6 +195,7 @@ BEGIN
 		CONVERT(DATE, LRP.DateCreated) = @DateFilter
 		AND 
 		LRPCD.RowStatus = 1
+		  AND IIF(SR.IdCountry IS NULL, 'GT',SR.IdCountry)= @IdCountry
 	GROUP BY
 		LRP.IdLinehaulRoutePreparation, 
 		[LRP].[StationDispatchedId],
@@ -379,6 +385,7 @@ BEGIN
 		CONVERT(DATE, LRP.DateCreated) = @DateFilter
 		AND 
 		LRPCD.RowStatus = 1
+		  AND IIF(SR.IdCountry IS NULL, 'GT',SR.IdCountry)= @IdCountry
 	GROUP BY
 		LRP.IdLinehaulRoutePreparation, 
 		[LRP].[StationDispatchedId],

@@ -17,6 +17,11 @@
 -- Create date: <2022-12-26>
 -- Description:	<Validar si se requiere uso de memrbesia y subscripción4>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-06-17>
+-- Description:	<Devuelve el valor de la moneda segun tarifario configurado por el cliente>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
@@ -119,6 +124,8 @@ BEGIN
 	END
 
 
+	--FIN FIx 20250603
+	------------------------------------------------------------------------------------------------------------------------------------
     ------- determinar el Tarifario y tipo de tarifario que se va a aplicar -------------------------------------------------------
 
     DECLARE @NewMainRates INT =
@@ -222,8 +229,12 @@ BEGIN
     DECLARE @IdTypeRate AS INT;
     DECLARE @WeigthLimit AS DECIMAL(12, 2) = 0;
     DECLARE @Currency AS VARCHAR(10) = '';
+	DECLARE @CurrencyId as INT;
     DECLARE @PiecesIncluded AS DECIMAL(12, 2) = 1;
     DECLARE @PriceWithCreditCard AS INT = 0;
+
+	DECLARE @DefaultCurrency AS INT = (select IdCatCurrencyCOD from DeliveryBackOffice.dbo.CatCurrencyCOD where CodeISO = 'GTQ')
+
 
     IF EXISTS
     (
@@ -239,6 +250,7 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Currency_Symbol
              , @PiecesIncluded = rh.PiecesIncluded
+			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
@@ -256,6 +268,7 @@ BEGIN
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Currency_Symbol
              , @PiecesIncluded = rh.PiecesIncluded
+			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
@@ -2729,6 +2742,7 @@ BEGIN
              , @FechaCompra                                                                  [FechaCompra]
              , @Currency                                                                     [Currency]
              , tr.ReturnRate                                                                 [ReturnRate]
+			 , @CurrencyId [CurrencyId]
         FROM @TempRate tr;
     END;
 

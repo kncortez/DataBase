@@ -4,10 +4,15 @@
 -- Create date: <2020-02-15>
 -- Description:	<Devuelve todas las Pickups asociadas a una ruta >
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_Settlement_PickUp] @Route VARCHAR(100) = 'GUA001'
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-11>
+-- Description: <Se agrega filtro de pais, por defecto GT>
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_Settlement_PickUp] 
+@Route     VARCHAR(100) = 'GUA001',
+@IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
-
     DECLARE @tiempo DATE =
             (
                 SELECT CAST(GETDATE() AS DATE)
@@ -57,6 +62,10 @@ BEGIN
             ON (ra.IdRouteAssigment = sm.IdPuRouteAssigment)
         INNER JOIN CatRoute cr WITH(NOLOCK)
             ON (cr.IdRoute = ra.IdRoute)
+        INNER JOIN Township tw WITH(NOLOCK)
+            ON (cr.IdTownship = tw.IdTownship)
+        INNER JOIN Province pr WITH(NOLOCK)
+            ON (pr.IdProvince = tw.IdProvince)
         INNER JOIN SenderReceiver sr WITH(NOLOCK)
             ON (sr.ID = ra.IdCurrierMan)
     WHERE cr.CodeRoute = @Route
@@ -66,6 +75,7 @@ BEGIN
               OR ordp.StatusOrderId IS NULL
           )
           AND CAST(sm.DateCreated AS DATE) = @tiempo
+          AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     --where cr.CodeRoute = @Route and (ordp.StatusOrderId not in (11,10,7,5)or ordp.StatusOrderId is null)  and ord.StatusOrderId not in (11,10,7,5) and ordp.IsPickup = 1  and cast(sm.DateCreated as date) = @tiempo
     GROUP BY ord.Guide_Serie,
              ord.Guide_Number,
@@ -108,6 +118,10 @@ BEGIN
             ON (ra.IdRouteAssigment = sm.IdPuRouteAssigment)
         INNER JOIN CatRoute cr WITH(NOLOCK)
             ON (cr.IdRoute = ra.IdRoute)
+        INNER JOIN Township tw WITH(NOLOCK)
+            ON (cr.IdTownship = tw.IdTownship)
+        INNER JOIN Province pr WITH(NOLOCK)
+            ON (pr.IdProvince = tw.IdProvince)
         INNER JOIN SenderReceiver sr WITH(NOLOCK)
             ON (sr.ID = ra.IdCurrierMan)
     --inner join  EventService es on (es.ServiceManagementId = sm.IdServiceManagement )
@@ -117,7 +131,8 @@ BEGIN
               ordp.StatusOrderId NOT IN ( 11, 10, 7, 5 )
               OR ordp.StatusOrderId IS NULL
           )
-          AND CAST(sm.DateCreated AS DATE) = @tiempo; ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
+          AND CAST(sm.DateCreated AS DATE) = @tiempo ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
+          AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     --where cr.CodeRoute = @Route and (ordp.StatusOrderId not in (11,10,7,5)or ordp.StatusOrderId is null) and cast(sm.DateCreated as date) = @tiempo and ordp.IsPickup = 1 ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
 
     /* TABLE 1 */
@@ -132,9 +147,14 @@ BEGIN
         FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb WITH(NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
                 ON (cr.IdRoute = tbb.RouteId)
+            INNER JOIN Township tw WITH(NOLOCK)
+                ON (cr.IdTownship = tw.IdTownship)
+            INNER JOIN Province pr WITH(NOLOCK)
+                ON (pr.IdProvince = tw.IdProvince)
         WHERE cr.CodeRoute = @Route
               AND CAST(tbb.DateCreated AS DATE) = @tiempo
               AND tbb.RowStatus = 1
+              AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     ) guides;
 
     /* TABLE 2 */
@@ -163,7 +183,14 @@ BEGIN
                AND do.Guide_Number = dopd.GuideNumber
     WHERE ra.IdRoute =
     (
-        SELECT cr.IdRoute FROM CatRoute cr WITH(NOLOCK) WHERE cr.CodeRoute = @Route
+        SELECT cr.IdRoute 
+          FROM CatRoute cr WITH(NOLOCK) 
+               INNER JOIN Township tw WITH(NOLOCK)
+                   ON (cr.IdTownship = tw.IdTownship)
+               INNER JOIN Province pr WITH(NOLOCK)
+                   ON (pr.IdProvince = tw.IdProvince)
+         WHERE cr.CodeRoute = @Route AND cr.rowstatus = 1
+           AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     )
           AND ra.DateOfRoute = @tiempo
           AND sp.AssigmentStatus = 1;
@@ -175,10 +202,15 @@ BEGIN
     FROM DeliveryBackOffice.dbo.RouteAssigment rta WITH(NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.CatRoute ctr WITH(NOLOCK)
             ON ctr.IdRoute = rta.IdRoute
+        LEFT JOIN Township tw WITH(NOLOCK)
+            ON (ctr.IdTownship = tw.IdTownship)
+        LEFT JOIN Province pr WITH(NOLOCK)
+            ON (pr.IdProvince = tw.IdProvince)
         LEFT JOIN SenderReceiver sr WITH(NOLOCK)
             ON sr.ID = rta.IdCurrierMan
     WHERE ctr.CodeRoute = @Route
-          AND CAST(rta.DateOfRoute AS DATE) = @tiempo;
+          AND CAST(rta.DateOfRoute AS DATE) = @tiempo
+          AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
 
 
     /* TABLE 4 */
@@ -188,10 +220,15 @@ BEGIN
     FROM DeliveryBackOffice.dbo.RouteAssigment rta WITH(NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.CatRoute ctr WITH(NOLOCK)
             ON ctr.IdRoute = rta.IdRoute
+        LEFT JOIN Township tw WITH(NOLOCK)
+            ON (ctr.IdTownship = tw.IdTownship)
+        LEFT JOIN Province pr WITH(NOLOCK)
+            ON (pr.IdProvince = tw.IdProvince)
         LEFT JOIN SenderReceiver sr WITH(NOLOCK)
             ON sr.ID = rta.IdCurrierMan
     WHERE ctr.CodeRoute = @Route
-          AND CAST(rta.DateOfRoute AS DATE) = @tiempo;
+         AND CAST(rta.DateOfRoute AS DATE) = @tiempo
+         AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
 
     /*	TABLE 5 
 		Selecciona todas las guías liquidadas de una ruta en la fecha actual.
@@ -208,12 +245,17 @@ BEGIN
                AND dop.NoPiece = tbb.GuidePiece
         INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
             ON (cr.IdRoute = tbb.RouteId)
+        INNER JOIN Township tw WITH(NOLOCK)
+            ON (cr.IdTownship = tw.IdTownship)
+        INNER JOIN Province pr WITH(NOLOCK)
+            ON (pr.IdProvince = tw.IdProvince)
         INNER JOIN DeliveryOrder do WITH (NOLOCK)
             ON do.Guide_Serie = dop.GuideSerie
                AND do.Guide_Number = dop.GuideNumber
     WHERE cr.CodeRoute = @Route
           AND CAST(tbb.DateCreated AS DATE) = @tiempo
           AND tbb.RowStatus = 1
+          AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     ORDER BY tbb.DateCreated DESC;
 
     /* TABLE 6 */
@@ -222,6 +264,10 @@ BEGIN
     FROM RouteAssigment ra WITH(NOLOCK)
         INNER JOIN CatRoute cr
             ON (cr.IdRoute = ra.IdRoute)
+        INNER JOIN Township tw WITH(NOLOCK)
+            ON (cr.IdTownship = tw.IdTownship)
+        INNER JOIN Province pr WITH(NOLOCK)
+            ON (pr.IdProvince = tw.IdProvince)
         INNER JOIN SettlementByPickup sbp WITH(NOLOCK)
             ON (
                    sbp.RouteAssigmentId = ra.IdRouteAssigment
@@ -231,6 +277,7 @@ BEGIN
     --inner join  EventService es on (es.ServiceManagementId = sm.IdServiceManagement )
     WHERE cr.CodeRoute = @Route
           AND CAST(ra.DateCreated AS DATE) = @tiempo ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
+          AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     --where cr.CodeRoute = @Route and (ordp.StatusOrderId  in (11,2,16)or ordp.StatusOrderId is null) and cast(sm.DateCreated as date) = @tiempo and ordp.IsPickup = 1
     ORDER BY 1 DESC;
 
@@ -247,10 +294,15 @@ BEGIN
         FROM DeliveryBackOffice.dbo.TransactionalBackbone tbb WITH(NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
                 ON (cr.IdRoute = tbb.RouteId)
+            INNER JOIN Township tw WITH(NOLOCK)
+                ON (cr.IdTownship = tw.IdTownship)
+            INNER JOIN Province pr WITH(NOLOCK)
+                ON (pr.IdProvince = tw.IdProvince)
             INNER JOIN DeliveryOrder do WITH(NOLOCK)
                 ON do.Guide_Serie = tbb.GuideSerie
                    AND do.Guide_Number = tbb.GuideNumber
         WHERE cr.CodeRoute = @Route
+              AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
               AND CAST(tbb.DateCreated AS DATE) = @tiempo
               AND tbb.RowStatus = 1
         GROUP BY tbb.GuideNumber,
@@ -259,4 +311,12 @@ BEGIN
     ) cn
     WHERE cn.Pieces = cn.Total;
 
+    SELECT cr.IdRoute AS RouteExists
+      FROM CatRoute cr WITH(NOLOCK) 
+           INNER JOIN Township tw WITH(NOLOCK)
+               ON (cr.IdTownship = tw.IdTownship)
+           INNER JOIN Province pr WITH(NOLOCK)
+               ON (pr.IdProvince = tw.IdProvince)
+     WHERE cr.CodeRoute = @Route AND cr.rowstatus = 1
+       AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
 END;

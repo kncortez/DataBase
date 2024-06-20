@@ -4,7 +4,10 @@
 -- Create date: <2021-12-22>
 -- Description: <Obtiene las rutas por tipo, si se envia ALL se retornan todas>
 -- =============================================
-
+-- Author:      <Cristian,Suazo>
+-- Create date: <2024-06-13>
+-- Description: <Se agrego filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_getRoutesByType]
 	@TypeRouteName VARCHAR(100),
 	@Country NVARCHAR(5) = 'GT'
@@ -21,6 +24,7 @@ BEGIN
 		LEFT JOIN TownShip T ON ctr.IdTownship = T.IdTownship
 		LEFT JOIN Province P ON T.IdProvince=P.IdProvince
 		WHERE ctr.RowStatus = 1
+          AND ISNULL(P.IdCountry, 'GT') = @Country
 		ORDER BY ctr.CodeRoute
 	END
 	ELSE

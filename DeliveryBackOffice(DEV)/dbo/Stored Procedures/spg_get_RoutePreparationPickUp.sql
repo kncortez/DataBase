@@ -14,9 +14,14 @@
 -- Update date: <2022-07-20>
 -- Description:	< Cambio de agrupaciones para evitar duplicados (Falsos positivos) >
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-05-28>
+-- Description: < Se agrego filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RoutePreparationPickUp]
     @datePickUp AS DATE = '',
-    @hubId INT = -1
+    @hubId INT = -1,
+    @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     SET ARITHABORT ON;
@@ -188,8 +193,9 @@ BEGIN
         (
             @hubId = -1
             OR shp.IdHubLogistics = @hubId
-        );
-   
+        )
+        AND IIF( prv.IdCountry IS NULL, 'GT', prv.IdCountry) = @IdCountry;
+
     PRINT 'termina brain';
     PRINT CONVERT(VARCHAR, GETDATE(), 9);
     SELECT MAX(tb.Periodicy) 'Periodicy',

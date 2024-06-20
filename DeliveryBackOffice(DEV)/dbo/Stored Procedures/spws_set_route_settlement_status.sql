@@ -3,20 +3,25 @@
 -- Create date: <2020-03-04>
 -- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-11>
+-- Description: <Se agrega validacion para consulta de guia existente pero que no pertenece al pais logueado>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
     @GuidePiece SMALLINT,
     @Token NVARCHAR(100),
     @Route VARCHAR(100),
-    @CountryId VARCHAR(2)
+    @CountryId VARCHAR(2) = 'GT'
 AS
 BEGIN
 
     DECLARE @RModified INT = 0;
     DECLARE @RModified2 INT = 0;
-    DECLARE @RModified3 INT = 0;
+    DECLARE @RModified3 INT = 0,
+            @SenderCountryId VARCHAR(2) = NULL;
+
 
     DECLARE @GModif INT = 0;
 
@@ -37,6 +42,39 @@ BEGIN
 	                                                Inner Join dbo.StatusOrder SO
 													ON DO.StatusOrderId = SO.StatusOrderId
 													Where DO.Guide_Serie=@GuideSerie And Guide_Number = @GuideNumber)
+
+
+        IF EXISTS
+        (
+            SELECT TOP 1 1
+              FROM DeliveryOrder WITH (NOLOCK)
+             WHERE Guide_Serie = @GuideSerie
+               AND Guide_Number = @GuideNumber
+        )
+        BEGIN
+            SELECT @SenderCountryId = SenderCountryId
+              FROM DeliveryOrder WITH (NOLOCK)
+             WHERE Guide_Serie = @GuideSerie
+               AND Guide_Number = @GuideNumber
+
+            IF @SenderCountryId <> @CountryId
+            BEGIN
+                  SET @Description = CONCAT('La guía ', @GuideSerie, @GuideNumber, ' no existe.');
+
+                  SELECT 0 AS 'StatusCode',
+                         @Description 'Description',
+                         CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide',
+                         0 AS 'SubStatusCode',
+                         0 'IsDry', 
+                         @IsStatusTerminal 'IsTerminal'
+
+                  SELECT 'No se guardo el registro' AS StatusCode;
+
+                  RETURN;
+            END
+        END
+
+
 	If( @IsStatusTerminal = 1)	
 				Begin
 					SET @Description ='*** Guía : '+ @GuideSerie + CONVERT(nvarchar(25),@GuideNumber) +' en estado Terminal : '+ @StatusDescription  +' ***';	
@@ -96,6 +134,7 @@ BEGIN
                     SELECT IdRoute
                     FROM DeliveryBackOffice.dbo.CatRoute WITH (NOLOCK)
                     WHERE CodeRoute = @Route
+                    AND RowStatus = 1
                 );
    
 	 

@@ -580,6 +580,7 @@
     <Build Include="dbo\Tables\AccountBankFormatRule.sql" />
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
+    <Build Include="dbo\Tables\CurrencyExchangeRates.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -1534,7 +1535,6 @@
     <Build Include="dbo\Stored Procedures\GetExternalPlatformServicesToNullify.sql" />
     <Build Include="dbo\Stored Procedures\GetExternalPlatformServicePendingAction.sql" />
     <Build Include="dbo\Stored Procedures\GetExternalPlatformConfigByName.sql" />
-    <Build Include="dbo\Stored Procedures\GetDynamicCatalog_old.sql" />
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog.sql" />
     <Build Include="dbo\Stored Procedures\GetDetailedTrackingDataOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetDestinationLinehauls.sql" />
@@ -1690,16 +1690,23 @@
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />   
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" /> 
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
-    <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetImagePromotional_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenSinTokenLog_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetBillingInformation_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetBillingDataUpload_1.sql" />
-    <Build Include="dbo\User Defined Types\TblSalePackageList_1.sql" />
-    <Build Include="dbo\Stored Procedures\spRS_ForzaDeliveryInComeReport.sql" />
+    <Build Include="dbo\Stored Procedures\GetWebhookDataForFileDHL.sql" />
+    <Build Include="dbo\Stored Procedures\GetImagePromotional.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierPhoneTokenSinTokenLog.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
+    <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
     <Build Include="dbo\Stored Procedures\SpHWGetStationForCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetCountries.sql" />
     <Build Include="dbo\Stored Procedures\spg_get_DimensionWeightGuidePiece.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetCurrencyByCountry.sql" />
+    <Build Include="dbo\Stored Procedures\spGetLoadStationCountry.sql" />
+    <Build Include="dbo\Stored Procedures\spGetLoginMC.sql" />
+    <Build Include="dbo\Stored Procedures\spGetCatalogExcMC.sql" />
+    <Build Include="dbo\Stored Procedures\spGetCatalogTypePieceMC.sql" />
+    <Build Include="dbo\User Defined Types\TblCustomerType.sql" />    
+    <Build Include="dbo\User Defined Types\TblCustomer.sql" />    
+    <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />    
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
