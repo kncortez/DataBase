@@ -8,6 +8,14 @@
 -- Create date: <2024-06-07>
 -- Description:	<Se agregan filtros por pais para evitar duplicidad en catalogos>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<Se toma en cuenta el parametro de pais y codigo de moneda>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-20>
+-- Description:	<Se elimina el filtro de pais para la tabla CatTypeRate>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @IdRate INT = -1,
     @RateName NVARCHAR(50),
@@ -15,7 +23,7 @@ CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @RateDescription NVARCHAR(200) = '',
     @IdTypeRate INT,
     @Token NVARCHAR(50),
-    @CountryId NVARCHAR(50) = 'GT',
+    @CountryId NVARCHAR(2) = 'GT',
     @CurrencyId INT = 1,
     @IsTemplate BIT = 1,
     @Status BIT = 1,
@@ -138,13 +146,14 @@ BEGIN
                 IsTemplate,
                 CutOffDate,
                 CatBusinessSegmentId,
-                PackagesRangeId
+                PackagesRangeId,
+				IdCurrency
             )
             VALUES
             (@RateName, @RateShortName, @RateDescription, 1, @Token, GETDATE(), @IdTypeRate, 0, @FragilRate,
              @InsuranceRate, @InsuranceExempt, @AdditionalWeightRate, @WeightLimit, @CreditCardRate, @Attempt,
              @ReturnRate, @CollectRate, @PiecesIncluded, @CountryId, @CurrencyId, @IsTemplate, @CutOffDate,
-             @CatBusinessSegmentId, @PackagesRangeId);
+             @CatBusinessSegmentId, @PackagesRangeId,@CurrencyId);
 
             SET @IdRate = SCOPE_IDENTITY();
             PRINT 'se inserto el tarifario';
@@ -172,7 +181,8 @@ BEGIN
                 CurrencyId = @CurrencyId,
                 CutOffDate = @CutOffDate,
                 CatBusinessSegmentId = @CatBusinessSegmentId,
-                PackagesRangeId = @PackagesRangeId
+                PackagesRangeId = @PackagesRangeId,
+				IdCurrency = @CurrencyId
             WHERE RheId = @IdRate;
         END;
 
@@ -918,7 +928,6 @@ BEGIN
         IF @IdTypeRate =
         (
             SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por Peso'
-            AND IIF(IdCountry IS NULL, 'GT',IdCountry) = @CountryId
         ) -- insertar por rango de pesos
         BEGIN
 
@@ -1527,7 +1536,6 @@ BEGIN
         IF @IdTypeRate =
         (
             SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por paquetes'
-            AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @CountryId
         ) -- insertar por paquetes
         BEGIN
 
