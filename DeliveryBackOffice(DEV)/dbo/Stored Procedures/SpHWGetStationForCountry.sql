@@ -8,7 +8,7 @@
 -- Create date: <2024-06-19>
 -- Description:	<Agregar filtro de sistema Hermes Mobile Linehaul>
 -- =============================================
-ALTER PROCEDURE [dbo].[SpHWGetStationForCountry]
+CREATE PROCEDURE [dbo].[SpHWGetStationForCountry]
 	@IdUser INT,
 	@Username NVARCHAR(50),
 	@IdCountry NVARCHAR(2),

@@ -26,6 +26,7 @@ BEGIN
     DECLARE @IdRoutePreparation INT;
     DECLARE @IdRoutePreparationDetail INT;
     DECLARE @IdRoutePreparationDetailPiece INT;
+    DECLARE @Country NVARCHAR(2)='GT';
 
     --- Tabla para validar estado
     DECLARE @StatusGuide TABLE
