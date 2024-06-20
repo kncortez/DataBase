@@ -8,9 +8,9 @@ CREATE PROCEDURE [dbo].[sphdGetCurrencyByCountry]
 AS
 BEGIN
 SELECT CU.IdCatCurrencyCOD [ID],
-       DC.Currency_Name [Name],
+       CU.Name [Name],
        DC.Currency_Symbol [Symbol],
-       DC.Currency_Name + ' - ' + DC.Currency_Symbol AS [Description],
+       CU.Name + ' - ' + DC.Currency_Symbol AS [Description],
 	   CU.CodeISO [CodeISO]
 FROM DeliveryCurrency DC
     INNER JOIN CatCurrencyCOD CU
