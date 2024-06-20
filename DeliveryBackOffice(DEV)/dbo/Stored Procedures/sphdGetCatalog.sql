@@ -13,6 +13,11 @@
 -- Create date: <2024-06-03>
 -- Description:	<se modifica para que utilice el parametro de pais para filtrar en los catalogos>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<se modifica para obtener datos de la tabla CatCurrencyCOD>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -117,7 +122,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CBS.IdBusinessSegment = @IdCorrelative
                   )
-				  AND IIF(CBS.IdCountry IS NULL, 'GT',CBS.IdCountry) = @IdFilter
             ORDER BY CBS.[BusinessSegmentName];
         END;
 
@@ -133,7 +137,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CBA.IdBusinessActivity = @IdCorrelative
                   )
-				  AND IIF(CBA.IdCountry IS NULL, 'GT',CBA.IdCountry) = @IdFilter
             ORDER BY CBA.[BusinessActivityName];
         END;
 
@@ -149,7 +152,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CCS.[IdCommercialSegment] = @IdCorrelative
                   )
-				  AND IIF(CCS.IdCountry IS NULL, 'GT',CCS.IdCountry) = @IdFilter
             ORDER BY CCS.[CommercialSegmentName];
         END;
 
@@ -166,8 +168,7 @@ BEGIN
                   (
                       @IdCorrelative = -1
                       OR CCP.IdConditionOfPayment = @IdCorrelative
-                  )
-				  AND IIF(CCP.IdCountry IS NULL, 'GT',CCP.IdCountry) = @IdFilter;
+                  );
 
         END;
 
@@ -188,12 +189,14 @@ BEGIN
 
         IF (@NameOfCatalog = 'DeliveryCurrency')
         BEGIN
-            SELECT curr.[Currency_Id] [IdValue],
-                   UPPER(curr.[Currency_Name]) [NameValue],
+            SELECT CU.IdCatCurrencyCOD [IdValue],
+                   UPPER(CU.Name) [NameValue],
                    curr.[Currency_IdCountry] [IdFilter],
                    curr.[Currency_Symbol] [Asssitant],
                    'DeliveryCurrency' [Catalog]
-            FROM [DeliveryBackOffice].[dbo].[DeliveryCurrency] curr
+            FROM [DeliveryBackOffice].[dbo].[DeliveryCurrency] curr WITH(NOLOCK)
+					INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
+					ON curr.IdCurrencyCOD = CU.IdCatCurrencyCOD
             WHERE [Currency_Status] = 1
                   AND
                   (
@@ -234,8 +237,7 @@ BEGIN
                   (
                       @IdCorrelative = -1
                       OR CTR.IdTypeRate = @IdCorrelative
-                  )
-				  AND IIF(CTR.IdCountry IS NULL, 'GT',CTR.IdCountry) = @IdFilter;
+                  );
         END;
 
         IF (@NameOfCatalog = 'RateCatalog')
@@ -442,8 +444,7 @@ BEGIN
                   (
                       @IdCorrelative = -1
                       OR csg.CrsId = @IdCorrelative
-                  )
-				  AND IIF(csg.IdCountry IS NULL,'GT',csg.IdCountry) = @IdFilter;
+                  );
         END;
 
 
@@ -593,6 +594,7 @@ BEGIN
 					,pr.PiecesIncluded [PiecesIncluded]
 					,cbs.IdBusinessSegment [IdValue]
 					,cbs.BusinessSegmentName [NameValue]
+                    ,ISNULL(pr.IdCurrency,1) [IdCurrency]--DEJA POR DEFECTO 1 -QUETZAL
 					,'PackagesRange' [Catalog]
 				FROM PackagesRange pr
 				INNER JOIN PackagesRangeDetail prd
