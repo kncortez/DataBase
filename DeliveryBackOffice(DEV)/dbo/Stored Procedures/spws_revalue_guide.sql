@@ -1350,6 +1350,8 @@ BEGIN
 				  , DateCreated
 				  , GuideSerie
 				  , GuideNumber
+				  , ShippingCurrency
+				  , ShippingExchangeRate
 				  , CodCurrency
 				  , CodExchangeRate
 				)
@@ -1357,6 +1359,7 @@ BEGIN
 				(   1, @ProdctNumber, 1     -- costo de envio
 				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
 				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
+				  , @CurrencyId, @ExchangeSender
 				  , @CurrencyId, @ExchangeSender
 				);
 			END
