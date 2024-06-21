@@ -6,9 +6,7 @@
     [DateCreated]            DATETIME       NOT NULL,
     [TokenUpdated]           NVARCHAR (50)  NULL,
     [DateUpdated]            DATETIME       NULL,
-    [IdCountry]              VARCHAR(2)     NULL, 
-    CONSTRAINT [PK_CatBillingTime] PRIMARY KEY CLUSTERED ([IdCatBillingTime] ASC),    
-    CONSTRAINT [FK_CatBillingTime_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [PK_CatBillingTime] PRIMARY KEY CLUSTERED ([IdCatBillingTime] ASC),
 );
 
 
@@ -41,11 +39,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id de pais (Referencia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatBillingTime',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

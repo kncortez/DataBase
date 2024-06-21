@@ -6,9 +6,7 @@
     [DateCreated]            DATETIME     NOT NULL,
     [TokenUpdated]           VARCHAR (50) NULL,
     [DateUpdated]            DATETIME     NULL,
-    [IdCountry]              VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([CatBatchFrequencyCODId] ASC),
-    CONSTRAINT [FK_CatBatchFrequencyCOD_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 
@@ -41,11 +39,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es la fecha
 
 
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'id de pais (Referencia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatBatchFrequencyCOD',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

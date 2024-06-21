@@ -474,7 +474,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR CSC.IdSalesChannel = @IdCorrelative
                   )
-				  AND IIF(CSC.IdCountry IS NULL, 'GT',CSC.IdCountry)= @IdFilter
+				  --AND IIF(CSC.IdCountry IS NULL, 'GT',CSC.IdCountry)= @IdFilter
             ORDER BY CSC.Description;
         END;
 
@@ -515,7 +515,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-				  AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
+				  --AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
             GROUP BY cbt.CatBatchTypeCODId,
                      cbt.Name
             ORDER BY cbt.Name;
@@ -537,7 +537,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-                  AND IIF(cbf.IdCountry IS NULL, 'GT',cbf.IdCountry) = @IdFilter
             GROUP BY cbf.CatBatchFrequencyCODId,
                      cbf.Name
             ORDER BY cbf.Name;
@@ -627,7 +626,6 @@ BEGIN
            'BillingTime' [Catalog]
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
-    AND IIF(BT.IdCountry IS NULL, 'GT', BT.IdCountry) = @IdFilter
 
 
 
@@ -637,7 +635,6 @@ BEGIN
            'BillingVolume' [Catalog]
     FROM [dbo].[CatBillingVolume] BV with (nolock)
     WHERE BV.RowStatus = 'TRUE'
-    AND IIF(BV.IdCountry IS NULL, 'GT', BV.IdCountry) = @IdFilter
 
 
 END
