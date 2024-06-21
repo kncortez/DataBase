@@ -17,6 +17,11 @@
 -- Create date: <2022-12-26>
 -- Description:	<Validar si se requiere uso de memrbesia y subscripción4>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-06-21>
+-- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
   , @IdCustomerParams AS INT = 0
@@ -82,6 +87,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
     DECLARE @NewAlternativeRates INT =
             (
@@ -89,6 +95,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
     DECLARE @NewAutoSalesMainRates INT =
             (
@@ -96,6 +103,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
 
    DECLARE @NewRateGeneral INT = (
@@ -103,12 +111,14 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
    DECLARE @NewRateGeneralDiscount INT = (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero destinos exc' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
 			
     --DECLARE @TarifaPlanBasico INT =
