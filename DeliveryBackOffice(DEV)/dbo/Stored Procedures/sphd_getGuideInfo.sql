@@ -8,6 +8,10 @@
 -- Create date: <2024-05-24>
 -- Description: <Se agrega parametro IdCountry para obtener la guia segun el país del usuario logeado en Hermes desktop>
 -- =============================================
+-- Modified: <Pedroza, Brandon>
+-- Create date: <2024-06-21>
+-- Description: <Se agrega critero para filtrar por pais segun campo GuideType de la guia INT o DOM segun la guia>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_getGuideInfo] @Guide_Serie VARCHAR(2),
 @Guide_Number INT,
 @IdCountry NVARCHAR(2) = 'GT'
@@ -84,10 +88,17 @@ BEGIN
          ELSE 0
       END)
       Valid
-   FROM dbo.DeliveryOrder do
-   INNER JOIN dbo.StatusOrder so
+   FROM dbo.DeliveryOrder do  WITH (NOLOCK)
+   INNER JOIN dbo.StatusOrder so  WITH (NOLOCK)
       ON do.StatusOrderId = so.StatusOrderId
    WHERE do.Guide_Serie = @Guide_Serie
    AND do.Guide_Number = @Guide_Number
-   AND (do.SenderCountryId = @IdCountry OR (do.SenderCountryId IS NULL AND @IdCountry ='GT'))
+   AND (ISNULL(do.GuideType,'DOM')='INT' OR (ISNULL(do.SenderCountryId,'GT')=@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'))
+
+	  ---TABLA RESPUESTA
+    SELECT 'La guía '+@Guide_Serie+CONVERT(VARCHAR, @Guide_Number)+' no pertene al paÍs.' AS [Description]
+    FROM DeliveryOrder do WITH (NOLOCK)
+    WHERE do.Guide_Number=@Guide_Number and do.Guide_Serie = @Guide_Serie
+    AND 		
+    ISNULL(do.SenderCountryId,'GT')<>@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'
 END
