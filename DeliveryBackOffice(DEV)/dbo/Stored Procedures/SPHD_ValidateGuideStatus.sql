@@ -14,12 +14,11 @@
 -- Description:	<Se agrega parametro para filtrar por pais de origen de la guia>
 -- =============================================
 -- Modified:	<Brandon Pedroza>
--- Create date: <2024-05-29>
--- Description:	<Se parametro para indicar si se debe tomar pais de origen o destino para filtrar>
+-- Create date: <2024-06-24>
+-- Description:	<Se agrega validacion para saber si la guia es domestica o internacional>
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20),
-	@IdCountry AS NVARCHAR(2)='GT',
-	@IsOriginCountry AS INT = 1-----1 INDICA QUE ES ORIGIN, 0 INDICA QUE ES DESTINO
+	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
     DECLARE @STATUS AS INT;
@@ -31,6 +30,7 @@ BEGIN
     DECLARE @ExistRegister AS BIT = 0;
     DECLARE @GuideSerie VARCHAR(50);
 	DECLARE @GuideNumber VARCHAR(50);
+    DECLARE @ExistRegisterInAnotherCountry AS BIT = 0;
 
 	-- Extraer letras
 		SET @GuideSerie = '';
@@ -138,11 +138,9 @@ BEGIN
 						WHERE 
 							[DDO].[Guide_Serie] = @GuideSerie 
 							AND [DDO].[Guide_Number] = @GuideNumber 
-							AND (
-								(@IsOriginCountry = 1 AND (IIF([DDO].[SenderCountryId] IS NULL, 'GT',[DDO].[SenderCountryId]) = @IdCountry))--filtra por pais de origen
-								OR 
-								(@IsOriginCountry = 0 AND (IIF([DDO].[ReceiverCountryId] IS NULL, 'GT',[DDO].[ReceiverCountryId]) = @IdCountry)) --filtra por pais de destino
-							)
+							AND (ISNULL([DDO].GuideType,'DOM')='INT' AND (ISNULL([DDO].SenderCountryId,'GT')=@IdCountry OR ISNULL([DDO].ReceiverCountryId,'GT')=@IdCountry)
+								OR (ISNULL([DDO].SenderCountryId,'GT')=@IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM')
+								)
 					) THEN 1
 					ELSE 0
 				END;
@@ -197,10 +195,31 @@ BEGIN
         END;
         ELSE
         BEGIN
-
+            --Verifica que existan registros de la guia en otro pais
+            SELECT @ExistRegisterInAnotherCountry = 
+				    CASE 
+					    WHEN EXISTS (
+						    SELECT 1
+						    FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
+						    WHERE 
+							    [DDO].[Guide_Serie] = @GuideSerie 
+							    AND [DDO].[Guide_Number] = @GuideNumber 
+							    AND ISNULL([DDO].SenderCountryId,'GT') <> @IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM'
+					    ) THEN 1
+					    ELSE 0
+				    END;
+            IF(@ExistRegisterInAnotherCountry = 1)
+			BEGIN
+				SELECT [Result] = 8,
+                   @StatusName 'Status',
+                   CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* La guia pertenece a otro pais*/
+			END
+            ELSE
+            BEGIN
             SELECT [Result] = 3,
                    @StatusName 'Status',
                    CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* Guía no existe*/
+            END
         END;
 
 
