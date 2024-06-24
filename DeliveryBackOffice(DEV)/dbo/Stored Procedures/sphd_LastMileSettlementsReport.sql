@@ -22,7 +22,7 @@ BEGIN
            CONCAT(sdr.First_Name, ' ', sdr.Last_Name) 'Piloto',
            IIF(ord.IsCollect = 1, ord.PriceShippment, 0) 'Collect',
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
-		   REPLACE(REPLACE(REPLACE(dc.Currency_Symbol,'.',''),'(',''),')','') [Currency_Symbol]
+		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol]
     FROM dbo.DeliveryOrderBySettlement dst
         JOIN dbo.DeliverySettlementDetail dsd
             ON dsd.ID_DeliveryOrderBySettlement = dst.ID
@@ -36,8 +36,8 @@ BEGIN
             ON sdr.ID = dst.ID_Courier
 		LEFT JOIN dbo.Cost c WITH (NOLOCK)
             ON c.ProductNumber = CONCAT(ord.guide_Serie, ord.guide_number)
-		LEFT JOIN dbo.deliverycurrency dc WITH (NOLOCK)
-            ON dc.Currency_Id = c.ShippingCurrency
+		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+            ON dc.IdCatCurrencyCOD = c.CodCurrency
     WHERE CONVERT(DATE, dst.Date_Received)
           BETWEEN @fromDate AND @toDate
           AND dst.SettlementStationId IN

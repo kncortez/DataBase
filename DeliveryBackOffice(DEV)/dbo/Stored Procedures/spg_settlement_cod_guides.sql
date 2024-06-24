@@ -41,7 +41,7 @@ BEGIN
 					(ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), do.PriceShippment)),
 					ISNULL((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) Total,
 		   do.Receiver_ID Receiver_ID,
-		   REPLACE(REPLACE(REPLACE(dc.Currency_Symbol,'.',''),'(',''),')','') [Currency_Symbol]
+		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol]
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
 			ON dsd.Guide_Serie = do.Guide_Serie
@@ -59,8 +59,8 @@ BEGIN
                AND cdp.IdConditionOfPayment > 1
 		LEFT JOIN dbo.Cost c WITH (NOLOCK)
             ON c.ProductNumber = CONCAT(do.guide_Serie, do.guide_number)
-		LEFT JOIN dbo.deliverycurrency dc WITH (NOLOCK)
-            ON dc.Currency_Id = c.ShippingCurrency
+		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+            ON dc.IdCatCurrencyCOD = c.CodCurrency
 	WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		  AND dsd.Guide_Discharged = 1 -- guía liquidada en COD
 		  AND
