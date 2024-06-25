@@ -2,7 +2,8 @@
 CREATE PROCEDURE [dbo].[GetGeneratedBatchCODDaily]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
-    @CoDProcessID INT
+    @CoDProcessID INT,
+	@IdCountrySender NVARCHAR(50) = N'GT'
 AS
 BEGIN
 
@@ -132,6 +133,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
 								 AND ISNULL(do.IsLastMileReturn,0) =0
+								 AND do.SenderCountryId = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -183,6 +185,7 @@ BEGIN
                                  AND cus.CatBatchFrequencyCODId = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
+								 AND do.SenderCountryId = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -293,7 +296,8 @@ BEGIN
                        AND PC.GuideNumberDestination = ord.Guide_Number
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
-                  AND PC.IdPromoCoupon IS NULL;
+                  AND PC.IdPromoCoupon IS NULL
+				  AND ord.SenderCountryId = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -490,6 +494,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ord.Collect_OnDelivery > 0
+				  AND ord.SenderCountryId = @IdCountrySender
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -612,6 +617,7 @@ BEGIN
                        AND do.Guide_Number = tact.Guide_Number
             WHERE (tact.Commision + tact.Price) > 0
                   AND tact.CODtoPay > 0
+				  AND do.SenderCountryId = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
