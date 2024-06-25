@@ -167,18 +167,18 @@ BEGIN
                    CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmailGT')
+								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' + PRV.IdCountry )
+								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
 					END AS VoucherEmail,
 					CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhoneGT')
+								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' + PRV.IdCountry )
+								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
 					END AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -291,21 +291,21 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(DOR.Sender_Mail, '') ToEmail,
                    Sender_Address ToAddress,
-                    CASE 
+                   CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmailGT')
+								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' + PRV.IdCountry )
+								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
 					END AS VoucherEmail,
 					CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhoneGT')
+								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' + PRV.IdCountry )
+								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
 					END AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
