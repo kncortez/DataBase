@@ -3,13 +3,14 @@ CREATE PROCEDURE [dbo].[sphw_generate_batch_cod]
     @IdBankParam INT
   , @BatchTimeRange VARCHAR(300) = ''
   , @CoDProcessID INT
+  , @IdCountrySender NVARCHAR(2)= 'GT'
 AS
 BEGIN
 
     -- Micro transacción para indicar inicio de proceso de CoD ejecutado
     BEGIN TRANSACTION Started_CoD_Execution_Process;
     BEGIN TRY
-
+		
 
 
         UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
@@ -136,6 +137,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
+								 AND do.SenderCountryId = @IdCountrySender
                            FOR XML PATH('')
                        )
                      , 1
@@ -189,6 +191,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
+								 AND do.SenderCountryId = @IdCountrySender
                            FOR XML PATH('')
                        )
                      , 1
@@ -315,7 +318,8 @@ BEGIN
                        AND lst.Guide_Number = MBS.LogGuideNumber
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL
-                  AND MBS.LogGuideNumber IS NULL;
+                  AND MBS.LogGuideNumber IS NULL
+				  AND ord.SenderCountryId = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -564,6 +568,7 @@ BEGIN
                         ON pyt.GuideSerie = ord.Guide_Serie
                            AND pyt.GuideNumber = ord.Guide_Number
                 WHERE ord.Collect_OnDelivery > 0
+					AND ord.SenderCountryId = @IdCountrySender
             ) a1
             ORDER BY a1.IDCUSTOMER
                    , a1.Guide_Serie
@@ -708,6 +713,7 @@ BEGIN
                   )
                   AND tact.CODtoPay > 0
             --AND tact.Id_bank IS NOT NULL
+				  AND do.SenderCountryId = @IdCountrySender
             ;
 
             CREATE NONCLUSTERED INDEX IX_TFPT_GSGNCABI
@@ -799,7 +805,8 @@ BEGIN
                     ON VPC.CodeOfReference = ORD.Sender_ID
                 LEFT JOIN dbo.Customer         CS WITH (NOLOCK)
                     ON CS.IdCustomer = ISNULL(ORD.IdCustomer, VPC.CustomerID)
-            WHERE tact.CODtoPay > 0;
+            WHERE tact.CODtoPay > 0
+				  AND ord.SenderCountryId = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
