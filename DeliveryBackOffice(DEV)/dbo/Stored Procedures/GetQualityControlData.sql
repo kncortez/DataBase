@@ -6,10 +6,11 @@
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
-  , @TblHubLogistic TblHubLogistic READONLY
+  , @TblHubLogistic  TblHubLogistic  READONLY
   , @TblCustomerType TblCustomerType READONLY
   , @TblCustomer     TblCustomer     READONLY
   , @TblVisitPointClient TblVisitPointClient READONLY
+  , @TblIncidenceType TblIncidenceType READONLY
   
 AS
 BEGIN
