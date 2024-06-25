@@ -12,56 +12,50 @@ BEGIN
 	DECLARE @ValidCod NVARCHAR(10), 
 			@Paid INT,
 			@CurrencyContry NVARCHAR(5),
-			@Currency NVARCHAR(10)
+			@Currency INT,
+			@Validate INT
 
+	DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Symbol = 'Q')
+	DECLARE @CurrencyHN INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Symbol = 'L')
+
+	SELECT @Currency = CASE WHEN  @CountryId = 'GT' THEN @CurrencyGT ELSE @CurrencyHN END
+	PRINT @Currency
 	BEGIN TRY
+
 	--SETEAMOS VALORES DE PAGO Y FACTURACION
 		SELECT @ValidCod = DO.TypeService,
 			   @Paid = TotalAmountPaid
 		FROM DeliveryOrder DO WITH(NOLOCK)
-		LEFT JOIN Cost C 
-			ON DO.Guide_Number = C.GuideNumber
+		LEFT JOIN Cost C WITH(NOLOCK)
+			ON DO.Guide_Number = C.GuideNumber AND DO.Guide_Serie = C.GuideSerie
 		WHERE DO.Guide_Serie = @GuideSerie 
 				AND DO.Guide_Number = @GuideNumber
 		
 		--VERIFICAR SI LA GUIA YA FUE PAGADA
-		IF (SELECT dti_fk_header FROM invoiceDetail WHERE dti_fk_orderNumber = @GuideNumber) IS NULL OR @Paid  IS NULL
+		IF (SELECT dti_fk_header FROM invoiceDetail WITH(NOLOCK) WHERE dti_fk_orderNumber = @GuideNumber AND dti_fk_orderSerie = @GuideSerie) IS NULL OR @Paid  IS NULL
 		BEGIN
-		--VERIFICAR SI ES COD
-			IF(@ValidCod = 'COD')
+
+		-------Validamos si la divisa es la misma al pais logueado, si no devuelve 0
+            PRINT 'ENTRO'
+			SELECT @Validate = C.IdCost 
+			FROM Cost C
+			WHERE GuideNumber = @GuideNumber 
+			AND C.GuideSerie = @GuideSerie
+			AND C.ShippingCurrency = @Currency
+
+			IF @Validate IS NOT NULL
 			BEGIN
-
-				SELECT 1 AS 'StatusCode', 
-					   ISNULL(DC.Currency_IdCountry, 'GT') AS Country,
-					   DC.Currency_Symbol
-				FROM Cost C WITH(NOLOCK)
-				INNER JOIN DeliveryCurrency DC WITH(NOLOCK) 
-					ON C.CodCurrency = DC.Currency_Id
-				WHERE C.GuideSerie = @GuideSerie 
-					  AND C.GuideNumber = @GuideNumber
-					  AND DC.Currency_IdCountry = @CountryId
-
-			END
-			IF (@ValidCod = 'STD')
-			BEGIN
-
-				SELECT 1 AS 'StatusCode',
-					   ISNULL(DC.Currency_IdCountry, 'GT') AS Country,
-					   DC.Currency_Symbol
-				FROM Cost C WITH(NOLOCK)
-				INNER JOIN DeliveryCurrency DC WITH(NOLOCK) 
-					ON C.ShippingCurrency = DC.Currency_Id
-				WHERE C.GuideSerie = @GuideSerie 
-					  AND C.GuideNumber = @GuideNumber
-					  AND DC.Currency_IdCountry = @CountryId
-
+				SELECT 
+				1 AS 'StatusCode',
+				'La moneda origen es la misma al pais logueado!' AS 'Description'
 			END
 			ELSE
 			BEGIN
-				SELECT
-					0 AS 'StatusCode',
-					'Tipo de guia desconocido' AS 'Description'
+				SELECT 
+				0 AS 'StatusCode',
+				'La moneda origen no coincide con el pais logueado' AS 'Description'
 			END
+
 		END
 		ELSE
 		BEGIN
