@@ -254,7 +254,7 @@ BEGIN
       , ReturnRates
     )
 
-    EXEC [dbo].[spws_get_guide_pending_payment_temp] @InGuides = @ConcatReturnGuides -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides -- Gu�as
                                               , @InTime = 3                          -- Entrega
                                               , @IsReturn = 1                        -- Devoluci�n
                                               , @CodeApp = 'SIFDCECOM300720201459'   -- CodeApp
