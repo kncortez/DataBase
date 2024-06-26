@@ -2,7 +2,8 @@
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_collect]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
-    @CoDProcessID INT
+    @CoDProcessID INT,
+	@IdCountrySender NVARCHAR(50) = N'GT'
 AS
 BEGIN
 
@@ -61,7 +62,7 @@ BEGIN
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        DECLARE @IdCountry NVARCHAR(50) = N'GT';
+        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
         DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
@@ -74,7 +75,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
-                          AND db.Id_country = @IdCountry
+                          AND db.Id_country = @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
@@ -180,6 +181,7 @@ BEGIN
                              AND pg.Date > '2022-03-14 22:00:00.000'
                              -- AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
+							 AND do.SenderCountryId = @IdCountrySender
                        FOR XML PATH('')
                    ),
                    1,
@@ -291,7 +293,8 @@ BEGIN
                        AND lst.Guide_Number = PC.GuideNumberDestination
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
-                  AND PC.IdPromoCoupon IS NULL;
+                  AND PC.IdPromoCoupon IS NULL
+				  AND ord.SenderCountryId = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -493,6 +496,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
+				  AND ord.SenderCountryId = @IdCountrySender
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -619,6 +623,7 @@ BEGIN
                       OR do.IsCollect = 'true'
                   )
                   AND ISNULL(tact.CODtoPay, 0) = 0
+				  AND do.SenderCountryId = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
