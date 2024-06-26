@@ -66,7 +66,7 @@ BEGIN
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        DECLARE @IdCountry NVARCHAR(50) = N'GT';
+        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
         DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
@@ -79,7 +79,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryBank db
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
-                          AND db.Id_country = @IdCountry
+                          AND db.Id_country = @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
@@ -100,7 +100,7 @@ BEGIN
             (
                 SELECT PayingBank
                 FROM DeliveryBackOffice.dbo.DeliveryBank
-                WHERE Id_country = @IdCountry
+                WHERE Id_country = @IdCountrySender
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
                 GROUP BY PayingBank
@@ -176,7 +176,7 @@ BEGIN
             (
                 SELECT PayingBank
                 FROM DeliveryBackOffice.dbo.DeliveryBank WITH (NOLOCK)
-                WHERE Id_country = @IdCountry
+                WHERE Id_country = @IdCountrySender
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
                 GROUP BY PayingBank
@@ -753,7 +753,7 @@ BEGIN
                        (
                            SELECT PayingBank
                            FROM DeliveryBackOffice.dbo.DeliveryBank
-                           WHERE Id_country = @IdCountry
+                           WHERE Id_country = @IdCountrySender
                                  AND Id_status = 1
                                  AND PayingBank <> @BankBAC
                            GROUP BY PayingBank
