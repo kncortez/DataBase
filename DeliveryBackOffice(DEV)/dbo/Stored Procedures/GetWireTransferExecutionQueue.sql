@@ -4,7 +4,13 @@
 -- Create date: <2022-06-07>
 -- Description:	< Obtener cola de ejecución de procesos de servicio HermesWireTransfer >
 -- =============================================
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Modification date: <2024-06-26>
+-- Description:	< Filtrar cola de ejcucion de procesos por pais para el servicio HermesWireTransfer >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetWireTransferExecutionQueue]
+	@IdCountrySender NVARCHAR(2)= 'GT'
 AS
 BEGIN
 
@@ -92,8 +98,10 @@ BEGIN
 				,CCDS.ProcessPriority
 			FROM
 				[DeliveryBackOffice].[dbo].[CatCoDDailySchedule] CCDS WITH(NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryBank] db WITH(NOLOCK) ON CCDS.DeliveryBankId = db.Id_Bank
 			WHERE
 				CCDS.RowStatus = 1
+				AND	db.Id_Country = @IdCountrySender
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @DailyExecutionQueue) )
 			BEGIN
