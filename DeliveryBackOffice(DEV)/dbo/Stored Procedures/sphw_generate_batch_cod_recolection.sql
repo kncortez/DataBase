@@ -3,7 +3,8 @@
 CREATE PROCEDURE [dbo].[sphw_generate_batch_cod_recolection]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
-    @CoDProcessID INT
+    @CoDProcessID INT,
+	@IdCountrySender NVARCHAR(50) = N'GT'
 AS
 BEGIN
 
@@ -62,7 +63,7 @@ BEGIN
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        DECLARE @IdCountry NVARCHAR(50) = N'GT';
+        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
         DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
@@ -75,7 +76,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryBank db
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
-                          AND db.Id_country = @IdCountry
+                          AND db.Id_country = @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
@@ -171,7 +172,7 @@ BEGIN
         (
             SELECT PayingBank
             FROM DeliveryBackOffice.dbo.DeliveryBank
-            WHERE Id_country = @IdCountry
+            WHERE Id_country = @IdCountrySender
                   AND Id_status = 1
                   AND PayingBank <> @BankBAC
             GROUP BY PayingBank
@@ -295,7 +296,8 @@ BEGIN
                        AND PC.GuideNumberDestination = ord.Guide_Number
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
-                  AND PC.IdPromoCoupon IS NULL;
+                  AND PC.IdPromoCoupon IS NULL
+				  AND ord.SenderCountryId = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -492,6 +494,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
+				  AND ord.SenderCountryId = @IdCountrySender
             --AND ISNULL(ord.IsCollect,'false') = 'false'
             --AND 
             --pyt.TimePlaId = 2
@@ -621,6 +624,7 @@ BEGIN
                       OR do.IsCollect = 'false'
                   )
                   AND ISNULL(tact.CODtoPay, 0) = 0
+				  AND do.SenderCountryId = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
