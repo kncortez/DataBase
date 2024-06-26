@@ -327,7 +327,7 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[RouteAssigment]			 ras WITH (NOLOCK)
         LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]	 sma WITH (NOLOCK)
             ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
-        INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		 spk WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		spk WITH (NOLOCK)
             ON spk.SchedulePickupId = sma.IdSchedulePickup
         LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]		 vpc WITH (NOLOCK)
             ON vpc.CodeOfReference = spk.SenderId
@@ -368,15 +368,15 @@ BEGIN
         WHERE	ras.IdCurrierMan = @IdCourier
 			AND ras.DateOfRoute  = @DateRoute
 			AND ras.RowStatus = 1 
+			AND sma.SubTypeServiceManagmentId=1
 		ORDER BY [CodeOfReference] ASC,
 				 [Id] ASC
 
 		/*****************************************************************************************************************************************
 		**************************************** CONSULTA PARA DESPLEGAR LAS ENTREGAS Y SUS ALERTAS **********************************************
 		******************************************************************************************************************************************/
-        
-		SELECT 
-				'Delivery' [ServiceType],
+       
+		SELECT	'Delivery' [ServiceType],
 				CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0))	[CodeOfReference],
 				ISNULL(
 					CASE
@@ -505,8 +505,6 @@ BEGIN
 									)
 							  )
 				END [Price_COD],
-				--kvp.KindOfVPName,
-				kvp.KindOfVPName ,
 				CASE
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
@@ -516,7 +514,7 @@ BEGIN
 								'0', 
 								IIF(
 										DOR.IsLastMileReturn = 1, 
-										TRPreturns.AmountToPay, 
+										TRPreturns.AmountToPay , 
 										IIF(
 												ISNULL(DOR.IsCollect, 0) = 1, 
 												ISNULL( DOR.PriceShippment, 0), 
