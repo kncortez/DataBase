@@ -1637,6 +1637,7 @@
     <Build Include="dbo\Stored Procedures\spGetLoginMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetCatalogExcMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetCatalogTypePieceMC.sql" />
+    <Build Include="dbo\Stored Procedures\spGetCorporateCustomersMC.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
