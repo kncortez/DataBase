@@ -31,6 +31,8 @@
     [dpf_OcrCode2]                   NVARCHAR (50)  NULL,
     [dpf_StatusFACE]                 NVARCHAR (1)   NULL,
     [dpf_WarehouseCode]              INT            NULL,
+    [inv_cmp_name]                   VARCHAR(500)   NULL,
+    [inv_cmp_nameComercial]          VARCHAR(500)   NULL,
     CONSTRAINT [PK_del_ParametrosFactura] PRIMARY KEY CLUSTERED ([dpf_VpCodeOfReference] ASC)
 );
 

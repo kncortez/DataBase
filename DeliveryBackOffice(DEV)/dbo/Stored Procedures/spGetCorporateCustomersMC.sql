@@ -30,6 +30,8 @@ SELECT DISTINCT
     ISNULL(
 		IIF(ISNULL(ccp.ConditionOfPayment, 'Contado') = 'Contado',
     '0','1'),'' )) AS HasCredit,
+    CONVERT(NVARCHAR,ISNULL(rh.InsuranceRate, 0)) AS InsuranceRate,
+	CONVERT(NVARCHAR,ISNULL(rh.InsuranceExempt, 0)) AS InsuranceExempt,
     REPLACE(ISNULL(Cu.[InvoiceName], ''), '"', '') AS EntityName,
     ISNULL(Cu.[TaxIdentificationNumber], '') AS TaxId,
     REPLACE(ISNULL(Cu.[FiscalAddress], ''), '"', '') AS TaxAddress,
@@ -43,7 +45,7 @@ SELECT DISTINCT
 FROM DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK)
 LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk WITH(NOLOCK)
     ON cu.CODAccountBankID = dbk.Id_bank
-    AND dbk.Id_country = 'GT'
+    AND (dbk.Id_country = @pCountryId OR (@pCountryId = 'GT' AND dbk.Id_country IS NULL))
     AND dbk.Id_status = 1
 LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType cba WITH(NOLOCK)
     ON cu.CODAccountTypeID = cba.IdBankAccountType
@@ -51,6 +53,8 @@ LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType cba WITH(NOLOCK)
 LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer rc WITH(NOLOCK)
     ON cu.IdCustomer = rc.RbcIdCustomer
     AND rc.RbcRowStatus = 1
+LEFT JOIN DeliveryBackOffice.dbo.RateHeader rh WITH(NOLOCK)
+	ON rc.RbcIdRate = rh.RheId AND rh.RheRowStatus = 1
 LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp WITH(NOLOCK)
     ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
@@ -72,7 +76,7 @@ WHERE IdCustomerType = 1
     AND (cu.IdCustomer = IIF(ISNUMERIC(@pOthers) = 1, @pOthers, 0)
          OR cu.Name LIKE CONCAT('%', @pOthers, '%')
          OR vpc.DescriptionOfClient LIKE CONCAT('%', @pOthers, '%'))
-	AND cu.CountryID = @pCountryId
+	AND (cu.CountryID = @pCountryId OR (@pCountryId = 'GT' AND cu.CountryID IS NULL))
     AND RowSatus = 1;
                                
 END;

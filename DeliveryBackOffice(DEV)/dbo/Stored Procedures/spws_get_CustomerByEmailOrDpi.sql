@@ -3,6 +3,11 @@
 -- Create date: <2021-08-02>
 -- Description:	<Devuelve el nombre de un cliente individual asi como su IdCustomer>
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2024-06-27>
+-- Description:	<Devuelve el nombre de un cliente individual asi como su IdCustomer filtrado por país>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_CustomerByEmailOrDpi]
     -- Add the parameters for the stored procedure here
     --@StartDate DATETIME,
@@ -11,6 +16,7 @@ CREATE PROCEDURE [dbo].[spws_get_CustomerByEmailOrDpi]
   , @Email VARCHAR(50) = ''
   , @DPI VARCHAR(50) = ''
   , @IdMembership INT = 0
+  , @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -190,6 +196,7 @@ BEGIN
                                        AND mmbrshp.ExpirationDate >= GETDATE()
                                        AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
                             WHERE ac.AccIdAccount = @IdAccount
+                            AND (cu.CountryID = @IdCountry OR (@IdCountry = 'GT' AND cu.CountryID IS NULL))
                             FOR XML PATH(''), TYPE
                         ).value('.', 'varchar(max)')
                       , 1
