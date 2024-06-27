@@ -3,26 +3,14 @@
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Create date: <2024-06-13>
--- Description: <Se agrega el filtro para procesar guias unicamente por pais, por defecto GT>
--- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
     @InGuides VARCHAR(MAX),
     @InTime INT,
     @IsReturn BIT,
     @CodeApp VARCHAR(100),
     @IdModule INT,
-    @Token VARCHAR(100),
-    @IdCountry VARCHAR(2) = 'GT'
---SET STATISTICS TIME ON; 
---DECLARE
---    @InGuides VARCHAR(MAX)	= 'FD1002000,FD1007542,FD1009118,FD1017485,FD1019336,FD1024099,FD1024118',
---    @InTime INT				= 2,
---    @IsReturn BIT			= 'FALSE',
---    @CodeApp VARCHAR(100)	= 'SIFDCECOM300720201459',
---    @IdModule INT			= 1,
---    @Token VARCHAR(100)		= 'SYSTEM'
+    @Token VARCHAR(100)
+
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -130,41 +118,106 @@ PRINT '*************************************************************************
 	--FROM #listGuidesBrain l
 
 
-	  SELECT ord.Guide_Serie [GuideSerie],
-           ord.Guide_Number [GuideNumber],
-           ord.IsCollect [IsCollect],
-           ord.PriceShippment [Price],
-           ord.Collect_OnDelivery [COD],
-           cst.TotalAmountPaid [AmountPaid],
-           cst.CODAmount [CODPaid],
-           IIF(cst.CODAmount IS NULL, 0, IIF(CST.CODAmount = ORD.Collect_OnDelivery,  1,0)) [CODIsPaid],
-           ISNULL(
+	  SELECT ord20.[GuideSerie],
+			 ord20.[GuideNumber],
+			 ord20.[IsCollect],
+			 ord20.[Price],
+             ord20.[COD],
+			 ord20.[AmountPaid],
+			 ord20.[CODPaid],
+             IIF(ord20.CODAmount IS NULL, 0, IIF(ord20.CODAmount = ord20.Collect_OnDelivery,  1,0)) [CODIsPaid],
+             ISNULL(
                      pyt.TimePlaId,
-                     IIF(ord.IsCollect = 'true',
+                     IIF(ord20.IsCollect = 'true',
                          @CollectTime,
                          IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, @MinTime, @MaxTime))
                  ) [PaymentTime],
-           ISNULL(
+            ISNULL(
                      tim.TimeSequence,
-                     IIF(ord.IsCollect = 'true',
+                     IIF(ord20.IsCollect = 'true',
                          @CollectSequence,
                          IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, @MinSequenceTime, @MaxSequenceTime))
                  ) [TimeSequence],
-           inh.inv_certificationFEL [FelNumber],
-           IIF(inh.inv_certificationFEL IS NULL, IIF(ISNULL(cst.TotalAmountPaid, 0) = 0, 0, 1), 1) [IsPaid],
-           cus.IdCustomer [IsCustomer],
-           cdp.ConditionOfPaymenDescription [ConditionPayment],
-           IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, 0, 1) [HaveCredit],
-           ISNULL(@InCollectCOD, 0) [CollectCOD],
-           ISNULL(ISNULL(rh.ReturnRate, rhd.ReturnRate), 100) [ReturnRate]
+            inh.inv_certificationFEL [FelNumber],
+            IIF(inh.inv_certificationFEL IS NULL, IIF(ISNULL(ord20.TotalAmountPaid, 0) = 0, 0, 1), 1) [IsPaid],
+            cus.IdCustomer [IsCustomer],
+            cdp.ConditionOfPaymenDescription [ConditionPayment],
+            IIF(cdp.ConditionOfPaymenAbbreviation IS NULL, 0, 1) [HaveCredit],
+            ISNULL(@InCollectCOD, 0) [CollectCOD],
+            ISNULL(ISNULL(rh.ReturnRate, rhd.ReturnRate), 100) [ReturnRate]
+			, ord20.[CurrencyPrice_CODCodeISO]
+			, ord20.[CurrencyPrice_CODSymbol]
+			, ord20.[CurrencyPriceCodeISO]   
+			, ord20.[CurrencyPriceSymbol]
     INTO #TempPrice
     FROM #listGuidesBrain lg WITH(NOLOCK)
-        inner JOIN dbo.DeliveryOrder ord WITH (NOLOCK)
-            ON  ord.Guide_Serie = lg.ItemSerie               
-			AND ord.Guide_Number = lg.ItemNumber
-        LEFT JOIN dbo.Cost cst WITH (NOLOCK)
-            ON cst.GuideSerie = lg.ItemSerie AND cst.GuideNumber = lg.ItemNumber
-               AND cst.RowStatus = 1
+		OUTER APPLY
+		(   --GUIAS DENTRO DEL MISMO PAIS
+			SELECT ord.Guide_Serie		 [GuideSerie]
+				, ord.Guide_Number		 [GuideNumber]
+				, ord.IdCustomer		 [IdCustomer]
+				, ord.Sender_Id			 [Sender_Id]
+				, ord.SenderCountryId    [SenderCountryId]
+				, ord.IsCollect			 [IsCollect]
+				, ord.PriceShippment	 [Price]
+				, ord.Collect_OnDelivery [COD]
+				, ord.Collect_OnDelivery [Collect_OnDelivery]
+				, cst.TotalAmountPaid	 [AmountPaid]
+				, cst.TotalAmountPaid	 [TotalAmountPaid]
+				, cst.CODAmount			 [CODPaid]
+				, cst.CODAmount			 [CODAmount]
+				, ccc.CodeISO            [CurrencyPrice_CODCodeISO]
+				, ccc.Symbol             [CurrencyPrice_CODSymbol]
+				, ccc.CodeISO            [CurrencyPriceCodeISO]   
+				, ccc.Symbol			 [CurrencyPriceSymbol]
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]				ord WITH (NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]				cst WITH (NOLOCK)
+					ON  cst.GuideSerie  = ord.Guide_Serie
+					AND cst.GuideNumber = ord.Guide_Number
+					AND cst.RowStatus = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
+					ON  de.Currency_IdCountry = ISNULL(ord.SenderCountryId,'GT')
+					AND de.DefaultPerCountry = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]	ccc WITH (NOLOCK)
+					ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
+			WHERE	ord.Guide_Serie  = lg.ItemSerie               
+				AND ord.Guide_Number = lg.ItemNumber
+				AND ISNULL(ord.GuideType,'DOM') = 'DOM'
+			UNION --GUIAS MULTIPAIS
+			SELECT ord.Guide_Serie		 [GuideSerie]
+				, ord.Guide_Number		 [GuideNumber]
+				, ord.IdCustomer		 [IdCustomer]
+				, ord.Sender_Id			 [Sender_Id]
+				, ord.SenderCountryId    [SenderCountryId]
+				, ord.IsCollect			 [IsCollect]
+				, ROUND(((ord.PriceShippment / cst.CODExchangeRate) * ce.ExchangeRate),2,1)		[Price]
+				, ROUND(((ord.Collect_OnDelivery / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[COD]
+				, ROUND(((ord.Collect_OnDelivery / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[Collect_OnDelivery]
+				, ROUND(((cst.TotalAmountPaid / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[AmountPaid]
+				, ROUND(((cst.TotalAmountPaid / cst.CODExchangeRate) * ce.ExchangeRate),2,1)	[TotalAmountPaid]
+				, ROUND(((cst.CODAmount / cst.CODExchangeRate) * ce.ExchangeRate),2,1)			[CODPaid]
+				, ROUND(((cst.CODAmount / cst.CODExchangeRate) * ce.ExchangeRate),2,1)			[CODAmount]
+				, ccc.CodeISO            [CurrencyPrice_CODCodeISO]
+				, ccc.Symbol             [CurrencyPrice_CODSymbol]
+				, ccc.CodeISO            [CurrencyPriceCodeISO]   
+				, ccc.Symbol			 [CurrencyPriceSymbol]
+			FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]					 ord WITH (NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]					 cst WITH (NOLOCK)
+					ON  cst.GuideSerie  = ord.Guide_Serie
+					AND cst.GuideNumber = ord.Guide_Number
+					AND cst.RowStatus = 1                                            
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
+					ON  de.Currency_IdCountry = ISNULL(ord.ReceiverCountryId,'GT')
+					AND de.DefaultPerCountry = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
+					ON ce.TargetCurrency = de.IdCurrencyCOD
+					and CONVERT(date,ce.ExchangeDate) = CONVERT(date,getdate())
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]		 ccc WITH (NOLOCK)
+					ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
+			WHERE	ord.Guide_Serie  = lg.ItemSerie               
+				AND ord.Guide_Number = lg.ItemNumber
+				AND ISNULL(ord.GuideType,'DOM') = 'INT'
+		)	ord20
         LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH (NOLOCK)
             ON pyt.GuideSerie = lg.ItemSerie
                AND pyt.GuideNumber = lg.ItemNumber
@@ -180,9 +233,9 @@ PRINT '*************************************************************************
             ON cus.IdCustomer =
             (
                 SELECT TOP 1
-                       ISNULL(ord.IdCustomer, vpc.CustomerID)
+                       ISNULL(ord20.IdCustomer, vpc.CustomerID)
                 FROM dbo.VisitPointClient vpc WITH (NOLOCK)
-                WHERE vpc.CodeOfReference = ord.Sender_ID
+                WHERE vpc.CodeOfReference = ord20.Sender_ID
             )
         LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
             ON cdp.IdConditionOfPayment = cus.ConditionOfPaymentID
@@ -191,7 +244,9 @@ PRINT '*************************************************************************
             ON rc.RbcIdCustomer = cus.IdCustomer
                AND rc.RbcRowStatus = 'TRUE'
 		LEFT JOIN dbo.RatebyCustomer rcv WITH (NOLOCK)
-			ON rcv.RbcIdCustomer = cus.IdCustomer AND rcv.RbcRowStatus = 'true' AND rcv.RbcCodeOfReference = ord.Sender_ID
+			ON rcv.RbcIdCustomer = cus.IdCustomer 
+				AND rcv.RbcCodeOfReference = ord20.Sender_ID
+				AND rcv.RbcRowStatus = 'true' 
         LEFT JOIN dbo.RateHeader rh WITH (NOLOCK)
             ON rh.RheId = ISNULL( rcv.RbcIdRate, rc.RbcIdRate)
         LEFT JOIN dbo.RateHeader rhd WITH (NOLOCK)
@@ -199,7 +254,7 @@ PRINT '*************************************************************************
                AND cdp.RowStatus = 1
     WHERE --rc.RbcCodeOfReference IS NULL
          ISNULL(rcv.RbcRowStatus,rc.RbcRowStatus) = 1
-         AND IIF(ord.SenderCountryId IS NULL, 'GT',ord.SenderCountryId) = @IdCountry
+         --AND IIF(ord20.SenderCountryId IS NULL, 'GT',ord20.SenderCountryId) = @IdCountry
     ORDER BY lg.ItemSerie,
              lg.ItemNumber;
 
@@ -208,8 +263,28 @@ PRINT '*************************************************************************
 			 PRINT '************************************************************************************* SELECT DISTINCT'
 	
     SELECT DISTINCT
-           tp.*,
-           CASE tp.IsPaid
+           tp.[GuideSerie]
+	     , tp.[GuideNumber]
+	     , tp.[IsCollect]
+		 , tp.[Price]
+         , tp.[COD]
+		 , tp.[AmountPaid]
+		 , tp.[CODPaid]
+		 , tp.[CODIsPaid]
+		 , tp.[PaymentTime]
+		 , tp.[TimeSequence]
+		 , tp.[FelNumber]
+		 , tp.[IsPaid]
+		 , tp.[IsCustomer]
+		 , tp.[ConditionPayment]
+		 , tp.[HaveCredit]
+		 , tp.[CollectCOD]
+		 , tp.[ReturnRate]
+		 , tp.[CurrencyPrice_CODCodeISO]
+		 , tp.[CurrencyPrice_CODSymbol]
+		 , tp.[CurrencyPriceCodeISO]   
+		 , tp.[CurrencyPriceSymbol]
+         , CASE tp.IsPaid
                WHEN 1 THEN
                    0 -- esta pagado
                ELSE -- no esta pagado
