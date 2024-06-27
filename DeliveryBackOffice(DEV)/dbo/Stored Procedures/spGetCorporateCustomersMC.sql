@@ -30,6 +30,8 @@ SELECT DISTINCT
     ISNULL(
 		IIF(ISNULL(ccp.ConditionOfPayment, 'Contado') = 'Contado',
     '0','1'),'' )) AS HasCredit,
+    CONVERT(NVARCHAR,ISNULL(rh.InsuranceRate, 0)) AS InsuranceRate,
+	CONVERT(NVARCHAR,ISNULL(rh.InsuranceExempt, 0)) AS InsuranceExempt,
     REPLACE(ISNULL(Cu.[InvoiceName], ''), '"', '') AS EntityName,
     ISNULL(Cu.[TaxIdentificationNumber], '') AS TaxId,
     REPLACE(ISNULL(Cu.[FiscalAddress], ''), '"', '') AS TaxAddress,
@@ -51,6 +53,8 @@ LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType cba WITH(NOLOCK)
 LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer rc WITH(NOLOCK)
     ON cu.IdCustomer = rc.RbcIdCustomer
     AND rc.RbcRowStatus = 1
+LEFT JOIN DeliveryBackOffice.dbo.RateHeader rh WITH(NOLOCK)
+	ON rc.RbcIdRate = rh.RheId AND rh.RheRowStatus = 1
 LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment ccp WITH(NOLOCK)
     ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
