@@ -67,7 +67,7 @@ BEGIN
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
         DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
         DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
-        DECLARE @CreditAccount NVARCHAR(50) = N'903666261';
+        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', N'903666262');
         DECLARE @ConceptForza NVARCHAR(50) = N'COLLECT';
         DECLARE @BankBAC INT =
                 (
