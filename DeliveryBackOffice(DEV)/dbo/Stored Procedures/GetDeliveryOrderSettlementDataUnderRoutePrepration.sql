@@ -115,6 +115,10 @@ BEGIN
         HaveCredit,
         CollectCOD,
         ReturnRate,
+		CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	CurrencyPrice_CODSymbol  NVARCHAR(8),
+	    CurrencyPriceCodeISO     NVARCHAR(8),
+	    CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay,
         CODAmount,
         ReturnRates

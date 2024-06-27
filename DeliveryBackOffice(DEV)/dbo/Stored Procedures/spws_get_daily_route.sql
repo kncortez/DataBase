@@ -279,7 +279,7 @@ BEGIN
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
 					  ),'json' ) [Address],
-				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
+				ISNULL( CONCAT(cp.[Value],ISNULL(spk.[SenderPhone], vpc.[Phone])), 'N/A') [Phone],
 				IIF(
 						ISNULL(dcp.Pieces_Dry, 0) = 0,
 						(
@@ -327,10 +327,13 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[RouteAssigment]			 ras WITH (NOLOCK)
         LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]	 sma WITH (NOLOCK)
             ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
-        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		spk WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		 spk WITH (NOLOCK)
             ON spk.SchedulePickupId = sma.IdSchedulePickup
         LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]		 vpc WITH (NOLOCK)
             ON vpc.CodeOfReference = spk.SenderId
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			 cp  WITH (NOLOCK)
+			ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+			AND CP.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
 			ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
 			AND de.DefaultPerCountry = 1
@@ -423,15 +426,15 @@ BEGIN
 				   ) [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN [DOR].[Sender_Phone]
+				THEN CONCAT([CPS].[Value], [DOR].[Sender_Phone])
 				ELSE ''
-				END [Sender_Phone],				
+				END [SenderPhone],				
 				ISNULL(
 						IIF(DOR.IsLastMileReturn = 1
-						, ISNULL(DOR.Sender_Phone, 'N/A')
+						, ISNULL( CONCAT([CPS].[Value], DOR.Sender_Phone) , 'N/A')
 						, ISNULL(
-									DOR.Receiver_Phone
-									, DOR.Receiver_Alternant_Phone
+									CONCAT([CPR].[Value], DOR.Receiver_Phone)
+									, CONCAT([CPR].[Value], DOR.Receiver_Alternant_Phone)
 								)
 							), 'N/A'
 					  ) [Phone],
@@ -686,13 +689,19 @@ BEGIN
 		(
 			SELECT MAX(ISNULL(SDFG.Latitude, 0))  'Latitude'
 					, MAX(ISNULL(SDFG.Longitude, 0)) 'Longitude'
-			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide]	SDFG WITH (NOLOCK)
 			WHERE DOR.Guide_Serie   =	SDFG.GuideSerie
 			  AND DOR.Guide_Number	=	SDFG.GuideNumber
 			  AND SDFG.IsDelivery	= 1
 			GROUP BY SDFG.GuideSerie,
 					 SDFG.GuideNumber
 		) DFG
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
+			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			AND CPS.[Name] = 'AreaCode'
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
+			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			AND CPR.[Name] = 'AreaCode'
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
 				AND DSD.RowStatus = 1
 

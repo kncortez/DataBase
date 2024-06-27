@@ -49,7 +49,11 @@
     [inv_dateFEL]             DATETIME       NULL,
     [CatInvoiceTypeId]        INT            NULL,
     [Retries]                 INT            DEFAULT ((1)) NULL,
+    [IdCurrency]              INT            NULL,
+    [IdCountry]               NVARCHAR(2)    NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
+    CONSTRAINT [FK_IdCurrencyInvH_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
+    CONSTRAINT [FK_IdCountryInvH_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
     FOREIGN KEY ([systemOperation]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
 );
 
@@ -112,13 +116,17 @@ CREATE NONCLUSTERED INDEX [idx_inv_pk_id_CatInvoiceTypeId]
     ON [dbo].[invoiceHeader]( [CatInvoiceTypeId]);
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del pais registrado para la factura', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IdCountry';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de moneda de la factura', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'IdCurrency';
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar el tipo de factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'CatInvoiceTypeId';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los int�ntos de la generaci�n de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
-
-
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para poder registrar los intentos de la generacion de una factura.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'invoiceHeader', @level2type = N'COLUMN', @level2name = N'Retries';
 
 
 GO
