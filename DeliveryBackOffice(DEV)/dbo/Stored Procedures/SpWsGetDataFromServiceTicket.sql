@@ -4,6 +4,11 @@
 -- Create date: <2022-06-07>
 -- Description:	< Agregar data de servicios y detalle para tabla dinamica en comprobante de pago, revalorizar guía si no contiene valor >
 -- =============================================
+-- =============================================
+-- Author:		<Walter,Orozco>
+-- Create date: <2024-06-24>
+-- Description:	< Agregar moneda, correo y telefono multipais. >
+-- =============================================
 CREATE PROCEDURE [dbo].[SpWsGetDataFromServiceTicket]
     @IdAccount INT = 37,
     @TrackingNumber VARCHAR(100) = 'FD138358',
@@ -20,6 +25,7 @@ BEGIN
         DECLARE @Serie AS VARCHAR(2) = SUBSTRING(@TrackingNumber, 1, 2);
         DECLARE @NUMBER AS VARCHAR(20) = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber));
         DECLARE @COD AS DECIMAL(18, 2);
+        DECLARE @CODCurrency AS NVARCHAR(6);
         DECLARE @COLLECT AS BIT;
 
         SELECT @TotalWeight = SUM(DOP.PieceWeight),
@@ -41,9 +47,15 @@ BEGIN
         ORDER BY DateCreated DESC;
 
         SELECT @COD = ISNULL(do.Collect_OnDelivery, 0),
-               @COLLECT = do.IsCollect
+               @COLLECT = do.IsCollect,
+			   @CODCurrency = CC.Symbol
         FROM dbo.DeliveryOrder do WITH (NOLOCK)
+        LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH (NOLOCK)
+			ON do.ReceiverCountryId = DC.Currency_IdCountry
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CC WITH (NOLOCK)
+			ON DC.IdCurrencyCOD = CC.IdCatCurrencyCOD
         WHERE do.Collect_OnDelivery > 0
+              AND DC.DefaultPerCountry = 1
               AND Guide_Serie = @Serie
               AND Guide_Number = @NUMBER;
 
@@ -152,6 +164,22 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(rgu.UsrEmail, '') ToEmail,
                    Sender_Address ToAddress,
+                   CASE 
+					WHEN PRV.IdCountry IS NULL 
+						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
+					ELSE 
+						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
+					END AS VoucherEmail,
+					CASE 
+					WHEN PRV.IdCountry IS NULL 
+						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
+					ELSE 
+						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
+					END AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 LEFT JOIN DeliveryBackOffice.dbo.Account ACC
@@ -181,10 +209,13 @@ BEGIN
             BEGIN
                 SELECT C.ProductNumber,
                        BOP.Description,
-                       BOP.Amount
+                       BOP.Amount,
+					   ISNULL(DC.Symbol,'Q') [Symbol]
                 FROM dbo.Cost C WITH (NOLOCK)
                     INNER JOIN dbo.BreakdownOfPayment BOP WITH (NOLOCK)
                         ON C.IdCost = BOP.IdCost
+                    INNER JOIN dbo.CatCurrencyCOD DC WITH (NOLOCK)
+						ON C.ShippingCurrency = DC.IdCatCurrencyCOD
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
                       AND C.ProductNumber = @TrackingNumber
@@ -192,16 +223,20 @@ BEGIN
                 UNION ALL
                 SELECT @TrackingNumber AS ProductNumber,
                        'Valor de Mercaderia' AS Description,
-                       @COD AS Amount;
+                       @COD AS Amount,
+					   @CODCurrency [Symbol];
             END;
             ELSE
             BEGIN
                 SELECT C.ProductNumber,
                        BOP.Description,
-                       BOP.Amount
+                       BOP.Amount,
+					   ISNULL(DC.Symbol,'Q') [Symbol]
                 FROM dbo.Cost C WITH (NOLOCK)
                     INNER JOIN dbo.BreakdownOfPayment BOP WITH (NOLOCK)
                         ON C.IdCost = BOP.IdCost
+                    INNER JOIN dbo.CatCurrencyCOD DC WITH (NOLOCK)
+						ON C.ShippingCurrency = DC.IdCatCurrencyCOD
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
                       AND C.ProductNumber = @TrackingNumber
@@ -256,6 +291,22 @@ BEGIN
                    Sender_Phone ToPhone,
                    COALESCE(DOR.Sender_Mail, '') ToEmail,
                    Sender_Address ToAddress,
+                   CASE 
+					WHEN PRV.IdCountry IS NULL 
+						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
+					ELSE 
+						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
+					END AS VoucherEmail,
+					CASE 
+					WHEN PRV.IdCountry IS NULL 
+						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
+					ELSE 
+						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
+								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
+					END AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
                 LEFT JOIN DeliveryBackOffice.dbo.Township TOW
@@ -283,10 +334,13 @@ BEGIN
             BEGIN
                 SELECT C.ProductNumber,
                        BOP.Description,
-                       BOP.Amount
+                       BOP.Amount,
+					   ISNULL(DC.Symbol,'Q') [Symbol]
                 FROM dbo.Cost C WITH (NOLOCK)
                     INNER JOIN dbo.BreakdownOfPayment BOP WITH (NOLOCK)
                         ON C.IdCost = BOP.IdCost
+                    INNER JOIN dbo.CatCurrencyCOD DC WITH (NOLOCK)
+						ON C.ShippingCurrency = DC.IdCatCurrencyCOD
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
                       AND C.ProductNumber = @TrackingNumber
@@ -294,16 +348,20 @@ BEGIN
                 UNION ALL
                 SELECT @TrackingNumber AS ProductNumber,
                        'Valor de Mercaderia' AS Description,
-                       @COD AS Amount;
+                       @COD AS Amount,
+					   @CODCurrency [Symbol];
             END;
             ELSE
             BEGIN
                 SELECT C.ProductNumber,
                        BOP.Description,
-                       BOP.Amount
+                       BOP.Amount,
+					   ISNULL(DC.Symbol,'Q') [Symbol]
                 FROM dbo.Cost C WITH (NOLOCK)
                     INNER JOIN dbo.BreakdownOfPayment BOP WITH (NOLOCK)
                         ON C.IdCost = BOP.IdCost
+                    INNER JOIN dbo.CatCurrencyCOD DC WITH (NOLOCK)
+						ON C.ShippingCurrency = DC.IdCatCurrencyCOD
                 WHERE BOP.RowStatus = 1
                       AND BOP.Amount <> 0
                       AND C.ProductNumber = @TrackingNumber
