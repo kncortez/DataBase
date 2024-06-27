@@ -7,6 +7,10 @@
 -- Create date: <2024-06-05>
 -- Description:	<Se agrega parametro para filtrar guias por pais de origen>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-06-27>
+-- Description:	<Se valida si la guia consultada es internacion o domestica>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetPieceGuideLinehauls]
 
 @Guide AS NVARCHAR(20),
@@ -37,7 +41,13 @@ BEGIN
 	ON  B.StatusOrderId =C.StatusOrderId
     WHERE B.GuideSerie  + CAST(B.GuideNumber AS varchar) = RTRIM(LTRIM(@Guide)) AND 
 		  C.OrderDescription NOT IN('Entregado','Anulado','Entregado En Express Center')
-		  AND IIF(O.SenderCountryId IS NULL, 'GT', O.SenderCountryId)=@IdCountry
+		  AND (ISNULL(O.GuideType,'DOM')='INT' OR (ISNULL(O.SenderCountryId,'GT')=@IdCountry AND ISNULL(O.GuideType,'DOM')='DOM'))
 	ORDER BY B.NoPiece
 
+	---TABLA RESPUESTA
+	SELECT 'La guía que intentas procesar pertenece a otro pais. Por favor, revísala e intenta de nuevo.' AS [Description]
+	FROM DeliveryOrder do WITH (NOLOCK)
+	WHERE do.Guide_Number=@GuideNumber and do.Guide_Serie = @Serie
+	AND 		
+	ISNULL(do.SenderCountryId,'GT')<>@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'
 END
