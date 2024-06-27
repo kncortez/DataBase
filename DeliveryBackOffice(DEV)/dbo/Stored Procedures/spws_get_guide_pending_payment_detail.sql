@@ -340,6 +340,10 @@ BEGIN
         HaveCredit BIT,
         CollectCOD BIT,
         ReturnRate DECIMAL(14, 2) NULL,
+        CurrencyPrice_CODCodeISO NVARCHAR(8),
+		CurrencyPrice_CODSymbol  NVARCHAR(8),
+		CurrencyPriceCodeISO     NVARCHAR(8),
+		CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay DECIMAL(14, 2) NULL,
         CODAmount DECIMAL(14, 2) NULL,
         ReturnRates DECIMAL(14, 2) NULL
@@ -370,6 +374,10 @@ BEGIN
         HaveCredit,
         CollectCOD,
         ReturnRate,
+        CurrencyPrice_CODCodeISO,
+		CurrencyPrice_CODSymbol,
+		CurrencyPriceCodeISO,
+		CurrencyPriceSymbol,
         AmountToPay,
         CODAmount,
         ReturnRates
