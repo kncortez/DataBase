@@ -368,7 +368,6 @@ BEGIN
         WHERE	ras.IdCurrierMan = @IdCourier
 			AND ras.DateOfRoute  = @DateRoute
 			AND ras.RowStatus = 1 
-			AND sma.SubTypeServiceManagmentId=1
 		ORDER BY [CodeOfReference] ASC,
 				 [Id] ASC
 
