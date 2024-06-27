@@ -30,7 +30,7 @@ CREATE PROCEDURE [dbo].[spws_get_daily_route]
   , @DateRoute DATE
 AS
 BEGIN
- 
+
     SET NOCOUNT ON;
 
 	DECLARE @TokenAct INT = 1;
@@ -272,14 +272,13 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
-    EXEC [dbo].[spws_get_guide_pending_payment_temp] @InGuides = @ConcatReturnGuides    -- Gu�as
-                                              , @InTime = 3                        -- Entrega
-                                              , @IsReturn = 1                      -- Devoluci�n
-                                              , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
+
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides -- Gu�as
+                                              , @InTime = 3                          -- Entrega
+                                              , @IsReturn = 1                        -- Devoluci�n
+                                              , @CodeApp = 'SIFDCECOM300720201459'   -- CodeApp
                                               , @IdModule = 1
                                               , @Token = @Token;
-
---SELECT * FROM @TempReturnPrice
 
     IF (@TokenAct = 1 AND @hourtoken <= 8)
     BEGIN
@@ -299,7 +298,7 @@ BEGIN
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
 					  ),'json' ) [Address],
-				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
+				ISNULL( CONCAT(cp.[Value],ISNULL(spk.[SenderPhone], vpc.[Phone])), 'N/A') [Phone],
 				IIF(
 						ISNULL(dcp.Pieces_Dry, 0) = 0,
 						(
@@ -347,10 +346,13 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[RouteAssigment]			 ras WITH (NOLOCK)
         LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]	 sma WITH (NOLOCK)
             ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
-        INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		 spk WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		 spk WITH (NOLOCK)
             ON spk.SchedulePickupId = sma.IdSchedulePickup
         LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]		 vpc WITH (NOLOCK)
             ON vpc.CodeOfReference = spk.SenderId
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			 cp  WITH (NOLOCK)
+			ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+			AND CP.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
 			ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
 			AND de.DefaultPerCountry = 1
@@ -388,6 +390,7 @@ BEGIN
         WHERE	ras.IdCurrierMan = @IdCourier
 			AND ras.DateOfRoute  = @DateRoute
 			AND ras.RowStatus = 1 
+			AND sma.SubTypeServiceManagmentId=1
 		ORDER BY [CodeOfReference] ASC,
 				 [Id] ASC
 
@@ -395,8 +398,7 @@ BEGIN
 		**************************************** CONSULTA PARA DESPLEGAR LAS ENTREGAS Y SUS ALERTAS **********************************************
 		******************************************************************************************************************************************/
        
-		SELECT	
-		'Delivery' [ServiceType],
+		SELECT	'Delivery' [ServiceType],
 				CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0))	[CodeOfReference],
 				ISNULL(
 					CASE
@@ -443,15 +445,15 @@ BEGIN
 				   ) [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN [DOR].[Sender_Phone]
+				THEN CONCAT([CPS].[Value], [DOR].[Sender_Phone])
 				ELSE ''
-				END [Sender_Phone],				
+				END [SenderPhone],				
 				ISNULL(
 						IIF(DOR.IsLastMileReturn = 1
-						, ISNULL(DOR.Sender_Phone, 'N/A')
+						, ISNULL( CONCAT([CPS].[Value], DOR.Sender_Phone) , 'N/A')
 						, ISNULL(
-									DOR.Receiver_Phone
-									, DOR.Receiver_Alternant_Phone
+									CONCAT([CPR].[Value], DOR.Receiver_Phone)
+									, CONCAT([CPR].[Value], DOR.Receiver_Alternant_Phone)
 								)
 							), 'N/A'
 					  ) [Phone],
@@ -525,8 +527,6 @@ BEGIN
 									)
 							  )
 				END [Price_COD],
-				--kvp.KindOfVPName,
-				kvp.KindOfVPName ,
 				CASE
 					WHEN DOR.IdDeliveryOption = @IdDeliveryOption 
 					THEN 0
@@ -536,7 +536,7 @@ BEGIN
 								'0', 
 								IIF(
 										DOR.IsLastMileReturn = 1, 
-										TRPreturns.AmountToPay, 
+										TRPreturns.AmountToPay , 
 										IIF(
 												ISNULL(DOR.IsCollect, 0) = 1, 
 												ISNULL( DOR.PriceShippment, 0), 
@@ -684,35 +684,6 @@ BEGIN
                                             )                                                           EPS
 			ON	DAT.Guide_Serie = EPS.GuideSerie
 			AND DAT.Guide_Number = EPS.GuideNumber
-		--OUTER APPLY(
-		--	SELECT	VPCA1.CodeOfReference, 
-		--			VPCA1.[Address], 
-		--			VPCA1.[Longitude], 
-		--			VPCA1.[Latitude], 
-		--			VPCA1.Accuracy, 
-		--			VPCA1.DescriptionOfClient, 
-		--			VPCA1.IdKindOfVPClient, 
-		--			KVPC1.KindOfVPName
-		--	FROM [DeliveryBackOffice].[dbo].[VisitPointClient]		VPCA1 WITH (NOLOCK)
-		--	RIGHT JOIN[DeliveryBackOffice].[dbo].[KindOfVPClient]	KVPC1 WITH (NOLOCK)
-		--		ON KVPC1.IdKindOfVPClient = VPCA1.IdKindOfVPClient
-		--	WHERE VPCA1.CodeOfReference = DOR.Receiver_ID 
-		--	AND DOR.IsLastMileReturn != 1 
-		--	UNION ALL
-		--	SELECT	VPCA2.CodeOfReference, 
-		--			VPCA2.[Address], 
-		--			VPCA2.[Longitude], 
-		--			VPCA2.[Latitude], 
-		--			VPCA2.Accuracy, 
-		--			VPCA2.DescriptionOfClient, 
-		--			VPCA2.IdKindOfVPClient, 
-		--			KVPC2.KindOfVPName
-		--	FROM [DeliveryBackOffice].[dbo].[VisitPointClient]		VPCA2 WITH (NOLOCK)
-		--	RIGHT JOIN[DeliveryBackOffice].[dbo].[KindOfVPClient]	KVPC2 WITH (NOLOCK)
-		--		ON KVPC2.IdKindOfVPClient = VPCA2.IdKindOfVPClient
-		--	WHERE VPCA2.CodeOfReference = DOR.Sender_ID
-		--	AND DOR.IsLastMileReturn = 1 
-		--) VPC
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient           VPr WITH (NOLOCK)
 			ON VPr.CodeOfReference = DOR.Receiver_ID
 		LEFT JOIN dbo.KindOfVPClient                                kvp WITH (NOLOCK)
@@ -737,13 +708,19 @@ BEGIN
 		(
 			SELECT MAX(ISNULL(SDFG.Latitude, 0))  'Latitude'
 					, MAX(ISNULL(SDFG.Longitude, 0)) 'Longitude'
-			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide]	SDFG WITH (NOLOCK)
 			WHERE DOR.Guide_Serie   =	SDFG.GuideSerie
 			  AND DOR.Guide_Number	=	SDFG.GuideNumber
 			  AND SDFG.IsDelivery	= 1
 			GROUP BY SDFG.GuideSerie,
 					 SDFG.GuideNumber
 		) DFG
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
+			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			AND CPS.[Name] = 'AreaCode'
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
+			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			AND CPR.[Name] = 'AreaCode'
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
 				AND DSD.RowStatus = 1
 
