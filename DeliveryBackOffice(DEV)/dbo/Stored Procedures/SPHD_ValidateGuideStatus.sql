@@ -138,7 +138,7 @@ BEGIN
 						WHERE 
 							[DDO].[Guide_Serie] = @GuideSerie 
 							AND [DDO].[Guide_Number] = @GuideNumber 
-							AND (ISNULL([DDO].GuideType,'DOM')='INT' AND (ISNULL([DDO].SenderCountryId,'GT')=@IdCountry OR ISNULL([DDO].ReceiverCountryId,'GT')=@IdCountry)
+							AND (ISNULL([DDO].GuideType,'DOM')='INT'
 								OR (ISNULL([DDO].SenderCountryId,'GT')=@IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM')
 								)
 					) THEN 1
