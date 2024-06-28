@@ -4,6 +4,11 @@
 -- Create date: <2020-12-11>
 -- Description:	<Devuelve una lista de departamentos asociados a un pais>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <2024-06-28>
+-- Description:	<Se agrega el IdProvince en la respuesta de la consulta>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_list_provinces_by_header_code]
 	-- Add the parameters for the stored procedure here
 	@IdHeaderCode as nvarchar(2) = '-1',
@@ -17,6 +22,7 @@ BEGIN
 	SELECT  
 		depto.LocalCode		'HeaderCode',
 		depto.ProvinceName	'ProvinceName',
+		depto.IdProvince AS 'IdProvince',
 		depto.IdCountry		'IdCountry'
 	FROM DeliveryBackOffice.dbo.Province depto WITH (NOLOCK) 
 	WHERE depto.ProvinceStatus = 'TRUE'
