@@ -334,12 +334,7 @@ BEGIN
 					, 1
 					, 0
 				   ) [HighPriority],
-				'' [Alerts],
-				ISNULL(sma.ServiceStatusId, 1) [Status],
-				ccc.CodeISO[CurrencyPriceCodeISO],
-				ccc.Symbol[CurrencyPriceSymbol],
-                ccc.CodeISO[PickupPriceCodeISO],
-                ccc.Symbol[PickupPriceSymbol]
+				'' [Alerts]
             FROM dbo.RouteAssigment             ras WITH (NOLOCK)
                 LEFT JOIN dbo.ServiceManagement sma WITH (NOLOCK)
                     ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
@@ -353,14 +348,6 @@ BEGIN
 									    ON  spk.TownshipId = t.IdTownship
 									LEFT JOIN dbo.Province p WITH (NOLOCK)
 									    ON t.IdProvince =p.IdProvince
-		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-			ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
-			AND de.DefaultPerCountry = 1
-		LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
-			ON ce.TargetCurrency = de.IdCurrencyCOD
-			and CONVERT(date,ce.ExchangeDate) = CONVERT(date,getdate())
-		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]		 ccc WITH (NOLOCK)
-			ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
             WHERE ras.IdCurrierMan = @IdCourier
                     AND (ras.DateOfRoute = @DateRoute
                         --- OR ras.DateOfRoute = '2023-06-25'
