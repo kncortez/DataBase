@@ -1648,6 +1648,7 @@
     <Build Include="dbo\Stored Procedures\spGetCatalogTypePieceMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetCorporateCustomersMC.sql" />
     <Build Include="dbo\Stored Procedures\GetDataInvoiceByCountry.sql" />
+    <Build Include="dbo\Stored Procedures\spGetDeliveryOptionsMC.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
