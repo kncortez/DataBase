@@ -7,7 +7,9 @@
     [DateCreated]      DATETIME       NOT NULL,
     [TokenUpdated]     NVARCHAR (50)  NULL,
     [DateUpdated]      DATETIME       NULL,
-    PRIMARY KEY CLUSTERED ([IdDeliveryOption] ASC)
+    [IdCountry]        VARCHAR  (2)   NULL,
+    PRIMARY KEY CLUSTERED ([IdDeliveryOption] ASC),
+    FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 
