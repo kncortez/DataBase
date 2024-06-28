@@ -39,7 +39,8 @@ BEGIN
 		ExecutionPriority INT,
 		ExecutionIsPending BIT,
 		ExecutionHasStarted BIT,
-		ExecutionHasCompleted BIT
+		ExecutionHasCompleted BIT,
+		IdCountry NVARCHAR(2)
 	);
 
 	-- Obtener valores de ejecución de la fecha actual
@@ -65,15 +66,17 @@ BEGIN
 			-- Ya existen registros para el día de hoy para ejecución de CoD
 			INSERT INTO
 				@ResponseExecutionQueue
-				(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted)
+				(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted, IdCountry)
 			SELECT
-				CDE.IdCoDDailyExecution, CDE.CoDProcessName, CDE.DeliveryBankId, CDE.ExecutionDate, CDE.ExecutionTime, CDE.ProcessPriority, CDE.ProcessPending, CDE.ProcessStarted, CDE.ProcessFinished
+				CDE.IdCoDDailyExecution, CDE.CoDProcessName, CDE.DeliveryBankId, CDE.ExecutionDate, CDE.ExecutionTime, CDE.ProcessPriority, CDE.ProcessPending, CDE.ProcessStarted, CDE.ProcessFinished, @IdCountrySender
 			FROM
 				[DeliveryBackOffice].[dbo].[CoDDailyExecution] CDE WITH(NOLOCK)
 			WHERE
 				CDE.ExecutionDate = CAST(GETDATE() AS DATE)
 				AND
 				CDE.RowStatus = 1
+				AND
+				CDE.IdCountry = @IdCountrySender
 			ORDER BY
 				CDE.ExecutionTime ASC,
 				CDE.ProcessPriority DESC,
