@@ -148,6 +148,10 @@ BEGIN
                                 (
                                     SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
                                            + '"PickupRate":"' + CONVERT(VARCHAR, ISNULL(@PickupRate, 0)) + '",'
+                                           + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
+                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
+                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceCodeISO , 0)) + '",'
+                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceSymbol , 0)) + '",'
                                            + '"Collect":"' + 'false' + +'"}'
                                     FROM #BrainProcessedGuides tbl
                                     FOR XML PATH(''), TYPE
