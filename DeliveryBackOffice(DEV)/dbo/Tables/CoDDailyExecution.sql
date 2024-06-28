@@ -16,6 +16,7 @@
     [DateCreated]         DATETIME        NOT NULL,
     [TokenUpdated]        NVARCHAR (50)   NULL,
     [DateUpdated]         DATETIME        NULL,
+    [IdCountry]           NVARCHAR (2)    NULL DEFAULT 'GT',
     PRIMARY KEY CLUSTERED ([IdCoDDailyExecution] ASC),
     CONSTRAINT [FK_CoDDailyExectuion_CoDDailySchedule] FOREIGN KEY ([CodDailyScheduleId]) REFERENCES [dbo].[CatCoDDailySchedule] ([IdCatCoDDailySchedule]),
     CONSTRAINT [FK_CoDDailyExectuion_DeliveryBank] FOREIGN KEY ([DeliveryBankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank])
@@ -89,6 +90,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CoDDailyExecution', @level2type = N'COLUMN', @level2name = N'IdCoDDailyExecution';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Pais de ejecucion de proceso de servicio COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CoDDailyExecution', @level2type = N'COLUMN', @level2name = N'IdCountry';
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de procesos de servicio de CoD ejecutados diariamente, sirviendo también como una bitácora de la ejecución del servicio durante el día.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CoDDailyExecution';
