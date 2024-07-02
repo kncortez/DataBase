@@ -181,7 +181,7 @@ BEGIN
                              AND pg.Date > '2022-03-14 22:00:00.000'
                              -- AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
-							 AND do.SenderCountryId = @IdCountrySender
+							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
                        FOR XML PATH('')
                    ),
                    1,
@@ -294,7 +294,7 @@ BEGIN
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL
-				  AND ord.SenderCountryId = @IdCountrySender;
+				  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -496,7 +496,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
-				  AND ord.SenderCountryId = @IdCountrySender
+					 AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -623,7 +623,7 @@ BEGIN
                       OR do.IsCollect = 'true'
                   )
                   AND ISNULL(tact.CODtoPay, 0) = 0
-				  AND do.SenderCountryId = @IdCountrySender
+				  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
