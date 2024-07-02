@@ -106,3 +106,30 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'CatRol',
     @level2type = NULL,
     @level2name = NULL
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica si el rol tiene roles del mismo nivel(EN DESUSO)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatRol',
+    @level2type = N'COLUMN',
+    @level2name = N'RolAdminBrothers'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica si el rol es de cliente(EN DESUSO)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatRol',
+    @level2type = N'COLUMN',
+    @level2name = N'RolAdminClient'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica si el rol es interno o no',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatRol',
+    @level2type = N'COLUMN',
+    @level2name = N'RolAdminInternal'
