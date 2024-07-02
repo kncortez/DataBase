@@ -1,8 +1,13 @@
 ﻿--EXEC GetDataForClosure
-
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-02>
+-- Description:	<Se agrega el filtro por pais y el nombre de las cuentas asignadas por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDataForClosure]
     @VisitPointId INT = 4246,
-    @IdAccount INT = 0
+    @IdAccount INT = 0,
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -14,6 +19,11 @@ BEGIN
     DECLARE @Devolucion INT;
     DECLARE @Traslado INT;
     DECLARE @Internacional INT;
+	DECLARE @AccountCOD NVARCHAR(30);
+	DECLARE @Account NVARCHAR(30);
+
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
     SET @Estandar =
     (
@@ -263,16 +273,18 @@ BEGIN
 
               AND ACD.RowStatus = 1
     );
-    WITH ROWCTE (TotalCash, CountCash, TotalCard, CountCard, TotalCredit, CountCredit, TotalFacturaCash,
+    WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
                  CountFacturaCash, TotalFacturaCard, CountFacturaCard, IdAccount
                 )
     AS (SELECT ISNULL(SUM(S1.TotalCash), 0) 'TotalCash',
+				@Account AS 'AccountExp',
                ISNULL(SUM(S1.CountCash), 0) 'CountCash',
                ISNULL(SUM(S1.TotalCard), 0) 'TotalCard',
                ISNULL(SUM(S1.CountCard), 0) 'CountCard',
                ISNULL(SUM(S1.TotalCredit), 0) 'TotalCredit',
                ISNULL(SUM(S1.CountCredit), 0) 'CountCredit',
                -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			   @AccountCOD AS 'AccountCOD',
                ISNULL(SUM(S1.TotalFacturaCash), 0) 'TotalFacturaCash',
                ISNULL(SUM(S1.CountFacturaCash), 0) 'CountFacturaCash',
                ISNULL(SUM(S1.TotalFacturaCard), 0) 'TotalFacturaCard',
