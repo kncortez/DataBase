@@ -137,7 +137,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
-								 AND do.SenderCountryId = @IdCountrySender
+								 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
                            FOR XML PATH('')
                        )
                      , 1
@@ -191,7 +191,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
                                  AND ISNULL(do.IsLastMileReturn, 0) = 0
-								 AND do.SenderCountryId = @IdCountrySender
+								 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
                            FOR XML PATH('')
                        )
                      , 1
@@ -319,7 +319,7 @@ BEGIN
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL
                   AND MBS.LogGuideNumber IS NULL
-				  AND ord.SenderCountryId = @IdCountrySender;
+				  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -568,7 +568,7 @@ BEGIN
                         ON pyt.GuideSerie = ord.Guide_Serie
                            AND pyt.GuideNumber = ord.Guide_Number
                 WHERE ord.Collect_OnDelivery > 0
-					AND ord.SenderCountryId = @IdCountrySender
+				AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
             ) a1
             ORDER BY a1.IDCUSTOMER
                    , a1.Guide_Serie
@@ -713,7 +713,7 @@ BEGIN
                   )
                   AND tact.CODtoPay > 0
             --AND tact.Id_bank IS NOT NULL
-				  AND do.SenderCountryId = @IdCountrySender
+				  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
             ;
 
             CREATE NONCLUSTERED INDEX IX_TFPT_GSGNCABI
@@ -806,7 +806,7 @@ BEGIN
                 LEFT JOIN dbo.Customer         CS WITH (NOLOCK)
                     ON CS.IdCustomer = ISNULL(ORD.IdCustomer, VPC.CustomerID)
             WHERE tact.CODtoPay > 0
-				  AND ord.SenderCountryId = @IdCountrySender
+				AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
