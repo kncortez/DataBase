@@ -151,6 +151,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
+             , REPLACE(REPLACE(ISNULL(dc.Currency_Symbol,'Q.'), '(', ''), ')', '') 'Moneda'
              , DO.PriceShippment                                                  'Monto de envío'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
@@ -191,6 +192,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
+            LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]			  DC WITH (NOLOCK)
+				ON (DO.ReceiverCountryId = DC.Currency_IdCountry OR (DO.ReceiverCountryId IS NULL AND DC.Currency_IdCountry = 'GT'))
+				AND DC.DefaultPerCountry = 1
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
