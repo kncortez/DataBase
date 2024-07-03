@@ -3,6 +3,11 @@
 -- Create date: <2021-08-02>
 -- Description:	<Devuelve el listado de GUIAS asiganadas a una cuenta usuario Individual>
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2024-07-02>
+-- Description:	<Mostrar correctamente la moneda en función del país.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_GuidesByCustomer]
     -- Add the parameters for the stored procedure here
     --@StartDate DATETIME,
@@ -78,7 +83,7 @@ SET @jsonResult =
                                        + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
                                        + '",' + '"DateProgramadaEntrega":"'
                                        + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A') + '",'
-                                       + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+                                       + '"CurrencySymbol":"' + REPLACE(REPLACE(ISNULL(dc.Currency_Symbol,'Q.'), '(', ''), ')', '')  + '",'
                                        +
                                     --'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
                                     '"PrecioServicio":"'
@@ -182,6 +187,9 @@ SET @jsonResult =
                                 FROM dbo.DeliveryOrder ord WITH(NOLOCK)
                                     INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
                                         ON sto.StatusOrderId = ord.StatusOrderId
+                                    LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency dc WITH(NOLOCK)
+										ON (ord.ReceiverCountryId = dc.Currency_IdCountry OR (ord.ReceiverCountryId IS NULL AND dc.Currency_IdCountry = 'GT'))
+										AND dc.DefaultPerCountry = 1
                                     LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
                                         ON (ord.Guide_Number = paydord.GuideNumber)
                                     LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
