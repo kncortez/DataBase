@@ -8,6 +8,7 @@
     [DateCreated]      DATETIME      NOT NULL,
     [TokenUpdated]     VARCHAR (50)  NULL,
     [DateUpdated]      DATETIME      NULL,
+    [IdCountry]        NVARCHAR(2)   NULL,
     PRIMARY KEY CLUSTERED ([IdClosureAccount] ASC)
 );
 
