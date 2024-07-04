@@ -25,7 +25,8 @@ CREATE PROCEDURE [dbo].[spws_create_account]
 	@URL AS NVARCHAR(MAX),
 	@NIT AS VARCHAR(18),
 	@PhoneNumber AS VARCHAR(30),
-	@AddedField AS NVARCHAR(50) = NULL
+	@AddedField AS NVARCHAR(50) = NULL,
+	@CountryId AS NVARCHAR(2) ='GT'
 	
 AS
 BEGIN
@@ -36,9 +37,8 @@ BEGIN
 
 	DECLARE @NewMainUserRol INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Nuevo estándar' COLLATE Latin1_General_CI_AI);
 
-	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
-	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
-
+	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI AND CountryId= @CountryId);
+	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI AND CountryId = @CountryId);
 	DECLARE @IdentificationValue NVARCHAR(200)
 	DECLARE @jsonResult NVARCHAR(MAX) 
 	DECLARE @IdCustomer as INT        --IdCustomer que se inserta en la tabla dbo.Customer
