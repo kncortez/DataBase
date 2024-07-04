@@ -11,8 +11,8 @@
 -- =============================================
 -- =============================================
 -- Author:		<Garcia, Tito>
--- Create date: <2024-07-03>
--- Description:	<Se mejora el filtro por pais
+-- Create date: <2024-07-04>
+-- Description:	<Se mejora el filtro por pais para tomar en cuenta el string vacio>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_list_provinces_by_header_code]
 	-- Add the parameters for the stored procedure here
@@ -32,7 +32,7 @@ BEGIN
 	FROM DeliveryBackOffice.dbo.Province depto WITH (NOLOCK) 
 	WHERE depto.ProvinceStatus = 'TRUE'
 		AND depto.IdProvince = IIF(@IdHeaderCode != -1, @IdHeaderCode, depto.IdProvince)
-		AND ISNULL(@IdCountry, depto.idCountry) = depto.idCountry
+		AND ISNULL(NULLIF(@IdCountry,''), depto.idCountry) = depto.idCountry
 	ORDER BY depto.LocalCode
 
 END
