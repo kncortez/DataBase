@@ -6,6 +6,11 @@
 --               municipios de un departamento o 
 --				 pais>
 -- =============================================
+-- =============================================
+-- Author:		<Tito García>
+-- Create date: <2024-07-04>
+-- Description:	<se mejora el filtro para obtener destino según país de Origen en el cotizador>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_list_townships_by_header_code]
 	-- Add the parameters for the stored procedure here
 	@IdHeaderCodeTownship as nvarchar(10)  = '-1', --all
@@ -37,7 +42,7 @@ BEGIN
 	WHERE 
 		mun.TownshipStatus = 'TRUE'
 		AND depto.ProvinceStatus = 1
-		AND depto.IdCountry = @IdCountry
+		AND ISNULL(NULLIF(@IdCountry,''), depto.IdCountry) = depto.IdCountry
 		AND (@IdHeaderCodeTownship = '-1' OR mun.HeaderCode = @IdHeaderCodeTownship)
 		AND (@IdHeaderCode = '-1' OR depto.LocalCode = @IdHeaderCode)
    
