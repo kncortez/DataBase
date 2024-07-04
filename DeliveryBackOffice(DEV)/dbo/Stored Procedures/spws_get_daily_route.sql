@@ -1,33 +1,14 @@
-﻿
+
 -- =============================================
--- Author:		<César,Aquino>
--- Create date: <2021-01-08>
+-- Author:		<Cristian Azurdia>
+-- Create date: <2024-04-25>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
--- =============================================
-
--- =============================================
--- Modiff:		<Hugo,Gomez>
--- Create date: <2021-05-13>
--- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
--- =============================================
-
--- =============================================
--- Modiff:		<Marco,Jiménez>
--- Create date: <2021-09-16>
--- Description:	<Se agregan validaciones para no cobrar el servicio ni COD en la courierapp cuando la entrega sea en un Express Center>
--- Hotfix: FDAPI-337
--- =============================================
-
--- =============================================
--- Modiff:		<Andres,Ruiz>
--- Create date: <2021-12-13>
--- Description:	< Adición de campos para alertas de servicios >
 -- =============================================
 
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
-    @Token VARCHAR(200) = ''
-  , @IdCourier BIGINT
-  , @DateRoute DATE
+    @Token VARCHAR(200) = '',
+    @IdCourier BIGINT,
+    @DateRoute DATE
 AS
 BEGIN
 
@@ -44,7 +25,11 @@ BEGIN
             (
                 SELECT	TOP 1 STSM.IdSubTypeServiceManagment
                 FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
+<<<<<<< HEAD
                 WHERE	STSM.Name = 'Recolección'
+=======
+                WHERE	STSM.Name = 'Recolecci�n'
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 					AND STSM.RowStatus = 1
             );
     DECLARE @DeliveryTypeId BIGINT =
@@ -58,7 +43,11 @@ BEGIN
             (
                 SELECT	TOP 1 STSM.IdSubTypeServiceManagment
                 FROM	[DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
+<<<<<<< HEAD
                 WHERE	STSM.Name = 'Devolución'
+=======
+                WHERE	STSM.Name = 'Devoluci�n'
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 					AND STSM.RowStatus = 1
             );
 
@@ -190,7 +179,11 @@ BEGIN
         AND DAT.Guide_Number = DOR.Guide_Number
         AND DOR.IsLastMileReturn = 1
 		--En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Incidencia en ruta
+<<<<<<< HEAD
         AND DOR.StatusOrderId IN ( 4, 5, 12,  14, 20, 25, 45, 50 ) 
+=======
+        AND DOR.StatusOrderId IN ( 4, 5, 12,  14, 20, 25, 45 ) 
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 	LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
         ON DSD.Guide_Serie = DAT.Guide_Serie
         AND DSD.Guide_Number = DAT.Guide_Number
@@ -272,11 +265,18 @@ BEGIN
       , CODAmount
       , ReturnRates
     )
+<<<<<<< HEAD
 
     EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides -- Gu�as
                                               , @InTime = 3                          -- Entrega
                                               , @IsReturn = 1                        -- Devoluci�n
                                               , @CodeApp = 'SIFDCECOM300720201459'   -- CodeApp
+=======
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides    -- Gu�as
+                                              , @InTime = 3                        -- Entrega
+                                              , @IsReturn = 1                      -- Devoluci�n
+                                              , @CodeApp = 'SIFDCECOM300720201459' -- CodeApp
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
                                               , @IdModule = 1
                                               , @Token = @Token;
 
@@ -292,6 +292,7 @@ BEGIN
 				ISNULL(spk.SchedulePickupId, '-1') [Id],
 				ISNULL(sma.IdServiceManagement, -1) [ServiceManagementId],
 				ISNULL(cpt.TimePlaName, 'N/A') [ServicePaymentTime],
+<<<<<<< HEAD
 				dbo.fnt_String_Escape(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A'),'json') [Sender],
 				dbo.fnt_String_Escape(
 				CONCAT( ISNULL(spk.AddressPickup, vpc.[Address]), ', ',
@@ -299,6 +300,15 @@ BEGIN
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
 					  ),'json' ) [Address],
 				ISNULL( CONCAT(cp.[Value],ISNULL(spk.[SenderPhone], vpc.[Phone])), 'N/A') [Phone],
+=======
+				dbo.fn_ReplaceSpecialCharsForJSON(ISNULL(ISNULL(spk.SenderName, vpc.DescriptionOfClient), 'N/A')) [Sender],
+				dbo.fn_ReplaceSpecialCharsForJSON(
+				CONCAT( ISNULL(spk.AddressPickup, vpc.[Address]), ', ',
+						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
+						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
+					  ) ) [Address],
+				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 				IIF(
 						ISNULL(dcp.Pieces_Dry, 0) = 0,
 						(
@@ -338,6 +348,7 @@ BEGIN
 					, 0
 				   ) [HighPriority],
 				'' [Alerts],
+<<<<<<< HEAD
 				ISNULL(sma.ServiceStatusId, 1) [Status],
 				ccc.CodeISO[CurrencyPriceCodeISO],
 				ccc.Symbol[CurrencyPriceSymbol],
@@ -366,6 +377,21 @@ BEGIN
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Township]				 t WITH (NOLOCK)
 			ON  spk.TownshipId = t.IdTownship
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Province]				 p WITH (NOLOCK)
+=======
+				ISNULL(sma.ServiceStatusId, 1) [Status]
+        FROM [DeliveryBackOffice].[dbo].[RouteAssigment]			ras WITH (NOLOCK)
+        LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]	sma WITH (NOLOCK)
+            ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
+        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		spk WITH (NOLOCK)
+            ON spk.SchedulePickupId = sma.IdSchedulePickup
+        RIGHT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]	vpc WITH (NOLOCK)
+            ON vpc.CodeOfReference = spk.SenderId
+        LEFT JOIN [DeliveryBackOffice].[dbo].[CatPaymentTime]		cpt WITH (NOLOCK)
+            ON sma.CatPaymentTimeId = cpt.TimePlaId
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Township]				t WITH (NOLOCK)
+			ON  spk.TownshipId = t.IdTownship
+		LEFT JOIN [DeliveryBackOffice].[dbo].[Province]				p WITH (NOLOCK)
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 			ON t.IdProvince =p.IdProvince
 		OUTER APPLY(
 			SELECT TOP 1 vpi.PathImage
@@ -390,7 +416,10 @@ BEGIN
         WHERE	ras.IdCurrierMan = @IdCourier
 			AND ras.DateOfRoute  = @DateRoute
 			AND ras.RowStatus = 1 
+<<<<<<< HEAD
 			AND sma.SubTypeServiceManagmentId=1
+=======
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 		ORDER BY [CodeOfReference] ASC,
 				 [Id] ASC
 
@@ -399,6 +428,7 @@ BEGIN
 		******************************************************************************************************************************************/
        
 		SELECT	'Delivery' [ServiceType],
+<<<<<<< HEAD
 				CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0))	[CodeOfReference],
 				ISNULL(
 					CASE
@@ -411,19 +441,41 @@ BEGIN
 				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
 				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
 				 0 [ServiceManagementId],
+=======
+				CONVERT(VARCHAR, ISNULL(VPC.CodeOfReference, 0)) [CodeOfReference],
+				ISNULL(
+						(
+							CASE
+							WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
+							THEN DOR.IdDeliveryOption
+							ELSE 1
+							END
+						), 0
+					  )[DeliveryOption],
+				 CONVERT(tinyint, ISNULL([DOR].[IsLastMileReturn], 0)) [IsLastMileReturn],
+				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 
+				 0 [ServiceManagementId],
+				 dbo.fn_ReplaceSpecialCharsForJSON(
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 				 ISNULL(
 					ISNULL(
 							COALESCE(
 										IIF(
 												DOR.IsLastMileReturn = 1,
+<<<<<<< HEAD
 												dbo.fnt_String_Escape(DOR.Receiver_FirstName, 'json'),
 												dbo.fnt_String_Escape(DOR.Sender_FirstName, 'json')
+=======
+												DOR.Receiver_FirstName,
+												DOR.Sender_FirstName
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 											) , ''
 									) + ' '
 							+ 
 							COALESCE(
 										IIF(
 												DOR.IsLastMileReturn = 1,
+<<<<<<< HEAD
 												dbo.fnt_String_Escape(DOR.Receiver_FirstName, 'json'),
 												dbo.fnt_String_Escape(DOR.Sender_FirstName, 'json')
 											) , ''
@@ -439,12 +491,31 @@ BEGIN
 										DOR.IsLastMileReturn = 1,
 										dbo.fnt_String_Escape(DOR.Sender_Address,'json'),
 										dbo.fnt_String_Escape(DOR.Receiver_Address,'json')
+=======
+												DOR.Receiver_FirstName,
+												DOR.Sender_FirstName
+											) , ''
+									   )
+							, VPC.DescriptionOfClient
+							) , 'N/A'
+					) 
+						)[Sender],
+				IIF(
+					KVPC.KindOfVPName = 'Express Center',
+					ISNULL(VPC.[Address], ''),											
+					ISNULL(
+								IIF(
+										DOR.IsLastMileReturn = 1,
+										DOR.Sender_Address,
+										DOR.Receiver_Address
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 									)
 								, 'N/A'
 							)
 				   ) [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
+<<<<<<< HEAD
 				THEN CONCAT([CPS].[Value], [DOR].[Sender_Phone])
 				ELSE ''
 				END [SenderPhone],				
@@ -454,6 +525,17 @@ BEGIN
 						, ISNULL(
 									CONCAT([CPR].[Value], DOR.Receiver_Phone)
 									, CONCAT([CPR].[Value], DOR.Receiver_Alternant_Phone)
+=======
+				THEN [DOR].[Sender_Phone]
+				ELSE ''
+				END [Sender_Phone],				
+				ISNULL(
+						IIF(DOR.IsLastMileReturn = 1
+						, ISNULL(DOR.Sender_Phone, 'N/A')
+						, ISNULL(
+									DOR.Receiver_Phone
+									, DOR.Receiver_Alternant_Phone
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 								)
 							), 'N/A'
 					  ) [Phone],
@@ -462,6 +544,10 @@ BEGIN
 							SELECT (SUM(ISNULL(DOR2.Pieces_Dry, 0))) pieces
 							FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DOR2 WITH (NOLOCK)
 							WHERE DOR2.Guide_Serie = DAT.Guide_Serie
+<<<<<<< HEAD
+=======
+							  
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 							  AND DOR2.Guide_Number = DAT.Guide_Number
 						), 0
 					  ) [PiecesDry],
@@ -479,6 +565,7 @@ BEGIN
 						ISNULL(IVP.PathImage,RIVP.PathImage)
 						, '#'
 					  )[Photo],
+<<<<<<< HEAD
 															CONVERT(
                                                                        VARCHAR,
                                                                        (CASE
@@ -501,6 +588,19 @@ BEGIN
                                                                         END
                                                                        )
                                                                    ) [Latitude],
+=======
+				CASE
+					WHEN ISNULL(DOR.Receiver_Lat, '0') <> ''
+					THEN ISNULL(DOR.Receiver_Lat, '0')
+					WHEN ISNULL(DFG.Latitude, 0) != 0
+					 AND ISNULL(DFG.Longitude, 0) != 0 
+					THEN CONVERT(VARCHAR, ISNULL(DFG.Latitude, 0))
+					WHEN ISNULL(EPS.Latitude, 0) != 0
+					 AND ISNULL(EPS.Longitude, 0) != 0 
+					THEN CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))												
+					ELSE ISNULL(VPC.Latitude, '0')	
+				END [Latitude],
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 				CASE
 					WHEN ISNULL(DOR.Receiver_Lng, '0') <> '' 
 					THEN ISNULL(DOR.Receiver_Lng, '0')
@@ -518,7 +618,11 @@ BEGIN
 					THEN 0
 					ELSE
 						 IIF(
+<<<<<<< HEAD
 								kvp.KindOfVPName = 'Express Center', 
+=======
+								KVPC.KindOfVPName = 'Express Center', 
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 								'0', 
 								IIF(
 									DOR.IsLastMileReturn = 1, 
@@ -532,7 +636,11 @@ BEGIN
 					THEN 0
 					ELSE
 						IIF(
+<<<<<<< HEAD
 								kvp.KindOfVPName = 'Express Center', 
+=======
+								KVPC.KindOfVPName = 'Express Center', 
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 								'0', 
 								IIF(
 										DOR.IsLastMileReturn = 1, 
@@ -563,6 +671,7 @@ BEGIN
 								), 0
 							  )
 				END [Pickup],
+<<<<<<< HEAD
 				dbo.fnt_String_Escape(
 					IIF(
 							DOR.IsLastMileReturn = 1, 
@@ -581,6 +690,24 @@ BEGIN
 						)
 					, 'json' ) [customerName],
 				dbo.fnt_String_Escape(
+=======
+				dbo.fn_ReplaceSpecialCharsForJSON(
+					IIF(
+							DOR.IsLastMileReturn = 1, 
+							IIF(
+									KVPC.KindOfVPName = 'Express Center' , 
+									ISNULL( VPC.DescriptionOfClient , '' ), 
+									ISNULL( DOR.Sender_FirstName , 'N/A' )
+								), 
+							IIF(
+									KVPC.KindOfVPName = 'Express Center', 
+									ISNULL( VPC.DescriptionOfClient , '' ), 
+									ISNULL( DOR.Receiver_FirstName , 'N/A' )
+								)
+						) 
+					) [customerName],
+				dbo.fn_ReplaceSpecialCharsForJSON(
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 					IIF(
 							DOR.IsLastMileReturn = 1, 
 							'N/A', 
@@ -589,7 +716,11 @@ BEGIN
 									ISNULL( DOR.Receiver_FirstName, 'N/A')
 								   )
 							) 
+<<<<<<< HEAD
 						,'json') [alterName],
+=======
+						) [alterName],
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 				IIF(
 						(
 							SELECT NumImgEvidence AS num
@@ -604,7 +735,11 @@ BEGIN
 					) [NumImageEvidence],
 				ISNULL(   
 						CASE
+<<<<<<< HEAD
 							WHEN DOR.StatusOrderId in (45,50) 
+=======
+							WHEN DOR.StatusOrderId = 45 
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 							THEN 12
 							ELSE DOR.StatusOrderId
 						END
@@ -626,11 +761,15 @@ BEGIN
 					, 1
 					, 0
 				   ) [HighPriority],
+<<<<<<< HEAD
 		'' [Alerts],
 		TRPreturns.CurrencyPrice_CODCodeISO [CurrencyPrice_CodeISO],
         TRPreturns.CurrencyPrice_CODSymbol  [CurrencyPrice_CODSymbol],
 		TRPreturns.CurrencyPriceCodeISO [CurrencyPriceCodeISO],
 		TRPreturns.CurrencyPriceSymbol  [CurrencyPriceSymbol]
+=======
+		'' [Alerts]
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 		FROM
 		(
 			SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
@@ -647,10 +786,17 @@ BEGIN
 					ID_Courier
 		)                                                               DAT	
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
+<<<<<<< HEAD
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
 			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devolución|Incidencia en ruta|Guía revertida para entrega
 			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
+=======
+			ON	DAT.Guide_Serie = DOR.Guide_Serie
+			AND	DAT.Guide_Number = DOR.Guide_Number
+			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devoluci�n|Incidencia en ruta|Gu�a revertida para entrega
+			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48 )
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
 			ON DSD.Guide_Serie = DAT.Guide_Serie
 			AND DSD.Guide_Number = DAT.Guide_Number
@@ -661,6 +807,7 @@ BEGIN
 		LEFT JOIN @TempReturnPrice										TRPreturns
 			ON DOR.Guide_Serie = TRPreturns.GuideSerie
 			AND DOR.Guide_Number = TRPreturns.GuideNumber
+<<<<<<< HEAD
                                             LEFT JOIN
                                             (
                                                 SELECT EPSA.GuideSerie
@@ -692,6 +839,39 @@ BEGIN
 			ON VPC.CodeOfReference = DOR.Sender_ID
 		LEFT JOIN dbo.KindOfVPClient                                kvpori WITH (NOLOCK)
 			ON kvpori.IdKindOfVPClient = VPC.IdKindOfVPClient
+=======
+		LEFT JOIN
+		(
+			SELECT	EPSRWG.GuideSerie, 
+					EPSRWG.GuideNumber, 
+					EPS.Latitude,
+					EPS.Longitude,
+					MAX(EPS.IdService) [LastService]
+			FROM [DeliveryBackOffice].[dbo].[ExtPlatServiceRelationshipWithGuide] EPSRWG WITH (NOLOCK)
+				LEFT JOIN DeliveryBackOffice.dbo.ExtPlatformService         EPS WITH (NOLOCK)
+					ON EPSRWG.ExtPlatServiceId = EPS.IdExtPlatformService
+			WHERE CAST(EPS.EstimatedTimeArrival AS DATE) = @DateRoute
+			GROUP BY EPSRWG.GuideSerie,
+						EPSRWG.GuideNumber,
+						EPS.Latitude,
+						EPS.Longitude
+		)   EPS
+			ON	DAT.Guide_Serie = EPS.GuideSerie
+			AND DAT.Guide_Number = EPS.GuideNumber
+		OUTER APPLY(
+			SELECT VPCA1.CodeOfReference, VPCA1.[Address], VPCA1.[Longitude], VPCA1.[Latitude], VPCA1.Accuracy, VPCA1.DescriptionOfClient, VPCA1.IdKindOfVPClient
+			FROM [DeliveryBackOffice].[dbo].[VisitPointClient]		VPCA1 WITH (NOLOCK)
+			WHERE VPCA1.CodeOfReference = DOR.Sender_ID
+			AND DOR.IsLastMileReturn != 1 
+			UNION ALL
+			SELECT VPCA2.CodeOfReference, VPCA2.[Address], VPCA2.[Longitude], VPCA2.[Latitude], VPCA2.Accuracy, VPCA2.DescriptionOfClient, VPCA2.IdKindOfVPClient
+			FROM [DeliveryBackOffice].[dbo].[VisitPointClient]		VPCA2 WITH (NOLOCK)
+			WHERE VPCA2.CodeOfReference = DOR.Receiver_ID
+			AND DOR.IsLastMileReturn = 1 
+		) VPC
+		RIGHT JOIN[DeliveryBackOffice].[dbo].[KindOfVPClient]		KVPC WITH (NOLOCK)
+		ON KVPC.IdKindOfVPClient = VPC.IdKindOfVPClient
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 		OUTER APPLY(
 			SELECT TOP 1 vpi.PathImage
 			FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint]	vpi WITH (NOLOCK)
@@ -708,19 +888,26 @@ BEGIN
 		(
 			SELECT MAX(ISNULL(SDFG.Latitude, 0))  'Latitude'
 					, MAX(ISNULL(SDFG.Longitude, 0)) 'Longitude'
+<<<<<<< HEAD
 			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide]	SDFG WITH (NOLOCK)
+=======
+			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 			WHERE DOR.Guide_Serie   =	SDFG.GuideSerie
 			  AND DOR.Guide_Number	=	SDFG.GuideNumber
 			  AND SDFG.IsDelivery	= 1
 			GROUP BY SDFG.GuideSerie,
 					 SDFG.GuideNumber
 		) DFG
+<<<<<<< HEAD
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
 			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
 			AND CPS.[Name] = 'AreaCode'
 		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
 			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
 			AND CPR.[Name] = 'AreaCode'
+=======
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
 				AND DSD.RowStatus = 1
 
@@ -731,7 +918,11 @@ BEGIN
 		SELECT 
 				TMAP.ServiceManagementId,
 				TMAP.TypeAlert,
+<<<<<<< HEAD
 				dbo.fnt_String_Escape(TMAP.DescriptionAlert,'json') DescriptionAlert,
+=======
+				dbo.fn_ReplaceSpecialCharsForJSON(TMAP.DescriptionAlert) DescriptionAlert,
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
 				TMAP.DateCreated
 		FROM	#TmpAlertList TMAP
 
@@ -741,7 +932,11 @@ BEGIN
 	ELSE IF (@TokenAct = 0 OR @TokenAct IS NULL OR @hourtoken > 8)
 	BEGIN
        
+<<<<<<< HEAD
 		SELECT '403' [IdResult], 'Token Inválido' [DescriptionError];
+=======
+		SELECT '403' [IdResult], 'Token Inv�lido' [DescriptionError];
+>>>>>>> feature/FDAPI-2608-configurar-manifiesto-de-recoleccion
         
 	END;
 END;
