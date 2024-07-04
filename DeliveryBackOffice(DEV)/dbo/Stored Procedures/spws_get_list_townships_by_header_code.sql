@@ -15,7 +15,7 @@ CREATE PROCEDURE [dbo].[spws_get_list_townships_by_header_code]
 	-- Add the parameters for the stored procedure here
 	@IdHeaderCodeTownship as nvarchar(10)  = '-1', --all
 	@IdHeaderCode as  nvarchar(2) = '-1', --all
-	@IdCountry as nvarchar(2) = 'GT'
+	@IdCountry as nvarchar(2) = NULL
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
