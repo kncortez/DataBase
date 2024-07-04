@@ -254,7 +254,7 @@ BEGIN
       , ReturnRates
     )
 
-    EXEC [dbo].[spws_get_guide_pending_payment_temp] @InGuides = @ConcatReturnGuides -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides -- Gu�as
                                               , @InTime = 3                          -- Entrega
                                               , @IsReturn = 1                        -- Devoluci�n
                                               , @CodeApp = 'SIFDCECOM300720201459'   -- CodeApp
@@ -279,20 +279,45 @@ BEGIN
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
 					  ),'json' ) [Address],
-				ISNULL( CONCAT(cp.[Value],ISNULL(spk.[SenderPhone], vpc.[Phone])), 'N/A') [Phone],
-				IIF(
-						ISNULL(dcp.Pieces_Dry, 0) = 0,
-						(
-						ISNULL(spk.QuantityOverDimensionedPackage,0)
-						+ 
-						ISNULL(spk.QuantityRegularPackages,0)
-						),
-						dcp.Pieces_Dry
-					) [PiecesDry],
-				ISNULL(dcp.Pieces_Cold, 0) [PiecesCold],
+				ISNULL(CONCAT([CP].[Value],ISNULL(spk.SenderPhone, vpc.Phone)), 'N/A') [Phone],
+				ISNULL(
+                                                    (
+                                                        SELECT IIF(SUM(ISNULL(ord.Pieces_Dry, 0)) = 0
+                                                                 , (ISNULL(SUM(sc.QuantityOverDimensionedPackage), 0)
+                                                                    + ISNULL(SUM(sc.QuantityRegularPackages), 0)
+                                                                   )
+                                                                 , SUM(ISNULL(ord.Pieces_Dry, 0))) pieces
+                                                        FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
+                                                            LEFT JOIN dbo.DeliveryOrder     ord WITH (NOLOCK)
+                                                                ON ord.Guide_Serie = pay.GuideSerie
+                                                                   AND ord.Guide_Number = pay.GuideNumber
+                                                            LEFT JOIN dbo.SchedulePickup    sc WITH (NOLOCK)
+                                                                ON sc.SchedulePickupId = pay.IdHeaderRecolection
+                                                        WHERE pay.IdHeaderRecolection = spk.SchedulePickupId
+                                                    )
+                                                  , 0
+                                                          ) [PiecesDry],
+														ISNULL((
+                                                               SELECT SUM(ISNULL(ord.Pieces_Cold, 0)) pieces
+                                                               FROM dbo.DeliveryOrderPaymentDetail pay WITH (NOLOCK)
+                                                                   LEFT JOIN dbo.DeliveryOrder     ord WITH (NOLOCK)
+                                                                       ON ord.Guide_Serie = pay.GuideSerie
+                                                                          AND ord.Guide_Number = pay.GuideNumber
+                                                               WHERE pay.IdHeaderRecolection = spk.SchedulePickupId
+                                                           )
+                                                         , 0
+                                                          )[PiecesCold],
 				SUBSTRING(CONVERT(VARCHAR, spk.StartDate, 8), 0, 6) [ScheduleStart],
 				SUBSTRING(CONVERT(VARCHAR, ISNULL(spk.EndDate, DATEADD( HOUR, 19, CAST(CAST(spk.StartDate AS DATE) AS DATETIME) ) ),8 ), 0, 6) [ScheduleEnd'],
-				ISNULL(ivp.PathImage, '#') [Photo],
+				ISNULL((
+                                                    SELECT TOP 1
+                                                           vpi.PathImage
+                                                    FROM dbo.ImagesByVisitPoint vpi WITH (NOLOCK)
+                                                    WHERE vpi.CodeOfReference = vpc.CodeOfReference
+                                                    ORDER BY DateCreated DESC
+                                                )
+                                              , '#'
+                                               ) [Photo],
 				ISNULL(vpc.Latitude, 0)  [Latitude],
 				ISNULL(vpc.Longitude, 0) [Longitude],
 				ISNULL(vpc.Accuracy, 0) [Precision],
@@ -324,56 +349,36 @@ BEGIN
 				ccc.Symbol[CurrencyPriceSymbol],
                 ccc.CodeISO[PickupPriceCodeISO],
                 ccc.Symbol[PickupPriceSymbol]
-        FROM [DeliveryBackOffice].[dbo].[RouteAssigment]			 ras WITH (NOLOCK)
-        LEFT JOIN [DeliveryBackOffice].[dbo].[ServiceManagement]	 sma WITH (NOLOCK)
-            ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
-        LEFT JOIN [DeliveryBackOffice].[dbo].[SchedulePickup]		 spk WITH (NOLOCK)
-            ON spk.SchedulePickupId = sma.IdSchedulePickup
-        LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]		 vpc WITH (NOLOCK)
-            ON vpc.CodeOfReference = spk.SenderId
-		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			 cp  WITH (NOLOCK)
-			ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
-			AND CP.[Name] = 'AreaCode'
-		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
-			ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
-			AND de.DefaultPerCountry = 1
-		LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
-			ON ce.TargetCurrency = de.IdCurrencyCOD
-			and CONVERT(date,ce.ExchangeDate) = CONVERT(date,getdate())
-		LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]		 ccc WITH (NOLOCK)
-			ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
-        LEFT JOIN [DeliveryBackOffice].[dbo].[CatPaymentTime]		 cpt WITH (NOLOCK)
-            ON sma.CatPaymentTimeId = cpt.TimePlaId
-		LEFT JOIN [DeliveryBackOffice].[dbo].[Township]				 t WITH (NOLOCK)
-			ON  spk.TownshipId = t.IdTownship
-		LEFT JOIN [DeliveryBackOffice].[dbo].[Province]				 p WITH (NOLOCK)
-			ON t.IdProvince =p.IdProvince
-		OUTER APPLY(
-			SELECT TOP 1 vpi.PathImage
-			FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint]	vpi WITH (NOLOCK)
-			WHERE vpi.CodeOfReference = VPC.CodeOfReference
-			ORDER BY DateCreated DESC
-		) IVP
-		OUTER APPLY( 
-					SELECT	SUM(sc.QuantityOverDimensionedPackage) [QuantityOverDimensionedPackage], 
-							SUM(sc.QuantityRegularPackages) [QuantityRegularPackages],
-							SUM(ord.Pieces_Dry) [Pieces_Dry], 
-							SUM(ord.Pieces_Cold) [Pieces_Cold]
-					FROM [DeliveryBackOffice].[dbo].[SchedulePickup]    sc WITH (NOLOCK)  
-					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] pay WITH (NOLOCK)
-						ON sc.SchedulePickupId = pay.IdHeaderRecolection
-					LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]     ord WITH (NOLOCK)
-						ON ord.Guide_Serie = pay.GuideSerie
-						AND ord.Guide_Number = pay.GuideNumber
-					WHERE  sc.SchedulePickupId = sma.IdSchedulePickup
-					   AND pay.IdHeaderRecolection = spk.SchedulePickupId
-		) dcp
-        WHERE	ras.IdCurrierMan = @IdCourier
-			AND ras.DateOfRoute  = @DateRoute
-			AND ras.RowStatus = 1 
-			AND sma.SubTypeServiceManagmentId=1
-		ORDER BY [CodeOfReference] ASC,
-				 [Id] ASC
+			FROM dbo.RouteAssigment             ras WITH (NOLOCK)
+                LEFT JOIN dbo.ServiceManagement sma WITH (NOLOCK)
+                    ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
+                LEFT JOIN dbo.SchedulePickup    spk WITH (NOLOCK)
+                    ON spk.SchedulePickupId = sma.IdSchedulePickup
+                LEFT JOIN dbo.VisitPointClient  vpc WITH (NOLOCK)
+                    ON vpc.CodeOfReference = spk.SenderId
+                LEFT JOIN dbo.CatPaymentTime    cpt WITH (NOLOCK)
+                    ON sma.CatPaymentTimeId = cpt.TimePlaId
+                LEFT JOIN dbo.Township t WITH (NOLOCK)
+					ON  spk.TownshipId = t.IdTownship
+				LEFT JOIN dbo.Province p WITH (NOLOCK)
+					ON t.IdProvince =p.IdProvince
+				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CP  WITH (NOLOCK)
+					ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+						AND CP.[Name] = 'AreaCode'
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
+					ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
+					AND de.DefaultPerCountry = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
+					ON ce.TargetCurrency = de.IdCurrencyCOD
+					and CONVERT(date,ce.ExchangeDate) = CONVERT(date,getdate())
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]		 ccc WITH (NOLOCK)
+					ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
+			WHERE ras.IdCurrierMan = @IdCourier
+                    AND (ras.DateOfRoute = @DateRoute
+                        --- OR ras.DateOfRoute = '2023-06-25'
+                        )
+					AND ISNULL(sma.SubTypeServiceManagmentId,1)=1
+		
 
 		/*****************************************************************************************************************************************
 		**************************************** CONSULTA PARA DESPLEGAR LAS ENTREGAS Y SUS ALERTAS **********************************************
@@ -689,7 +694,7 @@ BEGIN
 		(
 			SELECT MAX(ISNULL(SDFG.Latitude, 0))  'Latitude'
 					, MAX(ISNULL(SDFG.Longitude, 0)) 'Longitude'
-			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide]	SDFG WITH (NOLOCK)
+			FROM [DeliveryBackOffice].[dbo].[ServiceDataForGuide] SDFG WITH (NOLOCK)
 			WHERE DOR.Guide_Serie   =	SDFG.GuideSerie
 			  AND DOR.Guide_Number	=	SDFG.GuideNumber
 			  AND SDFG.IsDelivery	= 1
