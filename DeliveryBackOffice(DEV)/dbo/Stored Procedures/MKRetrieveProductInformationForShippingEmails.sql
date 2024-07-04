@@ -11,7 +11,7 @@ AS
 
 BEGIN
 
-     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/notification/gift-create-account';
+     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/design/individual/centro-canje';
 	 DECLARE  @URL_USER_NOT_LOGIN VARCHAR (200)='https://portal.forzadelivery.com';
 
 	
