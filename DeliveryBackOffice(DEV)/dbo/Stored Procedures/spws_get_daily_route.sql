@@ -1,33 +1,14 @@
-﻿
+
 -- =============================================
--- Author:		<César,Aquino>
--- Create date: <2021-01-08>
+-- Author:		<Cristian Azurdia>
+-- Create date: <2024-04-25>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
--- =============================================
-
--- =============================================
--- Modiff:		<Hugo,Gomez>
--- Create date: <2021-05-13>
--- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
--- =============================================
-
--- =============================================
--- Modiff:		<Marco,Jiménez>
--- Create date: <2021-09-16>
--- Description:	<Se agregan validaciones para no cobrar el servicio ni COD en la courierapp cuando la entrega sea en un Express Center>
--- Hotfix: FDAPI-337
--- =============================================
-
--- =============================================
--- Modiff:		<Andres,Ruiz>
--- Create date: <2021-12-13>
--- Description:	< Adición de campos para alertas de servicios >
 -- =============================================
 
 CREATE PROCEDURE [dbo].[spws_get_daily_route]
-    @Token VARCHAR(200) = ''
-  , @IdCourier BIGINT
-  , @DateRoute DATE
+    @Token VARCHAR(200) = '',
+    @IdCourier BIGINT,
+    @DateRoute DATE
 AS
 BEGIN
 
@@ -273,7 +254,7 @@ BEGIN
       , ReturnRates
     )
 
-    EXEC [dbo].[spws_get_guide_pending_payment] @InGuides = @ConcatReturnGuides -- Gu�as
+    EXEC [dbo].[spws_get_guide_pending_payment_temp] @InGuides = @ConcatReturnGuides -- Gu�as
                                               , @InTime = 3                          -- Entrega
                                               , @IsReturn = 1                        -- Devoluci�n
                                               , @CodeApp = 'SIFDCECOM300720201459'   -- CodeApp
