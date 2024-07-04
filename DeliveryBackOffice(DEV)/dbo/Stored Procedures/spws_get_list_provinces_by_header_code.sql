@@ -11,8 +11,8 @@
 -- =============================================
 -- =============================================
 -- Author:		<Garcia, Tito>
--- Create date: <2024-07-03>
--- Description:	<Se mejora el filtro por pais>
+-- Create date: <2024-07-04>
+-- Description:	<Se mejora el filtro por pais para tomar en cuenta el string vacio>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_list_provinces_by_header_code]
 	-- Add the parameters for the stored procedure here
