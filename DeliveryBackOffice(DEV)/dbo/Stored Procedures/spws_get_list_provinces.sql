@@ -29,6 +29,6 @@ BEGIN
 	LEFT JOIN DenariusDesktop_Dev.dbo.prm_country ct ON depto.IdCountry = ct.CNT_IdCountry
 	WHERE depto.ProvinceStatus = 'TRUE'
 	  AND depto.IdProvince = IIF(@IdProvince != -1, @IdProvince, depto.IdProvince)
-	  AND ISNULL(@IdCountry, depto.idCountry) = depto.idCountry
+	  AND ISNULL(NULLIF(@IdCountry,''), depto.IdCountry) = depto.IdCountry
 
 END
