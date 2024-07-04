@@ -21,9 +21,14 @@ BEGIN
     DECLARE @Internacional INT;
 	DECLARE @AccountCOD NVARCHAR(30);
 	DECLARE @Account NVARCHAR(30);
+	DECLARE @CountryId NVARCHAR(2)
+	
+	SELECT @CountryId = CountryId 
+	FROM VisitPointClient 
+	WHERE CodeOfReference = @VisitPointId
 
-	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
-	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @CountryId
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' FROM dbo.ClosureAccount WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @CountryId
 
     SET @Estandar =
     (
@@ -104,6 +109,7 @@ BEGIN
            ISNULL(costd.Voucher, '') 'Voucher',
            ISNULL(DOPD.amount, 0) 'PriceShippment',
            ISNULL(DOR.Collect_OnDelivery, 0) 'COD',
+		   CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
            CASE
                WHEN DOPD.TypeofInOutMoneyId = 1 THEN
@@ -202,6 +208,7 @@ BEGIN
            Voucher = '',
            ISNULL(DOPD.amount, 0) 'PriceShippment',
            COD = 0,
+		   '' AS 'CurrencySymbol',
            ISNULL(DOPD.CODAmountProcess, 0) 'ProcessedCOD',
            CASE
                WHEN DOPD.TypeofInOutMoneyId = 1 THEN
@@ -273,14 +280,15 @@ BEGIN
 
               AND ACD.RowStatus = 1
     );
-    WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
-                 CountFacturaCash, TotalFacturaCard, CountFacturaCard, IdAccount
+    WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, CurrencySymbolExp, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
+                 CountFacturaCash, TotalFacturaCard, CountFacturaCard, CurrencySymbolCOD, IdAccount
                 )
     AS (SELECT ISNULL(SUM(S1.TotalCash), 0) 'TotalCash',
 				@Account AS 'AccountExp',
                ISNULL(SUM(S1.CountCash), 0) 'CountCash',
                ISNULL(SUM(S1.TotalCard), 0) 'TotalCard',
                ISNULL(SUM(S1.CountCard), 0) 'CountCard',
+			   S1.CurrencySymbolExp,
                ISNULL(SUM(S1.TotalCredit), 0) 'TotalCredit',
                ISNULL(SUM(S1.CountCredit), 0) 'CountCredit',
                -- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
@@ -289,6 +297,7 @@ BEGIN
                ISNULL(SUM(S1.CountFacturaCash), 0) 'CountFacturaCash',
                ISNULL(SUM(S1.TotalFacturaCard), 0) 'TotalFacturaCard',
                ISNULL(SUM(S1.CountFacturaCard), 0) 'CountFacturaCard',
+			   S1.CurrencySymbolCOD,
                -- FIN MODIFICACIÓN
                IdAccount
         FROM
@@ -352,6 +361,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
+				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                            /*SUM(   CASE
@@ -430,6 +440,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
+				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolCOD',
                    --FIN MODIFICACIÓN 
 
                    DOPD.AccountId IdAccount
@@ -472,7 +483,8 @@ BEGIN
             GROUP BY DOPD.TypeofInOutMoneyId,
                      DOPD.TypeServiceId,
                      DOPD.amount,
-                     AccountId
+                     AccountId,
+					 DOR.SenderCountryId
             UNION ALL
             SELECT CASE
                        WHEN DOPD.TypeofInOutMoneyId = 1
@@ -514,6 +526,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountCard',
+				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolExp',
                    CASE
                        WHEN DOPD.TypeofInOutMoneyId = 8 THEN
                            SUM(DOPD.amount)
@@ -568,6 +581,7 @@ BEGIN
                        ELSE
                            0
                    END 'CountFacturaCard',
+				   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'Q' ELSE 'L' END 'CurrencySymbolCOD',
                    -- FIN MODIFICACIÓN
 
                    DOPD.AccountId IdAccount
@@ -577,6 +591,8 @@ BEGIN
                     ON CTS.IdTypeService = DOPD.TypeServiceId
                 LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
                     ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+				INNER JOIN DeliveryOrder DOR WITH (NOLOCK)
+					ON DOR.Guide_Number = DOPD.GuideNumber AND DOR.Guide_Serie = DOPD.GuideSerie
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
 			 AND DOPD.[TypeofInOutMoneyId] != 8
@@ -594,9 +610,11 @@ BEGIN
             GROUP BY DOPD.TypeofInOutMoneyId,
                      DOPD.TypeServiceId,
                      DOPD.amount,
-                     AccountId
+                     AccountId,
+					 DOR.SenderCountryId
+
         ) S1
-        GROUP BY IdAccount)
+        GROUP BY IdAccount, CurrencySymbolExp, CurrencySymbolCOD)
     SELECT *,
            @TOTALAMOUNTCOD 'TotalAmountCOD',
            @TOTALCOD 'TotalCOD'
