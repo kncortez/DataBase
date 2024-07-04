@@ -72,7 +72,7 @@ BEGIN
                               FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) 
                              WHERE Guide_Serie = @Series 
                                AND Guide_Number = @Guide_number
-                               AND ISNULL(SenderCountryId,'GT') = @IdCountry
+                               AND ISNULL(ReceiverCountryId,'GT') = @IdCountry
                                )
 	DECLARE @IdCourier INT = (
 	SELECT TOP 1 ID_Courier FROM DeliveryBackOffice.dbo.DeliveryAttempt WITH(NOLOCK)
@@ -142,7 +142,7 @@ BEGIN
 				INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = @IdCourier
 				WHERE
 				dor.Guide_Number = @Guide_number AND dor.Guide_Serie = @Series
-                  AND ISNULL(dor.SenderCountryId,'GT') = @IdCountry
+                  AND ISNULL(dor.ReceiverCountryId,'GT') = @IdCountry
 				
 				FOR XML PATH('') 
 			)
