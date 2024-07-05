@@ -360,7 +360,7 @@ BEGIN
 		******************************************************************************************************************************************/
        
 		SELECT	'Delivery' [ServiceType],
-				CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0))	[CodeOfReference],
+				CONVERT(VARCHAR, ISNULL(VPC.CodeOfReference, 0))	[CodeOfReference],
 				ISNULL(
 					CASE
 					WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
@@ -393,16 +393,25 @@ BEGIN
 							) , 'N/A'
 					)[Sender],
 				IIF(
-					kvp.KindOfVPName != 'Express Center',
+					kvp.KindOfVPName = 'Express Center',
 					dbo.fnt_String_Escape(ISNULL(VPr.[Address], ''),'json'),
-					ISNULL(
-								IIF(
-										DOR.IsLastMileReturn = 1,
-										dbo.fnt_String_Escape(DOR.Sender_Address,'json'),
-										dbo.fnt_String_Escape(DOR.Receiver_Address,'json')
-									)
-								, 'N/A'
-							)
+					ISNULL
+					(
+						ISNULL(
+									IIF(
+											DOR.IsLastMileReturn = 1,
+											dbo.fnt_String_Escape(DOR.Sender_Address,'json'),
+											dbo.fnt_String_Escape(DOR.Receiver_Address,'json')
+										)
+									, 
+									IIF(
+										DOR.IsLastMileReturn = 1
+										, VPC.Address
+										, VPr.Address
+									   )
+							   ),
+						'N/A'
+					)	
 				   ) [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
@@ -437,31 +446,36 @@ BEGIN
 				'' [ScheduleStart],
 				'' [ScheduleEnd],
 				ISNULL(
-						ISNULL(IVP.PathImage,RIVP.PathImage)
+						(
+							SELECT TOP 1 vpi.PathImage
+							FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint] vpi WITH (NOLOCK)
+							WHERE vpi.CodeOfReference = VPC.CodeOfReference
+							ORDER BY DateCreated DESC
+						)
 						, '#'
 					  )[Photo],
-															CONVERT(
-                                                                       VARCHAR,
-                                                                       (CASE
-																	        WHEN ISNULL(DOR.Receiver_Lat, '0') <> '' THEN
-																			      ISNULL(DOR.Receiver_Lat, '0')
-                                                                            WHEN ISNULL(DFG.Latitude, 0) != 0
-                                                                                 AND ISNULL(DFG.Longitude, 0) != 0 THEN
-                                                                                CONVERT(VARCHAR, ISNULL(DFG.Latitude, 0))
-                                                                            WHEN ISNULL(EPS.Latitude, 0) != 0
-                                                                                 AND ISNULL(EPS.Longitude, 0) != 0 THEN
-                                                                                CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))
-                                                                            WHEN ISNULL(VPC.Longitude, '0') <> ''
-                                                                                 AND DOR.IsLastMileReturn = 1 THEN
-                                                                                ISNULL(VPC.Longitude, '0')
-                                                                            WHEN ISNULL(VPr.Latitude, '0') <> ''
-                                                                                 AND DOR.IsLastMileReturn = 0 THEN
-                                                                                ISNULL(VPr.Latitude, '0')
-                                                                            ELSE
-                                                                                '0'
-                                                                        END
-                                                                       )
-                                                                   ) [Latitude],
+				CONVERT(
+						VARCHAR,
+                            (CASE
+								WHEN ISNULL(DOR.Receiver_Lat, '0') <> '' THEN
+										ISNULL(DOR.Receiver_Lat, '0')
+                                WHEN ISNULL(DFG.Latitude, 0) != 0
+                                        AND ISNULL(DFG.Longitude, 0) != 0 THEN
+                                    CONVERT(VARCHAR, ISNULL(DFG.Latitude, 0))
+                                WHEN ISNULL(EPS.Latitude, 0) != 0
+                                        AND ISNULL(EPS.Longitude, 0) != 0 THEN
+                                    CONVERT(VARCHAR, ISNULL(EPS.Latitude, 0))
+                                WHEN ISNULL(VPC.Longitude, '0') <> ''
+                                        AND DOR.IsLastMileReturn = 1 THEN
+                                    ISNULL(VPC.Longitude, '0')
+                                WHEN ISNULL(VPr.Latitude, '0') <> ''
+                                        AND DOR.IsLastMileReturn = 0 THEN
+                                    ISNULL(VPr.Latitude, '0')
+                                ELSE
+                                    '0'
+                            END
+                            )
+                        ) [Latitude],
 				CASE
 					WHEN ISNULL(DOR.Receiver_Lng, '0') <> '' 
 					THEN ISNULL(DOR.Receiver_Lng, '0')
@@ -603,66 +617,62 @@ BEGIN
 					Guide_Number,
 					ID_Courier
 		)                                                               DAT	
-		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
 			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devolución|Incidencia en ruta|Guía revertida para entrega
 			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
-		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
 			ON DSD.Guide_Serie = DAT.Guide_Serie
 			AND DSD.Guide_Number = DAT.Guide_Number
 			AND DSD.RowStatus = 1
-		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOS WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOS WITH (NOLOCK)
 			ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
 			AND DOS.ID_Courier = DAT.ID_Courier
 		LEFT JOIN @TempReturnPrice										TRPreturns
 			ON DOR.Guide_Serie = TRPreturns.GuideSerie
 			AND DOR.Guide_Number = TRPreturns.GuideNumber
-                                            LEFT JOIN
-                                            (
-                                                SELECT EPSA.GuideSerie
-                                                     , EPSA.GuideNumber
-                                                     , EPS.Latitude
-                                                     , EPS.Longitude
-                                                FROM DeliveryBackOffice.dbo.ExtPlatformService EPS WITH (NOLOCK)
-                                                    INNER JOIN
-                                                    (
-                                                        SELECT EPSRWG.GuideSerie
-                                                             , EPSRWG.GuideNumber
-                                                             , MAX(EPS.IdService) 'LastService'
-                                                        FROM DeliveryBackOffice.dbo.ExtPlatServiceRelationshipWithGuide EPSRWG WITH (NOLOCK)
-                                                            LEFT JOIN DeliveryBackOffice.dbo.ExtPlatformService         EPS WITH (NOLOCK)
-                                                                ON EPSRWG.ExtPlatServiceId = EPS.IdExtPlatformService
-                                                        GROUP BY EPSRWG.GuideSerie
-                                                               , EPSRWG.GuideNumber
-                                                    )                                          EPSA
-                                                        ON EPS.IdService = EPSA.LastService
-                                                WHERE CAST(EPS.EstimatedTimeArrival AS DATE) = CAST(@DateRoute AS DATE)
-                                            )                                                           EPS
+		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]			VPC WITH (NOLOCK)
+			ON VPC.CodeOfReference = DOR.Sender_ID
+        LEFT JOIN
+        (
+            SELECT EPSA.GuideSerie
+                    , EPSA.GuideNumber
+                    , EPS.Latitude
+                    , EPS.Longitude
+            FROM DeliveryBackOffice.dbo.ExtPlatformService EPS WITH (NOLOCK)
+                INNER JOIN
+                (
+                    SELECT EPSRWG.GuideSerie
+                            , EPSRWG.GuideNumber
+                            , MAX(EPS.IdService) 'LastService'
+                    FROM DeliveryBackOffice.dbo.ExtPlatServiceRelationshipWithGuide EPSRWG WITH (NOLOCK)
+                        LEFT JOIN DeliveryBackOffice.dbo.ExtPlatformService         EPS WITH (NOLOCK)
+                            ON EPSRWG.ExtPlatServiceId = EPS.IdExtPlatformService
+                    GROUP BY EPSRWG.GuideSerie
+                            , EPSRWG.GuideNumber
+                )                                          EPSA
+                    ON EPS.IdService = EPSA.LastService
+            WHERE CAST(EPS.EstimatedTimeArrival AS DATE) = CAST(@DateRoute AS DATE)
+        )                                                           EPS
 			ON	DAT.Guide_Serie = EPS.GuideSerie
 			AND DAT.Guide_Number = EPS.GuideNumber
 
 
-		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient           VPr WITH (NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] VPr WITH (NOLOCK)
 			ON VPr.CodeOfReference = DOR.Receiver_ID
-		LEFT JOIN dbo.KindOfVPClient                                kvp WITH (NOLOCK)
-			ON kvp.IdKindOfVPClient = VPr.IdKindOfVPClient
-		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient           VPC WITH (NOLOCK)
-			ON VPC.CodeOfReference = DOR.Sender_ID
-		LEFT JOIN dbo.KindOfVPClient                                kvpori WITH (NOLOCK)
+		LEFT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] kvpori WITH (NOLOCK)
 			ON kvpori.IdKindOfVPClient = VPC.IdKindOfVPClient
+		LEFT JOIN [DeliveryBackOffice].[dbo].[KindOfVPClient] kvp WITH (NOLOCK)
+			ON kvp.IdKindOfVPClient = VPr.IdKindOfVPClient
+		
 		OUTER APPLY(
 			SELECT TOP 1 vpi.PathImage
 			FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint]	vpi WITH (NOLOCK)
 			WHERE vpi.CodeOfReference = VPC.CodeOfReference
 			ORDER BY DateCreated DESC
 		) IVP
-		OUTER APPLY(
-			SELECT TOP 1 vpi.PathImage
-			FROM [DeliveryBackOffice].[dbo].[ImagesByVisitPoint]	vpi WITH (NOLOCK)
-			WHERE vpi.CodeOfReference = VPC.CodeOfReference
-			ORDER BY DateCreated DESC
-		) RIVP
+
 		OUTER APPLY
 		(
 			SELECT MAX(ISNULL(SDFG.Latitude, 0))  'Latitude'
