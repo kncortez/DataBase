@@ -894,6 +894,7 @@ BEGIN
                       , Amount
                       , Commission
                       , CatTransactionTypeCODId
+					  , CatCurrencyCODId
                       , BankId
                       , CatAccountTypeCODId
                       , CatConceptCODId
@@ -917,6 +918,7 @@ BEGIN
                          , tcpt.Amount
                          , tcpt.Commision
                          , tcpt.CatTransactionTypeCODId
+						 , (SELECT CodCurrency FROM DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) WHERE c.ProductNumber = CONCAT(tcpt.GuideSerie, tpct.GuideNumber) )
                          , tcpt.BankId
                          , tcpt.CatAccountTypeCODId
                          , tcpt.CatConceptCODId
@@ -1002,6 +1004,7 @@ BEGIN
                       , Amount
                       , Commission
                       , CatTransactionTypeCODId
+					  , CatCurrencyCODId
                       , BankId
                       , CatAccountTypeCODId
                       , CatConceptCODId
@@ -1023,6 +1026,7 @@ BEGIN
                          , tfpt.Amount
                          , tfpt.Commision
                          , tfpt.CatTransactionTypeCODId
+						 , (SELECT CodCurrency FROM DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) WHERE c.ProductNumber = CONCAT(tcpt.GuideSerie, tpct.GuideNumber) )
                          , tfpt.BankId
                          , tfpt.CatAccountTypeCODId
                          , tfpt.CatConceptCODId
