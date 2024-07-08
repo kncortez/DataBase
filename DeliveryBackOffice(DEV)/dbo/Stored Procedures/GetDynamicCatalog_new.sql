@@ -131,6 +131,28 @@ BEGIN
 		END
 		
     END;
+	ELSE IF (@TypeMethod = 'GetTypeIncidence')
+    BEGIN
+
+		SELECT	[IdIncidenceType]					[Id],
+				ISNULL([NameIncidence], 'N/A')		[Name],
+				ISNULL(DescriptionIncidence, 'N/A')	[Description]
+        FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] WITH(NOLOCK)
+        WHERE RowStatus = 1
+			AND ServiceType = 'PICKUP'
+			AND ISNULL(CountryID, 'GT')= @IdCountry
+
+    END;
+	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
+    BEGIN
+
+		SELECT [IdIncidenceType], [NameIncidence]
+		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence
+		WHERE ServiceType = 'DELIVERY'
+			  AND RowStatus = 1
+			  AND ISNULL(CountryID, 'GT')= @IdCountry
+
+    END;
 	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
     BEGIN
 
