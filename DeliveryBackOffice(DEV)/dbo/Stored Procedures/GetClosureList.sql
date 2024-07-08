@@ -10,7 +10,7 @@ EXEC GetClosureList
 -- Description:	<Se agrega la moneda correspondiente al express center>
 -- =============================================
 
-ALTER PROCEDURE [dbo].[GetClosureList]
+CREATE PROCEDURE [dbo].[GetClosureList]
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
