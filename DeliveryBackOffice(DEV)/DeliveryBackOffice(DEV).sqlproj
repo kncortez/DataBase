@@ -1651,6 +1651,10 @@
     <Build Include="dbo\Stored Procedures\spGetDeliveryOptionsMC.sql" />
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetCatCountry.sql" />
+    <Build Include="dbo\User Defined Types\TblCustomerType.sql" />
+    <Build Include="dbo\User Defined Types\TblCustomer.sql" />
+    <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
+    <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
