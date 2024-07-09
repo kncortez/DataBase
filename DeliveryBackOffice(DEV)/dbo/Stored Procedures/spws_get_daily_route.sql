@@ -334,7 +334,8 @@ BEGIN
 					, 1
 					, 0
 				   ) [HighPriority],
-				'' [Alerts]
+				'' [Alerts],
+				 CONVERT(VARCHAR, ISNULL(sma.ServiceStatusId, 1)) [Status]
             FROM dbo.RouteAssigment             ras WITH (NOLOCK)
                 LEFT JOIN dbo.ServiceManagement sma WITH (NOLOCK)
                     ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
