@@ -3,6 +3,11 @@
 -- Create date: <19/01/2022>
 -- Description:	<SP para consulta de cierres en reporte de reporting services>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <09/07/2024>
+-- Description:	<Se agrega el simbolo de la moneda y las cuentas correspondientes al pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosure]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -57,6 +62,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -133,6 +139,7 @@ begin
 			,Status='----'  
 			,Guide='----'
 			,Voucher=''
+			,'' AS CurrencySymbol
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
@@ -192,6 +199,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol 
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -266,6 +274,7 @@ begin
 			,Status='----'  
 			,Guide='----'
 			,Voucher=''
+			,CurrencySymbol = ''
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
@@ -326,6 +335,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -402,6 +412,7 @@ begin
 			,Status='----'  
 			,Guide='----'
 			,Voucher=''
+			,CurrencySymbol = ''
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
