@@ -713,7 +713,8 @@ BEGIN
                         AccountNumber,
                         AccountName,
                         CODCommissionPercentage,
-                        DiscountPrice
+                        DiscountPrice,
+						IdCountry
                     )
                     SELECT @NewIdBatchCODForza,
                            tfpt.GuideSerie,
@@ -748,7 +749,8 @@ BEGIN
                            tfpt.AccountNumber,
                            tfpt.AccountName,
                            CODRate,
-                           DiscountPrice
+                           DiscountPrice,
+						   @IdCountrySender
                     FROM #TableForzaPaymentTemp tfpt
                     WHERE NOT EXISTS
                     (
