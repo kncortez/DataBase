@@ -11,6 +11,11 @@ EXEC GetClosureList
 -- Description:	<SP para obtener la lista de cierres que se procesaron en un express center por VisitPoint>
 -- Nota: Es una copia de GetClosureList
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-04>
+-- Description:	<Se agrega las cuentas y el simbolo de la moneda correspondiente para la vista de los cierres generales>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetClosureListVisitPoint]
 @VisitPointId INT
@@ -18,6 +23,22 @@ CREATE PROCEDURE [dbo].[GetClosureListVisitPoint]
 ,@EndDate datetime
 AS
 BEGIN
+	
+	DECLARE @IdCountry NVARCHAR(2),
+		    @Account NVARCHAR(30),
+			@AccountCOD NVARCHAR(30);
+
+	SELECT @IdCountry = CountryId 
+	FROM VisitPointClient 
+	WHERE CodeOfReference = @VisitPointId
+
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
 	SELECT ACH.IdAccountingClosuresHeaderVisitPoint 'ClosureId',
 		ACH.VisitPoint 'VisitPointId',vpc.DescriptionOfClient 'VisitPoinDescription'
@@ -37,6 +58,7 @@ BEGIN
 		,ACH.TotalAmountFacturaCashDeclared
 		,ACH.TotalAmountFacturaCard
 		,ACH.TotalAmountFacturaCardDeclared
+		,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END CunrrencySymbol
 		-- FIN MODIFICACIÓN
 	FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACH
 	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
@@ -47,7 +69,9 @@ BEGIN
 		BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)
 		AND (@VisitPointId = ACH.VisitPoint OR @VisitPointId = -1)
 
-	select Value 'URL' from ConfigParams
+	select @Account AS AccountExp,
+		   @AccountCOD AS AccountCOD,
+		   Value 'URL' from ConfigParams
 	where Name = 'ClosureExpressCenter'
 
 END
