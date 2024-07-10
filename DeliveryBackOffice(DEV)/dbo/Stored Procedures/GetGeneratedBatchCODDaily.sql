@@ -783,7 +783,8 @@ BEGIN
                         AccountNumber,
                         AccountName,
                         CODCommissionPercentage,
-                        DiscountPrice
+                        DiscountPrice,
+						IdCountry
                     )
                     SELECT @NewIdBatchCODCustomer,
                            tcpt.GuideSerie,
@@ -818,7 +819,8 @@ BEGIN
                            tcpt.AccountNumber,
                            tcpt.AccountName,
                            CODRate,
-                           DiscountPrice
+                           DiscountPrice,
+						   @IdCountrySender
                     FROM #TableCustomerPaymentTempDaily tcpt
                     WHERE NOT EXISTS
                     (
@@ -887,7 +889,8 @@ BEGIN
                         AccountNumber,
                         AccountName,
                         CODCommissionPercentage,
-                        DiscountPrice
+                        DiscountPrice,
+						IdCountry
                     )
                     SELECT @NewIdBatchCODForza,
                            tfpt.GuideSerie,
@@ -922,7 +925,8 @@ BEGIN
                            tfpt.AccountNumber,
                            tfpt.AccountName,
                            CODRate,
-                           DiscountPrice
+                           DiscountPrice,
+						   @IdCountrySender
                     FROM #TableForzaPaymentTempDaily tfpt
                     WHERE NOT EXISTS
                     (
