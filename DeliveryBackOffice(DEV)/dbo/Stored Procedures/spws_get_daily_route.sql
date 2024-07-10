@@ -337,9 +337,9 @@ BEGIN
 				'' [Alerts],
 				 CONVERT(VARCHAR, ISNULL(sma.ServiceStatusId, 1)) [Status]
             FROM dbo.RouteAssigment             ras WITH (NOLOCK)
-                LEFT JOIN dbo.ServiceManagement sma WITH (NOLOCK)
+                INNER JOIN dbo.ServiceManagement sma WITH (NOLOCK)
                     ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
-                LEFT JOIN dbo.SchedulePickup    spk WITH (NOLOCK)
+                INNER JOIN dbo.SchedulePickup    spk WITH (NOLOCK)
                     ON spk.SchedulePickupId = sma.IdSchedulePickup
                 LEFT JOIN dbo.VisitPointClient  vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = spk.SenderId
