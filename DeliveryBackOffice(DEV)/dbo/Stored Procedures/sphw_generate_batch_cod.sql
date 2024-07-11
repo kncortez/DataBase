@@ -919,7 +919,7 @@ BEGIN
                          , tcpt.Amount
                          , tcpt.Commision
                          , tcpt.CatTransactionTypeCODId
-						 , (SELECT CodCurrency FROM DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) WHERE c.ProductNumber = CONCAT(tcpt.GuideSerie, tpct.GuideNumber) )
+						 , IIF(c.CodCurrency is null, 1, c.CodCurrency)
                          , tcpt.BankId
                          , tcpt.CatAccountTypeCODId
                          , tcpt.CatConceptCODId
@@ -949,6 +949,7 @@ BEGIN
                          , 0
 						 , @IdCountrySender
                     FROM #TableCustomerPaymentTemp tcpt
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tcpt.GuideSerie, tcpt.GuideNumber)
                     WHERE NOT EXISTS
                     (
                         SELECT 1
@@ -1029,7 +1030,7 @@ BEGIN
                          , tfpt.Amount
                          , tfpt.Commision
                          , tfpt.CatTransactionTypeCODId
-						 , (SELECT CodCurrency FROM DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) WHERE c.ProductNumber = CONCAT(tcpt.GuideSerie, tpct.GuideNumber) )
+						 , IIF(c.CodCurrency is null, 1, c.CodCurrency)
                          , tfpt.BankId
                          , tfpt.CatAccountTypeCODId
                          , tfpt.CatConceptCODId
@@ -1057,6 +1058,7 @@ BEGIN
                          , DiscountPrice
 						 , @IdCountrySender
                     FROM #TableForzaPaymentTemp tfpt
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
                     WHERE NOT EXISTS
                     (
                         SELECT 1
