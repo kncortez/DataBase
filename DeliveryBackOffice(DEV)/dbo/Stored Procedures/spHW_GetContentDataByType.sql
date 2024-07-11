@@ -4,8 +4,14 @@
 -- Create date: <2022-11-30>
 -- Description:	< Carga de información para tutoriales y preguntas frecuentes >
 -- =============================================
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-07-10>
+-- Description:	<Se Agrega filtro para mostrar el contenido (tutoriales y preguntas frecuentes)  segun el pais del cliente>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetContentDataByType]
-	@ContentTypeName NVARCHAR(100)
+	@ContentTypeName NVARCHAR(100),
+	@CountryId AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -42,16 +48,11 @@ BEGIN
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
 			(IdContentTitle)
-		SELECT
-			CT.IdContentTitle
-		FROM
-			[DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentType FCT
-				ON
-					CT.TypeContentId = FCT.IdContentType
-					AND
-					CT.RowStatus = 1
+		SELECT CT.IdContentTitle
+		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
+			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType					
+		WHERE CT.RowStatus = 1
+			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription
@@ -189,16 +190,11 @@ BEGIN
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
 			(IdContentTitle)
-		SELECT
-			CT.IdContentTitle
-		FROM
-			[DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentType FCT
-				ON
-					CT.TypeContentId = FCT.IdContentType
-					AND
-					CT.RowStatus = 1
+		SELECT CT.IdContentTitle
+		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
+			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType
+		WHERE CT.RowStatus = 1
+			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription

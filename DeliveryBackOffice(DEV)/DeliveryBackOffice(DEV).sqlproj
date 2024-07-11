@@ -1649,6 +1649,7 @@
     <Build Include="dbo\Stored Procedures\spGetCorporateCustomersMC.sql" />
     <Build Include="dbo\Stored Procedures\GetDataInvoiceByCountry.sql" />
     <Build Include="dbo\Stored Procedures\spGetDeliveryOptionsMC.sql" />
+    <Build Include="dbo\Stored Procedures\spGetInsuranceTypeCustomerMC.sql" />
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetCatCountry.sql" />
     <Build Include="dbo\User Defined Types\TblCustomerType.sql" />

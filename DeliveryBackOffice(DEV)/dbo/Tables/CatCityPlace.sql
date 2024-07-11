@@ -7,7 +7,9 @@
     [CityPlaceTokenUpdated] VARCHAR (50) NULL,
     [CityPlaceDateUpdate]   DATETIME     NULL,
     [OrderCityPlace]        INT          NULL,
-    CONSTRAINT [PK_CatCityPlace] PRIMARY KEY CLUSTERED ([IdCityPlace] ASC)
+    [IdCountry]             VARCHAR (2)  NULL,
+    CONSTRAINT [PK_CatCityPlace] PRIMARY KEY CLUSTERED ([IdCityPlace] ASC),
+    FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 

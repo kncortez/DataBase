@@ -4,6 +4,11 @@
 -- Description:	<SP para consulta de cierres generales en reporte de reporting services>
 -- Nota: Es una copia de ReportClosure
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <10-07-2024>
+-- Description:	<Se agrega la moneda y las cuentas para mostrar en el detalle del reporte>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
@@ -89,8 +94,9 @@ BEGIN
                -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
                ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral',
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
-               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS'
+               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
+			   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
 
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             LEFT JOIN @TEMPLATEDETAIL IND
@@ -202,8 +208,9 @@ BEGIN
                -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
                ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral',
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
-               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS'
+               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
+			   CurrencySymbol = ''
 
         --,DOPD.*
         --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
@@ -294,8 +301,9 @@ BEGIN
                -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
                ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral',
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
-               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS'
+               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
+			   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
 
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
             LEFT JOIN @TEMPLATEDETAIL IND
@@ -408,9 +416,9 @@ BEGIN
                -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
                ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral',
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
-               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS'
+               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-
+			   CurrencySymbol = ''
         --,DOPD.*
         --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
         FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
@@ -501,9 +509,9 @@ BEGIN
                -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
                ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral',
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
-               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS'
+               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-
+			   CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
         --,DOPD.*
         --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
         FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -609,9 +617,9 @@ BEGIN
                -- MODIFICACIÓN 12/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN 
                ISNULL(ACHVP.Voucher1, '') 'VoucherGeneral',
                ISNULL(ACHVP.Bag1, '') 'Bolsa',
-               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS'
+               ISNULL(ACHVP.ClosurerPOS, '') 'CierrePOS',
         -- FIN MODIFICACIÓN
-
+			   CurrencySymbol = ''
         --,DOPD.*
         --SELECT * FROM DeliveryBackOffice.dbo.CatPaymentType
         FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
