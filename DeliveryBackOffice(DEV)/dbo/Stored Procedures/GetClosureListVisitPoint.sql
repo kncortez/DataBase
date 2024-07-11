@@ -58,7 +58,7 @@ BEGIN
 		,ACH.TotalAmountFacturaCashDeclared
 		,ACH.TotalAmountFacturaCard
 		,ACH.TotalAmountFacturaCardDeclared
-		,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END CunrrencySymbol
+		,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END CunrrencySymbol
 		-- FIN MODIFICACIÓN
 	FROM DeliveryBackOffice.dbo.AccountingClosuresHeaderVisitPoint ACH
 	JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
