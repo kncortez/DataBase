@@ -17,7 +17,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetDailyCodPayment]
 -- Add the parameters for the stored procedure here
-
+   @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
     DECLARE @Debug BIT = 'false';
@@ -86,6 +86,10 @@ BEGIN
 			  OR LEN(COALESCE(do.Sender_Mail,''))>0
 			  OR LEN(COALESCE(cu.RegexEmail,''))>0--quitar valores nulos
 			  )
+              AND ISNULL(do.ReceiverCountryId,'GT') = CASE 
+                                                         WHEN @IdCountry = '-1' THEN ISNULL(do.ReceiverCountryId,'GT')
+                                                         ELSE @IdCountry
+                                                      END
 			  
 -- AND do.IdCustomer <> 29328
  AND NOT EXISTS --búsqueda por sender
@@ -163,6 +167,10 @@ BEGIN
                   AND btd.[AuthorizationNumber] IS NOT NULL
                   AND do.SalePipeLineId IN ( 3 )
 				  AND LEN(COALESCE(do.Sender_Mail,''))>0 --quitar valores nulos
+                  AND ISNULL(do.ReceiverCountryId,'GT') = CASE 
+                                                             WHEN @IdCountry = '-1' THEN ISNULL(do.ReceiverCountryId,'GT')
+                                                             ELSE @IdCountry
+                                                          END
             GROUP BY do.Sender_Mail,
                      cu.CODContactEmail,
                      cu.RegexEmail,
@@ -172,8 +180,7 @@ BEGIN
                      btd.BankId
         ) X
     ) CDATA
-    WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0;
-
+    WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0
 
 END;
 
