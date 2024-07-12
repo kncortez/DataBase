@@ -18,7 +18,7 @@ AS
 BEGIN
 	DECLARE @CorreoPredeterminado AS VARCHAR(100) = (SELECT cp3.Value 
 														FROM dbo.ConfigParams cp3	
-														WHERE cp3.Name = 'CorreoPais' 
+														WHERE cp3.Name = 'SupportEmailByCountry' 
 															AND cp3.IdCountry = 'GT' 
 															AND cp3.Status = 1 );
 	DECLARE @IdUser AS bigint;
@@ -48,7 +48,7 @@ BEGIN
 		INNER JOIN dbo.Customer c WITH (NOLOCK)	ON c.IdCustomer = ac.IdCustomer
 		INNER JOIN [dbo].Person pe WITH (NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson AND pe.PerRowStatus = 1
 		LEFT JOIN [dbo].[ConfigParams] cp1 ON cp1.Name = @ParamName
-		LEFT JOIN [dbo].[ConfigParams] cp2 ON cp2.Name = 'CorreoPais' 
+		LEFT JOIN [dbo].[ConfigParams] cp2 ON cp2.Name = 'SupportEmailByCountry' 
 													AND cp2.IdCountry = c.CountryID 
 													AND cp2.Status = 1
 	WHERE ac.AccIdAccount = @IdAccount OR us.UsrEmail = LTRIM(RTRIM(@UserName)) OR us.UsrIdUser =  @IdUser
