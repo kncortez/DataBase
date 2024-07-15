@@ -10,6 +10,7 @@ CREATE TABLE [dbo].[CatProductCategory](
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
     [TechnicalDescription] NVARCHAR(50) NULL, 
+    [ImageURL] NVARCHAR(255) NULL, 
     CONSTRAINT [PK_CatProductCategory] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC)
 )
 GO
