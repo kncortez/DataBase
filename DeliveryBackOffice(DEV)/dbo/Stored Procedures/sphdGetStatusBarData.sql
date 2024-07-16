@@ -25,7 +25,7 @@ BEGIN
         SELECT A3.RolIdRol,
                dbo.CapitalizeFirstLetter(A3.RolName) AS RolName,
                count(A2.RmsIdModulE) AS COUNTADOR
-        FROM RolByUserBySystem A1
+        FROM RolByUserBySystem A1 WITH (NOLOCK)
             INNER JOIN RolByModuleBySystem A2 WITH (NOLOCK)
                 ON A1.RusIdRol = A2.RmsIdRol
             INNER JOIN CatRol A3 WITH (NOLOCK)
@@ -53,7 +53,7 @@ BEGIN
             ON A1.RegisterUserID = RUS.RusIdUser
         INNER JOIN CatStation STA WITH (NOLOCK)
             ON RUS.StationId = STA.IdStation
-        LEFT JOIN CatCountry C
+        LEFT JOIN CatCountry C WITH (NOLOCK)
             ON ISNULL(A3.PerCountryOrigin, 'GT') = C.IdCountry
     WHERE A1.IdUser = @IdUser
           AND RUS.RusIdRol = @RolId
