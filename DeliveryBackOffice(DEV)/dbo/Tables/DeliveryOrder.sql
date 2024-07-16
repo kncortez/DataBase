@@ -438,6 +438,11 @@ CREATE NONCLUSTERED INDEX [idx_salepipelineid]
     INCLUDE([Sender_Zone], [Sender_Town], [Sender_Department], [SenderIdTownship], [TypeService]);
 
 GO
+CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie],[Guide_Number],[IsLastMileReturn] )
+	INCLUDE (Sender_FirstName,Sender_LastName,Sender_Phone,Receiver_Phone,Receiver_Address,PriceShippment,Collect_OnDelivery,StatusOrderId);
+
+GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Número de ticket',
     @level0type = N'SCHEMA',
