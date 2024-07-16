@@ -8,6 +8,10 @@
 -- Create date: <2024-07-09>
 -- Description: <Se agrego campo de moneda para mostrar en reporte de depositos>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-12>
+-- Description: <Se realizo un ajuste para optimizar el tiempo del query para opción 1>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDepositReportCOD]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT = -1,
@@ -197,7 +201,6 @@ BEGIN
 					--BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
 					) s1
 					ORDER BY s1.[AuthorizationDate] ASC
-					OPTION (OPTIMIZE FOR UNKNOWN)
 				END
 			 ELSE
 			    BEGIN

@@ -2,8 +2,8 @@
 
 INSERT INTO [dbo].[ConfigParams] ([Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD])
      VALUES
-           ('CorreoPais'
-           ,'Correo de información para Guatemala'
+           ('SupportEmailByCountry'
+           ,'Correo de información y soporte para Guatemala'
            ,'info.gt@forzadelivery.com'
            ,1
            ,GETDATE()
@@ -12,8 +12,8 @@ INSERT INTO [dbo].[ConfigParams] ([Name], [Description], [Value], [Status], [Cre
 GO
 INSERT INTO [dbo].[ConfigParams] ([Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD])
      VALUES
-           ('CorreoPais'
-           ,'Correo de información para Honduras'
+           ('SupportEmailByCountry'
+           ,'Correo de información y soporte para Honduras'
            ,'info.hn@forzadelivery.com'
            ,1
            ,GETDATE()
