@@ -120,10 +120,15 @@ BEGIN
 	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
     BEGIN
 
-		SELECT [IdIncidenceType], [NameIncidence]
-		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence
-		WHERE ServiceType = 'DELIVERY'
-			  AND RowStatus = 1
+		SELECT cti.IdIncidenceType									[IncidenceId],
+				cti.NameIncidence									[IncidenceName],
+				cti.IncidenceClasificationId						[IncidenceClasificationId],
+				cic.IncidenceTypeName								[IncidenceClasificationName]
+		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence AS cti WITH(NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[CatIncidenceClasification] AS cic WITH(NOLOCK) 
+								ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+		WHERE cti.ServiceType = 'DELIVERY'
+			  AND cti.RowStatus = 1
 
     END;
     ELSE 
