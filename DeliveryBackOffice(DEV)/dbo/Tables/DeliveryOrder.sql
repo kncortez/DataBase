@@ -431,4 +431,9 @@ CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetQueryRelationshipPieceCode]
 GO
 CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetRelationshipPieceCode]
 ON [dbo].[DeliveryOrder] ([IdCustomer])
-INCLUDE ([Ticket_Number],[Pieces_Dry],[Pieces_Cold])
+INCLUDE ([Ticket_Number],[Pieces_Dry],[Pieces_Cold]);
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie],[Guide_Number],[IsLastMileReturn] )
+	INCLUDE (Sender_FirstName,Sender_LastName,Sender_Phone,Receiver_Phone,Receiver_Address,PriceShippment,Collect_OnDelivery,StatusOrderId);
