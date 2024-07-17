@@ -25,7 +25,6 @@ BEGIN
 	set @FIlterByHub = (select top 1 1  from @TblHubLogistic)
 
 DECLARE @CurrentDateAsDatetime datetime=CAST(CAST(GETDATE() AS DATE) AS DATETIME);
-set @CurrentDateAsDatetime='2024-07-14 00:00:00.000';
 DECLARE @CurrentDateAsDatetimeFinishDay datetime=DATEADD(day, 1,@CurrentDateAsDatetime) ;
 DECLARE @CURRENTDATE DATE=CONVERT(DATE,@CurrentDateAsDatetime);
 
