@@ -34,6 +34,7 @@ BEGIN
           , Guide_Settlement = 1 -- guía liquidada en bodega
           , Guide_Returned = 1   -- guía liquidada vía material devuelto
           , Guide_Delivered = 0  -- guía liquidada vía comprobante de entrega
+          , StatusOrderId = 8
         WHERE Guide_Serie = @GuideSerie
               AND Guide_Number = @GuideNumber
               AND ID_DeliveryOrderBySettlement = @IdManifest;
