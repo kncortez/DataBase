@@ -9,9 +9,18 @@ CREATE PROCEDURE [dbo].[spGetLoadStationCountry]
 AS
 BEGIN
 
-	SELECT IdStation, StationName, CodeOfReference FROM DeliveryBackOffice.dbo.CatStation
-	WHERE StationType = 2
-	AND CountryId = @pCountryId
-	AND RowStatus = 1
+	SELECT 
+		MIN(IdStation) AS IdStation, 
+		StationName, 
+		CodeOfReference
+	FROM 
+		DeliveryBackOffice.dbo.CatStation
+	WHERE 
+		StationType = 2
+		AND CountryId = @pCountryId
+		AND RowStatus = 1
+	GROUP BY 
+		StationName, 
+		CodeOfReference;
 
 END;
