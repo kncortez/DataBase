@@ -334,6 +334,32 @@ BEGIN
                 FROM @TblDetail td
                 WHERE LEN(ISNULL(td.Responsible, '')) > 0;
 
+				---------actualizar el estado de la guía en detalle de manifiesto ----------------------------
+				
+		
+				  
+					;WITH LatestID AS (
+									SELECT TOP 1
+										A.Guide_Number,
+										MAX(ID) AS LastID
+									FROM 
+										[dbo].[DeliverySettlementDetail] A WITH (NOLOCK)
+									WHERE Guide_Serie = @GuideSerie AND  Guide_Number = @GuideNumber
+								GROUP BY Guide_Number
+								)
+								UPDATE ds
+								SET 
+									ds.StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
+                                        @StatusEXC,
+                                        IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5)))
+								FROM 
+									[dbo].[DeliverySettlementDetail] ds
+								INNER JOIN 
+									[LatestID] li 
+								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
+					
+				---------------------------------------------------------------------------------------------
+
                 -- registrar estado en tabla de checkpoints
                 INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
                 (

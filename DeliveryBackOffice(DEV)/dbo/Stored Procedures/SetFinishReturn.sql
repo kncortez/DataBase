@@ -251,6 +251,26 @@ BEGIN
 	--						   INNER JOIN  dbo.DeliveryOrder od on od.Guide_Serie =  ls.Serie AND od.Guide_Number = ls.NumberGuide
 	--	END
 						-------------------WEBHOOK.FIN------------------------------	
+		----------------------------------Bitacora de detalle de manifiesto-----------------------------------------------------------------------
+								;WITH LatestID AS (
+									SELECT 
+										Guide_Number,
+										MAX(ID) AS LastID
+									FROM 
+										[dbo].[DeliverySettlementDetail] WITH (NOLOCK)
+									WHERE Guide_Number in (SELECT NumberGuide FROM @TblGuidesReturns)
+									GROUP BY 
+										Guide_Number
+								)
+								UPDATE ds
+								SET 
+									ds.StatusOrderId = 14
+								FROM 
+									[dbo].[DeliverySettlementDetail] ds
+								INNER JOIN 
+									LatestID li ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
+								INNER JOIN 
+									@TblGuidesReturns tg ON ds.Guide_Number = tg.NumberGuide;
 						
 		---------------------------------------------- Coloca true a IsPickup para que se entienda que es Recoleccion o fue escaneada la guia --------------------
 						

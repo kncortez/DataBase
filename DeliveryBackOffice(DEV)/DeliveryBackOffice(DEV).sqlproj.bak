@@ -1575,7 +1575,6 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\spGenerateArrivedGuides.sql" />
-	<Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />

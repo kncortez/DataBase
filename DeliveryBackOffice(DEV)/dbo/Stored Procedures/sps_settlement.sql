@@ -20,6 +20,31 @@ BEGIN
 	BEGIN TRANSACTION
 
 		BEGIN TRY
+			-- Obtener las guías que se actuaizará el ultimo estado en bitacora para actualizar el último estado de una guía asignada a un manifiesto
+		;WITH LatestOrder AS (
+			SELECT 
+				[dod].[Guide_Number],
+				[dod].[StatusOrderId],
+				ROW_NUMBER() OVER (PARTITION BY [dod].[Guide_Number] ORDER BY [dod].[DateCreated] DESC) AS rn
+			FROM 
+				[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] dod
+			WHERE 
+				[dod].[Guide_Number] IN (
+										   SELECT [ds].[Guide_Number]
+											 FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds
+												 WHERE [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
+				)
+		)
+		UPDATE ds
+		SET [ds].[StatusOrderId] = [lo].[StatusOrderId]
+		FROM 
+			[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] ds
+		INNER JOIN 
+			[LatestOrder] lo ON [ds].[Guide_Number] = [lo].[Guide_Number]
+		WHERE 
+			[lo].[rn] = 1
+			AND [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
+			AND ds.StatusOrderId <> 5;
 
 			-- Actualizar registro en control de manifiestos de despacho
 			UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
