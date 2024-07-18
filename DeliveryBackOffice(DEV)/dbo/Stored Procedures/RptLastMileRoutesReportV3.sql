@@ -241,7 +241,7 @@ OUTER APPLY (
 
 WHERE 
     DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
-	AND   HBL.IdCountry = @IdCountry
+	AND   HBL.IdCountry = ISNULL(@IdCountry,'GT')
 GROUP BY DOBS.ID
 
 
