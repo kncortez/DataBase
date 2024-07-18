@@ -15,8 +15,11 @@ CREATE TABLE [dbo].[CatMembership] (
     [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
 	[CatProductCategoryId] 			[int]			 NULL,
 	[Tag] 							[nvarchar](100)  NULL,
-	[Position] 						[int] 			 NULL,	
-    CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
+	[Position] 						[int] 			 NULL,
+    [IdCountry]                     NVARCHAR(2)      NULL,
+	[IdCatCurrencyCOD]              INT              NULL,	
+    CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC),
+    CONSTRAINT [FK_CatMembership_CatCurrencyCOD] FOREIGN KEY ([IdCatCurrencyCOD]) REFERENCES [dbo].[CatCurrencyCOD]([IdCatCurrencyCOD])
 );
 
 
