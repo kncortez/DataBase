@@ -29,6 +29,17 @@ BEGIN
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
 
+    
+   SET @CountryId =(SELECT TOP 1  
+	                                  CASE WHEN LEFT(ISNULL(UsrCurrency,'GTQ'),2)='HN' 
+									  THEN 'HN' ELSE 'GT' END  
+						FROM dbo.RegisterUser WHERE UsrEmail=@Username);
+
+
+				
+
+	DECLARE @CodeIsoMoney NVARCHAR(3) = (SELECT TOP 1 CodeISO  FROM [dbo].[CatCurrencyCOD] WHERE CodeISO LIKE '%' + @CountryId +'%');
+
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
     SET @VERIFYUSER =
@@ -576,6 +587,7 @@ BEGIN
                             SELECT STUFF(
                                             (
                                                 SELECT '{"IdResult":200' + ',' + '"Token":"' + @Token + '",'
+                                                       + '"Currency":"' + @CodeIsoMoney + '",'
                                                        + '"Modules":[' + @JsonModules + '],' + '"Accounts":['
                                                        + @JsonAccounts + '],' + '"Profile":['
                                                        + CASE
