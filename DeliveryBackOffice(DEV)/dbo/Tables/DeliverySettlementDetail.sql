@@ -19,7 +19,7 @@
     [TokenUpdated]                   NVARCHAR (50)   NULL,
     [DateUpdated]                    DATETIME        NULL,
     [GuideETA]                       TIME (7)        NULL,
-    [StatusOrderId]                  INT             NULL,
+    [StatusOrderId]                  TINYINT         NULL,
     CONSTRAINT [PK_DeliverySettlementDetail] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
