@@ -93,7 +93,7 @@ BEGIN
 			, IIF(srv.ServiceStatusId = 3,MAX(spd.Price),0) Price
 		FROM 
 			dbo.SenderReceiver sr WITH(NOLOCK)
-			LEFT JOIN 
+			INNER JOIN 
 				dbo.SettlementPickupStation sps WITH(NOLOCK)
 				ON 
 					sps.CouriermanId = sr.ID 
