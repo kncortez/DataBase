@@ -1631,6 +1631,7 @@
     <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
+    <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
   </ItemGroup>
   <ItemGroup>
