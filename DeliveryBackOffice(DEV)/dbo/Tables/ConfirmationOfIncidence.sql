@@ -22,6 +22,8 @@
     [IsAddressModificationRequested]   BIT            NULL,
     [ValidGeolocationEvidence]         BIT            NULL,
     [ValidPhotographicEvidence]        BIT            NULL,
+    [TypeIncidenceId]         TINYINT        NULL,
+    [CommentOnConfirmedTypeIncidence]  NVARCHAR (600) NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
