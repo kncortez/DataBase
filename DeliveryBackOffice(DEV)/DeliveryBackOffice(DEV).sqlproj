@@ -737,6 +737,7 @@
     <Build Include="dbo\Stored Procedures\sps_creditNoteForza.sql" />
     <Build Include="dbo\Stored Procedures\sps_contact_incident.sql" />
     <Build Include="dbo\Stored Procedures\sps_cod_amount.sql" />
+    <Build Include="dbo\Stored Procedures\ReleaseUserFromIncident.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateOrderBankAccount.sql" />
     <Build Include="dbo\Stored Procedures\sps_Set_Unlink_Link_UserExc.sql" />
     <Build Include="dbo\Stored Procedures\sps_SetEditGuides.sql" />
