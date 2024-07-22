@@ -15,6 +15,7 @@ CREATE PROCEDURE [dbo].[spws_get_login]
   , @Password VARCHAR(200)
   , @IP VARCHAR(30)
   , @IdSystem INT = 1
+  , @CountryId VARCHAR(2) ='GT'
 AS
 BEGIN
     PRINT 'TEST';
@@ -28,17 +29,18 @@ BEGIN
     DECLARE @StatusAccount CHAR(1);
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
+    DECLARE @CODPercentage NVARCHAR(10);
 
-    
    SET @CountryId =(SELECT TOP 1  
-	                                  CASE WHEN LEFT(ISNULL(UsrCurrency,'GTQ'),2)='HN' 
+	                                  CASE WHEN LEFT(UsrCurrency,2)='HN' 
 									  THEN 'HN' ELSE 'GT' END  
 						FROM dbo.RegisterUser WHERE UsrEmail=@Username);
 
 
-				
-
 	DECLARE @CodeIsoMoney NVARCHAR(3) = (SELECT TOP 1 CodeISO  FROM [dbo].[CatCurrencyCOD] WHERE CodeISO LIKE '%' + @CountryId +'%');
+
+	SET @CODPercentage = (Select CONVERT(VARCHAR,ISNULL([Value],0)) From dbo.ConfigParams
+                                      WHERE [Name] ='MinCODCommissionAmount' AND IdCountry LIKE '%'+ @CountryId  + '%')
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -429,6 +431,25 @@ BEGIN
                                                                  ta.TacName
                                                          END + '",' + '"IdCustomer":"'
                                                        + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",'
+                                                       + '"CODPercentage":"' + @CODPercentage + '",'
+														+ '"InsuranceRate":"' 
+														+  
+													      (SELECT TOP 1 CONVERT(VARCHAR ,ISNULL(InsuranceRate, 0)) FROM dbo.RateHeader  
+																					  WHERE RheId IN(
+																									select RbcIdRate from dbo.RatebyCustomer
+																									where RbcIdCustomer=ac.IdCustomer)) + '",'
+														+ '"InsuranceExempt":"' 
+														+  
+													      (SELECT TOP 1 CONVERT(VARCHAR ,ISNULL(InsuranceExempt, 0)) FROM dbo.RateHeader  
+																					  WHERE RheId IN(
+																									select RbcIdRate from dbo.RatebyCustomer
+																									where RbcIdCustomer=ac.IdCustomer)) + '",'
+														+ '"CashOnDeliveryCharge":"' 
+														+  
+													      (SELECT TOP 1 CONVERT(VARCHAR ,ISNULL(CollectRate, 0)) FROM dbo.RateHeader  
+																					  WHERE RheId IN(
+																									select RbcIdRate from dbo.RatebyCustomer
+																									where RbcIdCustomer=ac.IdCustomer)) + '",'
                                                        + '"RolName":"' + ro.RolName + '",' + '"ImageProfile":"'
                                                        + ISNULL(ac.ImageProfile, '') + '",' + '"StarRating":"'
                                                        + CONVERT(VARCHAR(1), ISNULL(ac.StarRating, 0)) + '",'
@@ -488,6 +509,8 @@ BEGIN
                                                        + '"Identification":"' + pe.PerIdentification + '",'
                                                        + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                        + CONVERT(VARCHAR, us.UsrNickName) + '",' + '"Phone":"'
+                                                       + '"PrefixCallingCode":"'
+													   + COALESCE(us.PrefixCallingCode  , ' ') + '",'
                                                        -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                                        + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",'
                                                        + '"VerifiedPhone.":"'
@@ -543,6 +566,8 @@ BEGIN
                                                     SELECT ',{"Name":"' + DescriptionOfClient + '",'
                                                            + '"ContactName":"' + ISNULL(ContactName, '') + '",'
                                                            + '"Phone":"' + ISNULL(VPC.Phone, '') + '",' + '"Email":"'
+                                                           + '"PrefixCallingCode":"'
+														   + COALESCE(us.PrefixCallingCode  , ' ') + '",'
                                                            + ISNULL(Email, '') + '",' + '"IdTownship":"'
                                                            + ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '') + '",'
                                                            + '"TownshipName":"' + ISNULL(TWS.TownshipDescription, '')
