@@ -153,14 +153,18 @@ BEGIN
 			  AND ISNULL(CountryID, 'GT')= @IdCountry
 
     END;
-	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
+	ELSE IF (@TypeMethod = 'GetIncidenceByServicesDelivery')
     BEGIN
 
-		SELECT [IdIncidenceType], [NameIncidence]
-		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence
+		SELECT  IdIncidenceType [Id]  
+				, ISNULL(NameIncidence, 'N/A') [Name]
+				, ISNULL(DescriptionIncidence, 'N/A') [DescriptionIncidence]
+				, IIF(COALESCE(EvidenceRequirement,0) = 1, '1','0') [EvidenceRequirement]								   
+				, ISNULL(CourierInstructions, 'N/A') [CourierInstructions]
+		FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] WITH(NOLOCK)
 		WHERE ServiceType = 'DELIVERY'
-			  AND RowStatus = 1
-			  AND ISNULL(CountryID, 'GT')= @IdCountry
+				AND RowStatus = 1
+				AND ISNULL(CountryID, 'GT')= @IdCountry
 
     END;
     ELSE 
