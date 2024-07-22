@@ -41,6 +41,7 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @PrefixCallingCode VARCHAR(4) = LEFT(@Phone, 4)
+	  SET @Phone   = RIGHT(@Phone,8)
 
 	DECLARE @TblErrorMessage AS TABLE (	IdResult INT,
 										Message NVARCHAR(50), 
