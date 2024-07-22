@@ -4,7 +4,10 @@
 -- Create date: <2022-06-30>
 -- Description:	< Reporte general de guías por rango de fechas >
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-07-22>
+-- Description: <Se agregan los valores de moneda de pago y moneda de COD para el reporte en corporativo>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuidesReport]
     @AccountId INT
   , @DateStart DATETIME = NULL
@@ -247,7 +250,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
+             , ISNULL(CAST(CCC.Symbol AS VARCHAR),'Q')                            'Moneda de envío'
              , DO.PriceShippment                                                  'Monto de envío'
+             , ISNULL(CAST(CCC.Symbol AS VARCHAR),'Q')                            'Moneda de COD'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
              , DO.Sender_Department                                               'Departamento origen'
@@ -291,6 +296,14 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
                    AND VPC.StatusClient = 1
+            LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
+                ON vpc.CustomerID = RC.RbcIdCustomer
+                AND rc.RbcRowStatus = 1
+            LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
+                ON RC.RbcIdRate = RH.RheId 
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
+                ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
+                OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number
