@@ -187,66 +187,75 @@ end
 if(@VisitPointId > 0 and (@IdCierre <= 0 or @IdCierre is null) )
 begin
 	SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
-			,VP.VisitPointId
-			,VP.DescriptionOfClient VisitPointDescription
-			,ACh.UserId
-			,REU.UsrNickName
-			,DTP.DateCreated 'DateCreated'
-			,DOR.Sender_FirstName + ' ' + DOR.Sender_LastName 'Client' 
-			--,vpc.DescriptionOfClient,DOR.Sender_ID,DOR.IsCollect,DOPD.PayTypeId
-			,INH.inv_certificationFEL 'CertificationFEL'
-			,INH.inv_serieFEL 'SerieFel'
-			,INH.inv_numberFEL 'NumberFel'
-			,INH.inv_SAPDocEntry 'DOCSAP'
-			,STO.OrderDescription 'Status'
-			,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
-			,isnull(CD.Voucher,'') 'Voucher'
-			,CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol 
-			,isnull(DTP.amount, 0)'PriceShippment'
-			,isnull(DTP.CODAmountProcess,0) 'COD'
-			, case 
-				when DTP.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
-				when DTP.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
-				when DTP.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
-				WHEN DTP.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
-				 else '' end 'PaymentType'
-			,CTS.NameTypeService as 'ServiceType'
+		,VPC.VisitPointId
+		,VPC.DescriptionOfClient VisitPointDescription
+		,ACh.UserId
+		,REU.UsrNickName
+		,DOPD.DateCreated 'DateCreated'
+		,DOR.Sender_FirstName + ' ' + DOR.Sender_LastName 'Client' 
+		--,vpc.DescriptionOfClient,DOR.Sender_ID,DOR.IsCollect,DOPD.PayTypeId
+		,INH.inv_certificationFEL 'CertificationFEL'
+		,INH.inv_serieFEL 'SerieFel'
+		,INH.inv_numberFEL 'NumberFel'
+		,INH.inv_SAPDocEntry 'DOCSAP'
+		,STO.OrderDescription 'Status'
+		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
+		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol 
+		,isnull(DOPD.amount, 0)'PriceShippment'
+		,isnull(DOPD.CODAmountProcess,0) 'COD'
+		, case 
+			when DOPD.TypeofInOutMoneyId  = 1 THEN UPPER(ctgmon.tio_pk_name)
+			when DOPD.TypeofInOutMoneyId = 2 THEN UPPER(ctgmon.tio_pk_name)
+			when DOPD.TypeofInOutMoneyId = 3 THEN UPPER(ctgmon.tio_pk_name)
+			when DOPD.TypeofInOutMoneyId = 4 THEN UPPER(ctgmon.tio_pk_name)
+			when DOPD.TypeofInOutMoneyId = 6 THEN UPPER('pago con tarjeta')
+			when DOPD.TypeofInOutMoneyId = 7 THEN UPPER(ctgmon.tio_pk_name)
+			WHEN DOPD.TypeofInOutMoneyId = 8 THEN UPPER(ctgmon.tio_pk_name)
+			 else '' end 'PaymentType'
+		,CTS.NameTypeService as 'ServiceType'
 	FROM dbo.DeliveryOrder DOR WITH (NOLOCK)
-			INNER JOIN @TEMPLATEDETAIL IND 
-				ON IND.guideserie = DOR.Guide_Serie
-				AND IND.guidenumber = DOR.Guide_Number
-			INNER JOIN DeliveryOrderPaymentTransaction DTP WITH (NOLOCK)
-				ON DTP.GuideSerie = IND.guideserie
-				AND DTP.GuideNumber = IND.guidenumber
-			INNER JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
-				ON INH.inv_pk_id = IND.header
-			INNER JOIN StatusOrder STO WITH (NOLOCK)
-				ON DOR.StatusOrderId = STO.StatusOrderId
-			INNER JOIN VisitPointClient VP WITH (NOLOCK)
-				ON DTP.VisitPoint = VP.CodeOfReference
-			INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
-				ON CTS.IdTypeService = DTP.TypeServiceId
-			INNER JOIN AccountingClosuresDetail ACD WITH (NOLOCK)
-				ON ACD.GuideSerie = DOR.Guide_Serie
-				AND ACD.GuideNumber = DOR.Guide_Number
-				AND ACD.DopId = DTP.DopId
-			INNER JOIN AccountingClosuresHeader ACH WITH (NOLOCK)
-				ON ACD.AccountingClosuresHeaderId = ACH.IdAccountingClosuresHeader
-			INNER JOIN  RegisterUser REU WITH (NOLOCK)
-				ON ACH.UserId = REU.UsrIdUser
-			INNER JOIN ctgTypeOfInOutOfMoney ctgmon WITH (NOLOCK)
-				ON ctgmon.tio_pk_id = DTP.TypeofInOutMoneyId
-			INNER JOIN Cost CO WITH (NOLOCK)
-				ON CO.GuideSerie = DOR.Guide_Serie
-				AND CO.GuideNumber = dor.Guide_Number
-			INNER JOIN CostDetail CD WITH (NOLOCK)
-				ON CD.IdCost = CO.IdCost
-	WHERE CONVERT(DATE, DTP.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-	AND (DTP.AccountId = @IdAccount OR DTP.VisitPoint = @VisitPointId) AND DTP.ShipmentCompleted = 1
-	AND DTP.AccountId > 0 AND DOR.StatusOrderId != 7 AND DTP.TypeofInOutMoneyId != 8 AND ACD.RowStatus = 1
+		LEFT JOIN @TEMPLATEDETAIL IND
+			ON IND.guideserie = DOR.Guide_Serie
+			AND IND.guidenumber = DOR.Guide_Number
+		LEFT JOIN DeliveryBackOffice.dbo.invoiceHeader INH WITH (NOLOCK)
+			ON INH.inv_pk_id = IND.header
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder STO 
+			ON STO.StatusOrderId = DOR.StatusOrderId
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
+			ON DOPD.GuideSerie = DOR.Guide_Serie 
+			AND DOPD.GuideNumber = DOR.Guide_Number
+
+		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
+			ON DOPD.VisitPoint = VPC.CodeOfReference
+		-- FIN MODIFICACIÓN
+		INNER JOIN CatTypeServiceClosure CTS 
+			ON CTS.IdTypeService = DOPD.TypeServiceId
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
+			on ACD.GuideSerie = DOR.Guide_Serie
+			AND ACD.GuideNumber = DOR.Guide_Number
+			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+			AND ACD.DopId = DOPD.DopId
+			-- FIN MODIFICACIÓN
+			
+		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
+			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
+		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
+			ON REU.UsrIdUser = ACH.UserId
+		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
+			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
+		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK) 
+			on cost.GuideSerie = DOR.Guide_Serie AND DOR.Guide_Number = cost.GuideNumber --CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
+		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)  
+			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
+			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
+	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId) AND ACD.RowStatus = 1
+			AND dopd.ShipmentCompleted = 1
+			AND DOPD.AccountId > 0
+			AND DOR.StatusOrderId != 7
+			AND DOPD.[TypeofInOutMoneyId] != 8
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
