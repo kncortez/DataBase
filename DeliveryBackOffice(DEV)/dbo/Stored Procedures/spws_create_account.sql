@@ -34,8 +34,8 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	
-		DECLARE @PrefixCallingCode VARCHAR(4) = LEFT(@PhoneNumber, 4)
-	      SET  @PhoneNumber = RIGHT(@PhoneNumber,8)
+	DECLARE @PrefixCallingCode VARCHAR(4) = LEFT(@PhoneNumber, 4)
+	SET  @PhoneNumber = RIGHT(@PhoneNumber,8)
 
 	DECLARE @NewMainUserRol INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Nuevo estándar' COLLATE Latin1_General_CI_AI);
 
@@ -109,6 +109,7 @@ BEGIN
 						,UsrRowStatus
 						,UsrTokenCreated
 						,UsrDateCreated
+						,PrefixCallingCode 
 						,Phone
 						)
 					Values(@IdPerson, @NickName,@Email,null,@Password,@ExpirationDate,@Language,@DeviceType,@Currency,null,null, 1,'SYS-ADMIN',GETDATE(),@PrefixCallingCode,@PhoneNumber)

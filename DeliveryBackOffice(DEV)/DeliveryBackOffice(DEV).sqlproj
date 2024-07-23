@@ -1576,6 +1576,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
+	<Build Include="dbo\Stored Procedures\spws_get_MailSoport.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1656,6 +1657,7 @@
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetStatusBarData.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
