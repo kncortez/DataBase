@@ -1,4 +1,4 @@
-﻿-- =============================================
+﻿﻿-- =============================================
 -- Modified:	<Brandon, Pedroza >
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega parametro para filtrar por pais, GT por defecto>
@@ -150,11 +150,15 @@ BEGIN
 	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
     BEGIN
 
-		SELECT [IdIncidenceType], [NameIncidence]
-		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence
-		WHERE ServiceType = 'DELIVERY'
-			  AND RowStatus = 1
-			  AND ISNULL(CountryID, 'GT')= @IdCountry
+		SELECT cti.IdIncidenceType									[IncidenceId],
+				cti.NameIncidence									[IncidenceName],
+				cti.IncidenceClasificationId						[IncidenceClasificationId],
+				cic.IncidenceTypeName								[IncidenceClasificationName]
+		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence AS cti WITH(NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[CatIncidenceClasification] AS cic WITH(NOLOCK) 
+								ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
+		WHERE cti.ServiceType = 'DELIVERY'
+			  AND cti.RowStatus = 1
 
     END;
 	ELSE IF (@TypeMethod = 'GetIncidenceByServicesDelivery')

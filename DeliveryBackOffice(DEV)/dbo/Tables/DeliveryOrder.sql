@@ -401,7 +401,11 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
 GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
     ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC);
+GO
 
+CREATE NONCLUSTERED INDEX [DeliveryOrderAttemptData_GetQualityControlData]
+	ON [dbo].[DeliveryOrderAttemptData]([GuideSerie] ASC, [GuideNumber] ASC)
+	INCLUDE (GuideDeliveryAttemptCount,GuideDeliveryMaxAttemptCount);
 GO
 --CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus] ON [DeliveryBackOffice].[dbo].[DeliveryOrder] 
 --(
