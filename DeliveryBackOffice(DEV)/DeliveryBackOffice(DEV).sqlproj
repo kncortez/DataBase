@@ -1576,6 +1576,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
+	<Build Include="dbo\Stored Procedures\spws_get_MailSoport.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
