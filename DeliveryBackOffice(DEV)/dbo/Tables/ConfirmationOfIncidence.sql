@@ -27,6 +27,7 @@
     [TakenIncidenceUserId]             INT            NULL,
     [TakenIncidenceUserName]           NVARCHAR (100) NULL,
     [TakenIncidenceDateAndTime]        DATETIME       NULL,
+    [CommentOnIncident]                NVARCHAR (200) NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
     CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
