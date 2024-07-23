@@ -159,6 +159,7 @@ BEGIN
 								ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification
 		WHERE cti.ServiceType = 'DELIVERY'
 			  AND cti.RowStatus = 1
+			  AND ISNULL(CountryID, 'GT')= @IdCountry
 
     END;
 	ELSE IF (@TypeMethod = 'GetIncidenceByServicesDelivery')
