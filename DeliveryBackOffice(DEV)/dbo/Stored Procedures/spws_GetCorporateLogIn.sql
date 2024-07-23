@@ -545,9 +545,9 @@ BEGIN
                                                        + CONVERT(NVARCHAR, ISNULL(rc.[RbcRowStatus], '')) + '",'
                                                        + '"CodeOfReference":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), vpc.CodeOfReference), '') + '",'
-                                                       + '"CurrencyEXP":"'
+                                                       + '"CurrencyCorporate":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.CodeISO), '') + '",'
-                                                       + '"CurrencySymbolEXP":"'
+                                                       + '"CurrencySymbolCorporate":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.Symbol), '') + '",'
 
                                                        + '"ListCod":' + '[{' + '"IdBank":"'
