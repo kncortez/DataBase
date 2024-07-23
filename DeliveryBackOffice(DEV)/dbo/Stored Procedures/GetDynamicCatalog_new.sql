@@ -3,6 +3,10 @@
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega parametro para filtrar por pais, GT por defecto>
 -- =============================================
+-- Modified:    <Daniel, Ramirez>
+-- Create date: <2024-22-07>
+-- Description: <Se agrega catalogo y filtro para obtener por pais los vehiculos para portal corporativo>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDynamicCatalog_new]
     @TypeMethod VARCHAR(100) = 'GetCustomerType'
   , @IdAccount INT = null
@@ -166,6 +170,16 @@ BEGIN
 				AND RowStatus = 1
 				AND ISNULL(CountryID, 'GT')= @IdCountry
 
+    END;
+    ELSE IF (@TypeMethod = 'GetTypeVehicle')
+    BEGIN
+        SELECT IdTypeVehicle AS [Id],
+               [Name] AS [Name],
+               [Description] AS [Description]
+          FROM CatTypeVehicle
+         WHERE RowStatus = 1
+           AND Name IN ('Camión','Panel','Motocicleta')
+           AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
     END;
     ELSE 
     BEGIN
