@@ -8,6 +8,10 @@
 -- Update date: <2024-07-19>
 -- Description:	<validar si un agente está operando una incidencia Ref. FDAPI-2283>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-07-23>
+-- Description:	<Se agrega un nuevo campo en la respuesta para regresar el comentario que ingreso el piloto Ref. FDAPI-2296>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_GetDataforIncidentRegistration]
  @GuideSerie NVARCHAR(2) = 'FD',
  @GuideNumber INT,
@@ -127,7 +131,8 @@ BEGIN
 						WHEN @Terminal = 3 THEN 'Guía en estado terminal,no es posible confirmar incidencia.'
 						ELSE 'Incidencia confirmada Exitosamente.'
 				   END
-				   AS 'DescriptionResult'
+				   AS 'DescriptionResult',
+				cfi.CommentOnIncident 
 		FROM [dbo].[DeliveryOrder] DO WITH (NOLOCK)
 			LEFT JOIN  [dbo].[DeliveryProof] DP WITH (NOLOCK)
 				ON DO.Guide_Serie = DP.Guide_Serie AND DO.Guide_Number = DP.Guide_Number 
