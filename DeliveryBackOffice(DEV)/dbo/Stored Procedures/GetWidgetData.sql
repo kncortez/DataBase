@@ -120,7 +120,8 @@ BEGIN
 						'Piezas' 'TopText',
 						ISNULL(TotalGuide,0) 'BottomValue',
 						'Envíos realizados' 'BottomText',
-						'bi bi-box-seam' 'WidgetIcon'
+						'bi bi-box-seam' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 					FROM
 						@ResponseTable
 				END
@@ -134,7 +135,8 @@ BEGIN
 						'Piezas' 'TopText',
 						0 'BottomValue',
 						'Envíos realizados' 'BottomText',
-						'bi bi-box-seam' 'WidgetIcon'
+						'bi bi-box-seam' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 
 			END
@@ -148,7 +150,8 @@ BEGIN
 					'Piezas' 'TopText',
 					0 'BottomValue',
 					'Envíos realizados' 'BottomText',
-					'bi bi-box-seam' 'WidgetIcon'
+					'bi bi-box-seam' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 		END
 		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
@@ -191,7 +194,8 @@ BEGIN
 						'Monto pagado COD' 'TopText',
 						ISNULL(TotalPendingCoD,0) 'BottomValue',
 						'Total por cobrar' 'BottomText',
-						'bi bi-cash' 'WidgetIcon'
+						'bi bi-cash' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 					FROM
 						@ResponseCoDTable
 				END
@@ -205,7 +209,8 @@ BEGIN
 						'Monto pagado COD' 'TopText',
 						0 'BottomValue',
 						'Total por cobrar' 'BottomText',
-						'bi bi-cash' 'WidgetIcon'
+						'bi bi-cash' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 			END
 			ELSE
@@ -218,7 +223,8 @@ BEGIN
 					'Monto pagado COD' 'TopText',
 					0 'BottomValue',
 					'Total por cobrar' 'BottomText',
-					'bi bi-cashSettlement' 'WidgetIcon'
+					'bi bi-cashSettlement' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 
 		END
@@ -323,7 +329,8 @@ BEGIN
 							'Velocidad de entrega' 'TopText',
 							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
 							'Entregas' 'BottomText',
-							'fas fa-paper-plane' 'WidgetIcon'
+							'fas fa-paper-plane' 'WidgetIcon',
+							ISNULL(@Currency,'GTQ') 'Currency' 
 						FROM
 							@ResponseVelTable
 					END
@@ -337,7 +344,8 @@ BEGIN
 							'Velocidad de entrega/día' 'TopText',
 							0 'BottomValue',
 							'Entregas' 'BottomText',
-							'fas fa-paper-plane' 'WidgetIcon'
+							'fas fa-paper-plane' 'WidgetIcon',
+							ISNULL(@Currency,'GTQ') 'Currency' 
 					END
 
 				END
@@ -351,7 +359,8 @@ BEGIN
 						'Velocidad de entrega/día' 'TopText',
 						0 'BottomValue',
 						'Entregas' 'BottomText',
-						'fas fa-paper-plane' 'WidgetIcon'
+						'fas fa-paper-plane' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 
 			END
@@ -365,7 +374,8 @@ BEGIN
 					'Velocidad de entrega/día' 'TopText',
 					0 'BottomValue',
 					'% de entregas' 'BottomText',
-					'fas fa-paper-plane' 'WidgetIcon'
+					'fas fa-paper-plane' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 
 		END
@@ -422,7 +432,8 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						ISNULL(TotalCompletedPickups,0) 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'fa fa-shipping-fast' 'WidgetIcon'
+						'fa fa-shipping-fast' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 					FROM
 						@ResponseServicesTable
 				END
@@ -436,7 +447,8 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						0 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'fa fa-shipping-fast' 'WidgetIcon'
+						'fa fa-shipping-fast' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 
 			END
@@ -450,7 +462,8 @@ BEGIN
 					'Recolecciones pendientes' 'TopText',
 					0 'BottomValue',
 					'Recolecciones completadas' 'BottomText',
-					'fa fa-shipping-fast' 'WidgetIcon'
+					'fa fa-shipping-fast' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 		END
 		ELSE
@@ -464,7 +477,8 @@ BEGIN
 				'' 'TopText',
 				0 'BottomValue',
 				'' 'BottomText',
-				'' 'WidgetIcon'
+				'' 'WidgetIcon',
+				'' 'Currency' 
 
 		END
 	END TRY
@@ -478,7 +492,8 @@ BEGIN
 			'' 'TopText',
 			0 'BottomValue',
 			'' 'BottomText',
-			'' 'WidgetIcon'
+			'' 'WidgetIcon',
+			'' 'Currency' 
 	END CATCH
 	
 	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL
