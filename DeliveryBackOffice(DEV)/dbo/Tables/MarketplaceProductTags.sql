@@ -9,6 +9,7 @@ CREATE TABLE [dbo].[MarketplaceProductTags](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
+	[IdCountry] [nvarchar](2) NULL,
  	CONSTRAINT [PK_MarketplaceProductTags] PRIMARY KEY CLUSTERED ([IdMarketplaceProductTags] ASC)
 )
 GO
