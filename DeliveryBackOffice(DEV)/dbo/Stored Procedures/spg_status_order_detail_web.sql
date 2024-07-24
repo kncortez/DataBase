@@ -10,6 +10,10 @@
 -- Update date: <28-03-2023>
 -- Description: <Add Username and station for each registered checkpoint>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <24-07-2024>
+-- Description: <Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_web]
     @Guide_Serie NVARCHAR(2),
     @Guide_Number BIGINT
@@ -73,6 +77,7 @@ BEGIN
            RES.[StageTitle],
            RES.[StageSource],
 		   RES.[ClasificationIncident],
+		   RES.[CommentOnIncident],
            RES.[StageDescription],
            RES.[CheckpointIcon],
            RES.[ImagePath],
@@ -107,6 +112,8 @@ BEGIN
                '' [StageTitle],
                'web' [StageSource],
 			   '' AS [ClasificationIncident],
+			   '' AS [CommentOnIncident],
+               '' AS [StageDescription],
                '' AS [StageDescription],
                '' AS [CheckpointIcon],
                '' AS [ImagePath],
@@ -165,6 +172,11 @@ BEGIN
                 END
 
 			   ) AS [ClasificationIncident],
+			 ( CASE
+                    WHEN dod.StatusOrderId = @StatusIncident THEN
+						ISNULL([COI].[CommentOnIncident], '')
+					END
+			   ) AS [CommentOnIncident],               
             (CASE
                  WHEN dod.StatusOrderId IN ( 6, 8,@StatusIncidentValidated ) THEN
                      ISNULL(dod.Observations, '')
@@ -413,7 +425,8 @@ BEGIN
                  COI.ValidGeolocationEvidence,
 				 COI.IsConfirmed,
 				 COI.IsDenied,
-				 COI.ValidPhotographicEvidence
+				 COI.ValidPhotographicEvidence,
+				 COI.CommentOnIncident
     ) RES
     ORDER BY RES.[StageDate] DESC,
              RES.[EventID];
@@ -436,6 +449,7 @@ BEGIN
            OrdChkPnt.[StageTitle],
            OrdChkPnt.[StageSource],
 		   OrdChkPnt.ClasificationIncident,
+		   OrdChkPnt.[CommentOnIncident],
            ISNULL(
                      '[ '
                      + DeliveryBackOffice.dbo.[CapitalizeFirstLetter](ISNULL(epl.FirstName, '') + ' '
