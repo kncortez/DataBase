@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+﻿-- =============================================
+-- Modified:    <Daniel, Ramirez>
+-- Create date: <2024-07-24>
+-- Description: <Se ajusto la informacion de salida para que obtenga la moneda correcta>
+-- =============================================
+CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD',
     @CountryThatConsults VARCHAR(2)= 'GT'
@@ -231,7 +236,7 @@ begin
     WHILE @j > 0
     BEGIN
         SELECT @integrationCost
-            = @integrationCost + '{"Currency":"' + 'GTQ' + '",' + +'"Description":"'
+            = @integrationCost + '{"Currency":"' + @calcurrency + '",' + +'"Description":"'
               + CONVERT(VARCHAR, ISNULL(Description, 0)) + '",' + +'"Price":"' + CONVERT(VARCHAR, ISNULL(Amount, 0))
               + '"' + '},'
         FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
@@ -487,7 +492,7 @@ begin
                                                   '\"'
                                               ) + '"' + '},' + '"parcels": [' + COALESCE(@arpieces, '') + ' ] , '
                                      + '"TotalWeight":' + CONVERT(VARCHAR, @TotalWeight) + ', ' + '"TotalValue":'
-                                     + CONVERT(VARCHAR, @TotalValue) + ',' + '"Currency":"' + 'GTQ' + '",'
+                                     + CONVERT(VARCHAR, @TotalValue) + ',' + '"Currency":"' + @calcurrency + '",'
                                      + '"ProductInsuranceAmount":'
                                      + CONVERT(VARCHAR, CAST(ISNULL(dev.InsuranceAmount, 0) AS MONEY)) + ','
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
@@ -577,7 +582,13 @@ begin
                                                                        ) + ',' + '"CreditNumber":"'
                                      + CONVERT(VARCHAR, ISNULL(dev.Order_Number, 0)) + '",' + '"AmmountCashOnDelivery": '
                                      + COALESCE(CONVERT(VARCHAR, dev.Collect_OnDelivery), '0') + ','
-                                     + '"CashOnDeliveryCurrency":"' + 'GTQ' + '",'
+                                     + '"CashOnDeliveryCurrency":"' + 
+                                        CASE 
+                                            WHEN dev.SenderCountryId = 'GT' THEN 'GTQ'
+                                            WHEN dev.SenderCountryId = 'HN' THEN 'HNL'
+                                            ELSE 'HNL'
+                                        END  
+                                     + '",'
                                      + '"BankAccountName":"AccountName",' /*,*/ + '"BankId":"'
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Bank_Id), '') + '",' + '"BankAccountType":"'
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') + '",'
