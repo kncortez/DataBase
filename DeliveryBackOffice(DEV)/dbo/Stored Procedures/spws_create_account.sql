@@ -146,6 +146,7 @@ BEGIN
 					   ,TypeOfBusinessID
 					   ,BusinessActivityID
 					   ,CommercialSegmentID
+					   ,CountryID
 					)
 				    VALUES
 					   (
@@ -164,6 +165,7 @@ BEGIN
 						,16
 						,28
 						,2
+						,@CountryId
 					   )
 					    SET @IdCustomer =  SCOPE_IDENTITY();
 
