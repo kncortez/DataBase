@@ -15,7 +15,7 @@ BEGIN
         ,ISNULL(Name, '') + '",'				AS [Name]
 		,ISNULL(Description, '')				AS [Description]
     FROM CatTypeVehicle
-    WHERE RowStatus = 1 AND IdCountry = @pCountryId
+    WHERE RowStatus = 1 AND (IdCountry = @pCountryId OR (@pCountryId = 'GT' AND IdCountry IS NULL))
 		AND Name IN ('Camión','Panel','Motocicleta')
 
 END;
