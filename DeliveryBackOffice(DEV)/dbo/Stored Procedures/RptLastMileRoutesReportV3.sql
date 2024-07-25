@@ -179,7 +179,15 @@ SELECT
 
 
 	(SUM(CASE WHEN DSD.StatusOrderId = 5 THEN DOP.NoPiece ELSE 0 END) * 100 / MAX(ISNULL(DOBS.Pieces_Dry_Dispatched,0)) + MAX(ISNULL(DOBS.Pieces_Cold_Dispatched,0)))  AS Delivery_effectiveness,
-     LEFT(CONVERT(VARCHAR(8), DATEADD(SECOND, DATEDIFF(SECOND, MAX([DOBS].[Date_Dispatched]), MAX([DOBS].[Route_Received])), 0), 108), 5) AS Time_on_route,
+      CONVERT(
+        CHAR(8),
+        DATEADD(
+            SECOND,
+            DATEDIFF(SECOND, MAX(DOBS.Date_Dispatched ), MAX(DOBS.Route_Received)),
+            0
+        ),
+        108
+    ) AS Time_on_route,
  
 	MAX(ISNULL(IIR.IncidentsCount, 0)) AS  IncedenceInRounte,
 
