@@ -245,19 +245,19 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                           ORDER BY CMD.DateCreated DESC
                       )
                     , CONCAT(DO.Manifest_Serie, DO.Manifest_Number)
-                     )                                                            'Manifiesto'
-             , CONCAT(DO.Guide_Serie, DO.Guide_Number)                            'Guía'
-             , SO.OrderDescription                                                'Estado'
-             , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
-             , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
-             , ISNULL(CAST(CCC.Symbol AS VARCHAR),'Q')                            'Moneda de envío'
-             , DO.PriceShippment                                                  'Monto de envío'
-             , ISNULL(CAST(CCC.Symbol AS VARCHAR),'Q')                            'Moneda de COD'
-             , DO.Collect_OnDelivery                                              'Monto de CoD'
-             , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
-             , DO.Sender_Department                                               'Departamento origen'
-             , DO.Sender_Town                                                     'Municipio origen'
-             , DO.DateCreated                                                     'Fecha de creación'
+                     )                                                                     'Manifiesto'
+             , CONCAT(DO.Guide_Serie, DO.Guide_Number)                                     'Guía'
+             , SO.OrderDescription                                                         'Estado'
+             , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))                      'Piezas'
+             , ISNULL(CPT.PayTypeName, '')                                                 'Tipo de pago'
+             , ISNULL(DeliveryBackOffice.dbo.CapitalizeFirstLetter(CCC.[name]) ,'Quetzal') 'Moneda de envío'
+             , DO.PriceShippment                                                           'Monto de envío'
+             , ISNULL(DeliveryBackOffice.dbo.CapitalizeFirstLetter(CCC.[name]),'Quetzal')  'Moneda de COD'
+             , DO.Collect_OnDelivery                                                       'Monto de CoD'
+             , ISNULL(DO.Ticket_Number, '')                                                'Referencia'
+             , DO.Sender_Department                                                        'Departamento origen'
+             , DO.Sender_Town                                                              'Municipio origen'
+             , DO.DateCreated                                                              'Fecha de creación'
              , ISNULL((
                           SELECT TOP 1
                                  DODrec.DateCreated
