@@ -3,12 +3,17 @@
 -- Create date: <2024-07-24>
 -- Description: <Se ajusto la informacion de salida para que obtenga la moneda correcta>
 -- =============================================
+-- Modified:    <Daniel, Ramirez>
+-- Create date: <2024-07-24>
+-- Description: <Se retiro el parametro de pais, y se toma el pais desde la guia>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
-    @Serie_Number VARCHAR(2) = 'FD',
-    @CountryThatConsults VARCHAR(2)= 'GT'
+    @Serie_Number VARCHAR(2) = 'FD'
 as
 begin
+    DECLARE @CountryThatConsults VARCHAR(2) = 'GT'
+
 	declare @FranchiseVisitPointTypeId int = 
 	(
 		select 
@@ -107,7 +112,14 @@ begin
     SELECT GuidePiece
     FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE GuideNumber = @Guide_Number;
-	
+
+    SET @CountryThatConsults = (
+                                SELECT TOP 1 SenderCountryId
+                                  FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+                                 WHERE Guide_Number = @Guide_Number
+                                   AND Guide_Serie = @Serie_Number
+                               );
+
 	DECLARE @EXCKindOfVPC INT =
 	(
 		SELECT 
