@@ -159,16 +159,15 @@ ON #TodaysCheckpointsDetail (Guideserie, Guidenumber,DateCheckpoint);
 					)						[User]
 				,ord.Guide_Serie																	[GuideSerie]
                 , ord.Guide_Number																	[GuideNumber]
-                --, ord.Sender_FirstName + ' ' + ord.Sender_LastName																	[SenderName]
-				--, vpc.DescriptionOfClient																	[SenderName]
-				,CONCAT(CASE WHEN IMP.CODEOFREFERENCE>0 THEN imp.DescriptionOfClient+'/'ELSE '' END	,cus.Name)																	[SenderName]
-                , COALESCE(ord.Receiver_FirstName, '') + ' ' + COALESCE(ord.Receiver_LastName, '')																	[ReceiverName]
+				,CONCAT(CASE WHEN IMP.CODEOFREFERENCE>0 THEN imp.DescriptionOfClient+'/'ELSE '' END	,
+					CASE WHEN IMP.CODEOFREFERENCE>0 THEN cus.Name ELSE vpc.DescriptionOfClient END	)	[SenderName]
+                , COALESCE(ord.Receiver_FirstName, '') + ' ' + COALESCE(ord.Receiver_LastName, '')  [ReceiverName]
                 , ord.Sender_Phone																	[SenderPhone]
                 , ord.Receiver_Phone																[ReceiverPhone]
                 , ord.Receiver_Address																[ReceiverAddress]
                 , ISNULL(cic.IncidenceTypeName, '')													[TypeOfIncident]
-                , cti.NameIncidence																				[Incident]
-				, TCD.DateCheckpoint																	[EventDate]
+                , cti.NameIncidence																	[Incident]
+				, TCD.DateCheckpoint																[EventDate]
 				, (CASE
 						WHEN cti.NameIncidence IS NULL THEN
 							NULL
@@ -185,7 +184,7 @@ ON #TodaysCheckpointsDetail (Guideserie, Guidenumber,DateCheckpoint);
 									, CONVERT(NVARCHAR(4), atd.GuideDeliveryMaxAttemptCount)
 								)
 					END
-				)																				[Attempts]
+				)																					[Attempts]
 				
                 , ord.PriceShippment																[PriceShippment]
                 , ord.Collect_OnDelivery															[CollectOnDelivery]
