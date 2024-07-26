@@ -11,8 +11,7 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[GetServicesOfRabbitPhone]
-    @Phone NVARCHAR(50) = 'Guatemala',
-    @IdCountry NVARCHAR(2) = 'GT'
+    @Phone NVARCHAR(50) = 'Guatemala'
 
 AS
 BEGIN
@@ -56,7 +55,6 @@ BEGIN
 			AND (sr.Phone LIKE '%' + @Phone + '%'
 			OR
 			[sr].[UniqueCode] = @Phone)
-			AND IIF(ord.SenderCountryId IS NULL, 'GT', ord.SenderCountryId) = @IdCountry
 			   
 		-- TABLAS A DEVOLVER
 		-- DATOS DE COURIER
@@ -65,7 +63,6 @@ BEGIN
 		WHERE (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
-          AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 		-- DATOS DE SERVICIOS
 		SELECT
@@ -100,8 +97,7 @@ BEGIN
 			  AND (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
-              AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
-		AND spd.SettlementDate IS NULL
+			AND spd.SettlementDate IS NULL
 		GROUP BY
 			srv.IdServiceManagement
 			, scp.SenderName
@@ -163,7 +159,6 @@ BEGIN
 				OR
 				[sr].[UniqueCode] = @Phone)
 		  AND	spd.SettlementDate is null
-		  AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 		-- MANIFIESTO
 		SELECT
@@ -176,7 +171,6 @@ BEGIN
 		 AND (sr.Phone LIKE '%' + @Phone + '%'
 				OR
 			  [sr].[UniqueCode] = @Phone)
-          AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 		-- Totales de piezas por guía las cuales no han sido liquidadas
 		SELECT DISTINCT
@@ -204,7 +198,6 @@ BEGIN
 				OR
 			  [sr].[UniqueCode] = @Phone)
 			AND spd.SettlementDate is null
-			AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
 	END TRY
 	BEGIN CATCH
