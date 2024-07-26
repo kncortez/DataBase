@@ -78,7 +78,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
+             , ISNULL(C2.Symbol, 'Q')											  'Moneda de envio'
              , DO.PriceShippment                                                  'Monto de envío'
+			 , ISNULL(C1.Symbol, 'Q')											  'Moneda de CoD'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
              , DO.Sender_Department                                               'Departamento origen'
@@ -116,6 +118,12 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						  C WITH (NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						  C1 WITH (NOLOCK)
+				ON C.CodCurrency = C1.IdCatCurrencyCOD
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						  C2 WITH (NOLOCK)
+				ON C.ShippingCurrency = C2.IdCatCurrencyCOD
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
