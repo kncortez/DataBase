@@ -521,7 +521,8 @@ BEGIN
 								ISNULL(TWS.HeaderCode, '')								'HeaderCode',
 								ISNULL(CONVERT(NVARCHAR(20), VPC.CodeOfReference), '')	'CodeOfReference',
 								@RolEXP													'RolEXP',
-								ISNULL(CCC.CodeISO, 'GTQ')								'Currency'
+								ISNULL(CCC.CodeISO, 'GTQ')								'Currency',
+								ISNULL(RH.CountryId,'GT')								'Nationality'
 							FROM DeliveryBackOffice.dbo.VisitPointClient		VPC WITH(NOLOCK)
 							INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer	RC WITH(NOLOCK)
 								ON VPC.CustomerID = RC.RbcIdCustomer

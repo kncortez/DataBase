@@ -85,7 +85,9 @@ BEGIN
                                    + CONVERT(NVARCHAR, ISNULL(@IdUser, '')) + '",' + '"IdCustomer":"'
                                    + CONVERT(NVARCHAR, ISNULL(cu.[IdCustomer], '')) + '",' + '"Name":"'
                                    + ISNULL(cu.[Name], '') + '",' + '"Email":"' + ISNULL(ru.[UsrEmail], '') + '",'
-                                   + '"Phone":"' + ISNULL(ru.[Phone], '') + '",' + '"HasMembership":'
+                                   + '"Phone":"' + ISNULL(ru.[Phone], '') + '",'
+								   + '"NirPhone":"' + ISNULL(ru.[PrefixCallingCode], '+502')
+								   + '",' + '"HasMembership":'
                                    + CONVERT(NVARCHAR
                                            , ISNULL(   (CASE
                                                             WHEN mmbrshp.IdMembership IS NOT NULL THEN

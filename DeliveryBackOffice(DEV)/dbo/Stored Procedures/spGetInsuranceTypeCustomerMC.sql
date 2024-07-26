@@ -10,34 +10,36 @@ CREATE PROCEDURE [dbo].[spGetInsuranceTypeCustomerMC]
 AS
 BEGIN
 
-	IF (@pTypeCustomer = 1 OR @pTypeCustomer = 0) --INDIVIDUAL O CORPORATIVO
+	IF (@pTypeCustomer = 0) --INDIVIDUAL O CORPORATIVO
 	BEGIN
 
-		SELECT 
+		SELECT DISTINCT
 		ISNULL(RH.InsuranceRate,0)		[InsuranceRate], 
-		ISNULL(RH.InsuranceExempt,0)	[InsuranceExempt]	
+		ISNULL(RH.InsuranceExempt,0)	[InsuranceExempt],
+		ISNULL(RH.CollectRate,0)		[CollectRate]
 		FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 			ON RH.RheId = RBC.RbcIdRate
 		INNER JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
 			ON RBC.RbcIdCustomer = C.IdCustomer
-		WHERE C.IdCustomer = @pId AND RH.CountryId = @pIdCountry
+		WHERE C.IdCustomer = @pId AND RH.CountryId = @pIdCountry AND RH.RheRowStatus = 1
+		AND RBC.RbcRowStatus = 1 AND C.RowSatus = 1
 
 	END;
-	ELSE --CLIENTE CARTERA
+	ELSE --CLIENTE CARTERA O EXC @pTypeCustomer = 1
 	BEGIN
 
-		SELECT 
+		SELECT DISTINCT
 		ISNULL(RH.InsuranceRate,0)		[InsuranceRate], 
-		ISNULL(RH.InsuranceExempt,0)	[InsuranceExempt]
+		ISNULL(RH.InsuranceExempt,0)	[InsuranceExempt],
+		ISNULL(RH.CollectRate,0)		[CollectRate]
 		FROM DeliveryBackOffice.dbo.RateHeader RH WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer RBC WITH(NOLOCK)
 			ON RH.RheId = RBC.RbcIdRate
 		INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON RBC.RbcIdCustomer = VPC.CustomerID
-		INNER JOIN DeliveryBackOffice.dbo.VisitPointByClientPortfolio VPCP WITH(NOLOCK)
-			ON VPC.CodeOfReference = VPCP.VisitPointId
-		WHERE VPCP.IdVisitPointByClientPortfolio = @pId AND RH.CountryId = @pIdCountry
+		WHERE VPC.CodeOfReference = @pId AND RH.CountryId = @pIdCountry
+		AND RH.RheRowStatus = 1 AND RBC.RbcRowStatus = 1
 
 	END;
      
