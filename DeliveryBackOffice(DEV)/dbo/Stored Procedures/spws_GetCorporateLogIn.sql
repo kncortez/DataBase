@@ -470,6 +470,13 @@ BEGIN
                                                    + CONVERT(VARCHAR, us.UsrNickName) + '",'
                                                    -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                                                    + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC + '",'
+                                                   + '"TaxCountry":"' + 
+                                                   CASE pe.PerNationality
+                                                       WHEN 'GT' THEN 'IVA'
+                                                       WHEN 'HN' THEN 'ISV'
+                                                       ELSE 'IVA'
+                                                   END 
+                                                   + '",' 
                                                    + '"NameBilling":"' + 
                                                    CASE pe.PerNationality
                                                        WHEN 'GT' THEN 'NIT'
