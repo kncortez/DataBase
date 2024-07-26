@@ -151,8 +151,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
-             , REPLACE(REPLACE(ISNULL(dc.Currency_Symbol,'Q.'), '(', ''), ')', '') 'Moneda'
+             , ISNULL(C2.Symbol, 'Q')											  'Moneda de envio'
              , DO.PriceShippment                                                  'Monto de envío'
+			 , ISNULL(C1.Symbol, 'Q')											  'Moneda de CoD'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
              , DO.Sender_Department                                               'Departamento origen'
@@ -192,10 +193,13 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
-            LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]			  DC WITH (NOLOCK)
-				ON (DO.ReceiverCountryId = DC.Currency_IdCountry OR (DO.ReceiverCountryId IS NULL AND DC.Currency_IdCountry = 'GT'))
-				AND DC.DefaultPerCountry = 1
-            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						  C WITH (NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]			  C1 WITH (NOLOCK)
+				ON C.CodCurrency = C1.IdCatCurrencyCOD
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]			  C2 WITH (NOLOCK)
+				ON C.ShippingCurrency = C2.IdCatCurrencyCOD
+           LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
