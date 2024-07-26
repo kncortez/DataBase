@@ -9,6 +9,10 @@
 -- Create date: <10-07-2024>
 -- Description:	<Se agrega la moneda y las cuentas para mostrar en el detalle del reporte>
 -- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <26-07-2024>
+-- Description:	<Se optimiza la consulta ya que se tardaba 1:30seg>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureVisitPoint]
     @StartDate DATETIME = NULL,
     @EndDate DATETIME = NULL,
@@ -131,7 +135,8 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
                 ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
             LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-                ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
+                ON cost.GuideSerie = DOR.Guide_Serie 
+				AND DOR.Guide_Number = cost.GuideNumber  
             LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
                 ON costd.IdCost = cost.IdCost
                    AND costd.Amount > 0
@@ -316,10 +321,6 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DOR.Guide_Serie
                    AND DOPD.GuideNumber = DOR.Guide_Number
-                   AND DOPD.ShipmentCompleted = 1
-                   AND DOPD.AccountId > 0
-                   AND DOR.StatusOrderId != 7
-			 AND DOPD.[TypeofInOutMoneyId] != 8
             JOIN CatTypeServiceClosure CTS
                 ON CTS.IdTypeService = DOPD.TypeServiceId
             JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
@@ -338,7 +339,8 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
                 ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
             LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-                ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
+                ON cost.GuideSerie = DOR.Guide_Serie 
+				AND DOR.Guide_Number = cost.GuideNumber 
             LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
                 ON costd.IdCost = cost.IdCost
                    AND costd.Amount > 0
@@ -368,7 +370,11 @@ BEGIN
               )
               -- FIN MODIFICACIÓN
 
-              AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL
+              AND ACH.AccountingClosuresHeaderVisitPointId IS NOT NULL 
+			  AND DOPD.ShipmentCompleted = 1
+              AND DOPD.AccountId > 0
+              AND DOR.StatusOrderId != 7
+			  AND DOPD.[TypeofInOutMoneyId] != 8
         -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
         UNION ALL
@@ -547,7 +553,8 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
                 ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
             LEFT JOIN DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-                ON cost.ProductNumber = CONCAT(DOR.Guide_Serie, DOR.Guide_Number)
+                ON cost.GuideSerie = DOR.Guide_Serie 
+				AND DOR.Guide_Number = cost.GuideNumber  
             LEFT JOIN DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
                 ON costd.IdCost = cost.IdCost
                    AND costd.Amount > 0
