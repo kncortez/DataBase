@@ -13,6 +13,10 @@
 -- Update date: <2024-07-17>
 -- Description: <Se agregan en la respuesta campos para login>
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-07-16>
+-- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
@@ -30,6 +34,7 @@ BEGIN
     DECLARE @StatusUser BIT;
     DECLARE @IdUser BIGINT;
     DECLARE @StatusAccount CHAR(1);
+    DECLARE @CountryByNacionality VARCHAR(2);
     --	declare @Username as nvarchar(100)='a.cesarene@gmail.com'
     --	declare	@Password as nvarchar(100)='7hFMXRrKI3G0addPtjwAHA=='
     --	declare @IdSystem as int = 1 
@@ -48,6 +53,17 @@ BEGIN
               AND ru.UsrRowStatus = 1
     );
 
+    SELECT TOP 1 
+           @CountryByNacionality = pe.PerNationality
+      FROM DeliveryBackOffice.dbo.RegisterUser           us
+           INNER JOIN DeliveryBackOffice.dbo.Person       pe
+               ON pe.PerIdPerson = us.UsrIdPerson
+                  AND pe.PerRowStatus = 1
+           INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+               ON iu.RegisterUserID = us.UsrIdUser
+     WHERE iu.Username = @UserName
+       AND iu.IdUser = @UserCode
+       AND iu.RowStatus = 1
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
@@ -163,7 +179,7 @@ BEGIN
                           , [TknDateUpdated]
                         )
                         VALUES
-                        (@Token, @IdUser, @IdSystem, 0, 0, 'GT', @IP, 1, @Token, GETDATE(), NULL, NULL);
+                        (@Token, @IdUser, @IdSystem, 0, 0, @CountryByNacionality, @IP, 1, @Token, GETDATE(), NULL, NULL);
                     END;
                     DECLARE @JsonModules NVARCHAR(MAX);
                     DECLARE @JsonAccounts NVARCHAR(MAX);
@@ -622,7 +638,7 @@ BEGIN
                                                            AND cu.RowSatus = 1
                                                     LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank            dbk
                                                         ON cu.CODAccountBankID = dbk.Id_bank
-                                                           AND dbk.Id_country = 'GT'
+                                                           AND dbk.Id_country = @CountryByNacionality
                                                            AND dbk.Id_status = 1
                                                     LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType      cba
                                                         ON cu.CODAccountTypeID = cba.IdBankAccountType
