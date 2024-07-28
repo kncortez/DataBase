@@ -38,10 +38,8 @@ BEGIN
 		INNER JOIN [dbo].[DeliveryAttempt] da WITH (NOLOCK) ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
 	WHERE da.Guide_Number = @GuideNumber
 		AND da.Guide_Serie = @GuideSerie
-		AND coi.TakenIncidenceDateAndTime IS NOT NULL
-		AND coi.TakenIncidenceDateAndTime > DATEADD(MINUTE, -10, GETDATE())
 
-	IF ((@TakenUserId IS NOT NULL AND @TakenUserId != @UserId) AND @isConfirmed = 0)
+	IF ((@TakenUserId IS NOT NULL AND @TakenUserId != @UserId AND @TakenDate > DATEADD(MINUTE, -10, GETDATE())) OR @isConfirmed = 1)
 	BEGIN
 		SET @Message = 'TAKEN'
 	END;
@@ -50,15 +48,6 @@ BEGIN
 
 	IF (@Message = 'FREE')
 	BEGIN
-
-		SELECT 
-			@isConfirmed = coi.IsConfirmed,
-			@ConfirmationOfIncidenceId = da.ConfirmationOfIncidenceId
-		FROM [dbo].[ConfirmationOfIncidence] coi
-			INNER JOIN [dbo].[DeliveryAttempt] da ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
-		WHERE da.Guide_Number = @GuideNumber
-			AND da.Guide_Serie = @GuideSerie
-
 		IF (@isConfirmed = 0)
 		BEGIN
 			-- Actualizar el registro con el usuario que solicito
