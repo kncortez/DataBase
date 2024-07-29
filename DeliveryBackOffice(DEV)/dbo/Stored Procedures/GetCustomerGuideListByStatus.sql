@@ -2,7 +2,7 @@
 -- Author:		<Luis Ardón>
 -- Create date: <2023-11-22>
 -- Modify:      <Carlos Vicente>
--- Modify on:   <2024-06-25>
+-- Modify on:   <2024-07-29>
 -- Description:	Este procedimiento almacenado, GetCustomerGuideListByStatus, se utiliza para obtener una lista de guías para un cliente, estado y rango de fechas en especifico.
 -- =============================================
 
@@ -129,6 +129,8 @@ SELECT
             A2.OrderDescription AS [Estado],
             O3.ActionObservation [Motivo de rechazo],
             ISNULL(UPPER(A1.Receiver_FirstName), '') + ' ' + ISNULL(UPPER(A1.Receiver_LastName), '') [Destinatario],
+            A1.Receiver_Phone [Numero de telefono],
+            A1.Receiver_Email [Correo de cliente],
             ISNULL(A1.Receiver_Department, '') [Departamento],
             A1.TypeService [Servicio],
             A1.Collect_OnDelivery [CCE Monto],
@@ -137,11 +139,14 @@ SELECT
                 ELSE 'Pagado'
             END AS [Estatus del CCE],
             O4.DateCreated [Fecha de reintegro],
-            CAST(A1.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(A1.Sender_FirstName), '') + ' '
-            + ISNULL(UPPER(A1.Sender_LastName), '') [Sede/tienda origen]
+            CASE
+                WHEN CHARINDEX('-', A3.DescriptionOfClient) > 0 
+                THEN CAST(A1.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(TRIM(LEFT(A3.DescriptionOfClient, CHARINDEX('-',A3.DescriptionOfClient)-1))),'') + ' ' + ISNULL(UPPER(A1.Sender_FirstName), '') + ' ' + ISNULL(UPPER(A1.Sender_LastName), '')
+                ELSE CAST(A1.Sender_ID AS VARCHAR) + ' - ' + ISNULL(UPPER(A1.Sender_FirstName), '') + ' ' + ISNULL(UPPER(A1.Sender_LastName), '') 
+			END AS [Sede/tienda origen]
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] AS A1 WITH (NOLOCK)
-            LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder] AS A2 WITH (NOLOCK)
-                ON A1.StatusOrderId = A2.StatusOrderId
+            LEFT JOIN [DeliveryBackOffice].[dbo].[StatusOrder] AS A2 WITH (NOLOCK) ON A1.StatusOrderId = A2.StatusOrderId
+            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] AS A3 WITH (NOLOCK) ON A1.IdCustomer = A3.CustomerID
 
             --Fecha de recolección
             OUTER APPLY
