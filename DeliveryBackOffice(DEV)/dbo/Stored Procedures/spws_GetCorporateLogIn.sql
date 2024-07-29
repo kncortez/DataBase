@@ -13,9 +13,9 @@
 -- Update date: <2024-07-17>
 -- Description: <Se agregan en la respuesta campos para login>
 -- =============================================
--- Author:      <Daniel, Ramirez>
--- Update date: <2024-07-16>
--- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais>
+-- Author:      <Daniel, Ramirez >
+-- Update date: <2024-07-16 >
+-- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
