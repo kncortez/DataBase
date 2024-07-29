@@ -4,6 +4,11 @@
 -- Create date: <2023-04-24>
 -- Description:	<Genera o obtiene el token para login en Courier App>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazi>
+-- Create date: <2024-07-29>
+-- Description:	<Se corrige el contador de mensajes para ambos paises, solo funcionaba para GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCourierLoginToken]
     -- Add the parameters for the stored procedure here
     @Phone NVARCHAR(20)
@@ -91,7 +96,7 @@ BEGIN
 				DECLARE @MCounter INT;
 				SET @MCounter = (SELECT TOP 1 MessageCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1)
 
-				IF(@IdCountry = 'GT' AND @NotificationEmail = 0)
+				IF(@NotificationEmail = 0)
 				BEGIN
 					IF(@MCounter < @MaxValue)
 					BEGIN
@@ -103,7 +108,7 @@ BEGIN
 					END
 				END
 
-				IF(@NotificationEmail = 1 OR @IdCountry <> 'GT')
+				IF(@NotificationEmail = 1 )
 				BEGIN
 						DECLARE @ECounter INT;
 						SET @ECounter = (SELECT TOP 1 MailCounter FROM SenderReceiver WHERE Phone = @Phone AND ISNULL(IdCountry,'GT') = @IdCountry AND Estatus = 1)
