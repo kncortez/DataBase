@@ -14,3 +14,37 @@
     CONSTRAINT [FK_CatSaleAdvisor_CatCountry] FOREIGN KEY ([CountryID]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del asesor de ventas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'IdSaleAdvisor'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Codigo del asesor de ventas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'SaleAdvisorCode'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion del asesor de ventas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'SaleAdvisorDescription'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de empleado' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'EmployeID'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de SAP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'SAPSellerID'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del pais relacionado con el asesor de ventas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'CountryID'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'1 activo, 0 inactivo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'SaleAdvisorStatus'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'TokenCreated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'DateCreated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Token de actualizacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene informacion del asesor de ventas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSaleAdvisor'
+GO
