@@ -26,7 +26,7 @@ BEGIN
 										         ON  A.IdCustomer = B.IdCustomer
 										   WHERE A.AccIdAccount =@AccoundId)
 
-		SET @Currency = (SELECT TOP 1  CodeISO 
+		SET @Currency = (SELECT TOP 1  Symbol 
 		                       FROM [dbo].[CatCurrencyCOD] 
 							       WHERE CodeISO LIKE '%'+@IdCountry+'%')
 
