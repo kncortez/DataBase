@@ -64,7 +64,15 @@ BEGIN
       , PromoId INT
     );
 
+     DECLARE @IdCountry NVARCHAR(3)= (   
+										   Select top 1 ISNULL(B.CountryID,'GT') 
+										         From [dbo].[Account] A WITH(NOLOCK) 
+										         INNER JOIN 
+												      [dbo].[Customer] B WITH(NOLOCK)
+										         ON  A.IdCustomer = B.IdCustomer
+										   WHERE A.AccIdAccount = @AccountId)
 
+		SET @Currency = IIF(@IdCountry ='GT',  320, 340)
 
 
     -- Variables para la asociación y activación de Membresías o suscripciones
