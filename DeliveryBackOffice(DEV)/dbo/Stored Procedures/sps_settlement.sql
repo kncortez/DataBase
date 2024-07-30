@@ -44,7 +44,7 @@ BEGIN
 		WHERE 
 			[lo].[rn] = 1
 			AND [ds].[ID_DeliveryOrderBySettlement] = @IdManifest
-			AND ds.StatusOrderId <> 5;
+			AND ds.StatusOrderId NOT IN(5,8,14,20);
 
 			-- Actualizar registro en control de manifiestos de despacho
 			UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement]
