@@ -526,6 +526,8 @@ BEGIN
 							FROM DeliveryBackOffice.dbo.VisitPointClient		VPC WITH(NOLOCK)
 							INNER JOIN DeliveryBackOffice.dbo.RatebyCustomer	RC WITH(NOLOCK)
 								ON VPC.CustomerID = RC.RbcIdCustomer
+							LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient		KOVPC WITH(NOLOCK)
+								ON VPC.IdKindOfVPClient = KOVPC.IdKindOfVPClient
 							INNER JOIN DeliveryBackOffice.dbo.RateHeader		RH WITH(NOLOCK)
 								ON RC.RbcIdRate = RH.RheId 
 							INNER JOIN DeliveryBackOffice.dbo.CatCurrencyCOD	CCC WITH(NOLOCK)
@@ -541,7 +543,7 @@ BEGIN
 								ON TWS.IdTownship = STL.IdTownship
 							INNER JOIN DeliveryBackOffice.dbo.Province			PRV WITH(NOLOCK)
 								ON PRV.IdProvince = TWS.IdProvince
-							WHERE IdKindOfVPClient = 1
+							WHERE KOVPC.KindOfVPName = 'Express Center'
 								AND RC.RbcRowStatus = 1
 								AND RH.RheRowStatus = 1
 								AND CCC.RowStatus = 1
