@@ -8,8 +8,10 @@
     [DateCreated]          DATETIME       NOT NULL,
     [TokenUpdated]         NVARCHAR (50)  NULL,
     [DateUpdated]          DATETIME       NULL,
+    [CountryId] [varchar](2) NULL,
     PRIMARY KEY CLUSTERED ([IdContainer] ASC),
-    CONSTRAINT [FK_Container_TypeContainer] FOREIGN KEY ([CatTypeContainerId]) REFERENCES [dbo].[CatTypeContainer] ([IdCatTypeContainer])
+    CONSTRAINT [FK_Container_TypeContainer] FOREIGN KEY ([CatTypeContainerId]) REFERENCES [dbo].[CatTypeContainer] ([IdCatTypeContainer]),
+    CONSTRAINT [FK_Container_CatCountry]    FOREIGN KEY ([CountryId])          REFERENCES [dbo].[CatCountry]       ([IdCountry])
 );
 
 
@@ -54,3 +56,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de contenedores.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Container';
 
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'indica el país al que pertenece el contenedor' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Container', @level2type=N'COLUMN',@level2name=N'CountryId'
+GO
