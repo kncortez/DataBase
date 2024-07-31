@@ -23,7 +23,7 @@ BEGIN
 		INNER JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
 			ON RBC.RbcIdCustomer = C.IdCustomer
 		WHERE C.IdCustomer = @pId AND RH.CountryId = @pIdCountry AND RH.RheRowStatus = 1
-		AND RBC.RbcRowStatus = 1 AND C.RowSatus = 1
+		AND RBC.RbcRowStatus = 1 --AND C.RowSatus = 1
 
 	END;
 	ELSE --CLIENTE CARTERA O EXC @pTypeCustomer = 1
