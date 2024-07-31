@@ -275,7 +275,7 @@ BEGIN
 
             DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
                     (
-                        SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+                        SELECT TOP 1 CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
                         FROM DeliveryBackOffice.dbo.ConfigParams cf
                         WHERE cf.Name = 'MinCODCommissionAmount'
                               AND Status = 1
