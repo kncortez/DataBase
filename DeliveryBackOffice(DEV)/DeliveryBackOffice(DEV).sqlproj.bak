@@ -1575,7 +1575,6 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\spGenerateArrivedGuides.sql" />
-	<Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1632,7 +1631,6 @@
     <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
-    <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
   </ItemGroup>
   <ItemGroup>
