@@ -78,9 +78,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
-             , ISNULL(C2.Symbol, 'Q')											  'Moneda de envio'
+             , ISNULL(C2.Symbol, ISNULL(C1.Symbol, 'Q'))						  'Moneda de envio'
              , DO.PriceShippment                                                  'Monto de envío'
-			 , ISNULL(C1.Symbol, 'Q')											  'Moneda de CoD'
+			 , ISNULL(C1.Symbol, ISNULL(C2.Symbol, 'Q'))						  'Moneda de CoD'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
              , DO.Sender_Department                                               'Departamento origen'
@@ -136,10 +136,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DOPD.PayTypeId = CPT.PayTypeId
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
-            LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
+                OR (DO.ReceiverIdTownship IS NULL AND  DO.Receiver_Town = TwnId.TownshipName COLLATE Latin1_General_CI_AI)
             LEFT JOIN #HubsByHeaderCode                                       DSC
-                ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
+                ON TwnId.HeaderCode = DSC.HeaderCode
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId
