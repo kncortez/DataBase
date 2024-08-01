@@ -15,6 +15,9 @@ BEGIN
 
     DECLARE @jsonResult NVARCHAR(MAX) = N'';
     DECLARE @errorMessage NVARCHAR(100);
+    DECLARE @IdManifest INT = (Select TOP 1  ID From [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] A WITH(NOLOCK)
+												 Where ID_Courier = @IdCourier
+												 Order By Date_Dispatched Desc)
 
     BEGIN TRANSACTION;
 
@@ -69,7 +72,8 @@ BEGIN
         UPDATE dsd
         SET RowStatus = 0,
             TokenUpdated = @TokenCreated,
-            DateUpdated = GETDATE()
+            DateUpdated = GETDATE(),
+            StatusOrderId = 20
         FROM DeliveryBackOffice.dbo.DeliverySettlementDetail dsd
             INNER JOIN #listGuidesEnabled lge
                 ON dsd.Guide_Serie = lge.Guide_Serie
@@ -78,6 +82,7 @@ BEGIN
 				ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
 		WHERE dsd.RowStatus = 1
 		AND CAST(dobs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
+        AND dsd.ID_DeliveryOrderBySettlement  = @IdManifest
 
 		UPDATE rpd 
 		SET RowStatus = 0,
