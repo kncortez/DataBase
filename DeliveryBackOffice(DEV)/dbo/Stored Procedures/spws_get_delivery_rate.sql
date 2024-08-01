@@ -258,15 +258,15 @@ BEGIN
         SELECT @IdRate         = rc.RbcIdRate
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
 			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @IdCustomer 
               AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
@@ -276,15 +276,15 @@ BEGIN
         SELECT @IdRate         = rc.RbcIdRate
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
 			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @IdCustomer
               AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference IS NULL;
@@ -295,14 +295,14 @@ BEGIN
         SELECT @IdRate         = rh.RheId
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
         FROM dbo.RateBySalePipeLine        sp WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = sp.RateId
                    AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE sp.RowStatus = 'true'
               AND sp.SalePipeLineId = @IdSalePipeLine;
 
@@ -313,11 +313,11 @@ BEGIN
         SELECT @IdRate         = rh.RheId
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
         FROM dbo.RateHeader                rh WITH (NOLOCK)
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rh.RheRowStatus = 'true'
               AND rh.RheDefault = 'true';
     END;

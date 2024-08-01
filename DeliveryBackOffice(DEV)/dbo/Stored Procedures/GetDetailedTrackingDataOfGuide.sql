@@ -37,6 +37,8 @@ BEGIN
     DECLARE @GuideDeliveryCourierAttempt NVARCHAR(200) = N'';
     DECLARE @StatusIncident INT;
     DECLARE @StatusIncidentValidated INT;
+    DECLARE @CurrencyPrice NVARCHAR(5);
+	DECLARE @CurrencyCOD NVARCHAR(5);
 
     SET @StatusIncident =
     (
@@ -51,6 +53,15 @@ BEGIN
         WHERE OrderDescription = 'Incidencia Validada'
     );
 
+    SELECT 
+		 @CurrencyPrice = ISNULL(CPrice.Symbol,ISNULL(CCod.Symbol,'Q')),
+		 @CurrencyCOD = ISNULL(CCod.Symbol,ISNULL(CPrice.Symbol,'Q'))
+	FROM DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CPrice WITH(NOLOCK)
+		ON C.ShippingCurrency = CPrice.IdCatCurrencyCOD
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCod WITH(NOLOCK)
+		ON C.CodCurrency = CCod.IdCatCurrencyCOD
+	WHERE GuideSerie = @Guide_Serie AND GuideNumber = @Guide_Number
 
     SELECT TOP 1
            @GuideDeliveryLatitude  = DA.Latitude
@@ -566,7 +577,9 @@ BEGIN
          , OrdChkPnt.[ManifestNumber]
          , OrdChkPnt.[Latitude]
          , OrdChkPnt.[Longitude]
+         , @CurrencyPrice [CurrencyPrice]
          , ISNULL(OrdChkPnt.Price, 0) Price
+		 , @CurrencyCOD [CurrencyCOD]
          , ISNULL(OrdChkPnt.COD, 0)   COD
          , OrdChkPnt.[NextSteps]
          , OrdChkPnt.[UserIncident]
@@ -591,8 +604,11 @@ BEGIN
             ON ru.UsrIdUser = vpbu.RegisterUserID
         LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient  vpc WITH (NOLOCK)
             ON vpbu.IdVisitPointClient = vpc.IdVisitPointClient
-               AND vpc.IdKindOfVPClient = 1
+               --AND vpc.IdKindOfVPClient = 1
                AND vpc.DescriptionOfClient LIKE 'FD%EXC%'
+        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient kvpc WITH (NOLOCK)
+			ON vpc.IdKindOfVPClient = kvpc.IdKindOfVPClient 
+			   AND  kvpc.KindOfVPName = 'Express Center'
     ORDER BY OrdChkPnt.[StageDate] DESC
            , OrdChkPnt.[EventID];
 
