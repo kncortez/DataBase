@@ -1578,6 +1578,13 @@
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_MailSoport.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_ValidEmailUser.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierInfoWithoutTokenLog.sql" />
+    <Build Include="dbo\Stored Procedures\SP_MarketPlace_SocialNetworks.sql" />
+    <Build Include="dbo\Stored Procedures\get_DiscountAndCollectAmounts.sql" />
+    <Build Include="dbo\Stored Procedures\sp_get_customerCountry_Parser.sql" />
+    <Build Include="dbo\Stored Procedures\sphdGetMessageFromLogin.sql" />
+    <Build Include="dbo\Stored Procedures\sps_Validate_Country.sql" />
+    <Build Include="dbo\Stored Procedures\sps_Validate_Currency.sql" />    
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
