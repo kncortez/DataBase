@@ -451,9 +451,10 @@ PRINT 'TEST';
 															 pe.PerNationality AS 'Nationality',
 															 CONVERT(VARCHAR, us.UsrNickName) AS 'NickName', 
 														   -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+															 CASE WHEN ISNULL(pe.PerNationality,'GT') = 'GT' THEN '+502' ELSE '+504' END AS nirPhone,
 															 CONVERT(VARCHAR, COALESCE(us.Phone, ' '))  AS 'Phone',
 															 CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone, 'false')) AS 'VerifiedPhone',
-															  @TAC AS 'TAC'
+															 @TAC AS 'TAC'
 													-- FIN MODIFICACIÓN
 													FROM RegisterUser           us
 														INNER JOIN [dbo].Person pe
