@@ -50,7 +50,7 @@
     [CatInvoiceTypeId]        INT            NULL,
     [Retries]                 INT            DEFAULT ((1)) NULL,
     [IdCurrency]              INT            NULL,
-    [IdCountry]               NVARCHAR(2)    NULL,
+    [IdCountry]               VARCHAR (2)    NULL,
     CONSTRAINT [PK_invoiceHeader] PRIMARY KEY CLUSTERED ([inv_pk_id] ASC),
     CONSTRAINT [FK_IdCurrencyInvH_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
     CONSTRAINT [FK_IdCountryInvH_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
