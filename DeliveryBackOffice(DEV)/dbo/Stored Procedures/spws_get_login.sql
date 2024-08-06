@@ -15,7 +15,7 @@ CREATE PROCEDURE [dbo].[spws_get_login]
   , @Password VARCHAR(200)
   , @IP VARCHAR(30)
   , @IdSystem INT = 1
-   , @CountryId VARCHAR(2) ='GT'
+  , @CountryId VARCHAR(2) ='GT'
 AS
 BEGIN
     PRINT 'TEST';
@@ -32,10 +32,11 @@ BEGIN
     DECLARE @CODPercentage NVARCHAR(10);
 
     
-   SET @CountryId =(SELECT TOP 1  
-	                                  CASE WHEN LEFT(ISNULL(UsrCurrency,'GTQ'),2)='HN' 
-									  THEN 'HN' ELSE 'GT' END  
-						FROM dbo.RegisterUser WHERE UsrEmail=@Username);
+     DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
+	                                            CASE 
+												    WHEN LEFT(UsrCurrency,2)='HN' 
+									                    THEN 'HN' ELSE 'GT' END  
+						                     FROM dbo.RegisterUser WHERE UsrEmail=@Username);
 
 
 				
@@ -119,6 +120,10 @@ BEGIN
         SELECT 400                                                                                                                            AS IdResult
              , 'Cuenta pendiente de confirmación, se envió un nuevo link a su correo electrónico registrado, para poder confirmar su cuenta.' AS Message
              , 'Confirmation'                                                                                                                 AS Id
+        UNION
+		SELECT 500									AS IdResult
+			 , 'El usuario pertenece a otro país. Por favor, inicia sesión con una cuenta del mismo país al que ingresaste o contacta a soporte.'	AS Message
+			 , 'WrongCountry'		AS Id
     ) AS errror;
     IF
     (
@@ -189,6 +194,8 @@ BEGIN
             (
                 SELECT TOP 1 PasswordExpired FROM #User
             );
+        IF @CountryIdOrigin = @CountryId
+         BEGIN
             IF @StatusAccount = 'C'
             BEGIN
                 IF @StatusRestrinct = 'ACTIVE' --USUARIO sin restricciones
@@ -746,6 +753,14 @@ BEGIN
                                 )
                 );
             END;
+        END;
+		ELSE
+		BEGIN
+				SELECT   CONVERT(VARCHAR, IdResult) AS 'IdResult',
+						Message 
+				FROM #errormessage
+				WHERE Id = 'WrongCountry'
+		END;
         END;
         ELSE
         BEGIN
