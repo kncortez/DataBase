@@ -454,7 +454,8 @@ PRINT 'TEST';
 															 CASE WHEN ISNULL(pe.PerNationality,'GT') = 'GT' THEN '+502' ELSE '+504' END AS nirPhone,
 															 CONVERT(VARCHAR, COALESCE(us.Phone, ' '))  AS 'Phone',
 															 CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone, 'false')) AS 'VerifiedPhone',
-															 @TAC AS 'TAC'
+															 @TAC AS 'TAC',
+															 @IdCountryUser AS IdCountry
 													-- FIN MODIFICACIÓN
 													FROM RegisterUser           us
 														INNER JOIN [dbo].Person pe
