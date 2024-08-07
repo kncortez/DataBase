@@ -1584,7 +1584,7 @@
     <Build Include="dbo\Stored Procedures\sp_get_customerCountry_Parser.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetMessageFromLogin.sql" />
     <Build Include="dbo\Stored Procedures\sps_Validate_Country.sql" />
-    <Build Include="dbo\Stored Procedures\sps_Validate_Currency.sql" />    
+    <Build Include="dbo\Stored Procedures\sps_Validate_Currency.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1668,6 +1668,7 @@
     <Build Include="dbo\Stored Procedures\sphdGetStatusBarData.sql" />
     <Build Include="dbo\Stored Procedures\spGetTypeVehicleMC.sql" />
     <Build Include="dbo\Stored Procedures\supportCreateNewExcV2.sql" />
+    <Build Include="dbo\Stored Procedures\spws_SetHwNewCorporateUserV2.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
