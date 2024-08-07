@@ -3,7 +3,7 @@
 -- Create date: <2024-08-07>
 -- Description: <Genera la informacion para los encabezados de la factura>
 -- =============================================
-ALTER PROCEDURE [dbo].[spGetHeaderInvoice]
+CREATE PROCEDURE [dbo].[spGetHeaderInvoice]
 (
  @IdInvoice          BIGINT,      -- Id de factura
  @CorrelativeInvoice NVARCHAR(15) -- Id de correlativo asignado a la factura

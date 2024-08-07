@@ -3,7 +3,7 @@
 -- Create date: <2024-08-07>
 -- Description: <Genera una cantidad numerica en letras con la moneda>
 -- =============================================
-ALTER FUNCTION [dbo].[CantidadEnLetras]
+CREATE FUNCTION [dbo].[CantidadEnLetras]
 (
   @Numero  DECIMAL(18,2),
   @Moneda  NVARCHAR(50)
