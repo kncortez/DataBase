@@ -333,7 +333,8 @@ BEGIN
 				SettlementCollect_DateCreated = GETDATE(), 
 				Guide_Settlement = 1, -- guía liquidada en bodega
 				Guide_Returned = 0,  -- guía liquidada vía material devuelto
-				Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega
+				Guide_Delivered = 1,  -- guía liquidada vía comprobante de entrega
+				StatusOrderId =5
 			WHERE 
 				Guide_Serie = @GuideSerie 
 				AND Guide_Number = @GuideNumber 
