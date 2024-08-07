@@ -10,9 +10,15 @@
 -- Create date: <2024-08-05>
 -- Description:	<Se agrega la moneda por pais en la consulta>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2024-08-07>
+-- Description:	<Agregar país para obtener carrito de compra>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetServiceCartbyAccountMarketPlace]
 	@IdAccount BIGINT,
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@IdCountry NVARCHAR(3)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -29,6 +35,7 @@ BEGIN
 		FROM [dbo].[MarketplaceCart]
 		WHERE AccountId = @IdAccount
 		AND RowStatus = 1
+		AND IdCountry=@IdCountry 
 		ORDER BY DateCreated DESC
 
 		IF @AccountServiceCartId IS NOT NULL
@@ -67,6 +74,7 @@ BEGIN
 				WHERE  mpc.AccountId = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
+				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
 				UNION ALL
 				SELECT
 				       mpcm.CatProductId,
@@ -86,6 +94,7 @@ BEGIN
 				WHERE  mpc.AccountId = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
+				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
 				
 			
 				
