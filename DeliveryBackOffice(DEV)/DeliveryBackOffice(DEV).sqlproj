@@ -1630,6 +1630,7 @@
     <Build Include="dbo\Functions\FnClearString.sql" />
     <Build Include="dbo\Functions\DelimitedSplit8K.sql" />
     <Build Include="dbo\Functions\CapitalizeFirstLetter.sql" />
+	<Build Include="dbo\Functions\CantidadEnLetras.sql" />
     <Build Include="dbo\Tables\CustomerCODLog.sql" />
     <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLog.sql" />
     <Build Include="dbo\Stored Procedures\sphdSetCustomerCODLogVisitPoint.sql" />
@@ -1669,6 +1670,8 @@
     <Build Include="dbo\Stored Procedures\spGetTypeVehicleMC.sql" />
     <Build Include="dbo\Stored Procedures\supportCreateNewExcV2.sql" />
     <Build Include="dbo\Stored Procedures\spws_SetHwNewCorporateUserV2.sql" />
+    <Build Include="dbo\Stored Procedures\spGetHeaderInvoice.sql" />
+	<Build Include="dbo\Stored Procedures\spGetDetailInvoice.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
