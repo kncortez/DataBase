@@ -101,6 +101,7 @@
     [DeliveryETA]                          DATETIME        NULL,
     [SenderCountryId]                      VARCHAR (2)     NULL,
     [ReceiverCountryId]                   VARCHAR (2)     NULL, 
+    [GuideType]                             NVARCHAR(3)    NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),

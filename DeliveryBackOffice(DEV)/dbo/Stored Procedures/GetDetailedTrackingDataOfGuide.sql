@@ -105,7 +105,7 @@ BEGIN
          , DO.Manifest_Number
          , DO.NameOfReceiver
          , DO.Delivery_Max_Date
-         , LTRIM(RTRIM(DO.Receiver_Phone))
+         , RIGHT(LTRIM(RTRIM(DO.Receiver_Phone)), 8)
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
     WHERE DO.Guide_Serie = @Guide_Serie
           AND DO.Guide_Number = @Guide_Number;

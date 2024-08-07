@@ -1,4 +1,4 @@
-﻿﻿-- =============================================
+﻿-- =============================================
 -- Modified:	<Brandon, Pedroza >
 -- Create date: <2024-07-05>
 -- Description:	<Se agrega parametro para filtrar por pais, GT por defecto>

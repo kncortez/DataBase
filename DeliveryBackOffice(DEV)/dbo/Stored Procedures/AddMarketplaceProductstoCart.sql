@@ -8,7 +8,8 @@
 CREATE PROCEDURE [dbo].[AddMarketplaceProductstoCart]
     @IdAccount BIGINT,
 	@Token NVARCHAR(50),
-	@TblProductsList [TblSalePackageMarketPlace]  READONLY
+	@TblProductsList [TblSalePackageMarketPlace]  READONLY,
+	@IdCountry NVARCHAR(3)='GT'
 AS
 	
 	DECLARE @MarketplaceCartId INT;
@@ -29,12 +30,14 @@ DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[Mar
 			AccountId,
 			RowStatus,
 			TokenCreated,
-			DateCreated
+			DateCreated,
+			IdCountry
 			)VALUES(
 			 @IdAccount,
 			 1,
 			 @Token,
-			 GETDATE()
+			 GETDATE(),
+			 @IdCountry
 			)
 
 			SET @MarketplaceCartId = SCOPE_IDENTITY();
