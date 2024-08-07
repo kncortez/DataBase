@@ -35,7 +35,7 @@ BEGIN
 		FROM [dbo].[MarketplaceCart]
 		WHERE AccountId = @IdAccount
 		AND RowStatus = 1
-		AND IdCountry=@IdCountry 
+		AND ISNULL(IdCountry,'GT')=@IdCountry 
 		ORDER BY DateCreated DESC
 
 		IF @AccountServiceCartId IS NOT NULL
