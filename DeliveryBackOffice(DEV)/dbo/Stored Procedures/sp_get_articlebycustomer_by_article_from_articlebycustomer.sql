@@ -1,6 +1,4 @@
-﻿
-
-CREATE PROCEDURE [dbo].[sp_get_articlebycustomer_by_article_from_articlebycustomer]
+﻿CREATE PROCEDURE [dbo].[sp_get_articlebycustomer_by_article_from_articlebycustomer]
 	@IdArticle INT,
 	@IdCountry AS NVARCHAR(2)='GT'
 AS
@@ -18,7 +16,8 @@ SELECT
 	   ISNULL(ac.MassWeight, 0) 'massWeight', ISNULL(ac.VolumetricWeight, 0) 'volumetricWeight',
 	   IIF(ac.ShowDefault = 'True', 'Si', 'No') 'showDefaultText',
 	   ISNULL(ac.PriceDefault, 0) 'priceDefault', ac.Code 'code',
-	   IIF(ac.ShowDefault = 'True', ac.ShowDefault, 'False') 'showDefault'
+	   IIF(ac.ShowDefault = 'True', ac.ShowDefault, 'False') 'showDefault',
+	   ISNULL(ac.IdCurrency,1) 'IdCurrency'
 FROM dbo.ArticleByCustomer ac
 LEFT JOIN DBO.CatArticle ca 
 	ON ca.ArtId = ac.AbcIdArticle

@@ -3,6 +3,14 @@
 -- Create date: <2023-09-12>
 -- Description:	<Obtener datos para Sistema de Control de Calidad>
 -- =============================================
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-06>
+-- Description:	<Se agrega parametro para filtrar incidencias por pais>
+-- =============================================
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-06>
+-- Description:	<Se devuelven simbolo de moneda para precio de envio y COD>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
@@ -11,10 +19,10 @@ CREATE PROCEDURE [dbo].[GetQualityControlData]
   , @TblCustomer     TblCustomer    READONLY
   , @TblVisitPointClient TblVisitPointClient   READONLY
   , @TblIncidenceType TblIncidenceType  READONLY
+  , @IdCountry AS NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
-
     SET ARITHABORT ON;
     BEGIN TRY
 	    --contadores en ruta y entregadas
@@ -90,7 +98,8 @@ BEGIN
               and ord.statusorderid NOT in ( 45,50)
               and dsd.rowstatus = 1
 			  and isnull(Guide_Settlement,0)=0
-			  AND ( NOT EXISTS (SELECT 1 FROM @TblHubLogistic)   OR Hubs.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic));
+			  AND ( NOT EXISTS (SELECT 1 FROM @TblHubLogistic)   OR Hubs.IdHubLogistic IN ( SELECT IdHubLogistics FROM @TblHubLogistic))
+			  AND ISNULL(ord.SenderCountryId, 'GT') = @IdCountry;
 
 		PRINT '@Pending_Counter'
 		PRINT @Pending_Counter
@@ -126,8 +135,11 @@ BEGIN
                 ordd.statusorderid,
                 ordd.SystemOrigin,
                 ordd.DeliveryAttemptId,
-                ordd.UserCreated
+                ordd.UserCreated,
+				ord.SenderCountryId
             from [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] ordd WITH (NOLOCK)
+				INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] ord WITH(NOLOCK)
+					ON ordd.Guide_Number = ord.Guide_Number AND ordd.Guide_Serie = ord.Guide_Serie
             where dsd.guide_Number = ordd.guide_number
                   and dsd.guide_serie = ordd.guide_serie
             order by datecreated desc
@@ -136,47 +148,12 @@ BEGIN
 			  CAST(dsd.datecreated AS DATE) = CAST(GETDATE() AS DATE)
               and dsd.rowstatus = 1
 			  --and ISNULL(dsd.Guide_Settlement,0)=0
-              and gdd.statusorderid in ( 45, 50 ); --solo incidencias confirmadas y pendientes para el detalle
-			  
+              and gdd.statusorderid in ( 45, 50 ) --solo incidencias confirmadas y pendientes para el detalle
+			  AND ( @GuideNumber = 0 OR (gdd.guide_number = @GuideNumber AND gdd.Guide_Serie = @GuideSerie))
+			  AND ISNULL(gdd.SenderCountryId, 'GT') = @IdCountry;
 
 
-        WITH TodaysCheckpoints
-        AS (SELECT ordd.guide_serie,
-                   ordd.guide_number,
-                   ordd.datecreated,
-                   ordd.DateCreatedInSystem,
-                   ordd.statusorderid,
-                   ordd.SystemOrigin,
-                   ordd.DeliveryAttemptId,
-                   ordd.UserCreated,
-                   ds.ID,
-                   ds.ID_Courier,
-                   ds.CatRouteId,
-                   ds.Date_Received,
-                   ROW_NUMBER() OVER (PARTITION BY ordd.guide_serie,
-                                                   ordd.guide_number
-                                      ORDER BY ordd.datecreated desc
-                                     ) AS rn
-            FROM DBO.DELIVERYORDERDETAIL ordd
-                LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd WITH (NOLOCK)
-                    ON dsd.guide_Number = ordd.guide_number
-                       and dsd.guide_serie = ordd.guide_serie
-                       and dsd.rowstatus = 1
-					   and ISNULL(dsd.Guide_Settlement,0)=0
-                LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] ds WITH (NOLOCK)
-                    ON dsd.ID_DeliveryORderBYSettlement = ds.ID
-            WHERE 
-				 CAST(ordd.datecreated AS DATE) = CAST(GETDATE() AS DATE)
-			      --ordd.datecreated BETWEEN @CurrentDateAsDatetime AND @CurrentDateAsDatetimeFinishDay
-                  AND ordd.STATUSORDERID IN ( 45, 50 ) --solo incidencias confirmadas y pendientes del día de hoy para el detalle
-                  AND NOT EXISTS
-            (
-                SELECT 1
-                FROM #TodaysCheckpointsDetail TCPD
-                WHERE TCPD.GUIDENUMBER = ordd.GUIDE_NUMBER
-                      and TCPD.GUIDESERIE = ordd.GUIDE_SERIE
-            )
-           )
+        
         INSERT INTO #TodaysCheckpointsDetail
         SELECT guide_serie,
                guide_number,
@@ -190,8 +167,44 @@ BEGIN
                ID_Courier,
                CatRouteId,
                Date_Received
-        FROM TodaysCheckpoints
-        WHERE rn = 1
+        FROM (SELECT ordd.guide_serie,
+                   ordd.guide_number,
+                   ordd.datecreated,
+                   ordd.DateCreatedInSystem,
+                   ordd.statusorderid,
+                   ordd.SystemOrigin,
+                   ordd.DeliveryAttemptId,
+                   ordd.UserCreated,
+                   ds.ID,
+                   ds.ID_Courier,
+                   ds.CatRouteId,
+                   ds.Date_Received,
+                   ROW_NUMBER() OVER (PARTITION BY ordd.guide_serie,
+                                                   ordd.guide_number
+                                      ORDER BY ordd.datecreated desc,dsd.DateCreated desc
+                                     ) AS rn
+            FROM DBO.DELIVERYORDERDETAIL ordd WITH (NOLOCK)
+				INNER JOIN DBO.DeliveryOrder ord WITH (NOLOCK)--filtrando guias que tienen el estado actual 
+					ON ord.guide_Number = ordd.guide_number
+                       and ord.guide_serie = ordd.guide_serie
+					   and ord.statusorderid=ordd.StatusOrderId--permite solo traer guias con estado actual
+                LEFT JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd WITH (NOLOCK)
+                    ON dsd.guide_Number = ordd.guide_number
+                       and dsd.guide_serie = ordd.guide_serie
+                       and dsd.rowstatus = 1
+                       
+                LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] ds WITH (NOLOCK)
+                    ON dsd.ID_DeliveryORderBYSettlement = ds.ID
+            WHERE 
+				 CAST(ordd.datecreated AS DATE) = CAST(GETDATE() AS DATE)
+			      --ordd.datecreated BETWEEN @CurrentDateAsDatetime AND @CurrentDateAsDatetimeFinishDay
+                  AND ordd.STATUSORDERID IN ( 45, 50 ) --solo incidencias confirmadas y pendientes del día de hoy para el detalle
+				  AND ordd.SystemOrigin=2--solo incidnecias de desktop
+                  and (dsd.ID IS NULL OR CAST(dsd.DateCreated as date)< CAST(GETDATE() AS DATE))				  
+				  AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry
+                 
+           ) INCDESKT
+        WHERE INCDESKT.rn = 1
 
         CREATE NONCLUSTERED INDEX IX_TodaysCheckpointsDetail
         ON #TodaysCheckpointsDetail
@@ -241,7 +254,9 @@ BEGIN
             [Customer] int,
             [CodeOfReference] NVARCHAR(50),
             [CustomerType] int,
-            [IdIncidenceType] int
+            [IdIncidenceType] int,
+			[ShippmentCurrencySymbol] NVARCHAR(2),
+			[CODCurrencySymbol] NVARCHAR(2)
         )
 
 
@@ -379,7 +394,9 @@ BEGIN
                cus.IdCustomer [Customer],
                vpc.CodeOfReference [CodeOfReference],
                cus.IdCustomerType [CustomerType],
-               cti.IdIncidenceType [IdIncidenceType]
+               cti.IdIncidenceType [IdIncidenceType],
+			   cur.Symbol				[ShippmentCurrencySymbol], 
+			   curCOD.Symbol			[CODCurrencySymbol]
         --,TCD.SystemOrigin
         --,ROW_NUMBER() OVER (PARTITION BY 
         --	--pending 
@@ -389,6 +406,13 @@ BEGIN
             INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder] ord WITH (NOLOCK)
                 ON ord.guide_serie = TCD.guideserie
                    and ord.guide_number = TCD.guidenumber
+			INNER JOIN [DeliveryBackOffice].[dbo].[Cost]								co WITH (NOLOCK)
+				ON	ord.Guide_Number= co.GuideNumber 
+					and ord.Guide_Serie = co.GuideSerie
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						cur WITH (NOLOCK)
+				ON ISNULL(co.ShippingCurrency,1) = cur.IdCatCurrencyCOD 
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						curCOD WITH (NOLOCK)
+				ON ISNULL(co.CodCurrency,IIF(ord.SenderCountryId='HN',4,1)) = curCOD.IdCatCurrencyCOD 
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpc WITH (NOLOCK)
                 ON vpc.CodeOfReference = ord.Sender_ID
             LEFT JOIN dbo.VisitPointClient imp WITH (NOLOCK)
@@ -491,7 +515,9 @@ BEGIN
             [Customer] ,
             [CodeOfReference] ,
             [CustomerType] ,
-            [IdIncidenceType] 
+            [IdIncidenceType] ,
+			[ShippmentCurrencySymbol],
+			[CODCurrencySymbol]
 			FROM #DetailGetQualityControlData WITH (NOLOCK)
 			WHERE UnConfirmationIncidents=1
 			UNION ALL
@@ -530,7 +556,9 @@ BEGIN
             [Customer] ,
             [CodeOfReference] ,
             [CustomerType] ,
-            [IdIncidenceType] 
+            [IdIncidenceType],
+			[ShippmentCurrencySymbol],
+			[CODCurrencySymbol]
 			FROM #DetailGetQualityControlData WITH (NOLOCK)
 			WHERE ConfirmationIncidents=1
 			ORDER BY ConfirmationIncidents asc ,EventDate asc;			

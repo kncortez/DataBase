@@ -1,14 +1,25 @@
-﻿-- =============================================
+﻿
+-- =============================================
 -- Author:		<Freddy Monterroso>
 -- Create date: <19/01/2022>
 -- Description:	<SP para consulta de cierres en reporte de reporting services>
 -- =============================================
-CREATE PROCEDURE [dbo].[ReportClosure]
-@StartDate datetime = null,
-@EndDate datetime = null,
-@VisitPointId INT = null,
-@IdCierre INT = null,
-@IdAccount INT = null
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <09/07/2024>
+-- Description:	<Se agrega el simbolo de la moneda y las cuentas correspondientes al pais>
+-- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <22/07/2024>
+-- Description:	<Se optimiza la consulta en la segunda validacion, para la generacion de los cierres>
+-- =============================================
+CREATE PROCEDURE [dbo].[ReportClosure] 
+@StartDate datetime = NULL,
+@EndDate datetime = NULL,
+@VisitPointId INT = NULL,
+@IdCierre INT = NULL,
+@IdAccount INT = NULL
 AS
 BEGIN
 
@@ -28,17 +39,14 @@ DECLARE @TEMPLATEDETAIL TABLE
     SELECT IND.dti_fk_orderSerie,
            IND.dti_fk_orderNumber,
            MAX(IND.dti_fk_header) 'dti_fk_header'
-    FROM DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPT WITH (NOLOCK)
-        LEFT JOIN DeliveryBackOffice.dbo.invoiceDetail IND WITH (NOLOCK)
-            ON IND.dti_fk_orderSerie = DOPT.GuideSerie
-               AND IND.dti_fk_orderNumber = DOPT.GuideNumber
-    
-	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-    WHERE CONVERT(DATE, DOPT.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-	-- FIN MODIFICACIÓN
+	FROM invoiceDetail IND WITH (NOLOCK)
+	INNER JOIN DeliveryOrderPaymentTransaction DPT
+		ON IND.dti_fk_orderSerie = DPT.GuideSerie
+		   AND IND.dti_fk_orderNumber = DPT.GuideNumber
+	WHERE CONVERT(DATE, DPT.DateCreated) >= CONVERT(DATE, @StartDate) AND CONVERT(DATE, DPT.DateCreated) <= CONVERT(DATE, @EndDate)
+		GROUP BY IND.dti_fk_orderSerie,
+			     IND.dti_fk_orderNumber
 
-    GROUP BY IND.dti_fk_orderSerie,
-             IND.dti_fk_orderNumber;
 
 
 if(@VisitPointId > 0 and @IdCierre > 0)
@@ -57,6 +65,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -108,7 +117,7 @@ begin
 		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
 			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-			on cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
+			on cost.GuideSerie = DOR.Guide_Serie AND DOR.Guide_Number = cost.GuideNumber  --cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
 		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
 			on costd.IdCost = cost.IdCost 
 			AND costd.Amount > 0 
@@ -133,6 +142,7 @@ begin
 			,Status='----'  
 			,Guide='----'
 			,Voucher=''
+			,'' AS CurrencySymbol
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
@@ -177,7 +187,7 @@ end
 
 if(@VisitPointId > 0 and (@IdCierre <= 0 or @IdCierre is null) )
 begin
-	SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
+SELECT DISTINCT ACD.AccountingClosuresHeaderId ClosuresHeaderId
 		,VPC.VisitPointId
 		,VPC.DescriptionOfClient VisitPointDescription
 		,ACh.UserId
@@ -192,6 +202,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId, 'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol 
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -215,27 +226,20 @@ begin
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
 			ON DOPD.GuideSerie = DOR.Guide_Serie 
 			AND DOPD.GuideNumber = DOR.Guide_Number
-			AND dopd.ShipmentCompleted = 1
-			AND DOPD.AccountId > 0
-			AND DOR.StatusOrderId != 7
-			 AND DOPD.[TypeofInOutMoneyId] != 8
 
 		-- MODIFICACIÓN 06/04/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC 
 			ON DOPD.VisitPoint = VPC.CodeOfReference
 		-- FIN MODIFICACIÓN
-
 		INNER JOIN CatTypeServiceClosure CTS 
 			ON CTS.IdTypeService = DOPD.TypeServiceId
 		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
 			on ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
-
 			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 			AND ACD.DopId = DOPD.DopId
 			-- FIN MODIFICACIÓN
-
-			AND ACD.RowStatus = 1
+			
 		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
@@ -243,12 +247,16 @@ begin
 		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
 			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK) 
-			on cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
+			on cost.GuideSerie = DOR.Guide_Serie AND DOR.Guide_Number = cost.GuideNumber --CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
 		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)  
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId)
+		AND (DOPD.AccountId = @IdAccount OR DOPD.VisitPoint = @VisitPointId) AND ACD.RowStatus = 1
+			AND dopd.ShipmentCompleted = 1
+			AND DOPD.AccountId > 0
+			AND DOR.StatusOrderId != 7
+			AND DOPD.[TypeofInOutMoneyId] != 8
 -- ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 	UNION ALL
@@ -266,6 +274,7 @@ begin
 			,Status='----'  
 			,Guide='----'
 			,Voucher=''
+			,CurrencySymbol = ''
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
@@ -304,7 +313,7 @@ begin
 			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
 			AND (CTS.IdTypeService NOT IN (5,23))
 			 AND DOPD.[TypeofInOutMoneyId] != 8
-		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
+	--	ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
 
@@ -326,6 +335,7 @@ begin
 		,STO.OrderDescription 'Status'
 		,DOR.Guide_Serie + CONVERT(VARCHAR,DOR.Guide_Number) 'Guide'
 		,isnull(costd.Voucher,'') 'Voucher'
+		,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'HNL.' END AS CurrencySymbol
 		,isnull(DOPD.amount, 0)'PriceShippment'
 		,isnull(DOPD.CODAmountProcess,0) 'COD'
 		, case 
@@ -402,6 +412,7 @@ begin
 			,Status='----'  
 			,Guide='----'
 			,Voucher=''
+			,CurrencySymbol = ''
 			,isnull(DOPD.amount, 0)'PriceShippment'
 			,isnull(DOPD.CODAmountProcess,0) 'COD'
 			, case 
@@ -441,4 +452,5 @@ begin
 			 AND DOPD.[TypeofInOutMoneyId] != 8
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
+
 END

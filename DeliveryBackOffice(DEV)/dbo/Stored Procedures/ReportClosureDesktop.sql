@@ -3,6 +3,11 @@
 -- Create date: <2023-03-04>
 -- Description:	<Sp para el detalle del reporte de cierres en desktop>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-08>
+-- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
@@ -80,6 +85,7 @@ BEGIN
 	   ,STO.OrderDescription 'Status'
 	   ,DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) 'Guide'
 	   ,ISNULL(costd.Voucher, '') 'Voucher'
+	   ,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
@@ -174,6 +180,7 @@ BEGIN
 	   ,Status = '----'
 	   ,Guide = '----'
 	   ,Voucher = ''
+	   ,'  ' AS CurrencySymbol
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE

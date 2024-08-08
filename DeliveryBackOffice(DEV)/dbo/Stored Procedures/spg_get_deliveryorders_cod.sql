@@ -25,14 +25,10 @@ BEGIN
 	DECLARE @IdToken AS VARCHAR(50);
 	DECLARE @IdRol AS BIGINT; 
 	DECLARE @IdVisitPoint AS BIGINT;
-	DECLARE @DateIni AS DATE;
-	DECLARE @DateFin AS DATE;
 
 	SET DATEFORMAT DMY;
 	SET @IdToken = @Token;
 	SET @IdRol =  @Rol;
-	SET @DateIni = CONVERT(DATE, @BeginDate);
-	SET @DateFin = CONVERT(DATE, @EndDate);
 
 	DECLARE @IdSystem AS INT 
 
@@ -61,6 +57,7 @@ BEGIN
 				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
 				so.OrderDescription AS [OrderStatus],
 				serv.Manifest_Serie + Cast(serv.Manifest_Number as varchar) [ManifestNumber],
+				IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
 				Collect_OnDelivery [CollectOnDelivery],
 				ISNULL(Guide_Collected, 'FALSE') [GuideCollected],
 				ISNULL(serv.Deposit_Number,'') [DepositCOD],
@@ -81,7 +78,9 @@ BEGIN
 				ON batch.GuideSerie = serv.Guide_Serie
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
-			WHERE CONVERT(DATE, serv.DateCreated) BETWEEN  @DateIni AND @DateFin
+			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD
+				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
+			WHERE (CONVERT(DATE, serv.DateCreated) BETWEEN @BeginDate AND @EndDate)
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
 				AND serv.StatusOrderId <> 15 -- No guías generadas
 				AND serv.Collect_OnDelivery > 0
@@ -99,6 +98,7 @@ BEGIN
 				serv.Guide_Serie + Cast(serv.Guide_Number as varchar) [GuideNumber],
 				so.OrderDescription AS [OrderStatus],
 				serv.Manifest_Serie + Cast(serv.Manifest_Number as varchar) [ManifestNumber],
+				IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
 				Collect_OnDelivery [CollectOnDelivery],
 				ISNULL(Guide_Collected, 'FALSE') [GuideCollected],
 				ISNULL(serv.Deposit_Number,'') [DepositCOD],
@@ -119,6 +119,8 @@ BEGIN
 				ON batch.GuideSerie = serv.Guide_Serie
 				AND batch.GuideNumber = serv.Guide_Number
 				AND batch.CatConceptCODId = 2
+			LEFT JOIN DeliveryBackOffice.dbo.catCurrencyCOD ccCOD
+				ON ccCOD.IdCatCurrencyCOD = IIF(batch.CatCurrencyCODId IS NULL, 1, batch.CatCurrencyCODId)
 			WHERE serv.Guide_Serie = @GuideSerie 
 				AND serv.Guide_Number = @GuideNumber 
 				AND serv.StatusOrderId <> 7 -- No guías anuladas

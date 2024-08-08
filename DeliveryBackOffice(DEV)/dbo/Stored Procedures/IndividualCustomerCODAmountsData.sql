@@ -3,6 +3,11 @@
 -- Create date: <2022-10-19>
 -- Description:	<Método para cargar datos de montos COD para uso de clientes individuales>
 -- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-07-23>
+-- Description:	<Se agrego moneda para COD y Shippment>
+-- =============================================
 CREATE PROCEDURE [dbo].[IndividualCustomerCODAmountsData]
 @IdAccount INT = -1,
 @StarDate DATETIME=NULL,
@@ -37,7 +42,9 @@ BEGIN
 		  ,s1.FechaPago
 		  ,s1.NoDeposito
 		  ,s1.CODAmount
+		  ,s1.CODCurrency
 		  ,s1.ShippmentAmount
+		  ,s1.ShippmentCurrency
 		  ,s1.PorcentajeComision
 		  ,s1.CommissionAmount
 		  ,s1.TotalAmount
@@ -73,12 +80,20 @@ BEGIN
 				'Collect',
 				(IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago
 			   ,do.[PriceShippment] AS ShippmentAmount
+			   ,ISNULL(c1.Symbol,'Q') AS CODCurrency
+			   ,ISNULL(c2.Symbol,'Q') AS ShippmentCurrency
 			   ,btd.[Commission] AS CommissionAmount
 			   ,btd.CODCommissionPercentage AS PorcentajeComision
 			   ,btd.[Amount] + btd.[Commission] AS ChargedAmount
 			   ,btd.[Amount] AS TotalAmount
 			   ,btd.[AuthorizationDate]
 			FROM [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
+			LEFT JOIN [dbo].[Cost] AS c WITH(NOLOCK)
+				ON [do].[Guide_Serie] = [c].[GuideSerie] AND [do].[Guide_Number] = [c].[GuideNumber]
+			LEFT JOIN [dbo].[CatCurrencyCOD] AS c1 WITH(NOLOCK)
+				ON [c].[CodCurrency] = [c1].[IdCatCurrencyCOD]
+			LEFT JOIN [dbo].[CatCurrencyCOD] AS c2 WITH(NOLOCK)
+				ON [c].[ShippingCurrency] = [c2].[IdCatCurrencyCOD]
 			LEFT JOIN [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
 				ON btd.[GuideSerie] = do.[Guide_Serie]
 				AND btd.[GuideNumber] = do.[Guide_Number]
@@ -116,7 +131,9 @@ BEGIN
 			,s1.FechaPago
 			,s1.NoDeposito
 			,s1.CODAmount
+			,s1.CODCurrency
 			,s1.ShippmentAmount
+			,s1.ShippmentCurrency
 			,s1.PorcentajeComision
 			,s1.CommissionAmount
 			,s1.TotalAmount
@@ -151,12 +168,20 @@ BEGIN
 				'Collect',
 				(IIF(ISNULL(cu.ConditionOfPaymentID, 0) > 1, 'Crédito', 'Prepago'))) TipodePago
 				,do.[PriceShippment] AS ShippmentAmount
+				,ISNULL(c1.Symbol,'Q') AS CODCurrency
+			    ,ISNULL(c2.Symbol,'Q') AS ShippmentCurrency
 				,btd.[Commission] AS CommissionAmount
 				,btd.CODCommissionPercentage AS PorcentajeComision
 				,btd.[Amount] + btd.[Commission] AS ChargedAmount
 				,btd.[Amount] AS TotalAmount
 				,btd.[AuthorizationDate]
 			FROM [dbo].[DeliveryOrder] AS do WITH(NOLOCK)
+			LEFT JOIN [dbo].[Cost] AS c WITH(NOLOCK)
+				ON [do].[Guide_Serie] = [c].[GuideSerie] AND [do].[Guide_Number] = [c].[GuideNumber]
+			LEFT JOIN [dbo].[CatCurrencyCOD] AS c1 WITH(NOLOCK)
+				ON [c].[CodCurrency] = [c1].[IdCatCurrencyCOD]
+			LEFT JOIN [dbo].[CatCurrencyCOD] AS c2 WITH(NOLOCK)
+				ON [c].[ShippingCurrency] = [c2].[IdCatCurrencyCOD]
 			LEFT JOIN [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
 				ON btd.[GuideSerie] = do.[Guide_Serie]
 				AND btd.[GuideNumber] = do.[Guide_Number]

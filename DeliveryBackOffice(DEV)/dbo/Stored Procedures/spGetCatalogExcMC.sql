@@ -32,7 +32,10 @@ INNER JOIN DeliveryBackOffice.dbo.Township TWS WITH(NOLOCK)
 	ON TWS.IdTownship = STL.IdTownship
 INNER JOIN DeliveryBackOffice.dbo.Province PRV WITH(NOLOCK)
 	ON PRV.IdProvince = TWS.IdProvince
-WHERE VPC.IdKindOfVPClient = 1 AND VPC.CountryId = @pCountryId
+LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient	KOVPC WITH(NOLOCK)
+	ON VPC.IdKindOfVPClient = KOVPC.IdKindOfVPClient
+WHERE KOVPC.KindOfVPName = 'Express Center' 
+	AND VPC.CountryId = @pCountryId
 	AND VPC.StatusClient = 1
 ORDER BY VPC.DescriptionOfClient
 

@@ -10,9 +10,10 @@ BEGIN
 
 	DECLARE @Debug BIT	 = 'false'
 
-    SELECT DISTINCT
+    SELECT DISTINCT TOP 2 
            ISNULL(ord.IdCustomer, vpc.CustomerID) idcustomer,
-           IIF(@Debug ='true', 'envios.parser4@gmail.com', COALESCE(ord.Sender_Mail, cs.CODContactEmail,cs.RegexEmail)) RegexEmail
+           --IIF(@Debug ='true', 'envios.parser4@gmail.com', COALESCE(ord.Sender_Mail, cs.CODContactEmail,cs.RegexEmail))
+           'juan.ramirez@forzadelivery.com' RegexEmail
     FROM dbo.DeliveryOrderDetail dt
         LEFT JOIN dbo.DeliveryOrder ord
             ON ord.Guide_Serie = dt.Guide_Serie

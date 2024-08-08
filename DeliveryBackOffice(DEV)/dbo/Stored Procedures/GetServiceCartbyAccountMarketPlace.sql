@@ -5,9 +5,15 @@
 -- Create date: <2023-08-31>
 -- Description:	<Obtiene información del carrito de compras MarketPlace>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-08-05>
+-- Description:	<Se agrega la moneda por pais en la consulta>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetServiceCartbyAccountMarketPlace]
 	@IdAccount BIGINT,
-	@Token NVARCHAR(50)
+	@Token NVARCHAR(50),
+	@IdCountry NVARCHAR(3)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -24,6 +30,7 @@ BEGIN
 		FROM [dbo].[MarketplaceCart]
 		WHERE AccountId = @IdAccount
 		AND RowStatus = 1
+		AND ISNULL(IdCountry,'GT')=@IdCountry 
 		ORDER BY DateCreated DESC
 
 		IF @AccountServiceCartId IS NOT NULL
@@ -49,6 +56,7 @@ BEGIN
 					   cp.SubscriptionName [CatProductName],
 					   cp.SubscriptionDescription  [CatProductDescription],
 					   cp.SubscriptionCost [CatProductCost],
+					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 					   mpcm.IdMarketplaceCartDetail,
 					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
 					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct]
@@ -61,12 +69,14 @@ BEGIN
 				WHERE  mpc.AccountId = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
+				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
 				UNION ALL
 				SELECT
 				       mpcm.CatProductId,
 					   cp.MembershipName [CatProductName],
 					   cp.MembershipDescription  [CatProductDescription],
 					   cp.MembershipCost [CatProductCost],
+					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 					   mpcm.IdMarketplaceCartDetail,
 					   cp.MembershipFixedValue   [CatProductDiscountValue],
 					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct]
@@ -79,6 +89,7 @@ BEGIN
 				WHERE  mpc.AccountId = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
+				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
 				
 			
 				

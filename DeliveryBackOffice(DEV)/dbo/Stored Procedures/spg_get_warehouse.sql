@@ -8,6 +8,10 @@
 -- Create date: <2024-06-06>
 -- Description:	<Se agrega paramtro para filtrar guias por pais de origen>
 -- =============================================
+-- Modified:	<Pedroza, Brandon>
+-- Create date: <2024-06-27>
+-- Description:	<Se agrega condicion para validar si la guia es domestica o internacional>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_warehouse]
 	@GuideSerie NVARCHAR(2),
 	@GuideNumber INT,
@@ -35,7 +39,7 @@ BEGIN
 	  WHERE 
 	  ((w.Guide_Serie = @GuideSerie AND w.Guide_Number = @GuideNumber AND w.Active = 1 AND w.IsReturn = 1)
 	  OR (w.Rack_Position = @RackPosition AND w.Active = 1) )
-	  AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId)=@IdCountry
+	  AND (ISNULL(do.GuideType,'DOM')='INT' OR (ISNULL(do.SenderCountryId,'GT')=@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'))
 	END
 	ELSE
 	BEGIN
@@ -53,7 +57,7 @@ BEGIN
 	  WHERE 
 	  ((w.Guide_Serie = @GuideSerie AND w.Guide_Number = @GuideNumber AND w.Active = 1 AND (w.IsReturn IS NULL OR w.IsReturn = 0))
 	  OR (w.Rack_Position = @RackPosition AND w.Active = 1) )
-	  AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId)=@IdCountry
+	  AND (ISNULL(do.GuideType,'DOM')='INT' OR (ISNULL(do.SenderCountryId,'GT')=@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'))
 	END
 
   -- get all pieces for guide (waybill)
@@ -68,7 +72,7 @@ BEGIN
   INNER JOIN StatusOrder so
 	ON so.StatusOrderId = do.StatusOrderId
   WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber
-  AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId)=@IdCountry
+  AND (ISNULL(do.GuideType,'DOM')='INT' OR (ISNULL(do.SenderCountryId,'GT')=@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'))
   
   ---devuelve respuesta si la guia pertenece a otro pais
   SELECT 
@@ -78,6 +82,6 @@ BEGIN
 	@RackPosition AS 'RackPosition'
 	FROM DeliveryOrder WITH(NOLOCK)
 	WHERE Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie 
-	AND IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) <> @IdCountry
+	AND ISNULL(SenderCountryId,'GT')<>@IdCountry AND ISNULL(GuideType,'DOM')='DOM'
 
 END

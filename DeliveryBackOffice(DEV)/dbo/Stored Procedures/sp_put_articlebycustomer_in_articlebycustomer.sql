@@ -9,7 +9,8 @@ CREATE PROCEDURE [dbo].[sp_put_articlebycustomer_in_articlebycustomer]
 	@Length DECIMAL(18, 2),
 	@MassWeight DECIMAL(18, 2),
 	@VolumetricWeight DECIMAL(18, 2),
-	@ShowDefault BIT
+	@ShowDefault BIT,
+	@IdCurrency INT = 1--por defecto quetzal
 AS
 BEGIN
 
@@ -37,7 +38,8 @@ BEGIN TRY
 		Length = @Length,
 		MassWeight = @MassWeight,
 		VolumetricWeight = @VolumetricWeight,
-		ShowDefault = @ShowDefault
+		ShowDefault = @ShowDefault,
+		IdCurrency = @IdCurrency
 	WHERE AbcId = @IdABC;
 END TRY
 BEGIN CATCH

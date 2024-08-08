@@ -1,237 +1,244 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2024-04-01>
 -- Description:	<Description,Nuevo Reporte de Guías Última Milla>
 -- =============================================
--- Modified:	<Brandon, Pedroza>
--- Create date: <2024-04-01>
--- Description:	<Se agrega paramtro para filtrar couriers por pais>
--- =============================================
+
 CREATE PROCEDURE [dbo].[RptLastMileRoutesReport] 
     @StartDate DATE,
-    @EndDate DATE,
-	@IdCountry AS NVARCHAR(2) = 'GT'
+    @EndDate DATE
+	
 AS
 BEGIN
      
-	DECLARE @StartDateTime AS DATETIME;
-	DECLARE @EndDateTime AS DATETIME;
-    DECLARE @STATUS_DELIVERED_ID AS INT;
-    DECLARE @STATUS_RETURNED_ID AS INT;
-    DECLARE @STATUS_TRANSFERED_EX_ID AS INT;
-    DECLARE @STATUS_COD_PAID AS INT;
-	DECLARE @STATUS_COD_liq AS INT;
-	DECLARE @STATUS_DELIVERY_EX_ID AS INT;
-	DECLARE @STATUS_DECLARE_RETURN AS INT;
-	DECLARE @STATUS_DECLARE_RETURN_PROCESS AS INT;
-	DECLARE @STATUS_RETURN_ORIGIN AS INT;
-	DECLARE @UnvalidatedIncident AS INT;
-	DECLARE @ConfirmationOfIncidence AS INT;
-	DECLARE @RECEIVER_IN_EXPRESS_ID AS INT;
-	DECLARE @RETURNT_IN_EXPRESS_ID AS INT;
-	DECLARE @SCHEDULEDFORDELIVERY AS INT;
-	DECLARE @ININVENTORY AS INT;
-	DECLARE @ArrivedatTheFacilities AS INT;
+				DECLARE @StartDateTime AS DATETIME;
+				DECLARE @EndDateTime AS DATETIME;
+  
 
-	SET NOCOUNT ON;
+				SET @StartDateTime = CAST(@StartDate AS DATETIME) + '00:00:00'; -- Añadimos el tiempo para incluir toda la fecha del primer día
+				SET @EndDateTime = CAST(@EndDate AS DATETIME) + '23:59:59'; 
 
-	SET @StartDateTime = CAST(@StartDate AS DATETIME) + '00:00:00'; -- Añadimos el tiempo para incluir toda la fecha del primer día
-    SET @EndDateTime = CAST(@EndDate AS DATETIME) + '23:59:59'; 
 
-	  -- Obtener IDs de estado
 
-	SELECT 
-		@STATUS_RETURN_ORIGIN = [SO].[StatusOrderId],
-		@STATUS_DELIVERY_EX_ID = [SE].[StatusOrderId],
-		@STATUS_DECLARE_RETURN = [SD].[StatusOrderId],
-		@STATUS_DECLARE_RETURN_PROCESS = [SR].[StatusOrderId],
-		@STATUS_DELIVERED_ID = [SDel].[StatusOrderId],
-		@STATUS_RETURNED_ID = [SRet].[StatusOrderId],
-		@STATUS_TRANSFERED_EX_ID = [ST].[StatusOrderId],
-		@STATUS_COD_PAID = [SCP].[StatusOrderId],
-		@STATUS_COD_liq = [SCL].[StatusOrderId],
-		@UnvalidatedIncident = [IER].[StatusOrderId],
-		@ConfirmationOfIncidence = [COI].[StatusOrderId],
-		@RECEIVER_IN_EXPRESS_ID = [REC].[StatusOrderId],
-		@RETURNT_IN_EXPRESS_ID = [REC].[StatusOrderId],
-		@SCHEDULEDFORDELIVERY  = [SFD].[StatusOrderId],
-		@ININVENTORY = [II].[StatusOrderId],
-		@ArrivedatTheFacilities = [AAI].[StatusOrderId]
-	FROM 
-		[dbo].[StatusOrder] [SO] WITH(NOLOCK)
-	LEFT JOIN [dbo].[StatusOrder] [SE]   ON [SE].[OrderDescription] = 'Entregado En Express Center'
-	LEFT JOIN [dbo].[StatusOrder] [SD]   ON [SD].[OrderDescription] = 'Declarado para Devolución'
-	LEFT JOIN [dbo].[StatusOrder] [SR]   ON [SR].[OrderDescription] = 'Paquete Retornado para Reproceso'
-	LEFT JOIN [dbo].[StatusOrder] [SDel] ON [SDel].[OrderDescription] = 'Entregado'
-	LEFT JOIN [dbo].[StatusOrder] [SRet] ON [SRet].[OrderDescription] = 'Devuelto'
-	LEFT JOIN [dbo].[StatusOrder] [ST]   ON [ST].[OrderDescription] = 'Traslado a Express Center'
-	LEFT JOIN [dbo].[StatusOrder] [SCP]  ON [SCP].[OrderDescription] = 'COD pagado'
-	LEFT JOIN [dbo].[StatusOrder] [SCL]  ON [SCL].[OrderDescription] = 'COD liquidado'
-	LEFT JOIN [dbo].[StatusOrder] [IER]  ON [IER].[OrderDescription] = 'Incidencia en ruta'
-	LEFT JOIN [dbo].[StatusOrder] [COI]  ON [COI].[OrderDescription] = 'Incidencia Validada'
-	LEFT JOIN [dbo].[StatusOrder] [REC]  ON [REC].[OrderDescription] = 'Recibido En Express Center'
-	LEFT JOIN [dbo].[StatusOrder] [REEC] ON [REEC].[OrderDescription] = 'Devuelto en Express Center'
-	LEFT JOIN [dbo].[StatusOrder] [SFD]  ON [SFD].[OrderDescription] =  'Programado para entrega'
-    LEFT JOIN [dbo].[StatusOrder] [II]   ON [II].[OrderDescription] =  'En Inventario'
-	LEFT JOIN [dbo].[StatusOrder] [AAI]   ON [AAI].[OrderDescription] =  'Arribó a las instalaciones';
-	
-SELECT    MAX([DOBS].[ID] ) Settlement_Id,
-          MAX([HBL].[HubAbbreviation]) Hub,
-          MAX([DOBS].[Date_Dispatched]) [Date_Dispatched],
-		  MAX([DOBS].[StartingKilometers]) Out_KM,
-		  MAX([DOBS].[Date_Dispatched]) Time_Dispatched,
-          MAX([DOBS].[Route_Received]) Time_Settlement,
-		  MAX([SRE].[First_Name]) + ' ' + max([SRE].[Last_Name]) Courierman_Name,
-		  MAX([CRT].[CodeRoute]) Route_Name,
-		  MAX([SRE].[CUI] ) Courierman_Id,
-		  MAX([TYSRE].[TypeName]) Driver_Type,
-		  MAX([CVH].[UnitNumber]) Vehicle,
-		  MAX([CR].[RegionName]) AS Region,
-         
-          MAX([DOBS].[Guides_Dispatched]) Dispatched_Guides,
-          MAX([DOBS].[Pieces_Dry_Dispatched]) + MAX([DOBS].[Pieces_Cold_Dispatched]) Dispatched_Pieces,
-	
-	    -- Guías entregadas
-		SUM(CASE WHEN DOD.StatusOrderId IN (@STATUS_DELIVERED_ID ,@STATUS_COD_PAID,@STATUS_COD_liq) AND  NotIsDelivery.DeliveryInExpressCenter  = 0 THEN 1 ELSE 0 END) AS [Delivered_Guides_Checkpoint],
-		SUM(CASE WHEN DOD.StatusOrderId IN (@STATUS_DELIVERED_ID ,@STATUS_COD_PAID,@STATUS_COD_liq) AND  NotIsDelivery.DeliveryInExpressCenter  = 0 THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS [Delivered_Pieces_Checkpoint],
-
-		-- Guías devueltas a origen
-		SUM(CASE WHEN DOD.StatusOrderId in(  @STATUS_RETURN_ORIGIN,@STATUS_RETURNED_ID ) THEN 1 ELSE 0 END) AS Returned_Guides_Checkpoint,
-		SUM(CASE WHEN DOD.StatusOrderId in(  @STATUS_RETURN_ORIGIN,@STATUS_RETURNED_ID ) THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS Returned_Pieces_Checkpoint,
-
-		-- Guías Retornadas para reproceso
-		SUM(CASE WHEN DOD.StatusOrderId in( @STATUS_DECLARE_RETURN_PROCESS,@ArrivedatTheFacilities,@ININVENTORY,@SCHEDULEDFORDELIVERY,@STATUS_DECLARE_RETURN,@ConfirmationOfIncidence) THEN 1 ELSE 0 END) AS Returned_Guides,
-		SUM(CASE WHEN DOD.StatusOrderId in( @STATUS_DECLARE_RETURN_PROCESS,@ArrivedatTheFacilities,@ININVENTORY,@SCHEDULEDFORDELIVERY,@STATUS_DECLARE_RETURN,@ConfirmationOfIncidence) THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS Returned_Pieces,
-
-		-- Guías Trasladadas, entregadas o recibidas en Express Center
-		SUM(CASE WHEN DOD.StatusOrderId in(@STATUS_TRANSFERED_EX_ID,@RECEIVER_IN_EXPRESS_ID,@STATUS_DELIVERY_EX_ID,@RETURNT_IN_EXPRESS_ID ) THEN 1 ELSE 0 END) AS Transfer_Guides_Checkpoint,
-		SUM(CASE WHEN DOD.StatusOrderId in(@STATUS_TRANSFERED_EX_ID,@RECEIVER_IN_EXPRESS_ID,@STATUS_DELIVERY_EX_ID,@RETURNT_IN_EXPRESS_ID ) THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS Transfer_Pieces_Checkpoint,
-
-	
-	 -- Guías en estados de incidencias confirmadas, pendientes de confirmar o visita fallida
-		SUM(CASE WHEN  [UnvalidatedIncident].[UnvalidatedIncident] = 1
-				 THEN 1 ELSE 0 END) [UnvalidatedIncident],
-
-		SUM(CASE WHEN  [UnvalidatedIncident].[UnvalidatedIncident] = 1
-				 THEN DO.Pieces_Dry + DO.Pieces_Cold  ELSE 0 END) [UnvalidatedIncidentPiece],
-
-		--  Incidencias confirmadas reales
-		SUM(CASE WHEN IncidenciasReales.RealIncidents = 1  
-				 THEN IncidenciasReales.RealIncidents ELSE 0 END) AS [RealIncidents],
-		SUM(CASE WHEN IncidenciasReales.RealIncidents = 1 
-				 THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS [RealIncidentsPiece],
-
-       --  Incidencias Confirmadas negadas por el cliente
-		SUM(CASE WHEN FalseIncidents.FalseIncidents = 1  
-				 THEN FalseIncidents.FalseIncidents ELSE 0 END) AS [FalseIncidents],
+			-- CTE para Incidents
+			WITH Incidents AS (
+				SELECT
+					MAX(DSD.Guide_Serie) Guide_Serie,
+					MAX(DSD.Guide_Number) Guide_Number ,
+					COUNT(DISTINCT DA.Guide_Number) AS UnvalidatedIncidentCount,
+					COUNT(DOP.GuidePiece) AS UnvalidatedIncidentPieceCount
+				FROM 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+					ON DOBS.ID = DSD.ID_DeliveryOrderBySettlement
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+					ON DA.Guide_Serie = DSD.Guide_Serie AND DA.Guide_Number = DSD.Guide_Number
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+				LEFT JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
+					ON  DA.Guide_Serie =  DOP.GuideSerie    AND DA.Guide_Number = DOP.GuideNumber 
+				WHERE
+					COI.IsConfirmed = 0 
+					AND COI.IsDenied = 0 
+					AND COI.RowStatus = 1 
+					AND COI.StatusOrderId = 45
+					AND DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
+					AND DA.Date_Created BETWEEN @StartDateTime AND @EndDateTime
+					AND COI.DateCreated BETWEEN @StartDateTime AND @EndDateTime
 		
-		SUM(CASE WHEN FalseIncidents.FalseIncidents = 1 
-				 THEN DO.Pieces_Dry + DO.Pieces_Cold ELSE 0 END) AS [FalseIncidentsPiece]
-FROM   
-		[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
-	INNER JOIN 
-		[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
-	ON 
-		 [DOBS].[ID] =[DSD].[ID_DeliveryOrderBySettlement]
-	INNER JOIN
-		[DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
-	ON  
-		DSD.Guide_Serie = DO.Guide_Serie AND DSD.Guide_Number = DO.Guide_Number
-	INNER JOIN 
-		 [DeliveryBackOffice].[dbo].[SenderReceiver] SRE WITH (NOLOCK)
-	ON [SRE].[ID] = [DOBS].[ID_Courier]
-	INNER JOIN 
-		   [DeliveryBackOffice].[dbo].[HubLogistics] HBL WITH (NOLOCK)
-	ON [HBL].[IdHubLogistic] = [SRE].[HubLogisticId]
-	INNER JOIN 
-	   [DeliveryBackOffice].[dbo].[HubByRegion] HBR WITH (NOLOCK)
-	ON [SRE].[HubLogisticId] = [HBR].[HubLogisticId]
-	INNER JOIN 
-	   [DeliveryBackOffice].[dbo].[CatRegion] CR WITH (NOLOCK)
-	ON [HBR].[RegionId] = [CR].[IdCatRegion]
-	INNER JOIN 
-	   [DeliveryBackOffice].[dbo].[CatRoute] CRT WITH (NOLOCK)
-	ON [DOBS].[CatRouteId] = [CRT].[IdRoute]
-	INNER JOIN 
-	   [DeliveryBackOffice].[dbo].[CatVehicle] CVH WITH (NOLOCK)
-	 ON [DOBS].[CatVehicleId] = [CVH].[IdVehicle]
-	INNER JOIN 
-		[DeliveryBackOffice].[dbo].[CatTypeSenderReceiver] TYSRE WITH (NOLOCK)
-	 ON [SRE].[CatTypeSenderReceiverId] = [TYSRE].[IdCatTypeSenderReceiver]
-	OUTER APPLY 
-	(
-	   SELECT  TOP 1
-				 DOD1.StatusOrderId
-			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD1 WITH (NOLOCK)
-			WHERE  DOD1.Guide_Serie = DSD.Guide_Serie AND
-				   DOD1.Guide_Number = DSD.Guide_Number
-			 AND  DOD1.DateCreated >= DATEADD(DAY, DATEDIFF(DAY, 0, [DOBS].Date_Dispatched), 0) -- Inicio del día de [DOBS].Date_Dispatched
-             AND  DOD1.DateCreated < DATEADD(DAY, DATEDIFF(DAY, 0, [DOBS].Date_Dispatched) + 1, 0) -- Inicio del día siguiente
-			ORDER BY DOD1.DateCreated DESC
-	) DOD
-		 OUTER APPLY
-		(
-			SELECT COUNT(1) 'FalseIncidents'
-			FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-				INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
-					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-			WHERE 
-					  DA.Guide_Serie  = DSD.Guide_Serie
-				  AND DA.Guide_Number = DSD.Guide_Number
-				  AND DA.Date_Created    BETWEEN @StartDateTime AND @EndDateTime
-				  AND COI.IsConfirmed = 1 
-				  AND COI.IsDenied = 1 
-				  AND COI.RowStatus = 1
-				  AND COI.StatusOrderId = @ConfirmationOfIncidence
-				
-		) FalseIncidents
-		OUTER APPLY
-		(
-			SELECT COUNT(1) 'RealIncidents'
-			FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-				INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
-					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-			WHERE 
-					   DA.Guide_Serie  = DSD.Guide_Serie
-				  AND  DA.Guide_Number = DSD.Guide_Number 
-				  AND  DA.Date_Created    BETWEEN @StartDateTime AND @EndDateTime
-				  AND  COI.IsConfirmed = 1 
-				  AND  COI.IsDenied = 0
-				  AND  COI.RowStatus = 1
-				  AND  COI.StatusOrderId = @ConfirmationOfIncidence
-				  
-		) IncidenciasReales	
-			 OUTER APPLY
-		(
-			SELECT COUNT(1) 'UnvalidatedIncident'
-			FROM [DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
-				INNER JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
-					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
-			WHERE 
-					  DA.Guide_Serie  = DSD.Guide_Serie
-				  AND DA.Guide_Number = DSD.Guide_Number
-				  AND DA.Date_Created    BETWEEN @StartDateTime AND @EndDateTime
-				  AND COI.IsConfirmed = 0 
-				  AND COI.IsDenied = 0
-				  AND COI.RowStatus = 1
-				  AND COI.StatusOrderId = @UnvalidatedIncident
-				
-		) UnvalidatedIncident
-		OUTER APPLY 
-	(
-	   SELECT  TOP 1 COUNT(1) DeliveryInExpressCenter
-			FROM [DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD1 WITH (NOLOCK)
-			WHERE  DOD1.Guide_Serie = DSD.Guide_Serie AND
-				   DOD1.Guide_Number = DSD.Guide_Number
-		           AND DOD1.StatusOrderId = @STATUS_DELIVERY_EX_ID
-	) NotIsDelivery
+				GROUP BY 
+				 DOBS.ID
+			),
 
-WHERE  
-    [DOBS].[Date_Dispatched] BETWEEN @StartDateTime AND @EndDateTime
-	 GROUP BY [DOBS].[ID]
+			-- CTE para IncidentsReal
+			IncidentsReal AS (
+				SELECT
+					MAX(DSD.Guide_Serie) Guide_Serie,
+					MAX(DSD.Guide_Number) Guide_Number ,
+					COUNT(DISTINCT DSD.Guide_Number) AS [RealIncidentsCount],
+					 COUNT(DOP.GuidePiece) AS [RealIncidentsPieceCount]
+				FROM 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+					ON DOBS.ID = DSD.ID_DeliveryOrderBySettlement
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+					ON DA.Guide_Serie = DSD.Guide_Serie AND DA.Guide_Number = DSD.Guide_Number
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+				LEFT JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
+					ON DOP.GuideNumber = DA.Guide_Number
+				WHERE
+					COI.IsConfirmed = 1 
+					AND COI.IsDenied = 0 
+					AND COI.RowStatus = 1 
+					AND COI.StatusOrderId = 50
+					AND DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
+					AND DA.Date_Created BETWEEN @StartDateTime AND @EndDateTime
+					AND COI.DateCreated BETWEEN @StartDateTime AND @EndDateTime
+				GROUP BY 
+					DSD.Guide_Serie, DSD.Guide_Number
+			),
+			-- CTE para IncidentsFalse
+			IncidentsFalse AS (
+				SELECT
+					MAX(DSD.Guide_Serie) Guide_Serie,
+					MAX(DSD.Guide_Number) Guide_Number ,
+					COUNT(DISTINCT DSD.Guide_Number) AS [FalseIncidentsCount],
+					 COUNT(DOP.GuidePiece) AS [FalseIncidentsPieceCount]
+				FROM 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+					ON DOBS.ID = DSD.ID_DeliveryOrderBySettlement
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryAttempt] DA WITH (NOLOCK)
+					ON DA.Guide_Serie = DSD.Guide_Serie AND DA.Guide_Number = DSD.Guide_Number
+				INNER JOIN 
+					[DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] COI WITH (NOLOCK)
+					ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
+				LEFT JOIN 
+					[DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP WITH (NOLOCK)
+					ON DOP.GuideNumber = DA.Guide_Number
+				WHERE
+					COI.IsConfirmed = 1 
+					AND COI.IsDenied = 1 
+					AND COI.RowStatus = 1 
+					AND COI.StatusOrderId = 50
+					AND DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
+					AND DA.Date_Created BETWEEN @StartDateTime AND @EndDateTime
+					AND COI.DateCreated BETWEEN @StartDateTime AND @EndDateTime
+				GROUP BY 
+				  DOBS.ID 
+			)
+			
+			-- Consulta principal
+			SELECT 
+				DOBS.ID,
+				MAX(HBL.HubAbbreviation) AS Hub,
+				MAX(DOBS.Date_Dispatched) AS Date_Dispatched,
+				MAX(DOBS.StartingKilometers) AS Out_KM,
+				MAX(DOBS.Date_Dispatched) AS Time_Dispatched,
+				MAX(DOBS.Route_Received) AS Time_Settlement,
+				MAX(SRE.First_Name) + ' ' + MAX(SRE.Last_Name) AS Courierman_Name,
+				MAX(CRT.CodeRoute) AS Route_Name,
+				MAX(SRE.CUI) AS Courierman_Id,
+				MAX(TYSRE.TypeName) AS Driver_Type,
+				MAX(CVH.UnitNumber) AS Vehicle,
+				MAX(CR.RegionName) AS Region,
+				
+				  -- Guías y Piezas despachadas
+				MAX(DOBS.Guides_Dispatched) AS Dispatched_Guides,
+				MAX(DOBS.Pieces_Dry_Dispatched) + MAX(DOBS.Pieces_Cold_Dispatched) AS Dispatched_Pieces,
+				
+				  -- Guías y piezas entregadas
+				SUM(CASE WHEN DOD.StatusOrderId = 5 THEN 1 ELSE 0 END) AS Delivered_Guides_Checkpoint,
+				SUM(CASE WHEN DOD.StatusOrderId = 5 THEN DOP.NoPiece ELSE 0 END) AS Delivered_Pieces_Checkpoint,
+				
+				  -- Guías y piezas devueltas a origen
+				SUM(CASE WHEN DOD.StatusOrderId = 14 THEN 1 ELSE 0 END) AS Returned_Guides_Checkpoint,
+				SUM(CASE WHEN DOD.StatusOrderId = 14 THEN DOP.NoPiece ELSE 0 END) AS Returned_Pieces_Checkpoint,
+				
+				 -- Guías y piezas Retornadas para reproceso
+				SUM(CASE WHEN DOD.StatusOrderId = 8 THEN 1 ELSE 0 END) AS Returned_Guides,
+				SUM(CASE WHEN DOD.StatusOrderId = 8 THEN DOP.NoPiece ELSE 0 END) AS Returned_Pieces,
+				
+				 -- Guías y piezas Trasladadas a Express Center
+				SUM(CASE WHEN DOD.StatusOrderId = 20 THEN 1 ELSE 0 END) AS Transfer_Guides_Checkpoint,
+				SUM(CASE WHEN DOD.StatusOrderId = 20 THEN DOP.NoPiece ELSE 0 END) AS Transfer_Pieces_Checkpoint,
+				
+				MAX(DOBS.Pieces_Dry_Dispatched) + MAX(DOBS.Pieces_Cold_Dispatched) AS Delivery_effectiveness,
+                CONVERT(TIME, MAX([DOBS].[Date_Dispatched]) - MAX([DOBS].[Route_Received])) Time_on_route,
+                SUM(IIF(DOD.StatusOrderId = 45, 1, 0)) IncidenceInRoute,
+				
+                 -- Guías y piezas en estados de incidencia pendientes de confirmar o visita fallida	
+				MAX(ISNULL(I.UnvalidatedIncidentCount, 0)) AS UnvalidatedIncident,
+				MAX(ISNULL(I.UnvalidatedIncidentPieceCount, 0)) AS UnvalidatedIncidentPiece,
+				
+				-- Incidencias confirmadas reales
+				MAX(ISNULL(IR.RealIncidentsCount, 0)) AS RealIncidents,
+				MAX(ISNULL(IR.RealIncidentsPieceCount, 0)) AS RealIncidentsPiece,
+				
+				 -- Incidencias Confirmadas negadas por el cliente
+				MAX(ISNULL(FI.FalseIncidentsCount, 0)) AS FalseIncidents,
+				MAX(ISNULL(FI.FalseIncidentsPieceCount, 0)) AS FalseIncidentsPiece
 	
+			FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
+            INNER JOIN 
+				[DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOBS WITH (NOLOCK)
+				ON RP.DeliveryOrderBySettlementId = DOBS.ID 
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[DeliverySettlementDetail] DSD WITH (NOLOCK)
+				ON DOBS.ID = DSD.ID_DeliveryOrderBySettlement
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[DeliveryOrderDetail] DOD WITH (NOLOCK)
+				ON DOD.Guide_Serie = DSD.Guide_Serie AND DOD.Guide_Number = DSD.Guide_Number
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[SenderReceiver] SRE WITH (NOLOCK)
+				ON SRE.ID = DOBS.ID_Courier
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[HubLogistics] HBL WITH (NOLOCK)
+				ON HBL.IdHubLogistic = SRE.HubLogisticId
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[HubByRegion] HBR WITH (NOLOCK)
+				ON SRE.HubLogisticId = HBR.HubLogisticId
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[CatRegion] CR WITH (NOLOCK)
+				ON HBR.RegionId = CR.IdCatRegion
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[CatRoute] CRT WITH (NOLOCK)
+				ON DOBS.CatRouteId = CRT.IdRoute
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[CatVehicle] CVH WITH (NOLOCK)
+				ON DOBS.CatVehicleId = CVH.IdVehicle
+			INNER JOIN 
+				[DeliveryBackOffice].[dbo].[CatTypeSenderReceiver] TYSRE WITH (NOLOCK)
+				ON SRE.CatTypeSenderReceiverId = TYSRE.IdCatTypeSenderReceiver
+			LEFT JOIN 
+				Incidents I
+				ON DSD.Guide_Serie = I.Guide_Serie AND DSD.Guide_Number = I.Guide_Number
+			LEFT JOIN 
+				IncidentsReal IR
+				ON DSD.Guide_Serie = IR.Guide_Serie AND DSD.Guide_Number = IR.Guide_Number
+			LEFT JOIN 
+				IncidentsFalse FI
+				ON DSD.Guide_Serie = FI.Guide_Serie AND DSD.Guide_Number = FI.Guide_Number
+			OUTER APPLY (
+				SELECT TOP 1 COUNT(DOP1.GuidePiece) AS NoPiece
+				FROM [DeliveryBackOffice].[dbo].[DeliveryOrderPiece] DOP1 WITH (NOLOCK)
+				WHERE   DOP1.GuideSerie = DOD.Guide_Serie AND  DOP1.GuideNumber = DOD.Guide_Number
+	  
+			) DOP
+			WHERE 
+				-- DOD.DateCreated BETWEEN  CAST(RP.DateRoutePreparation  AS DATETIME) + '00:00:00' AND CAST(RP.DateRoutePreparation  AS DATETIME) + '23:59:59'
+                   DOBS.Date_Dispatched BETWEEN @StartDateTime AND @EndDateTime
+				   AND CONVERT(TIME,DOD.DateCreated) >= CONVERT(TIME,DOBS.Date_Dispatched)
+			GROUP BY DOBS.ID
 
+		
+
+
+
+
+
+
+	
+	
 END
+
+
+
+
+--[dbo].[RptLastMileRoutesReport] 
+--    @StartDate='2024-05-28',
+--    @EndDate='2024-05-28'
 
 
 

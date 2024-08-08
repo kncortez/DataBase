@@ -8,6 +8,11 @@
 -- Create date: <2022-05-11>
 -- Description:	< Adición de ubicación a poblado >
 -- =============================================
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-06-27>
+-- Description:	<Se corrige valor de idcountry, el cual no se almacenaba en la tabla Settlement>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_CreateSettlementCoverage]
 	@tokenUser nvarchar(50),
 	@nameNewSettlement nvarchar(100),
@@ -30,7 +35,6 @@ BEGIN
 		DECLARE @idprovince int ;
 		DECLARE @headerCode varchar(10);
 
-		DECLARE @idcontry nvarchar(3) =(select IdCountry from dbo.Province prv where prv.IdProvince=@idprovince);
 		DECLARE @idNewsetlement int=(SELECT IDENT_CURRENT('Settlement'))+1;
 		DECLARE @routecode nvarchar(100) = (select CodeRoute from dbo.CatRoute where IdRoute=@IdRoute);
 		
@@ -39,6 +43,8 @@ BEGIN
 		select @idprovince=IdProvince,@headerCode=HeaderCode from dbo.Township twn where twn.IdTownship=@idTownShip
 		--select * from HubLogistics;
 		DECLARE @hubcode nvarchar(50) = (select HubAbbreviation from HubLogistics where IdHubLogistic=@idHub  );
+		
+		DECLARE @idcontry nvarchar(4) =(select IdCountry from dbo.Province prv where prv.IdProvince=@idprovince);
 		IF (@TDA=1)
 		BEGIN
 			

@@ -4,6 +4,11 @@
 -- Create date: <2022-08-18>
 -- Description:	< Método dinamico para obtener datos para Widgets del lado de portal web  >
 -- =============================================
+-- =============================================
+-- Author:		<Edelman>
+-- Create date: <2024-07-23>
+-- Description:	< devolver moneda seg  >
+-- =============================================
 /*
 	Actualización: Actualizar texto de íconos quemados en estructura de respuesta
 	Autor: Jerson Ochoa - 30-12-2022
@@ -17,6 +22,18 @@ CREATE PROCEDURE [dbo].[GetWidgetData]
 
 AS
 BEGIN
+        DECLARE @Currency AS NVARCHAR(3)   
+		DECLARE @IdCountry NVARCHAR(3)= (   
+										   Select top 1 ISNULL(B.CountryID,'GT') 
+										         From [dbo].[Account] A WITH(NOLOCK) 
+										         INNER JOIN 
+												      [dbo].[Customer] B WITH(NOLOCK)
+										         ON  A.IdCustomer = B.IdCustomer
+										   WHERE A.AccIdAccount =@AccoundId)
+
+		SET @Currency = (SELECT TOP 1  Symbol 
+		                       FROM [dbo].[CatCurrencyCOD] 
+							       WHERE CodeISO LIKE '%'+@IdCountry+'%')
 
 	-- Limpieza y corrección de datos de fecha
 	IF(@EndFilterDate IS NULL)
@@ -108,7 +125,8 @@ BEGIN
 						'Piezas' 'TopText',
 						ISNULL(TotalGuide,0) 'BottomValue',
 						'Envíos realizados' 'BottomText',
-						'bi bi-box-seam' 'WidgetIcon'
+						'bi bi-box-seam' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 					FROM
 						@ResponseTable
 				END
@@ -122,7 +140,8 @@ BEGIN
 						'Piezas' 'TopText',
 						0 'BottomValue',
 						'Envíos realizados' 'BottomText',
-						'bi bi-box-seam' 'WidgetIcon'
+						'bi bi-box-seam' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 
 			END
@@ -136,7 +155,8 @@ BEGIN
 					'Piezas' 'TopText',
 					0 'BottomValue',
 					'Envíos realizados' 'BottomText',
-					'bi bi-box-seam' 'WidgetIcon'
+					'bi bi-box-seam' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 		END
 		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
@@ -179,7 +199,8 @@ BEGIN
 						'Monto pagado COD' 'TopText',
 						ISNULL(TotalPendingCoD,0) 'BottomValue',
 						'Total por cobrar' 'BottomText',
-						'bi bi-cash' 'WidgetIcon'
+						'bi bi-cash' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 					FROM
 						@ResponseCoDTable
 				END
@@ -193,7 +214,8 @@ BEGIN
 						'Monto pagado COD' 'TopText',
 						0 'BottomValue',
 						'Total por cobrar' 'BottomText',
-						'bi bi-cash' 'WidgetIcon'
+						'bi bi-cash' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 			END
 			ELSE
@@ -206,7 +228,8 @@ BEGIN
 					'Monto pagado COD' 'TopText',
 					0 'BottomValue',
 					'Total por cobrar' 'BottomText',
-					'bi bi-cashSettlement' 'WidgetIcon'
+					'bi bi-cashSettlement' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 
 		END
@@ -311,7 +334,8 @@ BEGIN
 							'Velocidad de entrega' 'TopText',
 							ISNULL(PorcentajentregaTotal,0) 'BottomValue',
 							'Entregas' 'BottomText',
-							'fas fa-paper-plane' 'WidgetIcon'
+							'fas fa-paper-plane' 'WidgetIcon',
+							ISNULL(@Currency,'GTQ') 'Currency' 
 						FROM
 							@ResponseVelTable
 					END
@@ -325,7 +349,8 @@ BEGIN
 							'Velocidad de entrega/día' 'TopText',
 							0 'BottomValue',
 							'Entregas' 'BottomText',
-							'fas fa-paper-plane' 'WidgetIcon'
+							'fas fa-paper-plane' 'WidgetIcon',
+							ISNULL(@Currency,'GTQ') 'Currency' 
 					END
 
 				END
@@ -339,7 +364,8 @@ BEGIN
 						'Velocidad de entrega/día' 'TopText',
 						0 'BottomValue',
 						'Entregas' 'BottomText',
-						'fas fa-paper-plane' 'WidgetIcon'
+						'fas fa-paper-plane' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 
 			END
@@ -353,7 +379,8 @@ BEGIN
 					'Velocidad de entrega/día' 'TopText',
 					0 'BottomValue',
 					'% de entregas' 'BottomText',
-					'fas fa-paper-plane' 'WidgetIcon'
+					'fas fa-paper-plane' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 
 		END
@@ -410,7 +437,8 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						ISNULL(TotalCompletedPickups,0) 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'fa fa-shipping-fast' 'WidgetIcon'
+						'fa fa-shipping-fast' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 					FROM
 						@ResponseServicesTable
 				END
@@ -424,7 +452,8 @@ BEGIN
 						'Recolecciones pendientes' 'TopText',
 						0 'BottomValue',
 						'Recolecciones completadas' 'BottomText',
-						'fa fa-shipping-fast' 'WidgetIcon'
+						'fa fa-shipping-fast' 'WidgetIcon',
+						ISNULL(@Currency,'GTQ') 'Currency' 
 				END
 
 			END
@@ -438,7 +467,8 @@ BEGIN
 					'Recolecciones pendientes' 'TopText',
 					0 'BottomValue',
 					'Recolecciones completadas' 'BottomText',
-					'fa fa-shipping-fast' 'WidgetIcon'
+					'fa fa-shipping-fast' 'WidgetIcon',
+					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 		END
 		ELSE
@@ -452,7 +482,8 @@ BEGIN
 				'' 'TopText',
 				0 'BottomValue',
 				'' 'BottomText',
-				'' 'WidgetIcon'
+				'' 'WidgetIcon',
+				'' 'Currency' 
 
 		END
 	END TRY
@@ -466,7 +497,8 @@ BEGIN
 			'' 'TopText',
 			0 'BottomValue',
 			'' 'BottomText',
-			'' 'WidgetIcon'
+			'' 'WidgetIcon',
+		    '' 'Currency' 
 	END CATCH
 	
 	IF OBJECT_ID('tempdb.dbo.#FilteredGuides', 'U') IS NOT NULL

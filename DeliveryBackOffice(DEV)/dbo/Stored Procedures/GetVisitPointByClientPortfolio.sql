@@ -425,7 +425,7 @@ BEGIN
                         ''
                     )
     );
-
+    print @VisitPointId
 	--SET STATISTICS TIME OFF;
 
 

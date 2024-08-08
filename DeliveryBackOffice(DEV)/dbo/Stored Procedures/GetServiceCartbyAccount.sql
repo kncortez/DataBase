@@ -121,6 +121,7 @@ BEGIN
 					,ascd.GuideNumber
 					,do.Pieces_Dry
 					,do.Pieces_Cold
+					,ISNULL(REPLACE(REPLACE(REPLACE(DC.Currency_Symbol,'(',''),')',''),'.',''),'Q.') AS 'Currency'
 					,do.PriceShippment
 					,do.Sender_ID
 					,CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) ReceiverName
@@ -138,8 +139,10 @@ BEGIN
 					ON ascd.GuideSerie = MSL.LogGuideSerie
 					AND ascd.GuideNumber = MSL.LogGuideNumber
 					AND MSL.RowStatus = 1
+				LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+					ON do.SenderCountryId = DC.Currency_IdCountry OR (do.SenderCountryId IS NULL AND DC.Currency_IdCountry = 'GT')
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
-				AND ascd.RowStatus = 1
+				AND ascd.RowStatus = 1 AND DC.Currency_Status = 1 AND DC.DefaultPerCountry = 1
 				
 				SELECT
 					ascd.GuideSerie GuideSerie

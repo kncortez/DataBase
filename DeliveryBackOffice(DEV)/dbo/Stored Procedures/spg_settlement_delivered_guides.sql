@@ -5,14 +5,21 @@
 -- Create date: <2020-11-24>
 -- Description:	<Recupera detalle para generar manifiesto de liquidación (entregas)>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-06-20>
+-- Description:	<Se agrega el cambio la conversion de cambio de tasa sgun moneda destino del pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_settlement_delivered_guides]
-		@IdManifest INT
+		@IdManifest INT 
 AS
 BEGIN
+
 	
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+
 
 	DECLARE @temp TABLE (
 		Guide_Code	nvarchar(max),
@@ -28,7 +35,8 @@ BEGIN
 		Max_Date nvarchar(50),
 		Receiver_Phone nvarchar(100),
 		Rack_Position nvarchar(MAX),
-		Collect_on_Delivery decimal(16,2)
+		Collect_on_Delivery decimal(16,2),
+		ReceiverCountryId nvarchar(2)
 	)
 
     -- tablix content
@@ -48,12 +56,65 @@ BEGIN
 	,do.Receiver_Phone as Receiver_Phone
 	,(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(do.Guide_Serie, do.Guide_Number)) as Rack_Position
 	--,Collect_OnDelivery
-	,(case when do.IsCollect = 'TRUE' then 
-	isnull((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END ),0)+isnull((CASE WHEN [do].[IsLastMileReturn] = 1 THEN CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END ELSE do.PriceShippment END),0)
-	else 
-	isnull((CASE WHEN do.[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END),0) 
-	end
-	) AS  Collect_OnDelivery
+	,(
+        case
+            when do.IsCollect = 'TRUE' then isnull(
+                (
+                    CASE
+                        WHEN do.[IsLastMileReturn] = 1 THEN 0
+                        ELSE CASE
+						/******SE AGREGA LA VALIDACION SI ES TIPO DE GUIA INT O DOM, SI ES INT REALIZA LA CONVERSION DE LA TAZA DE CAMBIO *******/
+                            WHEN do.GuideType = 'INT' THEN CASE
+                                WHEN SenderCountryId = 'GT' THEN do.Collect_OnDelivery / CASE
+                                    WHEN do.TypeService = 'COD' THEN co.CodExchangeRate
+                                    ELSE co.ShippingExchangeRate
+                                END
+                                ELSE do.Collect_OnDelivery * co.CodExchangeRate
+                            END * CASE
+                                WHEN do.TypeService = 'COD' THEN co.CODPaymentExchangeRate
+                                ELSE co.DeliveryPaymentExchangeRate
+                            END
+                            ELSE do.Collect_OnDelivery
+                        END
+                    END
+                ),
+                0
+            ) + isnull(
+                (
+                    CASE
+                        WHEN [do].[IsLastMileReturn] = 1 THEN CASE
+                            WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0
+                            ELSE do.PriceShippment
+                        END
+                        ELSE do.PriceShippment
+                    END
+                ),
+                0
+            )
+            else isnull(
+                (
+                    CASE
+                        WHEN do.[IsLastMileReturn] = 1 THEN 0
+                        ELSE CASE
+                            WHEN do.GuideType = 'INT' THEN CASE
+                                WHEN SenderCountryId = 'GT' THEN do.Collect_OnDelivery / CASE
+                                    WHEN do.TypeService = 'COD' THEN co.CodExchangeRate
+                                    ELSE co.ShippingExchangeRate
+                                END
+                                ELSE do.Collect_OnDelivery * co.CodExchangeRate
+                            END * CASE
+                                WHEN do.TypeService = 'COD' THEN co.CODPaymentExchangeRate
+                                ELSE co.DeliveryPaymentExchangeRate
+                            END
+                            ELSE do.Collect_OnDelivery
+                        END
+                    END
+                ),
+                0
+            )
+        end
+    ) AS Collect_OnDelivery,
+	do.ReceiverCountryId
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do  WITH(NOLOCK) 
 	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK)  ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number AND dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
 	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH(NOLOCK)
@@ -65,6 +126,9 @@ BEGIN
 		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
             ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
                AND cdp.IdConditionOfPayment > 1
+	INNER JOIN DeliveryBackOffice.dbo.Cost co WITH(NOLOCK)
+			ON do.Guide_Number = co.GuideNumber 
+				AND do.Guide_Serie = co.GuideSerie
 	WHERE do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega

@@ -1,4 +1,4 @@
-
+﻿
 -- =============================================
 -- Author:		<Bidcar Herrera>
 -- Create date: <19/01/2024>
@@ -11,8 +11,14 @@ AS
 
 BEGIN
 
-     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/design/individual/centro-canje';
+     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/notification/gift-create-account';
 	 DECLARE  @URL_USER_NOT_LOGIN VARCHAR (200)='https://portal.forzadelivery.com';
+	 DECLARE  @CODECURRENCY INT = (Select TOP 1  Currency
+	                                From [dbo].[CreditCardTransactionByCustomer]
+                                        Where  OrderNumber=@TransactionId)
+
+	DECLARE @PBX VARCHAR(10) = ( Select [Value] From [dbo].[ConfigParams]
+                                        Where [Name]='PBX'And IdCountry=IIf(@CODECURRENCY=320,'GT','HN'));
 
 	
 		IF(@Telemarketing = 0)
@@ -22,7 +28,7 @@ BEGIN
 		BEGIN 
 		
 			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
-			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
+			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL], @CODECURRENCY [CodeCurrency], @PBX [PBX]
 			FROM
 			(
 			SELECT InvoiceEmail [UsrEmail], 
@@ -129,7 +135,7 @@ BEGIN
 		BEGIN
 			--PRINT 'USUARIO NO LOGUEADO'
 			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
-			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
+			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL], @CODECURRENCY [CodeCurrency], @PBX [PBX]
 			FROM
 			(
 			SELECT A3.InvoiceEmail [UsrEmail], 
@@ -225,7 +231,7 @@ BEGIN
 	BEGIN
 	    --PRINT 'USUARIO TELEMARKETING'
 		select TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
-		IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
+		IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL], @CODECURRENCY [CodeCurrency], @PBX [PBX]
 		from
 		(
 		SELECT COALESCE(A5.UsrEmail,A3.InvoiceEmail) [UsrEmail],
