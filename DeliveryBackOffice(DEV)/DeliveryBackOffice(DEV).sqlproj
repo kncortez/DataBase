@@ -1708,12 +1708,8 @@
     <Build Include="dbo\Stored Procedures\spws_get_list_provinces_by_header_code_v2.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_wo.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_daily_route_old.sql" />
-    <Build Include="dbo\Stored Procedures\sps_Validate_Currency_1.sql" />
-    <Build Include="dbo\Stored Procedures\sps_Validate_Country_1.sql" />
     <Build Include="dbo\Stored Procedures\sps_set_status_order_by_guide_linehauls_bnhl.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData_old.sql" />
-    <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new_1.sql" />
-    <Build Include="dbo\Stored Procedures\GetCourierInfoWithoutTokenLog_1.sql" />
     <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
   </ItemGroup>
