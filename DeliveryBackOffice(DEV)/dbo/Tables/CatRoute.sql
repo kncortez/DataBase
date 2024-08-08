@@ -17,6 +17,8 @@
 );
 
 
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatRoute', @level2type=N'COLUMN',@level2name=N'IdRoute'
@@ -52,7 +54,9 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de modificación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatRoute', @level2type=N'COLUMN',@level2name=N'DateUpdated'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de país' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatRoute', @level2type=N'COLUMN',@level2name=N'CountryId'
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de pais', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatRoute', @level2type = N'COLUMN', @level2name = N'CountryId';
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Catalogo de rutas que puede tomar un corier' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatRoute'

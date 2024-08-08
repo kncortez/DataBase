@@ -14,3 +14,13 @@
     CONSTRAINT [FK_InvoiceBathcDetail_InvoiceHeader] FOREIGN KEY ([inv_pk_id]) REFERENCES [dbo].[invoiceHeader] ([inv_pk_id])
 );
 
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Factura ya procesada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchDetail', @level2type = N'COLUMN', @level2name = N'ProcessedCorrelative';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de factura generada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchDetail', @level2type = N'COLUMN', @level2name = N'inv_pk_id';
+

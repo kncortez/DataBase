@@ -24,11 +24,14 @@ AS
 BEGIN TRANSACTION
 BEGIN TRY
 
-DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[MarketplaceCart] a  WHERE  a.AccountId = @IdAccount AND a.RowStatus=1 ORDER BY a.DateCreated DESC)
+DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[MarketplaceCart] a  WHERE  a.AccountId = @IdAccount AND a.RowStatus=1 AND ISNULL(a.IdCountry,'GT') = @IdCountry ORDER BY a.DateCreated DESC)
 
  	IF(NOT EXISTS(Select Top 1 1 
 	                  From [dbo].[MarketplaceCart] a  
-					        WHERE  a.AccountId = @IdAccount AND a.RowStatus=1 ORDER BY a.DateCreated DESC))
+					        WHERE  a.AccountId = @IdAccount 
+							   AND a.RowStatus=1
+							   AND ISNULL(a.IdCountry,'GT') = @IdCountry
+							ORDER BY a.DateCreated DESC))
 	BEGIN
 	
 			INSERT INTO [dbo].[MarketplaceCart](

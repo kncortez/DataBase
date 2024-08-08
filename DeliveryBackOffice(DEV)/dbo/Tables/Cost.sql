@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Cost] (
+CREATE TABLE [dbo].[Cost] (
     [IdCost]                      INT             IDENTITY (1, 1) NOT NULL,
     [IdProduct]                   INT             NULL,
     [ProductNumber]               VARCHAR (100)   NULL,
@@ -35,6 +35,8 @@
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct])
 );
+
+
 
 
 
@@ -90,25 +92,28 @@ CREATE NONCLUSTERED INDEX [idx_IdProduct_GuideSerie_GuideNumber]
     INCLUDE([IdCost]);
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de envio para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'ShippingCurrency';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio de envio para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'ShippingExchangeRate';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de COD para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CodCurrency';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio de COD para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CodExchangeRate';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de pago de envio ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'DeliveryPaymentCurrency';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio del pago de envio ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'DeliveryPaymentExchangeRate';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de pago para COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CODPaymentCurrency';
+
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio del pago del COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CODPaymentExchangeRate';
+CREATE NONCLUSTERED INDEX [idx_totalamojntpaid_productnumber_totalamount]
+    ON [dbo].[Cost]([TotalAmountPaid] ASC)
+    INCLUDE([ProductNumber], [TotalAmount]);
+

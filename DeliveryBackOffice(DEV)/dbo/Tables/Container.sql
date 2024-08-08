@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Container', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -57,4 +59,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla de registro de contenedores.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Container';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'indica el país al que pertenece el contenedor', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Container', @level2type = N'COLUMN', @level2name = N'CountryId';
 

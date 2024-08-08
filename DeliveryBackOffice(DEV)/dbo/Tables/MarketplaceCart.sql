@@ -1,4 +1,4 @@
-﻿
+
 CREATE TABLE [dbo].[MarketplaceCart] (
     [IdMarketplaceCart] INT           IDENTITY (1, 1) NOT NULL,
     [AccountId]         BIGINT        NOT NULL,
@@ -11,6 +11,8 @@ CREATE TABLE [dbo].[MarketplaceCart] (
     CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
     CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
 );
+
+
 
 
 GO
@@ -32,5 +34,5 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Carrito de productos' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCart'
 GO
-
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'país al que pertenece el carrito de compras', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCart', @level2type = N'COLUMN', @level2name = N'IdCountry';
 

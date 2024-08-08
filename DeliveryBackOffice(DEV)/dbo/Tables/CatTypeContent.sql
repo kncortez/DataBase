@@ -6,9 +6,10 @@
     [DateCreated]               DATETIME       NOT NULL,
     [TokenCreated]              NVARCHAR (50)  NOT NULL,
     [DateUpdated]               DATETIME       NULL,
-    [TokenUpdated]              NVARCHAR (50)  NULL,
-    PRIMARY KEY CLUSTERED ([IdCatTypeContent] ASC)
+    [TokenUpdated]              NVARCHAR (50)  NULL
 );
+
+
 
 
 GO

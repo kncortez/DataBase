@@ -28,6 +28,8 @@
 
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [ClusteredIndex-GuideSerie-Number-Status]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC);
@@ -94,8 +96,10 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl]
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_DateCreatedInSystem_INCLUDE]
-    ON [dbo].[DeliveryOrderDetail]([DateCreatedInSystem] ASC, [StatusOrderId] ASC)
+    ON [dbo].[DeliveryOrderDetail]([DateCreatedInSystem] DESC, [StatusOrderId] ASC)
     INCLUDE([RowStatus]);
+
+
 
 
 GO
@@ -111,3 +115,14 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl2]
     ON [dbo].[DeliveryOrderDetail]([SystemOrigin] ASC)
     INCLUDE([Guide_Serie],[Guide_Number]);
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrderDetail_GuideNumber_StatusOrderId_spw_get_geliveryorders_track]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Number] ASC, [StatusOrderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreated]
+    ON [dbo].[DeliveryOrderDetail]([StatusOrderId] ASC, [DateCreated] ASC, [RowStatus] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number], [DateCreatedInSystem], [SystemOrigin], [DeliveryAttemptId], [UserCreated]);
+

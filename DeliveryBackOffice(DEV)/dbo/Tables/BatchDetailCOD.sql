@@ -38,7 +38,7 @@
     [RowStatus]               BIT             CONSTRAINT [DF_BatchDetailCOD_RowStatus] DEFAULT ((1)) NULL,
     [CODCommission]           DECIMAL (18, 2) NULL,
     [CODDiscount]             DECIMAL (18, 2) NULL,
-    [IdCountry]               VARCHAR(2)      NULL,
+    [IdCountry]               VARCHAR (2)     NULL,
     [IdCurrency]              INT             NULL,
     CONSTRAINT [PK_BatchDetailCOD_IdBatchDetailCOD] PRIMARY KEY CLUSTERED ([IdBatchDetailCOD] ASC),
     CONSTRAINT [FK_BatchDetailCOD_BatchCOD] FOREIGN KEY ([BatchCODId]) REFERENCES [dbo].[BatchCOD] ([IdBatchCOD]),
@@ -49,9 +49,11 @@
     CONSTRAINT [FK_BatchDetailCOD_CatTransactionTypeCOD] FOREIGN KEY ([CatTransactionTypeCODId]) REFERENCES [dbo].[CatTransactionTypeCOD] ([IdCatTransactionTypeCOD]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryBank] FOREIGN KEY ([BankId]) REFERENCES [dbo].[DeliveryBank] ([Id_bank]),
     CONSTRAINT [FK_BatchDetailCOD_DeliveryOrder] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_IdCountryBDCOD_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
-    CONSTRAINT [FK_IdCurrencyBDCOD_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
+    CONSTRAINT [FK_IdCountryBDCOD_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    CONSTRAINT [FK_IdCurrencyBDCOD_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
 
 
 
@@ -138,7 +140,7 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para indicar el status del registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica el pais de la transaccion ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IdCountry';
+
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifica la moneda de la transaccion ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'IdCurrency';

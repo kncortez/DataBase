@@ -7,10 +7,12 @@
     [DateCreated]            DATETIME       NULL,
     [TokenUpdate]            NVARCHAR (50)  NULL,
     [DateUpdated]            DATETIME       NULL,
-    [IdCountry]              VARCHAR(2)     NULL, 
+    [IdCountry]              VARCHAR (2)    NULL,
     CONSTRAINT [PK_KindOfVPBusiness] PRIMARY KEY CLUSTERED ([IdKindOfVPBusiness] ASC),
-    CONSTRAINT [FK_KindOfVPBusiness_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [FK_KindOfVPBusiness_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO
@@ -41,11 +43,3 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los tipos de negocio del punto de visita' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'KindOfVPBusiness'
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id de pais(Referencia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'KindOfVPBusiness',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

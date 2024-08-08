@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[VisitPointClient] (
+CREATE TABLE [dbo].[VisitPointClient] (
     [IdVisitPointClient]      INT            IDENTITY (1, 1) NOT NULL,
     [CodeOfReference]         INT            NOT NULL,
     [DescriptionOfClient]     NVARCHAR (100) NULL,
@@ -43,6 +43,8 @@
     CONSTRAINT [fk_VisitTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [UQ_CodeOfReferenceporVisitPointId] UNIQUE NONCLUSTERED ([CodeOfReference] ASC, [VisitPointId] ASC)
 );
+
+
 
 
 
@@ -167,3 +169,11 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que obtiene los valores de puntos de visita de un cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'VisitPointClient'
 GO
+CREATE NONCLUSTERED INDEX [IX_VisitPointClient_CodeOfReference_CustomerID_spw_get_geliveryorders_track]
+    ON [dbo].[VisitPointClient]([CodeOfReference] ASC, [CustomerID] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_optimized_visitpointclient_spw_get_geliveryorders_track]
+    ON [dbo].[VisitPointClient]([VisitPointId] ASC, [CodeOfReference] ASC, [CustomerID] ASC);
+

@@ -148,6 +148,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -403,8 +405,9 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
 		INCLUDE([Sender_Mail],[Sender_ID],[DCBA_ID],[IdCustomer]);
 GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
-    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC)
-    INCLUDE ([Sender_ID],[StatusOrderId]);
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC) WHERE ([IsLastMileReturn]=(0));
+
+
 GO
 
 CREATE NONCLUSTERED INDEX [DeliveryOrderAttemptData_GetQualityControlData]
@@ -968,3 +971,38 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = N'COLUMN',
     @level2name = N'Contact_Confirmed'
 GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GuideSerie_GuideNumber_StatusOrderId_spw_get_geliveryorders_track]
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_DateCreated_StatusOrderId_spw_get_geliveryorders_track]
+    ON [dbo].[DeliveryOrder]([DateCreated] ASC, [StatusOrderId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_DateCreated_StatusOrderId_IdCustomer_Sender_ID_spw_get_geliveryorders_track]
+    ON [dbo].[DeliveryOrder]([DateCreated] ASC, [StatusOrderId] ASC, [IdCustomer] ASC, [Sender_ID] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_optimized_deliveryorder_spw_get_geliveryorders_track]
+    ON [dbo].[DeliveryOrder]([DateCreated] ASC, [StatusOrderId] ASC, [Sender_ID] ASC, [IdCustomer] ASC, [Guide_Serie] ASC, [Guide_Number] ASC)
+    INCLUDE([Receiver_FirstName], [Receiver_LastName], [NameOfReceiver], [Shipping_Date], [Manifest_Serie], [Manifest_Number], [Ticket_Number], [Receiver_Address], [Receiver_Alternant_SocialSecurity_ID], [Receiver_CUI]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturnSender_IDStatusOrderId]
+    ON [dbo].[DeliveryOrder]([IsLastMileReturn] ASC)
+    INCLUDE([Sender_ID], [StatusOrderId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC)
+    INCLUDE([Sender_FirstName], [Sender_LastName], [Sender_Phone], [Receiver_Phone], [Receiver_Address], [PriceShippment], [Collect_OnDelivery], [StatusOrderId]);
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si una guia es internacional o nacional', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'GuideType';
+

@@ -167,7 +167,6 @@
     <Build Include="dbo\Tables\VisitPointConfiguration.sql" />
     <Build Include="dbo\Tables\VisitPointClient_Parser.sql" />
     <Build Include="dbo\Tables\VisitPointClientByHubLogistics.sql" />
-    <Build Include="dbo\Tables\VisitPointClient20230217.sql" />
     <Build Include="dbo\Tables\VisitPointClient.sql" />
     <Build Include="dbo\Tables\VisitPointByUser.sql" />
     <Build Include="dbo\Tables\VisitPointByClientPortfolio.sql" />
@@ -599,8 +598,6 @@
     <Build Include="dbo\Stored Procedures\spws_set_UpdatePassword.sql" />
     <Build Include="dbo\Stored Procedures\spws_set_ConfirmAccount.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_original.sql" />
-    <Build Include="dbo\Stored Procedures\spws_revalue_guide_bnhl.sql" />
-    <Build Include="dbo\Stored Procedures\spws_revalue_guide_bk.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_JARP.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\spws_revalue_guide.sql" />
@@ -616,7 +613,6 @@
     <Build Include="dbo\Stored Procedures\spws_get_services_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_services.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny_by_hub_cras.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny_by_hub_JARP.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny_by_hub.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_service_source_destiny.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_rate_estimate_select.sql" />
@@ -640,11 +636,6 @@
     <Build Include="dbo\Stored Procedures\spws_get_guide_pending_payment_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_guide_pending_payment_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_guide_pending_payment.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_bk.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_TMP.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_JARP.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_CRAS.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_delivery_rate.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_data_manifest_pickup.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_daily_route_new.sql" />
@@ -739,9 +730,7 @@
     <Build Include="dbo\Stored Procedures\sps_get_return_by_service.sql" />
     <Build Include="dbo\Stored Procedures\sps_get_payment_amount.sql" />
     <Build Include="dbo\Stored Procedures\sps_get_linehauls_by_service.sql" />
-    <Build Include="dbo\Stored Procedures\sps_getReprintMultipleGuides_JARP.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintMultipleGuides.sql" />
-    <Build Include="dbo\Stored Procedures\sps_getReprintGuie_JARP.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie.sql" />
     <Build Include="dbo\Stored Procedures\sps_edit_guide.sql" />
@@ -870,7 +859,6 @@
     <Build Include="dbo\Stored Procedures\spget_all_express_center.sql" />
     <Build Include="dbo\Stored Procedures\spg_visitpoint.sql" />
     <Build Include="dbo\Stored Procedures\spg_update_CatVehicle.sql" />
-    <Build Include="dbo\Stored Procedures\spg_status_order_detail_web_antes.sql" />
     <Build Include="dbo\Stored Procedures\spg_status_order_detail_web_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\spg_status_order_detail_web.sql" />
     <Build Include="dbo\Stored Procedures\spg_status_order_detail_wbs.sql" />
@@ -932,9 +920,7 @@
     <Build Include="dbo\Stored Procedures\spg_manifest_for_dispatch_routeinfo.sql" />
     <Build Include="dbo\Stored Procedures\spg_manifest_for_dispatch_return.sql" />
     <Build Include="dbo\Stored Procedures\spg_manifest_for_dispatch.sql" />
-    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAP_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAP_BK_20210726.sql" />
-    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPPaymentRecoveryV2.sql" />
     <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPPaymentRecovery.sql" />
     <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAP.sql" />
     <Build Include="dbo\Stored Procedures\spg_lost_unified_route_guides.sql" />
@@ -1238,7 +1224,6 @@
     <Build Include="dbo\Stored Procedures\StateCatalogforServices.sql" />
     <Build Include="dbo\Stored Procedures\Sps_DetailInvoice.sql" />
     <Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket.sql" />
-    <Build Include="dbo\Stored Procedures\SpSaveRegisterPreparationRouteEspecial_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\SpSaveRegisterPreparationRouteEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpHWGetStationForCountry.sql" />
     <Build Include="dbo\Stored Procedures\SpGetDataGuideEspecial.sql" />
@@ -1247,7 +1232,6 @@
     <Build Include="dbo\Stored Procedures\SpCatRouteClusterEspecial.sql" />
     <Build Include="dbo\Stored Procedures\SpCatRoutEspecial.sql" />
     <Build Include="dbo\Stored Procedures\Set_ResponseFelToNoteCredit.sql" />
-    <Build Include="dbo\Stored Procedures\Set_GuidePiecesScan_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\Set_GuidePiecesScan.sql" />
     <Build Include="dbo\Stored Procedures\Set_FinishProcesRecolect.sql" />
     <Build Include="dbo\Stored Procedures\SetWebhookLog.sql" />
@@ -1344,7 +1328,6 @@
     <Build Include="dbo\Stored Procedures\SPHWPRevisarMembresia.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPModificationOfMembershipOrSubscription.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPMembershipsAndSubscriptionsAssociatedWithClient.sql" />
-    <Build Include="dbo\Stored Procedures\SPHWPMembershipOrSubscriptions_TEMP.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPMembershipOrSubscriptions.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPMembershipOrSubscriptionActivation.sql" />
     <Build Include="dbo\Stored Procedures\SPHWPCouponData.sql" />
@@ -1382,7 +1365,6 @@
     <Build Include="dbo\Stored Procedures\SPDHValidateGuideInRourteSpecial.sql" />
     <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspectionDetail.sql" />
     <Build Include="dbo\Stored Procedures\RptManifestofGuidesinInspection.sql" />
-    <Build Include="dbo\Stored Procedures\RptLastMileRoutes_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReport.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutes.sql" />
     <Build Include="dbo\Stored Procedures\RptGuidesWithoutLiquidationinShoppingCartHeader.sql" />
@@ -1468,7 +1450,6 @@
     <Build Include="dbo\Stored Procedures\GetReturnsCODSettlement.sql" />
     <Build Include="dbo\Stored Procedures\GetRecolectPriceGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetReasons.sql" />
-    <Build Include="dbo\Stored Procedures\GetQualityControlData_mejorado.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData_bnhl.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Stored Procedures\GetProductsByCategory.sql" />
@@ -1489,7 +1470,6 @@
     <Build Include="dbo\Stored Procedures\GetManifestFromGuidesGroup.sql" />
     <Build Include="dbo\Stored Procedures\GetManifestByRouteLinehauls.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceProcessedToUpdate.sql" />
-    <Build Include="dbo\Stored Procedures\GetInvoicePaymentCommissionCOD_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoicePaymentCommissionCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionQueue.sql" />
     <Build Include="dbo\Stored Procedures\GetInternalLoginMarketPlace.sql" />
@@ -1503,7 +1483,6 @@
     <Build Include="dbo\Stored Procedures\GetHubs.sql" />
     <Build Include="dbo\Stored Procedures\GetHubOfStation.sql" />
     <Build Include="dbo\Stored Procedures\GetHistoricalSAPInvoiceValidation.sql" />
-    <Build Include="dbo\Stored Procedures\GetHistoricGuides_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetHistoricGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetGuidesToPayCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetGuidesFromCorporateVisitPoint.sql" />
@@ -1532,10 +1511,8 @@
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog.sql" />
     <Build Include="dbo\Stored Procedures\GetDetailedTrackingDataOfGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetDestinationLinehauls.sql" />
-    <Build Include="dbo\Stored Procedures\GetDepositReportCOD_TEST.sql" />
     <Build Include="dbo\Stored Procedures\GetDepositReportCOD_Generic_EXP.sql" />
     <Build Include="dbo\Stored Procedures\GetDepositReportCOD_Generic.sql" />
-    <Build Include="dbo\Stored Procedures\GetDepositReportCOD_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\GetDepositReportCOD.sql" />
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderSettlementDataUnderRoutePrepration_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\GetDeliveryOrderSettlementDataUnderRoutePrepration.sql" />
@@ -1544,12 +1521,10 @@
     <Build Include="dbo\Stored Procedures\GetDataToReviewLocation.sql" />
     <Build Include="dbo\Stored Procedures\GetDataForClosureVisitPoint.sql" />
     <Build Include="dbo\Stored Procedures\GetDataForClosure.sql" />
-    <Build Include="dbo\Stored Procedures\GetDailyCodPayment_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\GetDailyCodPayment.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomers.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerPaymentDataMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerPaymentData.sql" />
-    <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuidesReport.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetCustomerGuideListByStatus.sql" />
@@ -1576,7 +1551,6 @@
     <Build Include="dbo\Stored Procedures\GetCODUnifiedRouteSettlement.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingInformation.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_JARP.sql" />
-    <Build Include="dbo\Stored Procedures\GetBillingGuideDetail_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingGuideDetail.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingDataUpload.sql" />
     <Build Include="dbo\Stored Procedures\GetBillingData.sql" />
@@ -1609,7 +1583,6 @@
     <Build Include="dbo\Stored Procedures\CouriermanByHub.sql" />
     <Build Include="dbo\Stored Procedures\CompleteGuideGenerationExpressCenter.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher.sql" />
-    <Build Include="dbo\Stored Procedures\AssignPieceToRoutePreparation_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\AssignPieceToRoutePreparation.sql" />
     <Build Include="dbo\Stored Procedures\AltaBajaRRHH.sql" />
     <Build Include="dbo\Stored Procedures\AdvancedGetCustomers.sql" />
@@ -1622,7 +1595,6 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetLoadingElementsandSubelements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_LoginMarketPlace.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreatNewDesktopUserMPV2.sql" />
-    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1700,13 +1672,7 @@
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
-    <Build Include="dbo\Tables\TEMP_Rate_TST.sql" />
-    <Build Include="dbo\Tables\customer_68324.sql" />
     <Build Include="dbo\Stored Procedures\supportSetVisitPointByClientPortfolio.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_list_provinces_by_header_code_v2.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_wo.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_daily_route_old.sql" />
-    <Build Include="dbo\Stored Procedures\sps_set_status_order_by_guide_linehauls_bnhl.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData_old.sql" />
     <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
@@ -1715,15 +1681,9 @@
     <Build Include="dbo\Tables\InvoiceBatchHeader.sql" />
     <Build Include="dbo\Tables\InvoiceBatchDetail.sql" />
     <Build Include="dbo\Stored Procedures\supportCreateNewExcV2.sql" />
-    <Build Include="dbo\Stored Procedures\SpWsGetDataFromServiceTicket_wo.sql" />
     <Build Include="dbo\Stored Procedures\spws_SetHwNewCorporateUserV2.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_ValidEmailUser.sql" />
     <Build Include="dbo\Stored Procedures\spws_get_MailSoport.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_guide_pending_payment_temp.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_DR2.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_delivery_rate_DR.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_ConfigParams_wo.sql" />
-    <Build Include="dbo\Stored Procedures\spws_get_address_CRAS.sql" />
     <Build Include="dbo\Stored Procedures\sps_Validate_Currency_2.sql" />
     <Build Include="dbo\Stored Procedures\sps_Validate_Country_2.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetCatCountry.sql" />
@@ -1731,7 +1691,6 @@
     <Build Include="dbo\Stored Procedures\sphdGetStatusBarData.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetMessageFromLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHD_ValidateGuideStatus_bepo.sql" />
-    <Build Include="dbo\Stored Procedures\SPHD_Courier_Dispatched_Status_PickUpv2.sql" />
     <Build Include="dbo\Stored Procedures\spGetTypeVehicleMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetInsuranceTypeCustomerMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetHeaderInvoice.sql" />
@@ -1739,7 +1698,6 @@
     <Build Include="dbo\Stored Procedures\spGetDeliveryOptionsMC.sql" />
     <Build Include="dbo\Stored Procedures\spGetCorporateCustomersMC.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
-    <Build Include="dbo\Stored Procedures\spg_courier_dispatched_statusv2.sql" />
     <Build Include="dbo\Stored Procedures\SP_MarketPlace_SocialNetworks.sql" />
     <Build Include="dbo\Stored Procedures\sp_get_customerCountry_Parser.sql" />
     <Build Include="dbo\Stored Procedures\SetInvoiceHelperExecutionBatch.sql" />
@@ -1748,12 +1706,13 @@
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionBatch.sql" />
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new_2.sql" />
     <Build Include="dbo\Stored Procedures\GetDataInvoiceByCountry.sql" />
-    <Build Include="dbo\Stored Procedures\GetDailyCodPaymentv2.sql" />
-    <Build Include="dbo\Stored Procedures\GetCustomerGuideListByStatus_ATC.sql" />
     <Build Include="dbo\Stored Procedures\GetCourierInfoWithoutTokenLog_2.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchInvoiceByCountry.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchInvoice.sql" />
     <Build Include="dbo\Stored Procedures\get_DiscountAndCollectAmounts.sql" />
+    <Build Include="dbo\Functions\CantidadEnLetras.sql" />
+    <Build Include="dbo\Functions\CantidadEnLetra.sql" />
+    <Build Include="dbo\Functions\CantidadConLetra.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

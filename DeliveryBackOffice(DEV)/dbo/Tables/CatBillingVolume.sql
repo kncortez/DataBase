@@ -13,6 +13,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha y hora de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingVolume', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
@@ -38,20 +40,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificad
 
 
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Codigo de quien modifico el registro',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatBillingVolume',
-    @level2type = N'COLUMN',
-    @level2name = N'TokenUpdated'
+
 GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Fecha de modificacion',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatBillingVolume',
-    @level2type = N'COLUMN',
-    @level2name = N'DateUpdated'

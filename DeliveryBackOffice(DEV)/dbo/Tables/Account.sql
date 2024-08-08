@@ -23,6 +23,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IDX_IdCustomer]
     ON [dbo].[Account]([IdCustomer] ASC);
@@ -78,4 +80,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de cr
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador si la cuena esta confirmada (C) o no (P).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Account', @level2type = N'COLUMN', @level2name = N'AccConfirm';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Account_IdCustomer_AccRowStatus_AccDateCreated_spw_get_geliveryorders_track]
+    ON [dbo].[Account]([IdCustomer] ASC, [AccRowStatus] ASC, [AccDateCreated] ASC);
 

@@ -13,12 +13,18 @@
 );
 
 
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la tabla país', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCountry', @level2type = N'COLUMN', @level2name = N'IdCountry';
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Código ISO 3166 Alpha3Code', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCountry', @level2type = N'COLUMN', @level2name = N'CountryAlpha3Code';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ISO Code 3166 Alpha2Code', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCountry', @level2type = N'COLUMN', @level2name = N'IdCountry';
+
+
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'ISO Code 3166 Alpha3Code', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCountry', @level2type = N'COLUMN', @level2name = N'CountryAlpha3Code';
+
+
 
 
 GO
