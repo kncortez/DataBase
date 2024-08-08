@@ -1,10 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-05-21>
 -- Description:	<Devuleve el monto a cobrar >
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment]
+CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_temp]
     @InGuides VARCHAR(MAX),
     @InTime INT,
     @IsReturn BIT,

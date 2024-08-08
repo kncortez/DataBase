@@ -43,7 +43,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate_wo]
   , @ParcelCode AS NVARCHAR(MAX) = '0'
   , @Zone AS INT = 0
   , @AddressParse AS NVARCHAR(600) = ''
-  --, @IdSettlementSource AS INT = 0  --NO ES UTILIZADO
+  , @IdSettlementSource AS INT = 0  --NO ES UTILIZADO
   , @IdSettlementDestiny AS INT = 0
   , @CodeOfReferenceSource AS INT = 0
   , @CodeOfReferenceDestiny AS INT = 0
@@ -2753,6 +2753,7 @@ BEGIN
              , @FechaCompra                                                                  [FechaCompra]
              , @Currency                                                                     [Currency]
              , tr.ReturnRate                                                                 [ReturnRate]
+			 , @CurrencyId [CurrencyId]
         FROM @TempRate tr;
     END;
 

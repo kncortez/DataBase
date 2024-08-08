@@ -17,9 +17,15 @@
 -- Create date: <2022-12-26>
 -- Description:	<Validar si se requiere uso de memrbesia y subscripción4>
 -- =============================================
+-- =============================================
 -- Author:		<Cristian Suazo>
 -- Create date: <2024-06-17>
 -- Description:	<Devuelve el valor de la moneda segun tarifario configurado por el cliente>
+-- =============================================
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-06-21>
+-- Description:	<Se agrega configuracion para multipais y multimoneda en EXC>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
     @CodApp AS NVARCHAR(50) = ''
@@ -51,9 +57,6 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @FetchActivePRoduct BIT=1
 AS
 BEGIN
-
-
-
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
@@ -136,6 +139,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
     DECLARE @NewAlternativeRates INT =
             (
@@ -143,6 +147,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
     DECLARE @NewAutoSalesMainRates INT =
             (
@@ -150,6 +155,7 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
 
    DECLARE @NewRateGeneral INT = (
@@ -157,12 +163,14 @@ BEGIN
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
    DECLARE @NewRateGeneralDiscount INT = (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero destinos exc' COLLATE Latin1_General_CI_AI
+                AND CountryId = @Country
             );
 			
     --DECLARE @TarifaPlanBasico INT =
@@ -250,15 +258,15 @@ BEGIN
         SELECT @IdRate         = rc.RbcIdRate
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
 			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @IdCustomer 
               AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
@@ -268,15 +276,15 @@ BEGIN
         SELECT @IdRate         = rc.RbcIdRate
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
 			 , @CurrencyId = ISNULL(rh.IdCurrency,@DefaultCurrency)
         FROM dbo.RatebyCustomer            rc WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rc.RbcIdCustomer = @IdCustomer
               AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference IS NULL;
@@ -287,14 +295,14 @@ BEGIN
         SELECT @IdRate         = rh.RheId
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
         FROM dbo.RateBySalePipeLine        sp WITH (NOLOCK)
             LEFT JOIN dbo.RateHeader       rh WITH (NOLOCK)
                 ON rh.RheId = sp.RateId
                    AND rh.RheRowStatus = 'true'
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE sp.RowStatus = 'true'
               AND sp.SalePipeLineId = @IdSalePipeLine;
 
@@ -305,11 +313,11 @@ BEGIN
         SELECT @IdRate         = rh.RheId
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
-             , @Currency       = dc.Currency_Symbol
+             , @Currency       = dc.Symbol
              , @PiecesIncluded = rh.PiecesIncluded
         FROM dbo.RateHeader                rh WITH (NOLOCK)
-            LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
-                ON dc.Currency_Id = rh.CurrencyId
+            LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rh.RheRowStatus = 'true'
               AND rh.RheDefault = 'true';
     END;
