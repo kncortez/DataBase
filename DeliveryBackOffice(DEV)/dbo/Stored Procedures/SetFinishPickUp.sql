@@ -573,12 +573,7 @@ BEGIN
                 -----------------------------------------------------Actualiza los datos obtenidos anteriormente para la tabla SchedulePickup-----------------------------------------------------------
 
                 UPDATE dbo.SchedulePickup
-                SET SenderId = @SenderId,
-                    SenderName = @SenderName,
-                    SenderPhone = @Sender_Phone,
-                    IdHubLogistics = @IdHublogistic,
-                    AddressPickup = @Sender_Address,
-                    AmountPickup = @AmountPickup
+                SET AmountPickup = @AmountPickup
                 WHERE SchedulePickupId = @IdPickup;
 
                 ---------------------------------------------------------Agrupa el lote de guias a una sola transaccion ------------------------------------------------------------------------------

@@ -646,7 +646,7 @@ BEGIN
 					Guide_Serie,
 					Guide_Number,
 					ID_Courier
-		)                                                                DAT	
+		)                                                               DAT	
 		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
