@@ -5,7 +5,10 @@
 -- Create date: <2022-04-18>
 -- Description:	<Obtiene guias asociadas a un Manifiesto corporativos previamente generados en Hermes Web>
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-07-26>
+-- Description: <Se agrega la descripcion de moneda para el detalle de manifiesto en portal corporativo>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCorporateManifestReadMode]
   @ManifestSerie VARCHAR(MAX),-- Serie de manifiesto
   @ManifestNumber BIGINT,-- Numero de manifiesto
@@ -28,15 +31,19 @@ SET @result = (SELECT STUFF(
 						'"Receiver":"'+CONCAT (do.Receiver_FirstName,' ', do.Receiver_LastName)+'",'+
 						'"ServicePrice":'+CAST(ISNULL(do.PriceShippment,0) AS NVARCHAR)+','+
 						'"COD":'+CAST(ISNULL(do.Collect_OnDelivery,0) AS NVARCHAR)+','+
+                        '"CurrencyPrice":'+ '"' + ISNULL(cCurr.CodeISO,'GTQ.') + '."'+ ',' +
+                        '"CurrencyCOD":'+ '"' + ISNULL(cCurr.CodeISO,'GTQ.') + '."'+','+
 						'"TotalPieces":'+CAST(ISNULL(do.Pieces_Dry, 0)+ISNULL(do.Pieces_Cold, 0) AS NVARCHAR)+','+
 						'"PiecesCold":'+CAST(ISNULL(do.Pieces_Cold,0) AS NVARCHAR)+','+
 						'"PiecesDry":'+CAST(ISNULL(do.Pieces_Dry,0) AS NVARCHAR)+','+
 						'"StatusDescription":"'+so.OrderDescription+'",'+
 						'"StatusOrderId":'+CAST(do.StatusOrderId AS NVARCHAR)+'}'
 						FROM DeliveryBackOffice.dbo.CorporateManifest cm WITH (NOLOCK)
-						JOIN DeliveryBackOffice.dbo.CorporateManifestDetail cmd WITH (NOLOCK) ON cmd.ManifestId = cm.IdManifest AND cmd.RowStatus=1
-						JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = cmd.GuideSerie AND do.Guide_Number = cmd.GuideNumber
-						JOIN DeliveryBackOffice.dbo.StatusOrder so ON so.StatusOrderId =  do.StatusOrderId
+						INNER JOIN DeliveryBackOffice.dbo.CorporateManifestDetail cmd WITH (NOLOCK) ON cmd.ManifestId = cm.IdManifest AND cmd.RowStatus=1
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = cmd.GuideSerie AND do.Guide_Number = cmd.GuideNumber
+						INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK) ON so.StatusOrderId =  do.StatusOrderId
+                        LEFT JOIN Cost cs WITH (NOLOCK) ON cs.GuideSerie = do.Guide_Serie AND cs.GuideNumber = Guide_Number
+                        LEFT JOIN CatCurrencyCOD cCurr WITH (NOLOCK) ON cs.ShippingCurrency = cCurr.IdCatCurrencyCOD
 						WHERE cm.ManifestSerie = @ManifestSerie AND cm.IdManifest = @ManifestNumber
 
                   FOR XML PATH(''), TYPE
