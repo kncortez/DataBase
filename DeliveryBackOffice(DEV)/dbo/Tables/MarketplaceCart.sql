@@ -7,6 +7,7 @@ CREATE TABLE [dbo].[MarketplaceCart](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
+	[IdCountry]  [NVARCHAR](3) NULL,
 	CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
 	CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
 )

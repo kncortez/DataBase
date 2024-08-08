@@ -11,7 +11,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetClientDataByEmail]
 	@UserId BIGINT, -- Register User, puede usarse para validar el rol que consulta la información
-	@ClientUserEmail NVARCHAR(100) 
+	@ClientUserEmail NVARCHAR(100),
 	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
