@@ -1676,7 +1676,6 @@
     <Build Include="dbo\Stored Procedures\spGetDetailInvoice.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewInternalUserWeb.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionBatch.sql" />
-    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
     <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
   </ItemGroup>
