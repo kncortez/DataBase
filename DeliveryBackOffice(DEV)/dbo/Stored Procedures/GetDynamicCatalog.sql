@@ -352,7 +352,7 @@ BEGIN
                                        + ISNULL(Name, 'N/A') + '",' + '"Description":"' + ISNULL(Description, 'N/A')
                                        + '"' + '}'
                                 FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH(NOLOCK)
-                                WHERE RowStatus = 1
+                                WHERE RowStatus = 1 AND IdCountry = 'GT'
                                 FOR XML PATH(''), TYPE
                             ).value('.', 'varchar(max)'),
                             1,

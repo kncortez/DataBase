@@ -1,16 +1,37 @@
-﻿/*
+﻿
+/*
 EXEC GetClosureList
 @VisitPointId = -1
 ,@StartDate = '20210627'
 ,@EndDate = '20210627'
 */
-CREATE PROCEDURE [dbo].[GetClosureList]
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-05>
+-- Description:	<Se agrega la moneda correspondiente al express center>
+-- =============================================
+
+CREATE PROCEDURE [dbo].[GetClosureList] 
     @VisitPointId INT,
     @StartDate DATETIME,
     @EndDate DATETIME
 AS
 BEGIN
+	DECLARE @IdCountry NVARCHAR(2),
+		    @Account NVARCHAR(30),
+			@AccountCOD NVARCHAR(30);
 
+	SELECT @IdCountry = CountryId 
+	FROM VisitPointClient 
+	WHERE CodeOfReference = @VisitPointId
+
+	SELECT @Account = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+	
+	SELECT @AccountCOD = Name +' '+ '('+ AccountNumber +')' 
+	FROM dbo.ClosureAccount 
+	WHERE Description = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
     SELECT ACH.IdAccountingClosuresHeader 'ClosureId',
            ACH.VisitPoint 'VisitPointId',
            VPC.DescriptionOfClient 'VisitPoinDescription',
@@ -31,7 +52,8 @@ BEGIN
            ACH.TotalAmountFacturaCash,
            ACH.TotalAmountFacturaCashDeclared,
            ACH.TotalAmountFacturaCard,
-           ACH.TotalAmountFacturaCardDeclared
+           ACH.TotalAmountFacturaCardDeclared,
+		   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
         JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
@@ -46,7 +68,9 @@ BEGIN
               OR @VisitPointId = -1
           );
 
-    SELECT Value 'URL'
+    SELECT @Account AS AccounExp,
+		   @AccountCOD AS AccountCOD,
+		  Value 'URL'
     FROM ConfigParams
     WHERE Name = 'ClosureExpressCenter';
 

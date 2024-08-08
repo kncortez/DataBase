@@ -4,6 +4,14 @@
 -- Create date: <2021-10-19>
 -- Description:	<Guias por pagar COD>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-09>
+-- Description: <Se agrego campo de moneda para mostrar en reporte de depositos>
+-- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-12>
+-- Description: <Se realizo un ajuste para optimizar el tiempo del query para opción 1>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDepositReportCOD]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT = -1,
@@ -73,7 +81,7 @@ BEGIN
 					SELECT 
 							s1.IdCliente
 							,s1.Cliente
-							,s1.Correo
+							,'juan.ramirez@forzadelivery.com' as Correo --s1.Correo
 							,s1.Banco
 							,s1.Cuenta
 							,s1.GuideNumber
@@ -97,12 +105,14 @@ BEGIN
 							,s1.FlagImmediateOrAch
 							,s1.AuthorizationDate
 						   ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
-						   ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
+						   ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago,
+                            CurrencyOrder
 					FROM
 					(
 						SELECT cu.[IdCustomer] IdCliente,
 							   cu.[Name] Cliente,
-							   COALESCE(cu.CODContactEmail, REPLACE(REPLACE(cu.[RegexEmail], '^', ''), '$', '')) Correo,
+							   --COALESCE(cu.CODContactEmail, REPLACE(REPLACE(cu.[RegexEmail], '^', ''), '$', '')) 
+                               'juan.ramirez@forzadelivery.com' as Correo,
 							   btd.BankName Banco,
 							   btd.AccountNumber Cuenta,
 							   CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber,
@@ -147,7 +157,12 @@ BEGIN
 							   btd.[Amount] + btd.[Commission] AS ChargedAmount,
 							   btd.[Amount] AS TotalAmount,
 							   IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
-							   TBDC.[AuthorizationDate]
+							   TBDC.[AuthorizationDate],
+                               CASE
+                                   WHEN ISNULL(do.[SenderCountryId],'GT') = 'GT' THEN 'Q'
+                                   WHEN do.[SenderCountryId] = 'HN' THEN 'L'
+                                   ELSE 'Q'
+                               END AS CurrencyOrder
 						FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
 							LEFT JOIN #TempBatchDetailCOD TBDC
 								ON btd.IdBatchDetailCOD = TBDC.IdBatchDetailCOD
@@ -187,14 +202,13 @@ BEGIN
 					--BETWEEN CAST(@StarDate AS DATE) AND CAST(@EndDate AS DATE)
 					) s1
 					ORDER BY s1.[AuthorizationDate] ASC
-					OPTION (OPTIMIZE FOR UNKNOWN)
 				END
 			 ELSE
 			    BEGIN
 					SELECT 
 							s1.IdCliente
 							,s1.Cliente
-							,s1.Correo
+							,'juan.ramirez@forzadelivery.com' as Correo --s1.Correo
 							,s1.Banco
 							,s1.Cuenta
 							,s1.GuideNumber
@@ -219,11 +233,13 @@ BEGIN
 							,s1.AuthorizationDate
 						   ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
 						   ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
+                           ,CurrencyOrder
 					FROM
 					(
 						SELECT cu.[IdCustomer] IdCliente,
-							   cu.[Name] Cliente,
-							   COALESCE(cu.CODContactEmail, REPLACE(REPLACE(cu.[RegexEmail], '^', ''), '$', '')) Correo,
+							   cu.[Name] Cliente
+							   --COALESCE(cu.CODContactEmail, REPLACE(REPLACE(cu.[RegexEmail], '^', ''), '$', '')) 
+                               ,'juan.ramirez@forzadelivery.com' as Correo,
 							   btd.BankName Banco,
 							   btd.AccountNumber Cuenta,
 							   CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber,
@@ -268,7 +284,12 @@ BEGIN
 							   btd.[Amount] + btd.[Commission] AS ChargedAmount,
 							   btd.[Amount] AS TotalAmount,
 							   IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
-							   TBDC.[AuthorizationDate]
+							   TBDC.[AuthorizationDate],
+                               CASE
+                                   WHEN ISNULL(do.[SenderCountryId],'GT') = 'GT' THEN 'Q'
+                                   WHEN do.[SenderCountryId] = 'HN' THEN 'L'
+                                   ELSE 'Q'
+                               END AS CurrencyOrder
 						FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
 							LEFT JOIN #TempBatchDetailCOD TBDC
 								ON btd.IdBatchDetailCOD = TBDC.IdBatchDetailCOD
@@ -355,7 +376,8 @@ BEGIN
         SELECT 
 				s1.IdCliente
 				,s1.Cliente
-				,s1.Correo
+				--,s1.Correo
+                ,'juan.ramirez@forzadelivery.com' as Correo
 				,s1.Banco
 				,s1.Cuenta
 				,s1.GuideNumber
@@ -384,12 +406,14 @@ BEGIN
 				,s1.FlagImmediateOrAch
 				,s1.AuthorizationDate
                ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaArribo, 103), CONVERT(DATE, s1.FechaEntrega, 103)), 0) AS DiasEntrega
-               ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago
+               ,ISNULL(DATEDIFF(DAY, CONVERT(DATE, s1.FechaEntrega, 103), CONVERT(DATE, s1.FechaPago, 103)), 0) AS DiasPago,
+                CurrencyOrder
         FROM
         (
             SELECT cu.[IdCustomer] IdCliente,
                    do.Sender_FirstName Cliente,
-                   @SenderEmail Correo,
+                   --@SenderEmail Correo,
+                   'juan.ramirez@forzadelivery.com' as Correo,
                    btd.BankName Banco,
                    btd.AccountNumber Cuenta,
                    CONCAT(btd.[GuideSerie], btd.[GuideNumber]) GuideNumber,
@@ -438,7 +462,12 @@ BEGIN
                    btd.[Amount] + btd.[Commission] AS ChargedAmount,
                    btd.[Amount] AS TotalAmount,
                    IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
-                   TBDC.[AuthorizationDate]
+                   TBDC.[AuthorizationDate],
+                   CASE
+                       WHEN ISNULL(do.[SenderCountryId],'GT') = 'GT' THEN 'Q'
+                       WHEN do.[SenderCountryId] = 'HN' THEN 'L'
+                       ELSE 'Q'
+                   END AS CurrencyOrder
             FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
 				LEFT JOIN #TempBatchDetailCOD_opt2 TBDC 
 					ON btd.IdBatchDetailCOD = TBDC.IdBatchDetailCOD

@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Andres, Ruiz>
 -- Create date: <2022-11-03>
 -- Description:	< Obtener guías por rango de fechas de un cliente, vajo distintos filtros>
@@ -369,13 +368,21 @@ BEGIN
 					ELSE ISNULL(CONVERT(VARCHAR, DOPD.TimePlaId), '') 
 				END) 'TimePayment',
 				ISNULL(CPTime.TimePlaName, '') 'TimePaymentDescription',
-				'Q.' 'CurrencySymbol'
+				ISNULL(CCC.Symbol+'.','Q.') 'CurrencySymbol'
 			FROM
 				#AccountFilteredGuides DO WITH(NOLOCK)
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK)
 					ON
 						DO.StatusOrderId = SO.StatusOrderId
+				LEFT JOIN [DeliveryBackOffice].[dbo].[Cost] C WITH(NOLOCK)
+					ON
+						DO.GuideNumber = C.GuideNumber
+						AND
+						DO.GuideSerie = C.GuideSerie
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD] CCC WITH(NOLOCK)
+					ON
+						C.ShippingCurrency = CCC.IdCatCurrencyCOD
 				LEFT JOIN
 					[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH(NOLOCK)
 					ON
