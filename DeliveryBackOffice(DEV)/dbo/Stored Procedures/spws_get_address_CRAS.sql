@@ -1,0 +1,103 @@
+﻿
+-- =============================================
+-- Author:		<César,Aquino>
+-- Create date: <2021-01-08>
+-- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
+-- =============================================
+
+CREATE PROCEDURE [dbo].[spws_get_address_CRAS]
+    -- Add the parameters for the stored procedure here
+    @Token VARCHAR(200)
+  , @IdAccount BIGINT
+  , @IdAddress BIGINT = -1
+AS
+BEGIN
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
+
+    DECLARE @jsonResult NVARCHAR(MAX);
+
+    DECLARE @IdUser BIGINT =
+            (
+                SELECT TOP 1
+                       RuaIdUser
+                FROM dbo.RolByUserByAccount
+                WHERE RuaIdAccount = @IdAccount
+            );
+
+
+
+
+    SELECT CONVERT(VARCHAR, ua.UadIdAccount) AS IdAccount
+         , CONVERT(VARCHAR, ua.UadIdAddress) AS IdAddress
+         , REPLACE(ua.UadFullName, '"', '') AS FullName
+         , REPLACE(ISNULL(ua.UadFullName, ''), '"', '') AS ContactName
+         , REPLACE(ua.UadAddress1, '"', '') AS Address1
+         , REPLACE(ua.UadAddress2, '"', '') AS Address2
+         , REPLACE(ua.UadNirPhone, '"', '') AS NirPhone
+         , ua.UadPhone  AS Phone
+         , REPLACE(ua.UadAdditionalInstructions, '"', '') AS AdditionalInstructions
+         , ua.UadIdCountry AS IdCountry
+         , prv.ProvinceName AS Province
+         , twn.TownshipName AS TownshipName
+         , CONVERT(VARCHAR, ua.UadIdTownship) AS IdTownship
+         , twn.HeaderCode AS HeaderCode
+         , CONVERT(VARCHAR, ua.CodeOfReference) AS CodeOfReference
+         , CONVERT(VARCHAR, ISNULL(ua.IdCityPlace, 31)) AS IdCityPlace
+         , CONVERT(VARCHAR, ctp.CityPlace) AS CityPlace
+         , CONVERT(VARCHAR, prv.IdProvince) AS IdProvince
+         , ISNULL(vp.Latitude, '') AS Latitude
+         , ISNULL(vp.Longitude, '') AS Longitude
+         , ISNULL(CAST(conf.[Zone] AS VARCHAR(2)), '') AS [Zone]
+         , ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood), '') AS Neighborhood
+         , CAST(ISNULL(vp.IsOriginVisitPoint, 1) AS NVARCHAR) AS IsOrigin
+    FROM dbo.RolByUserByAccount        rua WITH (NOLOCK)
+        INNER JOIN dbo.UserAddress     ua WITH (NOLOCK)
+            ON ua.UadIdAccount = rua.RuaIdAccount
+        INNER JOIN dbo.Township        twn WITH (NOLOCK)
+            ON twn.IdTownship = ua.UadIdTownship
+        INNER JOIN dbo.Province        prv WITH (NOLOCK)
+            ON prv.IdProvince = twn.IdProvince
+        INNER JOIN dbo.CatCityPlace    ctp WITH (NOLOCK)
+            ON ua.IdCityPlace = ctp.IdCityPlace
+               AND ctp.CityPlaceRowStatus = 'true'
+        LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+            ON vp.CodeOfReference = ua.CodeOfReference
+        LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+            ON conf.NirPhone = ua.UadNirPhone
+          AND conf.Phone = ua.UadPhone
+          AND conf.TownshipId = vp.IdTownship
+          AND conf.[Address] = vp.[Address]
+    WHERE rua.RuaIdAccount = @IdAccount
+          AND rua.RuaIdUser = @IdUser
+          AND ua.UadRowStatus = 1
+          AND
+          (
+              ua.UadIdAddress = @IdAddress
+              OR @IdAddress = -1
+          );
+
+    ---- retornar resultado en formato json
+    --IF @jsonResult IS NULL
+    --BEGIN
+
+
+    --    SET @jsonResult =
+    --    (
+    --        SELECT STUFF((
+    --                         SELECT '{{"IdResult":500,' + '"Message":" No se econtraron registros"}'
+    --                         FOR XML PATH(''), TYPE
+    --                     ).value('.', 'varchar(max)')
+    --                   , 1
+    --                   , 1
+    --                   , ''
+    --                    )
+    --    );
+    --END;
+
+    --SELECT ('[' + @jsonResult + ']') jsonResult;
+
+
+
+END;

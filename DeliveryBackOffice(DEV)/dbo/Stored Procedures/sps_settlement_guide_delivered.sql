@@ -281,6 +281,11 @@ BEGIN
 					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
 					AND TargetCurrency = @Currencydestination
 					ORDER BY ExchangeDate DESC
+					
+					IF @ResultDestination IS NULL
+					BEGIN
+						RAISERROR ('The exchange rate conversion could not be performed, the value cannot be null', 16, 1);
+					END
 
 				IF @TypeService = 'COD'
 				BEGIN				
@@ -304,6 +309,8 @@ BEGIN
 			END
 			ELSE
 			BEGIN
+				/******EL MONTO NO SUFRE NINGUNA TAZA DE CAMBIO******/
+				SET @ResultDestination = @Amount
 				/**********NO SE DEBE CALCULAR TASA DE CAMBIO PARA GUIAS DOMESTICAS**************/
 				IF @TypeService = 'COD'
 				BEGIN
@@ -322,8 +329,6 @@ BEGIN
 					AND GuideSerie = @GuideSerie
 				END
 			END
-			
-
 
 			-- actualizar guía debido al proceso de liquidación
 			UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]

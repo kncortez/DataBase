@@ -920,7 +920,7 @@ BEGIN
         IF @IdTypeRate =
         (
             SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por Peso'
-			and IdCountry = @CountryId --BNHL
+			--and IdCountry = @CountryId --BNHL
         ) -- insertar por rango de pesos
         BEGIN
 
@@ -1529,7 +1529,7 @@ BEGIN
         IF @IdTypeRate =
         (
             SELECT IdTypeRate FROM CatTypeRate WHERE [Name] = 'Por paquetes'
-			and IdCountry = @CountryId --BNHL
+			--and IdCountry = @CountryId --BNHL
         ) -- insertar por paquetes
         BEGIN
 

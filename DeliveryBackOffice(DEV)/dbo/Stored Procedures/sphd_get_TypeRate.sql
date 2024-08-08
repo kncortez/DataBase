@@ -8,12 +8,16 @@
 -- Create date: <2024-06-04>
 -- Description:	<Se agrega parametro para filtrar por pais>
 -- =============================================
- create PROCEDURE [dbo].[sphd_get_TypeRate]
-  @IdCountry AS NVARCHAR(2)= 'GT'
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-04>
+-- Description:	<Se elimina filtro>
+-- =============================================
+ CREATE PROCEDURE [dbo].[sphd_get_TypeRate]
+ @IdCountry AS NVARCHAR(2)= 'GT'
 AS
 BEGIN
 	select IdTypeRate AS Id, Name as Name
 	from dbo.CatTypeRate
 	where RowStatus = 'true'
-	AND IIF(IdCountry IS NULL, 'GT',IdCountry) = @IdCountry
+	--AND IIF(IdCountry IS NULL, 'GT',IdCountry) = @IdCountry
 END

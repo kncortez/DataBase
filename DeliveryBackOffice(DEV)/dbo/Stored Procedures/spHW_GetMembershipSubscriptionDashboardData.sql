@@ -93,6 +93,7 @@ BEGIN
 					AND [MSL].[SubscriptionId] IS NULL
 					AND [MSL].[RowStatus] = 1
 					/* AND [MSL].[DateCreated] BETWEEN @DateStart AND @DateEnd */ ), 0) [MembershipDeliveriesTotalDiscountGiven],
+				ISNULL([C].[Symbol],'Q') [Currency],
 				[CM].[NextSalesPackageBanner],
 				ISNULL([M].[AvailablePoints], 0) [AvailablePoints],
 				ISNULL([M].[AccumulatedPoints], 0) [AccumulatedPoints],
@@ -108,6 +109,8 @@ BEGIN
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	INNER JOIN	[dbo].[CatSalesPackageStatus] CSPS
 		ON		[M].[CatMembershipStatusId] = [CSPS].[IdCatSalesPackageStatus]
+	LEFT JOIN [dbo].[CatCurrencyCOD] C
+			ON [CM].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
 	WHERE		[M].[AccountId] = @AccountId
 		AND		[M].[RowStatus] = 1
 		AND		[M].[CatMembershipStatusId] IN (@MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID);
@@ -165,11 +168,14 @@ BEGIN
                   )
                 , 0
                  )                                                                          [SubscriptionDeliveriesTotalDiscountGiven]
+		 , ISNULL([C].[Symbol],'Q') [Currency]
          , [CS].[NextSalesPackageBanner]
          , [S].CatTypeSubscriptionId
     FROM [dbo].[Subscription]              S
         INNER JOIN [dbo].[CatSubscription] CS
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
+		LEFT JOIN [dbo].[CatCurrencyCOD] C
+			ON [CS].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE [S].AccountId = @AccountId 
           AND [S].[ExpirationDate] >= GETDATE() --- colocarle  hora 00:00:00
           AND [S].[RowStatus] = 1
@@ -229,11 +235,14 @@ Union all
                   )
                 , 0
                  )                                                                          [SubscriptionDeliveriesTotalDiscountGiven]
+		 , ISNULL([C].[Symbol],'Q') [Currency]
          , [CS].[NextSalesPackageBanner]
          , [S].CatTypeSubscriptionId
     FROM [dbo].[Subscription]              S
         INNER JOIN [dbo].[CatSubscription] CS
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
+		LEFT JOIN [dbo].[CatCurrencyCOD] C
+			ON [CS].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE
 	          [S].AccountId = @AccountId 
           AND [S].[ExpirationDate] >= GETDATE()

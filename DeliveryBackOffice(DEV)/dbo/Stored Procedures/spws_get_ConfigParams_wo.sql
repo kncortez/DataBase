@@ -8,7 +8,7 @@
 -- Create date: <2024-06-25>
 -- Description:	<Cambio de reestructuración de JSON y multipais>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_ConfigParams]
+CREATE PROCEDURE [dbo].[spws_get_ConfigParams_wo]
     @pName AS NVARCHAR(100),
 	@pIdCountry as NVARCHAR(3) = 'GT',
 	@pCurrency as INT = NULL

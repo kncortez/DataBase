@@ -96,7 +96,7 @@ BEGIN
                                FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
+                               --ORDER BY ACC.AccDateCreated DESC
                            ) IS NOT NULL THEN
                                'Portal Web'
                            WHEN cs.IdCustomerType = 2 THEN
@@ -116,6 +116,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
+					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -149,6 +150,11 @@ BEGIN
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
                            AND invHead.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                        ON serv.Guide_Serie = c.GuideSerie
+                           AND serv.Guide_Number = c.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
                 WHERE CONVERT(DATE, serv.DateCreated)
                       BETWEEN @DateIni AND @DateFin
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
@@ -189,7 +195,7 @@ BEGIN
                                FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
+                               --ORDER BY ACC.AccDateCreated DESC
                            ) IS NOT NULL THEN
                                'Portal Web'
                            WHEN cs.IdCustomerType = 2 THEN
@@ -209,6 +215,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
+					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -242,6 +249,11 @@ BEGIN
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
                            AND invHead.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                        ON serv.Guide_Serie = c.GuideSerie
+                           AND serv.Guide_Number = c.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
                 WHERE serv.Guide_Serie = @GuideSerie
                       AND serv.Guide_Number = @GuideNumber
                       AND serv.StatusOrderId <> 7 -- No guías anuladas
@@ -285,7 +297,7 @@ BEGIN
                                FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
+                               --ORDER BY ACC.AccDateCreated DESC
                            ) IS NOT NULL THEN
                                'Portal Web'
                            WHEN cs.IdCustomerType = 2 THEN
@@ -305,6 +317,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
+					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
                        CAST(ISNULL(serv.IsCollect, 0) AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -338,6 +351,11 @@ BEGIN
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
                            AND invHead.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                        ON serv.Guide_Serie = c.GuideSerie
+                           AND serv.Guide_Number = c.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
                 WHERE (
                           (
                               serv.Sender_ID = 0
@@ -390,7 +408,7 @@ BEGIN
                                FROM DeliveryBackOffice.dbo.Account ACC WITH (NOLOCK)
                                WHERE ACC.IdCustomer = cs.IdCustomer
                                      AND ACC.AccRowStatus = 'TRUE'
-                               ORDER BY ACC.AccDateCreated DESC
+                               --ORDER BY ACC.AccDateCreated DESC
                            ) IS NOT NULL THEN
                                'Portal Web'
                            WHEN cs.IdCustomerType = 2 THEN
@@ -410,6 +428,7 @@ BEGIN
                                'Otros'
                        END [SourceGuide],
                        CAST((ISNULL(serv.Pieces_Cold, 0) + ISNULL(serv.Pieces_Dry, 0)) AS VARCHAR(50)) [Pieces],
+					   IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol],
                        CAST(serv.IsCollect AS VARCHAR(50)) [IsCollect],
                        CASE serv.IsCollect
                            WHEN 'true' THEN
@@ -443,6 +462,11 @@ BEGIN
                            AND invHead.inv_status IN ( 2, 3 ) -- Firmado Fel o enviado a SAP
                            AND invHead.inv_certificationFEL IS NOT NULL
                            AND invHead.inv_serieFEL IS NOT NULL
+                    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                        ON serv.Guide_Serie = c.GuideSerie
+                           AND serv.Guide_Number = c.GuideNumber
+                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                        ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
                 WHERE (
                           (
                               serv.Sender_ID = 0

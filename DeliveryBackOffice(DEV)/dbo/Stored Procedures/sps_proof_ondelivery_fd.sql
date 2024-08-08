@@ -1,6 +1,4 @@
 ﻿
-
-
 -- =============================================
 -- Author:		<Aquino, César>
 -- Create date: <2021-03-23>
@@ -37,7 +35,8 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ImageDry VARCHAR(300),
     @ImageCold VARCHAR(300),
     @CODPayment DECIMAL(12, 2) = 0,
-    @ExcludeCODPyament BIT = 'false'
+    @ExcludeCODPyament BIT = 'false',
+	@IdCountry NVARCHAR(8) = 'GT'
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -124,10 +123,10 @@ BEGIN
                                                    ON G.IdGeofence = GP.IdGeofence
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
-                                           WHERE G.RowStatus = 1
+                                           WHERE G.CountryId = @IdCountry -- Geocerca de GT
+												 AND G.RowStatus = 1
 												 AND GP.RowStatus = 1
 												 AND P.RowStatus = 1
-                                                 AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
                                        ).value('.', 'varchar(max)'),
@@ -161,10 +160,12 @@ BEGIN
 
     END TRY
     BEGIN CATCH
+
         PRINT 'ERROR IN GEOLOCATION';
 
         SET @FixedLatitude = NULL;
         SET @FixedLongitude = NULL;
+
     END CATCH;
 
     BEGIN TRANSACTION;
@@ -347,6 +348,7 @@ BEGIN
 									WHERE Guide_Serie = @GuideSerie AND  Guide_Number = @GuideNumber
 								GROUP BY Guide_Number
 								)
+
 								UPDATE ds
 								SET 
 									ds.StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
@@ -358,6 +360,7 @@ BEGIN
 									[LatestID] li 
 								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
 					
+
 				---------------------------------------------------------------------------------------------
 
                 -- registrar estado en tabla de checkpoints
@@ -994,12 +997,12 @@ BEGIN
 				IF 
 					(RTRIM(LTRIM(ISNULL(@VPLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@VPLongitude, ''))) <> '')
 				BEGIN
-					
+					PRINT 'SI TIENE COORDENADAS EL PUNTO DE RECOLECCION'
 					-- Punto de visita con ubicación existente
 					IF 
 						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
 					BEGIN
-						
+						PRINT 'SI CAZO CON EL PAIS'
 						-- Si existe una ubicación para registrar
 						-- Distancia (en metros) entre recolección y el punto de visita
 						-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
@@ -1007,6 +1010,7 @@ BEGIN
 						BEGIN
 							-- Si la distancia es menor a 10 metros
 							-- Guardar última ubicación
+							PRINT 'SI LA DISTANCIA ES MENOR A 10 METROS'
 							UPDATE
 								[DeliveryBackOffice].[dbo].[VisitPointClient]
 							SET
@@ -1032,6 +1036,7 @@ BEGIN
 						END
 						ELSE
 						BEGIN
+							   PRINT 'ES MAYOR A 10 METROS'
 								-- Guardar nueva ubicación de recolección en "bitácora" para revisión
 								UPDATE
 									[DeliveryBackOffice].[dbo].[VisitPointClient]

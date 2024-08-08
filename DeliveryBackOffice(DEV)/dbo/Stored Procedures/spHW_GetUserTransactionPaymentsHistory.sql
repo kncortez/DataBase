@@ -1,9 +1,4 @@
-﻿-- =============================================
--- Author:		<Jerson Ochoa>
--- Create date: <13-01-2023>
--- Description:	<Get user transaction payments list generated in web app>
--- =============================================
-CREATE PROCEDURE [dbo].[spHW_GetUserTransactionPaymentsHistory] 
+﻿CREATE PROCEDURE [dbo].[spHW_GetUserTransactionPaymentsHistory] 
 	@AccountId AS INT,
 	@DateStart AS DATETIME = NULL,
 	@DateEnd AS DATETIME = NULL
@@ -34,8 +29,9 @@ BEGIN
 
 	SELECT		CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) [TrxService],
 				[DO].[PriceShippment] [TrxPrice],
+				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) [TrxDate],
-				[IH].[inv_certificationFEL] [TrxCertificacionFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxCertificacionFEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				ISNULL([MSL].[IdMembershipSubscriptionLog], 0) [TrxIsMembershipSubscription],
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
@@ -57,6 +53,11 @@ BEGIN
 	LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
+	LEFT JOIN   [dbo].[DeliveryCurrency] DC WITH(NOLOCK)
+		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry] OR ([DO].[SenderCountryId] IS NULL AND [DC].[Currency_IdCountry] ='GT'))
+		AND		[DC].[DefaultPerCountry] = 1 
+	LEFT JOIN	[dbo].CatCurrencyCOD CCC WITH(NOLOCK)
+		ON		[DC].[IdCurrencyCOD] = [CCC].[IdCatCurrencyCOD]
 	WHERE [A].[AccIdAccount] = @AccountId
 	AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	ORDER BY	[CCTC].[DateCreated] DESC;
@@ -65,8 +66,9 @@ BEGIN
 
 	SELECT		CONCAT([DO].[Guide_Serie], [DO].[Guide_Number]) [TrxService],
 				[DO].[PriceShippment] [TrxPrice],
+				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) [TrxDate],
-				[IH].[inv_certificationFEL] [TrxCertificacionFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL] END [TrxCertificacionFEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				ISNULL([MSL].[IdMembershipSubscriptionLog], 0) [TrxIsMembershipSubscription],
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
@@ -91,6 +93,11 @@ BEGIN
 	LEFT JOIN	[dbo].[MembershipSubscriptionLog] MSL
 		ON		[DO].[Guide_Serie] = [MSL].[LogGuideSerie]
 		AND		[DO].[Guide_Number] = [MSL].[LogGuideNumber]
+	LEFT JOIN   [dbo].[DeliveryCurrency] DC WITH(NOLOCK)
+		ON		([DO].[SenderCountryId] = [DC].[Currency_IdCountry] OR ([DO].[SenderCountryId] IS NULL AND [DC].[Currency_IdCountry] ='GT'))
+		AND		[DC].[DefaultPerCountry] = 1 
+	LEFT JOIN	[dbo].CatCurrencyCOD CCC WITH(NOLOCK)
+		ON		[DC].[IdCurrencyCOD] = [CCC].[IdCatCurrencyCOD]
 	WHERE  [A].[AccIdAccount] = @AccountId
 	AND		ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) BETWEEN @DateStart AND @DateEnd
 	ORDER BY	[CCTC].[DateCreated] DESC;
@@ -98,6 +105,7 @@ BEGIN
 	-- Membresías
 	SELECT		[M].[IdMembership] [TrxService],
 				[M].[MembershipCost] [TrxPrice],
+				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDate],
 				[IH].[inv_certificationFEL] [TrxCertificacionFEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
@@ -117,6 +125,8 @@ BEGIN
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
 	LEFT JOIN   [dbo].[MembershipPaymentLog] MPL WITH(NOLOCK)
 		ON		[M].[IdMembership] = [MPL].[MembershipId] 
+	LEFT JOIN	[dbo].[CatCurrencyCOD] CCC WITH(NOLOCK)	
+		ON		[CM].[IdCatCurrencyCOD] = [CCC].[IdCatCurrencyCOD] OR ([CM].[IdCatCurrencyCOD] IS NULL AND [CCC].[IdCatCurrencyCOD] = 1)
 	OUTER APPLY(
 				  SELECT Top 1[OrderNumber], [PaymentImageURL]
 				  FROM [dbo].[RegistrationofTransactionProcessStates]
@@ -132,6 +142,7 @@ BEGIN
 	-- Suscripciones
 	SELECT		[S].[IdSubscription] [TrxService],
 				[S].[SubscriptionCost] [TrxPrice],
+				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDate],
 				[IH].[inv_certificationFEL] [TrxCertificacionFEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
@@ -151,6 +162,8 @@ BEGIN
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
 	LEFT JOIN   [dbo].[SubscriptionPaymentLog] SPL WITH(NOLOCK)
 		ON      [S].[IdSubscription] = [SPL].[SubscriptionId]
+	LEFT JOIN	[dbo].[CatCurrencyCOD] CCC WITH(NOLOCK)	
+		ON		[CS].[IdCatCurrencyCOD] = [CCC].[IdCatCurrencyCOD] OR ([CS].[IdCatCurrencyCOD] IS NULL AND [CCC].[IdCatCurrencyCOD] = 1)
 	OUTER APPLY(
 				  SELECT Top 1 [OrderNumber], [PaymentImageURL]
 				  FROM [dbo].[RegistrationofTransactionProcessStates]

@@ -13,6 +13,11 @@
 -- Create date: <2024-06-03>
 -- Description:	<se modifica para que utilice el parametro de pais para filtrar en los catalogos>
 -- =============================================
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<se modifica para obtener datos de la tabla CatCurrencyCOD>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -133,7 +138,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CBA.IdBusinessActivity = @IdCorrelative
                   )
-				  AND IIF(CBA.IdCountry IS NULL, 'GT',CBA.IdCountry) = @IdFilter
             ORDER BY CBA.[BusinessActivityName];
         END;
 
@@ -149,7 +153,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CCS.[IdCommercialSegment] = @IdCorrelative
                   )
-				  AND IIF(CCS.IdCountry IS NULL, 'GT',CCS.IdCountry) = @IdFilter
             ORDER BY CCS.[CommercialSegmentName];
         END;
 
@@ -167,7 +170,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CCP.IdConditionOfPayment = @IdCorrelative
                   )
-				  AND IIF(CCP.IdCountry IS NULL, 'GT',CCP.IdCountry) = @IdFilter;
 
         END;
 
@@ -237,7 +239,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR CTR.IdTypeRate = @IdCorrelative
                   )
-				  AND IIF(CTR.IdCountry IS NULL, 'GT',CTR.IdCountry) = @IdFilter;
         END;
 
         IF (@NameOfCatalog = 'RateCatalog')
@@ -445,7 +446,6 @@ BEGIN
                       @IdCorrelative = -1
                       OR csg.CrsId = @IdCorrelative
                   )
-				  AND IIF(csg.IdCountry IS NULL,'GT',csg.IdCountry) = @IdFilter;
         END;
 
 
@@ -475,7 +475,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR CSC.IdSalesChannel = @IdCorrelative
                   )
-				  AND IIF(CSC.IdCountry IS NULL, 'GT',CSC.IdCountry)= @IdFilter
+				  
             ORDER BY CSC.Description;
         END;
 
@@ -516,7 +516,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-				  AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
+				  --AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
             GROUP BY cbt.CatBatchTypeCODId,
                      cbt.Name
             ORDER BY cbt.Name;
@@ -538,7 +538,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
-				  AND IIF(cbf.IdCountry IS NULL, 'GT',cbf.IdCountry) = @IdFilter
+				  --AND IIF(cbf.IdCountry IS NULL, 'GT',cbf.IdCountry) = @IdFilter
             GROUP BY cbf.CatBatchFrequencyCODId,
                      cbf.Name
             ORDER BY cbf.Name;
@@ -628,7 +628,7 @@ BEGIN
            'BillingTime' [Catalog]
     FROM [dbo].[CatBillingTime] BT with (nolock)
     WHERE BT.RowStatus = 'TRUE'
-	AND IIF(BT.IdCountry IS NULL, 'GT', BT.IdCountry) = @IdFilter
+	--AND IIF(BT.IdCountry IS NULL, 'GT', BT.IdCountry) = @IdFilter
 
 
 
@@ -638,7 +638,7 @@ BEGIN
            'BillingVolume' [Catalog]
     FROM [dbo].[CatBillingVolume] BV with (nolock)
     WHERE BV.RowStatus = 'TRUE'
-	AND IIF(BV.IdCountry IS NULL, 'GT', BV.IdCountry) = @IdFilter
+	--AND IIF(BV.IdCountry IS NULL, 'GT', BV.IdCountry) = @IdFilter
 
 
 END

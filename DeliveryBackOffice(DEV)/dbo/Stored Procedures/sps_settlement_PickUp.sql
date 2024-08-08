@@ -345,7 +345,6 @@ BEGIN
         END;
 
         ----------------------- PROCESSGUIDECOD- SE REGISTRA RECOLECCIÓN . INI ----------------------	
-
         --Buscar ID modulo liquidación Recolecciones
         SET @CatModuleId = ISNULL(
                            (
@@ -354,58 +353,39 @@ BEGIN
                            0
                                  );
 
+        IF OBJECT_ID('tempdb.dbo.#listGuidesNotProcess', 'U') IS NOT NULL
+            DROP TABLE #listGuidesNotProcess;
 
-        IF OBJECT_ID('tempdb.dbo.#listGuidesTemp', 'U') IS NOT NULL
-            DROP TABLE #listGuidesTemp;
-
-        CREATE TABLE #listGuidesTemp
+        CREATE TABLE #listGuidesNotProcess
         (
             ItemSerie NVARCHAR(2),
             ItemNumber INT,
             ItemPiece INT
         );
+
         CREATE NONCLUSTERED INDEX listGuidesTempesserie
-        ON #listGuidesTemp (
+        ON #listGuidesNotProcess (
                                ItemSerie,
                                ItemNumber
                            );
 
-        INSERT INTO #listGuidesTemp
+        INSERT INTO #listGuidesNotProcess
         (
             ItemSerie,
             ItemNumber,
             ItemPiece
         )
-        SELECT *
-        --  INTO #listGuidesTemp
-        FROM #listGuides;
-        -- mientras la tabla no este vacía
-        WHILE EXISTS (SELECT * FROM #listGuidesTemp)
-        BEGIN
-            -- se obtiene la guía a iterar
-            SELECT TOP 1
-                   @GuideNumber = ItemNumber,
-                   @GuideSerie = ItemSerie
-            FROM #listGuidesTemp;
+        SELECT ItemSerie
+			  ,ItemNumber
+			  ,ItemPiece
+        FROM #listGuides
+		WHERE NOT EXISTS (	SELECT	1 
+							FROM	[dbo].[ProcessedGuideCOD] WITH (NOLOCK)
+							WHERE	[GuideNumber] = ItemNumber
+									AND GuideSerie = ItemSerie
+						 );
 
-            -- se obtiene el id del courierman
-            SELECT TOP 1
-                   @CourierId = ID_Courier
-            FROM [dbo].[DeliveryAttempt] WITH (NOLOCK)
-            WHERE [Guide_Serie] = @GuideSerie
-                  AND [Guide_Number] = @GuideNumber
-            ORDER BY [Date_Created] DESC;
-
-            -- se verifica que no exita en las guías procesadas
-            IF NOT EXISTS
-            (
-                SELECT 1
-                FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
-                WHERE [GuideNumber] = @GuideNumber
-                      AND GuideSerie = @GuideSerie
-            )
-            BEGIN
-                INSERT INTO [dbo].[ProcessedGuideCOD]
+		INSERT INTO [dbo].[ProcessedGuideCOD]
                 (
                     [GuideSerie],
                     [GuideNumber],
@@ -420,7 +400,7 @@ BEGIN
                 )
                 SELECT do.[Guide_Serie],
                        do.[Guide_Number],
-                       @CourierId,
+                       cou.CourierId,
                        GETDATE(),
                        NULL,
                        NULL,
@@ -428,24 +408,27 @@ BEGIN
                        0,
                        @Token,
                        cus.IdCustomer
-                FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
+                FROM #listGuidesNotProcess   lgnp
+					INNER JOIN [dbo].[DeliveryOrder] do WITH (NOLOCK)
+						ON  do.Guide_Serie = lgnp.ItemSerie
+						AND do.Guide_Number = lgnp.ItemNumber
                     LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                         ON vp.CodeOfReference = do.Sender_ID
                     LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                         ON cus.IdCustomer = ISNULL(do.IdCustomer, vp.CustomerID)
                     INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
-                        ON do.Guide_Serie = DOP.GuideSerie
-                           AND do.Guide_Number = DOP.GuideNumber
-                WHERE do.[Guide_Number] = @GuideNumber
-                      AND do.[Guide_Serie] = @GuideSerie
-                      AND do.IsCollect = 'false'
-                      AND DOP.TimePlaId = 2;
-            END;
-
-            DELETE #listGuidesTemp
-            WHERE ItemNumber = @GuideNumber
-                  AND ItemSerie = @GuideSerie;
-        END;
+                        ON lgnp.ItemSerie = DOP.GuideSerie
+                        AND lgnp.ItemNumber = DOP.GuideNumber
+					OUTER APPLY
+					(
+						SELECT	TOP 1
+								ID_Courier [CourierId]
+						FROM	[dbo].[DeliveryAttempt] WITH (NOLOCK)
+						WHERE	[Guide_Serie] = lgnp.ItemSerie
+							AND [Guide_Number] = lgnp.ItemNumber
+					) cou
+                WHERE do.IsCollect = 'false'
+                  AND DOP.TimePlaId = 2;
 
     ----------------------- PROCESSGUIDECOD- SE REGISTRA RECOLECCIÓN . FIN ----------------------		
 

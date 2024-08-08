@@ -1,10 +1,15 @@
-
+﻿
 -- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2023-30-11>
 -- Description:	<Description,carga de imagenes e información de un producto>
 -- =============================================
-CREATE PROCEDURE [SPHW_GetImagesandProductInformation]
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <Create Date,2024-07-25>
+-- Description:	<DSe agrega la moneda correspondiente al pais>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHW_GetImagesandProductInformation] 
 @IdCatProduct INT, 
 @ProductName NVARCHAR(300)
 AS
@@ -33,6 +38,7 @@ IF (EXISTS( Select Top 1 1
 			CP.SubscriptionName [CatProductName],
 			CP.SubscriptionDescription   [CatProductDescription],
 			CP.SubscriptionCost  [CatProductCost],
+			CASE WHEN ISNULL(CP.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 			CP.SubscriptionFixedValue [CatProductDiscountValue],
 			CP.[CatProductCategoryId],
 			CP.Tag,
@@ -47,6 +53,7 @@ Select
 			CP.MembershipName [CatProductName],
 			CP.MembershipDescription   [CatProductDescription],
 			CP.MembershipCost  [CatProductCost],
+			CASE WHEN ISNULL(CP.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 			CP.MembershipFixedValue [CatProductDiscountValue],
 			CP.[CatProductCategoryId],
 			CP.Tag,

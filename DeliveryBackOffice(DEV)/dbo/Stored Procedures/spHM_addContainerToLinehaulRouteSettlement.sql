@@ -51,9 +51,9 @@ BEGIN
 										[C].[CatTypeContainerId],
 										[CTC].[TypeContainerSerie],
 										[C].[ContainerNumber],
+										[LRSC].[HubId],
 										[HL].[HubAbbreviation],
 										[HL].[HubName],
-										[LRSC].[HubId],
 										[LRSC].[GuideQuantity],
 										[LRSC].[DryPiecesQuantity], 
 										[LRSC].[ColdPiecesQuantity]
@@ -84,7 +84,7 @@ BEGIN
 											 [DateCreated])
 									VALUES	(@LinehaulRouteSettlementId,
 											 @ContainerId,
-											 (	SELECT	[LRPC].[HubDestinyId]
+											 (	SELECT TOP 1 	[LRPC].[HubDestinyId]
 												FROM	[dbo].[LinehaulRoutePreparationContainer] LRPC
 												WHERE	[LRPC].[LinehaulRoutePreparationId] = @LinehaulRoutePreparationId
 													AND	[LRPC].[ContainerId] = @ContainerId

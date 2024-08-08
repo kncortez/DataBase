@@ -115,7 +115,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
-			 , cst.[IsCOD]
+			 , ISNULL(cst.[IsCOD],0) IsCOD
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -217,7 +217,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
-			 , cst.[IsCOD]
+			 , ISNULL(cst.[IsCOD],0) IsCOD
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
@@ -225,7 +225,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 
     END;
@@ -302,7 +302,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
-              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
