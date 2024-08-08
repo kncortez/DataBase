@@ -5,10 +5,16 @@
 -- Create date: <Create Date,2023->
 -- Description:	<Description,Método para agregar productos marketplace al carrito>
 -- =============================================
+-- =============================================
+-- Author:		<Author,Edelman>
+-- Create date: <Create Date,2024-07-08>
+-- Description:	<Agregar identificador de país a carrito>
+-- =============================================
 CREATE PROCEDURE [dbo].[AddMarketplaceProductstoCart]
     @IdAccount BIGINT,
 	@Token NVARCHAR(50),
-	@TblProductsList [TblSalePackageMarketPlace]  READONLY
+	@TblProductsList [TblSalePackageMarketPlace]  READONLY,
+	@IdCountry NVARCHAR(3)='GT'
 AS
 	
 	DECLARE @MarketplaceCartId INT;
@@ -29,12 +35,14 @@ DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[Mar
 			AccountId,
 			RowStatus,
 			TokenCreated,
-			DateCreated
+			DateCreated,
+			IdCountry
 			)VALUES(
 			 @IdAccount,
 			 1,
 			 @Token,
-			 GETDATE()
+			 GETDATE(),
+			 @IdCountry
 			)
 
 			SET @MarketplaceCartId = SCOPE_IDENTITY();
@@ -50,7 +58,6 @@ DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[Mar
 				TypeProduct
 			)
 			SELECT
-	
 			 @MarketplaceCartId,
 			 TPL.IdSalePackage,
 			 1,
