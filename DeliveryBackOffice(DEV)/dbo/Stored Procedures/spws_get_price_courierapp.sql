@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-01-08>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
@@ -148,8 +147,16 @@ BEGIN
                                 (
                                     SELECT ',{"Amount":"' + CONVERT(VARCHAR, ISNULL(SUM(tbl.AmountToPay), 0)) + '",'
                                            + '"PickupRate":"' + CONVERT(VARCHAR, ISNULL(@PickupRate, 0)) + '",'
+										   + '"CurrencyPrice_CODCodeISO":"' + CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODCodeISO, 0)) + '",'
+                                           + '"CurrencyPrice_CODSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPrice_CODSymbol, 0)) + '",'
+                                           + '"CurrencyPriceCodeISO":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceCodeISO , 0)) + '",'
+                                           + '"CurrencyPriceSymbol":"' +  CONVERT(VARCHAR, ISNULL(tbl.CurrencyPriceSymbol , 0)) + '",'
                                            + '"Collect":"' + 'false' + +'"}'
                                     FROM #BrainProcessedGuides tbl
+									GROUP BY tbl.CurrencyPrice_CODCodeISO,
+										tbl.CurrencyPrice_CODSymbol,
+										tbl.CurrencyPriceCodeISO,
+										tbl.CurrencyPriceSymbol 
                                     FOR XML PATH(''), TYPE
                                 ).value('.', 'varchar(max)'),
                                 1,
@@ -288,3 +295,5 @@ BEGIN
 
 END;
 --select * from dbo.RouteAssigment
+GO
+
