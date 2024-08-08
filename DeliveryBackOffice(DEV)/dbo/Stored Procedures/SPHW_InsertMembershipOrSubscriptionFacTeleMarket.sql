@@ -6,7 +6,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionFacTeleMarket]
  @OrderNumber AS NVARCHAR(25),
- @ImageURL NVARCHAR(600) = NULL
+ @ImageURL NVARCHAR(600) = NULL,
+ @IdCountry NVARCHAR(3)='GT'
 AS
 BEGIN
 
@@ -321,7 +322,7 @@ BEGIN
 
 
 
-	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount ORDER BY DateCreated DESC)
+	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND IdCountry=@IdCountry ORDER BY DateCreated DESC)
 
 		 UPDATE  [dbo].[MarketplaceCartDetail]
 			  SET RowStatus = 0,
