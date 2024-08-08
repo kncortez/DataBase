@@ -1,6 +1,6 @@
 ﻿-- =============================================
 -- Author:		<CRISTIAN SUAZO>
--- Create date: <2024-05-243>
+-- Create date: <2024-05-24>
 -- Description:	<Valida que el pais origen sea el mismo al logueado>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_Validate_Country] 

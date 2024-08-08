@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Edwin,Ramirez>
 -- Create date: <2020-07-23>
 -- Description:	<Obtiene el listado de todos los 
@@ -43,7 +42,6 @@ BEGIN
 		mun.TownshipStatus = 'TRUE'
 		AND depto.ProvinceStatus = 1
 		AND ISNULL(NULLIF(@IdCountry,''), depto.IdCountry) = depto.IdCountry
-		--AND ISNULL(@IdCountry, depto.IdCountry) = depto.IdCountry
 		AND (@IdHeaderCodeTownship = '-1' OR mun.HeaderCode = @IdHeaderCodeTownship)
 		AND (@IdHeaderCode = '-1' OR depto.LocalCode = @IdHeaderCode)
    

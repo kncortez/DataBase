@@ -3,6 +3,8 @@
 -- Create date: <2020-12-30>
 -- Description:	<Login Portal Web>
 -- =============================================
+
+
 CREATE PROCEDURE [dbo].[spws_create_account]
 	-- Add the parameters for the stored procedure here
 	@FirstName NVARCHAR(100),
@@ -39,7 +41,6 @@ BEGIN
 
 	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI AND CountryId= @CountryId);
 	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI AND CountryId = @CountryId);
-
 	DECLARE @IdentificationValue NVARCHAR(200)
 	DECLARE @jsonResult NVARCHAR(MAX) 
 	DECLARE @IdCustomer as INT        --IdCustomer que se inserta en la tabla dbo.Customer
@@ -59,9 +60,9 @@ BEGIN
 					,'Cuenta creada correctamente' AS Message
 					,'Ok' as Id )  as errror
 
-		-- validar que el correo no exite  
+		-- validar que el correo no exite
 
-		if (select count(1) from RegisterUser usr where usr.UsrEmail = @Email) =0  -- no existe usuario, por lo tanto lo crea
+		if (select count(*) from RegisterUser usr where usr.UsrEmail = @Email) =0  -- no existe usuario, por lo tanto lo crea
 			begin
 				IF @TypeAccount = 'IND' 
 				BEGIN
@@ -92,7 +93,7 @@ BEGIN
 					declare @ExpirationDate as date = (SELECT DATEADD(DAY,90,GETDATE()));
 
 				-- insertar registro en tabla RegisterUser 
-					select top 1  * from dbo.RegisterUser 
+					
 					Insert into  DeliveryBackOffice.dbo.RegisterUser  
 						(UsrIdPerson
 						,UsrNickName
@@ -111,7 +112,7 @@ BEGIN
 						,PrefixCallingCode 
 						,Phone
 						)
-					Values(@IdPerson, @NickName,@Email,null,@Password,@ExpirationDate,@Language,@DeviceType,@Currency,null,null, 1,'SYS-ADMIN',GETDATE(),@PrefixCallingCode ,@PhoneNumber)
+					Values(@IdPerson, @NickName,@Email,null,@Password,@ExpirationDate,@Language,@DeviceType,@Currency,null,null, 1,'SYS-ADMIN',GETDATE(),@PrefixCallingCode,@PhoneNumber)
 					DECLARE @IdUser as bigint =  SCOPE_IDENTITY();
 
 
@@ -127,7 +128,6 @@ BEGIN
 						,UstDateCreated
 						,UstOperationDate)
 					values (@IdUser,@IdSystem,10,0,'ACTIVE', 1,'SYS-ADMIN',GETDATE(),GETDATE())
-				
 
 				-- CREAR CUSTOMER					
 					INSERT INTO [dbo].[Customer]

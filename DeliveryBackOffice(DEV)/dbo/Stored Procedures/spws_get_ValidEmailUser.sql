@@ -1,11 +1,9 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Edelman>
 -- Create date: <2024-07-24>
 -- Description:	<Validar si el correo tiene cuenta y esa cuenta pertenece al país de compra>
 -- =============================================
 CREATE PROCEDURE [dbo].[spws_get_ValidEmailUser]
-	-- Add the parameters for the stored procedure here	
 	@Email VARCHAR(100),
 	@CountryId VARCHAR(3) = 'GT'
 

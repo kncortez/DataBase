@@ -15,8 +15,8 @@ BEGIN
 	
 	SELECT TOP 1 
 		@DeliveryOrderBySettlementId = rp.DeliveryOrderBySettlementId,
-		@PiecesDry = rp.PiecesDry,
-		@PiecesCold = rp.PiecesCold
+		@PiecesDry = DO.Pieces_Dry,
+		@PiecesCold = DO.Pieces_Cold
 	FROM RoutePreparation rp WITH(NOLOCK)
 		INNER JOIN RoutePreparationDetail rpd WITH(NOLOCK)
 			ON rp.IdRoutePreparation = rpd.RoutePreparationId
@@ -28,6 +28,8 @@ BEGIN
 		AND DO.Guide_Serie = @GuideSerie
 		AND rp.RowStatus = 1
 		AND rpd.IsCustomerReschedule = 0
+		AND rp.DeliveryOrderBySettlementId is not null
+	ORDER BY IdRoutePreparation ASC
 
 	BEGIN TRANSACTION
 		BEGIN TRY

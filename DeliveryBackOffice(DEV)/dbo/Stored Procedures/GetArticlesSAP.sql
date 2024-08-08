@@ -6,7 +6,8 @@
 -- Description:	<Obtiene información de artículos SAP>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[GetArticlesSAP] 
+CREATE PROCEDURE [dbo].[GetArticlesSAP]
+				@IdCountry NVARCHAR(2) = 'GT'
 -- Add the parameters for the stored procedure here
 
 AS
@@ -34,6 +35,7 @@ BEGIN
 		,IsSurcharge
 	FROM CatArticleSAP
 	WHERE RowSatus = 1
+	AND ISNULL(IdCountry,'GT') = @IdCountry
 	ORDER BY Id ASC
 
 	SET NOCOUNT OFF;

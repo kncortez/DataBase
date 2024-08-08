@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<Edwin,Ramirez>
 -- Create date: <2020-07-23>
 -- Description:	<Devuelve una lista de departamentos asociados a un pais>
@@ -9,7 +8,6 @@
 -- Create date: <2024-07-03>
 -- Description:	<Validación si se muestra la información de varios paises o uno en especifico>
 -- =============================================
-
 CREATE PROCEDURE [dbo].[spws_get_list_provinces]
 	-- Add the parameters for the stored procedure here
 	@IdProvince as int = -1,
@@ -30,7 +28,6 @@ BEGIN
 	LEFT JOIN DenariusDesktop_Dev.dbo.prm_country ct ON depto.IdCountry = ct.CNT_IdCountry
 	WHERE depto.ProvinceStatus = 'TRUE'
 	  AND depto.IdProvince = IIF(@IdProvince != -1, @IdProvince, depto.IdProvince)
-	  AND ISNULL(@IdCountry, depto.idCountry) = depto.idCountry
-	
+	  AND ISNULL(NULLIF(@IdCountry,''), depto.IdCountry) = depto.IdCountry
 
 END

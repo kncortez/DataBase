@@ -1450,7 +1450,6 @@
     <Build Include="dbo\Stored Procedures\GetReturnsCODSettlement.sql" />
     <Build Include="dbo\Stored Procedures\GetRecolectPriceGuides.sql" />
     <Build Include="dbo\Stored Procedures\GetReasons.sql" />
-    <Build Include="dbo\Stored Procedures\GetQualityControlData_bnhl.sql" />
     <Build Include="dbo\Stored Procedures\GetQualityControlData.sql" />
     <Build Include="dbo\Stored Procedures\GetProductsByCategory.sql" />
     <Build Include="dbo\Stored Procedures\GetPieceGuideLinehauls.sql" />

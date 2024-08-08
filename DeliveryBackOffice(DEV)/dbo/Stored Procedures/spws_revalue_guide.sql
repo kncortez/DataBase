@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-04-28>
 -- Description:	<Revaloriza una guia de transporte>
@@ -540,7 +539,7 @@ BEGIN
                                          , @IdCustomerParams = @IdCustomer
                                          , @HeaderCodeDestiny = @HeaderCodeDestiny
                                          , @HeaderCodeSource = @HeaderCodeSource
-                                         , @Country = @ReceiverCountryId --'GT'
+                                         , @Country = @ReceiverCountryId 
                                          , @CountPiecesParams = @PiecesCount
                                          , @IsFragile = 'false'
                                          , @IsCollected = @IsCollect
@@ -1326,12 +1325,6 @@ BEGIN
 			INNER JOIN CatCurrencyCOD C  ON C.IdCatCurrencyCOD = CE.SourceCurrency
 			WHERE CodeISO LIKE ''+ @SenderCountryId +'%'
 			ORDER BY CE.ExchangeDate DESC
-
-			--SELECT @ExchangeSender= ExchangeRate FROM CurrencyExchangeRates
-			--WHERE IdCountry = @SenderCountryId
-			--AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
-			--AND SourceCurrency = @CurrencyId
-			--ORDER BY ExchangeDate DESC
 			
             PRINT 'registro no existe , hay que crearlo';
 			IF @ServiceShortName = 'COD'
