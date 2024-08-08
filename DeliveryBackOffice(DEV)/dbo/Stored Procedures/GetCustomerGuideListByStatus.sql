@@ -6,9 +6,6 @@
 -- Description:	Este procedimiento almacenado, GetCustomerGuideListByStatus, se utiliza para obtener una lista de guías para un cliente, estado y rango de fechas en especifico.
 -- =============================================
 
-DROP PROCEDURE IF EXISTS [dbo].[GetCustomerGuideListByStatus]
-GO
-
 CREATE PROCEDURE [dbo].[GetCustomerGuideListByStatus]
 @IdCustomer INT,
 @ListStatus AS VARCHAR(500),
