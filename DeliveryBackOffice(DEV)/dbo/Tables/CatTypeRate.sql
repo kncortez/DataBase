@@ -39,12 +39,3 @@ EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de actual
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los diferentes tipos de tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatTypeRate'
-GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id del pais(Referencia a idCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatTypeRate',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

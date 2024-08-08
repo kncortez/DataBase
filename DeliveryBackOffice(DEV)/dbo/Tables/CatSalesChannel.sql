@@ -43,13 +43,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de ac
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro válido?', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSalesChannel', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
-
-GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'id de pais (Referencia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatSalesChannel',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

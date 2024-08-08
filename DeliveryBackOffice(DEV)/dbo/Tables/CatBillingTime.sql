@@ -39,13 +39,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripció
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de catalogo de tiempo de facturación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingTime', @level2type = N'COLUMN', @level2name = N'IdCatBillingTime';
 
-
-GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Id de pais (Referencia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatBillingTime',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'

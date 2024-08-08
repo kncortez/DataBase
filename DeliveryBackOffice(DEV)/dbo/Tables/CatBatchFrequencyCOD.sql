@@ -38,14 +38,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es el token
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Es la fecha en que se actualizó el registro', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBatchFrequencyCOD', @level2type = N'COLUMN', @level2name = N'DateUpdated';
-
-
-GO
-EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'id de pais (Referencia a IdCountry de la tabla CatCountry)',
-    @level0type = N'SCHEMA',
-    @level0name = N'dbo',
-    @level1type = N'TABLE',
-    @level1name = N'CatBatchFrequencyCOD',
-    @level2type = N'COLUMN',
-    @level2name = N'IdCountry'
