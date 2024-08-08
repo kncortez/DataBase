@@ -1,17 +1,21 @@
-
-CREATE TABLE [dbo].[CatProductCategory](
-	[IdCatProductCategory] [int] IDENTITY(1,1) NOT NULL,
-	[CatProductCategoryName] [nvarchar](100) NOT NULL,
-	[CatProductCategoryDescription] [nvarchar](200) NULL,
-	[CatProductCategoryOrder] [int] NOT NULL,
-	[RowStatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdated] [nvarchar](50) NULL,
-	[DateUpdated] [datetime] NULL,
-    [TechnicalDescription] NVARCHAR(50) NULL, 
+﻿
+CREATE TABLE [dbo].[CatProductCategory] (
+    [IdCatProductCategory]          INT            IDENTITY (1, 1) NOT NULL,
+    [CatProductCategoryName]        NVARCHAR (100) NOT NULL,
+    [CatProductCategoryDescription] NVARCHAR (200) NULL,
+    [CatProductCategoryOrder]       INT            NOT NULL,
+    [RowStatus]                     BIT            NOT NULL,
+    [TokenCreated]                  NVARCHAR (50)  NOT NULL,
+    [DateCreated]                   DATETIME       NOT NULL,
+    [TokenUpdated]                  NVARCHAR (50)  NULL,
+    [DateUpdated]                   DATETIME       NULL,
+    [TechnicalDescription]          NVARCHAR (50)  NULL,
+    [ImageURL]                      NVARCHAR (255) NULL,
+    [IdCountry]                     NVARCHAR (2)   NULL,
     CONSTRAINT [PK_CatProductCategory] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC)
-)
+);
+
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de categoría' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatProductCategory', @level2type=N'COLUMN',@level2name=N'IdCatProductCategory'

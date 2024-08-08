@@ -8,7 +8,7 @@
 -- Create date: <2024-06-24>
 -- Description:	< Agregar moneda, correo y telefono multipais >
 -- =============================================
-CREATE PROCEDURE [dbo].[SpWsGetDataFromServiceTicket]
+CREATE PROCEDURE [dbo].[SpWsGetDataFromServiceTicket_wo]
     @IdAccount INT = 37,
     @TrackingNumber VARCHAR(100) = 'FD138358',
     @Token VARCHAR(100) = 'C6A98D3AB3A005C0023D634A6ECD1E5B'
@@ -24,7 +24,7 @@ BEGIN
         DECLARE @Serie AS VARCHAR(2) = SUBSTRING(@TrackingNumber, 1, 2);
         DECLARE @NUMBER AS VARCHAR(20) = SUBSTRING(@TrackingNumber, 3, LEN(@TrackingNumber));
         DECLARE @COD AS DECIMAL(18, 2);
-        DECLARE @CODCurrency AS NVARCHAR(6);
+        DECLARE @CODCurrency AS NVARCHAR(50);
         DECLARE @COLLECT AS BIT;
 
         SELECT @TotalWeight = SUM(DOP.PieceWeight),
@@ -166,18 +166,18 @@ BEGIN
 				   CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
+								WHERE Name = 'VoucherEmailGT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
+								WHERE Name = 'VoucherEmail' + PRV.IdCountry )
 					END AS VoucherEmail,
 					CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
+								WHERE Name = 'VoucherPhoneGT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
+								WHERE Name = 'VoucherPhone' + PRV.IdCountry )
 					END AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
@@ -293,18 +293,18 @@ BEGIN
 				   CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = 'GT')
+								WHERE Name = 'VoucherEmailGT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherEmail' AND IdCountry = PRV.IdCountry )
+								WHERE Name = 'VoucherEmail' + PRV.IdCountry )
 					END AS VoucherEmail,
 					CASE 
 					WHEN PRV.IdCountry IS NULL 
 						THEN (SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = 'GT')
+								WHERE Name = 'VoucherPhoneGT')
 					ELSE 
 						(SELECT Value FROM DeliveryBackOffice.dbo.ConfigParams
-								WHERE Name = 'VoucherPhone' AND IdCountry = PRV.IdCountry )
+								WHERE Name = 'VoucherPhone' + PRV.IdCountry )
 					END AS VoucherPhone,
                    PRV.ProvinceDescription ToCity
             FROM DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)

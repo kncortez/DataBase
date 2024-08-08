@@ -4,9 +4,13 @@
 -- Create date: <2022-08-12>
 -- Description:	< Obtener datos de guías necesarios para reporte de incidencias de SAC >
 -- =============================================
-
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-28>
+-- Description:	<Se agrega parametro que indica pais para filtra por tipo de guia(DOM o INT)>
+-- =============================================
 CREATE PROCEDURE [dbo].[TrackRequestedGuides]
-	@GuideList NVARCHAR(MAX)
+	@GuideList NVARCHAR(MAX),
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -67,6 +71,7 @@ BEGIN
 					wh.Guide_Number = do.Guide_Number
 					AND 
 					wh.Active = 1
+		WHERE (ISNULL(do.GuideType,'DOM')='INT' OR (ISNULL(do.SenderCountryId,'GT')=@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'))
 
 		IF( EXISTS( SELECT TOP 1 1 FROM #ResponseTable ) )
 		BEGIN

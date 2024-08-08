@@ -39,6 +39,12 @@ BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
+
+		
+	DECLARE @PrefixCallingCode VARCHAR(4) = LEFT(@Phone, 4)
+	  SET @Phone   = RIGHT(@Phone,8)
+
+
 	DECLARE @TblErrorMessage AS TABLE (	IdResult INT,
 										Message NVARCHAR(50), 
 										Id NVARCHAR(25));
@@ -91,7 +97,7 @@ BEGIN
                 UsrCurrency = @Currency,
                 UsrTokenUpdated = @Token,
                 UsrDateUpdated = GETDATE(),
-                PrefixCallingCode = '+502',
+                PrefixCallingCode = @PrefixCallingCode,
                 Phone = @Phone,
                 UrlFacebook = @UrlFacebook,
                 UrlInstagram = @UrlInstagram,

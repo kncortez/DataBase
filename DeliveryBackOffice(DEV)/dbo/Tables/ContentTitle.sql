@@ -8,9 +8,11 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
-    PRIMARY KEY CLUSTERED ([IdContentTitle] ASC),
-    CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent])
+    [CountryId]          NVARCHAR (2)   DEFAULT ('GT') NOT NULL,
+    PRIMARY KEY CLUSTERED ([IdContentTitle] ASC)
 );
+
+
 
 
 GO

@@ -6,10 +6,10 @@
     [DateCreated]            DATETIME       NOT NULL,
     [TokenUpdated]           NVARCHAR (50)  NULL,
     [DateUpdated]            DATETIME       NULL,
-    [IdCountry]              VARCHAR(2)     NULL, 
-    CONSTRAINT [PK_CatBillingTime] PRIMARY KEY CLUSTERED ([IdCatBillingTime] ASC),    
-    CONSTRAINT [FK_CatBillingTime_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    CONSTRAINT [PK_CatBillingTime] PRIMARY KEY CLUSTERED ([IdCatBillingTime] ASC)
 );
+
+
 
 
 GO

@@ -8,10 +8,10 @@
     [CrsDateCreated]  DATETIME      NOT NULL,
     [CrsTokenUpdated] VARCHAR (50)  NULL,
     [CrsDateUpdated]  DATETIME      NULL,
-    [IdCountry]        VARCHAR(2)    NULL, 
-    PRIMARY KEY CLUSTERED ([CrsId] ASC),
-    CONSTRAINT [FK_CatRateSegment_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    PRIMARY KEY CLUSTERED ([CrsId] ASC)
 );
+
+
 
 
 GO

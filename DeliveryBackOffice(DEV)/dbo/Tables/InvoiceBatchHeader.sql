@@ -1,0 +1,28 @@
+﻿CREATE TABLE [dbo].[InvoiceBatchHeader] (
+    [Id_Lote]                        INT           IDENTITY (1, 1) NOT NULL,
+    [RTN]                            NVARCHAR (50) NOT NULL,
+    [NoDeclaracion]                  NVARCHAR (50) NOT NULL,
+    [CAI]                            NVARCHAR (50) NOT NULL,
+    [LimitDateEmision]               DATETIME      NOT NULL,
+    [Establishment]                  INT           NULL,
+    [Emision_Point]                  INT           NULL,
+    [TypeDocument]                   INT           NOT NULL,
+    [RecepcionDate]                  DATETIME      NULL,
+    [Administration_Code]            INT           NOT NULL,
+    [Status]                         BIT           NOT NULL,
+    [Enable]                         BIT           NULL,
+    [InitialRange]                   BIGINT        NOT NULL,
+    [FinalRange]                     BIGINT        NOT NULL,
+    [Last_Process]                   BIGINT        NOT NULL,
+    [AmountGranted]                  BIGINT        NULL,
+    [EmailNotification]              NVARCHAR (50) NULL,
+    [DaysLeftNotifycation]           INT           NULL,
+    [PercentInvoiceLeftNotifycation] INT           NULL,
+    [RowStatus]                      BIT           NOT NULL,
+    [TokenCreated]                   NVARCHAR (50) NOT NULL,
+    [DateCreated]                    DATETIME      NOT NULL,
+    [TokenUpdated]                   NVARCHAR (50) NULL,
+    [DateUpdated]                    DATETIME      NULL,
+    CONSTRAINT [PK_InvoiceLoteHeader] PRIMARY KEY CLUSTERED ([Id_Lote] ASC)
+);
+

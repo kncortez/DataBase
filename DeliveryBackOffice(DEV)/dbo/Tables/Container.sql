@@ -8,9 +8,13 @@
     [DateCreated]          DATETIME       NOT NULL,
     [TokenUpdated]         NVARCHAR (50)  NULL,
     [DateUpdated]          DATETIME       NULL,
+    [CountryId]            VARCHAR (2)    NULL,
     PRIMARY KEY CLUSTERED ([IdContainer] ASC),
+    CONSTRAINT [FK_Container_CatCountry] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [FK_Container_TypeContainer] FOREIGN KEY ([CatTypeContainerId]) REFERENCES [dbo].[CatTypeContainer] ([IdCatTypeContainer])
 );
+
+
 
 
 

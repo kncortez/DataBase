@@ -6,10 +6,10 @@
     [TokenUpdated]   NVARCHAR (50) NULL,
     [DateUpdated]    DATETIME      NULL,
     [RowStatus]      BIT           NOT NULL,
-    [IdCountry]      VARCHAR (2)   NULL,
-    CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC),
-    CONSTRAINT [FK_CatSalesChannel_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC)
 );
+
+
 
 
 GO

@@ -7,10 +7,10 @@
     [DateCreated]  DATETIME      NOT NULL,
     [TokenUpdated] VARCHAR (50)  NULL,
     [DateUpdated]  DATETIME      NULL,
-    [IdCountry]    VARCHAR(2)    NULL, 
-    PRIMARY KEY CLUSTERED ([IdTypeRate] ASC),
-    CONSTRAINT [FK_CatTypeRate_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
+    PRIMARY KEY CLUSTERED ([IdTypeRate] ASC)
 );
+
+
 
 GO
 

@@ -18,8 +18,11 @@
     [NameIncidencePublic]      VARCHAR (50)   NULL,
     [EvidenceRequirement]      BIT            NULL,
     [CourierInstructions]      NVARCHAR (100) NULL,
+    [CountryId]                NVARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdIncidenceType] ASC)
 );
+
+
 
 
 

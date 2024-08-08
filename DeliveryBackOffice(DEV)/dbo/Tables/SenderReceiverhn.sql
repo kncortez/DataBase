@@ -1,0 +1,27 @@
+﻿CREATE TABLE [dbo].[SenderReceiverhn] (
+    [ID]                      INT            IDENTITY (1, 1) NOT NULL,
+    [First_Name]              NVARCHAR (100) NOT NULL,
+    [Last_Name]               NVARCHAR (100) NOT NULL,
+    [Address]                 NVARCHAR (200) NOT NULL,
+    [Zone]                    NVARCHAR (100) NULL,
+    [Town]                    NVARCHAR (100) NOT NULL,
+    [Department]              NVARCHAR (100) NOT NULL,
+    [Phone]                   NVARCHAR (50)  NOT NULL,
+    [Social_Security_ID]      NVARCHAR (200) NULL,
+    [Email]                   NVARCHAR (200) NULL,
+    [CUI]                     NVARCHAR (25)  NULL,
+    [Latitude]                NVARCHAR (40)  NULL,
+    [Longitude]               NVARCHAR (40)  NULL,
+    [Entity_Type]             TINYINT        NOT NULL,
+    [User_Created]            NVARCHAR (50)  NOT NULL,
+    [Date_Created]            DATETIME       NOT NULL,
+    [Estatus]                 BIT            NULL,
+    [HubLogisticId]           INT            NULL,
+    [CatTypeSenderReceiverId] INT            NULL,
+    [UniqueCode]              NVARCHAR (50)  NULL,
+    [MessageCounter]          INT            NOT NULL,
+    [MailCounter]             INT            NOT NULL,
+    [Date_UpdateToken]        DATETIME       NULL,
+    [IdCountry]               VARCHAR (2)    NULL
+);
+

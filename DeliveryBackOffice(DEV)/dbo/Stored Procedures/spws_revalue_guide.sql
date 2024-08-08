@@ -1327,10 +1327,11 @@ BEGIN
 			WHERE CodeISO LIKE ''+ @SenderCountryId +'%'
 			ORDER BY CE.ExchangeDate DESC
 
-			SELECT @ExchangeSender= ExchangeRate FROM CurrencyExchangeRates
-			WHERE IdCountry = @SenderCountryId
-			AND ExchangeDate = GETDATE()
-			AND SourceCurrency = @CurrencyId
+			--SELECT @ExchangeSender= ExchangeRate FROM CurrencyExchangeRates
+			--WHERE IdCountry = @SenderCountryId
+			--AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+			--AND SourceCurrency = @CurrencyId
+			--ORDER BY ExchangeDate DESC
 			
             PRINT 'registro no existe , hay que crearlo';
 			IF @ServiceShortName = 'COD'
@@ -1357,8 +1358,8 @@ BEGIN
 				(   1, @ProdctNumber, 1     -- costo de envio
 				  , @NewPrice, @IdModule, 1 -- guardar los registros como activos 
 				  , @Token, GETDATE(), ISNULL(@GuideSerie, 'FD'), @GuideNumber
-				  , @CurrencyId, @ExchangeSender
-				  , @CurrencyId, @ExchangeSender
+				  , @CurrencySender, @ExchangeSender
+				  , @CurrencySender, @ExchangeSender
 				);
 			END
 			ELSE 

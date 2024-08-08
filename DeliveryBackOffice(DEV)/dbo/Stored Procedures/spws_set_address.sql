@@ -1,5 +1,4 @@
-﻿
--- =============================================
+﻿-- =============================================
 -- Author:		<César,Aquino>
 -- Create date: <2021-01-08>
 -- Description:	<Método para registrar dirección y punto de visita>
@@ -81,7 +80,11 @@ BEGIN
 	union
 	SELECT  200 AS IdResult
 			,'Registro Eliminado' AS Message
-			,'Delete' as Id) as messagess
+			,'Delete' as Id
+	union
+	SELECT  500 AS IdResult
+			,'Error al ejecutar la operación ' AS Message
+			,'Error' as Id) as messagess
 			
 	-- Figurar municipio en caso no venga un identificador
 
@@ -118,7 +121,7 @@ BEGIN
 				SELECT @Department=ProvinceName,@IdDepartment=PV.IdProvince FROM Province PV  with(nolock)
 									  INNER JOIN Township TS with(nolock) ON PV.IdProvince = TS.IdProvince
 									  WHERE TS.IdTownship = @IdTownship;
-				SET @IdKindOfVPBusiness = (SELECT IdKindOfVPBusiness  FROM KindOfVPBusiness with(nolock) WHERE Shorthand = 'HUB')
+				SET @IdKindOfVPBusiness = (SELECT IdKindOfVPBusiness  FROM KindOfVPBusiness with(nolock) WHERE Shorthand = 'HUB' AND (IdCountry = @IdCountry OR (@IdCountry = 'GT' AND IdCountry IS NULL)))
 				Select @HeaderCode=HeaderCode, @TownshipName=TownshipName from dbo.Township with(nolock) WHERE IdTownship = @IdTownship;
 				SET @CityName=(SELECT CityPlace FROM DBO.CatCityPlace with(nolock) WHERE IdCityPlace=@IdCityPlace)
 
@@ -474,15 +477,15 @@ BEGIN
 		ROLLBACK TRANSACTION;
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
-			(ErrorProcedure, ErrorDescription, TokenCreated, DateCreated)
+			(ErrorProcedure, ErrorDescription, TokenCreated, DateCreated, ErrorLine)
 		VALUES
-			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE())
+			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE(), ERROR_LINE())
 
 		set @jsonResult =(
 					SELECT STUFF(( 
 					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
 					+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
-					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
+					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Error'
 		
 					FOR XML PATH(''), TYPE
 					).value('.', 'varchar(max)'),1,1,''

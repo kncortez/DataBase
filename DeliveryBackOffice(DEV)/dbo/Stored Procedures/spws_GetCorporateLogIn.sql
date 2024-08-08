@@ -9,8 +9,14 @@
 -- Update date: <2022-06-28>
 -- Description:	< Devolver datos de COD de punto de visita sobre datos de cliente, si hubiese >
 -- =============================================
-
-
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-07-17>
+-- Description: <Se agregan en la respuesta campos para login>
+-- =============================================
+-- Author:      <Daniel, Ramirez >
+-- Update date: <2024-07-16 >
+-- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
@@ -28,6 +34,7 @@ BEGIN
     DECLARE @StatusUser BIT;
     DECLARE @IdUser BIGINT;
     DECLARE @StatusAccount CHAR(1);
+    DECLARE @CountryByNacionality VARCHAR(2);
     --	declare @Username as nvarchar(100)='a.cesarene@gmail.com'
     --	declare	@Password as nvarchar(100)='7hFMXRrKI3G0addPtjwAHA=='
     --	declare @IdSystem as int = 1 
@@ -46,6 +53,17 @@ BEGIN
               AND ru.UsrRowStatus = 1
     );
 
+    SELECT TOP 1 
+           @CountryByNacionality = pe.PerNationality
+      FROM DeliveryBackOffice.dbo.RegisterUser           us
+           INNER JOIN DeliveryBackOffice.dbo.Person       pe
+               ON pe.PerIdPerson = us.UsrIdPerson
+                  AND pe.PerRowStatus = 1
+           INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
+               ON iu.RegisterUserID = us.UsrIdUser
+     WHERE iu.Username = @UserName
+       AND iu.IdUser = @UserCode
+       AND iu.RowStatus = 1
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
@@ -161,7 +179,7 @@ BEGIN
                           , [TknDateUpdated]
                         )
                         VALUES
-                        (@Token, @IdUser, @IdSystem, 0, 0, 'GT', @IP, 1, @Token, GETDATE(), NULL, NULL);
+                        (@Token, @IdUser, @IdSystem, 0, 0, @CountryByNacionality, @IP, 1, @Token, GETDATE(), NULL, NULL);
                     END;
                     DECLARE @JsonModules NVARCHAR(MAX);
                     DECLARE @JsonAccounts NVARCHAR(MAX);
@@ -467,9 +485,26 @@ BEGIN
                                                    + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                    + CONVERT(VARCHAR, us.UsrNickName) + '",'
                                                    -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                                   + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC
-                                                   -- FIN MODIFICACIÓN
-                                                   + '"}'
+                                                   + '"Phone":"' + ISNULL(us.Phone, '') + '",' + '"TAC":"' + @TAC + '",'
+                                                   + '"TaxCountry":"' + 
+                                                   CASE pe.PerNationality
+                                                       WHEN 'GT' THEN 'IVA'
+                                                       WHEN 'HN' THEN 'ISV'
+                                                       ELSE 'IVA'
+                                                   END 
+                                                   + '",' 
+                                                   + '"NameBilling":"' + 
+                                                   CASE pe.PerNationality
+                                                       WHEN 'GT' THEN 'NIT'
+                                                       WHEN 'HN' THEN 'RTN'
+                                                       ELSE 'NIT'
+                                                   END + '",' 
+                                                   + '"NameIdentification":"' +
+                                                   CASE pe.PerNationality
+                                                       WHEN 'GT' THEN 'DPI'
+                                                       WHEN 'HN' THEN 'DNI'
+                                                       ELSE 'DPI'
+                                                   END + '"}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser           us
                                                 INNER JOIN DeliveryBackOffice.dbo.Person       pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
@@ -533,6 +568,11 @@ BEGIN
                                                        + CONVERT(NVARCHAR, ISNULL(rc.[RbcRowStatus], '')) + '",'
                                                        + '"CodeOfReference":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), vpc.CodeOfReference), '') + '",'
+                                                       + '"CurrencyCorporate":"'
+                                                       + ISNULL(CONVERT(NVARCHAR(20), CCC.CodeISO), '') + '",'
+                                                       + '"CurrencySymbolCorporate":"'
+                                                       + ISNULL(CONVERT(NVARCHAR(20), CCC.Symbol), '') + '",'
+
                                                        + '"ListCod":' + '[{' + '"IdBank":"'
                                                        + ISNULL(
                                                                    CONVERT(
@@ -564,7 +604,8 @@ BEGIN
                                                                 ) + '",' + '"NumberAcc":"'
                                                        + ISNULL(ISNULL(vpconf.CODAccountNumber, cu.[CODAccountNumber]), '')
                                                        + '",'
-                                                     , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' + '}]' + '}'
+                                                     , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' 
+                                                     + '}]' + '}'
                                                 FROM DeliveryBackOffice.dbo.InternalUser                     iu
                                                     JOIN DeliveryBackOffice.dbo.RegisterUser                 ru
                                                         ON ru.UsrIdUser = iu.RegisterUserID
@@ -575,6 +616,14 @@ BEGIN
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
                                                     JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc
                                                         ON vpc.CustomerID = ac.IdCustomer
+                                                    LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
+                                                        ON vpc.CustomerID = RC.RbcIdCustomer
+                                                        AND rc.RbcRowStatus = 1
+                                                    LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
+                                                        ON RC.RbcIdRate = RH.RheId 
+                                                    LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
+                                                        ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
+                                                        OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
                                                     LEFT JOIN DeliveryBackOffice.dbo.Settlement              STL
                                                         ON vpc.IdSettlement = STL.IdSettlement
                                                     LEFT JOIN DeliveryBackOffice.dbo.DumpServiceCoverage     dsc
@@ -589,14 +638,11 @@ BEGIN
                                                            AND cu.RowSatus = 1
                                                     LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank            dbk
                                                         ON cu.CODAccountBankID = dbk.Id_bank
-                                                           AND dbk.Id_country = 'GT'
+                                                           AND dbk.Id_country = @CountryByNacionality
                                                            AND dbk.Id_status = 1
                                                     LEFT JOIN DeliveryBackOffice.dbo.CatBankAccountType      cba
                                                         ON cu.CODAccountTypeID = cba.IdBankAccountType
                                                            AND cba.RowStatus = 1
-                                                    LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer          rc
-                                                        ON cu.IdCustomer = rc.RbcIdCustomer
-                                                           AND rc.RbcRowStatus = 1
                                                     LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment   ccp
                                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                                     LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser        vpu

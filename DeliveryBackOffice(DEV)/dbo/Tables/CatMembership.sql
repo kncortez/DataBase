@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[CatMembership] (
+﻿CREATE TABLE [dbo].[CatMembership] (
     [IdCatMembership]                INT             IDENTITY (1, 1) NOT NULL,
     [MembershipName]                 NVARCHAR (50)   NOT NULL,
     [MembershipDescription]          NVARCHAR (300)  NOT NULL,
@@ -13,11 +13,16 @@ CREATE TABLE [dbo].[CatMembership] (
     [DateUpdated]                    DATETIME        NULL,
     [Icon]                           NVARCHAR (50)   NULL,
     [NextSalesPackageBanner]         NVARCHAR (200)  NULL,
-	[CatProductCategoryId] 			[int]			 NULL,
-	[Tag] 							[nvarchar](100)  NULL,
-	[Position] 						[int] 			 NULL,	
-    CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC)
+    [CatProductCategoryId]           INT             NULL,
+    [Tag]                            NVARCHAR (100)  NULL,
+    [Position]                       INT             NULL,
+    [IdCountry]                      NVARCHAR (2)    NULL,
+    [IdCatCurrencyCOD]               INT             NULL,
+    CONSTRAINT [PK_CatMembership] PRIMARY KEY CLUSTERED ([IdCatMembership] ASC),
+    CONSTRAINT [FK_CatMembership_CatCurrencyCOD] FOREIGN KEY ([IdCatCurrencyCOD]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
+
+
 
 
 

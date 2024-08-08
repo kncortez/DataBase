@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[MarketplaceCarouselImage] (
+﻿CREATE TABLE [dbo].[MarketplaceCarouselImage] (
     [IdCarouselImage] INT            IDENTITY (1, 1) NOT NULL,
     [XXLImageURL]     NVARCHAR (200) NOT NULL,
     [XLImageURL]      NVARCHAR (200) NOT NULL,
@@ -12,8 +12,11 @@ CREATE TABLE [dbo].[MarketplaceCarouselImage] (
     [DateUpdated]     DATETIME       NULL,
     [XXXLImageURL]    NVARCHAR (200) NULL,
     [HyperlinkURL]    NVARCHAR (200) NULL,
+    [IdCountry]       NVARCHAR (2)   NULL,
     CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
 );
+
+
 
 
 GO

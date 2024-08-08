@@ -1,16 +1,19 @@
+﻿
+CREATE TABLE [dbo].[MarketplaceProductTags] (
+    [IdMarketplaceProductTags]          INT            IDENTITY (1, 1) NOT NULL,
+    [MarketplaceProductTagsName]        NVARCHAR (50)  NULL,
+    [MarketplaceProductTagsDescription] NVARCHAR (100) NOT NULL,
+    [MarketplaceProductTagsOrder]       INT            NOT NULL,
+    [RowStatus]                         BIT            NOT NULL,
+    [TokenCreated]                      NVARCHAR (50)  NOT NULL,
+    [DateCreated]                       DATETIME       NOT NULL,
+    [TokenUpdated]                      NVARCHAR (50)  NULL,
+    [DateUpdated]                       DATETIME       NULL,
+    [IdCountry]                         NVARCHAR (2)   NULL,
+    CONSTRAINT [PK_MarketplaceProductTags] PRIMARY KEY CLUSTERED ([IdMarketplaceProductTags] ASC)
+);
 
-CREATE TABLE [dbo].[MarketplaceProductTags](
-	[IdMarketplaceProductTags] [int] IDENTITY(1,1) NOT NULL,
-	[MarketplaceProductTagsName] [nvarchar](50) NULL,
-	[MarketplaceProductTagsDescription] [nvarchar](100) NOT NULL,
-	[MarketplaceProductTagsOrder] [int] NOT NULL,
-	[RowStatus] [bit] NOT NULL,
-	[TokenCreated] [nvarchar](50) NOT NULL,
-	[DateCreated] [datetime] NOT NULL,
-	[TokenUpdated] [nvarchar](50) NULL,
-	[DateUpdated] [datetime] NULL,
- 	CONSTRAINT [PK_MarketplaceProductTags] PRIMARY KEY CLUSTERED ([IdMarketplaceProductTags] ASC)
-)
+
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identicador de la etiqueta' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceProductTags', @level2type=N'COLUMN',@level2name=N'IdMarketplaceProductTags'

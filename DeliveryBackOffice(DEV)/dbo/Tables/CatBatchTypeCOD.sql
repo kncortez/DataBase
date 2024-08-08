@@ -6,10 +6,10 @@
     [DateCreated]       DATETIME     NOT NULL,
     [TokenUpdated]      VARCHAR (50) NULL,
     [DateUpdated]       DATETIME     NULL,
-    [IdCountry]         VARCHAR (2)  NULL,
-    PRIMARY KEY CLUSTERED ([CatBatchTypeCODId] ASC),
-    CONSTRAINT [FK_CatBatchTypeCOD_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    PRIMARY KEY CLUSTERED ([CatBatchTypeCODId] ASC)
 );
+
+
 
 
 
