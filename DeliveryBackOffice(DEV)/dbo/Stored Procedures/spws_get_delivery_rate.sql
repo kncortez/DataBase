@@ -959,16 +959,22 @@ BEGIN
     BEGIN
 
         DECLARE @DataCounter INT = 1;
+        DECLARE @ParcelCode2 NVARCHAR(40);
+        --SET @ParcelCode = N'EXP076';
 
-        SET @ParcelCode = N'EXP076';
+        SELECT TOP 1 @ParcelCode = Code FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK)
+		WHERE  AbcIdArticle = (SELECT ArtId FROM DeliveryBackOffice.dbo.CatArticle WITH(NOLOCK)
+		WHERE  ArtName = 'Paquete pequeño' AND (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT')))
+
+		SET @ParcelCode2 = @ParcelCode;
 
         IF (@DataCounter < @CountPiecesParams)
         BEGIN
             WHILE @DataCounter < @CountPiecesParams
             BEGIN
 
-                SET @ParcelCode = CONCAT(@ParcelCode, ',EXP076');
-
+                SET @ParcelCode = CONCAT(@ParcelCode, ',' + @ParcelCode2);
+                --SET @ParcelCode = CONCAT(@ParcelCode, ',EXP076');
                 SET @DataCounter = @DataCounter + 1;
 
             END;
@@ -991,7 +997,8 @@ BEGIN
     BEGIN
 
         UPDATE [#ParceCode]
-        SET [Item] = 'EXP076'
+        --SET [Item] = 'EXP076'
+        SET [Item] = @ParcelCode2
         WHERE LTRIM(RTRIM(ISNULL([Item], ''))) = '';
 
     END;
@@ -1069,17 +1076,22 @@ BEGIN
         SET @CountPiecebyArticle =
         (
             SELECT COUNT(1)
-            FROM #ParceWeigth         pw
-                INNER JOIN #ParceCode pc
-                    ON pc.ID = pw.ID
-            WHERE pc.Item <> '0'
-                  AND pc.Item <> ''
-                  AND pc.Item <> 'EXP076'
-                  AND pc.Item <> 'EXP077'
-                  AND pc.Item <> 'EXP078'
-                  AND pc.Item <> 'EXP079'
-                  AND pc.Item <> 'EXP080'
-                  AND pc.Item IS NOT NULL
+			FROM #ParceWeigth pw
+			INNER JOIN #ParceCode pc
+				ON pc.ID = pw.ID
+			WHERE pc.Item <> '0'
+			  AND pc.Item <> ''
+			  AND pc.Item NOT IN (
+					SELECT Code 
+					FROM DeliveryBackOffice.dbo.ArticleByCustomer
+					WHERE AbcIdArticle IN (
+						SELECT ArtId 
+						FROM DeliveryBackOffice.dbo.CatArticle
+						WHERE ArtName IN ('Paquete pequeño', 'Paquete mediano', 'Paquete grande', 'Paquete extra grande', 'Paquete sobredimensionado')
+						  AND (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT'))
+					)
+				)
+			  AND pc.Item IS NOT NULL
         );
 
         SET @CountPiece = dbo.FnPiecesByPiecesIncluded(@CountPiecesParams, @PiecesIncluded) - @CountPiecebyArticle;
