@@ -114,7 +114,6 @@ BEGIN
 			   '' AS [ClasificationIncident],
 			   '' AS [CommentOnIncident],
                '' AS [StageDescription],
-               '' AS [StageDescription],
                '' AS [CheckpointIcon],
                '' AS [ImagePath],
                --(Select top 1 Path_Dry from DeliveryProof where Guide_Number = 247619 order by Date_Photo desc) AS Dry,
