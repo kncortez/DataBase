@@ -141,7 +141,8 @@ BEGIN
 			'' as Place,
 			'' as [ManifestNumber],
 			'' as Latitude,
-			'' as Longitude
+			'' as Longitude,
+			COI.CommentOnIncident AS [CommentOnIncident]
 		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
 		   INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
 		   		ON so.StatusOrderId = dod.StatusOrderId
