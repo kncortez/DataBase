@@ -121,8 +121,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora posible de arribo al servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'GuideETA';
 
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value=N'Check Point para indicar estado de la guía despachada en el manifiesto ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'DeliverySettlementDetail', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value=N'Check Point para indicar estado de la guía despachada en el manifiesto ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'DeliverySettlementDetail', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
+
 
 
 GO
@@ -139,9 +140,9 @@ GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliverySettlementDetail_DateCreated]
     ON [dbo].[DeliverySettlementDetail]([DateCreated] ASC);
 
+GO
 CREATE NONCLUSTERED INDEX [idx_Guide_Settlement_RowStatus]
 	ON [dbo].[DeliverySettlementDetail] ([Guide_Serie],[Guide_Number],[Guide_Settlement],[RowStatus])
-	INCLUDE ([DateCreated],[ID_DeliveryORderBYSettlement])
-	drop index  [idx_Guide_Settlement_RowStatus] on [DeliverySettlementDetail];
+	INCLUDE ([DateCreated],[ID_DeliveryORderBYSettlement]);
 
 
