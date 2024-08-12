@@ -113,7 +113,11 @@
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient] FOREIGN KEY ([Sender_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient1] FOREIGN KEY ([Receiver_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
+    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type]),
+
+	CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie],[Guide_Number],[IsLastMileReturn] )
+	INCLUDE (Sender_FirstName,Sender_LastName,Sender_Phone,Receiver_Phone,Receiver_Address,PriceShippment,Collect_OnDelivery,StatusOrderId);
 );
 
 
@@ -396,7 +400,11 @@ CREATE NONCLUSTERED INDEX [IDX_DeliveryOrder_GetDailyCodPayment]
 GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Serie_Guide_Number_IsLastMileReturn]
     ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [IsLastMileReturn] ASC);
+GO
 
+CREATE NONCLUSTERED INDEX [DeliveryOrderAttemptData_GetQualityControlData]
+	ON [dbo].[DeliveryOrderAttemptData]([GuideSerie] ASC, [GuideNumber] ASC)
+	INCLUDE (GuideDeliveryAttemptCount,GuideDeliveryMaxAttemptCount);
 GO
 --CREATE NONCLUSTERED INDEX [IX_DeliveryOrder_GetCustomerGuideListByStatus] ON [DeliveryBackOffice].[dbo].[DeliveryOrder] 
 --(
@@ -432,3 +440,8 @@ CREATE NONCLUSTERED INDEX [idx_salepipelineid]
     ON [dbo].[DeliveryOrder]([SalePipeLineId] ASC)
     INCLUDE([Sender_Zone], [Sender_Town], [Sender_Department], [SenderIdTownship], [TypeService]);
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([Guide_Serie],[Guide_Number],[IsLastMileReturn] )
+	INCLUDE (Sender_FirstName,Sender_LastName,Sender_Phone,Receiver_Phone,Receiver_Address,PriceShippment,Collect_OnDelivery,StatusOrderId);
