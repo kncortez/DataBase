@@ -14,10 +14,10 @@ BEGIN
           parFac.dpf_FELEntity,
           parFac.dpf_FELCorreoCCO,
           vPointCli.[Address],
+          -- Primer bloque
           CONCAT(RIGHT('000' + CAST(invHe.Establishment AS VARCHAR), 3), '-',
           RIGHT('000' + CAST(invHe.Emision_Point AS VARCHAR), 3),'-',
           RIGHT('00' + CAST(invHe.TypeDocument AS VARCHAR), 2),'-',
-          --- --Primer bloque
           RIGHT('00000000' + CAST(invBD.ProcessedCorrelative AS VARCHAR), 8)) AS NoInvoice,
           FORMAT(invH.inv_date,'dd/MM/yyyy') AS InvoiceDate,
           FORMAT(invHe.LimitDateEmision,'dd/MM/yyyy') AS LimitDateEmision,
