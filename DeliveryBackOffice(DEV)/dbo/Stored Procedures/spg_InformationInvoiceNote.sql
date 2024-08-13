@@ -5,7 +5,8 @@
 -- =============================================
 CREATE procedure [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
-    @fel nvarchar(100)
+    @fel nvarchar(100),
+    @IdCountry nvarchar(2) = 'GT'
 as
 declare @idinvoice int;
 begin
@@ -18,6 +19,7 @@ begin
         select inv_pk_id
         from [dbo].[invoiceHeader] with (nolock)
         where inv_certificationFEL = @fel
+		AND ISNULL(IdCountry,'GT') = @IdCountry
     );
     -- Insert statements for procedure here
     select [inv_pk_id]
