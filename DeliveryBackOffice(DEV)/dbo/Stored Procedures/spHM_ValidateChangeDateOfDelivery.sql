@@ -10,10 +10,11 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	SELECT rp.DateRoutePreparation 
-	FROM [dbo].[DeliveryOrderBySettlement] dobs
-		INNER JOIN [dbo].[RoutePreparation] rp ON dobs.ID = rp.DeliveryOrderBySettlementId
-		INNER JOIN [dbo].[DeliverySettlementDetail] dsd ON dsd.ID_DeliveryOrderBySettlement = dobs.ID
-	WHERE dsd.Guide_Serie = @GuideSerie
-		AND dsd.Guide_Number = @GuideNumber		
+	SELECT TOP 1 rp.DateRoutePreparation, rpd.IsCustomerReschedule
+	FROM [dbo].[RoutePreparation] rp
+		INNER JOIN [dbo].[RoutePreparationDetail] rpd ON rp.IdRoutePreparation = rpd.RoutePreparationId
+	WHERE rpd.Guide_Serie = @GuideSerie
+		AND rpd.Guide_Number = 	@GuideNumber	
+		AND rp.RowStatus = 1
+	ORDER BY rp.IdRoutePreparation DESC
 END;
