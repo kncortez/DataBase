@@ -18,6 +18,9 @@
     [AlternativeRateHeaderId]          INT             NULL,
     [IncludedMembershipId]             INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
+    [CatProductCategoryId]             INT             NULL,
+    [Tag]                              NVARCHAR (100)  NULL,
+    [Position]                         INT             NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
     CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_CatSubscription_CatMembership] FOREIGN KEY ([IncludedMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
@@ -29,24 +32,16 @@
 
 
 
-
-
-
-
-
-
-
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id relacion con tabla CatProductCategory' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'CatProductCategoryId'
 
 
 GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'etiqueta de identificación del producto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'Tag'
 
 
 GO
-
-
-
-GO
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'campo para el ordenamiento por  Posición ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'Position'
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = 'Nombre de banner a desplegar cuando servicios de monto fijo esten proximos a acabarse', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'NextSalesPackageBanner';
@@ -65,4 +60,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
-

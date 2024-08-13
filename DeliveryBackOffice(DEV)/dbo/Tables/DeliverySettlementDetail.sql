@@ -19,19 +19,13 @@
     [TokenUpdated]                   NVARCHAR (50)   NULL,
     [DateUpdated]                    DATETIME        NULL,
     [GuideETA]                       TIME (7)        NULL,
+    [StatusOrderId]                  TINYINT         NULL,
+    CONSTRAINT [PK_DeliverySettlementDetail] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
-    CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID])
+    CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
+    CONSTRAINT [FK_DeliverySettlementDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
+
 );
-
-
-
-
-
-
-
-
-
-
 
 
 GO
@@ -44,8 +38,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Orden o sec
 
 
 GO
-CREATE NONCLUSTERED INDEX [ID]
-    ON [dbo].[DeliverySettlementDetail]([ID] ASC);
+
 
 
 GO
@@ -128,6 +121,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora posible de arribo al servicio.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliverySettlementDetail', @level2type = N'COLUMN', @level2name = N'GuideETA';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value=N'Check Point para indicar estado de la guía despachada en el manifiesto ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'DeliverySettlementDetail', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
+
+
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
@@ -137,5 +134,15 @@ CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
 GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliveryOrderBySettlement_RowStatus_include]
     ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [RowStatus] ASC)
-    INCLUDE([Guide_Serie], [Guide_Number]);
+    INCLUDE([Guide_Serie], [Guide_Number], [DateCreated]);
+
+GO
+CREATE NONCLUSTERED INDEX [idx_ID_DeliverySettlementDetail_DateCreated]
+    ON [dbo].[DeliverySettlementDetail]([DateCreated] ASC);
+
+GO
+CREATE NONCLUSTERED INDEX [idx_Guide_Settlement_RowStatus]
+	ON [dbo].[DeliverySettlementDetail] ([Guide_Serie],[Guide_Number],[Guide_Settlement],[RowStatus])
+	INCLUDE ([DateCreated],[ID_DeliveryORderBYSettlement]);
+
 

@@ -75,30 +75,147 @@ BEGIN
 							InsertedId BIGINT
 						);
 
-						INSERT INTO 
-							[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-							(
-								[GuideSerie]
-								,[GuideNumber]
-								,[CustomerId]
-								,[StatusOrderId]
-								,[WebhookEndpointId]
-								,[HasNotified]
-								,[TokenCreated]
-								,[DateCreated]
-							)
-						OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-						VALUES
-							(
-								@GuideSerie
-								,@GuideNumber
-								,@WebhookCustomerId
-								,@GuideCurrentStatus
-								,@CustomerEndpointId
-								,0
-								,@Token
-								,GETDATE()
-							)
+						DECLARE @TypeConnect INT = 0;
+
+						SET @TypeConnect = (SELECT top 1 TypeConnectionId 
+								FROM WebhookEndpoint wh
+								INNER JOIN WebhookCatTypeConnection wc
+									ON wh.TypeConnectionId = wc.IdCatTypeConnection
+								WHERE wh.CustomerId = @WebhookCustomerId)
+						IF(@TypeConnect = 1)
+							 BEGIN
+								INSERT INTO 
+									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+									(
+										[GuideSerie]
+										,[GuideNumber]
+										,[CustomerId]
+										,[StatusOrderId]
+										,[WebhookEndpointId]
+										,[HasNotified]
+										,[TokenCreated]
+										,[DateCreated]
+									)
+								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+								VALUES
+									(
+										@GuideSerie
+										,@GuideNumber
+										,@WebhookCustomerId
+										,@GuideCurrentStatus
+										,@CustomerEndpointId
+										,0
+										,@Token
+										,GETDATE()
+									)
+							END
+						ELSE
+							BEGIN
+								-----------------------------------
+									 DECLARE @GuidePiecesTable AS TABLE
+									(
+									    CustomerId INT,
+									    CustomerEndpointId BIGINT,
+									    WebhookType INT,
+									    GuideSerie NVARCHAR(2),
+									    GuideNumber INT,
+									    GuideStatusId TINYINT,
+										NumberPieces INT,
+										NumberRelatedPieces INT
+										
+									);
+
+									INSERT INTO @GuidePiecesTable 
+												( 
+											CustomerId,
+									        GuideSerie,
+									        GuideNumber,
+									        GuideStatusId,
+											NumberPieces
+											)
+											SELECT @WebhookCustomerId,
+											dop.GuideSerie,dop.GuideNumber, 
+											@GuideCurrentStatus,
+											Count(dop.GuideNumber)
+											FROM DeliveryOrder do WITH(NOLOCK)
+											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+												ON do.Guide_Serie = dop.GuideSerie
+												AND do.Guide_Number = dop.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+											    ON do.IdCustomer = WHE.CustomerId
+												WHERE do.Guide_Serie = @GuideSerie 
+												AND do.Guide_Number = @GuideNumber
+													AND WHE.TypeConnectionId = 2
+												GROUP BY dop.GuideSerie,dop.GuideNumber
+
+									   DECLARE @PiecesGuideRelatedTable AS TABLE
+									(
+									    CustomerId INT,
+									    CustomerEndpointId BIGINT,
+									    WebhookType INT,
+									    GuideSerie NVARCHAR(2),
+									    GuideNumber INT,
+									    GuideStatusId TINYINT,
+										NumberRelatedPieces INT
+										
+									);
+
+									INSERT INTO @PiecesGuideRelatedTable 
+												( 
+											CustomerId,
+									        GuideSerie,
+									        GuideNumber,
+									        GuideStatusId,
+											NumberRelatedPieces
+											)
+											SELECT @WebhookCustomerId,
+											dop.GuideSerie,dop.GuideNumber, 
+											@GuideCurrentStatus,
+											Count(dop.GuideNumber)
+											FROM DeliveryOrder do WITH(NOLOCK)
+											INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+												ON do.Guide_Serie = dop.GuideSerie
+												AND do.Guide_Number = dop.GuideNumber
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+											    ON do.IdCustomer = WHE.CustomerId
+												WHERE do.Guide_Serie = @GuideSerie 
+												AND do.Guide_Number = @GuideNumber
+												AND dop.ExternalPieceId IS NOT NULL
+												AND WHE.TypeConnectionId = 2
+												GROUP BY dop.GuideSerie,dop.GuideNumber
+					  
+					  					INSERT INTO WebhookTrackingQueueDetailForSFTP 
+											(CustomerId,
+											GuideSerie,
+											GuideNumber,
+											GuidePiece,
+											ExternalNumber,
+											ExternalPieceId,
+											StatusOrderId,
+											RowStatus,
+											DateCreated,
+											TokenCreated)
+										SELECT @WebhookCustomerId,
+										dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
+										@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
+										FROM DeliveryOrderPiece dop WITH(NOLOCK)
+										INNER JOIN DeliveryOrder do WITH(NOLOCK)
+											ON dop.GuideSerie = do.Guide_Serie
+											AND dop.GuideNumber = do.Guide_Number
+										INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+										    ON do.IdCustomer = WHE.CustomerId
+										INNER JOIN @GuidePiecesTable gpt
+										    ON dop.GuideSerie = gpt.GuideSerie
+											AND dop.GuideNumber = gpt.GuideNumber
+										INNER JOIN @PiecesGuideRelatedTable pgt
+										    ON gpt.GuideSerie = pgt.GuideSerie
+											AND gpt.GuideNumber = pgt.GuideNumber
+											WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
+												AND WHE.TypeConnectionId = 2
+
+							END
+
+					
 					END
 				END TRY
 				BEGIN CATCH
@@ -129,7 +246,8 @@ BEGIN
 				SettlementCollect_DateCreated = GETDATE(), 
 				Guide_Settlement = 1, -- guía liquidada en bodega
 				Guide_Returned = 0,  -- guía liquidada vía material devuelto
-				Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega
+				Guide_Delivered = 1,  -- guía liquidada vía comprobante de entrega
+				StatusOrderId =5
 			WHERE 
 				Guide_Serie = @GuideSerie 
 				AND Guide_Number = @GuideNumber 

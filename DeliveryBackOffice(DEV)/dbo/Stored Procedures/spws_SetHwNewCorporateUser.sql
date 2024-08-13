@@ -191,7 +191,7 @@ BEGIN
         END TRY
         BEGIN CATCH
 
-            SELECT 'Error al Crear usuario';
+            SELECT 'Error al Crear usuario', ERROR_LINE(), ERROR_MESSAGE(), ERROR_NUMBER();
 
             ROLLBACK TRANSACTION;
 

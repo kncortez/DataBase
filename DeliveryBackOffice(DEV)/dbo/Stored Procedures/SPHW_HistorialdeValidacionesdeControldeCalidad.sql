@@ -1,9 +1,4 @@
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2023-11-17>
 -- Description:	<Description,Obtener URL de reporte de historial de incdiencias de control de calidad>
@@ -21,4 +16,3 @@ BEGIN
 				   FROM ConfigParams
             WHERE Name = 'CCValidationHistory';
 END
-GO

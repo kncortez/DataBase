@@ -207,30 +207,139 @@ IF(@IsStatusTerminal = 0)
 												WRBU.WebhookTypeId = @GuideStatusChangeWebhook
 								) ) )
 							BEGIN
-								INSERT INTO 
-									[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
-									(
-										[GuideSerie]
-										,[GuideNumber]
-										,[CustomerId]
-										,[StatusOrderId]
-										,[WebhookEndpointId]
-										,[HasNotified]
-										,[TokenCreated]
-										,[DateCreated]
-									)
-								OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
-								VALUES
-									(
-										@Guide_Serie
-										,@Guide_Number
-										,@WebhookCustomerId
-										,@GuideCurrentStatus
-										,@CustomerEndpointId
-										,0
-										,@TokenId
-										,GETDATE()
-									)
+								DECLARE @TypeConnect INT = 0;
+
+							SET @TypeConnect = (SELECT top 1 TypeConnectionId 
+									FROM WebhookEndpoint wh
+									INNER JOIN WebhookCatTypeConnection wc
+										ON wh.TypeConnectionId = wc.IdCatTypeConnection
+									WHERE wh.CustomerId = @WebhookCustomerId)
+
+									IF(@TypeConnect = 1)
+										BEGIN
+											INSERT INTO 
+												[DeliveryBackOffice].[dbo].[WebhookTrackingQueue]
+												(
+													[GuideSerie]
+													,[GuideNumber]
+													,[CustomerId]
+													,[StatusOrderId]
+													,[WebhookEndpointId]
+													,[HasNotified]
+													,[TokenCreated]
+													,[DateCreated]
+												)
+											OUTPUT inserted.IdWebhookTrackingQueue INTO @ResponseTable (InsertedId)
+											VALUES
+												(
+													@Guide_Serie
+													,@Guide_Number
+													,@WebhookCustomerId
+													,@GuideCurrentStatus
+													,@CustomerEndpointId
+													,0
+													,@TokenId
+													,GETDATE()
+												)
+										END
+									ELSE
+										BEGIN
+											-----------------------------------
+											 DECLARE @GuidePiecesTable AS TABLE
+											(
+											    CustomerId INT,
+											    CustomerEndpointId BIGINT,
+											    WebhookType INT,
+											    GuideSerie NVARCHAR(2),
+											    GuideNumber INT,
+											    GuideStatusId TINYINT,
+												NumberPieces INT,
+												NumberRelatedPieces INT
+												
+											);
+
+											INSERT INTO @GuidePiecesTable 
+														( 
+													CustomerId,
+											        GuideSerie,
+											        GuideNumber,
+											        GuideStatusId,
+													NumberPieces
+													)
+													SELECT @WebhookCustomerId,
+													dop.GuideSerie,dop.GuideNumber, 
+													@GuideCurrentStatus,
+													Count(dop.GuideNumber)
+													FROM DeliveryOrder do WITH(NOLOCK)
+													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+														ON do.Guide_Number = dop.GuideNumber
+														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+													    ON do.IdCustomer = WHE.CustomerId
+														WHERE do.Guide_Number = @Guide_Number
+															AND WHE.TypeConnectionId = 2
+														GROUP BY dop.GuideSerie,dop.GuideNumber
+
+											   DECLARE @PiecesGuideRelatedTable AS TABLE
+											(
+											    CustomerId INT,
+											    CustomerEndpointId BIGINT,
+											    WebhookType INT,
+											    GuideSerie NVARCHAR(2),
+											    GuideNumber INT,
+											    GuideStatusId TINYINT,
+												NumberRelatedPieces INT
+												
+											);
+
+											INSERT INTO @PiecesGuideRelatedTable 
+														( 
+													CustomerId,
+											        GuideSerie,
+											        GuideNumber,
+											        GuideStatusId,
+													NumberRelatedPieces
+													)
+													SELECT @WebhookCustomerId,
+													dop.GuideSerie,dop.GuideNumber, 
+													@GuideCurrentStatus,
+													Count(dop.GuideNumber)
+													FROM DeliveryOrder do WITH(NOLOCK)
+													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
+														ON do.Guide_Number = dop.GuideNumber
+														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+													    ON do.IdCustomer = WHE.CustomerId
+														WHERE do.Guide_Number = @Guide_Number
+														AND dop.ExternalPieceId IS NOT NULL
+														AND WHE.TypeConnectionId = 2
+														GROUP BY dop.GuideSerie,dop.GuideNumber
+					  
+					  							INSERT INTO WebhookTrackingQueueDetailForSFTP 
+													(CustomerId,
+													GuideSerie,
+													GuideNumber,
+													GuidePiece,
+													ExternalNumber,
+													ExternalPieceId,
+													StatusOrderId,
+													RowStatus,
+													DateCreated,
+													TokenCreated)
+												SELECT @WebhookCustomerId,
+												dop.GuideSerie,dop.GuideNumber, dop.GuidePiece, do.Ticket_Number,dop.ExternalPieceId, 
+												@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@TokenId AS TokenCreated
+												FROM DeliveryOrderPiece dop WITH(NOLOCK)
+												INNER JOIN DeliveryOrder do WITH(NOLOCK)
+													ON dop.GuideNumber = do.Guide_Number
+												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
+												    ON do.IdCustomer = WHE.CustomerId
+												INNER JOIN @GuidePiecesTable gpt
+												    ON dop.GuideNumber = gpt.GuideNumber
+												INNER JOIN @PiecesGuideRelatedTable pgt
+												    ON gpt.GuideNumber = pgt.GuideNumber
+													WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
+														AND WHE.TypeConnectionId = 2
+
+										END
 							END
 						END
 
@@ -281,8 +390,9 @@ IF(@IsStatusTerminal = 0)
                         FROM DeliveryBackOffice.dbo.Cost C WITH (NOLOCK)
                             INNER JOIN CostDetail CD WITH (NOLOCK)
                                 ON CD.IdCost = C.IdCost
-                                   AND CD.IdTypeOfMoney IN ( 2, 6 )
-                        WHERE C.ProductNumber = CONCAT(@Guide_Serie, CAST(@Guide_Number AS VARCHAR(50)))
+                        WHERE C.GuideSerie = @Guide_Serie
+							  AND C.GuideNumber = @Guide_Number
+							  AND CD.IdTypeOfMoney IN ( 2, 6 )
                     )
                     BEGIN
                         --Buscar ID modulo liquidación COD

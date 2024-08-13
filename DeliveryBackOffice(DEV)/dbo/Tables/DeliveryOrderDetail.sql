@@ -15,7 +15,12 @@
     CONSTRAINT [FK_DeliveryOrderDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliveryOrderDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
     CONSTRAINT [FK_DeliveryOrderDetail_SystemOrigin] FOREIGN KEY ([SystemOrigin]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
+
 );
+
+
+
+
 
 
 
@@ -87,3 +92,28 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl]
     ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreatedInSystem] ASC, [SystemOrigin] ASC);
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_StatusOrderId_DateCreatedInSystem_INCLUDE]
+    ON [dbo].[DeliveryOrderDetail]([DateCreatedInSystem] ASC, [StatusOrderId] ASC)
+    INCLUDE([RowStatus]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_UserCreated]
+    ON [dbo].[DeliveryOrderDetail]([UserCreated] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_Guide_Serie_Guide_Number_StatusOrderId_DateCreatedInSystem]
+    ON [dbo].[DeliveryOrderDetail]([Guide_Serie] ASC, [Guide_Number] ASC, [StatusOrderId] ASC, [DateCreatedInSystem] ASC);
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_DeliveryOrderDetail_QualityControl2]
+    ON [dbo].[DeliveryOrderDetail]([SystemOrigin] ASC)
+    INCLUDE([Guide_Serie],[Guide_Number]);
+
+GO
+CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreated]
+	ON [dbo].[DeliveryOrderDetail] ([StatusOrderId],[DateCreated],[rowstatus])
+	INCLUDE ([Guide_Serie],[Guide_Number],DateCreatedInSystem,SystemOrigin,DeliveryAttemptId,UserCreated);
