@@ -114,7 +114,7 @@ BEGIN
 		declare @NewProductId INT=NULL;
 
 		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
-		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1)
+		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1 and (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT')))
 	
 		IF(@NewProductId IS NULL)
 		BEGIN
