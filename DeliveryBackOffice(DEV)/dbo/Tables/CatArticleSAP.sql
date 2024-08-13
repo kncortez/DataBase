@@ -15,6 +15,7 @@
     [CardAmount]              DECIMAL (14, 2) NULL,
     [IsSurcharge]             BIT             NULL,
     [SendAlmacenExp]          BIT             DEFAULT ('false') NULL,
+    [IdCountry]              NVARCHAR(2)      NULL,
     PRIMARY KEY CLUSTERED ([IdCatArticleSAP] ASC),
     CONSTRAINT [FK_CatArticleSAP_CatCategoryArticleSAP] FOREIGN KEY ([CatCategoryArticleSAPId]) REFERENCES [dbo].[CatArticleCategorySAP] ([IdCatCategoryArticleSAP]) ON DELETE CASCADE
 );
