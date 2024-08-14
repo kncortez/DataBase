@@ -3,7 +3,10 @@
 -- Create date: <07-02-2023>
 -- Description:	< Proceso para obtener información general de bloqueos de un usuario >
 -- =============================================
-
+-- Author:		<Brandon Pedroza>
+-- Modified:	<14-08-2024>
+-- Description:	<Se agrega el prefijo al numero telefonico>
+-- =============================================
 --DECLARE
 CREATE PROCEDURE [dbo].[spHW_GetStatusAccountData] 
 	@AccountEmail NVARCHAR(200) = 'andres.ruiz@forzadelivery.com',
@@ -51,7 +54,7 @@ BEGIN
 			Acc.AccIdAccount AccountId,
 			Cu.IdCustomer CustomerId,
 			LTRIM(RTRIM(CONCAT(Prs.PerFirstName, ' ', Prs.PerLastName))) AccountName,
-			ISNULL(Cu.CustomerPhone, ru.Phone) AccountPhone,
+			ISNULL(Cu.CustomerPhone, CONCAT(ISNULL(RU.PrefixCallingCode,'+502'),ru.Phone)) AccountPhone,
 			RU.UsrEmail AccountEmail,
 			CT.[Description] AccountTypeName,
 			CT.IdCustomerType AccountTypeId,

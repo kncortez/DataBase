@@ -3,6 +3,10 @@
 -- Create date: <24-01-2023>
 -- Description:	<Get list of associated customers for Telemarketing dashboard>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<14-08-2024>
+-- Description:	<Concat nirphone in Phone number>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
 	@RegisterUserId INT
 AS
@@ -20,7 +24,7 @@ BEGIN
     SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
 				[RU].[UsrEmail] [Email],
-				[RU].[Phone] [Phone],
+				CONCAT(ISNULL([RU].[PrefixCallingCode],'+502'),[RU].[Phone]) [Phone],
 				[RU].[UsrDateCreated] [DateCreated],
 				[C].[CutOffDate] [CutOffDate],
 				[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
@@ -63,7 +67,7 @@ BEGIN
 	SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
 				[RU].[UsrEmail] [Email],
-				[RU].[Phone] [Phone],
+				CONCAT(ISNULL([RU].[PrefixCallingCode], '+502'),[RU].[Phone]) [Phone],
 				[RU].[UsrDateCreated] [DateCreated],
 				[RU].[UsrDateCreated] [CutOffDate],
 				0 [CustomerGoalQuantity],
