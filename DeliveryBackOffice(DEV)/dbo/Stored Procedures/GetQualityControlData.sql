@@ -13,7 +13,7 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
-  , @GuideNumber INT
+  , @GuideNumber INT=0
   , @TblHubLogistic  TblHubLogistic  READONLY
   , @TblCustomerType TblCustomerType  READONLY
   , @TblCustomer     TblCustomer    READONLY
@@ -192,6 +192,7 @@ BEGIN
                     ON dsd.guide_Number = ordd.guide_number
                        and dsd.guide_serie = ordd.guide_serie
                        and dsd.rowstatus = 1
+                       
                 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] ds WITH (NOLOCK)
                     ON dsd.ID_DeliveryORderBYSettlement = ds.ID
             WHERE 
@@ -201,6 +202,7 @@ BEGIN
 				  AND ordd.SystemOrigin=2--solo incidnecias de desktop
                   and (dsd.ID IS NULL OR CAST(dsd.DateCreated as date)< CAST(GETDATE() AS DATE))				  
 				  AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry
+				  AND ( @GuideNumber = 0 OR (ordd.guide_number = @GuideNumber AND ordd.guide_serie = @GuideSerie))
                  
            ) INCDESKT
         WHERE INCDESKT.rn = 1

@@ -1,139 +1,199 @@
-﻿
--- =============================================
--- Author:		<Cristian,Azurdia>
--- Create date: <2024-07-24>
--- Description:	< Obtener Lotes pendientes de envió de correo HermesInvoiceHelperHN >
--- =============================================
+﻿USE [DeliveryBackOffice]
+GO
+/****** Object:  StoredProcedure [dbo].[GetInvoiceHelperExecutionBatch]    Script Date: 13/08/2024 09:17:58 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 
+-- =============================================
+-- Author:        <Cristian,Azurdia>
+-- Create date: <2024-07-24>
+-- Description:    < Obtener Lotes pendientes de envió de correo HermesInvoiceHelperHN >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInvoiceHelperExecutionBatch]
-	@Pending as INT
+    @Option as INT,
+    @CodeOfReference as INT = 0,
+    @IdCountry AS VARCHAR(2) = 'GT'
 AS
 BEGIN
 
-	BEGIN TRANSACTION
-	BEGIN TRY
+    BEGIN TRANSACTION
+    BEGIN TRY
 
-	   /*
-			InvoiceBatchHeader
-			status = 1 y enable = 1 es cuando el lote esta habilidado y activo
-			status = 0 y enable = 1 es un error - no contemplado
-			status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturación (Ya viene lote nuevo ejemplo)
-		*/
+       /*
+            InvoiceBatchHeader
+            status = 1 y enable = 1 es cuando el lote esta habilidado y activo
+            status = 0 y enable = 1 es un error - no contemplado
+            status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturación (Ya viene lote nuevo ejemplo)
+        */
 
-		IF (@Pending = 1)
-		BEGIN
-			/*********************************************************************************************************************
-			***************************** OBTENCIÓN INFORMACIÓN DE FACTURAS PENDIENTES DE ASIGNAR CORRELATIVO ********************
-			*********************************************************************************************************************/
+        IF (@Option = 1)
+        BEGIN
+            
+            /*********************************************************************************************************************
+            ***************************** OBTENCIÓN DE INFORMACION DE LOTES EN BASE CODEOFREFERENCE *****************************
+            *********************************************************************************************************************/
 
-			SELECT  IH.inv_pk_id
-					, IH.IdCountry
-					, ISNULL(IH.inv_certificationFEL, '') [inv_certificationFEL]    
-					, ISNULL(IH.inv_serieFEL, '')		  [inv_serieFEL]
-					, ISNULL(IH.inv_numberFEL, '')		  [inv_numberFEL]
-					, IH.inv_FechaHoraFEL				  [inv_FechaHoraFEL]
-					, ISNULL(IH.inv_subjectFEL, '')       [inv_subjectFEL]
-					, IH.inv_MailSendFEL                  [inv_MailSendFEL]
-					, IH.inv_cli_email					  [inv_cli_email]
-			FROM	InvoiceHeader   as IH
-			WHERE	IH.IdCountry = 'GT'
-				AND ISNULL(IH.inv_numberFEL,'') = ''
-				AND ISNULL(IH.inv_FechaHoraFEL, '') = ''
-				AND IH.inv_status = 1
-			ORDER BY  IH.inv_pk_id
+            SELECT IBH.Id_Lote
+                   , IBR.CodeOfReference
+                   , IBH.CAI
+                   , IBH.LimitDateEmision
+                   , IBH.DaysLeftNotifycation
+                   , IBH.PercentInvoiceLeftNotifycation
+                   , IBH.EmailNotification
+              FROM InvoiceBatchHeader IBH
+                   LEFT JOIN InvoiceBatchRelationships IBR
+                      ON IBH.Id_Lote = IBR.Id_Lote
+                     AND IBR.CodeOfReference = @CodeOfReference
+             WHERE IBH.[Status] = 1
+               AND IBH.[Enable] = 1
+               AND IBH.RowStatus = 1
+               AND IBR.RowStatus = 1;
 
-			COMMIT TRANSACTION;
-		END
-		ELSE
-		BEGIN
-		/*********************************************************************************************************************
-		***************************** OBTENCIÓN DE LISTADO DE FACTURAS PENDIENTES DE ENVIAR CORREO ***************************
-		*********************************************************************************************************************/
-		CREATE TABLE #listInvoicePending
-        (
-            Id_Lote					INT,
-            ProcessedCorrelative	NVARCHAR(50),
-            inv_pk_id				INT
-        );
+            COMMIT TRANSACTION;
+        END
+        ELSE IF(@Option = 2)
+        BEGIN
+            
+            /*********************************************************************************************************************
+            ***************************** OBTENCIÓN INFORMACIÓN DE FACTURAS PENDIENTES DE ASIGNAR CORRELATIVO ********************
+            *********************************************************************************************************************/
 
-		INSERT INTO #listInvoicePending
-        (
-            Id_Lote,
-            ProcessedCorrelative,
-            inv_pk_id
-        )
-		SELECT  Id_Lote
-				,ProcessedCorrelative
-				,inv_pk_id
-		FROM	invoiceBatchDetail
-		WHERE	SendEmail = 0
+            SELECT IH.inv_pk_id
+                   , IH.IdCountry
+                   , IH.inv_vpCodeOfReferences
+                   , ISNULL(IH.inv_certificationFEL, '') [inv_certificationFEL]    
+                   , ISNULL(IH.inv_serieFEL, '')         [inv_serieFEL]
+                   , ISNULL(IH.inv_numberFEL, '')        [inv_numberFEL]
+                   , IH.inv_FechaHoraFEL                 [inv_FechaHoraFEL]
+                   , ISNULL(IH.inv_subjectFEL, '')       [inv_subjectFEL]
+                   , ISNULL(IH.inv_descriptionFEL,'')    [inv_descriptionFEL]
+                   , IH.inv_status                       [inv_status]
+                   , 'juan.ramirez@forzadelivery.com'    [inv_MailSendFEL] --IH.inv_MailSendFEL                  [inv_MailSendFEL]
+                   , 'juan.ramirez@forzadelivery.com'    [inv_cli_email]   --IH.inv_cli_email                    [inv_cli_email]
+                   , ISNULL(IH.inv_CountryFEL,'')        [inv_CountryFEL]
+                   , ISNULL(IH.inv_documentSend,'')      [inv_documentSend]
+                   , ISNULL(inv_documentRecieved,'')     [inv_documentRecieved]
+                   , ISNULL(inv_RequestorFEL,'')         [inv_RequestorFEL]
+                   , ISNULL(inv_TransactionFEL, '')      [inv_TransactionFEL]
+                   , ISNULL(inv_EntityFEL, '')           [inv_EntityFEL]
+                   , ISNULL(inv_UserFEL, '')             [inv_UserFEL]
+                   , ISNULL(inv_UserName, '')            [inv_UserName]
+                   , ISNULL(inv_Data1FEL, '')            [inv_Data1FEL]
+                   , ISNULL(inv_Data3FEL, '')            [inv_Data3FEL]
+                   , ISNULL(inv_tokenRegister, '')       [inv_tokenRegister]
+                   , ISNULL(inv_cmp_name, '')            [inv_cmp_name]
+                   , ISNULL(inv_cmp_nameComercial, '')   [inv_cmp_nameComercial]
+                   , ISNULL(inv_cmp_adress, '')          [inv_cmp_adress]
+                   , ISNULL(inv_establecimientoFEL, '')  [inv_establecimientoFEL]
+                   , ISNULL(inv_cmp_nameFEL,'')          [inv_cmp_nameFEL]
+              FROM InvoiceHeader AS IH
+             WHERE IH.IdCountry = @IdCountry
+               AND IH.inv_CountryFEL = @IdCountry
+               AND ISNULL(IH.inv_numberFEL,'') = ''
+               AND ISNULL(IH.inv_FechaHoraFEL, '') = ''
+               AND IH.inv_type = 1
+               AND IH.inv_status = 1
+             ORDER BY IH.inv_pk_id
 
-		/*********************************************************************************************************************
-		***************************** OBTENCIÓN INFORMACIÓN DE FACTURAS PENDIENTES DE ENVIAR CORREO **************************
-		*********************************************************************************************************************/
+            COMMIT TRANSACTION;
+        END
+        ELSE IF(@Option = 3)
+        BEGIN
 
-			--SELECT * FROM #listInvoicePending
-			-- ENCABEZADO
-			SELECT	 IH.inv_pk_id
-					,IH.inv_cmp_nit
-					,IH.inv_cmp_name
-					,IH.inv_cmp_adress
-					,IH.inv_certificationFEL
-					,IH.inv_serieFEL
-					,IH.inv_numberFEL
-					,IH.inv_FechaHoraFEL
-					,ISNULL(IH.inv_MailSendFEL, '') [inv_MailSendFEL]
-					,IH.inv_subjectFEL
-					,IH.inv_cli_nit
-					,IH.inv_cli_name
-					,IH.inv_cli_adress
-					,IH.inv_cli_email
-					,IH.inv_amount 
-			FROM	#listInvoicePending   as LIP
-				INNER JOIN invoiceHeader  as IH  WITH (NOLOCK)
-					ON IH.inv_pk_id = LIP.inv_pk_id
-			WHERE IH.inv_status = 1
-			ORDER BY IH.inv_pk_id
+        /*********************************************************************************************************************
+        ***************************** OBTENCIÓN DE LISTADO DE FACTURAS PENDIENTES DE ENVIAR CORREO ***************************
+        *********************************************************************************************************************/
+             CREATE TABLE #listInvoicePending
+             (
+                 Id_Lote               INT,
+                 ProcessedCorrelative  NVARCHAR(50),
+                 inv_pk_id             INT
+             );
 
-			--DETALLE
-			SELECT  LIP.inv_pk_id
-					,ID.dti_identification
-					,ID.dti_category
-					,ID.dti_quantity
-					,ID.dti_measurement
-					,ID.dti_description
-					,ID.dti_priceUnit
-					,ID.dti_IVA
-					,ID.dti_amount
-			FROM	#listInvoicePending   as LIP
-				INNER JOIN InvoiceDetail  as ID  WITH (NOLOCK)
-					ON ID.dti_fk_header = LIP.inv_pk_id
-				INNER JOIN DeliveryOrder  as DO WITH(NOLOCK)
-					ON  DO.Guide_Number = ID.dti_fk_orderNumber
-					AND DO.Guide_Serie  = ID.dti_fk_orderSerie
-			ORDER BY LIP.inv_pk_id
+             INSERT INTO #listInvoicePending
+             (
+                 Id_Lote,
+                 ProcessedCorrelative,
+                 inv_pk_id
+             )
+             SELECT Id_Lote
+                    ,ProcessedCorrelative
+                    ,inv_pk_id
+               FROM invoiceBatchDetail
+              WHERE SendEmail = 0
 
+        /*********************************************************************************************************************
+        ***************************** OBTENCIÓN INFORMACIÓN DE FACTURAS PENDIENTES DE ENVIAR CORREO **************************
+        *********************************************************************************************************************/
 
-			IF OBJECT_ID('tempdb.dbo.#listInvoicePending', 'U') IS NOT NULL
-			DROP TABLE #listInvoicePending;
+             --SELECT * FROM #listInvoicePending
+             -- ENCABEZADO
+             SELECT IH.inv_pk_id
+                    ,IH.inv_cmp_nit
+                    ,IH.inv_cmp_name
+                    ,IH.inv_cmp_adress
+                    ,IH.inv_certificationFEL
+                    ,IH.inv_serieFEL
+                    ,IH.inv_numberFEL
+                    ,IH.inv_FechaHoraFEL
+                    , 'juan.ramirez@forzadelivery.com'    [inv_MailSendFEL] --,ISNULL(IH.inv_MailSendFEL, '') [inv_MailSendFEL]
+                    ,IH.inv_subjectFEL
+                    ,IH.inv_cli_nit
+                    ,IH.inv_cli_name
+                    ,IH.inv_cli_adress
+                    , 'juan.ramirez@forzadelivery.com'    [inv_cli_email]   --,IH.inv_cli_email
+                    ,IH.inv_amount 
+               FROM #listInvoicePending   as LIP
+                    INNER JOIN invoiceHeader  as IH  WITH (NOLOCK)
+                        ON IH.inv_pk_id = LIP.inv_pk_id
+              WHERE IH.inv_status = 1
+              ORDER BY IH.inv_pk_id
 
-			COMMIT TRANSACTION;
-		END
-	END TRY
-	BEGIN CATCH
+            --DETALLE
+             SELECT LIP.inv_pk_id
+                    ,ID.dti_identification
+                    ,ID.dti_category
+                    ,ID.dti_quantity
+                    ,ID.dti_measurement
+                    ,ID.dti_description
+                    ,ID.dti_priceUnit
+                    ,ID.dti_IVA
+                    ,ID.dti_amount
+                    ,curr.Symbol
+               FROM #listInvoicePending   as LIP
+                    INNER JOIN InvoiceDetail  as ID  WITH (NOLOCK)
+                        ON ID.dti_fk_header = LIP.inv_pk_id
+                    INNER JOIN DeliveryOrder  as DO WITH(NOLOCK)
+                        ON  DO.Guide_Number = ID.dti_fk_orderNumber
+                        AND DO.Guide_Serie  = ID.dti_fk_orderSerie
+                    LEFT JOIN Cost AS sc WITH(NOLOCK)
+                        ON sc.GuideNumber = ID.dti_fk_orderNumber
+                        AND sc.GuideSerie = ID.dti_fk_orderSerie
+                    LEFT JOIN CatCurrencyCOD as curr WITH(NOLOCK)
+                        ON sc.ShippingCurrency = curr.IdCatCurrencyCOD
+               ORDER BY LIP.inv_pk_id
 
-		ROLLBACK TRANSACTION;
+               IF OBJECT_ID('tempdb.dbo.#listInvoicePending', 'U') IS NOT NULL
+               DROP TABLE #listInvoicePending;
 
-		SELECT 
-			CAST(0 AS BIT) [blnResult],
-			ERROR_NUMBER() AS [ErrorNumber],
-			ERROR_SEVERITY() AS [ErrorSeverity],
-			ERROR_STATE() AS [ErrorState],
-			ERROR_PROCEDURE() AS [ErrorProcedure],
-			ERROR_LINE() AS [ErrorLine],
-			ERROR_MESSAGE() AS [ErrorMessage];
+               COMMIT TRANSACTION;
+        END
+    END TRY
+    BEGIN CATCH
 
-		-- INSERTAR A BITACORA DEL SERVICIO
+        ROLLBACK TRANSACTION;
 
-	END CATCH
+        SELECT CAST(0 AS BIT) [blnResult],
+               ERROR_NUMBER() AS [ErrorNumber],
+               ERROR_SEVERITY() AS [ErrorSeverity],
+               ERROR_STATE() AS [ErrorState],
+               ERROR_PROCEDURE() AS [ErrorProcedure],
+               ERROR_LINE() AS [ErrorLine],
+               ERROR_MESSAGE() AS [ErrorMessage];
+
+        -- INSERTAR A BITACORA DEL SERVICIO
+
+    END CATCH
 END
