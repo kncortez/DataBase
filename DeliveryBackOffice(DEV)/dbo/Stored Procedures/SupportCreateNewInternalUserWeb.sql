@@ -3,6 +3,10 @@
 -- Create date:   <2024-08-07>
 -- Description:   <Crear un nuevo usuario para ingresar a portal interno,debe estar previamente creado en Denarius considerando multipais>
 -- =============================================
+-- Author:        <Brandon, Pedroza>
+-- Create date:   <2024-08-14>
+-- Description:   <Se agrega validacion para usuarios de telemercadeo>
+-- =============================================
 CREATE PROCEDURE [dbo].[SupportCreateNewInternalUserWeb]
   @Code INT
  ,@User NVARCHAR(50)
@@ -19,17 +23,22 @@ BEGIN
 
 		DECLARE @IDPerson INT = 0,
 				@CodeISOCurrency NVARCHAR(10),
-				@IdRegisterUser INT = 0;
-				--@IdCountry NVARCHAR(2) = 'GT', 
-				--@IdRol	  INT = 26, --- SAC web	Servicio al cliente en portal web web RolIdRol [CatRol]
-				--@IdSystem INT = 13, --- Hermes web operaciones SysIdSystem [CatSystem]
+				@IdRegisterUser INT = 0,
+				@IdRolTelemercadeo INT = 0,
+				@FirstName NVARCHAR(100),
+				@LastName NVARCHAR(100);
 		SELECT TOP 1
 				@CodeISOCurrency = cuCOD.CodeISO 
 				FROM CatCurrencyCOD cuCOD WITH (NOLOCK)
 				INNER JOIN DeliveryCurrency  cu WITH (NOLOCK)
 					ON cu.IdCurrencyCOD = cuCOD.IdCatCurrencyCOD
 				WHERE cu.DefaultPerCountry = 1
-				AND cu.Currency_IdCountry= @IdCountry		
+				AND cu.Currency_IdCountry= @IdCountry
+                
+        SELECT TOP 1 
+				@IdRolTelemercadeo = RolIdRol 
+				FROM CatRol WHERE RolName = 'Ventas telemercadeo'
+
         INSERT INTO DeliveryBackOffice.dbo.Person
         (
            PerFirstName
@@ -99,7 +108,7 @@ BEGIN
              , usr.USR_Password
              , GETDATE() + 100
              , 'ES'
-             , 'DESKTOP'
+             , 'WEB'
              , @CodeISOCurrency
              , NULL
              , NULL
@@ -198,6 +207,40 @@ BEGIN
        , NULL            -- RusDateUpdated - datetime
        , @idStation      -- StationId - int
       );
+
+      IF(@IdRol = @IdRolTelemercadeo)
+	  BEGIN
+		SELECT TOP 1
+              @FirstName =  dbo.CapitalizeFirstLetter(ISNULL(emp.FirstName, ''))
+             , @LastName =  dbo.CapitalizeFirstLetter(ISNULL(emp.LastName1, ''))
+			FROM DenariusDesktop_Dev.dbo.LGT_INF_Employee emp
+			WHERE emp.CodeEmployee =  CONVERT(NVARCHAR(20), @Code);
+
+			INSERT INTO [dbo].[CatTMSalesPerson]
+				([Code]
+				,[FirstName]
+				,[LastName]
+				,[Country]
+				,[RegisterUserId]
+				,[RowStatus]
+				,[DateCreated]
+				,[TokenCreated]
+				,[DateUpdated]
+				,[TokenUpdated]
+				,[CatSaleAdvisorId])
+			VALUES
+				(''
+				,@FirstName
+				,@LastName
+				,@IdCountry
+				,@IdRegisterUser
+				,1
+				,GETDATE()
+				,@Token
+				,NULL
+				,NULL
+				,NULL)
+	  END;
 
       COMMIT;
 
