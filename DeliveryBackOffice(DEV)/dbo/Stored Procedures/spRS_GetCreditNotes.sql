@@ -7,7 +7,8 @@ CREATE PROCEDURE [dbo].[spRS_GetCreditNotes]
 
 	@StartDate DATETIME = NULL,
 	@EndDate DATETIME = NULL,
-	@FilteredGuide NVARCHAR(MAX) = NULL
+	@FilteredGuide NVARCHAR(MAX) = NULL,
+	@idCountrySender NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -127,6 +128,8 @@ BEGIN
 			[InHcreditnote].[inv_type] = 2
 			AND
 			[InHcreditnote].[inv_date] BETWEEN @StartDate AND @EndDate
+			AND 
+			InHcreditnote.IdCountry = @idCountrySender
 		
 	END
 	ELSE
@@ -191,6 +194,8 @@ BEGIN
 			[InHcreditnote].[inv_type] = 2
 			AND
 			[InHcreditnote].[inv_date] BETWEEN @StartDate AND @EndDate
+			AND 
+			InHcreditnote.IdCountry = @idCountrySender
 		
 	END
 
