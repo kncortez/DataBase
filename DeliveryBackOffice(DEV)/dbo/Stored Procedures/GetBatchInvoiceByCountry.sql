@@ -5,7 +5,7 @@
 -- =============================================
 -- Author:      Daniel Ramirez
 -- Create date: 2018-08-08
--- Description: Se registra 
+-- Description: Se obtienen los valores de serie y number FEL
 -- =============================================
 CREATE PROCEDURE [dbo].[GetBatchInvoiceByCountry]
     @idInvoice BIGINT,
