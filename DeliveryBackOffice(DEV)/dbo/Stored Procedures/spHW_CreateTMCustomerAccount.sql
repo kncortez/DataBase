@@ -3,6 +3,10 @@
 -- Create date: <19-01-2023>
 -- Description:	<Create account for Telemarketing Customer>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<13-08-2024>
+-- Description:	<Add multicountry validations>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_CreateTMCustomerAccount] 
 	@FirstName NVARCHAR(100),
 	@LastName NVARCHAR(100),
@@ -17,7 +21,9 @@ CREATE PROCEDURE [dbo].[spHW_CreateTMCustomerAccount]
 	@Currency NVARCHAR(20),
 	@Phone NVARCHAR(30),
 	@SystemId INT = 1,
-	@RegisterUserId INT = 0
+	@RegisterUserId INT = 0,
+	@NirPhone AS NVARCHAR(10) = '+502',
+	@IdCountry AS NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -52,11 +58,13 @@ BEGIN
 
 	SET @NewMainRates = (SELECT TOP 1 RH.RheId 
 						FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
-						WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
+						WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+						AND ISNULL(RH.CountryId,'GT') = @IdCountry);
 
 	SET @NewAlternativeRates = (SELECT TOP 1 RH.RheId 
 								FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
-								WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
+								WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+								AND ISNULL(RH.CountryId,'GT') = @IdCountry);
 
 	SET @NewMainUserRol =	(SELECT TOP 1 [CR].[RolIdRol]
 							FROM [dbo].[CatRol] CR
@@ -72,7 +80,8 @@ BEGIN
 
 	SET @CatBusinessSegmentId = (SELECT TOP 1 [CBS].[IdBusinessSegment]
 								FROM	[dbo].[CatBusinessSegment] CBS
-								WHERE	[CBS].[BusinessSegmentName] = 'C2C - CUSTOMER TO CUSTOMER');
+								WHERE	[CBS].[BusinessSegmentName] = 'C2C'
+								AND		ISNULL([CBS].[IdCountry],'GT') = @IdCountry);
 
 	--SET @SaleAdvisorId =	(SELECT [CSA].[IdSaleAdvisor]
 	--						FROM	[dbo].[CatSaleAdvisor] CSA
@@ -80,11 +89,12 @@ BEGIN
 
 	SET @CatTypeOfBusiness =	(SELECT	TOP 1 [CTB].[IdTypeOfBusiness]
 								FROM	[dbo].[CatTypeOfBusiness] CTB
-								WHERE	[CTB].[TypeOfBusinessName] = 'PYMES');
+								WHERE	[CTB].[TypeOfBusinessName] = 'PYMES'
+								AND		ISNULL([CTB].[CountryID],'GT') = @IdCountry);
 
 	SET @CatBusinessActivityId =	(SELECT TOP 1 [CBA].[IdBusinessActivity]
 									FROM	[dbo].[CatBusinessActivity] CBA
-									WHERE	[CBA].[BusinessActivityName] = 'LOGÍSTICA');
+									WHERE	[CBA].[BusinessActivityName] = 'LOGISTICA');
 
 	SET @CatCommercialSegmentId =	(SELECT TOP 1 [CCS].[IdCommercialSegment]
 									FROM	[dbo].[CatCommercialSegment] CCS
@@ -146,7 +156,8 @@ BEGIN
 									[PerNationality],
 									[PerRowStatus],
 									[PerTokenCreated],
-									[PerDateCreated])
+									[PerDateCreated],
+									[PerCountryOrigin])
 		VALUES						(@FirstName,
 									@LastName,
 									@Gender,
@@ -155,7 +166,8 @@ BEGIN
 									@Nationality,
 									1,			-- RowStatus
 									'spHW_CreateTMCustomerAccount', 
-									SYSDATETIME());
+									SYSDATETIME(),
+									@IdCountry);
 
 		SET @PersonId = SCOPE_IDENTITY();
 
@@ -174,6 +186,7 @@ BEGIN
 											[UsrRowStatus],
 											[UsrTokenCreated],
 											[UsrDateCreated],
+											[PrefixCallingCode],
 											[Phone], 
 											[ChangePassword])
 		VALUES								(@PersonId,
@@ -190,6 +203,7 @@ BEGIN
 											1,		-- ROWSTATUS
 											'spHW_CreateTMCustomerAccount',
 											SYSDATETIME(),
+											@NirPhone,
 											@Phone, 
 											1);
 
@@ -231,7 +245,8 @@ BEGIN
 										[CommercialSegmentID],
 										[CatTMSalesPersonId],
 										[CutOffDate],
-										[CustomerGoalQuantity] )
+										[CustomerGoalQuantity],
+										[CountryID] )
 		VALUES							(CONCAT(@FirstName, ' ', @LastName),													-- Name
 										CONCAT(@FirstName, ' ', @LastName),														-- Description
 										CAST(SUBSTRING (@Email, CHARINDEX( '@', @Email ), LEN(@Email)  ) AS nvarchar(50)),		-- Domain
@@ -247,7 +262,8 @@ BEGIN
 										@CatCommercialSegmentId,																-- CommercialSegmentID
 										@CatTMSalesPersonId,																	-- CatTMSalesPersonID
 										@CutOffDate,																			-- CutOffDate												
-										@PackagesGoal);																			-- CustomerGoalQuantity
+										@PackagesGoal,																			-- CustomerGoalQuantity
+										@IdCountry);
 										
 		SET @CustomerId = SCOPE_IDENTITY();
 
