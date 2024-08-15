@@ -6,6 +6,7 @@ CREATE TABLE [dbo].[InvoiceBatchDetail]
 	Id_Lote					INTEGER			NOT NULL,
 	ProcessedCorrelative	VARCHAR(50)		NOT NULL,
 	inv_pk_id				BIGINT			NOT NULL,
+	[SendEmail]				BIT				NOT NULL,
 	[RowStatus]				BIT             NOT NULL,
     [TokenCreated]      	NVARCHAR (50)   NOT NULL,
     [DateCreated]       	DATETIME        NOT NULL,
