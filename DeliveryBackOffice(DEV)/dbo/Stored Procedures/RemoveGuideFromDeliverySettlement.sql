@@ -29,7 +29,7 @@ BEGIN
 		AND rp.RowStatus = 1
 		AND rpd.IsCustomerReschedule = 0
 		AND rp.DeliveryOrderBySettlementId is not null
-	ORDER BY IdRoutePreparation ASC
+	ORDER BY IdRoutePreparation DESC
 
 	BEGIN TRANSACTION
 		BEGIN TRY
