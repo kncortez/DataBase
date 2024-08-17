@@ -1586,7 +1586,7 @@
     <Build Include="dbo\Stored Procedures\sps_Validate_Country.sql" />
     <Build Include="dbo\Stored Procedures\sps_Validate_Currency.sql" />
     <Build Include="dbo\Stored Procedures\spGenerateArrivedGuides.sql" />
-	  <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
+    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1677,6 +1677,8 @@
     <Build Include="dbo\Stored Procedures\SupportCreateNewInternalUserWeb.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionBatch.sql" />
     <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
+    <Build Include="dbo\Stored Procedures\GetBatchInvoiceByCountry.sql" />    
+    <Build Include="dbo\Stored Procedures\ValidateBatchInvoice.sql" />    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
     <Build Include="dbo\User Defined Types\TblCustomerType.sql" />    
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />    
