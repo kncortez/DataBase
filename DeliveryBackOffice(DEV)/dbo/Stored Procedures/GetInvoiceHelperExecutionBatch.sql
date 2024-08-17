@@ -11,13 +11,16 @@ GO
 -- Create date: <2024-07-24>
 -- Description:    < Obtener Lotes pendientes de envió de correo HermesInvoiceHelperHN >
 -- =============================================
+-- Author:        <Daniel, Ramirez>
+-- Create date:   <2024-08-16>
+-- Description:   <Se agrego validacion por lotes al momento de obtener el numero de factura>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInvoiceHelperExecutionBatch]
     @Option as INT,
     @CodeOfReference as INT = 0,
     @IdCountry AS VARCHAR(2) = 'GT'
 AS
 BEGIN
-
     BEGIN TRANSACTION
     BEGIN TRY
 
@@ -48,7 +51,6 @@ BEGIN
                      AND IBR.CodeOfReference = @CodeOfReference
              WHERE IBH.[Status] = 1
                AND IBH.[Enable] = 1
-               AND IBH.RowStatus = 1
                AND IBR.RowStatus = 1;
 
             COMMIT TRANSACTION;
@@ -70,8 +72,8 @@ BEGIN
                    , ISNULL(IH.inv_subjectFEL, '')       [inv_subjectFEL]
                    , ISNULL(IH.inv_descriptionFEL,'')    [inv_descriptionFEL]
                    , IH.inv_status                       [inv_status]
-                   , 'juan.ramirez@forzadelivery.com'    [inv_MailSendFEL] --IH.inv_MailSendFEL                  [inv_MailSendFEL]
-                   , 'juan.ramirez@forzadelivery.com'    [inv_cli_email]   --IH.inv_cli_email                    [inv_cli_email]
+                   , IH.inv_MailSendFEL                  [inv_MailSendFEL]
+                   , IH.inv_cli_email                    [inv_cli_email]
                    , ISNULL(IH.inv_CountryFEL,'')        [inv_CountryFEL]
                    , ISNULL(IH.inv_documentSend,'')      [inv_documentSend]
                    , ISNULL(inv_documentRecieved,'')     [inv_documentRecieved]
@@ -90,11 +92,11 @@ BEGIN
                    , ISNULL(inv_cmp_nameFEL,'')          [inv_cmp_nameFEL]
               FROM InvoiceHeader AS IH
              WHERE IH.IdCountry = @IdCountry
-               AND IH.inv_CountryFEL = @IdCountry
                AND ISNULL(IH.inv_numberFEL,'') = ''
                AND ISNULL(IH.inv_FechaHoraFEL, '') = ''
                AND IH.inv_type = 1
                AND IH.inv_status = 1
+               AND inv_pk_id = 3747636
              ORDER BY IH.inv_pk_id
 
             COMMIT TRANSACTION;
@@ -118,11 +120,18 @@ BEGIN
                  ProcessedCorrelative,
                  inv_pk_id
              )
-             SELECT Id_Lote
+             SELECT ibd.Id_Lote
                     ,ProcessedCorrelative
                     ,inv_pk_id
-               FROM invoiceBatchDetail
+               FROM invoiceBatchDetail ibd WITH(NOLOCK)
+                    INNER JOIN InvoiceBatchHeader ibh WITH(NOLOCK)
+                            ON ibd.Id_Lote = ibh.Id_Lote
               WHERE SendEmail = 0
+                AND ibh.TypeDocument = 1
+                AND ibh.[Status] = 1
+                AND ibh.[Enable] = 1
+                AND ibh.RowStatus = 1
+                AND ISNULL(ProcessedCorrelative,0) <> 0
 
         /*********************************************************************************************************************
         ***************************** OBTENCIÓN INFORMACIÓN DE FACTURAS PENDIENTES DE ENVIAR CORREO **************************
@@ -130,21 +139,21 @@ BEGIN
 
              --SELECT * FROM #listInvoicePending
              -- ENCABEZADO
-             SELECT IH.inv_pk_id
-                    ,IH.inv_cmp_nit
-                    ,IH.inv_cmp_name
-                    ,IH.inv_cmp_adress
-                    ,IH.inv_certificationFEL
-                    ,IH.inv_serieFEL
-                    ,IH.inv_numberFEL
-                    ,IH.inv_FechaHoraFEL
-                    , 'juan.ramirez@forzadelivery.com'    [inv_MailSendFEL] --,ISNULL(IH.inv_MailSendFEL, '') [inv_MailSendFEL]
-                    ,IH.inv_subjectFEL
-                    ,IH.inv_cli_nit
-                    ,IH.inv_cli_name
-                    ,IH.inv_cli_adress
-                    , 'juan.ramirez@forzadelivery.com'    [inv_cli_email]   --,IH.inv_cli_email
-                    ,IH.inv_amount 
+             SELECT ISNULL(IH.inv_pk_id,0) inv_pk_id
+                    ,ISNULL(IH.inv_cmp_nit,'') inv_cmp_nit
+                    ,ISNULL(IH.inv_cmp_name,'') inv_cmp_name
+                    ,ISNULL(IH.inv_cmp_adress,'') inv_cmp_adress
+                    ,ISNULL(IH.inv_certificationFEL,'') inv_certificationFEL
+                    ,ISNULL(IH.inv_serieFEL,'') inv_serieFEL
+                    ,ISNULL(IH.inv_numberFEL,0) inv_numberFEL
+                    ,ISNULL(IH.inv_FechaHoraFEL,'') inv_FechaHoraFEL
+                    ,ISNULL(IH.inv_MailSendFEL, '') [inv_MailSendFEL]
+                    ,ISNULL(IH.inv_subjectFEL,'') inv_subjectFEL
+                    ,ISNULL(IH.inv_cli_nit,'') inv_cli_nit
+                    ,ISNULL(IH.inv_cli_name,'') inv_cli_name
+                    ,ISNULL(IH.inv_cli_adress,'') inv_cli_adress
+                    ,ISNULL(IH.inv_cli_email,'') [inv_cli_email] 
+                    ,ISNULL(IH.inv_amount ,0.00) inv_amount 
                FROM #listInvoicePending   as LIP
                     INNER JOIN invoiceHeader  as IH  WITH (NOLOCK)
                         ON IH.inv_pk_id = LIP.inv_pk_id
@@ -152,16 +161,16 @@ BEGIN
               ORDER BY IH.inv_pk_id
 
             --DETALLE
-             SELECT LIP.inv_pk_id
-                    ,ID.dti_identification
-                    ,ID.dti_category
-                    ,ID.dti_quantity
-                    ,ID.dti_measurement
-                    ,ID.dti_description
-                    ,ID.dti_priceUnit
-                    ,ID.dti_IVA
-                    ,ID.dti_amount
-                    ,curr.Symbol
+             SELECT ISNULL(LIP.inv_pk_id,0) inv_pk_id
+                    ,ISNULL(ID.dti_identification,'') dti_identification
+                    ,ISNULL(ID.dti_category,'') dti_category
+                    ,ISNULL(ID.dti_quantity,0.00) dti_quantity
+                    ,ISNULL(ID.dti_measurement,'') dti_measurement
+                    ,ISNULL(ID.dti_description,'') dti_description
+                    ,ISNULL(ID.dti_priceUnit,0.00) dti_priceUnit
+                    ,ISNULL(ID.dti_IVA,0.00) dti_IVA
+                    ,ISNULL(ID.dti_amount,0.00) dti_amount
+                    ,ISNULL(curr.Symbol,'Q ') Symbol
                FROM #listInvoicePending   as LIP
                     INNER JOIN InvoiceDetail  as ID  WITH (NOLOCK)
                         ON ID.dti_fk_header = LIP.inv_pk_id
