@@ -11,6 +11,10 @@
 -- Modified: <2024-08-06>
 -- Description:	<Se devuelven simbolo de moneda para precio de envio y COD>
 -- =============================================
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-14>
+-- Description:	<Se agrega validacion para mostrar guia sin tomar en cuenta filtro del pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetQualityControlData]
     @GuideSerie NVARCHAR(2) = ''
   , @GuideNumber INT
@@ -149,8 +153,9 @@ BEGIN
               and dsd.rowstatus = 1
 			  --and ISNULL(dsd.Guide_Settlement,0)=0
               and gdd.statusorderid in ( 45, 50 ) --solo incidencias confirmadas y pendientes para el detalle
-			  AND ( @GuideNumber = 0 OR (gdd.guide_number = @GuideNumber AND gdd.Guide_Serie = @GuideSerie))
-			  AND ISNULL(gdd.SenderCountryId, 'GT') = @IdCountry;
+			  --AND ( @GuideNumber = 0 OR (gdd.guide_number = @GuideNumber AND gdd.Guide_Serie = @GuideSerie))
+			  --AND ISNULL(gdd.SenderCountryId, 'GT') = @IdCountry;
+              AND (( @GuideNumber = 0 AND ISNULL(gdd.SenderCountryId, 'GT') = @IdCountry) OR (gdd.guide_number = @GuideNumber AND gdd.Guide_Serie = @GuideSerie));
 
 
         
@@ -192,6 +197,7 @@ BEGIN
                     ON dsd.guide_Number = ordd.guide_number
                        and dsd.guide_serie = ordd.guide_serie
                        and dsd.rowstatus = 1
+                       
                 LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] ds WITH (NOLOCK)
                     ON dsd.ID_DeliveryORderBYSettlement = ds.ID
             WHERE 
@@ -201,6 +207,7 @@ BEGIN
 				  AND ordd.SystemOrigin=2--solo incidnecias de desktop
                   and (dsd.ID IS NULL OR CAST(dsd.DateCreated as date)< CAST(GETDATE() AS DATE))				  
 				  AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry
+				  --AND ( @GuideNumber = 0 OR (ordd.guide_number = @GuideNumber AND ordd.guide_serie = @GuideSerie))
                  
            ) INCDESKT
         WHERE INCDESKT.rn = 1
@@ -294,14 +301,16 @@ BEGIN
                ISNULL(TCD.Settlement_CatRouteId, 0) [IdRoute],
                (CASE
                     WHEN TCD.SystemOrigin = 2 THEN
-                        tk2.SSN_IdUser
+                        --tk2.SSN_IdUser
+                        ''
                     ELSE
                         NULL
                 END
                ) [IdUser],
                (CASE
                     WHEN TCD.SystemOrigin = 2 THEN
-                        tk2.SSN_Username
+                        --tk2.SSN_Username
+                        ''
                     ELSE
                         NULL
                 END
@@ -432,8 +441,8 @@ BEGIN
         ) HUbs
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] da WITH (NOLOCK)
                 ON [DA].[ID] = TCD.[DeliveryAttemptId]
-            LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk2 WITH (NOLOCK)
-                ON tk2.SSN_IdToken = CONVERT(VARCHAR(50), da.User_Created) --ddd.UserCreated						
+            --LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk2 WITH (NOLOCK)
+            --    ON tk2.SSN_IdToken = CONVERT(VARCHAR(50), da.User_Created) --ddd.UserCreated						
             LEFT JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] coi WITH (NOLOCK)
                 ON [COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
                    AND coi.Rowstatus = 1

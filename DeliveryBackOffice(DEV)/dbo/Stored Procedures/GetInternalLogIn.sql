@@ -9,6 +9,10 @@
 -- Modified: <2024-08-05>
 -- Description:	<Se devuelve el id del pais de usuario, en apartado Profile>
 -- =============================================
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-16>
+-- Description:	<Se cambia el pais de usuario por pais de estacion asignada>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInternalLogIn]
 	-- Add the parameters for the stored procedure here
 	@UserCode BIGINT = 0,
@@ -486,7 +490,7 @@ AS
                                          + pe.PerIdentification + '",' + '"Nationality":"' + pe.PerNationality + '",' 
                                          + '"NickName":"' + CONVERT(VARCHAR, us.UsrNickName) + '",'
                                          + '"Phone":"' + ISNULL(us.Phone,'') + '",'										 
-										 + '"IdCountry":"' + ISNULL(pe.PerCountryOrigin,'GT') + '",'
+										 --+ '"IdCountry":"' + ISNULL(pe.PerCountryOrigin,'GT') + '",'
 										 + '"TAC":"TRUE"}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
                                                     INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson
@@ -507,6 +511,7 @@ AS
 											'"ContactName":"' + isnull( RTRIM(LTRIM(CONCAT(pe.PerFirstName,' ', pe.PerLastName))) , '')  + '",' +	  	  
 											'"Phone":"' + isnull(ru.Phone, '')  + '",' +
 											'"Email":"' + isnull(ru.UsrEmail, '')  + '",' +
+											'"IdCountry":"' + ISNULL(CS.CountryId,'GT') + '",'+
 											'"Station":' + CAST(ISNULL(CS.IdStation,0) AS NVARCHAR)+',' + '}' 
 			        FROM  
 			         DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
