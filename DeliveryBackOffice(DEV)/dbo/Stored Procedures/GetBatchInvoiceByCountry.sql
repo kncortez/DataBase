@@ -11,7 +11,7 @@
 -- Create date: 2024/08/16
 -- Description: Se agregaron validaciones de lotes
 -- =============================================
-CREATE PROCEDURE [dbo].[GetBatchInvoiceByCountry_DR]
+CREATE PROCEDURE [dbo].[GetBatchInvoiceByCountry]
 (
     @idInvoice       BIGINT,
     @user            NVARCHAR(100) = 'SYSTEM',
