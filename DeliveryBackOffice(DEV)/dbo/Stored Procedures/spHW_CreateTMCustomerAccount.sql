@@ -7,6 +7,10 @@
 -- Modified:	<13-08-2024>
 -- Description:	<Add multicountry validations>
 -- =============================================
+-- Author:		<Tito García>
+-- Modified:	<19-08-2024>
+-- Description:	<Support email by country is added to the stored procedure response>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_CreateTMCustomerAccount] 
 	@FirstName NVARCHAR(100),
 	@LastName NVARCHAR(100),
@@ -54,6 +58,7 @@ BEGIN
 	DECLARE @TMSalesPersonName NVARCHAR(600) = '';
 	DECLARE @TMSalesPersonPhone NVARCHAR(200) = '';
 	DECLARE @TMSalesPersonEmail NVARCHAR(200) = '';
+	DECLARE @SupportEmailByCountry NVARCHAR(200) = '';
 	DECLARE @CatSaleAdvisorId INT = 0;
 
 	SET @NewMainRates = (SELECT TOP 1 RH.RheId 
@@ -136,6 +141,11 @@ BEGIN
 	SET @CatSaleAdvisorId = ( SELECT	[CTSP].[CatSaleAdvisorId]
 								FROM	[dbo].[CatTMSalesPerson] CTSP
 								WHERE	[CTSP].[RegisterUserId] = @RegisterUserId);
+
+	SET @SupportEmailByCountry = ( SELECT [cp].[Value]
+									FROM [dbo].[ConfigParams] cp
+									WHERE Name = 'SupportEmailByCountry'
+										AND [cp].[IdCountry] = @IdCountry);
 
 	-- Validación de correo
 	IF (@EmailExisting > 0)
@@ -409,6 +419,7 @@ BEGIN
 			,@TMSalesPersonName [spTMSPName]
 			,@TMSalesPersonPhone [spTMSPPhone]
 			,@TMSalesPersonEmail [spTMSPEmail]
+			,@SupportEmailByCountry [spSupportEmailByCountry]
 			,@AccountId [spIdAccount];
 	END TRY
 	BEGIN CATCH
