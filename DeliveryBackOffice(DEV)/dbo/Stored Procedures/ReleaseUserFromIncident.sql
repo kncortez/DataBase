@@ -3,7 +3,7 @@
 -- Create date: <2024-07-22>
 -- Description:	<SP para liberar la incidencia del usuario que la tiene asignada en el  proceso de validacion. Ref. FDAPI-2287>
 -- =============================================
-ALTER PROCEDURE [dbo].[ReleaseUserFromIncident]
+CREATE PROCEDURE [dbo].[ReleaseUserFromIncident]
  @GuideSerie NVARCHAR(2) = 'FD',
  @GuideNumber INT
 
@@ -13,6 +13,7 @@ BEGIN
 
 	DECLARE @DescriptionResult NVARCHAR(500)
 
+	BEGIN TRANSACTION 
 	BEGIN TRY
 		UPDATE coi  
 		SET coi.TakenIncidenceUserId = Null, 
@@ -33,9 +34,12 @@ BEGIN
 		END
 		
 		SELECT @DescriptionResult AS DescriptionResult
-
+		COMMIT TRANSACTION;
 	END TRY
 	BEGIN CATCH
+
+		ROLLBACK TRANSACTION;
+
 		DECLARE @ErrorMessage NVARCHAR(500);
 		SET @ErrorMessage = ERROR_MESSAGE();
 

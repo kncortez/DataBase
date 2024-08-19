@@ -11,8 +11,9 @@ BEGIN
 	SET NOCOUNT ON;
 
 	SELECT TOP 1 rp.DateRoutePreparation, rpd.IsCustomerReschedule
-	FROM [dbo].[RoutePreparation] rp
-		INNER JOIN [dbo].[RoutePreparationDetail] rpd ON rp.IdRoutePreparation = rpd.RoutePreparationId
+	FROM [dbo].[RoutePreparation] rp WITH(NOLOCK)
+		INNER JOIN [dbo].[RoutePreparationDetail] rpd WITH(NOLOCK)
+			ON rp.IdRoutePreparation = rpd.RoutePreparationId
 	WHERE rpd.Guide_Serie = @GuideSerie
 		AND rpd.Guide_Number = 	@GuideNumber	
 		AND rp.RowStatus = 1
