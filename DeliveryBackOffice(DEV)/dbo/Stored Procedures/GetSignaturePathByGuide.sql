@@ -9,7 +9,7 @@ CREATE PROCEDURE [dbo].[GetSignaturePathByGuide]
 AS
 BEGIN
 
-	SELECT TOP 1 dp.PathSignature 
+	SELECT TOP 1 dp.PathSignature AS [SignaturePath]
 	FROM [dbo].[DeliveryProof] dp WITH (NOLOCK)
 	WHERE dp.Guide_Serie = @GuideSerie
 		AND dp.Guide_Number = @GuideNumber
