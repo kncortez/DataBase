@@ -19,6 +19,11 @@
 -- Create date: <2024-06-11>
 -- Description:	<Agrega el tipo de moneda origen y destino, dependiendo del pais >
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2024-08-12>
+-- Description:	<Modificación de forma dinamica los códigos para los articulos filtrado por país.>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_revalue_guide]
     @GuideSerie VARCHAR(2) = 'FD'
   , @GuideNumber INT = 200307
@@ -65,33 +70,6 @@ BEGIN
 				SET @RevaluedGuide = 1
 				
        END
-
-	
-
-
-
-    -- Variables "estaticas"
-    DECLARE @NewMainRates INT =
-            (
-                SELECT TOP 1
-                       RH.RheId
-                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar' --COLLATE Latin1_General_CI_AI
-            );
-    DECLARE @NewAlternativeRates INT =
-            (
-                SELECT TOP 1
-                       RH.RheId
-                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario destinos express center' --COLLATE Latin1_General_CI_AI
-            );
-    DECLARE @NewAutoSalesMainRates INT =
-            (
-                SELECT TOP 1
-                       RH.RheId
-                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' --COLLATE Latin1_General_CI_AI
-            );
 
     -- Variables de control
     DECLARE @IdCustomer AS INT;
@@ -153,6 +131,28 @@ BEGIN
     --print 'fin carga inicial'
     ------------------ fin Carga de datos ---------------------------------------------------------------------
 
+    -- Variables "estaticas"
+    DECLARE @NewMainRates INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifario de servicio estandar' AND CountryId = @ReceiverCountryId  --COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @NewAlternativeRates INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifario destinos express center' AND CountryId = @ReceiverCountryId --COLLATE Latin1_General_CI_AI
+            );
+    DECLARE @NewAutoSalesMainRates INT =
+            (
+                SELECT TOP 1
+                       RH.RheId
+                FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
+                WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' AND CountryId = @ReceiverCountryId --COLLATE Latin1_General_CI_AI
+            );
 
 	PRINT 'origen';
     PRINT @HeaderCodeSource;
@@ -428,16 +428,23 @@ BEGIN
         BEGIN
 
             DECLARE @DataCounter INT = 1;
-
-            SET @Parcel = N'EXP076';
+            DECLARE @ParcelCode2 NVARCHAR(40);
+            --SET @Parcel = N'EXP076';
             SET @Pesos = N'10';
+
+            SELECT TOP 1 @Parcel = Code FROM DeliveryBackOffice.dbo.ArticleByCustomer WITH(NOLOCK)
+			WHERE  AbcIdArticle = (SELECT ArtId FROM DeliveryBackOffice.dbo.CatArticle WITH(NOLOCK)
+			WHERE  ArtName = 'Paquete pequeño' AND (IdCountry = @ReceiverCountryId OR (IdCountry IS NULL AND @ReceiverCountryId = 'GT')))
+
+			SET @ParcelCode2 = @Parcel;
 
             IF (@DataCounter < @PiecesCount)
             BEGIN
                 WHILE @DataCounter < @PiecesCount
                 BEGIN
 
-                    SET @Parcel = CONCAT(@Parcel, ',EXP076');
+                    --SET @Parcel = CONCAT(@Parcel, ',EXP076');
+                    SET @Parcel = CONCAT(@Parcel, ',' + @ParcelCode2);
                     SET @Pesos = CONCAT(@Pesos, ',10');
 
                     SET @DataCounter = @DataCounter + 1;
@@ -493,7 +500,7 @@ BEGIN
 		declare @NewProductId INT=NULL;
 
 		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
-		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1)
+		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1 and (IdCountry = @ReceiverCountryId OR (IdCountry IS NULL AND @ReceiverCountryId = 'GT')))
 	
 		IF(@NewProductId IS NULL)
 		BEGIN
