@@ -4,10 +4,15 @@
 -- Create date: <20-09-2022>
 -- Description:	<Hace la busqueda de puntos de visita por teléfono, correo o nombre>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<20-08-2024>
+-- Description:	<Se agrega parametro para filtrar por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_SearchVisitPoints]
 	-- Add the parameters for the stored procedure here
 	@search NVARCHAR(80)=NULL,
-	@filter INT = -1
+	@filter INT = -1,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 		--0 TELEFONO,
 		--1 CORREO,
 		--2 NOMBRE
@@ -62,7 +67,8 @@ BEGIN
 			OR
 			(@filter = 2 AND CONCAT(PR.PerFirstName,' ',PR.PerLastName) like '%'+@search+'%' COLLATE Latin1_General_CI_AI)
 		)
-		AND VP.StatusClient = 1	;
+		AND VP.StatusClient = 1	
+		AND ISNULL(VP.CountryId, 'GT') = @IdCountry ;
 
 	
 END
