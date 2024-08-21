@@ -6,7 +6,7 @@
 -- =============================================
 -- Author:		<Brandon Pedroza>
 -- Modified:	<20-08-2024>
--- Description:	<Se agrega parametro para filtrar por pais>
+-- Description:	<Se agrega parametro para filtrar por pais y nirphone>
 -- =============================================
 CREATE PROCEDURE [dbo].[sphw_SearchVisitPoints]
 	-- Add the parameters for the stored procedure here
@@ -32,7 +32,8 @@ BEGIN
 		VP.DescriptionOfClient,
 		VP.ContactName,
 		VP.Address,
-		REPLACE(REPLACE(REPLACE(VP.Phone,'(502)',''),'-',''),' ','') 'Phone',
+		ISNULL(UA.UadNirPhone,IIF(VP.CountryId ='HN','504','502')) 'NirPhone',
+		REPLACE(REPLACE(REPLACE(REPLACE(VP.Phone,'(504)',''),'(502)',''),'-',''),' ','') 'Phone',
 		VP.Email,
 		VP.Town,
 		VP.Department,
