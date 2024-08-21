@@ -439,19 +439,20 @@ BEGIN
 				   ) [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN CONCAT([CPS].[Value],[DOR].[Sender_Phone])
+				THEN  REPLACE(REPLACE(REPLACE(REPLACE([DOR].[Sender_Phone],' ', ''), '+', ''), '(', ''), '(', '')
 				ELSE ''
 				END [Sender_Phone],				
 				ISNULL(
 						IIF(DOR.IsLastMileReturn = 1
-						, CONCAT([CPS].[Value],ISNULL(DOR.Sender_Phone, 'N/A'))
-						,  CONCAT([CPR].[Value],
-								ISNULL(
+						, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(DOR.Sender_Phone, 'N/A'),' ', ''), '+', ''), '(', ''), '(', '')
+						, REPLACE(REPLACE(REPLACE(REPLACE(
+								ISNULL
+									(
 									  DOR.Receiver_Phone
 									, DOR.Receiver_Alternant_Phone
 									)
-								)
-							), 'N/A'
+							,' ', ''), '+', ''), '(', ''), '(', '')
+						), 'N/A'
 					  ) [Phone],
 				ISNULL(
 						(
@@ -646,7 +647,7 @@ BEGIN
 					Guide_Serie,
 					Guide_Number,
 					ID_Courier
-		)                                                               DAT	
+		)                                                                DAT	
 		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
