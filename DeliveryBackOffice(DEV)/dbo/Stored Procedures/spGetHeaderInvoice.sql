@@ -3,6 +3,10 @@
 -- Create date: <2024-08-07>
 -- Description: <Genera la informacion para los encabezados de la factura>
 -- =============================================
+-- Author:        <Daniel, Ramirez>
+-- Create date:   <2024-08-21>
+-- Description:   <Ajuste para obtener info para tienda virtual desde Invoice Helper>
+-- =============================================
 CREATE PROCEDURE [dbo].[spGetHeaderInvoice]
 (
  @IdInvoice          BIGINT,      -- Id de factura
@@ -10,6 +14,44 @@ CREATE PROCEDURE [dbo].[spGetHeaderInvoice]
 )
 AS
 BEGIN
+     DECLARE @IdCountry    NVARCHAR(2),
+             @Pbx          NVARCHAR(15),
+             @EmailSup     NVARCHAR(35),
+             @CodeArea     NVARCHAR(5),
+             @VoucherPhone NVARCHAR(35)
+
+   SELECT @IdCountry = IdCountry
+     FROM invoiceHeader invH WITH(NOLOCK)
+    WHERE invH.inv_numberFEL = @CorrelativeInvoice
+      AND invH.inv_pk_id = @IdInvoice
+
+   SELECT @CodeArea     = MAX(AreaCode),
+          @EmailSup     = MAX(SupportEmailByCountry),
+          @Pbx          = MAX(PBX),
+          @VoucherPhone = MAX(VoucherPhone)
+     FROM (
+           SELECT 
+                   CASE
+                       WHEN [Name] = 'AreaCode' THEN [Value]
+                       ELSE ''
+                   END AS [AreaCode],
+                   CASE
+                       WHEN [Name] = 'SupportEmailByCountry' THEN [Value]
+                       ELSE ''
+                   END AS [SupportEmailByCountry],
+                   CASE
+                       WHEN [Name] = 'PBX' THEN [Value]
+                       ELSE ''
+                   END AS [PBX],
+                   CASE
+                       WHEN [Name] = 'VoucherPhone' THEN [Value]
+                       ELSE ''
+                   END AS [VoucherPhone]
+            FROM ConfigParams
+           WHERE [Name] IN ('AreaCode', 'SupportEmailByCountry','PBX','VoucherPhone')
+             AND IdCountry = @IdCountry
+     ) AS T
+
    SELECT parFac.inv_cmp_nameComercial, 
           parFac.dpf_FELEntity,
           parFac.dpf_FELCorreoCCO,
@@ -41,15 +83,19 @@ BEGIN
           '' AS ImpExonerado,
           invH.inv_IVA AS Isv,
           invH.inv_amount AS TotalPay,
-          dbo.[CantidadEnLetras](inv_amount,'LEMPIRAS') AS PayInLetters
+          dbo.[CantidadEnLetras](inv_amount,'LEMPIRAS') AS PayInLetters,
+          ISNULL(LTRIM(RTRIM(@CodeArea)),'') AS [CodeArea],
+          ISNULL(LTRIM(RTRIM(@EmailSup)),'') AS [EmailSup],
+          ISNULL(LTRIM(RTRIM(@Pbx)),'') AS [Pbx],
+          ISNULL(LTRIM(RTRIM(@VoucherPhone)),'') AS [VoucherPhone]
      FROM invoiceHeader invH WITH(NOLOCK)
-          LEFT JOIN InvoiceBatchDetail invBD WITH(NOLOCK) 
+          INNER JOIN InvoiceBatchDetail invBD WITH(NOLOCK) 
                   ON invH.inv_pk_id = invBD.inv_pk_id 
-          LEFT JOIN InvoiceBatchHeader invHe WITH(NOLOCK) 
+          INNER JOIN InvoiceBatchHeader invHe WITH(NOLOCK) 
                   ON invBD.Id_Lote = invHe.Id_Lote
-          LEFT JOIN del_ParametrosFactura parFac WITH(NOLOCK)
+          INNER JOIN del_ParametrosFactura parFac WITH(NOLOCK)
                   ON parFac.dpf_VpCodeOfReference = invH.inv_vpCodeOfReferences
-          LEFT JOIN VisitPointClient vPointCli WITH(NOLOCK)
+          INNER JOIN VisitPointClient vPointCli WITH(NOLOCK)
                   ON vPointCli.CodeOfReference = parFac.dpf_VpCodeOfReference
     WHERE invH.inv_numberFEL = @CorrelativeInvoice
       AND invH.inv_pk_id = @IdInvoice

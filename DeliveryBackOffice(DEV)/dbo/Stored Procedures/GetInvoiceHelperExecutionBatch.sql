@@ -15,6 +15,10 @@ GO
 -- Create date:   <2024-08-16>
 -- Description:   <Se agrego validacion por lotes al momento de obtener el numero de factura>
 -- =============================================
+-- Author:        <Daniel, Ramirez>
+-- Create date:   <2024-08-21>
+-- Description:   <Ajuste para obtener info para tienda virtual desde Invoice Helper>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInvoiceHelperExecutionBatch]
     @Option as INT,
     @CodeOfReference as INT = 0,
@@ -24,6 +28,7 @@ BEGIN
     BEGIN TRANSACTION
     BEGIN TRY
 
+     DECLARE @Pbx          NVARCHAR(15) = ''
        /*
             InvoiceBatchHeader
             status = 1 y enable = 1 es cuando el lote esta habilidado y activo
@@ -104,6 +109,11 @@ BEGIN
         ELSE IF(@Option = 3)
         BEGIN
 
+           SELECT @Pbx = [Value]
+             FROM ConfigParams
+            WHERE [Name] = 'PBX'
+              AND IdCountry = @IdCountry
+
         /*********************************************************************************************************************
         ***************************** OBTENCIÓN DE LISTADO DE FACTURAS PENDIENTES DE ENVIAR CORREO ***************************
         *********************************************************************************************************************/
@@ -152,12 +162,16 @@ BEGIN
                     ,ISNULL(IH.inv_cli_nit,'') inv_cli_nit
                     ,ISNULL(IH.inv_cli_name,'') inv_cli_name
                     ,ISNULL(IH.inv_cli_adress,'') inv_cli_adress
-                    ,ISNULL(IH.inv_cli_email,'') [inv_cli_email] 
-                    ,ISNULL(IH.inv_amount ,0.00) inv_amount 
+                    ,ISNULL(IH.inv_cli_email,'') [inv_cli_email]
+                    ,ISNULL(IH.inv_amount ,0.00) inv_amount
+                    ,ISNULL(curr.Symbol,'Q ') Symbol
+                    ,ISNULL(LTRIM(RTRIM(@Pbx)),'') Pbx
                FROM #listInvoicePending   as LIP
                     INNER JOIN invoiceHeader  as IH  WITH (NOLOCK)
                         ON IH.inv_pk_id = LIP.inv_pk_id
-              WHERE IH.inv_status = 1
+                    LEFT JOIN CatCurrencyCOD as curr WITH(NOLOCK)
+                        ON IH.IdCurrency = curr.IdCatCurrencyCOD
+              WHERE IH.inv_status = 2
               ORDER BY IH.inv_pk_id
 
             --DETALLE
@@ -170,19 +184,13 @@ BEGIN
                     ,ISNULL(ID.dti_priceUnit,0.00) dti_priceUnit
                     ,ISNULL(ID.dti_IVA,0.00) dti_IVA
                     ,ISNULL(ID.dti_amount,0.00) dti_amount
-                    ,ISNULL(curr.Symbol,'Q ') Symbol
                FROM #listInvoicePending   as LIP
+                    INNER JOIN invoiceHeader  as IH  WITH (NOLOCK)
+                        ON IH.inv_pk_id = LIP.inv_pk_id
                     INNER JOIN InvoiceDetail  as ID  WITH (NOLOCK)
                         ON ID.dti_fk_header = LIP.inv_pk_id
-                    INNER JOIN DeliveryOrder  as DO WITH(NOLOCK)
-                        ON  DO.Guide_Number = ID.dti_fk_orderNumber
-                        AND DO.Guide_Serie  = ID.dti_fk_orderSerie
-                    LEFT JOIN Cost AS sc WITH(NOLOCK)
-                        ON sc.GuideNumber = ID.dti_fk_orderNumber
-                        AND sc.GuideSerie = ID.dti_fk_orderSerie
-                    LEFT JOIN CatCurrencyCOD as curr WITH(NOLOCK)
-                        ON sc.ShippingCurrency = curr.IdCatCurrencyCOD
-               ORDER BY LIP.inv_pk_id
+              WHERE IH.inv_status = 2
+              ORDER BY LIP.inv_pk_id
 
                IF OBJECT_ID('tempdb.dbo.#listInvoicePending', 'U') IS NOT NULL
                DROP TABLE #listInvoicePending;
