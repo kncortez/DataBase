@@ -16,16 +16,10 @@ BEGIN
           invDet.dti_amount,
           curr.Symbol AS currency
      FROM invoiceHeader invH WITH(NOLOCK)
-          LEFT JOIN invoiceDetail invDet WITH(NOLOCK)
+          INNER JOIN invoiceDetail invDet WITH(NOLOCK)
                  ON invH.inv_pk_id = invDet.dti_fk_header
-          LEFT JOIN DeliveryOrder do WITH(NOLOCK)
-                 ON do.Guide_Serie  = invDet.dti_fk_orderSerie
-                AND do.Guide_Number = invDet.dti_fk_orderNumber
-          LEFT JOIN Cost cs WITH(NOLOCK)
-                 ON do.Guide_Serie  = cs.GuideSerie
-                AND do.Guide_Number = cs.GuideNumber
           LEFT JOIN CatCurrencyCOD curr WITH(NOLOCK)
-                 ON curr.IdCatCurrencyCOD = cs.ShippingCurrency
+                 ON curr.IdCatCurrencyCOD = invH.IdCurrency
     WHERE invH.inv_numberFEL = @CorrelativeInvoice
       AND invH.inv_pk_id = @IdInvoice
      ORDER BY 1 DESC
