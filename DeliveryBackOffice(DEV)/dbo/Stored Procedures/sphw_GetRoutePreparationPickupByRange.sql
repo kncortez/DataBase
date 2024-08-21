@@ -4,13 +4,18 @@
 -- Create date: <2022-09-13>
 -- Description:	<Devuelve todas las recolecciones de un usuario individual filtradas por un rango de fechas, siendo máximo 30 días atras>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2024-08-20>
+-- Description:	<Se agrega parametro para filtrar servicios de recoleccion por pais de hub asignado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_GetRoutePreparationPickupByRange]
 	@startDate AS DATE = NULL, --Fecha inicio de filtro
 	@endDate AS DATE = NULL, --Fecha fin de filtro
 
 	@accountId BIGINT = NULL,
 	@userId BIGINT = NULL,
-	@serviceManagementId INT = NULL
+	@serviceManagementId INT = NULL,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -84,6 +89,7 @@ BEGIN
 			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND shp.AccountId = @accountId
+			AND ISNULL(hl.IdCountry,'GT') = @IdCountry 
 		ORDER BY shp.DateCreated desc
 		
 	END
@@ -150,6 +156,7 @@ BEGIN
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
+			AND ISNULL(hlf.IdCountry,'GT') = @IdCountry 
 		ORDER BY shp.DateCreated desc
 
 	END
