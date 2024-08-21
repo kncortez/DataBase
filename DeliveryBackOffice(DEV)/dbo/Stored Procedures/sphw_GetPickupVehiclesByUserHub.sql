@@ -8,7 +8,8 @@ CREATE PROCEDURE [dbo].[sphw_GetPickupVehiclesByUserHub]
 	-- Add the parameters for the stored procedure here
 	@IdUser BIGINT,
 	@UbicaCourierLocations TblCourierLocation READONLY,
-	@CourierLocations TblCourierLocation READONLY
+	@CourierLocations TblCourierLocation READONLY,
+	@IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -134,7 +135,8 @@ BEGIN
 		FROM HubLogisticByUser hlbu WITH (NOLOCK)
 		INNER JOIN HubLogistics hl
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
-		WHERE UserId = @IdUser)
+		WHERE UserId = @IdUser
+		AND ISNULL(hl.IdCountry, 'GT') = @IdCountry)
 	)
 	
 	INSERT INTO @ResponseTable
@@ -227,7 +229,8 @@ BEGIN
 		FROM HubLogisticByUser hlbu WITH (NOLOCK)
 		INNER JOIN HubLogistics hl
 			ON hl.IdHubLogistic = hlbu.HubLogisticId
-		WHERE UserId = @IdUser)
+		WHERE UserId = @IdUser
+		AND ISNULL(hl.IdCountry, 'GT') = @IdCountry)
 	)
 	AND RT.CourierId IS NULL
 

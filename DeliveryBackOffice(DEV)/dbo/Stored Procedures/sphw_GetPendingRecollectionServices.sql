@@ -4,11 +4,16 @@
 -- Create date: <22-09-2022>
 -- Description:	<Método para carga de servicios pendientes de procesar filtrado por hubs y rango de fechas>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<21-08-2024>
+-- Description:	<Se agrega parametro para filtrar servicios por pais de hub asignado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_GetPendingRecollectionServices]
 	@HubId	INT = -1,
 	@StartDate DATE = NULL,
 	@EndDate DATE = NULL,
-	@IdUser INT = -1
+	@IdUser INT = -1,
+	@IdCountry NVARCHAR(2)= 'GT'
 	
 
 AS
@@ -92,13 +97,15 @@ BEGIN
 				ON shp.TownshipId = twnT.IdTownship
 			LEFT JOIN
 			(
-				SELECT DSCAux.HeaderCode,
+				SELECT TOP 1 DSCAux.HeaderCode,
 						HL.IdHubLogistic,
-					   MAX(DSCAux.Hub) 'HubAbbreviation'
+					   MAX(DSCAux.Hub) 'HubAbbreviation',
+					   HL.IdCountry
 				FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSCAux WITH (NOLOCK)
 					INNER JOIN DBO.HubLogistics HL WITH (NOLOCK) ON HL.HubAbbreviation=DSCAux.Hub 
-				WHERE DSCAux.RowStatus = 1 AND HL.HubStatus =1
-				GROUP BY DSCAux.HeaderCode,HL.IdHubLogistic
+				WHERE DSCAux.RowStatus = 1 AND HL.HubStatus = 1
+				AND ISNULL(HL.IdCountry, 'GT') = @IdCountry
+				GROUP BY DSCAux.HeaderCode,HL.IdHubLogistic, HL.IdCountry
 			) hub
 				ON ISNULL(twnT.HeaderCode, TwnTvpc.HeaderCode) = hub.HeaderCode
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
@@ -152,6 +159,7 @@ BEGIN
 				AND
 				INSRV.ServiceManagementId IS NULL--No posee ninguna incidencia registrada
 			------------------------------------------------------------------------
+			AND ISNULL(SPHUB.IdCountry,ISNULL(hub.IdCountry,'GT')) = @IdCountry
 		ORDER BY
 			ISNULL(srv.IdPuRouteAssigment, 0) ASC, -- Primero servicios sin asignar
 			ISNULL(SA.IsAlerted, 0) DESC, -- Luego servicios alertados
