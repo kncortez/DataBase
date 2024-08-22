@@ -265,20 +265,23 @@ BEGIN
 
             DECLARE @IdRateDefault INT =
                     (
-                        SELECT TOP 1
+                        SELECT
                                rh.RheId
                         FROM DeliveryBackOffice.dbo.RateHeader rh
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
+							  AND rh.RateTypeId = 1
+							  AND rh.CountryId = @IdCountrySender
                     );
             DECLARE @IdRate INT;
 
             DECLARE @MinCODCommissionAmount DECIMAL(12, 2) =
                     (
-                        SELECT TOP 1 CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
+                        SELECT CONVERT(DECIMAL(12, 2), ISNULL(cf.Value, '0')) val
                         FROM DeliveryBackOffice.dbo.ConfigParams cf
                         WHERE cf.Name = 'MinCODCommissionAmount'
                               AND Status = 1
+							  AND cf.IdCountry = @IdCountrySender
                     );
             DECLARE @CODRateDefault DECIMAL(12, 2) =
                     (
@@ -286,6 +289,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
+							  AND cf.IdCountry = @IdCountrySender
                     );
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
@@ -293,6 +297,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
+							  AND cf.IdCountry = @IdCountrySender
                     );
 
             ---- Revalorizar guias que no tengan un precio asociado ---------------------------------------------
