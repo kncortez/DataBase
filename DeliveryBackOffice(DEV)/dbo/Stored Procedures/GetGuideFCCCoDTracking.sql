@@ -59,7 +59,7 @@ BEGIN
 					,-1 'Option'
 					,(
 						CASE
-							WHEN Cu.IdCustomerType = 1 AND Cu.CODContactEmail IS NOT NULL THEN Cu.CODContactEmail
+							WHEN Cu.IdCustomerType = 1 AND Cu.CODContactEmail IS NOT NULL THEN ISNULL(Cu.CODContactEmail,Cu.ContactEmail)
 							ELSE ISNULL(DO.Sender_Mail, '')
 						END
 					) 'CustomerMail'
