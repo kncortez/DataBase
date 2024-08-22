@@ -1684,6 +1684,7 @@
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />    
     <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />    
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />    
+    <Build Include="dbo\SetBatchInvoiceByCountryCreditNote.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
