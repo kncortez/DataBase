@@ -252,11 +252,13 @@ BEGIN
 
             DECLARE @IdRateDefault INT =
                     (
-                        SELECT TOP 1
+                        SELECT
                                rh.RheId
                         FROM DeliveryBackOffice.dbo.RateHeader rh WITH (NOLOCK)
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
+							  AND rh.RateTypeId = 1
+							  AND rh.CountryId = @IdCountrySender
                     );
             DECLARE @IdRate INT;
             DECLARE @CODRateDefault DECIMAL(12, 2) =
@@ -265,6 +267,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
+							  AND cf.IdCountry = @IdCountrySender
                     );
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
@@ -272,6 +275,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
+							  AND cf.IdCountry = @IdCountrySender
                     );
 
             ---- Revalorizar guias que no tengan un precio asociado ---------------------------------------------
