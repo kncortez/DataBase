@@ -483,7 +483,8 @@ BEGIN
              , 'Transacción exitosa' AS 'Description'
              , @dti_fk_header        IdInvoice
              , @inv_cli_email        inv_cli_email
-             , @Token                Token;
+             , @Token                Token
+             , @inv_vpCodeOfReferences inv_vpCodeOfReferences;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;

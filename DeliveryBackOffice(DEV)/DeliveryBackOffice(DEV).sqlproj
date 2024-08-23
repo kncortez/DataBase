@@ -1679,6 +1679,7 @@
     <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
     <Build Include="dbo\Stored Procedures\GetBatchInvoiceByCountry.sql" />    
     <Build Include="dbo\Stored Procedures\ValidateBatchInvoice.sql" />    
+    <Build Include="dbo\Stored Procedures\GetValuesInvoice.sql" />    
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
     <Build Include="dbo\User Defined Types\TblCustomerType.sql" />    
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />    
