@@ -36,7 +36,7 @@ BEGIN
                                         ON TWS.IdTownship = STL.IdTownship
                                     INNER JOIN DeliveryBackOffice.dbo.Province   PRV WITH (NOLOCK)
                                         ON PRV.IdProvince = TWS.IdProvince
-                                WHERE IdKindOfVPClient = 1
+                                WHERE (IdKindOfVPClient = 1 OR IdKindOfVPClient = 12)
                                       AND VPC.StatusClient = 1
                                       AND IIF(PRV.IdCountry IS NULL, 'GT', PRV.IdCountry) = @Idcountry
                                 ORDER BY VPC.CodeOfReference
