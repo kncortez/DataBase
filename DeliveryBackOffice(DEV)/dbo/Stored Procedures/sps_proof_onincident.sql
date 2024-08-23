@@ -19,6 +19,10 @@
 -- Create date: <2022-10-19>
 -- Description:	<devolución ingreso a cola de webhooks>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-07-23>
+-- Description:	<Se guarda en la tabla ConfirmationOfIncidence el comentario que registra el piloto al momento de crear la incidencia>
+-- =============================================
 
 CREATE procedure [dbo].[sps_proof_onincident]
     @GuideSerie nvarchar(2),
@@ -29,7 +33,8 @@ CREATE procedure [dbo].[sps_proof_onincident]
     @Latitude NVARCHAR(20),
     @Longitude NVARCHAR(20),
     @Accuracy NVARCHAR(20),
-    @MaxDistance FLOAT = 7000 --Distancia en metros
+    @MaxDistance FLOAT = 7000, --Distancia en metros
+	@CommentOnIncident NVARCHAR(200) = ''
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -599,12 +604,13 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
                     [DateStatusOrder],
                     [RowStatus],
                     [TokenCreated],
-                    [DateCreated]
+                    [DateCreated],
+					[CommentOnIncident]
                 )
                 VALUES
                 (CONCAT(@GuideSerie, @GuideNumber, ROUND(((99999 - 10000) * RAND() + 10000), 0)),
                  @CatTypeConfirmationOfIncidenceId, ISNULL(@IsValidDistance, 0), 0, @StatusOrderId, @DateStatusOrder, 1,
-                 'sps_proof_onincident', GETDATE());
+                 'sps_proof_onincident', GETDATE(), @CommentOnIncident);
 
                 SET @ConfirmationOfIncidenceId = SCOPE_IDENTITY();
 

@@ -1,12 +1,11 @@
-﻿
-
-
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Edwin,Ramirez>
 -- Create date: <01/11/2020>
 -- Description:	<Detalle de rastreo en web services para el cliente>
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Create date: <24/07/2024>
+-- Description:	<Se agrega CommentOnIncident para devolver el comentario que el piloto ingreso al momento de crear la incidencia>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_status_order_detail_wbs]
 	@Guide_Serie NVARCHAR(2),
@@ -40,7 +39,8 @@ BEGIN
 		   RES.[Place],
 		   RES.[ManifestNumber],
 		   RES.[Latitude],
-		   RES.[Longitude]
+		   RES.[Longitude],
+		   RES.[CommentOnIncident]
 	FROM 
 		(SELECT
 			0 [EventID],
@@ -72,7 +72,8 @@ BEGIN
 			ISNULL(Sender_FirstName,'') + ' ' + isnull(Sender_LastName,'') as Place ,
 			do.Manifest_Serie + CAST(do.Manifest_Number AS VARCHAR) as [ManifestNumber],
 			da.Latitude,
-			da.Longitude
+			da.Longitude,
+			'' AS [CommentOnIncident]
 		FROM DeliveryBackOffice.dbo.DeliveryOrder do with(nolock)
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryAttempt da with(nolock) 
 		on da.Guide_Serie = do.Guide_Serie and da.Guide_Number = do.Guide_Number
@@ -140,9 +141,15 @@ BEGIN
 			'' as Place,
 			'' as [ManifestNumber],
 			'' as Latitude,
-			'' as Longitude
-		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod with(nolock) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
-		   INNER JOIN DeliveryBackOffice.dbo.StatusOrder so with(nolock) on so.StatusOrderId = dod.StatusOrderId
+			'' as Longitude,
+			COI.CommentOnIncident AS [CommentOnIncident]
+		FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH(NOLOCK) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
+		   INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH(NOLOCK) 
+		   		ON so.StatusOrderId = dod.StatusOrderId
+            LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
+			    ON da.ID = dod.DeliveryAttemptId
+			LEFT JOIN [dbo].[ConfirmationOfIncidence] COI WITH(NOLOCK) 
+			    ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
 		WHERE dod.Guide_Serie = @Guide_Serie and dod.Guide_Number = @Guide_Number
 		) RES
 		ORDER BY RES.[EventID], RES.[StageDate] ASC
