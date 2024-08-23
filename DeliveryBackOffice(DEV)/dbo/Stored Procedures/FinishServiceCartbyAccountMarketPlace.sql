@@ -35,9 +35,24 @@ BEGIN
 	DECLARE @IdCustomer INT =(SELECT Top 1 IdCustomer  FROM [dbo].[Account]
                               WHERE AccIdAccount = ISNULL(@IdAccount,0))
 
-    DECLARE @IdCart INT =(Select Top 1 MarketplaceCartId From [dbo].[MarketplaceCartDetail] a  WHERE  a.IdMarketplaceCartDetail= ISNULL(@IdServiceCart,0) ORDER BY a.DateCreated DESC)
+    DECLARE @IdCart INT;
+	IF(EXISTS(Select TOP 1 1 From [dbo].[Account] Where AccIdAccount= @IdAccount And AccRowStatus=1))
+	  BEGIN
+		SELECT TOP 1
+			@IdCart = [IdMarketplaceCart]
+		FROM [dbo].[MarketplaceCart]
+		WHERE ISNULL(AccountId,0) = @IdAccount
+		AND RowStatus = 1
+	  END
+	  ELSE
+	   BEGIN
+	     SELECT TOP 1
+			@IdCart = [IdMarketplaceCart]
+		FROM [dbo].[MarketplaceCart]
+		WHERE ISNULL(RegisterUserId,0) = @IdAccount
+		AND RowStatus = 1
 
-	
+	  END
 
 SET @AccountStatement =	(SELECT
 							 ISNULL(res.UstStatus, 'N/A')
@@ -403,7 +418,7 @@ SET @AccountStatement =	(SELECT
 			  SET RowStatus = 0,
 				  TokenUpdated = @Token,
 				  DateUpdated  = GETDATE()
-			  WHERE  AccountId = ISNULL(@IdAccount,0) AND IdMarketplaceCart = @IdCart
+			  WHERE   IdMarketplaceCart = @IdCart
 
 
 			-- Si actualizo el carrito exitosamente
