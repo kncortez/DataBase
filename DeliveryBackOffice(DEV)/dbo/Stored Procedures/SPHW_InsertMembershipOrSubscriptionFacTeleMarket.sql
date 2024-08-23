@@ -12,8 +12,6 @@ AS
 BEGIN
 
     -- Datos cliente Cabecera de factura   
-
-
     DECLARE @TypeSalePackage AS NVARCHAR(50)
     DECLARE @IdSalePackage INT
     DECLARE @IdAccount INT
@@ -24,6 +22,7 @@ BEGIN
     DECLARE @TaxName NVARCHAR(100) = 'Consumidor Final'
     DECLARE @InvoiceEmail NVARCHAR(50) =''
 	DECLARE @Vaucher NVARCHAR(50) =''
+	DECLARE @IVA DECIMAL(12,6) = 1.12;
 	DECLARE @IdTarjeta AS INT = NULL
 	DECLARE @CustomerType INT = 0;
 	DECLARE @ActivationCode NVARCHAR(100) = N'';
@@ -31,9 +30,14 @@ BEGIN
 	DECLARE @AddedPointExpirationDate INT = 0;
 	DECLARE @ActiveMembershipId INT = 0;
 
+	SELECT @IVA = ISNULL([Value],1.12)
+    FROM ConfigParams
+    WHERE [Name] = 'TaxPercentage'
+       AND IdCountry = @IdCountry
+
 	SELECT Top 1 
 	    @IdTarjeta = GetCardsCredit 
-	   , @TypeSalePackage = TypeSalePackage  
+	  , @TypeSalePackage = TypeSalePackage  
 	  , @IdSalePackage = IdSalePackage             
 	  , @IdAccount = AccountId              
 	  , @Vaucher =Vaucher           
@@ -54,7 +58,6 @@ BEGIN
                AND Acc.AccIdAccount = @IdAccount
     WHERE Acc.AccIdAccount = @IdAccount;
 
-
     DECLARE @inv_vpCodeOfReferences AS INT =
             (
                 SELECT TOP 1
@@ -62,7 +65,9 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
                 WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' --COLLATE Latin1_General_CI_AI
                       AND VPC.[StatusClient] = 1
+					  AND VPC.CountryId = @IdCountry
             );
+
     DECLARE @inv_cmp_nit AS VARCHAR(100) =
             (
                 SELECT dpf_FELEntity
@@ -74,6 +79,7 @@ BEGIN
     DECLARE @inv_cli_nit AS VARCHAR(200);
     DECLARE @inv_cli_email AS VARCHAR(200);
     DECLARE @inv_date AS DATETIME = GETDATE();
+	DECLARE @idCurrency AS INT;
     DECLARE @inv_IVA AS MONEY;
     DECLARE @inv_amount AS MONEY;
     DECLARE @inv_status AS INT = 1;
@@ -102,10 +108,10 @@ BEGIN
     DECLARE @dti_priceUnit MONEY;
     DECLARE @dti_description VARCHAR(MAX) =
             (
-                SELECT TOP 1
-                       [Description]
+                SELECT TOP 1  [Description]
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' --COLLATE Latin1_General_CI_AI
+					  AND ISNULL(IdCountry,'GT') = @IdCountry
             );
     DECLARE @dti_IVA MONEY;
     DECLARE @dti_amount MONEY;
@@ -113,10 +119,10 @@ BEGIN
     DECLARE @dti_tokenRegister VARCHAR(200) = @Token;
     DECLARE @SAPCode NVARCHAR(50) =
             (
-                SELECT TOP 1
-                       SAPCode
+                SELECT TOP 1 SAPCode
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' --COLLATE Latin1_General_CI_AI
+					  AND ISNULL(IdCountry,'GT') = @IdCountry
             );
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
@@ -125,7 +131,7 @@ BEGIN
     DECLARE @IdMemberOrSuscription AS NVARCHAR(200);
     DECLARE @MembershipId AS INT = NULL;
     DECLARE @SubscriptionId AS INT = NULL;
-	 DECLARE @ServiceAmmount DECIMAL = 0;
+	DECLARE @ServiceAmmount DECIMAL = 0;
 
     SET @SuscriptionDesc =
     (
@@ -133,62 +139,63 @@ BEGIN
                ISNULL(SubscriptionName, '')
         FROM [dbo].[CatSubscription] WITH (NOLOCK)
         WHERE IdCatSubscription = @IdSalePackage
+		  AND ISNULL(IdCountry,'GT') = @IdCountry
     );
 
     IF (
            @SuscriptionDesc = 'Plan Básico'
            AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
        )
-        SET @dti_description =
+    SET @dti_description =
     (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        SELECT TOP 1 [Description]
+        FROM  [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'SUSCRIPCION MENSUAL A' --COLLATE Latin1_General_CI_AI
+			  AND ISNULL(IdCountry,'GT') = @IdCountry
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Básico +'
                 AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
-        SET @dti_description =
+    SET @dti_description =
     (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        SELECT TOP 1  [Description]
+        FROM  [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'SUSCRIPCION MENSUAL B' --COLLATE Latin1_General_CI_AI
+		      AND ISNULL(IdCountry,'GT') = @IdCountry
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Gold'
                 AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
-        SET @dti_description =
+    SET @dti_description =
     (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        SELECT TOP 1 [Description]
+        FROM  [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'SUSCRIPCION MENSUAL C' --COLLATE Latin1_General_CI_AI
+		      AND ISNULL(IdCountry,'GT') = @IdCountry
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Corporativo'
                 AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
-        SET @dti_description =
+    SET @dti_description =
     (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        SELECT TOP 1 [Description]
+        FROM  [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'SUSCRIPCION MENSUAL D' --COLLATE Latin1_General_CI_AI
+		      AND ISNULL(IdCountry,'GT') = @IdCountry
     )   ;
     ELSE IF (
                 @SuscriptionDesc = 'Plan Diamante'
                 AND @TypeSalePackage <> 'Membership' --COLLATE Latin1_General_CI_AI
             )
-        SET @dti_description =
+    SET @dti_description =
     (
-        SELECT TOP 1
-               [Description]
-        FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+        SELECT TOP 1 [Description]
+        FROM  [dbo].[CatArticleSAP] WITH (NOLOCK)
         WHERE [Name] = 'MEMBRESIA DIAMANTE' --COLLATE Latin1_General_CI_AI
+			  AND ISNULL(IdCountry,'GT') = @IdCountry
     )   ;
 
     IF (@InvoiceEmail = '')
@@ -229,7 +236,7 @@ BEGIN
                  , @inv_cli_adress        = M.FiscalAddress
                  , @inv_cli_nit           = REPLACE(M.TaxIdNumber, '-', '')
                  , @inv_cli_name          = M.InvoiceName
-                 , @inv_IVA               = M.MembershipCost - (M.MembershipCost / 1.12)
+                 , @inv_IVA               = M.MembershipCost - (M.MembershipCost / @IVA)
                  , @Descriptionp          = CM.MembershipName
                  , @IdMemberOrSuscription = M.IdMembership
                  , @MembershipId          = M.IdMembership
@@ -262,7 +269,7 @@ BEGIN
                      , @inv_cli_adress        = @FiscalAddress
                      , @inv_cli_nit           = REPLACE(@TaxId, '-', '')
                      , @inv_cli_name          = @TaxName
-                     , @inv_IVA               = S.SubscriptionCost - (S.SubscriptionCost / 1.12)
+                     , @inv_IVA               = S.SubscriptionCost - (S.SubscriptionCost / @IVA)
                      , @Descriptionp          = CS.SubscriptionName
                      , @IdMemberOrSuscription = S.IdSubscription
                      , @SubscriptionId        = [S].[IdSubscription]
@@ -305,20 +312,6 @@ BEGIN
 
 
 
-        INSERT INTO [dbo].[InOutOfMoneyDetail]
-        (
-            [io_type]
-          , [io_vpCodeOfReferences]
-          , [io_ticket]
-          , [io_amount]
-          , [io_status]
-          , [io_invoice]
-          , [io_registryToken]
-          , [io_registryDate]
-        )
-        VALUES
-        (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
-       , GETDATE());
 
 
 
@@ -745,8 +738,8 @@ BEGIN
               , DateCreated
               , RenewalFixedDay
               , CatTypeSubscriptionId
-			  ,ActivationCode
-			  ,ProductGiftShippingEmail
+			  , ActivationCode
+			  , ProductGiftShippingEmail
             )
             OUTPUT inserted.IdSubscription
             INTO @AuxNewSubscriptions
@@ -1074,9 +1067,10 @@ BEGIN
 
 
 
-			SELECT 
-                 @inv_amount =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
-                @inv_IVA =      SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / 1.12))
+			SELECT TOP 1
+                @inv_amount  =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
+                @inv_IVA     =   SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / @IVA)),
+				@IdCurrency  =   ISNULL(ISNULL(cs.IdCatCurrencyCOD, cs.IdCatCurrencyCOD),1)
 			 FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
@@ -1085,6 +1079,7 @@ BEGIN
 				  ON  CM.IdCatMembership =  RTPS.IdSalePackage
 				    AND RTPS.TypeSalePackage ='MEMBERSHIP' 
 			WHERE RTPS.OrderNumber = @OrderNumber
+			GROUP BY cs.IdCatCurrencyCOD, cs.IdCatCurrencyCOD
 
 			
 
@@ -1103,10 +1098,15 @@ BEGIN
           , inv_dateRegister
           , inv_tokenRegister
           , inv_type
+		  , CatInvoiceTypeId
+		  , inv_CountryFel
+		  , inv_EntityFEL
+		  , IdCurrency
+		  , idCountry
         )
         VALUES
         (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'), @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
-       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1);
+       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @idCurrency, @IdCountry, @IdCountry, @idCurrency, @IdCountry);
 
 
 
@@ -1138,7 +1138,7 @@ BEGIN
 		   @dti_measurement,
 		     (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
 		   ,CS.SubscriptionName	
-		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / 1.12)
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / @IVA)
 		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
 		   ,@dti_dateRegister
 		   ,@dti_tokenRegister
@@ -1163,7 +1163,7 @@ BEGIN
 		   @dti_measurement,
 		   CS.MembershipCost	
 		   ,CS.MembershipName	
-		   ,CS.MembershipCost -((CS.MembershipCost) / 1.12)
+		   ,CS.MembershipCost -((CS.MembershipCost) / @IVA)
 		   ,CS.MembershipCost
 		   ,@dti_dateRegister
 		   ,@dti_tokenRegister
@@ -1182,6 +1182,21 @@ BEGIN
                        SPL.[Authorization] = @OrderNumber
 
 
+        INSERT INTO [dbo].[InOutOfMoneyDetail]
+        (
+            [io_type]
+          , [io_vpCodeOfReferences]
+          , [io_ticket]
+          , [io_amount]
+          , [io_status]
+          , [io_invoice]
+          , [io_registryToken]
+          , [io_registryDate]
+        )
+        VALUES
+        (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
+       , GETDATE());
+	   
         COMMIT TRANSACTION;
 
         SELECT Result                = 1
