@@ -314,9 +314,18 @@ BEGIN
 
 
 
+ DECLARE @IdCart INT;
 
-	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND IdCountry=@IdCountry ORDER BY DateCreated DESC)
+		IF(EXISTS(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND IdCountry=@IdCountry AND RowStatus=1 ORDER BY DateCreated DESC))
+		BEGIN
 
+	     SET @IdCart  =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND IdCountry=@IdCountry ORDER BY DateCreated DESC)
+		 END
+		 ELSE
+		 BEGIN
+		  SET @IdCart  =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where RegisterUserId = @IdAccount AND IdCountry=@IdCountry ORDER BY DateCreated DESC)
+		
+		 END
 		 UPDATE  [dbo].[MarketplaceCartDetail]
 			  SET RowStatus = 0,
 				  TokenUpdated = @Token,

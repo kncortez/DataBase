@@ -72,7 +72,8 @@ BEGIN
 					1 'StatusCode'
 				   ,'Records found' 'Description'
 				
-					SELECT
+							
+				SELECT
 				       mpcm.CatProductId,
 					   cp.SubscriptionName [CatProductName],
 					   cp.SubscriptionDescription  [CatProductDescription],
@@ -87,7 +88,7 @@ BEGIN
 				AND mpcm.TypeProduct <> 'Club Forza'
 				INNER JOIN dbo.CatSubscription cp with (nolock)
 				on mpcm.CatProductId = cp.IdCatSubscription
-				WHERE  ISNULL(mpc.AccountId,0) = @IdAccount
+				WHERE  IIF(mpc.AccountId IS NULL, mpc.RegisterUserId,mpc.AccountId) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
 				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
@@ -108,54 +109,14 @@ BEGIN
 				INNER JOIN dbo.CatMembership cp with (nolock)
 				on mpcm.CatProductId = cp.IdCatMembership
 				 AND mpcm.TypeProduct = cp.MembershipName
-				WHERE  ISNULL(mpc.AccountId,0) = @IdAccount
+				WHERE  IIF(mpc.AccountId IS NULL, mpc.RegisterUserId,mpc.AccountId) = @IdAccount
 				AND mpc.RowStatus = 1
 				AND mpcm.RowStatus=1
 				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
 				
-				UNION ALL
+				
 					
-				SELECT
-				       mpcm.CatProductId,
-					   cp.SubscriptionName [CatProductName],
-					   cp.SubscriptionDescription  [CatProductDescription],
-					   cp.SubscriptionCost [CatProductCost],
-					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
-					   mpcm.IdMarketplaceCartDetail,
-					   cp.SubscriptionFixedValue   [CatProductDiscountValue],
-					   IIF(cp.SubscriptionValidity = 1, CONVERT(Varchar,cp.SubscriptionValidity)+' mes', CONVERT(Varchar,cp.SubscriptionValidity)+' meses') [ExpirationProduct]
-				FROM [dbo].[MarketplaceCartDetail] mpcm
-				INNER JOIN [dbo].[MarketplaceCart] mpc
-				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
-				AND mpcm.TypeProduct <> 'Club Forza'
-				INNER JOIN dbo.CatSubscription cp with (nolock)
-				on mpcm.CatProductId = cp.IdCatSubscription
-				WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
-				AND mpc.RowStatus = 1
-				AND mpcm.RowStatus=1
-				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
-				
-				UNION ALL
-				SELECT
-				       mpcm.CatProductId,
-					   cp.MembershipName [CatProductName],
-					   cp.MembershipDescription  [CatProductDescription],
-					   cp.MembershipCost [CatProductCost],
-					   CASE WHEN ISNULL(cp.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
-					   mpcm.IdMarketplaceCartDetail,
-					   cp.MembershipFixedValue   [CatProductDiscountValue],
-					   IIF(cp.MembershipValidity = 1, CONVERT(Varchar,cp.MembershipValidity)+' mes', CONVERT(Varchar,cp.MembershipValidity)+' meses') [ExpirationProduct]
-				FROM [dbo].[MarketplaceCartDetail] mpcm
-				INNER JOIN [dbo].[MarketplaceCart] mpc
-				ON mpcm.MarketplaceCartId = mpc.IdMarketplaceCart
-				INNER JOIN dbo.CatMembership cp with (nolock)
-				on mpcm.CatProductId = cp.IdCatMembership
-				 AND mpcm.TypeProduct = cp.MembershipName
-				WHERE  ISNULL(mpc.RegisterUserId,0) = @IdAccount
-				AND mpc.RowStatus = 1
-				AND mpcm.RowStatus=1
-				AND ISNULL(mpc.IdCountry,'GT')=@IdCountry 
-				
+			
 				
 			
 				

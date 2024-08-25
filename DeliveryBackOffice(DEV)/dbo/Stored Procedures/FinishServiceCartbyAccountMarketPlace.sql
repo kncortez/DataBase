@@ -54,6 +54,11 @@ BEGIN
 
 	  END
 
+	      SET	@IdServiceCart = (Select 
+	                       Top 1 a.IdMarketplaceCartDetail
+	                   From [dbo].[MarketplaceCartDetail] a	WITH(NOLOCK)  
+		                    WHERE  a.MarketplaceCartId = ISNULL(@IdCart,0) And a.RowStatus=1)	
+
 SET @AccountStatement =	(SELECT
 							 ISNULL(res.UstStatus, 'N/A')
 						FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
