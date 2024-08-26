@@ -19,7 +19,7 @@ CREATE PROCEDURE [dbo].[GetServiceCartbyAccountMarketPlace]
 	@IdAccount BIGINT,
 	@Token NVARCHAR(50),
 	@IdCountry NVARCHAR(3),
-	@IsUserTeleMarketing
+	@IsUserTeleMarketing BIT = 0
 AS
 BEGIN
 	SET NOCOUNT ON;
