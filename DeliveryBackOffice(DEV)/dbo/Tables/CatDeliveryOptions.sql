@@ -92,10 +92,19 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2name = N'DateUpdated'
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificador del país para opciones de entrega de paquetes',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatDeliveryOptions',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Catalogo de opciones disponibles para entrega de paquetes',
     @level0type = N'SCHEMA',
     @level0name = N'dbo',
     @level1type = N'TABLE',
     @level1name = N'CatDeliveryOptions',
     @level2type = NULL,
-    @level2name = NULL
+    @level2name = 

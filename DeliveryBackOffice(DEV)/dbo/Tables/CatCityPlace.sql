@@ -20,3 +20,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'List of pla
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'1 active  0 inactive', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCityPlace', @level2type = N'COLUMN', @level2name = N'CityPlaceRowStatus';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identifier of the country to which city place', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatCityPlace', @level2type = N'COLUMN', @level2name = N'IdCountry';
