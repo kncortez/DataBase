@@ -36,7 +36,8 @@ BEGIN
 				[DO].[PriceShippment] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) [TrxDate],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxCertificacionFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				ISNULL([MSL].[IdMembershipSubscriptionLog], 0) [TrxIsMembershipSubscription],
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
@@ -73,7 +74,8 @@ BEGIN
 				[DO].[PriceShippment] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([CCTC].[DateUpdated], [CCTC].[DateCreated]) [TrxDate],
-				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL] END [TrxCertificacionFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				ISNULL([MSL].[IdMembershipSubscriptionLog], 0) [TrxIsMembershipSubscription],
 				ISNULL([MSL].[MembershipId], 0) [TrxMembershipId],
@@ -108,11 +110,14 @@ BEGIN
 	ORDER BY	[CCTC].[DateCreated] DESC;
 
 	-- Membresías
-	SELECT		[M].[IdMembership] [TrxService],
+	SELECT		[IH].inv_pk_id,
+				ISNULL(IH.IdCountry,'GT') IdCountry,
+				[M].[IdMembership] [TrxService],
 				[M].[MembershipCost] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDate],
-				[IH].[inv_certificationFEL] [TrxCertificacionFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				1 [TrxIsMembershipSubscription],
 				[M].[IdMembership] [TrxMembershipId],
@@ -121,10 +126,10 @@ BEGIN
 				'' [SubscriptionName],
 				CASE WHEN [MPL].[TypeOfInOutOfMoneyId] = 6  THEN '' ELSE [MPL].[Authorization] END [TrxOrderNumber],
 				ISNULL([MPL].[PaymentImageURL],[RTPS].[PaymentImageURL]) [TrxPaymentUrl]
-	FROM		[dbo].[Membership] M 
+	FROM		[dbo].[Membership] M     WITH(NOLOCK)
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[M].[IdMembership] = [ID].[MembershipId]
-	INNER JOIN	[dbo].[CatMembership] CM
+	INNER JOIN	[dbo].[CatMembership] CM WITH(NOLOCK)
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	INNER JOIN	[dbo].[invoiceHeader] IH WITH(NOLOCK)
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
@@ -145,11 +150,13 @@ BEGIN
 		AND		[M].[RowStatus] = 1;
 
 	-- Suscripciones
-	SELECT		[S].[IdSubscription] [TrxService],
+	SELECT		ISNULL(IH.IdCountry,'GT') IdCountry,
+				[S].[IdSubscription] [TrxService],
 				[S].[SubscriptionCost] [TrxPrice],
 				[CCC].[Symbol] [TrxCurrency],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDate],
-				[IH].[inv_certificationFEL] [TrxCertificacionFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_numberFEL]) ELSE [IH].[inv_certificationFEL]  END [TrxStringFEL],
+				CASE WHEN ISNULL(IH.IdCountry,'GT') = 'HN' THEN ([IH].[inv_serieFEL])  ELSE ''   END [TrxString2FEL],
 				ISNULL([IH].[inv_dateFEL], [IH].[inv_date]) [TrxDateFEL],
 				1 [TrxIsMembershipSubscription],
 				0 [TrxMembershipId],
@@ -158,10 +165,10 @@ BEGIN
 				[CS].[SubscriptionName] [TrxSubscriptionName],
 				CASE WHEN [SPL].[TypeOfInOutOfMoneyId] = 6  THEN '' ELSE [SPL].[Authorization] END [TrxOrderNumber],
 				ISNULL([SPL].[PaymentImageURL],[RTPS].[PaymentImageURL])  [TrxPaymentUrl]
-	FROM		[dbo].[Subscription] S
+	FROM		[dbo].[Subscription] S   WITH(NOLOCK)
 	INNER JOIN	[dbo].[invoiceDetail] ID WITH(NOLOCK)
 		ON		[S].[IdSubscription] = [ID].[SubscriptionId]
-	INNER JOIN	[dbo].[CatSubscription] CS
+	INNER JOIN	[dbo].[CatSubscription] CS WITH(NOLOCK)
 		ON		[S].[CatSubscriptionId] = [CS].[IdCatSubscription]
 	INNER JOIN	[dbo].[invoiceHeader] IH WITH(NOLOCK)
 		ON		[ID].[dti_fk_header] = [IH].[inv_pk_id]
