@@ -9,6 +9,10 @@
 -- Create date: <2024-08-20>
 -- Description: <Se agrego filtro por pais, se filtra CodeOfReference para facturacion, calculo de IVA obtenido de configParams>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-08-26>
+-- Description: < Ajustes por tienda virtual para Facturar>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_InsertMembershipOrSubscriptionFac]
  @OrderNumber AS NVARCHAR(25),
  @IdCountry   AS NVARCHAR(2) = 'GT'
@@ -17,10 +21,11 @@ BEGIN
 
     -- Datos cliente Cabecera de factura   
 
-
+    DECLARE @idType INT = 0;
     DECLARE @TypeSalePackage AS NVARCHAR(50)
     DECLARE @IdSalePackage INT
     DECLARE @IdAccount INT
+    DECLARE @systemOrigen INT = 0
     DECLARE @Token AS VARCHAR(200)
   -- Datos de Facturación
     DECLARE @TaxId NVARCHAR(50) = 'CF'
@@ -326,7 +331,15 @@ BEGIN
 				    AND RTPS.TypeSalePackage ='MEMBERSHIP' 
 			WHERE RTPS.OrderNumber = @OrderNumber
 
-			
+        SET @systemOrigen = (
+                             SELECT TOP 1 SysIdSystem
+                               FROM DeliveryBackOffice.dbo.CatSystem
+                              WHERE SysNameSystem = 'Tienda Virtual'
+                            )
+
+        SET @idType = (SELECT IdCatInvoiceType
+                         FROM CatInvoiceType 
+                        WHERE Name = 'Otros')
 
         INSERT INTO [dbo].[invoiceHeader]
         (
@@ -343,10 +356,12 @@ BEGIN
           , inv_dateRegister
           , inv_tokenRegister
           , inv_type
+          , systemOperation
+          , CatInvoiceTypeId
         )
         VALUES
         (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'), @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
-       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1);
+       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @systemOrigen, @idType);
 
 
 
@@ -448,6 +463,7 @@ BEGIN
                IdCurrency = @IdCurrency
          WHERE inv_pk_id = @dti_fk_header
 
+
         INSERT INTO [dbo].[InOutOfMoneyDetail]
         (
             [io_type]
@@ -484,7 +500,9 @@ BEGIN
              , @dti_fk_header        IdInvoice
              , @inv_cli_email        inv_cli_email
              , @Token                Token
-             , @inv_vpCodeOfReferences inv_vpCodeOfReferences;
+             , @inv_vpCodeOfReferences inv_vpCodeOfReferences
+             , ISNULL(@inv_cli_name,'CF') inv_cli_name;
+
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -493,7 +511,9 @@ BEGIN
              , IdInvoice       = 0
              , @dti_fk_header  IdInvoice
              , @inv_cli_email  inv_cli_email
-             , @Token          Token;
+             , @Token          Token
+             , @inv_vpCodeOfReferences inv_vpCodeOfReferences
+             , ISNULL(@inv_cli_name,'') inv_cli_name;
 
         INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
         (
