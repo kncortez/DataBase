@@ -2,7 +2,6 @@
 
 CREATE TABLE [dbo].[InvoiceBatchRelationships]
 (
-	Id					INT IDENTITY(1,1),
 	Id_Lote				INT,
 	CodeOfReference		INT,
 	[RowStatus]			BIT             NOT NULL,
