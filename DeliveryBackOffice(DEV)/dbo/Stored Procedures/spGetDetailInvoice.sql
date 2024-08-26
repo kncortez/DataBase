@@ -10,11 +10,12 @@ CREATE PROCEDURE [dbo].[spGetDetailInvoice]
 )
 AS
 BEGIN
-   SELECT invDet.dti_quantity,
+   SELECT ROW_NUMBER() OVER(ORDER BY invDet.dti_description) [row_number],
+          SUM(invDet.dti_quantity) dti_quantity,
           invDet.dti_description,
           invDet.dti_priceUnit,
-          invDet.dti_amount,
-          curr.Symbol AS currency
+          SUM(invDet.dti_amount) AS dti_amount,
+          MAX(curr.Symbol) AS currency
      FROM invoiceHeader invH WITH(NOLOCK)
           INNER JOIN invoiceDetail invDet WITH(NOLOCK)
                  ON invH.inv_pk_id = invDet.dti_fk_header
@@ -22,5 +23,6 @@ BEGIN
                  ON curr.IdCatCurrencyCOD = invH.IdCurrency
     WHERE invH.inv_numberFEL = @CorrelativeInvoice
       AND invH.inv_pk_id = @IdInvoice
-     ORDER BY 1 DESC
+    GROUP BY invDet.dti_description, invDet.dti_priceUnit
+    ORDER BY invDet.dti_description, invDet.dti_priceUnit DESC
 END
