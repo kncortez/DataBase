@@ -15,6 +15,7 @@ BEGIN
     DECLARE @TypeSalePackage AS NVARCHAR(50)
     DECLARE @IdSalePackage INT
     DECLARE @IdAccount INT
+	DECLARE @systemOrigen INT = 0
     DECLARE @Token AS VARCHAR(200)
   -- Datos de Facturación
     DECLARE @TaxId NVARCHAR(50) = 'CF'
@@ -22,6 +23,7 @@ BEGIN
     DECLARE @TaxName NVARCHAR(100) = 'Consumidor Final'
     DECLARE @InvoiceEmail NVARCHAR(50) =''
 	DECLARE @Vaucher NVARCHAR(50) =''
+	DECLARE @idType INT = 0;
 	DECLARE @IVA DECIMAL(12,6) = 1.12;
 	DECLARE @IdTarjeta AS INT = NULL
 	DECLARE @CustomerType INT = 0;
@@ -34,6 +36,17 @@ BEGIN
     FROM ConfigParams
     WHERE [Name] = 'TaxPercentage'
        AND IdCountry = @IdCountry
+
+	SET @systemOrigen = (
+							SELECT TOP 1 SysIdSystem
+							FROM DeliveryBackOffice.dbo.CatSystem
+							WHERE SysNameSystem = 'Tienda Virtual'
+						)
+	
+	SET @idType = (SELECT IdCatInvoiceType
+						FROM CatInvoiceType 
+					WHERE Name = 'Otros')
+
 
 	SELECT Top 1 
 	    @IdTarjeta = GetCardsCredit 
@@ -310,12 +323,20 @@ BEGIN
         
 
 
+		 DECLARE @IdCart INT;
 
+		IF(EXISTS(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry AND RowStatus=1 ORDER BY DateCreated DESC))
+		BEGIN
 
-
-
-
-	     DECLARE @IdCart INT =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND IdCountry=@IdCountry ORDER BY DateCreated DESC)
+	     SET @IdCart = (select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry ORDER BY DateCreated DESC)
+		 
+		END
+		ELSE
+		BEGIN
+		 
+		 SET @IdCart = (select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where RegisterUserId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry ORDER BY DateCreated DESC)
+		
+		END
 
 		 UPDATE  [dbo].[MarketplaceCartDetail]
 			  SET RowStatus = 0,
@@ -323,14 +344,13 @@ BEGIN
 				  DateUpdated  = GETDATE()
 			  WHERE  MarketplaceCartId = @IdCart
 
-			UPDATE  [dbo].[MarketplaceCart]
-			  SET RowStatus = 0,
-				  TokenUpdated = @Token,
-				  DateUpdated  = GETDATE()
-			  WHERE IdMarketplaceCart = @IdCart
+		UPDATE  [dbo].[MarketplaceCart]
+			SET RowStatus = 0,
+				TokenUpdated = @Token,
+				DateUpdated  = GETDATE()
+			WHERE IdMarketplaceCart = @IdCart
 
-
- IF (
+        IF (
 			 EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
                 AND TypeSalePackage = 'MEMBERSHIP') --COLLATE Latin1_General_CI_AI
            )
@@ -1069,8 +1089,7 @@ BEGIN
 
 			SELECT TOP 1
                 @inv_amount  =    SUM(  ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) , CM.MembershipCost) ) ,
-                @inv_IVA     =   SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / @IVA)),
-				@IdCurrency  =   ISNULL(ISNULL(cs.IdCatCurrencyCOD, cs.IdCatCurrencyCOD),1)
+                @inv_IVA     =   SUM(ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) - (ISNULL((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)), CM.MembershipCost) / @IVA))
 			 FROM  [DeliveryBackOffice].[dbo].[RegistrationofTransactionProcessStates] RTPS WITH (NOLOCK)
 		          LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CS WITH (NOLOCK)
 			      ON CS.IdCatSubscription = RTPS.IdSalePackage
@@ -1098,15 +1117,12 @@ BEGIN
           , inv_dateRegister
           , inv_tokenRegister
           , inv_type
-		  , CatInvoiceTypeId
-		  , inv_CountryFel
-		  , inv_EntityFEL
-		  , IdCurrency
-		  , idCountry
-        )
+		  , systemOperation
+          , CatInvoiceTypeId
+		)
         VALUES
         (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'), @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
-       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @idCurrency, @IdCountry, @IdCountry, @idCurrency, @IdCountry);
+       , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @systemOrigen, @idType);
 
 
 
@@ -1131,12 +1147,12 @@ BEGIN
           , SubscriptionId
         )
 			SELECT 
-		   @dti_fk_header,
-		   @dti_identification,
-		   @dti_category,
-		   @dti_quantity,
-		   @dti_measurement,
-		     (CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
+		   @dti_fk_header
+		   ,@dti_identification
+		   ,@dti_category
+		   ,@dti_quantity
+		   ,@dti_measurement
+		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))	
 		   ,CS.SubscriptionName	
 		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) -((CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0)) / @IVA)
 		   ,(CS.SubscriptionCost - ISNULL(CS.SubscriptionFixedValue,0))
@@ -1181,6 +1197,32 @@ BEGIN
                 WHERE 
                        SPL.[Authorization] = @OrderNumber
 
+		SELECT @IdCountry = T.IdCountry,
+               @IdCurrency = T.IdCatCurrencyCOD
+          FROM (
+                SELECT IdCountry,
+                       IdCatCurrencyCOD
+                  FROM [dbo].[Subscription] S WITH (NOLOCK)
+                       INNER JOIN dbo.CatSubscription  CS
+                          ON S.CatSubscriptionId = CS.IdCatSubscription
+                       INNER JOIN [dbo].[SubscriptionPaymentLog] SPL WITH (NOLOCK)
+                          ON  S.IdSubscription = SPL.SubscriptionId
+                  WHERE SPL.[Authorization] = @OrderNumber
+                  UNION
+                 SELECT IdCountry,
+                        IdCatCurrencyCOD
+                   FROM [dbo].[Membership] S WITH (NOLOCK)
+                        INNER JOIN dbo.CatMembership  CS
+                           ON S.CatMembershipId = CS.IdCatMembership
+                        INNER JOIN [dbo].[MembershipPaymentLog] SPL WITH (NOLOCK)
+                           ON  S.IdMembership = SPL.MembershipId
+                        WHERE SPL.[Authorization] = @OrderNumber
+               ) AS T
+
+        UPDATE [invoiceHeader]
+           SET IdCountry = @IdCountry,
+               IdCurrency = @IdCurrency
+         WHERE inv_pk_id = @dti_fk_header
 
         INSERT INTO [dbo].[InOutOfMoneyDetail]
         (
