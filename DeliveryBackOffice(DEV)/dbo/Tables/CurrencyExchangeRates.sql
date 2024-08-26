@@ -6,7 +6,8 @@ CREATE TABLE [dbo].[CurrencyExchangeRates] (
     [TargetCurrency]           INT             NULL,
     [ExchangeRate]             DECIMAL (12, 6) NULL,
     CONSTRAINT [FK_SourceCurrency_CatCurrencyCOD] FOREIGN KEY (SourceCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
-    CONSTRAINT [FK_TargetCurrency_CatCurrencyCOD] FOREIGN KEY (TargetCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
+    CONSTRAINT [FK_TargetCurrency_CatCurrencyCOD] FOREIGN KEY (TargetCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
+    CONSTRAINT [FK_IdCountryCER_IdCountryCC] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
 );
 
 GO
