@@ -90,18 +90,22 @@ BEGIN
                    , ISNULL(inv_Data1FEL, '')            [inv_Data1FEL]
                    , ISNULL(inv_Data3FEL, '')            [inv_Data3FEL]
                    , ISNULL(inv_tokenRegister, '')       [inv_tokenRegister]
-                   , ISNULL(inv_cmp_name, '')            [inv_cmp_name]
-                   , ISNULL(inv_cmp_nameComercial, '')   [inv_cmp_nameComercial]
+                   , ISNULL(IH.inv_cmp_name, '')         [inv_cmp_name]
+                   , ISNULL(IH.inv_cmp_nameComercial, '')[inv_cmp_nameComercial]
                    , ISNULL(inv_cmp_adress, '')          [inv_cmp_adress]
                    , ISNULL(inv_establecimientoFEL, '')  [inv_establecimientoFEL]
                    , ISNULL(inv_cmp_nameFEL,'')          [inv_cmp_nameFEL]
-              FROM InvoiceHeader AS IH
+                   , ISNULL(inv_cli_name,'')             [inv_cli_name]
+              FROM InvoiceHeader AS IH WITH(NOLOCK)
+                   INNER JOIN del_ParametrosFactura AS dpf WITH(NOLOCK) 
+                   ON IH.inv_vpCodeOfReferences = dpf.dpf_VpCodeOfReference
              WHERE IH.IdCountry = @IdCountry
                AND ISNULL(IH.inv_numberFEL,'') = ''
                AND ISNULL(IH.inv_FechaHoraFEL, '') = ''
                AND IH.inv_type = 1
                AND IH.inv_status = 1
-               AND inv_pk_id = 3747636
+               AND dpf.dpf_FELCountry = @IdCountry
+               AND inv_pk_id IN (3747881)
              ORDER BY IH.inv_pk_id
 
             COMMIT TRANSACTION;
