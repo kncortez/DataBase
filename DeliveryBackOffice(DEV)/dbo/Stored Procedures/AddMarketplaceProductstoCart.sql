@@ -36,8 +36,7 @@ BEGIN TRY
 	 END
 
 
-IF(NOT EXISTS(Select Top 1 1 From [dbo].[MarketplaceCart] a  WHERE  IIF(a.AccountId IS NULL,a.RegisterUserId,a.AccountId) = @IdAccount 
-																	  AND a.RowStatus=1 AND ISNULL(a.IdCountry,'GT') = @IdCountry ))
+IF(ISNULL(@IdCart,0) = 0  )
 	BEGIN
 	
 			INSERT INTO [dbo].[MarketplaceCart](

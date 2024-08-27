@@ -323,32 +323,7 @@ BEGIN
         
 
 
-		DECLARE @IdCart INT;
-
-		IF(EXISTS(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry AND RowStatus=1 ORDER BY DateCreated DESC))
-		BEGIN
-
-			SET @IdCart = (select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry ORDER BY DateCreated DESC)
-		 
-		END
-		ELSE
-		BEGIN
-		 
-			SET @IdCart = (select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where RegisterUserId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry ORDER BY DateCreated DESC)
 		
-		END
-
-		 UPDATE  [dbo].[MarketplaceCartDetail]
-			  SET RowStatus = 0,
-				  TokenUpdated = @Token,
-				  DateUpdated  = GETDATE()
-			  WHERE  MarketplaceCartId = @IdCart
-
-		UPDATE  [dbo].[MarketplaceCart]
-			SET RowStatus = 0,
-				TokenUpdated = @Token,
-				DateUpdated  = GETDATE()
-			WHERE IdMarketplaceCart = @IdCart
 
         IF (
 			 EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
@@ -1239,6 +1214,27 @@ BEGIN
         (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
        , GETDATE());
 	   
+
+        DECLARE @IdCart INT;
+
+	
+	     SET @IdCart  =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where RegisterUserId = @IdAccount AND IdCountry=@IdCountry AND RowStatus=1 ORDER BY DateCreated DESC);
+		
+		 
+		 UPDATE  [dbo].[MarketplaceCartDetail]
+			  SET RowStatus = 0,
+				  TokenUpdated = @Token,
+				  DateUpdated  = GETDATE()
+			  WHERE  MarketplaceCartId = @IdCart
+
+			UPDATE  [dbo].[MarketplaceCart]
+			  SET RowStatus = 0,
+				  TokenUpdated = @Token,
+				  DateUpdated  = GETDATE()
+			  WHERE IdMarketplaceCart = @IdCart
+
+
+
         COMMIT TRANSACTION;
 
         SELECT Result                = 1

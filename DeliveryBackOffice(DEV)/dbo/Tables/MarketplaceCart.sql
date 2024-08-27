@@ -11,7 +11,7 @@ CREATE TABLE [dbo].[MarketplaceCart](
 	[RegisterUserId] [bigint] NULL,
 	CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
 	CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
-	CONSTRAINT [FK_MarketplaceCart_RegisterUser] FOREIGN KEY([ UsrIdUser]) REFERENCES [dbo].[RegisterUser] ([ UsrIdUser])
+	CONSTRAINT [FK_MarketplaceCart_RegisterUser] FOREIGN KEY([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 )
 GO
 
