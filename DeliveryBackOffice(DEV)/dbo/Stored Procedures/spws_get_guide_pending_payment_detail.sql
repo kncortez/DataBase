@@ -12,7 +12,7 @@
 -- Create date: <2024-07-02>
 -- Description: <Se agrega filtro para el remitente por pais>
 -- =============================================
-ALTER PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
+CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
