@@ -19,6 +19,7 @@
     [VisitPointByClientPortfolioId] INT            NULL,
     [UadIdSettlement]               BIGINT         NULL,
     [UadIdDeliveryOption]           BIGINT         NULL,
+    [UadFavorite]                   BIT            NULL,
     PRIMARY KEY CLUSTERED ([UadIdAddress] ASC),
     CONSTRAINT [FK_IdVisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_UserAddress_CatCityPlace] FOREIGN KEY ([IdCityPlace]) REFERENCES [dbo].[CatCityPlace] ([IdCityPlace]),
@@ -235,3 +236,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'UserAddress',
     @level2type = N'COLUMN',
     @level2name = N'VisitPointByClientPortfolioId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Dirección favorita es unica por cliente y solo es de Origen',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadFavorite'

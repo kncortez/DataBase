@@ -4,7 +4,11 @@
 -- Create date: <2021-01-08>
 -- Description:	<Método para registrar dirección y punto de visita>
 -- =============================================
-
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-08-26>
+-- Description:	<Se agrega la opción de tener una única dirección favorita para Origen>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_address]
 	-- Add the parameters for the stored procedure here
@@ -32,7 +36,8 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@VisibleInGuide bit = NULL,
 	@PickupsProgram bit = NULL,
 	@IsOriginVisitPoint bit = 1,
-	@ContactName NVARCHAR(200) = NULL
+	@ContactName NVARCHAR(200) = NULL,
+	@IsFavorite bit = 0
 	
 	
 AS
@@ -46,11 +51,13 @@ BEGIN
 	DECLARE @IdCustomer INT
 	DECLARE @TownshipName NVARCHAR(200)
 	DECLARE @Department NVARCHAR(100)
+	DECLARE @IdKindOfVPClient INT
 	DECLARE @IdKindOfVPBusiness INT
 	DECLARE @IdVisitPointClient INT
 	DECLARE @HeaderCode VARCHAR(10)
 	DECLARE @CityName VARCHAR(50)
 	DEClARE @IdDepartment INT;
+	DECLARE @IdAddressFavorite bigINT;
 
 	DECLARE @ResponseMessages AS TABLE (
 		IdResult INT,
@@ -122,6 +129,7 @@ BEGIN
 				SELECT @Department=ProvinceName,@IdDepartment=PV.IdProvince FROM Province PV  with(nolock)
 									  INNER JOIN Township TS with(nolock) ON PV.IdProvince = TS.IdProvince
 									  WHERE TS.IdTownship = @IdTownship;
+				SET @IdKindOfVPClient = (SELECT IdKindOfVPClient FROM KindOfVPClient with(nolock) WHERE KindOfVPName = 'HUB' AND (IdCountry = @IdCountry OR (@IdCountry = 'GT' AND IdCountry IS NULL)))
 				SET @IdKindOfVPBusiness = (SELECT IdKindOfVPBusiness  FROM KindOfVPBusiness with(nolock) WHERE Shorthand = 'HUB' AND (IdCountry = @IdCountry OR (@IdCountry = 'GT' AND IdCountry IS NULL)))
 				Select @HeaderCode=HeaderCode, @TownshipName=TownshipName from dbo.Township with(nolock) WHERE IdTownship = @IdTownship;
 				SET @CityName=(SELECT CityPlace FROM DBO.CatCityPlace with(nolock) WHERE IdCityPlace=@IdCityPlace)
@@ -141,6 +149,7 @@ BEGIN
 					-- desactivar registro (borrado logico)
 					UPDATE [dbo].[UserAddress]
 					   SET [UadRowStatus] = @Status
+						  ,[UadFavorite] = 0
 						  ,[UadTokenUpdated] = @Token
 						  ,[UadDateUpdated] = GETDATE()
 					 WHERE [UadIdAddress] =  @IdAddress
@@ -167,6 +176,53 @@ BEGIN
 				end
 				else -- se va a actualizar el registro
 				begin 
+					--Es favorita la dirección?
+					IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 1)
+					BEGIN
+						--Cosultar si ya existe otra favorita
+						SELECT TOP 1
+							@IdAddressFavorite = ua.UadIdAddress
+						FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
+						INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
+							ON ua.UadIdAccount = rua.RuaIdAccount
+						INNER JOIN dbo.Township twn WITH (NOLOCK)
+							ON twn.IdTownship = ua.UadIdTownship
+						INNER JOIN dbo.Province prv WITH (NOLOCK)
+							ON prv.IdProvince = twn.IdProvince
+						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
+							ON ua.IdCityPlace = ctp.IdCityPlace
+							   AND ctp.CityPlaceRowStatus = 'true'
+						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+							ON vp.CodeOfReference = ua.CodeOfReference
+						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+							ON conf.NirPhone = ua.UadNirPhone
+							AND conf.Phone = ua.UadPhone
+						WHERE rua.RuaIdAccount = @IdAccount
+							  AND rua.RuaIdUser = @IdUser
+							  AND ua.UadRowStatus = 1
+							  AND ua.UadFavorite = 1 --Debe ser favorita
+							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
+							  AND conf.TownshipId = vp.IdTownship
+							  AND conf.[Address] = vp.[Address]
+
+						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
+						BEGIN
+							IF(@IdAddressFavorite != @IdAddress)
+							BEGIN
+								UPDATE [dbo].[UserAddress]
+							   SET [UadTokenUpdated] = @Token
+								  ,[UadDateUpdated] = GETDATE()
+								  ,[UadFavorite] = 0 --Se elimina la favorita actual
+								WHERE [UadIdAddress] =  @IdAddressFavorite
+							END;
+						END;
+					END;
+					--Es origen la direccion
+					ELSE IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 0)
+					BEGIN
+						SET @IsFavorite = 0; --Se cambia ya que solo puede ser favorita una direccion de Origen
+					END;
+
 					-- actualizar el registro con los datos proporcionado
 					UPDATE [dbo].[UserAddress]
 					   SET [UadIdTownship] = @IdTownship
@@ -181,6 +237,7 @@ BEGIN
 						  ,[UadTokenUpdated] = @Token
 						  ,[UadDateUpdated] = GETDATE()
 						  ,[IdCityPlace] = @IdCityPlace
+						  ,[UadFavorite] = @IsFavorite
 					 WHERE [UadIdAddress] =  @IdAddress
 
 					UPDATE VP
@@ -194,6 +251,7 @@ BEGIN
 						  ,VP.DateUpdated = GETDATE()
 						  ,VP.Town=@TownshipName
 						  ,VP.Department=@Department
+						  ,VP.IdKindOfVPClient=@IdKindOfVPClient
 						  ,VP.IdKindOfVPBusiness=@IdKindOfVPBusiness
 						  ,VP.Latitude=@Latitude
 						  ,VP.Longitude=@Longitude
@@ -217,6 +275,53 @@ BEGIN
 			end
 			else -- la cuenta no existe, entonces se crea
 			begin
+				--Es favorita la dirección?
+					IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 1)
+					BEGIN
+						--Cosultar si ya existe otra favorita
+						SELECT TOP 1
+							@IdAddressFavorite = ua.UadIdAddress
+						FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
+						INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
+							ON ua.UadIdAccount = rua.RuaIdAccount
+						INNER JOIN dbo.Township twn WITH (NOLOCK)
+							ON twn.IdTownship = ua.UadIdTownship
+						INNER JOIN dbo.Province prv WITH (NOLOCK)
+							ON prv.IdProvince = twn.IdProvince
+						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
+							ON ua.IdCityPlace = ctp.IdCityPlace
+							   AND ctp.CityPlaceRowStatus = 'true'
+						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+							ON vp.CodeOfReference = ua.CodeOfReference
+						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+							ON conf.NirPhone = ua.UadNirPhone
+							AND conf.Phone = ua.UadPhone
+						WHERE rua.RuaIdAccount = @IdAccount
+							  AND rua.RuaIdUser = @IdUser
+							  AND ua.UadRowStatus = 1
+							  AND ua.UadFavorite = 1 --Debe ser favorita
+							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
+							  AND conf.TownshipId = vp.IdTownship
+							  AND conf.[Address] = vp.[Address]
+
+						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
+						BEGIN
+							IF(@IdAddressFavorite != @IdAddress)
+							BEGIN
+								UPDATE [dbo].[UserAddress]
+							   SET [UadTokenUpdated] = @Token
+								  ,[UadDateUpdated] = GETDATE()
+								  ,[UadFavorite] = 0 --Se elimina la favorita actual
+								WHERE [UadIdAddress] =  @IdAddressFavorite
+							END;
+						END;
+					END;
+					--Es origen la direccion
+					ELSE IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 0)
+					BEGIN
+						SET @IsFavorite = 0; --Se cambia ya que solo puede ser favorita una direccion de Origen
+					END;
+
 				SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)			
 						--Inserta Visit Point en la tabla VisitPointClient
 				INSERT INTO [dbo].[VisitPointClient]
@@ -262,7 +367,7 @@ BEGIN
 					   ,@Department
 					   ,@Phone
 					   ,@ContactName
-					   ,6
+					   ,@IdKindOfVPClient
 					   ,@IdKindOfVPBusiness
 					   ,NULL
 					   ,NULL
@@ -291,7 +396,8 @@ BEGIN
 						,[UadTokenUpdated]
 						,[UadDateUpdated]
 						,CodeOfReference
-						,IdCityPlace)
+						,IdCityPlace
+						,[UadFavorite])
 						VALUES
 						(@IdTownship
 						,@IdAccount
@@ -308,7 +414,8 @@ BEGIN
 						,null
 						,null
 						,@CodeOfReference
-						,@IdCityPlace)
+						,@IdCityPlace
+						,@IsFavorite)
 
 
 

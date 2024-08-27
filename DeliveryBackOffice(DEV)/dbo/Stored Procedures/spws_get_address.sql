@@ -57,6 +57,7 @@ BEGIN
 		 , ISNULL(CAST(conf.[Zone] AS VARCHAR(2)), '') AS [Zone]
 		 , ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood), '') AS Neighborhood
 		 , CAST(ISNULL(vp.IsOriginVisitPoint, 1) AS NVARCHAR(1)) AS IsOrigin
+		 , CAST(ISNULL(ua.UadFavorite,0) AS NVARCHAR(1)) AS IsFavorite
 	FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
 	INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
 		ON ua.UadIdAccount = rua.RuaIdAccount
