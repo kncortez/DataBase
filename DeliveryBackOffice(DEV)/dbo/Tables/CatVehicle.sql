@@ -48,7 +48,11 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubi
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última ubicación, latitud, registrada del vehículo.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatVehicle', @level2type = N'COLUMN', @level2name = N'LastLatitude';
+GO
 
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País del vehiculo ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatVehicle', @level2type=N'COLUMN',@level2name=N'IdCountry'
+GO
 
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',

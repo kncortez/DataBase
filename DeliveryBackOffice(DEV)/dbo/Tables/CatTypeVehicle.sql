@@ -97,6 +97,15 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2name = N'PackageSize'
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Relacion a que país corresponde el tipo de Vehiculo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatTypeVehicle',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Catálogo de tipo de vehículos',
     @level0type = N'SCHEMA',
     @level0name = N'dbo',

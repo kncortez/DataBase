@@ -12,7 +12,7 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[GetArticlesSAP] 
-				 @IdCountry NVARCHAR(2) = 'HN'
+				 @IdCountry NVARCHAR(2) = 'GT'
 -- Add the parameters for the stored procedure here
 
 AS

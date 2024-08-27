@@ -138,7 +138,7 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Tarifario de servicio estandar'
                 AND CountryId = @Country
             );
     DECLARE @NewAlternativeRates INT =
@@ -146,7 +146,7 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Tarifario destinos express center'
                 AND CountryId = @Country
             );
     DECLARE @NewAutoSalesMainRates INT =
@@ -154,7 +154,7 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Tarifario de servicio estandar autoventas'
                 AND CountryId = @Country
             );
 
@@ -162,14 +162,14 @@ BEGIN
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Promo Paquetequiero' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Promo Paquetequiero'
                 AND CountryId = @Country
             );
    DECLARE @NewRateGeneralDiscount INT = (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
-                WHERE RH.RheName = 'Promo Paquetequiero destinos exc' COLLATE Latin1_General_CI_AI
+                WHERE RH.RheName = 'Promo Paquetequiero destinos exc'
                 AND CountryId = @Country
             );
 			
@@ -345,7 +345,7 @@ BEGIN
             FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
             WHERE VPC.CodeOfReference = @CodeOfReferenceDestiny
                   AND VPC.StatusClient = 1
-                  AND VPC.DescriptionOfClient LIKE 'FD%EXC%' COLLATE Latin1_General_CI_AI
+                  AND VPC.DescriptionOfClient LIKE 'FD%EXC%'
         )
            )
          BEGIN
@@ -433,8 +433,8 @@ BEGIN
                       AND GETDATE() <= MB.ExpirationDate AND MB.RowStatus = 1
 					  AND GETDATE() <= SC.ExpirationDate
 					  AND SC.RowStatus = 1
-					  AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-					  AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+					  AND CSPS.SalesPackageStatusName = 'Activa' 
+					  AND CSPSM.SalesPackageStatusName = 'Activa' 
 					  AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
 				ORDER BY SC.ExpirationDate ASC;
 	
@@ -453,7 +453,7 @@ BEGIN
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
                 WHERE VPC.CodeOfReference = @CodeOfReferenceDestiny
                       AND VPC.StatusClient = 1
-                      AND VPC.DescriptionOfClient LIKE 'FD%EXC%' COLLATE Latin1_General_CI_AI
+                      AND VPC.DescriptionOfClient LIKE 'FD%EXC%'
             )
                )
             BEGIN
@@ -883,7 +883,7 @@ BEGIN
         SELECT TOP 1
                @IdSegment = sg.CrsId
         FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-        WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
+        WHERE sg.CrsShortName = 'FOR' 
     END;
 
     --------------- Fin Determinar Segmento LOC/MET/FOR --- ---------------------------------------------------------------------------------------------------
@@ -1366,7 +1366,7 @@ BEGIN
                     SELECT TOP 1
                            @IdSegment = sg.CrsId
                     FROM [DeliveryBackOffice].dbo.CatRateSegment sg WITH (NOLOCK)
-                    WHERE sg.CrsShortName = 'FOR' COLLATE Latin1_General_CI_AI;
+                    WHERE sg.CrsShortName = 'FOR';
                 END;
 
                 -- Cálculo de precios
@@ -1392,7 +1392,7 @@ BEGIN
                 INTO #ParcelOverweightPerType
                 FROM #ParceCode                                               p
                     INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
-                        ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
+                        ON p.Item = ABC.Code 
                         WHERE ABC.AbcRowStatus = 1;
 
                 SET @ExpectedWeight =
@@ -1481,7 +1481,7 @@ BEGIN
                             SELECT TOP 1
                                    CTS.CtsId
                             FROM [DeliveryBackOffice].[dbo].[CatTypeService] CTS WITH (NOLOCK)
-                            WHERE CTS.CtsShortName = 'SDD' COLLATE Latin1_General_CI_AI
+                            WHERE CTS.CtsShortName = 'SDD' 
                         );
                 IF (@IsSDD = 0)
                     UPDATE @RealRateGroup
@@ -1591,7 +1591,7 @@ BEGIN
                 INNER JOIN [#ParceWeigth]                                 PW
                     ON p.[ID] = PW.[ID]
                 INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
-                    ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
+                    ON p.Item = ABC.Code 
                 OUTER APPLY
             (
                 SELECT TOP (1)

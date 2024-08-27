@@ -86,7 +86,7 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2name = N'CountryTokenUpdated'
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
-    @value = N'Fehca de modicificación del país',
+    @value = N'Fecha de modicificación del país',
     @level0type = N'SCHEMA',
     @level0name = N'dbo',
     @level1type = N'TABLE',

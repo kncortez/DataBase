@@ -118,6 +118,15 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2name = N'UnitType'
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Relación con el pais de origen (CatCountry)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatVehicleCategories',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Catálogo de categorías de vehículos',
     @level0type = N'SCHEMA',
     @level0name = N'dbo',
