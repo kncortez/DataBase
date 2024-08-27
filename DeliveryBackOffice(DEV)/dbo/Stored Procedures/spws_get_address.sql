@@ -82,7 +82,8 @@ BEGIN
           (
               ua.UadIdAddress = @IdAddress
               OR @IdAddress = -1
-          );
+          )
+	ORDER BY ua.UadFavorite DESC;
 END
 
 
