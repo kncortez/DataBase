@@ -38,15 +38,14 @@ BEGIN
        AND IdCountry = @IdCountry
 
 	SET @systemOrigen = (
-							SELECT TOP 1 SysIdSystem
-							FROM DeliveryBackOffice.dbo.CatSystem
-							WHERE SysNameSystem = 'Tienda Virtual'
-						)
+						SELECT TOP 1 SysIdSystem
+						FROM DeliveryBackOffice.dbo.CatSystem
+						WHERE SysNameSystem = 'Tienda Virtual'
+					)
 	
 	SET @idType = (SELECT IdCatInvoiceType
 						FROM CatInvoiceType 
 					WHERE Name = 'Otros')
-
 
 	SELECT Top 1 
 	    @IdTarjeta = GetCardsCredit 
@@ -323,34 +322,9 @@ BEGIN
         
 
 
-		 DECLARE @IdCart INT;
 
-		IF(EXISTS(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry AND RowStatus=1 ORDER BY DateCreated DESC))
-		BEGIN
 
-	     SET @IdCart = (select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where AccountId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry ORDER BY DateCreated DESC)
-		 
-		END
-		ELSE
-		BEGIN
-		 
-		 SET @IdCart = (select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where RegisterUserId = @IdAccount AND ISNULL(IdCountry,'GT') = @IdCountry ORDER BY DateCreated DESC)
-		
-		END
-
-		 UPDATE  [dbo].[MarketplaceCartDetail]
-			  SET RowStatus = 0,
-				  TokenUpdated = @Token,
-				  DateUpdated  = GETDATE()
-			  WHERE  MarketplaceCartId = @IdCart
-
-		UPDATE  [dbo].[MarketplaceCart]
-			SET RowStatus = 0,
-				TokenUpdated = @Token,
-				DateUpdated  = GETDATE()
-			WHERE IdMarketplaceCart = @IdCart
-
-        IF (
+ IF (
 			 EXISTS( SELECT TOP 1 1 FROM dbo.RegistrationofTransactionProcessStates where OrderNumber= @OrderNumber
                 AND TypeSalePackage = 'MEMBERSHIP') --COLLATE Latin1_General_CI_AI
            )
@@ -1119,12 +1093,10 @@ BEGIN
           , inv_type
 		  , systemOperation
           , CatInvoiceTypeId
-		)
+        )
         VALUES
         (@inv_vpCodeOfReferences, @inv_cmp_nit, ISNULL(@inv_cli_name,'CF'), @inv_cli_adress, @inv_cli_nit, @inv_cli_email, @inv_date
        , @inv_IVA, @inv_amount, @inv_status, @inv_dateRegister, @inv_tokenRegister, 1, @systemOrigen, @idType);
-
-
 
         SET @dti_fk_header = SCOPE_IDENTITY();
 
@@ -1172,12 +1144,12 @@ BEGIN
                        SPL.[Authorization] = @OrderNumber
         UNION ALL
 			SELECT 
-		   @dti_fk_header,
-		   @dti_identification,
-		   @dti_category,
-		   @dti_quantity,
-		   @dti_measurement,
-		   CS.MembershipCost	
+		    @dti_fk_header
+		   ,@dti_identification
+		   ,@dti_category
+		   ,@dti_quantity
+		   ,@dti_measurement
+		   ,CS.MembershipCost	
 		   ,CS.MembershipName	
 		   ,CS.MembershipCost -((CS.MembershipCost) / @IVA)
 		   ,CS.MembershipCost
@@ -1197,8 +1169,8 @@ BEGIN
                 WHERE 
                        SPL.[Authorization] = @OrderNumber
 
-		SELECT @IdCountry = T.IdCountry,
-               @IdCurrency = T.IdCatCurrencyCOD
+		  SELECT @IdCountry = T.IdCountry,
+                 @IdCurrency = T.IdCatCurrencyCOD
           FROM (
                 SELECT IdCountry,
                        IdCatCurrencyCOD
@@ -1219,7 +1191,7 @@ BEGIN
                         WHERE SPL.[Authorization] = @OrderNumber
                ) AS T
 
-        UPDATE [invoiceHeader]
+         UPDATE [invoiceHeader]
            SET IdCountry = @IdCountry,
                IdCurrency = @IdCurrency
          WHERE inv_pk_id = @dti_fk_header
@@ -1238,6 +1210,25 @@ BEGIN
         VALUES
         (2, @inv_vpCodeOfReferences, @Authorizacion, @inv_amount, @inv_status, @dti_fk_header, @Token
        , GETDATE());
+
+	   
+		 DECLARE @IdCart INT;
+
+	
+	     SET @IdCart  =(select  Top 1 IdMarketplaceCart from dbo.MarketplaceCart where RegisterUserId = @IdAccount AND IdCountry=@IdCountry AND RowStatus=1 ORDER BY DateCreated DESC);
+		
+		 
+		 UPDATE  [dbo].[MarketplaceCartDetail]
+			  SET RowStatus = 0,
+				  TokenUpdated = @Token,
+				  DateUpdated  = GETDATE()
+			  WHERE  MarketplaceCartId = @IdCart
+
+			UPDATE  [dbo].[MarketplaceCart]
+			  SET RowStatus = 0,
+				  TokenUpdated = @Token,
+				  DateUpdated  = GETDATE()
+			  WHERE IdMarketplaceCart = @IdCart
 	   
         COMMIT TRANSACTION;
 
