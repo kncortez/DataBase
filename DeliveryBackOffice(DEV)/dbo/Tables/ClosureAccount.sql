@@ -8,8 +8,9 @@
     [DateCreated]      DATETIME      NOT NULL,
     [TokenUpdated]     VARCHAR (50)  NULL,
     [DateUpdated]      DATETIME      NULL,
-    [IdCountry]        NVARCHAR(2)   NULL,
-    PRIMARY KEY CLUSTERED ([IdClosureAccount] ASC)
+    [IdCountry]        VARCHAR(2)   NULL,
+    PRIMARY KEY CLUSTERED ([IdClosureAccount] ASC),
+    CONSTRAINT [FK_ClosureAccount_CatCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
 
 
@@ -52,3 +53,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que m
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se actualizó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ClosureAccount', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de las cuentas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ClosureAccount', @level2type=N'COLUMN',@level2name=N'IdCountry'
+GO
