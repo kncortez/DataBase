@@ -12,7 +12,7 @@
 -- Create date: <2024-07-02>
 -- Description: <Se agrega filtro para el remitente por pais>
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
+ALTER PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
@@ -51,8 +51,7 @@ BEGIN
         Guide_Number INT
     );
 
-    CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
-    CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
+    CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
     INSERT INTO #listGuides
     (
@@ -80,10 +79,7 @@ BEGIN
           AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
     );
 
-    CREATE NONCLUSTERED INDEX IX_LGNE_SERIE
-    ON #listGuidesNotExist (Guide_Serie);
-    CREATE NONCLUSTERED INDEX IX_LGNE_NUMBER
-    ON #listGuidesNotExist (Guide_Number);
+    CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que si se pueden procesar con el modulo indicado ------------------------------------
@@ -123,10 +119,7 @@ BEGIN
 					  WHERE lgne.Guide_Serie = lg.Guide_Serie
 					  AND lgne.Guide_Number = lg.Guide_Number);*/
 
-    CREATE NONCLUSTERED INDEX IX_LGI_SERIE
-    ON #listGuidesIncluded (Guide_Serie);
-    CREATE NONCLUSTERED INDEX IX_LGI_NUMBER
-    ON #listGuidesIncluded (Guide_Number);
+    CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
 
@@ -222,10 +215,7 @@ BEGIN
          
 			END
 
-    CREATE NONCLUSTERED INDEX IX_LGE_SERIE
-    ON #listGuidesExcluded (Guide_Serie);
-    CREATE NONCLUSTERED INDEX IX_LGE_NUMBER
-    ON #listGuidesExcluded (Guide_Number);
+    CREATE NONCLUSTERED INDEX IX_LGE_GUIDES ON #listGuidesExcluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
     ---- Asignar configuracion de parametros -------------------------------------------------------------
@@ -360,8 +350,7 @@ BEGIN
         ReturnRates DECIMAL(14, 2) NULL
     );
 
-    CREATE NONCLUSTERED INDEX IX_PPT_GS ON #PendingPaymentTemp (GuideSerie);
-    CREATE NONCLUSTERED INDEX IX_PPT_GN ON #PendingPaymentTemp (GuideNumber);
+    CREATE NONCLUSTERED INDEX IX_PPT_GNS ON #PendingPaymentTemp (GuideSerie,GuideNumber);
 
     PRINT '@InTime';
     PRINT @InTimeP;
