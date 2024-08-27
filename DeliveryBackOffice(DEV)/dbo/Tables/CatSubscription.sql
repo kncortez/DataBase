@@ -64,6 +64,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
-
+GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de la suscripcion ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'IdCountry'
 GO

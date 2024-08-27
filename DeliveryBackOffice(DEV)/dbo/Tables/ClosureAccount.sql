@@ -52,7 +52,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que m
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se actualizó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ClosureAccount', @level2type = N'COLUMN', @level2name = N'DateUpdated';
-
+GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de las cuentas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ClosureAccount', @level2type=N'COLUMN',@level2name=N'IdCountry'
 GO

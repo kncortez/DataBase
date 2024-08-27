@@ -1,12 +1,4 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[GetInvoiceHelperExecutionBatch]    Script Date: 13/08/2024 09:17:58 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- =============================================
+﻿-- =============================================
 -- Author:        <Cristian,Azurdia>
 -- Create date: <2024-07-24>
 -- Description:    < Obtener Lotes pendientes de envió de correo HermesInvoiceHelperHN >

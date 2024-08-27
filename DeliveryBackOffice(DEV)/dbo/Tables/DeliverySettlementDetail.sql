@@ -123,8 +123,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Hora posibl
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value=N'Check Point para indicar estado de la guía despachada en el manifiesto ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'DeliverySettlementDetail', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
-GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value=N'Check Point para indicar estado de la guía despachada en el manifiesto ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'DeliverySettlementDetail', @level2type=N'COLUMN',@level2name=N'StatusOrderId'
 
 
 

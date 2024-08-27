@@ -100,7 +100,7 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si es artí
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar valor que indica si se envía o no código de almacén de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'SendAlmacenExp';
-
+GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País del articulo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatArticleSAP', @level2type=N'COLUMN',@level2name=N'IdCountry'
 GO
