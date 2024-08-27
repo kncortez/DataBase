@@ -73,6 +73,10 @@ BEGIN
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
 				ON vpc.IdTownship = TwnTvpc.IdTownship
+			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK) -----
+				ON TwnSph.IdTownship = shp.TownshipId -------
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] PrvTvpc WITH (NOLOCK)
+				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
 			LEFT JOIN dbo.ServiceManagement srv
@@ -89,7 +93,7 @@ BEGIN
 			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND shp.AccountId = @accountId
-			AND ISNULL(hl.IdCountry,'GT') = @IdCountry 
+			AND (ISNULL(hl.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
 		ORDER BY shp.DateCreated desc
 		
 	END
@@ -121,6 +125,10 @@ BEGIN
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
 				ON vpc.IdTownship = TwnTvpc.IdTownship
+			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK) -----
+				ON TwnSph.IdTownship = shp.TownshipId -------
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] PrvTvpc WITH (NOLOCK)
+				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
 			LEFT JOIN (
 				SELECT
 					DSC.HeaderCode,
@@ -156,7 +164,7 @@ BEGIN
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
-			AND ISNULL(hlf.IdCountry,'GT') = @IdCountry 
+			AND (ISNULL(hlf.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
 		ORDER BY shp.DateCreated desc
 
 	END
