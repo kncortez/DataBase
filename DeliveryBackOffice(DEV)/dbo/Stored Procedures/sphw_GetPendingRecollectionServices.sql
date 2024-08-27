@@ -104,7 +104,6 @@ BEGIN
 				FROM [DeliveryBackOffice].[dbo].[DumpServiceCoverage] DSCAux WITH (NOLOCK)
 					INNER JOIN DBO.HubLogistics HL WITH (NOLOCK) ON HL.HubAbbreviation=DSCAux.Hub 
 				WHERE DSCAux.RowStatus = 1 AND HL.HubStatus = 1
-				AND ISNULL(HL.IdCountry, 'GT') = @IdCountry
 				GROUP BY DSCAux.HeaderCode,HL.IdHubLogistic, HL.IdCountry
 			) hub
 				ON ISNULL(twnT.HeaderCode, TwnTvpc.HeaderCode) = hub.HeaderCode
