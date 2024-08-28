@@ -20,7 +20,9 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'
+		AND
+			ISNULL([KOVPC].IdCountry , 'GT') = @idCountrySender
 	)
 
 	DECLARE @TempGuideSplit TABLE (
@@ -129,7 +131,7 @@ BEGIN
 			AND
 			[InHcreditnote].[inv_date] BETWEEN @StartDate AND @EndDate
 			AND 
-			InHcreditnote.IdCountry = @idCountrySender
+			ISNULL(InHcreditnote.IdCountry,'GT') = @idCountrySender
 		
 	END
 	ELSE
@@ -195,7 +197,7 @@ BEGIN
 			AND
 			[InHcreditnote].[inv_date] BETWEEN @StartDate AND @EndDate
 			AND 
-			InHcreditnote.IdCountry = @idCountrySender
+			ISNULL(InHcreditnote.IdCountry,'GT') = @idCountrySender
 		
 	END
 
