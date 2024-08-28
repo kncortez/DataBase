@@ -26,7 +26,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI AND IdCountry = @IdCountry
 	)
 
 	DECLARE @TempGuideSplit TABLE (
