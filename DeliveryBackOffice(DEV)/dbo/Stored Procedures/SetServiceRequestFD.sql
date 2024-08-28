@@ -1,4 +1,9 @@
 ﻿
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Modified:	<28/08/2024>
+-- Description:	<Se agrega validacion para tomar en cuenta idKindOfVPClient multipais>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -13,12 +18,13 @@ BEGIN
 	DECLARE @ManifestNumber INT = 0
 	DECLARE @ManifestSerie VARCHAR(2) = 'FM'
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
-
+	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
+	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -408,7 +414,7 @@ BEGIN
 					DECLARE @TypeClient INT;
 					SET @TypeClient = (SELECT TOP 1 IdKindOfVPClient FROM VisitPointClient WITH (NOLOCK) WHERE CustomerID = @CustomerID)
 
-					IF(@TypeClient = 3)
+					IF(@TypeClient = 3 OR @TypeClient = 14)
 						BEGIN
 						DECLARE @IdCost INT;
 						DECLARE @IsCollect BIT;
@@ -674,6 +680,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Concesionario'   
+			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -683,7 +690,8 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'   
+			[KOVPC].[KindOfVPName] = 'Express Center'  
+			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 
 	DECLARE @IndividualWebSys INT =
