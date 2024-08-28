@@ -125,8 +125,7 @@ BEGIN
 	LEFT JOIN [dbo].[LinehaulRouteSettlement] lrs  WITH(NOLOCK) 
 		ON [lrs].[LinehaulRoutePreparationId] = [lrp].[IdLinehaulRoutePreparation]
 	WHERE lrp.IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
-	AND lrp.RowStatus = 1
-	AND IIF(hl.IdCountry IS NULL, 'GT', hl.IdCountry)= @IdCountry
+	AND lrp.RowStatus = 1	
 
 	-- Table 1 Detalle manifiesto
 	SELECT 
@@ -211,7 +210,7 @@ BEGIN
 							AND ad.RowStatus = 1
 					WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
 					AND lrpc.RowStatus = 1
-					AND IIF(hl.IdCountry IS NULL, 'GT', hl.IdCountry)= @IdCountry
+					AND ISNULL(hl.IdCountry, 'GT') = @IdCountry
 					ORDER BY hl.HubName
 				) DispatchedLienahul
 			UNION
@@ -325,6 +324,7 @@ BEGIN
 									[AD].[RowStatus] = 1
 						WHERE
 							[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
+							AND ISNULL(hl.IdCountry, 'GT') = @IdCountry
 						ORDER BY HL.HubName
 				) ExtraGuidesLinehaul
 		) TotalGuidesLinehaul
