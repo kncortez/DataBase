@@ -15,3 +15,10 @@
     CONSTRAINT [FK_MembershipDiscountRange_ValueType] FOREIGN KEY ([ValueTypeId]) REFERENCES [dbo].[CatValueType] ([IdCatValueType])
 );
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_MembershipId]
+    ON [dbo].[MembershipDiscountRange]([MembershipId] ASC);
+

@@ -44,7 +44,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @RevaluedGuide BIT = 0
   , @CategoryProductId INT = 0
   , @ProductId INT = 0
-  , @FetchActivePRoduct BIT=1
+  , @FetchActivePRoduct BIT = 1
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -74,49 +74,67 @@ BEGIN
         SET @IdCustomer = @IdCustomerParams;
     END;
     ------- fin determinar cliente ------------------------------------------------------------------------------------------------
-		------------------------------------------------------------------------------------------------------------------------------------
-	/*
+    ------------------------------------------------------------------------------------------------------------------------------------
+    /*
 		Inicio FIx 20250603 Membersías y suscripciones
 		Verifica los productos validos y activos del cliente
 	*/
-	IF @ProductId>0 AND @FetchActivePRoduct=1
-	BEGIN 
-		Declare @IdAcount INT=(SELECT TOP 1 AccIdAccount FROM DBO.ACCOUNT where idCustomer=@IdCustomer and AccRowStatus=1)
-		Declare @TechnicalDescription NVARCHAR(50);
+    IF @ProductId > 0
+       AND @FetchActivePRoduct = 1
+    BEGIN
+        DECLARE @IdAcount INT =
+                (
+                    SELECT TOP 1
+                           AccIdAccount
+                    FROM dbo.Account
+                    WHERE IdCustomer = @IdCustomer
+                          AND AccRowStatus = 1
+                );
+        DECLARE @TechnicalDescription NVARCHAR(50);
 
-		DECLARE  @ActiveProducts  TABLE 
-		(
-			StatusId INT,
-			CatProductCategoryId INT,
-			ProductId INT,
-			ProductName NVARCHAR(50),
-			ProductDescription NVARCHAR(300),
-			IncludeCollect BIT
-		);	
-		INSERT INTO @ActiveProducts 
-		EXEC ClientSubscriptionFetcher_Data @IdAccount=@IdAcount
+        DECLARE @ActiveProducts TABLE
+        (
+            StatusId INT
+          , CatProductCategoryId INT
+          , ProductId INT
+          , ProductName NVARCHAR(50)
+          , ProductDescription NVARCHAR(300)
+          , IncludeCollect BIT
+        );
+        INSERT INTO @ActiveProducts
+        EXEC ClientSubscriptionFetcher_Data @IdAccount = @IdAcount;
 
 
-		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory
-		WHERE IdCatProductCategory= @CategoryProductId
-		and rowstatus=1
+        SELECT TOP 1
+               @TechnicalDescription = TechnicalDescription
+        FROM CatProductCategory
+        WHERE IdCatProductCategory = @CategoryProductId
+              AND RowStatus = 1;
 
-		declare @NewProductId INT=NULL;
+        DECLARE @NewProductId INT = NULL;
 
-		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
-		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1)
-	
-		IF(@NewProductId IS NULL)
-		BEGIN
-			SET @ProductId=0;
-			SET  @CategoryProductId=0;
-			--SET @UseMembership=0;
-		END
-		ELSE
-		BEGIN
-			SET @ProductId=@NewProductId
-		END
-	END
+        SELECT TOP 1
+               @NewProductId = ProductId
+        FROM @ActiveProducts
+        WHERE CatProductCategoryId =
+        (
+            SELECT IdCatProductCategory
+            FROM CatProductCategory
+            WHERE TechnicalDescription = @TechnicalDescription
+                  AND RowStatus = 1
+        );
+
+        IF (@NewProductId IS NULL)
+        BEGIN
+            SET @ProductId = 0;
+            SET @CategoryProductId = 0;
+        --SET @UseMembership=0;
+        END;
+        ELSE
+        BEGIN
+            SET @ProductId = @NewProductId;
+        END;
+    END;
 
 
     ------- determinar el Tarifario y tipo de tarifario que se va a aplicar -------------------------------------------------------
@@ -143,19 +161,21 @@ BEGIN
                 WHERE RH.RheName = 'Tarifario de servicio estandar autoventas' COLLATE Latin1_General_CI_AI
             );
 
-   DECLARE @NewRateGeneral INT = (
+    DECLARE @NewRateGeneral INT =
+            (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero' COLLATE Latin1_General_CI_AI
             );
-   DECLARE @NewRateGeneralDiscount INT = (
+    DECLARE @NewRateGeneralDiscount INT =
+            (
                 SELECT TOP 1
                        RH.RheId
                 FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH (NOLOCK)
                 WHERE RH.RheName = 'Promo Paquetequiero destinos exc' COLLATE Latin1_General_CI_AI
             );
-			
+
     --DECLARE @TarifaPlanBasico INT =
     --        (
     --            SELECT TOP 1
@@ -245,7 +265,7 @@ BEGIN
                    AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.DeliveryCurrency dc WITH (NOLOCK)
                 ON dc.Currency_Id = rh.CurrencyId
-        WHERE rc.RbcIdCustomer = @IdCustomer 
+        WHERE rc.RbcIdCustomer = @IdCustomer
               AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
     END;
@@ -300,8 +320,8 @@ BEGIN
     END;
 
 
-	PRINT 'TARIFA QUE SE USARÁ'
-	PRINT @IdRate
+    PRINT 'TARIFA QUE SE USARÁ';
+    PRINT @IdRate;
 
     -------- Fin determinar tarifa que se va usar ---------------------------------------------------------------------
 
@@ -325,42 +345,41 @@ BEGIN
                   AND VPC.DescriptionOfClient LIKE 'FD%EXC%' COLLATE Latin1_General_CI_AI
         )
            )
-         BEGIN
-			IF (EXISTS
-			(
-				SELECT TOP 1
-					   1
-				FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] AR WITH (NOLOCK)
-				WHERE AR.VisitPointClientId = @CodeOfReferenceSource
-					  AND AR.RowStatus = 1
-					  
-			)
-			   )
-			    BEGIN
+        BEGIN
+            IF (EXISTS
+            (
+                SELECT TOP 1
+                       1
+                FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] AR WITH (NOLOCK)
+                WHERE AR.VisitPointClientId = @CodeOfReferenceSource
+                      AND AR.RowStatus = 1
+            )
+               )
+            BEGIN
 
-						SELECT @RateId = ARC.RateId
-						FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
-						WHERE ARC.VisitPointClientId = @CodeOfReferenceSource
-							  AND ARC.RowStatus = 1
-							  --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+                SELECT @RateId = ARC.RateId
+                FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
+                WHERE ARC.VisitPointClientId = @CodeOfReferenceSource
+                      AND ARC.RowStatus = 1;
+                --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
-						SET @IdRate = ISNULL(@RateId, @IdRate);
-				END
-			ELSE 
-			    BEGIN
-						SELECT @RateId = ARC.RateId
-						FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
-						WHERE ARC.CustomerId = @IdCustomer
-							  AND ARC.VisitPointClientId IS NULL
-							  AND ARC.RowStatus = 1
-							  --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
+                SET @IdRate = ISNULL(@RateId, @IdRate);
+            END;
+            ELSE
+            BEGIN
+                SELECT @RateId = ARC.RateId
+                FROM [DeliveryBackOffice].[dbo].[AlternativeRateByCustomer] ARC WITH (NOLOCK)
+                WHERE ARC.CustomerId = @IdCustomer
+                      AND ARC.VisitPointClientId IS NULL
+                      AND ARC.RowStatus = 1;
+                --AND @IdRate IN ( @NewMainRates, @NewAutoSalesMainRates );
 
-						SET @IdRate = ISNULL(@RateId, @IdRate);
-				END
-			 
+                SET @IdRate = ISNULL(@RateId, @IdRate);
+            END;
 
-			PRINT 'TARIFA ALTERNATIVA'
-			PRINT @IdRate
+
+            PRINT 'TARIFA ALTERNATIVA';
+            PRINT @IdRate;
 
         END;
     END;
@@ -371,10 +390,10 @@ BEGIN
     (
         SELECT TOP 1
                cts.IdCatTypeSubscription
-        FROM CatSubscription csp
+        FROM CatSubscription               csp
             INNER JOIN CatTypeSubscription cts
                 ON csp.CatTypeSubscriptionId = cts.IdCatTypeSubscription
-            INNER JOIN CatProductCategory cpc
+            INNER JOIN CatProductCategory  cpc
                 ON csp.CatProductCategoryId = cpc.IdCatProductCategory
         WHERE cpc.IdCatProductCategory = @CategoryProductId
     );
@@ -385,10 +404,10 @@ BEGIN
         (
             SELECT TOP 1
                    cvt.IdCatValueType
-            FROM CatValueType cvt
+            FROM CatValueType                      cvt
                 INNER JOIN MembershipDiscountRange mdr
                     ON cvt.IdCatValueType = mdr.ValueTypeId
-                INNER JOIN Membership mbs
+                INNER JOIN Membership              mbs
                     ON mdr.MembershipId = mbs.IdMembership
             WHERE mbs.IdMembership = @ProductId
         );
@@ -397,24 +416,26 @@ BEGIN
     BEGIN
 
         DECLARE @CustomerHasActiveSubscription INT;
-		
-				SELECT @CustomerHasActiveSubscription = SC.IdSubscription
-				FROM [DeliveryBackOffice].[dbo].[Subscription]                    SC WITH (NOLOCK)
-					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-						ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
-					INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
-						ON SC.MembershipId = MB.IdMembership
-					INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
-						ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
-				WHERE SC.CustomerId = @IdCustomer AND MB.CustomerId = @IdCustomer
-                      AND GETDATE() <= MB.ExpirationDate AND MB.RowStatus = 1
-					  AND GETDATE() <= SC.ExpirationDate
-					  AND SC.RowStatus = 1
-					  AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-					  AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
-					  AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
-				ORDER BY SC.ExpirationDate ASC;
-	
+
+        SELECT @CustomerHasActiveSubscription = SC.IdSubscription
+        FROM [DeliveryBackOffice].[dbo].[Subscription]                    SC WITH (NOLOCK)
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
+                ON CSPS.IdCatSalesPackageStatus = SC.CatSubscriptionStatusId
+            INNER JOIN [DeliveryBackOffice].[dbo].[Membership]            MB WITH (NOLOCK)
+                ON SC.MembershipId = MB.IdMembership
+            INNER JOIN [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPSM WITH (NOLOCK)
+                ON CSPSM.IdCatSalesPackageStatus = MB.CatMembershipStatusId
+        WHERE SC.CustomerId = @IdCustomer
+              AND MB.CustomerId = @IdCustomer
+              AND GETDATE() <= MB.ExpirationDate
+              AND MB.RowStatus = 1
+              AND GETDATE() <= SC.ExpirationDate
+              AND SC.RowStatus = 1
+              AND CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+              AND CSPSM.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+              AND SC.CatTypeSubscriptionId = ISNULL(@TypeSubscriptionId, 2)
+        ORDER BY SC.ExpirationDate ASC;
+
 
 
 
@@ -648,6 +669,9 @@ BEGIN
         --PRINT @AddressParse
 
         -- separar en un arrglo la direccion 
+
+		PRINT '+++++++++++++++++++++++@AddressParse++++++++++++++++++++'
+		PRINT @AddressParse
         SELECT Item
         INTO #ItemAddress
         FROM DeliveryBackOffice.dbo.SplitUnlimited(@AddressParse, ' ');
@@ -892,7 +916,8 @@ BEGIN
             ON tyd.IdCatTypeDiscount = sd.TypeDiscountId
         LEFT JOIN dbo.SpecialSaleTarget  tgt WITH (NOLOCK)
             ON tgt.SpecialSaleId = ss.IdSpecialSale
-    WHERE ss.RowStatus = 1 AND sd.RowStatus = 1
+    WHERE ss.RowStatus = 1
+          AND sd.RowStatus = 1
           AND GETDATE()
           BETWEEN ss.StartDate AND ss.FinishDate
           AND
@@ -1073,8 +1098,8 @@ BEGIN
                     ON ar.Code = ls.Item
                 INNER JOIN dbo.RateData          ra
                     ON ra.ArticleId = ar.AbcId
-                WHERE ra.TypeSegmentId = @IdSegment
-                       AND ra.RateId = @IdRate
+            WHERE ra.TypeSegmentId = @IdSegment
+                  AND ra.RateId = @IdRate
         );
 
         IF (@IsSDD = 'true' AND @CountPiecebyArticle = 0) -----HOTFIX_SAMEDAY.INI	
@@ -1110,7 +1135,8 @@ BEGIN
                     ON sv.CtsId = rd.TypeServiceId
                 LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId
-            WHERE rh.RheRowStatus = 'true' AND rd.RowStatus = 'true'
+            WHERE rh.RheRowStatus = 'true'
+                  AND rd.RowStatus = 'true'
                   AND rh.RheId = @IdRate
                   AND rd.ArticleId IS NULL
                   AND (rd.TypeServiceId IN
@@ -1169,7 +1195,8 @@ BEGIN
                     ON sv.CtsId = rd.TypeServiceId
                 LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                     ON cr.IdTypeRate = rh.RateTypeId
-            WHERE rh.RheRowStatus = 'true' AND rd.RowStatus = 'true'
+            WHERE rh.RheRowStatus = 'true'
+                  AND rd.RowStatus = 'true'
                   AND rh.RheId = @IdRate
                   AND rd.ArticleId IS NULL
                   AND (rd.TypeServiceId IN
@@ -1244,7 +1271,8 @@ BEGIN
                 ON sv.CtsId = rd.TypeServiceId
             LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                 ON cr.IdTypeRate = rh.RateTypeId
-        WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
+        WHERE rh.RheId = @IdRate
+              AND rd.RowStatus = 'true'
               AND rd.ArticleId IS NULL
               AND rd.TypeSegmentId = @IdSegment
               AND (rd.TypeServiceId IN
@@ -1287,7 +1315,10 @@ BEGIN
         --select * from #ListCode
         DECLARE @ParcelPrice DECIMAL(12, 2) = 0;
 
-        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates,@NewRateGeneral, @NewRateGeneralDiscount))
+        IF (@IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
+                       , @NewRateGeneralDiscount
+                       )
+           )
         BEGIN
 
             SET @IdSegment = NULL;
@@ -1358,7 +1389,7 @@ BEGIN
                 FROM #ParceCode                                               p
                     INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
                         ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
-                        WHERE ABC.AbcRowStatus = 1;
+                WHERE ABC.AbcRowStatus = 1;
 
                 SET @ExpectedWeight =
                 (
@@ -1398,7 +1429,8 @@ BEGIN
                             ON rd.ArticleId = abc.AbcId
                         INNER JOIN #ListCode             LC
                             ON abc.Code = LC.Item
-                    WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
+                    WHERE rh.RheId = @IdRate
+                          AND rd.RowStatus = 'true'
                           AND rd.TypeSegmentId = @IdSegment
                     GROUP BY rd.TypeSegmentId
                            , rd.TypeServiceId
@@ -1488,7 +1520,8 @@ BEGIN
                         ON sv.CtsId = rd.TypeServiceId
                     LEFT JOIN dbo.CatTypeRate       cr
                         ON cr.IdTypeRate = rh.RateTypeId
-                WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
+                WHERE rh.RheId = @IdRate
+                      AND rd.RowStatus = 'true'
                       --and rd.ArticleId is null
                       AND rd.TypeSegmentId = @IdSegment
                       AND (rd.TypeServiceId IN
@@ -1644,7 +1677,8 @@ BEGIN
                         ON sv.CtsId = rd.TypeServiceId
                     LEFT JOIN dbo.CatTypeRate        cr WITH (NOLOCK)
                         ON cr.IdTypeRate = rh.RateTypeId
-                WHERE rd.TypeSegmentId = @IdSegment AND rd.RowStatus = 'true'
+                WHERE rd.TypeSegmentId = @IdSegment
+                      AND rd.RowStatus = 'true'
                       AND (rd.TypeServiceId IN
                            (
                                SELECT CtsId
@@ -1720,14 +1754,14 @@ BEGIN
                 DROP TABLE #ParcelOverweightPerTypeCorp;
 
         END;
-    print 'rate'
-    print @IdRate
-    print 'segment'
-    print @IdSegment
-    print 'grupo'
-    print @IdRateGroup
-	PRINT '@IdTypeRate'
-	PRINT @IdTypeRate
+        PRINT 'rate';
+        PRINT @IdRate;
+        PRINT 'segment';
+        PRINT @IdSegment;
+        PRINT 'grupo';
+        PRINT @IdRateGroup;
+        PRINT '@IdTypeRate';
+        PRINT @IdTypeRate;
     END;
     ELSE IF @IdTypeRate = 4 -- tarifas especiales
     BEGIN
@@ -1817,7 +1851,8 @@ BEGIN
                 INNER JOIN #ParceWeigth  pw
                     ON pw.Item
                        BETWEEN rd.WeightFrom AND rd.WeightTo
-            WHERE rh.RheId = @IdRate AND rd.RowStatus = 1
+            WHERE rh.RheId = @IdRate
+                  AND rd.RowStatus = 1
                   AND rd.TypeSegmentId = @IdSegment
                   AND (rd.TypeServiceId IN
                        (
@@ -1873,18 +1908,19 @@ BEGIN
                     ON ctr.IdTypeRate = rh.RateTypeId
                 INNER JOIN @tblNotInRange pw
                     ON pw.CatTypeServiceId = rd.TypeServiceId
-                WHERE rh.RheId = @IdRate AND rd.RowStatus = 1
-                       AND rd.IdRateData =
-                       (
-                           SELECT TOP 1
-                                  IdRateData
-                           FROM RateData
-                           WHERE RateId = @IdRate
-                                 AND TypeSegmentId = @IdSegment
-                                 AND TypeServiceId = cts.CtsId
-                                 AND RowStatus = 1
-                           ORDER BY WeightTo DESC
-                       )
+            WHERE rh.RheId = @IdRate
+                  AND rd.RowStatus = 1
+                  AND rd.IdRateData =
+                  (
+                      SELECT TOP 1
+                             IdRateData
+                      FROM RateData
+                      WHERE RateId = @IdRate
+                            AND TypeSegmentId = @IdSegment
+                            AND TypeServiceId = cts.CtsId
+                            AND RowStatus = 1
+                      ORDER BY WeightTo DESC
+                  )
                   AND rd.TypeSegmentId = @IdSegment
                   AND CONVERT(DATETIME, @Time, 108) <= ISNULL(
                                                                  CONVERT(
@@ -1948,7 +1984,8 @@ BEGIN
                 ON sv.CtsId = rd.TypeServiceId
             LEFT JOIN dbo.CatTypeRate    cr WITH (NOLOCK)
                 ON cr.IdTypeRate = rh.RateTypeId
-        WHERE rh.RheId = @IdRate AND rd.RowStatus = 'true'
+        WHERE rh.RheId = @IdRate
+              AND rd.RowStatus = 'true'
               AND rd.ArticleId IS NULL
               AND rd.TypeSegmentId = @IdSegment
               AND (rd.TypeServiceId IN
@@ -2014,10 +2051,10 @@ BEGIN
             (
                 SELECT TOP 1
                        cts.CatTypeSubscriptionName
-                FROM CatSubscription csp WITH(NOLOCK)
-                    INNER JOIN CatTypeSubscription cts WITH(NOLOCK)
+                FROM CatSubscription               csp WITH (NOLOCK)
+                    INNER JOIN CatTypeSubscription cts WITH (NOLOCK)
                         ON csp.CatTypeSubscriptionId = cts.IdCatTypeSubscription
-                    INNER JOIN CatProductCategory cpc WITH(NOLOCK)
+                    INNER JOIN CatProductCategory  cpc WITH (NOLOCK)
                         ON csp.CatProductCategoryId = cpc.IdCatProductCategory
                 WHERE cpc.IdCatProductCategory = @CategoryProductId
             );
@@ -2030,10 +2067,10 @@ BEGIN
                 (
                     SELECT TOP 1
                            cvt.ValueTypeName
-                    FROM CatValueType cvt WITH(NOLOCK)
-                        INNER JOIN MembershipDiscountRange mdr WITH(NOLOCK)
+                    FROM CatValueType                      cvt WITH (NOLOCK)
+                        INNER JOIN MembershipDiscountRange mdr WITH (NOLOCK)
                             ON cvt.IdCatValueType = mdr.ValueTypeId
-                        INNER JOIN Membership mbs WITH(NOLOCK)
+                        INNER JOIN Membership              mbs WITH (NOLOCK)
                             ON mdr.MembershipId = mbs.IdMembership
                     WHERE mbs.IdMembership = @ProductId
                 );
@@ -2043,7 +2080,7 @@ BEGIN
             (
                 SELECT TOP 1
                        TechnicalDescription
-                FROM CatProductCategory WITH(NOLOCK)
+                FROM CatProductCategory WITH (NOLOCK)
                 WHERE IdCatProductCategory = @CategoryProductId
             );
 
@@ -2053,20 +2090,18 @@ BEGIN
             BEGIN
 
                 SELECT TOP 1
-                       @SubscriptionId = sc.IdSubscription,
-                       @ServiceValueSubscription
-                           = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-                              scdr.DiscountValue,
-                              -1),
-                       @DescriptionTypeSubscription = cts.TechnicalDescription
-                FROM Subscription sc WITH(NOLOCK)
-                    INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
+                       @SubscriptionId              = sc.IdSubscription
+                     , @ServiceValueSubscription
+                                                    = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue, scdr.DiscountValue, -1)
+                     , @DescriptionTypeSubscription = cts.TechnicalDescription
+                FROM Subscription                        sc WITH (NOLOCK)
+                    INNER JOIN CatSalesPackageStatus     csps WITH (NOLOCK)
                         ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-                    INNER JOIN CatSubscription cat WITH(NOLOCK)
+                    INNER JOIN CatSubscription           cat WITH (NOLOCK)
                         ON sc.CatSubscriptionId = cat.IdCatSubscription
-                    INNER JOIN CatProductCategory cts WITH(NOLOCK)
+                    INNER JOIN CatProductCategory        cts WITH (NOLOCK)
                         ON cat.CatProductCategoryId = cts.IdCatProductCategory
-                    INNER JOIN SubscriptionDiscountRange scdr WITH(NOLOCK)
+                    INNER JOIN SubscriptionDiscountRange scdr WITH (NOLOCK)
                         ON sc.IdSubscription = scdr.SubscriptionId
                 WHERE sc.CustomerId = @IdCustomer
                       AND GETDATE() <= sc.ExpirationDate
@@ -2074,7 +2109,7 @@ BEGIN
                       AND csps.SalesPackageStatusName = 'Activa'
                       AND sc.IdSubscription = @ProductId
                       AND cts.IdCatProductCategory = @CategoryProductId
-                ORDER BY scdr.DiscountValue DESC;               
+                ORDER BY scdr.DiscountValue DESC;
 
             END;
             ELSE IF (@NameCategoryProduct = 'Paquetes')
@@ -2082,18 +2117,18 @@ BEGIN
                 IF (@RevaluedGuide = 0)
                 BEGIN
                     SELECT TOP 1
-                        @SubscriptionId = sc.IdSubscription,
-                        @ServiceValueSubscription
-                            = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-                                  sc.SubscriptionFixedValue,
-                                  -1),
-                           @DescriptionTypeSubscription = cts.TechnicalDescription
-                    FROM Subscription sc WITH(NOLOCK)
-                        INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
+                           @SubscriptionId              = sc.IdSubscription
+                         , @ServiceValueSubscription
+                                                        = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue
+                                  , sc.SubscriptionFixedValue
+                                  , -1)
+                         , @DescriptionTypeSubscription = cts.TechnicalDescription
+                    FROM Subscription                    sc WITH (NOLOCK)
+                        INNER JOIN CatSalesPackageStatus csps WITH (NOLOCK)
                             ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-                        INNER JOIN CatSubscription cat WITH(NOLOCK)
+                        INNER JOIN CatSubscription       cat WITH (NOLOCK)
                             ON sc.CatSubscriptionId = cat.IdCatSubscription
-                        INNER JOIN CatProductCategory cts WITH(NOLOCK)
+                        INNER JOIN CatProductCategory    cts WITH (NOLOCK)
                             ON cat.CatProductCategoryId = cts.IdCatProductCategory
                     WHERE sc.CustomerId = @IdCustomer
                           AND GETDATE() <= sc.ExpirationDate
@@ -2107,18 +2142,18 @@ BEGIN
                 ELSE IF (@RevaluedGuide = 1)
                 BEGIN
                     SELECT TOP 1
-                        @SubscriptionId = sc.IdSubscription,
-                        @ServiceValueSubscription
-                            = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue,
-                                  sc.SubscriptionFixedValue,
-                                  -1),
-                           @DescriptionTypeSubscription = cts.TechnicalDescription
-                    FROM Subscription sc WITH(NOLOCK)
-                        INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
+                           @SubscriptionId              = sc.IdSubscription
+                         , @ServiceValueSubscription
+                                                        = IIF(sc.ActualServiceCount + 1 <= sc.SubscriptionMaxServiceFixedValue
+                                  , sc.SubscriptionFixedValue
+                                  , -1)
+                         , @DescriptionTypeSubscription = cts.TechnicalDescription
+                    FROM Subscription                    sc WITH (NOLOCK)
+                        INNER JOIN CatSalesPackageStatus csps WITH (NOLOCK)
                             ON csps.IdCatSalesPackageStatus = sc.CatSubscriptionStatusId
-                        INNER JOIN CatSubscription cat WITH(NOLOCK)
+                        INNER JOIN CatSubscription       cat WITH (NOLOCK)
                             ON sc.CatSubscriptionId = cat.IdCatSubscription
-                        INNER JOIN CatProductCategory cts WITH(NOLOCK)
+                        INNER JOIN CatProductCategory    cts WITH (NOLOCK)
                             ON cat.CatProductCategoryId = cts.IdCatProductCategory
                     WHERE sc.CustomerId = @IdCustomer
                           AND GETDATE() <= sc.ExpirationDate
@@ -2133,20 +2168,20 @@ BEGIN
             ELSE IF (@NameCategoryProduct = 'Membresías')
             BEGIN
                 SELECT TOP 1
-                       @SubscriptionId = sc.IdMembership,
-                       @ServiceValueSubscription
-                           = IIF(sc.ActualServiceCount + 1 <= sc.MembershipMaxServiceFixedValue,
-                              sc.MembershipFixedValue,
-                              -1),
-                       @DescriptionTypeSubscription = cts.TechnicalDescription
-                FROM Membership sc WITH(NOLOCK)
-                    INNER JOIN CatSalesPackageStatus csps WITH(NOLOCK)
+                       @SubscriptionId              = sc.IdMembership
+                     , @ServiceValueSubscription
+                                                    = IIF(sc.ActualServiceCount + 1 <= sc.MembershipMaxServiceFixedValue
+                              , sc.MembershipFixedValue
+                              , -1)
+                     , @DescriptionTypeSubscription = cts.TechnicalDescription
+                FROM Membership                        sc WITH (NOLOCK)
+                    INNER JOIN CatSalesPackageStatus   csps WITH (NOLOCK)
                         ON csps.IdCatSalesPackageStatus = sc.CatMembershipStatusId
-                    INNER JOIN CatSubscription cat WITH(NOLOCK)
+                    INNER JOIN CatSubscription         cat WITH (NOLOCK)
                         ON sc.CatMembershipId = cat.IdCatSubscription
-                    INNER JOIN CatProductCategory cts WITH(NOLOCK)
+                    INNER JOIN CatProductCategory      cts WITH (NOLOCK)
                         ON cat.CatProductCategoryId = cts.IdCatProductCategory
-                    INNER JOIN MembershipDiscountRange scdr WITH(NOLOCK)
+                    INNER JOIN MembershipDiscountRange scdr WITH (NOLOCK)
                         ON sc.IdMembership = scdr.MembershipId
                 WHERE sc.CustomerId = @IdCustomer
                       AND GETDATE() <= sc.ExpirationDate
@@ -2165,14 +2200,14 @@ BEGIN
         --Se busca membresía por rango de servicios2
         PRINT @DiscountValue;
         SELECT TOP 1
-               @DiscountValue = DiscountValue,
-               @Type = cvt.ValueTypeName
-        FROM SubscriptionDiscountRange sdr WITH(NOLOCK)
-            INNER JOIN Subscription sc WITH(NOLOCK)
+               @DiscountValue = DiscountValue
+             , @Type          = cvt.ValueTypeName
+        FROM SubscriptionDiscountRange sdr WITH (NOLOCK)
+            INNER JOIN Subscription    sc WITH (NOLOCK)
                 ON sc.IdSubscription = sdr.SubscriptionId
-            INNER JOIN CatValueType cvt WITH(NOLOCK)
+            INNER JOIN CatValueType    cvt WITH (NOLOCK)
                 ON sdr.ValueTypeId = cvt.IdCatValueType
-            INNER JOIN CatSubscription css WITH(NOLOCK)
+            INNER JOIN CatSubscription css WITH (NOLOCK)
                 ON sc.CatSubscriptionId = css.IdCatSubscription
         WHERE sdr.SubscriptionId = @SubscriptionId
               AND css.CatProductCategoryId = @CategoryProductId
@@ -2189,14 +2224,14 @@ BEGIN
         IF (@DiscountValue IS NULL)
         BEGIN
             SELECT TOP 1
-                   @DiscountValue = DiscountValue,
-                   @Type = cvt.ValueTypeName
+                   @DiscountValue = DiscountValue
+                 , @Type          = cvt.ValueTypeName
             FROM MembershipDiscountRange sdr
-                INNER JOIN Membership sc WITH(NOLOCK)
+                INNER JOIN Membership    sc WITH (NOLOCK)
                     ON sc.IdMembership = sdr.MembershipId
-                INNER JOIN CatValueType cvt WITH(NOLOCK)
+                INNER JOIN CatValueType  cvt WITH (NOLOCK)
                     ON sdr.ValueTypeId = cvt.IdCatValueType
-                INNER JOIN CatMembership css WITH(NOLOCK)
+                INNER JOIN CatMembership css WITH (NOLOCK)
                     ON sc.CatMembershipId = css.IdCatMembership
             WHERE sdr.MembershipId = @ProductId
                   AND css.CatProductCategoryId = @CategoryProductId
@@ -2236,10 +2271,10 @@ BEGIN
                         IF (@ServiceValueSubscription > 0)
                         BEGIN
                             SELECT @Discount
-                                = IIF(@NameTypeSubscrition = 'Porcentaje',
-                                      (tr.IrregularPieceRate * (@DiscountValue / 100)),
-                                      (IIF(@DiscountValue IS NULL, tr.IrregularPieceRate, @DiscountValue))),
-                                   @NewPriceShippment
+                                       = IIF(@NameTypeSubscrition = 'Porcentaje'
+                                           , (tr.IrregularPieceRate * (@DiscountValue / 100))
+                                           , (IIF(@DiscountValue IS NULL, tr.IrregularPieceRate, @DiscountValue)))
+                                 , @NewPriceShippment
                                        = (tr.FragilRate + tr.CollectedRate + tr.InsuranceRate + tr.OverWeightRate)
                             FROM @TempRate tr
                             WHERE Id = @i;
@@ -2330,15 +2365,15 @@ BEGIN
                AND @IsCollected = 1
             BEGIN
                 UPDATE @TempRate
-                SET Discount = 0,
-                    DiscountName = 'No puede utilizar la suscripción de monto fijo con un servicio collect'
+                SET Discount = 0
+                  , DiscountName = 'No puede utilizar la suscripción de monto fijo con un servicio collect'
                 WHERE Id = @i;
             END;
             ELSE IF (@Discount > 0)
             BEGIN
                 UPDATE @TempRate
-                SET Discount = @Discount,
-                    DiscountName = 'Descuento membresía'
+                SET Discount = @Discount
+                  , DiscountName = 'Descuento membresía'
                 WHERE Id = @i;
             END;
         END;
@@ -2357,7 +2392,9 @@ BEGIN
                --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
                --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
                --           )
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates,@NewRateGeneral, @NewRateGeneralDiscount)
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
+                          , @NewRateGeneralDiscount
+                          )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';
@@ -2697,7 +2734,9 @@ BEGIN
                --             @TarifaPlanBasicoPlus, @TarifaPlanGold, @TarifaPlanCorporativo, @TarifaPlanBasicoAlt,
                --             @TarifaPlanBasicoPlusAlt, @TarifaPlanGoldAlt, @TarifaPlanCorporativoAlt
                --)
-               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates,@NewRateGeneral, @NewRateGeneralDiscount)
+               @IdRate IN ( @NewMainRates, @NewAlternativeRates, @NewAutoSalesMainRates, @NewRateGeneral
+                          , @NewRateGeneralDiscount
+                          )
                AND @IdCustomerParams != 0
            )
             SET @CalculateTaxes = 'false';

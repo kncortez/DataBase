@@ -18,6 +18,12 @@ IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL DROP TABLE #listGuides;
 	into #listGuides
 	from DenariusDesktop_Dev.dbo.SplitUnlimited(@InGuides,',')
 
+	 CREATE NONCLUSTERED INDEX tempSerie
+            ON #listGuides (
+                               ItemSerie
+                             , ItemNumber
+                           );
+
 
 	INSERT INTO [dbo].[invoiceDetail]
            ([dti_fk_header]

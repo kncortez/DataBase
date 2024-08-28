@@ -143,6 +143,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IndiceSenderIncludingFilters]
     ON [dbo].[DeliveryOrder]([Sender_ID] ASC)
@@ -215,9 +217,7 @@ CREATE NONCLUSTERED INDEX [idx_sendertown]
     ON [dbo].[DeliveryOrder]([Sender_Town] ASC);
 
 GO
-CREATE NONCLUSTERED INDEX [idx_Guide_2023]
-ON [dbo].[DeliveryOrderDetail] ([StatusOrderId],[DateCreatedInSystem])
-INCLUDE ([UserCreated],[DeliveryAttemptId])
+
 
 
 GO
@@ -441,3 +441,14 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
     ON [dbo].[DeliveryOrder]([Guide_Serie],[Guide_Number],[IsLastMileReturn] )
 	INCLUDE (Sender_FirstName,Sender_LastName,Sender_Phone,Receiver_Phone,Receiver_Address,PriceShippment,Collect_OnDelivery,StatusOrderId);
+
+GO
+CREATE NONCLUSTERED INDEX [ix_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([IsLastMileReturn] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
+    INCLUDE([Pieces_Dry], [Pieces_Cold], [StatusOrderId]);
+

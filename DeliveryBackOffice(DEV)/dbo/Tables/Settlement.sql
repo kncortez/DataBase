@@ -19,7 +19,15 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_Settlement_SettlementStatusList]
     ON [dbo].[Settlement]([IdSettlement] ASC, [SettlementSatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdTownship_Include]
+    ON [dbo].[Settlement]([IdTownship] ASC)
+    INCLUDE([Settlement]);
 

@@ -30,10 +30,10 @@
     [CommentOnIncident]                NVARCHAR (200) NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
-    CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
-    CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeIncidence] FOREIGN KEY ([TypeIncidenceId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType]),
-    CONSTRAINT [FK_ConfirmationOfIncidence_RegisterUser] FOREIGN KEY ([TakenIncidenceUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
+    CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
 );
+
+
 
 
 

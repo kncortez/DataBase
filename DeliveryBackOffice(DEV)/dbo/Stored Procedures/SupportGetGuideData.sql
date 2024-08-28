@@ -171,6 +171,7 @@ select 'Tracking'                                                               
      , st.OrderDescription 'Estado'
      , isnull(tk.SSN_Username, isnull(rg.UsrEmail, concat(sr.First_Name, ' ', sr.Last_Name))) 'Usuario'
      , dtd.DateCreated 'Fecha y Hora'
+	 , dtd.DateCreatedInSystem
 	 , stp.CheckpointTypeDescription 'Tipo de estado'
 from dbo.DeliveryOrderDetail                      dtd with (nolock)
     inner join dbo.StatusOrder                    st with (nolock)
