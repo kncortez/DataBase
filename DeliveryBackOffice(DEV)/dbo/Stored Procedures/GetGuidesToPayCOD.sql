@@ -111,7 +111,7 @@ BEGIN
                        SELECT TOP 1
                               [IdTownship]
                        FROM [dbo].[Township] WITH(NOLOCK)
-                       WHERE UPPER(do.[Receiver_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                       WHERE UPPER(do.[Receiver_Town]) = UPPER([TownshipName])
                    )
                    ELSE
                        do.[ReceiverIdTownship]
@@ -123,7 +123,7 @@ BEGIN
                        SELECT TOP 1
                               [IdTownship]
                        FROM [dbo].[Township] WITH(NOLOCK)
-                       WHERE UPPER(do.[Sender_Town])COLLATE Latin1_General_CI_AI = UPPER([TownshipName])COLLATE Latin1_General_CI_AI
+                       WHERE UPPER(do.[Sender_Town]) = UPPER([TownshipName])
                    )
                    ELSE
                        do.[SenderIdTownship]

@@ -25,7 +25,8 @@ CREATE PROCEDURE [dbo].[spws_create_account]
 	@URL AS NVARCHAR(MAX),
 	@NIT AS VARCHAR(18),
 	@PhoneNumber AS VARCHAR(30),
-	@AddedField AS NVARCHAR(50) = NULL
+	@AddedField AS NVARCHAR(50) = NULL,
+	@CountryId AS NVARCHAR(2) ='GT'
 	
 AS
 BEGIN
@@ -33,12 +34,13 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 	
+	DECLARE @PrefixCallingCode VARCHAR(4) = LEFT(@PhoneNumber, 4)
+	SET  @PhoneNumber = RIGHT(@PhoneNumber,8)
 
-	DECLARE @NewMainUserRol INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Nuevo estándar' COLLATE Latin1_General_CI_AI);
+	DECLARE @NewMainUserRol INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = 'Nuevo estándar' );
 
-	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI);
-	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI);
-
+	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI AND CountryId= @CountryId);
+	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI AND CountryId = @CountryId);
 	DECLARE @IdentificationValue NVARCHAR(200)
 	DECLARE @jsonResult NVARCHAR(MAX) 
 	DECLARE @IdCustomer as INT        --IdCustomer que se inserta en la tabla dbo.Customer
@@ -107,9 +109,10 @@ BEGIN
 						,UsrRowStatus
 						,UsrTokenCreated
 						,UsrDateCreated
+						,PrefixCallingCode 
 						,Phone
 						)
-					Values(@IdPerson, @NickName,@Email,null,@Password,@ExpirationDate,@Language,@DeviceType,@Currency,null,null, 1,'SYS-ADMIN',GETDATE(),@PhoneNumber)
+					Values(@IdPerson, @NickName,@Email,null,@Password,@ExpirationDate,@Language,@DeviceType,@Currency,null,null, 1,'SYS-ADMIN',GETDATE(),@PrefixCallingCode,@PhoneNumber)
 					DECLARE @IdUser as bigint =  SCOPE_IDENTITY();
 
 
@@ -143,6 +146,7 @@ BEGIN
 					   ,TypeOfBusinessID
 					   ,BusinessActivityID
 					   ,CommercialSegmentID
+					   ,CountryID
 					)
 				    VALUES
 					   (
@@ -161,6 +165,7 @@ BEGIN
 						,16
 						,28
 						,2
+						,@CountryId
 					   )
 					    SET @IdCustomer =  SCOPE_IDENTITY();
 

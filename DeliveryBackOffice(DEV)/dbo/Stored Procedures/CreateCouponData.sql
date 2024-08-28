@@ -29,8 +29,8 @@ BEGIN
 BEGIN TRANSACTION
 BEGIN TRY
 
-	DECLARE @PromoId INT = (SELECT TOP 1 CP.IdPromo FROM [DeliveryBackOffice].[dbo].[CatPromo] CP WITH(NOLOCK) WHERE CP.PromoDescription = @DiscountType COLLATE Latin1_General_CI_AI AND CP.RowStatus = 1);
-	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Desktop' COLLATE Latin1_General_CI_AI);
+	DECLARE @PromoId INT = (SELECT TOP 1 CP.IdPromo FROM [DeliveryBackOffice].[dbo].[CatPromo] CP WITH(NOLOCK) WHERE CP.PromoDescription = @DiscountType AND CP.RowStatus = 1);
+	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Desktop' );
 
 	DECLARE @StartDatetime DATETIME = CAST(@StartDate AS DATETIME);
 	DECLARE @EndDatetime DATETIME = CAST(@EndDate AS DATETIME);

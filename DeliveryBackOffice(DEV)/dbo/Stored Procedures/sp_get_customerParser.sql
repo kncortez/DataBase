@@ -5,6 +5,11 @@
 -- 				por medio del correo del que fueron enviados los archivos>
 -- Nota: Este SP solamente es utilizado por el parser
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <26/08/2024>
+-- Description:	<Se agrega el CountryID en la respuesta del SP>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sp_get_customerParser]
 @Email AS VARCHAR(50)
@@ -20,7 +25,7 @@ SET @Cantidad = (SELECT count(IdCustomer) FROM Customer WHERE RegexEmail Like '%
 
 	IF (@Cantidad > 0)
 		BEGIN
-			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename FROM Customer
+			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename, ISNULL(CountryID,'GT') AS CountryID FROM Customer
 				 WHERE RegexEmail Like '%' + @Email + '%'
 		END
 

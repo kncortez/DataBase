@@ -3,7 +3,13 @@
 -- Create date: <2022-03-03>
 -- Description:	<Recupera información de Express center y los usuarios de express center para form ClosureReport>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-05>
+-- Description:	<Se agrega filtro de pais para los express center>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetUserByExpressCenter]
+			    @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 -- SET NOCOUNT ON added to prevent extra result sets from
@@ -16,7 +22,7 @@ SET NOCOUNT ON;
 		,DescriptionOfClient 
 	FROM VisitPointClient
 	WHERE IdKindOfVPClient = 1
-	AND StatusClient = 1
+	AND StatusClient = 1 AND ISNULL(CountryId,'GT') = @IdCountry
 	ORDER BY DescriptionOfClient
 
 	SELECT
@@ -35,6 +41,7 @@ SET NOCOUNT ON;
 			AND IdKindOfVPClient = 1
 			AND StatusClient = 1
 	WHERE vpu.RowStatus = 1
+	AND ISNULL(vpc.CountryId,'GT') = @IdCountry
 	ORDER BY vpc.DescriptionOfClient
 END
 

@@ -430,7 +430,7 @@ BEGIN
                     ) hubcov
                         ON (Twn.HeaderCode = hubcov.HeaderCode)
                     INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] HL WITH (NOLOCK)
-                        ON hubcov.hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
+                        ON hubcov.hub = HL.HubAbbreviation 
                     INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                         ON (
                                dop.GuideNumber = ord.Guide_Number
@@ -636,6 +636,10 @@ BEGIN
                 HaveCredit NVARCHAR(50) NULL,
                 CollectCOD NVARCHAR(50) NULL,
                 ReturnRate DECIMAL(14, 2) NULL,
+                CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	        CurrencyPrice_CODSymbol  NVARCHAR(8),
+	            CurrencyPriceCodeISO     NVARCHAR(8),
+	            CurrencyPriceSymbol      NVARCHAR(8),
                 AmountToPay DECIMAL(14, 2) NULL,
                 CODAmount DECIMAL(14, 2) NULL,
                 ReturnRates DECIMAL(14, 2) NULL
@@ -675,6 +679,10 @@ BEGIN
                 HaveCredit,
                 CollectCOD,
                 ReturnRate,
+                CurrencyPrice_CODCodeISO,
+	  	        CurrencyPrice_CODSymbol,
+	            CurrencyPriceCodeISO,
+	            CurrencyPriceSymbol,
                 AmountToPay,
                 CODAmount,
                 ReturnRates

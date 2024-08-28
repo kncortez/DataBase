@@ -202,7 +202,7 @@ BEGIN
                        1, -- crear registro activo por default
                        det.TokenCreated,
                        GETDATE(),
-					   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+					   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description )
                 FROM @TblDetail det
                     LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
@@ -351,7 +351,7 @@ BEGIN
                            1, -- crear registro activo por default
                            det.TokenCreated,
                            GETDATE(),
-						(SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+						(SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description )
                     FROM @TblDetail det;
 
                 END;
@@ -521,7 +521,7 @@ BEGIN
                        1, -- crear registro activo por default
                        det.TokenCreated,
                        GETDATE(),
-					   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+					   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description )
                 FROM @TblDetail det
                     LEFT JOIN dbo.BreakdownOfPayment bk WITH (NOLOCK)
                         ON bk.Description = det.Description
@@ -631,7 +631,7 @@ BEGIN
                            1, -- crear registro activo por default
                            det.TokenCreated,
                            GETDATE(),
-						   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description COLLATE Latin1_General_CI_AI)
+						   (SELECT TOP 1 CBOPT.IdCatBreakdownOfPaymentType FROM [DeliveryBackOffice].[dbo].[CatBreakdownOfPaymentType] CBOPT WITH(NOLOCK) WHERE CBOPT.BreakdownOfPaymentTypeName = det.Description )
                     FROM @TblDetail det;
 
                 END;

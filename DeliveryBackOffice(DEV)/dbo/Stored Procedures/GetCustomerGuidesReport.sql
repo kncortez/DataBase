@@ -4,7 +4,10 @@
 -- Create date: <2022-06-30>
 -- Description:	< Reporte general de guías por rango de fechas >
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-07-22>
+-- Description: <Se agregan los valores de moneda de pago y moneda de COD para el reporte en corporativo>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomerGuidesReport]
     @AccountId INT
   , @DateStart DATETIME = NULL
@@ -75,7 +78,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
+             , ISNULL(C2.Symbol, ISNULL(C1.Symbol, 'Q'))						  'Moneda de envio'
              , DO.PriceShippment                                                  'Monto de envío'
+			 , ISNULL(C1.Symbol, ISNULL(C2.Symbol, 'Q'))						  'Moneda de CoD'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
              , DO.Sender_Department                                               'Departamento origen'
@@ -113,6 +118,12 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						  C WITH (NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						  C1 WITH (NOLOCK)
+				ON C.CodCurrency = C1.IdCatCurrencyCOD
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]						  C2 WITH (NOLOCK)
+				ON C.ShippingCurrency = C2.IdCatCurrencyCOD
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
             LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
@@ -125,10 +136,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DOPD.PayTypeId = CPT.PayTypeId
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
-            LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
+                OR (DO.ReceiverIdTownship IS NULL AND  DO.Receiver_Town = TwnId.TownshipName )
             LEFT JOIN #HubsByHeaderCode                                       DSC
-                ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
+                ON TwnId.HeaderCode = DSC.HeaderCode
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId
@@ -151,7 +161,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
              , SO.OrderDescription                                                'Estado'
              , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
              , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
+             , ISNULL(C2.Symbol, ISNULL(C1.Symbol, 'Q'))						  'Moneda de envio'
              , DO.PriceShippment                                                  'Monto de envío'
+			 , ISNULL(C1.Symbol, ISNULL(C2.Symbol, 'Q'))						  'Moneda de CoD'
              , DO.Collect_OnDelivery                                              'Monto de CoD'
              , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
              , DO.Sender_Department                                               'Departamento origen'
@@ -191,7 +203,13 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
-            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]						  C WITH (NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]			  C1 WITH (NOLOCK)
+				ON C.CodCurrency = C1.IdCatCurrencyCOD
+			LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]			  C2 WITH (NOLOCK)
+				ON C.ShippingCurrency = C2.IdCatCurrencyCOD
+           LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient]           VPC WITH (NOLOCK)
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
@@ -202,7 +220,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
+                ON DO.Receiver_Town = TwnName.TownshipName 
             LEFT JOIN #HubsByHeaderCode                                       DSC
                 ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
         WHERE DO.DateCreated
@@ -238,17 +256,19 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                           ORDER BY CMD.DateCreated DESC
                       )
                     , CONCAT(DO.Manifest_Serie, DO.Manifest_Number)
-                     )                                                            'Manifiesto'
-             , CONCAT(DO.Guide_Serie, DO.Guide_Number)                            'Guía'
-             , SO.OrderDescription                                                'Estado'
-             , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))             'Piezas'
-             , ISNULL(CPT.PayTypeName, '')                                        'Tipo de pago'
-             , DO.PriceShippment                                                  'Monto de envío'
-             , DO.Collect_OnDelivery                                              'Monto de CoD'
-             , ISNULL(DO.Ticket_Number, '')                                       'Referencia'
-             , DO.Sender_Department                                               'Departamento origen'
-             , DO.Sender_Town                                                     'Municipio origen'
-             , DO.DateCreated                                                     'Fecha de creación'
+                     )                                                                     'Manifiesto'
+             , CONCAT(DO.Guide_Serie, DO.Guide_Number)                                     'Guía'
+             , SO.OrderDescription                                                         'Estado'
+             , (ISNULL(DO.Pieces_Dry, 0) + ISNULL(DO.Pieces_Cold, 0))                      'Piezas'
+             , ISNULL(CPT.PayTypeName, '')                                                 'Tipo de pago'
+             , ISNULL(DeliveryBackOffice.dbo.CapitalizeFirstLetter(CCC.[name]) ,'Quetzal') 'Moneda de envío'
+             , DO.PriceShippment                                                           'Monto de envío'
+             , ISNULL(DeliveryBackOffice.dbo.CapitalizeFirstLetter(CCC.[name]),'Quetzal')  'Moneda de COD'
+             , DO.Collect_OnDelivery                                                       'Monto de CoD'
+             , ISNULL(DO.Ticket_Number, '')                                                'Referencia'
+             , DO.Sender_Department                                                        'Departamento origen'
+             , DO.Sender_Town                                                              'Municipio origen'
+             , DO.DateCreated                                                              'Fecha de creación'
              , ISNULL((
                           SELECT TOP 1
                                  DODrec.DateCreated
@@ -280,7 +300,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                     , NULL
                      )                                                            'Fecha de entrega'
              , ISNULL(DO.NameOfReceiver, '')                                      'Persona que recibe'
-             , ISNULL(VPCP.InternalCode,'')                                       'InternalCode'
         FROM [DeliveryBackOffice].[dbo].[DeliveryOrder]                       DO WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[StatusOrder]               SO WITH (NOLOCK)
                 ON DO.StatusOrderId = SO.StatusOrderId
@@ -288,6 +307,14 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
                    AND VPC.StatusClient = 1
+            LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
+                ON vpc.CustomerID = RC.RbcIdCustomer
+                AND rc.RbcRowStatus = 1
+            LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
+                ON RC.RbcIdRate = RH.RheId 
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
+                ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
+                OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number
@@ -296,11 +323,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
+                ON DO.Receiver_Town = TwnName.TownshipName 
             LEFT JOIN #HubsByHeaderCode                                       DSC
                 ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
-            LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointByClientPortfolio] VPCP WITH(NOLOCK)
-				ON DO.VisitpointClientPortfolioId = VPCP.IdVisitPointByClientPortfolio
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId

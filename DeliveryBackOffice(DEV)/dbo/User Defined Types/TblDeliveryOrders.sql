@@ -43,7 +43,8 @@
     [Sender_Internal_Code]                 NVARCHAR (50)   NULL,
     [Receiver_Alternant_CUI]               NVARCHAR (25)   NULL,
     [Collect_OnDelivery]                   DECIMAL (14, 2) NULL,
-    [ParcelCode]                           NVARCHAR (1000) NULL);
+    [ParcelCode]                           NVARCHAR (1000) NULL,
+    [IdCountrySender]                      NVARCHAR (2)    NULL);
 
 
 

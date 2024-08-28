@@ -4,8 +4,13 @@
 -- Create date: <22-09-2022>
 -- Description:	<Método que obitene el catálogo de hubs activos>
 -- =============================================
+-- Modified:	<Brandon, Pedroza >
+-- Create date: <2024-07-05>
+-- Description:	<Se agrega parametro para filtrar por pais, GT por defecto>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_GetCatHubs]
 	-- Add the parameters for the stored procedure here
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -30,7 +35,8 @@ BEGIN
 			IdStation,
 			IdCountry
 		FROM DBO.HubLogistics 
-			WHERE HubStatus =1;
+			WHERE HubStatus =1
+			AND ISNULL(IdCountry,'GT') = @IdCountry;
 
 		IF @TranCounter = 0  
             COMMIT TRANSACTION;  

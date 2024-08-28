@@ -3,8 +3,13 @@
 -- Create date: <2022-12-19>
 -- Description:	<Obtiene información para módulo Segmentos de Socios de Negocio Desktop>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-06-28>
+-- Description:	<Se agrega parametro para filtra por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetBusinessPartnerSegments]
 	-- Add the parameters for the stored procedure here
+		@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -36,6 +41,7 @@ BEGIN
 	INNER JOIN CatRateSegment crs
 		ON ctc.SegmentTypeId = crs.CrsId
 	WHERE ctc.RowStatus = 1
+		AND ISNULL(pO.IdCountry,'GT') = @IdCountry AND ISNULL(pD.IdCountry,'GT') = @IdCountry
 	ORDER BY pO.ProvinceName
 
 	SELECT
@@ -43,13 +49,17 @@ BEGIN
 	   ,ProvinceName ProvinceName
 	FROM Province
 	WHERE ProvinceStatus = 1
+		AND ISNULL(IdCountry,'GT') = @IdCountry
 
 	SELECT
-		IdTownship TownshipId
-	   ,TownshipName TownshipName
-	   ,IdProvince ProvinceId
-	FROM Township
+		Tw.IdTownship TownshipId
+	   ,Tw.TownshipName TownshipName
+	   ,Tw.IdProvince ProvinceId
+	FROM Township Tw
+		INNER JOIN Province Pr
+		ON Tw.IdProvince = Pr.IdProvince
 	WHERE TownshipStatus = 1
+		AND ISNULL(Pr.IdCountry,'GT') = @IdCountry
 
 	SELECT
 		CrsId SegmentId

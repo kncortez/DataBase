@@ -4,8 +4,14 @@
 -- Create date: <2022-11-30>
 -- Description:	< Carga de información para tutoriales y preguntas frecuentes >
 -- =============================================
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-07-10>
+-- Description:	<Se Agrega filtro para mostrar el contenido (tutoriales y preguntas frecuentes)  segun el pais del cliente>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetContentDataByType]
-	@ContentTypeName NVARCHAR(100)
+	@ContentTypeName NVARCHAR(100),
+	@CountryId AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -30,28 +36,23 @@ BEGIN
 		IdContentDescriptionTag BIGINT
 	)
 
-	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' COLLATE Latin1_General_CI_AI )
+	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' )
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' COLLATE Latin1_General_CI_AI) )
-			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' COLLATE Latin1_General_CI_AI) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' ) )
+			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' ) )
 
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
 			(IdContentTitle)
-		SELECT
-			CT.IdContentTitle
-		FROM
-			[DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentType FCT
-				ON
-					CT.TypeContentId = FCT.IdContentType
-					AND
-					CT.RowStatus = 1
+		SELECT CT.IdContentTitle
+		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
+			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType					
+		WHERE CT.RowStatus = 1
+			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription
@@ -178,27 +179,22 @@ BEGIN
 		END
 
 	END
-	ELSE IF ( @ContentTypeName = 'ListasColapsadas' COLLATE Latin1_General_CI_AI )
+	ELSE IF ( @ContentTypeName = 'ListasColapsadas'  )
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' COLLATE Latin1_General_CI_AI) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' ) )
 	
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
 			(IdContentTitle)
-		SELECT
-			CT.IdContentTitle
-		FROM
-			[DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentType FCT
-				ON
-					CT.TypeContentId = FCT.IdContentType
-					AND
-					CT.RowStatus = 1
+		SELECT CT.IdContentTitle
+		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
+			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType
+		WHERE CT.RowStatus = 1
+			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription

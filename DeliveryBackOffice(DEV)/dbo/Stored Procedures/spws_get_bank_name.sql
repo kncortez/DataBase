@@ -20,6 +20,10 @@
 -- Create date: <2023-01-2>4
 -- Description:	<Devolver tipo de cuenta y mensaje de estructura de cuenta en arreglo dentro del json>
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-20>
+-- Description: <Se agrega el filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_bank_name]
     -- Add the parameters for the stored procedure here
     @ValName AS NVARCHAR(100),
@@ -109,7 +113,7 @@ BEGIN
                                             Name LIKE '%' + @ValName + '%'
                                             OR @ValName = '-1'
                                         )
-                                        AND DB.Id_country = 'GT'
+                                        AND DB.Id_country = @IdCountry
                                         --AND DB.Acronym IS NOT NULL
                                         --AND DB.Description IS NOT NULL
                                   ORDER BY [Name] ASC

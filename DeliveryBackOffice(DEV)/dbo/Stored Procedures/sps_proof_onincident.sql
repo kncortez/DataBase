@@ -52,7 +52,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)	
 		WHERE
-			[CS].[SysNameSystem] = 'CourierAPP'  COLLATE Latin1_General_CI_AI 	);
+			[CS].[SysNameSystem] = 'CourierAPP' );
     -- control de inserción de imagen en tabla de fotografías
     DECLARE @ID_Photo INT;
     -- variables auxiliares para conversión de imagen de base64 a varbinary
@@ -78,14 +78,14 @@ BEGIN
                 SELECT TOP (1)
                        [CNM].[IdCatNotificationMedium]
                 FROM [DeliveryBackOffice].[dbo].[CatNotificationMedium] CNM WITH (NOLOCK)
-                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP' COLLATE Latin1_General_CI_AI
+                WHERE [CNM].[NotificationMediumName] = 'Correo SMTP' 
             );
     DECLARE @NotificationType BIGINT =
             (
                 SELECT TOP (1)
                        [CNT].[IdCatNotificationType]
                 FROM [DeliveryBackOffice].[dbo].[CatNotificationType] CNT WITH (NOLOCK)
-                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin' COLLATE Latin1_General_CI_AI
+                WHERE [CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin' 
             );
 
     DECLARE @TokenLinkGeneration NVARCHAR(100) = N'';
@@ -859,7 +859,7 @@ IF(ISNULL(@CurrentIncidentCount,0)<=0)
                             SELECT TOP 1
                                    WT.IdWebhookType
                             FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                            WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                            WHERE WT.WebhookName = 'GuideStatusChange' 
                                   AND WT.RowStatus = 1
                         );
 

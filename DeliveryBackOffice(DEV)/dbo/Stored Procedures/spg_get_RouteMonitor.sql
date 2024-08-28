@@ -5,6 +5,12 @@
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-07-20>
 -- Description:	<Devuelve información para monitoreo de ruta>
+-- =============================================reo de ruta>
+-- =============================================
+-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2025-05-17>
+-- Description: <Devuelve información para monitoreo de ruta>
 -- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteMonitor]
 		@Token AS VARCHAR(50)    = 'ad1a2328ed27ea99622f68deae5d9976',
@@ -13,7 +19,8 @@ CREATE PROCEDURE [dbo].[spg_get_RouteMonitor]
 		@Department AS VARCHAR(100) = '',
 		@Town AS VARCHAR(100) ='',
 		@Manifest AS VARCHAR(50) = '',
-		@DateSettlement AS VARCHAR(50) = ''
+		@DateSettlement AS VARCHAR(50) = '',
+        @IdCountry AS VARCHAR(2) = 'GT'
 AS
 
 BEGIN
@@ -63,7 +70,7 @@ BEGIN
 		  Manifest_Serie +  CAST(Manifest_Number AS VARCHAR) = @Manifest		   
 		  )
 		 )  
-		
+        AND IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry
 		--(@DateSettlement = NULL OR Receiver_Zone = @DateSettlement) AND PENDIENTE
 	
 	

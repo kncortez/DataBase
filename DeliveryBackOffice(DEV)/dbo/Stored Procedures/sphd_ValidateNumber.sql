@@ -3,9 +3,14 @@
 -- Create date: <2023-07-31>
 -- Description:	<Validar si existe número>
 -- =============================================
-CREATE procedure [dbo].[sphd_ValidateNumber]
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-05-17>
+-- Description: <Agregar filtro de pais, por defecto GT>
+-- =============================================
+create procedure [dbo].[sphd_ValidateNumber]
 @Phone nvarchar(50),
-@UniqueCode nvarchar(50)
+@UniqueCode nvarchar(50),
+@IdCountry  NVARCHAR(2) = 'GT'
 AS
 BEGIN
 		
@@ -13,7 +18,12 @@ BEGIN
 
 			IF (@UniqueCode='0')	   
 			BEGIN
-						IF EXISTS(SELECT TOP 1 1   FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE Phone LIKE '%'+ @Phone + '%' )
+						IF EXISTS (
+                           SELECT TOP 1 1
+                             FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
+                            WHERE Phone LIKE '%'+ @Phone + '%'
+                              AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
+                                   )
 						BEGIN 
 						  SELECT 0 AS 'StatusCode'
 		
@@ -26,7 +36,12 @@ BEGIN
 			ELSE
 			BEGIN
 			
-			IF EXISTS(SELECT TOP 1 1   FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE Phone LIKE '%'+ @Phone + '%')
+			IF EXISTS(
+                       SELECT TOP 1 1
+                         FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
+                        WHERE Phone LIKE '%'+ @Phone + '%'
+                          AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
+                      )
 						BEGIN 
 						  SELECT 0 AS 'StatusCode'
 		

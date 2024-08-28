@@ -4,13 +4,18 @@
 -- Create date: <2022-09-13>
 -- Description:	<Devuelve todas las recolecciones de un usuario individual filtradas por un rango de fechas, siendo máximo 30 días atras>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2024-08-20>
+-- Description:	<Se agrega parametro para filtrar servicios de recoleccion por pais de hub asignado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_GetRoutePreparationPickupByRange]
 	@startDate AS DATE = NULL, --Fecha inicio de filtro
 	@endDate AS DATE = NULL, --Fecha fin de filtro
 
 	@accountId BIGINT = NULL,
 	@userId BIGINT = NULL,
-	@serviceManagementId INT = NULL
+	@serviceManagementId INT = NULL,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -36,7 +41,7 @@ BEGIN
 	END	 
 	--FIN
 	----------------------------------------------------------------------------
-	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' COLLATE Latin1_General_CI_AI)
+	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' )
 
 
 	IF (@accountId IS NOT NULL AND ISNULL(@userId,0) = 0)
@@ -68,6 +73,10 @@ BEGIN
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
 				ON vpc.IdTownship = TwnTvpc.IdTownship
+			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK) -----
+				ON TwnSph.IdTownship = shp.TownshipId -------
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] PrvTvpc WITH (NOLOCK)
+				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
 			LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeVehicle] ctv WITH (NOLOCK)
 				ON shp.TypeVehicleId = ctv.IdTypeVehicle
 			LEFT JOIN dbo.ServiceManagement srv
@@ -84,6 +93,7 @@ BEGIN
 			CONVERT(date, shp.DateCreated) <= @endDate
 			AND shp.RowStatus = 1
 			AND shp.AccountId = @accountId
+			AND (ISNULL(hl.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
 		ORDER BY shp.DateCreated desc
 		
 	END
@@ -115,6 +125,10 @@ BEGIN
 				ON shp.SenderId = vpc.CodeOfReference
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Township] TwnTvpc WITH (NOLOCK)
 				ON vpc.IdTownship = TwnTvpc.IdTownship
+			INNER JOIN [DeliveryBackOffice].[dbo].[Township] TwnSph  WITH (NOLOCK) -----
+				ON TwnSph.IdTownship = shp.TownshipId -------
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] PrvTvpc WITH (NOLOCK)
+				ON TwnSph.IdProvince = PrvTvpc.IdProvince 
 			LEFT JOIN (
 				SELECT
 					DSC.HeaderCode,
@@ -150,6 +164,7 @@ BEGIN
 			CONVERT(date, shp.StartDate) <= @endDate
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
+			AND (ISNULL(hlf.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
 		ORDER BY shp.DateCreated desc
 
 	END

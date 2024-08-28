@@ -34,7 +34,7 @@ BEGIN
     --========================================================================================================
     --===                                       STATUS CHANGE                                              ===
     --========================================================================================================
-    IF (@WebhookTypeName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI)
+    IF (@WebhookTypeName = 'GuideStatusChange' )
     BEGIN
         BEGIN TRY
 
@@ -133,7 +133,7 @@ BEGIN
                                 SELECT TOP (1)
                                        [CCCOD].[IdCatConceptCOD]
                                 FROM [DeliveryBackOffice].[dbo].[CatConceptCOD] CCCOD WITH (NOLOCK)
-                                WHERE [CCCOD].[Concept] = 'PAGO DE LA GUIA' COLLATE Latin1_General_CI_AI
+                                WHERE [CCCOD].[Concept] = 'PAGO DE LA GUIA' 
                             );
 
                     SELECT TOP (1)

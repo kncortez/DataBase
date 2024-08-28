@@ -23,3 +23,121 @@ GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221216-222011]
     ON [dbo].[Township]([TownshipName] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificación de municipio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'IdTownship'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre municipio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TownshipName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Descripción',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TownshipDescription'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Latitud',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TownshipLatitud'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Longitud',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TownshipLongitud'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código Postal',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'PostalCode'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TownshipStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Referencia departamento',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'IdProvince'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creo el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'DateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = N'COLUMN',
+    @level2name = N'DatedUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Datos de municipios',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Township',
+    @level2type = NULL,
+    @level2name = NULL

@@ -8,7 +8,15 @@
 -- Create date: <2022-05-12>
 -- Description:	< Remover campo de puntos de visita >
 -- =============================================
+-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-05-24>
+-- Description: <Agregar filtro de pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomers]	
+(
+  @IdCountry VARCHAR(2) = 'GT'
+)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -24,14 +32,14 @@ BEGIN
 					, Cu.Name
 					, ' '
 					, IIF(Cu.CommercialName IS NOT NULL, CONCAT('[',Cu.CommercialName,'] '),'')
-					, REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ','')
+					, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'(504)',''),'-',''),' ','')
 					, ' '
 					, IIF(Cu.IdCustomerType = 3, CONCAT(ISNULL(RU.UsrEmail, ''),' '), '')
 				)
 			) 'Name',
 			Cu.IdCustomerType,
 			Cu.IdCustomer,
-			ISNULL(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ',''),'') 'Phone'
+			ISNULL(REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'(504)',''),'-',''),' ',''),'') 'Phone'
     FROM 
 		[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
         LEFT JOIN 
@@ -48,6 +56,7 @@ BEGIN
 					RU.UsrIdUser = RBUBA.RuaIdUser
     WHERE 
 		ISNULL(Cu.RowSatus, 1) = 1
+      AND IIF(cu.CountryID IS NULL, 'GT', cu.CountryID) = @IdCountry
 	ORDER BY
 		Cu.IdCustomer ASC
 

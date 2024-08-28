@@ -22,7 +22,7 @@ BEGIN
                 SELECT TOP 1
                        CST.IdCatStatusType
                 FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
-                WHERE CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
+                WHERE CST.StatusType = 'Externo' 
             );
 
     DECLARE @GuideOrderTemp AS TABLE
@@ -106,7 +106,7 @@ BEGIN
          , DO.Manifest_Number
          , DO.NameOfReceiver
          , DO.Delivery_Max_Date
-         , LTRIM(RTRIM(DO.Receiver_Phone))
+         , RIGHT(LTRIM(RTRIM(DO.Receiver_Phone)), 8)
          , DO.PriceShippment
          , DO.Collect_OnDelivery
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)

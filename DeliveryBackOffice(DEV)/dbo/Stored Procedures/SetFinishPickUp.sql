@@ -664,7 +664,7 @@ BEGIN
                                 SELECT TOP 1
                                        WT.IdWebhookType
                                 FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                WHERE WT.WebhookName = 'GuideStatusChange' 
                                       AND WT.RowStatus = 1
                             );
 
@@ -1313,8 +1313,11 @@ BEGIN
 
             SELECT ('[' + @jsonResult + ']') jsonResult;
             PRINT @jsonResult;
+
+			-- CORREO A ENVIAR MANIFIESTO
             SELECT @mail;
 
+			-- DATOS DEL MANIFIESTO A GENERAR
             SELECT @ManifestNumber AS 'IdManifest',
                    @ManifestSerie AS 'Manifest_Serie',
                    @ManifestNumber AS 'Manifest_Number',
@@ -1329,8 +1332,11 @@ BEGIN
                 RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = slp.SenderId
             WHERE slp.SchedulePickupId = @IdPickup;
+
+			-- DETALLE DE LAS GUIAS RECOLECTADAS
             WITH GUIDEMONITOR (GuideNumber, PiecesColdCounter, PiecesDryCounter, TotalPieces)
-            AS (SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
+            AS (
+				SELECT COALESCE(dop.GuideNumber, dop2.GuideNumber) GuideNumber,
                        COUNT(dop.GuideNumber) 'PiecesColdCounter',
                        COUNT(dop2.GuideNumber) 'PiecesDryCounter',
                        COUNT(dop.NoPiece) + COUNT(dop2.NoPiece) 'TotalPieces'
@@ -1346,16 +1352,20 @@ BEGIN
                            AND lp.ItemPiece = dop2.NoPiece
                            AND dop2.IsDry = 1
                 GROUP BY dop.GuideNumber,
-                         dop2.GuideNumber)
+                         dop2.GuideNumber
+			)
+
             SELECT COUNT(GM.GuideNumber) 'GuidesCounter',
                    SUM(GM.PiecesColdCounter) 'PiecesColdCounter',
                    SUM(GM.PiecesDryCounter) 'PiecesDryCounter',
                    SUM(GM.TotalPieces) 'TotalPieces'
             FROM GUIDEMONITOR GM;
 
-            SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) AS 'Piece',
-                   CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) AS 'ReceiverName',
-                   LEFT(do.Receiver_Address, 200) AS 'ReceiverAddress'
+			-- DETALLE DE LAS PIEZAS DE LAS GUIAS RECOLECTADAS
+            SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
+                   CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
+                   LEFT(do.Receiver_Address, 200)							 [ReceiverAddress],
+				   do.ReceiverCountryId									     [ReceiverCountryId]
             FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                 INNER JOIN #listGuides lp
                     ON lp.ItemSerie = dop.GuideSerie
@@ -1368,7 +1378,8 @@ BEGIN
                      dop.NoPiece,
                      do.Receiver_FirstName,
                      do.Receiver_LastName,
-                     do.Receiver_Address
+                     do.Receiver_Address,
+					 do.ReceiverCountryId
             ORDER BY dop.GuideNumber ASC;
 
         --print @mail
@@ -1474,4 +1485,3 @@ BEGIN
 
 
 END;
-

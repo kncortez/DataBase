@@ -3,11 +3,15 @@
 -- Create date: <Create Date,3-12-2021>
 -- Description:	<Description, it confirms if a guide number meets all the requirements of a transfer, if so it returns all the necessary data >
 -- =============================================
-
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-04>
+-- Description: <Se agrega filtro por pais para filtrar guias>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_check_transfer_guide]
 	
 	@Guide VARCHAR(MAX), 
-	@Token VARCHAR(100) = ''
+	@Token VARCHAR(100) = '',
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -21,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'En ruta'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'En ruta'  
 	)
 	DECLARE @GuideInReturnRoute INT = (
 		SELECT 
@@ -30,7 +34,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'En ruta para devolución'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'En ruta para devolución'  
 	)
 	DECLARE @IncidenceInRoute INT = (
 		SELECT 
@@ -39,7 +43,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Incidencia en ruta'   
 	)
 	DECLARE @FailedDeliveryAttempt INT = (
 		SELECT 
@@ -48,7 +52,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Intento de entrega fallida'   
 	)
 
 	DECLARE @ValidatedIncident INT = (
@@ -64,7 +68,12 @@ BEGIN
 	DECLARE @Guide_number NVARCHAR(50) = SUBSTRING(@Guide, 3, LEN(@Guide));
 	DECLARE @jsonResult NVARCHAR(MAX) = '';
 
-	DECLARE @Status INT =  (SELECT StatusOrderId FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @Series AND Guide_Number = @Guide_number)
+	DECLARE @Status INT =  (SELECT StatusOrderId 
+                              FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK) 
+                             WHERE Guide_Serie = @Series 
+                               AND Guide_Number = @Guide_number
+                               AND ISNULL(ReceiverCountryId,'GT') = @IdCountry
+                               )
 	DECLARE @IdCourier INT = (
 	SELECT TOP 1 ID_Courier FROM DeliveryBackOffice.dbo.DeliveryAttempt WITH(NOLOCK)
 	WHERE Guide_Serie = @Series AND Guide_Number = @Guide_number ORDER BY Date_Created DESC
@@ -133,6 +142,7 @@ BEGIN
 				INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr ON sr.ID = @IdCourier
 				WHERE
 				dor.Guide_Number = @Guide_number AND dor.Guide_Serie = @Series
+                  AND ISNULL(dor.ReceiverCountryId,'GT') = @IdCountry
 				
 				FOR XML PATH('') 
 			)

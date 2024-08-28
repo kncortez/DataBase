@@ -10,7 +10,8 @@
 -- =============================================
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
-	@GUIDESLIST TblGUides READONLY
+	@GUIDESLIST TblGUides READONLY,
+	@CountryThatConsults VARCHAR(2)= 'GT'
 AS
 BEGIN
 
@@ -23,6 +24,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -33,6 +35,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -115,7 +118,7 @@ BEGIN
     
 
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND ISNULL(IdCountry,'GT')=@CountryThatConsults);
 
 
 
@@ -175,7 +178,12 @@ BEGIN
 									TP.GuideNumber 'GuideNumber',
 									CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121)		'DateOfSale',
 									CONVERT(VARCHAR, ISNULL(dev.Package_Description, ''))				'ContentDescription',
-									CONVERT(VARCHAR, COALESCE(p.IdCountry, ''))							'IdCountry',
+									--SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
+									CASE WHEN dev.IsLastMileReturn=0  
+										 THEN CONVERT(VARCHAR, COALESCE(dev.ReceiverCountryId, 'GT'))
+										 ELSE CONVERT(VARCHAR, COALESCE(dev.SenderCountryId, 'GT')) 
+									END 'IdCountry',
+										 --FIN CAMBIO
 									CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0))		'CountPieces',
 									CONVERT(VARCHAR, COALESCE([dev].[Ticket_Number], '0'))							'Ticket_Number',
 									CONVERT(VARCHAR, ISNULL(dev.[Order_Number], 0))		'Order_Number',

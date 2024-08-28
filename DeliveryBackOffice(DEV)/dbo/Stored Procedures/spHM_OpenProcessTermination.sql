@@ -44,7 +44,7 @@ BEGIN
 
 	SELECT TOP 1 @StatusOrder = so.StatusOrderId
 	FROM [DeliveryBackOffice].[dbo].[StatusOrder] so WITH(NOLOCK) 
-	WHERE so.OrderDescription = 'Programado para entrega' COLLATE Latin1_General_CI_AI
+	WHERE so.OrderDescription = 'Programado para entrega' 
 	
 	-- Obtener asignaci�n de ruta
 	SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM DeliveryBackOffice.dbo.RouteAssigment RA WITH(NOLOCK) WHERE RA.IdRoute = @IdRoute AND RA.DateOfRoute = @DateRoute AND RA.RowStatus = 1);
@@ -129,6 +129,10 @@ BEGIN
 			HaveCredit BIT,
 			CollectCOD BIT,
 			ReturnRate DECIMAL(5, 2),
+			CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	    CurrencyPrice_CODSymbol  NVARCHAR(8),
+	        CurrencyPriceCodeISO     NVARCHAR(8),
+	        CurrencyPriceSymbol      NVARCHAR(8),
 			AmountToPay DECIMAL(18, 2),
 			CODAmount DECIMAL(18, 2),
 			ReturnRates DECIMAL(5, 2)
@@ -173,7 +177,7 @@ BEGIN
 				,1
 				,@Token
 				,GETDATE()
-				,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' COLLATE Latin1_General_CI_AI)
+				,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' )
 				,@subtypeservicemanagment
 				,1
 				,0
@@ -190,7 +194,7 @@ BEGIN
 			VALUES
 				(
 					(SELECT TOP 1 ISM.IdServiceManagement FROM @InsertedServiceManagement ISM)
-					,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' COLLATE Latin1_General_CI_AI)
+					,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' )
 					,1
 					,@Token
 					,GETDATE()
@@ -256,7 +260,7 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
 					ON
-						DSC.Hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
+						DSC.Hub = HL.HubAbbreviation 
 			WHERE
 				DO.Guide_Serie = @GuideSerie
 				AND
@@ -297,7 +301,7 @@ BEGIN
 	BEGIN
 
 		--- Es entrega
-		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Entrega' COLLATE Latin1_General_CI_AI)
+		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Entrega' )
 		
 		SELECT 
 			TOP 1 
@@ -346,7 +350,7 @@ BEGIN
 				,1
 				,@Token
 				,GETDATE()
-				,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' COLLATE Latin1_General_CI_AI)
+				,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' )
 				,@subtypeservicemanagment
 				,1
 				,0
@@ -363,7 +367,7 @@ BEGIN
 			VALUES
 				(
 					(SELECT TOP 1 ISM.IdServiceManagement FROM @InsertedServiceManagement ISM)
-					,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' COLLATE Latin1_General_CI_AI)
+					,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' )
 					,1
 					,@Token
 					,GETDATE()
@@ -429,7 +433,7 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
 					ON
-						DSC.Hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
+						DSC.Hub = HL.HubAbbreviation 
 			WHERE
 				DO.Guide_Serie = @GuideSerie
 				AND

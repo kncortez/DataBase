@@ -9,6 +9,10 @@
 -- Update date: <2022-08-05>
 -- Description:	< Corrección de datos e indice de tabla >
 -- =============================================
+-- Author:		<Cristian, Suazo>
+-- Update date: <2024-06-18>
+-- Description:	< Se agrega el pais destino de la guia >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDeliveryOrderSettlementDataUnderRoutePrepration]
 	@IdManifest INT
 AS
@@ -111,6 +115,10 @@ BEGIN
         HaveCredit,
         CollectCOD,
         ReturnRate,
+		CurrencyPrice_CODCodeISO ,
+	  	CurrencyPrice_CODSymbol  ,
+	    CurrencyPriceCodeISO     ,
+	    CurrencyPriceSymbol      ,
         AmountToPay,
         CODAmount,
         ReturnRates
@@ -145,7 +153,8 @@ BEGIN
 		Rack_Position nvarchar(MAX),
 		Price decimal(16,2),
 		Collect_on_Delivery decimal(16,2),
-		Total decimal(16,2)
+		Total decimal(16,2),
+		ReceiverCountry NVARCHAR(2)
 
 	)
 
@@ -180,6 +189,7 @@ BEGIN
 		ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0)
 		END
 		) AS  Total
+		, do.ReceiverCountryId AS ReceiverCountry
 	from 
 		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN 
@@ -218,6 +228,7 @@ BEGIN
 		,Price
 		,Collect_on_Delivery
 		,Total
+		,ReceiverCountry
 	FROM 
 		@temp tmp
 	ORDER BY 

@@ -64,7 +64,7 @@ BEGIN
                 SELECT TOP 1
                        CST.IdCatStatusType
                 FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
-                WHERE CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
+                WHERE CST.StatusType = 'Externo' 
             );
 
 			PRINT @ExternalTypeId

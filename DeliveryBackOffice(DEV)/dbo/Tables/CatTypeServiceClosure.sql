@@ -38,3 +38,22 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualizacion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeServiceClosure', @level2type = N'COLUMN', @level2name = N'DateUpdate';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo,0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatTypeServiceClosure',
+    @level2type = N'COLUMN',
+    @level2name = N'StatusTypeService'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Catálogo de tipo cierre de servicio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatTypeServiceClosure',
+    @level2type = NULL,
+    @level2name = NULL

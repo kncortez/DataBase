@@ -249,7 +249,10 @@ BEGIN
 			[CatSystemId],
 			[CatModuleId],
 			[Receiver_Lat],
-			[Receiver_Lng]
+			[Receiver_Lng],
+			[SenderCountryId],
+			[ReceiverCountryId],
+			[GuideType]
 		)
 		SELECT 
 			GT.[Ticket_Number],
@@ -318,8 +321,18 @@ BEGIN
 			@system,
 			@module,
 			GT.ReceiverLatitude,
-			GT.ReceiverLongitude
+			GT.ReceiverLongitude,
+			ISNULL(P.IdCountry,'GT'),
+			ISNULL(P2.IdCountry,'GT'),
+			CASE
+				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
+				ELSE 'INT'
+			END AS GuideType
 		FROM #GuideTable GT
+		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
+		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
+		INNER JOIN DeliveryBackOffice.dbo.Township T2 ON GT.ReceiverIdTownship = T2.IdTownship
+		INNER JOIN DeliveryBackOffice.dbo.Province P2 ON T2.IdProvince = P2.IdProvince
 			
 		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
 		-- INSERTAR DATA PARA MANEJO DE LANDING PAGE
@@ -660,7 +673,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'   
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -670,7 +683,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'   
 	)
 
 	DECLARE @IndividualWebSys INT =
@@ -681,7 +694,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web'   
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -691,7 +704,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'   
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -701,7 +714,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'   
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -711,7 +724,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'   
 	)
 
 

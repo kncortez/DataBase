@@ -218,6 +218,10 @@ BEGIN
       , HaveCredit NVARCHAR(50) NULL
       , CollectCOD NVARCHAR(50) NULL
       , ReturnRate DECIMAL(14, 2) NULL
+	  , CurrencyPrice_CODCodeISO NVARCHAR(8)
+	  , CurrencyPrice_CODSymbol  NVARCHAR(8)
+	  , CurrencyPriceCodeISO     NVARCHAR(8)
+	  , CurrencyPriceSymbol      NVARCHAR(8)
       , AmountToPay DECIMAL(14, 2) NULL
       , CODAmount DECIMAL(14, 2) NULL
       , ReturnRates DECIMAL(14, 2) NULL
@@ -241,6 +245,10 @@ BEGIN
       , HaveCredit
       , CollectCOD
       , ReturnRate
+	  , CurrencyPrice_CODCodeISO
+	  , CurrencyPrice_CODSymbol
+	  , CurrencyPriceCodeISO   
+	  , CurrencyPriceSymbol
       , AmountToPay
       , CODAmount
       , ReturnRates
@@ -270,7 +278,7 @@ BEGIN
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN t.TownshipName ELSE vpc.Town  END, ', ',
 						CASE WHEN  spk.AddressPickup IS NOT NULL AND spk.TownshipId IS NOT NULL THEN p.ProvinceName ELSE vpc.Department END
 					  ),'json' ) [Address],
-				ISNULL(ISNULL(spk.SenderPhone, vpc.Phone), 'N/A') [Phone],
+				ISNULL(CONCAT([CP].[Value], ISNULL(spk.SenderPhone, vpc.Phone)), 'N/A') [Phone],
 				ISNULL(
                                                     (
                                                         SELECT IIF(SUM(ISNULL(ord.Pieces_Dry, 0)) = 0
@@ -335,7 +343,11 @@ BEGIN
 					, 0
 				   ) [HighPriority],
 				'' [Alerts],
-				 CONVERT(VARCHAR, ISNULL(sma.ServiceStatusId, 1)) [Status]
+				 CONVERT(VARCHAR, ISNULL(sma.ServiceStatusId, 1)) [Status],
+				 ccc.CodeISO[CurrencyPriceCodeISO],
+				 ccc.Symbol[CurrencyPriceSymbol],
+                 ccc.CodeISO[PickupPriceCodeISO],
+                 ccc.Symbol[PickupPriceSymbol]
             FROM dbo.RouteAssigment             ras WITH (NOLOCK)
                 INNER JOIN dbo.ServiceManagement sma WITH (NOLOCK)
                     ON sma.IdPuRouteAssigment = ras.IdRouteAssigment
@@ -349,6 +361,17 @@ BEGIN
 									    ON  spk.TownshipId = t.IdTownship
 									LEFT JOIN dbo.Province p WITH (NOLOCK)
 									    ON t.IdProvince =p.IdProvince
+				LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CP  WITH (NOLOCK)
+					ON  CP.[IdCountry] = ISNULL(vpc.CountryId,'GT')
+						AND CP.[Name] = 'AreaCode'
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]      de	WITH (NOLOCK)
+					ON  de.Currency_IdCountry = ISNULL(vpc.CountryId,'GT')
+					AND de.DefaultPerCountry = 1
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CurrencyExchangeRates] ce WITH (NOLOCK)
+					ON ce.TargetCurrency = de.IdCurrencyCOD
+					and CONVERT(date,ce.ExchangeDate) = CONVERT(date,getdate())
+				LEFT JOIN [DeliveryBackOffice].[dbo].[CatCurrencyCOD]		 ccc WITH (NOLOCK)
+					ON ccc.IdCatCurrencyCOD = de.IdCurrencyCOD
             WHERE ras.IdCurrierMan = @IdCourier
                     AND (ras.DateOfRoute = @DateRoute
                         --- OR ras.DateOfRoute = '2023-06-25'
@@ -416,17 +439,20 @@ BEGIN
 				   ) [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN [DOR].[Sender_Phone]
+				THEN  REPLACE(REPLACE(REPLACE(REPLACE([DOR].[Sender_Phone],' ', ''), '+', ''), '(', ''), '(', '')
 				ELSE ''
 				END [Sender_Phone],				
 				ISNULL(
 						IIF(DOR.IsLastMileReturn = 1
-						, ISNULL(DOR.Sender_Phone, 'N/A')
-						, ISNULL(
-									DOR.Receiver_Phone
+						, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(DOR.Sender_Phone, 'N/A'),' ', ''), '+', ''), '(', ''), '(', '')
+						, REPLACE(REPLACE(REPLACE(REPLACE(
+								ISNULL
+									(
+									  DOR.Receiver_Phone
 									, DOR.Receiver_Alternant_Phone
-								)
-							), 'N/A'
+									)
+							,' ', ''), '+', ''), '(', ''), '(', '')
+						), 'N/A'
 					  ) [Phone],
 				ISNULL(
 						(
@@ -602,7 +628,11 @@ BEGIN
 					, 1
 					, 0
 				   ) [HighPriority],
-		'' [Alerts]
+		'' [Alerts],
+		TRPreturns.CurrencyPrice_CODCodeISO [CurrencyPrice_CodeISO],
+        TRPreturns.CurrencyPrice_CODSymbol  [CurrencyPrice_CODSymbol],
+		TRPreturns.CurrencyPriceCodeISO		[CurrencyPriceCodeISO],
+		TRPreturns.CurrencyPriceSymbol		[CurrencyPriceSymbol]
 		FROM
 		(
 			SELECT  MAX(ID_DeliveryOrderBySettlement) ID_DeliveryOrderBySettlement,
@@ -617,7 +647,7 @@ BEGIN
 					Guide_Serie,
 					Guide_Number,
 					ID_Courier
-		)                                                               DAT	
+		)                                                                DAT	
 		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrder]            DOR WITH (NOLOCK)
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
@@ -685,6 +715,14 @@ BEGIN
 			GROUP BY SDFG.GuideSerie,
 					 SDFG.GuideNumber
 		) DFG
+
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPS   WITH (NOLOCK)
+			ON  CPS.[IdCountry] = ISNULL(dor.SenderCountryId,'GT')
+			AND CPS.[Name] = 'AreaCode'
+		LEFT JOIN [DeliveryBackOffice].[dbo].[ConfigParams]			CPR   WITH (NOLOCK)
+			ON  CPR.[IdCountry] = ISNULL(dor.ReceiverCountryId, 'GT')
+			AND CPR.[Name] = 'AreaCode'
+
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
 				AND DSD.RowStatus = 1
 

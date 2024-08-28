@@ -5,6 +5,10 @@
     [Value]          VARCHAR (MAX) NOT NULL,
     [Status]         SMALLINT      NOT NULL,
     [CreateDate]     DATETIME      CONSTRAINT [DefaultDate] DEFAULT (getdate()) NOT NULL,
-    CONSTRAINT [PK_ConfigParams] PRIMARY KEY CLUSTERED ([ConfigParamsId] ASC)
+    [IdCountry]      VARCHAR(2)    NULL,
+    [IdCurrencyCOD]  INT           NULL,
+    CONSTRAINT [PK_ConfigParams] PRIMARY KEY CLUSTERED ([ConfigParamsId] ASC),
+    FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
+    FOREIGN KEY ([IdCurrencyCOD]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
 
