@@ -40,7 +40,7 @@ BEGIN
 				TOP 1
 					CTOB.IdTypeOfBusiness
 			FROM
-				[DeliveryBackOffice].[dbo].[CatSystem] CTOB WITH(NOLOCK)
+                [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH(NOLOCK)
 			WHERE
 				CTOB.TypeOfBusinessName = 'PYMES' 
 		)
