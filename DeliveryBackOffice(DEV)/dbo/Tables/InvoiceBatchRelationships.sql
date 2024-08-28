@@ -15,3 +15,6 @@ CREATE TABLE [dbo].[InvoiceBatchRelationships]
 	CONSTRAINT [FK_InvoiceLoteBatchRelationships_VisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
 	
 );
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Relacion entre los lotes registrados y los puntos de venta registrados', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchRelationships';
