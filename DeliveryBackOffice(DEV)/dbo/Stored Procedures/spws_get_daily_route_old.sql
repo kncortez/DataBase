@@ -218,7 +218,7 @@ BEGIN
       , HaveCredit
       , CollectCOD
       , ReturnRate
-      ,CurrencyPrice_CODCodeISO,
+      ,CurrencyPrice_CODCodeISO
 	  	,CurrencyPrice_CODSymbol
 	    ,CurrencyPriceCodeISO
 	    ,CurrencyPriceSymbol
