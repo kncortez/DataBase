@@ -389,7 +389,7 @@ BEGIN
                                         SELECT TOP 1
                                                WT.IdWebhookType
                                         FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                        WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                        WHERE WT.WebhookName = 'GuideStatusChange' 
                                               AND WT.RowStatus = 1
                                     );
 
@@ -787,7 +787,7 @@ BEGIN
                             SELECT TOP 1
                                    CDO.IdDeliveryOption
                             FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH (NOLOCK)
-                            WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI
+                            WHERE CDO.[Name] = 'Express Center' 
                         );
 
                 UPDATE dbo.DeliveryOrder

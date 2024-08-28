@@ -22,7 +22,7 @@ CREATE PROCEDURE [dbo].[sphd_UpdateGuideStatus]
 AS
 BEGIN
 
-	DECLARE @VoidStatus INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI)
+	DECLARE @VoidStatus INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' )
 
 	DECLARE @IsCouponOrigin   BIT = 0;
 	DECLARE @IsCouponRedeemer BIT = 0;

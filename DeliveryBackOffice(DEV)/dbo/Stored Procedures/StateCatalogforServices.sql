@@ -12,7 +12,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	BEGIN TRY
-	IF (@ServiceType = 'PICKUP' COLLATE Latin1_General_CI_AI)
+	IF (@ServiceType = 'PICKUP' )
 	BEGIN
 		SELECT
 			1 'IdServiceStatus',
@@ -24,7 +24,7 @@ BEGIN
 		FROM 
 			dbo.CatServiceStatus WITH (NOLOCK)
 		WHERE
-			[Name] COLLATE Latin1_General_CI_AI IN ('Recolectado', 'Incidencia')
+			[Name] IN ('Recolectado', 'Incidencia')
 	END
 	ELSE
 	BEGIN

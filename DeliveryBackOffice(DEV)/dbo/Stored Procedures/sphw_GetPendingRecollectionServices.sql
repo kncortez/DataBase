@@ -22,7 +22,7 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @RefClientId INT = (SELECT TOP 1 Cu.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado' COLLATE Latin1_General_CI_AI);
+	DECLARE @RefClientId INT = (SELECT TOP 1 Cu.IdCustomer FROM [DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK) INNER JOIN [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK) ON Acc.IdCustomer = Cu.IdCustomer WHERE Cu.[Name] = 'Cliente Referenciado' );
 	
 	IF OBJECT_ID('tempdb.dbo.#ServiceAlert', 'U') IS NOT NULL
         DROP TABLE #ServiceAlert;

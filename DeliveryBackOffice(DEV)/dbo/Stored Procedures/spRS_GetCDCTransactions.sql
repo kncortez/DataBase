@@ -27,7 +27,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI AND IdCountry = @IdCountry
+			[KOVPC].[KindOfVPName] = 'Express Center' AND IdCountry = @IdCountry
 	)
 
 	-- Manejo de fechas

@@ -10,7 +10,7 @@ AS
 BEGIN
 
 	-- Variables de control de flujo
-	DECLARE @CompletedLinkStatusId INT = (SELECT TOP 1 CDLS.IdCatDataLinkStatus FROM [DeliveryBackOffice].[dbo].[CatDataLinkStatus] CDLS WITH(NOLOCK) WHERE CDLS.DataLinkStatusName = 'Completado' COLLATE Latin1_General_CI_AI AND CDLS.RowStatus = 1)
+	DECLARE @CompletedLinkStatusId INT = (SELECT TOP 1 CDLS.IdCatDataLinkStatus FROM [DeliveryBackOffice].[dbo].[CatDataLinkStatus] CDLS WITH(NOLOCK) WHERE CDLS.DataLinkStatusName = 'Completado' AND CDLS.RowStatus = 1)
 
 	-- Variables de respuesta
 	DECLARE @DataLinkInfo AS TABLE (

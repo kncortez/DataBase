@@ -11,10 +11,10 @@ AS
 BEGIN
 
 	-- Variables estaticas globales
-	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Charge Service' COLLATE Latin1_General_CI_AI AND CS.SysRowStatus = 1)
+	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Charge Service' AND CS.SysRowStatus = 1)
 
-	DECLARE @InactiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Inactiva' COLLATE Latin1_General_CI_AI);
-	DECLARE @VoidStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Anulada' COLLATE Latin1_General_CI_AI);
+	DECLARE @InactiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Inactiva' );
+	DECLARE @VoidStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Anulada' );
 	
 	DECLARE @SalesPackagePointsToDeactivate TABLE (
 		SalesPackageId INT
@@ -138,7 +138,7 @@ BEGIN
 					ON
 						MMBSHP.IdMembership = SPTD.SalesPackageId
 						AND
-						SPTD.SalesPackageType = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+						SPTD.SalesPackageType = 'MEMBERSHIP' 
 						
 			UPDATE
 				SBSCTPN
@@ -153,7 +153,7 @@ BEGIN
 					ON
 						SBSCTPN.IdSubscription = SPTD.SalesPackageId
 						AND
-						SPTD.SalesPackageType = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI
+						SPTD.SalesPackageType = 'SUBSCRIPTION' 
 
 		END
 
@@ -174,7 +174,7 @@ BEGIN
 					ON
 						MMBSHP.IdMembership = SPTV.SalesPackageId
 						AND
-						SPTV.SalesPackageType = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+						SPTV.SalesPackageType = 'MEMBERSHIP' 
 
 			UPDATE
 				SBSCTPN
@@ -189,7 +189,7 @@ BEGIN
 					ON
 						SBSCTPN.IdSubscription = SPTV.SalesPackageId
 						AND
-						SPTV.SalesPackageType = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI
+						SPTV.SalesPackageType = 'SUBSCRIPTION' 
 
 		END
 

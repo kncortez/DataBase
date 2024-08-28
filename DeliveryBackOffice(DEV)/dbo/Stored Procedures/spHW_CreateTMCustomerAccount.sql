@@ -63,21 +63,21 @@ BEGIN
 
 	SET @NewMainRates = (SELECT TOP 1 RH.RheId 
 						FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
-						WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI
+						WHERE RH.RheName = 'Tarifario de servicio estandar' 
 						AND ISNULL(RH.CountryId,'GT') = @IdCountry);
 
 	SET @NewAlternativeRates = (SELECT TOP 1 RH.RheId 
 								FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) 
-								WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI
+								WHERE RH.RheName = 'Tarifario destinos express center' 
 								AND ISNULL(RH.CountryId,'GT') = @IdCountry);
 
 	SET @NewMainUserRol =	(SELECT TOP 1 [CR].[RolIdRol]
 							FROM [dbo].[CatRol] CR
-							WHERE [CR].[RolName] = 'Nuevo estándar' COLLATE Latin1_General_CI_AI );
+							WHERE [CR].[RolName] = 'Nuevo estándar' );
 
 	SET @EmailExisting =	(SELECT TOP 1 [RU].[UsrIdUser]
 							FROM	[dbo].[RegisterUser] RU 
-							WHERE	[RU].[UsrEmail] = @Email COLLATE Latin1_General_CI_AI);
+							WHERE	[RU].[UsrEmail] = @Email );
 
 	SET @CustomerTypeId =	(SELECT TOP 1 [CT].[IdCustomerType]
 							FROM	[dbo].[CustomerType] CT

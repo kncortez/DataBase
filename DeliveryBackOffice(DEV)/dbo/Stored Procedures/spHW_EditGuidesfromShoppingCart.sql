@@ -14,7 +14,7 @@ CREATE PROCEDURE [dbo].[spHW_EditGuidesfromShoppingCart]
 AS
 BEGIN
 	
-	DECLARE @TCCPaymendId INT = (SELECT TOP 1 TOIOOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] TOIOOM WITH(NOLOCK) WHERE TOIOOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
+	DECLARE @TCCPaymendId INT = (SELECT TOP 1 TOIOOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] TOIOOM WITH(NOLOCK) WHERE TOIOOM.tio_pk_name = 'pago con tarjeta' );
 	DECLARE @IsTCCPaid BIT = 0;
 
 	SET NOCOUNT ON;

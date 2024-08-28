@@ -24,7 +24,7 @@ BEGIN
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 			WHERE 
-				CS.SysNameSystem = 'Hermes web' COLLATE Latin1_General_CI_AI
+				CS.SysNameSystem = 'Hermes web' 
 		)
 	DECLARE @StandardRole INT = (
 			SELECT 
@@ -33,16 +33,16 @@ BEGIN
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) 
 			WHERE 
-				CR.RolName = 'Nuevo estandar' COLLATE Latin1_General_CI_AI
+				CR.RolName = 'Nuevo estandar' 
 		)
 	DECLARE @PYMES INT = (
 			SELECT
 				TOP 1
 					CTOB.IdTypeOfBusiness
 			FROM
-				[DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH(NOLOCK)
+				[DeliveryBackOffice].[dbo].[CatSystem] CTOB WITH(NOLOCK)
 			WHERE
-				CTOB.TypeOfBusinessName = 'PYMES' COLLATE Latin1_General_CI_AI
+				CTOB.TypeOfBusinessName = 'PYMES' 
 		)
 	DECLARE @InactiveMembeshipStatus INT = (
 			SELECT
@@ -51,7 +51,7 @@ BEGIN
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK)
 			WHERE
-				CSPS.SalesPackageStatusName = 'Inactiva' COLLATE Latin1_General_CI_AI
+				CSPS.SalesPackageStatusName = 'Inactiva' 
 		)
 	DECLARE @VoidedMembeshipStatus INT = (
 			SELECT
@@ -60,7 +60,7 @@ BEGIN
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK)
 			WHERE
-				CSPS.SalesPackageStatusName = 'Anulada' COLLATE Latin1_General_CI_AI
+				CSPS.SalesPackageStatusName = 'Anulada'
 		)
 
 	-- Validación de información
@@ -122,15 +122,15 @@ BEGIN
 				,Acc.AccIdAccount
 				,(
 					CASE
-						WHEN USR.UstStatus != 'ACTIVE' COLLATE Latin1_General_CI_AI THEN 0
-						WHEN Acc.AccConfirm != 'C' COLLATE Latin1_General_CI_AI THEN 0
+						WHEN USR.UstStatus != 'ACTIVE' THEN 0
+						WHEN Acc.AccConfirm != 'C' THEN 0
 						ELSE 1
 					END
 				) 'IsActive'
 				,(
 					CASE
-						WHEN USR.UstStatus != 'ACTIVE' COLLATE Latin1_General_CI_AI THEN 'Bloqueada'
-						WHEN Acc.AccConfirm != 'C' COLLATE Latin1_General_CI_AI THEN 'Sin confirmar'
+						WHEN USR.UstStatus != 'ACTIVE' THEN 'Bloqueada'
+						WHEN Acc.AccConfirm != 'C' THEN 'Sin confirmar'
 						ELSE 'Activa'
 					END
 				) 'ActiveStatus'
@@ -220,7 +220,7 @@ BEGIN
 				ON
 					MMBRSHP.CatMembershipId = CM.IdCatMembership
 		WHERE
-			RU.UsrEmail = @ClientUserEmail COLLATE Latin1_General_CI_AI
+			RU.UsrEmail = @ClientUserEmail 
 		
 		IF(EXISTS(SELECT TOP 1 1 FROM @CustomerInfo))
 		BEGIN

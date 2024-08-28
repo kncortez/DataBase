@@ -21,7 +21,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex' collate Latin1_General_CI_AI
+                where CP.[Name] = 'GuideRegex' 
             );
 
     declare @GuideRegexScannerData nvarchar(500) =
@@ -29,7 +29,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner' collate Latin1_General_CI_AI
+                where CP.[Name] = 'GuideRegexScanner' 
             );
 
     declare @jsonResult nvarchar(max);

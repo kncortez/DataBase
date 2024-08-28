@@ -50,7 +50,7 @@ AS
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 			WHERE 
-				CS.SysNameSystem = 'Hermes Desktop' COLLATE Latin1_General_CI_AI 
+				CS.SysNameSystem = 'Hermes Desktop' 
 				AND 
 				CS.SysRowStatus = 1
 		); -- Hermes web
@@ -64,7 +64,7 @@ AS
 				FROM 
 					[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 				WHERE 
-					CS.SysNameSystem = @SystemName COLLATE Latin1_General_CI_AI 
+					CS.SysNameSystem = @SystemName 
 					AND 
 					CS.SysRowStatus = 1
 			)

@@ -603,7 +603,7 @@ BEGIN
 								WHERE 
 									BOP.IdCost = @CostId 
 									AND 
-									BOP.Description = @PromoName COLLATE Latin1_General_CI_AI AND BOP.RowStatus = 1)
+									BOP.Description = @PromoName AND BOP.RowStatus = 1)
 						)
 						BEGIN
 
@@ -618,7 +618,7 @@ BEGIN
 							WHERE
 								IdCost = @CostId
 								AND
-								Description = @PromoName COLLATE Latin1_General_CI_AI
+								Description = @PromoName 
 
 							IF(SCOPE_IDENTITY() > 0)
 								SET @CoUpdated = 1;

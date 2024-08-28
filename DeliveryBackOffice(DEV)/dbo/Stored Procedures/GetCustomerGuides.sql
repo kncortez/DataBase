@@ -32,14 +32,14 @@ BEGIN
 
     IF OBJECT_ID('tempdb.dbo.#AccountFilteredGuides', 'U') IS NOT NULL DROP TABLE #AccountFilteredGuides;
 
-	DECLARE @NotStartCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint inicial' COLLATE Latin1_General_CI_AI);
-	DECLARE @InProgessCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de proceso' COLLATE Latin1_General_CI_AI);
-	DECLARE @CompletedCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final' COLLATE Latin1_General_CI_AI);
-	DECLARE @IncidenceCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia' COLLATE Latin1_General_CI_AI);
+	DECLARE @NotStartCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint inicial');
+	DECLARE @InProgessCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de proceso' );
+	DECLARE @CompletedCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final' );
+	DECLARE @IncidenceCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia');
 
-	DECLARE @CanceledStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado' COLLATE Latin1_General_CI_AI);
+	DECLARE @CanceledStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado');
 
-	DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora' COLLATE Latin1_General_CI_AI)
+	DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora' )
 
 	-- Configuraciones generales
 	DECLARE @OffsetRegistries BIGINT = @DisplayPage * @DisplayRegistries;
@@ -61,7 +61,7 @@ BEGIN
 				FROM
 					[DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
 				WHERE
-					CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
+					CST.StatusType = 'Externo' 
 			)
 	-- Obtener datos de usuario
 	SELECT

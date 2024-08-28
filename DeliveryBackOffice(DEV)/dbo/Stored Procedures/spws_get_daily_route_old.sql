@@ -50,21 +50,21 @@ BEGIN
                 SELECT TOP 1
                        STSM.IdSubTypeServiceManagment
                 FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE STSM.Name = 'Recolección' COLLATE Latin1_General_CI_AI
+                WHERE STSM.Name = 'Recolección' 
             );
     DECLARE @DeliveryTypeId BIGINT =
             (
                 SELECT TOP 1
                        STSM.IdSubTypeServiceManagment
                 FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE STSM.Name = 'Entrega' COLLATE Latin1_General_CI_AI
+                WHERE STSM.Name = 'Entrega' 
             );
     DECLARE @ReturnTypeId BIGINT =
             (
                 SELECT TOP 1
                        STSM.IdSubTypeServiceManagment
                 FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH (NOLOCK)
-                WHERE STSM.Name = 'Devolución' COLLATE Latin1_General_CI_AI
+                WHERE STSM.Name = 'Devolución' 
             );
 
     --Flujo Recolecciones

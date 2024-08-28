@@ -530,7 +530,7 @@ BEGIN
                                                                        do.ReceiverIdTownship)
                                                    OR tw.TownshipName = IIF(do.IsLastMileReturn = 1,
                                                                             do.Sender_Town,
-                                                                            do.Receiver_Town)  COLLATE Latin1_General_CI_AI 
+                                                                            do.Receiver_Town)   
                                         WHERE do.Guide_Serie = @GuideSerie
                                               AND do.Guide_Number = @GuideNumber;
 

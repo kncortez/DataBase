@@ -66,7 +66,7 @@ BEGIN
 	IF(@IdTownship IS NULL)
 	BEGIN
 
-		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' COLLATE Latin1_General_CI_AI);
+		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' );
 
 	END
 	

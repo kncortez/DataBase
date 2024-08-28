@@ -45,7 +45,7 @@ BEGIN
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] Tw WITH(NOLOCK)
 			ON Tw.IdTownship = VPC.IdTownship
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
-			on VPC.Town = Twn.TownshipName COLLATE Latin1_General_CI_AI
+			on VPC.Town = Twn.TownshipName 
             AND Tw.IdTownship = Twn.IdTownship
 		LEFT JOIN (
 			SELECT

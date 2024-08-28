@@ -23,13 +23,13 @@ BEGIN
     DECLARE @IDRUTETYPE AS INT = (
                                      SELECT IdTypeRoute
                                      FROM DBO.CatTypeRoute WITH (NOLOCK)
-                                     WHERE Name = 'Recolección' COLLATE Latin1_General_CI_AI
+                                     WHERE Name = 'Recolección' 
                                            AND RowStatus = 1
                                  );
     DECLARE @status AS INT = (
                                  SELECT IdServiceStatus
                                  FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] WITH (NOLOCK)
-                                 WHERE [Name] = 'Asignado a Ruta' COLLATE Latin1_General_CI_AI
+                                 WHERE [Name] = 'Asignado a Ruta' 
                              );
 
 

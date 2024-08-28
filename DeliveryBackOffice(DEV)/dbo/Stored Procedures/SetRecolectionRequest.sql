@@ -430,7 +430,7 @@ BEGIN
                     ) hubcov
                         ON (Twn.HeaderCode = hubcov.HeaderCode)
                     INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] HL WITH (NOLOCK)
-                        ON hubcov.hub = HL.HubAbbreviation COLLATE Latin1_General_CI_AI
+                        ON hubcov.hub = HL.HubAbbreviation 
                     INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                         ON (
                                dop.GuideNumber = ord.Guide_Number

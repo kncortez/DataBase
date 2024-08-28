@@ -629,14 +629,14 @@ BEGIN
 			FROM
 				[DeliveryBackOffice].[dbo].[CatPaymentType] CPT  WITH(NOLOCK) 
 			WHERE
-				[CPT].[PayTypeName] = 'Credit'  COLLATE Latin1_General_CI_AI )
+				[CPT].[PayTypeName] = 'Credit'  )
 			,(SELECT 
 				TOP 1
 					[CTOIOOM].[tio_pk_id]
 			FROM
 				[DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOOM  WITH(NOLOCK) 
 			WHERE
-				[CTOIOOM].[tio_pk_name] = 'Credito'  COLLATE Latin1_General_CI_AI)
+				[CTOIOOM].[tio_pk_name] = 'Credito'  )
 			,(SELECT 
 				TOP 1 
 					[CPT].[TimePlaId]

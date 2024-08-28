@@ -428,7 +428,7 @@ BEGIN
                             SELECT TOP 1
                                    CSPS.IdCatSalesPackageStatus
                             FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                            WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                            WHERE CSPS.SalesPackageStatusName = 'Activa' 
                         );
 
                 DECLARE @StatusSubcription INT =
@@ -499,7 +499,7 @@ BEGIN
                            1
                     FROM dbo.RegistrationofTransactionProcessStates
                     WHERE OrderNumber = @OrderNumber
-                          AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+                          AND TypeSalePackage = 'MEMBERSHIP' 
                 )
                    )
                 BEGIN
@@ -784,7 +784,7 @@ BEGIN
                            1
                     FROM dbo.RegistrationofTransactionProcessStates
                     WHERE OrderNumber = @OrderNumber
-                          AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+                          AND TypeSalePackage != 'MEMBERSHIP' 
                 )
                    )
                 BEGIN
