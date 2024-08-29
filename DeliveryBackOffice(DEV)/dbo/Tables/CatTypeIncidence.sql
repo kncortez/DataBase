@@ -55,3 +55,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si r
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Instrucciones para courierman', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'CourierInstructions';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica a que país pertenece la incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeIncidence', @level2type = N'COLUMN', @level2name = N'CountryId';
+
