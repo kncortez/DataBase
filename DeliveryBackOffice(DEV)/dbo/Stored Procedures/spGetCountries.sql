@@ -10,6 +10,10 @@
 -- Create date: <2024-05-31>
 -- Description:	<Se modifica sp para mostrar unicamente pais donde el usuario esta registrado para login Hermes Desktop>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-08-29>
+-- Description:	<Se modifica condicion en join y agrega row status>
+-- =============================================
 AS
 SELECT DISTINCT ISNULL(C.IdCountry, 'GT') [IdCountry],
 				ISNULL(C.CountryNameES, 'Guatemala') [Name],
@@ -18,7 +22,8 @@ FROM DeliveryBackOffice.dbo.Person p WITH(NOLOCK)
 INNER JOIN DeliveryBackOffice.dbo.RegisterUser R WITH(NOLOCK)
 ON  P.PerIdPerson = R.UsrIdPerson
 INNER JOIN DeliveryBackOffice.dbo.InternalUser I WITH (NOLOCK)
-ON I.RegisterUserID = R.UsrIdUser AND I.Username = R.UsrNickName
+ON I.RegisterUserID = R.UsrIdUser AND R.UsrIdPerson = P.PerIdPerson
 LEFT JOIN DeliveryBackOffice.dbo.CatCountry C WITH (NOLOCK)
 ON P.PerCountryOrigin = C.IdCountry
 WHERE I.IdUser = @IdUser AND I.Username = @Username
+AND R.UsrRowStatus = 1
