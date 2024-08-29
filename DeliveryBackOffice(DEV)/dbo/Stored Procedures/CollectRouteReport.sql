@@ -3,7 +3,7 @@
 -- Update date: <2024-08-26>
 -- Description: <Se agrega SP para reporte de monitoreo de servicios de recolección>
 -- =============================================
-ALTER PROCEDURE CollectRouteReport
+CREATE PROCEDURE CollectRouteReport
     @StartDate DATE,
     @EndDate DATE
 AS
