@@ -53,6 +53,7 @@ BEGIN
 										[C].[ContainerNumber],
 										[HL].[HubAbbreviation],
 										[HL].[HubName],
+										[LRSC].[HubId],
 										[LRSC].[GuideQuantity],
 										[LRSC].[DryPiecesQuantity], 
 										[LRSC].[ColdPiecesQuantity]

@@ -8,11 +8,16 @@
 -- Create date: <2023-03-21>
 -- Description:	<Agregar guìas con estado terminal a tabla temporal de guìas excluidas, asì evitar que realicen algun proceso en recolecciòn, entrega o devoluciòn>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-02>
+-- Description: <Se agrega filtro para el remitente por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_guide_pending_payment_detail]
     @InGuidesP VARCHAR(MAX),
     @IdModuleP INT,
     @ServiceType VARCHAR(100),
-    @TokenP VARCHAR(100)
+    @TokenP VARCHAR(100),
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -46,8 +51,7 @@ BEGIN
         Guide_Number INT
     );
 
-    CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
-    CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
+    CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);
 
     INSERT INTO #listGuides
     (
@@ -72,12 +76,10 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrder do
         WHERE lg.Guide_Serie = do.Guide_Serie
               AND lg.Guide_Number = do.Guide_Number
+          AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
     );
 
-    CREATE NONCLUSTERED INDEX IX_LGNE_SERIE
-    ON #listGuidesNotExist (Guide_Serie);
-    CREATE NONCLUSTERED INDEX IX_LGNE_NUMBER
-    ON #listGuidesNotExist (Guide_Number);
+    CREATE NONCLUSTERED INDEX IX_LGNE_NGUIDES ON #listGuidesNotExist (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
     ---- Obtener guias que si se pueden procesar con el modulo indicado ------------------------------------
@@ -105,7 +107,8 @@ BEGIN
           (
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21,32 )
-          );
+          )
+      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 
     /*SELECT lg.Guide_Serie,
 			lg.Guide_Number
@@ -116,10 +119,7 @@ BEGIN
 					  WHERE lgne.Guide_Serie = lg.Guide_Serie
 					  AND lgne.Guide_Number = lg.Guide_Number);*/
 
-    CREATE NONCLUSTERED INDEX IX_LGI_SERIE
-    ON #listGuidesIncluded (Guide_Serie);
-    CREATE NONCLUSTERED INDEX IX_LGI_NUMBER
-    ON #listGuidesIncluded (Guide_Number);
+    CREATE NONCLUSTERED INDEX IX_LGI_GUIDES ON #listGuidesIncluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
 
@@ -151,7 +151,8 @@ BEGIN
               UPPER(@ServiceType) = 'RETURN'
               AND so.StatusOrderId NOT IN ( 2, 3, 8, 10, 11, 12, 17, 18, 20, 21 )
 			
-          );
+          )
+      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 		  
 
   INSERT INTO #listGuidesExcluded
@@ -175,6 +176,7 @@ BEGIN
 												WHERE
 													[CatCheckpointTypeId] = 3 And RowStatus = 1 ))
 		)
+      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
 
 ------------------------------------  Validación de estados terminales --------------------------------------------------
  
@@ -209,13 +211,11 @@ BEGIN
               AND DO.IsLastMileReturn = 1
 			  AND DOD.StatusOrderId IN ( 32 )						
           )
+      AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
          
 			END
 
-    CREATE NONCLUSTERED INDEX IX_LGE_SERIE
-    ON #listGuidesExcluded (Guide_Serie);
-    CREATE NONCLUSTERED INDEX IX_LGE_NUMBER
-    ON #listGuidesExcluded (Guide_Number);
+    CREATE NONCLUSTERED INDEX IX_LGE_GUIDES ON #listGuidesExcluded (Guide_Serie, Guide_Number);
     -----------------------------------------------------------------------------------------------------------------
 
     ---- Asignar configuracion de parametros -------------------------------------------------------------
@@ -252,7 +252,8 @@ BEGIN
 				AND PC.FinalActiveDate >= GETDATE()
 				AND PC.RowStatus = 1
     WHERE ISNULL(ord.PriceShippment, 0) = 0
-		AND PC.IdPromoCoupon IS NULL;
+		AND PC.IdPromoCoupon IS NULL
+        AND ISNULL(ord.SenderCountryId,'GT') = @IdCountry ;
 
     CREATE NONCLUSTERED INDEX tempFila ON #RevalueGuides (fila);
 
@@ -340,13 +341,16 @@ BEGIN
         HaveCredit BIT,
         CollectCOD BIT,
         ReturnRate DECIMAL(14, 2) NULL,
+        CurrencyPrice_CODCodeISO NVARCHAR(8),
+		CurrencyPrice_CODSymbol  NVARCHAR(8),
+		CurrencyPriceCodeISO     NVARCHAR(8),
+		CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay DECIMAL(14, 2) NULL,
         CODAmount DECIMAL(14, 2) NULL,
         ReturnRates DECIMAL(14, 2) NULL
     );
 
-    CREATE NONCLUSTERED INDEX IX_PPT_GS ON #PendingPaymentTemp (GuideSerie);
-    CREATE NONCLUSTERED INDEX IX_PPT_GN ON #PendingPaymentTemp (GuideNumber);
+    CREATE NONCLUSTERED INDEX IX_PPT_GNS ON #PendingPaymentTemp (GuideSerie,GuideNumber);
 
     PRINT '@InTime';
     PRINT @InTimeP;
@@ -370,6 +374,10 @@ BEGIN
         HaveCredit,
         CollectCOD,
         ReturnRate,
+        CurrencyPrice_CODCodeISO,
+		CurrencyPrice_CODSymbol,
+		CurrencyPriceCodeISO,
+		CurrencyPriceSymbol,
         AmountToPay,
         CODAmount,
         ReturnRates
@@ -488,12 +496,14 @@ BEGIN
                                                                     LTRIM(RTRIM(ISNULL(do.IndicationsToSendOrigin, ''))))
                                                                ) Indications,
            (ISNULL(do.Pieces_Dry, 0) + ISNULL(do.Pieces_Cold, 0)) Pieces,
-           IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType
+           IIF(do.TypeService = 'EXP', 'NDD', ISNULL(do.TypeService, 'NDD')) ServiceType,
+           ppt.CurrencyPriceSymbol
     INTO #PendingPaymentTempId
     FROM #PendingPaymentTemp ppt
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
             ON ppt.GuideSerie = do.Guide_Serie
-               AND ppt.GuideNumber = do.Guide_Number;
+               AND ppt.GuideNumber = do.Guide_Number
+   WHERE ISNULL(do.SenderCountryId,'GT') = @IdCountry;
 
     CREATE NONCLUSTERED INDEX IX_PPTID_ID ON #PendingPaymentTempId ([Id]);
 
@@ -529,7 +539,7 @@ BEGIN
                       --'"GuideNumber": "' + CAST(pg.GuideNumber AS VARCHAR) + '", ' + 
                       '"SenderName": "' + pg.SenderName + '", ' + '"SenderAddress": "' + pg.SenderAddress + '", '
                          + '"ReceiverName": "' + pg.ReceiverName + '", ' + '"ReceiverAddress": "' + pg.ReceiverAddress
-                         + '", ' + '"Indications": "' + pg.Indications + '", ' + '"CurrencySymbol": "Q.",'
+                         + '", ' + '"Indications": "' + pg.Indications + '", ' + '"CurrencySymbol": "' + CurrencyPriceSymbol  + '.",'
                          + '"AmountToCollect": ' + CAST(CAST(pg.AmountToCollect AS DECIMAL(18, 2)) AS VARCHAR) + ', '
                          + '"ServicePrice": ' + CAST(CAST(ISNULL(pg.AmountToPay, 0) AS DECIMAL(18, 2)) AS VARCHAR)
                          + ', ' + '"CODAmount": ' + CAST(CAST(ISNULL(pg.CODAmount, 0) AS DECIMAL(18, 2)) AS VARCHAR)

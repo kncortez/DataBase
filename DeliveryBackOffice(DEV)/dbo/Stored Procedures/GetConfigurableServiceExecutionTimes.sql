@@ -23,7 +23,7 @@ BEGIN
 			FROM
 				[DeliveryBackOffice].[dbo].[CatConfigurableService] CCS
 			WHERE
-				CCS.CatConfigurableServiceName = @ConfigurableWindowsServiceName COLLATE Latin1_General_CI_AI
+				CCS.CatConfigurableServiceName = @ConfigurableWindowsServiceName 
 		)
 	END
 	

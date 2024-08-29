@@ -5,7 +5,10 @@
 -- Create date: <2022-03-29>
 -- Description:	< Obtiene listado de guias estado solicitado recoleccion Hermes Web Corporativo >
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-07-26>
+-- Description: <Se agrega la descripcion de moneda para el detalle de manifiesto en portal corporativo>
+-- =============================================
 CREATE  PROCEDURE [dbo].[GetGuidesFromCorporateVisitPoint]
 	@StartDate DATE, -- fecha de inicio de busqueda.
 	@EndDate DATE, -- fecha de finalizacion de busqueda.
@@ -32,7 +35,21 @@ BEGIN
 			'"OrderNumber":"'+CONVERT(NVARCHAR(MAX), do.Guide_Number)+'",'+
 			'"ReceiverName":"'+CONCAT(do.Receiver_FirstName,' ',do.Receiver_LastName) +'",'+
 			'"ServiceType":"'+IIF(do.TypeService='NDD' OR do.TypeService = 'TDA' , 'NEXT DAY', 'SAME DAY') +'",'+
-			'"Price":'+CONVERT(NVARCHAR(MAX), ISNULL(do.PriceShippment,0)) +','+
+			'"CurrencyPrice":'+
+             CASE
+                 WHEN do.SenderCountryId = 'GT' THEN '"GTQ."'
+                 WHEN do.SenderCountryId = 'HN' THEN '"HNL."'
+                 ELSE '"GTQ."'
+             END
+            +','+
+            '"Price":'+CONVERT(NVARCHAR(MAX), ISNULL(do.PriceShippment,0)) +','+
+			'"CurrencyCOD":'+
+             CASE
+                 WHEN do.SenderCountryId = 'GT' THEN '"GTQ."'
+                 WHEN do.SenderCountryId = 'HN' THEN '"HNL."'
+                 ELSE '"GTQ."'
+             END
+            +','+
 			'"COD":'+CONVERT(NVARCHAR(MAX), ISNULL(do.Collect_OnDelivery,0)) +','+
 			'"Pieces":'+CONVERT(NVARCHAR(MAX), ISNULL(do.Pieces_Cold,0)+ISNULL(do.Pieces_Dry,0)) +','+
 			'"ColdPieces":'+CONVERT(NVARCHAR(MAX), ISNULL(do.Pieces_Cold,0)) +','+

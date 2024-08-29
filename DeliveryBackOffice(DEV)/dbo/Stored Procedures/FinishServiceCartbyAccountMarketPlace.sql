@@ -21,7 +21,7 @@ BEGIN
 
 	DECLARE @VoidedCart BIT = 0;
 
-	DECLARE @CollectPaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WHERE CPT.TimePlaName = 'Destino' COLLATE Latin1_General_CI_AI);
+	DECLARE @CollectPaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WHERE CPT.TimePlaName = 'Destino' );
 
 	DECLARE @CountUpdated INT = 0;
 	DECLARE @CountValid INT= 0;
@@ -35,9 +35,29 @@ BEGIN
 	DECLARE @IdCustomer INT =(SELECT Top 1 IdCustomer  FROM [dbo].[Account]
                               WHERE AccIdAccount = ISNULL(@IdAccount,0))
 
-    DECLARE @IdCart INT =(Select Top 1 MarketplaceCartId From [dbo].[MarketplaceCartDetail] a  WHERE  a.IdMarketplaceCartDetail= ISNULL(@IdServiceCart,0) ORDER BY a.DateCreated DESC)
+    DECLARE @IdCart INT;
+	IF(EXISTS(Select TOP 1 1 From [dbo].[Account] Where AccIdAccount= @IdAccount And AccRowStatus=1))
+	  BEGIN
+		SELECT TOP 1
+			@IdCart = [IdMarketplaceCart]
+		FROM [dbo].[MarketplaceCart]
+		WHERE ISNULL(AccountId,0) = @IdAccount
+		AND RowStatus = 1
+	  END
+	  ELSE
+	   BEGIN
+	     SELECT TOP 1
+			@IdCart = [IdMarketplaceCart]
+		FROM [dbo].[MarketplaceCart]
+		WHERE ISNULL(RegisterUserId,0) = @IdAccount
+		AND RowStatus = 1
 
-	
+	  END
+
+	      SET	@IdServiceCart = (Select 
+	                       Top 1 a.IdMarketplaceCartDetail
+	                   From [dbo].[MarketplaceCartDetail] a	WITH(NOLOCK)  
+		                    WHERE  a.MarketplaceCartId = ISNULL(@IdCart,0) And a.RowStatus=1)	
 
 SET @AccountStatement =	(SELECT
 							 ISNULL(res.UstStatus, 'N/A')
@@ -184,7 +204,7 @@ SET @AccountStatement =	(SELECT
                 SELECT TOP 1
                        [VPC].[CodeOfReference]
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
-                WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' COLLATE Latin1_General_CI_AI
+                WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' 
                       AND VPC.[StatusClient] = 1
             );
 			DECLARE @inv_cmp_nit AS VARCHAR(100) =
@@ -221,7 +241,7 @@ SET @AccountStatement =	(SELECT
                 SELECT TOP 1
                        [Description]
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI
+                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
             );
     DECLARE @dti_IVA MONEY;
     DECLARE @dti_amount MONEY;
@@ -232,7 +252,7 @@ SET @AccountStatement =	(SELECT
                 SELECT TOP 1
                        SAPCode
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI
+                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
             );
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
@@ -249,7 +269,7 @@ SET @AccountStatement =	(SELECT
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL A' COLLATE Latin1_General_CI_AI
+        WHERE [Name] = 'SUSCRIPCION MENSUAL A' 
     );
    
        
@@ -403,7 +423,7 @@ SET @AccountStatement =	(SELECT
 			  SET RowStatus = 0,
 				  TokenUpdated = @Token,
 				  DateUpdated  = GETDATE()
-			  WHERE  AccountId = ISNULL(@IdAccount,0) AND IdMarketplaceCart = @IdCart
+			  WHERE   IdMarketplaceCart = @IdCart
 
 
 			-- Si actualizo el carrito exitosamente

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Contingency] (
+CREATE TABLE [dbo].[Contingency] (
     [IdContingency]               INT             IDENTITY (1, 1) NOT NULL,
     [DeliveryOrderBySettlementId] BIGINT          NOT NULL,
     [Type]                        VARCHAR (10)    NOT NULL,
@@ -6,8 +6,12 @@
     [Description]                 NVARCHAR (500)  NULL,
     [TokenCreated]                NVARCHAR (50)   NOT NULL,
     [DateCreated]                 DATETIME        NOT NULL,
+    [IdCountry]                   VARCHAR(2)      NULL,
+    [IdCurrency]                  INT             NULL,
     CONSTRAINT [PK_Contingency_IdContingency] PRIMARY KEY CLUSTERED ([IdContingency] ASC),
     CONSTRAINT [FK_Contingency_DeliveryOrderBySettlementId] FOREIGN KEY ([DeliveryOrderBySettlementId]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
+    CONSTRAINT [FK_IdCountryCon_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
+    CONSTRAINT [FK_IdCurrencyCon_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD),
     UNIQUE NONCLUSTERED ([DeliveryOrderBySettlementId] ASC)
 );
 
@@ -48,4 +52,9 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora en la que se creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'DateCreated';
 
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de pais de la transaccion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'IdCountry';
 
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de la moneda de la transaccion', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'IdCurrency';

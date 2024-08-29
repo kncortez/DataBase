@@ -31,7 +31,7 @@ begin
                 select top 1
                        [VPC].[CodeOfReference]
                 from [DeliveryBackOffice].[dbo].[VisitPointClient] VPC with (nolock)
-                where VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' collate Latin1_General_CI_AI
+                where VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' 
                       and VPC.[StatusClient] = 1
             );
     declare @inv_cmp_nit as varchar(100) =
@@ -77,7 +77,7 @@ begin
                 select top 1
                        [Description]
                 from [dbo].[CatArticleSAP] with (nolock)
-                where Name = 'MEMBRESIA ANUAL CLUB FORZA' collate Latin1_General_CI_AI
+                where Name = 'MEMBRESIA ANUAL CLUB FORZA' 
             );
     declare @dti_IVA money;
     declare @dti_amount money;
@@ -88,7 +88,7 @@ begin
                 select top 1
                        SAPCode
                 from [dbo].[CatArticleSAP] with (nolock)
-                where Name = 'MEMBRESIA ANUAL CLUB FORZA' collate Latin1_General_CI_AI
+                where Name = 'MEMBRESIA ANUAL CLUB FORZA' 
             );
     declare @SendToInvoice bit = 1;
     declare @Descriptionp as nvarchar(500);
@@ -108,58 +108,58 @@ begin
 
     if (
            @SuscriptionDesc = 'Plan Básico'
-           and @TypeSalePackage <> 'Membership' collate Latin1_General_CI_AI
+           and @TypeSalePackage <> 'Membership' 
        )
         set @dti_description =
     (
         select top 1
                [Description]
         from [dbo].[CatArticleSAP] with (nolock)
-        where [Name] = 'SUSCRIPCION MENSUAL A' collate Latin1_General_CI_AI
+        where [Name] = 'SUSCRIPCION MENSUAL A' 
     )   ;
     else if (
                 @SuscriptionDesc = 'Plan Básico +'
-                and @TypeSalePackage <> 'Membership' collate Latin1_General_CI_AI
+                and @TypeSalePackage <> 'Membership' 
             )
         set @dti_description =
     (
         select top 1
                [Description]
         from [dbo].[CatArticleSAP] with (nolock)
-        where [Name] = 'SUSCRIPCION MENSUAL B' collate Latin1_General_CI_AI
+        where [Name] = 'SUSCRIPCION MENSUAL B' 
     )   ;
     else if (
                 @SuscriptionDesc = 'Plan Gold'
-                and @TypeSalePackage <> 'Membership' collate Latin1_General_CI_AI
+                and @TypeSalePackage <> 'Membership' 
             )
         set @dti_description =
     (
         select top 1
                [Description]
         from [dbo].[CatArticleSAP] with (nolock)
-        where [Name] = 'SUSCRIPCION MENSUAL C' collate Latin1_General_CI_AI
+        where [Name] = 'SUSCRIPCION MENSUAL C' 
     )   ;
     else if (
                 @SuscriptionDesc = 'Plan Corporativo'
-                and @TypeSalePackage <> 'Membership' collate Latin1_General_CI_AI
+                and @TypeSalePackage <> 'Membership' 
             )
         set @dti_description =
     (
         select top 1
                [Description]
         from [dbo].[CatArticleSAP] with (nolock)
-        where [Name] = 'SUSCRIPCION MENSUAL D' collate Latin1_General_CI_AI
+        where [Name] = 'SUSCRIPCION MENSUAL D' 
     )   ;
     else if (
                 @SuscriptionDesc = 'Plan Diamante'
-                and @TypeSalePackage <> 'Membership' collate Latin1_General_CI_AI
+                and @TypeSalePackage <> 'Membership' 
             )
         set @dti_description =
     (
         select top 1
                [Description]
         from [dbo].[CatArticleSAP] with (nolock)
-        where [Name] = 'MEMBRESIA DIAMANTE' collate Latin1_General_CI_AI
+        where [Name] = 'MEMBRESIA DIAMANTE' 
     )   ;
 
         IF (@InvoiceEmail='')
@@ -176,7 +176,7 @@ begin
     begin transaction;
     begin try
 
-        if (@TypeSalePackage = 'Membership' collate Latin1_General_CI_AI)
+        if (@TypeSalePackage = 'Membership' )
         begin
 
             select top 1

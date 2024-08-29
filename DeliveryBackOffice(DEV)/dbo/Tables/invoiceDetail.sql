@@ -90,3 +90,46 @@ GO
 CREATE NONCLUSTERED INDEX [idx_dti_fk_header_MembershipId]
     ON [dbo].[invoiceDetail]([dti_fk_header] ASC, [MembershipId] ASC);
 
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de cabecera de factura con tabla InvoiceHeader (llave foranea)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_fk_header'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Serie asociada al detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_fk_orderSerie'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Numero de orden asociada al detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_fk_orderNumber'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Categoria de identificacion o servicio asociado al detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_identification'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Categoria de producto del detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_category'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'cantidad en unidades de detalle de la factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_quantity'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion de tipo de unidad del detalle de factura (UND = unidad)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_measurement'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Precio unitario del detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_priceUnit'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion del registro del detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_description'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion del precio de IVA para el detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_IVA'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Precio unitario del detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_amount'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de registro del detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_dateRegister'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Token de registro del detalle de factura' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail', @level2type=N'COLUMN',@level2name=N'dti_tokenRegister'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla de modulo de facturación que almacena el cuerpo o detalle de las facturas de su respectiva cabecera con InvoiceHeader' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'invoiceDetail'
+GO

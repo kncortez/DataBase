@@ -12,7 +12,9 @@ CREATE TABLE [dbo].[MarketplaceCarouselImage] (
     [DateUpdated]     DATETIME       NULL,
     [XXXLImageURL]    NVARCHAR (200) NULL,
     [HyperlinkURL]    NVARCHAR (200) NULL,
-    CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
+    [IdCountry]               VARCHAR  (2)   NULL,
+    CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC),
+    CONSTRAINT [FK_MCSenderIdCountry_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
 );
 
 

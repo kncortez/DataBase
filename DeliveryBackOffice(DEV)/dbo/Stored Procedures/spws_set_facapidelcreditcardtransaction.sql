@@ -64,7 +64,15 @@ BEGIN
       , PromoId INT
     );
 
+     	DECLARE @IdCountry NVARCHAR(3)= (   
+										   Select top 1 ISNULL(B.CountryID,'GT') 
+										         From [dbo].[Account] A WITH(NOLOCK) 
+										         INNER JOIN 
+												      [dbo].[Customer] B WITH(NOLOCK)
+										         ON  A.IdCustomer = B.IdCustomer
+										   WHERE A.AccIdAccount = @AccountId)
 
+		SET @Currency = IIF(@IdCountry ='GT',  320, 340)
 
 
     -- Variables para la asociación y activación de Membresías o suscripciones
@@ -420,7 +428,7 @@ BEGIN
                             SELECT TOP 1
                                    CSPS.IdCatSalesPackageStatus
                             FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                            WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                            WHERE CSPS.SalesPackageStatusName = 'Activa' 
                         );
 
                 DECLARE @StatusSubcription INT =
@@ -491,7 +499,7 @@ BEGIN
                            1
                     FROM dbo.RegistrationofTransactionProcessStates
                     WHERE OrderNumber = @OrderNumber
-                          AND TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+                          AND TypeSalePackage = 'MEMBERSHIP' 
                 )
                    )
                 BEGIN
@@ -776,7 +784,7 @@ BEGIN
                            1
                     FROM dbo.RegistrationofTransactionProcessStates
                     WHERE OrderNumber = @OrderNumber
-                          AND TypeSalePackage != 'MEMBERSHIP' COLLATE Latin1_General_CI_AI
+                          AND TypeSalePackage != 'MEMBERSHIP' 
                 )
                    )
                 BEGIN

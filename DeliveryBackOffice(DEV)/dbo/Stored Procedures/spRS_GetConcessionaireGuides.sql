@@ -4,11 +4,17 @@
 -- Create date: <2023-04-10>
 -- Description:	<Obtener información de guías de concecionarios>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-08-20>
+-- Description:	<Se agrega el filtro por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spRS_GetConcessionaireGuides]
 
 	@StartDate DATETIME = NULL,
-	@EndDate DATETIME = NULL,
-	@FilteredGuide NVARCHAR(MAX) = NULL
+	@EndDate DATETIME = NULL,																																																																															
+	@FilteredGuide NVARCHAR(MAX) = NULL,
+	@IdCountry NVARCHAR(5) = 'GT'
 
 AS
 BEGIN
@@ -20,7 +26,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI AND IdCountry = @IdCountry
 	)
 
 	DECLARE @TempGuideSplit TABLE (
@@ -103,6 +109,7 @@ BEGIN
 				,LTRIM(RTRIM(CONCAT([DO].[Sender_FirstName], ' ', [DO].[Sender_LastName]))) [Origin]
 				,LTRIM(RTRIM(CONCAT([DO].[Receiver_FirstName], ' ', [DO].[Receiver_LastName]))) [Destiny]
 				,[VPC].[DescriptionOfClient] [Franchise]
+				,CASE WHEN ISNULL(DO.SenderCountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 			INNER JOIN
@@ -158,6 +165,7 @@ BEGIN
 			) INH
 		WHERE
 			[DO].[DateCreated] BETWEEN @StartDate AND @EndDate
+			AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
 		
 	END
 	ELSE
@@ -191,6 +199,7 @@ BEGIN
 				,LTRIM(RTRIM(CONCAT([DO].[Sender_FirstName], ' ', [DO].[Sender_LastName]))) [Origin]
 				,LTRIM(RTRIM(CONCAT([DO].[Receiver_FirstName], ' ', [DO].[Receiver_LastName]))) [Destiny]
 				,[VPC].[DescriptionOfClient] [Franchise]
+				,CASE WHEN ISNULL(DO.SenderCountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 			INNER JOIN
@@ -252,6 +261,7 @@ BEGIN
 			) INH
 		WHERE
 			[DO].[DateCreated] BETWEEN @StartDate AND @EndDate
+			AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
 		
 	END
 

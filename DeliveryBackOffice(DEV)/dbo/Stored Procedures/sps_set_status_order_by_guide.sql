@@ -3,6 +3,11 @@
 -- Create date: <2020-06-10>
 -- Description:	<Cambiar el estado de una lista de guías>
 -- =============================================
+-- =============================================
+-- Author:		<CRISTIAN SUAZO>
+-- Create date: <2024-06-05>
+-- Description:	<Validacion cambiar de cambio de estado por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
     @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
     @Guide_Number AS VARCHAR(MAX),      -- a list of guides separated by comma
@@ -13,7 +18,8 @@ CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
     @Temperature_Celsius AS DECIMAL(5, 2),
     @courierName AS VARCHAR(200) = '',
     @iduser AS INT = NULL,
-    @username NVARCHAR(50) = NULL
+    @username NVARCHAR(50) = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     DECLARE @ValidateOperation BIGINT = 0;
@@ -29,10 +35,31 @@ BEGIN
     DECLARE @CourierId INT;
     -- CatModuleId del modulo
     DECLARE @CatModuleId INT;
+	---Pertenece al pais?-----
+	DECLARE @BelongConuntry BIT;
 
     BEGIN TRANSACTION;
 
     BEGIN TRY
+
+	SELECT @BelongConuntry = CASE
+                             WHEN IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
+                                  OR IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN
+                                 1
+                             ELSE
+                                 0
+                         END
+	FROM DeliveryOrder
+	WHERE Guide_number = @Guide_Number
+		  AND Guide_Serie = @Guide_Serie
+
+	IF @BelongConuntry = 0
+	BEGIN
+		SELECT 0 AS 'StatusCode',
+           'La guia pertenece a otro pais' AS 'Description'
+	END
+	ELSE
+	BEGIN 
 
         -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
         INSERT @ItemsTable
@@ -391,7 +418,7 @@ BEGIN
                                         SELECT TOP 1
                                                WT.IdWebhookType
                                         FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                        WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                        WHERE WT.WebhookName = 'GuideStatusChange' 
                                               AND WT.RowStatus = 1
                                     );
 
@@ -574,7 +601,7 @@ BEGIN
 
                     -------------------WEBHOOK.INI FIN----------------------------------------------------------------------------------------	
 
-
+	END;
 
 
     END TRY

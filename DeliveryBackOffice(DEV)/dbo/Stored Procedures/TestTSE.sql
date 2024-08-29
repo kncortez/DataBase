@@ -131,8 +131,8 @@ BEGIN
 					SUM
 					(
 						CASE
-							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRE'  COLLATE Latin1_General_CI_AI  THEN 0
-							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRES'  COLLATE Latin1_General_CI_AI  THEN 0
+							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRE' THEN 0
+							WHEN LTRIM(RTRIM([TP].[Detail])) = 'SOBRES' THEN 0
 							WHEN LTRIM(RTRIM([TP].[Detail])) <> '' THEN 1
 							ELSE 0
 						END

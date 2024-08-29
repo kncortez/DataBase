@@ -11,7 +11,10 @@
 -- Create date: <2022-09-07>
 -- Description:	<Actualizar SP para que valide si existe algun registro en la tabla invoiceHeader vinculada con la guía por la cual se desea crear factura>
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-27>
+-- Description: <Se agrego parametros de factura y moneda, por defecto 1 = QTZ, 'GT'>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
     ,@cmp_nit varchar(100)
@@ -24,6 +27,8 @@ CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
     ,@tokenRegister varchar(200)
 	,@type int
 	,@systemOrigen int = 1
+    ,@IdCurrency INT = 1
+    ,@IdCountry  VARCHAR(2) = 'GT'
 	,@TblLstDetail TblLstDetail READONLY
 	,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
 AS
@@ -78,6 +83,8 @@ BEGIN
 								,[inv_type]
 								,[systemOperation]
 								,[CatInvoiceTypeId]
+                                ,[IdCurrency]
+                                ,[IdCountry]
 								)
 							VALUES
 								(@VpCodeOfReferences
@@ -95,6 +102,8 @@ BEGIN
 								,@type
 								,@systemOrigen
 								,@idType
+                                ,@IdCurrency
+                                ,@IdCountry
 								)
 								SET @invoiceHeaderId= @@IDENTITY --'IDENTITY'
 

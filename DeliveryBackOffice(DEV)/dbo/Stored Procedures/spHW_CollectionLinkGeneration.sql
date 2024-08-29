@@ -17,8 +17,8 @@ BEGIN
 
 	SET NOCOUNT ON;
 	
-	DECLARE @GeneratedLinkStatusId INT = (SELECT TOP 1 CDLS.IdCatDataLinkStatus FROM [DeliveryBackOffice].[dbo].[CatDataLinkStatus] CDLS WITH(NOLOCK) WHERE CDLS.DataLinkStatusName = 'Generado' COLLATE Latin1_General_CI_AI AND CDLS.RowStatus = 1);
-	DECLARE @CompletedLinkStatusId INT = (SELECT TOP 1 CDLS.IdCatDataLinkStatus FROM [DeliveryBackOffice].[dbo].[CatDataLinkStatus] CDLS WITH(NOLOCK) WHERE CDLS.DataLinkStatusName = 'Completado' COLLATE Latin1_General_CI_AI AND CDLS.RowStatus = 1);
+	DECLARE @GeneratedLinkStatusId INT = (SELECT TOP 1 CDLS.IdCatDataLinkStatus FROM [DeliveryBackOffice].[dbo].[CatDataLinkStatus] CDLS WITH(NOLOCK) WHERE CDLS.DataLinkStatusName = 'Generado' AND CDLS.RowStatus = 1);
+	DECLARE @CompletedLinkStatusId INT = (SELECT TOP 1 CDLS.IdCatDataLinkStatus FROM [DeliveryBackOffice].[dbo].[CatDataLinkStatus] CDLS WITH(NOLOCK) WHERE CDLS.DataLinkStatusName = 'Completado' AND CDLS.RowStatus = 1);
 
 	DECLARE @PickupLinkBase NVARCHAR(500) = '';
 

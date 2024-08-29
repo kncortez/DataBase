@@ -20,7 +20,7 @@ BEGIN
                 SELECT TOP 1
                        CDO.IdDeliveryOption
                 FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH (NOLOCK)
-                WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI
+                WHERE CDO.[Name] = 'Express Center' 
             );
     DECLARE @NewDeliveryAddress NVARCHAR(600) = N'';
 

@@ -1,7 +1,4 @@
-﻿
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Bidcar, Herrera>
 -- Create date: <2020-06-12>
 -- Description:	<Confirmar entrega de guía>
@@ -25,12 +22,18 @@
 -- Create date: <2023-03-20>
 -- Description:	<Validar que guía no este en estado terminal>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <2024-06-06>
+-- Description:	<Valida que el pais destino es el mismo que el pais logueado>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_Confirmation_of_delivery]
     @Guide_Serie AS VARCHAR(2),   --guide serie
     @Guide_Number AS INT,         --guide number
     @DateOfDelivery VARCHAR(50),  --Date of delivery
     @NameOfReceiver VARCHAR(200), --Name of receiver
-    @TokenId AS VARCHAR(50)       --token user
+    @TokenId AS VARCHAR(50),       --token user
+	@IdCountry AS NVARCHAR(2) = 'GT' --Country
 AS
 BEGIN
     DECLARE @StatusId TINYINT = 5; --Status of delivery 
@@ -40,6 +43,7 @@ BEGIN
     DECLARE @CourierId INT; -- CourierId de la guía
     DECLARE @COD DECIMAL(14, 2); -- COD de la guía
     DECLARE @Datetime DATETIME; -- Fecha y hora del último checkpoint
+	DECLARE @BelongCountry NVARCHAR(2);
 
 		DECLARE @StatusDescription NVARCHAR(200)= ( Select SO.OrderDescription 
 												From [dbo].[DeliveryOrder] DO With(Nolock) 
@@ -57,12 +61,16 @@ BEGIN
 													And DO.Guide_Number =@Guide_Number 
 														),0)
 																					
+	SELECT @BelongCountry = CASE WHEN IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN 1 ELSE 0 END	
+	FROM DeliveryOrder 
+	WHERE Guide_Serie = @Guide_Serie AND Guide_Number = @Guide_Number																			
 
 
     BEGIN TRANSACTION;
     BEGIN TRY
 
-
+	IF @BelongCountry = 1
+	BEGIN
         -- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
         SET @Times =
         (
@@ -166,7 +174,7 @@ IF(@IsStatusTerminal = 0)
 					DECLARE @GuideCurrentStatus INT = -1;
 
 					BEGIN TRY
-						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @Guide_Number AND DO.Guide_Serie = @Guide_Serie),-1);
 						SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
@@ -450,7 +458,9 @@ IF(@IsStatusTerminal = 0)
      ELSE
 		SET @ValidateOperation = -4
 		
-	
+	END
+	ELSE
+		SET @ValidateOperation = -5
 
 	END TRY
     BEGIN CATCH
@@ -506,7 +516,14 @@ IF(@IsStatusTerminal = 0)
 					'Para operar una guia en este módulo no debe estar en  estado : ['+ @StatusDescription + '] por ser estado Terminal.' AS 'Description',  
 					@ValidateOperation AS 'NumTransferID'
 			END
-        ELSE
+        ELSE IF (@ValidateOperation = -5)
+		BEGIN
+				SELECT			  
+					-5 AS 'StatusCode',
+					'La guia no pertenece al páis logueado' AS 'Description',  
+					@ValidateOperation AS 'NumTransferID'
+		END
+		ELSE
         BEGIN
             SELECT 0 AS 'StatusCode',
                    'El registro no existe' AS 'Description',

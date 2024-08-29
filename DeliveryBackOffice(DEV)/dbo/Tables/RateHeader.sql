@@ -29,11 +29,13 @@
     [CutOffDate]           TINYINT         NULL,
     [CatBusinessSegmentId] INT             NULL,
     [PackagesRangeId]      INT             NULL,
+    [IdCurrency]           INT             NULL,
     PRIMARY KEY CLUSTERED ([RheId] ASC),
     FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     FOREIGN KEY ([CurrencyId]) REFERENCES [dbo].[DeliveryCurrency] ([Currency_Id]),
     CONSTRAINT [FK_RateHeader_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
-    CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
+    CONSTRAINT [FK_RateHeader_CatTypeRate] FOREIGN KEY ([RateTypeId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate]),
+    CONSTRAINT [FK_IdCurrencyRH_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
 );
 
 
@@ -139,6 +141,9 @@ EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Segmento de neg
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Rango de paquetes al que pertenece.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'PackagesRangeId'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Id de la moneda en la que se realiza la transaccion' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader', @level2type=N'COLUMN',@level2name=N'IdCurrency'
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion de los tarifarios' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'RateHeader'

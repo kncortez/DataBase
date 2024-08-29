@@ -8,6 +8,8 @@
     [DateCreated]                   DATETIME       NOT NULL,
     [TokenUpdated]                  NVARCHAR (50)  NULL,
     [DateUpdated]                   DATETIME       NULL,
-    CONSTRAINT [PK_CatConditionOfPayment] PRIMARY KEY CLUSTERED ([IdConditionOfPayment] ASC)
+    [IdCountry]                     VARCHAR(2)     NULL,
+    CONSTRAINT [PK_CatConditionOfPayment] PRIMARY KEY CLUSTERED ([IdConditionOfPayment] ASC),
+    CONSTRAINT [FK_CatConditionOfPayment_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 

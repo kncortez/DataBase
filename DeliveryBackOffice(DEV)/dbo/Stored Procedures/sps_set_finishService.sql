@@ -273,26 +273,30 @@ BEGIN
 
             CREATE TABLE #PendingPaymentTemp
             (
-                GuideSerie NVARCHAR(25) NULL
-              , GuideNumber INT
-              , IsCollect BIT
-              , Price DECIMAL(14, 2) NULL
-              , COD DECIMAL(14, 2) NULL
-              , AmountPaid DECIMAL(14, 2) NULL
-              , CODPaid DECIMAL(14, 2) NULL
-              , CODIsPaid BIT
-              , PaymentTime INT NULL
-              , TimeSequence INT NULL
-              , FelNumber NVARCHAR(50) NULL
-              , IsPaid BIT
-              , IsCustomer INT NULL
-              , ConditionPayment VARCHAR(200)
-              , HaveCredit BIT
-              , CollectCOD BIT
-              , ReturnRate DECIMAL(14, 2) NULL
-              , AmountToPay DECIMAL(14, 2) NULL
-              , CODAmount DECIMAL(14, 2) NULL
-              , ReturnRates DECIMAL(14, 2) NULL
+                GuideSerie NVARCHAR(25) NULL,
+                GuideNumber INT,
+                IsCollect BIT,
+                Price DECIMAL(14, 2) NULL,
+                COD DECIMAL(14, 2) NULL,
+                AmountPaid DECIMAL(14, 2) NULL,
+                CODPaid DECIMAL(14, 2) NULL,
+                CODIsPaid BIT,
+                PaymentTime INT NULL,
+                TimeSequence INT NULL,
+                FelNumber NVARCHAR(50) NULL,
+                IsPaid BIT,
+                IsCustomer INT NULL,
+                ConditionPayment VARCHAR(200),
+                HaveCredit BIT,
+                CollectCOD BIT,
+                ReturnRate DECIMAL(14, 2) NULL,
+                CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	        CurrencyPrice_CODSymbol  NVARCHAR(8),
+	            CurrencyPriceCodeISO     NVARCHAR(8),
+	            CurrencyPriceSymbol      NVARCHAR(8),
+                AmountToPay DECIMAL(14, 2) NULL,
+                CODAmount DECIMAL(14, 2) NULL,
+                ReturnRates DECIMAL(14, 2) NULL
             );
 
             CREATE NONCLUSTERED INDEX IX_PPT_GS
@@ -303,26 +307,30 @@ BEGIN
 
             INSERT INTO #PendingPaymentTemp
             (
-                GuideSerie
-              , GuideNumber
-              , IsCollect
-              , Price
-              , COD
-              , AmountPaid
-              , CODPaid
-              , CODIsPaid
-              , PaymentTime
-              , TimeSequence
-              , FelNumber
-              , IsPaid
-              , IsCustomer
-              , ConditionPayment
-              , HaveCredit
-              , CollectCOD
-              , ReturnRate
-              , AmountToPay
-              , CODAmount
-              , ReturnRates
+                GuideSerie,
+                GuideNumber,
+                IsCollect,
+                Price,
+                COD,
+                AmountPaid,
+                CODPaid,
+                CODIsPaid,
+                PaymentTime,
+                TimeSequence,
+                FelNumber,
+                IsPaid,
+                IsCustomer,
+                ConditionPayment,
+                HaveCredit,
+                CollectCOD,
+                ReturnRate,
+                CurrencyPrice_CODCodeISO,
+	  	        CurrencyPrice_CODSymbol,
+	            CurrencyPriceCodeISO,
+	            CurrencyPriceSymbol,
+                AmountToPay,
+                CODAmount,
+                ReturnRates
             )
             EXEC DeliveryBackOffice.dbo.spws_get_guide_pending_payment @InGuides = @InGuidesP
                                                                      , @InTime = @InTimeP
@@ -741,7 +749,7 @@ BEGIN
                                             SELECT TOP 1
                                                    WT.IdWebhookType
                                             FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                            WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
+                                            WHERE WT.WebhookName = 'GuideStatusChange' 
                                                   AND WT.RowStatus = 1
                                         );
 

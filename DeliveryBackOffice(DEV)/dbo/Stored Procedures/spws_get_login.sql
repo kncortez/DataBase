@@ -15,6 +15,7 @@ CREATE PROCEDURE [dbo].[spws_get_login]
   , @Password VARCHAR(200)
   , @IP VARCHAR(30)
   , @IdSystem INT = 1
+  , @CountryId VARCHAR(2) ='GT'
 AS
 BEGIN
     PRINT 'TEST';
@@ -28,6 +29,22 @@ BEGIN
     DECLARE @StatusAccount CHAR(1);
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
+    DECLARE @CODPercentage NVARCHAR(10);
+
+    
+     DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
+	                                            CASE 
+												    WHEN LEFT(UsrCurrency,2)='HN' 
+									                    THEN 'HN' ELSE 'GT' END  
+						                     FROM dbo.RegisterUser WHERE UsrEmail=@Username);
+
+
+				
+
+	DECLARE @CodeIsoMoney NVARCHAR(3) = (SELECT TOP 1 CodeISO  FROM [dbo].[CatCurrencyCOD] WHERE CodeISO LIKE '%' + @CountryId +'%');
+
+    	SET @CODPercentage = (Select CONVERT(VARCHAR,ISNULL([Value],0)) From dbo.ConfigParams
+                                      WHERE [Name] ='MinCODCommissionAmount' AND IdCountry LIKE '%'+ @CountryId  + '%')
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -87,6 +104,10 @@ BEGIN
         SELECT 500                 AS IdResult
              , 'Usuario bloqueado' AS Message
              , 'Blocked'           AS Id
+		UNION
+        SELECT 500                 AS IdResult
+             , 'Usuario de Express Center' AS Message
+             , 'UserEXC'           AS Id
         UNION
         SELECT 500                AS IdResult
              , 'Usuario inactivo' AS Message
@@ -99,311 +120,320 @@ BEGIN
         SELECT 400                                                                                                                            AS IdResult
              , 'Cuenta pendiente de confirmación, se envió un nuevo link a su correo electrónico registrado, para poder confirmar su cuenta.' AS Message
              , 'Confirmation'                                                                                                                 AS Id
+        UNION
+		SELECT 500									AS IdResult
+			 , 'El usuario pertenece a otro país. Por favor, inicia sesión con una cuenta del mismo país al que ingresaste o contacta a soporte.'	AS Message
+			 , 'WrongCountry'		AS Id
     ) AS errror;
     IF
     (
         SELECT COUNT(*)FROM #User
     ) > 0 -- si encuentra registros quiere decir que hay conicidencia en usuario y contraseña
     BEGIN
-        -- Validación de visit point para express center
-		PRINT 'TEST3';
-        IF (@VERIFYUSER > 0)
+    --No permitir el logueo de un Express Center
+    IF (@VERIFYUSER = 0)
         BEGIN
-            SET @VisitPointValid =
-            (
-                SELECT [VPC].[StatusClient]
-                FROM [dbo].[RegisterUser]               RU
-                    INNER JOIN [dbo].[VisitPointByUser] VP
-                        ON [RU].[UsrIdUser] = [VP].[RegisterUserID]
-                    INNER JOIN [dbo].[VisitPointClient] VPC
-                        ON [VP].[IdVisitPointClient] = [VPC].[IdVisitPointClient]
-                WHERE [RU].[UsrEmail] = @Username AND VP.RowStatus = 1
-            );
-
-            IF (@VisitPointValid = 0)
+            -- Validación de visit point para express center
+            PRINT 'TEST3';
+            IF (@VERIFYUSER > 0)
             BEGIN
-                SET @jsonResult =
+                SET @VisitPointValid =
                 (
-                    SELECT STUFF(
-                                    (
-                                        SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                               + Message + '"}'
-                                        FROM #errormessage
-                                        WHERE Id = 'Inactive'
-                                        FOR XML PATH(''), TYPE
-                                    ).value('.', 'varchar(max)')
-                                  , 1
-                                  , 1
-                                  , ''
-                                )
+                    SELECT [VPC].[StatusClient]
+                    FROM [dbo].[RegisterUser]               RU
+                        INNER JOIN [dbo].[VisitPointByUser] VP
+                            ON [RU].[UsrIdUser] = [VP].[RegisterUserID]
+                        INNER JOIN [dbo].[VisitPointClient] VPC
+                            ON [VP].[IdVisitPointClient] = [VPC].[IdVisitPointClient]
+                    WHERE [RU].[UsrEmail] = @Username AND VP.RowStatus = 1
                 );
-                SELECT ('[{' + @jsonResult + ']') jsonResult;
-                RETURN;
-            END;
 
-        END;
-		PRINT 'TEST4';
-
-        -- validar que el usuario no este bloqueado 
-
-        SET @StatusRestrinct =
-        (
-            SELECT TOP 1 UPPER(UstStatus)FROM #User
-        );
-        SET @StatusUser =
-        (
-            SELECT TOP 1 UsrStatus FROM #User
-        );
-        SET @IdUser =
-        (
-            SELECT TOP 1 IdUser FROM #User
-        );
-        SET @StatusAccount =
-        (
-            SELECT TOP 1 StatusAccount FROM #User
-        );
-        SET @PasswordExpired =
-        (
-            SELECT TOP 1 PasswordExpired FROM #User
-        );
-        IF @StatusAccount = 'C'
-        BEGIN
-            IF @StatusRestrinct = 'ACTIVE' --USUARIO sin restricciones
-            BEGIN
-                IF @PasswordExpired = 0 --USUARIO sin restricciones
+                IF (@VisitPointValid = 0)
                 BEGIN
+                    SET @jsonResult =
+                    (
+                        SELECT STUFF(
+                                        (
+                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
+                                                + Message + '"}'
+                                            FROM #errormessage
+                                            WHERE Id = 'Inactive'
+                                            FOR XML PATH(''), TYPE
+                                        ).value('.', 'varchar(max)')
+                                    , 1
+                                    , 1
+                                    , ''
+                                    )
+                    );
+                    SELECT ('[{' + @jsonResult + ']') jsonResult;
+                    RETURN;
+                END;
 
-                    IF @StatusUser = 1 -- usuario activo
+            END;
+            PRINT 'TEST4';
+
+            -- validar que el usuario no este bloqueado 
+
+            SET @StatusRestrinct =
+            (
+                SELECT TOP 1 UPPER(UstStatus)FROM #User
+            );
+            SET @StatusUser =
+            (
+                SELECT TOP 1 UsrStatus FROM #User
+            );
+            SET @IdUser =
+            (
+                SELECT TOP 1 IdUser FROM #User
+            );
+            SET @StatusAccount =
+            (
+                SELECT TOP 1 StatusAccount FROM #User
+            );
+            SET @PasswordExpired =
+            (
+                SELECT TOP 1 PasswordExpired FROM #User
+            );
+        IF @CountryIdOrigin = @CountryId
+         BEGIN
+            IF @StatusAccount = 'C'
+            BEGIN
+                IF @StatusRestrinct = 'ACTIVE' --USUARIO sin restricciones
+                BEGIN
+                    IF @PasswordExpired = 0 --USUARIO sin restricciones
                     BEGIN
-                        -- GENERAR TOKEN 
-                        DECLARE @Token AS NVARCHAR(50)
-                            =
+
+                        IF @StatusUser = 1 -- usuario activo
+                        BEGIN
+                            -- GENERAR TOKEN 
+                            DECLARE @Token AS NVARCHAR(50)
+                                =
+                                    (
+                                        SELECT CONVERT(
+                                                        VARCHAR(32)
+                                                        , HASHBYTES('MD5', CONCAT(@Username, @Password, SYSDATETIME()))
+                                                        , 2
+                                                    ) AS token
+                                    );
+                            IF
+                            (
+                                SELECT COUNT(*)FROM [dbo].TokenLog tkn WHERE tkn.TknIdToken = @Token
+                            ) = 0 --si el token no exite crearlo 
+                            BEGIN
+
+                            PRINT 'TEST6';
+                                INSERT INTO [dbo].[TokenLog]
                                 (
-                                    SELECT CONVERT(
-                                                      VARCHAR(32)
-                                                    , HASHBYTES('MD5', CONCAT(@Username, @Password, SYSDATETIME()))
-                                                    , 2
-                                                  ) AS token
-                                );
-                        IF
-                        (
-                            SELECT COUNT(*)FROM [dbo].TokenLog tkn WHERE tkn.TknIdToken = @Token
-                        ) = 0 --si el token no exite crearlo 
-                        BEGIN
+                                    [TknIdToken]
+                                , [TknIdUser]
+                                , [TknIdSystem]
+                                , [TknIdHub]
+                                , [TknIdModule]
+                                , [TknIdCountry]
+                                , [TknIP]
+                                , [TknRowStatus]
+                                , [TknTokenCreated]
+                                , [TknDateCreated]
+                                , [TknTokenUpdated]
+                                , [TknDateUpdated]
+                                )
+                                VALUES
+                                (@Token, @IdUser, @IdSystem, 0, 0, 'GT', @IP, 1, @Token, GETDATE(), NULL, NULL);
+                            END;
 
-						PRINT 'TEST6';
-                            INSERT INTO [dbo].[TokenLog]
+                            PRINT 'TEST7';
+                            DECLARE @JsonModules NVARCHAR(MAX);
+                            DECLARE @JsonAccounts NVARCHAR(MAX);
+                            DECLARE @JsonProfile NVARCHAR(MAX);
+                            DECLARE @JsonProfileEXP NVARCHAR(MAX) = N'';
+
+                            -- obtener modulos a los que tiene acceso el usuario logueado
+                            /*tabla temporal ModIdModule*/
+                            DECLARE @TOTALSUBMODULES    INT = 0
+                                , @ITERATORSUBMODULES INT = 1;
+                            DECLARE @TBSUBMODULES TABLE
                             (
-                                [TknIdToken]
-                              , [TknIdUser]
-                              , [TknIdSystem]
-                              , [TknIdHub]
-                              , [TknIdModule]
-                              , [TknIdCountry]
-                              , [TknIP]
-                              , [TknRowStatus]
-                              , [TknTokenCreated]
-                              , [TknDateCreated]
-                              , [TknTokenUpdated]
-                              , [TknDateUpdated]
-                            )
-                            VALUES
-                            (@Token, @IdUser, @IdSystem, 0, 0, 'GT', @IP, 1, @Token, GETDATE(), NULL, NULL);
-                        END;
-
-						PRINT 'TEST7';
-                        DECLARE @JsonModules NVARCHAR(MAX);
-                        DECLARE @JsonAccounts NVARCHAR(MAX);
-                        DECLARE @JsonProfile NVARCHAR(MAX);
-                        DECLARE @JsonProfileEXP NVARCHAR(MAX) = N'';
-
-                        -- obtener modulos a los que tiene acceso el usuario logueado
-                        /*tabla temporal ModIdModule*/
-                        DECLARE @TOTALSUBMODULES    INT = 0
-                              , @ITERATORSUBMODULES INT = 1;
-                        DECLARE @TBSUBMODULES TABLE
-                        (
-                            ITERATOR INT IDENTITY(1, 1)
-                          , ModIdModule INT
-                          , SUBMODULES VARCHAR(MAX)
-                        );
-                        SELECT @TOTALSUBMODULES = COUNT(cmo.ModIdModule)
-                        FROM RegisterUser                         us
-                            INNER JOIN [dbo].[RolByUserByAccount] rua
-                                ON rua.RuaIdUser = us.UsrIdUser
-                                   AND rua.RuaRowStatus = 1
-                            INNER JOIN dbo.RolByModuleBySystem    rms
-                                ON rms.RmsIdRol = rua.RuaIdRol
-                                   AND rms.RmsRowStatus = 1
-                            INNER JOIN [dbo].CatModule            cmo
-                                ON cmo.ModIdModule = rms.RmsIdModule
-                                   AND cmo.ModRowStatus = 1
-                                   AND cmo.ModVisible = 1
-                                   AND cmo.ModIdModuleParent IS NOT NULL
-                            INNER JOIN [dbo].CatRol               rol
-                                ON rol.RolIdRol = rms.RmsIdRol
-                        WHERE us.UsrEmail = @Username
-                              AND us.UsrRowStatus = 1;
-                        IF (@TOTALSUBMODULES) > 0
-                        BEGIN /*PARENT LIST*/
-                            INSERT INTO @TBSUBMODULES
-                            (
-                                ModIdModule
-                            )
-                            SELECT cmo.ModIdModule
-                            FROM RegisterUser                         us
-                                INNER JOIN [dbo].[RolByUserByAccount] rua
-                                    ON rua.RuaIdUser = us.UsrIdUser
-                                       AND rua.RuaRowStatus = 1
-                                INNER JOIN dbo.RolByModuleBySystem    rms
-                                    ON rms.RmsIdRol = rua.RuaIdRol
-                                       AND rms.RmsRowStatus = 1
-                                INNER JOIN [dbo].CatModule            cmo
-                                    ON cmo.ModIdModule = rms.RmsIdModule
-                                       AND cmo.ModRowStatus = 1
-                                       AND cmo.ModVisible = 1
-                                       AND cmo.ModIdModuleParent IS NULL
-                                       AND cmo.ModIdModule IN
-                                           (
-                                               SELECT ModIdModuleParent FROM [dbo].CatModule
-                                           )
-                                INNER JOIN [dbo].CatRol               rol
-                                    ON rol.RolIdRol = rms.RmsIdRol
-                            WHERE us.UsrEmail = @Username
-                                  AND us.UsrRowStatus = 1;
-
-                            SELECT @TOTALSUBMODULES = COUNT(ModIdModule)
-                            FROM @TBSUBMODULES;
-
-                        END;
-                        /*INSERT SUBMODULES*/
-                        WHILE @TOTALSUBMODULES > 0
-                        BEGIN
-                            DECLARE @CHILDSMD    VARCHAR(MAX) = ''
-                                  , @CHILDSMENU  INT          = 0
-                                  , @CHILDSMENU2 INT          = 1;
-                            DECLARE @TBSUBMODULES2 TABLE
-                            (
-                                ITERATOR2 INT
-                              , ModIdModuleDAD INT
-                              , ModIdModuleCHILD INT
+                                ITERATOR INT IDENTITY(1, 1)
+                            , ModIdModule INT
+                            , SUBMODULES VARCHAR(MAX)
                             );
-
-                            DELETE @TBSUBMODULES2
-                            WHERE 1 = 1;
-                            INSERT INTO @TBSUBMODULES2
-                            (
-                                ITERATOR2
-                              , ModIdModuleDAD
-                              , ModIdModuleCHILD
-                            )
-                            SELECT ROW_NUMBER() OVER (ORDER BY cmo.ModIdModule ASC)
-                                 , (
-                                       SELECT TMP.ModIdModule
-                                       FROM @TBSUBMODULES AS TMP
-                                       WHERE TMP.ITERATOR = @ITERATORSUBMODULES
-                                   )               AS ModIdModuleDAD
-                                 , cmo.ModIdModule AS ModIdModuleCHILD
+                            SELECT @TOTALSUBMODULES = COUNT(cmo.ModIdModule)
                             FROM RegisterUser                         us
                                 INNER JOIN [dbo].[RolByUserByAccount] rua
                                     ON rua.RuaIdUser = us.UsrIdUser
-                                       AND rua.RuaRowStatus = 1
+                                    AND rua.RuaRowStatus = 1
                                 INNER JOIN dbo.RolByModuleBySystem    rms
                                     ON rms.RmsIdRol = rua.RuaIdRol
-                                       AND rms.RmsRowStatus = 1
+                                    AND rms.RmsRowStatus = 1
                                 INNER JOIN [dbo].CatModule            cmo
                                     ON cmo.ModIdModule = rms.RmsIdModule
-                                       AND cmo.ModRowStatus = 1
-                                       AND cmo.ModVisible = 1
-                                -- AND 
+                                    AND cmo.ModRowStatus = 1
+                                    AND cmo.ModVisible = 1
+                                    AND cmo.ModIdModuleParent IS NOT NULL
                                 INNER JOIN [dbo].CatRol               rol
                                     ON rol.RolIdRol = rms.RmsIdRol
                             WHERE us.UsrEmail = @Username
-                                  AND us.UsrRowStatus = 1 --order by cmo.ModOrder
-                                  AND cmo.ModIdModuleParent =
-                                  (
-                                      SELECT TMP.ModIdModule
-                                      FROM @TBSUBMODULES AS TMP
-                                      WHERE TMP.ITERATOR = @ITERATORSUBMODULES
-                                  );
-								  PRINT 'TEST8';
-                            SELECT @CHILDSMENU = COUNT(1)
-                            FROM @TBSUBMODULES2;
-                            PRINT @CHILDSMENU;
-                            WHILE @CHILDSMENU > 0
-                            BEGIN
-                                SELECT @CHILDSMD
-                                    = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata
-                                      + '",' + '"Path":"' + cmo.ModPath + '"},'
-                                FROM [dbo].CatModule cmo
-                                WHERE cmo.ModIdModule =
+                                AND us.UsrRowStatus = 1;
+                            IF (@TOTALSUBMODULES) > 0
+                            BEGIN /*PARENT LIST*/
+                                INSERT INTO @TBSUBMODULES
                                 (
-                                    SELECT TMP.ModIdModuleCHILD
-                                    FROM @TBSUBMODULES2 AS TMP
-                                    WHERE TMP.ITERATOR2 = @CHILDSMENU2
+                                    ModIdModule
+                                )
+                                SELECT cmo.ModIdModule
+                                FROM RegisterUser                         us
+                                    INNER JOIN [dbo].[RolByUserByAccount] rua
+                                        ON rua.RuaIdUser = us.UsrIdUser
+                                        AND rua.RuaRowStatus = 1
+                                    INNER JOIN dbo.RolByModuleBySystem    rms
+                                        ON rms.RmsIdRol = rua.RuaIdRol
+                                        AND rms.RmsRowStatus = 1
+                                    INNER JOIN [dbo].CatModule            cmo
+                                        ON cmo.ModIdModule = rms.RmsIdModule
+                                        AND cmo.ModRowStatus = 1
+                                        AND cmo.ModVisible = 1
+                                        AND cmo.ModIdModuleParent IS NULL
+                                        AND cmo.ModIdModule IN
+                                            (
+                                                SELECT ModIdModuleParent FROM [dbo].CatModule
+                                            )
+                                    INNER JOIN [dbo].CatRol               rol
+                                        ON rol.RolIdRol = rms.RmsIdRol
+                                WHERE us.UsrEmail = @Username
+                                    AND us.UsrRowStatus = 1;
+
+                                SELECT @TOTALSUBMODULES = COUNT(ModIdModule)
+                                FROM @TBSUBMODULES;
+
+                            END;
+                            /*INSERT SUBMODULES*/
+                            WHILE @TOTALSUBMODULES > 0
+                            BEGIN
+                                DECLARE @CHILDSMD    VARCHAR(MAX) = ''
+                                    , @CHILDSMENU  INT          = 0
+                                    , @CHILDSMENU2 INT          = 1;
+                                DECLARE @TBSUBMODULES2 TABLE
+                                (
+                                    ITERATOR2 INT
+                                , ModIdModuleDAD INT
+                                , ModIdModuleCHILD INT
                                 );
 
-                                SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
-                                SET @CHILDSMENU = @CHILDSMENU - 1;
-                            END;
-                            IF (@CHILDSMD IS NOT NULL AND LEN(@CHILDSMD) > 0)
-                            BEGIN
-                                SET @CHILDSMD = LEFT(@CHILDSMD, LEN(@CHILDSMD) - 1);
-                            END;
-                            UPDATE @TBSUBMODULES
-                            SET SUBMODULES = @CHILDSMD
-                            WHERE ITERATOR = @ITERATORSUBMODULES;
-                            SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
-                            SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
-                        END;
+                                DELETE @TBSUBMODULES2
+                                WHERE 1 = 1;
+                                INSERT INTO @TBSUBMODULES2
+                                (
+                                    ITERATOR2
+                                , ModIdModuleDAD
+                                , ModIdModuleCHILD
+                                )
+                                SELECT ROW_NUMBER() OVER (ORDER BY cmo.ModIdModule ASC)
+                                    , (
+                                        SELECT TMP.ModIdModule
+                                        FROM @TBSUBMODULES AS TMP
+                                        WHERE TMP.ITERATOR = @ITERATORSUBMODULES
+                                    )               AS ModIdModuleDAD
+                                    , cmo.ModIdModule AS ModIdModuleCHILD
+                                FROM RegisterUser                         us
+                                    INNER JOIN [dbo].[RolByUserByAccount] rua
+                                        ON rua.RuaIdUser = us.UsrIdUser
+                                        AND rua.RuaRowStatus = 1
+                                    INNER JOIN dbo.RolByModuleBySystem    rms
+                                        ON rms.RmsIdRol = rua.RuaIdRol
+                                        AND rms.RmsRowStatus = 1
+                                    INNER JOIN [dbo].CatModule            cmo
+                                        ON cmo.ModIdModule = rms.RmsIdModule
+                                        AND cmo.ModRowStatus = 1
+                                        AND cmo.ModVisible = 1
+                                    -- AND 
+                                    INNER JOIN [dbo].CatRol               rol
+                                        ON rol.RolIdRol = rms.RmsIdRol
+                                WHERE us.UsrEmail = @Username
+                                    AND us.UsrRowStatus = 1 --order by cmo.ModOrder
+                                    AND cmo.ModIdModuleParent =
+                                    (
+                                        SELECT TMP.ModIdModule
+                                        FROM @TBSUBMODULES AS TMP
+                                        WHERE TMP.ITERATOR = @ITERATORSUBMODULES
+                                    );
+                                    PRINT 'TEST8';
+                                SELECT @CHILDSMENU = COUNT(1)
+                                FROM @TBSUBMODULES2;
+                                PRINT @CHILDSMENU;
+                                WHILE @CHILDSMENU > 0
+                                BEGIN
+                                    SELECT @CHILDSMD
+                                        = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata
+                                        + '",' + '"Path":"' + cmo.ModPath + '"},'
+                                    FROM [dbo].CatModule cmo
+                                    WHERE cmo.ModIdModule =
+                                    (
+                                        SELECT TMP.ModIdModuleCHILD
+                                        FROM @TBSUBMODULES2 AS TMP
+                                        WHERE TMP.ITERATOR2 = @CHILDSMENU2
+                                    );
 
-                        /*END SUBMODULOES*/
-                        SET @JsonModules =
-                        (
-                            SELECT STUFF(
-                                            (
-                                                SELECT ',{"Module":"' + cmo.ModName + '",' + '"Icon":"'
-                                                       + cmo.ModMetadata + '",' + '"Path":"' + cmo.ModPath + '",'
-                                                       + '"MenuId":' + CAST(ISNULL(rms.RmsModuleMenu, 1) AS NVARCHAR)
-                                                       + ',' + '"GroupId":' + CAST(ISNULL(cmo.ModGroup, 0) AS NVARCHAR)
-                                                       + ',' + '"NewFunction":'
-                                                       + CAST(ISNULL(rms.RmsHasNewFunction, 0) AS NVARCHAR) + ','
-                                                       + '"Rol":"' + rol.RolName
-                                                       + (CASE
-                                                              WHEN LEN(ISNULL(TMP.SUBMODULES, '')) > 0 THEN
-                                                                  '",' + '"SubModule":[' + COALESCE(TMP.SUBMODULES, '')
-                                                                  + ']}'
-                                                              ELSE
-                                                                  '"}'
-                                                          END
-                                                         )
-                                                FROM RegisterUser                         us
-                                                    INNER JOIN [dbo].[RolByUserByAccount] rua
-                                                        ON rua.RuaIdUser = us.UsrIdUser
-                                                           AND rua.RuaRowStatus = 1
-                                                    INNER JOIN dbo.RolByModuleBySystem    rms
-                                                        ON rms.RmsIdRol = rua.RuaIdRol
-                                                           AND rms.RmsRowStatus = 1
-                                                    INNER JOIN [dbo].CatModule            cmo
-                                                        ON cmo.ModIdModule = rms.RmsIdModule
-                                                           AND cmo.ModRowStatus = 1
-                                                           AND cmo.ModVisible = 1
-                                                           AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
-                                                    INNER JOIN [dbo].CatRol               rol
-                                                        ON rol.RolIdRol = rms.RmsIdRol
-                                                    LEFT JOIN @TBSUBMODULES               TMP
-                                                        ON TMP.ModIdModule = cmo.ModIdModule
-                                                WHERE us.UsrEmail = @Username
-                                                      AND us.UsrRowStatus = 1
-                                                ORDER BY cmo.ModOrder
-                                                FOR XML PATH(''), TYPE
-                                            ).value('.', 'varchar(max)')
-                                          , 1
-                                          , 1
-                                          , ''
-                                        )
-                        );
-                        -- obtener las cuentas a las que tiene acceso el usuario
+                                    SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
+                                    SET @CHILDSMENU = @CHILDSMENU - 1;
+                                END;
+                                IF (@CHILDSMD IS NOT NULL AND LEN(@CHILDSMD) > 0)
+                                BEGIN
+                                    SET @CHILDSMD = LEFT(@CHILDSMD, LEN(@CHILDSMD) - 1);
+                                END;
+                                UPDATE @TBSUBMODULES
+                                SET SUBMODULES = @CHILDSMD
+                                WHERE ITERATOR = @ITERATORSUBMODULES;
+                                SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
+                                SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
+                            END;
+
+                            /*END SUBMODULOES*/
+                            SET @JsonModules =
+                            (
+                                SELECT STUFF(
+                                                (
+                                                    SELECT ',{"Module":"' + cmo.ModName + '",' + '"Icon":"'
+                                                        + cmo.ModMetadata + '",' + '"Path":"' + cmo.ModPath + '",'
+                                                        + '"MenuId":' + CAST(ISNULL(rms.RmsModuleMenu, 1) AS NVARCHAR)
+                                                        + ',' + '"GroupId":' + CAST(ISNULL(cmo.ModGroup, 0) AS NVARCHAR)
+                                                        + ',' + '"NewFunction":'
+                                                        + CAST(ISNULL(rms.RmsHasNewFunction, 0) AS NVARCHAR) + ','
+                                                        + '"Rol":"' + rol.RolName
+                                                        + (CASE
+                                                                WHEN LEN(ISNULL(TMP.SUBMODULES, '')) > 0 THEN
+                                                                    '",' + '"SubModule":[' + COALESCE(TMP.SUBMODULES, '')
+                                                                    + ']}'
+                                                                ELSE
+                                                                    '"}'
+                                                            END
+                                                            )
+                                                    FROM RegisterUser                         us
+                                                        INNER JOIN [dbo].[RolByUserByAccount] rua
+                                                            ON rua.RuaIdUser = us.UsrIdUser
+                                                            AND rua.RuaRowStatus = 1
+                                                        INNER JOIN dbo.RolByModuleBySystem    rms
+                                                            ON rms.RmsIdRol = rua.RuaIdRol
+                                                            AND rms.RmsRowStatus = 1
+                                                        INNER JOIN [dbo].CatModule            cmo
+                                                            ON cmo.ModIdModule = rms.RmsIdModule
+                                                            AND cmo.ModRowStatus = 1
+                                                            AND cmo.ModVisible = 1
+                                                            AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
+                                                        INNER JOIN [dbo].CatRol               rol
+                                                            ON rol.RolIdRol = rms.RmsIdRol
+                                                        LEFT JOIN @TBSUBMODULES               TMP
+                                                            ON TMP.ModIdModule = cmo.ModIdModule
+                                                    WHERE us.UsrEmail = @Username
+                                                        AND us.UsrRowStatus = 1
+                                                    ORDER BY cmo.ModOrder
+                                                    FOR XML PATH(''), TYPE
+                                                ).value('.', 'varchar(max)')
+                                            , 1
+                                            , 1
+                                            , ''
+                                            )
+                            );
+                            -- obtener las cuentas a las que tiene acceso el usuario
 
                         SET @JsonAccounts =
                         (
@@ -418,6 +448,25 @@ BEGIN
                                                                  ta.TacName
                                                          END + '",' + '"IdCustomer":"'
                                                        + CONVERT(VARCHAR, ISNULL(ac.IdCustomer, 0)) + '",'
+                                                       + '"CODPercentage":"' + @CODPercentage + '",'
+													   + '"InsuranceRate":"' 
+													   +  
+													      (SELECT TOP 1 CONVERT(VARCHAR ,ISNULL(InsuranceRate, 0)) FROM dbo.RateHeader  
+																					  WHERE RheId IN(
+																									select RbcIdRate from dbo.RatebyCustomer
+																									where RbcIdCustomer=ac.IdCustomer)) + '",'
+														+ '"InsuranceExempt":"' 
+														+  
+													      (SELECT TOP 1 CONVERT(VARCHAR ,ISNULL(InsuranceExempt, 0)) FROM dbo.RateHeader  
+																					  WHERE RheId IN(
+																									select RbcIdRate from dbo.RatebyCustomer
+																									where RbcIdCustomer=ac.IdCustomer)) + '",'
+														+ '"CashOnDeliveryCharge":"' 
+														+  
+													      (SELECT TOP 1 CONVERT(VARCHAR ,ISNULL(CollectRate, 0)) FROM dbo.RateHeader  
+																					  WHERE RheId IN(
+																									select RbcIdRate from dbo.RatebyCustomer
+																									where RbcIdCustomer=ac.IdCustomer)) + '",'
                                                        + '"RolName":"' + ro.RolName + '",' + '"ImageProfile":"'
                                                        + ISNULL(ac.ImageProfile, '') + '",' + '"StarRating":"'
                                                        + CONVERT(VARCHAR(1), ISNULL(ac.StarRating, 0)) + '",'
@@ -451,21 +500,21 @@ BEGIN
                         );
                         -- obtener los datos del perfil asociado al usuario 
 
-                        -- MODIFICACIÓN 09/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                        -- Determinar si ya ha aceptado los terminos y condiciones
-                        DECLARE @ValTAC INT =
-                                (
-                                    SELECT [dbo].[FnValidateTermsAndConditions](@Username, 0, 1)
-                                );
+                            -- MODIFICACIÓN 09/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+                            -- Determinar si ya ha aceptado los terminos y condiciones
+                            DECLARE @ValTAC INT =
+                                    (
+                                        SELECT [dbo].[FnValidateTermsAndConditions](@Username, 0, 1)
+                                    );
 
-                        -- Valida el valor en la tabla; 1 = TRUE, si fuera 0 o NULL devuelve FALSE
-                        DECLARE @TAC VARCHAR(5) = CASE
-                                                      WHEN @ValTAC = 1 THEN
-                                                          'TRUE'
-                                                      ELSE
-                                                          'FALSE'
-                                                  END;
-                        -- FIN MODIFICACIÓN
+                            -- Valida el valor en la tabla; 1 = TRUE, si fuera 0 o NULL devuelve FALSE
+                            DECLARE @TAC VARCHAR(5) = CASE
+                                                        WHEN @ValTAC = 1 THEN
+                                                            'TRUE'
+                                                        ELSE
+                                                            'FALSE'
+                                                    END;
+                            -- FIN MODIFICACIÓN
 
                         SET @JsonProfile =
                         (
@@ -478,6 +527,8 @@ BEGIN
                                                        + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
                                                        + CONVERT(VARCHAR, us.UsrNickName) + '",' + '"Phone":"'
                                                        -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+                                                       + '"PrefixCallingCode":"'
+													   + COALESCE(us.PrefixCallingCode  , ' ') + '",'
                                                        + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",'
                                                        + '"VerifiedPhone.":"'
                                                        + CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone, 'false')) + '",'
@@ -497,31 +548,31 @@ BEGIN
                                         )
                         );
 
-                        -- MODIFICACIÓN 23/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                        -- Variable para guardar el rol de express center del usuario
-                        DECLARE @RolEXP NVARCHAR(MAX);
+                            -- MODIFICACIÓN 23/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+                            -- Variable para guardar el rol de express center del usuario
+                            DECLARE @RolEXP NVARCHAR(MAX);
 
-                        SET @RolEXP =
-                        (
-                            SELECT TOP 1
-                                   cr.RolName
-                            FROM RegisterUser                 ru
-                                INNER JOIN RolByUserByAccount rb
-                                    ON ru.UsrIdUser = rb.RuaIdUser
-                                INNER JOIN CatRol             cr
-                                    ON rb.RuaIdRol = cr.RolIdRol
-                            WHERE ru.UsrEmail = @Username
-                        );
+                            SET @RolEXP =
+                            (
+                                SELECT TOP 1
+                                    cr.RolName
+                                FROM RegisterUser                 ru
+                                    INNER JOIN RolByUserByAccount rb
+                                        ON ru.UsrIdUser = rb.RuaIdUser
+                                    INNER JOIN CatRol             cr
+                                        ON rb.RuaIdRol = cr.RolIdRol
+                                WHERE ru.UsrEmail = @Username
+                            );
 
-                        IF (@RolEXP LIKE 'ADMINISTRACION%')
-                        BEGIN
-                            SET @RolEXP = N'Admin';
-                        END;
-                        ELSE
-                        BEGIN
-                            SET @RolEXP = N'Encargado';
-                        END;
-                        -- FIN MODIFICACIÓN
+                            IF (@RolEXP LIKE 'ADMINISTRACION%')
+                            BEGIN
+                                SET @RolEXP = N'Admin';
+                            END;
+                            ELSE
+                            BEGIN
+                                SET @RolEXP = N'Encargado';
+                            END;
+                            -- FIN MODIFICACIÓN
 
                         IF (@VERIFYUSER > 0)
                         BEGIN
@@ -531,6 +582,8 @@ BEGIN
                                                 (
                                                     SELECT ',{"Name":"' + DescriptionOfClient + '",'
                                                            + '"ContactName":"' + ISNULL(ContactName, '') + '",'
+                                                           + '"PrefixCallingCode":"'
+														   + COALESCE(ru.PrefixCallingCode  , ' ') + '",'
                                                            + '"Phone":"' + ISNULL(VPC.Phone, '') + '",' + '"Email":"'
                                                            + ISNULL(Email, '') + '",' + '"IdTownship":"'
                                                            + ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '') + '",'
@@ -576,6 +629,7 @@ BEGIN
                             SELECT STUFF(
                                             (
                                                 SELECT '{"IdResult":200' + ',' + '"Token":"' + @Token + '",'
+                                                       + '"Currency":"' + @CodeIsoMoney + '",'
                                                        + '"Modules":[' + @JsonModules + '],' + '"Accounts":['
                                                        + @JsonAccounts + '],' + '"Profile":['
                                                        + CASE
@@ -592,14 +646,34 @@ BEGIN
                                         )
                         );
 
-						PRINT '@JsonModules'
-						PRINT @JsonModules
-						PRINT '@JsonAccounts'
-						PRINT @JsonAccounts
-						PRINT '@JsonProfile'
-						PRINT @JsonProfile
-						PRINT '@JsonProfileEXP'
-						PRINT @JsonProfileEXP
+                            PRINT '@JsonModules'
+                            PRINT @JsonModules
+                            PRINT '@JsonAccounts'
+                            PRINT @JsonAccounts
+                            PRINT '@JsonProfile'
+                            PRINT @JsonProfile
+                            PRINT '@JsonProfileEXP'
+                            PRINT @JsonProfileEXP
+                        END;
+                        ELSE
+                        BEGIN
+                            SET @jsonResult =
+                            (
+                                SELECT STUFF(
+                                                (
+                                                    SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ','
+                                                        + '"Message":"' + Message + '"}'
+                                                    FROM #errormessage
+                                                    WHERE Id = 'Inactive'
+                                                    FOR XML PATH(''), TYPE
+                                                ).value('.', 'varchar(max)')
+                                            , 1
+                                            , 1
+                                            , ''
+                                            )
+                            );
+                        END;
+
                     END;
                     ELSE
                     BEGIN
@@ -607,95 +681,101 @@ BEGIN
                         (
                             SELECT STUFF(
                                             (
-                                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ','
-                                                       + '"Message":"' + Message + '"}'
+                                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
+                                                    + Message + '"}'
                                                 FROM #errormessage
-                                                WHERE Id = 'Inactive'
+                                                WHERE Id = 'PasswordExpired'
                                                 FOR XML PATH(''), TYPE
                                             ).value('.', 'varchar(max)')
-                                          , 1
-                                          , 1
-                                          , ''
+                                        , 1
+                                        , 1
+                                        , ''
                                         )
                         );
                     END;
 
                 END;
-                ELSE
+                ELSE -- usuario bloqueado
                 BEGIN
-                    SET @jsonResult =
-                    (
-                        SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                                   + Message + '"}'
-                                            FROM #errormessage
-                                            WHERE Id = 'PasswordExpired'
-                                            FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)')
-                                      , 1
-                                      , 1
-                                      , ''
-                                    )
-                    );
+                    IF ((@StatusRestrinct = 'BLOCKED'))
+                    BEGIN
+                        SET @jsonResult =
+                        (
+                            SELECT STUFF(
+                                            (
+                                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
+                                                    + Message + '"}'
+                                                FROM #errormessage
+                                                WHERE Id = 'Blocked'
+                                                FOR XML PATH(''), TYPE
+                                            ).value('.', 'varchar(max)')
+                                        , 1
+                                        , 1
+                                        , ''
+                                        )
+                        );
+                    END;
+                    ELSE -- culaquier otro estado diferente de "ACTIVE" y "BLOCKED"
+                    BEGIN
+                        SET @jsonResult =
+                        (
+                            SELECT STUFF(
+                                            (
+                                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
+                                                    + Message + '"}'
+                                                FROM #errormessage
+                                                WHERE Id = 'Inactive'
+                                                FOR XML PATH(''), TYPE
+                                            ).value('.', 'varchar(max)')
+                                        , 1
+                                        , 1
+                                        , ''
+                                        )
+                        );
+                    END;
                 END;
-
             END;
-            ELSE -- usuario bloqueado
+            ELSE
             BEGIN
-                IF ((@StatusRestrinct = 'BLOCKED'))
-                BEGIN
-                    SET @jsonResult =
-                    (
-                        SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                                   + Message + '"}'
-                                            FROM #errormessage
-                                            WHERE Id = 'Blocked'
-                                            FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)')
-                                      , 1
-                                      , 1
-                                      , ''
-                                    )
-                    );
-                END;
-                ELSE -- culaquier otro estado diferente de "ACTIVE" y "BLOCKED"
-                BEGIN
-                    SET @jsonResult =
-                    (
-                        SELECT STUFF(
-                                        (
-                                            SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"'
-                                                   + Message + '"}'
-                                            FROM #errormessage
-                                            WHERE Id = 'Inactive'
-                                            FOR XML PATH(''), TYPE
-                                        ).value('.', 'varchar(max)')
-                                      , 1
-                                      , 1
-                                      , ''
-                                    )
-                    );
-                END;
+                SET @jsonResult =
+                (
+                    SELECT STUFF(
+                                    (
+                                        SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message
+                                            + '"}'
+                                        FROM #errormessage
+                                        WHERE Id = 'Confirmation'
+                                        FOR XML PATH(''), TYPE
+                                    ).value('.', 'varchar(max)')
+                                , 1
+                                , 1
+                                , ''
+                                )
+                );
             END;
+        END;
+		ELSE
+		BEGIN
+				SELECT   CONVERT(VARCHAR, IdResult) AS 'IdResult',
+						Message 
+				FROM #errormessage
+				WHERE Id = 'WrongCountry'
+		END;
         END;
         ELSE
         BEGIN
+            -- retornar mensaje de error
             SET @jsonResult =
             (
-                SELECT STUFF(
-                                (
-                                    SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message
-                                           + '"}'
-                                    FROM #errormessage
-                                    WHERE Id = 'Confirmation'
-                                    FOR XML PATH(''), TYPE
-                                ).value('.', 'varchar(max)')
-                              , 1
-                              , 1
-                              , ''
+                SELECT STUFF((
+                                SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '"}'
+                                FROM #errormessage
+                                WHERE Id = 'UserEXC'
+                                FOR XML PATH(''), TYPE
+                            ).value('.', 'varchar(max)')
+                        , 1
+                        , 1
+                        , ''
                             )
             );
         END;

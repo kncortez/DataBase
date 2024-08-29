@@ -244,13 +244,13 @@ BEGIN
 				SET @DiscountAmount = (
 					SELECT
 						CASE
-							WHEN CVT.ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
+							WHEN CVT.ValueTypeName = 'Porcentaje' THEN 
 								CASE
 									WHEN CTD.ShortName = 'TOT' THEN
 										ROUND(((@OldAmount * CD.couponvalue) / 100), 1)
 									ELSE 0
 								END
-							WHEN CVT.ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
+							WHEN CVT.ValueTypeName = 'Monto' THEN 
 								CASE
 									WHEN CTD.ShortName = 'TOT' THEN
 										CASE
@@ -261,7 +261,7 @@ BEGIN
 										END
 									ELSE 0
 								END
-							WHEN CVT.ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
+							WHEN CVT.ValueTypeName = 'Servicio' THEN 
 								CASE
 									WHEN CTD.ShortName = 'TOT' THEN
 										@OldAmount

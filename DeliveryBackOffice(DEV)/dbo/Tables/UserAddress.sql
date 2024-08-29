@@ -19,6 +19,7 @@
     [VisitPointByClientPortfolioId] INT            NULL,
     [UadIdSettlement]               BIGINT         NULL,
     [UadIdDeliveryOption]           BIGINT         NULL,
+    [UadFavorite]                   BIT            NULL,
     PRIMARY KEY CLUSTERED ([UadIdAddress] ASC),
     CONSTRAINT [FK_IdVisitPointClient] FOREIGN KEY ([CodeOfReference]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_UserAddress_CatCityPlace] FOREIGN KEY ([IdCityPlace]) REFERENCES [dbo].[CatCityPlace] ([IdCityPlace]),
@@ -63,3 +64,184 @@ GO
 CREATE NONCLUSTERED INDEX [idx_UadIdAccount_CodeOfReference]
     ON [dbo].[UserAddress]([UadIdAccount] ASC, [CodeOfReference] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'LIsta de direcciones que tiene el usuario',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = NULL,
+    @level2name = NULL
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificador de registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadIdAddress'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del municipio(Referencia a idTownship de la tabla Township)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadIdTownship'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de la cuenta de usuario(Referencia a AccIdAccount de la tabla Account)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadIdAccount'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del pais',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadIdCountry'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre completo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadFullName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Primera dirección ',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadAddress1'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Segundo dirección',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadAddress2'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Prefijo de número telefónico',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadNirPhone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número telefónico',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadPhone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indicaciones adicionales para entrega',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadAdditionalInstructions'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadRowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadTokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadDateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadTokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificiación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadDateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del punto de visita(Refencia a CodeOfReference de la tabla VisitPointClient)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'CodeOfReference'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de lugar de la ciudad(Refencia a idCityPlace de la tabla CatCityPlace)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCityPlace'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de la cartera de cliente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'VisitPointByClientPortfolioId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Dirección favorita es unica por cliente y solo es de Origen',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'UserAddress',
+    @level2type = N'COLUMN',
+    @level2name = N'UadFavorite'

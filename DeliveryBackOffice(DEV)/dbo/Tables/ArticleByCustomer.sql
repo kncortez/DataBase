@@ -15,10 +15,12 @@
     [MassWeight]       DECIMAL (18, 2) NULL,
     [VolumetricWeight] DECIMAL (18, 2) NULL,
     [ShowDefault]      BIT             NULL,
+    [IdCurrency] INT NULL, 
     PRIMARY KEY CLUSTERED ([AbcId] ASC),
     CONSTRAINT [FKArticleCustom] FOREIGN KEY ([AbcIdArticle]) REFERENCES [dbo].[CatArticle] ([ArtId]),
     CONSTRAINT [FKCustomArticle] FOREIGN KEY ([AbcIdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [AK_Password] UNIQUE NONCLUSTERED ([Code] ASC)
+    CONSTRAINT [AK_Password] UNIQUE NONCLUSTERED ([Code] ASC),
+    CONSTRAINT [FK_ArticleByCustomer_CatCurrencyCOD] FOREIGN KEY ([IdCurrency]) REFERENCES [dbo].[CatCurrencyCOD] ([IdCatCurrencyCOD])
 );
 
 

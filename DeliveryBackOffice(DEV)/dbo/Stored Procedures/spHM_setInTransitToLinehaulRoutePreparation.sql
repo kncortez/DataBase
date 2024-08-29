@@ -145,7 +145,7 @@ BEGIN
 
 	IF (@EXISTING_SR > 0)
 		BEGIN
-			SET @EXISTING_SR = (SELECT [SR].[ID]
+			SET @EXISTING_SR = (SELECT TOP 1 [SR].[ID]
 								FROM [dbo].[SenderReceiver] SR
 								WHERE [SR].[CUI] = @SenderReceiverCUI);
 		END

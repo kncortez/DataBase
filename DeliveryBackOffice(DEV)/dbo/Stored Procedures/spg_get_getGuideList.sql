@@ -38,6 +38,6 @@ BEGIN
            serv.Receiver_Department Department
     FROM DeliveryBackOffice.dbo.DeliveryOrder serv WITH (NOLOCK)
         INNER JOIN #listGuides lst
-            ON lst.Item = Guide_Serie + CAST(Guide_Number AS VARCHAR) COLLATE SQL_Latin1_General_CP1_CI_AS;
+            ON lst.Item = Guide_Serie + CAST(Guide_Number AS VARCHAR) ;
 
 END;

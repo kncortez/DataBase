@@ -3,6 +3,11 @@
 -- Create date: <2022-04-07>
 -- Description:	< Obtiene la lista de puntos de visita de clientes concatenando >
 -- =============================================
+-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-05-24>
+-- Description: < Se obtiene columna adicional con nombre invocado desde frontend >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetVisitPointOFCustomer]	
 	@Country NVARCHAR(2) = 'GT',
 	@CustomerId INT
@@ -14,6 +19,7 @@ BEGIN
 
 	SELECT
 		VPC.IdVisitPointClient IdVP,
+        VPC.IdVisitPointClient IdVisitPointClient,
 		CONCAT('[', VPC.CodeOfReference, '] ', isnull(Cu.Abbreviation,''), (CASE WHEN Cu.Abbreviation IS NULL THEN '' ELSE ' - ' END), VPC.DescriptionOfClient, ' {', REPLACE(REPLACE(REPLACE(ISNULL(VPC.Phone, ''),'(502)',''),'-',''),' ',''),'} ', IIF(VPC.StatusClient = 0, ' [X]', '')) [Client], 
 		Cu.IdCustomer				IdCustomer,
 		--Cu.Name + ' ' + ISNULL(ru.UsrEmail, '' ) NameEmail,
@@ -39,7 +45,8 @@ BEGIN
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] Tw WITH(NOLOCK)
 			ON Tw.IdTownship = VPC.IdTownship
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK)
-			on VPC.Town = Twn.TownshipName COLLATE Latin1_General_CI_AI
+			on VPC.Town = Twn.TownshipName 
+            AND Tw.IdTownship = Twn.IdTownship
 		LEFT JOIN (
 			SELECT
 				DSC.HeaderCode

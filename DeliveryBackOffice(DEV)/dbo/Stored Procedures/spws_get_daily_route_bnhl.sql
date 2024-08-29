@@ -335,62 +335,125 @@ BEGIN
 
 		PRINT 'construido jrsult';
 
-		PRINT 'construyendo jrsult 2';
-       
-		SELECT	'Delivery' [ServiceType],
-				CONVERT(VARCHAR, ISNULL(VPr.CodeOfReference, 0)) [CodeOfReference],
-				ISNULL(
-						(
-							CASE
-							WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-							THEN DOR.IdDeliveryOption
-							ELSE 1
-							END
-						), 0
-					  )[DeliveryOption],
-				 ISNULL([DOR].[IsLastMileReturn], 0) [IsLastMileReturn],
-				 ISNULL( CONVERT( VARCHAR, DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) ), '-1' )[Id], 0 [ServiceManagementId],
-				 ISNULL(
-					ISNULL(
-							COALESCE(
-										IIF(
-												DOR.IsLastMileReturn = 1,
-												DOR.Receiver_FirstName,
-												DOR.Sender_FirstName
-											) , ''
-									) + ' '
-							+ 
-							COALESCE(
-										IIF(
-												DOR.IsLastMileReturn = 1,
-												DOR.Receiver_FirstName,
-												DOR.Sender_FirstName
-											) , ''
-									   )
-							, VPC.DescriptionOfClient
-							) , 'N/A'
-					) [Sender],
-				CASE
-				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN [DOR].[Sender_Phone]
-				ELSE ''
-				END [Sender_Phone],
-				IIF(
-						kvp.KindOfVPName = 'Express Center',
-						ISNULL(VPr.Address, ''),											
-						ISNULL(
-								ISNULL(
-										IIF(
-												DOR.IsLastMileReturn = 1,
-												DOR.Sender_Address,
-												DOR.Receiver_Address
-											), 
-										IIF(
-												DOR.IsLastMileReturn = 1,
-												VPC.Address,
-												VPr.Address
-											)
-																								
+
+declare @guides nvarchar (MAX) = (select stuff((select ','+concat(GuideSerie,GuideNumber) from #GuideService
+											FOR XML PATH ('')),1,1,''))
+
+											PRINT CONCAT('GUIDES',@guides)
+
+		declare @Temp as table
+		(	GuideSerie			nvarchar (25) null,
+			GuideNumber			nvarchar (25) null,
+			IsCollect			nvarchar (25) null,
+			Price				decimal (14,2) null,
+			COD					decimal (14,2) null,
+			AmountPaid			decimal (14,2) null,
+			CODPaid				decimal (14,2) null,
+			CODIsPaid			decimal (14,2) null,
+			PaymentTime			int null,
+			TimeSequence		int null,
+			FelNumber			nvarchar (50) null,
+			IsPaid				int null,
+			IsCustomer			int null,
+			ConditionPayment	nvarchar(200) null,
+			HaveCredit			nvarchar (50) null,
+			CollectCOD			nvarchar (50) null,
+			ReturnRate			decimal (14,2) null,
+			CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	    CurrencyPrice_CODSymbol  NVARCHAR(8),
+	        CurrencyPriceCodeISO     NVARCHAR(8),
+	        CurrencyPriceSymbol      NVARCHAR(8),
+			AmountToPay			decimal (14,2) null,
+			CODAmount			decimal (14,2) null,
+			ReturnRates			decimal (14,2) null)
+			INSERT INTO @Temp (GuideSerie,GuideNumber,IsCollect,Price,COD,AmountPaid,CODPaid
+				,CODIsPaid,PaymentTime,TimeSequence	,FelNumber,IsPaid,IsCustomer
+				,ConditionPayment,HaveCredit,CollectCOD,ReturnRate,AmountToPay,CODAmount,ReturnRates)
+			EXEC  [dbo].[spws_get_guide_pending_payment]
+				@InGuides = @guides,
+				@InTime = 1,
+				@IsReturn = 1,
+				@CodeApp = 'SIFDCECOM300720201459',
+				@IdModule = 1,
+				@Token = @Token
+
+
+	
+
+--------------------------------End Sumary,ListGuides Return----------------------------------------------------------------------
+
+
+-----------------------Start Retuns Services ---------------------------------------------
+--Devoluciones
+								--set @jsonResult3 = (SELECT STUFF(( 
+								--	 select  distinct
+								--	',
+								--	{									
+        --                                        "ServiceType":"' +  'Return'  + '",' +
+								--	'"CodeOfReference":"' + convert( varchar,isnull(vpc.CodeOfReference,0))  + '",' +
+								--	'"ServiceManagementId":"' +  isnull( convert(varchar, gs.IdServiceManagement ,0) , 'N/A') + '",' +
+								--	'"Sender":"'  +  isnull(isnull(COALESCE(do.Sender_FirstName,'')+ ' ' + COALESCE(do.Sender_LastName,''), COALESCE( vpc.DescriptionOfClient,'') ), 'N/A') + '",' +
+								--	'"Address":"' + dbo.fnt_String_Escape( concat(  ISNULL(REPLACE(do.Sender_Address,'"','') ,' ') , isnull(do.Sender_Address, REPLACE(vpc.Address,'"','')) , ' ' , ISNULL( do.Sender_Town, '') , ' ' , isnull(do.Sender_Department,'')),'json') + '",' +
+								--	'"Phone":"' +  isnull( isnull(do.Sender_Phone, '')  ,'N/A') + '",' +
+								--	--'"PiecesDry":"' + CONVERT(varchar,isnull((select (sum(isnull(do.Pieces_Dry,0)))),0))  + '",' +
+								--	--'"PiecesCold":"' + CONVERT(varchar,isnull((select (sum(isnull(do.Pieces_Cold,0)))),0))  + '",' +
+								--	'"ScheduleStart":"' +   ''  + '",' +
+								--	'"ScheduleEnd":"' +     ''   + '",' +
+								--	'"Photo":"' + ISNULL( (select top 1 vpi.PathImage from dbo.ImagesByVisitPoint vpi
+								--							where vpi.CodeOfReference =VPC.CodeOfReference 
+								--							order by DateCreated desc) ,'#')  + '",' +
+								--	'"Latitude":"' + convert(varchar, isnull(vpc.Latitude,0) )  + '",' +
+								--	'"Longitude":"' + convert(varchar, isnull(vpc.Longitude,0) )  + '",' +
+								--	'"Precision":"' + convert(varchar, isnull(vpc.Accuracy,0) )  +  '",' +
+								--	'"Status":"' + convert(varchar,isnull(gs.ServiceStatusId,7)) +  '",' +
+								--	'"CurrencySymbol":"' +     'Q.'   + '",' +
+								----	'"Summary":' + @jsonResult8 + ',' +
+								--CASE WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
+								--	'"TotalServiceAmount":"0",' 
+								--	ELSE
+								--	'"TotalServiceAmount":"' + convert( varchar,isnull(gt.AmountToPay,0))  + '",' 
+								--	END +
+								--	CASE WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
+								--    '"TotalReturnAmount":"0",' 
+								--	ELSE
+								--	'"TotalReturnAmount":"' + convert( varchar,isnull(gt.ReturnRates,0))  + '",' 
+								--	END +
+								--	CASE WHEN do.IdDeliveryOption = @IdDeliveryOption THEN
+								--	'"TotalAmount":"0",' 
+								--	ELSE
+								--	'"TotalAmount":"' + convert( varchar,isnull(gt.AmountToPay + gt.ReturnRates,0))  + '",' 
+								--	END +
+								--	'"PiecesList":[' + (select stuff((SELECT ','+    '"' +   isnull(CONCAT(isnull(convert(varchar,dop.GuideSerie), 'N/A') ,isnull(convert(varchar,dop.GuideNumber), 'N/A'), '-' ,isnull(convert(varchar,dop.NoPiece), 'N/A' )  ) , 'N/A') +  '"'  
+								--			 	from ServiceManagement sm 
+								--			join SenderReceiver sr on (sr.ID = sm.IdPuCourrier)
+								--			join PieceByService ps on (ps.ServiceManagmentId = sm.IdServiceManagement)
+								--			join DeliveryOrderPiece dop WITH (NOLOCK) on (dop.GuidePiece = ps.GuidePieceId)
+								--			where sm.ServiceStatusId in ( 1,4,7,8) and sm.IdPuCourrier = @IdCourier and CONVERT(varchar,sm.DateCreated,103)  =  CONVERT(varchar,GETDATE(),103) and sm.IdServiceManagement = gs.IdServiceManagement
+								--			FOR XML PATH ('')),1,1,'')) + ']' +
+								--		+ '}' 
+								--	from   
+								--			#GuideService gs
+								--			left join @Temp gt  on gt.GuideSerie = gs.GuideSerie and gt.GuideNumber = gs.GuideNumber
+								--			join DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) on do.Guide_Serie = gs.GuideSerie and do.Guide_Number = gs.GuideNumber 
+								--			left join DeliveryBackOffice.dbo.VisitPointClient VPC
+								--	    on     VPC.CodeOfReference = do.Sender_ID
+								--		group by gs.IdServiceManagement, do.Sender_Address,  VPC.CodeOfReference, do.Sender_FirstName, do.Sender_LastName,
+								--		 VPC.DescriptionOfClient,  VPC.Address, do.Sender_Town, do.Sender_Department, do.Sender_Phone,  VPC.Latitude,  VPC.Longitude,  VPC.Accuracy
+								--		 ,gs.ServiceStatusId, gt.AmountToPay, gt.ReturnRates,do.IdDeliveryOption
+								--	--and CAST(DAT.Date_Created AS DATE) = CAST(@DateRoute AS DATE)
+								--		FOR XML PATH(''), TYPE
+								--			).value('.', 'varchar(max)'),1,1,''
+								--					) )
+		---------------------------------------------End Retuns Services --------------------------------------------------					
+						If @jsonResult is null and @jsonResult2 is null and @jsonResult3 is null
+						begin
+							set @jsonResultErrror =(
+										SELECT STUFF(( 
+										SELECT '{{"IdResult":500,' 
+										+ '"Message":" No se encontraron registros"}' 
+										FOR XML PATH(''), TYPE
+										).value('.', 'varchar(max)'),1,1,''
+											  ) 
 										)
 										, 'N/A'
 								)

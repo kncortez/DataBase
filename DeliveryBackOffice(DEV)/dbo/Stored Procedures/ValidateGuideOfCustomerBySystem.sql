@@ -16,7 +16,7 @@ AS
 BEGIN
 
 	-- Varaible del identificador del systema
-	DECLARE @ImageRegisterCourierAppId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WHERE CS.SysNameSystem = 'App-Evidencias' COLLATE Latin1_General_CI_AI);
+	DECLARE @ImageRegisterCourierAppId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WHERE CS.SysNameSystem = 'App-Evidencias' );
 	
 	-- Variables de respuesta
 	DECLARE @jsonResult NVARCHAR(MAX);

@@ -3,6 +3,11 @@
 -- Create date: <2021-08-02>
 -- Description:	<Devuelve el nombre de un cliente individual asi como su IdCustomer>
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <2024-06-27>
+-- Description:	<Devuelve el nombre de un cliente individual asi como su IdCustomer filtrado por país>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_CustomerByEmailOrDpi]
     -- Add the parameters for the stored procedure here
     --@StartDate DATETIME,
@@ -11,6 +16,7 @@ CREATE PROCEDURE [dbo].[spws_get_CustomerByEmailOrDpi]
   , @Email VARCHAR(50) = ''
   , @DPI VARCHAR(50) = ''
   , @IdMembership INT = 0
+  , @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -23,7 +29,7 @@ BEGIN
                 SELECT TOP 1
                        CSPS.IdCatSalesPackageStatus
                 FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
+                WHERE CSPS.SalesPackageStatusName = 'Activa' 
             );
 
 
@@ -79,7 +85,9 @@ BEGIN
                                    + CONVERT(NVARCHAR, ISNULL(@IdUser, '')) + '",' + '"IdCustomer":"'
                                    + CONVERT(NVARCHAR, ISNULL(cu.[IdCustomer], '')) + '",' + '"Name":"'
                                    + ISNULL(cu.[Name], '') + '",' + '"Email":"' + ISNULL(ru.[UsrEmail], '') + '",'
-                                   + '"Phone":"' + ISNULL(ru.[Phone], '') + '",' + '"HasMembership":'
+                                   + '"Phone":"' + ISNULL(ru.[Phone], '') + '",'
+								   + '"NirPhone":"' + ISNULL(ru.[PrefixCallingCode], '+502')
+								   + '",' + '"HasMembership":'
                                    + CONVERT(NVARCHAR
                                            , ISNULL(   (CASE
                                                             WHEN mmbrshp.IdMembership IS NOT NULL THEN
@@ -190,6 +198,7 @@ BEGIN
                                        AND mmbrshp.ExpirationDate >= GETDATE()
                                        AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
                             WHERE ac.AccIdAccount = @IdAccount
+                            AND (cu.CountryID = @IdCountry OR (@IdCountry = 'GT' AND cu.CountryID IS NULL))
                             FOR XML PATH(''), TYPE
                         ).value('.', 'varchar(max)')
                       , 1

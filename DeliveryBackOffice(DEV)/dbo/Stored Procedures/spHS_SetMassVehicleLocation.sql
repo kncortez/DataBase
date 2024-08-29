@@ -70,12 +70,12 @@ BEGIN
 			LEFT JOIN 
 				[DeliveryBackOffice].[dbo].[CatVehicle] CVUnit
 				ON
-					[VL].[CourierPhone] = [CVUnit].[UnitNumber]  COLLATE Latin1_General_CI_AI 
+					[VL].[CourierPhone] = [CVUnit].[UnitNumber]   
 			-- Por placa de vehículo
 			LEFT JOIN
 				[DeliveryBackOffice].[dbo].[CatVehicle] CVPlate
 				ON
-					[VL].[VehicleTypeDescription] = [CVPlate].[Plate]  COLLATE Latin1_General_CI_AI 
+					[VL].[VehicleTypeDescription] = [CVPlate].[Plate]   
 
 		IF ( NOT EXISTS ( SELECT TOP 1 1 FROM @VehicleLocationToProcess ) )
 		BEGIN

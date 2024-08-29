@@ -1,12 +1,12 @@
-﻿
-
-
-
-
--- =============================================
+﻿-- =============================================
 -- Author:		<Cano, Carlos>
 -- Create date: <2020-11-22>
 -- Description:	<Registrar transacción de liquidación para comprobante de entrega>
+-- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-06-19>
+-- Description:	<Se calcula la tasa de cambio y la conversion de la moneda del pais orgigen a pais destino>
 -- =============================================
 CREATE PROCEDURE [dbo].[sps_settlement_guide_delivered]
 		@GuideSerie AS VARCHAR(2),
@@ -24,14 +24,31 @@ BEGIN
 	DECLARE @StatusTransfer TINYINT = (SELECT so.StatusOrderId FROM StatusOrder so WHERE so.OrderDescription = 'Traslado a Express Center')
 	DECLARE @StatusId tinyint = (SELECT CASE WHEN do.IsLastMileReturn = 1 THEN @StatusReturn ELSE @StatusDelivery END FROM DeliveryOrder do WITH(NOLOCK) WHERE do.Guide_Serie = @GuideSerie AND do.Guide_Number = @GuideNumber) --Status of delivery 
 	
+	DECLARE @OriginResult DECIMAL(12,6);
+	DECLARE @ResultDestination DECIMAL(12,6);
+	DECLARE @TypeService NVARCHAR(3);
+	DECLARE	@ReceiverCountry NVARCHAR(2),
+			@SenderCountry NVARCHAR(2),
+			@GuideType NVARCHAR(3),
+			@CurrencyOrigin INT,
+			@CurrencyDestination INT;
+
 	BEGIN TRANSACTION
 
 		BEGIN TRY
-			
+
+			SELECT @ReceiverCountry = ReceiverCountryId,
+				   @SenderCountry = SenderCountryId,
+				   @TypeService = TypeService,
+				   @GuideType = GuideType
+			FROM DeliveryOrder  WITH(NOLOCK)
+			WHERE Guide_Serie = @GuideSerie
+			AND Guide_Number = @GuideNumber
+
 			/*** SIMULAR ENTREGA DE GUÍA COMO CONFIRMACION DE ENTREGA ***/
 	
 			-- Buscar si la guía ya cuenta con estado de entrega previa, en caso que exista no se procede a registrar transacción para evitar registro duplicado
-			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND (StatusOrderId IN (@StatusDelivery,@StatusReturn,@StatusTransfer)))
+			SET @Times = (SELECT COUNT(Guide_Number) FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND (StatusOrderId IN (@StatusDelivery,@StatusReturn,@StatusTransfer)))
 
 			IF (@Times = 0)
 			BEGIN
@@ -39,7 +56,7 @@ BEGIN
 				UPDATE DeliveryBackOffice.dbo.DeliveryOrder
 				SET StatusOrderId = @StatusId, --Status of delivery 			
 				NameOfReceiver = @NameReceiver
-				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber			
+				WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber					
 			
 				-- Insertar nuevo estado de guía en tabla histórica
 				INSERT INTO DeliveryBackOffice.dbo.DeliveryOrderDetail
@@ -59,7 +76,7 @@ BEGIN
 				DECLARE @GuideCurrentStatus INT = -1;
 
 				BEGIN TRY
-					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
+					DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
 
 					SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
 					SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
@@ -238,11 +255,85 @@ BEGIN
 
 			SET @Amount = (SELECT CASE WHEN IsLastMileReturn = 1 THEN 0 ELSE ISNULL(Collect_OnDelivery, 0) END FROM DeliveryOrder WITH(NOLOCK) WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
+			IF @GuideType = 'INT'
+			BEGIN
+
+				DECLARE @ExchangeReceiver DECIMAL(12,6);
+					/***************CONVERSION MONEDA ORIGEN A DOLAR****************************/
+					SET @CurrencyOrigin = (SELECT CodCurrency FROM Cost WITH(NOLOCK) WHERE GuideNumber = @GuideNumber AND GuideSerie = @GuideSerie)
+
+					SELECT @OriginResult = CASE WHEN @SenderCountry = 'GT' THEN @Amount / ExchangeRate ELSE @Amount * ExchangeRate END  
+					FROM CurrencyExchangeRates WITH(NOLOCK) 
+					WHERE IdCountry = @SenderCountry 
+					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+					AND SourceCurrency = @CurrencyOrigin
+					ORDER BY ExchangeDate DESC
+					
+					/**********************CONVERSION DOLAR A MONEDA LOCAL***********************/
+
+					SET @Currencydestination  =  (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WITH(NOLOCK) WHERE CodeISO LIKE ''+@ReceiverCountry+'%')
+
+					SELECT @ResultDestination = @OriginResult * ExchangeRate,
+							@ExchangeReceiver = ExchangeRate
+					FROM CurrencyExchangeRates WITH(NOLOCK) 
+					WHERE IdCountry = @ReceiverCountry
+					AND CAST(ExchangeDate AS DATE) = CAST(GETDATE() AS DATE) 
+					AND TargetCurrency = @Currencydestination
+					ORDER BY ExchangeDate DESC
+					
+					IF @ResultDestination IS NULL
+					BEGIN
+						RAISERROR ('The exchange rate conversion could not be performed, the value cannot be null', 16, 1);
+					END
+
+				IF @TypeService = 'COD'
+				BEGIN				
+					/*********************ACTUALIZACION DE DATOS EN COST*************************/
+
+					UPDATE DeliveryBackOffice.dbo.Cost
+					SET CODPaymentCurrency = @Currencydestination,
+						CODPaymentExchangeRate = @ExchangeReceiver
+					WHERE GuideNumber = @GuideNumber
+					AND GuideSerie = @GuideSerie
+				END
+				ELSE
+				BEGIN
+					UPDATE DeliveryBackOffice.dbo.Cost
+					SET DeliveryPaymentCurrency = @CurrencyDestination,
+						DeliveryPaymentExchangeRate = @ExchangeReceiver
+					WHERE GuideNumber = @GuideNumber
+					AND GuideSerie = @GuideSerie
+				END
+
+			END
+			ELSE
+			BEGIN
+				/******EL MONTO NO SUFRE NINGUNA TAZA DE CAMBIO******/
+				SET @ResultDestination = @Amount
+				/**********NO SE DEBE CALCULAR TASA DE CAMBIO PARA GUIAS DOMESTICAS**************/
+				IF @TypeService = 'COD'
+				BEGIN
+					UPDATE DeliveryBackOffice.dbo.Cost
+					SET CODPaymentCurrency = CodCurrency,
+						CODPaymentExchangeRate = CodExchangeRate
+					WHERE GuideNumber = @GuideNumber
+					AND GuideSerie = @GuideSerie
+				END
+				ELSE
+				BEGIN
+					UPDATE DeliveryBackOffice.dbo.Cost
+					SET DeliveryPaymentCurrency = ShippingCurrency,
+						DeliveryPaymentExchangeRate =ShippingExchangeRate
+					WHERE GuideNumber = @GuideNumber
+					AND GuideSerie = @GuideSerie
+				END
+			END
+
 			-- actualizar guía debido al proceso de liquidación
 			UPDATE [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]
 			SET 
 				Settlement_Collect_OnDelivery = @Amount, 
-				SettlementCollect_TokenCreated = @Token, 
+				SettlementCollect_TokenCreated = @Token,  
 				SettlementCollect_DateCreated = GETDATE(), 
 				Guide_Settlement = 1, -- guía liquidada en bodega
 				Guide_Returned = 0,  -- guía liquidada vía material devuelto
@@ -252,6 +343,8 @@ BEGIN
 				Guide_Serie = @GuideSerie 
 				AND Guide_Number = @GuideNumber 
 				AND ID_DeliveryOrderBySettlement = @IdManifest
+
+
 
 			SET @RModified = @@ROWCOUNT
 						
@@ -266,7 +359,8 @@ BEGIN
 				@Amount AS 'Amount',
 				0 AS 'SubStatusCode',
 				0 AS RetriesMade,
-				0 AS RetriesAllowed
+				0 AS RetriesAllowed,
+				ERROR_LINE() AS ErrorLine
 			ROLLBACK TRANSACTION
 
 
@@ -321,6 +415,7 @@ BEGIN
 					   'Sin Observaciones' 
 				       ELSE COI.LiquidatorRemarks 
 				   END AS LiquidatorRemarks
+				   , CASE WHEN DOR.ReceiverCountryId = 'GT' THEN CONCAT('Q', CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination, 2) AS DECIMAL(12,2)))) ELSE CONCAT('L', CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination , 2) AS DECIMAL(12,2)))) END AS 'CurrencySymbol'
 				FROM DeliveryOrder DOR WITH (NOLOCK)
 				LEFT JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
 					ON doad.GuideSerie = DOR.Guide_Serie
@@ -355,3 +450,5 @@ BEGIN
 				@Amount AS 'Amount',
 				0 AS 'SubStatusCode'
 END
+GO
+

@@ -4,10 +4,13 @@
 -- Create date: <2020-02-15>
 -- Description:	<Devuelve los vehiculos que esten activos>
 -- =============================================
--- drop  procedure dbo.spg_Fleet
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-04>
+-- Description: <Se agrega filtro para filtrar por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE  [dbo].[spws_get_vehicle_list]
-@RowStatus	bit = 1 
-
+@RowStatus	bit = 1,
+@IdCountry  VARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -22,7 +25,7 @@ BEGIN
 		left join CatVehicleCategories cvc on (cv.CatVehicleCategoriesId = cvc.IdCatVehicleCategories)
 		left join HubLogistics hl on (cv.HubLogisticId=hl.IdHubLogistic)
 		where  cv.RowStatus = @RowStatus
-
+        AND IIF(cv.IdCountry IS NULL, 'GT',cv.IdCountry) = @IdCountry
 END
 
 

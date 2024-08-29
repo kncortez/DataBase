@@ -8,6 +8,16 @@
 -- Create date: <2023-03-28>
 -- Description:	<agragar catalogo para opciones de tiempo de facturación y volument de facturación>
 -- =============================================
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-06-03>
+-- Description:	<se modifica para que utilice el parametro de pais para filtrar en los catalogos>
+-- =============================================
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<se modifica para obtener datos de la tabla CatCurrencyCOD>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCatalog]
     -- Add the parameters for the stored procedure here
     @IdCorrelative INT = -1,
@@ -179,12 +189,14 @@ BEGIN
 
         IF (@NameOfCatalog = 'DeliveryCurrency')
         BEGIN
-            SELECT curr.[Currency_Id] [IdValue],
-                   UPPER(curr.[Currency_Name]) [NameValue],
+            SELECT CU.IdCatCurrencyCOD [IdValue],
+                   UPPER(CU.Name) [NameValue],
                    curr.[Currency_IdCountry] [IdFilter],
                    curr.[Currency_Symbol] [Asssitant],
                    'DeliveryCurrency' [Catalog]
-            FROM [DeliveryBackOffice].[dbo].[DeliveryCurrency] curr
+            FROM [DeliveryBackOffice].[dbo].[DeliveryCurrency] curr WITH(NOLOCK)
+					INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
+					ON curr.IdCurrencyCOD = CU.IdCatCurrencyCOD
             WHERE [Currency_Status] = 1
                   AND
                   (
@@ -209,7 +221,8 @@ BEGIN
                   (
                       @IdCorrelative = -1
                       OR CBA.IdBankAccountType = @IdCorrelative
-                  );
+                  )
+				  AND IIF(CBA.IdCountry IS NULL, 'GT',CBA.IdCountry) = @IdFilter;
 
         END;
 
@@ -245,7 +258,8 @@ BEGIN
                   (
                       @IdParentFilter = -1
                       OR hr.RateTypeId = @IdParentFilter
-                  );
+                  )
+				  AND IIF(hr.CountryId IS NULL, 'GT',hr.CountryId) = @IdFilter;
         --AND hr.IsTemplate = 'TRUE' --no hay forma de mostrar cuando es clonable y cuando no es clonable
         END;
 
@@ -370,6 +384,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR kbs.IdKindOfVPBusiness = @IdCorrelative
                   )
+				  AND IIF(kbs.IdCountry IS NULL, 'GT',kbs.IdCountry) = @IdFilter
             ORDER BY kbs.KindOfVPNameBussiness;
         END;
 
@@ -387,6 +402,7 @@ BEGIN
                   )
                   AND koc.IdKindOfVPClient NOT IN ( 5 ) --estos son los puntos (bodegas dinamicas) que hace los clientes integrados
             --AND koc.DateCreated >= '2021-08-19'
+                  AND IIF(koc.IdCountry IS NULL, 'GT',koc.IdCountry) = @IdFilter
             ORDER BY koc.KindOfVPName;
         END;
 
@@ -396,7 +412,11 @@ BEGIN
                    UPPER(crt.CodeRoute) [NameValue],
                    crt.IdTypeRoute [IdFilter],
                    'Route' [Catalog]
-            FROM dbo.CatRoute crt
+            FROM dbo.CatRoute crt WITH(NOLOCK)
+			LEFT JOIN dbo.Township tw WITH(NOLOCK)
+				ON crt.IdTownship = tw.IdTownship
+			LEFT JOIN dbo.Province pr WITH(NOLOCK)
+				ON tw.IdProvince = pr.IdProvince
             WHERE crt.RowStatus = 'TRUE'
                   AND
                   (
@@ -407,7 +427,8 @@ BEGIN
                   (
                       @IdParentFilter = -1
                       OR crt.IdTypeRoute = @IdParentFilter
-                  );
+                  )
+                  AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdFilter;
         END;
 
 
@@ -437,7 +458,8 @@ BEGIN
                     ON ca.ArtId = ac.AbcIdArticle
                 LEFT JOIN dbo.CatTypeArticle ta
                     ON ta.TarId = ca.ArtIdTypeArticle
-            WHERE ac.AbcRowStatus = 'TRUE';
+            WHERE ac.AbcRowStatus = 'TRUE'
+            AND IIF(ca.IdCountry IS NULL, 'GT',ca.IdCountry)= @IdFilter;
         END;
 
         IF (@NameOfCatalog = 'SalesChannel')
@@ -452,6 +474,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR CSC.IdSalesChannel = @IdCorrelative
                   )
+				  --AND IIF(CSC.IdCountry IS NULL, 'GT',CSC.IdCountry)= @IdFilter
             ORDER BY CSC.Description;
         END;
 
@@ -492,6 +515,7 @@ BEGIN
                       @IdCorrelative = -1
                       OR cu.IdCustomer = @IdCorrelative
                   )
+				  --AND IIF(cbt.IdCountry IS NULL, 'GT',cbt.IdCountry) = @IdFilter
             GROUP BY cbt.CatBatchTypeCODId,
                      cbt.Name
             ORDER BY cbt.Name;
@@ -569,6 +593,7 @@ BEGIN
 					,pr.PiecesIncluded [PiecesIncluded]
 					,cbs.IdBusinessSegment [IdValue]
 					,cbs.BusinessSegmentName [NameValue]
+                    ,ISNULL(pr.IdCurrency,1) [IdCurrency]--DEJA POR DEFECTO 1 -QUETZAL
 					,'PackagesRange' [Catalog]
 				FROM PackagesRange pr
 				INNER JOIN PackagesRangeDetail prd
@@ -585,6 +610,7 @@ BEGIN
 					ON prCOD.CatRateSegmentId = crs2.CrsId
 				WHERE pr.RowStatus = 1
 				AND prd.RowStatus = 1
+                AND IIF(cbs.IdCountry IS NULL, 'GT', cbs.IdCountry) = @IdFilter
 				ORDER BY cts.CtsShortName DESC, pr.[Order]
 			END
 

@@ -194,7 +194,7 @@ SET @loop_counter = ISNULL((SELECT COUNT(*) FROM @Customers),0)
 			on PHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader 
 			   and PHead.IdStatus = 1
 		LEFT JOIN #GuidesDelivered Deliv
-		   on Deliv.Guide_Serie = Serv.Guide_Serie COLLATE SQL_Latin1_General_CP1_CI_AS
+		   on Deliv.Guide_Serie = Serv.Guide_Serie 
 		   and Deliv.Guide_Number = Serv.Guide_Number		   
 		INNER JOIN DeliveryBackOffice.dbo.Customer Ctm WITH(NOLOCK) on Ctm.IdCustomer = vpclient.CustomerID
 		LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH(NOLOCK) on
@@ -290,7 +290,7 @@ SELECT  distinct
 			on PaidHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader
 			   and PaidHead.IdStatus = 1
 		LEFT JOIN #GuidesDelivered Deliv
-		   on Deliv.Guide_Serie = Serv.Guide_Serie COLLATE SQL_Latin1_General_CP1_CI_AS
+		   on Deliv.Guide_Serie = Serv.Guide_Serie 
 		   and Deliv.Guide_Number = Serv.Guide_Number
 		
 		LEFT JOIN @CustomersDetail CustomDet on vpclient.CustomerID = CustomDet.IdCustomer
@@ -383,7 +383,7 @@ STUFF((
 			on PaidHead.IdDeliveryOrderPaid = paidguide.IdDeliveryOrderPaidHeader
 			   and PaidHead.IdStatus = 1			
 		LEFT JOIN #GuidesDelivered Deliv
-		   on Deliv.Guide_Serie  = Serv.Guide_Serie COLLATE SQL_Latin1_General_CP1_CI_AS
+		   on Deliv.Guide_Serie  = Serv.Guide_Serie 
 		   and Deliv.Guide_Number = Serv.Guide_Number
 		 LEFT JOIN DeliveryBackOffice.dbo.TownshipByHubLogistic tbl WITH (NOLOCK) on
 		    tbl.IdTownship = serv.ReceiverIdTownship

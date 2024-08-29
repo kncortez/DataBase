@@ -3,6 +3,10 @@
 -- Create date: <2022-03-04>
 -- Description:	<SP para mostrar totales en reporte de cierres en desktop>
 -- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-08>
+-- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para encabezado del reporte>
+-- =============================================
 CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop] 
 	@StartDate datetime = NULL,
 	@EndDate datetime = NULL,
@@ -11,6 +15,17 @@ CREATE PROCEDURE  [dbo].[ReportClosureTotalDesktop]
 	@IdAccount NVARCHAR(MAX) = NULL
 AS
 BEGIN
+	DECLARE @AccountExp NVARCHAR(30),
+			@AccountCOD NVARCHAR(30);
+	DECLARE @IdCountry NVARCHAR(2) = (SELECT CountryId FROM VisitPointClient WHERE CodeOfReference = @VisitPointId)
+
+	SELECT @AccountExp = Name +' '+ '(' +AccountNumber +')' 
+	FROM ClosureAccount 
+	WHERE Name = 'Cuenta Express Center' AND ISNULL(IdCountry,'GT') = @IdCountry
+
+	SELECT @AccountCOD = Name +' '+ '(' +AccountNumber +')' 
+	FROM ClosureAccount 
+	WHERE Name = 'Cuenta Área COD' AND ISNULL(IdCountry,'GT') = @IdCountry
 
 	DECLARE @tblVisitPointId TABLE(
 		CodeOfReference int
@@ -41,10 +56,12 @@ BEGIN
 
 
 	SELECT
-		ISNULL(SUM(TotalCash), 0) TotalCash
+		@AccountExp AS AccountExp
+		,ISNULL(SUM(TotalCash), 0) TotalCash
 		,ISNULL(SUM(TotalCredit), 0) TotalCredit
 		,ISNULL(SUM(TotalCashDeclared), 0) TotalCashDeclared
 		,ISNULL(SUM(TotalCreditDeclared), 0) TotalCreditDeclared
+		,@AccountCOD AS AccountCOD
 		,ISNULL(SUM(TotalCODCash), 0) TotalCODCash
 		-- MODIFICACIÓN 21/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 		,ISNULL(SUM(TotalAmountCODCashDeclared), 0) TotalAmountCODCashDeclared
@@ -54,6 +71,7 @@ BEGIN
 		,ISNULL(SUM(TotalAmountFacturaCardDeclared), 0) TotalAmountFacturaCardDeclared
 		-- FIN MODIFICACIÓN
 		,ISNULL(SUM(TotalGeneral), 0 ) TotalGeneral
+		,CurrensySymbol
 	FROM (SELECT
 			ISNULL(MAX(ACH.TotalAmountCash), 0) TotalCash
 		   ,ISNULL(MAX(ACH.TotalAmountCredit), 0) TotalCredit
@@ -68,6 +86,7 @@ BEGIN
 		   ,ISNULL(MAX(ACH.TotalAmountFacturaCardDeclared), 0) TotalAmountFacturaCardDeclared
 		   ,ISNULL(MAX(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard), 0) TotalGeneral
 		   -- FIN MODIFICACIÓN
+		   ,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrensySymbol
 		FROM dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		LEFT JOIN dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON VPC.CodeOfReference = ACH.VisitPoint
@@ -89,5 +108,6 @@ BEGIN
 				AccountId
 			FROM @tblIdAccount)
 		OR @IdAccount = '-1')
-		GROUP BY ACH.IdAccountingClosuresHeader) X
+		GROUP BY ACH.IdAccountingClosuresHeader, VPC.CountryId) X
+		GROUP BY CurrensySymbol
 END

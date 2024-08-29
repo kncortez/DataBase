@@ -1,8 +1,13 @@
-﻿
+﻿-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-10>
+-- Description:	<Se agrega paramtro para filtrar articulos por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[sp_post_new_article_in_catarticle]
 	@IdTypeArticle INT,
 	@ArticleName VARCHAR(50),
-	@Token VARCHAR(50)
+	@Token VARCHAR(50),
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -18,7 +23,7 @@ DECLARE @ExistArticleId INT = -1;
 BEGIN TRANSACTION;
 
 BEGIN TRY
-	IF NOT EXISTS (SELECT * FROM dbo.CatArticle WHERE UPPER(ArtName) = UPPER(@ArticleName))
+	IF NOT EXISTS (SELECT * FROM dbo.CatArticle WHERE UPPER(ArtName) = UPPER(@ArticleName) AND IIF(IdCountry IS NULL,'GT',IdCountry)=@IdCountry)
     BEGIN
 		INSERT INTO dbo.CatArticle
 		(
@@ -27,7 +32,8 @@ BEGIN TRY
 			ArtShowDefault,
 			ArtRowStatus,
 			ArtTokenCreated,
-			ArtDateCreated
+			ArtDateCreated,
+			IdCountry
 		)
 		VALUES
 		(
@@ -36,7 +42,8 @@ BEGIN TRY
 			@FlagShowDefaultArticle,
 			@FlagEnabledArticle,
 			@Token,
-			@DateCreated
+			@DateCreated,
+			@IdCountry
 		);
 
 		SET @NewArticleId = SCOPE_IDENTITY();
@@ -45,7 +52,8 @@ BEGIN TRY
 	BEGIN
 		SELECT @ExistArticleId = ArtId 
 		FROM dbo.CatArticle 
-		WHERE UPPER(ArtName) = UPPER(@ArticleName);
+		WHERE UPPER(ArtName) = UPPER(@ArticleName)
+		AND IIF(IdCountry IS NULL, 'GT',IdCountry)= @IdCountry;
 	END
 END TRY
 BEGIN CATCH

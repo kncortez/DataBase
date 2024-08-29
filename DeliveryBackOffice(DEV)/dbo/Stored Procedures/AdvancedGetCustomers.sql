@@ -1,12 +1,19 @@
 ﻿
 -- =============================================
--- Author:		<Andres, Ruiz>
+-- Author:      <Andres, Ruiz>
 -- Create date: <2022-05-12>
--- Description:	< Busqueda avanzada de clientes buscando por una concidencia en puntos de visita >
+-- Description: < Busqueda avanzada de clientes buscando por una concidencia en puntos de visita >
 -- =============================================
-
+-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-05-24>
+-- Description: < Se agrego filtro para datos por pais, por defecto GT >
+-- =============================================
 CREATE PROCEDURE [dbo].[AdvancedGetCustomers]
-	@Filter NVARCHAR(100)
+(
+    @Filter    NVARCHAR(100),
+    @IdCountry NVARCHAR(2) = 'GT'
+)
 AS
 BEGIN
 
@@ -17,7 +24,7 @@ BEGIN
 					, Cu.Name
 					, ' '
 					, IIF(Cu.CommercialName IS NOT NULL, CONCAT('[',Cu.CommercialName,'] '),'')
-					, REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ','')
+					, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'(504)',''),'-',''),' ','')
 					, ' '
 					, IIF(Cu.IdCustomerType = 3, CONCAT(ISNULL(RU.UsrEmail, ''),' '), '')
 					, CONCAT('{', VPC.DescriptionOfClient, '}')
@@ -26,7 +33,7 @@ BEGIN
 			Cu.IdCustomerType,
 			Cu.IdCustomer,
 			VPC.IdVisitPointClient,
-			ISNULL(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ',''),'') 'Phone'
+			ISNULL(REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'(504)',''),'-',''),' ',''),'') 'Phone'
 	FROM
 		[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
         LEFT JOIN 
@@ -48,7 +55,8 @@ BEGIN
 				AND
 				VPC.StatusClient = 1
 	WHERE
-		VPC.DescriptionOfClient LIKE '%' + @Filter + '%' COLLATE Latin1_General_CI_AI
+		VPC.DescriptionOfClient LIKE '%' + @Filter + '%' 
+        AND IIF(VPC.CountryId IS NULL,'GT',VPC.CountryId) = @IdCountry
 	UNION
 	SELECT
 		RTRIM(
@@ -57,7 +65,7 @@ BEGIN
 					, Cu.Name
 					, ' '
 					, IIF(Cu.CommercialName IS NOT NULL, CONCAT('[',Cu.CommercialName,'] '),'')
-					, REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ','')
+					, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'(504)',''),'-',''),' ','')
 					, ' '
 					, IIF(Cu.IdCustomerType = 3, CONCAT(ISNULL(RU.UsrEmail, ''),' '), '')
 					, CONCAT('{', VPC.DescriptionOfClient,'|',VPC.Phone, '}')
@@ -66,7 +74,7 @@ BEGIN
 			Cu.IdCustomerType,
 			Cu.IdCustomer,
 			VPC.IdVisitPointClient,
-			ISNULL(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'-',''),' ',''),'') 'Phone'
+			ISNULL(REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Cu.CustomerPhone, RU.Phone),'(502)',''),'(504)',''),'-',''),' ',''),'') 'Phone'
 	FROM
 		[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
         LEFT JOIN 
@@ -88,8 +96,8 @@ BEGIN
 				AND
 				VPC.StatusClient = 1
 	WHERE
-		VPC.Phone LIKE '%' + @Filter + '%' COLLATE Latin1_General_CI_AI
-
+		  VPC.Phone LIKE '%' + @Filter + '%' 
+      AND IIF(VPC.CountryId IS NULL,'GT',VPC.CountryId) = @IdCountry
 
 END
 

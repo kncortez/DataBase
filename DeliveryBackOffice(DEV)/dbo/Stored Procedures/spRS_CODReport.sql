@@ -6,7 +6,8 @@
 
 CREATE PROCEDURE [dbo].[spRS_CODReport]
     @StartDate DATETIME = NULL,
-    @EndDate DATETIME = NULL
+    @EndDate DATETIME = NULL,
+	@IdCountrySender NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -21,7 +22,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'   
 	)
 	DECLARE @ExpressCenterKindVisitPoint INT = 
 	(
@@ -31,7 +32,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'   
 	)
 	DECLARE @ParserSystemId INT =
 	(
@@ -41,7 +42,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser' 
 	)
 
 	-- Manejo de fechas
@@ -752,6 +753,7 @@ BEGIN
                AND DBA.Id_country = 'GT'
                AND DBA.Id_status = 1
 		LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO ON STO.StatusOrderId = DOR.StatusOrderId
+		WHERE ISNULL(DOR.SenderCountryId, 'GT') = @IdCountrySender
 
 	IF OBJECT_ID('tempdb.dbo.#TransactionFAC1', 'U') IS NOT NULL 
 		DROP TABLE #TransactionFAC1;
