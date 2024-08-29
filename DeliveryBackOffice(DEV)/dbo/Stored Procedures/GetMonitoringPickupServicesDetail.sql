@@ -7,6 +7,10 @@
 -- Create date: <2024-06-06>
 -- Description: <Se agrego filtro por pais, por defecto GT>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-08-27>
+-- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
 	-- Add the parameters for the stored procedure here
 	@ServiceManagementId INT,
@@ -24,7 +28,7 @@ SET NOCOUNT ON;
 	   ,vpc.DescriptionOfClient VisitPoint
 	   ,vpc.Department Department
 	   ,vpc.Town Town
-	   ,vpc.Address Address
+	   ,sp.AddressPickup Address
 	   ,cr.CodeRoute Route
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) Courier
 	   ,sm.Amount Amount

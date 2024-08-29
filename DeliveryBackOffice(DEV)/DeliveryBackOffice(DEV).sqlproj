@@ -839,6 +839,7 @@
     <Build Include="dbo\Stored Procedures\sphdGetRolesbyUserId.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetRateByVPC.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetRateByCustomer.sql" />
+    <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetModuleAccess.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetItineraryOfVisitPointID.sql" />
     <Build Include="dbo\Stored Procedures\sphdGetHubCoveragebyVisitPointID.sql" />

@@ -7,6 +7,10 @@
 -- Create date: <2024-06-06>
 -- Description: <Se agrego filtro por pais, por defecto GT>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-08-27>
+-- Description:	<Se cambia la dirección y la fecha de servicio por el de recolección>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServices]
 	-- Add the parameters for the stored procedure here
 	@CustomerId INT = -1,
@@ -28,10 +32,10 @@ SET NOCOUNT ON;
 	   ,vpc.DescriptionOfClient VisitPoint
 	   ,vpc.Department Department
 	   ,vpc.Town Town
-	   ,vpc.Address Address
+	   ,sp.AddressPickup Address
 	   ,css.Name Status
 	   ,IIF(sp.IsScheduled IS NULL OR sp.IsScheduled = 0, 'A demanda', 'Programada') TypeService
-	   ,FORMAT(sm.DateCreated,'dd/MM/yyyy HH:mm:ss') DateCreated
+	   ,FORMAT(sp.StartDate,'dd/MM/yyyy HH:mm:ss') DateCreated
 	   ,FORMAT(sp.EndDate,'dd/MM/yyyy HH:mm:ss') EndDate
 	FROM ServiceManagement sm
 	JOIN SchedulePickup sp
@@ -50,6 +54,7 @@ SET NOCOUNT ON;
 	OR REPLACE(vpc.Phone, '-', '') LIKE @PhoneNew
 	OR REPLACE(cu.CustomerPhone, '-', '') LIKE @PhoneNew
 	OR @PhoneNew = '-1')
-	AND CAST(sm.DateCreated AS DATE) BETWEEN @DateStart AND @DateEnd
+	AND CAST(sp.StartDate AS DATE) >= @DateStart
+    AND CAST(sp.EndDate AS DATE) <= @DateEnd
     AND IIF(vpc.CountryId IS NULL,'GT', vpc.CountryId) = @IdCountry
 END
