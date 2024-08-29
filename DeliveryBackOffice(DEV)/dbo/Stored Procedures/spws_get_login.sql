@@ -44,7 +44,7 @@ BEGIN
 	DECLARE @CodeIsoMoney NVARCHAR(3) = (SELECT TOP 1 CodeISO  FROM [dbo].[CatCurrencyCOD] WHERE CodeISO LIKE '%' + @CountryId +'%');
 
     	SET @CODPercentage = (Select CONVERT(VARCHAR,ISNULL([Value],0)) From dbo.ConfigParams
-                                      WHERE [Name] ='MinCODCommissionAmount' AND IdCountry LIKE '%'+ @CountryId  + '%')
+                                      WHERE [Name] ='MinCODCommissionAmount' AND ISNULL(IdCountry,'GT') LIKE '%'+ @CountryId  + '%')
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -520,15 +520,16 @@ BEGIN
                         (
                             SELECT STUFF(
                                             (
-                                                SELECT ',{"FirstName":"' + pe.PerFirstName + '",' + '"LastName":"'
+                                                 SELECT ',{"FirstName":"' + pe.PerFirstName + '",' + '"LastName":"'
                                                        + pe.PerLastName + '",' + '"Gender":"' + pe.PerGender + '",'
                                                        + '"Birthdate":"' + CONVERT(VARCHAR, pe.PerBirthdate) + '",'
                                                        + '"Identification":"' + pe.PerIdentification + '",'
-                                                       + '"Nationality":"' + pe.PerNationality + '",' + '"NickName":"'
-                                                       + CONVERT(VARCHAR, us.UsrNickName) + '",' + '"Phone":"'
+                                                       + '"Nationality":"' + pe.PerNationality + '",' 
+													   + '"NickName":"' 
+                                                       + CONVERT(VARCHAR, us.UsrNickName)  + '",' 
                                                        -- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-                                                       + '"PrefixCallingCode":"'
-													   + COALESCE(us.PrefixCallingCode  , ' ') + '",'
+                                                       + '"PrefixCallingCode":"' + ISNULL(us.PrefixCallingCode, '') + '",'
+													   + '"Phone":"'
                                                        + CONVERT(VARCHAR, COALESCE(us.Phone, ' ')) + '",'
                                                        + '"VerifiedPhone.":"'
                                                        + CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone, 'false')) + '",'
@@ -582,10 +583,10 @@ BEGIN
                                                 (
                                                     SELECT ',{"Name":"' + DescriptionOfClient + '",'
                                                            + '"ContactName":"' + ISNULL(ContactName, '') + '",'
-                                                           + '"PrefixCallingCode":"'
-														   + COALESCE(ru.PrefixCallingCode  , ' ') + '",'
-                                                           + '"Phone":"' + ISNULL(VPC.Phone, '') + '",' + '"Email":"'
-                                                           + ISNULL(Email, '') + '",' + '"IdTownship":"'
+                                                           + '"PrefixCallingCode":"' + ISNULL(ru.PrefixCallingCode, '') + '",'
+                                                           + '"Phone":"' + ISNULL(VPC.Phone, '') + '",' 
+														   + '"Email":"' + ISNULL(Email, '') + '",' 
+														   + '"IdTownship":"'
                                                            + ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '') + '",'
                                                            + '"TownshipName":"' + ISNULL(TWS.TownshipDescription, '')
                                                            + '",' + '"IdProvince":"'
