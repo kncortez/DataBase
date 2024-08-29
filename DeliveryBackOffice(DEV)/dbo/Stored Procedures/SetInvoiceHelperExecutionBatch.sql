@@ -5,7 +5,7 @@
 -- Description:	< Actualizar como enviados las facturas de HermesInvoiceHelperHN >
 -- =============================================
 
-CREATE PPROCEDURE [dbo].[SetInvoiceHelperExecutionBatch]
+CREATE PROCEDURE [dbo].[SetInvoiceHelperExecutionBatch]
 	@IdInvoice as INT
 AS
 BEGIN
