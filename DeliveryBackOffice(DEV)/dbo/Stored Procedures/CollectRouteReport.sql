@@ -21,7 +21,7 @@ BEGIN
             --Nombre del cliente
             sp.SenderName AS ClientName,
             --Punto de visita
-            vpc.CodeOfReference AS VisitPoint,
+            vpc.DescriptionOfClient AS VisitPoint,
             --Hub (de la dirección del servicio), Tomar en cuenta servicios por garantía que debería guardar al hacer el servicio por garantía en punto de recolección que corresponde
             IIF(hl.HubName IS NOT NULL, hl.HubName,hlbts.HubName) AS HubName,
             --Región
@@ -41,7 +41,7 @@ BEGIN
             --Hora del despacho (Primer inicio de sesión del día)
             ltp.TimeCreated AS DispatchTime,
             --Hora de liquidación
-            CAST(sbp.DateCreated AS TIME) AS SettlementTime,
+            CAST(sbp.DateCreated AS TIME(0)) AS SettlementTime,
             --Tipo de servicio (A demanda/Programado)
             IIF(sp.IsScheduled = 0, 'A demanda', 'Programado') AS ServiceType,
             --Estado del servicio
@@ -50,14 +50,15 @@ BEGIN
             smt.DateCreated, 
             sp.StartDate,
             sp.EndDate,
-            IIF(smt.DateCreated IS NOT NULL,IIF(CAST(smt.DateCreated AS TIME) <= IIF(sp.EndDate IS NOT NULL, CAST(sp.EndDate AS TIME), '19:00:00.0000000') , 'Si','No'),'Pendiente') AS ServiceOntime,
+            IIF(smt.DateCreated IS NOT NULL,IIF(CAST(smt.DateCreated AS TIME) <= IIF(sp.EndDate IS NOT NULL, CAST(sp.EndDate AS TIME), '19:00:00.0000000') , 'Si','No'),'') AS ServiceOntime,
             --Hora inicio (que corresponde al servicio)
-            CAST(sp.StartDate AS TIME) AS StartTime,
+            CAST(sp.StartDate AS TIME(0)) AS StartTime,
             --Hora fin (que corresponde al servicio)
-            IIF(sp.EndDate IS NOT NULL, CAST(sp.EndDate AS TIME), '19:00:00.0000000') AS EndTime,
+            IIF(sp.EndDate IS NOT NULL, CAST(sp.EndDate AS TIME(0)), '19:00:00') AS EndTime,
             --Piezas recolectadas (recolectan en POD, lo que liquidaron en recos, en la liquidación no asocia los servicios, tomarlo en cuenta y validarlo con C. Valdes si fuera necesario)
             smt.cold_count AS ColdNumberOfItems,
             smt.dry_count AS DryNumberOfItems,
+            ISNULL(smt.dry_count,0) + ISNULL(smt.cold_count,0)  AS TotalNumberOfItems,
             --Nombre de incidencia (Que incidencia reportó)	
             ins.DescriptionIncidence AS IncidenceName
         FROM [DeliveryBackOffice].[dbo].[ServiceManagement] sm WITH(NOLOCK)
