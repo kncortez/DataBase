@@ -583,7 +583,7 @@ BEGIN
                                                     SELECT ',{"Name":"' + DescriptionOfClient + '",'
                                                            + '"ContactName":"' + ISNULL(ContactName, '') + '",'
                                                            + '"PrefixCallingCode":"'
-														   + COALESCE(us.PrefixCallingCode  , ' ') + '",'
+														   + COALESCE(ru.PrefixCallingCode  , ' ') + '",'
                                                            + '"Phone":"' + ISNULL(VPC.Phone, '') + '",' + '"Email":"'
                                                            + ISNULL(Email, '') + '",' + '"IdTownship":"'
                                                            + ISNULL(CONVERT(VARCHAR, TWS.IdTownship), '') + '",'
