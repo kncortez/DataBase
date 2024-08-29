@@ -571,8 +571,8 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
-												AND ord.Guide_Serie = paydord.GuideSerie
+												ON (ord.Guide_Number = paydord.GuideNumber 
+												AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1339,7 +1339,8 @@ set arithabort off
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber
+												    AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1585,6 +1586,7 @@ set arithabort off
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												   AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)

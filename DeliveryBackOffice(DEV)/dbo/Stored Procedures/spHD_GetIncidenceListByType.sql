@@ -44,6 +44,8 @@ BEGIN
 				[CTI].[RowStatus] = 1
 				AND
 				[CTI].[ServiceType] = @IncidenceServiceType   
+                AND
+                ISNULL([CTI].[CountryId], 'GT') = @IdCountry
 			ORDER BY
 				CTI.[OrderId] ASC
 

@@ -5,7 +5,7 @@
 -- Create date: <2023-12-4>
 -- Description:	<Finaliza un carrito de compra MarcketPlace>
 -- =============================================
-CREATE PROCEDURE [dbo].[FinishServiceCartbyAccountMarketPlace]
+ALTER PROCEDURE [dbo].[FinishServiceCartbyAccountMarketPlace]
     @IdAccount BIGINT= NULL,
 	@Token NVARCHAR(50),
 	@ProductInvoiceName NVARCHAR(250),
@@ -14,7 +14,8 @@ CREATE PROCEDURE [dbo].[FinishServiceCartbyAccountMarketPlace]
 	@ProductFiscalAddress NVARCHAR(500),
 	@TblProductsList [TblProductMarketPlace]  READONLY,
 	@IdServiceCart  INT=NULL,
-	@CardId INT=NULL
+	@CardId INT=NULL,
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -206,6 +207,7 @@ SET @AccountStatement =	(SELECT
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
                 WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' 
                       AND VPC.[StatusClient] = 1
+                      AND CountryId = @IdCountry
             );
 			DECLARE @inv_cmp_nit AS VARCHAR(100) =
 					(
@@ -240,8 +242,9 @@ SET @AccountStatement =	(SELECT
             (
                 SELECT TOP 1
                        [Description]
-                FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
+                  FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
+                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
+                   AND IdCountry = @IdCountry
             );
     DECLARE @dti_IVA MONEY;
     DECLARE @dti_amount MONEY;
@@ -253,6 +256,7 @@ SET @AccountStatement =	(SELECT
                        SAPCode
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
                 WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
+                  AND IdCountry = @IdCountry
             );
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
@@ -269,7 +273,8 @@ SET @AccountStatement =	(SELECT
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL A' 
+        WHERE [Name] = 'SUSCRIPCION MENSUAL A'
+          AND IdCountry = @IdCountry
     );
    
        

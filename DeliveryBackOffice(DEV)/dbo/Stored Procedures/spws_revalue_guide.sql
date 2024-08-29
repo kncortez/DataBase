@@ -188,7 +188,8 @@ BEGIN
             FROM dbo.DeliveryOrder     ord WITH (NOLOCK)
                 LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.TownshipName = ord.Sender_Town
-            WHERE ord.Guide_Number = @GuideNumber;
+            WHERE ord.Guide_Serie = @GuideSerie
+              AND ord.Guide_Number = @GuideNumber;
         END;
     END;
 
@@ -200,7 +201,8 @@ BEGIN
             FROM dbo.DeliveryOrder     ord WITH (NOLOCK)
                 LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.TownshipName = ord.Receiver_Town
-            WHERE ord.Guide_Number = @GuideNumber;
+            WHERE ord.Guide_Serie = @GuideSerie
+              AND ord.Guide_Number = @GuideNumber;
         END;
     END;
     PRINT 'origen';
@@ -227,6 +229,7 @@ BEGIN
           AND ps.GuideNumber = @GuideNumber;
 
     CREATE NONCLUSTERED INDEX IX_Pieces_ParcelCode ON #Pieces (ParcelCode);
+    CREATE NONCLUSTERED INDEX IX_Pieces_Id ON #Pieces (Id);
 
     DECLARE @count INT;
     SET @count = 1;
