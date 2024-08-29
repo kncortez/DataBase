@@ -3,6 +3,10 @@
 -- Create date: <2022-04-08>
 -- Description:	<Obtiene información para el detalle del Form Monitoreo de Servicios de Recolección>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-08-27>
+-- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
 	-- Add the parameters for the stored procedure here
 	@ServiceManagementId INT
@@ -19,7 +23,7 @@ SET NOCOUNT ON;
 	   ,vpc.DescriptionOfClient VisitPoint
 	   ,vpc.Department Department
 	   ,vpc.Town Town
-	   ,vpc.Address Address
+	   ,sp.AddressPickup Address
 	   ,cr.CodeRoute Route
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) Courier
 	   ,sm.Amount Amount

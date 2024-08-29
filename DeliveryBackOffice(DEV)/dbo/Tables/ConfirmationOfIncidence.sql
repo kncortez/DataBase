@@ -22,9 +22,17 @@
     [IsAddressModificationRequested]   BIT            NULL,
     [ValidGeolocationEvidence]         BIT            NULL,
     [ValidPhotographicEvidence]        BIT            NULL,
+    [TypeIncidenceId]                  INT            NULL,
+    [CommentOnConfirmedTypeIncidence]  NVARCHAR (600) NULL,
+    [TakenIncidenceUserId]             BIGINT         NULL,
+    [TakenIncidenceUserName]           NVARCHAR (100) NULL,
+    [TakenIncidenceDateAndTime]        DATETIME       NULL,
+    [CommentOnIncident]                NVARCHAR (200) NULL,
     CONSTRAINT [PK_ConfirmationOfIncidence] PRIMARY KEY CLUSTERED ([IdConfirmationOfIncidence] ASC),
     CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeConfirmationOfIncidence] FOREIGN KEY ([CatTypeConfirmationOfIncidenceId]) REFERENCES [dbo].[CatTypeConfirmationOfIncidence] ([IdCatTypeConfirmationOfIncidence]),
-    CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
+    CONSTRAINT [FK_ConfirmationOfIncidence_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
+    CONSTRAINT [FK_ConfirmationOfIncidence_CatTypeIncidence] FOREIGN KEY ([TypeIncidenceId]) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType]),
+    CONSTRAINT [FK_ConfirmationOfIncidence_RegisterUser] FOREIGN KEY ([TakenIncidenceUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 );
 
 
@@ -127,6 +135,23 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Validar incide
 GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'valida evidencia fotografica' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'ValidPhotographicEvidence'
 
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Registro original del tipo de incidencia al momento de cambiarse en Control de calidad' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'TypeIncidenceId';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Comentario del porque se cambia el tipo de incidencia en Control de calidad' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'CommentOnConfirmedTypeIncidence';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Id del usuario que toma la incidencia en Control de calidad' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'TakenIncidenceUserId';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario que toma la incidencia en Control de calidad' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'TakenIncidenceUserName';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha y hora en que se toma la incidencia por el operador en Control de calidad' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'TakenIncidenceDateAndTime';
+
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Comentario que registra el piloto al momento de crear la incidencia' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'ConfirmationOfIncidence', @level2type=N'COLUMN',@level2name=N'CommentOnIncident';
 
 
 GO

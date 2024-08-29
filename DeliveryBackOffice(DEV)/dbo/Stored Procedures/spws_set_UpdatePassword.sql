@@ -74,6 +74,16 @@ as
                     BEGIN
                         IF @ChangeType = 'R'
                             BEGIN
+                            
+                            --### CAMBIO PARA PODER DESBLOQUEAR.INI ###
+                                UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
+                                SET UstRetries = 0 , UstStatus = 'ACTIVE'
+                                ,UstOperationDate = GETDATE()
+                                WHERE UstIdUser = @IdUser
+                                AND UstRowStatus = 1
+							--### CAMBIO PARA PODER DESBLOQUEAR.FIN ###
+
+
                                 UPDATE RegisterUser
                                   SET 
                                       UsrLastPassword = @Password, 
@@ -138,6 +148,15 @@ as
                                         END;
                                         ELSE
                                         BEGIN
+
+                                        --### CAMBIO PARA PODER DESBLOQUEAR.INI ###
+                                                UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
+                                                SET UstRetries = 0 , UstStatus = 'ACTIVE'
+                                                ,UstOperationDate = GETDATE()
+                                                WHERE UstIdUser = @IdUser
+                                                AND UstRowStatus = 1
+                                            --### CAMBIO PARA PODER DESBLOQUEAR.FIN ###
+
                                             SELECT 
 												@IdUserUPDATE = us.UsrIdUser,
 												@UserName = prs.PerFirstName,
