@@ -1,9 +1,4 @@
---COPIAR
-SELECT TOP 20 * FROM DeliveryBackOffice.dbo.VisitPointClient
-WHERE CustomerID = 81
-ORDER BY IdVisitPointClient DESC
-
---INSERT
+--pendiente
 INSERT INTO [dbo].[VisitPointClient]
            ([CodeOfReference]
            ,[DescriptionOfClient]
@@ -49,7 +44,7 @@ INSERT INTO [dbo].[VisitPointClient]
            ,'2024-06-12 17:30:00.000'
            ,NULL
            ,NULL
-           ,68381
+           ,73503
            ,''
            ,'0'
            ,'YORO'

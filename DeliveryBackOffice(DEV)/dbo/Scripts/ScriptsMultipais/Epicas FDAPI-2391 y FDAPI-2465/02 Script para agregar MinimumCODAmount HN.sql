@@ -1,3 +1,4 @@
+--screjecutado 6
 --SCRIPT PARA INSERTAR EL VALOR DE MinimumCODAmount DE HN EN ConfigParams
 
 INSERT INTO [dbo].[ConfigParams]
@@ -10,7 +11,7 @@ INSERT INTO [dbo].[ConfigParams]
     ,[IdCurrencyCOD])
 VALUES
     ('MinimumCODAmount'
-    ,'Monto minimo de COD permitido en la generación de una guía'
+    ,'Monto minimo de COD permitido en la generaciÃ³n de una guÃ­a'
     ,'90'
     ,1
     ,GETDATE()

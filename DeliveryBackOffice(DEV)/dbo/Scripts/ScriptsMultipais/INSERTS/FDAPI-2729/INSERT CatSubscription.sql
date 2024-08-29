@@ -1,4 +1,4 @@
-
+--pendiente
 INSERT INTO CatSubscription (SubscriptionName, 
 							 SubscriptionDescription, 
 							 SubscriptionCost, 

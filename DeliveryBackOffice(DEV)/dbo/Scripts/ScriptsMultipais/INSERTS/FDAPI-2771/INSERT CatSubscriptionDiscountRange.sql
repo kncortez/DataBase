@@ -1,3 +1,4 @@
+--script pendiente
 INSERT INTO CatSubscriptionDiscountRange (CatSubscriptionId, 
 										  DiscountLowServiceRange, 
 										  ValueTypeId, 

@@ -1,4 +1,4 @@
-
+--pendiente
 INSERT INTO CatMembership (MembershipName,
 						   MembershipDescription, 
 						   MembershipCost, 
@@ -15,7 +15,7 @@ INSERT INTO CatMembership (MembershipName,
 						   IdCatCurrencyCOD)
 
 	  VALUES('Club Forza',
-			 'Es una membresía para emprendedores y mi Pymes que te da beneficios, acceso exclusivo a promociones y descuentos, recolecciones sin costo y con frecuencia programada de visita.',
+			 'Es una membresï¿½a para emprendedores y mi Pymes que te da beneficios, acceso exclusivo a promociones y descuentos, recolecciones sin costo y con frecuencia programada de visita.',
 			 63.87,
 			 0,
 			 0,

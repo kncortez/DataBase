@@ -1,3 +1,4 @@
+--pendiente
 INSERT INTO DeliveryBackOffice.dbo.CatMoney (CurrencyId, Type, Value, RowStatus, TokenCreated, DateCreated, TokenUpdated, DateUpdated)
 VALUES	(9, 'BILLETE', 500,  1, 'ORODRIGUEZ', GETDATE(), NULL, NULL),
 		(9, 'BILLETE', 200,  1, 'ORODRIGUEZ', GETDATE(), NULL, NULL),

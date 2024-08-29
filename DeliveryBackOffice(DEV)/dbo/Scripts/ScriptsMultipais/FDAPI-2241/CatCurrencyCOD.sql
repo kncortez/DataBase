@@ -1,3 +1,4 @@
+--pendiente all
 -- =============================================
 -- Author:      <Daniel, Ramirez >
 -- Create date: <2024-06-06>

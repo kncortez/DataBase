@@ -1,4 +1,4 @@
-
+--pendiente
 
 INSERT INTO MarketplaceTagsByProduct (MarketplaceProductTagsId,RowStatus,TokenCreated,DateCreated, CatSubscriptionId, CatMembershipId, Position)
 VALUES(4,1,'SYS-BHERRERA',GETDATE(),13,NULL,3),	

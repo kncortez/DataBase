@@ -1,20 +1,4 @@
-
---SCRIPT PARA AGREGAR NUEVA COLUMNA DE PA蚐 EN CatDeliveryOptions
-
-ALTER TABLE DeliveryBackOffice.dbo.CatDeliveryOptions
-ADD IdCountry VARCHAR(2);
-
-ALTER TABLE DeliveryBackOffice.dbo.CatDeliveryOptions
-ADD CONSTRAINT FK_CatDeliveryOptions_CatCountry FOREIGN KEY (IdCountry)
-REFERENCES DeliveryBackOffice.dbo.CatCountry(IdCountry);
-
-
---SCRIPT AGREGAR VALORES A CatDeliveryOptions DE HN
-
-SELECT * FROM DeliveryBackOffice.dbo.CatDeliveryOptions
-
---UPDATE DeliveryBackOffice.dbo.CatDeliveryOptions
---SET IdCountry = 'GT' --ESTO ANTES DE INSERTAR LOS VALORES DE HN
+--screjecutado 8
 
 INSERT INTO [dbo].[CatDeliveryOptions]
            ([Name]
@@ -27,7 +11,7 @@ INSERT INTO [dbo].[CatDeliveryOptions]
            ,[IdCountry])
      VALUES
            ('Casa'
-           ,'Opci髇 de entrega casa'
+           ,'Opci贸n de entrega casa'
            ,1
            ,'SYS-WOROZCO'
            ,GETDATE()
@@ -46,7 +30,7 @@ INSERT INTO [dbo].[CatDeliveryOptions]
            ,[IdCountry])
      VALUES
            ('Oficina'
-           ,'Opci髇 de entrega oficina'
+           ,'Opci贸n de entrega oficina'
            ,1
            ,'SYS-WOROZCO'
            ,GETDATE()
@@ -65,7 +49,7 @@ INSERT INTO [dbo].[CatDeliveryOptions]
            ,[IdCountry])
      VALUES
            ('Express Center'
-           ,'Opci髇 de entrega Express Center'
+           ,'Opci贸n de entrega Express Center'
            ,1
            ,'SYS-WOROZCO'
            ,GETDATE()
@@ -84,7 +68,7 @@ INSERT INTO [dbo].[CatDeliveryOptions]
            ,[IdCountry])
      VALUES
            ('Smart Locker'
-           ,'Opci髇 de entrega Smart Locker'
+           ,'Opci贸n de entrega Smart Locker'
            ,1
            ,'SYS-WOROZCO'
            ,GETDATE()

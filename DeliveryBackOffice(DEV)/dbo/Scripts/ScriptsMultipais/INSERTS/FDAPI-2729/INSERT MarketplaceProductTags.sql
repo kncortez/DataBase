@@ -1,4 +1,4 @@
-
+--pendiente
 
 INSERT INTO MarketplaceProductTags (MarketplaceProductTagsName, 
 									MarketplaceProductTagsDescription, 
@@ -7,6 +7,6 @@ INSERT INTO MarketplaceProductTags (MarketplaceProductTagsName,
 									TokenCreated, 
 									DateCreated, 
 									IdCountry)
-		VALUES('LO MÁS VENDIDO','En esta sección, encontrarás una selección de los productos más populares entre nuestros clientes',1,1,'SYS-BHERRERA',GETDATE(),'HN'),
-			  ('NOVEDADES','En esta sección, encontrarás lo más reciente de nuestra tienda virtual',2,1,'SYS-BHERRERA',GETDATE(),'HN'),
-			  ('TODOS LOS PRODUCTOS','Desde membresías, planes con descuento hasta guías prepago con tarifa única todo destino',3,1,'SYS-BHERRERA',GETDATE(),'HN')
+		VALUES('LO Mï¿½S VENDIDO','En esta secciï¿½n, encontrarï¿½s una selecciï¿½n de los productos mï¿½s populares entre nuestros clientes',1,1,'SYS-BHERRERA',GETDATE(),'HN'),
+			  ('NOVEDADES','En esta secciï¿½n, encontrarï¿½s lo mï¿½s reciente de nuestra tienda virtual',2,1,'SYS-BHERRERA',GETDATE(),'HN'),
+			  ('TODOS LOS PRODUCTOS','Desde membresï¿½as, planes con descuento hasta guï¿½as prepago con tarifa ï¿½nica todo destino',3,1,'SYS-BHERRERA',GETDATE(),'HN')

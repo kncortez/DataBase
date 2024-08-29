@@ -1,10 +1,4 @@
-
---CLIENTE A COPIAR
-SELECT * FROM DeliveryBackOffice.dbo.Customer WITH(NOLOCK)
-WHERE IdCustomer = 81 
-
-
---INSERT
+--screjecutado 8
 INSERT INTO [dbo].[Customer]
            ([Name]
            ,[Description]

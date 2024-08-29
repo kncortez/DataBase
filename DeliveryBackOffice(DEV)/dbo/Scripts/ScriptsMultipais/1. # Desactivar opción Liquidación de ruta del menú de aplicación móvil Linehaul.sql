@@ -1,4 +1,4 @@
-
+--screjecutado 3
 /* Desactivar opción Liquidación de ruta del menú de aplicación móvil Linehaul */
 
 DECLARE @ModIdModule INT

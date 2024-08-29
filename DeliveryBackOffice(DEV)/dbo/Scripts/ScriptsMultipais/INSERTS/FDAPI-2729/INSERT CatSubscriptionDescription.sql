@@ -1,71 +1,71 @@
-
+--pendiente
 /*********PAQUETE BASICO HN*****************/
 INSERT INTO CatSubscriptionDescription (Title, Description, Position,Type,CatSubscriptionId,RowStatus,DateCreated,TokenCreated)
-VALUES('¿Qué es?',
-       'Nuestro paquete te ofrece 50 guías de envío prepagadas con Tarifa única a todo el país, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ¡nuestra tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías prepagadas que ofrecen una ayuda invaluable para tu negocio. ¿Tienes una gran cantidad de envíos de manera continua? Estas guías son ideales para ti. Simplifica tus procesos de envío, obtén la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ¡Haz que tus envíos sean más rentables y eficientes hoy mismo!',
+VALUES('ï¿½Quï¿½ es?',
+       'Nuestro paquete te ofrece 50 guï¿½as de envï¿½o prepagadas con Tarifa ï¿½nica a todo el paï¿½s, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ï¿½nuestra tarifa es la mï¿½s barata del mercado! Ahorra y optimiza con nuestras guï¿½as prepagadas que ofrecen una ayuda invaluable para tu negocio. ï¿½Tienes una gran cantidad de envï¿½os de manera continua? Estas guï¿½as son ideales para ti. Simplifica tus procesos de envï¿½o, obtï¿½n la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ï¿½Haz que tus envï¿½os sean mï¿½s rentables y eficientes hoy mismo!',
 	   1,'',13,1,GETDATE(),'SYS-BHERRERA'),
-	   ('¿Cómo Funciona?',
-	   'Compra en la tienda virtual y recibe las guías en tu correo electronico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Básico y podrás obtener tus guías prepagadas de 50 envíos con tarifa única a todo el país a L99.00 c/u.  ',
+	   ('ï¿½Cï¿½mo Funciona?',
+	   'Compra en la tienda virtual y recibe las guï¿½as en tu correo electronico. Prepara tus paquetes, completa la informaciï¿½n de envï¿½o y entrï¿½galos en las +90 agencias express center o puedes solicitar la recolecciï¿½n a tu casa u oficina. Rastrea el progreso del envï¿½o con el nï¿½mero de guï¿½a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logï¿½sticos. Adquiere tu Paquete Bï¿½sico y podrï¿½s obtener tus guï¿½as prepagadas de 50 envï¿½os con tarifa ï¿½nica a todo el paï¿½s a L99.00 c/u.  ',
 	   2,'',13,1,GETDATE(),'SYS-BHERRERA'),
 	   ('Aplican restricciones',
-	   'En caso de que tu envío exceda el peso, +L3.19.00 por libra adicional, consulta los términos y condiciones.',
-	   5,'PAQUETE BÁSICO',13,1,GETDATE(),'SYS-EVASQUEZ')
+	   'En caso de que tu envï¿½o exceda el peso, +L3.19.00 por libra adicional, consulta los tï¿½rminos y condiciones.',
+	   5,'PAQUETE Bï¿½SICO',13,1,GETDATE(),'SYS-EVASQUEZ')
 
 /*********PAQUETE PLUS HN********************/
 INSERT INTO CatSubscriptionDescription (Title, Description, Position,Type,CatSubscriptionId,RowStatus,DateCreated,TokenCreated)
-VALUES('¿Qué es?',
-	    'Nuestro paquete te ofrece 100 guías de envío prepagadas con Tarifa única a todo el país, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ¡nuestra tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías prepagadas que ofrecen una ayuda invaluable para tu negocio. ¿Tienes una gran cantidad de envíos de manera continua? Estas guías son ideales para ti. Simplifica tus procesos de envío, obtén la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ¡Haz que tus envíos sean más rentables y eficientes hoy mismo!',
+VALUES('ï¿½Quï¿½ es?',
+	    'Nuestro paquete te ofrece 100 guï¿½as de envï¿½o prepagadas con Tarifa ï¿½nica a todo el paï¿½s, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ï¿½nuestra tarifa es la mï¿½s barata del mercado! Ahorra y optimiza con nuestras guï¿½as prepagadas que ofrecen una ayuda invaluable para tu negocio. ï¿½Tienes una gran cantidad de envï¿½os de manera continua? Estas guï¿½as son ideales para ti. Simplifica tus procesos de envï¿½o, obtï¿½n la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ï¿½Haz que tus envï¿½os sean mï¿½s rentables y eficientes hoy mismo!',
 		1,'PAQUETE PLUS',14,1,GETDATE(),'SYS-BHERRERA'),
-	  ('¿Cómo Funciona?',
-	   'Compra en la tienda virtual y recibe las guías en tu correo electronico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Plus y podrás obtener tus guías prepagadas de 100 envíos con tarifa única a todo el país a L92.62 c/u.',
+	  ('ï¿½Cï¿½mo Funciona?',
+	   'Compra en la tienda virtual y recibe las guï¿½as en tu correo electronico. Prepara tus paquetes, completa la informaciï¿½n de envï¿½o y entrï¿½galos en las +90 agencias express center o puedes solicitar la recolecciï¿½n a tu casa u oficina. Rastrea el progreso del envï¿½o con el nï¿½mero de guï¿½a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logï¿½sticos. Adquiere tu Paquete Plus y podrï¿½s obtener tus guï¿½as prepagadas de 100 envï¿½os con tarifa ï¿½nica a todo el paï¿½s a L92.62 c/u.',
 	   2,'PAQUETE PLUS',14,1,GETDATE(),'SYS-BHERRERA'),
 	  ('Aplican restricciones',
-	  'En caso de que tu envío exceda el peso, +L3.19.00 por libra adicional, consulta los términos y condiciones.',
+	  'En caso de que tu envï¿½o exceda el peso, +L3.19.00 por libra adicional, consulta los tï¿½rminos y condiciones.',
 	  5,'PAQUETE PLUS',14,1,GETDATE(),'SYS-BHERRERA')
 
 /*********PAQUETE GOLD HN********************/
 INSERT INTO CatSubscriptionDescription (Title, Description, Position,Type,CatSubscriptionId,RowStatus,DateCreated,TokenCreated)
-VALUES('¿Qué es?',
-	   'Nuestro paquete te ofrece 200 guías de envío prepagadas con Tarifa única a todo el país, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ¡nuestra tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías prepagadas que ofrecen una ayuda invaluable para tu negocio. ¿Tienes una gran cantidad de envíos de manera continua? Estas guías son ideales para ti. Simplifica tus procesos de envío, obtén la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ¡Haz que tus envíos sean más rentables y eficientes hoy mismo!',
+VALUES('ï¿½Quï¿½ es?',
+	   'Nuestro paquete te ofrece 200 guï¿½as de envï¿½o prepagadas con Tarifa ï¿½nica a todo el paï¿½s, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ï¿½nuestra tarifa es la mï¿½s barata del mercado! Ahorra y optimiza con nuestras guï¿½as prepagadas que ofrecen una ayuda invaluable para tu negocio. ï¿½Tienes una gran cantidad de envï¿½os de manera continua? Estas guï¿½as son ideales para ti. Simplifica tus procesos de envï¿½o, obtï¿½n la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ï¿½Haz que tus envï¿½os sean mï¿½s rentables y eficientes hoy mismo!',
 	   1,'PAQUETE GOLD',15,1,GETDATE(),'SYS-BHERRERA'),
-	  ('¿Cómo Funciona?','Compra en la tienda virtual y recibe las guías en tu correo electronico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Gold y podrás obtener tus guías prepagadas de 200 envíos con tarifa única a todo el país a L86.23 c/u.  ',
+	  ('ï¿½Cï¿½mo Funciona?','Compra en la tienda virtual y recibe las guï¿½as en tu correo electronico. Prepara tus paquetes, completa la informaciï¿½n de envï¿½o y entrï¿½galos en las +90 agencias express center o puedes solicitar la recolecciï¿½n a tu casa u oficina. Rastrea el progreso del envï¿½o con el nï¿½mero de guï¿½a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logï¿½sticos. Adquiere tu Paquete Gold y podrï¿½s obtener tus guï¿½as prepagadas de 200 envï¿½os con tarifa ï¿½nica a todo el paï¿½s a L86.23 c/u.  ',
 	   2,'PAQUETE GOLD',15,1,GETDATE(),'SYS-BHERRERA'),
 	  ('Aplican restricciones',
-	   'En caso de que tu envío exceda el peso, +L3.19.00 por libra adicional, consulta los términos y condiciones.',
+	   'En caso de que tu envï¿½o exceda el peso, +L3.19.00 por libra adicional, consulta los tï¿½rminos y condiciones.',
 	   5,'PAQUETE GOLD',15,1,GETDATE(),'SYS-BHERRERA')
 
 /*********PLAN AMIGO HN********************/
 INSERT INTO CatSubscriptionDescription (Title, Description, Position,Type,CatSubscriptionId,RowStatus,DateCreated,TokenCreated)
-VALUES('¿Qué es?',
-	   'El Plan Amigo es una oportunidad única para ahorrar en tus envíos a nivel nacional. Obtén un 10% de descuento sobre la tarifa vigente en todos tus envíos, ya sea en servicio C.O.D o Estándar. Este plan recompensa tu lealtad al ofrecerte tarifas mejoradas según el servicio y destino. ¡Únete ahora y disfruta de tarifas más económicas mientras envías con confianza!',
+VALUES('ï¿½Quï¿½ es?',
+	   'El Plan Amigo es una oportunidad ï¿½nica para ahorrar en tus envï¿½os a nivel nacional. Obtï¿½n un 10% de descuento sobre la tarifa vigente en todos tus envï¿½os, ya sea en servicio C.O.D o Estï¿½ndar. Este plan recompensa tu lealtad al ofrecerte tarifas mejoradas segï¿½n el servicio y destino. ï¿½ï¿½nete ahora y disfruta de tarifas mï¿½s econï¿½micas mientras envï¿½as con confianza!',
 	    1,'PLAN AMIGO',16,1,GETDATE(),'SYS-BHERRERA'),
-	   ('¿Cómo Funciona?',
-	    'Simplemente regístrate en nuestro Plan Amigo y automáticamente comenzarás a disfrutar de un 10% de descuento en todos tus envíos a nivel nacional. No hay tarifas ocultas ni complicados procesos. Solo envía tus paquetes como lo harías normalmente, y el descuento se aplicará automáticamente a la tarifa estándar. ¡Así de simple es comenzar a ahorrar con nuestro Plan Amigo!',
+	   ('ï¿½Cï¿½mo Funciona?',
+	    'Simplemente regï¿½strate en nuestro Plan Amigo y automï¿½ticamente comenzarï¿½s a disfrutar de un 10% de descuento en todos tus envï¿½os a nivel nacional. No hay tarifas ocultas ni complicados procesos. Solo envï¿½a tus paquetes como lo harï¿½as normalmente, y el descuento se aplicarï¿½ automï¿½ticamente a la tarifa estï¿½ndar. ï¿½Asï¿½ de simple es comenzar a ahorrar con nuestro Plan Amigo!',
 		2,'PLAN AMIGO',16,1,GETDATE(),'SYS-BHERRERA'),
 	   ('Aplican restricciones',
-	    'En caso de que tu envío exceda el peso, +L3.19.00 por libra adicional, consulta los términos y condiciones.',
+	    'En caso de que tu envï¿½o exceda el peso, +L3.19.00 por libra adicional, consulta los tï¿½rminos y condiciones.',
 		5,'PLAN AMIGO',16,1,GETDATE(),'SYS-BHERRERA')
 
 /*********PAQUETE PETIT HN********************/
 INSERT INTO CatSubscriptionDescription (Title, Description, Position,Type,CatSubscriptionId,RowStatus,DateCreated,TokenCreated)
-VALUES('¿Qué es?',
-	   'Nuestro paquete te ofrece 25 guías de envío prepagadas con Tarifa única a todo el país, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ¡nuestra tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías prepagadas que ofrecen una ayuda invaluable para tu negocio. ¿Tienes una gran cantidad de envíos de manera continua? Estas guías son ideales para ti. Simplifica tus procesos de envío, obtén la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ¡Haz que tus envíos sean más rentables y eficientes hoy mismo!',
+VALUES('ï¿½Quï¿½ es?',
+	   'Nuestro paquete te ofrece 25 guï¿½as de envï¿½o prepagadas con Tarifa ï¿½nica a todo el paï¿½s, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ï¿½nuestra tarifa es la mï¿½s barata del mercado! Ahorra y optimiza con nuestras guï¿½as prepagadas que ofrecen una ayuda invaluable para tu negocio. ï¿½Tienes una gran cantidad de envï¿½os de manera continua? Estas guï¿½as son ideales para ti. Simplifica tus procesos de envï¿½o, obtï¿½n la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ï¿½Haz que tus envï¿½os sean mï¿½s rentables y eficientes hoy mismo!',
 	   1,'PAQUETE PETIT',17,1,GETDATE(),'SYS-EVASQUEZ'),
-	  ('¿Cómo Funciona?',
-	   'Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Petit y podrás obtener tus guías prepagadas de 25 envíos con tarifa única a todo el país a L105.39 c/u.',
+	  ('ï¿½Cï¿½mo Funciona?',
+	   'Compra en la tienda virtual y recibe las guï¿½as en tu correo electrï¿½nico. Prepara tus paquetes, completa la informaciï¿½n de envï¿½o y entrï¿½galos en las +90 agencias express center o puedes solicitar la recolecciï¿½n a tu casa u oficina. Rastrea el progreso del envï¿½o con el nï¿½mero de guï¿½a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logï¿½sticos. Adquiere tu Paquete Petit y podrï¿½s obtener tus guï¿½as prepagadas de 25 envï¿½os con tarifa ï¿½nica a todo el paï¿½s a L105.39 c/u.',
 	   2,'PAQUETE PETIT',17,1,GETDATE(),'SYS-EVASQUEZ'),
 	  ('Aplican restricciones',
-	   'En caso de que tu envío exceda el peso, +L3.19.00 por libra adicional, consulta los términos y condiciones.',
+	   'En caso de que tu envï¿½o exceda el peso, +L3.19.00 por libra adicional, consulta los tï¿½rminos y condiciones.',
 	   5,'PAQUETE PETIT',17,1,GETDATE(),'SYS-EVASQUEZ')
 
 /*********PAQUETE PLATINO HN********************/
 INSERT INTO CatSubscriptionDescription (Title, Description, Position,Type,CatSubscriptionId,RowStatus,DateCreated,TokenCreated)
-VALUES('¿Qué es?',
-	   'Nuestro paquete te ofrece 400 guías de envío prepagadas con Tarifa única a todo el país, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ¡nuestra tarifa es la más barata del mercado! Ahorra y optimiza con nuestras guías prepagadas que ofrecen una ayuda invaluable para tu negocio. ¿Tienes una gran cantidad de envíos de manera continua? Estas guías son ideales para ti. Simplifica tus procesos de envío, obtén la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ¡Haz que tus envíos sean más rentables y eficientes hoy mismo!',
+VALUES('ï¿½Quï¿½ es?',
+	   'Nuestro paquete te ofrece 400 guï¿½as de envï¿½o prepagadas con Tarifa ï¿½nica a todo el paï¿½s, lo que significa que puedes enviar tus productos a cualquier destino sin preocuparte por tarifas variables.  Pero eso no es todo, ï¿½nuestra tarifa es la mï¿½s barata del mercado! Ahorra y optimiza con nuestras guï¿½as prepagadas que ofrecen una ayuda invaluable para tu negocio. ï¿½Tienes una gran cantidad de envï¿½os de manera continua? Estas guï¿½as son ideales para ti. Simplifica tus procesos de envï¿½o, obtï¿½n la tranquilidad de una tarifa fija y la comodidad de un proceso simplificado. ï¿½Haz que tus envï¿½os sean mï¿½s rentables y eficientes hoy mismo!',
 	   1,'PAQUETE PLATINO',18,1,GETDATE(),'SYS-AIXCHOP'),
-	  ('¿Cómo Funciona?',
-	   'Compra en la tienda virtual y recibe las guías en tu correo electrónico. Prepara tus paquetes, completa la información de envío y entrégalos en las +90 agencias express center o puedes solicitar la recolección a tu casa u oficina. Rastrea el progreso del envío con el número de guía proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logísticos. Adquiere tu Paquete Platino y podrás obtener tus guías prepagadas de 400 envíos con tarifa única a todo el país a L79.84 c/u.',
+	  ('ï¿½Cï¿½mo Funciona?',
+	   'Compra en la tienda virtual y recibe las guï¿½as en tu correo electrï¿½nico. Prepara tus paquetes, completa la informaciï¿½n de envï¿½o y entrï¿½galos en las +90 agencias express center o puedes solicitar la recolecciï¿½n a tu casa u oficina. Rastrea el progreso del envï¿½o con el nï¿½mero de guï¿½a proporcionado para una experiencia sin complicaciones. Ahorra tiempo y esfuerzo al centrarte en hacer crecer tu negocio mientras nosotros nos encargamos de los detalles logï¿½sticos. Adquiere tu Paquete Platino y podrï¿½s obtener tus guï¿½as prepagadas de 400 envï¿½os con tarifa ï¿½nica a todo el paï¿½s a L79.84 c/u.',
 	   2,'PAQUETE PLATINO',18,1,GETDATE(),'SYS-AIXCHOP'),
 	  ('Aplican restricciones',
-	   'En caso de que tu envío exceda el peso, +L3.19.00 por libra adicional, consulta los términos y condiciones.',
+	   'En caso de que tu envï¿½o exceda el peso, +L3.19.00 por libra adicional, consulta los tï¿½rminos y condiciones.',
 	   5,'PAQUETE PLATINO',18,1,GETDATE(),'SYS-EVASQUEZ')
