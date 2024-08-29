@@ -96,10 +96,10 @@ BEGIN
         SET @TimeByCountry =
                 (
                     SELECT COUNT(Guide_Number)
-                    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail
+                    FROM DeliveryBackOffice.dbo.DeliveryOrder
                     WHERE Guide_Serie = @Guide_Serie
                           AND Guide_Number = @Guide_Number
-                          AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId) = @IdCountry
+                          AND ISNULL(SenderCountryId, 'GT') = @IdCountry
                           
                 );
 

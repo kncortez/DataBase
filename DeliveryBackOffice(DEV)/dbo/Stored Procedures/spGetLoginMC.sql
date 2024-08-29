@@ -89,7 +89,8 @@ BEGIN
 		HeaderCode NVARCHAR(10),
 		CodeOfReference NVARCHAR(20),
 		RolEXP NVARCHAR(MAX),
-		CurrencyEXP NVARCHAR(5)
+		CurrencyEXP NVARCHAR(5),
+		Nationality NVARCHAR(50)
 	);
 
 	--VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN
@@ -507,7 +508,7 @@ BEGIN
 							BEGIN
 
 							INSERT INTO @ProfileEXPTable (Name,ContactName,Phone,Email,IdTownship,TownshipName,IdProvince,
-															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP)
+															ProvinceName,Address,HeaderCode,CodeOfReference,RolEXP,CurrencyEXP,Nationality)
 							SELECT 
 								DescriptionOfClient										'Name',
 								ISNULL(ContactName, '')									'ContactName',

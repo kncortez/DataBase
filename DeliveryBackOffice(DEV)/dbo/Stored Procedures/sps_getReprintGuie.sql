@@ -14,6 +14,19 @@ as
 begin
     DECLARE @CountryThatConsults VARCHAR(2) = 'GT'
 
+    
+    SET @CountryThatConsults = (
+		SELECT TOP 1 SenderCountryId
+			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+		WHERE Guide_Number = @Guide_Number
+			AND Guide_Serie = @Serie_Number
+    );
+
+	IF (@CountryThatConsults IS NULL OR @CountryThatConsults = '')
+	BEGIN
+		SET @CountryThatConsults = 'GT';
+	END;
+
 	declare @FranchiseVisitPointTypeId int = 
 	(
 		select 
@@ -22,7 +35,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults --collate Latin1_General_CI_AI 
 	)
 	declare @ExpressVisitPointTypeId int = 
 	(
@@ -32,7 +45,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Express Center'  --collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults --collate Latin1_General_CI_AI 
 	)
 	declare @IndividualWebSys int =
 	(
@@ -112,13 +125,6 @@ begin
     SELECT GuidePiece
     FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
     WHERE GuideNumber = @Guide_Number;
-
-    SET @CountryThatConsults = (
-                                SELECT TOP 1 SenderCountryId
-                                  FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
-                                 WHERE Guide_Number = @Guide_Number
-                                   AND Guide_Serie = @Serie_Number
-                               );
 
 	DECLARE @EXCKindOfVPC INT =
 	(

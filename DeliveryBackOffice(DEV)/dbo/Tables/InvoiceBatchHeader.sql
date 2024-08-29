@@ -30,6 +30,9 @@ CREATE TABLE [dbo].[InvoiceBatchHeader]
 );
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Manejo de lotes solicitados a Entidad Fiscal Correspondiente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader';
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Porcentaje procesado para notificar que esta llegano al límite', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'PercentInvoiceLeftNotifycation';
 
 GO
