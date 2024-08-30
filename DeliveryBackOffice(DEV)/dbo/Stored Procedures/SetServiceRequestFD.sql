@@ -4,6 +4,10 @@
 -- Modified:	<28/08/2024>
 -- Description:	<Se agrega validacion para tomar en cuenta idKindOfVPClient multipais>
 -- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Modified:	<29-08-2024>
+-- Description:	<Se envian parametros de pais de origen y destino a la funcion ETA>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -558,7 +562,7 @@ BEGIN
 		UPDATE
 			[DO]
 		SET
-			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, NULL)
+			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, ISNULL([DO].[SenderCountryId],'GT'), [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, ISNULL([DO].[ReceiverCountryId],'GT'), NULL)
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 			INNER JOIN
