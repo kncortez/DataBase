@@ -41,8 +41,8 @@ SET NOCOUNT ON;
 	WHERE sm.IdServiceManagement = @ServiceManagementId
 
 	--Table 1 Checkpoints Servicio
-	SELECT
-		IIF(lbt.SSN_IdUser IS NULL, CONCAT(sr.First_Name, ' ', sr.Last_Name), lbt.SSN_Username) 'User'
+    SELECT
+		IIF(c.[Name] IS NOT NULL,c.[Name],IIF(lbt.SSN_IdUser IS NULL, CONCAT(sr.First_Name, ' ', sr.Last_Name), lbt.SSN_Username )) 'User'
 	   ,css.Name 'Status'
 	   ,es.DateCreated 'Datetime'
 	   ,es.Observations 'Incidence'
@@ -53,8 +53,14 @@ SET NOCOUNT ON;
 		ON ltp.LogTokenPOD = es.TokenCreated
 	LEFT JOIN SenderReceiver sr WITH (NOLOCK)
 		ON sr.ID = ltp.IdCourierman
-	inner JOIN CatServiceStatus css WITH(NOLOCK)
+	LEFT JOIN CatServiceStatus css WITH(NOLOCK)
 		ON css.IdServiceStatus = es.ServiceStatusId
+	LEFT JOIN [dbo].[SchedulePickup] SP WITH(NOLOCK)
+	     ON es.TokenCreated = SP.TokenCreated 
+	LEFT JOIN [dbo].[Account] Ac WITH(NOLOCK)
+	  on  SP.AccountId = Ac.AccIdAccount
+	LEFT JOIN [dbo].[Customer] C WITH(NOLOCK)
+	ON Ac.IdCustomer = C.IdCustomer 
 	WHERE es.ServiceManagementId = @ServiceManagementId
 	ORDER BY es.DateCreated 
 
