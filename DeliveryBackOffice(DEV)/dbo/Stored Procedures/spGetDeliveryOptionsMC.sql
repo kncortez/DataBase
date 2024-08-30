@@ -15,6 +15,6 @@ BEGIN
 		,ISNULL(Name, 'N/A')					AS [Name]
 		,ISNULL(Description, 'N/A')				AS [Description]
 	FROM DeliveryBackOffice.dbo.CatDeliveryOptions WITH(NOLOCK)
-		WHERE RowStatus = 1 AND IdCountry = @pCountryId
+		WHERE RowStatus = 1 AND (IdCountry = @pCountryId OR (IdCountry IS NULL AND @pCountryId = 'GT'))
 
 END;
