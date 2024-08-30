@@ -3,6 +3,10 @@
 -- Create date: <2020-03-04>
 -- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <30/08/2024>
+-- Description:	<Se carga información en sp.IdHubLogistics y sp.TownshipId al momento de crear un nuevo servicio en liquidación>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
@@ -1174,6 +1178,21 @@ BEGIN
                       AND ra.DateOfRoute = @tiempo;
 
                 SET @ServiceManagementId = SCOPE_IDENTITY();
+                
+				UPDATE sp SET sp.IdHubLogistics = sr.HubLogisticId , sp.TownshipId = cr.IdTownship
+				--SELECT sm.IdServiceManagement, sp.IdHubLogistics, sr.HubLogisticId, sp.TownshipId, cr.IdTownship	
+				FROM ServiceManagement sm WITH (NOLOCK)
+					INNER JOIN [dbo].[SchedulePickup] sp WITH (NOLOCK)
+						ON sm.IdSchedulePickup = sp.SchedulePickupId
+					INNER JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] ra WITH (NOLOCK)
+						ON sm.IdPuRouteAssigment = ra.IdRouteAssigment
+					INNER JOIN [DeliveryBackOffice].[dbo].[SenderReceiver] sr WITH (NOLOCK)
+						ON ra.IdCurrierMan = sr.ID
+					INNER JOIN [DeliveryBackOffice].[dbo].[CatRoute] cr WITH (NOLOCK)
+						ON ra.IdRoute = cr.IdRoute
+				WHERE sp.IdHubLogistics IS NULL 
+					AND sp.TownshipId IS NULL
+					AND sm.IdServiceManagement = @ServiceManagementId	
 
                 --Insertar EventService si no existe
                 IF NOT EXISTS
