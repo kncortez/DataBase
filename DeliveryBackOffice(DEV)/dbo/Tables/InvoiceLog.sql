@@ -7,6 +7,7 @@
     [ErrorDesc]         NVARCHAR (MAX) NULL,
     [Date]              DATETIME       NOT NULL,
     [TransactionStatus] INT            NULL,
+    [CreateUser]        nvarchar (200) NULL,
     PRIMARY KEY CLUSTERED ([InvoiceLogId] ASC),
     CONSTRAINT [FKIRestrictionInvoiceLog] FOREIGN KEY ([InvIdRestriction]) REFERENCES [dbo].[InvoiceRestriction] ([InvIdRestriction])
 );
@@ -45,4 +46,7 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Valor que repr
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que almacena el historial de operaciones para facturas' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceLog'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario que crea el registro SAP' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'InvoiceLog', @level2type=N'COLUMN',@level2name=N'CreateUser'
 GO

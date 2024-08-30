@@ -6,8 +6,9 @@ CREATE PROC [dbo].[SetInvoiceLog] @inv_pk_id BIGINT,
 @inv_DataSent NVARCHAR(MAX),
 @inv_DataReceived NVARCHAR(MAX),
 @ErrorDesc NVARCHAR(MAX),
-@TransactionStatus INT --> 0 = Transacción no completada
+@TransactionStatus INT, --> 0 = Transacción no completada
 --> 1 = Transacción completada
+@CreateUser AS NVARCHAR(200)=NULL
 AS
 BEGIN
 
@@ -73,7 +74,7 @@ BEGIN
 
 			print 'Inserta InvoiceLog';
 		INSERT INTO dbo.InvoiceLog (inv_pk_id, InvIdRestriction, inv_DataSent, inv_DataReceived, ErrorDesc,
-		[Date], TransactionStatus)
+		[Date], TransactionStatus,CreateUser)
 			SELECT
 				@inv_pk_id
 			   ,@InvIdRestriction
@@ -82,6 +83,7 @@ BEGIN
 			   ,@ErrorDesc
 			   ,GETDATE()
 			   ,@TransactionStatus
+			   ,@CreateUser
 
 			   SET @InvoiceLogID = SCOPE_IDENTITY();
 
