@@ -24,10 +24,10 @@ SET NOCOUNT ON;
 	--Table 0 información del servicio
 	SELECT DISTINCT
 		sm.IdServiceManagement IdServiceManagement
-	   ,cu.Name Customer
+	   ,sp.SenderName Customer
 	   ,vpc.DescriptionOfClient VisitPoint
-	   ,vpc.Department Department
-	   ,vpc.Town Town
+	   ,p.ProvinceName Department
+	   ,ts.TownshipName Town
 	   ,sp.AddressPickup Address
 	   ,cr.CodeRoute Route
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) Courier
@@ -47,6 +47,10 @@ SET NOCOUNT ON;
 		ON cr.IdRoute = ra.IdRoute
 	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON sr.ID = ra.IdCurrierMan
+	LEFT JOIN Township ts WITH(NOLOCK)
+		ON ts.IdTownship = sp.TownshipId
+	LEFT JOIN Province p WITH(NOLOCK)
+		ON ts.IdProvince = p.IdProvince
 	WHERE sm.IdServiceManagement = @ServiceManagementId
       AND IIF(vpc.CountryId IS NULL, 'GT',vpc.CountryId) = @IdCountry
 
