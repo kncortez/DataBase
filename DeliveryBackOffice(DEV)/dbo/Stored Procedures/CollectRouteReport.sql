@@ -87,7 +87,7 @@ BEGIN
             LEFT JOIN [DeliveryBackOffice].dbo.CatTypeVehicle ctv WITH (NOLOCK) 
                 ON cv.IdTypeVehicle = ctv.IdTypeVehicle
             LEFT JOIN (
-                        SELECT ltpod.IdCourierman, CAST(ltpod.DateCreated AS DATE) AS DateCreated, CAST(MIN(ltpod.DateCreated) AS TIME) AS TimeCreated  
+                        SELECT ltpod.IdCourierman, CAST(ltpod.DateCreated AS DATE) AS DateCreated, CAST(MIN(ltpod.DateCreated) AS TIME(0)) AS TimeCreated  
                         FROM LogTokenPOD ltpod WITH (NOLOCK)
                         GROUP BY ltpod.IdCourierman, CAST(ltpod.DateCreated AS DATE)
             ) AS ltp ON ltp.IdCourierman = sm.IdPuCourrier AND ltp.DateCreated = CAST(sp.StartDate AS DATE)
