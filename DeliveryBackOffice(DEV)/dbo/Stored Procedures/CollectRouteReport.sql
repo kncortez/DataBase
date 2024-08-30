@@ -35,7 +35,7 @@ BEGIN
             --Ruta
             cr.CodeRoute AS Route,
             --Unidad
-            CONCAT(ctv.Name,'  ',cv.plate) AS Vehicle,
+            cv.UnitNumber AS Vehicle,
             --Manifiesto (route assignment)
             ra.IdRouteAssigment AS Manifest,
             --Hora del despacho (Primer inicio de sesión del día)
