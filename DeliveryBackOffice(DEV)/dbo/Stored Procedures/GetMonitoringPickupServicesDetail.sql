@@ -21,8 +21,8 @@ SET NOCOUNT ON;
 		sm.IdServiceManagement IdServiceManagement
 	   ,cu.Name Customer
 	   ,vpc.DescriptionOfClient VisitPoint
-	   ,vpc.Department Department
-	   ,vpc.Town Town
+	   ,p.ProvinceName Department
+	   ,ts.TownshipName Town
 	   ,sp.AddressPickup Address
 	   ,cr.CodeRoute Route
 	   ,CONCAT(sr.First_Name, ' ', sr.Last_Name) Courier
@@ -42,6 +42,10 @@ SET NOCOUNT ON;
 		ON cr.IdRoute = ra.IdRoute
 	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON sr.ID = ra.IdCurrierMan
+	LEFT JOIN Township ts WITH(NOLOCK)
+		ON ts.IdTownship = sp.TownshipId
+	LEFT JOIN Province p WITH(NOLOCK)
+		ON ts.IdProvince = p.IdProvince
 	WHERE sm.IdServiceManagement = @ServiceManagementId
 
 	--Table 1 Checkpoints Servicio

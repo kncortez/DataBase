@@ -25,8 +25,8 @@ SET NOCOUNT ON;
 		IdServiceManagement ServiceId
 	   ,sp.SenderName Customer  
 	   ,vpc.DescriptionOfClient VisitPoint
-	   ,vpc.Department Department
-	   ,vpc.Town Town
+	   ,p.ProvinceName Department
+	   ,ts.TownshipName Town
 	   ,sp.AddressPickup Address
 	   ,css.Name Status
 	   ,IIF(sp.IsScheduled IS NULL OR sp.IsScheduled = 0, 'A demanda', 'Programada') TypeService
@@ -43,6 +43,10 @@ SET NOCOUNT ON;
 		ON cu.IdCustomer = vpc.CustomerID
 	LEFT JOIN CatSystem cs
 		ON cs.SysIdSystem = sp.IdSourcePlataform
+	LEFT JOIN Township ts WITH(NOLOCK)
+		ON ts.IdTownship = sp.TownshipId
+	LEFT JOIN Province p WITH(NOLOCK)
+		ON ts.IdProvince = p.IdProvince
 	WHERE (cu.IdCustomer = @CustomerId
 	OR @CustomerId = -1)
 	AND (REPLACE(sp.SenderPhone, '-', '') LIKE @PhoneNew
