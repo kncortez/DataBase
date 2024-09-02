@@ -296,9 +296,16 @@ BEGIN
                 ON rh.RheId = rc.RbcIdRate
                    AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
+                ON dc.IdCatCurrencyCOD = rh.IdCurrency
+        WHERE rc.RbcIdCustomer = @IdCustomer 
+              AND rc.RbcRowStatus = 'true'
+              AND rc.RbcCodeOfReference IS NULL;
+    END;
+
 
     IF @IdRate IS NULL -- si el cliente no tiene una tarifa asociada determinar por canal de venta
     BEGIN
+		SELECT @IdRate         = rh.RheId
              , @IdTypeRate     = rh.RateTypeId
              , @WeigthLimit    = rh.WeightLimit
              , @Currency       = dc.Symbol
