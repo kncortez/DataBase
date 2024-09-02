@@ -1,3 +1,5 @@
+--FDAPI-2241
+--Script de ejemplo para agregar tipo de cambio del día, SOLO PARA ENVIOS INTERNACIONALES
 ;WITH CTE_InsertData AS (
     SELECT *
     FROM (

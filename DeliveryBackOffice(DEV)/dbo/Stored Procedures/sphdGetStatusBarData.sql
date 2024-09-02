@@ -3,6 +3,10 @@
 -- Create date: <2024-07-15>
 -- Description:	<Obtiene los datos para mostrar en status bar HermesDesktop>
 -- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-08-30>
+-- Description:	<Se coloca validacion para obtener unicamente roles del sistema HermesDesktop>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetStatusBarData]
     @IdUser AS NVARCHAR(100)
 AS
@@ -33,6 +37,7 @@ BEGIN
             INNER JOIN InternalUser A4 WITH (NOLOCK)
                 ON A1.RusIdUser = A4.RegisterUserID
         WHERE A4.IdUser = @IdUser
+			AND A1.RusIdSystem =  2
         GROUP BY A3.RolIdRol,
                  A3.RolName
     ) TBL

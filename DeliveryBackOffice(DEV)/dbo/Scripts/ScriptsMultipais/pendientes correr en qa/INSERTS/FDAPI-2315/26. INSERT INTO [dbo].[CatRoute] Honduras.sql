@@ -1,3 +1,4 @@
+--Corrección, tiene como dependencia el insert de los township
 USE [DeliveryBackOffice]
 GO
 

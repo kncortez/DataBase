@@ -1,6 +1,5 @@
--- Agregar la columna IdCountry con un valor predeterminado de 'GT' En tabla de horarios para ejecucion de hermes wire transfer
-ALTER TABLE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
-ADD IdCountry NVARCHAR(2) NULL;
+--ALTER TABLE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
+--ADD IdCountry NVARCHAR(2) NULL;
 
 UPDATE [DeliveryBackOffice].[dbo].[CoDDailyExecution]
 SET IdCountry = 'GT'
@@ -111,12 +110,8 @@ VALUES	('CoD_Batch', 108, '07:00:00.0000000', 1, 0, 'SYS-ORODRIGUEZ', GETDATE(),
 
 
 
--- Creacion de bancos para HN
-INSERT INTO DeliveryBackOffice.dbo.DeliveryBank (Id_bank, Name, Acronym, Description, Create_date, Id_Status, Id_Country, URL_Logo, CardCode, ACHCode, PayingBank)
-VALUES	(108, 'BANCO FICOSHA', 'FICHOSA', 'BANCO FICOSHA', GETDATE(), 1, 'HN', '/banks/hn/ficohsa.png', NULL, NULL, 108),
-		(109, 'BANCO DE AMERICA CENTRAL', 'BAC', 'BANCO DE AMERICA CENTRAL', GETDATE(), 1, 'HN', '/banks/hn/bac.png', NULL, NULL, 109),
-		(110, 'BANCO DE DESARROLLO RURAL', 'BANRURAL', 'BANCO DE DESARROLLO RURAL', GETDATE(), 1, 'HN', '/banks/gt/banrural.png', NULL, NULL, 110);
 
+--CORRECCIÓN INSERTICIÓN  A TABLA DeliveryCustomerBankAccount
 -- Creacion de cuenta bancaria asociada a servicio hermes wire transfer y SP's de generacion de lotes BAC
-INSERT INTO DeliveryBackOffice.dbo.DeliveryCustomerBankAccount (DCBA_Id, DCBA_Bank_Id, DCBA_Customer_Id, DCBA_Num_account, DCBA_Nom_account, DCBA_Id_currency, DCBA_TokenCreated, DCBA_DateCreated, DCBA_TokenUpdate, ACN_DateUpdate, DCBA_Id_estado, DCBA_Prefix, DCBA_IsCodeIBAN, DCBA_LegalIDN, DCBA_BankAccountType, DCBA_Identification)
-VALUES (77262, 109, -1, '903666262', 'DELIVERY EXPRESS', 1, 'ORODRIGUEZ', GETDATE(), NULL, NULL, 1, NULL, NULL, NULL, 'Monetaria', NULL)
+--INSERT INTO DeliveryBackOffice.dbo.DeliveryCustomerBankAccount (DCBA_Id, DCBA_Bank_Id, DCBA_Customer_Id, DCBA_Num_account, DCBA_Nom_account, DCBA_Id_currency, DCBA_TokenCreated, DCBA_DateCreated, DCBA_TokenUpdate, ACN_DateUpdate, DCBA_Id_estado, DCBA_Prefix, DCBA_IsCodeIBAN, DCBA_LegalIDN, DCBA_BankAccountType, DCBA_Identification)
+--VALUES (77262, 109, -1, '903666262', 'DELIVERY EXPRESS', 1, 'ORODRIGUEZ', GETDATE(), NULL, NULL, 1, NULL, NULL, NULL, 'Monetaria', NULL)

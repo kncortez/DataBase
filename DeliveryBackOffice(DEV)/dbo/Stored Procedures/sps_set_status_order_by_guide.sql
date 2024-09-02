@@ -42,16 +42,26 @@ BEGIN
 
     BEGIN TRY
 
-	SELECT @BelongConuntry = CASE
-                             WHEN IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
-                                  OR IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN
-                                 1
-                             ELSE
-                                 0
-                         END
-	FROM DeliveryOrder
-	WHERE Guide_number = @Guide_Number
-		  AND Guide_Serie = @Guide_Serie
+	    -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
+    INSERT @ItemsTable
+    SELECT CAST(Item AS INT)
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
+
+	SELECT @BelongConuntry = MAX(X.Number)
+	FROM (
+		SELECT CASE
+				WHEN IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
+					OR IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN
+					1
+				ELSE
+					0
+			END AS Number
+		FROM DeliveryOrder WITH(NOLOCK)
+		WHERE Guide_Serie = @Guide_Serie
+		AND Guide_Number IN (SELECT
+								Guide_Number
+							FROM @ItemsTable)
+	) AS X
 
 	IF @BelongConuntry = 0
 	BEGIN
@@ -60,11 +70,6 @@ BEGIN
 	END
 	ELSE
 	BEGIN 
-
-        -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
-        INSERT @ItemsTable
-        SELECT CAST(Item AS INT)
-        FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
 
         -- Actualizar registro de guía a último estado 
 		UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -284,7 +289,7 @@ BEGIN
             SET ServiceStatusId = 3
                 ,TokenUpdated = @TokenId
                 ,DateUpdated = GETDATE()
-            FROM ServiceManagement sm
+            FROM ServiceManagement sm WITH(NOLOCK)
             INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                 ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
             INNER JOIN @ItemsTable it
@@ -464,8 +469,8 @@ BEGIN
 						DECLARE @TypeConnect INT = 0;
 
 						SET @TypeConnect = (SELECT top 1 TypeConnectionId 
-								FROM WebhookEndpoint wh
-								INNER JOIN WebhookCatTypeConnection wc
+								FROM WebhookEndpoint wh WITH(NOLOCK)
+								INNER JOIN WebhookCatTypeConnection wc WITH(NOLOCK)
 									ON wh.TypeConnectionId = wc.IdCatTypeConnection
 								WHERE wh.CustomerId = @WebhookCustomerId)
 

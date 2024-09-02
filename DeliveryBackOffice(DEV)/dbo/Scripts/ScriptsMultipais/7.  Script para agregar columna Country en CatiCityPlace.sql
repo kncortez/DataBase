@@ -1,4 +1,5 @@
 --screjecutado 7
+
 INSERT INTO [dbo].[CatCityPlace]
     ([CityPlace]
     ,[CityPlaceRowStatus]

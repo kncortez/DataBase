@@ -1,7 +1,5 @@
 
---INGRESAR INFORMACION DE CORREO Y TELEFONO POR PAIS PARA COMPROBANTE
 
-SELECT * FROM DeliveryBackOffice.dbo.ConfigParams
 
 --EMAIL GT
 INSERT INTO [dbo].[ConfigParams]
@@ -12,7 +10,7 @@ INSERT INTO [dbo].[ConfigParams]
            ,[CreateDate])
 VALUES
     ('VoucherEmailGT'
-    ,'Valor de correo electrónico para el comprobante en Guatemala'
+    ,'Valor de correo electrÃ³nico para el comprobante en Guatemala'
     ,'info@forzadelivery.com' --VALOR
     ,1
     ,GETDATE())
@@ -26,7 +24,7 @@ INSERT INTO [dbo].[ConfigParams]
            ,[CreateDate])
 VALUES
     ('VoucherEmailHN'
-    ,'Valor de correo electrónico para el comprobante en Honduras'
+    ,'Valor de correo electrÃ³nico para el comprobante en Honduras'
     ,'infohn@forzadelivery.com' --VALOR
     ,1
     ,GETDATE())
@@ -40,7 +38,7 @@ INSERT INTO [dbo].[ConfigParams]
            ,[CreateDate])
 VALUES
     ('VoucherPhoneGT'
-    ,'Valor del teléfono para el comprobante en Guatemala'
+    ,'Valor del telÃ©fono para el comprobante en Guatemala'
     ,'(+502) 2377-5300' --VALOR
     ,1
     ,GETDATE())
@@ -54,7 +52,7 @@ INSERT INTO [dbo].[ConfigParams]
            ,[CreateDate])
 VALUES
     ('VoucherPhoneHN'
-    ,'Valor del teléfono para el comprobante en Honduras'
+    ,'Valor del telÃ©fono para el comprobante en Honduras'
     ,'(+504) 2377-5300' --VALOR
     ,1
     ,GETDATE())

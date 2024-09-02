@@ -332,7 +332,8 @@ BEGIN
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
         WHERE rh.RheRowStatus = 'true'
-              AND rh.RheDefault = 'true';
+              AND rh.RheDefault = 'true'
+			  AND ISNULL(rh.CountryId,'GT')= @Country;
     END;
 
 
