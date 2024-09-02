@@ -18,7 +18,7 @@ BEGIN
 
 	DECLARE @VoidedCart BIT = 0;
 
-	DECLARE @CollectPaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WHERE CPT.TimePlaName = 'Destino');
+	DECLARE @CollectPaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WHERE CPT.TimePlaName = 'Destino' COLLATE Latin1_General_CI_AI);
 
 	DECLARE @CountUpdated INT = 0;
 	DECLARE @CountValid INT = 0;

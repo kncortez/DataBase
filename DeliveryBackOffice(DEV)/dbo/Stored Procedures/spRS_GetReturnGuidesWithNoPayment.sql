@@ -25,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Devuelto'   
+			SO.[OrderDescription] = 'Devuelto'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ReturnEXCStatusId INT = (
 		SELECT 
@@ -34,7 +34,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Devuelto en express center'   
+			SO.[OrderDescription] = 'Devuelto en express center'  COLLATE Latin1_General_CI_AI 
 	)
 
 	-- Manejo de fechas

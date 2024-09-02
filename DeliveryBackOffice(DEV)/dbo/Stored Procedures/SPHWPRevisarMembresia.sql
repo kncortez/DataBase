@@ -24,7 +24,7 @@ BEGIN
                 SELECT TOP 1
                        CSPS.IdCatSalesPackageStatus
                 FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                WHERE CSPS.SalesPackageStatusName = 'Activa' 
+                WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
             );
 
     -- Variables de control de flujo
@@ -32,7 +32,7 @@ BEGIN
     DECLARE @ActiveMembershipId INT = 0;
     DECLARE @IdActiveSalePackage INT = 0;
 
-    IF (@TypeSalePackage = 'MEMBERSHIP' )
+    IF (@TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
     BEGIN
 
         SELECT TOP 1
@@ -45,7 +45,7 @@ BEGIN
               AND mmbrshp.CatMembershipId = @IdSalePackage;
 
     END;
-    ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' )
+    ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
     BEGIN
 
 

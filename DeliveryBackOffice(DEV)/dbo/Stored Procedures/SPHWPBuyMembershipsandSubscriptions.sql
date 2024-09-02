@@ -40,7 +40,7 @@ BEGIN
                 SELECT TOP 1
                        CSPS.IdCatSalesPackageStatus
                 FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                WHERE CSPS.SalesPackageStatusName = 'Activa' 
+                WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
             );
 
     DECLARE @StatusSubcription INT =
@@ -68,7 +68,7 @@ BEGIN
                           SELECT TOP 1
                                  [CP].[Value]
                           FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
-                          WHERE [CP].[Name] = 'ForzaPointsExpirationDays' 
+                          WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
                       )
                     , 0
                      ) AS INT);
@@ -108,7 +108,7 @@ BEGIN
     BEGIN TRANSACTION;
     BEGIN TRY
         IF (
-               @TypeSalePackage = 'Membership' 
+               @TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI
                AND ISNULL(@StatusMembershipt, 0) < 1
            )
         BEGIN
@@ -276,7 +276,7 @@ BEGIN
 
         END;
         ELSE IF (
-                    @TypeSalePackage = 'Suscription' 
+                    @TypeSalePackage = 'Suscription' COLLATE Latin1_General_CI_AI
                     AND
                     (
                         (ISNULL(@StatusMembershipt, 0) > 0)

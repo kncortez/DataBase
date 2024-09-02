@@ -21,7 +21,7 @@ BEGIN
 
 	DECLARE @VoidedCart BIT = 0;
 
-	DECLARE @CollectPaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WHERE CPT.TimePlaName = 'Destino' );
+	DECLARE @CollectPaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WHERE CPT.TimePlaName = 'Destino' COLLATE Latin1_General_CI_AI);
 
 	DECLARE @CountUpdated INT = 0;
 	DECLARE @CountValid INT= 0;
@@ -204,7 +204,7 @@ SET @AccountStatement =	(SELECT
                 SELECT TOP 1
                        [VPC].[CodeOfReference]
                 FROM [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH (NOLOCK)
-                WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' 
+                WHERE VPC.[DescriptionOfClient] = 'EXPRESS CENTER CLUBFORZA' COLLATE Latin1_General_CI_AI
                       AND VPC.[StatusClient] = 1
             );
 			DECLARE @inv_cmp_nit AS VARCHAR(100) =
@@ -241,7 +241,7 @@ SET @AccountStatement =	(SELECT
                 SELECT TOP 1
                        [Description]
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
+                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI
             );
     DECLARE @dti_IVA MONEY;
     DECLARE @dti_amount MONEY;
@@ -252,7 +252,7 @@ SET @AccountStatement =	(SELECT
                 SELECT TOP 1
                        SAPCode
                 FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' 
+                WHERE Name = 'MEMBRESIA ANUAL CLUB FORZA' COLLATE Latin1_General_CI_AI
             );
     DECLARE @SendToInvoice BIT = 1;
     DECLARE @Descriptionp AS NVARCHAR(500);
@@ -269,7 +269,7 @@ SET @AccountStatement =	(SELECT
         SELECT TOP 1
                [Description]
         FROM [dbo].[CatArticleSAP] WITH (NOLOCK)
-        WHERE [Name] = 'SUSCRIPCION MENSUAL A' 
+        WHERE [Name] = 'SUSCRIPCION MENSUAL A' COLLATE Latin1_General_CI_AI
     );
    
        

@@ -27,7 +27,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK)	
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Desktop'   
+			[CS].[SysNameSystem] = 'Hermes Desktop'  COLLATE Latin1_General_CI_AI 
 	);
 	DECLARE @EmailNotificationMedium INT = 
 	(
@@ -37,7 +37,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatNotificationMedium] CNM  WITH(NOLOCK) 
 		WHERE
-			[CNM].[NotificationMediumName] = 'Correo SMTP'   
+			[CNM].[NotificationMediumName] = 'Correo SMTP'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @NotificationType BIGINT =
 	(
@@ -47,7 +47,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatNotificationType] CNT  WITH(NOLOCK) 
 		WHERE
-			[CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin'   
+			[CNT].[NotificationTypeName] = 'DailyGuideIncidenceToOrigin'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @FailedDeliveryVisitStatus INT = 
 	(
@@ -57,7 +57,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			[SO].[OrderDescription] = 'Incidencia en ruta'   
+			[SO].[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
 	);
 	DECLARE @OnRouteStatus INT = 
 	(
@@ -67,7 +67,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			[SO].[OrderDescription] = 'En ruta'  
+			[SO].[OrderDescription] = 'En ruta'  COLLATE Latin1_General_CI_AI 
 	);
 
 	-- Variables de control de flujo

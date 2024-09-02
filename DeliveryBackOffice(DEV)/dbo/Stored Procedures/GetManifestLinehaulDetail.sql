@@ -25,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatContainerSubtype] CCS  WITH(NOLOCK) 
 		WHERE
-			[CCS].ContainerSubtypeName = 'CAJA' 
+			[CCS].ContainerSubtypeName = 'CAJA'  COLLATE Latin1_General_CI_AI 
 	);
 	DECLARE @SubtypeFloorContainer BIGINT = 
 	(
@@ -35,7 +35,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatContainerSubtype] CCS  WITH(NOLOCK) 
 		WHERE
-			[CCS].ContainerSubtypeName = 'PISO' 
+			[CCS].ContainerSubtypeName = 'PISO'  COLLATE Latin1_General_CI_AI 
 	);
 
     -- Insert statements for procedure here

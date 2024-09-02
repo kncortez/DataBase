@@ -24,7 +24,7 @@ BEGIN
 
 	 SET @Url= 'https://portal.forzadelivery.com/design/dashboard' 
 
-	 IF(@TypeSalePackage = 'Membership' )
+	 IF(@TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI)
 		BEGIN
   
 		  SELECT TOP 1      

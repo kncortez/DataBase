@@ -68,7 +68,7 @@ BEGIN
                 SELECT TOP 1
                        SO.StatusOrderId
                 FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
-                WHERE SO.OrderDescription = 'Traslado a express center' 
+                WHERE SO.OrderDescription = 'Traslado a express center' COLLATE Latin1_General_CI_AI
             );
 
     -- Variables del courier

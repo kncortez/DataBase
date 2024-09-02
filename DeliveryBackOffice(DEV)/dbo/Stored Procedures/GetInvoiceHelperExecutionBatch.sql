@@ -97,6 +97,7 @@ BEGIN
                AND IH.inv_type = 1
                AND IH.inv_status = 1
                AND dpf.dpf_FELCountry = @IdCountry
+               AND inv_pk_id IN (3747881)
              ORDER BY IH.inv_pk_id
 
             COMMIT TRANSACTION;

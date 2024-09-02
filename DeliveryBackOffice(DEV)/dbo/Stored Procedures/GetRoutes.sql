@@ -19,7 +19,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Recolección' 
+            WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI
         )   ;
         ELSE IF (@RouteChar = 'L')
             SET @RouteType =
@@ -27,7 +27,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Linehaul' 
+            WHERE CTR.[Name] = 'Linehaul' COLLATE Latin1_General_CI_AI
         )   ;
         ELSE IF (@RouteChar = 'D')
             SET @RouteType =
@@ -35,7 +35,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Devolución' 
+            WHERE CTR.[Name] = 'Devolución' COLLATE Latin1_General_CI_AI
         )   ;
         ELSE IF (@RouteChar = 'U')
             SET @RouteType =
@@ -43,7 +43,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Ultima Milla' 
+            WHERE CTR.[Name] = 'Ultima Milla' COLLATE Latin1_General_CI_AI
         )   ;
         ELSE
             SET @RouteType = -1;

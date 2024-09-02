@@ -27,12 +27,12 @@ BEGIN
 	-- interfering with SELECT statements.
 
 	-- Variables de incidencias terminales - 
-	DECLARE @DuplicateId INT = (SELECT TOP 1 CTI.IdIncidenceType FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK) WHERE CTI.NameIncidence = 'Servicio duplicado' );
-	DECLARE @CanceledId INT = (SELECT TOP 1 CTI.IdIncidenceType FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK) WHERE CTI.NameIncidence = 'Cliente cancelo servicio');
-	DECLARE @AlreadyPickedId INT = (SELECT TOP 1 CTI.IdIncidenceType FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK) WHERE CTI.NameIncidence = 'Recolectada en otra ruta' );
+	DECLARE @DuplicateId INT = (SELECT TOP 1 CTI.IdIncidenceType FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK) WHERE CTI.NameIncidence = 'Servicio duplicado' COLLATE Latin1_General_CI_AI);
+	DECLARE @CanceledId INT = (SELECT TOP 1 CTI.IdIncidenceType FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK) WHERE CTI.NameIncidence = 'Cliente cancelo servicio' COLLATE Latin1_General_CI_AI);
+	DECLARE @AlreadyPickedId INT = (SELECT TOP 1 CTI.IdIncidenceType FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH(NOLOCK) WHERE CTI.NameIncidence = 'Recolectada en otra ruta' COLLATE Latin1_General_CI_AI);
 
 	-- Variables de estado cancelado -
-	DECLARE @CanceledStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' );
+	DECLARE @CanceledStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' COLLATE Latin1_General_CI_AI);
 
 	DECLARE @jsonToken NVARCHAR(MAX)
 	declare @jsonService NVARCHAR(MAX)

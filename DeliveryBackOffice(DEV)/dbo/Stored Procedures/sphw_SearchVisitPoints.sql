@@ -62,7 +62,7 @@ BEGIN
 		(
 			@filter =-1
 			OR
-			(@filter = 0 AND VP.Phone  LIKE '%'+@search+'%' )
+			(@filter = 0 AND VP.Phone  LIKE '%'+@search+'%' COLLATE Latin1_General_CI_AI)
 			OR
 			(@filter = 1 AND RU.UsrEmail = @search COLLATE Latin1_General_CI_AI)
 			OR

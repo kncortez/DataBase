@@ -36,14 +36,14 @@ BEGIN
 		IdContentDescriptionTag BIGINT
 	)
 
-	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' )
+	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' COLLATE Latin1_General_CI_AI )
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' ) )
-			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' ) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' COLLATE Latin1_General_CI_AI) )
+			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' COLLATE Latin1_General_CI_AI) )
 
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
@@ -179,13 +179,13 @@ BEGIN
 		END
 
 	END
-	ELSE IF ( @ContentTypeName = 'ListasColapsadas'  )
+	ELSE IF ( @ContentTypeName = 'ListasColapsadas' COLLATE Latin1_General_CI_AI )
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' ) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' COLLATE Latin1_General_CI_AI) )
 	
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle

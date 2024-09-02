@@ -683,7 +683,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'   
+			[KOVPC].[KindOfVPName] = 'Concesionario' COLLATE Latin1_General_CI_AI 
 			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
@@ -694,7 +694,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  
+			[KOVPC].[KindOfVPName] = 'Express Center' COLLATE Latin1_General_CI_AI 
 			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 
@@ -706,7 +706,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'   
+			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -716,7 +716,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'   
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -726,7 +726,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'   
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -736,7 +736,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'   
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
 	)
 
 

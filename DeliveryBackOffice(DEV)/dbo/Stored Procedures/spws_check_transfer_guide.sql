@@ -25,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'En ruta'  
+			SO.[OrderDescription] = 'En ruta'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @GuideInReturnRoute INT = (
 		SELECT 
@@ -34,7 +34,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'En ruta para devolución'  
+			SO.[OrderDescription] = 'En ruta para devolución'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @IncidenceInRoute INT = (
 		SELECT 
@@ -43,7 +43,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Incidencia en ruta'   
+			SO.[OrderDescription] = 'Incidencia en ruta'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @FailedDeliveryAttempt INT = (
 		SELECT 
@@ -52,7 +52,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Intento de entrega fallida'   
+			SO.[OrderDescription] = 'Intento de entrega fallida'  COLLATE Latin1_General_CI_AI 
 	)
 
 	DECLARE @ValidatedIncident INT = (
