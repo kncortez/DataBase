@@ -20,7 +20,7 @@ DECLARE @p4 NVarChar(10) SET @p4 = '-'
 
 IF (SELECT LEN(@Phone) ) > 8
    BEGIN
-		SET @Phone = RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(REPLACE(@Phone ,  
+		SET @Phone = RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(REPLACE(@Phone  COLLATE Latin1_General_BIN,  
 									       	   @p1, @es ),@p2,@es),@p3 ,@es),@p4,@es ))); 
 	END;
 
@@ -73,7 +73,7 @@ IF (SELECT LEN(@Phone) ) > 8
 			ON  
 			DCBA.DCBA_Bank_Id =DB.Id_bank
 		WHERE 
-		  SUBSTRING(RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(REPLACE( DO.Sender_Phone ,
+		  SUBSTRING(RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(REPLACE( DO.Sender_Phone COLLATE Latin1_General_BIN,
 		  @p1, @es ),@p2,@es),@p3 ,@es),@p4,@es ))),0,7) = SUBSTRING(@Phone,0,7)  	
 		ORDER BY
 			DO.DateCreated DESC

@@ -32,9 +32,9 @@ BEGIN
     )
     SELECT [CTI].[IdIncidenceType]
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-    WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete' 
+    WHERE [CTI].[NameIncidence] = 'Destinatario rechaza paquete' COLLATE Latin1_General_CI_AI
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY' ;
+          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI;
 
     INSERT INTO @ReturnIncidence
     (
@@ -42,9 +42,9 @@ BEGIN
     )
     SELECT [CTI].[IdIncidenceType]
     FROM [DeliveryBackOffice].[dbo].[CatTypeIncidence] CTI WITH (NOLOCK)
-    WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución' 
+    WHERE [CTI].[NameIncidence] = 'Remitente solicita devolución' COLLATE Latin1_General_CI_AI
           AND [CTI].[RowStatus] = 1
-          AND [CTI].[ServiceType] = 'DELIVERY';
+          AND [CTI].[ServiceType] = 'DELIVERY' COLLATE Latin1_General_CI_AI;
 
 
     DECLARE @STATUSDECLAREDRETURNED_DO INT =

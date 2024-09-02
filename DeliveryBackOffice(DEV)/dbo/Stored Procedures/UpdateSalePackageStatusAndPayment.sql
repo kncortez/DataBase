@@ -20,7 +20,7 @@ BEGIN
                 SELECT TOP 1
                        CSPS.IdCatSalesPackageStatus
                 FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK)
-                WHERE CSPS.SalesPackageStatusName = 'Activa' 
+                WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI
                       AND CSPS.RowStatus = 1
             );
     DECLARE @SystemId INT =
@@ -28,7 +28,7 @@ BEGIN
                 SELECT TOP 1
                        CS.SysIdSystem
                 FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH (NOLOCK)
-                WHERE CS.SysNameSystem = 'Hermes Charge Service' 
+                WHERE CS.SysNameSystem = 'Hermes Charge Service' COLLATE Latin1_General_CI_AI
                       AND CS.SysRowStatus = 1
             );
     DECLARE @ModuleId INT =
@@ -36,7 +36,7 @@ BEGIN
                 SELECT TOP 1
                        CM.ModIdModule
                 FROM [DeliveryBackOffice].[dbo].[CatModule] CM WITH (NOLOCK)
-                WHERE CM.ModName = 'Hermes Charge Service' 
+                WHERE CM.ModName = 'Hermes Charge Service' COLLATE Latin1_General_CI_AI
                       AND CM.ModRowStatus = 1
             );
 
@@ -46,7 +46,7 @@ BEGIN
               SELECT TOP 1
                      CP.[Value]
               FROM [DeliveryBackOffice].[dbo].[ConfigParams] CP WITH (NOLOCK)
-              WHERE CP.[Name] = 'ForzaPointsExpirationDays' 
+              WHERE CP.[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
           ) AS INT);
 
     -- Variables de control de flujo
@@ -65,11 +65,11 @@ BEGIN
     BEGIN TRY
 
         -- MEmbresia
-        IF (@TypeSalePackage = 'MEMBERSHIP' )
+        IF (@TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
         BEGIN
 
             -- Es del tipo membresia
-            IF (@TypeUpdate = 'SUCCESSFUL' )
+            IF (@TypeUpdate = 'SUCCESSFUL' COLLATE Latin1_General_CI_AI)
             BEGIN
 
                 INSERT INTO [DeliveryBackOffice].[dbo].[MembershipPaymentLog]
@@ -418,11 +418,11 @@ BEGIN
 
         END;
         -- Subscripción
-        ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' )
+        ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
         BEGIN
 
             -- Es del tipo subscripcion
-            IF (@TypeUpdate = 'SUCCESSFUL' )
+            IF (@TypeUpdate = 'SUCCESSFUL' COLLATE Latin1_General_CI_AI)
             BEGIN
 
                 INSERT INTO [DeliveryBackOffice].[dbo].[SubscriptionPaymentLog]
@@ -783,7 +783,7 @@ BEGIN
     BEGIN CATCH
         ROLLBACK TRANSACTION;
 
-        IF (@TypeSalePackage = 'MEMBERSHIP' )
+        IF (@TypeSalePackage = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
         BEGIN
 
             INSERT INTO [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog]
@@ -814,7 +814,7 @@ BEGIN
             WHERE Mmshp.IdMembership = @SalePackageToRenew;
 
         END;
-        ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' )
+        ELSE IF (@TypeSalePackage = 'SUBSCRIPTION' COLLATE Latin1_General_CI_AI)
         BEGIN
 
             INSERT INTO [DeliveryBackOffice].[dbo].[MembershipSubscriptionLog]

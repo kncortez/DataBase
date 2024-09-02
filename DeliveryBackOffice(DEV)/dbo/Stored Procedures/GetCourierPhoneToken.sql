@@ -102,7 +102,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegex' 
+                where CP.[Name] = 'GuideRegex' collate Latin1_General_CI_AI
             );
 
 			declare @GuideRegexScannerData nvarchar(500) =
@@ -110,7 +110,7 @@ begin
                 select top 1
                        CP.[Value]
                 from [DeliveryBackOffice].[dbo].[ConfigParams] CP with (nolock)
-                where CP.[Name] = 'GuideRegexScanner' 
+                where CP.[Name] = 'GuideRegexScanner' collate Latin1_General_CI_AI
             );
 
             --CONVERT(varchar,@Existingdate,3) as [DD/MM/YY]

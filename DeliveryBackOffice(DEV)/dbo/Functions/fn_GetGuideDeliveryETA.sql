@@ -92,7 +92,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 		WHERE
-			[Prv].[ProvinceName] = @OriginProvince 
+			[Prv].[ProvinceName] = @OriginProvince  COLLATE Latin1_General_CI_AI 
 			AND
 			[Prv].[ProvinceStatus] = 1
 		ORDER BY
@@ -107,7 +107,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 		WHERE
-			[Prv].[ProvinceName] = @DestinyProvince 
+			[Prv].[ProvinceName] = @DestinyProvince  COLLATE Latin1_General_CI_AI 
 			AND
 			[Prv].[ProvinceStatus] = 1
 		ORDER BY

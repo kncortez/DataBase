@@ -49,15 +49,15 @@ begin
 			ON	[DO].[HubDestinationId] = [HL].[IdHubLogistic]
 		INNER JOIN [dbo].[StatusOrder] SO
 			ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
-			AND ([SO].[OrderDescription] = 'Generado' OR
-				[SO].[OrderDescription] = 'Recolectado' OR
-				[SO].[OrderDescription] = 'Arribó a las instalaciones' OR
-				[SO].[OrderDescription] = 'En inventario' OR
-				[SO].[OrderDescription] = 'En Tránsito' OR
-				[SO].[OrderDescription] = 'En preparación de traslado' OR
-				[SO].[OrderDescription] = 'Declarado para Devolución' OR
-				[SO].[OrderDescription] = 'Guía revertida para entrega' OR
-				[SO].[OrderDescription] = 'Trasladado a Hub' )
+			AND ([SO].[OrderDescription] = 'Generado'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Recolectado'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Arribó a las instalaciones'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'En inventario'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'En Tránsito'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'En preparación de traslado'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Declarado para Devolución'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Guía revertida para entrega'  COLLATE Latin1_General_CI_AI  OR
+				[SO].[OrderDescription] = 'Trasladado a Hub'  COLLATE Latin1_General_CI_AI )
 		WHERE	[DO].[Guide_Serie] = @GuideSerie
 		AND		[DO].[Guide_Number] = @GuideNumber;
 

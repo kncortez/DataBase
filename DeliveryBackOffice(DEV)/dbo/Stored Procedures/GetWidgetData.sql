@@ -78,7 +78,7 @@ BEGIN
 	);
 
 	BEGIN TRY
-		IF(@WidgetName = 'EnviosRealizados' )
+		IF(@WidgetName = 'EnviosRealizados' COLLATE Latin1_General_CI_AI)
 		BEGIN
 
 			INSERT INTO #FilteredGuides
@@ -154,7 +154,7 @@ BEGIN
 					ISNULL(@Currency,'GTQ') 'Currency' 
 			END
 		END
-		ELSE IF(@WidgetName = 'MontosCoD' )
+		ELSE IF(@WidgetName = 'MontosCoD' COLLATE Latin1_General_CI_AI)
 		BEGIN
 
 			INSERT INTO #FilteredGuides
@@ -228,7 +228,7 @@ BEGIN
 			END
 
 		END
-		ELSE IF(@WidgetName = 'VelocidadEntrega' )
+		ELSE IF(@WidgetName = 'VelocidadEntrega' COLLATE Latin1_General_CI_AI)
 		BEGIN
 		
 			INSERT INTO #FilteredGuides
@@ -379,11 +379,11 @@ BEGIN
 			END
 
 		END
-		ELSE IF(@WidgetName = 'RecoleccionesRealizados' )
+		ELSE IF(@WidgetName = 'RecoleccionesRealizados' COLLATE Latin1_General_CI_AI)
 		BEGIN
 
-			DECLARE @PickupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado' )
-			DECLARE @CancelServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' )
+			DECLARE @PickupServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Recolectado' COLLATE Latin1_General_CI_AI)
+			DECLARE @CancelServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Cancelado' COLLATE Latin1_General_CI_AI)
 
 			INSERT INTO #FilteredServices
 				(ServiceManagement, SchedulePickup, ServiceStatus, ServiceDate, ServicePickupDate)

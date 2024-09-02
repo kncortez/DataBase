@@ -37,7 +37,7 @@ BEGIN
 	-- Variables estaticas "globales"
 	SET @StartingStatus = (	SELECT TOP 1 [CSPS].[IdCatSalesPackageStatus] 
 							FROM	[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH (NOLOCK) 
-							WHERE	[CSPS].[SalesPackageStatusName] = 'Activa' );
+							WHERE	[CSPS].[SalesPackageStatusName] = 'Activa' COLLATE Latin1_General_CI_AI);
 	SET @CustomerTypeId = ( SELECT TOP 1 [CT].[IdCustomerType]
 							FROM	[dbo].[CustomerType] CT
 							WHERE	[CT].[Description] = 'INDIVIDUAL'
@@ -62,7 +62,7 @@ BEGIN
                    SELECT TOP 1
                           [CP].[Value]
                    FROM [DeliveryBackOffice].[dbo].[ConfigParams] [CP] WITH (NOLOCK)
-                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' 
+                   WHERE [CP].[Name] = 'ForzaPointsExpirationDays' COLLATE Latin1_General_CI_AI
                ),
                0
             ) AS INT);

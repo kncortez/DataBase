@@ -43,9 +43,7 @@ BEGIN
 			WHERE
 				[CTI].[RowStatus] = 1
 				AND
-				[CTI].[ServiceType] = @IncidenceServiceType   
-                AND
-                ISNULL([CTI].[CountryId], 'GT') = @IdCountry
+				[CTI].[ServiceType] = @IncidenceServiceType COLLATE Latin1_General_CI_AI 
 			ORDER BY
 				CTI.[OrderId] ASC
 

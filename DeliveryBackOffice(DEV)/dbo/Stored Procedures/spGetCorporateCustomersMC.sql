@@ -11,7 +11,7 @@ CREATE PROCEDURE [dbo].[spGetCorporateCustomersMC]
 AS
 BEGIN
 
-DECLARE @ActiveSalesPackageId INT = ( SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa'  )
+DECLARE @ActiveSalesPackageId INT = ( SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI )
 
 SELECT DISTINCT
     CONVERT(NVARCHAR, ISNULL(IdCustomer, 0)) AS [Id],

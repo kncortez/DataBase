@@ -28,7 +28,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 
-	SET @IDRUTETYPE =(SELECT IdTypeRoute FROM DBO.CatTypeRoute WITH (NOLOCK) WHERE Name ='Recolección' AND RowStatus=1);
+	SET @IDRUTETYPE =(SELECT IdTypeRoute FROM DBO.CatTypeRoute WITH (NOLOCK) WHERE Name ='Recolección'  COLLATE Latin1_General_CI_AI AND RowStatus=1);
 	
 			SELECT  @IdSchedulePickup = IdSchedulePickup
 			FROM [dbo].[ServiceManagement] SMD WITH(NOLOCK) 

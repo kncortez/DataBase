@@ -36,7 +36,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
 		WHERE
-			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'   
+			[CCT].[CheckpointTypeDescription] = 'Checkpoint final'  COLLATE Latin1_General_CI_AI 
 	);
 
 	SET @EXISTING_LRP = (SELECT COUNT([LRP].[IdLinehaulRoutePreparation]) AS CONT

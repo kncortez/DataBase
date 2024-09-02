@@ -27,10 +27,10 @@ BEGIN
 	SET ARITHABORT ON
 
 	-- Variables "globales"
-	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta');
-	DECLARE @IdDatafonoPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'Datafono' );
+	DECLARE @IdCreditCardPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'pago con tarjeta' COLLATE Latin1_General_CI_AI);
+	DECLARE @IdDatafonoPayment INT = (SELECT TOP 1 CTOIOM.tio_pk_id FROM [DeliveryBackOffice].[dbo].[ctgTypeOfInOutOfMoney] CTOIOM WITH(NOLOCK) WHERE CTOIOM.tio_pk_name = 'Datafono' COLLATE Latin1_General_CI_AI);
 	
-	DECLARE @TypeExpressCenter INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'REDISTRIBUIDOR' );
+	DECLARE @TypeExpressCenter INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'REDISTRIBUIDOR' COLLATE Latin1_General_CI_AI);
 
 	-- Manejo cuando dato viene vacio o es 0
 	IF(@VisitPointClientId = 0)
@@ -573,7 +573,7 @@ BEGIN
 						WHERE 
 							BOP.IdCost = @CostId 
 							AND 
-							BOP.Description = @PromoName AND BOP.RowStatus = 1)
+							BOP.Description = @PromoName COLLATE Latin1_General_CI_AI AND BOP.RowStatus = 1)
 				)
 				BEGIN
 
@@ -588,7 +588,7 @@ BEGIN
 					WHERE
 						IdCost = @CostId
 						AND
-						Description = @PromoName
+						Description = @PromoName COLLATE Latin1_General_CI_AI
 
 					IF(SCOPE_IDENTITY() > 0)
 						SET @CoUpdated = 1;
