@@ -48,7 +48,7 @@ BEGIN
 		LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail doddelivered WITH(NOLOCK) 
 				ON do.Guide_Serie = doddelivered.Guide_Serie 
 				AND do.Guide_Number = doddelivered.Guide_Number
-				AND doddelivered.StatusOrderId IN (5)
+				AND doddelivered.StatusOrderId IN (5,14)
 		WHERE	do.Guide_Serie = @GuideSerie
 				AND do.Guide_Number = @GuideNumber
 				AND ISNULL(do.SenderCountryId,'GT') = @IdCountry
