@@ -767,10 +767,12 @@ BEGIN
 					(CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Department],''))) <> '' THEN [DO].[Sender_Department] ELSE [VPC].[Department] END)
 					, (CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Town],''))) <> '' THEN [DO].[Sender_Town] ELSE [VPC].[Town] END)
 					, NULL
+					, [DO].[SenderCountryId] 
 					, [DO].[Receiver_Department]
 					, [DO].[Receiver_Town]
 					, NULL
-					, NULL
+					, [DO].[ReceiverCountryId]
+					, [DO].[DateCreated]
 				)
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 

@@ -652,11 +652,9 @@ BEGIN
 			ON	DOR.Guide_Serie = DAT.Guide_Serie
 			AND	DOR.Guide_Number = DAT.Guide_Number
 			-- En ruta|entregado|Intento de entrega fallida|Devuelto|Traslado a Express Center|COD pagado|Declarado para Devolución|Incidencia en ruta|Guía revertida para entrega
-			AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
 		INNER JOIN [DeliveryBackOffice].[dbo].[DeliverySettlementDetail]  DSD WITH (NOLOCK)
 			ON DSD.Guide_Serie = DAT.Guide_Serie
 			AND DSD.Guide_Number = DAT.Guide_Number
-			AND DSD.RowStatus = 1
 		INNER JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderBySettlement] DOS WITH (NOLOCK)
 			ON DOS.ID = DSD.ID_DeliveryOrderBySettlement
 			AND DOS.ID_Courier = DAT.ID_Courier
@@ -724,7 +722,9 @@ BEGIN
 			AND CPR.[Name] = 'AreaCode'
 
 		WHERE	CAST(DSD.DateCreated AS DATE) = @DateRoute
-				AND DSD.RowStatus = 1
+          AND DSD.RowStatus = 1
+          AND DOR.StatusOrderId IN ( 4, 5, 12, 14, 20, 25, 32, 45, 48, 50 )
+          AND DSD.RowStatus = 1
 
 		/******************************************************************************************************************************
 		****************************************** CONSULTA PARA MOSTRAR LAS ALERTAS DISPONIBLES **************************************
