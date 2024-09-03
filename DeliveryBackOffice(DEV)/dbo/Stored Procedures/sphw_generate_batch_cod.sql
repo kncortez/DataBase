@@ -643,10 +643,10 @@ BEGIN
                 INNER JOIN #TableAmountCODTemp            tact
                     ON pgc.GuideSerie = tact.Guide_Serie
                        AND pgc.GuideNumber = tact.Guide_Number
-                       AND tact.CODtoPay <= 0
             WHERE pgc.BatchCODId IS NULL
                   AND pgc.BatchCODIdCommission IS NULL
-                  AND pgc.RowStatus = 1;
+                  AND pgc.RowStatus = 1
+                  AND tact.CODtoPay <= 0;
 
             -- OBTENCION DEL NUMERO DE REFERENCIA (CORRELATIVO) PARA BAC
             SELECT @Reference = Last
@@ -954,7 +954,8 @@ BEGIN
                          , 0
 						 , @IdCountrySender
                     FROM #TableCustomerPaymentTemp tcpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tcpt.GuideSerie, tcpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.GuideSerie  = tcpt.GuideSerie
+                                                                         AND c.GuideNumber = tcpt.GuideNumber
                     WHERE NOT EXISTS
                     (
                         SELECT 1
