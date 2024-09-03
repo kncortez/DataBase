@@ -79,6 +79,11 @@ BEGIN
 			--DECLARE @IDTAC1 BIGINT= (SELECT IdTAC FROM DBO.TermsAndConditions WHERE Name='Collection Services Terms and Conditions' AND RowStatus=1)
 			--DECLARE @IDTAC2 BIGINT= (SELECT IdTAC FROM DBO.TermsAndConditions WHERE Name='Declaration no content of illegal products' AND RowStatus=1)
 
+			IF @EndDate IS NULL 
+			BEGIN
+				--se suman 2 horas
+				SET @EndDate=DATEADD(HOUR,2,@startdate )
+			END
 	
 			DECLARE @IDSCHEDULEPICKUP INT =NULL;
 			DECLARE @IDSERVICEMANAGEMENT INT =NULL;
