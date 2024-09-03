@@ -123,7 +123,6 @@ IF(@IsStatusTerminal = 0)
 				  UPDATE  dbo.warehouse SET Active =0,
 				          UserUpdated = @TokenId,
 						  DateUpdated = GETDATE()
-
 				  where Guide_Serie = @Guide_Serie AND 
                         Guide_Number = @Guide_Number AND
 						Active = 1
@@ -281,10 +280,12 @@ IF(@IsStatusTerminal = 0)
 													FROM DeliveryOrder do WITH(NOLOCK)
 													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 														ON do.Guide_Number = dop.GuideNumber
+                                                        AND do.Guide_Serie = dop.GuideSerie
 														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
 														WHERE do.Guide_Number = @Guide_Number
-															AND WHE.TypeConnectionId = 2
+                                                          AND do.Guide_Serie = @Guide_Serie
+														  AND WHE.TypeConnectionId = 2
 														GROUP BY dop.GuideSerie,dop.GuideNumber
 
 											   DECLARE @PiecesGuideRelatedTable AS TABLE
@@ -314,9 +315,11 @@ IF(@IsStatusTerminal = 0)
 													FROM DeliveryOrder do WITH(NOLOCK)
 													INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 														ON do.Guide_Number = dop.GuideNumber
+                                                        AND do.Guide_Serie = dop.GuideSerie
 														INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
 														WHERE do.Guide_Number = @Guide_Number
+                                                        AND do.Guide_Serie = @Guide_Serie
 														AND dop.ExternalPieceId IS NOT NULL
 														AND WHE.TypeConnectionId = 2
 														GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -338,12 +341,15 @@ IF(@IsStatusTerminal = 0)
 												FROM DeliveryOrderPiece dop WITH(NOLOCK)
 												INNER JOIN DeliveryOrder do WITH(NOLOCK)
 													ON dop.GuideNumber = do.Guide_Number
+                                                    AND dop.GuideSerie = do.Guide_Serie
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 												    ON do.IdCustomer = WHE.CustomerId
 												INNER JOIN @GuidePiecesTable gpt
 												    ON dop.GuideNumber = gpt.GuideNumber
+                                                    AND dop.GuideSerie = gpt.GuideSerie
 												INNER JOIN @PiecesGuideRelatedTable pgt
 												    ON gpt.GuideNumber = pgt.GuideNumber
+                                                    AND gpt.GuideSerie = pgt.GuideSerie
 													WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
 														AND WHE.TypeConnectionId = 2
 
