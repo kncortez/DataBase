@@ -19,6 +19,10 @@
 -- Create date: <2023-03-02>
 -- Description:	<En proceso de entregas desde CourierApp, cuando sea flujo de guías marcadas para devolución, ingresar las guías marcadas para devolución al proceso de COD para lotes Collect>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <03-09-2024>
+-- Description:	<Se agrega la variable @Receiver_CUI para almacenar el CUI de la persona que recibe>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @GuideSerie NVARCHAR(2),
@@ -37,7 +41,8 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ImageDry VARCHAR(300),
     @ImageCold VARCHAR(300),
     @CODPayment DECIMAL(12, 2) = 0,
-    @ExcludeCODPyament BIT = 'false'
+    @ExcludeCODPyament BIT = 'false',
+    @Receiver_CUI NVARCHAR(25) = ''
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -319,6 +324,7 @@ BEGIN
                 -- actualizar tabla de registro de guías electrónicas
                 UPDATE DeliveryBackOffice.dbo.DeliveryOrder
                 SET NameOfReceiver = @ReceiverName,
+					Receiver_CUI = @Receiver_CUI,
                     StatusOrderId = IIF(@IdDeliveryOptionGuide = @IdDeliveryOption AND ISNULL(@IsReturn, 0) = 0,
                                         @StatusEXC,
                                         IIF(@IsExpress = 'true' AND ISNULL(@IsReturn, 0) = 0, @StatusEXC, IIF(@IsReturn = 1, 14, 5))),
