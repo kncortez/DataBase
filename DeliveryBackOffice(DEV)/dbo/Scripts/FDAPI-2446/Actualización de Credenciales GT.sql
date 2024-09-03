@@ -7,7 +7,7 @@ SELECT
 	   ,dpf_SAPCompania
 	   ,dpf_SAPUsuario
 	   ,dpf_SAPServidor
-	   ,dpf_SAPUsuarioBD
+	   ,dpf_SAPUsuario
 	   ,dpf_SAPContrasenia
 	   ,dpf_SAPServidor
 	   ,dpf_SAPUsuarioBD
@@ -16,18 +16,18 @@ SELECT
 	   ,dpf_OcrCode
 	   ,dpf_OcrCode2
 FROM del_ParametrosFactura
-WHERE dpf_FELCountry = 'HN'
+WHERE ISNULL(dpf_FELCountry,'GT') = 'GT'
 
 update del_ParametrosFactura 
 set 
 	 dpf_SAPServidorLicencias = 'WIN-QF1OUTS7TLC'
-	,dpf_SAPCompania = 'DELIVERY_FORZA'
+	,dpf_SAPCompania = 'VVV_DELVERYGUATEMALATEST'
 	,dpf_SAPUsuario = 'RPA_AGENT'
 	,dpf_SAPContrasenia = 'Del$2025'
-	,dpf_SAPServidor = '192.168.130.107'
+	,dpf_SAPServidor = '172.19.2.30'	
 	,dpf_SAPUsuarioBD = 'delivery'
-	,dpf_SAPContraseniaBD = 'Del$2024' 
-where dpf_FELCountry= 'HN'
+	,dpf_SAPContraseniaBD = 'R;XF%269z]$VG!HM=w<}PC' 
+where ISNULL(dpf_FELCountry,'GT') = 'GT'
 
 SELECT
 		dpf_VpCodeOfReference
@@ -38,7 +38,7 @@ SELECT
 	   ,dpf_SAPCompania
 	   ,dpf_SAPUsuario
 	   ,dpf_SAPServidor
-	   ,dpf_SAPUsuarioBD
+	   ,dpf_SAPUsuario
 	   ,dpf_SAPContrasenia
 	   ,dpf_SAPServidor
 	   ,dpf_SAPUsuarioBD
@@ -47,4 +47,4 @@ SELECT
 	   ,dpf_OcrCode
 	   ,dpf_OcrCode2
 FROM del_ParametrosFactura
-WHERE dpf_FELCountry = 'HN'
+WHERE ISNULL(dpf_FELCountry,'GT') = 'GT'
