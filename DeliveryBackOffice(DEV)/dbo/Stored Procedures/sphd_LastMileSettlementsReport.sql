@@ -24,18 +24,18 @@ BEGIN
            (CASE WHEN [ord].[IsLastMileReturn] = 1 THEN 0 ELSE ord.Collect_OnDelivery END) 'COD',
 		   REPLACE(REPLACE(REPLACE(dc.Symbol,'.',''),'(',''),')','') [Currency_Symbol]
     FROM dbo.DeliveryOrderBySettlement dst
-        JOIN dbo.DeliverySettlementDetail dsd
+        INNER JOIN dbo.DeliverySettlementDetail dsd
             ON dsd.ID_DeliveryOrderBySettlement = dst.ID
-               AND dsd.RowStatus = 1
-        JOIN dbo.DeliveryOrder ord
+        INNER JOIN dbo.DeliveryOrder ord
             ON ord.Guide_Serie = dsd.Guide_Serie
                AND ord.Guide_Number = dsd.Guide_Number
-        JOIN dbo.CatStation cst
+        INNER JOIN dbo.CatStation cst
             ON cst.IdStation = dst.SettlementStationId
         LEFT JOIN dbo.SenderReceiver sdr
             ON sdr.ID = dst.ID_Courier
 		LEFT JOIN dbo.Cost c WITH (NOLOCK)
-            ON c.ProductNumber = CONCAT(ord.guide_Serie, ord.guide_number)
+            ON c.GuideSerie = ord.guide_Serie
+            AND c.GuideNumber = ord.guide_number
 		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
             ON dc.IdCatCurrencyCOD = c.CodCurrency
     WHERE CONVERT(DATE, dst.Date_Received)
@@ -48,6 +48,7 @@ BEGIN
           --dsd.Settlement_Collect_OnDelivery > 0
           AND dsd.Guide_Delivered = 'true'
           AND dsd.Guide_Discharged IS NOT NULL
+          AND dsd.RowStatus = 1
     ORDER BY cst.IdStation,
              dst.Date_Received,
              dst.ID,

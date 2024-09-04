@@ -41,8 +41,8 @@ BEGIN
 		,ISNULL(smt.[Order], 1) [Order]
   from 
   [DeliveryBackOffice].[dbo].[RouteAssigment] as rat WITH(NOLOCK) 	
-	join [DeliveryBackOffice].[dbo].[ServiceManagement] as smt WITH(NOLOCK) on smt.IdPuRouteAssigment = rat.IdRouteAssigment
-	join [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = smt.IdSchedulePickup
+    INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] as smt WITH(NOLOCK) on smt.IdPuRouteAssigment = rat.IdRouteAssigment
+    INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = smt.IdSchedulePickup
 	left join [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] as dop WITH(NOLOCK) ON spu.SchedulePickupId=dop.IdHeaderRecolection
 	left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Number = dop.GuideNumber AND dor.Guide_Serie = dop.GuideSerie
 	left join [DeliveryBackOffice].[dbo].[Township] twnT WITH(NOLOCK) ON spu.TownshipId = twnT.IdTownship

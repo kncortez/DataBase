@@ -33,17 +33,20 @@ BEGIN
 			VP.Town Township
       FROM dbo.VisitPointItinerary TT WITH(NOLOCK)
           INNER JOIN dbo.VisitPointFrequency FQ WITH (NOLOCK)
-              ON FQ.IdVPFrequency = TT.VPFrequencyID AND fq.RowStatus ='true' 
+              ON FQ.IdVPFrequency = TT.VPFrequencyID
           INNER JOIN dbo.VisitPointConfiguration CF WITH (NOLOCK)
-              ON CF.IdVPConfiguration = FQ.VPConfigurationID AND cf.RowStatus ='true'
+              ON CF.IdVPConfiguration = FQ.VPConfigurationID
           INNER JOIN dbo.VisitPointClient VP WITH (NOLOCK)
               ON VP.CodeOfReference = CF.VisitPointID --AND vp.StatusClient ='true'
           INNER JOIN dbo.Customer CS WITH (NOLOCK)
-              ON CS.IdCustomer = VP.CustomerID AND cs.RowSatus ='true'
+              ON CS.IdCustomer = VP.CustomerID
           LEFT JOIN dbo.CatRoute RT WITH(NOLOCK)
               ON RT.IdRoute = TT.RouteCodeID 
       WHERE TT.DayOfVisit = @weekday
+            AND fq.RowStatus ='true' 
             AND TT.RowStatus = 'TRUE'
+            AND cf.RowStatus ='true'
+            AND cs.RowSatus ='true'
 			AND ISNULL(TT.InitializationTimeOfVisit, '__:__') != '__:__'
 			AND ISNULL(TT.FinalizationTimeOfVisit, '__:__') != '__:__'
             AND IIF(VP.CountryId IS NULL, 'GT', VP.CountryId) = @IdCountry;
