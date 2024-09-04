@@ -17,11 +17,8 @@
     [InternalCode]                  VARCHAR (50)   NULL,
     [TaxId]                         VARCHAR (50)   NULL,
     [ContactName]                   VARCHAR (50)   NULL,
-    [IsBusiness]                    BIT            NULL,
     CONSTRAINT [PK_VisitPointByClientPortfolio] PRIMARY KEY CLUSTERED ([IdVisitPointByClientPortfolio] ASC)
 );
-
-
 
 
 
@@ -71,5 +68,146 @@ CREATE NONCLUSTERED INDEX [IDX_Phone]
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'bandera indica si el tipo de cliente es individual o empresarial', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'VisitPointByClientPortfolio', @level2type = N'COLUMN', @level2name = N'IsBusiness';
-
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificador de registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'IdVisitPointByClientPortfolio'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Primer nombre',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'FirstName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Segundo nombre',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'SecondName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Primer apellido',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'LastName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Segundo Apellido',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'SecondLastName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Email',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'Email'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Prefijo de numero(+502)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'NirPhone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de teléfono',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'Phone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'CUI',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'CUI'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de punto de visita',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'VisitPointId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'RowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'DateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = N'COLUMN',
+    @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Datos de puntos de visita por cartera de cliente corporativo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'VisitPointByClientPortfolio',
+    @level2type = NULL,
+    @level2name = NULL

@@ -3,10 +3,27 @@
 -- Create date: <2021-19-04>
 -- Description:	<Obtiene el listado de los clientes>
 -- =============================================
+
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Update date: <2024-04-23>
+-- Description:	<Se agrego obtencion de campo isCOD>
+-- =============================================
+
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Update date: <2024-06-03>
+-- Description:	<Se agrega parametro para filtrar por pais>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-26>
+-- Description:	<Se agrega validacion para obtener campo isCOD sin valor null>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCustomer]
     -- Add the parameters for the stored procedure here
     @IdCustomer AS INT = -1
   , @Option AS INT = 0
+  , @IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -27,6 +44,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -40,7 +58,8 @@ BEGIN
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
-              );
+              )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -100,6 +119,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
+			 , ISNULL(cst.[IsCOD],0) IsCOD
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               --AND cst.RowSatus = 'TRUE'
@@ -108,6 +128,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
     END;
 
@@ -124,6 +145,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -136,7 +158,8 @@ BEGIN
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
-              );
+              )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -198,6 +221,7 @@ BEGIN
              , ISNULL(cst.[CatBillingVolumeId], -1)        AS CatBillingVolumeId
              , ISNULL(cst.[BillingCut_offDate], GETDATE()) AS BillingCut_offDate
              , ISNULL(cst.[NumImgEvidence], 1)             AS NumImgEvidence
+			 , ISNULL(cst.[IsCOD],0) IsCOD
         FROM Customer cst
         WHERE cst.IdCustomerType != 3 --todos excepto el portal 3
               AND
@@ -205,6 +229,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 
     END;
@@ -223,6 +248,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -235,7 +261,8 @@ BEGIN
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
-              );
+              )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -247,6 +274,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 	END;
 
@@ -264,6 +292,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			  AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 
         --Second Catalog UI MgtCustomer
@@ -276,7 +305,8 @@ BEGIN
               (
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
-              );
+              )
+              AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry;
 
         --Third Data UI MgtCustomer
         SELECT cst.[IdCustomer]
@@ -289,6 +319,7 @@ BEGIN
                   @IdCustomer = -1
                   OR cst.IdCustomer = @IdCustomer
               )
+			 AND IIF(cst.CountryID IS NULL,'GT',cst.CountryID) = @IdCountry
         ORDER BY cst.Name;
 	END;
 

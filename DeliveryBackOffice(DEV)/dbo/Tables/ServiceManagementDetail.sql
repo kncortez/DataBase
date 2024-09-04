@@ -133,3 +133,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del Serv
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de tabla ServiceManagementDetail', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagementDetail', @level2type = N'COLUMN', @level2name = N'IdServiceManagementDetail';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tabla del detalle de servicios realizados.',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagementDetail',
+    @level2type = NULL,
+    @level2name = NULL

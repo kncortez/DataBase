@@ -42,3 +42,13 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'TokenUpdate
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'DateUpdated categoría', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleCategorySAP', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Catálogo de categorias de articulos SAP',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatArticleCategorySAP',
+    @level2type = NULL,
+    @level2name = NULL

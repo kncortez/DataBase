@@ -5,7 +5,14 @@
 -- Last Update date: <2022-09-22>
 -- Description:	< Login de portal web para usuarios internos >
 -- =============================================
-
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-05>
+-- Description:	<Se devuelve el id del pais de usuario, en apartado Profile>
+-- =============================================
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-16>
+-- Description:	<Se cambia el pais de usuario por pais de estacion asignada>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInternalLogIn]
 	-- Add the parameters for the stored procedure here
 	@UserCode BIGINT = 0,
@@ -80,7 +87,24 @@ AS
 				AND 
 				ru.UsrRowStatus = 1
 		)
-												
+		
+		--OBTIENE EL PAIS DE USUARIO
+		DECLARE @IdCountry AS VARCHAR(2) ='GT';
+		SELECT @IdCountry = ISNULL(PerCountryOrigin,'GT')
+			FROM 
+				DeliveryBackOffice.[dbo].RegisterUser ru WITH(NOLOCK)
+				INNER JOIN 
+					DeliveryBackOffice.[dbo].InternalUser iu WITH(NOLOCK)
+					ON ru.UsrIdUser = iu.RegisterUserID
+				INNER JOIN 
+					DeliveryBackOffice.[dbo].Person per WITH(NOLOCK)
+					ON ru.UsrIdPerson = per.PerIdPerson 
+			WHERE 
+				iu.Username=@UserName
+				AND 
+				ru.UsrRowStatus = 1		
+				
+
          --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
 		INSERT INTO @User
@@ -207,7 +231,7 @@ AS
 													@IdSystem, 
 													0, 
 													0, 
-													'GT', 
+													@IdCountry,--'GT', 
 													NULL, 
 													1, 
 													@Token, 
@@ -465,7 +489,8 @@ AS
                                          '"Birthdate":"' + CONVERT(VARCHAR, ISNULL(pe.PerBirthdate,'')) + '",' + '"Identification":"'
                                          + pe.PerIdentification + '",' + '"Nationality":"' + pe.PerNationality + '",' 
                                          + '"NickName":"' + CONVERT(VARCHAR, us.UsrNickName) + '",'
-                                         + '"Phone":"' + ISNULL(us.Phone,'') + '",'
+                                         + '"Phone":"' + ISNULL(us.Phone,'') + '",'										 
+										 --+ '"IdCountry":"' + ISNULL(pe.PerCountryOrigin,'GT') + '",'
 										 + '"TAC":"TRUE"}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
                                                     INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson
@@ -486,6 +511,7 @@ AS
 											'"ContactName":"' + isnull( RTRIM(LTRIM(CONCAT(pe.PerFirstName,' ', pe.PerLastName))) , '')  + '",' +	  	  
 											'"Phone":"' + isnull(ru.Phone, '')  + '",' +
 											'"Email":"' + isnull(ru.UsrEmail, '')  + '",' +
+											'"IdCountry":"' + ISNULL(CS.CountryId,'GT') + '",'+
 											'"Station":' + CAST(ISNULL(CS.IdStation,0) AS NVARCHAR)+',' + '}' 
 			        FROM  
 			         DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 

@@ -4,6 +4,11 @@
 -- Create date: 7 Octubre 2020
 -- Description:	Inserta encabezado de factura
 -- =============================================
+-- =============================================
+-- Author:		Cristian Suazo
+-- Create date: 12-08-2024 
+-- Description:	Se calcula y se inserta la moneda y el pais en InvoiceHeader
+-- =============================================
 */
 CREATE PROCEDURE [dbo].[sps_headerInvoice]
 	-- Add the parameters for the stored procedure here
@@ -21,6 +26,22 @@ CREATE PROCEDURE [dbo].[sps_headerInvoice]
 	,@CatTypeInvoiceId INT = NULL
 AS
 BEGIN
+
+
+DECLARE @IdCountry NVARCHAR(2),
+		@IdCurrency INT;
+
+	SELECT @IdCountry=CountryId 
+	FROM VisitPointClient WITH (NOLOCK)
+	WHERE CodeOfReference = @VpCodeOfReferences
+
+	SELECT @IdCurrency = CU.IdCatCurrencyCOD 
+	FROM DeliveryCurrency DC WITH (NOLOCK)
+	INNER JOIN CatCurrencyCOD CU WITH (NOLOCK)
+		ON DC.IdCurrencyCOD = CU.IdCatCurrencyCOD
+	WHERE DC.Currency_IdCountry = @IdCountry AND DC.Currency_Status = 1
+	AND DC.DefaultPerCountry = 1
+
 
 if (@systemOrigen = 0)
 BEGIN
@@ -49,6 +70,8 @@ END
 		   ,[inv_type]
            ,[systemOperation]
 		   ,[CatInvoiceTypeId]
+		   ,IdCurrency
+		   ,IdCountry
 		   )
      VALUES
            (@VpCodeOfReferences
@@ -66,6 +89,8 @@ END
 		   ,@type
            ,@systemOrigen
 		   ,ISNULL(@CatTypeInvoiceId, (SELECT IdCatInvoiceType FROM CatInvoiceType WHERE Name = 'Envío' AND RowStatus = 1))
+		   ,@IdCurrency
+		   ,@IdCountry
 		   )
 		   select @@IDENTITY 'IDENTITY'
 END

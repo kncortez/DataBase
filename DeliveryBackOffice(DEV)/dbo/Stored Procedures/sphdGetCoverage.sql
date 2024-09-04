@@ -3,7 +3,12 @@
 -- Create date: <2022-01-11>
 -- Description:	<Retorna los tipos de una ruta>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-05-27>
+-- Description:	<Se agrega parametro para filtrar coberturas>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphdGetCoverage]
+	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
 
@@ -34,6 +39,7 @@ BEGIN
 				INNER JOIN dbo.Province prov      WITH (NOLOCK) 
 				ON prov.IdProvince=towns.IdProvince    
 		WHERE  (cov.RowStatus=1)
+		AND prov.IdCountry = @IdCountry
 		ORDER BY cov.HeaderCode
 END
 

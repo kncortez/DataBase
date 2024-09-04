@@ -32,6 +32,7 @@ BEGIN
     DECLARE @AmountWeight DECIMAL(18, 2);
     DECLARE @AmountSecure DECIMAL(18, 2);
     DECLARE @AmountCollect DECIMAL(18, 2);
+    DECLARE @CountryByGuide NVARCHAR(2);
 
     DECLARE @CostId INT;
 
@@ -67,6 +68,7 @@ BEGIN
     SELECT 
 		@TypeService = ISNULL(do.TypeService, 'STD')
 		,@IsCOD = (CASE WHEN do.Collect_OnDelivery > 0 THEN 1 ELSE 0 END)
+        ,@CountryByGuide = SenderCountryId
     FROM DeliveryOrder do WITH (NOLOCK)
     WHERE do.Guide_Serie = @GuideSerie
             AND do.Guide_Number = @GuideNumber
@@ -456,7 +458,8 @@ BEGIN
                    ca.Category,
                    1
             FROM CatArticleSAP ca
-            WHERE ca.Name = @NameArticle;
+            WHERE ca.Name = @NameArticle
+              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
 			
         IF @AmountCollect IS NOT NULL
            AND @AmountCollect > 0
@@ -468,7 +471,8 @@ BEGIN
                    ca.Category,
                    1
             FROM CatArticleSAP ca
-            WHERE ca.Name = @NameArticleCollect;
+            WHERE ca.Name = @NameArticleCollect
+              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
 
         IF @AmountWeight IS NOT NULL
            AND @AmountWeight > 0
@@ -480,7 +484,8 @@ BEGIN
                    ca.Category,
                    1
             FROM CatArticleSAP ca
-            WHERE ca.Name = @NameArticleWeight;
+            WHERE ca.Name = @NameArticleWeight
+              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
 
         IF @AmountSecure IS NOT NULL
            AND @AmountSecure > 0
@@ -492,7 +497,8 @@ BEGIN
                    ca.Category,
                    1
             FROM CatArticleSAP ca
-            WHERE ca.Name = @NameArticleSecure;
+            WHERE ca.Name = @NameArticleSecure
+              AND ISNULL(ca.IdCountry,'GT') = @CountryByGuide;
     END;
 
 		

@@ -3,12 +3,17 @@
 -- Create date: <2022-04-07>
 -- Description:	<Obtiene información para Form Monitoreo de Servicios de Recolección>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-06-06>
+-- Description: <Se agrego filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServices]
 	-- Add the parameters for the stored procedure here
 	@CustomerId INT = -1,
 	@DateStart DATE = '2022-01-07',
 	@DateEnd DATE = '2022-04-07',
-	@Phone NVARCHAR(50) = '-1'
+	@Phone NVARCHAR(50) = '-1',
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 -- SET NOCOUNT ON added to prevent extra result sets from
@@ -46,4 +51,5 @@ SET NOCOUNT ON;
 	OR REPLACE(cu.CustomerPhone, '-', '') LIKE @PhoneNew
 	OR @PhoneNew = '-1')
 	AND CAST(sm.DateCreated AS DATE) BETWEEN @DateStart AND @DateEnd
+    AND IIF(vpc.CountryId IS NULL,'GT', vpc.CountryId) = @IdCountry
 END

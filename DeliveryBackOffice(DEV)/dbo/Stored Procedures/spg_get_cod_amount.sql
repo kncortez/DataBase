@@ -14,6 +14,7 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+    DECLARE @IdCountry NVARCHAR(2) = 'GT';
 
 			-- Insert statements for procedure here
 		IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL DROP TABLE #listGuides;
@@ -29,16 +30,24 @@ BEGIN
 		DECLARE @IdRateDefault int = (select top 1 rhd.RheId  from DBO.RateHeader rhd where rhd.RheRowStatus = 1 and rhd.RheDefault = 1)
 		DECLARE @IdRate int
 
-		DECLARE @CODRateDefault decimal(12,2) = (select CONVERT(decimal(12,2), isnull(cf.Value,'0')) val from dbo.ConfigParams cf where cf.Name ='CODRateDef' and Status =1)
+        SELECT TOP 1 
+               @IdCountry = ord.SenderCountryId
+        --Into #RevalueGuides
+          FROM #listGuides lst
+               INNER JOIN dbo.DeliveryOrder ord 
+                  ON ord.Guide_Number = lst.ItemNumber
+                 AND ord.Guide_Serie = lst.ItemSerie
 
-		DECLARE @CODExemptDefault decimal(12,2) = (select CONVERT(decimal(12,2), isnull(cf.Value,'0')) val from dbo.ConfigParams cf where cf.Name ='CODExemptDef' and Status =1)
+		DECLARE @CODRateDefault decimal(12,2) = (select CONVERT(decimal(12,2), isnull(cf.Value,'0')) val from dbo.ConfigParams cf where cf.Name ='CODRateDef' and Status =1 AND ISNULL(IdCountry,'GT') = @IdCountry)
+
+		DECLARE @CODExemptDefault decimal(12,2) = (select CONVERT(decimal(12,2), isnull(cf.Value,'0')) val from dbo.ConfigParams cf where cf.Name ='CODExemptDef' and Status =1 AND ISNULL(IdCountry,'GT') = @IdCountry)
 
 		---- Revalorizar guias que no tengan un precio asociado ---------------------------------------------
 
 			select ord.Guide_Serie , ord.Guide_Number
 			Into #RevalueGuides
 			from #listGuides lst
-				join dbo.DeliveryOrder ord on ord.Guide_Number = lst.ItemNumber and ord.Guide_Serie = lst.ItemSerie
+				INNER JOIN dbo.DeliveryOrder ord on ord.Guide_Number = lst.ItemNumber and ord.Guide_Serie = lst.ItemSerie
 				LEFT JOIN
 					[DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH(NOLOCK)
 					ON lst.ItemSerie = PC.GuideSerieDestination
@@ -48,6 +57,8 @@ BEGIN
 				or ord.PriceShippment  <=0  -- precio 0
 				or ord.StatusOrderId = 14)  -- guias devuletas
 				AND PC.IdPromoCoupon IS NULL
+
+            CREATE NONCLUSTERED INDEX listGuides ON #RevalueGuides (Guide_Serie, Guide_Number);
 
 			DECLARE @count INT;
 			SET @count = 1;
@@ -89,13 +100,13 @@ BEGIN
 			, iif( ord.TypeService ='EXP' ,'NDD', isnull(ord.TypeService,'NDD')) Serv
 			, twn.HeaderCode
 			, (select top 1 hb.IdHubLogistic from dbo.DumpServiceCoverage cv 
-					 join dbo.HubLogistics hb on hb.HubAbbreviation = cv.Hub	
+					 INNER JOIN dbo.HubLogistics hb on hb.HubAbbreviation = cv.Hub	
 				where cv.HeaderCode =twn.HeaderCode ) Hub
 			, csv.CtsId IdService
 			, ord.DCBA_ID 
 		Into #TempData
 		from  #listGuides lst
-			join dbo.DeliveryOrder ord on ord.Guide_Serie = lst.ItemSerie and ord.Guide_Number = lst.ItemNumber
+			INNER JOIN dbo.DeliveryOrder ord on ord.Guide_Serie = lst.ItemSerie and ord.Guide_Number = lst.ItemNumber
 			left join dbo.VisitPointClient vpc on vpc.CodeOfReference = ord.Sender_ID
 			LEFT JOIN dbo.RatebyCustomer rc on rc.RbcIdCustomer =isnull(ord.IdCustomer, vpc.CustomerID) and rc.RbcRowStatus ='true'
 			left join dbo.Township twn on twn.IdTownship =   isnull( isnull(isnull(ord.ReceiverIdTownship , vpc.IdTownship), (select  top 1 st.IdTownship from dbo.Settlement st where st.IdSettlement = vpc.IdSettlement)), (select top 1  IdTownship from dbo.Township twn where twn.TownshipName =ord.Receiver_Town and twn.TownshipStatus ='true') )
@@ -105,6 +116,8 @@ BEGIN
 			--left join dbo.RateCOD rco on rco.RateId = isnull(rc.RbcIdRate ,@idRateDefault)
 
 			DECLARE @IdSegmentDefault int =( select TOP 1 CrsId from dbo.CatRateSegment where CrsShortName ='FOR' and CrsRowStatus  ='true')
+
+            CREATE NONCLUSTERED INDEX TempData ON #TempData (IdRate, IdService);
 
 			select td.*
 			, isnull(cv.SegmentId,@IdSegmentDefault) IdSegment
@@ -140,12 +153,17 @@ BEGIN
 					HaveCredit			BIT,
 					CollectCOD			BIT,
 					ReturnRate			decimal (14,2) null,
+					CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	            CurrencyPrice_CODSymbol  NVARCHAR(8),
+	                CurrencyPriceCodeISO     NVARCHAR(8),
+	                CurrencyPriceSymbol      NVARCHAR(8),
 					AmountToPay			decimal (14,2) null,
 					CODAmount			decimal (14,2) null,
 					ReturnRates			decimal (14,2) null)
 			INSERT INTO @PendingPaymentTemp (GuideSerie,GuideNumber,IsCollect,Price,COD,AmountPaid,CODPaid
 				,CODIsPaid,PaymentTime,TimeSequence	,FelNumber,IsPaid,IsCustomer
-				,ConditionPayment,HaveCredit,CollectCOD,ReturnRate,AmountToPay,CODAmount,ReturnRates)
+				,ConditionPayment,HaveCredit,CollectCOD,ReturnRate, CurrencyPrice_CODCodeISO,CurrencyPrice_CODSymbol,
+                CurrencyPriceCodeISO,CurrencyPriceSymbol,AmountToPay,CODAmount,ReturnRates)
 			EXEC  [dbo].[spws_get_guide_pending_payment]
 						@InGuides = @ProductNumber,
 						@InTime = @MaxPaymentTIme,

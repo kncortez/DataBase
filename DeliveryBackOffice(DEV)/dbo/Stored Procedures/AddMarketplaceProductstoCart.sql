@@ -8,33 +8,49 @@
 CREATE PROCEDURE [dbo].[AddMarketplaceProductstoCart]
     @IdAccount BIGINT,
 	@Token NVARCHAR(50),
-	@TblProductsList [TblSalePackageMarketPlace]  READONLY
+	@TblProductsList [TblSalePackageMarketPlace]  READONLY,
+	@IdCountry NVARCHAR(3)='GT',
+	@IsUserTeleMarketing BIT = 0
 AS
 	
 	DECLARE @MarketplaceCartId INT;
-
+    DECLARE @IdCart INT=0;
 	
 
 BEGIN TRANSACTION
 BEGIN TRY
 
-DECLARE @IdCart INT =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[MarketplaceCart] a  WHERE  a.AccountId = @IdAccount AND a.RowStatus=1 ORDER BY a.DateCreated DESC)
 
- 	IF(NOT EXISTS(Select Top 1 1 
-	                  From [dbo].[MarketplaceCart] a  
-					        WHERE  a.AccountId = @IdAccount AND a.RowStatus=1 ORDER BY a.DateCreated DESC))
+
+  IF(@IsUserTeleMarketing=0) 
+  BEGIN
+
+   SET  @IdCart  =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[MarketplaceCart] a  WHERE  ISNULL(a.AccountId,0) = @IdAccount 
+                                                                          AND a.RowStatus=1 AND ISNULL(a.IdCountry,'GT') = @IdCountry  ORDER BY a.DateCreated DESC);
+   END
+	   ELSE
+	    BEGIN
+
+	        SET  @IdCart  =(Select Top 1 ISNULL(a.IdMarketplaceCart,0) From [dbo].[MarketplaceCart] a  WHERE  ISNULL(a.RegisterUserId,0) = @IdAccount 
+																			  AND a.RowStatus=1 AND ISNULL(a.IdCountry,'GT') = @IdCountry  ORDER BY a.DateCreated DESC);
+	 END
+
+
+IF(ISNULL(@IdCart,0) = 0  )
 	BEGIN
 	
 			INSERT INTO [dbo].[MarketplaceCart](
 			AccountId,
 			RowStatus,
 			TokenCreated,
-			DateCreated
+			DateCreated,
+			IdCountry
 			)VALUES(
 			 @IdAccount,
 			 1,
 			 @Token,
-			 GETDATE()
+			 GETDATE(),
+			 @IdCountry
 			)
 
 			SET @MarketplaceCartId = SCOPE_IDENTITY();

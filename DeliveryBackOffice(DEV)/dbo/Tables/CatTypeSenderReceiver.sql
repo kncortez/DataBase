@@ -6,7 +6,9 @@
     [DateCreated]             DATETIME      NOT NULL,
     [TokenUpdated]            NVARCHAR (50) NULL,
     [DateUpdated]             DATETIME      NULL,
-    CONSTRAINT [PK_CatTypeSenderReceiver] PRIMARY KEY CLUSTERED ([IdCatTypeSenderReceiver] ASC)
+    [IdCountry]               VARCHAR  (2)  NULL,
+    CONSTRAINT [PK_CatTypeSenderReceiver] PRIMARY KEY CLUSTERED ([IdCatTypeSenderReceiver] ASC),
+    CONSTRAINT [FK_TypeSenderIdCountry_CountryIdCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
 );
 
 
@@ -45,3 +47,5 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de ac
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeSenderReceiver', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de pais', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatTypeSenderReceiver', @level2type = N'COLUMN', @level2name = N'IdCountry';

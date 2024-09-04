@@ -3,8 +3,14 @@
 -- Create date: <2021-06-29>
 -- Description:	<Guias por pagar COD>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Modification date: <2024-07-09>
+-- Description:	<Filtro multipais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spcod_get_customer_daily_delivery]
 -- Add the parameters for the stored procedure here
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -27,6 +33,7 @@ BEGIN
           AND CONVERT(DATE, dt.DateCreated) = CONVERT(DATE, GETDATE())
 		  AND PC.Notificated = 0
 		  AND PC.BatchCODId IS NOT NULL
+		  AND IIF(ord.SenderCountryId IS NULL, 'GT', ord.SenderCountryId) = @IdCountry
 		 
 END;
 

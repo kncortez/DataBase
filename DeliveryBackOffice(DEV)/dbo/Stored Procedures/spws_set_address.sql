@@ -4,7 +4,11 @@
 -- Create date: <2021-01-08>
 -- Description:	<Método para registrar dirección y punto de visita>
 -- =============================================
-
+-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-08-26>
+-- Description:	<Se agrega la opción de tener una única dirección favorita para Origen>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_address]
 	-- Add the parameters for the stored procedure here
@@ -32,7 +36,8 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@VisibleInGuide bit = NULL,
 	@PickupsProgram bit = NULL,
 	@IsOriginVisitPoint bit = 1,
-	@ContactName NVARCHAR(200) = NULL
+	@ContactName NVARCHAR(200) = NULL,
+	@IsFavorite bit = 0
 	
 	
 AS
@@ -41,15 +46,18 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	DECLARE @jsonResult NVARCHAR(MAX) 
 	DECLARE @CodeOfReference INT
 	DECLARE @IdCustomer INT
 	DECLARE @TownshipName NVARCHAR(200)
 	DECLARE @Department NVARCHAR(100)
+	DECLARE @IdKindOfVPClient INT
 	DECLARE @IdKindOfVPBusiness INT
 	DECLARE @IdVisitPointClient INT
 	DECLARE @HeaderCode VARCHAR(10)
 	DECLARE @CityName VARCHAR(50)
 	DEClARE @IdDepartment INT;
+	DECLARE @IdAddressFavorite bigINT;
 
 	DECLARE @ResponseMessages AS TABLE (
 		IdResult INT,
@@ -70,8 +78,8 @@ BEGIN
 			,'Registro creado correctamente' AS Message
 			,'Insert' as Id 
 	union
-	SELECT  401 AS IdResult
-			,'Usuario no asociado a cuenta, revise el token' AS Message
+	SELECT  500 AS IdResult
+			,'Usuario no asociado a cuenta' AS Message
 			,'Access' as Id 
 	union
 	SELECT  200 AS IdResult
@@ -80,41 +88,37 @@ BEGIN
 	union
 	SELECT  200 AS IdResult
 			,'Registro Eliminado' AS Message
-			,'Delete' as Id
+			,'Delete'  as Id
 	union
 	SELECT  500 AS IdResult
 			,'Error al ejecutar la operación ' AS Message
 			,'Error' as Id) as messagess
 			
 	-- Figurar municipio en caso no venga un identificador
-	SET @CodeOfReference = (SELECT MAX(CodeOfReference)+1  FROM VisitPointClient)
-	
+
+	PRINT '@IdTownship'
+	PRINT @IdTownship
 	IF(@IdTownship IS NULL)
 	BEGIN
-		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' COLLATE Latin1_General_CI_AI);
-	END
-	
-	-- obtener el id de usuarion con base al token
-	declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t with(nolock) where t.TknIdToken = @Token)
 
-	IF(NOT EXISTS(Select Top 1 1 
-					From dbo.RolByUserByAccount  rua
-					Where rua.RuaIdAccount = @IdAccount and
-					rua.RuaIdUser = @IdUser))
-	BEGIN
-	 Select Top 1 @IdUser=RuaIdUser From [dbo].[RolByUserByAccount]  rua Where rua.RuaIdAccount = @IdAccount 
+		SET @IdTownship = (SELECT TOP 1 Twn.IdTownship FROM [DeliveryBackOffice].[dbo].[Township] Twn WITH(NOLOCK) WHERE @ProvinceTownship LIKE '%'+Twn.TownshipName+'%' COLLATE Latin1_General_CI_AI);
+
 	END
+
+	-- obtener el id de usuarion con base al token
+
+	declare @IdUser bigint  = (select top 1 t.TknIdUser from TokenLog t with(nolock) where t.TknIdToken = @Token)
 
 	select RuaIdAccount 
 	into #Access
 	from dbo.RolByUserByAccount  rua
 	where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser
-	
+
 	BEGIN TRANSACTION
 	BEGIN TRY
 
-		IF(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
-		BEGIN
+		if(select count(RuaIdAccount) from #Access)>0 -- el usuario tiene acceso  a la cuenta indicada
+		begin
 
 			select uad.UadIdAddress
 			into #Address
@@ -125,17 +129,27 @@ BEGIN
 				SELECT @Department=ProvinceName,@IdDepartment=PV.IdProvince FROM Province PV  with(nolock)
 									  INNER JOIN Township TS with(nolock) ON PV.IdProvince = TS.IdProvince
 									  WHERE TS.IdTownship = @IdTownship;
-				SET @IdKindOfVPBusiness = (SELECT IdKindOfVPBusiness  FROM KindOfVPBusiness with(nolock) WHERE Shorthand = 'HUB')
-				SELECT @HeaderCode=HeaderCode, @TownshipName=TownshipName from dbo.Township with(nolock) WHERE IdTownship = @IdTownship;
+				SET @IdKindOfVPClient = (SELECT IdKindOfVPClient FROM KindOfVPClient with(nolock) WHERE KindOfVPName = 'HUB' AND (IdCountry = @IdCountry OR (@IdCountry = 'GT' AND IdCountry IS NULL)))
+				SET @IdKindOfVPBusiness = (SELECT IdKindOfVPBusiness  FROM KindOfVPBusiness with(nolock) WHERE Shorthand = 'HUB' AND (IdCountry = @IdCountry OR (@IdCountry = 'GT' AND IdCountry IS NULL)))
+				Select @HeaderCode=HeaderCode, @TownshipName=TownshipName from dbo.Township with(nolock) WHERE IdTownship = @IdTownship;
 				SET @CityName=(SELECT CityPlace FROM DBO.CatCityPlace with(nolock) WHERE IdCityPlace=@IdCityPlace)
 
-			IF (select count(*) from #Address) >0 -- verifica que la direccion exista
-			BEGIN 
-				IF @Status =0  -- se infiere que, se va a desctivar el registro
-				BEGIN
+
+				PRINT '@Department'
+				PRINT @Department
+
+				PRINT '@HeaderCode'
+				PRINT @HeaderCode
+			
+
+			if (select count(*) from #Address) >0 -- verifica que la direccion exista
+			begin 
+				if @Status =0  -- se infiere que, se va a desctivar el registro
+				begin
 					-- desactivar registro (borrado logico)
 					UPDATE [dbo].[UserAddress]
 					   SET [UadRowStatus] = @Status
+						  ,[UadFavorite] = 0
 						  ,[UadTokenUpdated] = @Token
 						  ,[UadDateUpdated] = GETDATE()
 					 WHERE [UadIdAddress] =  @IdAddress
@@ -148,11 +162,67 @@ BEGIN
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
 
-					SELECT * FROM @ResponseMessages WHERE Id ='Delete'
+					 set @jsonResult =(
+						SELECT STUFF(( 
+						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
+						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Delete'
+		
+						FOR XML PATH(''), TYPE
+						).value('.', 'varchar(max)'),1,1,''
+							  ) 
+						)
 
-				END
-				ELSE -- se va a actualizar el registro
-				BEGIN 
+				end
+				else -- se va a actualizar el registro
+				begin 
+					--Es favorita la dirección?
+					IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 1)
+					BEGIN
+						--Cosultar si ya existe otra favorita
+						SELECT TOP 1
+							@IdAddressFavorite = ua.UadIdAddress
+						FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
+						INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
+							ON ua.UadIdAccount = rua.RuaIdAccount
+						INNER JOIN dbo.Township twn WITH (NOLOCK)
+							ON twn.IdTownship = ua.UadIdTownship
+						INNER JOIN dbo.Province prv WITH (NOLOCK)
+							ON prv.IdProvince = twn.IdProvince
+						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
+							ON ua.IdCityPlace = ctp.IdCityPlace
+							   AND ctp.CityPlaceRowStatus = 'true'
+						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+							ON vp.CodeOfReference = ua.CodeOfReference
+						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+							ON conf.NirPhone = ua.UadNirPhone
+							AND conf.Phone = ua.UadPhone
+						WHERE rua.RuaIdAccount = @IdAccount
+							  AND rua.RuaIdUser = @IdUser
+							  AND ua.UadRowStatus = 1
+							  AND ua.UadFavorite = 1 --Debe ser favorita
+							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
+							  AND conf.TownshipId = vp.IdTownship
+							  AND conf.[Address] = vp.[Address]
+
+						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
+						BEGIN
+							IF(@IdAddressFavorite != @IdAddress)
+							BEGIN
+								UPDATE [dbo].[UserAddress]
+							   SET [UadTokenUpdated] = @Token
+								  ,[UadDateUpdated] = GETDATE()
+								  ,[UadFavorite] = 0 --Se elimina la favorita actual
+								WHERE [UadIdAddress] =  @IdAddressFavorite
+							END;
+						END;
+					END;
+					--Es origen la direccion
+					ELSE IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 0)
+					BEGIN
+						SET @IsFavorite = 0; --Se cambia ya que solo puede ser favorita una direccion de Origen
+					END;
+
 					-- actualizar el registro con los datos proporcionado
 					UPDATE [dbo].[UserAddress]
 					   SET [UadIdTownship] = @IdTownship
@@ -167,6 +237,7 @@ BEGIN
 						  ,[UadTokenUpdated] = @Token
 						  ,[UadDateUpdated] = GETDATE()
 						  ,[IdCityPlace] = @IdCityPlace
+						  ,[UadFavorite] = @IsFavorite
 					 WHERE [UadIdAddress] =  @IdAddress
 
 					UPDATE VP
@@ -180,6 +251,7 @@ BEGIN
 						  ,VP.DateUpdated = GETDATE()
 						  ,VP.Town=@TownshipName
 						  ,VP.Department=@Department
+						  ,VP.IdKindOfVPClient=@IdKindOfVPClient
 						  ,VP.IdKindOfVPBusiness=@IdKindOfVPBusiness
 						  ,VP.Latitude=@Latitude
 						  ,VP.Longitude=@Longitude
@@ -188,29 +260,70 @@ BEGIN
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
-				
-				 SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)
 
-				 SELECT 
-					IdResult 'IdResult',
-					@IdAddress 'IdAddress',
-					@CodeOfReference 'CodeOfReference',
-					@Department 'Province',
-					@TownshipName 'Township',
-					@HeaderCode 'HeaderCode',
-					@CityName 'CityPlace',
-					@IdDepartment 'IdProvince',
-					Message 'Message'
-				 FROM 
-					@ResponseMessages
-				 WHERE 
-					Id = 'Update';
+					 set @jsonResult =(
+						SELECT STUFF(( 
+						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
+						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Update'
+		
+						FOR XML PATH(''), TYPE
+						).value('.', 'varchar(max)'),1,1,''
+							  ) 
+						)
+				end
+			end
+			else -- la cuenta no existe, entonces se crea
+			begin
+				--Es favorita la dirección?
+					IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 1)
+					BEGIN
+						--Cosultar si ya existe otra favorita
+						SELECT TOP 1
+							@IdAddressFavorite = ua.UadIdAddress
+						FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
+						INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
+							ON ua.UadIdAccount = rua.RuaIdAccount
+						INNER JOIN dbo.Township twn WITH (NOLOCK)
+							ON twn.IdTownship = ua.UadIdTownship
+						INNER JOIN dbo.Province prv WITH (NOLOCK)
+							ON prv.IdProvince = twn.IdProvince
+						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
+							ON ua.IdCityPlace = ctp.IdCityPlace
+							   AND ctp.CityPlaceRowStatus = 'true'
+						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+							ON vp.CodeOfReference = ua.CodeOfReference
+						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+							ON conf.NirPhone = ua.UadNirPhone
+							AND conf.Phone = ua.UadPhone
+						WHERE rua.RuaIdAccount = @IdAccount
+							  AND rua.RuaIdUser = @IdUser
+							  AND ua.UadRowStatus = 1
+							  AND ua.UadFavorite = 1 --Debe ser favorita
+							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
+							  AND conf.TownshipId = vp.IdTownship
+							  AND conf.[Address] = vp.[Address]
 
-				 END
-			END
-			ELSE -- la cuenta no existe, entonces se crea
-			BEGIN
-          
+						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
+						BEGIN
+							IF(@IdAddressFavorite != @IdAddress)
+							BEGIN
+								UPDATE [dbo].[UserAddress]
+							   SET [UadTokenUpdated] = @Token
+								  ,[UadDateUpdated] = GETDATE()
+								  ,[UadFavorite] = 0 --Se elimina la favorita actual
+								WHERE [UadIdAddress] =  @IdAddressFavorite
+							END;
+						END;
+					END;
+					--Es origen la direccion
+					ELSE IF (@IsFavorite = 1 AND @IsOriginVisitPoint = 0)
+					BEGIN
+						SET @IsFavorite = 0; --Se cambia ya que solo puede ser favorita una direccion de Origen
+					END;
+
+				SET @CodeOfReference = (SELECT MAX(CodeOfReference) + 1 FROM VisitPointClient)			
+						--Inserta Visit Point en la tabla VisitPointClient
 				INSERT INTO [dbo].[VisitPointClient]
 					   ([CodeOfReference]
 					   ,[DescriptionOfClient]
@@ -254,7 +367,7 @@ BEGIN
 					   ,@Department
 					   ,@Phone
 					   ,@ContactName
-					   ,6
+					   ,@IdKindOfVPClient
 					   ,@IdKindOfVPBusiness
 					   ,NULL
 					   ,NULL
@@ -264,6 +377,7 @@ BEGIN
 					   ,ISNULL(@IsOriginVisitPoint, 1)
 					   )
 				set @IdVisitPointClient = SCOPE_IDENTITY()
+
 
 				--insertar nueva direccion
 				INSERT INTO [dbo].[UserAddress]
@@ -282,7 +396,8 @@ BEGIN
 						,[UadTokenUpdated]
 						,[UadDateUpdated]
 						,CodeOfReference
-						,IdCityPlace)
+						,IdCityPlace
+						,[UadFavorite])
 						VALUES
 						(@IdTownship
 						,@IdAccount
@@ -299,46 +414,43 @@ BEGIN
 						,null
 						,null
 						,@CodeOfReference
-						,@IdCityPlace)
+						,@IdCityPlace
+						,@IsFavorite)
+
+
 
 				set @IdAddress = SCOPE_IDENTITY()
-
-				SELECT 
-						IdResult 'IdResult',
-						@IdAddress 'IdAddress',
-						@CodeOfReference 'CodeOfReference',
-						@Department 'Province',
-						@TownshipName 'Township',
-						@HeaderCode 'HeaderCode',
-						@CityName 'CityPlace',
-						@IdDepartment 'IdProvince',
-						Message 'Message'
-					FROM 
-						@ResponseMessages
-					WHERE 
-						Id = 'Insert';		
-
-			END
+				set @jsonResult =(
+						SELECT STUFF(( 
+						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
+						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"CodeOfReference":' + convert(varchar,@CodeOfReference)    +',' 
+						+ '"Province":"' + convert(varchar,@Department)    +'",' 
+						+ '"Township":"' + convert(varchar,@TownshipName)    +'",' 
+						+ '"HeaderCode":"' + convert(varchar,@HeaderCode)    +'",' 
+						+ '"CityPlace":"' + convert(varchar,@CityName) +'",' 
+						+ '"IdProvince":"' + convert(varchar,@IdDepartment) +'",' 
+						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Insert'
+		
+						FOR XML PATH(''), TYPE
+						).value('.', 'varchar(max)'),1,1,''
+							  ) 
+						)			
+			end
 			--------INICIO Homologación de campos para OAC (Tabla: ConfirmedAddres)--------
-
-			SELECT @CodeOfReference = CodeOfReference FROM DeliveryBackOffice.dbo.UserAddress
-			WHERE UadIdAddress =  @IdAddress
-
-			IF @Status = 0
-			BEGIN 
+			if @Status = 0
+			begin 
 					UPDATE [dbo].[ConfirmedAddress] SET
 							   [TokenUpdate] =@Token
 							   ,[DateUpdate] =getdate()
 							   ,[RowStatus] =0
-					WHERE NirPhone=@NirPhone AND Phone=@Phone	
-					
-			END
-			ELSE IF @Status = 1
-			BEGIN 
+					WHERE NirPhone=@NirPhone AND Phone=@Phone			
+			end
+			else if @Status = 1
+			begin 
 				--Comprobar si existe el telefono
-				IF EXISTS(SELECT TOP 1 1 FROM DBO.ConfirmedAddress WHERE NirPhone=@NirPhone AND Phone=@Phone AND ProvinceId = @IdDepartment AND TownshipId = @IdTownship AND [Address] = @Address1)
-				BEGIN
-
+				if EXISTS(SELECT TOP 1 1 FROM DBO.ConfirmedAddress WHERE NirPhone=@NirPhone AND Phone=@Phone AND ProvinceId = @IdDepartment AND TownshipId = @IdTownship AND [Address] = @Address1)
+				begin
 					UPDATE [dbo].[ConfirmedAddress] SET
 							   [NirPhone] =@NirPhone
 							   ,[Phone] = @Phone
@@ -382,10 +494,9 @@ BEGIN
 							@UpdatedAddress UA
 
 					END
-				END
-				ELSE
-				BEGIN
-
+				end
+				else
+				begin
 					--Si no existe, crearlo
 					INSERT INTO [dbo].[ConfirmedAddress]
 						([NirPhone]
@@ -446,26 +557,31 @@ BEGIN
 							@UpdatedAddress UA
 
 					END
-
-				END		
-				
-			END
+				end			
+			end
 
 			COMMIT TRANSACTION;
 
 			--------FIN Homologación de campos para OAC --------
-		END
-		ELSE
-		BEGIN
+		end
+		else
+		begin
 
 			ROLLBACK TRANSACTION;
 
-			SELECT * FROM @ResponseMessages WHERE Id ='Access'
-
-		END
+			set @jsonResult =(
+						SELECT STUFF(( 
+						SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
+						+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+						+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Access'
+		
+						FOR XML PATH(''), TYPE
+						).value('.', 'varchar(max)'),1,1,''
+							  ) 
+						)
+		end
 	END TRY
 	BEGIN CATCH
-
 		ROLLBACK TRANSACTION;
 
 		INSERT INTO [DeliveryBackOffice].[dbo].[RoutePreparationLogError]
@@ -473,12 +589,28 @@ BEGIN
 		VALUES
 			('spws_set_address', ERROR_MESSAGE(), @Token, GETDATE(), ERROR_LINE())
 
-		SELECT * FROM @ResponseMessages WHERE Id ='Error'
-
+		set @jsonResult =(
+					SELECT STUFF(( 
+					SELECT '{"IdResult":' + convert(varchar,IdResult)    +',' 
+					+ '"IdAddress":' + convert(varchar,@IdAddress)    +',' 
+					+ '"Message":"' + Message + '"}' from @ResponseMessages where Id ='Error'
+		
+					FOR XML PATH(''), TYPE
+					).value('.', 'varchar(max)'),1,1,''
+							) 
+					)
 	END CATCH
 
 	-- destruir tablas temporales
+
 	IF OBJECT_ID('tempdb.dbo.#Address', 'U') IS NOT NULL DROP TABLE #Address;
 	IF OBJECT_ID('tempdb.dbo.#Access', 'U') IS NOT NULL DROP TABLE #Access;
 
+	-- retornar resultado en formato json
+
+	select ('[{' + @jsonResult +  ']') jsonResult
+
 END
+
+
+

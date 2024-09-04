@@ -13,8 +13,11 @@
     [HubLatitude]     NVARCHAR (20)  NULL,
     [HubLongitude]    NVARCHAR (20)  NULL,
     [DescriptionCC]   NVARCHAR (100) NULL,
-    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC)
+    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC),
+    CONSTRAINT [FK_IdCountry_CatCountry] FOREIGN KEY (idCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
 );
+
+
 
 
 
@@ -81,3 +84,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Latitud del
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripción del Hub para Express Center', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'HubLogistics', @level2type = N'COLUMN', @level2name = N'DescriptionCC';
 
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IDX_HubLogistics_HubAbbreviation_RowStatus]
+    ON [dbo].[HubLogistics]([HubAbbreviation] ASC, [HubStatus] ASC);
+
+GO

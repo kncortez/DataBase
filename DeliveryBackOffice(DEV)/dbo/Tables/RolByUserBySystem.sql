@@ -17,7 +17,15 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_RolByUserBySystem]
     ON [dbo].[RolByUserBySystem]([RusIdRol] ASC, [RusIdSystem] ASC, [RusIdUser] ASC, [StationId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RusIdSystem_RusIdUser]
+    ON [dbo].[RolByUserBySystem]([RusIdSystem] ASC, [RusIdUser] ASC)
+    INCLUDE([StationId]);
 

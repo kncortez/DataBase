@@ -13,6 +13,22 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	 DECLARE @IdCountry NVARCHAR(2)=(SELECT SenderCountryId FROM dbo.DeliveryOrder
+                                                           WHERE Guide_Number = @GuideNumber);
+	DECLARE @PHONE NVARCHAR(25);   
+	DECLARE @SoportMail NVARCHAR(50);
+	
+    SELECT  @PHONE = [Value]
+	            FROM dbo.configparams
+						  WHERE  [Name]='VoucherPhone'
+						  AND  IdCountry=@IdCountry 
+	SELECT  
+           @SoportMail = [Value]	
+	                      FROM dbo.configparams
+						  WHERE  [Name]='SupportEmailByCountry'
+						   AND  IdCountry=@IdCountry
+					
+
 	-- Variables "configurables"
 	DECLARE @GoodResponseMessage NVARCHAR(300) = CONCAT('Estimado cliente, se le enviará un reporte al correo <MAIL> basado en la guía FD', @GuideNumber, '');
 	DECLARE @BadResponseMessage NVARCHAR(300) = CONCAT('Estimado cliente, le comentamos que la guía FD', @GuideNumber, ' no ha sido procesada por CoD.');
@@ -59,7 +75,7 @@ BEGIN
 					,-1 'Option'
 					,(
 						CASE
-							WHEN Cu.IdCustomerType = 1 AND Cu.CODContactEmail IS NOT NULL THEN Cu.CODContactEmail
+							WHEN Cu.IdCustomerType = 1 AND Cu.CODContactEmail IS NOT NULL THEN ISNULL(Cu.CODContactEmail,Cu.ContactEmail)
 							ELSE ISNULL(DO.Sender_Mail, '')
 						END
 					) 'CustomerMail'
@@ -103,6 +119,8 @@ BEGIN
 						,CONVERT(NVARCHAR, RT.ReportEndDate, 120) 'ReportEndDate'
 						,RT.ReportOption
 						,RT.ReportMail
+						,@PHONE PHONE
+						,@SoportMail SoportMail
 				FROM
 					@ResponseTable RT
 

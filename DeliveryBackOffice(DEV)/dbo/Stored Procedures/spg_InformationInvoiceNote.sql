@@ -5,20 +5,41 @@
 -- =============================================
 CREATE procedure [dbo].[spg_InformationInvoiceNote]
     -- Add the parameters for the stored procedure here
-    @fel nvarchar(100)
+    @fel nvarchar(100),
+    @IdCountry nvarchar(2) = 'GT',
+	@CAI nvarchar(50) = ''
 as
 declare @idinvoice int;
 begin
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     set nocount on;
+	
+	IF @IdCountry = 'GT'
+	BEGIN
+		set @idinvoice =
+		(
+			select inv_pk_id
+			from [dbo].[invoiceHeader] with (nolock)
+			where inv_certificationFEL = @fel
+			AND ISNULL(IdCountry,'GT') = @IdCountry
+		);
+	END
+	ELSE
+	BEGIN
+		set @idinvoice =
+		(
+			select ih.inv_pk_id
+			from [dbo].[invoiceHeader] ih with (nolock)
+			LEFT JOIN dbo.InvoiceBatchHeader ibh with (nolock) ON ih.inv_serieFEL = ibh.CAI
+			where ih.inv_certificationFEL = @fel
+			AND ISNULL(ih.IdCountry,'GT') = @IdCountry
+			AND ih.inv_serieFEL = @CAI
+			AND ibh.RowStatus = 1
+			AND ibh.TypeDocument = 1
+		);
+	END
 
-    set @idinvoice =
-    (
-        select inv_pk_id
-        from [dbo].[invoiceHeader] with (nolock)
-        where inv_certificationFEL = @fel
-    );
     -- Insert statements for procedure here
     select [inv_pk_id]
          , [inv_vpCodeOfReferences]

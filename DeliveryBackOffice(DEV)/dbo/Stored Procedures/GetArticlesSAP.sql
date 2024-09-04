@@ -5,8 +5,14 @@
 -- Create date: <2021-10-12>
 -- Description:	<Obtiene información de artículos SAP>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazi>
+-- Create date: <2024-08-08>
+-- Description:	<Se agrega filtro de pais>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[GetArticlesSAP] 
+				 @IdCountry NVARCHAR(2) = 'GT'
 -- Add the parameters for the stored procedure here
 
 AS
@@ -34,6 +40,7 @@ BEGIN
 		,IsSurcharge
 	FROM CatArticleSAP
 	WHERE RowSatus = 1
+	AND ISNULL(IdCountry,'GT') = @IdCountry
 	ORDER BY Id ASC
 
 	SET NOCOUNT OFF;

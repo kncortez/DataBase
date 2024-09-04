@@ -7,8 +7,11 @@ CREATE TABLE [dbo].[MarketplaceCart](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
+	[IdCountry]  [NVARCHAR](3) NULL,
+	[RegisterUserId] [bigint] NULL,
 	CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
-	CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
+	CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
+	CONSTRAINT [FK_MarketplaceCart_RegisterUser] FOREIGN KEY([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
 )
 GO
 
@@ -28,6 +31,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de modif
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Carrito de productos' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCart'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador de usuario de telemercadeo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCart', @level2type=N'COLUMN',@level2name=N'RegisterUserId'
 GO
 
 

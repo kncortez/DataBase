@@ -9,7 +9,9 @@ CREATE TABLE [dbo].[MarketplaceProductTags](
 	[DateCreated] [datetime] NOT NULL,
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
- 	CONSTRAINT [PK_MarketplaceProductTags] PRIMARY KEY CLUSTERED ([IdMarketplaceProductTags] ASC)
+	[IdCountry] [varchar](2) NULL,
+ 	CONSTRAINT [PK_MarketplaceProductTags] PRIMARY KEY CLUSTERED ([IdMarketplaceProductTags] ASC),
+	CONSTRAINT [FK_MarketplaceProductTags_CatCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 )
 GO
 
@@ -43,4 +45,5 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Etiquetas de productos en el marketplace' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceProductTags'
 GO
 
-
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de los tag' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceProductTags', @level2type=N'COLUMN',@level2name=N'IdCountry'
+GO

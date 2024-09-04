@@ -10,6 +10,10 @@ CREATE PROCEDURE [dbo].[MKRetrieveProductInformationForShippingEmails]
 AS
 
 BEGIN
+
+     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/notification/gift-create-account';
+	 DECLARE  @URL_USER_NOT_LOGIN VARCHAR (200)='https://portal.forzadelivery.com';
+
 	
 		IF(@Telemarketing = 0)
 	BEGIN 
@@ -17,7 +21,8 @@ BEGIN
 		IF EXISTS(SELECT UsrEmail from RegisterUser WHERE UsrEmail = (SELECT Top 1 InvoiceEmail FROM RegistrationofTransactionProcessStates WHERE OrderNumber = @TransactionId))
 		BEGIN 
 		
-			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
+			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
+			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
 			FROM
 			(
 			SELECT InvoiceEmail [UsrEmail], 
@@ -123,7 +128,8 @@ BEGIN
 		ELSE -- PARA ENVIAR CORREOS QUE NO TIENEN CUENTA
 		BEGIN
 			--PRINT 'USUARIO NO LOGUEADO'
-			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
+			SELECT TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
+			IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
 			FROM
 			(
 			SELECT A3.InvoiceEmail [UsrEmail], 
@@ -218,7 +224,8 @@ BEGIN
 	ELSE   -- SI FUERA UN CORREO GENERADO POR TELEMARKETING
 	BEGIN
 	    --PRINT 'USUARIO TELEMARKETING'
-		select TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail]
+		select TBL.[UsrEmail],TBL.[IdProduct],TBL.[Email],TBL.[ClientName],TBL.[ProductType],TBL.[ProductName],TBL.[ActivationCode],TBL.[ProductCost],TBL.[OrderMail],
+		IIF(TBL.[ActivationCode]='ACTIVADO',@URL_USER_LOGIN,@URL_USER_NOT_LOGIN) [URL]
 		from
 		(
 		SELECT COALESCE(A5.UsrEmail,A3.InvoiceEmail) [UsrEmail],

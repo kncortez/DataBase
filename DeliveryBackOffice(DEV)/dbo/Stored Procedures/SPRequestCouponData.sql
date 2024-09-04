@@ -99,6 +99,7 @@ BEGIN
 				,@OldAmount = DO.priceshippment
 				,@PhoneDestination = RTRIM(LTRIM(ISNULL(DO.Sender_Phone,'')))
 				,@VisitPointClient = IIF(DO.OriginSenderId IS NULL OR DO.OriginSenderId = 0, IIF(@ClientType = 2, DO.Sender_ID, NULL), DO.OriginSenderId)
+				,@VisitPointClientPortfolio =DO.VisitpointClientPortfolioId
 			FROM
 				dbo.deliveryorder DO WITH(NOLOCK)
 				LEFT JOIN

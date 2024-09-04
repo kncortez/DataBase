@@ -1,4 +1,13 @@
 ﻿
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Modified:	<28/08/2024>
+-- Description:	<Se agrega validacion para tomar en cuenta idKindOfVPClient multipais>
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Modified:	<29-08-2024>
+-- Description:	<Se envian parametros de pais de origen y destino a la funcion ETA>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -13,12 +22,13 @@ BEGIN
 	DECLARE @ManifestNumber INT = 0
 	DECLARE @ManifestSerie VARCHAR(2) = 'FM'
 	DECLARE @GuideSerie VARCHAR(2) = 'FD'
-
+	DECLARE @IdCountryByCustomer NVARCHAR(2) = 'GT'
 
 	-- MODIFICACION 16/02/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	DECLARE @CustomerID int = (SELECT [CustomerID] FROM @TblServiceRequestFD)
 	--FIN MODIFICACIÓN
 	DECLARE @StatusPackage INT = (SELECT IdCatSalesPackageStatus FROM CatSalesPackageStatus WHERE SalesPackageStatusName = 'Activa')
+	SET @IdCountryByCustomer =(SELECT TOP 1 ISNULL(CountryID,'GT') FROM VisitPointClient WHERE CustomerID = @CustomerID )
   IF(@VisitPointByClientPortfolioId = 0)
   BEGIN
   SET @VisitPointByClientPortfolioId = NULL;
@@ -249,7 +259,10 @@ BEGIN
 			[CatSystemId],
 			[CatModuleId],
 			[Receiver_Lat],
-			[Receiver_Lng]
+			[Receiver_Lng],
+			[SenderCountryId],
+			[ReceiverCountryId],
+			[GuideType]
 		)
 		SELECT 
 			GT.[Ticket_Number],
@@ -318,8 +331,18 @@ BEGIN
 			@system,
 			@module,
 			GT.ReceiverLatitude,
-			GT.ReceiverLongitude
+			GT.ReceiverLongitude,
+			ISNULL(P.IdCountry,'GT'),
+			ISNULL(P2.IdCountry,'GT'),
+			CASE
+				WHEN ISNULL(P.IdCountry,'GT') = ISNULL(P2.IdCountry,'GT') THEN 'DOM'
+				ELSE 'INT'
+			END AS GuideType
 		FROM #GuideTable GT
+		INNER JOIN DeliveryBackOffice.dbo.Township T ON GT.SenderIdTownship = T.IdTownship
+		INNER JOIN DeliveryBackOffice.dbo.Province P ON T.IdProvince = P.IdProvince
+		INNER JOIN DeliveryBackOffice.dbo.Township T2 ON GT.ReceiverIdTownship = T2.IdTownship
+		INNER JOIN DeliveryBackOffice.dbo.Province P2 ON T2.IdProvince = P2.IdProvince
 			
 		-- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
 		-- INSERTAR DATA PARA MANEJO DE LANDING PAGE
@@ -395,7 +418,7 @@ BEGIN
 					DECLARE @TypeClient INT;
 					SET @TypeClient = (SELECT TOP 1 IdKindOfVPClient FROM VisitPointClient WITH (NOLOCK) WHERE CustomerID = @CustomerID)
 
-					IF(@TypeClient = 3)
+					IF(@TypeClient = 3 OR @TypeClient = 14)
 						BEGIN
 						DECLARE @IdCost INT;
 						DECLARE @IsCollect BIT;
@@ -539,7 +562,7 @@ BEGIN
 		UPDATE
 			[DO]
 		SET
-			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, NULL)
+			[DO].[DeliveryETA] = [DeliveryBackOffice].[dbo].[fn_GetGuideDeliveryETA]([DO].[Sender_Department], [DO].[Sender_Town], NULL, ISNULL([DO].[SenderCountryId],'GT'), [DO].[Receiver_Department], [DO].[Receiver_Town], NULL, ISNULL([DO].[ReceiverCountryId],'GT'), NULL)
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
 			INNER JOIN
@@ -794,7 +817,8 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario' COLLATE Latin1_General_CI_AI 
+			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -804,7 +828,8 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' COLLATE Latin1_General_CI_AI 
+			AND ISNULL([KOVPC].[IdCountry], 'GT')= @IdCountryByCustomer
 	)
 
 	DECLARE @IndividualWebSys INT =
@@ -852,7 +877,7 @@ BEGIN
   --Fin Nuevos datos para consumir nuevo formato guía
 
 
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND ISNULL(IdCountry,'GT')= @IdCountryByCustomer);
 
 		SELECT 
 			1 AS 'StatusCode',

@@ -6,6 +6,10 @@
 -- Author:		<Edelman>
 -- Description:	<Modificación para incorporar a estructura de club forza con columna nueva en CatSuscription>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Description:	<Se agrega la moneda correspondiente>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetProductsByCategory] @IdCategory INT
 AS
 BEGIN
@@ -15,6 +19,7 @@ BEGIN
 	        CS.[IdCatSubscription] [IdCatProduct],
 			CS.[SubscriptionName]  [CatProductName],
 			CS.[SubscriptionCost]  [CatProductCost],
+			CASE WHEN ISNULL(CS.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 			CS.[SubscriptionDescription] [CatProductDescription],
 			CS.[CatProductCategoryId] [CatProductCategoryId],
 			CS.Tag,
@@ -27,6 +32,7 @@ BEGIN
 			 CS.[IdCatMembership] [IdCatProduct],
 			 CS.[MembershipName]  [CatProductName],
 			 CS.[MembershipCost]  [CatProductCost],
+			 CASE WHEN ISNULL(CS.IdCountry,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol,
 			 CS.[MembershipDescription] [CatProductDescription],
 			 CS.[CatProductCategoryId] [CatProductCategoryId],
 			 CS.Tag,

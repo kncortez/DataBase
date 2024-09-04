@@ -350,6 +350,10 @@ declare @guides nvarchar (MAX) = (select stuff((select ','+concat(GuideSerie,Gui
 			HaveCredit			nvarchar (50) null,
 			CollectCOD			nvarchar (50) null,
 			ReturnRate			decimal (14,2) null,
+			CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	    CurrencyPrice_CODSymbol  NVARCHAR(8),
+	        CurrencyPriceCodeISO     NVARCHAR(8),
+	        CurrencyPriceSymbol      NVARCHAR(8),
 			AmountToPay			decimal (14,2) null,
 			CODAmount			decimal (14,2) null,
 			ReturnRates			decimal (14,2) null)

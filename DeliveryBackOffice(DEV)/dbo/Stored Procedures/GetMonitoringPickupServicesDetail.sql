@@ -3,9 +3,14 @@
 -- Create date: <2022-04-08>
 -- Description:	<Obtiene información para el detalle del Form Monitoreo de Servicios de Recolección>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-06-06>
+-- Description: <Se agrego filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
 	-- Add the parameters for the stored procedure here
-	@ServiceManagementId INT
+	@ServiceManagementId INT,
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 -- SET NOCOUNT ON added to prevent extra result sets from
@@ -39,6 +44,7 @@ SET NOCOUNT ON;
 	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON sr.ID = ra.IdCurrierMan
 	WHERE sm.IdServiceManagement = @ServiceManagementId
+      AND IIF(vpc.CountryId IS NULL, 'GT',vpc.CountryId) = @IdCountry
 
 	--Table 1 Checkpoints Servicio
 	SELECT

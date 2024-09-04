@@ -6,7 +6,8 @@ CREATE PROCEDURE [dbo].[SetAuthorizationLogCOD]
 	@AuthorizedBy [varchar](MAX),	
 	@ReasonId BIGINT ,	
 	@NewCODAmount [decimal](14, 2),
-	@TokenCreated nvarchar(max)
+	@TokenCreated nvarchar(max),
+	@CountryId nvarchar(2) = 'GT'
 AS
 BEGIN
 	
@@ -16,7 +17,11 @@ BEGIN
 
 	BEGIN TRY
 
-	IF EXISTS(SELECT * FROM DeliveryBackOffice.dbo.DeliveryOrderDetail WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber AND  StatusOrderId NOT IN (5) )
+	IF EXISTS(SELECT * FROM DeliveryBackOffice.dbo.DeliveryOrder DOR
+    INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderDetail DORD
+        ON DOR.Guide_Serie = DORD.Guide_Serie
+           AND DOR.Guide_Number = DORD.Guide_Number
+		   WHERE DORD.Guide_Serie = @GuideSerie AND DORD.Guide_Number = @GuideNumber AND  DORD.StatusOrderId NOT IN (5) AND IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @CountryId )
 	BEGIN
 	SET @OldCODAmount = (SELECT Collect_OnDelivery FROM DeliveryBackOffice.dbo.DeliveryOrder  
 	WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber )

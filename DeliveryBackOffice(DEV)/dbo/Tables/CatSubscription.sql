@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[CatSubscription] (
+﻿CREATE TABLE [dbo].[CatSubscription] (
     [IdCatSubscription]                INT             IDENTITY (1, 1) NOT NULL,
     [SubscriptionName]                 NVARCHAR (50)   NOT NULL,
     [SubscriptionDescription]          NVARCHAR (300)  NULL,
@@ -18,16 +18,21 @@ CREATE TABLE [dbo].[CatSubscription] (
     [AlternativeRateHeaderId]          INT             NULL,
     [IncludedMembershipId]             INT             NULL,
     [CatTypeSubscriptionId]            INT             NULL,
-	[CatProductCategoryId] 			   [int]		   NULL,
-	[Tag] 						       [nvarchar](100) NULL,
-	[Position] 						   [int] 		   NULL,	
+    [CatProductCategoryId]             INT             NULL,
+    [Tag]                              NVARCHAR (100)  NULL,
+    [Position]                         INT             NULL,
+    [IdCountry]                        VARCHAR(2)     NULL,
+	[IdCatCurrencyCOD]                 INT             NULL,
     CONSTRAINT [PK_CatSubscription] PRIMARY KEY CLUSTERED ([IdCatSubscription] ASC),
     CONSTRAINT [FK_CatSubscription_AlternativeRate] FOREIGN KEY ([AlternativeRateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
     CONSTRAINT [FK_CatSubscription_CatMembership] FOREIGN KEY ([IncludedMembershipId]) REFERENCES [dbo].[CatMembership] ([IdCatMembership]),
     CONSTRAINT [FK_CatSubscription_CatTypeSubscription] FOREIGN KEY ([CatTypeSubscriptionId]) REFERENCES [dbo].[CatTypeSubscription] ([IdCatTypeSubscription]),
     CONSTRAINT [FK_CatSubscription_Rate] FOREIGN KEY ([RateHeaderId]) REFERENCES [dbo].[RateHeader] ([RheId]),
-	CONSTRAINT [FK_CatSubscription_CatProductCategory] FOREIGN KEY([CatProductCategoryId])REFERENCES [dbo].[CatProductCategory] ([IdCatProductCategory])
+    CONSTRAINT [FK_CatSubscription_CatCurrencyCOD] FOREIGN KEY ([IdCatCurrencyCOD]) REFERENCES [dbo].[CatCurrencyCOD]([IdCatCurrencyCOD]),
+    CONSTRAINT [FK_CatSubscription_CatCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 
@@ -59,3 +64,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id relacion con tabla CatTypeSubscription', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSubscription', @level2type = N'COLUMN', @level2name = N'CatTypeSubscriptionId';
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de la suscripcion ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatSubscription', @level2type=N'COLUMN',@level2name=N'IdCountry'
+GO

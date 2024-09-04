@@ -4,7 +4,13 @@
 -- Create date: <2022-06-07>
 -- Description:	< Obtener cola de ejecución de procesos de servicio HermesWireTransfer >
 -- =============================================
+-- =============================================
+-- Author:		<Oscar,Rodriguez>
+-- Modification date: <2024-06-26>
+-- Description:	< Filtrar cola de ejcucion de procesos por pais para el servicio HermesWireTransfer >
+-- =============================================
 CREATE PROCEDURE [dbo].[GetWireTransferExecutionQueue]
+	@IdCountrySender NVARCHAR(2)= 'GT'
 AS
 BEGIN
 
@@ -16,7 +22,8 @@ BEGIN
 		CoDProcessName NVARCHAR(100),
 		DeliveryBankId INT,
 		ExecutionTime TIME,
-		ProcessPriority INT
+		ProcessPriority INT,
+		IdCountry NVARCHAR(2)
 	);
 
 	-- Variables de respuesta
@@ -32,7 +39,8 @@ BEGIN
 		ExecutionPriority INT,
 		ExecutionIsPending BIT,
 		ExecutionHasStarted BIT,
-		ExecutionHasCompleted BIT
+		ExecutionHasCompleted BIT,
+		IdCountry NVARCHAR(2)
 	);
 
 	-- Obtener valores de ejecución de la fecha actual
@@ -46,6 +54,8 @@ BEGIN
 			CDE.ExecutionDate = CAST(GETDATE() AS DATE) 
 			AND 
 			CDE.RowStatus = 1
+			AND
+			CDE.IdCountry = @IdCountrySender
 	),0)
 
 	BEGIN TRANSACTION
@@ -56,15 +66,17 @@ BEGIN
 			-- Ya existen registros para el día de hoy para ejecución de CoD
 			INSERT INTO
 				@ResponseExecutionQueue
-				(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted)
+				(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted, IdCountry)
 			SELECT
-				CDE.IdCoDDailyExecution, CDE.CoDProcessName, CDE.DeliveryBankId, CDE.ExecutionDate, CDE.ExecutionTime, CDE.ProcessPriority, CDE.ProcessPending, CDE.ProcessStarted, CDE.ProcessFinished
+				CDE.IdCoDDailyExecution, CDE.CoDProcessName, CDE.DeliveryBankId, CDE.ExecutionDate, CDE.ExecutionTime, CDE.ProcessPriority, CDE.ProcessPending, CDE.ProcessStarted, CDE.ProcessFinished, @IdCountrySender
 			FROM
 				[DeliveryBackOffice].[dbo].[CoDDailyExecution] CDE WITH(NOLOCK)
 			WHERE
 				CDE.ExecutionDate = CAST(GETDATE() AS DATE)
 				AND
 				CDE.RowStatus = 1
+				AND
+				CDE.IdCountry = @IdCountrySender
 			ORDER BY
 				CDE.ExecutionTime ASC,
 				CDE.ProcessPriority DESC,
@@ -82,7 +94,7 @@ BEGIN
 			-- No existen registros para el día de hoy para ejecución de CoD
 			INSERT INTO 
 				@DailyExecutionQueue
-				(CodDailyScheduleId, ExecutionDate, CoDProcessName, DeliveryBankId, ExecutionTime, ProcessPriority)
+				(CodDailyScheduleId, ExecutionDate, CoDProcessName, DeliveryBankId, ExecutionTime, ProcessPriority, IdCountry)
 			SELECT
 				CCDS.IdCatCoDDailySchedule
 				,CAST(GETDATE() AS DATE)
@@ -90,10 +102,13 @@ BEGIN
 				,CCDS.DeliveryBankId
 				,CCDS.ExecutionTime
 				,CCDS.ProcessPriority
+				,@IdCountrySender
 			FROM
 				[DeliveryBackOffice].[dbo].[CatCoDDailySchedule] CCDS WITH(NOLOCK)
+				LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryBank] db WITH(NOLOCK) ON CCDS.DeliveryBankId = db.Id_Bank
 			WHERE
 				CCDS.RowStatus = 1
+				AND	db.Id_Country = @IdCountrySender
 
 			IF( EXISTS(SELECT TOP 1 1 FROM @DailyExecutionQueue) )
 			BEGIN
@@ -101,12 +116,12 @@ BEGIN
 				-- Existen datos de procesos de CoD a ejecutar
 				INSERT INTO 
 					[DeliveryBackOffice].[dbo].[CoDDailyExecution]
-					(CodDailyScheduleId, ExecutionDate, CoDProcessName, DeliveryBankId, ExecutionTime, ProcessPriority, DateCreated, TokenCreated)
+					(CodDailyScheduleId, ExecutionDate, CoDProcessName, DeliveryBankId, ExecutionTime, ProcessPriority, DateCreated, TokenCreated, IdCountry)
 				OUTPUT
 					inserted.IdCoDDailyExecution, inserted.CoDProcessName, inserted.DeliveryBankId, inserted.ExecutionDate, inserted.ExecutionTime, inserted.ProcessPriority, inserted.ProcessPending, inserted.ProcessStarted, inserted.ProcessFinished
 					INTO @ResponseExecutionQueue(ResponseOrder, CoDProcessName, DeliveryBankId, ExecutionDate, ExecutionTime, ExecutionPriority, ExecutionIsPending, ExecutionHasStarted, ExecutionHasCompleted)
 				SELECT
-					DEQ.CodDailyScheduleId, DEQ.ExecutionDate, DEQ.CoDProcessName, DEQ.DeliveryBankId, DEQ.ExecutionTime, DEQ.ProcessPriority, GETDATE(), 'SYS-HERMESWIRETRANSFER'
+					DEQ.CodDailyScheduleId, DEQ.ExecutionDate, DEQ.CoDProcessName, DEQ.DeliveryBankId, DEQ.ExecutionTime, DEQ.ProcessPriority, GETDATE(), 'SYS-HERMESWIRETRANSFER', @IdCountrySender
 				FROM
 					@DailyExecutionQueue DEQ
 				ORDER BY

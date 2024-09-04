@@ -7,6 +7,44 @@
     [DateCreated]                DATETIME       NOT NULL,
     [TokenUpdated]               NVARCHAR (50)  NULL,
     [DateUpdated]                DATETIME       NULL,
-    CONSTRAINT [PK_CatBusinessSegment] PRIMARY KEY CLUSTERED ([IdBusinessSegment] ASC)
+    [IdCountry]                  VARCHAR(2)     NULL, 
+    CONSTRAINT [PK_CatBusinessSegment] PRIMARY KEY CLUSTERED ([IdBusinessSegment] ASC),
+    CONSTRAINT [FK_CatBusinessSegmentCatArticle_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador del segmento de negocio' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'IdBusinessSegment'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Nombre del segmento de negocio' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'BusinessSegmentName'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion del segmento de negocio' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'BusinessSegmentDescription'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'1 activo, 0 inactivo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'RowStatus'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Token de creación de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'TokenCreated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de creacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'DateCreated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Token de actualizacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'TokenUpdated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de actualizacion de fila' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment', @level2type=N'COLUMN',@level2name=N'DateUpdated'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion del segmento de negocio al que pertenece el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de pais (Referencia a IdCountry de la tabla CatCountry)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatBusinessSegment',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'

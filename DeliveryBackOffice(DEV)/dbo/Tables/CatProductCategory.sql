@@ -10,7 +10,9 @@ CREATE TABLE [dbo].[CatProductCategory](
 	[TokenUpdated] [nvarchar](50) NULL,
 	[DateUpdated] [datetime] NULL,
     [TechnicalDescription] NVARCHAR(50) NULL, 
-    CONSTRAINT [PK_CatProductCategory] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC)
+    [IdCountry] VARCHAR(2) NULL,
+    CONSTRAINT [PK_CatProductCategory] PRIMARY KEY CLUSTERED ([IdCatProductCategory] ASC),
+    CONSTRAINT [FK_CatProductCategory_CatCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 )
 GO
 
@@ -42,6 +44,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de modif
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Categoría de productos' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatProductCategory'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País de los productos' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatProductCategory', @level2type=N'COLUMN',@level2name=N'IdCountry'
 GO
 
 

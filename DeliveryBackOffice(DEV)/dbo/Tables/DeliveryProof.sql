@@ -36,3 +36,85 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
     ON [dbo].[DeliveryProof]([Guide_Number] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificador de registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'ID'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Serie de guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Guide_Serie'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Número de guía',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Guide_Number'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha en que se tomo foto',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Date_Photo'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Campo para almacenar url de imagen la cual es evidencia de incidencia en courierApp',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Path_Incident'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Campo para almacenar url de imagen de firma en courierApp',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'PathSignature'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Campo para almacenar archivo imagen dry, evidencia de entrega',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Proof_Dry'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Campo para almacenar archivo imagen cold, evidencia de entrega',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Proof_Cold'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Campo para almacenar archivo imagen de incidencia',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryProof',
+    @level2type = N'COLUMN',
+    @level2name = N'Proof_Incident'

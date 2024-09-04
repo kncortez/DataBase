@@ -10,7 +10,8 @@ CREATE PROCEDURE [dbo].[spHM_SetRoutePreparationDetail]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
     @GuidePiece SMALLINT,
-    @Token NVARCHAR(50)
+    @Token NVARCHAR(50),
+    @CountryId NVARCHAR(2)='GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -25,6 +26,7 @@ BEGIN
     DECLARE @IdRoutePreparation INT;
     DECLARE @IdRoutePreparationDetail INT;
     DECLARE @IdRoutePreparationDetailPiece INT;
+    DECLARE @Country NVARCHAR(2)='GT';
 
     --- Tabla para validar estado
     DECLARE @StatusGuide TABLE
@@ -62,13 +64,22 @@ BEGIN
 
     BEGIN TRY
 
+       -- Obtener el país al que pertenece la guía
+		SELECT  @Country = ISNULL(do.ReceiverCountryId,'GT')
+		     FROM [DeliveryOrder] do WITH(NOLOCK)
+		WHERE     do.Guide_Serie  = @GuideSerie
+              AND do.Guide_Number = @GuideNumber
+
         --- Verificar si la pieza existe
         SELECT @GuidePieceExists = 1,
                @GuidePieceIsDry = ISNULL(dop.IsDry, 1)
-        FROM DeliveryOrderPiece dop WITH (NOLOCK)
+        FROM [DeliveryOrderPiece] dop WITH (NOLOCK)
+		INNER JOIN [DeliveryOrder] do WITH(NOLOCK)
+		ON dop.GuideSerie =do.Guide_Serie and dop.GuideNumber = do.Guide_Number
         WHERE dop.GuideSerie = @GuideSerie
               AND dop.GuideNumber = @GuideNumber
-              AND dop.NoPiece = @GuidePiece;
+              AND dop.NoPiece = @GuidePiece
+			  AND ISNULL(do.ReceiverCountryId,'GT') = @CountryId
 
         IF @GuidePieceExists = 1
         BEGIN
@@ -775,9 +786,19 @@ BEGIN
         ELSE
         BEGIN
             ROLLBACK TRANSACTION;
-
-            SELECT 2 'StatusCode',
-                   CONCAT('La pieza ', @GuideSerie, @GuideNumber, '-', @GuidePiece, ' no existe.') 'Description';
+              
+			IF(@CountryId  <>  @Country)
+			BEGIN
+				SELECT 
+					2 AS StatusCode,
+					'   ¡Lo sentimos! El país de tu cuenta no coincide con el país de destino de la guía seleccionada. Por favor, revisa y selecciona una guía que corresponda a tu país.'   AS Description; 
+			END
+			   ELSE
+					BEGIN
+						SELECT 2 'StatusCode',
+							   CONCAT('La pieza ', @GuideSerie, @GuideNumber, '-', @GuidePiece, ' no existe.') 'Description';
+					 END
+           
         END;
     END TRY
     BEGIN CATCH

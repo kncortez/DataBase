@@ -3,12 +3,17 @@
 -- Create date: <2023-02-10>
 -- Description:	<Guarda información de los precios por segmento DESKTOP>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-12>
+-- Description:	<Se agrega parametro para indicar el pais y moneda del rango de paquete>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetPackagesRangeData]
 	-- Add the parameters for the stored procedure here
 	@CatBusinessSegmentId INT,
 	@CatTypeRate INT,
 	@Token NVARCHAR(50),
-	@TblPackagesRange TblPackagesRange READONLY
+	@TblPackagesRange TblPackagesRange READONLY,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -103,6 +108,8 @@ BEGIN
 		   ,pr.PiecesIncluded = tpr.PiecesIncluded
 		   ,pr.TokenUpdated = @Token
 		   ,pr.DateUpdated = GETDATE()
+		   ,pr.IdCountry = tpr.IdCountry
+		   ,pr.IdCurrency = tpr.IdCurrency
 		FROM PackagesRange pr
 		INNER JOIN @TblPackagesRange tpr
 			ON pr.IdPackagesRange = tpr.IdPackatesRange
@@ -300,6 +307,9 @@ BEGIN
 			   ,tpr.numCODExcentMet
 			   ,tpr.numCODExcentFor
 			   ,tpr.numCODExcentEsp
+			   ,tpr.IdCountry
+			   ,tpr.IdCurrency
+			   ,tpr.Description
 			FROM @TblPackagesRange tpr
 			WHERE tpr.[Status] = 1
 
@@ -329,7 +339,9 @@ BEGIN
 				, [PiecesIncluded]
 				, [RowStatus]
 				, [TokenCreated]
-				, [DateCreated])
+				, [DateCreated]
+				, [IdCountry]
+				, [IdCurrency])
 					SELECT
 						tmp.[Range]
 					   ,tmp.Discount
@@ -350,6 +362,8 @@ BEGIN
 					   ,'TRUE'
 					   ,@Token
 					   ,GETDATE()
+					   ,tmp.IdCountry
+					   ,tmp.IdCurrency
 					FROM @temp tmp
 					WHERE tmp.IdPackatesRange = @iter
 

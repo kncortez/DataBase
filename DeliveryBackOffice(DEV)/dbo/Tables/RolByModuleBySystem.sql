@@ -27,3 +27,85 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indicativo si el modulo tiene nuevas funcionalidades (para poder desplegar un icono en frontend).', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'RolByModuleBySystem', @level2type = N'COLUMN', @level2name = N'RmsHasNewFunction';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Roles con accesos a modulos por sistemas',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = NULL,
+    @level2name = NULL
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Referencia a rol(catRol)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsIdRol'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Referencia a sistema(CatSystem)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsIdSystem'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Referencia a modulo(CatModule)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsIdModule'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsRowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsTokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsDateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsTokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RolByModuleBySystem',
+    @level2type = N'COLUMN',
+    @level2name = N'RmsDateUpdated'

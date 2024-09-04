@@ -121,44 +121,8 @@ BEGIN
 					,ascd.GuideNumber
 					,do.Pieces_Dry
 					,do.Pieces_Cold
-					, ROUND((
-						CASE
-							WHEN [PPDest].[IdPromoCoupon] IS NOT NULL THEN 
-								(
-									[do].[PriceShippment] - 
-									(
-										CASE
-											WHEN [CVT].ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-												CASE
-													WHEN [CTD].ShortName = 'TOT' THEN
-														ROUND((([do].[PriceShippment] * [PPDest].[CouponValue]) / 100), 1)
-													ELSE 0
-												END
-											WHEN [CVT].ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
-												CASE
-													WHEN [CTD].ShortName = 'TOT' THEN
-														CASE
-															WHEN [PPDest].[CouponValue] > [do].[PriceShippment] THEN
-																[do].[PriceShippment]
-															ELSE
-																[do].[PriceShippment] - [PPDest].[CouponValue]
-														END
-													ELSE 0
-												END
-											WHEN [CVT].ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
-												CASE
-													WHEN CTD.ShortName = 'TOT' THEN
-														[do].[PriceShippment]
-													ELSE 0
-												END
-											ELSE 0
-										END
-									)
-								)
-							ELSE 
-								do.PriceShippment
-						END
-					),1) [PriceShippment]
+					,ISNULL(REPLACE(REPLACE(REPLACE(DC.Currency_Symbol,'(',''),')',''),'.',''),'Q.') AS 'Currency'
+					,do.PriceShippment
 					,do.Sender_ID
 					,CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName) ReceiverName
 					,do.Receiver_Address
@@ -167,9 +131,6 @@ BEGIN
 					,ISNULL(CAST(do.DCBA_ID AS NVARCHAR), '') 'DCBA_ID'
 					,ISNULL(CAST(do.InsuranceAmount AS NVARCHAR),'') InsuranceAmount
 					,(CASE WHEN ISNULL(MSL.IdMembershipSubscriptionLog, 0) > 0 THEN 'true' ELSE 'false' END) UsedMembership
-					,CAST(ISNULL((CASE WHEN [PPDest].[IdPromoCoupon] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [AppliedCoupon]
-					,ISNULL((CASE WHEN [PPDest].[IdPromoCoupon] IS NULL THEN '' ELSE [PPDest].[PromoCouponSerie] END),'') [AppliedCouponSerie]
-					,CAST(ISNULL((CASE WHEN [PPOri].[IdPromoCoupon] IS NULL THEN 0 ELSE 1 END),0) AS BIT) [GeneratedCoupon]
 				FROM AccountServiceCartDetail ascd
 				INNER JOIN DeliveryOrder do WITH (NOLOCK)
 					ON do.Guide_Serie = ascd.GuideSerie
@@ -178,20 +139,10 @@ BEGIN
 					ON ascd.GuideSerie = MSL.LogGuideSerie
 					AND ascd.GuideNumber = MSL.LogGuideNumber
 					AND MSL.RowStatus = 1
-				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PPDest]  WITH(NOLOCK) 
-					ON ascd.[GuideSerie] = [PPDest].[GuideSerieDestination]
-					AND ascd.[GuideNumber] = [PPDest].[GuideNumberDestination]
-					AND [PPDest].[RowStatus] = 1
-				LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
-					ON [PPDest].[CatValueTypeId] = [CVT].[IdCatValueType]
-				LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
-					ON [PPDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
-				LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] [PPOri]  WITH(NOLOCK) 
-					ON ascd.[GuideSerie] = [PPOri].[GuideSerieOrigin]
-					AND ascd.[GuideNumber] = [PPOri].[GuideNumberOrigin]
-					AND [PPOri].[RowStatus] = 1
+				LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+					ON do.SenderCountryId = DC.Currency_IdCountry OR (do.SenderCountryId IS NULL AND DC.Currency_IdCountry = 'GT')
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
-				AND ascd.RowStatus = 1
+				AND ascd.RowStatus = 1 AND DC.Currency_Status = 1 AND DC.DefaultPerCountry = 1
 				
 				SELECT
 					ascd.GuideSerie GuideSerie
@@ -208,66 +159,7 @@ BEGIN
 						AND bop.Amount <> 0
 				WHERE ascd.AccountServiceCartId = @AccountServiceCartId
 				AND ascd.RowStatus = 1
-				UNION
-				SELECT 
-					ascd.[GuideSerie] [GuideSerie]
-					,ascd.[GuideNumber] [GuideNumber]
-					,[CP].[PromoDescription]
-					,-(
-						CASE
-							WHEN [CVT].ValueTypeName = 'Porcentaje' COLLATE Latin1_General_CI_AI THEN 
-								CASE
-									WHEN [CTD].ShortName = 'TOT' THEN
-										ROUND((([do].[PriceShippment] * [PPDest].[CouponValue]) / 100), 1)
-									ELSE 0
-								END
-							WHEN [CVT].ValueTypeName = 'Monto' COLLATE Latin1_General_CI_AI THEN 
-								CASE
-									WHEN [CTD].ShortName = 'TOT' THEN
-										CASE
-											WHEN [PPDest].[CouponValue] > [do].[PriceShippment] THEN
-												[do].[PriceShippment]
-											ELSE
-												[do].[PriceShippment] - [PPDest].[CouponValue]
-										END
-									ELSE 0
-								END
-							WHEN [CVT].ValueTypeName = 'Servicio' COLLATE Latin1_General_CI_AI THEN 
-								CASE
-									WHEN CTD.ShortName = 'TOT' THEN
-										[do].[PriceShippment]
-									ELSE 0
-								END
-							ELSE 0
-						END
-					) [Amount]
-				FROM
-					[DeliveryBackOffice].[dbo].AccountServiceCartDetail ascd  WITH(NOLOCK) 
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[PromoCoupon] PPDest  WITH(NOLOCK) 
-						ON
-							ascd.[GuideSerie] = [PPDest].[GuideSerieDestination]
-							AND
-							ascd.[GuideNumber] = [PPDest].[GuideNumberDestination]
-							AND
-							[PPDest].[RowStatus] = 1
-					INNER JOIN
-						[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
-						ON 
-							[DO].[Guide_Serie] = [PPDest].[GuideSerieDestination] 
-							AND 
-							[DO].[Guide_Number] = [PPDest].[GuideNumberDestination]
-					LEFT JOIN [DeliveryBackOffice].[dbo].[CatPromo] CP  WITH(NOLOCK) 
-						ON [CP].[IdPromo] = [PPDest].[CatPromoId]
-					LEFT JOIN [DeliveryBackOffice].[dbo].[CatValueType] CVT  WITH(NOLOCK) 
-						ON [PPDest].[CatValueTypeId] = [CVT].[IdCatValueType]
-					LEFT JOIN [DeliveryBackOffice].[dbo].[CatTypeDiscount] CTD  WITH(NOLOCK) 
-						ON [PPDest].[CatDiscountTypeId] = [CTD].[IdCatTypeDiscount]
-				WHERE
-					ascd.[AccountServiceCartId] = @AccountServiceCartId
-					AND ascd.RowStatus = 1
-				ORDER BY ascd.[GuideSerie],
-				ascd.[GuideNumber] 
+				ORDER BY bop.IdBreakdownOfPayment
 				
 			END
 			ELSE

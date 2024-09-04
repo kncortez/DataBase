@@ -4,6 +4,11 @@
 -- Create date: <2021-10-19>
 -- Description:	<Guias por pagar COD>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-15>
+-- Description:	<Se agrega el simbolo de la moneda por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDepositReportCOD_Generic]
     -- Add the parameters for the stored procedure here
     @IdCustomer INT = -1,
@@ -85,7 +90,8 @@ BEGIN
                        btd.[Amount] + btd.[Commission] AS ChargedAmount,
                        btd.[Amount] AS TotalAmount,
                        IIF(btd.BankId IN ( 3, 5, 31, 33, 1), 1, 0) FlagImmediateOrAch,
-                       btd.[AuthorizationDate]
+                       btd.[AuthorizationDate],
+					   CASE WHEN ISNULL(do.SenderCountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
                 FROM [dbo].[BatchDetailCOD] AS btd WITH(NOLOCK)
                     INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH(NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]
@@ -182,7 +188,8 @@ BEGIN
                        btd.[Amount] AS TotalAmount,
                        IIF(btd.BankId IN ( 3, 5, 31, 33, 1 ), 1, 0) FlagImmediateOrAch,
                        btd.[AuthorizationDate],
-					   CONVERT(varchar(10), @StarDate,103) +' - ' +  CONVERT(varchar(10),    @EndDate ,103) AS DateDelivery
+					   CONVERT(varchar(10), @StarDate,103) +' - ' +  CONVERT(varchar(10),    @EndDate ,103) AS DateDelivery,
+					   CASE WHEN ISNULL(do.SenderCountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
                 FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
                     INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                         ON btd.[GuideSerie] = pg.[GuideSerie]

@@ -9,6 +9,11 @@
 -- Create date: <2022-02-22>
 -- Description:	< Mejora para que clientes corporativos solo se muestren registros por punto y no en general >
 -- =============================================
+-- =============================================
+-- Author:		<Cristian, Suazo>
+-- Create date: <2024-06-26>
+-- Description:	< Se muestra el simbolo de la moneda origen si es GT Q y si es HN L >
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_services]
     -- Add the parameters for the stored procedure here
     @StartDate DATE = NULL,
@@ -21,6 +26,7 @@ CREATE PROCEDURE [dbo].[spws_get_services]
     @CancelGuides TINYINT = 1
 AS
 BEGIN    
+set arithabort off
     DECLARE @IdUser BIGINT =
             (
                 SELECT TOP 1 t.TknIdUser FROM TokenLog t WITH(NOLOCK) WHERE t.TknIdToken = @Token
@@ -176,7 +182,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -450,7 +456,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -565,8 +571,8 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber AND ord.Guide_Serie = paydord.GuideSerie)
-												AND ord.Guide_Serie = paydord.GuideSerie
+												ON (ord.Guide_Number = paydord.GuideNumber 
+												AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -748,7 +754,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -967,7 +973,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1239,7 +1245,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1333,7 +1339,8 @@ BEGIN
 											INNER JOIN dbo.StatusOrder sto WITH(NOLOCK)
 												ON sto.StatusOrderId = ord.StatusOrderId
 											LEFT JOIN [dbo].[DeliveryOrderPaymentDetail] paydord WITH(NOLOCK)
-												ON (ord.Guide_Number = paydord.GuideNumber)
+												ON (ord.Guide_Number = paydord.GuideNumber
+												    AND ord.Guide_Serie = paydord.GuideSerie)
 											LEFT JOIN [dbo].[CatPaymentType] catpay WITH(NOLOCK)
 												ON (catpay.PayTypeId = paydord.PayTypeId)
 											LEFT JOIN [dbo].[CatPaymentTime] cattime WITH(NOLOCK)
@@ -1474,7 +1481,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1579,6 +1586,7 @@ BEGIN
 												ON (ctgmon.tio_pk_id = paydord.TypeofInOutMoneyId)
 											LEFT JOIN DeliveryBackOffice.dbo.GuideBatch gb WITH(NOLOCK)
 												ON gb.GuideNumber = ord.Guide_Number
+												   AND gb.GuideSeries = ord.Guide_Serie
 												   AND gb.RowStatus = 1
 											LEFT JOIN
 												[DeliveryBackOffice].[dbo].[PointsByServiceLog] PBSL WITH(NOLOCK)
@@ -1728,7 +1736,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -1943,7 +1951,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2185,7 +2193,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2403,7 +2411,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2658,7 +2666,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -2845,7 +2853,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3090,7 +3098,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3302,7 +3310,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3527,7 +3535,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'
@@ -3717,7 +3725,7 @@ BEGIN
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Preparation_Date, 20) AS VARCHAR), 'N/A')
 											   + '",' + '"DateProgramadaEntrega":"'
 											   + ISNULL(CAST(CONVERT(VARCHAR, ord.Shipping_Date, 20) AS VARCHAR), 'N/A')
-											   + '",' + '"CurrencySymbol":"' + CONVERT(VARCHAR, 'Q.') + '",'
+											   + '",' + '"CurrencySymbol":"' + CASE WHEN ISNULL(ord.SenderCountryId, 'GT') = 'GT' THEN 'Q.' ELSE 'L.' END + '",'
 											   +
 											--'"GuideNumber":"' + CAST(ord.Guide_Serie AS varchar) +''+ cast(ord.Guide_Number as varchar)  + '",' +
 											'"PrecioServicio":"'

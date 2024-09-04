@@ -14,7 +14,7 @@ CREATE TABLE [dbo].[RegistrationofTransactionProcessStates](
 	[TokenUpdate] [nvarchar](50) NULL,
 	[DateUpdate] [datetime] NULL,
 	[IdSalePackage] [int] NULL,
-	[TypeSalePackage] [nvarchar](25) NULL,
+	[TypeSalePackage] [nvarchar](100) NULL,
 	[Vaucher] [nvarchar](25) NULL,
 	[InvoiceEmail] [nvarchar](50) NULL,
 	[ProductGiftShippingEmail] [nvarchar](50) NULL,

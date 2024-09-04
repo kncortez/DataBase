@@ -15,9 +15,13 @@
 -- Description:	      <Se cambia la manera de obtener el id de banco, para poder obtener el 
 -- banco con el que se generó el lote en la BatchDetailCOD>
 -- =============================================
+-- Author:            <Daniel, Ramirez>
+-- Modification date: <2024-07-11>
+-- Description:       <Se agrega el filtro por pais, ajustando el tiempo de ejcución>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDailyCodPayment]
 -- Add the parameters for the stored procedure here
-
+   @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
     DECLARE @Debug BIT = 'false';
@@ -33,11 +37,8 @@ BEGIN
            CDATA.DCBA_Bank_Id
     FROM
     (
-        SELECT DISTINCT
-            --       IIF(do.VisitpointClientPortfolioId > 0,NULL,cu.IdCustomer) IdCustomer,
-            --do.VisitpointClientPortfolioId AS IdClientPortfolio,
+         SELECT DISTINCT
                cu.IdCustomer,
-               -- IIF(do.VisitpointClientPortfolioId != NULL,CONCAT(vpbc.Email,'envios.parser4@gmail.com,carlos.valdes@forzalatam.com,gloria.villatoro@forzalatam.com'),
                IIF(@Debug = 'true',
                    'envios@parser4@gmail.com,cod.gt@forzalatam.com',
                    CONCAT(
@@ -52,8 +53,8 @@ BEGIN
                RegexEmail,
                '0' SenderEmail,
                btd.BankId AS DCBA_Bank_Id
-        FROM [dbo].[BatchDetailCOD] AS btd 
-            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+        FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
+            INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                 ON btd.[GuideSerie] = pg.[GuideSerie]
                    AND btd.[GuideNumber] = pg.[GuideNumber]
             INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
@@ -64,12 +65,9 @@ BEGIN
             --	AND vpbc.RowStatus = 1
             LEFT JOIN dbo.Township twn WITH (NOLOCK)
                 ON twn.IdTownship = do.ReceiverIdTownship
-            LEFT JOIN dbo.Township tw WITH (NOLOCK)
-                ON tw.TownshipName = do.Receiver_Town
+                AND  twn.TownshipName = do.Receiver_Town
             LEFT JOIN dbo.Province prv WITH (NOLOCK)
                 ON prv.IdProvince = twn.IdProvince
-            LEFT JOIN dbo.Province pr
-                ON pr.IdProvince = tw.IdProvince
             LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                 ON vpc.CodeOfReference = do.Sender_ID
             LEFT JOIN dbo.Customer cu WITH (NOLOCK)
@@ -86,8 +84,6 @@ BEGIN
 			  OR LEN(COALESCE(do.Sender_Mail,''))>0
 			  OR LEN(COALESCE(cu.RegexEmail,''))>0--quitar valores nulos
 			  )
-			  
--- AND do.IdCustomer <> 29328
  AND NOT EXISTS --búsqueda por sender
  (
 	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)
@@ -113,12 +109,8 @@ BEGIN
         FROM
         (
             SELECT DISTINCT
-                --IIF(do.VisitpointClientPortfolioId > 0,NULL,cu.IdCustomer) IdCustomer,
-                --do.VisitpointClientPortfolioId AS IdClientPortfolio,
                    0 IdCustomer,
-                   --IIF(do.VisitpointClientPortfolioId != NULL,CONCAT(vpbc.Email,'envios.parser4@gmail.com,carlos.valdes@forzalatam.com,gloria.villatoro@forzalatam.com'),
-
-                   LTRIM(RTRIM(IIF(@Debug = 'true',
+                   LTRIM(RTRIM(IIF(@Debug= 'true',
                                    'envios.parser4@gmail.com,cod.gt@forzalatam.com',
                                    ISNULL(
                                              IIF(do.Sender_Mail = '',
@@ -129,28 +121,24 @@ BEGIN
                                          ))
                               )
                         )
-                   --)
                    RegexEmail,
                    do.Sender_Mail SenderEmail,
                    btd.BankId AS DCBA_Bank_Id
-            FROM [dbo].[BatchDetailCOD] AS btd
-                INNER JOIN [dbo].[ProcessedGuideCOD] AS pg
+            FROM [dbo].[BatchDetailCOD] AS btd WITH (NOLOCK)
+                INNER JOIN [dbo].[ProcessedGuideCOD] AS pg WITH (NOLOCK)
                     ON btd.[GuideSerie] = pg.[GuideSerie]
                        AND btd.[GuideNumber] = pg.[GuideNumber]
                 INNER JOIN [dbo].[DeliveryOrder] AS do WITH (NOLOCK)
                     ON btd.[GuideSerie] = do.[Guide_Serie]
-                       AND btd.[GuideNumber] = do.[Guide_Number]
+                       AND btd.[GuideNumber] = do.[Guide_Number] 
                 --LEFT JOIN VisitPointByClientPortfolio vpbc 
                 --	ON do.VisitpointClientPortfolioId = vpbc.IdVisitPointByClientPortfolio 
                 --	AND vpbc.RowStatus = 1
                 LEFT JOIN dbo.Township twn WITH (NOLOCK)
                     ON twn.IdTownship = do.ReceiverIdTownship
-                LEFT JOIN dbo.Township tw WITH (NOLOCK)
-                    ON tw.TownshipName = do.Receiver_Town
+                    AND twn.TownshipName = do.Receiver_Town
                 LEFT JOIN dbo.Province prv WITH (NOLOCK)
                     ON prv.IdProvince = twn.IdProvince
-                LEFT JOIN dbo.Province pr WITH (NOLOCK)
-                    ON pr.IdProvince = tw.IdProvince
                 LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.Sender_ID
                 LEFT JOIN dbo.Customer cu WITH (NOLOCK)
@@ -172,9 +160,10 @@ BEGIN
                      btd.BankId
         ) X
     ) CDATA
-    WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0;
-
-
+          LEFT JOIN [dbo].[DeliveryBank] AS bank
+                 ON bank.Id_bank = CDATA.DCBA_Bank_Id
+    WHERE ISNULL(IIF(CDATA.DCBA_Bank_Id = '', NULL, CDATA.DCBA_Bank_Id), 0) <> 0
+      AND ISNULL(bank.Id_country,'GT') = IIF(@IdCountry = '-1', ISNULL(bank.Id_country,'GT'), @IdCountry)
 END;
 
 

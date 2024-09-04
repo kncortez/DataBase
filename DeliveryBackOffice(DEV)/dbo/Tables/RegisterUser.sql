@@ -77,3 +77,157 @@ GO
 CREATE NONCLUSTERED INDEX [idx_UsrIdPerson]
     ON [dbo].[RegisterUser]([UsrIdPerson] ASC);
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'identificacion de persona',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrIdPerson'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'identificación de usuario',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrIdUser'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'nombre de usuario',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrNickName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'correo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrEmail'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'ultima contraseña',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrLastPassword'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'fecha de expiración de contraseña',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrPasswordExpiration'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tipo de dispositivo ',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrDeviceType'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Abreviatura de idioma(ES)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrLang'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Abreviatura de moneda',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrCurrency'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrRowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Codigo de quien creo el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrTokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de creación de registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrDateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Codigo de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrTokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fehca de modificación del registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'UsrDateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Prefijo para llamadas',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'PrefixCallingCode'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Telefono',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = N'COLUMN',
+    @level2name = N'Phone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Contiene información de los usuarios que utilizan el portal individual',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'RegisterUser',
+    @level2type = NULL,
+    @level2name = NULL

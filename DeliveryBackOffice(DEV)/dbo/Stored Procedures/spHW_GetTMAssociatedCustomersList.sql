@@ -3,8 +3,17 @@
 -- Create date: <24-01-2023>
 -- Description:	<Get list of associated customers for Telemarketing dashboard>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<14-08-2024>
+-- Description:	<Concat nirphone in Phone number>
+-- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<16-08-2024>
+-- Description:	<Added idcontry parameter>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
-	@RegisterUserId INT
+	@RegisterUserId INT,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -20,7 +29,8 @@ BEGIN
     SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
 				[RU].[UsrEmail] [Email],
-				[RU].[Phone] [Phone],
+				ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
+				[RU].[Phone] [Phone],				
 				[RU].[UsrDateCreated] [DateCreated],
 				[C].[CutOffDate] [CutOffDate],
 				[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
@@ -59,10 +69,12 @@ BEGIN
 			DO.IdCustomer
 	) GuideAmountBeforeCut
 	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId
+	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
 	UNION
 	SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
 				[RU].[UsrEmail] [Email],
+				ISNULL([RU].[PrefixCallingCode], '+502') [NirPhone],
 				[RU].[Phone] [Phone],
 				[RU].[UsrDateCreated] [DateCreated],
 				[RU].[UsrDateCreated] [CutOffDate],
@@ -86,6 +98,7 @@ BEGIN
 		AND		[M].[ExpirationDate] >= SYSDATETIME()
 	LEFT JOIN	[dbo].[CatMembership] CM  WITH(NOLOCK) 
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
-	WHERE	[M].[CatTMSalesPersonId] = @CatTMSalesPersonId;
+	WHERE	[M].[CatTMSalesPersonId] = @CatTMSalesPersonId
+	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry;
 
 END

@@ -4,9 +4,15 @@
 -- Create date: <2023-01-20>
 -- Description:	< Obtener información de cliente a partir de correo electronico, usado principalmente para pantalla de venta de membresías a clientes individuales en plataforma web interna .>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-08-07>
+-- Description:	<Se agrega la validacion del un usuario que pertenezca al pais correspondiente, de lo contrario no deja ingresar.>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetClientDataByEmail]
 	@UserId BIGINT, -- Register User, puede usarse para validar el rol que consulta la información
-	@ClientUserEmail NVARCHAR(100) 
+	@ClientUserEmail NVARCHAR(100),
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	
@@ -34,7 +40,7 @@ BEGIN
 				TOP 1
 					CTOB.IdTypeOfBusiness
 			FROM
-				[DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH(NOLOCK)
+                [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH(NOLOCK)
 			WHERE
 				CTOB.TypeOfBusinessName = 'PYMES' COLLATE Latin1_General_CI_AI
 		)
@@ -64,6 +70,7 @@ BEGIN
 		IsAccountActive BIT,
 		AccountActiveStatus NVARCHAR(50),
 		CustomerName NVARCHAR(200),
+		NirPhone NVARCHAR(5),
 		CustomerPhone NVARCHAR(200),
 		CustomerEmail NVARCHAR(200),
 		CustomerTypeId INT,
@@ -77,7 +84,8 @@ BEGIN
 		MembershipName NVARCHAR(200),
 		MembershipExpirationDate DATE,
 		MembershipLastPayment DATE,
-		MemberSince DATE
+		MemberSince DATE,
+		CountryId NVARCHAR(2)
 	);
 
 	BEGIN TRY
@@ -91,6 +99,7 @@ BEGIN
 				,IsAccountActive
 				,AccountActiveStatus
 				,CustomerName
+				,NirPhone
 				,CustomerPhone
 				,CustomerEmail
 				,CustomerTypeId
@@ -105,6 +114,7 @@ BEGIN
 				,MembershipExpirationDate
 				,MembershipLastPayment
 				,MemberSince
+				,CountryId
 			)	
 		SELECT
 			TOP 1
@@ -125,6 +135,7 @@ BEGIN
 					END
 				) 'ActiveStatus'
 				,CONCAT(PRS.PerFirstName, PRS.PerLastName) 'CustomerName'
+				,CASE WHEN ISNULL(Ru.PrefixCallingCode,'+502') = '+502' THEN '+502' ELSE Ru.PrefixCallingCode END NirPhone
 				,RU.Phone
 				,RU.UsrEmail
 				,Cu.IdCustomerType
@@ -167,6 +178,7 @@ BEGIN
 				,CAST(MMBRSHP.ExpirationDate AS DATE)
 				,CAST(ISNULL(MMBRSHP.LastPaymentDate, MMBRSHP.DateCreated) AS DATE) 'MembersgipLastPayment'
 				,CAST(MMBRSHP.DateCreated AS DATE)
+				,CASE WHEN ISNULL(Cu.CountryID,'GT') = 'GT' THEN 'GT' ELSE Cu.CountryID END CountryId
 		FROM
 			[DeliveryBackOffice].[dbo].[RegisterUser] RU WITH(NOLOCK) -- Usuario registrado
 			INNER JOIN
@@ -209,37 +221,45 @@ BEGIN
 					MMBRSHP.CatMembershipId = CM.IdCatMembership
 		WHERE
 			RU.UsrEmail = @ClientUserEmail COLLATE Latin1_General_CI_AI
-
+		
 		IF(EXISTS(SELECT TOP 1 1 FROM @CustomerInfo))
 		BEGIN
+			IF @IdCountry = (SELECT TOP 1 CountryId FROM @CustomerInfo)
+			BEGIN
+				SELECT
+					200 'resultCode',
+					'Datos obtenidos satisfactoriamente' 'resultMessage'
 
-			SELECT
-				200 'resultCode',
-				'Datos obtenidos satisfactoriamente' 'resultMessage'
-
-			SELECT
-				CI.IdCustomer
-				,CI.IdAccount
-				,CI.IsAccountActive
-				,CI.AccountActiveStatus
-				,CI.CustomerName
-				,CI.CustomerPhone
-				,CI.CustomerEmail
-				,CI.CustomerTypeId
-				,CI.CustomerTypeName
-				,CI.IsPYMES
-				,CI.HasMembership
-				,CI.MembershipId
-				,CI.IsMembershipActive
-				,CI.MembershipActiveStatus
-				,CI.CatMembershipId
-				,CI.MembershipName
-				,CI.MembershipExpirationDate
-				,CI.MembershipLastPayment
-				,CI.MemberSince
-			FROM
-				@CustomerInfo CI
-
+				SELECT
+					CI.IdCustomer
+					,CI.IdAccount
+					,CI.IsAccountActive
+					,CI.AccountActiveStatus
+					,CI.CustomerName
+					,CI.NirPhone
+					,CI.CustomerPhone
+					,CI.CustomerEmail
+					,CI.CustomerTypeId
+					,CI.CustomerTypeName
+					,CI.IsPYMES
+					,CI.HasMembership
+					,CI.MembershipId
+					,CI.IsMembershipActive
+					,CI.MembershipActiveStatus
+					,CI.CatMembershipId
+					,CI.MembershipName
+					,CI.MembershipExpirationDate
+					,CI.MembershipLastPayment
+					,CI.MemberSince
+				FROM
+					@CustomerInfo CI
+			END
+			ELSE
+			BEGIN
+				SELECT
+				204 AS 'resultCode',
+				'El usuario pertenece a otro país. Por favor, inicia sesión con una cuenta del mismo país al que ingresaste o contacta a soporte.' AS 'resultMessage'
+			END
 		END
 		ELSE
 		BEGIN

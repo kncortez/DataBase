@@ -4,7 +4,15 @@
 -- Create date: <2021-01-08>
 -- Description:	<Devuelve el listado de Direcciones asiganadas a una cuenta>
 -- =============================================
-
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-07-31>
+-- Description: <Obtiene le listado de direcciones asignadas en forma de datatable>
+-- =============================================
+-- =============================================
+-- Author:      <Walter Orozco>
+-- Create date: <2024-08-21>
+-- Description: <Optimización de la consulta>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_get_address]
 	-- Add the parameters for the stored procedure here
 	@Token VARCHAR(200),
@@ -12,81 +20,70 @@ CREATE PROCEDURE [dbo].[spws_get_address]
 	@IdAddress bigint = -1
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
 
-	DECLARE @jsonResult NVARCHAR(MAX) 
+    DECLARE @jsonResult NVARCHAR(MAX);
 
-	DECLARE @IdUser bigint  = (SELECT TOP 1 RuaIdUser FROM dbo.RolByUserByAccount WHERE RuaIdAccount = @IdAccount)
+    DECLARE @IdUser BIGINT =
+            (
+                SELECT TOP 1
+                       RuaIdUser
+                FROM dbo.RolByUserByAccount
+                WHERE RuaIdAccount = @IdAccount
+            );
 
-
-
-
-	set @jsonResult = (SELECT STUFF(( 
-							select  
-							 ',{"IdAccount":"' +   convert(varchar,ua.UadIdAccount) + '",' +
-							'"IdAddress":"' +  convert(varchar,ua.UadIdAddress)  + '",' +
-							'"FullName":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadFullName,'json') ,'"','')  + '",' +
-							'"ContactName":"' +  REPLACE(dbo.fnt_String_Escape(ISNULL(ua.UadFullName,''),'json') ,'"','')  + '",' +
-							'"Address1":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAddress1,'json') ,'"','') + '",' +
-							'"Address2":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAddress2,'json') ,'"','')  + '",' +
-							'"NirPhone":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadNirPhone,'json') ,'"','')  + '",' +
-							'"Phone":"' + ua.UadPhone   + '",' +
-							'"AdditionalInstructions":"' +  REPLACE(dbo.fnt_String_Escape(ua.UadAdditionalInstructions,'json') ,'"','')  + '",' +
-							'"IdCountry":"' + ua.UadIdCountry  + '",' +
-							'"Province":"' + prv.ProvinceName  + '",' +
-							'"Township":"' + twn.TownshipName  + '",' +
-							'"IdTownship":"' +  convert(varchar,ua.UadIdTownship)  + '",' +
-							'"HeaderCode":"' + twn.HeaderCode   + '",' +
-							'"CodeOfReference":"' + convert(varchar, ua.CodeOfReference)  + '",' +
-							'"IdCityPlace":"' + convert(varchar, isnull(ua.IdCityPlace,31))+ '",' +
-							'"CityPlace":"' + convert(varchar, ctp.CityPlace)   + '",' +
-							--'"IdProvince":"' +  convert(varchar,prv.IdProvince)  + 
-							'"IdProvince":"' +  convert(varchar,prv.IdProvince)  + '",' +							
-							'"Latitude":"' +  ISNULL(vp.Latitude,'') + '",' +
-							'"Longitude":"' +  ISNULL(vp.Longitude,'') +'",' +
-							'"Zone":"' +  ISNULL(CAST(conf.Zone as varchar(2)),'')+'",' +
-							'"Neighborhood":"' +  ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood),'') + '",' +
-							'"IsOrigin":' +  CAST(ISNULL(vp.IsOriginVisitPoint,1) AS NVARCHAR) + ''
-							+ '}'
-					from dbo.RolByUserByAccount  rua WITH(NOLOCK)
-						inner join dbo.UserAddress ua WITH(NOLOCK) on ua.UadIdAccount = rua.RuaIdAccount
-						inner join dbo.Township twn WITH(NOLOCK) on twn.IdTownship = ua.UadIdTownship
-						inner join dbo.Province prv WITH(NOLOCK) on prv.IdProvince = twn.IdProvince
-						inner join dbo.CatCityPlace ctp WITH(NOLOCK) on ua.IdCityPlace = ctp.IdCityPlace and ctp.CityPlaceRowStatus = 'true'
-						left join dbo.VisitPointClient vp WITH(NOLOCK) on vp.CodeOfReference=ua.CodeOfReference
-						left join dbo.ConfirmedAddress conf WITH(NOLOCK) on 
-								conf.NirPhone=ua.UadNirPhone
-								AND conf.Phone=ua.UadPhone
-								AND conf.TownshipId = VP.IdTownship
-								AND conf.[Address] = VP.Address
-					where rua.RuaIdAccount = @IdAccount and rua.RuaIdUser = @IdUser and ua.UadRowStatus = 1
-						and (ua.UadIdAddress = @IdAddress or @IdAddress = -1)
-					FOR XML PATH(''), TYPE
-							).value('.', 'varchar(max)'),1,1,''
-									) )
-
-		-- retornar resultado en formato json
-	If @jsonResult is null 
-	begin
-
-
-		set @jsonResult =(
-					SELECT STUFF(( 
-					SELECT '{{"IdResult":500,' 
-					+ '"Message":" No se econtraron registros"}' 
-		
-					FOR XML PATH(''), TYPE
-					).value('.', 'varchar(max)'),1,1,''
-						  ) 
-					)
-	end
-	
-		select ('[' + @jsonResult +  ']') jsonResult
-
-	
-
+    SELECT CONVERT(VARCHAR(20), ua.UadIdAccount) AS IdAccount
+		 , CONVERT(VARCHAR(20), ua.UadIdAddress) AS IdAddress
+		 , ua.UadFullName AS FullName
+		 , ISNULL(ua.UadFullName, '') AS ContactName
+		 , ua.UadAddress1 AS Address1
+		 , ua.UadAddress2 AS Address2
+		 , ua.UadNirPhone AS NirPhone
+		 , ua.UadPhone AS Phone
+		 , ua.UadAdditionalInstructions AS AdditionalInstructions
+		 , ua.UadIdCountry AS IdCountry
+		 , prv.ProvinceName AS Province
+		 , twn.TownshipName AS TownshipName
+		 , CONVERT(VARCHAR(11), ua.UadIdTownship) AS IdTownship
+		 , twn.HeaderCode AS HeaderCode
+		 , CONVERT(VARCHAR(11), ua.CodeOfReference) AS CodeOfReference
+		 , CONVERT(VARCHAR(11), ISNULL(ua.IdCityPlace, 31)) AS IdCityPlace
+		 , ctp.CityPlace AS CityPlace
+		 , CONVERT(VARCHAR(11), prv.IdProvince) AS IdProvince
+		 , ISNULL(vp.Latitude, '') AS Latitude
+		 , ISNULL(vp.Longitude, '') AS Longitude
+		 , ISNULL(CAST(conf.[Zone] AS VARCHAR(2)), '') AS [Zone]
+		 , ISNULL(dbo.fn_ReplaceSpecialCharsForJSON(conf.Neighborhood), '') AS Neighborhood
+		 , CAST(ISNULL(vp.IsOriginVisitPoint, 1) AS NVARCHAR(1)) AS IsOrigin
+		 , CAST(ISNULL(ua.UadFavorite,0) AS NVARCHAR(1)) AS IsFavorite
+	FROM dbo.RolByUserByAccount rua WITH (NOLOCK)
+	INNER JOIN dbo.UserAddress ua WITH (NOLOCK)
+		ON ua.UadIdAccount = rua.RuaIdAccount
+	INNER JOIN dbo.Township twn WITH (NOLOCK)
+		ON twn.IdTownship = ua.UadIdTownship
+	INNER JOIN dbo.Province prv WITH (NOLOCK)
+		ON prv.IdProvince = twn.IdProvince
+	INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
+		ON ua.IdCityPlace = ctp.IdCityPlace
+		   AND ctp.CityPlaceRowStatus = 'true'
+	LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
+		ON vp.CodeOfReference = ua.CodeOfReference
+	LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
+		ON conf.NirPhone = ua.UadNirPhone
+		AND conf.Phone = ua.UadPhone
+	WHERE rua.RuaIdAccount = @IdAccount
+		  AND rua.RuaIdUser = @IdUser
+		  AND ua.UadRowStatus = 1
+		  AND conf.TownshipId = vp.IdTownship
+		  AND conf.[Address] = vp.[Address]
+          AND
+          (
+              ua.UadIdAddress = @IdAddress
+              OR @IdAddress = -1
+          )
+	ORDER BY ua.UadFavorite DESC;
 END
 
 
