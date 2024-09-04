@@ -557,7 +557,7 @@ BEGIN
 				   db.[Name] [NameValue],
                    'AccountBankFormatRule' [Catalog]
             FROM AccountBankFormatRule abfr
-                JOIN DeliveryBank db
+                INNER JOIN DeliveryBank db
                     ON db.Id_bank = abfr.DeliveryBankId
             WHERE db.[Id_status] = 1
                   AND db.[Id_country] = @IdFilter

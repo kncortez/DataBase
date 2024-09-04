@@ -36,18 +36,12 @@ BEGIN
             do.Guide_Number
     FROM 
         [DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
-    INNER JOIN 
-        DeliverySettlementDetail dsd WITH(NOLOCK)
-        ON 
-            do.Guide_Serie = dsd.Guide_Serie 
-            AND 
-            do.Guide_Number = dsd.Guide_Number
-            AND
-            do.[IsLastMileReturn] = 1
-            AND 
-            dsd.ID_DeliveryOrderBySettlement = @IdManifest 
-            AND 
-            dsd.RowStatus = 1
+    INNER JOIN DeliverySettlementDetail dsd WITH(NOLOCK)
+        ON do.Guide_Serie = dsd.Guide_Serie 
+        AND do.Guide_Number = dsd.Guide_Number
+     WHERE do.[IsLastMileReturn] = 1
+       AND dsd.ID_DeliveryOrderBySettlement = @IdManifest 
+       AND dsd.RowStatus = 1
 
     DECLARE @ConcatReturnGuides NVARCHAR(MAX) = (
         SELECT STUFF
@@ -171,7 +165,7 @@ BEGIN
 	END
 	) AS  Collect_OnDelivery
 	FROM [DeliveryBackOffice].[dbo].DeliveryOrder do  WITH(NOLOCK) 
-	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK)  ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number AND dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
+	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK)  ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number
 	LEFT JOIN
     @TempReturnPrice TRP
     ON
@@ -183,6 +177,8 @@ BEGIN
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 	AND dsd.Guide_Returned = 1  -- guía liquidada vía material devuelto
 	AND dsd.Guide_Delivered = 0  -- guía liquidada vía comprobante de entrega
+    AND dsd.ID_DeliveryOrderBySettlement = @IdManifest 
+    AND dsd.RowStatus = 1
 
 	SELECT * FROM @temp
 	order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc

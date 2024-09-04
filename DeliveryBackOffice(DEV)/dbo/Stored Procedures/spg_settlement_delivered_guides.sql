@@ -114,7 +114,9 @@ BEGIN
     ) AS Collect_OnDelivery,
 	do.ReceiverCountryId
 	from [DeliveryBackOffice].[dbo].DeliveryOrder do  WITH(NOLOCK) 
-	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK)  ON dsd.Guide_Serie = do.Guide_Serie AND dsd.Guide_Number = do.Guide_Number AND dsd.ID_DeliveryOrderBySettlement = @IdManifest AND dsd.RowStatus = 1
+	INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK)  
+            ON dsd.Guide_Serie = do.Guide_Serie 
+            AND dsd.Guide_Number = do.Guide_Number 
 	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH(NOLOCK)
 			ON do.Receiver_ID = vp.CodeOfReference
 		LEFT JOIN [dbo].VisitPointClient vps WITH(NOLOCK)
@@ -132,7 +134,8 @@ BEGIN
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 	AND dsd.Guide_Returned = 0  -- guía liquidada vía material devuelto
 	AND dsd.Guide_Delivered = 1  -- guía liquidada vía comprobante de entrega
-
+    AND dsd.ID_DeliveryOrderBySettlement = @IdManifest 
+    AND dsd.RowStatus = 1
 
 	SELECT * FROM @temp
 	order by Receiver_Departament asc, Receiver_Town asc, Receiver_Zone asc, Receiver_Address asc

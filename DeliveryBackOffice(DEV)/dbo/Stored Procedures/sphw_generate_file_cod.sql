@@ -401,7 +401,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
-                           AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
+                WHERE fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
                            AND fac.inv_creditNote IS NULL
                 GROUP BY invd.dti_fk_orderSerie,
@@ -840,7 +840,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
-                           AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
+                WHERE fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
                            AND fac.inv_creditNote IS NULL
                 GROUP BY invd.dti_fk_orderSerie,

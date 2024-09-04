@@ -119,14 +119,12 @@ BEGIN
 		ON  UPPER(REPLACE(REPLACE(ucl.VehicleTypeDescription,' ',''),'-','')) = UPPER(REPLACE(REPLACE(cv.Plate,' ',''),'-',''))
 	INNER JOIN RouteAssigment ra WITH (NOLOCK)
 		ON ra.IdVehicle = cv.IdVehicle
-		AND ra.RowStatus = 1
 	INNER JOIN SenderReceiver sr WITH (NOLOCK)
 		ON ra.IdCurrierMan = sr.ID
 	LEFT JOIN CatTypeVehicle ctv WITH (NOLOCK)
 		ON ctv.IdTypeVehicle = cv.IdTypeVehicle
 	INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON ra.IdRoute = cr.IdRoute
-		AND cr.IdTypeRoute = @PickupServiceTypeId
 	WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
 	AND (
 	 (CV.HubLogisticId) IN
@@ -138,6 +136,8 @@ BEGIN
 		WHERE UserId = @IdUser
 		AND ISNULL(hl.IdCountry, 'GT') = @IdCountry)
 	)
+	AND ra.RowStatus = 1
+	AND cr.IdTypeRoute = @PickupServiceTypeId
 	
 	INSERT INTO @ResponseTable
 	SELECT
@@ -213,12 +213,10 @@ BEGIN
 		ON ctv.IdTypeVehicle = cfdvt.CatTypeVehicleId
 	INNER JOIN RouteAssigment ra WITH (NOLOCK)
 		ON ra.IdCurrierMan = sr.ID
-		AND ra.RowStatus = 1
 	INNER JOIN CatVehicle cv WITH (NOLOCK)
 		ON cv.IdVehicle = ra.IdVehicle
 	INNER JOIN CatRoute cr WITH (NOLOCK)
 		ON ra.IdRoute = cr.IdRoute
-		AND cr.IdTypeRoute = @PickupServiceTypeId
 	LEFT JOIN @ResponseTable RT
 		ON RT.CourierId = SR.ID
 	WHERE ra.DateOfRoute = CAST(GETDATE() AS DATE)
@@ -233,6 +231,8 @@ BEGIN
 		AND ISNULL(hl.IdCountry, 'GT') = @IdCountry)
 	)
 	AND RT.CourierId IS NULL
+	AND ra.RowStatus = 1
+	AND cr.IdTypeRoute = @PickupServiceTypeId
 
 	SELECT
 		 RT.CourierId

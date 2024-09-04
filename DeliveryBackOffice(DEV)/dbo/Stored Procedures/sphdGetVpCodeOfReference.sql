@@ -33,21 +33,21 @@ BEGIN
 		'',CONVERT(VARCHAR(50),CONVERT(VARCHAR(50),VPC.CodeOfReference) + ' ' + VPC.Address))	
           ,@Country = cs.CountryId
 	FROM DeliveryBackOffice.dbo.InternalUser iu
-	JOIN DeliveryBackOffice.dbo.RegisterUser ru
-		ON iu.RegisterUserID = ru.UsrIdUser
-		AND ru.UsrRowStatus = 1
-	JOIN DeliveryBackOffice.dbo.RolByUserBySystem rus
-		ON ru.UsrIdUser = rus.RusIdUser
-		AND rus.RusRowStatus = 1
-	JOIN DeliveryBackOffice.dbo.CatStation cs
-		ON rus.StationId = cs.IdStation
-		AND cs.RowStatus = 1
-	LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
-	ON VPC.CodeOfReference = cs.CodeOfReference AND cs.StationType = 2
+	    INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru
+		      ON iu.RegisterUserID = ru.UsrIdUser
+	    INNER JOIN DeliveryBackOffice.dbo.RolByUserBySystem rus
+		      ON ru.UsrIdUser = rus.RusIdUser
+	    INNER JOIN DeliveryBackOffice.dbo.CatStation cs
+		      ON rus.StationId = cs.IdStation
+	    LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+	         ON VPC.CodeOfReference = cs.CodeOfReference AND cs.StationType = 2
 	WHERE iu.IdUser = @CodeUser 
 		AND iu.Username = @UserName
 		AND rus.RusIdSystem = @IdSystem
 		AND iu.RowStatus = 1
+        AND ru.UsrRowStatus = 1
+        AND rus.RusRowStatus = 1
+        AND cs.RowStatus = 1
 
 	IF @StationId IS NULL
 		SELECT @StationId = -1 
