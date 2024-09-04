@@ -106,7 +106,6 @@ BEGIN
 							,[InternalCode]
 							,[TaxId]
 							,[ContactName]
-							,[IsBusiness]
 						)
 						values(@FirstName, @SecondName, @LastName, @SecondLastName, @Email,@NirPhone
 						, @Phone, @CUI, @VisitPointId,@Status, @Token, GETDATE(),null, null, @InternalCode, @TaxId, @ContactName, @IsBusiness)
@@ -240,7 +239,7 @@ if( @IdVisitPointByClientPortfolio > 0 )
 
 						update VisitPointByClientPortfolio set FirstName = @FirstName, SecondName = @SecondName, LastName = @LastName, SecondLastName = @SecondLastName,
 						Email = @Email, NirPhone = @NirPhone, Phone = @Phone, CUI = @CUI, TokenUpdated = @Token , DateUpdated = GETDATE(), TaxId = @TaxId, ContactName=@ContactName,
-						RowStatus = @Status, IsBusiness = @IsBusiness
+						RowStatus = @Status
 						where IdVisitPointByClientPortfolio = @IdVisitPointByClientPortfolio
 						
 						
