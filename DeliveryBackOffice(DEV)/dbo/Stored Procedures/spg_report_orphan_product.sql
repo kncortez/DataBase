@@ -33,7 +33,7 @@ BEGIN
 	where StatusOrderId = 5
 	group by dod.Guide_Serie, dod.Guide_Number
 	) as SUBQ
-	JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = subq.guide_serie and do.Guide_Number = subq.guide_number
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = subq.guide_serie and do.Guide_Number = subq.guide_number
 	where w.Active = 1
 	AND SUBQ.Date_Created <=  GETDATE() - 1
 	AND SUBQ.Guide_Serie = w.Guide_Serie and SUBQ.Guide_Number = w.Guide_Number

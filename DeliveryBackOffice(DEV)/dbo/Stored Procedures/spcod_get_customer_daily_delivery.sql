@@ -19,15 +19,15 @@ BEGIN
     SELECT DISTINCT
            ISNULL(ord.IdCustomer, vpc.CustomerID) idcustomer,
            IIF(@Debug ='true', 'envios.parser4@gmail.com', COALESCE(ord.Sender_Mail, cs.CODContactEmail,cs.RegexEmail)) RegexEmail
-    FROM dbo.DeliveryOrderDetail dt
-        LEFT JOIN dbo.DeliveryOrder ord
+    FROM dbo.DeliveryOrderDetail dt WITH(NOLOCK)
+        LEFT JOIN dbo.DeliveryOrder ord WITH(NOLOCK)
             ON ord.Guide_Serie = dt.Guide_Serie
                AND ord.Guide_Number = dt.Guide_Number
-        LEFT JOIN dbo.VisitPointClient vpc
+        LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
             ON vpc.CodeOfReference = ord.Sender_ID
-        LEFT JOIN dbo.Customer cs
+        LEFT JOIN dbo.Customer cs WITH(NOLOCK)
             ON cs.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
-		LEFT JOIN ProcessedGuideCOD PC ON dt.Guide_Number = pc.GuideNumber and dt.Guide_Serie = pc.GuideSerie and pc.Notificated = 0
+		LEFT JOIN ProcessedGuideCOD PC WITH(NOLOCK) ON dt.Guide_Number = pc.GuideNumber and dt.Guide_Serie = pc.GuideSerie and pc.Notificated = 0
     WHERE dt.StatusOrderId IN (5,22)
 	      AND ord.StatusOrderId NOT IN (7,15)
           AND CONVERT(DATE, dt.DateCreated) = CONVERT(DATE, GETDATE())
