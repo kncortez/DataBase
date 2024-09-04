@@ -1687,6 +1687,7 @@
     <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
     <Build Include="dbo\Stored Procedures\InsertSundaysInRange.sql" />
     <Build Include="dbo\Stored Procedures\SetBatchInvoiceByCountryCreditNote.sql" />
+    <Build Include="dbo\Stored Procedures\sps_InvoicecreditNoteValidation.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
