@@ -46,9 +46,9 @@ BEGIN
 		AC.AccIdAccount 'IdAccount',
 		IIF((CU.[Name] = 'Cliente Referenciado' AND CU.Domain = '@forzadelivery'),1,0) 'IsReferredCustomer',
 		CU.Name 'CustomerName'
-		FROM DBO.VisitPointClient VP
-		LEFT JOIN DBO.UserAddress UA ON VP.CodeOfReference=UA.CodeOfReference
-		LEFT JOIN DBO.Customer CU ON CU.IdCustomer=VP.CustomerID
+		FROM DBO.VisitPointClient VP WITH(NOLOCK)
+		LEFT JOIN DBO.UserAddress UA WITH(NOLOCK) ON VP.CodeOfReference=UA.CodeOfReference
+		LEFT JOIN DBO.Customer CU WITH(NOLOCK) ON CU.IdCustomer=VP.CustomerID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Account] Ac WITH(NOLOCK)
 					ON Ac.IdCustomer = VP.CustomerID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
@@ -57,7 +57,7 @@ BEGIN
 					ON RU.UsrIdUser = RBUBA.RuaIdUser
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Person] PR WITH(NOLOCK)
 					ON PR.PerIdPerson = RU.UsrIdPerson
-		LEFT JOIN DBO.CatCityPlace CP ON UA.IdCityPlace=CP.IdCityPlace
+		LEFT JOIN DBO.CatCityPlace CP WITH(NOLOCK) ON UA.IdCityPlace=CP.IdCityPlace
 		WHERE 
 		(
 			@filter =-1

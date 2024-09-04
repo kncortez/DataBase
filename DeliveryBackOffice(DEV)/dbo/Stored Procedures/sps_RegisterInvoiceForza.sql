@@ -38,8 +38,9 @@ BEGIN
 
 	SET @Guide =(SELECT Count (ind.dti_fk_orderNumber)
 				 FROM invoiceDetail ind WITH (NOLOCK)
-				 INNER JOIN @TblLstDetail tbd 
+				 INNER JOIN @TblLstDetail tbd	
 				 ON ind.dti_fk_orderNumber = tbd.orderNumber
+					AND ind.dti_fk_orderserie = tbd.orderSerie
 				 INNER JOIN invoiceHeader inh WITH (NOLOCK)
 				 ON ind.dti_fk_header = inh.inv_pk_id
 				 WHERE inh.inv_certificationFEL IS NULL
@@ -189,6 +190,7 @@ BEGIN
 			SET @invoiceHeaderId = (SELECT TOP 1 dti_fk_header FROM invoiceDetail indt WITH (NOLOCK)
 									INNER JOIN @TblLstDetail tbld
 									ON indt.dti_fk_orderNumber = tbld.orderNumber
+									AND indt.dti_fk_orderserie = tbld.orderSerie
 									INNER JOIN invoiceHeader inh WITH (NOLOCK)
 									ON indt.dti_fk_header = inh.inv_pk_id
 								    WHERE inh.inv_certificationFEL IS NULL)
