@@ -755,7 +755,9 @@ BEGIN
                            DiscountPrice,
 						   @IdCountrySender
                     FROM #TableForzaPaymentTemp tfpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) 
+                        ON c.GuideSerie = tfpt.GuideSerie
+                        AND c.GuideNumber = tfpt.GuideNumber
                     WHERE NOT EXISTS
                     (
                         SELECT 1

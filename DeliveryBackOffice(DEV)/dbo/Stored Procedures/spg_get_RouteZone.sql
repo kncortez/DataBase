@@ -42,7 +42,7 @@ BEGIN
 			Vehicles=STUFF((
 							 SELECT ',' + isnull( cv.Name, ' ')
 							 FROM VehicleCategoryByRoute vcb
-							 join CatVehicleCategories cv on (cv.IdCatVehicleCategories = vcb.CatVehicleCategoriesId)
+							 INNER join CatVehicleCategories cv on (cv.IdCatVehicleCategories = vcb.CatVehicleCategoriesId)
 							 where vcb.RouteId = cr.IdRoute
 							 FOR XML PATH('')
 							 ), 1, 1, ''),

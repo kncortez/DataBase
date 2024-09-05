@@ -19,8 +19,8 @@ BEGIN
          ts.IdProvince 
     FROM Township ts
          INNER JOIN Province pv ON pv.IdProvince = ts.IdProvince
-                               AND pv.ProvinceStatus = 1
    WHERE TownshipStatus = 1
+     AND pv.ProvinceStatus = 1
      AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
 
 END

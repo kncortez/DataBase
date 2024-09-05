@@ -67,7 +67,7 @@ BEGIN
 				,ISNULL(serv.Receiver_CUI, '') CUI
 				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON ((serv.Sender_ID = vpclient.CodeOfReference) OR (serv.IdCustomer = vpclient.CustomerID))
 			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
 				ON serv.StatusOrderId = so.StatusOrderId
@@ -101,7 +101,7 @@ BEGIN
 				,ISNULL(serv.Receiver_CUI, '') CUI
 				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON ((serv.Sender_ID = vpclient.CodeOfReference) OR (serv.IdCustomer = vpclient.CustomerID))
 			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
 				ON serv.StatusOrderId = so.StatusOrderId

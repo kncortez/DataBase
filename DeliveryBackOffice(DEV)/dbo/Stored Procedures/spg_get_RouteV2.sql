@@ -45,10 +45,8 @@ BEGIN
 	FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr
 	INNER JOIN [DeliveryBackOffice].[dbo].[Township] ts
 		ON ts.IdTownship = ctr.IdTownship
-        AND ts.TownshipStatus = 1
     INNER JOIN [DeliveryBackOffice].[dbo].[Province] pr
         ON pr.IdProvince = ts.IdProvince
-        AND pr.ProvinceStatus = 1
 	WHERE ctr.RowStatus = 1
 		AND 
 		(
@@ -57,5 +55,7 @@ BEGIN
 			ctr.IdTypeRoute = (SELECT ctr.IdTypeRoute FROM CatTypeRoute ctr WHERE [Name] = 'Especiales')
 		)
         AND IIF(pr.IdCountry IS NULL, 'GT', pr.IdCountry) = @IdCountry
+        AND ts.TownshipStatus = 1
+        AND pr.ProvinceStatus = 1
 	ORDER BY ctr.CodeRoute
 END

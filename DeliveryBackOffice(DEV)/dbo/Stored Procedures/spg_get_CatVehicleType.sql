@@ -13,7 +13,9 @@ CREATE PROCEDURE [dbo].[spg_get_CatVehicleType]
 @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
-	SELECT IdTypeVehicle, Name FROM CatTypeVehicle
-	where RowStatus = 1
-    AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry 
+    SELECT IdTypeVehicle,
+           [Name]
+      FROM CatTypeVehicle
+     WHERE RowStatus = 1
+       AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry 
 END

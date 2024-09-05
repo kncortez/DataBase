@@ -13,9 +13,13 @@ CREATE PROCEDURE [dbo].[spg_get_CatVehicleCategories]
 @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
-	SELECT IdCatVehicleCategories, Name,COALESCE(Length,0) Length,COALESCE(Width,0) Width,COALESCE(High,0)High
-	,COALESCE(UnitType,0) UnitType
-	FROM CatVehicleCategories
-	where RowStatus = 1
-      AND IIF(IdCountry IS NULL,'GT',IdCountry) = @IdCountry
+    SELECT IdCatVehicleCategories, 
+           [Name],
+           COALESCE([Length],0) [Length],
+           COALESCE(Width,0) Width,
+           COALESCE([High],0) [High],
+           COALESCE(UnitType,0) UnitType
+      FROM CatVehicleCategories
+     WHERE RowStatus = 1
+       AND IIF(IdCountry IS NULL,'GT',IdCountry) = @IdCountry
 END
