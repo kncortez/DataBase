@@ -5,19 +5,21 @@
 BEGIN TRY
     BEGIN TRANSACTION;
 
-	ALTER TABLE [DeliveryBackOffice].[dbo].[NoLaborCalendar]
-	ADD IdCountry VARCHAR(2) NOT NULL DEFAULT 'GT';
+	--ALTER TABLE [DeliveryBackOffice].[dbo].[NoLaborCalendar]
+	--ADD IdCountry VARCHAR(2) NOT NULL DEFAULT 'GT';
 
-	ALTER TABLE [DeliveryBackOffice].[dbo].[NoLaborCalendar]
-	ADD CONSTRAINT FK_NoLaborCalendar_CatCountry
-	FOREIGN KEY (IdCountry)
-	REFERENCES [DeliveryBackOffice].[dbo].[CatCountry](IdCountry);
-
-	--Eliminar la restricción de clave única existente
+	--ALTER TABLE [DeliveryBackOffice].[dbo].[NoLaborCalendar]
+	--ADD CONSTRAINT FK_NoLaborCalendar_CatCountry
+	--FOREIGN KEY (IdCountry)
+	--REFERENCES [DeliveryBackOffice].[dbo].[CatCountry](IdCountry);
+	update NoLaborCalendar
+		set IdCountry='GT'
+	WHERE IdCountry IS NULL
+	--Eliminar la restricciï¿½n de clave ï¿½nica existente
 	ALTER TABLE [DeliveryBackOffice].[dbo].[NoLaborCalendar]
 	DROP CONSTRAINT UQ_NoLaborCalendar_NoRepeats;
 
-	--Crear una nueva restricción de clave única compuesta
+	--Crear una nueva restricciï¿½n de clave ï¿½nica compuesta
 	ALTER TABLE [DeliveryBackOffice].[dbo].[NoLaborCalendar]
 	ADD CONSTRAINT UQ_NoLaborCalendar_Composite UNIQUE (NoLaborDate, IdCountry);
 

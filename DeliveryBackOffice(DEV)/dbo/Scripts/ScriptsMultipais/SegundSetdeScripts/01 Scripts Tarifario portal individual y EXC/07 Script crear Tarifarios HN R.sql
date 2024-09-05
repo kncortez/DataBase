@@ -17,7 +17,7 @@ BEGIN TRY
 	WHERE Currency_Name = 'Lempira' AND Currency_IdCountry = 'HN' AND DefaultPerCountry = 1
 
 	SELECT @IdTypeRate = IdTypeRate FROM DeliveryBackOffice.dbo.CatTypeRate 
-	WHERE Name = 'Tipo de Artículo' AND RowStatus = 1
+	WHERE Name = 'Tipo de ArtÃ­culo' AND RowStatus = 1
 
 	SELECT @IdBusinessSegment = IdBusinessSegment FROM  DeliveryBackOffice.dbo.CatBusinessSegment
 	WHERE BusinessSegmentName = 'C2C' and IdCountry ='HN' and RowStatus = 1

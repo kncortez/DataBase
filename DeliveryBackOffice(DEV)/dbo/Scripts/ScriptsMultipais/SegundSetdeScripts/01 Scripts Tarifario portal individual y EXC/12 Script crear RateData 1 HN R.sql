@@ -1,6 +1,16 @@
---CLONAR PARA TARIFARIO ALTERNATIVO
+
+------------------------------------------------------------------------------------------------
+-------------------------------------------!IMPORTANTE------------------------------------------
+------------------------------------------------------------------------------------------------
+/*
+Los datos insertados en l tabla ratedata son de prueba, verificar los valores a insertar
+Los datos de la rateheader si seran los correcto
+*/
+
+------------------------------------------------------------------------------------------------
+--CLONAR PARA TARIFARIO
 --SELECT * FROM DeliveryBackOffice.dbo.RateData
---where RateId = 2286  --EJEMPLO DEVELOP
+--where RateId = 2285 --EJEMPLO DEVELOP GT
 
 BEGIN TRY
     BEGIN TRANSACTION;
@@ -9,10 +19,10 @@ BEGIN TRY
 	DECLARE @IdRateHN INT;
 
 	SELECT @IdRateGT = RheId FROM DeliveryBackOffice.dbo.RateHeader
-	WHERE RheName = 'Tarifario destinos express center' AND CountryId = 'GT'
+	WHERE RheName = 'Tarifario de servicio estandar' AND CountryId = 'GT'
 
 	SELECT @IdRateHN = RheId FROM DeliveryBackOffice.dbo.RateHeader
-	WHERE RheName = 'Tarifario destinos express center' AND CountryId = 'HN'
+	WHERE RheName = 'Tarifario de servicio estandar' AND CountryId = 'HN'
 
 	DECLARE @RateId INT
 	DECLARE @TypeServiceId INT
@@ -61,11 +71,11 @@ BEGIN TRY
 
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
-		-- Aquí puedes modificar los valores de las variables según tus necesidades
-		SET @RateId = @IdRateHN  -- Ejemplo de modificación
-		SET @RateValue = @RateValue * 3  -- Ejemplo de modificación
+		-- Aquï¿½ puedes modificar los valores de las variables segï¿½n tus necesidades
+		SET @RateId = @IdRateHN 
+		SET @RateValue = @RateValue * 3 --le aumentamos 3 por la equivalencia 1Q = 3L
 		SET @TokenCreated = 'SYS-WOROZCO'
-		SET @DateCreated = '2024-08-13 12:15:00.000'
+		SET @DateCreated = '2024-08-13 11:15:00.000'
 		SET @TokenUpdated = NULL
 		SET @DateUpdated = NULL
 

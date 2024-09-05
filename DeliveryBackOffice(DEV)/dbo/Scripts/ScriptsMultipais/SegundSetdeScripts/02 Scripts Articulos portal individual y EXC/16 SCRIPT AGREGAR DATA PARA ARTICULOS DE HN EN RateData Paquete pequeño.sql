@@ -1,6 +1,6 @@
 --SELECT * FROM DeliveryBackOffice.dbo.ArticleByCustomer
 --WHERE  AbcIdArticle = (SELECT ArtId FROM DeliveryBackOffice.dbo.CatArticle
---WHERE  ArtName = 'Paquete pequeño' AND IdCountry IS NULL) --EJEMPLO DEVELOP
+--WHERE  ArtName = 'Paquete pequeÃ±o' AND IdCountry IS NULL) --EJEMPLO DEVELOP
 
 DECLARE @IdArticle INT;
 DECLARE @IdArticleGT INT;
@@ -12,12 +12,12 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
 	SELECT @IdArticle = ArtId  FROM DeliveryBackOffice.dbo.CatArticle 
-	WHERE ArtName = 'Paquete pequeño' AND  IdCountry = 'HN'
+	WHERE ArtName = 'Paquete pequeÃ±o' AND  IdCountry = 'HN'
 	
 	SELECT @IdCurrency = IdCatCurrencyCOD FROM DeliveryBackOffice.dbo.CatCurrencyCOD WITH(NOLOCK)
 	WHERE Name = 'LEMPIRA'
 
-	--SCRIPT AGREGAR ARTICULO POR CLIENTE DE HN EN ArticleByCustomer Paquete pequeño
+	--SCRIPT AGREGAR ARTICULO POR CLIENTE DE HN EN ArticleByCustomer Paquete pequeÃ±o
 	INSERT INTO [dbo].[ArticleByCustomer] --ESTE INSERT NO LO HICE EN DEVELOP
 		([AbcIdArticle]
 		,[AbcIdCustomer]
@@ -61,9 +61,9 @@ BEGIN TRY
 
 	SELECT @IdArticleGT = AbcId FROM DeliveryBackOffice.dbo.ArticleByCustomer
 	WHERE  AbcIdArticle = (SELECT ArtId FROM DeliveryBackOffice.dbo.CatArticle
-	WHERE  ArtName = 'Paquete pequeño' AND (IdCountry IS NULL OR IdCountry = 'GT'))
+	WHERE  ArtName = 'Paquete pequeÃ±o' AND (IdCountry IS NULL OR IdCountry = 'GT'))
 
-	--SCRIPT AGREGAR DATA PARA ARTICULOS DE HN EN RateData Paquete pequeño
+	--SCRIPT AGREGAR DATA PARA ARTICULOS DE HN EN RateData Paquete pequeÃ±o
 	INSERT INTO [dbo].[RateData]
 		([RateId]
 		,[TypeServiceId]
