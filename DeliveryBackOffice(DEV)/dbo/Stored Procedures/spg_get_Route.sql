@@ -29,7 +29,7 @@ BEGIN
       FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr WITH(NOLOCK)
            INNER JOIN [DeliveryBackOffice].[dbo].[Township] ts WITH(NOLOCK) ON ts.IdTownship = ctr.IdTownship
            INNER JOIN [DeliveryBackOffice].[dbo].[Province] pr WITH(NOLOCK) ON pr.IdProvince = ts.IdProvince
-                                                                           AND ProvinceStatus = 1
      WHERE ctr.RowStatus = 1
+       AND ProvinceStatus = 1
        AND IIF(pr.IdCountry IS NULL, 'GT', pr.IdCountry) = @IdCountry
 END

@@ -311,6 +311,8 @@ BEGIN
 		(serv.Guide_Serie + CONVERT(VARCHAR(100),serv.Guide_Number) = @Guide) 	
 END
 
+CREATE NONCLUSTERED INDEX TempResults ON #TempResults (IdCountry);
+
 SELECT * FROM #TempResults
 WHERE IdCountry = @IdCountry
 

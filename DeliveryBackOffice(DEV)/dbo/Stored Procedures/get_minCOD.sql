@@ -14,6 +14,6 @@ AS
 
 DECLARE @MinCOD INT = 0;
 BEGIN
- SET @MinCOD =  (SELECT Value FROM ConfigParams WHERE Name = 'MinimumCODAmount' AND ISNULL(IdCountry, 'GT') = @IdCountry)
+ SET @MinCOD =  (SELECT [Value] FROM ConfigParams WHERE [Name] = 'MinimumCODAmount' AND ISNULL(IdCountry, 'GT') = @IdCountry)
  SELECT @MinCOD AS MinCOD
 END
