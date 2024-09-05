@@ -7,7 +7,7 @@
 -- Update date: <2024-03-07>
 -- Description:	<Registrar incidencia para cliente DHL>
 -- =============================================
-ALTER PROCEDURE [dbo].[CreateIncidentRecord]
+CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @GuideSerie NVARCHAR(2) = 'FD'        --serie
   , @GuideNumber INT                      --número de guía
   , @TokenCreated NVARCHAR(200)           --token de guardado
