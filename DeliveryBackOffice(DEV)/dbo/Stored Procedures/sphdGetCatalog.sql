@@ -122,6 +122,11 @@ BEGIN
                       @IdCorrelative = -1
                       OR CBS.IdBusinessSegment = @IdCorrelative
                   )
+                  AND
+                  (
+                      @IdFilter = ''
+                      OR ISNULL(CBS.IdCountry,'GT') = @IdFilter
+                  )
             ORDER BY CBS.[BusinessSegmentName];
         END;
 
