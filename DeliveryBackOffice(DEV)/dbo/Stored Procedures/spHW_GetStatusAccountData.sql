@@ -71,8 +71,6 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
 				ON
 					RU.UsrIdUser = RBUBA.RuaIdUser
-					AND
-					RBUBA.RuaRowStatus = 1
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[Account] Acc WITH(NOLOCK)
 				ON
@@ -89,10 +87,11 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[UserSystemRestriction] USR WITH(NOLOCK)
 				ON
 					RU.UsrIdUser = USR.UstIdUser
-					AND
-					USR.UstIdSystem = @TargetSystem
 		WHERE
 			RU.UsrEmail = @AccountEmail COLLATE Latin1_General_CI_AI
+          AND RBUBA.RuaRowStatus = 1
+          AND USR.UstIdSystem = @TargetSystem
+
 
 		IF(EXISTS(SELECT TOP 1 1 FROM @AccountData))
 		BEGIN

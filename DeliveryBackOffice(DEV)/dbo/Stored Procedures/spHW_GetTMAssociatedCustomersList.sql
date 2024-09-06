@@ -41,7 +41,6 @@ BEGIN
 	FROM		[dbo].[Customer] C  WITH(NOLOCK) 
 	INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
 		ON		[C].[IdCustomer] = [A].[IdCustomer]
-		AND		[C].[CutOffDate] >= SYSDATETIME()
 	INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
 		ON		[A].[AccIdAccount] = [RUA].[RuaIdAccount]
 	INNER JOIN	[dbo].[RegisterUser] RU  WITH(NOLOCK) 
@@ -70,6 +69,7 @@ BEGIN
 	) GuideAmountBeforeCut
 	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId
 	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
+    AND [C].[CutOffDate] >= SYSDATETIME()
 	UNION
 	SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
@@ -86,7 +86,6 @@ BEGIN
 	FROM		[dbo].[Customer] C  WITH(NOLOCK) 
 	INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
 		ON		[C].[IdCustomer] = [A].[IdCustomer]
-		AND		[C].[CutOffDate] >= SYSDATETIME()
 	INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
 		ON		[A].[AccIdAccount] = [RUA].[RuaIdAccount]
 	INNER JOIN	[dbo].[RegisterUser] RU  WITH(NOLOCK) 
@@ -99,6 +98,7 @@ BEGIN
 	LEFT JOIN	[dbo].[CatMembership] CM  WITH(NOLOCK) 
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
 	WHERE	[M].[CatTMSalesPersonId] = @CatTMSalesPersonId
-	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry;
+	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
+    AND [C].[CutOffDate] >= SYSDATETIME();
 
 END
