@@ -237,7 +237,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
     END;
     ELSE IF (@CustomerTypeId = 1) -- Corporativos - cliente + punto de visita
     BEGIN
-
         SELECT LTRIM(RTRIM(IIF(VPC.DescriptionOfClient IS NULL
                                , ''
                                , CONCAT(VPC.CodeOfReference, ' - ', VPC.DescriptionOfClient))
@@ -322,10 +321,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DOPD.PayTypeId = CPT.PayTypeId
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
-            LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
+                OR (DO.ReceiverIdTownship IS NULL AND DO.Receiver_Town = TwnId.TownshipName COLLATE Latin1_General_CI_AI)
             LEFT JOIN #HubsByHeaderCode                                       DSC
-                ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
+                ON TwnId.HeaderCode = DSC.HeaderCode
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId
