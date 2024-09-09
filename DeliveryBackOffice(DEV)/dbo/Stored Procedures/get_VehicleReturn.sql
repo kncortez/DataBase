@@ -13,7 +13,7 @@ CREATE PROCEDURE [dbo].[get_VehicleReturn]
 AS
 BEGIN
 
-    select IdVehicle Id, concat(CodeName,'-', Plate ) Name from CatVehicle
+    select IdVehicle Id, concat(CodeName,'-', Plate ) [Name] from CatVehicle
     where  RowStatus = 1
 	AND ISNULL(IdCountry,'GT') = @Country
 

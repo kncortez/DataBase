@@ -148,7 +148,6 @@ BEGIN
                         FROM RoutePreparationDetail rpd
                             INNER JOIN RoutePreparation rp
                                 ON rpd.RoutePreparationId = rp.IdRoutePreparation
-                                   AND rp.RowStatus = 1
                             INNER JOIN CatRoute cr WITH (NOLOCK)
                                 ON rp.CatRouteId = cr.IdRoute
                         WHERE rpd.IsOpenProcess = 1
@@ -156,6 +155,7 @@ BEGIN
                               AND rpd.Guide_Number = @GuideNumber
                               AND rp.IdRoutePreparation <> @IdRoutePreparation
                               AND rp.DateRoutePreparation = @Date
+                              AND rp.RowStatus = 1
                         ORDER BY rpd.DateCreated DESC;
 
                         IF @CodeOfRoute IS NULL
@@ -584,15 +584,15 @@ BEGIN
                                     FROM RoutePreparationDetailPiece rpdp
                                         INNER JOIN RoutePreparationDetail rpd
                                             ON rpdp.RoutePreparationDetailId = rpd.IdRoutePreparationDetail
-                                               AND rpd.RowStatus = 1
                                         INNER JOIN RoutePreparation rp
                                             ON rpd.RoutePreparationId = rp.IdRoutePreparation
-                                               AND rp.RowStatus = 1
                                     WHERE rpdp.RowStatus = 1
                                           AND rpd.Guide_Serie = @GuideSerie
                                           AND rpd.Guide_Number = @GuideNumber
                                           AND rp.IdRoutePreparation <> @IdRoutePreparation
-                                          AND rp.DateRoutePreparation = @Date;
+                                          AND rp.DateRoutePreparation = @Date
+                                          AND rpd.RowStatus = 1
+                                          AND rp.RowStatus = 1;
 
                                     --- Extraer de los demas detalles la guía ingresada
                                     UPDATE rpd
@@ -602,14 +602,14 @@ BEGIN
                                         rpd.IsOpenProcess = 0,
                                         rpd.UserProcess = NULL
                                     FROM RoutePreparationDetail rpd
-                                        JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] rp
+                                        INNER JOIN [DeliveryBackOffice].[dbo].[RoutePreparation] rp
                                             ON rpd.RoutePreparationId = rp.IdRoutePreparation
-                                               AND rp.RowStatus = 1
                                     WHERE rpd.RowStatus = 1
                                           AND rpd.Guide_Serie = @GuideSerie
                                           AND rpd.Guide_Number = @GuideNumber
                                           AND rp.IdRoutePreparation <> @IdRoutePreparation
-                                          AND rp.DateRoutePreparation = @Date;
+                                          AND rp.DateRoutePreparation = @Date
+                                          AND rp.RowStatus = 1;
 
                                     IF @@rowcount > 0
                                         SET @IsReassignment = 1;
@@ -694,8 +694,8 @@ BEGIN
                                                 FROM ActDetail ad WITH (NOLOCK)
                                                     INNER JOIN ActDetailPiece adp WITH (NOLOCK)
                                                         ON adp.ActDetailId = ad.IdActDetail
-                                                           AND adp.RowStatus = 1
                                                 WHERE ad.RowStatus = 1
+                                                AND adp.RowStatus = 1
                                             ) act
                                                 ON act.GuideSerie = dop.GuideSerie
                                                    AND act.GuideNumber = dop.GuideNumber

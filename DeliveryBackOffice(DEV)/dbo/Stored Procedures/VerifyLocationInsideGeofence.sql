@@ -43,12 +43,12 @@ BEGIN
 						FROM [DeliveryBackOffice].[dbo].[Geofence] G WITH (NOLOCK)
 						INNER JOIN [DeliveryBackOffice].[dbo].[GeofencePoint] GP WITH (NOLOCK)
 							ON G.IdGeofence = GP.IdGeofence
-							AND GP.RowStatus = 1
 						INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
 							ON GP.IdPoint = P.IdPoint
-							AND P.RowStatus = 1
 						WHERE G.RowStatus = 1
 						AND G.CountryId = @IdCountry 
+						AND GP.RowStatus = 1
+						AND P.RowStatus = 1
 						ORDER BY GP.GeofencePointOrder ASC
 						FOR XML PATH (''), TYPE)
 					.value('.', 'varchar(max)'),
