@@ -1,9 +1,9 @@
 ﻿-- =============================================
--- Author:		Marco Jiménez
--- Create date: 15/11/2021
--- Description:	Retorna listado de facturas pendientes de pago para enviar a SAP
+-- Author:		Cristian Azurdia
+-- Create date: 09/04/2024
+-- Description:	Retorna listado de facturas pendientes de pago para enviar a SAP HN
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_lstFacturasToSAPPaymentRecovery]
+CREATE PROCEDURE [dbo].[spg_lstFacturasToSAPPaymentRecoveryHN]
 AS
 BEGIN
 DECLARE @hour AS INT =
@@ -28,7 +28,7 @@ DECLARE @hour AS INT =
 			ON IOMD.io_invoice = ihd.inv_pk_id
 	WHERE 
 		(IOMD.io_SAPDocEntryPaymentDetail = -1 OR IOMD.io_SAPDocEntryPaymentDetail IS NULL)
-		AND ISNULL(ihd.IdCountry, 'GT') = 'GT'
+		AND ISNULL(ihd.IdCountry, 'GT') = 'HN'
 		AND ihd.inv_SAPDocEntry <> -1
 		AND ihd.inv_SAPDocEntry IS NOT NULL
 		--AND ihd.inv_pk_id = 2384510
