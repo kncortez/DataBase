@@ -61,10 +61,10 @@ BEGIN
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
-                   AND VPC.CodeOfReference = @VisitPointId
         WHERE CONVERT(DATE, ACH.DateCreated)
               BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
-              AND ACH.IdAccountingClosuresHeaderVisitPoint = @IdCierre
+          AND ACH.IdAccountingClosuresHeaderVisitPoint = @IdCierre
+          AND VPC.CodeOfReference = @VisitPointId
         GROUP BY VPC.CountryId
     end
 
@@ -94,9 +94,9 @@ BEGIN
         FROM dbo.AccountingClosuresHeaderVisitPoint ACH
             INNER JOIN dbo.VisitPointClient VPC WITH (NOLOCK)
                 ON VPC.CodeOfReference = ACH.VisitPoint
-                   AND VPC.CodeOfReference = @VisitPointId
         WHERE CONVERT(DATE, ACH.DateCreated)
         BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
+          AND VPC.CodeOfReference = @VisitPointId
         GROUP BY VisitPoint,
                  VPC.CountryId
     end

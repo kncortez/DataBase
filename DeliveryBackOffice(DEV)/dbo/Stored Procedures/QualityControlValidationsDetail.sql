@@ -37,8 +37,7 @@ set arithabort on;
         CIC.IncidenceTypeName		
     FROM ConfirmationOfIncidence COI WITH (NOLOCK) 
         INNER JOIN DeliveryAttempt DA WITH (NOLOCK)
-		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  AND COI.IsConfirmed = 0 AND DA.Delivered = 0
-		And COI.StatusOrderId=45
+		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  
 		INNER JOIN 
 		DeliveryOrder DO WITH (NOLOCK)
 		ON DA.Guide_Serie = DO.Guide_Serie AND DA.Guide_Number = DO.Guide_Number
@@ -86,6 +85,9 @@ set arithabort on;
         LEFT JOIN [DBO].[CatIncidenceClasification] CIC WITH (NOLOCK) ON CI.IncidenceClasificationId = CIC.IdCatIncidenceClasification
     WHERE
         CONVERT(DATE, COI.DateCreated) BETWEEN @StartDate AND @EndDate
+      AND COI.IsConfirmed = 0 
+      AND DA.Delivered = 0
+      AND COI.StatusOrderId = 45
 	UNION
 	SELECT 
 
@@ -110,8 +112,7 @@ set arithabort on;
         CIC.IncidenceTypeName		
     FROM ConfirmationOfIncidence COI WITH (NOLOCK) 
         INNER JOIN DeliveryAttempt DA WITH (NOLOCK)
-		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  AND COI.IsConfirmed = 1 AND DA.Delivered = 0
-		And COI.StatusOrderId=50
+		ON DA.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence  
 		INNER JOIN 
 		DeliveryOrder DO WITH (NOLOCK)
 		ON DA.Guide_Serie = DO.Guide_Serie AND DA.Guide_Number = DO.Guide_Number
@@ -159,6 +160,9 @@ set arithabort on;
         LEFT JOIN [DBO].[CatIncidenceClasification] CIC WITH (NOLOCK) ON CI.IncidenceClasificationId = CIC.IdCatIncidenceClasification
     WHERE
         CONVERT(DATE, COI.DateCreated) BETWEEN @StartDate AND @EndDate
+      AND COI.IsConfirmed = 1 
+      AND DA.Delivered = 0
+      AND COI.StatusOrderId=50
    
 END
 

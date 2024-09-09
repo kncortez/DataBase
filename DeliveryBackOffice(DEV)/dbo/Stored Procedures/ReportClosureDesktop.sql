@@ -11,15 +11,15 @@
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
-@VisitPointId NVARCHAR(MAX) = null,
-@IdCierre NVARCHAR(MAX) = null,
-@IdAccount NVARCHAR(MAX) = null
+@VisitPointId NVARCHAR(3000) = null,
+@IdCierre NVARCHAR(3000) = null,
+@IdAccount NVARCHAR(3000) = null
 AS
 BEGIN
 
 	DECLARE @TEMPLATEDETAIL TABLE
 		(
-			guideserie NVARCHAR(MAX),
+			guideserie NVARCHAR(3000),
 			guidenumber BIGINT,
 			header BIGINT
 		);
@@ -133,7 +133,6 @@ BEGIN
 		ON ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 			AND ACD.DopId = DOPD.DopId
-			AND ACD.RowStatus = 1
 	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
@@ -157,7 +156,7 @@ BEGIN
 
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
-
+    AND ACD.RowStatus = 1
 	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	AND (DOPD.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1' OR DOPD.VisitPoint IS NULL)
 	-- FIN MODIFICACIÓN
@@ -217,7 +216,6 @@ BEGIN
 				WHERE id = 2)
 	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 		ON INH.inv_numberFEL = ACD.Fel
-			AND ACD.RowStatus = 1
 	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
@@ -243,7 +241,7 @@ BEGIN
 	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	AND (VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1' OR VPC.CodeOfReference IS NULL)
 	-- FIN MODIFICACIÓN
-
+    AND ACD.RowStatus = 1
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService NOT IN (5, 23))

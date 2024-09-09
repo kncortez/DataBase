@@ -135,6 +135,7 @@ BEGIN
 						FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
 						INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
 							ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
+                            AND [DDO].[Guide_Serie] = [DOP].[GuideSerie]
 						WHERE 
 							[DDO].[Guide_Serie] = @GuideSerie 
 							AND [DDO].[Guide_Number] = @GuideNumber 
