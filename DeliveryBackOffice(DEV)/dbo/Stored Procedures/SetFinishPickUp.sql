@@ -1370,7 +1370,7 @@ BEGIN
             SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
                    CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
                    LEFT(do.Receiver_Address, 200)							 [ReceiverAddress],
-				   do.ReceiverCountryId									     [ReceiverCountryId]
+				   ISNULL(do.ReceiverCountryId,'GT')						 [ReceiverCountryId]
             FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                 INNER JOIN #listGuides lp
                     ON lp.ItemSerie = dop.GuideSerie
