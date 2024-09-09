@@ -116,6 +116,7 @@ SELECT
 CONCAT(dop.GuideSerie,dop.GuideNumber,'-',dop.NoPiece) AS 'Piece',
 CONCAT(do.Receiver_FirstName,' ', do.Receiver_LastName) AS 'ReceiverName',
 LEFT(do.Receiver_Address,200) AS 'ReceiverAddress'
+,ISNULL(do.ReceiverCountryId,'GT') 'ReceiverCountryId'
 FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
 INNER JOIN @GuidesGroup gp ON gp.Guide_Serie = dop.GuideSerie AND gp.Guide_Number = dop.GuideNumber
 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = dop.GuideSerie AND do.Guide_Number = dop.GuideNumber
