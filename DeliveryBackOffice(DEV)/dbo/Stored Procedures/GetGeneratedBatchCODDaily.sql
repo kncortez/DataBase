@@ -633,6 +633,12 @@ BEGIN
                                                [BankId]
                                            );
 
+            CREATE NONCLUSTERED INDEX IX_TFPTD_Guides
+            ON #TableForzaPaymentTempDaily (
+                                               [GuideSerie],
+                                               [GuideNumber]
+                                           );
+
             SET @Reference = @Reference +
                              (
                                  SELECT COUNT(1)FROM #TableForzaPaymentTempDaily
