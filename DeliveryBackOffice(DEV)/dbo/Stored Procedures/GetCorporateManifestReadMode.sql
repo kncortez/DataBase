@@ -39,12 +39,13 @@ SET @result = (SELECT STUFF(
 						'"StatusDescription":"'+so.OrderDescription+'",'+
 						'"StatusOrderId":'+CAST(do.StatusOrderId AS NVARCHAR)+'}'
 						FROM DeliveryBackOffice.dbo.CorporateManifest cm WITH (NOLOCK)
-						INNER JOIN DeliveryBackOffice.dbo.CorporateManifestDetail cmd WITH (NOLOCK) ON cmd.ManifestId = cm.IdManifest AND cmd.RowStatus=1
+						INNER JOIN DeliveryBackOffice.dbo.CorporateManifestDetail cmd WITH (NOLOCK) ON cmd.ManifestId = cm.IdManifest 
 						INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK) ON do.Guide_Serie = cmd.GuideSerie AND do.Guide_Number = cmd.GuideNumber
 						INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK) ON so.StatusOrderId =  do.StatusOrderId
                         LEFT JOIN Cost cs WITH (NOLOCK) ON cs.GuideSerie = do.Guide_Serie AND cs.GuideNumber = Guide_Number
                         LEFT JOIN CatCurrencyCOD cCurr WITH (NOLOCK) ON cs.ShippingCurrency = cCurr.IdCatCurrencyCOD
 						WHERE cm.ManifestSerie = @ManifestSerie AND cm.IdManifest = @ManifestNumber
+						AND cmd.RowStatus=1
 
                   FOR XML PATH(''), TYPE
                   ).value('.', 'varchar(max)'),1,1,''

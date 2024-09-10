@@ -51,7 +51,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
     FROM [DeliveryBackOffice].[dbo].[Account]                     Acc WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[Customer]          Cu WITH (NOLOCK)
             ON Acc.IdCustomer = Cu.IdCustomer
-               AND ISNULL(Cu.RowSatus, 1) = 1
         LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH (NOLOCK)
             ON RBUBA.RuaIdAccount = Acc.AccIdAccount
                AND RBUBA.RuaRowStatus = 1
@@ -62,7 +61,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             ON VPBU.IdVisitPointClient = VPC.IdVisitPointClient
                AND VPC.StatusClient = 1
     WHERE Acc.AccIdAccount = @AccountIdParam
-          AND Acc.AccRowStatus = 1;
+          AND Acc.AccRowStatus = 1
+          AND ISNULL(Cu.RowSatus, 1) = 1;
 
     IF (@CustomerTypeId = 3) -- INDIVIDUAL - cliente
     BEGIN

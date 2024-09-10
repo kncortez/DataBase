@@ -41,9 +41,9 @@ BEGIN
 		   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON ACH.VisitPoint = VPC.CodeOfReference
-        JOIN DeliveryBackOffice.dbo.RegisterUser REU
+        INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)

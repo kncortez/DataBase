@@ -89,8 +89,8 @@ BEGIN
 	SELECT A1.IdCustomer FROM DeliveryBackOffice.dbo.Customer A1 WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.DBO.VisitPointClient  A2 WITH(NOLOCK) 
 	ON A1.IdCustomer = A2.CustomerID
+	WHERE DO.Sender_ID = A2.CodeOfReference    
 	AND A2.IdKindOfVPClient = 1
-	WHERE DO.Sender_ID = A2.CodeOfReference
  )
  AND NOT EXISTS --búsqueda por customer
  (
