@@ -1690,6 +1690,7 @@
     <Build Include="dbo\Stored Procedures\sps_InvoicecreditNoteValidation.sql" />
     <Build Include="dbo\User Defined Types\TblBatch.sql" />
     <Build Include="dbo\Stored Procedures\SetBatchAdministration.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchAdministration.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
