@@ -71,4 +71,3 @@ BEGIN
            @StationName StationName
 
 END
-GO
