@@ -42,16 +42,10 @@ BEGIN
 				dbo.SettlementPickupStation sps WITH(NOLOCK)
 				ON 
 					sps.CouriermanId = sr.ID 
-					AND 
-					sps.TransactionDate  = CONVERT(DATE,GETDATE())
-					AND
-					sps.RowStatus = 1
 			INNER JOIN 
 				dbo.SettlementPickupStationDetail spd WITH(NOLOCK)
 				ON 
-					spd.SettlementPickupStationId = sps.IdSettlementPickupStation
-					AND
-					spd.RowStatus = 1
+					spd.SettlementPickupStationId = sps.IdSettlementPickupStation					
 			INNER JOIN 
 				dbo.ServiceManagement srv WITH(NOLOCK)
 				ON 
@@ -78,6 +72,9 @@ BEGIN
 				OR
 			  [sr].[UniqueCode] = @Phone)
               AND IIF(ord.SenderCountryId IS NULL, 'GT', ord.SenderCountryId) = @IdCountry
+			  AND sps.TransactionDate  = CONVERT(DATE,GETDATE())
+			  AND sps.RowStatus = 1
+			  AND spd.RowStatus = 1
 
 		-- TABLAS A DEVOLVER
 		-- DATOS DE COURIER

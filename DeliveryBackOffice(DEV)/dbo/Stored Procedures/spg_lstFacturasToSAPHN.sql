@@ -1,9 +1,11 @@
-﻿-- =============================================
--- Author:		Luis Fernando Coti Itzep
--- Create date: 17 Nov 2020
+﻿
+-- =============================================
+-- Author:		Cristian Azurdia
+-- Create date: 30 Agosto 2024
 -- Description:	Retorna listado de facturas listas para enviar a SAP
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_lstFacturasToSAP]
+
+CREATE PROCEDURE [dbo].[spg_lstFacturasToSAPHN]
 AS
 BEGIN
     DECLARE @hour AS INT =
@@ -25,7 +27,7 @@ BEGIN
         FROM DeliveryBackOffice.dbo.invoiceHeader ihd WITH (NOLOCK)
             LEFT JOIN dbo.InvoiceRestriction ir WITH(NOLOCK)
             ON ihd.inv_pk_id = ir.inv_pk_id
-        WHERE ISNULL(ihd.IdCountry,'GT') = 'GT'
+        WHERE ISNULL(ihd.IdCountry,'GT') = 'HN'
 			  AND ihd.inv_status IN ( -1, 2 )
               -- 1 CREA LOCALMENTE EL REGISTRO DE FACTURA
               -- 2 CUANDO SE ENVIA FACTURA A FEL

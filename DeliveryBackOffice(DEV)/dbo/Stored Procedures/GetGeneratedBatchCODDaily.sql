@@ -110,7 +110,7 @@ BEGIN
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
@@ -151,7 +151,7 @@ BEGIN
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
@@ -631,6 +631,12 @@ BEGIN
                                                [GuideNumber],
                                                [CreditAccountId],
                                                [BankId]
+                                           );
+
+            CREATE NONCLUSTERED INDEX IX_TFPTD_Guides
+            ON #TableForzaPaymentTempDaily (
+                                               [GuideSerie],
+                                               [GuideNumber]
                                            );
 
             SET @Reference = @Reference +

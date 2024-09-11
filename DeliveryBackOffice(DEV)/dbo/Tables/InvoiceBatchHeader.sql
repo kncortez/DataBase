@@ -27,6 +27,7 @@ CREATE TABLE [dbo].[InvoiceBatchHeader]
     [TokenUpdated]					NVARCHAR (50)   NULL,
     [DateUpdated]					DATETIME        NULL,
 	CONSTRAINT [PK_InvoiceLoteHeader] PRIMARY KEY CLUSTERED ([Id_Lote] ASC),
+	AmountRequested					BIGINT,
 );
 
 GO
@@ -67,3 +68,6 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Numero de i
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Equivalente a NIT, aplica para Honduras', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'RTN';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Cantidad de documentos solicitados a SAR', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchHeader', @level2type = N'COLUMN', @level2name = N'AmountGranted';

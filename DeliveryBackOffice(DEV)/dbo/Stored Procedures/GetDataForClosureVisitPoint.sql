@@ -54,7 +54,7 @@ BEGIN
 				RU.UsrNickName, RU.UsrIdUser, ACH.DateCreated, ACH.IdAccountingClosuresHeader,
 				CASE WHEN VP.CountryId = 'GT' THEN 'Q.' ELSE 'L.' END AS 'CurrencySymbolDetail'
 		FROM AccountingClosuresHeader ACH
-		JOIN RegisterUser RU
+		INNER JOIN RegisterUser RU
 			ON ACH.UserId = RU.UsrIdUser
 		INNER JOIN VisitPointClient VP WITH (NOLOCK)
 			ON ACH.VisitPoint = VP.CodeOfReference

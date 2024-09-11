@@ -38,13 +38,13 @@ SET NOCOUNT ON;
 	   ,FORMAT(sp.StartDate,'dd/MM/yyyy HH:mm:ss') DateCreated
 	   ,FORMAT(sp.EndDate,'dd/MM/yyyy HH:mm:ss') EndDate
 	FROM ServiceManagement sm
-	JOIN SchedulePickup sp
+	INNER JOIN SchedulePickup sp
 		ON sp.SchedulePickupId = sm.IdSchedulePickup
-	JOIN VisitPointClient vpc
+	INNER JOIN VisitPointClient vpc
 		ON vpc.CodeOfReference = sp.SenderId
-	JOIN CatServiceStatus css
+	INNER JOIN CatServiceStatus css
 		ON css.IdServiceStatus = sm.ServiceStatusId
-	JOIN Customer cu
+	INNER JOIN Customer cu
 		ON cu.IdCustomer = vpc.CustomerID
 	LEFT JOIN CatSystem cs
 		ON cs.SysIdSystem = sp.IdSourcePlataform

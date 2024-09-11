@@ -47,8 +47,8 @@ BEGIN
 			SELECT pr.IdProvince,
                    pr.ProvinceName,
                    tw.TownshipName
-            FROM dbo.Township tw
-                INNER JOIN dbo.Province pr
+            FROM dbo.Township tw WITH (NOLOCK)
+                INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
             WHERE  tw.IdTownship = @IdTownship
 			AND ISNULL(pr.IdCountry,'GT') = @IdCountry
@@ -109,10 +109,10 @@ BEGIN
 					@ProvinceName = pr.ProvinceName,
 					@TownshipName = tw.TownshipName,
 					@IdSettlement = se.IdSettlement
-            FROM dbo.Township tw
-                INNER JOIN dbo.Province pr
+            FROM dbo.Township tw WITH (NOLOCK)
+                INNER JOIN dbo.Province pr WITH (NOLOCK)
                     ON pr.IdProvince = tw.IdProvince
-				INNER JOIN dbo.Settlement se
+				INNER JOIN dbo.Settlement se WITH (NOLOCK)
 					ON se.IdProvince = pr.IdProvince AND se.IdTownship = tw.IdTownship
             WHERE tw.IdTownship = @IdTownship;
 	
@@ -196,7 +196,7 @@ BEGIN
 				IF NOT EXISTS
 				(
 					SELECT *
-					FROM dbo.del_ParametrosFactura pr
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @CodeOfReference
 				)
 				BEGIN
@@ -271,7 +271,7 @@ BEGIN
 						   @SapOcrCode,
 						   'DELIVERY EXPRESS HONDURAS',
 						   'DELIVERY EXPRESS HN'
-					FROM dbo.del_ParametrosFactura pr
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = 677882;
 				END;
 				ELSE
@@ -284,7 +284,7 @@ BEGIN
 				IF NOT EXISTS
 				(
 					SELECT *
-					FROM dbo.del_ParametrosFactura pr
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = @CodeOfReference
 				)
 				BEGIN
@@ -356,7 +356,7 @@ BEGIN
 						   pr.dpf_OcrCode2,
 						   pr.dpf_StatusFACE,
 						   @SapOcrCode
-					FROM dbo.del_ParametrosFactura pr
+					FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
 					WHERE pr.dpf_VpCodeOfReference = 999;
 
 				END;
@@ -383,7 +383,7 @@ BEGIN
 
 
             SELECT *
-            FROM dbo.del_ParametrosFactura pr
+            FROM dbo.del_ParametrosFactura pr WITH (NOLOCK)
             WHERE pr.dpf_VpCodeOfReference = @CodeOfReference;
 
 			SELECT *

@@ -529,15 +529,15 @@ PRINT 'TEST';
 																@RolEXP AS  'RolEXP'
 															   -- FIN MODIFICACIÓN
 														FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-															JOIN VisitPointByUser                    VPU
+															INNER JOIN VisitPointByUser                    VPU
 																ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-															JOIN RegisterUser                        ru
+															INNER JOIN RegisterUser                        ru
 																ON VPU.RegisterUserID = ru.UsrIdUser
-															JOIN DeliveryBackOffice.dbo.Settlement   STL
+															INNER JOIN DeliveryBackOffice.dbo.Settlement   STL
 																ON VPC.IdSettlement = STL.IdSettlement
-															JOIN DeliveryBackOffice.dbo.Township     TWS
+															INNER JOIN DeliveryBackOffice.dbo.Township     TWS
 																ON TWS.IdTownship = STL.IdTownship
-															JOIN DeliveryBackOffice.dbo.Province     PRV
+															INNER JOIN DeliveryBackOffice.dbo.Province     PRV
 																ON PRV.IdProvince = TWS.IdProvince
 														WHERE IdKindOfVPClient = 1 AND VPU.RowStatus = 1
 															  AND ru.UsrRowStatus = 1

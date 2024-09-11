@@ -143,10 +143,6 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
             ON DOPD.GuideSerie = DOR.Guide_Serie
                AND DOPD.GuideNumber = DOR.Guide_Number
-               AND DOPD.ShipmentCompleted = 1
-               AND DOPD.AccountId = @IdAccount
-               AND DOPD.AccountId > 0
-			 AND DOPD.[TypeofInOutMoneyId] != 8
                
         INNER JOIN CatTypeServiceClosure CTS WITH (NOLOCK)
             ON CTS.IdTypeService = DOPD.TypeServiceId
@@ -193,6 +189,11 @@ BEGIN
 
               AND ACD.RowStatus = 1
     )
+    
+        AND DOPD.ShipmentCompleted = 1
+        AND DOPD.AccountId = @IdAccount
+        AND DOPD.AccountId > 0
+		AND DOPD.[TypeofInOutMoneyId] != 8
     -- ORDER BY DOPD.DateCreated DESC;
     ---------------------------------------------------------------------------------------------
     UNION ALL
@@ -263,8 +264,6 @@ BEGIN
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DOR WITH (NOLOCK)
             ON DOR.Guide_Number = dpd.GuideNumber
                AND DOR.Guide_Serie = dpd.GuideSerie
-               AND dpd.CODAmountProcess > 0
-               AND DOR.StatusOrderId != 7
     WHERE CAST(dpd.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
           AND AccountId = @IdAccount
           AND NOT EXISTS
@@ -279,7 +278,9 @@ BEGIN
               -- FIN MODIFICACIÓN
 
               AND ACD.RowStatus = 1
-    );
+    )
+        AND dpd.CODAmountProcess > 0
+        AND DOR.StatusOrderId != 7;
     WITH ROWCTE (TotalCash, AccountExp, CountCash, TotalCard, CountCard, CurrencySymbolExp, TotalCredit,  CountCredit, AccountCOD, TotalFacturaCash,
                  CountFacturaCash, TotalFacturaCard, CountFacturaCard, CurrencySymbolCOD, IdAccount
                 )
@@ -457,9 +458,6 @@ BEGIN
                 INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentTransaction DOPD WITH (NOLOCK)
                     ON DOPD.GuideSerie = DOR.Guide_Serie
                        AND DOPD.GuideNumber = DOR.Guide_Number
-                       AND DOPD.ShipmentCompleted = 1
-                       AND DOR.StatusOrderId != 7
-			 AND DOPD.[TypeofInOutMoneyId] != 8
             WHERE CAST(DOPD.DateCreated AS DATE) = CAST(GETDATE() AS DATE)
                   AND DOPD.AccountId = @IdAccount
                   AND
@@ -480,6 +478,9 @@ BEGIN
 
                       AND ACD.RowStatus = 1
             )
+                AND DOPD.ShipmentCompleted = 1
+                AND DOR.StatusOrderId != 7
+                AND DOPD.[TypeofInOutMoneyId] != 8
             GROUP BY DOPD.TypeofInOutMoneyId,
                      DOPD.TypeServiceId,
                      DOPD.amount,
