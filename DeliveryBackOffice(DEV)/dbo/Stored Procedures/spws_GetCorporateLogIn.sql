@@ -267,7 +267,7 @@ BEGIN
                           , ModIdModuleDAD INT
                           , ModIdModuleCHILD INT
                         );
-                        TRUNCATE TABLE @TBSUBMODULES2
+                        DELETE FROM @TBSUBMODULES2;
                         --	IF (@VERIFYUSER  > 0 )
                         --BEGIN
 
