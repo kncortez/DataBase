@@ -15,6 +15,7 @@
     [FinalRange]                        BIGINT          NULL,
     [Last_Process]                      BIGINT          NULL,
     [AmountGranted]                     BIGINT          NULL,
+    [AmountRequested]                   BIGINT          NULL,
     [Emailification]                    NVARCHAR(50)    NULL,
     [DaysLeftifycation]                 INT             NULL,
     [PercentInvoiceLeftifycation]       INT             NULL,
