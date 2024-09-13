@@ -19,6 +19,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Notificaciónes de alertas de servicios/guías', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAlert';
 
@@ -106,4 +108,10 @@ CREATE NONCLUSTERED INDEX [IDX_guideserie_guidenumber]
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del servicio de la tabla ServiceManagement', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrderAlert', @level2type = N'COLUMN', @level2name = N'ServiceManagementId';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_RowStatus_ServiceTypeId_DateCreated]
+    ON [dbo].[DeliveryOrderAlert]([RowStatus] ASC, [ServiceTypeId] ASC, [DateCreated] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [AlertDescription]);
 

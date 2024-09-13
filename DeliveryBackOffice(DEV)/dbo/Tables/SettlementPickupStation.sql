@@ -12,6 +12,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Manifiesto de recolección asociado a cada courier.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SettlementPickupStation';
 
@@ -50,4 +52,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Usuario de 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SettlementPickupStation', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_SettlementPickupStation_TransactionDate_RowStatus]
+    ON [dbo].[SettlementPickupStation]([TransactionDate] ASC, [RowStatus] ASC);
 

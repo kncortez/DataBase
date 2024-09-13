@@ -429,7 +429,7 @@ BEGIN
 																			  WHERE  cov2.HeaderCode = tws2.HeaderCode
 								  )cov
                                   LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
-                                      ON DOPD.GuideNumber = dev.Guide_Number
+                                      ON  dopd.GuideSerie = dev.Guide_Serie AND  DOPD.GuideNumber = dev.Guide_Number
                                   LEFT JOIN DeliveryBackOffice.dbo.CatPaymentTime CPT WITH (NOLOCK)
                                       ON DOPD.TimePlaId = CPT.TimePlaId
                                          AND cov.RowStatus = 1

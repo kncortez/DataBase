@@ -359,7 +359,10 @@ BEGIN
         BEGIN
 
             PRINT 'INSERT MEMBRESIA';
-            DECLARE @AuxNewMembership AS TABLE (IdNewMembership INT);
+            DECLARE @AuxNewMembership AS TABLE
+            (
+                IdNewMembership INT
+            );
 
             INSERT INTO [DeliveryBackOffice].[dbo].[Membership]
             (

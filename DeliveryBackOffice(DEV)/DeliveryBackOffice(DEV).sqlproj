@@ -1588,7 +1588,7 @@
     <Build Include="dbo\Stored Procedures\sps_Validate_Country.sql" />
     <Build Include="dbo\Stored Procedures\sps_Validate_Currency.sql" />
     <Build Include="dbo\Stored Procedures\spGenerateArrivedGuides.sql" />
-	  <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
+    <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
@@ -1685,6 +1685,8 @@
     <Build Include="dbo\Stored Procedures\GetBatchInvoiceByCountry.sql" />
     <Build Include="dbo\Stored Procedures\ValidateBatchInvoice.sql" />
     <Build Include="dbo\Stored Procedures\GetValuesInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
+    <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />
     <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
     <Build Include="dbo\User Defined Types\TblCustomerType.sql" />
     <Build Include="dbo\User Defined Types\TblCustomer.sql" />
@@ -1693,6 +1695,27 @@
     <Build Include="dbo\Stored Procedures\InsertSundaysInRange.sql" />
     <Build Include="dbo\Stored Procedures\SetBatchInvoiceByCountryCreditNote.sql" />
     <Build Include="dbo\Stored Procedures\sps_InvoicecreditNoteValidation.sql" />
+    <Build Include="dbo\Stored Procedures\supportSetVisitPointByClientPortfolio.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetReversalStatus.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetMoveUserExc.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetExtendExpirationDateCoupon.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetConfigurationExcGuideManual.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetBlockCorporateUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetActivateInternalUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportSetActivateCorporateUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportReleaseDHLGuide.sql" />
+    <Build Include="dbo\Stored Procedures\SupportInsertRol.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGetStatusCorporateUser.sql" />
+    <Build Include="dbo\Stored Procedures\SupportGetHistoryRateByCustomer.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreateUserWarehouse.sql" />
+    <Build Include="dbo\Stored Procedures\SupportCreateRoute.sql" />
+    <Build Include="dbo\Stored Procedures\SupportAtivateUserTemp.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_DispatchManifesttoDeliveryRoutesHeader.sql" />
+    <Build Include="dbo\Stored Procedures\SPHD_DispatchManifesttoDeliveryRoutesDetail.sql" />
+    <Build Include="dbo\Stored Procedures\spg_lstFacturasToSAPPaymentRecoveryV2.sql" />
+    <Build Include="dbo\Stored Procedures\RDL_Info_DensityGMap.sql" />
+    <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new_1.sql" />
+    <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

@@ -44,7 +44,7 @@ BEGIN
 				Guide_Settlement = 1, -- guía liquidada en bodega
 				Guide_Returned = 0,  -- guía liquidada vía material devuelto
 				Guide_Delivered = 1,  -- guía liquidada vía comprobante de entrega
-				StatusOrderId=5
+				StatusOrderId=CASE WHEN do.IsLastMileReturn = 1 THEN 14 ELSE 5 END
 			FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] dsd
 			INNER JOIN #listGuidesoOverall lg
 				ON dsd.Guide_Serie = lg.ItemSerie AND dsd.Guide_Number = lg.ItemNumber

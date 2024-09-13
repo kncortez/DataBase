@@ -50,6 +50,7 @@ BEGIN
 		AND SS2.Sent_Guide_Series = do.Guide_Serie
 		AND ISNULL(SS2.SentTypeStatus,0) IN (0,1,2,3)
 	  )
+	  
 
 
 	declare @PhoneBook as table (
@@ -91,7 +92,8 @@ BEGIN
 	left join DeliveryBackOffice.dbo.VisitPointClient VPC with(nolock) ON VPC.CodeOfReference = do.Sender_ID
 	left join DeliveryBackOffice.dbo.ServiceDataForGuide SDFG with(nolock) ON do.Guide_Serie = SDFG.GuideSerie and do.Guide_Number = SDFG.GuideNumber and SDFG.IsDelivery = 1
 	where not tu._Number is null
-	and not tu._Series is null
+	and not tu._Series is NULL
+   
 	--WHERE CONVERT(VARCHAR, do.Delivery_Max_Date, 23) = CONVERT(VARCHAR, @MaxDeliveryDate, 23)
 
 	declare @TopBatchId bigint=0
