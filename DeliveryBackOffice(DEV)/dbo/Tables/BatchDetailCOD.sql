@@ -66,6 +66,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Se almacena el motivo por el que se excluye el registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'BatchDetailCOD', @level2type = N'COLUMN', @level2name = N'Comments';
 
@@ -244,4 +246,10 @@ CREATE NONCLUSTERED INDEX [idx_powerbi_only]
 GO
 CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_RowStatus]
     ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_CatConceptCODId_include]
+    ON [dbo].[BatchDetailCOD]([CatConceptCODId] ASC)
+    INCLUDE([GuideSerie], [GuideNumber], [Amount], [Commission], [AuthorizationNumber], [AuthorizationDate], [BankName], [AccountNumber], [CODCommissionPercentage]);
 

@@ -32,6 +32,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetail', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -97,10 +99,14 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Control de 
 
 
 GO
-CREATE NONCLUSTERED INDEX [NonClusteredIndex-20221123-222829]
-    ON [dbo].[LinehaulRoutePreparationContainerDetail]([LinehaulRoutePreparationContainerId] ASC, [GuideSerie] ASC, [GuideNumber] ASC);
+
 
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bandera para saber si es una guía fuera de ruta.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'LinehaulRoutePreparationContainerDetail', @level2type = N'COLUMN', @level2name = N'IsOffRoute';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_GuideSerie_GuideNumber_IsOpenProcess_RowStatus]
+    ON [dbo].[LinehaulRoutePreparationContainerDetail]([GuideSerie] ASC, [GuideNumber] ASC, [IsOpenProcess] ASC, [RowStatus] ASC);
 

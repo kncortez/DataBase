@@ -95,7 +95,7 @@ BEGIN
             (
                 SELECT 1
                 FROM [dbo].[ProcessedGuideCOD] WITH (NOLOCK)
-                WHERE [GuideNumber] = @GuideNumber
+                WHERE GuideSerie = @GuideSerie AND  [GuideNumber] = @GuideNumber
             )
             BEGIN
                 -- se obtiene el id del courierman

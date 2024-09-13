@@ -78,4 +78,26 @@ IF (SELECT LEN(@Phone) ) > 8
 		ORDER BY
 			DO.DateCreated DESC
 
+			INSERT INTO DeliveryBackOffice.dbo.RoutePreparationLogError
+			(
+			    ErrorDescription,
+			    ErrorNumber,
+			    ErrorProcedure,
+			    ErrorLine,
+			    GuideSerie,
+			    GuideNumber,
+			    TokenCreated,
+			    DateCreated
+			)
+			VALUES
+			(   'GetGuideFromPhoneNumberFCCTracking',     -- ErrorDescription - varchar(300)
+			    1,     -- ErrorNumber - int
+			    'GetGuideFromPhoneNumberFCCTracking',     -- ErrorProcedure - varchar(100)
+			    NULL,     -- ErrorLine - int
+			    NULL,     -- GuideSerie - nvarchar(2)
+			    NULL,     -- GuideNumber - int
+			    'SYS-BHERRERA',       -- TokenCreated - varchar(50)
+			    GETDATE() -- DateCreated - datetime
+			    )
+
 END

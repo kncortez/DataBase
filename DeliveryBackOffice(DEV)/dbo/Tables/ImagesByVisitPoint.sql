@@ -13,3 +13,10 @@
 
 
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_CodeOfReference]
+    ON [dbo].[ImagesByVisitPoint]([CodeOfReference] ASC);
+
