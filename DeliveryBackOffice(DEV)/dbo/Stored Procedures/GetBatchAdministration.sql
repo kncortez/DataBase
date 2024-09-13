@@ -19,6 +19,7 @@ BEGIN
 		,Emision_Point			AS 'Punto de emisión'
 		,TypeDocument			AS 'Tipo de documento'
 		,Status					AS 'Estado'
+		,Enable					AS 'Detenido'
 		,AmountGranted			AS 'Cantidad otorgada'
 		,DaysLeftNotifycation	AS 'Disponible'
 	FROM DeliveryBackOffice.dbo.InvoiceBatchHeader
