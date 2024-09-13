@@ -75,23 +75,47 @@ SET NOCOUNT ON;
         ON hl.IdHubLogistic = sp.IdHubLogistics
     LEFT JOIN [DeliveryBackOffice].dbo.[HubByRegion] hbr WITH (NOLOCK)
         ON hl.IdHubLogistic = hbr.HubLogisticId
-	LEFT JOIN
-            (
-                SELECT tbhl.IdTownship
-					,hl.IdHubLogistic
-                     , hl.HubAbbreviation  HubName -- COLOCAR ABREVIATURA DE HUB CRAS
-                     , cre.RegionName
-                FROM [DeliveryBackOffice].dbo.TownshipByHubLogistic    AS tbhl WITH (NOLOCK)
-                    INNER JOIN [DeliveryBackOffice].[dbo].HubLogistics AS hl WITH (NOLOCK)
-                        ON tbhl.IdHublogistic = hl.IdHubLogistic
-                    INNER JOIN [DeliveryBackOffice].dbo.[HubByRegion] AS hbr WITH (NOLOCK)
-                        ON hl.IdHubLogistic = hbr.HubLogisticId
-                    INNER JOIN [DeliveryBackOffice].dbo.[CatRegion] AS cre WITH (NOLOCK)
-                        ON cre.IdCatRegion = hbr.RegionId
-                WHERE tbhl.StatusTownshipHub = 1
-                      AND hl.HubStatus = 1
-            )                                                        AS hlbts
-                ON hlbts.IdTownship = sp.TownshipId
+	--LEFT JOIN
+ --           (
+ --               SELECT tbhl.IdTownship
+	--				,hl.IdHubLogistic
+ --                    , hl.HubAbbreviation  HubName -- COLOCAR ABREVIATURA DE HUB CRAS
+ --                    , cre.RegionName
+ --               FROM [DeliveryBackOffice].dbo.TownshipByHubLogistic    AS tbhl WITH (NOLOCK)
+ --                   INNER JOIN [DeliveryBackOffice].[dbo].HubLogistics AS hl WITH (NOLOCK)
+ --                       ON tbhl.IdHublogistic = hl.IdHubLogistic
+ --                   INNER JOIN [DeliveryBackOffice].dbo.[HubByRegion] AS hbr WITH (NOLOCK)
+ --                       ON hl.IdHubLogistic = hbr.HubLogisticId
+ --                   INNER JOIN [DeliveryBackOffice].dbo.[CatRegion] AS cre WITH (NOLOCK)
+ --                       ON cre.IdCatRegion = hbr.RegionId
+ --               WHERE tbhl.StatusTownshipHub = 1
+ --                     AND hl.HubStatus = 1
+ --           )                                                        AS hlbts
+ --               ON hlbts.IdTownship = sp.TownshipId
+  OUTER APPLY
+        (
+            SELECT TOP 1
+                   A2.Hub HubName, --tbhl.IdTownship
+				   A4.HubLogisticId,
+				   A3.IdHubLogistic,
+                   --, hl.HubAbbreviation  HubName -- COLOCAR ABREVIATURA DE HUB CRAS
+                   A5.RegionName RegionName
+            FROM DeliveryBackOffice.dbo.Township A1 WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage A2 WITH (NOLOCK)
+                    ON A2.HeaderCode = A1.HeaderCode
+                INNER JOIN DeliveryBackOffice.dbo.HubLogistics A3 WITH (NOLOCK)
+                    ON A3.HubAbbreviation = A2.Hub
+                LEFT JOIN DeliveryBackOffice.dbo.HubByRegion A4 WITH (NOLOCK)
+                    ON A4.HubLogisticId = A3.IdHubLogistic
+                LEFT JOIN DeliveryBackOffice.dbo.CatRegion A5
+                    ON A4.RegionId = A5.IdCatRegion
+            WHERE A1.IdTownship = sp.TownshipId
+                  AND A2.RowStatus = 1
+                  AND A3.HubStatus = 1
+                  AND A4.RowStatus = 1
+                  AND A5.RowStatus = 1
+            ORDER BY A1.IdTownship ASC
+        ) AS hlbts
 	LEFT JOIN [DeliveryBackOffice].[dbo].[SenderReceiver]      sr WITH (NOLOCK)
                 ON sr.ID = sm.IdPuCourrier
 	LEFT JOIN dbo.HubLogistics								BHC WITH (NOLOCK)
@@ -108,7 +132,7 @@ SET NOCOUNT ON;
 		AND (REPLACE(sp.SenderPhone, '-', '') LIKE @PhoneNew OR REPLACE(vpc.Phone, '-', '') LIKE @PhoneNew OR REPLACE(cu.CustomerPhone, '-', '') LIKE @PhoneNew OR @PhoneNew = '-1')
 		AND CAST(sp.StartDate AS DATE) >= @DateStart
     	AND CAST(sp.EndDate AS DATE) <= @DateEnd
-		AND IIF(vpc.CountryId IS NULL,'GT', vpc.CountryId) = @IdCountry
 		AND (ISNULL(IIF(hl.IdHubLogistic IS NOT NULL, hl.IdHubLogistic, hlbts.IdHubLogistic), BHC.IdHubLogistic) = @HubId 
 		OR @HubId = -1)
+		AND IIF(vpc.CountryId IS NULL,'GT', vpc.CountryId) = @IdCountry
 END

@@ -4,7 +4,7 @@
 -- Description:	<Sp para dar de baja usuario corporativos>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SupportSetBlockInternalUser]
+CREATE PROCEDURE [dbo].[SupportSetBlockCorporateUser]
     @Code INT
   , @UserName NVARCHAR(100)
   , @Token NVARCHAR(60)
@@ -41,7 +41,7 @@ BEGIN
 
 		-- Inactivar Persona
 		 UPDATE per
-        SET per.PerRowStatus =0
+        SET per.PerRowStatus =1
 			, per.PerTokenUpdated = @Token
 			, per.PerDateUpdated = GETDATE()
         FROM dbo.InternalUser           it

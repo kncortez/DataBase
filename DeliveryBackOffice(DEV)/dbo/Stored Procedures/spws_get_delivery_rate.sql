@@ -1415,8 +1415,8 @@ BEGIN
                 INTO #ParcelOverweightPerType
                 FROM #ParceCode                                               p
                     INNER JOIN [DeliveryBackOffice].[dbo].[ArticleByCustomer] ABC WITH (NOLOCK)
-                        ON p.Item = ABC.Code 
-                        WHERE ABC.AbcRowStatus = 1;
+                        ON p.Item = ABC.Code COLLATE Latin1_General_CI_AI
+                WHERE ABC.AbcRowStatus = 1;
 
                 SET @ExpectedWeight =
                 (

@@ -642,12 +642,10 @@ BEGIN
 														Count(dop.GuideNumber)
 														FROM DeliveryOrder do WITH(NOLOCK)
 														INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
-															ON do.Guide_Number = dop.GuideNumber
-                                                            AND do.Guide_Serie = dop.GuideSerie
+															ON do.Guide_Number = dop.GuideNumber AND dop.GuideSerie = do.Guide_Serie
 															INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 														    ON do.IdCustomer = WHE.CustomerId
-															WHERE do.Guide_Number = @GuideNumber
-                                                            AND do.Guide_Serie = @GuideSerie
+															WHERE do.Guide_Number = @GuideNumber AND do.Guide_Serie = @GuideSerie
 															AND dop.ExternalPieceId IS NOT NULL
 															AND WHE.TypeConnectionId = 2
 															GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -668,18 +666,15 @@ BEGIN
 													@GuideCurrentStatus, 1 AS RowStatus, GETDATE()AS DateCreated,@Token AS TokenCreated
 													FROM DeliveryOrderPiece dop WITH(NOLOCK)
 													INNER JOIN DeliveryOrder do WITH(NOLOCK)
-														ON dop.GuideNumber = do.Guide_Number
-                                                        AND dop.GuideSerie = do.Guide_Serie
+														ON dop.GuideNumber = do.Guide_Number AND do.Guide_Serie = dop.GuideSerie
 													INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
 													INNER JOIN @GuidePiecesTable gpt
-													    ON dop.GuideNumber = gpt.GuideNumber
-                                                        AND dop.GuideSerie = gpt.GuideSerie
+													    ON dop.GuideNumber = gpt.GuideNumber AND dop.GuideSerie = gpt.GuideSerie
 													INNER JOIN @PiecesGuideRelatedTable pgt
-													    ON gpt.GuideNumber = pgt.GuideNumber
-                                                        AND gpt.GuideSerie = pgt.GuideSerie
-                                                        AND gpt.NumberPieces = pgt.NumberRelatedPieces
-													WHERE WHE.TypeConnectionId = 2
+													    ON gpt.GuideNumber = pgt.GuideNumber AND gpt.GuideSerie = pgt.GuideSerie
+														WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
+															AND WHE.TypeConnectionId = 2
 
 							 END
 

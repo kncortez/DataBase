@@ -120,10 +120,13 @@ BEGIN
 	ELSE IF (@TypeMethod = 'GetActiveTypeIncidenceDelivery')
     BEGIN
 
-		SELECT cti.IdIncidenceType									[IncidenceId],
-				cti.NameIncidence									[IncidenceName],
+		SELECT 
+				cti.NameIncidence									[NameIncidence],
+				cti.IdIncidenceType									[IncidenceId],
+				cti.NameIncidence									[IncidenceName],												
 				cti.IncidenceClasificationId						[IncidenceClasificationId],
-				cic.IncidenceTypeName								[IncidenceClasificationName]
+				cic.IncidenceTypeName								[IncidenceClasificationName],
+				cti.IdIncidenceType									[IdIncidenceType]
 		FROM [DeliveryBackOffice].[dbo].CatTypeIncidence AS cti WITH(NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CatIncidenceClasification] AS cic WITH(NOLOCK) 
 								ON cti.IncidenceClasificationId = cic.IdCatIncidenceClasification

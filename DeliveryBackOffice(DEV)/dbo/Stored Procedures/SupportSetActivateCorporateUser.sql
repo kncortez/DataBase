@@ -1,10 +1,10 @@
 ﻿-- =============================================
 -- Author:		<César,Aquino>
--- Create date: <2023-07-07>
--- Description:	<Sp para dar de baja usuario corporativos>
+-- Create date: <2024-09-02>
+-- Description:	<Sp para reactivar>
 -- =============================================
 
-CREATE PROCEDURE [dbo].[SupportSetBlockInternalUser]
+CREATE PROCEDURE [dbo].[SupportSetActivateCorporateUser]
     @Code INT
   , @UserName NVARCHAR(100)
   , @Token NVARCHAR(60)
@@ -12,36 +12,37 @@ CREATE PROCEDURE [dbo].[SupportSetBlockInternalUser]
 AS
 BEGIN
 
-IF EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName AND it.RowStatus = 1)
+IF EXISTS(SELECT * FROM dbo.InternalUser it WHERE it.IdUser =@Code AND it.Username = @UserName) --AND it.RowStatus = 0)
 BEGIN
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
 
-		-- inactivar Usuario Interno
+		-- Activar Usuario Interno
         UPDATE dbo.InternalUser
-        SET RowStatus = 0
+        SET RowStatus = 1
 		, TokenUpdated = @Token
 		, DateUpdated = GETDATE()
 		, Comment = @Comment
         WHERE IdUser = @Code
-              AND Username = @UserName;
+              AND Username = @UserName
+			  AND RowStatus =0;
 
-		-- Inactivar register user
+		-- Activar register user
         UPDATE rg
-        SET rg.UsrRowStatus = 0
+        SET rg.UsrRowStatus = 1
 		, rg.UsrTokenUpdated =@Token
 		, rg.UsrDateUpdated = GETDATE()
         FROM dbo.InternalUser           it
             INNER JOIN dbo.RegisterUser rg
                 ON rg.UsrIdUser = it.RegisterUserID
         WHERE it.IdUser = @Code
-              AND it.Username = @UserName;
+              AND it.Username = @UserName --AND RowStatus =0;
 
-		-- Inactivar Persona
+		-- Activar Persona
 		 UPDATE per
-        SET per.PerRowStatus =0
+        SET per.PerRowStatus =1
 			, per.PerTokenUpdated = @Token
 			, per.PerDateUpdated = GETDATE()
         FROM dbo.InternalUser           it
@@ -49,7 +50,7 @@ BEGIN
 			INNER JOIN dbo.Person per ON per.PerIdPerson = rg.UsrIdPerson
                 ON rg.UsrIdUser = it.RegisterUserID
         WHERE it.IdUser = @Code
-              AND it.Username = @UserName;
+              AND it.Username = @UserName --AND RowStatus =0;
 
 
 		-- Inactivar VisitPointByUser
@@ -62,16 +63,17 @@ BEGIN
   --      WHERE it.IdUser = @Code
   --            AND it.Username = @UserName;
 
-		-- Blockear Restiction
+		-- Activate Restiction
 		UPDATE res
-        SET res.UstStatus ='BLOCKED'
+        SET res.UstStatus ='ACTIVE'
 		, res.UstOperationDate = GETDATE()
+		, res.UstAccessRetries =0
         FROM dbo.InternalUser           it
             INNER JOIN dbo.RegisterUser rg
                 ON rg.UsrIdUser = it.RegisterUserID
 			INNER JOIN dbo.UserSystemRestriction res ON res.UstIdUser = rg.UsrIdUser
         WHERE it.IdUser = @Code
-              AND it.Username = @UserName;
+              AND it.Username = @UserName AND res.UstStatus ='BLOCKED';
 		
 		
 		---- Inactivar Puntos de visita asociados (VisitPointByUser)
@@ -90,13 +92,14 @@ BEGIN
 		-- Inactivar Usuarios Denarius
 
 		UPDATE DenariusUser_Dev.dbo.LGN_Restriction
-		SET	 RST_Status ='BLOCKED'
-		WHERE RST_IdUser = @Code AND RST_Username =@UserName
+		SET	 RST_Status ='ACTIVE'
+		, RST_Retries =0
+		WHERE RST_IdUser = @Code AND RST_Username =@UserName AND RST_Status ='BLOCKED'
 
 
         COMMIT TRANSACTION;
 
-		SELECT 'EL usuario se dio de baja correctamete'
+		SELECT 'EL usuario se activó correctamete'
     END TRY
     BEGIN CATCH
 
@@ -111,6 +114,6 @@ BEGIN
 	END
 	ELSE
 	BEGIN
-	    SELECT 'Usuario no exite '
+	    SELECT 'Usuario no existe o no esta de baja consulta el estado de este usuario con el sp [SupportGetStatusCorporateUser] '
 	END
 END;

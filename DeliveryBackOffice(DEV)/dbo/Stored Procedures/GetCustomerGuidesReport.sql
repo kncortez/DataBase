@@ -306,14 +306,11 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DO.Sender_ID = VPC.CodeOfReference
                    AND DO.Sender_ID != 0
                    AND VPC.StatusClient = 1
-            LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
-                ON vpc.CustomerID = RC.RbcIdCustomer
-                AND rc.RbcRowStatus = 1
-            LEFT JOIN DeliveryBackOffice.dbo.RateHeader        RH WITH(NOLOCK)
-                ON RC.RbcIdRate = RH.RheId 
+            LEFT JOIN [DeliveryBackOffice].[dbo].[Cost]                       C WITH (NOLOCK)
+                   ON DO.Guide_Serie = C.GuideSerie 
+                  AND DO.Guide_Number = C.GuideNumber
             LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD    CCC WITH(NOLOCK)
-                ON CCC.IdCatCurrencyCOD = RH.IdCurrency 
-                OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) --1 DEFAULT GT
+                ON CCC.IdCatCurrencyCOD = C.ShippingCurrency 
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                 ON DOPD.GuideSerie = DO.Guide_Serie
                    AND DOPD.GuideNumber = DO.Guide_Number

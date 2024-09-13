@@ -24,6 +24,7 @@ SET NOCOUNT ON;
 	--Table 0 información del servicio
 	SELECT DISTINCT
 		sm.IdServiceManagement IdServiceManagement
+	   --,cu.Name Customer
 	   ,sp.SenderName Customer
 	   ,vpc.DescriptionOfClient VisitPoint
 	   ,p.ProvinceName Department
