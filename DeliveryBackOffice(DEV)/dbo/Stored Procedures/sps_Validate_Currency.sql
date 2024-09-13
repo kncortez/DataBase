@@ -26,7 +26,7 @@ BEGIN
 		FROM Cost C
 		WHERE GuideNumber = @GuideNumber 
 		AND C.GuideSerie = @GuideSerie
-		AND C.ShippingCurrency = @Currency
+		AND ISNULL(C.ShippingCurrency,@CurrencyGT) = @Currency
 
 		IF @Validate IS NOT NULL
 		BEGIN
