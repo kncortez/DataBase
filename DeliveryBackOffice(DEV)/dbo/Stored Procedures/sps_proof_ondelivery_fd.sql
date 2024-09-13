@@ -341,12 +341,13 @@ BEGIN
 				  
 					;WITH LatestID AS (
 									SELECT TOP 1
+										A.Guide_Serie,
 										A.Guide_Number,
 										MAX(ID) AS LastID
 									FROM 
 										[dbo].[DeliverySettlementDetail] A WITH (NOLOCK)
 									WHERE Guide_Serie = @GuideSerie AND  Guide_Number = @GuideNumber
-								GROUP BY Guide_Number
+								GROUP BY Guide_Number, Guide_Serie
 								)
 								UPDATE ds
 								SET 
@@ -358,6 +359,7 @@ BEGIN
 								INNER JOIN 
 									[LatestID] li 
 								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
+									AND ds.Guide_Serie = li.Guide_Serie
 					
 				---------------------------------------------------------------------------------------------
 
@@ -398,7 +400,7 @@ BEGIN
                                 SELECT TOP 1
                                        WT.IdWebhookType
                                 FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                WHERE WT.WebhookName = 'GuideStatusChange' 
+                                WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
                                       AND WT.RowStatus = 1
                             );
 
@@ -517,6 +519,7 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
+										AND do.Guide_Serie = @GuideSerie
 										AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -551,6 +554,7 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
+									AND do.Guide_Serie = @GuideSerie
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber

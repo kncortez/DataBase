@@ -24,7 +24,7 @@ BEGIN
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 			WHERE 
-				CS.SysNameSystem = 'Hermes web' 
+				CS.SysNameSystem = 'Hermes web'
 		)
 	DECLARE @StandardRole INT = (
 			SELECT 
@@ -33,7 +33,7 @@ BEGIN
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) 
 			WHERE 
-				CR.RolName = 'Nuevo estandar' 
+				CR.RolName = 'Nuevo estandar'
 		)
 	DECLARE @PYMES INT = (
 			SELECT
@@ -42,7 +42,7 @@ BEGIN
 			FROM
                 [DeliveryBackOffice].[dbo].[CatTypeOfBusiness] CTOB WITH(NOLOCK)
 			WHERE
-				CTOB.TypeOfBusinessName = 'PYMES' 
+				CTOB.TypeOfBusinessName = 'PYMES'
 		)
 	DECLARE @InactiveMembeshipStatus INT = (
 			SELECT
@@ -51,7 +51,7 @@ BEGIN
 			FROM
 				[DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK)
 			WHERE
-				CSPS.SalesPackageStatusName = 'Inactiva' 
+				CSPS.SalesPackageStatusName = 'Inactiva'
 		)
 	DECLARE @VoidedMembeshipStatus INT = (
 			SELECT

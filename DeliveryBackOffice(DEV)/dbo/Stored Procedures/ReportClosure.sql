@@ -105,7 +105,7 @@ begin
 			AND ACD.GuideNumber = DOR.Guide_Number
 
 			-- MODIFICACIÓN 31/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
-			AND ACD.DopId = DOPD.DopId
+			AND ACD.DopId = DOPD.DopId 
 			-- FIN MODIFICACIÓN
 
 			AND ACD.RowStatus = 1
@@ -116,7 +116,8 @@ begin
 		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
 			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK)
-			on cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
+			on cost.GuideNumber = DOR.Guide_Number
+            AND cost.GuideSerie = DOR.Guide_Serie
 		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)
 			on costd.IdCost = cost.IdCost 
 			AND costd.Amount > 0 
@@ -171,14 +172,15 @@ begin
 		INNER JOIN invoiceHeader INH WITH (NOLOCK)
 			ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
         INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-			ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+			ON INH.inv_numberFEL = ACD.Fel 
 		INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 			ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 		LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
 			ON REU.UsrIdUser = ACH.UserId
 	WHERE  CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 		AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount) and ACD.AccountingClosuresHeaderId = @IdCierre
-		AND (CTS.IdTypeService NOT IN (5,23))
+		AND ACD.RowStatus = 1
+        AND (CTS.IdTypeService NOT IN (5,23))
 			 AND DOPD.[TypeofInOutMoneyId] != 8
 	ORDER BY DOPD.DateCreated ASC
 end
@@ -294,7 +296,7 @@ begin
 			INNER JOIN invoiceHeader INH WITH (NOLOCK)  
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
 			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+				ON INH.inv_numberFEL = ACD.Fel
 			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 			LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU 
@@ -302,7 +304,8 @@ begin
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (VPC.CodeOfReference = @VisitPointId OR DOPD.AccountId = @IdAccount)
 			AND (CTS.IdTypeService NOT IN (5,23))
-			 AND DOPD.[TypeofInOutMoneyId] != 8
+			AND DOPD.[TypeofInOutMoneyId] != 8
+            AND ACD.RowStatus = 1
 	--	ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 
 end
@@ -379,7 +382,8 @@ begin
 		left join DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon 
 			on ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
 		left join DeliveryBackOffice.dbo.Cost cost WITH (NOLOCK) 
-			on cost.ProductNumber = CONCAT(DOR.Guide_Serie,DOR.Guide_Number)
+			on cost.GuideSerie = DOR.Guide_Serie
+            AND cost.GuideNumber = DOR.Guide_Number
 		left join DeliveryBackOffice.dbo.CostDetail costd WITH (NOLOCK)  
 			on costd.IdCost = cost.IdCost AND costd.Amount > 0 
 			AND (DOPD.TypeofInOutMoneyId = 6 AND costd.Voucher != '')
@@ -423,10 +427,10 @@ begin
 				ON CTS.IdTypeService = DOPD.TypeServiceId
 			LEFT JOIN DeliveryBackOffice.dbo.ctgTypeOfInOutOfMoney ctgmon
 				ON ctgmon.tio_pk_id = DOPD.TypeofInOutMoneyId
-			INNER JOIN invoiceHeader INH WITH (NOLOCK)  
+			INNER JOIN invoiceHeader INH WITH (NOLOCK)
 				ON INH.inv_numberFEL = (SELECT item FROM dbo.SplitUnlimited(DOPD.Fel, '-') WHERE id = 2)
 			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD
-				ON INH.inv_numberFEL = ACD.Fel AND ACD.RowStatus = 1
+				ON INH.inv_numberFEL = ACD.Fel
 			INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
 				ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
@@ -440,6 +444,7 @@ begin
 		WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN  CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 			AND (CTS.IdTypeService NOT IN (5,23))
 			 AND DOPD.[TypeofInOutMoneyId] != 8
+             AND ACD.RowStatus = 1
 		ORDER BY ACD.AccountingClosuresHeaderId, DOPD.DateCreated ASC
 end
 END

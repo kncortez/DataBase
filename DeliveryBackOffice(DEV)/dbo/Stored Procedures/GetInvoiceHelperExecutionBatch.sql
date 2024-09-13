@@ -42,8 +42,8 @@ BEGIN
                    , IBH.DaysLeftNotifycation
                    , IBH.PercentInvoiceLeftNotifycation
                    , IBH.EmailNotification
-              FROM InvoiceBatchHeader IBH
-                   LEFT JOIN InvoiceBatchRelationships IBR
+              FROM InvoiceBatchHeader IBH WITH (NOLOCK)
+                   LEFT JOIN InvoiceBatchRelationships IBR WITH (NOLOCK)
                       ON IBH.Id_Lote = IBR.Id_Lote
                      AND IBR.CodeOfReference = @CodeOfReference
              WHERE IBH.[Status] = 1
@@ -118,6 +118,8 @@ BEGIN
                  ProcessedCorrelative  NVARCHAR(50),
                  inv_pk_id             INT
              );
+            
+            CREATE NONCLUSTERED INDEX IX_LIP_SERIE ON #listInvoicePending (inv_pk_id);
 
              INSERT INTO #listInvoicePending
              (

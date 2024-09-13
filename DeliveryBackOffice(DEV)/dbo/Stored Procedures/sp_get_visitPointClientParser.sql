@@ -14,14 +14,14 @@ BEGIN
 
 	SELECT CodeOfReference, 
 		   CustomerID, 
-		   Address, 
-		   Zone, 
+		   [Address], 
+		   [Zone], 
 		   Town, 
 		   Department, 
 		   Phone, 
 		   DescriptionOfClient, 
 		   ISNULL(CountryId, 'GT') AS CountryId
-	FROM VisitPointClient
+	FROM VisitPointClient WITH(NOLOCK)
 	WHERE CodeOfReference = @IdVisitClient
 
 END

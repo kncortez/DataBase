@@ -11,17 +11,17 @@ AS
 BEGIN
 
 	-- Variables estaticas globales
-	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Charge Service' AND CS.SysRowStatus = 1)
+	DECLARE @SystemId INT = (SELECT TOP 1 CS.SysIdSystem FROM [DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) WHERE CS.SysNameSystem = 'Hermes Charge Service' COLLATE Latin1_General_CI_AI AND CS.SysRowStatus = 1)
 
-	DECLARE @CorporateCustomer INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'CORPORATIVO' );
-	DECLARE @IndividualCustomer INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'INDIVIDUAL' );
+	DECLARE @CorporateCustomer INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'CORPORATIVO' COLLATE Latin1_General_CI_AI);
+	DECLARE @IndividualCustomer INT = (SELECT TOP 1 CT.IdCustomerType FROM [DeliveryBackOffice].[dbo].[CustomerType] CT WITH(NOLOCK) WHERE CT.[Description] = 'INDIVIDUAL' COLLATE Latin1_General_CI_AI);
 	
-	DECLARE @ActiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' );
-	DECLARE @InactiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Inactiva' );
-	DECLARE @VoidStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Anulada' );
+	DECLARE @ActiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Activa' COLLATE Latin1_General_CI_AI);
+	DECLARE @InactiveStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Inactiva' COLLATE Latin1_General_CI_AI);
+	DECLARE @VoidStatus INT = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Anulada' COLLATE Latin1_General_CI_AI);
 
 	-- Obtener datos
-	IF(@TypeProcess = 'MEMBERSHIP' )
+	IF(@TypeProcess = 'MEMBERSHIP' COLLATE Latin1_General_CI_AI)
 	BEGIN
 
 		-- Membresias
@@ -39,7 +39,7 @@ BEGIN
 					AND
 					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' 
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
 			),0)),1)),12)) 'SalePackageReference'
@@ -67,7 +67,7 @@ BEGIN
 					AND
 					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' 
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
 			),0) 'RenewalAttempts'
@@ -140,7 +140,7 @@ BEGIN
 					AND
 					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' 
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
 			),0)),1)),12)) 'SalePackageReference'
@@ -168,7 +168,7 @@ BEGIN
 					AND
 					MPLRejects.DateCreated >= ISNULL(Mmshp.LastPaymentDate, Mmshp.DateCreated)
 					AND
-					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' 
+					LTRIM(RTRIM(ISNULL(MPLRejects.[TransactionOrder],''))) = 'REJECTED' COLLATE Latin1_General_CI_AI
 					AND
 					MPLRejects.RowStatus = 1
 			),0) 'RenewalAttempts'

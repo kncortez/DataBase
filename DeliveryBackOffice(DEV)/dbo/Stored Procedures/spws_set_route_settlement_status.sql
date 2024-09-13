@@ -288,7 +288,7 @@ BEGIN
 						DECLARE @GuideCurrentStatusRec INT = -1;
 
 						BEGIN TRY
-							DECLARE @GuideStatusChangeWebhookRec INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange'  AND WT.RowStatus = 1);
+							DECLARE @GuideStatusChangeWebhookRec INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
 
 							SET @WebhookCustomerIdRec = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
 							SET @CustomerEndpointIdRec = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerIdRec AND  WE.WebhookTypeId = @GuideStatusChangeWebhookRec),-1);
@@ -376,6 +376,7 @@ BEGIN
 																INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 															    ON do.IdCustomer = WHE.CustomerId
 																WHERE do.Guide_Number = @GuideNumber
+                                                                    AND do.Guide_Serie = @GuideSerie
 																	AND WHE.TypeConnectionId = 2
 																GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -392,7 +393,7 @@ BEGIN
 													);
 
 													DECLARE @MaxPieceOrderDetail INT = 0;
-													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryOrderDetail WITH(NOLOCK) Where Guide_Number = @GuideNumber AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND StatusOrderId = 2))
+													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryOrderDetail WITH(NOLOCK) Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2))
 
 													INSERT INTO @PiecesGuideRelatedTableRec 
 																( 
@@ -412,7 +413,7 @@ BEGIN
 																AND do.Guide_Number = dop.GuideNumber
 																INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 															    ON do.IdCustomer = WHE.CustomerId
-																WHERE do.Guide_Serie = @GuideSerie 
+																WHERE do.Guide_Serie = @GuideSerie
 																AND do.Guide_Number = @GuideNumber
 																AND dop.ExternalPieceId IS NOT NULL
 																AND WHE.TypeConnectionId = 2
@@ -444,8 +445,8 @@ BEGIN
 														INNER JOIN @PiecesGuideRelatedTableRec pgt
 														    ON gpt.GuideSerie = pgt.GuideSerie
 															AND gpt.GuideNumber = pgt.GuideNumber
-															WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-																AND gpt.NumberPieces = @MaxPieceOrderDetail
+                                                            AND gpt.NumberPieces = pgt.NumberRelatedPieces
+															WHERE gpt.NumberPieces = @MaxPieceOrderDetail
 																AND WHE.TypeConnectionId = 2
 
 								 END
@@ -519,7 +520,7 @@ BEGIN
 					DECLARE @GuideCurrentStatus INT = -1;
 
 					BEGIN TRY
-						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' AND WT.RowStatus = 1);
+						DECLARE @GuideStatusChangeWebhook INT = (SELECT TOP 1 WT.IdWebhookType FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH(NOLOCK) WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI AND WT.RowStatus = 1);
 
 						SET @WebhookCustomerId = ISNULL((SELECT TOP 1 DO.IdCustomer FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK) WHERE DO.Guide_Number = @GuideNumber AND DO.Guide_Serie = @GuideSerie),-1);
 						SET @CustomerEndpointId = ISNULL((SELECT TOP 1 WE.IdWebhookEndpoint FROM [DeliveryBackOffice].[dbo].[WebhookEndpoint] WE WITH(NOLOCK) WHERE WE.CustomerId = @WebhookCustomerId AND  WE.WebhookTypeId = @GuideStatusChangeWebhook),-1);
@@ -602,9 +603,11 @@ BEGIN
 														FROM DeliveryOrder do WITH(NOLOCK)
 														INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 															ON do.Guide_Number = dop.GuideNumber
+                                                            AND do.Guide_Serie = dop.GuideSerie
 															INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 														    ON do.IdCustomer = WHE.CustomerId
 															WHERE do.Guide_Number = @GuideNumber
+                                                                AND do.Guide_Serie = @GuideSerie
 																AND WHE.TypeConnectionId = 2
 															GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -635,9 +638,11 @@ BEGIN
 														FROM DeliveryOrder do WITH(NOLOCK)
 														INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 															ON do.Guide_Number = dop.GuideNumber
+                                                            AND do.Guide_Serie = dop.GuideSerie
 															INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 														    ON do.IdCustomer = WHE.CustomerId
 															WHERE do.Guide_Number = @GuideNumber
+                                                            AND do.Guide_Serie = @GuideSerie
 															AND dop.ExternalPieceId IS NOT NULL
 															AND WHE.TypeConnectionId = 2
 															GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -659,14 +664,17 @@ BEGIN
 													FROM DeliveryOrderPiece dop WITH(NOLOCK)
 													INNER JOIN DeliveryOrder do WITH(NOLOCK)
 														ON dop.GuideNumber = do.Guide_Number
+                                                        AND dop.GuideSerie = do.Guide_Serie
 													INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													    ON do.IdCustomer = WHE.CustomerId
 													INNER JOIN @GuidePiecesTable gpt
 													    ON dop.GuideNumber = gpt.GuideNumber
+                                                        AND dop.GuideSerie = gpt.GuideSerie
 													INNER JOIN @PiecesGuideRelatedTable pgt
 													    ON gpt.GuideNumber = pgt.GuideNumber
-														WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-															AND WHE.TypeConnectionId = 2
+                                                        AND gpt.GuideSerie = pgt.GuideSerie
+                                                        AND gpt.NumberPieces = pgt.NumberRelatedPieces
+													WHERE WHE.TypeConnectionId = 2
 
 							 END
 
@@ -961,8 +969,7 @@ BEGIN
                            AND do.Guide_Number = @GuideNumber
                            AND sp.AddressPickup = do.Sender_Address
                 WHERE ra.IdRoute = @IdRoute
-                      AND ra.DateOfRoute = @tiempo
-                      AND sp.AddressPickup = do.Sender_Address;
+                      AND ra.DateOfRoute = @tiempo;
             END;
 
             --Si se encuentra el vp entre los servicios de recolección, se asigna

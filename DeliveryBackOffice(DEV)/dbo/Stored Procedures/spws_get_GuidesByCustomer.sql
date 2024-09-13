@@ -152,12 +152,10 @@ SET @jsonResult =
                                                                                       SELECT COUNT(*)
                                                                                       FROM Cost C
                                                                                           INNER JOIN CostDetail CD WITH(NOLOCK)
-                                                                                              ON C.IdCost = CD.IdCost
-                                                                                                 AND C.RowStatus = 1
-                                                                                      WHERE ProductNumber = CONCAT(
-                                                                                                                      ord.Guide_Serie,
-                                                                                                                      ord.Guide_Number
-                                                                                                                  )
+                                                                                             ON C.IdCost = CD.IdCost
+                                                                                      WHERE C.RowStatus = 1
+                                                                                        AND C.GuideSerie = ord.Guide_Serie
+                                                                                        AND C.GuideNumber = ord.Guide_Number
                                                                                   ) > 1 THEN
                                                                                       'TARJETA'
                                                                                   WHEN

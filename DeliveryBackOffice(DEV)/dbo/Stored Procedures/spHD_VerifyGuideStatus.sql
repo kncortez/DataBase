@@ -34,7 +34,7 @@ BEGIN
 			FROM
 				[DeliveryBackOffice].[dbo].[CatCheckpointType] CCT  WITH(NOLOCK) 
 			WHERE
-				[CCT].[CheckpointTypeDescription] = 'Checkpoint final'   
+				[CCT].[CheckpointTypeDescription] = 'Checkpoint final'
 		);
 		DECLARE @ActualGuideStatus INT;
 		DECLARE @TerminalStatus TABLE

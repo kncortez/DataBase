@@ -76,6 +76,7 @@ BEGIN
                                          dod.DateCreated
                                   FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
+                                    AND dod.Guide_Serie = serv.Guide_Serie
                                         AND dod.StatusOrderId = 5
                               ),
                                          103
@@ -175,6 +176,7 @@ BEGIN
                                          dod.DateCreated
                                   FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
+                                    AND dod.Guide_Serie = serv.Guide_Serie
                                         AND dod.StatusOrderId = 5
                               ),
                                          103
@@ -277,6 +279,7 @@ BEGIN
                                          dod.DateCreated
                                   FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
+                                    AND dod.Guide_Serie = serv.Guide_Serie
                                         AND dod.StatusOrderId = 5
                               ),
                                          103
@@ -388,6 +391,7 @@ BEGIN
                                          dod.DateCreated
                                   FROM DeliveryBackOffice.dbo.DeliveryOrderDetail dod WITH (NOLOCK)
                                   WHERE dod.Guide_Number = serv.Guide_Number
+                                    AND dod.Guide_Serie = serv.Guide_Serie
                                         AND dod.StatusOrderId = 5
                               ),
                                          103

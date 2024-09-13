@@ -59,7 +59,7 @@ AS
 				FROM 
 					[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 				WHERE 
-					CS.SysNameSystem = @SystemName
+					CS.SysNameSystem = @SystemName COLLATE Latin1_General_CI_AI 
 					AND 
 					CS.SysRowStatus = 1
 			)

@@ -146,16 +146,16 @@ BEGIN
 														   ELSE
 													  (CASE
 														   -- manejo de centros comerciales
-														   WHEN AG.ReceiverAddress LIKE '%cc %' THEN
+														   WHEN AG.ReceiverAddress LIKE '%cc %' COLLATE Latin1_General_CI_AI THEN
 															   +'"window_start"' + ':' + '"08:00"' + ','
 															   + '"window_end"' + ':' + '"10:00"' + ','
-														   WHEN AG.ReceiverAddress LIKE '%centro comercial%'  THEN
+														   WHEN AG.ReceiverAddress LIKE '%centro comercial%' COLLATE Latin1_General_CI_AI THEN
 															   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 															   + ':' + '"10:00"' + ','
-														   WHEN AG.ReceiverAddress LIKE '%c.c.%'  THEN
+														   WHEN AG.ReceiverAddress LIKE '%c.c.%' COLLATE Latin1_General_CI_AI THEN
 															   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 															   + ':' + '"10:00"' + ','
-														   WHEN AG.ReceiverAddress LIKE '%c.c%'  THEN
+														   WHEN AG.ReceiverAddress LIKE '%c.c%' COLLATE Latin1_General_CI_AI THEN
 															   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 															   + ':' + '"10:00"' + ','
 														   -- Ventanas de menor prioridad
@@ -196,16 +196,16 @@ BEGIN
 															  (
 																CASE
 																   -- manejo de centros comerciales
-																   WHEN AG.ReceiverAddress LIKE '%cc %'  THEN
+																   WHEN AG.ReceiverAddress LIKE '%cc %' COLLATE Latin1_General_CI_AI THEN
 																	   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 																	   + ':' + '"10:00"' + ','
-																   WHEN AG.ReceiverAddress LIKE '%centro comercial%'  THEN
+																   WHEN AG.ReceiverAddress LIKE '%centro comercial%' COLLATE Latin1_General_CI_AI THEN
 																	   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 																	   + ':' + '"10:00"' + ','
-																   WHEN AG.ReceiverAddress LIKE '%c.c.%'  THEN
+																   WHEN AG.ReceiverAddress LIKE '%c.c.%' COLLATE Latin1_General_CI_AI THEN
 																	   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 																	   + ':' + '"10:00"' + ','
-																   WHEN AG.ReceiverAddress LIKE '%c.c%'  THEN
+																   WHEN AG.ReceiverAddress LIKE '%c.c%' COLLATE Latin1_General_CI_AI THEN
 																	   +'"window_start"' + ':' + '"08:00"' + ',' + '"window_end"'
 																	   + ':' + '"10:00"' + ','
 																   -- Ventanas de menor prioridad
@@ -251,7 +251,7 @@ BEGIN
                                     LEFT JOIN DeliveryBackOffice.dbo.Township TWSrid
                                         ON TWSrid.IdTownship = AG.ReceiverTownshipId
                                     LEFT JOIN DeliveryBackOffice.dbo.Township TWSrtwn
-                                        ON TWSrtwn.TownshipName LIKE '%' + AG.ReceiverTown + '%' 
+                                        ON TWSrtwn.TownshipName LIKE '%' + AG.ReceiverTown + '%' COLLATE Latin1_General_CI_AI
                                     LEFT JOIN DeliveryBackOffice.dbo.ServiceDataForGuide SDFG WITH (NOLOCK)
                                         ON AG.GuideSerie = SDFG.GuideSerie
                                            AND AG.GuideNumber = SDFG.GuideNumber

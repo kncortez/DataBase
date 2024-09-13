@@ -65,6 +65,9 @@ BEGIN
             Guide VARCHAR(255),
             Message VARCHAR(255),
         );
+
+        CREATE NONCLUSTERED INDEX TempGuides ON #Temp (Guide);
+
         INSERT INTO #Temp
         (
             Guide,

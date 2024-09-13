@@ -44,13 +44,13 @@ BEGIN
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
         INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
-               AND dsd.RowStatus = 1
     WHERE dbs.ID = @IdManifest
           AND
           (
               dsd.Guide_Settlement = 0
               OR dsd.Guide_Settlement IS NULL
-          );
+          )
+          AND dsd.RowStatus = 1;
 		  
     SELECT 
         dbs.ID,

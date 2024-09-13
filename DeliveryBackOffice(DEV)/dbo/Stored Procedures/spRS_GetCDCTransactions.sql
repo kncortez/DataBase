@@ -69,7 +69,7 @@ BEGIN
 	);
 
 	CREATE NONCLUSTERED INDEX IDX_TMP_Transaction_Guide
-	ON #TCTransaction ( [ProductSerie], [ProductNumber] )
+	ON #TCTransaction ([ProductNumber] )
 	
 	INSERT INTO #TCTransaction
 	(

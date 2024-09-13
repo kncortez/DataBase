@@ -335,6 +335,10 @@ BEGIN
                           (
                               SELECT ItemNumber FROM #listGuides -- WHERE ItemSerie = 'fd'
                           )
+                          AND ord.Guide_Serie IN 
+						  (
+								SELECT ItemSerie FROM #listGuides
+						  )
                           AND ord.StatusOrderId IN ( 15, 1, 16 )
                           AND dop.GuideNumber IS NULL
                 ) AS Table1;
@@ -456,6 +460,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+                                    AND ord.Guide_Serie IN 
+						            (
+							            SELECT ItemSerie FROM #listGuides
+						            )
                         );
 
                 DECLARE @CustomerId INT =
@@ -472,6 +480,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+                                   AND ord.Guide_Serie IN 
+						            (
+								        SELECT ItemSerie FROM #listGuides
+						            )
                         );
 
                 DECLARE @SenderName VARCHAR(50) =
@@ -488,6 +500,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+                                   AND ord.Guide_Serie IN 
+						          (
+								        SELECT ItemSerie FROM #listGuides
+						          )
                         );
 
                 DECLARE @Sender_Phone VARCHAR(20) =
@@ -504,6 +520,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+                                   AND ord.Guide_Serie IN 
+						            (
+								        SELECT ItemSerie FROM #listGuides
+						            )
                         );
 
 
@@ -521,11 +541,11 @@ BEGIN
                                 --INNER JOIN TownshipByHubLogistic thb WITH (NOLOCK)
                                 --    ON (ord.SenderIdTownship = thb.IdTownship)
 								INNER JOIN DeliveryBackOffice.dbo.Township TWN WITH(NOLOCK)
-									ON ord.SenderIdTownship = twn.IdTownship AND twn.TownshipStatus = 1
+									ON ord.SenderIdTownship = twn.IdTownship 
 								INNER JOIN DeliveryBackOffice.dbo.DumpServiceCoverage THB WITH(NOLOCK)
 									ON THB.HeaderCode = twn.HeaderCode
                                 INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBG WITH(NOLOCK)
-									ON HBG.HubAbbreviation = THB.Hub AND HBG.HubStatus = 1
+									ON HBG.HubAbbreviation = THB.Hub 
 								INNER JOIN DeliveryOrderPaymentDetail dop WITH (NOLOCK)
                                     ON (
                                            dop.GuideNumber = ord.Guide_Number
@@ -535,7 +555,13 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+								  AND ord.Guide_Serie IN 
+								  (
+										SELECT ItemSerie FROM #listGuides
+								  )
 								  AND THB.RowStatus = 1
+                                  AND twn.TownshipStatus = 1
+                                  AND HBG.HubStatus = 1
                         );
 
 
@@ -553,6 +579,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+								  AND ord.Guide_Serie IN 
+								  (
+										SELECT ItemSerie FROM #listGuides
+								  )
                         );
 
                 DECLARE @Sender_Email VARCHAR(200) =
@@ -970,7 +1000,7 @@ BEGIN
                     ) -- Control de guías pagadas
                     FROM [DeliveryBackOffice].[dbo].[Cost] C WITH (NOLOCK)
                         INNER JOIN #listGuides LG
-                            ON C.ProductNumber = CONCAT(LG.ItemSerie, LG.ItemNumber)
+                            ON C.GuideSerie = LG.ItemSerie AND C.GuideNumber = LG.ItemNumber
                         LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD WITH (NOLOCK)
                             ON LG.ItemSerie = DOPD.GuideSerie
                                AND LG.ItemNumber = DOPD.GuideNumber
@@ -1016,6 +1046,10 @@ BEGIN
                                   (
                                       SELECT ItemNumber FROM #listGuides
                                   )
+								  AND ord.Guide_Serie IN 
+								  (
+										SELECT ItemSerie FROM #listGuides
+								  )
                         );
 
 
@@ -1028,9 +1062,9 @@ BEGIN
                            sr.ID
                     FROM DeliveryBackOffice.dbo.SenderReceiver sr
                         INNER JOIN DeliveryBackOffice.dbo.LogTokenPOD ltp WITH (NOLOCK)
-                            ON ltp.LogTokenPOD = @Token
+                            ON  ltp.IdCourierman = sr.ID
                                --AND ltp.RowStatus = 1
-                               AND ltp.IdCourierman = sr.ID
+                               WHERE ltp.LogTokenPOD = @Token 
                 );
 
                 INSERT INTO [dbo].[CourierPickupManifest]
@@ -1365,7 +1399,7 @@ BEGIN
             SELECT CONCAT(dop.GuideSerie, dop.GuideNumber, '-', dop.NoPiece) [Piece],
                    CONCAT(do.Receiver_FirstName, ' ', do.Receiver_LastName)  [ReceiverName],
                    LEFT(do.Receiver_Address, 200)							 [ReceiverAddress],
-				   do.ReceiverCountryId									     [ReceiverCountryId]
+				   ISNULL(do.ReceiverCountryId,'GT')						 [ReceiverCountryId]
             FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH (NOLOCK)
                 INNER JOIN #listGuides lp
                     ON lp.ItemSerie = dop.GuideSerie

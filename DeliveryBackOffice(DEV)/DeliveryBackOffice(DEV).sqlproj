@@ -1681,16 +1681,18 @@
     <Build Include="dbo\Stored Procedures\spGetDetailInvoice.sql" />
     <Build Include="dbo\Stored Procedures\SupportCreateNewInternalUserWeb.sql" />
     <Build Include="dbo\Stored Procedures\GetInvoiceHelperExecutionBatch.sql" />
-    <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />    
-    <Build Include="dbo\Stored Procedures\GetBatchInvoiceByCountry.sql" />    
-    <Build Include="dbo\Stored Procedures\ValidateBatchInvoice.sql" />    
-    <Build Include="dbo\Stored Procedures\GetValuesInvoice.sql" />    
-    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />    
-    <Build Include="dbo\User Defined Types\TblCustomerType.sql" />    
-    <Build Include="dbo\User Defined Types\TblCustomer.sql" />    
-    <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />    
-    <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />    
-    <Build Include="dbo\SetBatchInvoiceByCountryCreditNote.sql" />
+    <Build Include="dbo\Stored Procedures\get_maxCOD.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchInvoiceByCountry.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateBatchInvoice.sql" />
+    <Build Include="dbo\Stored Procedures\GetValuesInvoice.sql" />
+    <Build Include="dbo\User Defined Types\TblSalePackageList.sql" />
+    <Build Include="dbo\User Defined Types\TblCustomerType.sql" />
+    <Build Include="dbo\User Defined Types\TblCustomer.sql" />
+    <Build Include="dbo\User Defined Types\TblVisitPointClient.sql" />
+    <Build Include="dbo\User Defined Types\TblIncidenceType.sql" />
+    <Build Include="dbo\Stored Procedures\InsertSundaysInRange.sql" />
+    <Build Include="dbo\Stored Procedures\SetBatchInvoiceByCountryCreditNote.sql" />
+    <Build Include="dbo\Stored Procedures\sps_InvoicecreditNoteValidation.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

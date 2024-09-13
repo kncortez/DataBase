@@ -51,7 +51,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
     FROM [DeliveryBackOffice].[dbo].[Account]                     Acc WITH (NOLOCK)
         INNER JOIN [DeliveryBackOffice].[dbo].[Customer]          Cu WITH (NOLOCK)
             ON Acc.IdCustomer = Cu.IdCustomer
-               AND ISNULL(Cu.RowSatus, 1) = 1
         LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH (NOLOCK)
             ON RBUBA.RuaIdAccount = Acc.AccIdAccount
                AND RBUBA.RuaRowStatus = 1
@@ -62,7 +61,8 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             ON VPBU.IdVisitPointClient = VPC.IdVisitPointClient
                AND VPC.StatusClient = 1
     WHERE Acc.AccIdAccount = @AccountIdParam
-          AND Acc.AccRowStatus = 1;
+          AND Acc.AccRowStatus = 1
+          AND ISNULL(Cu.RowSatus, 1) = 1;
 
     IF (@CustomerTypeId = 3) -- INDIVIDUAL - cliente
     BEGIN
@@ -136,7 +136,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DOPD.PayTypeId = CPT.PayTypeId
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
-                OR (DO.ReceiverIdTownship IS NULL AND  DO.Receiver_Town = TwnId.TownshipName )
+                OR (DO.ReceiverIdTownship IS NULL AND  DO.Receiver_Town = TwnId.TownshipName COLLATE Latin1_General_CI_AI)
             LEFT JOIN #HubsByHeaderCode                                       DSC
                 ON TwnId.HeaderCode = DSC.HeaderCode
         WHERE DO.DateCreated
@@ -220,7 +220,7 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName 
+                ON DO.Receiver_Town = TwnName.TownshipName COLLATE Latin1_General_CI_AI
             LEFT JOIN #HubsByHeaderCode                                       DSC
                 ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
         WHERE DO.DateCreated
@@ -237,7 +237,6 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
     END;
     ELSE IF (@CustomerTypeId = 1) -- Corporativos - cliente + punto de visita
     BEGIN
-
         SELECT LTRIM(RTRIM(IIF(VPC.DescriptionOfClient IS NULL
                                , ''
                                , CONCAT(VPC.CodeOfReference, ' - ', VPC.DescriptionOfClient))
@@ -322,10 +321,9 @@ DECLARE @DateFinishParam DATETIME = @DateFinish
                 ON DOPD.PayTypeId = CPT.PayTypeId
             LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnId WITH (NOLOCK)
                 ON DO.ReceiverIdTownship = TwnId.IdTownship
-            LEFT JOIN [DeliveryBackOffice].[dbo].[Township]                   TwnName WITH (NOLOCK)
-                ON DO.Receiver_Town = TwnName.TownshipName 
+                OR (DO.ReceiverIdTownship IS NULL AND DO.Receiver_Town = TwnId.TownshipName COLLATE Latin1_General_CI_AI)
             LEFT JOIN #HubsByHeaderCode                                       DSC
-                ON ISNULL(TwnId.HeaderCode, TwnName.HeaderCode) = DSC.HeaderCode
+                ON TwnId.HeaderCode = DSC.HeaderCode
         WHERE DO.DateCreated
               BETWEEN @DateStartParam AND @DateFinishParam
               AND DO.IdCustomer = @CustomerId

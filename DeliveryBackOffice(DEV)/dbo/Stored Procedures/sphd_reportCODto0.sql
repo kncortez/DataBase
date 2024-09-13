@@ -31,8 +31,9 @@ BEGIN
     ON cr.IdCatReason = alc.ReasonId
     INNER JOIN DenariusUser_Dev.dbo.LGN_LogByToken lgnlbt WITH (NOLOCK)
     ON lgnlbt.SSN_IdToken = alc.TokenCreated
-    LEFt JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
-    ON c.ProductNumber = CONCAT(do.Guide_Serie, do.Guide_Number)
+    LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+      ON c.GuideSerie = do.Guide_Serie
+     AND c.GuideNumber = do.Guide_Number
 	LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
     ON dc.IdCatCurrencyCOD = c.CodCurrency
     WHERE IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @Country 

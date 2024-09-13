@@ -266,7 +266,7 @@ BEGIN
                              FROM [DeliveryBackOffice].[dbo].[ConfigExternalPlatform]        ConfEP WITH (NOLOCK)
                                  INNER JOIN [DeliveryBackOffice].[dbo].[CatExternalPlatform] CEP WITH (NOLOCK)
                                      ON ConfEP.ExternalPlatformId = CEP.IdExternalPlatform
-                             WHERE CEP.NameExternalPlatform = 'HermesInvoiceHelper' 
+                             WHERE CEP.NameExternalPlatform = 'HermesInvoiceHelper' COLLATE Latin1_General_CI_AI
                                    AND ConfEP.ConfigParameterName = 'Retries'
                                    AND ConfEP.RowStatus = 1
                          )

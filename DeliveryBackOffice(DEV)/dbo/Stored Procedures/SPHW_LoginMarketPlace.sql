@@ -28,6 +28,7 @@ PRINT 'TEST';
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
 	DECLARE @IdCountryUser NVARCHAR(2);
+	DECLARE @IdCurrencyUser INT;
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.INI
     DECLARE @VERIFYUSER AS INT = 0;
@@ -57,6 +58,7 @@ PRINT 'TEST';
             END
            )                            PasswordExpired
 		,ISNULL(CTM.CountryID,'GT') AS CountryID
+		,ISNULL(IdCatCurrencyCOD, 1) AS CurrencyID
     INTO #User
     FROM [dbo].RegisterUser                   usr WITH (NOLOCK)
         INNER JOIN [dbo].RolByUserBySystem    rus WITH (NOLOCK)
@@ -67,10 +69,20 @@ PRINT 'TEST';
         LEFT JOIN [dbo].[RolByUserByAccount]  rua WITH (NOLOCK)
             ON rua.RuaIdUser = usr.UsrIdUser
                AND rua.RuaRowStatus = 1
-        INNER JOIN [dbo].Account              ac WITH (NOLOCK)
+        INNER JOIN [dbo].Account             ac   WITH (NOLOCK)
             ON ac.AccIdAccount = rua.RuaIdAccount
-		INNER JOIN Customer					 CTM WITH (NOLOCK)
+		INNER JOIN Customer					 CTM  WITH (NOLOCK)
 			ON ac.IdCustomer = CTM.IdCustomer
+		LEFT JOIN VisitPointClient			 VPC  WITH (NOLOCK)
+			ON VPC.CustomerID = CTM.IdCustomer
+		LEFT JOIN [dbo].RatebyCustomer		 RC   WITH (NOLOCK)
+			ON  RC.RbcIdCustomer = CTM.IdCustomer
+			AND rc.RbcRowStatus = 1
+		LEFT JOIN [dbo].RateHeader			 RH   WITH (NOLOCK)
+			ON RC.RbcIdRate = RH.RheId
+		LEFT JOIN [dbo].CatCurrencyCOD       CCC  WITH (NOLOCK)
+			ON RH.IdCurrency = CCC.IdCatCurrencyCOD
+			OR (RH.IdCurrency IS NULL AND CCC.IdCatCurrencyCOD = 1) -- 1 ES PARA QUE POR DEFECTO CARGUE GT
     WHERE usr.UsrEmail = @Username 
           AND rus.RusIdSystem = @IdSystem
           AND usr.UsrLastPassword = @Password AND ac.AccRowStatus = 1;
@@ -166,6 +178,11 @@ PRINT 'TEST';
 		(
 			SELECT TOP 1 CountryID FROM #User
 		);
+		SET @IdCurrencyUser =
+		(
+			SELECT TOP 1 CurrencyID FROM #User
+		);
+
 		IF @IdCountryUser = @IdCountry
 		BEGIN
 			IF @StatusAccount = 'C'
@@ -455,7 +472,8 @@ PRINT 'TEST';
 															 CONVERT(VARCHAR, COALESCE(us.Phone, ' '))  AS 'Phone',
 															 CONVERT(VARCHAR(1), ISNULL(us.VerifiedPhone, 'false')) AS 'VerifiedPhone',
 															 @TAC AS 'TAC',
-															 @IdCountryUser AS IdCountry
+															 @IdCountryUser  AS IdCountry,
+															 @IdCurrencyUser AS IdCurrency
 													-- FIN MODIFICACIÓN
 													FROM RegisterUser           us
 														INNER JOIN [dbo].Person pe
@@ -511,15 +529,15 @@ PRINT 'TEST';
 																@RolEXP AS  'RolEXP'
 															   -- FIN MODIFICACIÓN
 														FROM DeliveryBackOffice.dbo.VisitPointClient VPC
-															JOIN VisitPointByUser                    VPU
+															INNER JOIN VisitPointByUser                    VPU
 																ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-															JOIN RegisterUser                        ru
+															INNER JOIN RegisterUser                        ru
 																ON VPU.RegisterUserID = ru.UsrIdUser
-															JOIN DeliveryBackOffice.dbo.Settlement   STL
+															INNER JOIN DeliveryBackOffice.dbo.Settlement   STL
 																ON VPC.IdSettlement = STL.IdSettlement
-															JOIN DeliveryBackOffice.dbo.Township     TWS
+															INNER JOIN DeliveryBackOffice.dbo.Township     TWS
 																ON TWS.IdTownship = STL.IdTownship
-															JOIN DeliveryBackOffice.dbo.Province     PRV
+															INNER JOIN DeliveryBackOffice.dbo.Province     PRV
 																ON PRV.IdProvince = TWS.IdProvince
 														WHERE IdKindOfVPClient = 1 AND VPU.RowStatus = 1
 															  AND ru.UsrRowStatus = 1

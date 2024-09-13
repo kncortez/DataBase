@@ -30,13 +30,13 @@ SET NOCOUNT ON;
 	   ,rua.RuaIdAccount
 	   ,CONCAT(vpc.DescriptionOfClient, ' - ', rus.UsrEmail) Usuario
 	FROM dbo.VisitPointByUser vpu
-	JOIN dbo.RegisterUser rus
+	INNER JOIN dbo.RegisterUser rus
 		ON rus.UsrIdUser = vpu.RegisterUserID
 			AND RUS.UsrRowStatus = 1
-	JOIN dbo.RolByUserByAccount rua
+	INNER JOIN dbo.RolByUserByAccount rua
 		ON rua.RuaIdUser = rus.UsrIdUser
 			AND vpu.RowStatus = 1
-	JOIN dbo.VisitPointClient vpc
+	INNER JOIN dbo.VisitPointClient vpc
 		ON vpc.IdVisitPointClient = vpu.IdVisitPointClient
 			AND IdKindOfVPClient = 1
 			AND StatusClient = 1
@@ -44,12 +44,3 @@ SET NOCOUNT ON;
 	AND ISNULL(vpc.CountryId,'GT') = @IdCountry
 	ORDER BY vpc.DescriptionOfClient
 END
-
-
-
-SELECT * FROM dbo.RolByUserByAccount
-WHERE RuaIdAccount = 21512
-
-UPDATE dbo.RegisterUser
-SET	 UsrRowStatus = 0
-WHERE UsrIdUser = 22036

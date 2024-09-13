@@ -27,7 +27,7 @@ BEGIN
 		(SELECT DeliveryBackOffice.dbo.fn_get_rackposition(w.Guide_Serie,w.Guide_Number)) as [Ubicacion_Bodega],
 		CONVERT(VARCHAR, w.DateCreated, 106) as Ingreso
 		from DeliveryBackOffice.dbo.Warehouse w
-		JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = w.guide_serie and do.Guide_Number = w.guide_number
+		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = w.guide_serie and do.Guide_Number = w.guide_number
 		where w.Active = 1
 		AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 		--AND w.DateCreated <=  GETDATE() - 1

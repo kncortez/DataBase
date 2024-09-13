@@ -17,7 +17,7 @@
 -- Update date: <2024-07-16 >
 -- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
+ALTER PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
   , @UserName VARCHAR(200)
@@ -58,12 +58,12 @@ BEGIN
       FROM DeliveryBackOffice.dbo.RegisterUser           us
            INNER JOIN DeliveryBackOffice.dbo.Person       pe
                ON pe.PerIdPerson = us.UsrIdPerson
-                  AND pe.PerRowStatus = 1
            INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
                ON iu.RegisterUserID = us.UsrIdUser
      WHERE iu.Username = @UserName
        AND iu.IdUser = @UserCode
        AND iu.RowStatus = 1
+       AND pe.PerRowStatus = 1
 
     --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
@@ -86,10 +86,10 @@ BEGIN
                AND rua.RuaRowStatus = 1
         INNER JOIN DeliveryBackOffice.[dbo].Account              ac
             ON ac.AccIdAccount = rua.RuaIdAccount
-               AND ac.AccRowStatus = 1
     WHERE iu.IdUser = @UserCode
           AND iu.Username = @UserName
-          AND usr.UsrLastPassword = @Password;
+          AND usr.UsrLastPassword = @Password
+          AND ac.AccRowStatus = 1;
     -- insertar en tabla temporal posbibles mensajes de error
 
     IF OBJECT_ID('tempdb.dbo.#errormessage', 'U') IS NOT NULL
@@ -202,22 +202,22 @@ BEGIN
                     FROM DeliveryBackOffice.[dbo].RegisterUser                   us
                         INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua
                             ON rua.RuaIdUser = us.UsrIdUser
-                               AND rua.RuaRowStatus = 1
                         INNER JOIN DeliveryBackOffice.[dbo].RolByModuleBySystem  rms
                             ON rms.RmsIdRol = rua.RuaIdRol
-                               AND rms.RmsRowStatus = 1
                         INNER JOIN DeliveryBackOffice.[dbo].CatModule            cmo
                             ON cmo.ModIdModule = rms.RmsIdModule
-                               AND cmo.ModRowStatus = 1
-                               AND cmo.ModVisible = 1
-                               AND cmo.ModIdModuleParent IS NOT NULL
                         INNER JOIN DeliveryBackOffice.[dbo].CatRol               rol
                             ON rol.RolIdRol = rms.RmsIdRol
                         INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
                             ON iu.RegisterUserID = us.UsrIdUser
                     WHERE iu.Username = @UserName
-                          AND iu.IdUser = @UserCode
-                          AND iu.RowStatus = 1;
+                      AND iu.IdUser = @UserCode
+                      AND iu.RowStatus = 1
+                      AND rua.RuaRowStatus = 1
+                      AND rms.RmsRowStatus = 1
+                      AND cmo.ModRowStatus = 1
+                      AND cmo.ModVisible = 1
+                      AND cmo.ModIdModuleParent IS NOT NULL;
 
                     IF (@TOTALSUBMODULES) > 0
                     BEGIN /*PARENT LIST*/
@@ -229,32 +229,34 @@ BEGIN
                         FROM DeliveryBackOffice.[dbo].RegisterUser                   us
                             INNER JOIN DeliveryBackOffice.[dbo].[RolByUserByAccount] rua
                                 ON rua.RuaIdUser = us.UsrIdUser
-                                   AND rua.RuaRowStatus = 1
                             INNER JOIN DeliveryBackOffice.[dbo].RolByModuleBySystem  rms
                                 ON rms.RmsIdRol = rua.RuaIdRol
-                                   AND rms.RmsRowStatus = 1
                             INNER JOIN DeliveryBackOffice.[dbo].CatModule            cmo
                                 ON cmo.ModIdModule = rms.RmsIdModule
-                                   AND cmo.ModRowStatus = 1
-                                   AND cmo.ModVisible = 1
-                                   AND cmo.ModIdModuleParent IS NULL
-                                   AND cmo.ModIdModule IN
-                                       (
-                                           SELECT ModIdModuleParent FROM DeliveryBackOffice.[dbo].CatModule
-                                       )
                             INNER JOIN DeliveryBackOffice.[dbo].CatRol               rol
                                 ON rol.RolIdRol = rms.RmsIdRol
                             INNER JOIN DeliveryBackOffice.dbo.InternalUser           iu
                                 ON iu.RegisterUserID = us.UsrIdUser
                         WHERE iu.Username = @UserName
                               AND iu.IdUser = @UserCode
-                              AND iu.RowStatus = 1;
+                              AND iu.RowStatus = 1
+                              AND rua.RuaRowStatus = 1
+                              AND rms.RmsRowStatus = 1
+                              AND cmo.ModRowStatus = 1
+                              AND cmo.ModVisible = 1
+                              AND cmo.ModIdModuleParent IS NULL
+                              AND cmo.ModIdModule IN
+                                                    (
+                                                     SELECT ModIdModuleParent
+                                                       FROM DeliveryBackOffice.[dbo].CatModule
+                                                    );
 
                         SELECT @TOTALSUBMODULES = COUNT(ModIdModule)
                         FROM @TBSUBMODULES;
 
                     END;
                     /*INSERT SUBMODULES*/
+					DECLARE @MININDEXSUBITEM2 INT= 0
                     WHILE @TOTALSUBMODULES > 0
                     BEGIN
                         DECLARE @CHILDSMD    VARCHAR(MAX) = ''
@@ -266,7 +268,7 @@ BEGIN
                           , ModIdModuleDAD INT
                           , ModIdModuleCHILD INT
                         );
-
+                       
                         --	IF (@VERIFYUSER  > 0 )
                         --BEGIN
 
@@ -285,15 +287,10 @@ BEGIN
                         FROM RegisterUser                                  us
                             INNER JOIN [dbo].[RolByUserByAccount]          rua
                                 ON rua.RuaIdUser = us.UsrIdUser
-                                   AND rua.RuaRowStatus = 1
                             INNER JOIN dbo.RolByModuleBySystem             rms
                                 ON rms.RmsIdRol = rua.RuaIdRol
-                                   AND rms.RmsRowStatus = 1
                             INNER JOIN [dbo].CatModule                     cmo
                                 ON cmo.ModIdModule = rms.RmsIdModule
-                                   AND cmo.ModRowStatus = 1
-                                   AND cmo.ModVisible = 1
-                            -- AND 
                             INNER JOIN [dbo].CatRol                        rol
                                 ON rol.RolIdRol = rms.RmsIdRol
                             INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
@@ -301,6 +298,10 @@ BEGIN
                         WHERE iu.Username = @UserName
                               AND iu.IdUser = @UserCode
                               AND iu.RowStatus = 1 --order by cmo.ModOrder
+                              AND rua.RuaRowStatus = 1
+                              AND cmo.ModRowStatus = 1
+                              AND cmo.ModVisible = 1
+                              AND rms.RmsRowStatus = 1
                               AND cmo.ModIdModuleParent =
                               (
                                   SELECT TMP.ModIdModule
@@ -333,11 +334,12 @@ BEGIN
 
                         --	END
 
-                        SELECT @CHILDSMENU = COUNT(1)
+                        SELECT @CHILDSMENU = COUNT(1)+@MININDEXSUBITEM2
                         FROM @TBSUBMODULES2;
 						 PRINT '@CHILDSMENU';
                         PRINT @CHILDSMENU;
-                        WHILE @CHILDSMENU > 0
+						SET @CHILDSMD=''
+                        WHILE @CHILDSMENU > @MININDEXSUBITEM2
                         BEGIN
                             SELECT @CHILDSMD
                                 = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",'
@@ -357,7 +359,7 @@ BEGIN
                             (
                                 SELECT TMP.ModIdModuleCHILD
                                 FROM @TBSUBMODULES2 AS TMP
-                                WHERE TMP.ITERATOR2 = @CHILDSMENU2
+                                WHERE TMP.ITERATOR2 = @CHILDSMENU2+@MININDEXSUBITEM2
                             );
 
                             SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
@@ -372,6 +374,8 @@ BEGIN
                         WHERE ITERATOR = @ITERATORSUBMODULES;
                         SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
                         SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
+						SET @MININDEXSUBITEM2= (SELECT MAX(ITERATOR2) AS UltimoID FROM @TBSUBMODULES2);														
+						DELETE FROM @TBSUBMODULES2;                        
                     END;
 
                     /*END SUBMODULOES*/
@@ -392,15 +396,10 @@ BEGIN
                                             FROM RegisterUser                                  us
                                                 INNER JOIN [dbo].[RolByUserByAccount]          rua
                                                     ON rua.RuaIdUser = us.UsrIdUser
-                                                       AND rua.RuaRowStatus = 1
                                                 INNER JOIN dbo.RolByModuleBySystem             rms
                                                     ON rms.RmsIdRol = rua.RuaIdRol
-                                                       AND rms.RmsRowStatus = 1
                                                 INNER JOIN [dbo].CatModule                     cmo
                                                     ON cmo.ModIdModule = rms.RmsIdModule
-                                                       AND cmo.ModRowStatus = 1
-                                                       AND cmo.ModVisible = 1
-                                                       AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
                                                 INNER JOIN [dbo].CatRol                        rol
                                                     ON rol.RolIdRol = rms.RmsIdRol
                                                 LEFT JOIN @TBSUBMODULES                        TMP
@@ -409,6 +408,11 @@ BEGIN
                                                     ON iu.RegisterUserID = us.UsrIdUser
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
+                                                  AND rua.RuaRowStatus = 1
+                                                  AND rms.RmsRowStatus = 1
+                                                  AND cmo.ModRowStatus = 1
+                                                  AND cmo.ModVisible = 1
+                                                  AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
                                             ORDER BY cmo.ModOrder
                                             FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)')
@@ -433,21 +437,21 @@ BEGIN
                                             FROM DeliveryBackOffice.dbo.RegisterUser                   us
                                                 INNER JOIN DeliveryBackOffice.dbo.Person               pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
-                                                       AND pe.PerRowStatus = 1
                                                 INNER JOIN DeliveryBackOffice.dbo.[RolByUserByAccount] rua
                                                     ON rua.RuaIdUser = us.UsrIdUser
-                                                       AND rua.RuaRowStatus = 1
                                                 INNER JOIN DeliveryBackOffice.dbo.CatRol               ro
                                                     ON ro.RolIdRol = rua.RuaIdRol
                                                 INNER JOIN DeliveryBackOffice.dbo.Account              ac
                                                     ON ac.AccIdAccount = rua.RuaIdAccount
-                                                       AND ac.AccRowStatus = 1
                                                 INNER JOIN DeliveryBackOffice.dbo.CatTypeAccount       ta
                                                     ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
                                                 INNER JOIN DeliveryBackOffice.dbo.InternalUser         iu
                                                     ON iu.RegisterUserID = UsrIdUser
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
+                                                  AND ac.AccRowStatus = 1
+                                                  AND rua.RuaRowStatus = 1
+                                                  AND pe.PerRowStatus = 1
                                                   AND iu.RowStatus = 1
                                             FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)')
@@ -508,11 +512,11 @@ BEGIN
                                             FROM DeliveryBackOffice.dbo.RegisterUser           us
                                                 INNER JOIN DeliveryBackOffice.dbo.Person       pe
                                                     ON pe.PerIdPerson = us.UsrIdPerson
-                                                       AND pe.PerRowStatus = 1
                                                 INNER JOIN DeliveryBackOffice.dbo.InternalUser iu
                                                     ON iu.RegisterUserID = us.UsrIdUser
                                             WHERE iu.Username = @UserName
                                                   AND iu.IdUser = @UserCode
+                                                  AND pe.PerRowStatus = 1
                                                   AND iu.RowStatus = 1
                                             FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)')
@@ -607,14 +611,13 @@ BEGIN
                                                      , +'"DPI":"' + ISNULL(cu.[LegalSponsorDPI], '') + '"' 
                                                      + '}]' + '}'
                                                 FROM DeliveryBackOffice.dbo.InternalUser                     iu
-                                                    JOIN DeliveryBackOffice.dbo.RegisterUser                 ru
+                                                    INNER JOIN DeliveryBackOffice.dbo.RegisterUser                 ru
                                                         ON ru.UsrIdUser = iu.RegisterUserID
-                                                           AND ru.UsrRowStatus = 1
-                                                    JOIN DeliveryBackOffice.dbo.RolByUserByAccount           rua
+                                                    INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount           rua
                                                         ON rua.RuaIdUser = ru.UsrIdUser
-                                                    JOIN DeliveryBackOffice.dbo.Account                      ac
+                                                    INNER JOIN DeliveryBackOffice.dbo.Account                      ac
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
-                                                    JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc
+                                                    INNER JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc
                                                         ON vpc.CustomerID = ac.IdCustomer
                                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
                                                         ON vpc.CustomerID = RC.RbcIdCustomer
@@ -647,6 +650,7 @@ BEGIN
                                                         ON ccp.IdConditionOfPayment = cu.ConditionOfPaymentID
                                                     LEFT JOIN DeliveryBackOffice.dbo.VisitPointByUser        vpu
                                                         ON vpu.RegisterUserID = ru.UsrIdUser
+                                                       AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
                                                     -- Configuración del punto de visita
                                                     LEFT JOIN DeliveryBackOffice.dbo.VisitPointConfiguration vpconf
                                                         ON vpc.CodeOfReference = vpconf.VisitPointID
@@ -656,7 +660,7 @@ BEGIN
                                                         ON vpconf.CODAccountBankID = dbkconf.Id_bank
                                                 WHERE iu.Username = @UserName
                                                       AND iu.IdUser = @UserCode
-                                                      AND vpu.IdVisitPointClient = vpc.IdVisitPointClient
+                                                      AND ru.UsrRowStatus = 1
                                                 FOR XML PATH(''), TYPE
                                             ).value('.', 'varchar(max)')
                                           , 1
@@ -819,5 +823,4 @@ BEGIN
 
     -- retornar resultado en formato json
 
-    SELECT ('[{' + @jsonResult + ']') jsonResult;
-END;
+    SELECT ('[{' + @jsonResult + ']') jsonRe

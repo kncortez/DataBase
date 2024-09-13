@@ -324,7 +324,7 @@ BEGIN
 					SELECT
 						(
 							CASE
-								WHEN @ValueType = 'Porcentaje'  THEN 
+								WHEN @ValueType = 'Porcentaje' THEN 
 									CASE
 										WHEN @DiscountType = 'TOT' THEN
 											@AmountCollect - ROUND(((@AmountCollect * @PromoValue) / 100), 1)

@@ -29,23 +29,23 @@ BEGIN
 	FROM dbo.VisitPointItinerary TT WITH(NOLOCK)
 	INNER JOIN dbo.VisitPointFrequency FQ WITH(NOLOCK)
 		ON FQ.IdVPFrequency = TT.VPFrequencyID
-			AND FQ.RowStatus = 'true'
 	INNER JOIN dbo.VisitPointConfiguration CF WITH(NOLOCK)
 		ON CF.IdVPConfiguration = FQ.VPConfigurationID
-			AND CF.RowStatus = 'true'
 	INNER JOIN dbo.VisitPointClient VP WITH(NOLOCK)
 		ON VP.CodeOfReference = CF.VisitPointId
-			AND VP.StatusClient = 'true'
 	INNER JOIN dbo.Customer CS WITH(NOLOCK)
 		ON CS.IdCustomer = VP.CustomerID
-			AND CS.RowSatus = 'true'
 	LEFT JOIN dbo.CatRoute RT WITH(NOLOCK)
 		ON RT.IdRoute = TT.RouteCodeID
 	WHERE TT.DayOfVisit = @DayOfVisit
 	AND TT.RowStatus = 'TRUE'
 	AND RT.IdRoute = @IdRoute
-	AND TT.InitializationTimeOfVisit IS NOT NULL AND TT.InitializationTimeOfVisit NOT IN ('__:__','0','',' ')
-	AND TT.FinalizationTimeOfVisit IS NOT NULL AND TT.FinalizationTimeOfVisit NOT IN ('__:__','0','',' ')
+    AND FQ.RowStatus = 'true'
+    AND CF.RowStatus = 'true'
+    AND VP.StatusClient = 'true'
+    AND CS.RowSatus = 'true'
+    AND TT.InitializationTimeOfVisit IS NOT NULL AND TT.InitializationTimeOfVisit NOT IN ('__:__','0','',' ')
+    AND TT.FinalizationTimeOfVisit IS NOT NULL AND TT.FinalizationTimeOfVisit NOT IN ('__:__','0','',' ')
     AND IIF(VP.CountryId IS NULL, 'GT', VP.CountryId) = @IdCountry
-	ORDER BY TT.InitializationTimeOfVisit, TT.FinalizationTimeOfVisit, CS.IdCustomer, vp.CodeOfReference, RT.IdRoute
+    ORDER BY TT.InitializationTimeOfVisit, TT.FinalizationTimeOfVisit, CS.IdCustomer, vp.CodeOfReference, RT.IdRoute
 END

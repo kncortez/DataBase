@@ -113,6 +113,7 @@ BEGIN
 	        CP.IdCatSubscription [IdCatProduct] ,
 	        CP.SubscriptionName [CatProductName],
 			CONVERT(DECIMAL(18,2),CP.[SubscriptionCost]) [CatProductCost],
+			CC.Symbol AS CurrencySymbol, 
 			CP.SubscriptionDescription [CatProductDescription],
 			MPT.[MarketplaceProductTagsName],
 			MPT.[MarketplaceProductTagsDescription],
@@ -123,6 +124,8 @@ BEGIN
 	  on MPT.IdMarketplaceProductTags=MTP.MarketplaceProductTagsId
 	  INNER JOIN  [dbo].[CatSubscription] CP WITH (NOLOCK)
 	  on MTP.CatSubscriptionId = CP.IdCatSubscription
+	  INNER JOIN CatCurrencyCOD CC WITH(NOLOCK)
+	  ON CP.IdCatCurrencyCOD = CC.IdCatCurrencyCOD
 	WHERE CP.RowStatus = 1 AND ISNULL(CP.IdCountry,'GT') = @IdCountry
 	UNION ALL
 	Select 
@@ -130,6 +133,7 @@ BEGIN
 	        CP.IdCatMembership [IdCatProduct] ,
 	        CP.MembershipName [CatProductName],
 			CONVERT(DECIMAL(18,2),CP.[MembershipCost]) [CatProductCost],
+			CC.Symbol AS CurrencySymbol, 
 			CP.MembershipDescription [CatProductDescription],
 			MPT.[MarketplaceProductTagsName],
 			MPT.[MarketplaceProductTagsDescription],
@@ -141,6 +145,8 @@ BEGIN
 	  ON CP.IdCatMembership = MTP.CatMembershipId
 	  INNER JOIN DeliveryBackOffice.[dbo].[MarketplaceProductTags] MPT WITH (NOLOCK)
 	  ON MTP.MarketplaceProductTagsId = MPT.IdMarketplaceProductTags
+	  INNER JOIN CatCurrencyCOD CC WITH(NOLOCK)
+	  ON CP.IdCatCurrencyCOD = CC.IdCatCurrencyCOD
 	 WHERE CP.RowStatus=1 AND ISNULL(CP.IdCountry,'GT') = @IdCountry
 	 ORDER BY MTP.[Position] ASC
 

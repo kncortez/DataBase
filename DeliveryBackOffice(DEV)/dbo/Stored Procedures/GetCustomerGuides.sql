@@ -33,13 +33,13 @@ BEGIN
     IF OBJECT_ID('tempdb.dbo.#AccountFilteredGuides', 'U') IS NOT NULL DROP TABLE #AccountFilteredGuides;
 
 	DECLARE @NotStartCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint inicial');
-	DECLARE @InProgessCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de proceso' );
-	DECLARE @CompletedCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final' );
+	DECLARE @InProgessCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de proceso');
+	DECLARE @CompletedCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final');
 	DECLARE @IncidenceCheckpontTypeId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia');
 
 	DECLARE @CanceledStatusOrderId INT = (SELECT TOP 1 SO.StatusOrderId FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH(NOLOCK) WHERE SO.OrderDescription = 'Anulado');
 
-	DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora' )
+	DECLARE @InmediatePaymentTime INT = (SELECT TOP 1 CPT.TimePlaId FROM [DeliveryBackOffice].[dbo].[CatPaymentTime] CPT WITH(NOLOCK) WHERE CPT.TimePlaName = 'Ahora')
 
 	-- Configuraciones generales
 	DECLARE @OffsetRegistries BIGINT = @DisplayPage * @DisplayRegistries;
@@ -61,7 +61,7 @@ BEGIN
 				FROM
 					[DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
 				WHERE
-					CST.StatusType = 'Externo' 
+					CST.StatusType = 'Externo'
 			)
 	-- Obtener datos de usuario
 	SELECT
@@ -73,9 +73,7 @@ BEGIN
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
 			ON
-				Acc.IdCustomer = Cu.IdCustomer
-				AND
-				ISNULL(Cu.RowSatus,1) = 1
+				Acc.IdCustomer = Cu.IdCustomer				
 		LEFT JOIN
 			[DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
 			ON
@@ -98,6 +96,8 @@ BEGIN
 		Acc.AccIdAccount = @AccountId
 		AND
 		Acc.AccRowStatus = 1
+		AND
+		ISNULL(Cu.RowSatus,1) = 1
 
 	-- Ingreso de filtros de estado
 	INSERT INTO @FilteredStatus
@@ -186,15 +186,15 @@ BEGIN
 						INNER JOIN
 							[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 							ON
-								[SO].[StatusOrderId] = [DOD].[StatusOrderId]
-								AND
-								[SO].[CatStatusTypeId] = @ExternalTypeId
+								[SO].[StatusOrderId] = [DOD].[StatusOrderId]								
 					WHERE
 						DOD.[Guide_Serie] = DO.[Guide_Serie]
 						AND
 						DOD.[Guide_Number] = DO.[Guide_Number]
 						AND
 						DOD.[RowStatus] = 1
+						AND
+						[SO].[CatStatusTypeId] = @ExternalTypeId
 					ORDER BY
 						DOD.[DateCreated] DESC
 				) LastExternalStatus

@@ -19,6 +19,9 @@ CREATE TABLE [dbo].[InvoiceBatchDetail]
 );
 
 GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Facturas Pendiente de envió de correo a las cuales se les a asigando un lote previamente', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchDetail';
+
+GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Factura ya procesada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'InvoiceBatchDetail', @level2type = N'COLUMN', @level2name = N'ProcessedCorrelative';
 
 GO

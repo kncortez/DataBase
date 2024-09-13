@@ -44,7 +44,7 @@ BEGIN
 
 	SELECT TOP 1 @StatusOrder = so.StatusOrderId
 	FROM [DeliveryBackOffice].[dbo].[StatusOrder] so WITH(NOLOCK) 
-	WHERE so.OrderDescription = 'Programado para entrega' 
+	WHERE so.OrderDescription = 'Programado para entrega' COLLATE Latin1_General_CI_AI
 	
 	-- Obtener asignaci�n de ruta
 	SET @RouteAssigmentId = (SELECT TOP 1 IdRouteAssigment FROM DeliveryBackOffice.dbo.RouteAssigment RA WITH(NOLOCK) WHERE RA.IdRoute = @IdRoute AND RA.DateOfRoute = @DateRoute AND RA.RowStatus = 1);
@@ -85,7 +85,7 @@ BEGIN
 	BEGIN
 
 		--- Es devoluci�n
-		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Devoluci�n' COLLATE Latin1_General_CI_AI)
+		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Devolución' COLLATE Latin1_General_CI_AI)
 
 		-- Obtener servicio activo de la gu�a
 		SELECT 
@@ -177,7 +177,7 @@ BEGIN
 				,1
 				,@Token
 				,GETDATE()
-				,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' )
+				,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado')
 				,@subtypeservicemanagment
 				,1
 				,0
@@ -194,7 +194,7 @@ BEGIN
 			VALUES
 				(
 					(SELECT TOP 1 ISM.IdServiceManagement FROM @InsertedServiceManagement ISM)
-					,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado' )
+					,(SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].dbo.CatServiceStatus CSS WHERE CSS.[Name] = 'Creado')
 					,1
 					,@Token
 					,GETDATE()
@@ -260,7 +260,7 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
 					ON
-						DSC.Hub = HL.HubAbbreviation 
+						DSC.Hub = HL.HubAbbreviation
 			WHERE
 				DO.Guide_Serie = @GuideSerie
 				AND
@@ -301,7 +301,7 @@ BEGIN
 	BEGIN
 
 		--- Es entrega
-		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Entrega' )
+		SET @subtypeservicemanagment = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM DeliveryBackOffice.dbo.SubTypeServiceManagment STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Entrega' COLLATE Latin1_General_CI_AI)
 		
 		SELECT 
 			TOP 1 
@@ -433,7 +433,7 @@ BEGIN
 				INNER JOIN
 					[DeliveryBackOffice].[dbo].[HubLogistics] HL WITH(NOLOCK)
 					ON
-						DSC.Hub = HL.HubAbbreviation 
+						DSC.Hub = HL.HubAbbreviation
 			WHERE
 				DO.Guide_Serie = @GuideSerie
 				AND

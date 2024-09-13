@@ -19,7 +19,7 @@ BEGIN
 	DECLARE @VoidedMembership INT
 
 	SET @AffiliateId = (SELECT TOP 1 RUBA.AffiliateId FROM [DeliveryBackOffice].[dbo].[RegisterUserByAffiliate] RUBA WITH(NOLOCK) WHERE RUBA.RegisterUserId = @UserId AND RUBA.RowStatus = 1)
-	SET @VoidedMembership = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Anulada' )
+	SET @VoidedMembership = (SELECT TOP 1 CSPS.IdCatSalesPackageStatus FROM [DeliveryBackOffice].[dbo].[CatSalesPackageStatus] CSPS WITH(NOLOCK) WHERE CSPS.SalesPackageStatusName = 'Anulada' COLLATE Latin1_General_CI_AI)
 	
 	DECLARE @MembershipData TABLE (
 		MembershipId INT,

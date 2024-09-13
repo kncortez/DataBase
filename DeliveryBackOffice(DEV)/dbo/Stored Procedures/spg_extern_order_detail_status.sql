@@ -22,7 +22,7 @@ BEGIN
                 SELECT TOP 1
                        CST.IdCatStatusType
                 FROM [DeliveryBackOffice].[dbo].[CatStatusType] CST WITH (NOLOCK)
-                WHERE CST.StatusType = 'Externo' 
+                WHERE CST.StatusType = 'Externo' COLLATE Latin1_General_CI_AI
             );
 
     DECLARE @GuideOrderTemp AS TABLE
@@ -318,9 +318,9 @@ BEGIN
                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
-                                   AND da.Delivered = 1
                         WHERE dp.Guide_Serie = @Guide_Serie
                               AND dp.Guide_Number = @Guide_Number
+                              AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
                     )
                     ELSE
@@ -336,9 +336,9 @@ BEGIN
                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
-                                   AND da.Delivered = 1
                         WHERE dp.Guide_Serie = @Guide_Serie
                               AND dp.Guide_Number = @Guide_Number
+                              AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
                     )
                     ELSE
@@ -417,7 +417,6 @@ BEGIN
         FROM DeliveryBackOffice.dbo.DeliveryOrderDetail   dod WITH (NOLOCK) --on do.[Guide_Serie] =  dod.Guide_Serie and do.[Guide_Number] = dod.Guide_Number
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
-                   AND so.CatStatusTypeId = @ExternalTypeId
             INNER JOIN [dbo].[CatCheckpointType]          CCT WITH (NOLOCK)
                 ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
             LEFT JOIN [dbo].[DeliveryAttempt]             da WITH (NOLOCK)
@@ -426,6 +425,7 @@ BEGIN
                 ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
+              AND so.CatStatusTypeId = @ExternalTypeId
     ) RES
     ORDER BY RES.[StageDate] DESC
            , RES.[EventID];

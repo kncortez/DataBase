@@ -96,10 +96,10 @@ BEGIN
         SET @TimeByCountry =
                 (
                     SELECT COUNT(Guide_Number)
-                    FROM DeliveryBackOffice.dbo.DeliveryOrderDetail
+                    FROM DeliveryBackOffice.dbo.DeliveryOrder
                     WHERE Guide_Serie = @Guide_Serie
                           AND Guide_Number = @Guide_Number
-                          AND IIF(SenderCountryId IS NULL, 'GT',SenderCountryId) = @IdCountry
+                          AND ISNULL(SenderCountryId, 'GT') = @IdCountry
                           
                 );
 
@@ -195,7 +195,7 @@ BEGIN
                                         SELECT TOP 1
                                                WT.IdWebhookType
                                         FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                        WHERE WT.WebhookName = 'GuideStatusChange' 
+                                        WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
                                               AND WT.RowStatus = 1
                                     );
 

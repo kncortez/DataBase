@@ -147,7 +147,7 @@ BEGIN
                    (
                        SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                        FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                           JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                           INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                ON do.Guide_Serie = pg.GuideSerie
                                   AND do.Guide_Number = pg.GuideNumber
                            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrderPaymentDetail DOPD
@@ -232,8 +232,7 @@ BEGIN
                 Guide_Serie NVARCHAR(2),
                 Guide_Number INT
             );
-            CREATE NONCLUSTERED INDEX tempSerie ON #listGuides (Guide_Serie);
-            CREATE NONCLUSTERED INDEX tempGuide ON #listGuides (Guide_Number);
+            CREATE NONCLUSTERED INDEX tempGuides ON #listGuides (Guide_Serie, Guide_Number);            
             CREATE TABLE #RevalueGuides
             (
                 fila INT,
@@ -293,7 +292,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #listGuides lst
-                JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
@@ -442,7 +441,7 @@ BEGIN
 
             INTO #TableAmountCOD
             FROM #listGuides lst
-                JOIN dbo.DeliveryOrder ord
+                INNER JOIN dbo.DeliveryOrder ord
                     ON ord.Guide_Serie = lst.Guide_Serie
                        AND ord.Guide_Number = lst.Guide_Number
                 LEFT JOIN dbo.VisitPointClient vpc
@@ -756,7 +755,9 @@ BEGIN
                            DiscountPrice,
 						   @IdCountrySender
                     FROM #TableForzaPaymentTemp tfpt
-					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) 
+                        ON c.GuideSerie = tfpt.GuideSerie
+                        AND c.GuideNumber = tfpt.GuideNumber
                     WHERE NOT EXISTS
                     (
                         SELECT 1

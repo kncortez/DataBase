@@ -22,7 +22,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'   
+			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressCenterKindVisitPoint INT = 
 	(
@@ -32,7 +32,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'   
+			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ParserSystemId INT =
 	(
@@ -42,7 +42,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser' 
+			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
 	)
 
 	-- Manejo de fechas

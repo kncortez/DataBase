@@ -4,14 +4,21 @@
 -- Create date: <17-04-2023>
 -- Description:	< Función para determinar tiempo estimado de entrega de una guía basado en hub de origen y destino >
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Create date: <29-08-2024>
+-- Description:	< Se agrega campos de país y cambios necesarios para soportar multipaís.>
+-- =============================================
 CREATE FUNCTION  [dbo].[fn_GetGuideDeliveryETA]
 (
 	@OriginProvince NVARCHAR(200),
 	@OriginTownship NVARCHAR(200) = NULL,
 	@OriginTownshipInputId INT = NULL,
+	@OriginCountry NVARCHAR(2) = 'GT',
 	@DestinyProvince NVARCHAR(200),
 	@DestinyTownship NVARCHAR(200) = NULL,
 	@DestinyTownshipInputId INT = NULL,
+	@DestinyCountry NVARCHAR(2) = 'GT',
 	@StartDate DATETIME = NULL
 )
 RETURNS DATE
@@ -58,7 +65,7 @@ BEGIN
 				AND
 				[HL].[HubStatus] = 1
 	WHERE
-		DSC.[RowStatus] = 1
+		DSC.[RowStatus] = 1 AND [HL].[IdCountry] = @OriginCountry
 	GROUP BY
 		[DSC].[HeaderCode]
 
@@ -92,9 +99,11 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 		WHERE
-			[Prv].[ProvinceName] = @OriginProvince 
+			[Prv].[ProvinceName] = @OriginProvince  COLLATE Latin1_General_CI_AI 
 			AND
 			[Prv].[ProvinceStatus] = 1
+			AND
+			[Prv].[IdCountry]= @OriginCountry
 		ORDER BY
 			[Prv].[DateCreated] DESC
 	)
@@ -107,9 +116,11 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 		WHERE
-			[Prv].[ProvinceName] = @DestinyProvince 
+			[Prv].[ProvinceName] = @DestinyProvince  COLLATE Latin1_General_CI_AI 
 			AND
 			[Prv].[ProvinceStatus] = 1
+			AND
+			[Prv].[IdCountry]= @DestinyCountry
 		ORDER BY
 			[Prv].[DateCreated] DESC
 	)
@@ -125,12 +136,16 @@ BEGIN
 					[Twn].[IdTownship] 
 			FROM 
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
 				[Twn].[TownshipName] = @OriginTownship  COLLATE Latin1_General_CI_AI 
 				AND
 				[Twn].[IdProvince] = @OriginProvinceId
 				AND
 				[Twn].[TownshipStatus] = 1
+				AND
+				[Prv].[IdCountry] = @OriginCountry
 			ORDER BY
 				[Twn].[DateCreated] DESC
 		)
@@ -144,12 +159,16 @@ BEGIN
 					[Twn].[IdTownship] 
 			FROM 
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
 				[Twn].[IdTownship] =  @OriginTownshipInputId
 				AND
-				[Twn].[IdProvince] = @DestinyProvinceId
+				[Twn].[IdProvince] = @OriginProvinceId
 				AND
 				[Twn].[TownshipStatus] = 1
+				AND
+				[Prv].[IdCountry] = @OriginCountry
 			ORDER BY
 				[Twn].[DateCreated] DESC
 		)
@@ -164,12 +183,16 @@ BEGIN
 					[Twn].[IdTownship] 
 			FROM 
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
 				[Twn].[TownshipName] = @DestinyTownship  COLLATE Latin1_General_CI_AI 
 				AND
 				[Twn].[IdProvince] = @DestinyProvinceId
 				AND
 				[Twn].[TownshipStatus] = 1
+				AND
+				[Prv].[IdCountry] = @DestinyCountry
 			ORDER BY
 				[Twn].[DateCreated] DESC
 		)
@@ -183,12 +206,16 @@ BEGIN
 					[Twn].[IdTownship] 
 			FROM 
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
 				[Twn].[IdTownship] =  @DestinyTownshipInputId
 				AND
 				[Twn].[IdProvince] = @DestinyProvinceId
 				AND
 				[Twn].[TownshipStatus] = 1
+				AND
+				[Prv].[IdCountry] = @DestinyCountry
 			ORDER BY
 				[Twn].[DateCreated] DESC
 		)
@@ -211,6 +238,8 @@ BEGIN
 					[Twn].[IdTownship] 
 			FROM 
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+				INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
 				-- Cabeceras tienen codigo XX01
 				[Twn].[HeaderCode] LIKE '%01'
@@ -218,6 +247,8 @@ BEGIN
 				[Twn].[IdProvince] = @OriginProvinceId
 				AND
 				[Twn].[TownshipStatus] = 1
+				AND
+				[Prv].[IdCountry] = @OriginCountry
 			ORDER BY
 				[Twn].[DateCreated] DESC
 		)
@@ -232,6 +263,8 @@ BEGIN
 					[Twn].[IdTownship] 
 			FROM 
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 			WHERE
 				-- Cabeceras tienen codigo XX01
 				[Twn].[HeaderCode] LIKE '%01'
@@ -239,6 +272,8 @@ BEGIN
 				[Twn].[IdProvince] = @DestinyProvinceId
 				AND
 				[Twn].[TownshipStatus] = 1
+				AND
+				[Prv].[IdCountry] = @DestinyCountry
 			ORDER BY
 				[Twn].[DateCreated] DESC
 		)
@@ -257,8 +292,12 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
 				ON
 					[TCBH].[CoverageHeaderCode] = [Twn].[HeaderCode]
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 		WHERE
 			[Twn].[IdTownship] = @OriginTownshipId
+			AND
+			[Prv].[IdCountry] = @OriginCountry
 	)
 	-- Obtener hub de destino
 	SET @DestinyCoverageHub =
@@ -272,8 +311,12 @@ BEGIN
 				[DeliveryBackOffice].[dbo].[Township] Twn  WITH(NOLOCK) 
 				ON
 					[TCBH].[CoverageHeaderCode] = [Twn].[HeaderCode]
+			INNER JOIN [DeliveryBackOffice].[dbo].[Province] Prv WITH(NOLOCK) 
+					ON [Twn].[IdProvince] = [Prv].[IdProvince]
 		WHERE
 			[Twn].[IdTownship] = @DestinyTownshipId
+			AND
+			[Prv].[IdCountry] = @DestinyCountry
 	)
 
 	--SELECT 
@@ -315,7 +358,7 @@ BEGIN
 	WHILE (ISNULL(@ValidDate, 0) = 0 AND @ResultDate IS NOT NULL)
 	BEGIN
 
-		IF ( EXISTS (SELECT [NLC].[NoLaborDate] FROM [DeliveryBackOffice].[dbo].[NoLaborCalendar] NLC  WITH(NOLOCK) WHERE [NLC].[NoLaborDate] = @ResultDate AND [NLC].[RowStatus] = 1) )
+		IF ( EXISTS (SELECT [NLC].[NoLaborDate] FROM [DeliveryBackOffice].[dbo].[NoLaborCalendar] NLC  WITH(NOLOCK) WHERE [NLC].[NoLaborDate] = @ResultDate AND [NLC].[RowStatus] = 1 AND [NLC].[IdCountry] = @OriginCountry) )
 		BEGIN
 
 			SET @ResultDate = CAST(DATEADD(DAY, 1, ISNULL(@ResultDate, GETDATE())) AS DATE)

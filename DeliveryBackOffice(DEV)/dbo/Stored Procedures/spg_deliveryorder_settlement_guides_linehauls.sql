@@ -82,16 +82,16 @@ BEGIN
     FROM DeliveryBackOffice.dbo.ServiceManagement sm WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH (NOLOCK)
             ON sm.IdServiceManagement = pbs.ServiceManagmentId
+            AND pbs.ServiceManagmentId = sm.IdServiceManagement
         INNER JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp WITH (NOLOCK)
-            ON sbp.SequenceCode = @IdManifest
-               AND sbp.ServiceManagmentId = sm.IdServiceManagement
-               AND sbp.SubTypeServiceManagmentId = 4
+            ON sbp.ServiceManagmentId = sm.IdServiceManagement
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece PC WITH (NOLOCK)
             ON pbs.GuidePieceId = PC.GuidePiece
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
             ON DO.Guide_Serie = PC.GuideSerie
                AND DO.Guide_Number = PC.GuideNumber
-    WHERE pbs.ServiceManagmentId = sm.IdServiceManagement;
+    WHERE sbp.SubTypeServiceManagmentId = 4
+      AND sbp.SequenceCode = @IdManifest;
 
     SELECT Tmp.Guide_Code,
            Tmp.Pieces_Cold,

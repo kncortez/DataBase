@@ -36,14 +36,14 @@ BEGIN
 		IdContentDescriptionTag BIGINT
 	)
 
-	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' )
+	IF ( @ContentTypeName = 'TutorialesYPreguntasFrecuentes' COLLATE Latin1_General_CI_AI )
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' ) )
-			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' ) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Preguntas frecuentes' COLLATE Latin1_General_CI_AI) )
+			, ( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Tutoriales' COLLATE Latin1_General_CI_AI) )
 
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
@@ -61,12 +61,9 @@ BEGIN
 			CD.IdContentDetail
 		FROM
 			[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentTitle FCT
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+			INNER JOIN @FilteredContentTitle FCT
+				ON CD.ContentTitleId = FCT.IdContentTitle
+		WHERE CD.RowStatus = 1
 
 		-- Tags a tomar para titulo
 		INSERT INTO @FilteredContentTags
@@ -78,16 +75,12 @@ BEGIN
 			@FilteredContentTitle FCT
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetailByTag] CDBT WITH(NOLOCK)
-				ON
-					CD.IdContentDetail = CDBT.ContentDetailId
-					AND
-					CDBT.RowStatus = 1
+				ON CD.IdContentDetail = CDBT.ContentDetailId
+         WHERE CD.RowStatus = 1
+           AND CDBT.RowStatus = 1
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @FilteredContentTitle) AND EXISTS (SELECT TOP 1 1 FROM @FilteredContentDescription))
 		BEGIN
@@ -179,13 +172,13 @@ BEGIN
 		END
 
 	END
-	ELSE IF ( @ContentTypeName = 'ListasColapsadas'  )
+	ELSE IF ( @ContentTypeName = 'ListasColapsadas' COLLATE Latin1_General_CI_AI )
 	BEGIN
 
 		INSERT INTO @FilteredContentType
 			(IdContentType)
 		VALUES
-			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' ) )
+			( (SELECT TOP 1 CTC.IdCatTypeContent FROM [DeliveryBackOffice].[dbo].[CatTypeContent] CTC WITH(NOLOCK) WHERE CTC.CatTypeContentName = 'Informativo' COLLATE Latin1_General_CI_AI) )
 	
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
@@ -205,10 +198,8 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 			INNER JOIN
 				@FilteredContentTitle FCT
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
+		WHERE CD.RowStatus = 1
 
 		-- Tags a tomar para titulo
 		INSERT INTO @FilteredContentTags
@@ -220,16 +211,12 @@ BEGIN
 			@FilteredContentTitle FCT
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetailByTag] CDBT WITH(NOLOCK)
-				ON
-					CD.IdContentDetail = CDBT.ContentDetailId
-					AND
-					CDBT.RowStatus = 1
+				ON CD.IdContentDetail = CDBT.ContentDetailId
+        WHERE CD.RowStatus = 1
+          AND CDBT.RowStatus = 1
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @FilteredContentTitle) AND EXISTS (SELECT TOP 1 1 FROM @FilteredContentDescription))
 		BEGIN

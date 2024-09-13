@@ -25,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatContainerSubtype] CCS  WITH(NOLOCK) 
 		WHERE
-			[CCS].ContainerSubtypeName = 'CAJA' 
+			[CCS].ContainerSubtypeName = 'CAJA'
 	);
 	DECLARE @SubtypeFloorContainer BIGINT = 
 	(
@@ -35,7 +35,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[CatContainerSubtype] CCS  WITH(NOLOCK) 
 		WHERE
-			[CCS].ContainerSubtypeName = 'PISO' 
+			[CCS].ContainerSubtypeName = 'PISO'  
 	);
 
     -- Insert statements for procedure here
@@ -48,10 +48,10 @@ BEGIN
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN Container c WITH (NOLOCK)
 				ON lrpc.ContainerId = c.IdContainer
-				AND c.RowStatus = 1
 			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
+            AND c.RowStatus = 1
 			AND ctc.[SubtypeContainerId] = @SubtypeBoxContainer
 			AND lrpc.RowStatus = 1)
 		, 0)
@@ -61,10 +61,10 @@ BEGIN
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN Container c WITH (NOLOCK)
 				ON lrpc.ContainerId = c.IdContainer
-				AND c.RowStatus = 1
 			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
+            AND c.RowStatus = 1
 			AND ctc.[SubtypeContainerId] = @SubtypeBoxContainer
 			AND lrpc.RowStatus = 1)
 		, 0)
@@ -74,10 +74,10 @@ BEGIN
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN Container c WITH (NOLOCK)
 				ON lrpc.ContainerId = c.IdContainer
-				AND c.RowStatus = 1
 			INNER JOIN CatTypeContainer ctc WITH (NOLOCK)
 				ON ctc.IdCatTypeContainer = c.CatTypeContainerId
 			WHERE lrpc.LinehaulRoutePreparationId = lrp.IdLinehaulRoutePreparation
+            AND c.RowStatus = 1
 			AND ctc.[SubtypeContainerId] = @SubtypeFloorContainer
 			AND lrpc.RowStatus = 1)
 		, 0)
@@ -92,9 +92,8 @@ BEGIN
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 				ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
-				AND lrpc.RowStatus = 1
 			WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
-			AND lrpc.RowStatus = 1
+            AND lrpc.RowStatus = 1
 			ORDER BY lrpcd.DateCreated)
 		, lrp.DateCreated), 'dd/MM/yyyy hh:mm tt') DateCreated
 	   ,FORMAT(ISNULL(lrp.[EndDateLinehaulRoutePreparation]
@@ -103,7 +102,6 @@ BEGIN
 			FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 			INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 				ON lrpc.IdLinehaulRoutePreparationContainer = lrpcd.LinehaulRoutePreparationContainerId
-				AND lrpc.RowStatus = 1
 			WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
 			AND lrpc.RowStatus = 1
 			ORDER BY lrpcd.DateCreated DESC)), 'dd/MM/yyyy hh:mm tt') DateRoutePreparation
@@ -125,8 +123,7 @@ BEGIN
 	LEFT JOIN [dbo].[LinehaulRouteSettlement] lrs  WITH(NOLOCK) 
 		ON [lrs].[LinehaulRoutePreparationId] = [lrp].[IdLinehaulRoutePreparation]
 	WHERE lrp.IdLinehaulRoutePreparation = @IdLinehaulRoutePreparation
-	AND lrp.RowStatus = 1
-	AND IIF(hl.IdCountry IS NULL, 'GT', hl.IdCountry)= @IdCountry
+	AND lrp.RowStatus = 1	
 
 	-- Table 1 Detalle manifiesto
 	SELECT 
@@ -195,7 +192,6 @@ BEGIN
 					FROM LinehaulRoutePreparationContainer lrpc WITH (NOLOCK)
 					INNER JOIN LinehaulRoutePreparationContainerDetail lrpcd WITH (NOLOCK)
 						ON lrpcd.LinehaulRoutePreparationContainerId = lrpc.IdLinehaulRoutePreparationContainer
-							AND lrpcd.RowStatus = 1
 					INNER JOIN Container c WITH (NOLOCK)
 						ON c.IdContainer = lrpc.ContainerId
 					INNER JOIN HubLogistics hl WITH (NOLOCK)
@@ -211,7 +207,8 @@ BEGIN
 							AND ad.RowStatus = 1
 					WHERE lrpc.LinehaulRoutePreparationId = @IdLinehaulRoutePreparation
 					AND lrpc.RowStatus = 1
-					AND IIF(hl.IdCountry IS NULL, 'GT', hl.IdCountry)= @IdCountry
+                    AND lrpcd.RowStatus = 1
+					AND ISNULL(hl.IdCountry, 'GT') = @IdCountry
 					ORDER BY hl.HubName
 				) DispatchedLienahul
 			UNION
@@ -270,37 +267,27 @@ BEGIN
 								[dbo].[LinehaulRoutePreparationContainer] LRPC  WITH(NOLOCK) 
 								ON
 									[LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
-									AND
-									[LRPC].[RowStatus] = 1
 							INNER JOIN
 								[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD  WITH(NOLOCK) 
 								ON
 									[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-									AND
-									[LRPCD].[RowStatus] =1
 							-- Revisar liquidación por guías adicionales, se debe validar datos de despacho con datos de liquidación para solo mostrar datos adicionales
 							INNER JOIN
 								[dbo].[LinehaulRouteSettlement] LRS  WITH(NOLOCK) 
 								ON
 									[LRS].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
-									AND
-									[LRS].[RowStatus] = 1
 							INNER JOIN
 								[dbo].[LinehaulRouteSettlementContainer] LRSC  WITH(NOLOCK) 
 								ON
 									[LRSC].[LinehaulRouteSettlementId] = [LRS].[IdLinehaulRouteSettlement]
 									AND
 									[LRSC].[ContainerId] <> [LRPC].[ContainerId]
-									AND
-									[LRSC].[RowStatus] = 1
 							INNER JOIN
 								[dbo].[LinehaulRouteSettlementContainerDetail] LRSCD  WITH(NOLOCK) 
 								ON
 									[LRSCD].[LinehaulRouteSettlementContainerId] = [LRSC].[IdLinehaulRouteSettlementContainer]
 									AND
 									[LRSCD].[GuideNumber] <> [LRSCD].[GuideNumber]
-									AND
-									[LRSCD].[RowStatus] = 1
 							INNER JOIN
 								[dbo].[Container] Ctn  WITH(NOLOCK) 
 								ON
@@ -325,6 +312,12 @@ BEGIN
 									[AD].[RowStatus] = 1
 						WHERE
 							[LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
+							AND ISNULL(hl.IdCountry, 'GT') = @IdCountry
+                            AND [LRPC].[RowStatus] = 1
+                            AND [LRS].[RowStatus] = 1
+                            AND [LRSCD].[RowStatus] = 1
+                            AND [LRSC].[RowStatus] = 1
+                            AND [LRPCD].[RowStatus] =1
 						ORDER BY HL.HubName
 				) ExtraGuidesLinehaul
 		) TotalGuidesLinehaul

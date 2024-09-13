@@ -32,7 +32,9 @@ BEGIN
 		   ,inv_invoiceOfCreditNote
 		   ,inv_motiveCreditNote
 		   ,inv_dateOriginDocument
-		   ,inv_documentOriginFEL)
+		   ,inv_documentOriginFEL
+		   ,IdCurrency
+		   ,IdCountry)
 		select [inv_vpCodeOfReferences]
            ,[inv_cmp_nit]
            ,[inv_cli_name]
@@ -50,6 +52,8 @@ BEGIN
 		   ,@motivoNotaCredito
 		   ,inv_date
 		   ,inv_certificationFEL
+		   ,IdCurrency
+		   ,IdCountry
 		from invoiceHeader WITH(NOLOCK)
 		where inv_pk_id = @idInvoice
 

@@ -61,6 +61,31 @@ BEGIN
             [Settlement_Date_Received] datetime
         );
 
+        CREATE NONCLUSTERED INDEX IX_TodaysCheckpointsDetail
+        ON #TodaysCheckpointsDetail
+        (
+            Guideserie,
+            Guidenumber
+        );
+
+        CREATE NONCLUSTERED INDEX IX_IdStatusDetail
+        ON #TodaysCheckpointsDetail
+        (
+            StatusOrderId
+        );
+
+        CREATE NONCLUSTERED INDEX IX_DeliveryAttemptIdDetail
+        ON #TodaysCheckpointsDetail
+        (
+            DeliveryAttemptId
+        );
+
+        CREATE NONCLUSTERED INDEX IX_Settlement_IdCourierDetail
+        ON #TodaysCheckpointsDetail
+        (
+            Settlement_IdCourier
+        );
+
         set @Pending_Counter = 0
         set @Delivered_Counter = 0
 		
@@ -93,8 +118,8 @@ BEGIN
             FROM dbo.DumpServiceCoverage dum WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBL WITH (NOLOCK)
                     ON dum.Hub = HBL.HubAbbreviation
-                       AND HBL.HubStatus = 1
             WHERE dum.HeaderCode = tw.HeaderCode
+              AND HBL.HubStatus = 1
         ) HUbs
         WHERE 
 				CAST(dsd.datecreated AS DATE) = CAST(GETDATE() AS DATE)
@@ -212,17 +237,6 @@ BEGIN
            ) INCDESKT
         WHERE INCDESKT.rn = 1
 
-        CREATE NONCLUSTERED INDEX IX_TodaysCheckpointsDetail
-        ON #TodaysCheckpointsDetail
-        (
-            Guideserie,
-            Guidenumber,
-            DateCheckpoint
-        );
-
-
-
-
 
         CREATE TABLE #DetailGetQualityControlData
         (
@@ -265,6 +279,11 @@ BEGIN
 			[CODCurrencySymbol] NVARCHAR(2)
         )
 
+        CREATE NONCLUSTERED INDEX IX_ConfirmationIncidents_ControlData
+        ON #DetailGetQualityControlData
+        (
+           ConfirmationIncidents
+        );
 
         insert into #DetailGetQualityControlData
         SELECT 0 [Pending],
@@ -431,13 +450,13 @@ BEGIN
                 ON std.StatusOrderId = TCD.StatusOrderId
             OUTER APPLY
         (
-            SELECT TOP 1
-                HBL.IdHubLogistic
+          SELECT TOP 1
+                 HBL.IdHubLogistic
             FROM dbo.DumpServiceCoverage dum WITH (NOLOCK)
                 INNER JOIN DeliveryBackOffice.dbo.HubLogistics HBL WITH (NOLOCK)
                     ON dum.Hub = HBL.HubAbbreviation
-                       AND HBL.HubStatus = 1
             WHERE dum.HeaderCode = tw.HeaderCode
+              AND HBL.HubStatus = 1
         ) HUbs
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] da WITH (NOLOCK)
                 ON [DA].[ID] = TCD.[DeliveryAttemptId]

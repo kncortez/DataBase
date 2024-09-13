@@ -442,6 +442,7 @@ BEGIN
                                AND t.Guide_Serie = dop.GuideSerie
                            )
                 WHERE ord.Guide_Number IN ( t.Guide_Number )
+				AND ord.Guide_Serie IN (t.Guide_Serie)
                 GROUP BY Sender_ID,
                          IdCustomer,
                          Sender_Phone,
@@ -971,13 +972,13 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.VisitPointClient VPC
                             INNER JOIN VisitPointByUser VPU WITH (NOLOCK)
                                 ON VPC.IdVisitPointClient = VPU.IdVisitPointClient
-                                   AND VPU.RowStatus = 1
                             INNER JOIN RegisterUser ru
                                 ON VPU.RegisterUserID = ru.UsrIdUser
-                                   AND ru.UsrRowStatus = 1
                             INNER JOIN [dbo].[RolByUserByAccount] rua
                                 ON rua.RuaIdUser = ru.UsrIdUser
                         WHERE rua.RuaIdAccount = @IdAccount
+                                   AND VPU.RowStatus = 1
+                                   AND ru.UsrRowStatus = 1
                     );
             -- FIN MODIFICACIÓN
 

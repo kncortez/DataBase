@@ -50,7 +50,7 @@ BEGIN
 	WHERE  
 		Ac.accidaccount = @IdAccount
 
-  IF(@TypeSalePackage = 'Membership' AND  @StatusMembershipt  > 0)
+  IF(@TypeSalePackage = 'Membership' COLLATE Latin1_General_CI_AI AND  @StatusMembershipt  > 0)
 	BEGIN
 	BEGIN TRANSACTION 
 		  BEGIN TRY
@@ -84,7 +84,7 @@ BEGIN
 	
 
 	END
-	ELSE IF(@TypeSalePackage = 'Subscription' AND  @StatusSubcription   > 0)
+	ELSE IF(@TypeSalePackage = 'Subscription' COLLATE Latin1_General_CI_AI AND  @StatusSubcription   > 0)
 	BEGIN
 	BEGIN TRANSACTION 
 		  BEGIN TRY

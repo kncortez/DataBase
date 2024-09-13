@@ -647,6 +647,7 @@ BEGIN
                                 FROM #listGuidesEnabled lge
                                     INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
                                         ON lge.Guide_Number = dlo.Guide_Number
+                                        AND lge.Guide_Serie = dlo.Guide_Serie
                                     INNER JOIN dbo.DeliveryOrderPaymentDetail DOP WITH (NOLOCK)
                                         ON dlo.Guide_Serie = DOP.GuideSerie
                                            AND dlo.Guide_Number = DOP.GuideNumber
@@ -739,7 +740,7 @@ BEGIN
                                             SELECT TOP 1
                                                    WT.IdWebhookType
                                             FROM [DeliveryBackOffice].[dbo].[WebhookType] WT WITH (NOLOCK)
-                                            WHERE WT.WebhookName = 'GuideStatusChange' 
+                                            WHERE WT.WebhookName = 'GuideStatusChange' COLLATE Latin1_General_CI_AI
                                                   AND WT.RowStatus = 1
                                         );
 
@@ -914,17 +915,21 @@ BEGIN
 												FROM DeliveryOrderPiece dop WITH(NOLOCK)
 												INNER JOIN @WebhookCustomerTable wct
 													ON dop.GuideNumber = wct.GuideNumber
+                                                    AND dop.GuideSerie = wct.GuideSerie
 												INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 													ON wct.CustomerId = WHE.CustomerId
 												INNER JOIN DeliveryOrder do WITH(NOLOCK)
 													ON dop.GuideNumber = do.Guide_Number
+                                                    AND dop.GuideSerie = do.Guide_Serie
+                                                    AND do.IdCustomer = wct.CustomerId
 												INNER JOIN @GuidePiecesTable gpt
 												    ON wct.GuideNumber = gpt.GuideNumber
+                                                    AND wct.GuideSerie = gpt.GuideSerie
 												INNER JOIN @PiecesGuideRelatedTable pgt
 												    ON gpt.GuideNumber = pgt.GuideNumber
-													WHERE do.IdCustomer = wct.CustomerId
-													AND WHE.TypeConnectionId = 2
-													AND gpt.NumberPieces = pgt.NumberRelatedPieces
+                                                    AND gpt.GuideSerie = pgt.GuideSerie
+                                                    AND gpt.NumberPieces = pgt.NumberRelatedPieces
+													WHERE WHE.TypeConnectionId = 2
 									--Agregar datos en cola de webhooks de cliente SFTP---FIN
 							
 
@@ -1606,13 +1611,14 @@ BEGIN
                     FROM #listGuidesEnabled lge
                         INNER JOIN DeliveryOrder dlo WITH (NOLOCK)
                             ON lge.Guide_Number = dlo.Guide_Number
+                            AND lge.Guide_Serie = dlo.Guide_Serie
                         LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
                             ON vp.CodeOfReference = Case when  dlo.IsLastMileReturn = 1 AND  dlo.Sender_ID != 0  Then dlo.Sender_ID Else dlo.Receiver_ID End
                         LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                             ON cus.IdCustomer = ISNULL(dlo.IdCustomer, vp.CustomerID)
                         LEFT JOIN ProcessedGuideCOD pcd WITH (NOLOCK)
                             ON pcd.GuideSerie = dlo.Guide_Serie
-                                AND pcd.GuideNumber = dlo.Guide_Number
+                            AND pcd.GuideNumber = dlo.Guide_Number
                     WHERE pcd.IdProcessedGuideCOD IS NULL AND dlo.IsLastMileReturn = 1 AND dlo.[IsCollect] = 1
 
         END TRY

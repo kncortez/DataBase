@@ -88,7 +88,7 @@ BEGIN
 	JOIN
 		[DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
 		ON
-			do.Receiver_Department = P.ProvinceName 
+			do.Receiver_Department = P.ProvinceName COLLATE Latin1_General_CI_AI
 	LEFT JOIN
 		[DeliveryBackOffice].[dbo].[ServiceProvinceConfiguration] SPC WITH(NOLOCK)
 		ON
@@ -96,7 +96,7 @@ BEGIN
 	JOIN
 		[DeliveryBackOffice].[dbo].[Township] TMun WITH(NOLOCK)
 		ON
-			do.Receiver_Town = TMun.TownshipName 
+			do.Receiver_Town = TMun.TownshipName COLLATE Latin1_General_CI_AI
 	LEFT JOIN
 		[DeliveryBackOffice].[dbo].[ServiceTownshipConfiguration] STC WITH(NOLOCK)
 		ON

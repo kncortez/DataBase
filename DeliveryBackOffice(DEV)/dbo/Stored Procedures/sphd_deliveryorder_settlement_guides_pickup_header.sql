@@ -42,14 +42,14 @@ BEGIN
 		 --,*
   from 
   [DeliveryBackOffice].[dbo].[RouteAssigment] as rat WITH(NOLOCK) 	
-	join 
+	INNER JOIN
 	(
 		select  IdServiceManagement,IdPuRouteAssigment,IdSchedulePickup, (ISNULL(sm.Amount,0)) Amount,  
 		count(IIF(dor.Guide_Number is not null and  dor.Guide_Serie is not  null,1,null)) guide_count,
 		sum(ISNULL(dor.Pieces_Cold,0)) cold_count,
 		sum(ISNULL(dor.Pieces_Dry,0)) dry_count
 		from [DeliveryBackOffice].[dbo].[ServiceManagement]sm
-		join [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = IdSchedulePickup 
+		INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = IdSchedulePickup 
 		left join [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] as dop WITH(NOLOCK) ON sm.IdSchedulePickup=dop.IdHeaderRecolection
 		left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Number = dop.GuideNumber AND dor.Guide_Serie = dop.GuideSerie
 		group by sm.Amount,IdServiceManagement,IdSchedulePickup,IdPuRouteAssigment

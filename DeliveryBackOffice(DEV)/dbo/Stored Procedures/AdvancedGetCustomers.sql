@@ -52,10 +52,9 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 			ON
 				Cu.IdCustomer = VPC.CustomerID
-				AND
-				VPC.StatusClient = 1
 	WHERE
-		VPC.DescriptionOfClient LIKE '%' + @Filter + '%' 
+		VPC.DescriptionOfClient LIKE '%' + @Filter + '%' COLLATE Latin1_General_CI_AI
+        AND VPC.StatusClient = 1
         AND IIF(VPC.CountryId IS NULL,'GT',VPC.CountryId) = @IdCountry
 	UNION
 	SELECT
@@ -93,10 +92,9 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
 			ON
 				Cu.IdCustomer = VPC.CustomerID
-				AND
-				VPC.StatusClient = 1
 	WHERE
-		  VPC.Phone LIKE '%' + @Filter + '%' 
+		  VPC.Phone LIKE '%' + @Filter + '%' COLLATE Latin1_General_CI_AI
+      AND VPC.StatusClient = 1
       AND IIF(VPC.CountryId IS NULL,'GT',VPC.CountryId) = @IdCountry
 
 END

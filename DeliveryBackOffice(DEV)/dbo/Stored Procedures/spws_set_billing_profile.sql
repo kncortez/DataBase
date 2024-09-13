@@ -30,7 +30,7 @@ BEGIN
                 SELECT TOP 1
                        CR.RolIdRol
                 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH (NOLOCK)
-                WHERE CR.RolName = 'Ventas telemercadeo' 
+                WHERE CR.RolName = 'Ventas telemercadeo' COLLATE Latin1_General_CI_AI
             );
 
     DECLARE @jsonResult NVARCHAR(MAX);

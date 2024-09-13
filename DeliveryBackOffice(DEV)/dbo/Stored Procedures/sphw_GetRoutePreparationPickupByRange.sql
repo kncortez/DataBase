@@ -41,7 +41,7 @@ BEGIN
 	END	 
 	--FIN
 	----------------------------------------------------------------------------
-	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' )
+	DECLARE @ServicePickupStatus INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.Name LIKE 'Recolectado' COLLATE Latin1_General_CI_AI)
 
 
 	IF (@accountId IS NOT NULL AND ISNULL(@userId,0) = 0)
@@ -151,7 +151,6 @@ BEGIN
 				ON css.IdServiceStatus = srv.ServiceStatusId
 			INNER JOIN [DeliveryBackOffice].[dbo].[HubLogisticByUser] AS hlbu WITH (NOLOCK)
 				ON ISNULL(shp.IdHubLogistics, hl.IdHubLogistic) = hlbu.HubLogisticId
-				AND hlbu.UserId = @userId
 			INNER JOIN [DeliveryBackOffice].[dbo].[HubLogistics] as hlf WITH (NOLOCK)
 				ON shp.IdHubLogistics = hlf.IdHubLogistic
 			LEFT JOIN [DeliveryBackOffice].[dbo].[RouteAssigment] as ra WITH (NOLOCK)
@@ -165,6 +164,7 @@ BEGIN
 			AND shp.RowStatus = 1
 			AND (ISNULL(@serviceManagementId,0) = 0 OR srv.IdServiceManagement = @serviceManagementId)
 			AND (ISNULL(hlf.IdCountry,'GT') = @IdCountry OR ISNULL(PrvTvpc.IdCountry, 'GT') = @IdCountry)
+			AND hlbu.UserId = @userId
 		ORDER BY shp.DateCreated desc
 
 	END

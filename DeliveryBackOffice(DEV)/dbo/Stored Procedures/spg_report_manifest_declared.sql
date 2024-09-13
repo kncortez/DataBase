@@ -48,10 +48,14 @@ sum(case when Temperature_Celsius is null then 1 else 0 end) Pieces_Dry_Arrived,
 sum(case when Temperature_Celsius is null then 0 else 1 end) Pieces_Cold_Arrived
 into #Pieces_Arrived
 from #HeaderDeliveryOrder do
-join DeliveryOrderDetail det on do.Guide_Serie = det.Guide_Serie
-and do.Guide_Number = det.Guide_Number and det.StatusOrderId = 11
+inner join DeliveryOrderDetail det on do.Guide_Serie = det.Guide_Serie
+and do.Guide_Number = det.Guide_Number 
+where det.StatusOrderId = 11
 group by det.Guide_Serie,det.Guide_Number,do.Manifest_Serie,
 do.Manifest_Number
+
+CREATE NONCLUSTERED INDEX tempOrders ON #HeaderDeliveryOrder (Guide_Serie, Guide_Number);
+CREATE NONCLUSTERED INDEX tempPieces ON #Pieces_Arrived (Manifest_Serie, Manifest_Number);
 
 select CONVERT(varchar, head.Preparation_Date, 103) Preparation_Date,
 	head.Manifest_Serie + 

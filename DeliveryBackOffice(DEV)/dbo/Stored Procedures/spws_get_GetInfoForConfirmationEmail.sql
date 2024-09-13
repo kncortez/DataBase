@@ -41,16 +41,22 @@ BEGIN
 	c.[Name]            AS [Name],
 	pe.PerGender        AS Gender
 	FROM RegisterUser us WITH (NOLOCK)
-		INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK) ON rua.RuaIdUser = us.UsrIdUser
-													AND rua.RuaRowStatus = 1
-		INNER JOIN [dbo].Account ac WITH (NOLOCK) ON ac.AccIdAccount = rua.RuaIdAccount
-									AND ac.AccRowStatus = 1
-		INNER JOIN dbo.Customer c WITH (NOLOCK)	ON c.IdCustomer = ac.IdCustomer
-		INNER JOIN [dbo].Person pe WITH (NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson AND pe.PerRowStatus = 1
-		LEFT JOIN [dbo].[ConfigParams] cp1 ON cp1.Name = @ParamName
-		LEFT JOIN [dbo].[ConfigParams] cp2 ON cp2.Name = 'SupportEmailByCountry' 
-													AND cp2.IdCountry = c.CountryID 
-													AND cp2.Status = 1
-	WHERE ac.AccIdAccount = @IdAccount OR us.UsrEmail = LTRIM(RTRIM(@UserName)) OR us.UsrIdUser =  @IdUser
+		INNER JOIN [dbo].[RolByUserByAccount] rua WITH (NOLOCK) 
+			ON rua.RuaIdUser = us.UsrIdUser
+		INNER JOIN [dbo].Account ac WITH (NOLOCK) 
+			ON ac.AccIdAccount = rua.RuaIdAccount
+		INNER JOIN dbo.Customer c WITH (NOLOCK)	
+			ON c.IdCustomer = ac.IdCustomer
+		INNER JOIN [dbo].Person pe WITH (NOLOCK) 
+			ON pe.PerIdPerson = us.UsrIdPerson
+		LEFT JOIN [dbo].[ConfigParams] cp1 
+			ON cp1.Name = @ParamName
+		LEFT JOIN [dbo].[ConfigParams] cp2 
+			ON cp2.Name = 'SupportEmailByCountry' AND cp2.IdCountry = c.CountryID 
+	WHERE rua.RuaRowStatus = 1
+		AND ac.AccRowStatus = 1
+		AND pe.PerRowStatus = 1
+		AND cp2.Status = 1
+		AND ac.AccIdAccount = @IdAccount OR us.UsrEmail = LTRIM(RTRIM(@UserName)) OR us.UsrIdUser =  @IdUser
 END
 

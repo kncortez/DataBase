@@ -53,7 +53,7 @@ BEGIN
 		BEGIN
 			;THROW 50005, N'Sistema no existe en el catálogo, revise el sistema.', 1;
 		END
-		IF( NOT EXISTS (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = @Role AND CR.RolRowStatus = 1) )
+		IF( NOT EXISTS (SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = @Role COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1) )
 		BEGIN
 			;THROW 50005, N'Rol no existe en el catálogo, revise el sistema.', 1;
 		END
@@ -62,7 +62,7 @@ BEGIN
 			;THROW 50005, N'Estación no existe en el catálogo, revise el sistema.', 1;
 		END
 		
-		DECLARE @RoleAsId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = @Role  AND CR.RolRowStatus = 1)
+		DECLARE @RoleAsId INT = (SELECT TOP 1 CR.RolIdRol FROM [DeliveryBackOffice].[dbo].[CatRol] CR WITH(NOLOCK) WHERE CR.RolName = @Role COLLATE Latin1_General_CI_AI AND CR.RolRowStatus = 1)
 
 		PRINT 'OBTENER DATOS DE PERSONA DE DENARIUS'
 		INSERT INTO @UserExistsDENARIUS

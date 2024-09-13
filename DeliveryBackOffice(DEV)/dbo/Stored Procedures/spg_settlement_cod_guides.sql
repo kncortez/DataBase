@@ -46,8 +46,6 @@ BEGIN
 		INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd WITH(NOLOCK)
 			ON dsd.Guide_Serie = do.Guide_Serie
 			   AND dsd.Guide_Number = do.Guide_Number
-			   AND dsd.ID_DeliveryOrderBySettlement = @IdManifest
-			   AND dsd.RowStatus = 1
 		LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH(NOLOCK)
 			ON do.Receiver_ID = vp.CodeOfReference
 		LEFT JOIN [dbo].VisitPointClient vps WITH(NOLOCK)
@@ -58,7 +56,7 @@ BEGIN
             ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
                AND cdp.IdConditionOfPayment > 1
 		LEFT JOIN dbo.Cost c WITH (NOLOCK)
-            ON c.ProductNumber = CONCAT(do.guide_Serie, do.guide_number)
+            ON c.GuideSerie	= do.guide_Serie AND c.GuideNumber = do.guide_number
 		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
             ON dc.IdCatCurrencyCOD = c.CodCurrency
 	WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
@@ -69,6 +67,8 @@ BEGIN
 			  OR vp.IdKindOfVPClient IS NULL
 		  )
 		 AND dsd.Guide_Delivered =1
+		 AND dsd.ID_DeliveryOrderBySettlement = @IdManifest
+		 AND dsd.RowStatus = 1
 	ORDER BY Receiver_Departament ASC,
 			 Receiver_Town ASC,
 			 Receiver_Zone ASC,

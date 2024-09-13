@@ -39,7 +39,6 @@ BEGIN
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
         INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
-               AND dsd.RowStatus = 1
         LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
             ON cs.IdStation = dbs.DispatchedStationId
     WHERE dbs.ID = @IdManifest
@@ -50,7 +49,8 @@ BEGIN
               dsd.Guide_Discharged = 0
               OR dsd.Guide_Discharged IS NULL
           )
-		  AND cs.CountryId = @Country;
+		  AND cs.CountryId = @Country
+          AND dsd.RowStatus = 1;
 
     SELECT dbs.ID,
            dbs.Date_Dispatched,
@@ -143,7 +143,8 @@ BEGIN
 		LEFT JOIN [dbo].[Customer] cu WITH(NOLOCK)
 			ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
 		LEFT JOIN [dbo].Cost c WITH(NOLOCK)
-			ON c.ProductNumber = CONCAT(do.Guide_Serie, do.Guide_Number)
+			ON c.GuideSerie = do.Guide_Serie 
+			AND c.GuideNumber = do.Guide_Number
 		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
             ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
                AND cdp.IdConditionOfPayment > 1

@@ -16,16 +16,16 @@ BEGIN
 		SET @DateOfRoute = CAST(GETDATE() AS DATE);
 	END
 	-- Tipo de estado de guía terminal
-	DECLARE @FinalStatusOfGuideId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final');
-	DECLARE @IncidenceStatusOfGuideId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia');
+	DECLARE @FinalStatusOfGuideId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint final' COLLATE Latin1_General_CI_AI);
+	DECLARE @IncidenceStatusOfGuideId INT = (SELECT TOP 1 CCT.IdCatCheckpointType FROM [DeliveryBackOffice].[dbo].[CatCheckpointType] CCT WITH(NOLOCK) WHERE CCT.CheckpointTypeDescription = 'Checkpoint de incidencia' COLLATE Latin1_General_CI_AI);
 
 	-- Tipos de servicio
-	DECLARE @PickupServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Recolección' )
-	DECLARE @DeliveryServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Entrega' )
-	DECLARE @ReturnServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Devolución' )
+	DECLARE @PickupServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI)
+	DECLARE @DeliveryServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Entrega' COLLATE Latin1_General_CI_AI)
+	DECLARE @ReturnServiceSubTypeId INT = (SELECT TOP 1 STSM.IdSubTypeServiceManagment FROM [DeliveryBackOffice].[dbo].[SubTypeServiceManagment] STSM WITH(NOLOCK) WHERE STSM.[Name] = 'Devolución' COLLATE Latin1_General_CI_AI)
 	-- Estados de servicio interpretados como pendientes de procesar
-	DECLARE @GeneratedServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Creado');
-	DECLARE @OnRouteServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Asignado a Ruta');
+	DECLARE @GeneratedServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Creado' COLLATE Latin1_General_CI_AI);
+	DECLARE @OnRouteServiceStatusId INT = (SELECT TOP 1 CSS.IdServiceStatus FROM [DeliveryBackOffice].[dbo].[CatServiceStatus] CSS WITH(NOLOCK) WHERE CSS.[Name] = 'Asignado a Ruta' COLLATE Latin1_General_CI_AI);
 	-- Estados de guías interpretados como pendientes de procesar o no posibles de interpretar
 	-- Estados terminales se toman para buscar aquellas en estados pendientes
 	DECLARE @FinalStatusOfGuide AS TABLE (
