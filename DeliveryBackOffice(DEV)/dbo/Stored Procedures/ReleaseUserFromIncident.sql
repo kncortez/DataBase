@@ -1,0 +1,50 @@
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Create date: <2024-07-22>
+-- Description:	<SP para liberar la incidencia del usuario que la tiene asignada en el  proceso de validacion. Ref. FDAPI-2287>
+-- =============================================
+CREATE PROCEDURE [dbo].[ReleaseUserFromIncident]
+ @GuideSerie NVARCHAR(2) = 'FD',
+ @GuideNumber INT
+
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE @DescriptionResult NVARCHAR(500)
+
+	BEGIN TRANSACTION 
+	BEGIN TRY
+		UPDATE coi  
+		SET coi.TakenIncidenceUserId = Null, 
+			coi.TakenIncidenceUserName = Null,  
+			coi.TakenIncidenceDateAndTime = Null 
+		FROM [dbo].[ConfirmationOfIncidence] coi
+			INNER JOIN [dbo].[DeliveryAttempt] da ON coi.IdConfirmationOfIncidence = da.ConfirmationOfIncidenceId
+		WHERE da.Guide_Number = @GuideNumber
+			AND da.Guide_Serie = @GuideSerie
+
+		IF @@ROWCOUNT > 0
+		BEGIN
+			SET @DescriptionResult = 'Usuario Liberado de la incidencia'
+		END
+		ELSE
+		BEGIN
+			SET @DescriptionResult = 'No se encuentra registro'
+		END
+		
+		SELECT @DescriptionResult AS DescriptionResult
+		COMMIT TRANSACTION;
+	END TRY
+	BEGIN CATCH
+
+		ROLLBACK TRANSACTION;
+
+		DECLARE @ErrorMessage NVARCHAR(500);
+		SET @ErrorMessage = ERROR_MESSAGE();
+
+		SET @DescriptionResult = 'Ocurrió el siguiente error: ' + @ErrorMessage
+		SELECT @DescriptionResult AS DescriptionResult
+
+	END CATCH
+END;

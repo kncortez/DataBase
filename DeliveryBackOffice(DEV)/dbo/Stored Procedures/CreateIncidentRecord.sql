@@ -7,7 +7,11 @@
 -- Update date: <2024-03-07>
 -- Description:	<Registrar incidencia para cliente DHL>
 -- =============================================
-ALTER PROCEDURE [dbo].[CreateIncidentRecord]
+-- Author:		<Tito Garcia>
+-- Update date: <2024-07-18>
+-- Description:	<Se confirma el tipo de incidencia por el currier, guardando Id original y comentario si hubiera cambio de tipo de incidencia>
+-- =============================================
+CREATE PROCEDURE [dbo].[CreateIncidentRecord]
     @GuideSerie NVARCHAR(2) = 'FD'        --serie
   , @GuideNumber INT                      --número de guía
   , @TokenCreated NVARCHAR(200)           --token de guardado
@@ -24,7 +28,9 @@ ALTER PROCEDURE [dbo].[CreateIncidentRecord]
   , @LiquidatorRemarks NVARCHAR(600) = '' --Observaciones para el liquidador
   , @ValidGeolocationEvidence BIT         --indica si la incidecia de geolocalziación es valdia
   , @ValidPhotographicEvidence BIT        --indica si la evidencia fotografica es valida
-  , @IdIncident INT                  --Id incidencia
+  , @IdIncident INT                       --Id incidencia
+  , @ConfirmedTypeIncidenceId INT = 0                        --Id del tipo de incidencia si es que se cambia en la validación 
+  , @CommentOnConfirmedTypeIncidence NVARCHAR(600) = ''		-- Comentario del cambio del tipo de incidencia
 AS
 BEGIN
     DECLARE @StatusOrderId TINYINT;
@@ -144,6 +150,31 @@ BEGIN
               AND RowStatus = 1
               AND StatusOrderId = @IncidentStatus
         ORDER BY DateCreatedInSystem DESC;
+
+-------------------------------------------------  Inicio Confirmando incidencia ------------------------------------------------
+        UPDATE t1
+        SET t1.TypeIncidenceId = A1.ID_Incident,
+			t1.CommentOnConfirmedTypeIncidence = @CommentOnConfirmedTypeIncidence
+        FROM dbo.ConfirmationOfIncidence                      t1 WITH (NOLOCK)
+            INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH (NOLOCK)
+                ON A1.ConfirmationOfIncidenceId = t1.IdConfirmationOfIncidence
+        WHERE A1.Guide_Serie = @GuideSerie
+                AND A1.Guide_Number = @GuideNumber
+                AND RowStatus = 1
+                AND A1.ID = @DeliveryAttemptId;
+
+        IF (@ConfirmedTypeIncidenceId > 0)
+		BEGIN
+			UPDATE A1
+			SET A1.ID_Incident = @ConfirmedTypeIncidenceId
+			FROM DeliveryBackOffice.dbo.DeliveryAttempt A1 WITH (NOLOCK)
+			WHERE A1.Guide_Serie = @GuideSerie
+					AND A1.Guide_Number = @GuideNumber
+					AND A1.ID = @DeliveryAttemptId;
+		END;
+
+-------------------------------------------------  Fin Confirmando incidencia ------------------------------------------------
+
 
         IF (@Terminal != 3 AND @StatusIncidence != 50)
         BEGIN

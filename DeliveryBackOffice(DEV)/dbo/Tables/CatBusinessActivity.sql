@@ -7,6 +7,6 @@
     [DateCreated]                 DATETIME       NOT NULL,
     [TokenUpdated]                NVARCHAR (50)  NULL,
     [DateUpdated]                 DATETIME       NULL,
-    CONSTRAINT [PK_CatBusinessActivity] PRIMARY KEY CLUSTERED ([IdBusinessActivity] ASC),
+    CONSTRAINT [PK_CatBusinessActivity] PRIMARY KEY CLUSTERED ([IdBusinessActivity] ASC)
 );
 

@@ -135,6 +135,7 @@ GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliveryOrderBySettlement_RowStatus_include]
     ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [RowStatus] ASC)
     INCLUDE([Guide_Serie], [Guide_Number], [DateCreated]);
+
 GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliverySettlementDetail_DateCreated]
     ON [dbo].[DeliverySettlementDetail]([DateCreated] ASC);

@@ -738,6 +738,7 @@
     <Build Include="dbo\Stored Procedures\sps_creditNoteForza.sql" />
     <Build Include="dbo\Stored Procedures\sps_contact_incident.sql" />
     <Build Include="dbo\Stored Procedures\sps_cod_amount.sql" />
+    <Build Include="dbo\Stored Procedures\ReleaseUserFromIncident.sql" />
     <Build Include="dbo\Stored Procedures\sps_UpdateOrderBankAccount.sql" />
     <Build Include="dbo\Stored Procedures\sps_Set_Unlink_Link_UserExc.sql" />
     <Build Include="dbo\Stored Procedures\sps_SetEditGuides.sql" />
@@ -1093,6 +1094,7 @@
     <Build Include="dbo\Stored Procedures\spHM_getContainersListByLinehaulRouteSettlementId.sql" />
     <Build Include="dbo\Stored Procedures\spHM_getContainersListByLinehaulRoutePreparationId.sql" />
     <Build Include="dbo\Stored Procedures\spHM_getContainerByNumber.sql" />
+    <Build Include="dbo\Stored Procedures\spHM_ValidateChangeDateOfDelivery.sql" />
     <Build Include="dbo\Stored Procedures\spHM_getCatSeriesByRowStatus.sql" />
     <Build Include="dbo\Stored Procedures\spHM_finalizeUnifiedRouteSettlementProcess.sql" />
     <Build Include="dbo\Stored Procedures\spHM_completeOpenProcessLinehaulDispatch.sql" />
@@ -1586,6 +1588,9 @@
     <Build Include="dbo\Stored Procedures\sps_Validate_Country.sql" />
     <Build Include="dbo\Stored Procedures\sps_Validate_Currency.sql" />
     <Build Include="dbo\Stored Procedures\spGenerateArrivedGuides.sql" />
+	  <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
+    <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
+    <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />

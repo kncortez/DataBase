@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatBillingTime] (
+CREATE TABLE [dbo].[CatBillingTime] (
     [IdCatBillingTime]       INT            IDENTITY (1, 1) NOT NULL,
     [DescriptionBillingTime] NVARCHAR (200) NOT NULL,
     [RowStatus]              BIT            CONSTRAINT [DF_CatBillingTime_RowStatus] DEFAULT ((1)) NOT NULL,
@@ -6,7 +6,7 @@
     [DateCreated]            DATETIME       NOT NULL,
     [TokenUpdated]           NVARCHAR (50)  NULL,
     [DateUpdated]            DATETIME       NULL,
-    CONSTRAINT [PK_CatBillingTime] PRIMARY KEY CLUSTERED ([IdCatBillingTime] ASC),
+    CONSTRAINT [PK_CatBillingTime] PRIMARY KEY CLUSTERED ([IdCatBillingTime] ASC)
 );
 
 
