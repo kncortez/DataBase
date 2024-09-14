@@ -1,13 +1,13 @@
 ﻿-- =============================================
 -- Author:		<Walter Orozco>
 -- Create date: <2024-09-10>
--- Description:	<Administraci�n de lotes - Cambio de estado de lote>
+-- Description:	<Administración de lotes - Cambio de estado de lote>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SetBatchStatus]
 @IdLote INT,
-@Status BIT,
-@Enable BIT
+@Status BIT = NULL,
+@Enable BIT = NULL
 AS
 BEGIN
     BEGIN TRY
@@ -23,13 +23,13 @@ BEGIN
 	SELECT @Emision_Point = Emision_Point, 
 		   @Establishment = Establishment, 
 		   @TypeDocument = TypeDocument
-	FROM DeliveryBackOffice.dbo.InvoiceBatchHeader
+	FROM DeliveryBackOffice.dbo.InvoiceBatchHeader WITH(NOLOCK)
 	WHERE Id_Lote = @IdLote
 
 	IF (@Status = 1) --ACTIVO
 	BEGIN
 		--Existe otro activo
-		IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.InvoiceBatchHeader
+		IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.InvoiceBatchHeader WITH(NOLOCK)
 		WHERE Emision_Point = @Emision_Point AND Establishment = @Establishment
 				AND TypeDocument = @TypeDocument AND Id_Lote != @IdLote AND [Status] = 1 AND [Enable] = 1)
 		BEGIN
@@ -48,7 +48,7 @@ BEGIN
 	END;
 	ELSE IF (@Status = 0) --INACTIVO
 	BEGIN
-		--No hay restricci�n
+		--No hay restricción
 		UPDATE DeliveryBackOffice.dbo.InvoiceBatchHeader
 		SET [Status] = @Status, [Enable] = 1
 		WHERE Id_Lote = @IdLote
@@ -58,7 +58,7 @@ BEGIN
 	END;
 	ELSE IF (@Enable = 0) --DETENIDO
 	BEGIN
-		--No hay restricci�n
+		--No hay restricción
 		UPDATE DeliveryBackOffice.dbo.InvoiceBatchHeader
 		SET [Status] = 0, [Enable] = 0
 		WHERE Id_Lote = @IdLote
