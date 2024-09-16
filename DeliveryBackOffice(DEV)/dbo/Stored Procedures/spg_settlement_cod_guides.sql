@@ -58,7 +58,7 @@ BEGIN
 		LEFT JOIN dbo.Cost c WITH (NOLOCK)
             ON c.GuideSerie	= do.guide_Serie AND c.GuideNumber = do.guide_number
 		LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
-            ON dc.IdCatCurrencyCOD = c.CodCurrency
+            ON dc.IdCatCurrencyCOD = ISNULL(c.ShippingCurrency,1)
 	WHERE dsd.Guide_Settlement = 1 -- guía liquidada en bodega
 		  AND dsd.Guide_Discharged = 1 -- guía liquidada en COD
 		  AND
