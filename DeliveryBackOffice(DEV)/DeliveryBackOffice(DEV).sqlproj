@@ -1693,6 +1693,7 @@
     <Build Include="dbo\Stored Procedures\GetBatchAdministration.sql" />
     <Build Include="dbo\Stored Procedures\GetBatchAdministrationAlert.sql" />
     <Build Include="dbo\Stored Procedures\SetBatchStatus.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchAdministrationSpecific.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
