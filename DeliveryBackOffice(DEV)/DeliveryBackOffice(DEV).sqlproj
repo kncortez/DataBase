@@ -165,6 +165,10 @@
     <Build Include="dbo\Tables\VisitPointConfiguration.sql" />
     <Build Include="dbo\Tables\VisitPointClient_Parser.sql" />
     <Build Include="dbo\Tables\VisitPointClientByHubLogistics.sql" />
+    <Build Include="dbo\Tables\CatManagementLevel.sql" />
+    <Build Include="dbo\Tables\ManagementLevelByUser.sql" />
+    <Build Include="dbo\Tables\CatManifestSettlementIncidenceType.sql" />
+    <Build Include="dbo\Tables\ManifestSettlementIncidence.sql" />
     <Build Include="dbo\Tables\VisitPointClient.sql" />
     <Build Include="dbo\Tables\VisitPointByUser.sql" />
     <Build Include="dbo\Tables\VisitPointByClientPortfolio.sql" />
