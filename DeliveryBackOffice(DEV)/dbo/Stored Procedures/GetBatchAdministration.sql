@@ -21,7 +21,11 @@ BEGIN
 		,Status					AS 'Estado'
 		,Enable					AS 'Detenido'
 		,AmountGranted			AS 'Cantidad otorgada'
-		,DaysLeftNotifycation	AS 'Disponible'
+		,CASE 
+			WHEN Last_Process > InitialRange 
+			THEN (FinalRange - InitialRange) - (Last_Process - InitialRange)	
+			ELSE (FinalRange - InitialRange)
+		END AS 'Disponible'
 	FROM DeliveryBackOffice.dbo.InvoiceBatchHeader
 	WHERE RTN = @RTN OR @RTN IS NULL
 		
