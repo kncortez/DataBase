@@ -1,13 +1,14 @@
 ﻿-- =============================================
 -- Author:		<Walter Orozco>
 -- Create date: <2024-09-17>
--- Description:	<Administración de lotes - Agregar un punto de venta a un lote>
+-- Description:	<Administración de lotes - Agregar/Eliminar un punto de venta a un lote>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SetPointSales]
 @IdLote				INT =  -1,
 @CodeOfReference	INT = 0,
-@Token				NVARCHAR(100) = 'SYS-DEFAULT'
+@Token				NVARCHAR(100) = 'SYS-DEFAULT',
+@Action				INT = 0 --0 ELIMINAR, 1 AGREGAR
 AS
 BEGIN
 BEGIN TRY
@@ -19,50 +20,79 @@ BEGIN TRY
 	FROM DeliveryBackOffice.dbo.InvoiceBatchRelationships WITH (NOLOCK)
 	WHERE Id_Lote = @IdLote AND CodeOfReference = @CodeOfReference
 
-	IF (@FlagRelationship IS NULL) --Es nueva relación
+	IF(@Action = 1) --FLUJO PARA AGREGAR RELACION ENTRE PUNTO DE VISITA Y LOTE
 	BEGIN
 
-		INSERT INTO [dbo].[InvoiceBatchRelationships]
-           ([Id_Lote]
-           ,[CodeOfReference]
-           ,[RowStatus]
-           ,[TokenCreated]
-           ,[DateCreated]
-           ,[TokenUpdated]
-           ,[DateUpdated])
-		 VALUES
-			   (@IdLote
-			   ,@CodeOfReference
-			   ,1
-			   ,@Token
-			   ,GETDATE()
-			   ,NULL
-			   ,NULL)
+		IF (@FlagRelationship IS NULL) --Es nueva relación
+		BEGIN
 
-		SELECT 
-			'200' IdResult,
-			'Se relacionó el punto de venta con el lote exitosamente.' MessageResult
+			INSERT INTO [dbo].[InvoiceBatchRelationships]
+			   ([Id_Lote]
+			   ,[CodeOfReference]
+			   ,[RowStatus]
+			   ,[TokenCreated]
+			   ,[DateCreated]
+			   ,[TokenUpdated]
+			   ,[DateUpdated])
+			 VALUES
+				   (@IdLote
+				   ,@CodeOfReference
+				   ,1
+				   ,@Token
+				   ,GETDATE()
+				   ,NULL
+				   ,NULL)
 
+			SELECT 
+				'200' IdResult,
+				'' MessageResult
+
+		END;
+		ELSE IF(@FlagRelationship = 0) --Existia una relacion con el Lote inactivo.
+		BEGIN
+
+			UPDATE [dbo].[InvoiceBatchRelationships]
+			SET RowStatus = 1, TokenUpdated = @Token, DateUpdated = GETDATE()
+			WHERE Id_Lote = @IdLote AND CodeOfReference = @CodeOfReference 
+
+			SELECT 
+				'201' IdResult,
+				'Se volvio a establecer la relación del punto de venta con el lote.' MessageResult
+
+		END;
+		ELSE IF(@FlagRelationship = 1) --Existe una relacion con el Lote activo.
+		BEGIN
+
+			SELECT 
+				'401' IdResult,
+				'La relación del punto de venta con el lote ya existe.' MessageResult
+
+		END;
 	END;
-	ELSE IF(@FlagRelationship = 0) --Existia una relacion con el Lote inactivo.
+	ELSE IF(@Action = 0) --FLUJO PARA ELIMINAR RELACION ENTRE PUNTO DE VISITA Y LOTE
 	BEGIN
+		IF(@FlagRelationship IS NULL) --No existe la relacion que desea eliminar
+		BEGIN
+			SELECT 
+				'402' IdResult,
+				'La relación que desea eliminar es incorrecta.' MessageResult
+		END;
+		ELSE IF(@FlagRelationship = 1) --Eliminar registro
+		BEGIN
+			UPDATE [dbo].[InvoiceBatchRelationships]
+			SET RowStatus = 0, TokenUpdated = @Token, DateUpdated = GETDATE()
+			WHERE Id_Lote = @IdLote AND CodeOfReference = @CodeOfReference
 
-		UPDATE [dbo].[InvoiceBatchRelationships]
-		SET RowStatus = 1, TokenUpdated = @Token, DateUpdated = GETDATE()
-		WHERE Id_Lote = @IdLote AND CodeOfReference = @CodeOfReference 
-
-		SELECT 
-			'201' IdResult,
-			'Se volvio a establecer la relación del punto de venta con el lote.' MessageResult
-
-	END;
-	ELSE IF(@FlagRelationship = 1) --Existe una relacion con el Lote activo.
-	BEGIN
-
-		SELECT 
-			'401' IdResult,
-			'La relación del punto de venta con el lote ya existe.' MessageResult
-
+			SELECT 
+				'202' IdResult,
+				'Se elimino correctamente el punto de venta del lote.' MessageResult
+		END;
+		ELSE--0
+		BEGIN
+			SELECT 
+				'203' IdResult,
+				'La relación ya se encontraba eliminada.' MessageResult
+		END;
 	END;
 
 	COMMIT TRANSACTION;
