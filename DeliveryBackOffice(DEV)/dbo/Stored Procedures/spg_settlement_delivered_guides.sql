@@ -19,6 +19,8 @@ BEGIN
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
+	DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Name = 'QUETZAL')
+
 	DECLARE @temp TABLE (
 		Guide_Code	nvarchar(max),
 		Pieces_Cold int,
@@ -132,7 +134,7 @@ BEGIN
 			ON do.Guide_Number = co.GuideNumber 
 				AND do.Guide_Serie = co.GuideSerie
 	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
-			ON co.ShippingCurrency = CCU.IdCatCurrencyCOD
+			ON ISNULL(co.ShippingCurrency,@CurrencyGT) = CCU.IdCatCurrencyCOD
 	WHERE do.Guide_Serie = (SELECT DISTINCT TOP 1 Guide_Serie FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest)
 	and do.Guide_Number IN (SELECT Guide_Number FROM [DeliveryBackOffice].[dbo].[DeliverySettlementDetail] WHERE ID_DeliveryOrderBySettlement = @IdManifest AND RowStatus = 1)
 	AND dsd.Guide_Settlement = 1 -- guía liquidada en bodega
