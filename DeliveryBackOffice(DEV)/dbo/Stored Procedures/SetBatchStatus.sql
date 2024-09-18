@@ -18,13 +18,27 @@ BEGIN
 	DECLARE @Emision_Point INT;
 	DECLARE @Establishment INT;
 	DECLARE @TypeDocument INT;
+	DECLARE @LastState INT;
+	DECLARE @LastEnable INT;
+	DECLARE @NameLastState NVARCHAR(20);
+	DECLARE @NameStatus NVARCHAR(20);
 
 	--Obtener info del lote
 	SELECT @Emision_Point = Emision_Point, 
 		   @Establishment = Establishment, 
-		   @TypeDocument = TypeDocument
+		   @TypeDocument = TypeDocument,
+		   @LastState = Status,
+		   @LastEnable = Enable
 	FROM DeliveryBackOffice.dbo.InvoiceBatchHeader WITH(NOLOCK)
 	WHERE Id_Lote = @IdLote
+
+	--Nombre del último estado
+	SET @NameLastState = CASE 
+                    WHEN @LastEnable = 0 THEN 'detenido'
+                    WHEN @LastState = 1 THEN 'activo'
+                    ELSE 'inactivo'
+                 END;
+
 
 	IF (@Status = 1) --ACTIVO
 	BEGIN
@@ -38,7 +52,8 @@ BEGIN
 			WHERE Id_Lote = @IdLote
 
 			SET @IdResult = '200';
-			SET @Message = 'El lote paso a estado activo exitosamente.';
+			SET @Message = 'El lote ha cambiado de estado de ' + @NameLastState
+			+ ' a  activo exitosamente.';
 		END;
 		ELSE
 		BEGIN
@@ -54,7 +69,8 @@ BEGIN
 		WHERE Id_Lote = @IdLote
 
 		SET @IdResult = '200';
-		SET @Message = 'El lote paso a estado inactivo exitosamente.';
+		SET @Message = 'El lote ha cambiado de estado de ' + @NameLastState
+			+ ' a inactivo exitosamente.';
 	END;
 	ELSE IF (@Enable = 0) --DETENIDO
 	BEGIN
@@ -64,7 +80,8 @@ BEGIN
 		WHERE Id_Lote = @IdLote
 
 		SET @IdResult = '200';
-		SET @Message = 'El lote paso a estado detenido exitosamente.';
+		SET @Message = 'El lote ha cambiado de estado de ' + @NameLastState
+			+ ' a detenido exitosamente.';
 	END;
 
 	SELECT 
