@@ -93,7 +93,7 @@ BEGIN
 		CurrencyPrice_CODCodeISO NVARCHAR(8),
 	  	CurrencyPrice_CODSymbol  NVARCHAR(8),
 	    CurrencyPriceCodeISO     NVARCHAR(8),
-	    CurrencyPriceSymbol      NVARCHAR(8),		
+	    CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay DECIMAL(14, 2) NULL,
         CODAmount DECIMAL(14, 2) NULL,
         ReturnRates DECIMAL(14, 2) NULL,
@@ -158,7 +158,8 @@ BEGIN
 		Price decimal(16,2),
 		Collect_on_Delivery decimal(16,2),
 		Total decimal(16,2),
-		ReceiverCountry NVARCHAR(2)
+		ReceiverCountry NVARCHAR(2),
+		Symbol NVARCHAR(2)
 
 	)
 
@@ -193,7 +194,8 @@ BEGIN
 		ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0)
 		END
 		) AS  Total
-		, do.ReceiverCountryId AS ReceiverCountry
+		, ISNULL(do.ReceiverCountryId,'GT') AS ReceiverCountry
+		, CCU.Symbol
 	from 
 		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN 
@@ -201,7 +203,13 @@ BEGIN
 		ON 
 			do.Guide_Serie = dsd.Guide_Serie 
 			AND 
-			do.Guide_Number = dsd.Guide_Number			
+			do.Guide_Number = dsd.Guide_Number
+	INNER JOIN Cost CO WITH (NOLOCK)
+	ON do.Guide_Serie = CO.GuideSerie
+	   AND
+	   do.Guide_Number = CO.GuideNumber
+	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
+	ON CO.ShippingCurrency= CCU.IdCatCurrencyCOD
 	LEFT JOIN
 		@TempReturnPrice TRP
 		ON
@@ -231,6 +239,7 @@ BEGIN
 		,Collect_on_Delivery
 		,Total
 		,ReceiverCountry
+		,Symbol
 	FROM 
 		@temp tmp
 	ORDER BY 
