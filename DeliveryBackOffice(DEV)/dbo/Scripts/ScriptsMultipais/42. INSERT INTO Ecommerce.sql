@@ -43,5 +43,5 @@ INSERT INTO [dbo].[Ecommerce]
            ,GETDATE()
            ,NULL
            ,NULL
-           ,@idcustomer
+           ,@idcustomer)
 GO
