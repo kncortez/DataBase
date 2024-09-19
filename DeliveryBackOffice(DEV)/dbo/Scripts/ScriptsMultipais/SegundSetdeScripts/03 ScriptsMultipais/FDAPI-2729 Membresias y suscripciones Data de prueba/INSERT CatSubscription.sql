@@ -22,4 +22,5 @@ INSERT INTO CatSubscription (SubscriptionName,
 			   ('Paquete Gold','200 envÍos L86.23 c/u',17246.10,0,3,6,4,1,'SYS-BHERRERA',GETDATE(),'hwa-planGoldIcon','bannerSubsPlan4.png',2,9,NULL,NULL,'HN',4),
 			   ('Plan Amigo','Plan de descuentos',316.18,0,3,6,1,1,'SYS-BHERRERA',GETDATE(),'hwa-planAmigoIcon','bannerSubsPlan4.png',1,10,'MAS VENDIDO',6,'HN',4),
 			   ('Paquete Petit','25 envíos L105.39 c/u',2634.82,0,3,6,0,1,'SYS-BHERRERA',GETDATE(),'hwa-planPetitIcon','bannerSubsPlan4.png',2,9,'MÁS VENDIDO',1,'HN',4),
-			   ('Paquete Platino','400 envÍos L79.84 c/u',31937.23,0,3,6,0,1,'SYS-BHERRERA',GETDATE(),'hwa-planPlatinoIcon','bannerSubsPlan4.png',2,9,'NOVEDADES',1,'HN',4)
+			   ('Paquete Platino','400 envÍos L79.84 c/u',31937.23,0,3,6,0,1,'SYS-BHERRERA',GETDATE(),'hwa-planPlatinoIcon','bannerSubsPlan4.png',2,9,'NOVEDADES',1,'HN',4),
+			   ('Paquete Paquete PRO','600 envíos L25.00 c/u',48060.20,0,3,6,0,1,'SYS-BHERRERA',GETDATE(),'hwa-planProIcon','bannerSubsPlan4.png',2,9,'NOVEDADES',1,'HN',4)

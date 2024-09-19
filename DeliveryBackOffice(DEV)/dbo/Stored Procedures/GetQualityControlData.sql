@@ -320,16 +320,14 @@ BEGIN
                ISNULL(TCD.Settlement_CatRouteId, 0) [IdRoute],
                (CASE
                     WHEN TCD.SystemOrigin = 2 THEN
-                        --tk2.SSN_IdUser
-                        ''
+                        tk2.SSN_IdUser
                     ELSE
                         NULL
                 END
                ) [IdUser],
                (CASE
                     WHEN TCD.SystemOrigin = 2 THEN
-                        --tk2.SSN_Username
-                        ''
+                        tk2.SSN_Username
                     ELSE
                         NULL
                 END
@@ -460,8 +458,8 @@ BEGIN
         ) HUbs
             LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryAttempt] da WITH (NOLOCK)
                 ON [DA].[ID] = TCD.[DeliveryAttemptId]
-            --LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk2 WITH (NOLOCK)
-            --    ON tk2.SSN_IdToken = CONVERT(VARCHAR(50), da.User_Created) --ddd.UserCreated						
+            LEFT JOIN DenariusUser_Dev.dbo.LGN_LogByToken tk2 WITH (NOLOCK)
+                ON tk2.SSN_IdToken = CONVERT(VARCHAR(50), da.User_Created) --ddd.UserCreated						
             LEFT JOIN [DeliveryBackOffice].[dbo].[ConfirmationOfIncidence] coi WITH (NOLOCK)
                 ON [COI].[IdConfirmationOfIncidence] = [DA].[ConfirmationOfIncidenceId]
                    AND coi.Rowstatus = 1

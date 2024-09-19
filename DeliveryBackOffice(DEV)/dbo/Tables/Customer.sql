@@ -114,6 +114,10 @@ GO
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Descripcion que complementa el nombre del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'Description'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado que indica si el cliente esta autorizado para guías COD' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IsCOD'
+GO
+
+
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Es el dominio que utiliza el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'Domain'
 GO
 
@@ -308,10 +312,6 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'La tabla Cliente almacena informacon relacionada con los clientes de la empresa Forza Delivery' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer'
 GO
-
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado que indica si el cliente esta autorizado para guías COD' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Customer', @level2type=N'COLUMN',@level2name=N'IsCOD'
-GO
-
 GO
 CREATE NONCLUSTERED INDEX [idx_idCustomer_sphdGetCustomer]
     ON [dbo].[Customer]([IdCustomerType] ASC)

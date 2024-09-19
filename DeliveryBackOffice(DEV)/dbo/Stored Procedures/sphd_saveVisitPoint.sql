@@ -83,8 +83,9 @@ BEGIN
         DECLARE @Idplace AS INT =
                 (
                     SELECT ISNULL(IdCityPlace, -1)
-                    FROM dbo.CatCityPlace
-                    WHERE CityPlace = 'No Aplica'
+                      FROM dbo.CatCityPlace
+                     WHERE CityPlace = 'No Aplica'
+                       AND IdCountry = @IdCountry
                 );
 
         SET @IdCountry =

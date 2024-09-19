@@ -91,13 +91,7 @@ BEGIN
 					).value('.', 'varchar(max)'),1,1,''
 						  ) 
 					)
-			--### CAMBIO PARA PODER DESBLOQUEAR.INI ###
-			UPDATE DeliveryBackOffice.dbo.UserSystemRestriction
-			SET UstRetries = 0 , UstStatus = 'ACTIVE'
-			   ,UstOperationDate = GETDATE()
-			WHERE UstIdUser = @IdUser
-			AND UstRowStatus = 1
-			--### CAMBIO PARA PODER DESBLOQUEAR.FIN ###
+		
 		END
 		ELSE
 		BEGIN

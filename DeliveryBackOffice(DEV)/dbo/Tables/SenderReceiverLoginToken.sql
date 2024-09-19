@@ -11,6 +11,8 @@
 );
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha y hora de actualización de la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiverLoginToken', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 
@@ -45,4 +47,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tabla para el almacenamiento de token de CourierApp.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SenderReceiverLoginToken';
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SenderReceiverId_iNCLUDE]
+    ON [dbo].[SenderReceiverLoginToken]([SenderReceiverId] ASC)
+    INCLUDE([LoginToken]);
 

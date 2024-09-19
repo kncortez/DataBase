@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatBillingVolume] (
+CREATE TABLE [dbo].[CatBillingVolume] (
     [IdCatBillingVolume]       INT            IDENTITY (1, 1) NOT NULL,
     [NameBillingVolume]        NVARCHAR (50)  NOT NULL,
     [DescriptionBillingVolume] NVARCHAR (200) NOT NULL,
@@ -7,7 +7,7 @@
     [DateCreated]              DATETIME       NOT NULL,
     [TokenUpdated]             NVARCHAR (50)  NULL,
     [DateUpdated]              NVARCHAR (50)  NULL,
-    CONSTRAINT [PK_CatBillingVolume] PRIMARY KEY CLUSTERED ([IdCatBillingVolume] ASC),
+    CONSTRAINT [PK_CatBillingVolume] PRIMARY KEY CLUSTERED ([IdCatBillingVolume] ASC)
 );
 
 

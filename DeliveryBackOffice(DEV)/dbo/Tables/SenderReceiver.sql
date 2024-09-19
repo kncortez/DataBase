@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[SenderReceiver] (
+CREATE TABLE [dbo].[SenderReceiver] (
     [ID]                      INT            IDENTITY (1, 1) NOT NULL,
     [First_Name]              NVARCHAR (100) NOT NULL,
     [Last_Name]               NVARCHAR (100) NOT NULL,
@@ -19,15 +19,15 @@
     [HubLogisticId]           INT            NULL,
     [CatTypeSenderReceiverId] INT            NULL,
     [UniqueCode]              NVARCHAR (50)  NULL,
-    [MessageCounter]          INT            NOT NULL DEFAULT (0),
-    [MailCounter]             INT            NOT NULL DEFAULT (0),
-    [Date_UpdateToken]        DATETIME       NULL,
+	[MessageCounter]          INT            NOT NULL DEFAULT (0),
+	[MailCounter]             INT            NOT NULL DEFAULT (0),
+	[Date_UpdateToken]        DATETIME       NULL,
     [IdCountry]               VARCHAR  (2)   NULL,
     CONSTRAINT [PK_SenderReceiver] PRIMARY KEY CLUSTERED ([ID] ASC),
     CONSTRAINT [FK_SenderReceiver_CatTypeSenderReceiver] FOREIGN KEY ([CatTypeSenderReceiverId]) REFERENCES [dbo].[CatTypeSenderReceiver] ([IdCatTypeSenderReceiver]),
     CONSTRAINT [FK_SenderReceiver_HubLogistic] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FK_SenderIdCountry_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry] (IdCountry),
-    CONSTRAINT [UC_CUI_Country] UNIQUE NONCLUSTERED ([CUI] ASC,[idCountry])
+    CONSTRAINT [UC_CUI] UNIQUE NONCLUSTERED ([CUI] ASC)
 );
 
 GO

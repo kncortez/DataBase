@@ -821,7 +821,8 @@ BEGIN
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
 		LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
-			ON DOPD.GuideNumber = D.Guide_Number
+			ON dopd.GuideSerie = d.Guide_Serie AND  DOPD.GuideNumber = D.Guide_Number
+			
 		LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
             ON vpct.CodeOfReference = D.Sender_ID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpcti  WITH(NOLOCK) 

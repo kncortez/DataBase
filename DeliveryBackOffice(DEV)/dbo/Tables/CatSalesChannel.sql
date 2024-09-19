@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatSalesChannel] (
+CREATE TABLE [dbo].[CatSalesChannel] (
     [IdSalesChannel] INT           IDENTITY (1, 1) NOT NULL,
     [Description]    NVARCHAR (50) NOT NULL,
     [TokenCreated]   NVARCHAR (50) NOT NULL,
@@ -6,7 +6,7 @@
     [TokenUpdated]   NVARCHAR (50) NULL,
     [DateUpdated]    DATETIME      NULL,
     [RowStatus]      BIT           NOT NULL,
-    CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC),
+    CONSTRAINT [PK_CatSalesChannel] PRIMARY KEY CLUSTERED ([IdSalesChannel] ASC)
 );
 
 
@@ -41,5 +41,3 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de ac
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Registro válido?', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatSalesChannel', @level2type = N'COLUMN', @level2name = N'RowStatus';
 
-
-GO

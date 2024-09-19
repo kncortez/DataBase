@@ -2835,7 +2835,7 @@ set arithabort off
 																													ord.Sender_Address,
 																													'N/A'
 																												)
-																										 ) AS VARCHAR),
+																										 ) AS VARCHAR(100)),
 																							   '"',
 																							   ''
 																						   ),

@@ -3,7 +3,7 @@
 -- Create date: <2022-05-23>
 -- Description:	< Obtiene los últimos datos de facturación de una guía >
 -- =============================================
-create PROCEDURE [dbo].[GetGuideFCCBilling] 
+CREATE PROCEDURE [dbo].[GetGuideFCCBilling] 
 	-- Add the parameters for the stored procedure here
 	@GuideNumber INT,
 	@GuideSerie NVARCHAR(2) = 'FD'
@@ -92,5 +92,27 @@ BEGIN
 			,@FailureResponseMessage [messageResult]
 
 	END CATCH
+
+	INSERT INTO DeliveryBackOffice.dbo.RoutePreparationLogError
+			(
+			    ErrorDescription,
+			    ErrorNumber,
+			    ErrorProcedure,
+			    ErrorLine,
+			    GuideSerie,
+			    GuideNumber,
+			    TokenCreated,
+			    DateCreated
+			)
+			VALUES
+			(   'GetGuideFCCBilling',     -- ErrorDescription - varchar(300)
+			    1,     -- ErrorNumber - int
+			    'GetGuideFCCBilling',     -- ErrorProcedure - varchar(100)
+			    NULL,     -- ErrorLine - int
+			    NULL,     -- GuideSerie - nvarchar(2)
+			    NULL,     -- GuideNumber - int
+			    'SYS-BHERRERA',       -- TokenCreated - varchar(50)
+			    GETDATE() -- DateCreated - datetime
+			    )
 
 END

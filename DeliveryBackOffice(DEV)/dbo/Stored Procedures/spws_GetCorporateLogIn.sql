@@ -17,7 +17,7 @@
 -- Update date: <2024-07-16 >
 -- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
 -- =============================================
-CREATE PROCEDURE [dbo].[spws_GetCorporateLogIn]
+ALTER PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
   , @UserName VARCHAR(200)
@@ -256,6 +256,7 @@ BEGIN
 
                     END;
                     /*INSERT SUBMODULES*/
+					DECLARE @MININDEXSUBITEM2 INT= 0
                     WHILE @TOTALSUBMODULES > 0
                     BEGIN
                         DECLARE @CHILDSMD    VARCHAR(MAX) = ''
@@ -267,7 +268,7 @@ BEGIN
                           , ModIdModuleDAD INT
                           , ModIdModuleCHILD INT
                         );
-
+                       
                         --	IF (@VERIFYUSER  > 0 )
                         --BEGIN
 
@@ -333,11 +334,12 @@ BEGIN
 
                         --	END
 
-                        SELECT @CHILDSMENU = COUNT(1)
+                        SELECT @CHILDSMENU = COUNT(1)+@MININDEXSUBITEM2
                         FROM @TBSUBMODULES2;
 						 PRINT '@CHILDSMENU';
                         PRINT @CHILDSMENU;
-                        WHILE @CHILDSMENU > 0
+						SET @CHILDSMD=''
+                        WHILE @CHILDSMENU > @MININDEXSUBITEM2
                         BEGIN
                             SELECT @CHILDSMD
                                 = @CHILDSMD + ' {"Module":"' + cmo.ModName + '",' + '"Icon":"' + cmo.ModMetadata + '",'
@@ -357,7 +359,7 @@ BEGIN
                             (
                                 SELECT TMP.ModIdModuleCHILD
                                 FROM @TBSUBMODULES2 AS TMP
-                                WHERE TMP.ITERATOR2 = @CHILDSMENU2
+                                WHERE TMP.ITERATOR2 = @CHILDSMENU2+@MININDEXSUBITEM2
                             );
 
                             SET @CHILDSMENU2 = @CHILDSMENU2 + 1;
@@ -372,6 +374,8 @@ BEGIN
                         WHERE ITERATOR = @ITERATORSUBMODULES;
                         SET @ITERATORSUBMODULES = @ITERATORSUBMODULES + 1;
                         SET @TOTALSUBMODULES = @TOTALSUBMODULES - 1;
+						SET @MININDEXSUBITEM2= (SELECT MAX(ITERATOR2) AS UltimoID FROM @TBSUBMODULES2);														
+						DELETE FROM @TBSUBMODULES2;                        
                     END;
 
                     /*END SUBMODULOES*/
@@ -819,5 +823,4 @@ BEGIN
 
     -- retornar resultado en formato json
 
-    SELECT ('[{' + @jsonResult + ']') jsonResult;
-END;
+    SELECT ('[{' + @jsonResult + ']') jsonRe

@@ -23,6 +23,8 @@
 
 
 
+
+
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador de la promoción de puntos adicionales aplicada', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'PointsByServiceLog', @level2type = N'COLUMN', @level2name = N'CatPointPromoId';
 
@@ -86,4 +88,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Bitácora d
 GO
 CREATE NONCLUSTERED INDEX [idx_MembershipId_RowStatus]
     ON [dbo].[PointsByServiceLog]([MembershipId] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [idx_GuideSerie_GuideNumber_RowStatus]
+    ON [dbo].[PointsByServiceLog]([GuideSerie] ASC, [GuideNumber] ASC, [RowStatus] ASC);
 

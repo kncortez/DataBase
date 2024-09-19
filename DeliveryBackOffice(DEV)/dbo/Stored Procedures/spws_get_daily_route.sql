@@ -1,4 +1,4 @@
-
+﻿
 -- =============================================
 -- Author:		<Cristian Azurdia>
 -- Create date: <2024-04-25>
@@ -416,9 +416,9 @@ BEGIN
 							, dbo.fnt_String_Escape(VPC.DescriptionOfClient, 'json')
 							) , 'N/A'
 					)[Sender],
-				IIF(
+				REPLACE(IIF(
 					kvp.KindOfVPName = 'Express Center',
-					dbo.fnt_String_Escape(ISNULL(VPr.[Address], ''),'json'),
+					dbo.fnt_String_Escape(ISNULL(REPLACE(VPr.[Address],'"',''), ''),'json'),
 					ISNULL
 					(
 						ISNULL(
@@ -436,7 +436,7 @@ BEGIN
 							   ),
 						'N/A'
 					)	
-				   ) [Address],
+				   ),'"','') [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
 				THEN  REPLACE(REPLACE(REPLACE(REPLACE([DOR].[Sender_Phone],' ', ''), '+', ''), '(', ''), '(', '')

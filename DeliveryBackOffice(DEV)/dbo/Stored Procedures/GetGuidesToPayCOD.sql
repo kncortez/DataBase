@@ -14,6 +14,7 @@
 CREATE PROCEDURE [dbo].[GetGuidesToPayCOD]
     -- Add the parameters for the stored procedure here
     @Date DATE
+  , @IdCountry NVARCHAR(2)= 'GT'
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -185,6 +186,7 @@ BEGIN
 		--AND pg.RowStatus = 'TRUE'
 		AND BTD.RowStatus = 1 
 		--AND btc.RowStatus = 1 
+		AND IIF(do.SenderCountryId IS NULL, 'GT', do.SenderCountryId) = @IdCountry
 ​
 		GROUP BY  btd.GuideSerie,
            btd.GuideNumber,

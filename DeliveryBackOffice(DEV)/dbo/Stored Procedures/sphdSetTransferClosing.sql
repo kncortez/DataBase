@@ -62,15 +62,7 @@ BEGIN
                    tdop.Guide_Number,
                    1,
                    ISNULL(
-                   (
-                       SELECT TOP 1
-                              B.IdTypeOfMoney
-                       FROM dbo.Cost A WITH (NOLOCK)
-                           LEFT JOIN dbo.CostDetail B WITH (NOLOCK)
-                               ON A.IdCost = B.IdCost
-                       WHERE A.ProductNumber = CONCAT(tdop.Guide_Serie, tdop.Guide_Number)
-                       ORDER BY B.DateCreated DESC
-                   ),
+                   tdop_oa.IdTypeOfMoney,
                    1
                          ),
                    ISNULL(
@@ -95,7 +87,21 @@ BEGIN
                    @IdAcc, --convert(Int,tdop.AccountId) as AccountId
                    0.00,
                    @FEL
-            FROM @TblDeliveryOrdersList tdop;
+            FROM @TblDeliveryOrdersList tdop
+			inner join dbo.Cost A WITH (NOLOCK)				
+				ON 
+					A.ProductNumber = (CAST(tdop.Guide_Serie AS VARCHAR(2)) + CAST(tdop.Guide_Number AS VARCHAR(50)))
+			OUTER APPLY(
+				SELECT TOP 1
+                              ISNULL(B.IdTypeOfMoney,1) IdTypeOfMoney
+                       FROM dbo.CostDetail B WITH (NOLOCK)
+                       WHERE 
+						A.IdCost = B.IdCost
+                       ORDER BY B.DateCreated DESC
+			) tdop_OA
+			WHERE 
+				A.RowStatus=1;
+
 
 
 

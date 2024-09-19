@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Contingency] (
+CREATE TABLE [dbo].[Contingency] (
     [IdContingency]               INT             IDENTITY (1, 1) NOT NULL,
     [DeliveryOrderBySettlementId] BIGINT          NOT NULL,
     [Type]                        VARCHAR (10)    NOT NULL,
@@ -44,6 +44,8 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Descripció
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token que creó la fila.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Contingency', @level2type = N'COLUMN', @level2name = N'TokenCreated';
+
+
 
 
 GO
