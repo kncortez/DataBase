@@ -18,7 +18,7 @@ CREATE TABLE [dbo].[ManifestSettlementIncidence] (
     [TokenUpdated]					NVARCHAR (50)	NULL,
 	CONSTRAINT [PK_ManifestSettlementIncidence_IdManifestSettlementIncidence] PRIMARY KEY CLUSTERED ([IdManifestSettlementIncidence] ASC),
     CONSTRAINT [FK_ManifestSettlementIncidence_CatRoute] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
-    CONSTRAINT [FK_ManifestSettlementIncidence_CatManifestSettlementIncidenceType] FOREIGN KEY (CatManifestSettlementIncidenceTypeId) REFERENCES [dbo].[CatManifestSettlementIncidenceType] ([IdCatManifestSettlementIncidenceType])
+    CONSTRAINT [FK_ManifestSettlementIncidence_CatTypeIncidence] FOREIGN KEY (CatManifestSettlementIncidenceTypeId) REFERENCES [dbo].[CatTypeIncidence] ([IdIncidenceType])
 );
 
 GO
