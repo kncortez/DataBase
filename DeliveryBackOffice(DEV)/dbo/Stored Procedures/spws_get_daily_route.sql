@@ -448,8 +448,8 @@ BEGIN
 						,  REPLACE(REPLACE(REPLACE(REPLACE(
 								ISNULL
 									(
-									  IIF(LEN([DOR].[Sender_Phone]) > 7 AND LEN([DOR].[Sender_Phone]) < 9 , CONCAT([CPR].[Value], [DOR].[Receiver_Phone]), DOR.Receiver_Phone )
-									, IIF(LEN([DOR].[Sender_Phone]) > 7 AND LEN([DOR].[Sender_Phone]) < 9 , CONCAT([CPR].[Value], [DOR].[Receiver_Alternant_Phone]), DOR.Receiver_Alternant_Phone)
+									  IIF(LEN([DOR].[Receiver_Phone]) > 7 AND LEN([DOR].[Receiver_Phone]) < 9 , CONCAT([CPR].[Value], [DOR].[Receiver_Phone]), DOR.Receiver_Phone )
+									, IIF(LEN([DOR].[Receiver_Alternant_Phone]) > 7 AND LEN([DOR].[Receiver_Alternant_Phone]) < 9 , CONCAT([CPR].[Value], [DOR].[Receiver_Alternant_Phone]), DOR.Receiver_Alternant_Phone)
 									)
 							,' ', ''), '+', ''), '(', ''), '(', '')
 						), 'N/A'
