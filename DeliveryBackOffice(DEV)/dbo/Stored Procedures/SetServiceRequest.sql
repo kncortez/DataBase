@@ -370,7 +370,8 @@ BEGIN
             [OrderUserCreated],
             [SalePipeLineId],
 			[SenderCountryId],
-			[ReceiverCountryId]
+			[ReceiverCountryId],
+            [GuideType]
         -- FIN MODIFICACION
         )
         SELECT GT.[Ticket_Number],
@@ -441,7 +442,8 @@ BEGIN
                GT.OrderUserCreated,
                GT.SalePipeLineId,
 			   GT.IdCountrySender,
-			   GT.ReceiverCountryId
+			   GT.ReceiverCountryId,
+               CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END
         -- FIN MODIFICACION
         FROM #GuideTable GT;
 
