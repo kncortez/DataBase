@@ -21,7 +21,7 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
-
+	DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Name = 'QUETZAL')
 	--Flujo nuevo devoluciones
     IF OBJECT_ID('tempdb.dbo.#GuideReturnService', 'U') IS NOT NULL
         DROP TABLE #GuideReturnService;
@@ -209,7 +209,7 @@ BEGIN
 	   AND
 	   do.Guide_Number = CO.GuideNumber
 	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
-	ON CO.ShippingCurrency= CCU.IdCatCurrencyCOD
+	ON ISNULL(CO.ShippingCurrency,@CurrencyGT)= CCU.IdCatCurrencyCOD
 	LEFT JOIN
 		@TempReturnPrice TRP
 		ON

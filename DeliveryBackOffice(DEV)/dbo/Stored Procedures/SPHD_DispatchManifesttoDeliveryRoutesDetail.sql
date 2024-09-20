@@ -11,7 +11,7 @@ BEGIN
 	
 
 	SET NOCOUNT ON;
-
+    DECLARE @CurrencyGT INT = (SELECT IdCatCurrencyCOD FROM CatCurrencyCOD WHERE Name = 'QUETZAL')
 	--Flujo nuevo devoluciones
     IF OBJECT_ID('tempdb.dbo.#GuideReturnService', 'U') IS NOT NULL
         DROP TABLE #GuideReturnService;
@@ -80,10 +80,10 @@ BEGIN
         HaveCredit NVARCHAR(50) NULL,
         CollectCOD NVARCHAR(50) NULL,
         ReturnRate DECIMAL(14, 2) NULL,
-		--CurrencyPrice_CODCodeISO NVARCHAR(8),
-	 -- 	CurrencyPrice_CODSymbol  NVARCHAR(8),
-	 --   CurrencyPriceCodeISO     NVARCHAR(8),
-	 --   CurrencyPriceSymbol      NVARCHAR(8),
+		CurrencyPrice_CODCodeISO NVARCHAR(8),
+	 	CurrencyPrice_CODSymbol  NVARCHAR(8),
+	    CurrencyPriceCodeISO     NVARCHAR(8),
+	    CurrencyPriceSymbol      NVARCHAR(8),
         AmountToPay DECIMAL(14, 2) NULL,
         CODAmount DECIMAL(14, 2) NULL,
         ReturnRates DECIMAL(14, 2) NULL,
@@ -109,10 +109,10 @@ BEGIN
         HaveCredit,
         CollectCOD,
         ReturnRate,
-		--CurrencyPrice_CODCodeISO,
-	 -- 	CurrencyPrice_CODSymbol,
-	 --   CurrencyPriceCodeISO,
-	 --   CurrencyPriceSymbol,
+		CurrencyPrice_CODCodeISO,
+	    CurrencyPrice_CODSymbol,
+	    CurrencyPriceCodeISO,
+	    CurrencyPriceSymbol,
         AmountToPay,
         CODAmount,
         ReturnRates
@@ -148,7 +148,8 @@ BEGIN
 		Price decimal(16,2),
 		Collect_on_Delivery decimal(16,2),
 		Total decimal(16,2),
-		ReceiverCountry NVARCHAR(2)
+		ReceiverCountry NVARCHAR(2),
+		Symbol NVARCHAR(2)
 
 	)
 
@@ -183,7 +184,8 @@ BEGIN
 		ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0)
 		END
 		) AS  Total
-		,'GT' --do.ReceiverCountryId AS ReceiverCountry
+		,do.ReceiverCountryId AS ReceiverCountry
+		,CCU.Symbol
 	from 
 		[DeliveryBackOffice].[dbo].DeliveryOrder do WITH(NOLOCK)
 	INNER JOIN 
@@ -196,6 +198,10 @@ BEGIN
 			dsd.ID_DeliveryOrderBySettlement = @IdManifest 
 			AND 
 			dsd.RowStatus = 1
+	INNER JOIN Cost CO WITH (NOLOCK)
+	    ON do.Guide_Serie = CO.GuideSerie AND do.Guide_Number = CO.GuideNumber
+	INNER JOIN CatCurrencyCOD CCU WITH (NOLOCK)
+	    ON ISNULL(CO.ShippingCurrency,@CurrencyGT)= CCU.IdCatCurrencyCOD
 	LEFT JOIN
 		@TempReturnPrice TRP
 		ON
@@ -223,6 +229,7 @@ BEGIN
 		,Collect_on_Delivery
 		,Total
 		,ReceiverCountry
+		,Symbol
 	FROM 
 		@temp tmp
 	ORDER BY 
