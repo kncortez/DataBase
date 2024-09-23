@@ -978,7 +978,12 @@ BEGIN
 						ELSE 'API'
 					END
 			)'GuideOrigin',
-			D.ReceiverCountryId
+			D.ReceiverCountryId,
+			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
+			IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT)) 'WeightLB',
+			RH.WeightLimit 'WeightOf',
+			ISNULL(DSC.RouteCode,'0000') AS 'RouteCode',
+			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
@@ -997,13 +1002,29 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK) 
-				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  --COLLATE Latin1_General_CI_AI 
+				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+			LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
+			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
+			LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			    ON DSC.IdSettlement = D.ReceiverIdSettlement
+			LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+			    ON   DOP.GuideSerie = D.Guide_Serie   AND  DOP.GuideNumber  = D.Guide_Number
+			LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
+			   ON D.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (D.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+            LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
+              ON RC.RbcIdRate= RH.RheId
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (
                       SELECT CT.Guide_Number FROM @CorrelativeTable CT
                   )
-		ORDER BY C.[Row_Number] ASC;
+		ORDER BY C.[Row_Number] ,
+			  CASE 
+				WHEN RbcCodeOfReference = D.Sender_ID THEN 1
+				WHEN RbcCodeOfReference IS NULL THEN 2
+				ELSE 3
+			  END
+			  ASC;
     END;
 END;
 
