@@ -415,7 +415,7 @@ BEGIN
 					   'Sin Observaciones' 
 				       ELSE COI.LiquidatorRemarks 
 				   END AS LiquidatorRemarks
-				   , CASE WHEN DOR.ReceiverCountryId = 'GT' THEN CONCAT('Q', CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination, 2) AS DECIMAL(12,2)))) ELSE CONCAT('L', CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination , 2) AS DECIMAL(12,2)))) END AS 'CurrencySymbol'
+				   , CASE WHEN ISNULL(DOR.ReceiverCountryId,'GT') = 'GT' THEN CONCAT('Q', CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination, 2) AS DECIMAL(12,2)))) ELSE CONCAT('L', CONVERT(NVARCHAR,CAST(ROUND(@ResultDestination , 2) AS DECIMAL(12,2)))) END AS 'CurrencySymbol'
 				FROM DeliveryOrder DOR WITH (NOLOCK)
 				LEFT JOIN DeliveryOrderAttemptData doad WITH (NOLOCK)
 					ON doad.GuideSerie = DOR.Guide_Serie

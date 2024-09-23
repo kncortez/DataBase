@@ -439,17 +439,17 @@ BEGIN
 				   ),'"','') [Address],
 				CASE
 				WHEN ISNULL([DOR].[IsLastMileReturn], 0) = 0 
-				THEN  REPLACE(REPLACE(REPLACE(REPLACE([DOR].[Sender_Phone],' ', ''), '+', ''), '(', ''), '(', '')
+				THEN  REPLACE(REPLACE(REPLACE(REPLACE( IIF(LEN([DOR].[Sender_Phone]) > 7 AND LEN([DOR].[Sender_Phone]) < 9 , CONCAT([CPS].[Value], [DOR].[Sender_Phone]), ISNULL([DOR].[Sender_Phone], 'N/A') ),' ', ''), '+', ''), '(', ''), '(', '')
 				ELSE ''
 				END [Sender_Phone],				
 				ISNULL(
 						IIF(DOR.IsLastMileReturn = 1
-						, REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(DOR.Sender_Phone, 'N/A'),' ', ''), '+', ''), '(', ''), '(', '')
-						, REPLACE(REPLACE(REPLACE(REPLACE(
+						,  REPLACE(REPLACE(REPLACE(REPLACE( IIF(LEN([DOR].[Sender_Phone]) > 7 AND LEN([DOR].[Sender_Phone]) < 9 , CONCAT([CPS].[Value], [DOR].[Sender_Phone]), ISNULL(DOR.Sender_Phone, 'N/A') ) ,' ', ''), '+', ''), '(', ''), '(', '')
+						,  REPLACE(REPLACE(REPLACE(REPLACE(
 								ISNULL
 									(
-									  DOR.Receiver_Phone
-									, DOR.Receiver_Alternant_Phone
+									  IIF(LEN([DOR].[Receiver_Phone]) > 7 AND LEN([DOR].[Receiver_Phone]) < 9 , CONCAT([CPR].[Value], [DOR].[Receiver_Phone]), DOR.Receiver_Phone )
+									, IIF(LEN([DOR].[Receiver_Alternant_Phone]) > 7 AND LEN([DOR].[Receiver_Alternant_Phone]) < 9 , CONCAT([CPR].[Value], [DOR].[Receiver_Alternant_Phone]), DOR.Receiver_Alternant_Phone)
 									)
 							,' ', ''), '+', ''), '(', ''), '(', '')
 						), 'N/A'
