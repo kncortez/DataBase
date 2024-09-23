@@ -4,8 +4,8 @@
 -- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
 -- =============================================
 -- Author:		<Tito Garcia>
--- Update date: <30/08/2024>
--- Description:	<Se carga información en sp.IdHubLogistics y sp.TownshipId al momento de crear un nuevo servicio en liquidación>
+-- Update date: <23/09/2024>
+-- Description:	<Se carga información en sp.IdHubLogistics y sp.TownshipId al momento de crear un nuevo servicio de recolección en el módulo liquidación>
 -- =============================================
 
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
@@ -1040,13 +1040,13 @@ BEGIN
                                  ISNULL(do.Sender_LastName, '')
                              ),
                        do.Sender_Phone,
-                       NULL, -- [IdHubLogistics]
+                       hub.IdHubLogistic,
                        NULL, -- [AmountPickup]
                        2,    -- [IdSourcePlataform]
                        do.Sender_Address,
                        1,
                        NULL, --TransaccionFAC
-                       NULL, --TownshipId
+                       twn.IdTownship,
                        1,
                        @VehicleTypeId,
                        0
@@ -1055,10 +1055,22 @@ BEGIN
                         ON acc.IdCustomer =
                         (
                             SELECT TOP 1
-                                   ISNULL(do.IdCustomer, vpc.CustomerID)
+                                    ISNULL(do.IdCustomer, vpc.CustomerID)
                             FROM dbo.VisitPointClient vpc WITH (NOLOCK)
                             WHERE vpc.CodeOfReference = do.Sender_ID
                         )
+                    LEFT JOIN dbo.Township twn WITH (NOLOCK)
+                        ON twn.IdTownship = do.SenderIdTownship
+                    LEFT JOIN dbo.Township twc WITH (NOLOCK)
+                        ON twc.TownshipName = do.Sender_Town
+                    LEFT JOIN (SELECT
+                            CV.HeaderCode
+                            ,MAX(CV.Hub) HUB
+                        FROM dbo.DumpServiceCoverage CV WITH (NOLOCK)
+                        GROUP BY CV.HeaderCode) HB
+                        ON HB.HeaderCode = ISNULL(twn.HeaderCode, twc.HeaderCode)
+                    LEFT JOIN dbo.HubLogistics hub WITH (NOLOCK)
+                        ON hub.HubAbbreviation = HB.HUB
                 WHERE do.Guide_Serie = @GuideSerie
                       AND do.Guide_Number = @GuideNumber;
 
