@@ -53,7 +53,7 @@ BEGIN
 			   ,@TotalAmount
 			   ,@GuidesQuantity
 			   ,@TotalNumberOfPieces
-			   ,NULL
+			   ,0
 			   ,NULL
 			   ,@CatManifestSettlementIncidenceTypeId
 			   ,@IncidenceComment
