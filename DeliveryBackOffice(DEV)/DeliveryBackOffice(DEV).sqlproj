@@ -1716,6 +1716,17 @@
     <Build Include="dbo\Stored Procedures\RDL_Info_DensityGMap.sql" />
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new_1.sql" />
     <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
+    <Build Include="dbo\Tables\CatProductSubCategory.sql" />
+    <Build Include="dbo\Tables\CatProductStatusStore.sql" />
+    <Build Include="dbo\Tables\CatProductCondition.sql" />
+    <Build Include="dbo\Tables\Product.sql" />
+    <Build Include="dbo\Tables\ProductImages.sql" />
+    <Build Include="dbo\Tables\CatProductTag.sql" />
+    <Build Include="dbo\Tables\TagByProduct.sql" />
+    <Build Include="dbo\Tables\ReviewByProduct.sql" />
+    <Build Include="dbo\Tables\DeliveryLinkStatus.sql" />
+    <Build Include="dbo\Tables\DeliveryLink.sql" />
+    <Build Include="dbo\Tables\DeliveryLinkProducts.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
