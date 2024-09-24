@@ -7,6 +7,10 @@ Pasos
 BEGIN TRY
     BEGIN TRANSACTION;
 
+    update ConfigParams
+      set IdCountry='GT'
+    where name ='CODRateDef'
+    AND IdCountry IS NULL
     --1. Insertar registro de porcentaje de comision (idCountry HN)
     INSERT INTO ConfigParams([Name],[Description],Value,Status,CreateDate,IdCountry)
     VALUES ('CODRateDef','Tarifa COD Default','12.14',1,GETDATE(),'HN')
