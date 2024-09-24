@@ -75,7 +75,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
-                          AND db.Id_country = @IdCountrySender
+                          AND ISNULL(db.Id_country,'GT') = @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
@@ -258,7 +258,7 @@ BEGIN
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
 							  AND rh.RateTypeId = 1
-							  AND rh.CountryId = @IdCountrySender
+							  AND ISNULL(rh.CountryId,'GT') = @IdCountrySender
                     );
             DECLARE @IdRate INT;
             DECLARE @CODRateDefault DECIMAL(12, 2) =
@@ -267,7 +267,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
-							  AND cf.IdCountry = @IdCountrySender
+							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
                     );
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
@@ -275,7 +275,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf WITH (NOLOCK)
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
-							  AND cf.IdCountry = @IdCountrySender
+							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
                     );
 
             ---- Revalorizar guias que no tengan un precio asociado ---------------------------------------------
