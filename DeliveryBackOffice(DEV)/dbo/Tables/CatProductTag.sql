@@ -7,7 +7,7 @@
     [DateCreated] DATETIME NOT NULL, 
     [UserUpdated] NVARCHAR(50) NULL, 
     [DateUpdated] DATETIME NULL, 
-	PRIMARY KEY CLUSTERED ([IdCatProductTag] ASC),
+	PRIMARY KEY CLUSTERED ([IdCatProductTag] ASC)
 )
 
 GO

@@ -7,7 +7,7 @@
     [DateCreated] DATETIME NOT NULL, 
     [UserUpdated] NVARCHAR(50) NULL, 
     [DateUpdated] DATETIME NULL ,
-	PRIMARY KEY CLUSTERED ([IdDeliveryLinkStatus] ASC),
+	PRIMARY KEY CLUSTERED ([IdDeliveryLinkStatus] ASC)
 )
 
 GO
