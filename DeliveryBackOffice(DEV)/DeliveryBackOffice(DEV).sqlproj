@@ -737,6 +737,9 @@
     <Build Include="dbo\Stored Procedures\sps_dsms_sms_received.sql" />
     <Build Include="dbo\Stored Procedures\sps_dsms_UpdateBatchSent.sql" />
     <Build Include="dbo\Stored Procedures\sps_ddeli_updateOrdersToPrinted.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestWithStatusByRoute.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestWithIncidenceDetails.sql" />
+    <Build Include="dbo\Stored Procedures\CreateManifestIncidence.sql" />
     <Build Include="dbo\Stored Procedures\sps_creditNoteForza_Hd.sql" />
     <Build Include="dbo\Stored Procedures\sps_creditNoteForza.sql" />
     <Build Include="dbo\Stored Procedures\sps_contact_incident.sql" />
