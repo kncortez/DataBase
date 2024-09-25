@@ -14,7 +14,8 @@ BEGIN
 	SELECT 1 AS StatusCode,
 		   'Registros encontrados' AS Description
 
-	SELECT DL.ReceiverName,
+	SELECT DL.IdDeliveryLink,
+		   DL.ReceiverName,
 		   DLP.Quantity,
 		   DL.ReceiverPhone,
 		   DL.ReceiverAddress,
