@@ -58,3 +58,5 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Imagen extra g
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'URL de hipervínculo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'HyperlinkURL';
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País asignado' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCarouselImage', @level2type=N'COLUMN',@level2name=N'IdCountry'
+GO
