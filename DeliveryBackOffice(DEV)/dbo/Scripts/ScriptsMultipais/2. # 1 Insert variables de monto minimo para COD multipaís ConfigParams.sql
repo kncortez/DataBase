@@ -9,3 +9,11 @@ VALUES (N'MinCODCommissionAmount', N'Monto de comision de COD minimo a descontar
 UPDATE [dbo].[ConfigParams]
 SET IdCountry='GT'
 where [Name]='MinCODCommissionAmount' AND [Value]='3.8'
+
+
+INSERT [dbo].[ConfigParams] ([Name], [Description], [Value], [Status], [CreateDate], [IdCountry], [IdCurrencyCOD])
+VALUES (N'MaximumCODAmount', N'Monto maximo de COD permitido en la generación de una guía', N'16000', 1, getdate(), N'HN', NULL)
+
+UPDATE [dbo].[ConfigParams]
+SET IdCountry='GT'
+where [Name]='MaximumCODAmount' and IdCountry is NULL

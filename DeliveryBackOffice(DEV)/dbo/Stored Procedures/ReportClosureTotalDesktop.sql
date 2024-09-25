@@ -86,7 +86,7 @@ BEGIN
 		   ,ISNULL(MAX(ACH.TotalAmountFacturaCardDeclared), 0) TotalAmountFacturaCardDeclared
 		   ,ISNULL(MAX(ACH.TotalAmountCash + ACH.TotalAmountCredit + ACH.TotalAmountCODCash + ACH.TotalAmountFacturaCash + ACH.TotalAmountFacturaCard), 0) TotalGeneral
 		   -- FIN MODIFICACIÓN
-		   ,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrensySymbol
+		   ,CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'GTQ.' ELSE 'L.' END AS CurrensySymbol
 		FROM dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		LEFT JOIN dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON VPC.CodeOfReference = ACH.VisitPoint
