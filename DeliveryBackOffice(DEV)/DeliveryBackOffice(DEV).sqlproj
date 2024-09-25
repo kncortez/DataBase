@@ -1733,6 +1733,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetProducts.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetProductCategories.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetConditionsProduct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetTagsProduct.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
