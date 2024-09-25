@@ -604,20 +604,20 @@ BEGIN
                            1
                        ELSE
                            0
-                   END
-                 , @Token
-                 , GETDATE()
-                 , @TaxId
-                 , @TaxName
-                 , @InvoiceEmail
-                 , @FiscalAddress
-                 , DAY(GETDATE())
-                 , 0
-                 , 0
-                 , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE()))
-                 , CDR.ValueTypeId
-                 , RTP.ProductGiftShippingEmail
-                 , (
+                   END,
+                   @Token,
+                   GETDATE(),
+                   @TaxId,
+                   @TaxName,
+                   @InvoiceEmail,
+                   @FiscalAddress,
+                   DAY(GETDATE()),
+                   0,
+                   0,
+                   DATEADD(DAY, @AddedPointExpirationDate, DATEADD(MONTH, [CM].[MembershipValidity], GETDATE())),
+                   CDR.ValueTypeId,
+                   RTP.ProductGiftShippingEmail,
+                   (
                        SELECT TOP 1
                               CASE
                                   WHEN number < 65 THEN

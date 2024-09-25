@@ -173,7 +173,7 @@ BEGIN
                  , CM.MembershipFixedValue
                  , CM.MembershipMaxServiceFixedValue
                  , 0
-                 , DATEADD(DAY, CM.MembershipValidity, GETDATE())
+                 , DATEADD(MONTH, CM.MembershipValidity, GETDATE())
                  , 1
                  , @Token
                  , GETDATE()
@@ -184,7 +184,7 @@ BEGIN
                  , DAY(GETDATE())
                  , 0
                  , 0
-                 , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE()))
+                 , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(MONTH, [CM].[MembershipValidity], GETDATE()))
                  , CDR.ValueTypeId
             FROM [DeliveryBackOffice].[dbo].[CatMembership] CM WITH (NOLOCK)
 			INNER JOIN [DeliveryBackOffice].[dbo].[CatMembershipDiscountRange] CDR WITH (NOLOCK)
