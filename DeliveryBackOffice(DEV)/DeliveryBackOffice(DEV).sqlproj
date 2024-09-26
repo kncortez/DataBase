@@ -1595,7 +1595,7 @@
     <Build Include="dbo\Stored Procedures\GetTypeCityPlace.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFullAddressList.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetInformationFromDeliveryLink.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1736,6 +1736,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetConditionsProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTagsProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetProductById.sql" />
+    <Build Include="dbo\Stored Procedures\sphwd_GetSettlements.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
