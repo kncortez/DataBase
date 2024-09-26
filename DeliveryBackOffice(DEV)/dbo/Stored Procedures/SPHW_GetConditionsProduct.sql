@@ -24,7 +24,7 @@ BEGIN
         SELECT C.[IdCatProductCondition] [Id],
                C.[Name] [Name],
                C.[Description] [Description]
-        FROM [dbo].[CatProductCondition] C
+        FROM [dbo].[CatProductCondition] C WITH(NOLOCK)
         WHERE C.[RowStatus] = 'TRUE'
 
 

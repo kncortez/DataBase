@@ -22,7 +22,7 @@ BEGIN
 
         SELECT C.[IdCatProductTag] [Id],
                C.[Description] [Description]
-        FROM [dbo].[CatProductTag] C
+        FROM [dbo].[CatProductTag] C WITH(NOLOCK)
         WHERE C.[RowStatus] = 'TRUE'
 
 

@@ -3,11 +3,11 @@
 	[IdDeliveryLink] INT IDENTITY (1, 1) NOT NULL,   
     [Token] NVARCHAR(200) NOT NULL, 
     [AccountId] BIGINT NOT NULL, 
-    [OriginCodeOfReference] NVARCHAR(200) NOT NULL, 
-    [DestinyCodeOfReference] NVARCHAR(200) NULL, 
+    [OriginCodeOfReference] INT NOT NULL, 
+    [DestinyCodeOfReference] INT NULL, 
     [ReceiverName] NVARCHAR(200) NOT NULL, 
     [ReceiverPhone] NVARCHAR(50) NOT NULL, 
-    [ReceiverSettlementId] NVARCHAR(100) NOT NULL, 
+    [ReceiverSettlementId] BIGINT NOT NULL, 
     [ReceiverEmail] NVARCHAR(100) NOT NULL, 
     [ReceiverCatCityPlaceId] INT NULL, 
     [ReceiverZone] NVARCHAR(100) NULL, 
@@ -41,7 +41,8 @@
     CONSTRAINT FK_DeliveryLink_DeliveryFacCODId FOREIGN KEY (DeliveryFacCODId) REFERENCES DeliveryFavCOD(IdDeliveryFavCOD),
     CONSTRAINT FK_DeliveryLink_DeliveryLinkStatusId FOREIGN KEY (DeliveryLinkStatusId) REFERENCES DeliveryLinkStatus(IdDeliveryLinkStatus),
     CONSTRAINT FK_DeliveryLink_SubscriptionId FOREIGN KEY (SubscriptionId) REFERENCES Subscription(IdSubscription),
-    CONSTRAINT FK_DeliveryLink_GuideSerie FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES DeliveryOrder(Guide_Serie, Guide_Number)
+    CONSTRAINT FK_DeliveryLink_GuideSerie FOREIGN KEY (GuideSerie, GuideNumber) REFERENCES DeliveryOrder(Guide_Serie, Guide_Number),
+    CONSTRAINT FK_DeliveryLink_Settlement FOREIGN KEY (ReceiverSettlementId) REFERENCES Settlement(IdSettlement)
 )
 
 GO

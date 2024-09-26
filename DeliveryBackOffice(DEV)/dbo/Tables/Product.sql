@@ -25,12 +25,14 @@
     [DateCreated] DATETIME NOT NULL,  
     [UserUpdated] NVARCHAR(50) NULL,  
     [DateUpdated] DATETIME NULL,    
-	PRIMARY KEY CLUSTERED ([IdProduct] ASC),
+	[IdOriginAddress] BIGINT NOT NULL, 
+    PRIMARY KEY CLUSTERED ([IdProduct] ASC),
     CONSTRAINT FK_Product_AccountId FOREIGN KEY (AccountId) REFERENCES Account(AccIdAccount),
     CONSTRAINT FK_Product_CatProductSubCategory FOREIGN KEY (CatProductSubCategoryId) REFERENCES CatProductSubCategory(IdCatProductSubCategory),
     CONSTRAINT FK_Product_CatStatusStoreId FOREIGN KEY (CatStatusStoreId) REFERENCES CatProductStatusStore(IdCatProductStatusStore),
     CONSTRAINT FK_Product_CatProductCondition FOREIGN KEY (CatProductConditionId) REFERENCES CatProductCondition(IdCatProductCondition),
-    CONSTRAINT FK_Product_CatCurrencyCODId FOREIGN KEY (CatCurrencyCODId) REFERENCES CatCurrencyCOD(IdCatCurrencyCOD)
+    CONSTRAINT FK_Product_CatCurrencyCODId FOREIGN KEY (CatCurrencyCODId) REFERENCES CatCurrencyCOD(IdCatCurrencyCOD),
+    CONSTRAINT FK_Product_OriginAddressId FOREIGN KEY (IdOriginAddress) REFERENCES UserAddress(UadIdAddress)
 )
 
 GO
@@ -258,3 +260,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'Product',
     @level2type = N'COLUMN',
     @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id Direccion origen (FK a UserAddress)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'Product',
+    @level2type = N'COLUMN',
+    @level2name = N'IdOriginAddress'
