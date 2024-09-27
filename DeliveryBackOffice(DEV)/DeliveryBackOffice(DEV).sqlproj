@@ -1741,6 +1741,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkProduct.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_ReactivateDeliveryLink.sql" />
 	<Build Include="dbo\Stored Procedures\SPHW_GetDeliveryLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetCheckout.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
