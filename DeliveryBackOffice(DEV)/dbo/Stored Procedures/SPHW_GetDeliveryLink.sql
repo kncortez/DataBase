@@ -35,13 +35,13 @@ BEGIN
 		   DL.DateCreated,
 		   DLS.Name AS Status
 	FROM DeliveryLink DL WITH (NOLOCK)
-		INNER JOIN VisitPointClient VP WITH (NOLOCK)
+		LEFT JOIN VisitPointClient VP WITH (NOLOCK)
 			ON DL.DestinyCodeOfReference = VP.CodeOfReference
-		INNER JOIN DeliveryLinkProducts DLP WITH (NOLOCK)
+		LEFT JOIN DeliveryLinkProducts DLP WITH (NOLOCK)
 			ON DLP.DeliveryLinkId = DL.IdDeliveryLink
-		INNER JOIN DeliveryLinkStatus DLS WITH (NOLOCK)
+		LEFT JOIN DeliveryLinkStatus DLS WITH (NOLOCK)
 			ON DLS.IdDeliveryLinkStatus = DL.DeliveryLinkStatusId
-	WHERE VP.CountryId = @IdCountry
+	WHERE (VP.CountryId = @IdCountry OR (@IdCountry = 'GT' AND VP.CountryId IS NULL))
 		  AND DL.AccountId = @AccountId
 
 	COMMIT TRANSACTION;
