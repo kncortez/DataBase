@@ -13,6 +13,7 @@ CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLink]
   @CollectOnDelivery DECIMAL(14, 2)
 AS 
 BEGIN 
+	BEGIN TRANSACTION
 	BEGIN TRY
 		INSERT INTO DeliveryBackOffice.dbo.DeliveryLink 
 		(Token,AccountId,OriginCodeOfReference,ReceiverName,ReceiverPhone,ReceiverSettlementId,ReceiverEmail,CatPaymentTypeId,CatTypeServiceId,
@@ -31,6 +32,7 @@ BEGIN
 		UPDATE DeliveryBackOffice.dbo.DeliveryLink
 		SET Token = @hashResultado
 		WHERE IdDeliveryLink = @DeliveryLinkID
+		COMMIT TRANSACTION
 
 		SELECT
 		200 AS 'StatusCode',
@@ -43,6 +45,7 @@ BEGIN
 		2 AS 'DeliveryLinkStatusId'
 	END TRY
 	BEGIN CATCH
+		ROLLBACK TRANSACTION
 		SELECT
 		400 AS 'StatusCode',
 		'Error al registrar Link de Entrega' AS 'Description'
