@@ -9,7 +9,7 @@ AS
 BEGIN
     BEGIN TRY
         DECLARE @Status INT = (
-                                  SELECT IdDeliveryLinkStatus FROM DeliveryLinkStatus WHERE Name = 'Envíado'
+                                  SELECT IdDeliveryLinkStatus FROM DeliveryLinkStatus WHERE Name = 'Enviado'
                               )
         DECLARE @StatusAcepted INT = (
                                          SELECT IdDeliveryLinkStatus
