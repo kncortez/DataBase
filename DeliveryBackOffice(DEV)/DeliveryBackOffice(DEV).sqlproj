@@ -1739,6 +1739,7 @@
     <Build Include="dbo\Stored Procedures\sphwd_GetSettlements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkProduct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_ReactivateDeliveryLink.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
