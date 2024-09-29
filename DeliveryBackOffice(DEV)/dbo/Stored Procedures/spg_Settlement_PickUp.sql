@@ -74,7 +74,7 @@ BEGIN
               ordp.StatusOrderId NOT IN ( 7, 5 ) --(11, 10, 7, 5)
               OR ordp.StatusOrderId IS NULL
           )
-          AND CAST(sm.DateCreated AS DATE) = @tiempo
+          AND CAST(sp.StartDate AS DATE) = @tiempo
           AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     --where cr.CodeRoute = @Route and (ordp.StatusOrderId not in (11,10,7,5)or ordp.StatusOrderId is null)  and ord.StatusOrderId not in (11,10,7,5) and ordp.IsPickup = 1  and cast(sm.DateCreated as date) = @tiempo
     GROUP BY ord.Guide_Serie,
@@ -131,7 +131,7 @@ BEGIN
               ordp.StatusOrderId NOT IN ( 11, 10, 7, 5 )
               OR ordp.StatusOrderId IS NULL
           )
-          AND CAST(sm.DateCreated AS DATE) = @tiempo ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
+          AND CAST(sp.StartDate AS DATE) = @tiempo ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
           AND IIF(pr.IdCountry IS NULL,'GT',pr.IdCountry) = @IdCountry
     --where cr.CodeRoute = @Route and (ordp.StatusOrderId not in (11,10,7,5)or ordp.StatusOrderId is null) and cast(sm.DateCreated as date) = @tiempo and ordp.IsPickup = 1 ---and es.ServiceStatusId = 3 and ord.StatusOrderId not in (11,10,7,5)  --
 

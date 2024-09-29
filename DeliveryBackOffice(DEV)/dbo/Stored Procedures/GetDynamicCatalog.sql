@@ -646,7 +646,9 @@ BEGIN
                                 FROM [DeliveryBackOffice].[dbo].[Subscription] WITH (NOLOCK)   
                                 WHERE AccountId = @IdAccount
 								     AND RowStatus = 1
-                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)))
+                                     AND CONVERT(NVARCHAR(10), ExpirationDate, 20) >= CONVERT(NVARCHAR(10), GETDATE(), 20)
+                                     AND SubscriptionMaxServiceFixedValue >	ActualServiceCount 
+                                     ))
         SET @jsonResult =
         (
           SELECT STUFF(
