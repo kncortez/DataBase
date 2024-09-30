@@ -1,56 +1,60 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SPHW_GetInformationFromDeliveryLink]    Script Date: 24/09/2024 08:35:36 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2024-10-23>
 -- Description:	<Description,Procedimiento para obtener información de un link de entrega>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHW_GetInformationFromDeliveryLink]
+ALTER PROCEDURE [dbo].[SPHW_GetInformationFromDeliveryLink]
 @Token NVARCHAR(250)
 AS
 BEGIN
+
+
 	
 	SET NOCOUNT ON;
+	--- Validar si es un token de link de compra o un token de link de producto, mandar data diferente, si existe mandar data de producto,  mandar bandera indicando que tipod e link es
 	
 IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
+   
    BEGIN
-	SELECT IdDeliveryLink,
-	       Token,
-		   AccountId,
-		   OriginCodeOfReference,
-		   DestinyCodeOfReference,
-		   ReceiverName,
-		   ReceiverPhone,
-		   ReceiverSettlementId,
-		   ReceiverEmail,
-		   ReceiverCatCityPlaceId,
-		   ReceiverZone,
-		   ReceiverNeighborhood,
-		   ReceiverAddress,
-		   ReceiverAdditionalInstuctions,
-		   ReceiverLatitude,
-		   ReceiverLongitude,
-		   WhatsappId,
-		   CatPaymentTypeId,
-		   CatTypeServiceId,
-		   IsInsurance,	
-		   InsuranceAmount,
-		   DeliveryFacCODId,
-		   CollectOnDelivery,
-		   DeliveryLinkStatusId,
-		   ExpirationDate,
-		   SubscriptionId,
-		   GuideSerie,
-		   GuideNumber,
+
+	SELECT Top 1 
+	       DL.IdDeliveryLink,
+	       DL.Token,
+		   DL.AccountId,
+		   DL.OriginCodeOfReference,
+		   DL.DestinyCodeOfReference,
+		   DL.ReceiverName,
+		   DL.ReceiverPhone,
+		   DL.ReceiverSettlementId,
+		   DL.ReceiverEmail,
+		   DL.ReceiverCatCityPlaceId,
+		   DL.ReceiverZone,
+		   DL.ReceiverNeighborhood,
+		   DL.ReceiverAddress,
+		   DL.ReceiverAdditionalInstuctions,
+		   DL.ReceiverLatitude,
+		   DL.ReceiverLongitude,
+		   DL.WhatsappId,
+		   DL.CatPaymentTypeId,
+		   DL.CatTypeServiceId,
+		   DL.IsInsurance,	
+		   DL.InsuranceAmount,
+		   DL.DeliveryFacCODId,
+		   DL.CollectOnDelivery,
+		   DL.DeliveryLinkStatusId,
+		   FORMAT(DL.ExpirationDate,'dd/MM/yyyy') [ExpirationDate], --- Formato DD/MM/YYYY
+		   DL.SubscriptionId,
+		   DL.GuideSerie,
+		   DL.GuideNumber,
 		   C.CountryID,
 		   S.Settlement,
 		   T.[TownshipName],
-		   P.[ProvinceName] 
+		   P.[ProvinceName],
+		   'true' AS [IsDeliveryLink],
+		    CASE WHEN DL.ExpirationDate <= GETDATE() AND DLS.[Name] = 'Envíado' THEN  1 --- INDICA QUE EL TOKEN ESTA VIGENTE
+			        ELSE 0 END AS [StatusCode], -- INDICA QUE EL tOKEN VENCIO
+			CASE WHEN DL.ExpirationDate <= GETDATE() AND DLS.[Name] = 'Envíado' THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
+			        ELSE 'Token No vigente' END AS [MessageResponse] -- INDICA QUE EL tOKEN VENCIO
 	FROM [DeliveryBackOffice].[dbo].[DeliveryLink] DL WITH(NOLOCK)
 	        INNER JOIN  
 		  [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
@@ -59,34 +63,42 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		  [DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
 		  ON A.IdCustomer = C.IdCustomer
 		      INNER JOIN 
-		  [DeliveryBackOffice].[dbo].Settlement S WITH(NOLOCK)
-		   ON DL.ReceiverSettlementId = S.IdSettlement
+		  [DeliveryBackOffice].[dbo].[Settlement] S WITH(NOLOCK)
+		  ON DL.ReceiverSettlementId = S.IdSettlement
 		      INNER JOIN 
-		  [DeliveryBackOffice].[dbo].Township T WITH(NOLOCK)
-		   ON S.IdTownship = T.IdTownship
-		   INNER JOIN 
-		   [DeliveryBackOffice].[dbo].Province P WITH(NOLOCK)
-		   ON T.IdProvince = P.IdProvince
-     WHERE Token =  @Token
-END
-	   ELSE
-	       BEGIN
+		  [DeliveryBackOffice].[dbo].[Township] T WITH(NOLOCK)
+		  ON S.IdTownship = T.IdTownship
+		      INNER JOIN 
+		  [DeliveryBackOffice].[dbo].[Province] P WITH(NOLOCK)
+		  ON T.IdProvince = P.IdProvince
+		      INNER JOIN 
+		  [DeliveryBackOffice].[dbo].[DeliveryLinkStatus] DLS WITH(NOLOCK)
+		  ON  DL.DeliveryLinkStatusId = DLS.IdDeliveryLinkStatus
+     WHERE DL.Token =  @Token
+	 ORDER BY DL.DateCreated DESC
 
-
-		  SELECT TOP 1  
-					   P.IdProduct,
+	 -- Arreglo de Productos
+	    
+       SELECT
+	          P.IdProduct,
+	          DLP.Price,
+	          DLP.Quantity,
+			  P.AccountId,
+			  P.[Name] NameProduct,
+			  P.[Description] DescriptionProduct,
+			  P.Sku, 
+			  P.Stock,
+		      C.[Name],
+			  C.CustomerPhone,
+			  DLP.DateCreated,
+			  C.CountryID,
+			  P.IdOriginAddress,
 					   P.Token,
-					   P.[Name] NameProduct,
-					   P.[Description] DescriptionProduct,
-					   P.AccountId,
 					   P.CatProductSubCategoryId,
 					   P.IsPublic,
 					   P.CatStatusStoreId,
 					   P.CatProductConditionId,
-					   P.Sku,
-					   P.Stock,
 					   P.StockRequired,
-					   P.Price,
 					   P.CatCurrencyCODId,
 					   P.Brand,
 					   P.AverageRating,
@@ -99,13 +111,74 @@ END
 					    P.RowStatus AS [StatusCode], -- INDICA QUE EL tOKEN VENCIO
 			          CASE WHEN P.RowStatus=1 THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
 			                 ELSE 'Token No vigente' END AS [MessageResponse] -- INDICA QUE EL tOKEN VENCIO
-			FROM [dbo].[Product] P WITH(NOLOCK)
-			    WHERE Token = @Token
+	  FROM [DeliveryBackOffice].[dbo].[DeliveryLinkProducts] DLP WITH(NOLOCK)
+	          INNER JOIN 
+		   [DeliveryBackOffice].[dbo].[Product] P WITH(NOLOCK)
+				ON DLP.ProductId = P.IdProduct
+			  INNER JOIN 
+		   [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
+		       ON P.AccountId = A.AccIdAccount
+			  INNER JOIN
+			[DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
+			  ON A.IdCustomer = C.IdCustomer
+	   WHERE 
+	   DLP.DeliveryLinkId = (SELECT Top 1  IdDeliveryLink FROM [DeliveryBackOffice].[dbo].[DeliveryLink] DL WITH(NOLOCK) WHERE DL.Token =  @Token)
+	    
+
+	END
+	   ELSE
+	       BEGIN
+
+
+			SELECT 
+			  P.IdProduct,
+	          DLP.Price,
+	          DLP.Quantity,
+			  P.AccountId,
+			  P.[Name] NameProduct,
+			  P.[Description] DescriptionProduct,
+			  P.Sku, 
+			  P.Stock,
+		      C.[Name],
+			  C.CustomerPhone,
+			  DLP.DateCreated,
+			  C.CountryID,
+			  P.IdOriginAddress,
+					   P.Token,
+					   P.CatProductSubCategoryId,
+					   P.IsPublic,
+					   P.CatStatusStoreId,
+					   P.CatProductConditionId,
+					   P.StockRequired,
+					   P.CatCurrencyCODId,
+					   P.Brand,
+					   P.AverageRating,
+					   P.NameSale,
+					   P.StartDateSale,
+					   P.EndDateSale,
+					   P.PercentageSale,
+					   P.IdOriginAddress,
+					   'false' AS [IsDeliveryLink],
+					    P.RowStatus AS [StatusCode], -- INDICA QUE EL tOKEN VENCIO
+			          CASE WHEN P.RowStatus=1 THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
+			                 ELSE 'Token No vigente' END AS [MessageResponse] -- INDICA QUE EL tOKEN VENCIO
+	  FROM [DeliveryBackOffice].[dbo].[DeliveryLinkProducts] DLP WITH(NOLOCK)
+	          INNER JOIN 
+		   [DeliveryBackOffice].[dbo].[Product] P WITH(NOLOCK)
+				ON DLP.ProductId = P.IdProduct
+			  INNER JOIN 
+		   [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
+		       ON P.AccountId = A.AccIdAccount
+			  INNER JOIN
+			[DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
+			  ON A.IdCustomer = C.IdCustomer
+	  WHERE Token = @Token
 			ORDER BY P.DateCreated DESC
 
 
 		   END
-	
 END
+
+
 
 
