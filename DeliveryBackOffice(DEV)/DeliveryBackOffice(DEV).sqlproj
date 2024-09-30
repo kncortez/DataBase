@@ -1735,7 +1735,8 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetProductCategories.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetConditionsProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTagsProduct.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_GetProductById.sql" />
+	<Build Include="dbo\Stored Procedures\SPHW_GetProductById.sql" />
+	<Build Include="dbo\Stored Procedures\SPHW_CancelledDeliveryLink.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

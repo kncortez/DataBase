@@ -3,30 +3,25 @@
 -- Create date: <2024-09-25>
 -- Description:	<Anulacion de links de entregas>
 -- =============================================
-CREATE PROCEDURE SPHW_CancelledDeliveryLink
-				@IdDeliveryLink INT
+CREATE PROCEDURE [dbo].[SPHW_CancelledDeliveryLink]
+	@IdDeliveryLink INT
 AS
 BEGIN
     BEGIN TRY
         DECLARE @Status INT = (
-                                  SELECT IdDeliveryLinkStatus FROM DeliveryLinkStatus WHERE Name = 'Anulado'
+                                  SELECT IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WHERE Name = 'Anulado'
                               )
-        DECLARE @StatusAcepted INT = (
-                                         SELECT IdDeliveryLinkStatus
-                                         FROM DeliveryLinkStatus
-                                         WHERE Name = 'Aperturado'
-                                     )
-
         IF EXISTS
         (
             SELECT IdDeliveryLink
-            FROM DeliveryLink
+            FROM DeliveryBackOffice.dbo.DeliveryLink
             WHERE IdDeliveryLink = @IdDeliveryLink
-                  AND DeliveryLinkStatusId = @StatusAcepted
+                  AND DeliveryLinkStatusId IN (SELECT IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus  WITH(NOLOCK)
+				  WHERE [Name] IN ('Completado','Caducado','Enviado','Aperturado','Recibido'))
         )
         BEGIN
             BEGIN TRANSACTION;
-            UPDATE DeliveryLink
+            UPDATE DeliveryBackOffice.dbo.DeliveryLink
             SET DeliveryLinkStatusId = @Status
             WHERE IdDeliveryLink = @IdDeliveryLink
             COMMIT TRANSACTION;
