@@ -50,7 +50,8 @@ IF(ISNULL(@IdCart,0) = 0  )
 			 1,
 			 @Token,
 			 GETDATE(),
-			 @IdCountry
+			 @IdCountry,
+			IIF(@IsUserTeleMarketing = 1, @IdAccount,NULL)
 			)
 
 			SET @MarketplaceCartId = SCOPE_IDENTITY();
