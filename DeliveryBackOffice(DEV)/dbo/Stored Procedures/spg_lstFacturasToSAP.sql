@@ -24,8 +24,9 @@ BEGIN
                ihd.inv_invoiceOfCreditNote
         FROM DeliveryBackOffice.dbo.invoiceHeader ihd WITH (NOLOCK)
             LEFT JOIN dbo.InvoiceRestriction ir WITH(NOLOCK)
-                ON ihd.inv_pk_id = ir.inv_pk_id
-        WHERE ihd.inv_status IN ( -1, 2 )
+            ON ihd.inv_pk_id = ir.inv_pk_id
+        WHERE ISNULL(ihd.IdCountry,'GT') = 'GT'
+			  AND ihd.inv_status IN ( -1, 2 )
               -- 1 CREA LOCALMENTE EL REGISTRO DE FACTURA
               -- 2 CUANDO SE ENVIA FACTURA A FEL
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
@@ -57,11 +58,3 @@ BEGIN
 
     END  
 END
-
-
-
-
-
-
-
-

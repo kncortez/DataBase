@@ -4,9 +4,15 @@
 -- Create date: <2023-04-28>
 -- Description:	< Método para obtener incidencias de un tipo con resultado como tabla >
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-10>
+-- Description:	<Se agrega filtro de país >
+-- =============================================
 CREATE PROCEDURE [dbo].[spHD_GetIncidenceListByType]
 
-	@IncidenceServiceType NVARCHAR(25) = NULL
+	@IncidenceServiceType NVARCHAR(25) = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -43,7 +49,9 @@ BEGIN
 			WHERE
 				[CTI].[RowStatus] = 1
 				AND
-				[CTI].[ServiceType] = @IncidenceServiceType  COLLATE Latin1_General_CI_AI 
+				[CTI].[ServiceType] = @IncidenceServiceType  
+				AND 
+				ISNULL([CTI].[CountryId], 'GT') = @IdCountry
 			ORDER BY
 				CTI.[OrderId] ASC
 

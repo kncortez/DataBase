@@ -3,20 +3,25 @@
 -- Create date: <2020-03-04>
 -- Description:	<Cambia de estado de recolectado a ingreso a instalaciones>
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-11>
+-- Description: <Se agrega validacion para consulta de guia existente pero que no pertenece al pais logueado>
+-- =============================================
 CREATE PROCEDURE [dbo].[spws_set_route_settlement_status]
     @GuideSerie NVARCHAR(2),
     @GuideNumber INT,
     @GuidePiece SMALLINT,
     @Token NVARCHAR(100),
     @Route VARCHAR(100),
-    @CountryId VARCHAR(2)
+    @CountryId VARCHAR(2) = 'GT'
 AS
 BEGIN
 
     DECLARE @RModified INT = 0;
     DECLARE @RModified2 INT = 0;
-    DECLARE @RModified3 INT = 0;
+    DECLARE @RModified3 INT = 0,
+            @SenderCountryId VARCHAR(2) = NULL;
+
 
     DECLARE @GModif INT = 0;
 
@@ -37,6 +42,39 @@ BEGIN
 	                                                Inner Join dbo.StatusOrder SO
 													ON DO.StatusOrderId = SO.StatusOrderId
 													Where DO.Guide_Serie=@GuideSerie And Guide_Number = @GuideNumber)
+
+
+        IF EXISTS
+        (
+            SELECT TOP 1 1
+              FROM DeliveryOrder WITH (NOLOCK)
+             WHERE Guide_Serie = @GuideSerie
+               AND Guide_Number = @GuideNumber
+        )
+        BEGIN
+            SELECT @SenderCountryId = SenderCountryId
+              FROM DeliveryOrder WITH (NOLOCK)
+             WHERE Guide_Serie = @GuideSerie
+               AND Guide_Number = @GuideNumber
+
+            IF @SenderCountryId <> @CountryId
+            BEGIN
+                  SET @Description = CONCAT('La guía ', @GuideSerie, @GuideNumber, ' no existe.');
+
+                  SELECT 0 AS 'StatusCode',
+                         @Description 'Description',
+                         CONCAT(@GuideSerie, @GuideNumber, '-', @GuidePiece) AS 'Guide',
+                         0 AS 'SubStatusCode',
+                         0 'IsDry', 
+                         @IsStatusTerminal 'IsTerminal'
+
+                  SELECT 'No se guardo el registro' AS StatusCode;
+
+                  RETURN;
+            END
+        END
+
+
 	If( @IsStatusTerminal = 1)	
 				Begin
 					SET @Description ='*** Guía : '+ @GuideSerie + CONVERT(nvarchar(25),@GuideNumber) +' en estado Terminal : '+ @StatusDescription  +' ***';	
@@ -96,6 +134,7 @@ BEGIN
                     SELECT IdRoute
                     FROM DeliveryBackOffice.dbo.CatRoute WITH (NOLOCK)
                     WHERE CodeRoute = @Route
+                    AND RowStatus = 1
                 );
    
 	 
@@ -337,6 +376,7 @@ BEGIN
 																INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 															    ON do.IdCustomer = WHE.CustomerId
 																WHERE do.Guide_Number = @GuideNumber
+                                                                    AND do.Guide_Serie = @GuideSerie
 																	AND WHE.TypeConnectionId = 2
 																GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -353,7 +393,7 @@ BEGIN
 													);
 
 													DECLARE @MaxPieceOrderDetail INT = 0;
-													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryOrderDetail WITH(NOLOCK) Where Guide_Number = @GuideNumber AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND StatusOrderId = 2))
+													SET @MaxPieceOrderDetail = IIF((SELECT MAX(PieceId) FROM DeliveryOrderDetail WITH(NOLOCK) Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2) IS NULL,0,(SELECT MAX(PieceId) FROM DeliveryOrderDetail Where Guide_Number = @GuideNumber AND Guide_Serie = @GuideSerie AND StatusOrderId = 2))
 
 													INSERT INTO @PiecesGuideRelatedTableRec 
 																( 
@@ -373,7 +413,7 @@ BEGIN
 																AND do.Guide_Number = dop.GuideNumber
 																INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 															    ON do.IdCustomer = WHE.CustomerId
-																WHERE do.Guide_Serie = @GuideSerie 
+																WHERE do.Guide_Serie = @GuideSerie
 																AND do.Guide_Number = @GuideNumber
 																AND dop.ExternalPieceId IS NOT NULL
 																AND WHE.TypeConnectionId = 2
@@ -405,8 +445,8 @@ BEGIN
 														INNER JOIN @PiecesGuideRelatedTableRec pgt
 														    ON gpt.GuideSerie = pgt.GuideSerie
 															AND gpt.GuideNumber = pgt.GuideNumber
-															WHERE gpt.NumberPieces = pgt.NumberRelatedPieces
-																AND gpt.NumberPieces = @MaxPieceOrderDetail
+                                                            AND gpt.NumberPieces = pgt.NumberRelatedPieces
+															WHERE gpt.NumberPieces = @MaxPieceOrderDetail
 																AND WHE.TypeConnectionId = 2
 
 								 END
@@ -563,9 +603,11 @@ BEGIN
 														FROM DeliveryOrder do WITH(NOLOCK)
 														INNER JOIN DeliveryOrderPiece dop WITH(NOLOCK)
 															ON do.Guide_Number = dop.GuideNumber
+                                                            AND do.Guide_Serie = dop.GuideSerie
 															INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 														    ON do.IdCustomer = WHE.CustomerId
 															WHERE do.Guide_Number = @GuideNumber
+                                                                AND do.Guide_Serie = @GuideSerie
 																AND WHE.TypeConnectionId = 2
 															GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -922,8 +964,7 @@ BEGIN
                            AND do.Guide_Number = @GuideNumber
                            AND sp.AddressPickup = do.Sender_Address
                 WHERE ra.IdRoute = @IdRoute
-                      AND ra.DateOfRoute = @tiempo
-                      AND sp.AddressPickup = do.Sender_Address;
+                      AND ra.DateOfRoute = @tiempo;
             END;
 
             --Si se encuentra el vp entre los servicios de recolección, se asigna

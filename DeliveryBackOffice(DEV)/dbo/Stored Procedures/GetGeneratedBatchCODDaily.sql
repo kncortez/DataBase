@@ -2,7 +2,8 @@
 CREATE PROCEDURE [dbo].[GetGeneratedBatchCODDaily]
     @IdBankParam INT,
     @BatchTimeRange VARCHAR(300) = '',
-    @CoDProcessID INT
+    @CoDProcessID INT,
+	@IdCountrySender NVARCHAR(50) = N'GT'
 AS
 BEGIN
 
@@ -61,12 +62,12 @@ BEGIN
                     WHERE cm.ModName = @ModuleName
                 );
         DECLARE @BankName NVARCHAR(50) = N'BANCO DE AMERICA CENTRAL';
-        DECLARE @IdCountry NVARCHAR(50) = N'GT';
+        --DECLARE @IdCountry NVARCHAR(50) = N'GT';
         DECLARE @InAccount NVARCHAR(50) = N'CUENTAS INTERNAS BAC O BANCOR';
         DECLARE @OutAccount NVARCHAR(50) = N'CREDITOS ENVIAR FONDOS A OTROS BANCOS';
         DECLARE @AccountType NVARCHAR(50) = N'MONETARIA';
         DECLARE @ConceptCustomer NVARCHAR(50) = N'PAGO';
-        DECLARE @CreditAccount NVARCHAR(50) = N'903666261';
+        DECLARE @CreditAccount NVARCHAR(50) = IIF(@IdCountrySender = 'GT', N'903666261', N'903666262');
         DECLARE @ConceptForza NVARCHAR(50) = N'COMISION';
         DECLARE @BankBAC INT =
                 (
@@ -74,7 +75,7 @@ BEGIN
                     FROM DeliveryBackOffice.dbo.DeliveryBank db
                     WHERE db.Name = @BankName
                           AND db.Id_status = 1
-                          AND db.Id_country = @IdCountry
+                          AND ISNULL(db.Id_country ,'GT')= @IdCountrySender
                 );
         DECLARE @CreditAccountId INT;
         DECLARE @CreditAccountName NVARCHAR(2000);
@@ -95,7 +96,7 @@ BEGIN
             (
                 SELECT PayingBank
                 FROM DeliveryBackOffice.dbo.DeliveryBank
-                WHERE Id_country = @IdCountry
+                WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
                 GROUP BY PayingBank
@@ -109,7 +110,7 @@ BEGIN
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
@@ -132,6 +133,7 @@ BEGIN
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
 								 AND ISNULL(do.IsLastMileReturn,0) =0
+								 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -149,7 +151,7 @@ BEGIN
                        (
                            SELECT /*TOP 50*/ ',' + CONCAT(pg.GuideSerie, pg.GuideNumber)
                            FROM DeliveryBackOffice.dbo.ProcessedGuideCOD pg
-                               JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                               INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
@@ -170,7 +172,7 @@ BEGIN
             (
                 SELECT PayingBank
                 FROM DeliveryBackOffice.dbo.DeliveryBank
-                WHERE Id_country = @IdCountry
+                WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                       AND Id_status = 1
                       AND PayingBank <> @BankBAC
                 GROUP BY PayingBank
@@ -183,6 +185,7 @@ BEGIN
                                  AND cus.CatBatchFrequencyCODId = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
+								 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -252,11 +255,13 @@ BEGIN
 
             DECLARE @IdRateDefault INT =
                     (
-                        SELECT TOP 1
+                        SELECT
                                rh.RheId
                         FROM DeliveryBackOffice.dbo.RateHeader rh
                         WHERE rh.RheRowStatus = 1
                               AND rh.RheDefault = 1
+							  AND rh.RateTypeId = 1
+							  AND ISNULL(rh.CountryId,'GT') = @IdCountrySender
                     );
             DECLARE @IdRate INT;
             DECLARE @CODRateDefault DECIMAL(12, 2) =
@@ -265,6 +270,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf
                         WHERE cf.Name = 'CODRateDef'
                               AND Status = 1
+							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
                     );
             DECLARE @CODExemptDefault DECIMAL(12, 2) =
                     (
@@ -272,6 +278,7 @@ BEGIN
                         FROM DeliveryBackOffice.dbo.ConfigParams cf
                         WHERE cf.Name = 'CODExemptDef'
                               AND Status = 1
+							  AND ISNULL(cf.IdCountry,'GT') = @IdCountrySender
                     );
 
             ---- Revalorizar guias que no tengan un precio asociado ---------------------------------------------
@@ -293,7 +300,8 @@ BEGIN
                        AND PC.GuideNumberDestination = ord.Guide_Number
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
-                  AND PC.IdPromoCoupon IS NULL;
+                  AND PC.IdPromoCoupon IS NULL
+				  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -490,6 +498,7 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ord.Collect_OnDelivery > 0
+					 AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -612,6 +621,7 @@ BEGIN
                        AND do.Guide_Number = tact.Guide_Number
             WHERE (tact.Commision + tact.Price) > 0
                   AND tact.CODtoPay > 0
+				  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 
@@ -621,6 +631,12 @@ BEGIN
                                                [GuideNumber],
                                                [CreditAccountId],
                                                [BankId]
+                                           );
+
+            CREATE NONCLUSTERED INDEX IX_TFPTD_Guides
+            ON #TableForzaPaymentTempDaily (
+                                               [GuideSerie],
+                                               [GuideNumber]
                                            );
 
             SET @Reference = @Reference +
@@ -646,7 +662,7 @@ BEGIN
                        (
                            SELECT PayingBank
                            FROM DeliveryBackOffice.dbo.DeliveryBank
-                           WHERE Id_country = @IdCountry
+                           WHERE ISNULL(Id_country,'GT') = @IdCountrySender
                                  AND Id_status = 1
                                  AND PayingBank <> @BankBAC
                            GROUP BY PayingBank
@@ -765,6 +781,7 @@ BEGIN
                         Amount,
                         Commission,
                         CatTransactionTypeCODId,
+					    CatCurrencyCODId,
                         BankId,
                         CatAccountTypeCODId,
                         CatConceptCODId,
@@ -776,7 +793,8 @@ BEGIN
                         AccountNumber,
                         AccountName,
                         CODCommissionPercentage,
-                        DiscountPrice
+                        DiscountPrice,
+						IdCountry
                     )
                     SELECT @NewIdBatchCODCustomer,
                            tcpt.GuideSerie,
@@ -786,6 +804,7 @@ BEGIN
                            tcpt.Amount,
                            tcpt.Commision,
                            tcpt.CatTransactionTypeCODId,
+						   IIF(c.CodCurrency is null, 1, c.CodCurrency),
                            tcpt.BankId,
                            tcpt.CatAccountTypeCODId,
                            tcpt.CatConceptCODId,
@@ -810,8 +829,10 @@ BEGIN
                            tcpt.AccountNumber,
                            tcpt.AccountName,
                            CODRate,
-                           DiscountPrice
+                           DiscountPrice,
+						   @IdCountrySender
                     FROM #TableCustomerPaymentTempDaily tcpt
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tcpt.GuideSerie, tcpt.GuideNumber)
                     WHERE NOT EXISTS
                     (
                         SELECT 1
@@ -867,6 +888,7 @@ BEGIN
                         Amount,
                         Commission,
                         CatTransactionTypeCODId,
+					    CatCurrencyCODId,
                         BankId,
                         CatAccountTypeCODId,
                         CatConceptCODId,
@@ -878,7 +900,8 @@ BEGIN
                         AccountNumber,
                         AccountName,
                         CODCommissionPercentage,
-                        DiscountPrice
+                        DiscountPrice,
+						IdCountry
                     )
                     SELECT @NewIdBatchCODForza,
                            tfpt.GuideSerie,
@@ -888,6 +911,7 @@ BEGIN
                            tfpt.Amount,
                            tfpt.Commision,
                            tfpt.CatTransactionTypeCODId,
+						   IIF(c.CodCurrency is null, 1, c.CodCurrency),
                            tfpt.BankId,
                            tfpt.CatAccountTypeCODId,
                            tfpt.CatConceptCODId,
@@ -912,8 +936,10 @@ BEGIN
                            tfpt.AccountNumber,
                            tfpt.AccountName,
                            CODRate,
-                           DiscountPrice
+                           DiscountPrice,
+						   @IdCountrySender
                     FROM #TableForzaPaymentTempDaily tfpt
+					LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK) ON c.ProductNumber = CONCAT(tfpt.GuideSerie, tfpt.GuideNumber)
                     WHERE NOT EXISTS
                     (
                         SELECT 1

@@ -4,10 +4,17 @@
 -- Create date: <2023-03-31>
 -- Description:	<Reporte de transacciones con tarjeta de crédito/débito registradas en sistema>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-08-20>
+-- Description:	<Se agrega el parametro de IdCountry y  sus filtros>
+--[dbo].[spRS_GetCDCTransactions] '2024-08-01', '2024-08-19', 'GT'
+-- =============================================
 CREATE PROCEDURE [dbo].[spRS_GetCDCTransactions]
 
 	@StartDate DATETIME = NULL,
-	@EndDate DATETIME = NULL
+	@EndDate DATETIME = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -20,7 +27,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' AND IdCountry = @IdCountry
 	)
 
 	-- Manejo de fechas
@@ -62,7 +69,7 @@ BEGIN
 	);
 
 	CREATE NONCLUSTERED INDEX IDX_TMP_Transaction_Guide
-	ON #TCTransaction ( [ProductSerie], [ProductNumber] )
+	ON #TCTransaction ([ProductNumber] )
 	
 	INSERT INTO #TCTransaction
 	(
@@ -87,7 +94,43 @@ BEGIN
 	WHERE
 		[CCTBC].[DateCreated] BETWEEN @StartDate AND @EndDate
 		AND
-		[CCTBC].[ReasonCode] = '00'
+		[CCTBC].[ReasonCode] = '00' 
+
+	IF OBJECT_ID('tempdb.dbo.#TCTDatan', 'U') IS NOT NULL 
+		DROP TABLE #TCTData;
+		
+	CREATE TABLE #TCTData(
+	OriginSystem NVARCHAR(25),
+	ExpressCenter NVARCHAR(50),
+	TypeProduct NVARCHAR(25),
+	ProductName NVARCHAR(50),
+	OrderNumber NVARCHAR(50),
+	PaymentDate NVARCHAR(20),
+	InvoiceDate NVARCHAR(20),
+	InvoiceCertification NVARCHAR(100),
+	InvoiceAmount DECIMAL(8,2),
+	TransactionDate DATETIME,
+	CurrencySymbol NVARCHAR(2),
+	IdCountryAll NVARCHAR(2),
+	Correlative BIGINT
+	);
+	
+	INSERT INTO #TCTData
+	(
+		OriginSystem, 
+		ExpressCenter, 
+		TypeProduct, 
+		ProductName, 
+		OrderNumber, 
+		PaymentDate, 
+		InvoiceDate, 
+		InvoiceCertification, 
+		InvoiceAmount, 
+		TransactionDate, 
+		CurrencySymbol, 
+		IdCountryAll,
+		Correlative 	
+	)
 
 	SELECT 
 		DISTINCT
@@ -161,6 +204,19 @@ BEGIN
 				END
 			) [InvoiceAmount]
 			,[TCT].[TransactionDate] -- Order by
+			,CASE WHEN ISNULL(CM.IdCountry,'GT') = 'GT' AND ISNULL(CS.IdCountry,'GT') = 'GT' AND ISNULL(DO.SenderCountryId, 'GT') = 'GT' THEN 'Q.'
+				  ELSE 'L.'
+			 END AS CurrencySymbol
+			,CASE WHEN CM.IdCountry IS NOT NULL THEN CM.IdCountry
+				  WHEN CS.IdCountry IS NOT NULL THEN CS.IdCountry
+				  WHEN DO.SenderCountryId IS NOT NULL THEN DO.SenderCountryId
+			ELSE NULL
+			END AS IdCountryAll
+			,CASE WHEN MPL.IdMembershipPaymentLog IS NOT NULL THEN MPL.IdMembershipPaymentLog
+				  WHEN SPL.IdSubscriptionPaymentLog IS NOT NULL THEN SPL.IdSubscriptionPaymentLog
+				  WHEN DO.Guide_Number IS NOT NULL THEN DO.Guide_Number
+			ELSE NULL
+			END AS Correlative
 	FROM
 		[#TCTransaction] TCT
 		-- Es una membresía
@@ -256,7 +312,26 @@ BEGIN
 				[VPCori].[CodeOfReference] <> 0
 		ORDER BY
 			[TCT].[TransactionDate] DESC
-				
+
+	SELECT OriginSystem,
+		   ExpressCenter,
+		   TypeProduct,
+		   ProductName,
+		   OrderNumber,
+		   PaymentDate,
+		   InvoiceDate,
+		   InvoiceCertification,
+		   InvoiceAmount,
+		   TransactionDate,
+		   CurrencySymbol,
+		   IdCountryAll,
+		   Correlative
+	FROM #TCTData
+	WHERE ISNULL(IdCountryAll,'GT') = @IdCountry
+
+	IF OBJECT_ID('tempdb.dbo.#TCTData', 'U') IS NOT NULL 
+		DROP TABLE #TCTData;
+
 	IF OBJECT_ID('tempdb.dbo.#TCTransaction', 'U') IS NOT NULL 
 		DROP TABLE #TCTransaction;
 END

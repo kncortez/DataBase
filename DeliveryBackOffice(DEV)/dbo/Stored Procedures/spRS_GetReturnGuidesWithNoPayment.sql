@@ -4,10 +4,16 @@
 -- Create date: <2023-03-30>
 -- Description:	<Retorna los tipos de una ruta>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-08-19>
+-- Description:	<Filtra los datos por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spRS_GetReturnGuidesWithNoPayment]
 
 	@StartDate DATETIME = NULL,
-	@EndDate DATETIME = NULL
+	@EndDate DATETIME = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -19,7 +25,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Devuelto'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Devuelto' 
 	)
 	DECLARE @ReturnEXCStatusId INT = (
 		SELECT 
@@ -28,7 +34,7 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[StatusOrder] SO  WITH(NOLOCK) 
 		WHERE
-			SO.[OrderDescription] = 'Devuelto en express center'  COLLATE Latin1_General_CI_AI 
+			SO.[OrderDescription] = 'Devuelto en express center'  
 	)
 
 	-- Manejo de fechas
@@ -97,6 +103,7 @@ BEGIN
 		,ReceiverName NVARCHAR(600)
 		,ServicePrice DECIMAL(18,2)
 		,OriginHub INT
+		,CurrencySymbol NVARCHAR(2)
 	);
 
 	CREATE NONCLUSTERED INDEX IDX_TMP_FilteredGuide_Giode ON [#FilteredGuide] ([GuideSerie], [GuideNumber])
@@ -116,6 +123,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[HubLogistics] HL  WITH(NOLOCK) 
 			ON
 				[DSC].[Hub] = [HL].[HubAbbreviation]
+	WHERE ISNULL(HL.IdCountry,'GT') = @IdCountry
 	GROUP BY
 		[DSC].[HeaderCode]
 	
@@ -143,18 +151,21 @@ BEGIN
 				[Co].[GuideNumber] = [DOD].[Guide_Number]
 				AND
 				[Co].[TotalAmountPaid] IS NULL
+		INNER JOIN DeliveryOrder DO WITH (NOLOCK)
+			ON DOD.Guide_Serie = DO.Guide_Serie
+			AND DOD.Guide_Number = DO.Guide_Number
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
 			ON
 				[DOD].[Guide_Serie] = [DOPD].[GuideSerie]
 				AND
-				[DOD].[Guide_Number] = [DOPD].[GuideNumber]
-				AND
-				[DOPD].[TimePlaId] <> 4
+				[DOD].[Guide_Number] = [DOPD].[GuideNumber]				
 	WHERE
 		[DOD].[DateCreated] BETWEEN @StartDate AND @EndDate
 		AND
 		[DOD].[StatusOrderId] = @ReturnStatusId
+		AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
+		AND [DOPD].[TimePlaId] <> 4
 	
 	-- Guías en estado devuelto en express center
 	INSERT INTO [#PreFilteredGuide]
@@ -180,18 +191,21 @@ BEGIN
 				[Co].[GuideNumber] = [DOD].[Guide_Number]
 				AND
 				[Co].[TotalAmountPaid] IS NULL
+		INNER JOIN DeliveryOrder DO WITH (NOLOCK)
+			ON DOD.Guide_Serie = DO.Guide_Serie
+			AND DOD.Guide_Number = DO.Guide_Number
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] DOPD  WITH(NOLOCK) 
 			ON
 				[DOD].[Guide_Serie] = [DOPD].[GuideSerie]
 				AND
-				[DOD].[Guide_Number] = [DOPD].[GuideNumber]
-				AND
-				[DOPD].[TimePlaId] <> 4
+				[DOD].[Guide_Number] = [DOPD].[GuideNumber]				
 	WHERE
 		[DOD].[DateCreated] BETWEEN @StartDate AND @EndDate
 		AND
 		[DOD].[StatusOrderId] = @ReturnEXCStatusId
+		AND ISNULL(DO.SenderCountryId,'GT') = @IdCountry
+		AND [DOPD].[TimePlaId] <> 4
 
 	------ Guías en estado devuelto
 	INSERT INTO [#FilteredGuide]
@@ -207,7 +221,8 @@ BEGIN
 		[SenderName],
 		[ReceiverName],
 		[ServicePrice],
-		[OriginHub]
+		[OriginHub],
+		CurrencySymbol
 	)
 	SELECT 
 		[DOD].[GuideSerie],
@@ -221,7 +236,8 @@ BEGIN
 		LTRIM(RTRIM(CONCAT([DO].[Sender_FirstName],' ',[DO].[Sender_LastName]))),
 		LTRIM(RTRIM(CONCAT([DO].[Receiver_FirstName],' ',[DO].[Receiver_LastName]))),
 		[DO].[PriceShippment],
-		[SC].[HubId]
+		[SC].[HubId],
+		CASE WHEN ISNULL(DO.SenderCountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END CurrencySymbol
 	FROM
 		[#PreFilteredGuide] DOD
 		INNER JOIN
@@ -233,7 +249,7 @@ BEGIN
 		INNER JOIN
 			[DeliveryBackOffice].[dbo].[Province] Prv  WITH(NOLOCK) 
 			ON
-				[DO].[Sender_Department] = [Prv].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+				[DO].[Sender_Department] = [Prv].[ProvinceName]  
 		LEFT JOIN
 			[DeliveryBackOffice].[dbo].[Township] TwnByCode  WITH(NOLOCK) 
 			ON
@@ -243,13 +259,14 @@ BEGIN
 		LEFT JOIN
 			[DeliveryBackOffice].[dbo].[Township] TwnByName  WITH(NOLOCK) 
 			ON
-				[TwnByName].[TownshipName] = DO.[Sender_Town]  COLLATE Latin1_General_CI_AI 
+				[TwnByName].[TownshipName] = DO.[Sender_Town] 
 				AND
 				[Prv].[IdProvince] = [TwnByName].[IdProvince]
 		LEFT JOIN
 			@ServiceCoverage SC
 			ON
 				[SC].[HeaderCode] = ISNULL([TwnByCode].[HeaderCode], [TwnByName].[HeaderCode])
+		WHERE ISNULL(DO.SenderCountryId,'GT') = @IdCountry
 
 	------ Guías en estado devuelto en express center
 	INSERT INTO [#FilteredGuide]
@@ -265,7 +282,8 @@ BEGIN
 		[SenderName],
 		[ReceiverName],
 		[ServicePrice],
-		[OriginHub]
+		[OriginHub],
+		CurrencySymbol
 	)
 	SELECT 
 		[DOD].[GuideSerie],
@@ -279,7 +297,8 @@ BEGIN
 		LTRIM(RTRIM(CONCAT([DO].[Sender_FirstName],' ',[DO].[Sender_LastName]))),
 		LTRIM(RTRIM(CONCAT([DO].[Receiver_FirstName],' ',[DO].[Receiver_LastName]))),
 		[DO].[PriceShippment],
-		[SC].[HubId]
+		[SC].[HubId],
+		CASE WHEN ISNULL(DO.SenderCountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END CurrencySymbol
 	FROM
 		[#PreFilteredGuide] DOD
 		INNER JOIN
@@ -308,6 +327,7 @@ BEGIN
 			@ServiceCoverage SC
 			ON
 				[SC].[HeaderCode] = ISNULL([TwnByCode].[HeaderCode], [TwnByName].[HeaderCode])
+		WHERE ISNULL(DO.SenderCountryId,'GT') = @IdCountry
 
 	SELECT
 		ISNULL([CS].[SysNameSystem], 'Hermes Integraciones') [System]
@@ -324,7 +344,8 @@ BEGIN
 		,[SO].[OrderDescription] [ActualStatusOrder]
 		,[DOD].[ServicePrice]
 		,MAX(COALESCE([LGNLBT].[SSN_Username], [IU].[Username], (LTRIM(RTRIM(CONCAT( [SR].[First_Name],' ',[SR].[Last_Name])))))) [ReturnResponsible]
-		,[HL].[HubAbbreviation] [OriginHub] 
+		,[HL].[HubAbbreviation] [OriginHub],
+		DOD.CurrencySymbol
 	FROM
 		[#FilteredGuide] DOD
 		LEFT JOIN
@@ -377,6 +398,7 @@ BEGIN
 		,[SO].[OrderDescription]
 		,[DOD].[ServicePrice]
 		,[HL].[HubAbbreviation]
+		,DOD.CurrencySymbol
 	ORDER BY
 		[DOD].[GuideNumber] DESC
 	

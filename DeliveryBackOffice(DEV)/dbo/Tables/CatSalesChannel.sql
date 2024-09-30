@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatSalesChannel] (
+CREATE TABLE [dbo].[CatSalesChannel] (
     [IdSalesChannel] INT           IDENTITY (1, 1) NOT NULL,
     [Description]    NVARCHAR (50) NOT NULL,
     [TokenCreated]   NVARCHAR (50) NOT NULL,

@@ -106,8 +106,8 @@ BEGIN
             ON [CMA].[CatMembershipId] = [CM].[IdCatMembership]
         INNER JOIN [dbo].[Membership]    M
             ON [CM].[IdCatMembership] = [M].[CatMembershipId]
-               AND [M].[IdMembership] = @MEMBERSHIP_ID
     WHERE [CMA].[RowStatus] = 1
+      AND [M].[IdMembership] = @MEMBERSHIP_ID
     ORDER BY [CMA].[MembershipAttributePosition] ASC;
 
     -- Membership history
@@ -115,6 +115,7 @@ BEGIN
          , CONCAT([MSL].[LogGuideSerie], [MSL].[LogGuideNumber])      [Guide]
          , [MSL].[DateCreated]                                        [Date]
          , [MSL].[LogGuideOriginalValue]                              [OriginalAmount]
+         , ISNULL([C].[Symbol],'Q')									  [Currency]
          , [MSL].[LogGuideNewValue]                                   [NewAmount]
          , ([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied]
          , [SO].[StatusOrderId]
@@ -139,12 +140,18 @@ BEGIN
         INNER JOIN [dbo].[DeliveryOrder]   DO WITH (NOLOCK)
             ON [MSL].[LogGuideSerie] = [DO].[Guide_Serie]
                AND [MSL].[LogGuideNumber] = [DO].[Guide_Number]
-               AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
         INNER JOIN [dbo].[StatusOrder]     SO
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
+        LEFT JOIN [dbo].[Membership] M
+			ON [MSL].[MembershipId] = [M].[IdMembership]
+		LEFT JOIN [dbo].[CatMembership] CM
+			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
+		LEFT JOIN [dbo].[CatCurrencyCOD] C
+			ON [CM].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE [MSL].[CustomerId] = @CUSTOMER_ID
          -- AND [MSL].[MembershipId] = @MEMBERSHIP_ID
           AND [MSL].[SubscriptionId] IS NULL
+          AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
           AND [MSL].[RowStatus] = 1
        --   AND [MSL].[SalesPackageStatusId] = @MEMBERSHIP_STATUS_ACTIVE_ID;
 
@@ -155,6 +162,7 @@ BEGIN
          , [S].[CatSubscriptionStatusId]
          , [CSPS].[SalesPackageStatusName]
          , [S].[SubscriptionCost]
+         , ISNULL([C].[Symbol],'Q') [Currency]
          , [S].[CustomerId]
          , [S].[AccountId]
          , [S].[IsAutoRenewable]
@@ -181,6 +189,8 @@ BEGIN
             ON [S].[CatSubscriptionId] = [CS].[IdCatSubscription]
         INNER JOIN [dbo].[CatSalesPackageStatus] CSPS
             ON [S].[CatSubscriptionStatusId] = [CSPS].[IdCatSalesPackageStatus]
+        LEFT JOIN [dbo].[CatCurrencyCOD] C
+			ON [CS].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE-- [S].[MembershipId] = @MEMBERSHIP_ID
            [S].[RowStatus] = 1
          -- AND [S].[CatSubscriptionStatusId] IN ( @MEMBERSHIP_STATUS_ACTIVE_ID, @MEMBERSHIP_STATUS_INACTIVE_ID );
@@ -215,6 +225,7 @@ BEGIN
          , [MSL].[LogActionDescription]
          , CONCAT([MSL].[LogGuideSerie], [MSL].[LogGuideNumber])      [Guide]
          , [MSL].[LogGuideOriginalValue]                              [OriginalAmount]
+         , ISNULL([C].[Symbol],'Q')									  [Currency]
          , [MSL].[LogGuideNewValue]                                   [NewAmount]
          , ([MSL].[LogGuideOriginalValue] - [MSL].[LogGuideNewValue]) [DiscountApplied]
          , [MSL].[DateCreated]                                        [Date]
@@ -238,12 +249,18 @@ BEGIN
         INNER JOIN [dbo].[DeliveryOrder]   DO WITH (NOLOCK)
             ON [MSL].[LogGuideSerie] = [DO].[Guide_Serie]
                AND [MSL].[LogGuideNumber] = [DO].[Guide_Number]
-               AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
         INNER JOIN [dbo].[StatusOrder]     SO
             ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
+        LEFT JOIN [dbo].[Membership] M
+			ON [MSL].[MembershipId] = [M].[IdMembership]
+		LEFT JOIN [dbo].[CatMembership] CM
+			ON [M].[CatMembershipId] = [CM].[IdCatMembership]
+		LEFT JOIN [dbo].[CatCurrencyCOD] C
+			ON [CM].[IdCatCurrencyCOD] = [C].[IdCatCurrencyCOD]
     WHERE --[MSL].[MembershipId] = @MEMBERSHIP_ID
            [MSL].[SubscriptionId] IS NOT NULL
           AND [MSL].[RowStatus] = 1
+          AND [DO].[StatusOrderId] NOT IN ( @NULL_STATUS_ORDER, @DESTROYED_STATUS_ORDER )
 		    AND [MSL].CustomerId= @CUSTOMER_ID
     ORDER BY [MSL].[SubscriptionId]
            , [MSL].[LogServiceNumber];

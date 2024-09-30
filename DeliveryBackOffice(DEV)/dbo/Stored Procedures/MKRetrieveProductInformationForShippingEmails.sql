@@ -11,7 +11,7 @@ AS
 
 BEGIN
 
-     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/design/individual/centro-canje';
+     DECLARE  @URL_USER_LOGIN VARCHAR (200) = 'https://portal.forzadelivery.com/notification/gift-create-account';
 	 DECLARE  @URL_USER_NOT_LOGIN VARCHAR (200)='https://portal.forzadelivery.com';
 
 	
@@ -138,7 +138,7 @@ BEGIN
 			A3.NameTax [ClientName],
 			'S' [ProductType],
 			A4.SubscriptionName [ProductName],
-			IIF( EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail = COALESCE(A2.ProductGiftShippingEmail, '') ),'ACTIVADO',A2.ActivationCode) [ActivationCode],
+			IIF(A2.ProductGiftShippingEmail IS NOT NULL AND EXISTS(SELECT UsrEmail FROM RegisterUser WHERE UsrEmail =A2.ProductGiftShippingEmail ),'ACTIVADO',A2.ActivationCode) [ActivationCode],
 			A2.SubscriptionCost [ProductCost],
 			IIF(LEN(COALESCE(A2.ProductGiftShippingEmail,'')) = 0 OR A2.ProductGiftShippingEmail = 'NULL',1,0) [OrderMail]
 			FROM [dbo].[SubscriptionPaymentLog] A1 WITH(NOLOCK)

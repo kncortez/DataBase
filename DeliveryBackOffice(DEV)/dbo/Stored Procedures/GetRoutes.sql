@@ -1,7 +1,13 @@
-﻿
-CREATE PROCEDURE [dbo].[GetRoutes] @RouteChar AS NVARCHAR
+-- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-06-04>
+-- Description:	<Se agregar parametro para filtrar por pais>
+-- =============================================
+CREATE PROCEDURE [dbo].[GetRoutes] @RouteChar AS NVARCHAR,
+		@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
+
 
     DECLARE @RouteType INT;
 
@@ -13,7 +19,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Recolección' COLLATE Latin1_General_CI_AI
+            WHERE CTR.[Name] = 'Recolección'
         )   ;
         ELSE IF (@RouteChar = 'L')
             SET @RouteType =
@@ -21,7 +27,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Linehaul' COLLATE Latin1_General_CI_AI
+            WHERE CTR.[Name] = 'Linehaul'
         )   ;
         ELSE IF (@RouteChar = 'D')
             SET @RouteType =
@@ -29,7 +35,7 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Devolución' COLLATE Latin1_General_CI_AI
+            WHERE CTR.[Name] = 'Devolución'
         )   ;
         ELSE IF (@RouteChar = 'U')
             SET @RouteType =
@@ -37,30 +43,49 @@ BEGIN
             SELECT TOP 1
                    CTR.IdTypeRoute
             FROM [DeliveryBackOffice].[dbo].[CatTypeRoute] CTR WITH (NOLOCK)
-            WHERE CTR.[Name] = 'Ultima Milla' COLLATE Latin1_General_CI_AI
+            WHERE CTR.[Name] = 'Ultima Milla'
         )   ;
         ELSE
             SET @RouteType = -1;
 
         IF (ISNULL(@RouteType, -1) > 0)
-            SELECT IdRoute IdRoute,
-                   CodeRoute
+            SELECT CR.IdRoute IdRoute,
+                   CR.CodeRoute CodeRoute
             FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
-            WHERE CR.IdTypeRoute = @RouteType;
+            LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
+				ON CR.IdTownship = TW.IdTownship
+			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
+				ON PR.IdProvince = TW.IdProvince
+            WHERE CR.IdTypeRoute = @RouteType
+            AND CR.RowStatus = 'TRUE'
+			AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
         ELSE
-            SELECT IdRoute IdRoute,
-                   CodeRoute
-            FROM [DeliveryBackOffice].[dbo].CatRoute
-            WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar;
+            SELECT CR.IdRoute IdRoute,
+                   CR.CodeRoute CodeRoute
+            FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
+			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
+				ON CR.IdTownship = TW.IdTownship
+			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
+				ON PR.IdProvince = TW.IdProvince
+            WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
+			AND CR.RowStatus = 'TRUE'
+			AND ISNULL(CR.CountryId, 'GT')=@IdCountry;
 
     END TRY
     BEGIN CATCH
-        SELECT IdRoute IdRoute,
-               CodeRoute
-        FROM [DeliveryBackOffice].[dbo].CatRoute
-        WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar;
+        SELECT CR.IdRoute IdRoute,
+               CR.CodeRoute CodeRoute
+        FROM [DeliveryBackOffice].[dbo].CatRoute CR WITH (NOLOCK)
+			LEFT JOIN [DeliveryBackOffice].[dbo].Township TW WITH(NOLOCK)
+				ON CR.IdTownship = TW.IdTownship
+			LEFT JOIN [DeliveryBackOffice].[dbo].Province PR WITH(NOLOCK)
+				ON PR.IdProvince = TW.IdProvince
+        WHERE LEFT(UPPER(CodeRoute), 1) = @RouteChar
+        AND CR.RowStatus = 'TRUE'
+		AND  ISNULL(CR.CountryId, 'GT')=@IdCountry;
     END CATCH;
 
 END;
+
 
 

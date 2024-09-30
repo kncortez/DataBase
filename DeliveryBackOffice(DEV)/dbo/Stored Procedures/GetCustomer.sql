@@ -3,10 +3,14 @@
 -- Create date: <2021-29-10>
 -- Description:	<Obtiene el listado de clientes>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-06-06>
+-- Description: <Se agrego filtro por pais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetCustomer]
 	-- Add the parameters for the stored procedure here
 	@IdCustomer INT = -1,
-	@Country NVARCHAR(2) = NULL
+	@Country NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -28,7 +32,7 @@ BEGIN
 	LEFT JOIN CustomerType ct WITH(NOLOCK)
 		ON ct.IdCustomerType = cu.IdCustomerType
 	WHERE (@IdCustomer = -1 OR cu.IdCustomer = @IdCustomer)
-		AND  (@Country IS NULL OR cu.CountryID IS NULL OR cu.CountryID = @Country)
+        AND IIF(cu.CountryID IS NULL,'GT',cu.CountryID ) = @Country
 		AND (cu.RowSatus = 1 OR cu.RowSatus IS NULL)
 	ORDER BY cu.[Name];
 END

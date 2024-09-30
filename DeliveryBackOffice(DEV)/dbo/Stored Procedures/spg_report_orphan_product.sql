@@ -4,7 +4,13 @@
 -- Create date: <02/09/2020>
 -- Description:	<Reporte de producto huérfano>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <13/06/2024>
+-- Description:	<Se agrega el filtro por pais de origen>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_report_orphan_product]
+				 @IdCountry NVARCHAR(2) = 'GT'
 	-- Add the parameters for the stored procedure here
 	
 AS
@@ -27,10 +33,11 @@ BEGIN
 	where StatusOrderId = 5
 	group by dod.Guide_Serie, dod.Guide_Number
 	) as SUBQ
-	JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = subq.guide_serie and do.Guide_Number = subq.guide_number
+	INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do with(nolock) on do.Guide_Serie = subq.guide_serie and do.Guide_Number = subq.guide_number
 	where w.Active = 1
 	AND SUBQ.Date_Created <=  GETDATE() - 1
 	AND SUBQ.Guide_Serie = w.Guide_Serie and SUBQ.Guide_Number = w.Guide_Number
+	AND IIF(do.SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
 	ORDER BY Days_Overdue
 
 

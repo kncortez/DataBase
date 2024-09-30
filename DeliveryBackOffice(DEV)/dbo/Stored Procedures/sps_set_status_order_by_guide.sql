@@ -3,6 +3,11 @@
 -- Create date: <2020-06-10>
 -- Description:	<Cambiar el estado de una lista de guías>
 -- =============================================
+-- =============================================
+-- Author:		<CRISTIAN SUAZO>
+-- Create date: <2024-06-05>
+-- Description:	<Validacion cambiar de cambio de estado por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
     @Guide_Serie AS VARCHAR(2),         -- same guide for all numbers provided
     @Guide_Number AS VARCHAR(MAX),      -- a list of guides separated by comma
@@ -13,7 +18,8 @@ CREATE PROCEDURE [dbo].[sps_set_status_order_by_guide]
     @Temperature_Celsius AS DECIMAL(5, 2),
     @courierName AS VARCHAR(200) = '',
     @iduser AS INT = NULL,
-    @username NVARCHAR(50) = NULL
+    @username NVARCHAR(50) = NULL,
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     DECLARE @ValidateOperation BIGINT = 0;
@@ -29,15 +35,41 @@ BEGIN
     DECLARE @CourierId INT;
     -- CatModuleId del modulo
     DECLARE @CatModuleId INT;
+	---Pertenece al pais?-----
+	DECLARE @BelongConuntry BIT;
 
     BEGIN TRANSACTION;
 
     BEGIN TRY
 
-        -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
-        INSERT @ItemsTable
-        SELECT CAST(Item AS INT)
-        FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
+	    -- Convertir la lista de guías separadas por coma en una tabla que permita adicionar columnas
+    INSERT @ItemsTable
+    SELECT CAST(Item AS INT)
+    FROM DeliveryBackOffice.dbo.SplitUnlimited(@Guide_Number, ',');
+
+	SELECT @BelongConuntry = MAX(X.Number)
+	FROM (
+		SELECT CASE
+				WHEN IIF(SenderCountryId IS NULL, 'GT', SenderCountryId) = @IdCountry
+					OR IIF(ReceiverCountryId IS NULL, 'GT', ReceiverCountryId) = @IdCountry THEN
+					1
+				ELSE
+					0
+			END AS Number
+		FROM DeliveryOrder WITH(NOLOCK)
+		WHERE Guide_Serie = @Guide_Serie
+		AND Guide_Number IN (SELECT
+								Guide_Number
+							FROM @ItemsTable)
+	) AS X
+
+	IF @BelongConuntry = 0
+	BEGIN
+		SELECT 0 AS 'StatusCode',
+           'La guia pertenece a otro pais' AS 'Description'
+	END
+	ELSE
+	BEGIN 
 
         -- Actualizar registro de guía a último estado 
 		UPDATE DeliveryBackOffice.dbo.DeliveryOrder
@@ -257,7 +289,7 @@ BEGIN
             SET ServiceStatusId = 3
                 ,TokenUpdated = @TokenId
                 ,DateUpdated = GETDATE()
-            FROM ServiceManagement sm
+            FROM ServiceManagement sm WITH(NOLOCK)
             INNER JOIN DeliveryOrderPaymentDetail dopd WITH (NOLOCK)
                 ON dopd.IdHeaderRecolection = sm.IdSchedulePickup
             INNER JOIN @ItemsTable it
@@ -437,8 +469,8 @@ BEGIN
 						DECLARE @TypeConnect INT = 0;
 
 						SET @TypeConnect = (SELECT top 1 TypeConnectionId 
-								FROM WebhookEndpoint wh
-								INNER JOIN WebhookCatTypeConnection wc
+								FROM WebhookEndpoint wh WITH(NOLOCK)
+								INNER JOIN WebhookCatTypeConnection wc WITH(NOLOCK)
 									ON wh.TypeConnectionId = wc.IdCatTypeConnection
 								WHERE wh.CustomerId = @WebhookCustomerId)
 
@@ -574,7 +606,7 @@ BEGIN
 
                     -------------------WEBHOOK.INI FIN----------------------------------------------------------------------------------------	
 
-
+	END;
 
 
     END TRY

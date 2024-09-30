@@ -3,9 +3,14 @@
 -- Create date: <21/10/2020>
 -- Description:	<Reporte por manifiesto declarado>
 -- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <17/06/2024>
+-- Description:	<Se agrega parametro para filtrar courier por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_report_DeliveryBySender_header]
     @StartDate DATE = '2020-10-03'
   , @EndDate DATE = '2020-11-05'
+  , @IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
     IF OBJECT_ID('tempdb..#ListRoutes') IS NOT NULL
@@ -34,6 +39,7 @@ BEGIN
             ON Att.Guide_Serie = lstr.Guide_Serie
                AND Att.Guide_Number = lstr.Guide_Number
         INNER JOIN DeliveryBackOffice.dbo.SenderReceiver Sender WITH (NOLOCK)
-            ON Att.ID_Courier = Sender.ID;
+            ON Att.ID_Courier = Sender.ID
+	WHERE ISNULL(Sender.IdCountry, 'GT') = @IdCountry;
 
 END;

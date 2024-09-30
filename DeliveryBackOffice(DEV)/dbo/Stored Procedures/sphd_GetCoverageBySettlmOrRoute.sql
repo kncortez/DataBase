@@ -8,8 +8,13 @@
 -- Create date: <2022-05-12>
 -- Description:	< Adición de identificador si posee ubicación >
 -- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-05-27>
+-- Description:	<Se agrega parametro para filtrar por pais >
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetCoverageBySettlmOrRoute]
-	@toSearch as nvarchar(50) = NULL
+	@toSearch as nvarchar(50) = NULL,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 
 BEGIN
@@ -21,6 +26,7 @@ BEGIN
 			INNER JOIN dbo.Township towns WITH(NOLOCK) ON towns.IdTownship=setl.IdTownship 
 			INNER JOIN dbo.Province prov WITH(NOLOCK) ON prov.IdProvince=towns.IdProvince
 			WHERE  (cov.RowStatus=1) and ((@toSearch is NULL) or (Hub like @regexp or setl.Settlement like @regexp  or setl.Settlement like @regexp  or RouteCode like @regexp ))
+			AND prov.IdCountry =@IdCountry
 END
 
 

@@ -12,9 +12,15 @@
 -- Modified:     <25/Enero/2022>
 -- Description:  <Se optimizó el sp>
 -- =============================================
+-- Modificado:   <Pedroza,Brandon>
+-- Modified:     <21/Mayo/2024>
+-- Description:  <Se agrega parametro que indica país para obtener los hubs de un país>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_courier_dispatched_status]
     @DispatchedDate DATE
   , @IsLastMileReturn BIT = NULL
+  , @IdCountry NVARCHAR(2) ='GT'
+
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -43,6 +49,7 @@ BEGIN
               @IsLastMileReturn IS NULL
               OR ISNULL(DATT.IsLastMileReturn, 0) = @IsLastMileReturn
           )
+		  AND HL.IdCountry = @IdCountry
     GROUP BY SR.ID
            , HL.HubAbbreviation
            , SR.First_Name

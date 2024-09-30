@@ -13,7 +13,8 @@
     [HubLatitude]     NVARCHAR (20)  NULL,
     [HubLongitude]    NVARCHAR (20)  NULL,
     [DescriptionCC]   NVARCHAR (100) NULL,
-    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC)
+    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC),
+    CONSTRAINT [FK_IdCountry_CatCountry] FOREIGN KEY (idCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
 );
 
 
@@ -88,3 +89,4 @@ GO
 CREATE UNIQUE NONCLUSTERED INDEX [IDX_HubLogistics_HubAbbreviation_RowStatus]
     ON [dbo].[HubLogistics]([HubAbbreviation] ASC, [HubStatus] ASC);
 
+GO

@@ -5,7 +5,14 @@
 -- Last Update date: <2022-09-22>
 -- Description:	< Login de portal web para usuarios internos >
 -- =============================================
-
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-05>
+-- Description:	<Se devuelve el id del pais de usuario, en apartado Profile>
+-- =============================================
+-- Author:	 <Brandon, Pedroza>
+-- Modified: <2024-08-16>
+-- Description:	<Se cambia el pais de usuario por pais de estacion asignada>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetInternalLogIn]
 	-- Add the parameters for the stored procedure here
 	@UserCode BIGINT = 0,
@@ -43,7 +50,7 @@ AS
 			FROM 
 				[DeliveryBackOffice].[dbo].[CatSystem] CS WITH(NOLOCK) 
 			WHERE 
-				CS.SysNameSystem = 'Hermes Desktop' COLLATE Latin1_General_CI_AI 
+				CS.SysNameSystem = 'Hermes Desktop' 
 				AND 
 				CS.SysRowStatus = 1
 		); -- Hermes web
@@ -80,7 +87,24 @@ AS
 				AND 
 				ru.UsrRowStatus = 1
 		)
-												
+		
+		--OBTIENE EL PAIS DE USUARIO
+		DECLARE @IdCountry AS VARCHAR(2) ='GT';
+		SELECT @IdCountry = ISNULL(PerCountryOrigin,'GT')
+			FROM 
+				DeliveryBackOffice.[dbo].RegisterUser ru WITH(NOLOCK)
+				INNER JOIN 
+					DeliveryBackOffice.[dbo].InternalUser iu WITH(NOLOCK)
+					ON ru.UsrIdUser = iu.RegisterUserID
+				INNER JOIN 
+					DeliveryBackOffice.[dbo].Person per WITH(NOLOCK)
+					ON ru.UsrIdPerson = per.PerIdPerson 
+			WHERE 
+				iu.Username=@UserName
+				AND 
+				ru.UsrRowStatus = 1		
+				
+
          --VALIDAR EL TIPO DE USUARIO QUE INICIA SESIÓN.FIN
 
 		INSERT INTO @User
@@ -99,8 +123,6 @@ AS
 				DeliveryBackOffice.[dbo].RolByUserBySystem rus  WITH(NOLOCK)
 				ON 
 					rus.RusIdUser = usr.UsrIdUser
-					AND 
-					rus.RusIdSystem = @IdSystem
 			LEFT JOIN 
 				DeliveryBackOffice.[dbo].UserSystemRestriction res  WITH(NOLOCK)
 				ON 
@@ -115,10 +137,9 @@ AS
 					RBUBA.RusRowStatus = 1
 			WHERE 
 				iu.IdUser=@UserCode 
-				AND 
-				iu.Username=@UserName
-				AND 
-				usr.UsrLastPassword = @Password;
+				AND iu.Username=@UserName
+				AND usr.UsrLastPassword = @Password
+                AND rus.RusIdSystem = @IdSystem;
         -- insertar en tabla temporal posbibles mensajes de error
 
 		INSERT INTO @ErrorMessage
@@ -207,7 +228,7 @@ AS
 													@IdSystem, 
 													0, 
 													0, 
-													'GT', 
+													@IdCountry,--'GT', 
 													NULL, 
 													1, 
 													@Token, 
@@ -242,26 +263,13 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
-														AND
-														RBUBA.RusIdSystem = @IdSystem
-														AND 
-														RBUBA.RusRowStatus = 1
 												INNER JOIN 
 													DeliveryBackOffice.[dbo].RolByModuleBySystem rms  WITH(NOLOCK)
 													ON 
 														rms.RmsIdRol = RBUBA.RusIdRol
-														AND 
-														rms.RmsRowStatus = 1
 												INNER JOIN 
 													DeliveryBackOffice.[dbo].CatModule cmo  WITH(NOLOCK)
-													ON 
-														cmo.ModIdModule = rms.RmsIdModule
-														AND 
-														cmo.ModRowStatus = 1
-														AND 
-														cmo.ModVisible = 1
-														AND 
-														cmo.ModIdModuleParent IS NOT NULL
+													ON cmo.ModIdModule = rms.RmsIdModule
 												INNER JOIN 
 													DeliveryBackOffice.[dbo].CatRol rol  WITH(NOLOCK)
 													ON 
@@ -270,12 +278,15 @@ AS
 													DeliveryBackOffice.dbo.InternalUser iu  WITH(NOLOCK)
 													ON 
 														iu.RegisterUserID = us.UsrIdUser
-                                            WHERE 
-												iu.UserName = @UserName 
-												AND 
-												iu.IdUser=@UserCode
-                                                AND 
-												iu.RowStatus = 1
+                                            WHERE iu.UserName = @UserName 
+												AND iu.IdUser=@UserCode
+                                                AND iu.RowStatus = 1
+                                                AND RBUBA.RusIdSystem = @IdSystem
+												AND RBUBA.RusRowStatus = 1
+                                                AND rms.RmsRowStatus = 1
+                                                AND cmo.ModRowStatus = 1
+												AND cmo.ModVisible = 1
+												AND cmo.ModIdModuleParent IS NOT NULL
 										)
 
 										IF (@TOTALSUBMODULES) > 0
@@ -289,28 +300,14 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
-														AND
-														RBUBA.RusIdSystem = @IdSystem
-														AND 
-														RBUBA.RusRowStatus = 1
                                                 INNER JOIN 
 												DeliveryBackOffice.[dbo].RolByModuleBySystem rms WITH(NOLOCK)
 													ON 
 														rms.RmsIdRol = RBUBA.RusIdRol
-														AND 
-														rms.RmsRowStatus = 1
                                                 INNER JOIN 
 												DeliveryBackOffice.[dbo].CatModule cmo  WITH(NOLOCK)
 													ON 
 														cmo.ModIdModule = rms.RmsIdModule
-														AND 
-														cmo.ModRowStatus = 1
-														AND 
-														cmo.ModVisible = 1
-														AND 
-														cmo.ModIdModuleParent IS NULL
-														AND 
-														cmo.ModIdModule in ( select ModIdModuleParent from DeliveryBackOffice.[dbo].CatModule WITH(NOLOCK) )
                                                 INNER JOIN 
 													DeliveryBackOffice.[dbo].CatRol rol  WITH(NOLOCK)
 													ON 
@@ -321,10 +318,15 @@ AS
 														iu.RegisterUserID = us.UsrIdUser
                                             WHERE 
 												iu.UserName = @UserName 
-												AND 
-												iu.IdUser=@UserCode
-                                                AND 
-												iu.RowStatus = 1;
+												AND iu.IdUser=@UserCode
+                                                AND iu.RowStatus = 1
+                                                AND RBUBA.RusIdSystem = @IdSystem
+                                                AND rms.RmsRowStatus = 1
+                                                AND cmo.ModRowStatus = 1
+												AND cmo.ModVisible = 1
+												AND cmo.ModIdModuleParent IS NULL
+												AND cmo.ModIdModule in ( select ModIdModuleParent from DeliveryBackOffice.[dbo].CatModule WITH(NOLOCK) )
+												AND RBUBA.RusRowStatus = 1;
 												
 											SELECT @TOTALSUBMODULES = COUNT(ModIdModule) FROM @TBSUBMODULES
 											
@@ -345,15 +347,8 @@ AS
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
 													ON 
 														RBUBA.RusIdUser = us.UsrIdUser
-														AND
-														RBUBA.RusIdSystem = @IdSystem
-														AND 
-														RBUBA.RusRowStatus = 1
 												INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) ON rms.RmsIdRol = RBUBA.RusIdRol
-												AND rms.RmsRowStatus = 1
 												INNER JOIN [dbo].CatModule cmo WITH(NOLOCK) ON cmo.ModIdModule = rms.RmsIdModule
-												AND cmo.ModRowStatus = 1
-												AND cmo.ModVisible = 1
 												-- AND 
 												INNER JOIN [dbo].CatRol rol  WITH(NOLOCK)ON rol.RolIdRol = rms.RmsIdRol
 												INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = us.UsrIdUser
@@ -361,8 +356,12 @@ AS
 												iu.UserName = @UserName 
 												and 
 												iu.IdUser=@UserCode
-												AND 
-												iu.RowStatus = 1
+                                                AND RBUBA.RusIdSystem = @IdSystem
+												AND RBUBA.RusRowStatus = 1
+                                                AND rms.RmsRowStatus = 1
+												AND iu.RowStatus = 1
+												AND cmo.ModRowStatus = 1
+												AND cmo.ModVisible = 1
 												AND 
 												cmo.ModIdModuleParent = (
 													SELECT 
@@ -408,22 +407,20 @@ AS
                                             FROM DeliveryBackOffice.[dbo].RegisterUser us WITH(NOLOCK)
 												INNER JOIN 
 													DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
-													ON 
-														RBUBA.RusIdUser = us.UsrIdUser
-														AND
-														RBUBA.RusIdSystem = @IdSystem
-														AND 
-														RBUBA.RusRowStatus = 1
+													ON RBUBA.RusIdUser = us.UsrIdUser
                                                  INNER JOIN dbo.RolByModuleBySystem rms WITH(NOLOCK) ON rms.RmsIdRol = RBUBA.RusIdRol
-                                                          AND rms.RmsRowStatus = 1
                                                  INNER JOIN [dbo].CatModule cmo  WITH(NOLOCK)ON cmo.ModIdModule = rms.RmsIdModule
-                                                                                   AND cmo.ModRowStatus = 1
-                                                                                   AND cmo.ModVisible = 1
-																				   AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
                                                  INNER JOIN [dbo].CatRol rol WITH(NOLOCK) ON rol.RolIdRol = rms.RmsIdRol
 												 LEFT JOIN @TBSUBMODULES TMP ON TMP.ModIdModule = cmo.ModIdModule 
                                             INNER JOIN DeliveryBackOffice.dbo.InternalUser iu ON iu.RegisterUserID = us.UsrIdUser
-                                            WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode order by cmo.ModOrder FOR XML PATH(''), TYPE
+                                            WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+                                              AND RBUBA.RusIdSystem = @IdSystem
+                                              AND RBUBA.RusRowStatus = 1
+                                              AND rms.RmsRowStatus = 1
+                                              AND cmo.ModRowStatus = 1
+                                              AND cmo.ModVisible = 1
+                                              AND cmo.ModIdModuleParent IS NULL /*IS DAD*/
+                                            order by cmo.ModOrder FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)'), 1, 1, '')
                                         );
                                         
@@ -436,22 +433,19 @@ AS
                                         (
                                             SELECT ',{"IdUser":"' + CONVERT(VARCHAR, us.UsrIdUser) + '",' + '"UserName":"' + iu.Username + '",' + '"TacName":"Interno",' + '"RolName":"' + ro.RolName + '",'  + '"SalesPersonCode":"' + ISNULL(CTMSP.Code, 'N/A') + '"' + '}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
-                                                 INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson
-                                                                               AND pe.PerRowStatus = 1
-													INNER JOIN 
-														DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
-														ON 
-															RBUBA.RusIdUser = us.UsrIdUser
-															AND
-															RBUBA.RusIdSystem = @IdSystem
-															AND 
-															RBUBA.RusRowStatus = 1
+                                                 INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) 
+                                                        ON pe.PerIdPerson = us.UsrIdPerson
+                                                 INNER JOIN DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
+                                                        ON RBUBA.RusIdUser = us.UsrIdUser
                                                  INNER JOIN DeliveryBackOffice.dbo.CatRol ro WITH(NOLOCK) ON ro.RolIdRol = RBUBA.RusIdRol
-												INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = UsrIdUser
-												LEFT JOIN [DeliveryBackOffice].[dbo].[CatTMSalesPerson] CTMSP WITH(NOLOCK)
-													ON CTMSP.RegisterUserId = us.UsrIdUser
-													AND CTMSP.RowStatus = 1
+                                                 INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = UsrIdUser
+                                                 LEFT JOIN [DeliveryBackOffice].[dbo].[CatTMSalesPerson] CTMSP WITH(NOLOCK)
+                                                        ON CTMSP.RegisterUserId = us.UsrIdUser
+                                                        AND CTMSP.RowStatus = 1
 												WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+                                                  AND pe.PerRowStatus = 1
+                                                  AND RBUBA.RusIdSystem = @IdSystem
+                                                  AND RBUBA.RusRowStatus = 1
 													AND iu.RowStatus = 1 FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)'), 1, 1, '')
                                         );
@@ -465,14 +459,17 @@ AS
                                          '"Birthdate":"' + CONVERT(VARCHAR, ISNULL(pe.PerBirthdate,'')) + '",' + '"Identification":"'
                                          + pe.PerIdentification + '",' + '"Nationality":"' + pe.PerNationality + '",' 
                                          + '"NickName":"' + CONVERT(VARCHAR, us.UsrNickName) + '",'
-                                         + '"Phone":"' + ISNULL(us.Phone,'') + '",'
+                                         + '"Phone":"' + ISNULL(us.Phone,'') + '",'										 
+										 --+ '"IdCountry":"' + ISNULL(pe.PerCountryOrigin,'GT') + '",'
 										 + '"TAC":"TRUE"}'
                                             FROM DeliveryBackOffice.dbo.RegisterUser us WITH(NOLOCK)
-                                                    INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) ON pe.PerIdPerson = us.UsrIdPerson
-                                                                                AND pe.PerRowStatus = 1
-                                            INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) ON iu.RegisterUserID = us.UsrIdUser
-												WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
-													    AND iu.RowStatus = 1
+                                                    INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) 
+                                                            ON pe.PerIdPerson = us.UsrIdPerson
+                                                    INNER JOIN DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
+                                                            ON iu.RegisterUserID = us.UsrIdUser
+											WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+											  AND iu.RowStatus = 1
+                                              AND pe.PerRowStatus = 1
                                          FOR XML PATH(''), TYPE
                                         ).value('.', 'varchar(max)'), 1, 1, '')
                                         );
@@ -486,24 +483,22 @@ AS
 											'"ContactName":"' + isnull( RTRIM(LTRIM(CONCAT(pe.PerFirstName,' ', pe.PerLastName))) , '')  + '",' +	  	  
 											'"Phone":"' + isnull(ru.Phone, '')  + '",' +
 											'"Email":"' + isnull(ru.UsrEmail, '')  + '",' +
+											'"IdCountry":"' + ISNULL(CS.CountryId,'GT') + '",'+
 											'"Station":' + CAST(ISNULL(CS.IdStation,0) AS NVARCHAR)+',' + '}' 
 			        FROM  
 			         DeliveryBackOffice.dbo.InternalUser iu WITH(NOLOCK) 
-			        INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH(NOLOCK) on  ru.UsrIdUser = iu.RegisterUserID and ru.UsrRowStatus = 1
+			        INNER JOIN DeliveryBackOffice.dbo.RegisterUser ru WITH(NOLOCK) 
+                            on  ru.UsrIdUser = iu.RegisterUserID 
                     INNER JOIN DeliveryBackOffice.dbo.Person pe WITH(NOLOCK) ON pe.PerIdPerson = ru.UsrIdPerson
-                                                AND pe.PerRowStatus = 1
-					INNER JOIN  DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
-						ON 
-							RBUBA.RusIdUser = ru.UsrIdUser
-							AND
-							RBUBA.RusIdSystem = @IdSystem
-							AND 
-							RBUBA.RusRowStatus = 1
-					LEFT JOIN [DeliveryBackOffice].[dbo].[CatStation] CS WITH(NOLOCK)
-						ON
-							RBUBA.StationId = CS.IdStation
-			         WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
-
+                    INNER JOIN DeliveryBackOffice.[dbo].[RolByUserBySystem] RBUBA WITH(NOLOCK)
+						ON RBUBA.RusIdUser = ru.UsrIdUser
+                    LEFT JOIN [DeliveryBackOffice].[dbo].[CatStation] CS WITH(NOLOCK)
+						ON RBUBA.StationId = CS.IdStation
+                    WHERE iu.UserName = @UserName AND iu.IdUser=@UserCode
+                      AND ru.UsrRowStatus = 1
+                      AND pe.PerRowStatus = 1
+                      AND RBUBA.RusIdSystem = @IdSystem
+                      AND RBUBA.RusRowStatus = 1
 		    FOR XML PATH(''), TYPE
 		   ).value('.', 'varchar(max)'),1,1,''
 		   			  )) 				

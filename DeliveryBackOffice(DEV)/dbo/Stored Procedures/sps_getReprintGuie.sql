@@ -1,8 +1,32 @@
-﻿CREATE PROCEDURE [dbo].[sps_getReprintGuie]
+﻿-- =============================================
+-- Modified:    <Daniel, Ramirez>
+-- Create date: <2024-07-24>
+-- Description: <Se ajusto la informacion de salida para que obtenga la moneda correcta>
+-- =============================================
+-- Modified:    <Daniel, Ramirez>
+-- Create date: <2024-07-24>
+-- Description: <Se retiro el parametro de pais, y se toma el pais desde la guia>
+-- =============================================
+CREATE PROCEDURE [dbo].[sps_getReprintGuie]
     @Guide_Number INT = 137916,
     @Serie_Number VARCHAR(2) = 'FD'
 as
 begin
+    DECLARE @CountryThatConsults VARCHAR(2) = 'GT'
+
+    
+    SET @CountryThatConsults = (
+		SELECT TOP 1 SenderCountryId
+			FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
+		WHERE Guide_Number = @Guide_Number
+			AND Guide_Serie = @Serie_Number
+    );
+
+	IF (@CountryThatConsults IS NULL OR @CountryThatConsults = '')
+	BEGIN
+		SET @CountryThatConsults = 'GT';
+	END;
+
 	declare @FranchiseVisitPointTypeId int = 
 	(
 		select 
@@ -11,7 +35,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Concesionario'  --collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults --collate Latin1_General_CI_AI 
 	)
 	declare @ExpressVisitPointTypeId int = 
 	(
@@ -21,7 +45,7 @@ begin
 		from
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  with(nolock) 
 		where
-			[KOVPC].[KindOfVPName] = 'Express Center'  --collate Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center' AND ISNULL([KOVPC].[IdCountry],'GT')=@CountryThatConsults --collate Latin1_General_CI_AI 
 	)
 	declare @IndividualWebSys int =
 	(
@@ -100,8 +124,9 @@ begin
     )
     SELECT GuidePiece
     FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH(NOLOCK)
-    WHERE GuideNumber = @Guide_Number;
-	
+    WHERE GuideNumber = @Guide_Number
+	AND GuideSerie = @Serie_Number;
+
 	DECLARE @EXCKindOfVPC INT =
 	(
 		SELECT 
@@ -110,6 +135,7 @@ begin
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
 			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
+		AND ISNULL(IdCountry,'GT')=@CountryThatConsults
 	);
 
     DECLARE @DaysToExpiration INT =
@@ -125,6 +151,7 @@ begin
                 SELECT IdCustomer
                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
                 WHERE Guide_Number = @Guide_Number
+				AND Guide_Serie = @Serie_Number
             );
     DECLARE @customerType INT =
             (
@@ -137,6 +164,7 @@ begin
                 SELECT SalePipeLineId
                 FROM DeliveryBackOffice.dbo.DeliveryOrder WITH (NOLOCK)
                 WHERE Guide_Number = @Guide_Number
+				AND Guide_Serie = @Serie_Number
             );
     DECLARE @Impersonate VARCHAR(20) = CASE
                                            WHEN @SalesChannel = 3
@@ -151,7 +179,7 @@ begin
                                        END;
     DECLARE @ExpressName VARCHAR(50) = '';
 
-	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+	DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B'AND ISNULL(IdCountry,'GT')=@CountryThatConsults);
 
     IF (@Impersonate = 'TRUE')
     BEGIN
@@ -162,6 +190,7 @@ begin
                 INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                     ON vpc.CodeOfReference = do.OriginSenderId
             WHERE Guide_Number = @Guide_Number
+			AND Guide_Serie = @Serie_Number
         );
     END;
     ELSE
@@ -175,6 +204,7 @@ begin
                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH (NOLOCK)
                         ON vpc.CodeOfReference = do.Sender_ID
                 WHERE Guide_Number = @Guide_Number
+				AND Guide_Serie = @Serie_Number
             );
         END;
     END;
@@ -196,6 +226,7 @@ begin
                @calcurrency = COALESCE(Currency, '')
         FROM DeliveryBackOffice.[dbo].[DeliveryOrderPiece] WITH (NOLOCK)
         WHERE GuideNumber = @Guide_Number
+		AND GuideSerie = @Serie_Number
               AND GuidePiece =
               (
                   SELECT myrow FROM @TMPPICES WHERE it = @identity
@@ -217,25 +248,28 @@ begin
     FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
             ON bdp.IdCost = ct.IdCost
-    WHERE ProductNumber = CONCAT(@Serie_Number, @Guide_Number);
+    WHERE ct.GuideNumber =  @Guide_Number
+		  AND ct.GuideSerie= @Serie_Number;
 
     SELECT TOP 1
            @identityCost = bdp.IdBreakdownOfPayment
     FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
         LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
             ON bdp.IdCost = ct.IdCost
-    WHERE ProductNumber = CONCAT(@Serie_Number, @Guide_Number);
+    WHERE ct.GuideNumber =  @Guide_Number
+		  AND ct.GuideSerie= @Serie_Number;
 
     WHILE @j > 0
     BEGIN
         SELECT @integrationCost
-            = @integrationCost + '{"Currency":"' + 'GTQ' + '",' + +'"Description":"'
+            = @integrationCost + '{"Currency":"' + @calcurrency + '",' + +'"Description":"'
               + CONVERT(VARCHAR, ISNULL(Description, 0)) + '",' + +'"Price":"' + CONVERT(VARCHAR, ISNULL(Amount, 0))
               + '"' + '},'
         FROM DeliveryBackOffice.[dbo].[Cost] ct WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
                 ON bdp.IdCost = ct.IdCost
-        WHERE ProductNumber = CONCAT(@Serie_Number, @Guide_Number)
+        WHERE ct.GuideNumber =  @Guide_Number
+			  AND ct.GuideSerie= @Serie_Number
               AND IdBreakdownOfPayment = @identityCost;
         SET @identityCost = @identityCost + 1;
         SET @j = @j - 1;
@@ -250,6 +284,7 @@ begin
 		INNER JOIN Membership mb
 		ON do.IdCustomer = mb.CustomerId
 		WHERE do.Guide_Number = @Guide_Number
+		AND do.Guide_Serie = @Serie_Number
 		AND mb.CatMembershipStatusId = 3
 		AND mb.ExpirationDate >= GETDATE()
 		AND mb.RowStatus = 1)
@@ -267,6 +302,7 @@ begin
 							INNER JOIN dbo.Subscription s WITH (NoLock)
 							ON MSL.SubscriptionId = S.IdSubscription
 							Where LogGuideNumber = @Guide_Number
+							    AND LogGuideSerie = @Serie_Number
 			
 			
 			)
@@ -284,7 +320,12 @@ begin
                                      ',{"DateOfSale":"' + CONVERT(VARCHAR, ISNULL(dev.Preparation_Date, GETDATE()), 121)
                                      + '",' + '"ContentDescription":"'
                                      + CONVERT(VARCHAR, ISNULL(dev.Package_Description, '')) + '",' + '"IdCountry":"'
-                                     + CONVERT(VARCHAR, COALESCE(p.IdCountry, '')) + '",' + '"CountPieces":'
+									 --SE AGREGA EL ID DEL PAIS DESTINO Y SI TIENE INCIDENCIAS AL PAIS ORIGEN, CRISTIAN SUAZO
+                                     + CASE WHEN dev.IsLastMileReturn=0   
+											THEN CONVERT(VARCHAR, COALESCE(dev.ReceiverCountryId, 'GT')) 
+											ELSE CONVERT(VARCHAR, COALESCE(dev.SenderCountryId, 'GT'))
+									   END+ '",' + '"CountPieces":'
+									 --FIN CAMBIO
                                      + CONVERT(VARCHAR, ISNULL(dev.Pieces_Dry + dev.Pieces_Cold, 0)) + ','
                                      + '"Collected":' + CASE
                                                             WHEN dev.IsCollect = 1 THEN
@@ -480,7 +521,7 @@ begin
                                                   '\"'
                                               ) + '"' + '},' + '"parcels": [' + COALESCE(@arpieces, '') + ' ] , '
                                      + '"TotalWeight":' + CONVERT(VARCHAR, @TotalWeight) + ', ' + '"TotalValue":'
-                                     + CONVERT(VARCHAR, @TotalValue) + ',' + '"Currency":"' + 'GTQ' + '",'
+                                     + CONVERT(VARCHAR, @TotalValue) + ',' + '"Currency":"' + @calcurrency + '",'
                                      + '"ProductInsuranceAmount":'
                                      + CONVERT(VARCHAR, CAST(ISNULL(dev.InsuranceAmount, 0) AS MONEY)) + ','
                                      + '"InsuranceCurrency":"' + CONVERT(VARCHAR, @calcurrency) + '",'
@@ -570,7 +611,13 @@ begin
                                                                        ) + ',' + '"CreditNumber":"'
                                      + CONVERT(VARCHAR, ISNULL(dev.Order_Number, 0)) + '",' + '"AmmountCashOnDelivery": '
                                      + COALESCE(CONVERT(VARCHAR, dev.Collect_OnDelivery), '0') + ','
-                                     + '"CashOnDeliveryCurrency":"' + 'GTQ' + '",'
+                                     + '"CashOnDeliveryCurrency":"' + 
+                                        CASE 
+                                            WHEN dev.SenderCountryId = 'GT' THEN 'GTQ'
+                                            WHEN dev.SenderCountryId = 'HN' THEN 'HNL'
+                                            ELSE 'HNL'
+                                        END  
+                                     + '",'
                                      + '"BankAccountName":"AccountName",' /*,*/ + '"BankId":"'
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_Bank_Id), '') + '",' + '"BankAccountType":"'
                                      + COALESCE(CONVERT(VARCHAR, dcba.DCBA_BankAccountType), '') + '",'

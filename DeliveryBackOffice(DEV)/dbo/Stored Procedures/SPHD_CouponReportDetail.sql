@@ -8,12 +8,17 @@
 -- Create date: <Create Date,2022-06-09>
 -- Description:	<Description, MODIFICACIONES, AGREGAR COLUMNA DE EXC Y FILTRO, RESUMEN DE TOTALES DE GENERACIONES DE CUPONES Y DE CANJE>
 -- =============================================
+-- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-06-18>
+-- Description:	<Se agrega parametro para filtrar guias por pais de origen>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHD_CouponReportDetail]
 	-- Add the parameters for the stored procedure here
 	@DateOf		 as DATE,
 	@DateTo		 as DATE,
-	@IdStation   as INT
-	
+	@IdStation   as INT,
+	@IdCountry	  as NVARCHAR(2) = 'GT'
 
 	
 AS
@@ -75,6 +80,7 @@ BEGIN
 		                    AND Format(@DateTo, 'yyyy-MM-dd 23:59:59')
 							--AND PC.VisitPointClientOrigin = @CodeOfReference
 							AND PC.RowStatus = 1
+							AND ISNULL(DO.SenderCountryId, 'GT') = @IdCountry
 	ORDER BY VPC.DescriptionOfClient, PC.DateCreated DESC 
 
 END

@@ -21,7 +21,7 @@ CREATE PROCEDURE [dbo].[CreateIncidentRecord]
   , @IsExpressCenterAddress BIT           --Se cambia a dirección de express center?
   , @IdExpressCenter INT                  --Express Center al que cambia
   , @NewAddress NVARCHAR(600)             --Nueva dirección si se solicita
-  , @NewPhoneNumber NVARCHAR(100)         --Cambio de teléfono si se solicita
+  , @NewPhoneNumber NVARCHAR(100)         --Cambio  de teléfono si se solicita
   , @DeliveryDateChange BIT               --Cambiar fecha de entrega?
   , @NewDeliveryDate DATE = NULL          --Nueva fecha de entrega si se solicita,
   , @Observations NVARCHAR(600)           --Observaciones tracking
@@ -43,6 +43,7 @@ BEGIN
     DECLARE @CatTypeCOIIncidenceStatusId INT;
     DECLARE @DeliveryAttemptId AS BIGINT = NULL;
     DECLARE @SytemOrigin AS INT = NULL;
+    DECLARE @IdCountrySender AS NVARCHAR(2) = 'GT';
 
     BEGIN TRANSACTION;
     DECLARE @OriginRouteId INT = NULL;
@@ -86,6 +87,15 @@ BEGIN
                 WHERE [SO].[RowStatus] = 1
                       AND [DO].[Guide_Serie] = @GuideSerie
                       AND [DO].[Guide_Number] = @GuideNumber
+            );
+
+    SET @IdCountrySender  =
+            (
+                SELECT TOP 1
+                       ISNULL([DO].[SenderCountryId],'GT')
+                  FROM [dbo].[DeliveryOrder]         [DO] WITH (NOLOCK)
+                 WHERE [DO].[Guide_Serie] = @GuideSerie
+                   AND [DO].[Guide_Number] = @GuideNumber
             );
 
     DECLARE @UserCreatedIncidence NVARCHAR(250) =
@@ -819,6 +829,7 @@ BEGIN
                                    CDO.IdDeliveryOption
                             FROM [DeliveryBackOffice].[dbo].[CatDeliveryOptions] CDO WITH (NOLOCK)
                             WHERE CDO.[Name] = 'Express Center' COLLATE Latin1_General_CI_AI
+                              AND IdCountry = @IdCountrySender
                         );
 
                 UPDATE dbo.DeliveryOrder

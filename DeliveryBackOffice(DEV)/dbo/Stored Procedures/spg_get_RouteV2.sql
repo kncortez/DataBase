@@ -4,8 +4,13 @@
 -- Update date: <2021-12-30>
 -- Description:	<Devuelve información sobre las rutas, piloto y unidad >
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-06-05>
+-- Description: < Adicion de filtros por pais, por defect GT >
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteV2] 
-	@dateRoute AS DATE
+	@dateRoute AS DATE,
+    @IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	SELECT
@@ -40,6 +45,8 @@ BEGIN
 	FROM [DeliveryBackOffice].[dbo].[CatRoute] ctr
 	INNER JOIN [DeliveryBackOffice].[dbo].[Township] ts
 		ON ts.IdTownship = ctr.IdTownship
+    INNER JOIN [DeliveryBackOffice].[dbo].[Province] pr
+        ON pr.IdProvince = ts.IdProvince
 	WHERE ctr.RowStatus = 1
 		AND 
 		(
@@ -47,5 +54,8 @@ BEGIN
 			OR
 			ctr.IdTypeRoute = (SELECT ctr.IdTypeRoute FROM CatTypeRoute ctr WHERE [Name] = 'Especiales')
 		)
+        AND IIF(pr.IdCountry IS NULL, 'GT', pr.IdCountry) = @IdCountry
+        AND ts.TownshipStatus = 1
+        AND pr.ProvinceStatus = 1
 	ORDER BY ctr.CodeRoute
 END

@@ -65,11 +65,17 @@ BEGIN
 				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
 				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
 				,ISNULL(serv.Receiver_CUI, '') CUI
+				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON ((serv.Sender_ID = vpclient.CodeOfReference) OR (serv.IdCustomer = vpclient.CustomerID))
 			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
 				ON serv.StatusOrderId = so.StatusOrderId
+            LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                ON serv.Guide_Serie = c.GuideSerie
+                AND serv.Guide_Number = c.GuideNumber
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
 			WHERE vpclient.VisitPointId = @IdVisitPoint
 				AND CONVERT(DATE, serv.DateCreated) BETWEEN @DateIni AND @DateFin
 				AND serv.StatusOrderId <> 7 -- No guías anuladas
@@ -93,11 +99,17 @@ BEGIN
 				,ISNULL(serv.Receiver_Address, '') ReceiverAddress
 				,ISNULL(serv.Receiver_Alternant_SocialSecurity_ID, '') SocialSecurityId
 				,ISNULL(serv.Receiver_CUI, '') CUI
+				,IIF(ccCOD.Symbol IS NULL, 'Q', ccCOD.Symbol) [Symbol]
 			FROM DeliveryBackOffice.DBO.DeliveryOrder serv WITH (NOLOCK)
-			JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
+			INNER JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpclient WITH (NOLOCK)
 				ON ((serv.Sender_ID = vpclient.CodeOfReference) OR (serv.IdCustomer = vpclient.CustomerID))
 			LEFT JOIN DeliveryBackOffice.dbo.StatusOrder so
 				ON serv.StatusOrderId = so.StatusOrderId
+            LEFT JOIN DeliveryBackOffice.dbo.Cost c WITH (NOLOCK)
+                ON serv.Guide_Serie = c.GuideSerie
+                AND serv.Guide_Number = c.GuideNumber
+            LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD ccCOD WITH (NOLOCK)
+                ON ccCOD.IdCatCurrencyCOD = c.CodCurrency
 			WHERE vpclient.VisitPointId = @IdVisitPoint
 				AND serv.Guide_Serie = @GuideSerie
 				AND serv.Guide_Number = @GuideNumber

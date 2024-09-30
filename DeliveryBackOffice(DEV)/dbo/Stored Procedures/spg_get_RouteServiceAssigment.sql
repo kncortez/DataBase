@@ -8,9 +8,14 @@
 -- Update date: <2020-03-21>
 -- Description:	< Adición de WITH(NOLOCK) para evitar bloqueos >
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-05-28>
+-- Description: < Adicion de filtros por pais, por defect GT >
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_RouteServiceAssigment]
 		@idRoute AS INT,
-		@dateRoute AS DATE
+		@dateRoute AS DATE,
+        @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
     SELECT spu.SchedulePickupId,
@@ -37,5 +42,6 @@ BEGIN
             ON css.IdServiceStatus = smt.ServiceStatusId
     WHERE rat.IdRoute = @idRoute
           AND rat.DateOfRoute = @dateRoute
-          AND spu.AssigmentStatus = '1';
+          AND spu.AssigmentStatus = '1'
+          AND IIF(snr.IdCountry IS NULL, 'GT', snr.IdCountry) = @IdCountry;
 END;

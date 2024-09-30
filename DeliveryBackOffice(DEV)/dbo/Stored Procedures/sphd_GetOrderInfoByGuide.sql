@@ -5,11 +5,20 @@
 -- Create date: <2021-11-29>
 -- Description:	<Devuelve todas las guias con informacion de sus posibles alertas que posee>
 -- =============================================
---
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-27>
+-- Description:	<Se agrega parametro para filtrar por pais >
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_GetOrderInfoByGuide]
-		@GuideToSearch as nvarchar(50)
+		@GuideToSearch as nvarchar(50),
+		@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
+	DECLARE @GuideSerie nvarchar(2);
+    DECLARE @GuideNumber int;
+
+    SET @GuideSerie = SUBSTRING(@GuideToSearch, 1, 2); 
+    SET @GuideNumber = CAST(SUBSTRING(@GuideToSearch, 3, LEN(@GuideToSearch) - 2) AS int); 
 		SELECT  			
 			serv.Guide_Serie +  CAST(serv.Guide_Number AS VARCHAR) Guide, 
 			serv.Guide_Serie GuideSerie,
@@ -53,7 +62,14 @@ BEGIN
 			LEFT JOIN DBO.CatTypeAlert Ttalert WITH(NOLOCK) ON Ttalert.IdCatTypeAlert= Talert.AlertTypeId  
 			
 		WHERE 
-		(serv.Guide_Serie +  CAST(Guide_Number AS VARCHAR) = @GuideToSearch)
+		serv.Guide_Serie = @GuideSerie AND serv.Guide_Number = @GuideNumber
+		AND (ISNULL(serv.GuideType,'DOM')='INT' OR (ISNULL(serv.SenderCountryId,'GT')=@IdCountry AND ISNULL(serv.GuideType,'DOM')='DOM'))
 		
+		---TABLA RESPUESTA
+		SELECT 'La guía que intentas procesar pertenece a otro pais. Por favor, revísala e intenta de nuevo.' AS [Description]
+		FROM DeliveryOrder do WITH (NOLOCK)
+		WHERE do.Guide_Number=@GuideNumber and do.Guide_Serie = @GuideSerie
+		AND 		
+		ISNULL(do.SenderCountryId,'GT')<>@IdCountry AND ISNULL(do.GuideType,'DOM')='DOM'
 
 END

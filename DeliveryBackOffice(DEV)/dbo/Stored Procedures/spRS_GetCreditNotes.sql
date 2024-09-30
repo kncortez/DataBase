@@ -7,7 +7,8 @@ CREATE PROCEDURE [dbo].[spRS_GetCreditNotes]
 
 	@StartDate DATETIME = NULL,
 	@EndDate DATETIME = NULL,
-	@FilteredGuide NVARCHAR(MAX) = NULL
+	@FilteredGuide NVARCHAR(MAX) = NULL,
+	@idCountrySender NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -19,7 +20,9 @@ BEGIN
 		FROM 
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'
+		AND
+			ISNULL([KOVPC].IdCountry , 'GT') = @idCountrySender
 	)
 
 	DECLARE @TempGuideSplit TABLE (
@@ -127,6 +130,8 @@ BEGIN
 			[InHcreditnote].[inv_type] = 2
 			AND
 			[InHcreditnote].[inv_date] BETWEEN @StartDate AND @EndDate
+			AND 
+			ISNULL(InHcreditnote.IdCountry,'GT') = @idCountrySender
 		
 	END
 	ELSE
@@ -191,6 +196,8 @@ BEGIN
 			[InHcreditnote].[inv_type] = 2
 			AND
 			[InHcreditnote].[inv_date] BETWEEN @StartDate AND @EndDate
+			AND 
+			ISNULL(InHcreditnote.IdCountry,'GT') = @idCountrySender
 		
 	END
 

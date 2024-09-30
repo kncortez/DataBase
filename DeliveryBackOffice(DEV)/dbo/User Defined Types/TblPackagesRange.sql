@@ -30,5 +30,8 @@
     [numCODExcentLoc]      DECIMAL (12, 2) NULL,
     [numCODExcentMet]      DECIMAL (12, 2) NULL,
     [numCODExcentFor]      DECIMAL (12, 2) NULL,
-    [numCODExcentEsp]      DECIMAL (12, 2) NULL);
+    [numCODExcentEsp]      DECIMAL (12, 2) NULL,
+    [IdCountry]            NVARCHAR(2)     NULL,
+    [IdCurrency]           INT             NULL,
+	[Description]          NVARCHAR(100)   NULL);
 

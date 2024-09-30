@@ -3,15 +3,16 @@ CREATE PROCEDURE [dbo].[sphw_generate_file_cod]
     @IdBank INT,
     @BatchCODId INT,
     @CatConceptCODId INT = 2
+  , @IdCountrySender NVARCHAR(2)= 'GT'
 AS
 BEGIN
     DECLARE @BANKID INT =
             (
-                SELECT Id_bank FROM DeliveryBank WHERE Name = 'BANCO DE DESARROLLO RURAL'
+                SELECT Id_bank FROM DeliveryBank WHERE Name = 'BANCO DE DESARROLLO RURAL' AND Id_country = @IdCountrySender
             );
     DECLARE @Excluded INT = 0;
     DECLARE @EnabledRow INT = 1;
-    DECLARE @IdCountry NVARCHAR(2) = N'GT';
+    --DECLARE @IdCountry NVARCHAR(2) = N'GT';
     DECLARE @CatConceptCODDeposit INT = 2;
     DECLARE @CommissionId INT;
     DECLARE @BatchTypeCOD_AC INT =
@@ -30,7 +31,7 @@ BEGIN
     DECLARE @RecolectionId INT;
 
     -- FORMATO BAC ENVIOS Y COMISIONES
-    IF @IdBank = 31
+    IF (@IdBank = 31 OR @IdBank = 109)
        AND @BatchCODId = -1
        AND @CatConceptCODId = 1
     BEGIN
@@ -153,18 +154,21 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                 ON db.Id_bank = bd.BankId
                    AND db.Id_status = @EnabledRow
-                   AND db.Id_country = @IdCountry
+                   AND db.Id_country = @IdCountrySender
             LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat WITH (NOLOCK)
                 ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                    AND cat.RowStatus = @EnabledRow
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco WITH (NOLOCK)
                 ON cco.IdCatConceptCOD = bd.CatConceptCODId
                    AND cco.RowStatus = @EnabledRow
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
         WHERE PGD.RowStatus = 1
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY cda.AccountNumber,
                  bd.AccountNumber,
                  bd.AccountName,
@@ -176,7 +180,7 @@ BEGIN
                  Password;
     END;
     --FORMATO BAC DETALLE INTERNO -ENVIOS Y COMISIONES
-    IF @IdBank = 31
+    IF (@IdBank = 31 OR @IdBank = 109)
        AND @BatchCODId = 0
        AND @CatConceptCODId = 1
     BEGIN
@@ -195,6 +199,8 @@ BEGIN
                       INNER JOIN DeliveryBackOffice.dbo.ProcessedGuideCOD PGD WITH (NOLOCK)
                           ON bd.GuideSerie = PGD.GuideSerie
                              AND bd.GuideNumber = PGD.GuideNumber
+				  	  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+						  ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
                   WHERE
                       bd.Excluded = @Excluded
                       AND bd.CatConceptCODId = @CatConceptCODId
@@ -203,6 +209,7 @@ BEGIN
                       AND PGD.BatchCODId IS NOT NULL
                       AND PGD.BatchCODIdCommission IS NOT NULL
                       AND bd.CommissionId IS NULL
+					  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
               )
               AND CommissionId IS NULL;
 
@@ -369,7 +376,7 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                 ON db.Id_bank = bd.BankId
                    AND db.Id_status = @EnabledRow
-                   AND db.Id_country = @IdCountry
+                   AND db.Id_country = @IdCountrySender
             LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat WITH (NOLOCK)
                 ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                    AND cat.RowStatus = @EnabledRow
@@ -394,7 +401,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
-                           AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
+                WHERE fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
                            AND fac.inv_creditNote IS NULL
                 GROUP BY invd.dti_fk_orderSerie,
@@ -408,12 +415,13 @@ BEGIN
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         ORDER BY bd.CreditDate DESC;
     END;
     --============================= FORMATO BAC ENVIOS COLLECT INICIO ====================================
     --====================================================================================================
     -- FORMATO BAC ENVIOS COLLECT
-    IF @IdBank = 31
+    IF (@IdBank = 31 OR @IdBank = 109)
        AND @BatchCODId = -1
        AND
        (
@@ -540,18 +548,21 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                 ON db.Id_bank = bd.BankId
                    AND db.Id_status = @EnabledRow
-                   AND db.Id_country = @IdCountry
+                   AND db.Id_country = @IdCountrySender
             LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat WITH (NOLOCK)
                 ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                    AND cat.RowStatus = @EnabledRow
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco WITH (NOLOCK)
                 ON cco.IdCatConceptCOD = bd.CatConceptCODId
                    AND cco.RowStatus = @EnabledRow
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
         WHERE PGD.RowStatus = 1
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY cda.AccountNumber,
                  bd.AccountNumber,
                  bd.AccountName,
@@ -563,7 +574,7 @@ BEGIN
                  Password;
     END;
     --FORMATO BAC DETALLE INTERNO -ENVIOS COLLECT
-    IF @IdBank = 31
+    IF (@IdBank = 31 OR @IdBank = 109)
        AND @BatchCODId = 0
        AND
        (
@@ -584,12 +595,15 @@ BEGIN
                   (
                       SELECT bd.IdBatchDetailCOD
                       FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
+						  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+							  ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
                       WHERE
                           bd.Excluded = @Excluded
                           AND bd.CatConceptCODId = @CatConceptCODId
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
                           AND bd.CollectId IS NULL
+						  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
                   )
                   AND CollectId IS NULL;
         END;
@@ -606,12 +620,15 @@ BEGIN
                   (
                       SELECT bd.IdBatchDetailCOD
                       FROM DeliveryBackOffice.dbo.BatchDetailCOD bd WITH (NOLOCK)
+						  LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+							  ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
                       WHERE
                           bd.Excluded = @Excluded
                           AND bd.CatConceptCODId = @CatConceptCODId
                           AND ISNULL(bd.CommissionNotified, 0) = 0
                           AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
                           AND bd.RecolectionId IS NULL
+						  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
                   )
                   AND RecolectionId IS NULL;
         END;
@@ -798,7 +815,7 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                 ON db.Id_bank = bd.BankId
                    AND db.Id_status = @EnabledRow
-                   AND db.Id_country = @IdCountry
+                   AND db.Id_country = @IdCountrySender
             LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat WITH (NOLOCK)
                 ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                    AND cat.RowStatus = @EnabledRow
@@ -823,7 +840,7 @@ BEGIN
                 FROM DeliveryBackOffice.dbo.invoiceDetail invd WITH (NOLOCK)
                     INNER JOIN DeliveryBackOffice.dbo.invoiceHeader fac WITH (NOLOCK)
                         ON fac.inv_pk_id = invd.dti_fk_header
-                           AND fac.inv_descriptionFEL = 'PROCESO REALIZADO'
+                WHERE fac.inv_descriptionFEL = 'PROCESO REALIZADO'
                            AND fac.inv_invoiceOfCreditNote IS NOT NULL
                            AND fac.inv_creditNote IS NULL
                 GROUP BY invd.dti_fk_orderSerie,
@@ -837,13 +854,14 @@ BEGIN
               AND bd.CatConceptCODId = @CatConceptCODId
               AND ISNULL(bd.CommissionNotified, 0) = 0
               AND FORMAT(bd.CreditDate, 'dd/MM/yyyy') = FORMAT(GETDATE(), 'dd/MM/yyyy')
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         ORDER BY bd.CreditDate DESC;
     END;
     --============================= FORMATO BAC ENVIOS COLLECT FIN =======================================
     --====================================================================================================
 
     --FORMATO BAC NORMAL
-    IF @IdBank = 31
+    IF (@IdBank = 31 OR @IdBank = 109)
        AND @CatConceptCODId = 2
     BEGIN
         -------DETALLADO
@@ -964,7 +982,7 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                 ON db.Id_bank = bd.BankId
                    AND db.Id_status = @EnabledRow
-                   AND db.Id_country = @IdCountry
+                   AND db.Id_country = @IdCountrySender
             LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat WITH (NOLOCK)
                 ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                    AND cat.RowStatus = @EnabledRow
@@ -978,11 +996,14 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.Customer cust WITH (NOLOCK)
                 ON pgd.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = 1
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
         WHERE pgd.RowStatus = 1
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODDeposit
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         UNION
         --------ACUMULADO
         SELECT REPLACE(
@@ -1110,7 +1131,7 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank db WITH (NOLOCK)
                 ON db.Id_bank = bd.BankId
                    AND db.Id_status = @EnabledRow
-                   AND db.Id_country = @IdCountry
+                   AND db.Id_country = @IdCountrySender		
             LEFT JOIN DeliveryBackOffice.dbo.CatAccountTypeCOD cat WITH (NOLOCK)
                 ON cat.IdCatAccountTypeCOD = bd.CatAccountTypeCODId
                    AND cat.RowStatus = @EnabledRow
@@ -1124,11 +1145,14 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.Customer cust WITH (NOLOCK)
                 ON pgd.CustomerId = cust.IdCustomer
                    AND cust.RowSatus = 1
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
         WHERE pgd.RowStatus = 1
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND bd.CatConceptCODId = @CatConceptCODDeposit
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY pgd.CustomerId,
                  cda.AccountNumber,
                  bd.AccountNumber,
@@ -1142,7 +1166,7 @@ BEGIN
     END;
 
     -- FORMATO BANRURAL	
-    IF @IdBank = 5
+    IF (@IdBank = 5 OR @IdBank = 110)
     BEGIN
         ------DETATALLADO
         SELECT btd.Reference 'REFERENCIA',
@@ -1237,6 +1261,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         UNION
         ------ACUMULADO
         SELECT MAX(btd.Reference) 'REFERENCIA',
@@ -1331,6 +1356,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY pg.CustomerId,
                  btd.TypeAccountName,
                  btd.AccountName,
@@ -1470,6 +1496,7 @@ BEGIN
             AND btd.BatchCODId = @BatchCODId
             AND btd.Excluded = @Excluded
             AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         UNION
         ----------ACUMULADO
         SELECT btd.CatAccountTypeCODId 'TIPO DE CUENTA',
@@ -1601,6 +1628,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY pg.CustomerId,
                  btd.CatAccountTypeCODId,
                  btd.AccountNumber,
@@ -1654,10 +1682,13 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
                 ON cco.IdCatConceptCOD = bd.CatConceptCODId
                    AND cco.RowStatus = @EnabledRow
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
         WHERE pgd.RowStatus = 1
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND ISNULL(cust.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         UNION
         -----------ACUMULADO
         SELECT RIGHT('000'
@@ -1682,10 +1713,13 @@ BEGIN
             LEFT JOIN DeliveryBackOffice.dbo.CatConceptCOD cco
                 ON cco.IdCatConceptCOD = bd.CatConceptCODId
                    AND cco.RowStatus = @EnabledRow
+            LEFT JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
+                ON do.Guide_Serie = bd.GuideSerie AND do.Guide_Number = bd.GuideNumber
         WHERE pgd.RowStatus = 1
               AND bd.BatchCODId = @BatchCODId
               AND bd.Excluded = @Excluded
               AND cust.CatBatchTypeCODId = @BatchTypeCOD_AC
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY pgd.CustomerId,
                  bd.CatAccountTypeCODId,
                  bd.AccountNumber,
@@ -1757,6 +1791,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         UNION
         ----------ACUMULADO
         SELECT RTRIM(LTRIM(REPLACE(
@@ -1819,6 +1854,7 @@ BEGIN
               AND btd.BatchCODId = @BatchCODId
               AND btd.Excluded = @Excluded
               AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+			  AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
         GROUP BY cu.IdCustomer,
                  btd.CatAccountTypeCODId,
                  cda.CatAccountTypeCODId,
@@ -1876,6 +1912,7 @@ BEGIN
 		AND btd.BatchCODId = @BatchCODId
 		AND btd.Excluded = @Excluded
 		AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+		AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
 
 		UNION
 		----------ACUMULADO
@@ -1918,6 +1955,7 @@ BEGIN
 		AND BTD.BatchCODId = @BatchCODId
 		AND btd.Excluded = @Excluded
 		AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+		AND IIF(do.SenderCountryID is null, 'GT', do.SenderCountryID) = @IdCountrySender
 
 
 		GROUP BY cu.IdCustomer

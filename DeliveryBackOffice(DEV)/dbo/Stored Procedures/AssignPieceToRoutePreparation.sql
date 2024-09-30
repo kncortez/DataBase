@@ -176,8 +176,6 @@ SET ARITHABORT ON
 						[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH (NOLOCK)
 						ON
 						RP.IdRoutePreparation = RPD.RoutePreparationId
-						AND
-						RPD.RowStatus = 1
 					OUTER APPLY
 						(
 							SELECT
@@ -200,6 +198,7 @@ SET ARITHABORT ON
 					RP.CatRouteId = @IdRoute
 					AND
 					RP.DateRoutePreparation = @Date
+                    AND RPD.RowStatus = 1
 					
 				-- Verificar si existe la guía dentro del detalle de la preparación de la ruta
 				IF(@IdRoutePreparationDetail IS NULL OR @IdRoutePreparationDetail = 0)
@@ -388,14 +387,10 @@ SET ARITHABORT ON
 									[DeliveryBackOffice].[dbo].[RoutePreparationDetail] RPD WITH(NOLOCK) 
 									ON
 									RPDP.RoutePreparationDetailId = RPD.IdRoutePreparationDetail
-									AND
-									RPD.RowStatus = 1
 								INNER JOIN
 									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
-									AND
-									RP.RowStatus = 1
 							WHERE 
 								RPDP.RowStatus = 1
 								AND
@@ -406,6 +401,8 @@ SET ARITHABORT ON
 								RP.IdRoutePreparation <> @IdRoutePreparation
 								AND
 								RP.DateRoutePreparation = @Date
+                                AND RPD.RowStatus = 1
+                                AND RP.RowStatus = 1
 									
 							--- Extraer de los demas detalles la guía ingresada
 							UPDATE RPD
@@ -418,8 +415,6 @@ SET ARITHABORT ON
 									[DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK) 
 									ON 
 									RPD.RoutePreparationId = RP.IdRoutePreparation
-									AND
-									RP.RowStatus = 1
 							WHERE 
 								RPD.RowStatus = 1
 								AND
@@ -430,6 +425,7 @@ SET ARITHABORT ON
 								RP.IdRoutePreparation <> @IdRoutePreparation
 								AND
 								RP.DateRoutePreparation = @Date
+                                AND RP.RowStatus = 1
 
 							--- Actualizar el estado de la guía
 							UPDATE [DeliveryBackOffice].[dbo].[DeliveryOrder]
@@ -583,6 +579,10 @@ SET ARITHABORT ON
 						HaveCredit BIT,
 						CollectCOD BIT,
 						ReturnRate DECIMAL(5, 2),
+					    CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  					CurrencyPrice_CODSymbol  NVARCHAR(8),
+	                    CurrencyPriceCodeISO     NVARCHAR(8),
+	                    CurrencyPriceSymbol      NVARCHAR(8),
 						AmountToPay DECIMAL(18, 2),
 						CODAmount DECIMAL(18, 2),
 						ReturnRates DECIMAL(5, 2));

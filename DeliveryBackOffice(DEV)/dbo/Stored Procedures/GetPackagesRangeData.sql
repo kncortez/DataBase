@@ -3,10 +3,15 @@
 -- Create date: <2023-02-10>
 -- Description:	<Obtiene información de los precios por segmento DESKTOP>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-11>
+-- Description:	<Se agrega paramtro para filtra rangos de paquete por pais>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetPackagesRangeData]
 	-- Add the parameters for the stored procedure here
 	@CatBusinessSegmentId INT,
-	@CatTypeRate INT
+	@CatTypeRate INT,
+	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
 
@@ -32,10 +37,16 @@ BEGIN
 		   ,ISNULL(pr.Attempt, 0) Attempt
 		   ,ISNULL(pr.PiecesIncluded, 0) PiecesIncluded
 		   ,pr.[Order]
+		   ,pr.[IdCountry]
+		   ,pr.[IdCurrency]
+		   ,CU.Name [Description]
 		FROM PackagesRange pr
+		LEFT JOIN CatCurrencyCOD CU
+		ON pr.IdCurrency = CU.IdCatCurrencyCOD
 		WHERE pr.CatBusinessSegmentId = @CatBusinessSegmentId
 		AND pr.CatTypeRateId = @CatTypeRate
 		AND pr.RowStatus = 1
+		AND IIF(pr.IdCountry IS NULL, 'GT', pr.IdCountry)= @IdCountry
 		ORDER BY pr.[Order] 
 
 		SELECT 
@@ -54,6 +65,7 @@ BEGIN
 		AND pr.CatTypeRateId = @CatTypeRate
 		AND pr.RowStatus = 1
 		AND prd.RowStatus = 1
+		AND IIF(pr.IdCountry IS NULL, 'GT', pr.IdCountry)= @IdCountry
 
 		SELECT 
 			pr.IdPackagesRange IdPackagesRange
@@ -69,6 +81,7 @@ BEGIN
 		AND pr.CatTypeRateId = @CatTypeRate
 		AND pr.RowStatus = 1
 		AND prCOD.RowStatus = 1
+		AND IIF(pr.IdCountry IS NULL, 'GT', pr.IdCountry)= @IdCountry
 	END TRY
 	BEGIN CATCH
 

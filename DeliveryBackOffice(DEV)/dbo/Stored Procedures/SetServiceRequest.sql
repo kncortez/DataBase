@@ -38,6 +38,7 @@ BEGIN
     DECLARE @GuideSerie VARCHAR(2) = 'FD';
 	DECLARE @GuidePriority INT = 0;
 	DECLARE @Priority VARCHAR(1);
+	DECLARE @IdCountry NVARCHAR(2);
 
     /*********************************************************************************************/
     /******** LLEVA EL CONTROL DE FILAS Y CORRELATIVOS AUTO GENERADOS PARA ESTA SOLICITUD ********/
@@ -128,7 +129,8 @@ BEGIN
                [Sender_Internal_Code],
                [Receiver_Alternant_CUI],
                [Collect_OnDelivery],
-
+			   [ParcelCode],
+			   [IdCountrySender],
                -- MODIFICACION 26/01/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
                --[Collect],
                NULL 'SenderIdTownship',
@@ -141,7 +143,9 @@ BEGIN
                NULL 'CatModuleId',
                NULL 'IdCustomer',
                NULL 'OrderUserCreated',
-               NULL 'SalePipeLineId'
+               NULL 'SalePipeLineId',
+			   -- SE MANDA EL PAIS CRISTIAN SUAZO
+			   '  ' AS 'ReceiverCountryId'
         -- FIN MODIFICACION
 
         INTO #GuideTable
@@ -275,7 +279,16 @@ BEGIN
             Segment =
             (
                 SELECT DeliveryBackOffice.dbo.fn_get_segment(t.Guide_Serie, t.Guide_Number)
-            )
+            ),
+		    --SE AGREGA EL DESTINO PAIS CRISTIAN SUAZO
+			ReceiverCountryId = 
+			(
+				SELECT TOP 1 IdCountry
+                          FROM [DeliveryBackOffice].[dbo].[Province]
+                          WHERE DeliveryBackOffice.dbo.FnClearString(ProvinceName) = DeliveryBackOffice.dbo.FnClearString(t.Receiver_Department)
+			)
+			----------------------------------------------
+
         FROM #GuideTable t;
 
         -- FIN MODIFICACION
@@ -355,7 +368,10 @@ BEGIN
             [IdCustomer],
             [Segment],
             [OrderUserCreated],
-            [SalePipeLineId]
+            [SalePipeLineId],
+			[SenderCountryId],
+			[ReceiverCountryId],
+            [GuideType]
         -- FIN MODIFICACION
         )
         SELECT GT.[Ticket_Number],
@@ -424,10 +440,14 @@ BEGIN
                GT.IdCustomer,
                GT.Segment,
                GT.OrderUserCreated,
-               GT.SalePipeLineId
+               GT.SalePipeLineId,
+			   GT.IdCountrySender,
+			   GT.ReceiverCountryId,
+               CASE WHEN GT.IdCountrySender = ReceiverCountryId THEN 'DOM' ELSE 'INT' END
         -- FIN MODIFICACION
         FROM #GuideTable GT;
 
+		SELECT @IdCountry = IdCountrySender  FROM #GuideTable
         -- MODIFICACION 17/09/2021 JOSE ANDRES RUIZ PEER
         -- INSERTAR DATA PARA MANEJO DE LANDING PAGE
         INSERT INTO [DeliveryBackOffice].[dbo].[ServiceDataForGuide]
@@ -494,10 +514,10 @@ BEGIN
 						FROM RatebyCustomer rbc WITH (NOLOCK)
 						INNER JOIN VisitPointClient vpc WITH (NOLOCK)
 							ON GT.Sender_ID = vpc.CodeOfReference
+                            AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
+						    OR rbc.RbcCodeOfReference IS NULL)
 						WHERE ISNULL(GT.IdCustomer, vpc.CustomerID) = rbc.RbcIdCustomer
-						AND rbc.RbcRowStatus = 1
-						AND (rbc.RbcCodeOfReference = vpc.CodeOfReference
-						OR rbc.RbcCodeOfReference IS NULL)
+						AND rbc.RbcRowStatus = 1						
 						ORDER BY rbc.RbcCodeOfReference DESC)
 			INNER JOIN RateHeader rh WITH (NOLOCK)
 				ON rc.RbcIdRate = rh.RheId
@@ -749,10 +769,12 @@ BEGIN
 					(CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Department],''))) <> '' THEN [DO].[Sender_Department] ELSE [VPC].[Department] END)
 					, (CASE WHEN LTRIM(RTRIM(ISNULL([DO].[Sender_Town],''))) <> '' THEN [DO].[Sender_Town] ELSE [VPC].[Town] END)
 					, NULL
+					, [DO].[SenderCountryId] 
 					, [DO].[Receiver_Department]
 					, [DO].[Receiver_Town]
 					, NULL
-					, NULL
+					, [DO].[ReceiverCountryId]
+					, [DO].[DateCreated]
 				)
 		FROM
 			[DeliveryBackOffice].[dbo].[DeliveryOrder] DO  WITH(NOLOCK) 
@@ -827,7 +849,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Concesionario'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Concesionario'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressVisitPointTypeId INT = 
 	(
@@ -837,7 +859,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KOVPC  WITH(NOLOCK) 
 		WHERE
-			[KOVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+			[KOVPC].[KindOfVPName] = 'Express Center'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @IndividualWebSys INT =
 	(
@@ -847,7 +869,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web' -- COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ExpressWebSys INT =
 	(
@@ -857,7 +879,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-ExpressCenter'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @CorporateWebSys INT =
 	(
@@ -867,7 +889,7 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Hermes Web-Corporativo'  --COLLATE Latin1_General_CI_AI 
 	)
 	DECLARE @ParserSys INT =
 	(
@@ -877,14 +899,14 @@ BEGIN
 		FROM
 			[DeliveryBackOffice].[dbo].[CatSystem] CS  WITH(NOLOCK) 
 		WHERE
-			[CS].[SysNameSystem] = 'Parser'  COLLATE Latin1_General_CI_AI 
+			[CS].[SysNameSystem] = 'Parser'  --COLLATE Latin1_General_CI_AI 
 	)
 
 
   --Fin Nuevos datos para consumir nuevo formato guía
 
-
-		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B');
+		-- SE AGREGO EL PAIS --CRISTIAN SUAZO
+		DECLARE @IDCatBusinessB2B INT = (SELECT IdBusinessSegment FROM DBO.CatBusinessSegment WHERE BusinessSegmentName='B2B' AND IIF(IdCountry IS NULL , 'GT', IdCountry) = @IdCountry);
 
 
         SELECT 1 AS 'StatusCode',
@@ -955,7 +977,8 @@ BEGIN
 						WHEN D.[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
 					END
-			)'GuideOrigin'
+			)'GuideOrigin',
+			D.ReceiverCountryId
         FROM DeliveryOrder D WITH (NOLOCK)
             INNER JOIN @CorrelativeTable C
                 ON C.Guide_Number = D.Guide_Number
@@ -974,7 +997,7 @@ BEGIN
 			LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpori  WITH(NOLOCK) 
 				ON [vpori].[CodeOfReference] = D.[OriginSenderId]
 			LEFT JOIN [DeliveryBackOffice].[dbo].[Province] PrvOri  WITH(NOLOCK) 
-				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  COLLATE Latin1_General_CI_AI 
+				ON [D].[Receiver_Department] = [PrvOri].[ProvinceName]  --COLLATE Latin1_General_CI_AI 
         WHERE D.Guide_Serie = @GuideSerie
               AND D.Guide_Number IN
                   (

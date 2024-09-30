@@ -3,6 +3,10 @@
 -- Create date: <2022-04-07>
 -- Description:	<Obtiene información para Form Monitoreo de Servicios de Recolección>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-06-06>
+-- Description: <Se agrego filtro por pais, por defecto GT>
+-- =============================================
 -- Author:		<Tito Garcia>
 -- Update date: <2024-08-27>
 -- Description:	<Se Agregan campos a la consulta y el nuevo filtro por Hub>
@@ -13,6 +17,7 @@ CREATE PROCEDURE [dbo].[GetMonitoringPickupServices]
 	@DateStart DATE = '2022-01-07',
 	@DateEnd DATE = '2022-04-07',
 	@Phone NVARCHAR(50) = '-1',
+    @IdCountry VARCHAR(2) = 'GT',
 	@HubId INT = -1
 AS
 BEGIN
@@ -129,4 +134,5 @@ SET NOCOUNT ON;
     	AND CAST(sp.EndDate AS DATE) <= @DateEnd
 		AND (ISNULL(IIF(hl.IdHubLogistic IS NOT NULL, hl.IdHubLogistic, hlbts.IdHubLogistic), BHC.IdHubLogistic) = @HubId 
 		OR @HubId = -1)
+		AND IIF(vpc.CountryId IS NULL,'GT', vpc.CountryId) = @IdCountry
 END

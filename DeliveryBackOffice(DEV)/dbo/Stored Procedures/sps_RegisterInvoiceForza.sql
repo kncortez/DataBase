@@ -11,7 +11,10 @@
 -- Create date: <2022-09-07>
 -- Description:	<Actualizar SP para que valide si existe algun registro en la tabla invoiceHeader vinculada con la guía por la cual se desea crear factura>
 -- =============================================
-
+-- Author:      <Daniel, Ramirez>
+-- Create date: <2024-06-27>
+-- Description: <Se agrego parametros de factura y moneda, por defecto 1 = QTZ, 'GT'>
+-- =============================================
 CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
 	 @VpCodeOfReferences int
     ,@cmp_nit varchar(100)
@@ -24,6 +27,8 @@ CREATE PROCEDURE [dbo].[sps_RegisterInvoiceForza]
     ,@tokenRegister varchar(200)
 	,@type int
 	,@systemOrigen int = 1
+    ,@IdCurrency INT = 1
+    ,@IdCountry  VARCHAR(2) = 'GT'
 	,@TblLstDetail TblLstDetail READONLY
 	,@TblInOutOfMoneyDetail TblInOutOfMoneyDetail READONLY
 AS
@@ -33,8 +38,9 @@ BEGIN
 
 	SET @Guide =(SELECT Count (ind.dti_fk_orderNumber)
 				 FROM invoiceDetail ind WITH (NOLOCK)
-				 INNER JOIN @TblLstDetail tbd 
+				 INNER JOIN @TblLstDetail tbd	
 				 ON ind.dti_fk_orderNumber = tbd.orderNumber
+					AND ind.dti_fk_orderserie = tbd.orderSerie
 				 INNER JOIN invoiceHeader inh WITH (NOLOCK)
 				 ON ind.dti_fk_header = inh.inv_pk_id
 				 WHERE inh.inv_certificationFEL IS NULL
@@ -78,6 +84,8 @@ BEGIN
 								,[inv_type]
 								,[systemOperation]
 								,[CatInvoiceTypeId]
+                                ,[IdCurrency]
+                                ,[IdCountry]
 								)
 							VALUES
 								(@VpCodeOfReferences
@@ -95,6 +103,8 @@ BEGIN
 								,@type
 								,@systemOrigen
 								,@idType
+                                ,@IdCurrency
+                                ,@IdCountry
 								)
 								SET @invoiceHeaderId= @@IDENTITY --'IDENTITY'
 
@@ -180,6 +190,7 @@ BEGIN
 			SET @invoiceHeaderId = (SELECT TOP 1 dti_fk_header FROM invoiceDetail indt WITH (NOLOCK)
 									INNER JOIN @TblLstDetail tbld
 									ON indt.dti_fk_orderNumber = tbld.orderNumber
+									AND indt.dti_fk_orderserie = tbld.orderSerie
 									INNER JOIN invoiceHeader inh WITH (NOLOCK)
 									ON indt.dti_fk_header = inh.inv_pk_id
 								    WHERE inh.inv_certificationFEL IS NULL)

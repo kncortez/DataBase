@@ -68,7 +68,7 @@ BEGIN
                 SELECT TOP 1
                        SO.StatusOrderId
                 FROM [DeliveryBackOffice].[dbo].[StatusOrder] SO WITH (NOLOCK)
-                WHERE SO.OrderDescription = 'Traslado a express center' COLLATE Latin1_General_CI_AI
+                WHERE SO.OrderDescription = 'Traslado a express center' --COLLATE Latin1_General_CI_AI
             );
 
     -- Variables del courier
@@ -454,6 +454,10 @@ BEGIN
                     HaveCredit BIT,
                     CollectCOD BIT,
                     ReturnRate DECIMAL(5, 2),
+                    CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	            CurrencyPrice_CODSymbol  NVARCHAR(8),
+	                CurrencyPriceCodeISO     NVARCHAR(8),
+	                CurrencyPriceSymbol      NVARCHAR(8),
                     AmountToPay DECIMAL(18, 2),
                     CODAmount DECIMAL(18, 2),
                     ReturnRates DECIMAL(5, 2)
@@ -612,7 +616,6 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[SettlementPickupStation] SPS WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                 ON SPS.IdSettlementPickupStation = SPSD.SettlementPickupStationId
-                   AND SPSD.RowStatus = 1
             INNER JOIN [DeliveryBackOffice].[dbo].[ServiceManagement] SM WITH (NOLOCK)
                 ON SPSD.ServiceManagementId = SM.IdServiceManagement
             INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] SP WITH (NOLOCK)
@@ -623,7 +626,8 @@ BEGIN
                 ON GTSM.GuideSerie = DOPD.GuideSerie
                    AND GTSM.GuideNumber = DOPD.GuideNumber
         WHERE SPS.IdSettlementPickupStation = @IdSettlementPickupStation
-              AND SPS.RowStatus = 1;
+              AND SPS.RowStatus = 1
+              AND SPSD.RowStatus = 1;
 
         -- Actualizar registros de servicios liquidados 
         UPDATE SPSD
@@ -636,11 +640,11 @@ BEGIN
         FROM [DeliveryBackOffice].[dbo].[SettlementPickupStation] SPS WITH (NOLOCK)
             INNER JOIN [DeliveryBackOffice].[dbo].[SettlementPickupStationDetail] SPSD WITH (NOLOCK)
                 ON SPS.IdSettlementPickupStation = SPSD.SettlementPickupStationId
-                   AND SPSD.RowStatus = 1
             INNER JOIN @AllServiceManagementToUpdate SMTU
                 ON SPSD.ServiceManagementId = SMTU.IdServiceManagement
         WHERE SPS.IdSettlementPickupStation = @IdSettlementPickupStation
-              AND SPS.RowStatus = 1;
+              AND SPS.RowStatus = 1
+              AND SPSD.RowStatus = 1;
 
         -- Actualizar registros de servicios liquidados a partir ç
 
