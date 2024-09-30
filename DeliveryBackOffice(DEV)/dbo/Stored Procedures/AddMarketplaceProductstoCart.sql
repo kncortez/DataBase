@@ -44,15 +44,18 @@ IF(ISNULL(@IdCart,0) = 0  )
 			RowStatus,
 			TokenCreated,
 			DateCreated,
-			IdCountry
+			IdCountry,
+			RegisterUserId
 			)VALUES(
-			 @IdAccount,
+			IIF(@IsUserTeleMarketing = 0, @IdAccount,NULL),
 			 1,
 			 @Token,
 			 GETDATE(),
 			 @IdCountry,
-			IIF(@IsUserTeleMarketing = 1, @IdAccount,NULL)
+		    IIF(@IsUserTeleMarketing = 1, @IdAccount,NULL)
+			 
 			)
+
 
 			SET @MarketplaceCartId = SCOPE_IDENTITY();
 	
