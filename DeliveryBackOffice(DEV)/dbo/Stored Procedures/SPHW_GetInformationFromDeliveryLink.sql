@@ -42,7 +42,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   DL.DeliveryFacCODId,
 		   DL.CollectOnDelivery,
 		   DL.DeliveryLinkStatusId,
-		   FORMAT(DL.ExpirationDate,'dd/MM/yyyy') [ExpirationDate], --- Formato DD/MM/YYYY
+		   DL.ExpirationDate, [ExpirationDate], --- Formato DD/MM/YYYY
 		   DL.SubscriptionId,
 		   DL.GuideSerie,
 		   DL.GuideNumber,
@@ -107,6 +107,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 					   P.EndDateSale,
 					   P.PercentageSale,
 					   P.IdOriginAddress,
+					   [PI].[Url],
 					   'false' AS [IsDeliveryLink],
 					    P.RowStatus AS [StatusCode], -- INDICA QUE EL tOKEN VENCIO
 			          CASE WHEN P.RowStatus=1 THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
@@ -121,6 +122,9 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 			  INNER JOIN
 			[DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
 			  ON A.IdCustomer = C.IdCustomer
+			INNER JOIN 
+           [DeliveryBackOffice].[dbo].[ProductImages] [PI] WITH(NOLOCK)
+		     ON DLP.ProductId =[PI].ProductId
 	   WHERE 
 	   DLP.DeliveryLinkId = (SELECT Top 1  IdDeliveryLink FROM [DeliveryBackOffice].[dbo].[DeliveryLink] DL WITH(NOLOCK) WHERE DL.Token =  @Token)
 	    
@@ -158,6 +162,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 					   P.EndDateSale,
 					   P.PercentageSale,
 					   P.IdOriginAddress,
+					    [PI].[Url],
 					   'false' AS [IsDeliveryLink],
 					    P.RowStatus AS [StatusCode], -- INDICA QUE EL tOKEN VENCIO
 			          CASE WHEN P.RowStatus=1 THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
@@ -172,6 +177,9 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 			  INNER JOIN
 			[DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
 			  ON A.IdCustomer = C.IdCustomer
+			INNER JOIN 
+           [DeliveryBackOffice].[dbo].[ProductImages] [PI] WITH(NOLOCK)
+		     ON DLP.ProductId =[PI].ProductId
 	  WHERE Token = @Token
 			ORDER BY P.DateCreated DESC
 
