@@ -1,7 +1,7 @@
 
 CREATE TABLE [dbo].[MarketplaceCart](
 	[IdMarketplaceCart] [int] IDENTITY(1,1) NOT NULL,
-	[AccountId] [bigint] NOT NULL,
+	[AccountId] [bigint] NULL,
 	[RowStatus] [bit] NOT NULL,
 	[TokenCreated] [nvarchar](50) NOT NULL,
 	[DateCreated] [datetime] NOT NULL,
