@@ -1736,6 +1736,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetConditionsProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTagsProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetProductById.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CancelledDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\sphwd_GetSettlements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkProduct.sql" />
