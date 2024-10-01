@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[Product]
 (
 	[IdProduct] INT IDENTITY (1, 1) NOT NULL, 
-    [Token] NVARCHAR(200) NOT NULL, 
+    [Token] NVARCHAR(200) NULL, 
     [Name] NVARCHAR(100) NOT NULL, 
     [Description] NVARCHAR(200) NULL, 
     [AccountId] BIGINT NOT NULL, 

@@ -2,7 +2,7 @@
 (
 	[IdProductImages] INT IDENTITY (1, 1) NOT NULL, 
     [ProductId] INT NOT NULL, 
-    [Url] NVARCHAR(200) NOT NULL, 
+    [Url] NVARCHAR(600) NOT NULL, 
     [Position] TINYINT NOT NULL, 
     [RowStatus] BIT NOT NULL, 
     [UserCreated] NVARCHAR(50) NOT NULL, 

@@ -1,33 +1,40 @@
 ﻿-- =============================================
--- Author:		<Brandon, Pedroza >
--- Create date: <2024-09-25>
--- Description:	<Obtiene datos de un producto especifico para link de entrega>
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-09-30>
+-- Description:	<Actualiza el path de productos nuevos cuyo path esta vacia>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHW_GetProductById]
-	@IdProduct AS INT
+CREATE PROCEDURE [dbo].[SPHW_UpdateImagesProductPath]
+	@ProductImages TblImagesProductList READONLY , -- Recibe una tabla de imágenes
+	@IdAccount NVARCHAR(50)
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
-    SET NOCOUNT ON;
-    DECLARE @TranCounter INT;
-    SET @TranCounter = @@TRANCOUNT;
-    IF @TranCounter > 0
-        SAVE TRANSACTION spgetProductId;
-    ELSE
-        BEGIN TRANSACTION;
-    BEGIN TRY
 
-        SELECT 200 AS 'StatusCode',
-               'Registros obtenidos' AS 'Description';
-		
-		--OBTENER DATOS DE PRODUCTO
+  BEGIN TRANSACTION
+	BEGIN TRY
+	DECLARE @IdProduct INT = (SELECT TOP 1 ProductId FROM @ProductImages);
+	DECLARE @UserToken AS NVARCHAR(50) =   (
+			SELECT CONVERT(VARCHAR(32), HASHBYTES('MD5', @IdAccount), 2) AS token
+		);
+
+	UPDATE Imp
+        SET Imp.[Url] = P.[Url] -- Actualiza el campo path
+			,Imp.DateUpdated =GETDATE() 
+			,Imp.UserUpdated = @UserToken
+        FROM dbo.ProductImages Imp
+        INNER JOIN @ProductImages P ON Imp.[IdProductImages]  = P.[IdProductImages]-- Relación por IdProductImages
+
+	  	COMMIT TRANSACTION;
+
+		SELECT 200 AS 'StatusCode',
+          'Datos Actualizados exitosamente' AS 'Description';
+
+			--OBTENER DATOS DE PRODUCTO
 		SELECT 
 			[IdProduct],
 			[Token],
 			[Name],
 			[Description],
-			[AccountId]
+			[AccountId],
 			[IdOriginAddress],
 			[CatProductSubCategoryId],
 			[IsPublic],
@@ -70,20 +77,17 @@ BEGIN
 		ON P.IdProduct = I.ProductId
 		WHERE P.[IdProduct] = @IdProduct
 		AND I.RowStatus = 'TRUE';
+	   
+	END TRY
+	
+		BEGIN CATCH
 
+			ROLLBACK TRANSACTION;
 
+			SELECT 0 AS 'StatusCode',
+               'Actualización de datos fallida' AS 'Description';
 
-        IF @TranCounter = 0
-            COMMIT TRANSACTION;
-    END TRY
-    BEGIN CATCH
-        IF @TranCounter = 0
-            ROLLBACK TRANSACTION;
-        ELSE IF XACT_STATE() <> -1
-            ROLLBACK TRANSACTION spgetProductId;
-        SELECT 0 AS 'StatusCode',
-               ERROR_MESSAGE() AS 'Description';
-    END CATCH
+		 END CATCH
 
 END
 
