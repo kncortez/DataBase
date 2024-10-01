@@ -29,6 +29,7 @@ BEGIN
 
 	SELECT DL.IdDeliveryLink,
 		   DL.ReceiverName,
+		   DL.Token,
 		   DLP.Quantity,
 		   DL.ReceiverPhone,
 		   DL.ReceiverAddress,
