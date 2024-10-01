@@ -42,6 +42,7 @@ BEGIN
                 ON I.[ProductId] = P.[IdProduct]
         WHERE P.[AccountId] = @Account
               AND I.[Position] = 1
+              AND P.[RowStatus] = 1
 
 
         IF @TranCounter = 0

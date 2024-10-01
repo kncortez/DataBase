@@ -1,4 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[SPHW_SetProduct]
+﻿-- =============================================
+-- Author:		<Brandon Pedroza>
+-- Create date: <2024-09-30>
+-- Description:	<Registra informacion de un nuevo producto, o actualiza la informacion>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHW_SetProduct]
 	@IdUser VARCHAR(50),
     @IdProduct INT = NULL,                        -- Parámetro que define si es nuevo o existente
     @Name NVARCHAR(100),
@@ -40,7 +45,12 @@ BEGIN
 			SELECT CONVERT(VARCHAR(32), HASHBYTES('MD5', @IdUser), 2) AS token
 		);
 
-		IF EXISTS (SELECT 1 FROM Product WHERE Sku = @Sku AND AccountId = @AccountId)
+		IF EXISTS (SELECT 1 FROM Product 
+					WHERE Sku = @Sku 
+					AND AccountId = @AccountId 
+					AND @IdProduct IS NULL 
+					AND RowStatus = 1
+				)
 		BEGIN
 			SELECT 201 AS 'StatusCode',
 				   'El producto ya existe' AS 'Description';

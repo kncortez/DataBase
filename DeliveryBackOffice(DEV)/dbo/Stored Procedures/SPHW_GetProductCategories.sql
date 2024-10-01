@@ -24,10 +24,15 @@ BEGIN
                C.[Name] [Name],
                C.[Description] [Description],
                C.[Icon] [Icon],
+               C2.[IdCatProductSubCategory] [IdParente],
+			   C2.[Name] [NameParent],
                ISNULL(C.[ProductSubCategoryParentId], 0) [IdParent]
-        FROM [dbo].[CatProductSubCategory] C
+        FROM [dbo].[CatProductSubCategory] C WITH(NOLOCK)
+		INNER JOIN [dbo].[CatProductSubCategory] C2 WITH(NOLOCK)
+		ON C2.IdCatProductSubCategory = C.ProductSubCategoryParentId
         WHERE C.[RowStatus] = 'TRUE'
-
+        AND C.ProductCategoryId =5
+		AND C.ProductSubCategoryParentId IS NOT NULL
 
 
         IF @TranCounter = 0

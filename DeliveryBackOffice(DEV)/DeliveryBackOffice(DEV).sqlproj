@@ -1740,13 +1740,14 @@
     <Build Include="dbo\Stored Procedures\sphwd_GetSettlements.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkProduct.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_ReactivateDeliveryLink.sql" />
-	<Build Include="dbo\Stored Procedures\SPHW_GetDeliveryLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_ReactivateDeliveryLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetDeliveryLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetCheckout.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_UpdateImagesProductPath.sql" />
     <Build Include="dbo\User Defined Types\TblImagesProductList.sql" />
     <Build Include="dbo\User Defined Types\TblTagsProductList.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_SetProduct.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_DisableProduct.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
