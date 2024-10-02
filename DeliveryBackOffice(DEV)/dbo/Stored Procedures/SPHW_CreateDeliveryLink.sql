@@ -2,7 +2,7 @@ CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLink]
   @AccountId INT,
   @CodeOfReference INT,
   @ReceiverName NVARCHAR(200),
-  @ReceiverPhone INT,
+  @ReceiverPhone BIGINT,
   @ReceiverSettlementId INT,
   @ReceiverEmail NVARCHAR(100),
   @CatPaymentTypeId INT,
@@ -23,11 +23,11 @@ BEGIN
 		@IsInsurance,@InsuranceAmount,@DeliveryFavCODId,@CollectOnDelivery,2,DATEADD(DAY, 1, GETDATE()),1,'SYSTEM',GETDATE())
 
 		DECLARE @DeliveryLinkID INT;
-		DECLARE @hash VARBINARY(32)
-		DECLARE @hashResultado VARCHAR(64);
+		DECLARE @hash VARBINARY(16); -- El tamaño del hash MD5 es de 16 bytes (128 bits)
+		DECLARE @hashResultado VARCHAR(32); -- El hash MD5 en formato hexadecimal tiene 32 caracteres
 		SET @DeliveryLinkID = @@IDENTITY;
-		SET @hash = HASHBYTES('SHA2_256', CONCAT(CAST(@DeliveryLinkID AS VARCHAR(50)),CAST(@AccountId AS VARCHAR(50))))
-		SET @hashResultado = CONVERT(VARCHAR(64), @hash, 2)
+		SET @hash = HASHBYTES('MD5', CONCAT(CAST(@DeliveryLinkID AS VARCHAR(50)), CAST(@AccountId AS VARCHAR(50))));
+		SET @hashResultado = CONVERT(VARCHAR(32), @hash, 2); -- El hash MD5 en hexadecimal tiene 32 caracteres
 
 		UPDATE DeliveryBackOffice.dbo.DeliveryLink
 		SET Token = @hashResultado
