@@ -68,7 +68,7 @@ BEGIN
     SELECT 
 		@TypeService = ISNULL(do.TypeService, 'STD')
 		,@IsCOD = (CASE WHEN do.Collect_OnDelivery > 0 THEN 1 ELSE 0 END)
-        ,@CountryByGuide = ISNULL(SenderCountryId,'GT')
+        ,@CountryByGuide = SenderCountryId
     FROM DeliveryOrder do WITH (NOLOCK)
     WHERE do.Guide_Serie = @GuideSerie
             AND do.Guide_Number = @GuideNumber
