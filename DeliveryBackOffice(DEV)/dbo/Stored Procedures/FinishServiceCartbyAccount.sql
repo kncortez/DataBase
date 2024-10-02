@@ -181,7 +181,7 @@ BEGIN
                         WHERE vpc.CodeOfReference = do.Sender_ID
                     )
 				LEFT JOIN 
-				[dbo].[DeliveryOrderPaymentDetail] dopd 
+				[dbo].[DeliveryOrderPaymentDetail] dopd WITH (NOLOCK)
 				ON CG.GuideSerie = dopd.GuideSerie AND 
 				   CG.GuideNumber = dopd.GuideNumber
             WHERE DopId IS NULL
