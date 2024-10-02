@@ -258,7 +258,7 @@ BEGIN
             [SenderName] NVARCHAR(150),
             [ReceiverName] NVARCHAR(150),
             [SenderPhone] NVARCHAR(150),
-            [ReceiverPhone] NVARCHAR(50),
+            [ReceiverPhone] NVARCHAR(100),
             [ReceiverAddress] NVARCHAR(600),
             [TypeOfIncident] NVARCHAR(50),
             [Incident] NVARCHAR(50),
