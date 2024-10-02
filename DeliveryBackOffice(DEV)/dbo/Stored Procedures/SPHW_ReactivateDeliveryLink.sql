@@ -9,7 +9,7 @@ AS
 BEGIN
     BEGIN TRY
         DECLARE @Status INT = (
-                                  SELECT IdDeliveryLinkStatus FROM DeliveryLinkStatus WHERE Name = 'Enviado'
+                                  SELECT IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WHERE Name = 'Enviado'
                               )
         DECLARE @StatusAcepted INT = (
                                          SELECT IdDeliveryLinkStatus
@@ -19,19 +19,25 @@ BEGIN
 
         IF EXISTS
         (
-            SELECT 1 FROM DeliveryLink WHERE IdDeliveryLink = @IdDeliveryLink
+            SELECT 1 FROM DeliveryBackOffice.dbo.DeliveryLink WHERE IdDeliveryLink = @IdDeliveryLink
             AND DeliveryLinkStatusId = @StatusAcepted
         )
         BEGIN
             BEGIN TRANSACTION;
 
-            UPDATE DeliveryLink
+            UPDATE DeliveryBackOffice.dbo.DeliveryLink
             SET DeliveryLinkStatusId = @Status
             WHERE IdDeliveryLink = @IdDeliveryLink
             COMMIT TRANSACTION;
 
-            SELECT 200 AS StatusCode,
-                   'Link reactivado correctamente.' AS Description
+            SELECT 200 AS StatusCode
+                   ,'Link reactivado correctamente.' AS Description
+				   , ReceiverEmail
+				   , ReceiverName
+				   , ReceiverPhone
+			FROM DeliveryBackOffice.dbo.DeliveryLink
+			WHERE IdDeliveryLink = @IdDeliveryLink
+				 
         END
         ELSE
         BEGIN
