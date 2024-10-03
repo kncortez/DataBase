@@ -15,12 +15,14 @@ AS
 BEGIN 
 	BEGIN TRANSACTION
 	BEGIN TRY
+		DECLARE @StatusId INT = (SELECT TOP 1 IdDeliveryLinkStatus FROM dbo.DeliveryLinkStatus WHERE Name = 'Enviado')
+
 		INSERT INTO DeliveryBackOffice.dbo.DeliveryLink 
 		(Token,AccountId,OriginCodeOfReference,ReceiverName,ReceiverPhone,ReceiverSettlementId,ReceiverEmail,CatPaymentTypeId,CatTypeServiceId,
 		IsInsurance,InsuranceAmount,DeliveryFacCODId,CollectOnDelivery,DeliveryLinkStatusId,ExpirationDate,RowStatus,UserCreated,DateCreated)
 		VALUES
-		('',@AccountId,@CodeOfReference,@ReceiverName,@ReceiverPhone,@ReceiverSettlementId,@ReceiverEmail,@CatPaymentTypeId,@CatTypeServiceId,
-		@IsInsurance,@InsuranceAmount,@DeliveryFavCODId,@CollectOnDelivery,2,DATEADD(DAY, 1, GETDATE()),1,'SYSTEM',GETDATE())
+		('',@AccountId,@CodeOfReference,@ReceiverName,CONCAT('+',@ReceiverPhone),@ReceiverSettlementId,@ReceiverEmail,@CatPaymentTypeId,@CatTypeServiceId,
+		@IsInsurance,@InsuranceAmount,@DeliveryFavCODId,@CollectOnDelivery,@StatusId,DATEADD(DAY, 1, GETDATE()),1,'SYSTEM',GETDATE())
 
 		DECLARE @DeliveryLinkID INT;
 		DECLARE @hash VARBINARY(16); -- El tamaño del hash MD5 es de 16 bytes (128 bits)
