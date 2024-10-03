@@ -43,6 +43,7 @@ BEGIN
         WHERE P.[AccountId] = @Account
               AND I.[Position] = 1
               AND P.[RowStatus] = 1
+			  AND I.[RowStatus] = 1
 
 
         IF @TranCounter = 0

@@ -173,7 +173,7 @@ BEGIN
 
 				--se actualiza el token de producto
 				UPDATE Product
-				SET Token = CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', CONCAT(IdProduct,Name)), 2)
+				SET Token = CONVERT(VARCHAR(64), HASHBYTES('MD5', CONCAT(IdProduct,Name)), 2)
 				WHERE IdProduct = @IdProduct
 
 
