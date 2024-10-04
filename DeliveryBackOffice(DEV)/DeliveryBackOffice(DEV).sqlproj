@@ -1749,6 +1749,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_SetProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_DisableProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_RegisterLinkWhatsAppId.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetFinalLink.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
