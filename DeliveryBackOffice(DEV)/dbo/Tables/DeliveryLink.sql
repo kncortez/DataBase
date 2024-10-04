@@ -18,7 +18,7 @@
     [ReceiverLongitude] NVARCHAR(50) NULL, 
     [WhatsappId] NVARCHAR(100) NULL, 
     [CatPaymentTypeId] INT NULL, 
-    [CatTypeServiceId] INT NOT NULL, 
+    [CatTypeServiceId] INT  NULL, 
     [IsInsurance] BIT NULL, 
     [InsuranceAmount] DECIMAL(14,2) NULL, 
     [DeliveryFacCODId] INT NULL, 
