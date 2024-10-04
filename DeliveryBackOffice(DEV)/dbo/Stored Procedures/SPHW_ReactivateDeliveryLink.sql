@@ -26,16 +26,23 @@ BEGIN
             BEGIN TRANSACTION;
 
             UPDATE DeliveryBackOffice.dbo.DeliveryLink
-            SET DeliveryLinkStatusId = @Status
+            SET DeliveryLinkStatusId = @Status, ExpirationDate = DATEADD(DAY, 1, GETDATE())
             WHERE IdDeliveryLink = @IdDeliveryLink
             COMMIT TRANSACTION;
 
             SELECT 200 AS StatusCode
                    ,'Link reactivado correctamente.' AS Description
+				   , RU.UsrNickName AS 'SenderName'
 				   , ReceiverEmail
 				   , ReceiverName
 				   , ReceiverPhone
-			FROM DeliveryBackOffice.dbo.DeliveryLink
+			FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
+			INNER JOIN DeliveryBackOffice.dbo.Account A WITH(NOLOCK)
+			ON DL.AccountId = A.AccIdAccount
+			INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
+			ON A.IdCustomer = RBUBA.RuaIdAccount
+			INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
+			ON RBUBA.RuaIdUser = RU.UsrIdUser
 			WHERE IdDeliveryLink = @IdDeliveryLink
 				 
         END
