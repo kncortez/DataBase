@@ -35,7 +35,7 @@ BEGIN TRY
 		--RESUMEN DE ENVIO
 		SELECT 
 			--DE
-			  C.Name AS 'Nombre remitente'
+			  RU.UsrNickName AS 'Nombre remitente'
 			, VPC.Phone AS 'Telefono remitente'
 			, T2.TownshipName + ' , ' + P2.ProvinceName  AS 'Direccion remitente'
 			, VPC.Email AS 'Correo remitente'
@@ -47,8 +47,18 @@ BEGIN TRY
 			--DATOS PARA COTIZADOR
 			, ISNULL(DL.OriginCodeOfReference,'0') AS 'CodeOfReferenceSource'
 			, ISNULL(DL.DestinyCodeOfReference,'0') AS 'CodeOfReferenceDestiny'
-			,ISNULL(T2.HeaderCode,'0') 'HeaderCodeSource'
-			,ISNULL(T.HeaderCode,'0') 'HeaderCodeDestiny'
+			, ISNULL(T2.HeaderCode,'0') AS 'HeaderCodeSource'
+			, ISNULL(T.HeaderCode,'0') AS 'HeaderCodeDestiny'
+			, RU.UsrEmail AS 'SenderEmail'
+			, RU.Phone AS 'SenderPhone'
+			, VPC.Address AS 'SenderAddress'
+			, VPC.Longitude AS 'SenderLongitude'
+			, VPC.Latitude AS 'SenderLatitude'
+			, VPC.DescriptionOfClient AS 'SenderContact'
+			, P2.ProvinceName + ' / ' + T2.TownshipName  AS 'SenderCity'
+			, DL.ReceiverSettlementId AS 'ReceiverSettlement'
+			, DL.ReceiverAddress AS 'ReceiverAddress'
+			, P.ProvinceName + ' / ' + T.TownshipName AS 'ReceiverCity'
 		FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DL.ReceiverSettlementId = S.IdSettlement
@@ -66,8 +76,10 @@ BEGIN TRY
 			ON S2.IdTownship = T2.IdTownship
 		INNER JOIN DeliveryBackOffice.dbo.Account A WITH(NOLOCK)
 			ON DL.AccountId = A.AccIdAccount
-		INNER JOIN DeliveryBackOffice.dbo.Customer C WITH(NOLOCK)
-			ON A.IdCustomer = C.IdCustomer
+		INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
+			ON A.IdCustomer = RBUBA.RuaIdAccount
+		INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
+			ON RBUBA.RuaIdUser = RU.UsrIdUser
 		WHERE DL.IdDeliveryLink = @IdDeliveryLink
 	END;
 
