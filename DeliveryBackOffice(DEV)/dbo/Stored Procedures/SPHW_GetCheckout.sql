@@ -16,10 +16,11 @@ BEGIN TRY
 		  P.Name AS 'Nombre'
 		, P.Description AS 'Descripcion'
 		, DLP.Quantity AS 'Cantidad'
-		, DLP.Price AS 'Precio'
+		, ISNULL(DLP.Price * DLP.Quantity,0) AS 'Precio'
 		, ISNULL(CCC.Symbol,'Q') AS 'Moneda'
+		, ISNULL(CCC.CodeISO,'GTQ') AS 'CurrencyISO'
 		, ISNULL(P2.Url,'') AS 'Imagen'
-		, ISNULL(SUM(DLP.Price) OVER (PARTITION BY DLP.DeliveryLinkId),0) AS 'MontoTotal'
+		, ISNULL(SUM(DLP.Price * DLP.Quantity) OVER (PARTITION BY DLP.DeliveryLinkId),0) AS 'MontoTotal'
 	FROM  DeliveryBackOffice.dbo.DeliveryLinkProducts DLP WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.Product P WITH(NOLOCK)
 		ON DLP.ProductId = P.IdProduct
@@ -59,6 +60,17 @@ BEGIN TRY
 			, DL.ReceiverSettlementId AS 'ReceiverSettlement'
 			, DL.ReceiverAddress AS 'ReceiverAddress'
 			, P.ProvinceName + ' / ' + T.TownshipName AS 'ReceiverCity'
+			--COD
+			, CTS.CtsShortName AS 'TypeService'
+			, CPT.PayTypeName AS 'PaymentType'
+			, DL.CollectOnDelivery AS'AmountCOD'
+			, DFCOD.TypeAccountFavCOD AS 'TypeAccount'
+			, DFCOD.IdBank AS 'IdBank'
+			, DFCOD.DocumentIdFavCOD AS 'DocumentId'
+			, DFCOD.NumberAccFavCOD AS 'NumberAcc'
+			, DL.DeliveryFacCODId AS 'IdNumberAcc'
+			, DB.[Name] AS 'NameBank'
+			, DFCOD.NameAccountFavCOD AS 'NameAcc'
 		FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DL.ReceiverSettlementId = S.IdSettlement
@@ -68,18 +80,24 @@ BEGIN TRY
 			ON S.IdTownship = T.IdTownship
 		INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON DL.OriginCodeOfReference = VPC.CodeOfReference
-		LEFT JOIN DeliveryBackOffice.dbo.Settlement S2 WITH(NOLOCK)
-			ON VPC.IdSettlement = S2.IdSettlement
-		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
-			ON S2.IdProvince = P2.IdProvince
 		LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH(NOLOCK)
-			ON S2.IdTownship = T2.IdTownship
+			ON VPC.IdTownship = T2.IdTownship
+		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
+			ON T2.IdProvince = P2.IdProvince
 		INNER JOIN DeliveryBackOffice.dbo.Account A WITH(NOLOCK)
 			ON DL.AccountId = A.AccIdAccount
 		INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
 			ON A.IdCustomer = RBUBA.RuaIdAccount
 		INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
 			ON RBUBA.RuaIdUser = RU.UsrIdUser
+		LEFT JOIN DeliveryBackOffice.dbo.CatTypeService CTS WITH(NOLOCK)
+			ON DL.CatTypeServiceId = CTS.CtsId
+		LEFT JOIN DeliveryBackOffice.dbo.CatPaymentType CPT WITH(NOLOCK)
+			ON DL.CatPaymentTypeId = CPT.PayTypeId
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryFavCOD DFCOD WITH(NOLOCK)
+			ON DL.DeliveryFacCODId = DFCOD.IdDeliveryFavCOD
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank DB WITH(NOLOCK)
+			ON DFCOD.IdBank = DB.Id_bank
 		WHERE DL.IdDeliveryLink = @IdDeliveryLink
 	END;
 
