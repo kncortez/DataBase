@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2024-10-25>
 -- Description:	<Description,Actualizar estado Link de entrega >
@@ -22,7 +22,8 @@ BEGIN
 
   DECLARE @Result INT=0;
   DECLARE @NewStatusId INT =(SELECT  TOP 1IdDeliveryLinkStatus FROM [dbo].[DeliveryLinkStatus] WITH(NOLOCK) WHERE [Name]='Completado' )
-  DECLARE @StatusId INT =(SELECT TOP 1  IdDeliveryLinkStatus FROM [dbo].[DeliveryLinkStatus] WITH(NOLOCK) WHERE [Name]='Aperturado' )
+  DECLARE @StatusId INT =(SELECT TOP 1  IdDeliveryLinkStatus FROM [dbo].[DeliveryLinkStatus]WITH(NOLOCK)  WHERE  [Name]='Aperturado' )
+  DECLARE @Canceled    INT =(SELECT TOP 1  IdDeliveryLinkStatus FROM [DeliveryBackOffice].[dbo].[DeliveryLinkStatus] WITH(NOLOCK) WHERE [Name]='Anulado' );
   DECLARE @OriginCodeOfReference INT =(SELECT	TOP 1 OriginCodeOfReference FROM dbo.DeliveryLink WITH(NOLOCK) WHERE Token = @Token)
   DECLARE @NickName NVARCHAR(100) = ( SELECT    TOP 1    
                                             RU.UsrNickName
@@ -45,29 +46,41 @@ BEGIN
 
   BEGIN TRANSACTION
 	BEGIN TRY
+	   
+		IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WITH(NOLOCK) WHERE Token = @Token AND DeliveryLinkStatusId = @Canceled))
+		  BEGIN
+				SET @Result =3;
+
+			END
+				 ELSE
+					  BEGIN
+							IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WITH(NOLOCK) WHERE Token = @Token AND DeliveryLinkStatusId = @StatusId))
+							   BEGIN
+
+	
+		
+		
+							   
+											  UPDATE [dbo].[DeliveryLInk]
+												 SET DeliveryLinkStatusId = @NewStatusId,
+													 ReceiverName  = @ReceiverName,
+													 ReceiverPhone = @ReceiverPhone,
+													 ReceiverEmail = @ReceiverEmail,
+													 ReceiverCatCityPlaceId = @ReceiverCatCityPlaceId,
+													 ReceiverSettlementId = @ReceiverSettlementId,
+													 ReceiverZone = @ReceiverZone,
+													 ReceiverNeighborhood = @ReceiverNeighborhood,
+													 ReceiverAddress = @ReceiverAddress,
+													 ReceiverAdditionalInstuctions = @ReceiverAdditionalInstuctions,
+													 ReceiverLatitude  = @ReceiverLatitude,
+													 ReceiverLongitude = @ReceiverLongitude
+											  WHERE TOKEN = @Token
+
+											  SET @Result =1;
+										  END 
+			END
 
 
-IF(EXISTS(SELECT TOP 1 * FROM [dbo].[DeliveryLink] WHERE Token = @Token AND DeliveryLinkStatusId = @StatusId))
-   BEGIN
-
-	  UPDATE [dbo].[DeliveryLInk]
-	     SET DeliveryLinkStatusId = @NewStatusId,
-		     ReceiverName  = @ReceiverName,
-		     ReceiverPhone = @ReceiverPhone,
-		     ReceiverEmail = @ReceiverEmail,
-			 ReceiverCatCityPlaceId = @ReceiverCatCityPlaceId,
-			 ReceiverSettlementId = @ReceiverSettlementId,
-		     ReceiverZone = @ReceiverZone,
-		     ReceiverNeighborhood = @ReceiverNeighborhood,
-		     ReceiverAddress = @ReceiverAddress,
-		     ReceiverAdditionalInstuctions = @ReceiverAdditionalInstuctions,
-		     ReceiverLatitude  = @ReceiverLatitude,
-		     ReceiverLongitude = @ReceiverLongitude
-	  WHERE TOKEN = @Token
-
-	  SET @Result =1;
-
-	END
 	  
 	COMMIT TRANSACTION;
 
@@ -75,9 +88,12 @@ IF(EXISTS(SELECT TOP 1 * FROM [dbo].[DeliveryLink] WHERE Token = @Token AND Deli
 	BEGIN
 	     SELECT 1 AS [StatusCode], 'Datos Actualizados exitosamente' AS[MessageResponse], @NickName [NickName] 
 	   END
-	     ELSE
+	     ELSE IF (@Result=0)
+		 BEGIN
 		    SELECT 0 AS [StatusCode], 'Token no vigente' AS[MessageResponse], @NickName [NickName] 
-		
+			END
+			  ELSE
+		          SELECT 3 AS [StatusCode], 'Token Anulado' AS[MessageResponse], @NickName [NickName] 
 
 	END TRY
 	

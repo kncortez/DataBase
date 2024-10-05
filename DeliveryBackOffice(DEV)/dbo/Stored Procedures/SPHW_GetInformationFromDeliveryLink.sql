@@ -7,6 +7,9 @@ CREATE PROCEDURE [dbo].[SPHW_GetInformationFromDeliveryLink]
 @Token NVARCHAR(250)
 AS
 BEGIN
+	
+
+	
 	SET NOCOUNT ON;
 	--- Validar si es un token de link de compra o un token de link de producto, mandar data diferente, si existe mandar data de producto,  mandar bandera indicando que tipod e link es
 	  DECLARE @NewStatusId INT =(SELECT TOP 1  IdDeliveryLinkStatus FROM [DeliveryBackOffice].[dbo].[DeliveryLinkStatus] WITH(NOLOCK) WHERE [Name]='Aperturado' );
@@ -59,10 +62,10 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   P.[ProvinceName],
 		   'true' AS [IsDeliveryLink],
 		    CASE WHEN DL.ExpirationDate >= GETDATE() AND DLS.[Name] = 'Enviado' OR DLS.[Name] = 'Aperturado' THEN  1 --- INDICA QUE EL TOKEN ESTA VIGENTE
-			     WHEN DLS.[Name] = @Canceled   THEN 3
+			     WHEN DLS.IdDeliveryLinkStatus = @Canceled   THEN 3
 			        ELSE 0 END AS [StatusCode], -- INDICA QUE EL tOKEN VENCIO
 			CASE WHEN DL.ExpirationDate >= GETDATE() AND DLS.[Name] = 'Enviado' OR DLS.[Name] = 'Aperturado' THEN 'Token vigente'  --- iNDICA QUE EL tOKEN ESTA VIGENTE
-			     WHEN DLS.[Name] = @Canceled   THEN 'Link de entrega anulado'
+			     WHEN DLS.IdDeliveryLinkStatus = @Canceled   THEN 'Link de entrega anulado'
 			        ELSE 'Token No vigente' END AS [MessageResponse], -- INDICA QUE EL tOKEN VENCIO
            DataOrigin.AccName,
 		   DataOrigin.UsrNickName AS [CommercialName],
@@ -284,8 +287,6 @@ IF(EXISTS(SELECT TOP 1 1 FROM [DeliveryBackOffice].[dbo].[DeliveryLink] WHERE To
 
 		 END CATCH
 END
-
-
 
 	
 	
