@@ -30,7 +30,7 @@ BEGIN
 	SELECT DL.IdDeliveryLink,
 		   DL.ReceiverName,
 		   DL.Token,
-		   DLP.Quantity,
+		   SUM(DLP.Quantity) AS 'Quantity',
 		   DL.ReceiverPhone,
 		   DL.ReceiverAddress,
 		   DL.DateCreated,
@@ -44,6 +44,8 @@ BEGIN
 			ON DLS.IdDeliveryLinkStatus = DL.DeliveryLinkStatusId
 	WHERE (VP.CountryId = @IdCountry OR (@IdCountry = 'GT' AND VP.CountryId IS NULL))
 		  AND DL.AccountId = @AccountId
+	GROUP BY DL.IdDeliveryLink, DL.ReceiverName, DL.Token, DL.ReceiverPhone, DL.ReceiverAddress, DL.DateCreated, DLS.Name
+	ORDER BY DL.IdDeliveryLink DESC
 
 	COMMIT TRANSACTION;
 
