@@ -54,29 +54,32 @@ VALUES
 
 
 
+DECLARE @IdAccount int =(SELECT TOP 100 * FROM Account WHERE AccIdAccount = 78630);
+
+DECLARE @IdOriginAddress INT = (SELECT TOP 1* FROM UserAddress WHERE UadIdAccount = @IdAccount);
+
 INSERT INTO [dbo].[Product] 
-([Token], [Name], [Description], [AccountId], [CatProductSubCategoryId], [IsPublic], [CatStatusStoreId], [CatProductConditionId], [Sku], [Stock], [StockRequired], [Price], [CatCurrencyCODId], [Brand], [AverageRating], [NameSale], [StartDateSale], [EndDateSale], [PercentageSale], [RowStatus], [UserCreated], [DateCreated], [UserUpdated], [DateUpdated])
+([Token], [Name], [Description], [AccountId], [CatProductSubCategoryId], [IsPublic], [CatStatusStoreId], [CatProductConditionId], [Sku], [Stock], [StockRequired], [Price], [CatCurrencyCODId], [Brand], [AverageRating], [NameSale], [StartDateSale], [EndDateSale], [PercentageSale], [RowStatus], [UserCreated], [DateCreated], [UserUpdated], [DateUpdated],[IdOriginAddress])
 VALUES
+('ELEC123', 'Smartphone X100', 'Último modelo con soporte 5G, 128GB de almacenamiento y cámara dual.', @IdAccount, 1, 1, 3, 1, 'SMX100', 500, 1, 699.99, 1, 'TechCorp', 4.5, 'Black Friday', '2024-11-25', '2024-11-30', 20.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('ELEC123', 'Smartphone X100', 'Último modelo con soporte 5G, 128GB de almacenamiento y cámara dual.', 1, 1, 1, 3, 1, 'SMX100', 500, 1, 699.99, 1, 'TechCorp', 4.5, 'Black Friday', '2024-11-25', '2024-11-30', 20.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('ELEC456', 'Laptop Pro 15', 'Laptop de alto rendimiento con Intel i7, 16GB RAM y 512GB SSD.', @IdAccount, 1, 1, 3, 1, 'LP1500', 150, 1, 1299.99, 1, 'CompTech', 5, 'Cyber Monday', '2024-12-02', '2024-12-03', 15.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('ELEC456', 'Laptop Pro 15', 'Laptop de alto rendimiento con Intel i7, 16GB RAM y 512GB SSD.', 2, 1, 1, 3, 1, 'LP1500', 150, 1, 1299.99, 1, 'CompTech', 5, 'Cyber Monday', '2024-12-02', '2024-12-03', 15.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('HOME789', 'TV LED 4K 55"', 'Televisor UHD Smart con soporte HDR y apps integradas.', @IdAccount, 1, 1, 2, 2, 'LEDTV55', 300, 1, 799.99, 1, 'ViewPlus', 4, 'Holiday Sale', '2024-12-15', '2024-12-31', 10.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('HOME789', 'TV LED 4K 55"', 'Televisor UHD Smart con soporte HDR y apps integradas.', 3, 1, 1, 3, 2, 'LEDTV55', 300, 1, 799.99, 1, 'ViewPlus', 4, 'Holiday Sale', '2024-12-15', '2024-12-31', 10.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('APPL012', 'Refrigerador 350L', 'Refrigerador de alta eficiencia energética, capacidad de 350 litros.', @IdAccount, 2, 1, 2, 1, 'FRG350L', 120, 1, 599.99, 1, 'CoolHome', 3.5, 'Summer Sale', '2024-06-01', '2024-06-15', 5.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('APPL012', 'Refrigerador 350L', 'Refrigerador de alta eficiencia energética, capacidad de 350 litros.', 4, 2, 1, 3, 1, 'FRG350L', 120, 1, 599.99, 1, 'CoolHome', 3.5, 'Summer Sale', '2024-06-01', '2024-06-15', 5.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('APPL345', 'Lavadora 7kg', 'Lavadora de carga frontal con 10 programas de lavado.', @IdAccount, 2, 1, 1, 2, 'WM7KG', 80, 1, 449.99, 1, 'CleanWave', 4, NULL, NULL, NULL, NULL, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('APPL345', 'Lavadora 7kg', 'Lavadora de carga frontal con 10 programas de lavado.', 5, 2, 1, 3, 2, 'WM7KG', 80, 1, 449.99, 1, 'CleanWave', 4, NULL, NULL, NULL, NULL, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('TOOL678', 'Taladro Inalámbrico 18V', 'Taladro inalámbrico con batería de 18V y ajustes de velocidad.', @IdAccount, 3, 1, 1, 2, 'CD18V', 250, 1, 199.99, 1, 'PowerPro', 5, 'New Year Sale', '2024-01-01', '2024-01-10', 15.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('TOOL678', 'Taladro Inalámbrico 18V', 'Taladro inalámbrico con batería de 18V y ajustes de velocidad.', 6, 3, 1, 3, 2, 'CD18V', 250, 1, 199.99, 1, 'PowerPro', 5, 'New Year Sale', '2024-01-01', '2024-01-10', 15.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('FURN901', 'Sofá de 3 Plazas', 'Sofá moderno con reposacabezas ajustables y cojines suaves.', @IdAccount, 3, 1, 2, 3, 'SF3ST', 50, 1, 899.99, 1, 'ComfortHouse', 4.5, 'Clearance Sale', '2024-07-01', '2024-07-15', 10.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('FURN901', 'Sofá de 3 Plazas', 'Sofá moderno con reposacabezas ajustables y cojines suaves.', 7, 3, 1, 3, 3, 'SF3ST', 50, 1, 899.99, 1, 'ComfortHouse', 4.5, 'Clearance Sale', '2024-07-01', '2024-07-15', 10.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('FURN234', 'Juego de Comedor', 'Mesa de comedor de madera con 6 sillas de diseño minimalista.', @IdAccount, 3, 1, 2, 3, 'DT6CH', 70, 1, 499.99, 1, 'WoodCraft', 5, 'Festive Sale', '2024-12-01', '2024-12-10', 20.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('FURN234', 'Juego de Comedor', 'Mesa de comedor de madera con 6 sillas de diseño minimalista.', 8, 3, 1, 3, 3, 'DT6CH', 70, 1, 499.99, 1, 'WoodCraft', 5, 'Festive Sale', '2024-12-01', '2024-12-10', 20.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
+('SPORT567', 'Bicicleta de Montaña', 'Bicicleta resistente con 21 velocidades y absorción de impactos.', @IdAccount, 4, 1, 1, 4, 'MTB21SP', 100, 1, 349.99, 1, 'SpeedRider', 4, 'End of Season', '2024-09-01', '2024-09-15', 25.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress),
 
-('SPORT567', 'Bicicleta de Montaña', 'Bicicleta resistente con 21 velocidades y absorción de impactos.', 9, 4, 1, 3, 4, 'MTB21SP', 100, 1, 349.99, 1, 'SpeedRider', 4, 'End of Season', '2024-09-01', '2024-09-15', 25.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL),
-
-('TOY890', 'Auto RC Turbo', 'Auto a control remoto con modo turbo y tracción en las 4 ruedas.', 10, 5, 1, 3, 4, 'RCCAR4WD', 500, 1, 129.99, 1, 'ToyMaster', 4.5, 'Christmas Special', '2024-12-20', '2024-12-25', 30.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL);
+('TOY890', 'Auto RC Turbo', 'Auto a control remoto con modo turbo y tracción en las 4 ruedas.', @IdAccount, 5, 1, 3, 4, 'RCCAR4WD', 500, 1, 129.99, 1, 'ToyMaster', 4.5, 'Christmas Special', '2024-12-20', '2024-12-25', 30.00, 1, 'SYS-BPEDROZA', GETDATE(), NULL, NULL,@IdOriginAddress);
 
 
 

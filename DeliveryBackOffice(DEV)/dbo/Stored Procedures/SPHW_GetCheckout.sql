@@ -63,12 +63,12 @@ BEGIN TRY
 			--COD
 			, CTS.CtsShortName AS 'TypeService'
 			, CPT.PayTypeName AS 'PaymentType'
-			, DL.CollectOnDelivery AS'AmountCOD'
+			, ISNULL(DL.CollectOnDelivery,0.00) AS'AmountCOD'
 			, DFCOD.TypeAccountFavCOD AS 'TypeAccount'
-			, DFCOD.IdBank AS 'IdBank'
+			, ISNULL(DFCOD.IdBank,0) AS 'IdBank'
 			, DFCOD.DocumentIdFavCOD AS 'DocumentId'
 			, DFCOD.NumberAccFavCOD AS 'NumberAcc'
-			, DL.DeliveryFacCODId AS 'IdNumberAcc'
+			, ISNULL(DL.DeliveryFacCODId,0) AS 'IdNumberAcc'
 			, DB.[Name] AS 'NameBank'
 			, DFCOD.NameAccountFavCOD AS 'NameAcc'
 		FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
