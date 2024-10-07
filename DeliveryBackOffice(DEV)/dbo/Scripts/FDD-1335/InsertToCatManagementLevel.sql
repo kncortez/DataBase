@@ -37,6 +37,6 @@ INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[Ro
 
 -- INSERT INTO [dbo].[ManagementLevelByUser] Usuario con su nivel jerárquico para desbloquear rutas
 
--------- NOTA IMPORTANTE. se tiene que llenar el token del usuario que va a validar en el campo TokenValidator según el ambiente en que se utilice. -----------------------------------------------
+-------- NOTA IMPORTANTE. se tiene que llenar el ID del usuario que va a validar en el campo [RegisterUserId] según el ambiente en que se utilice. -----------------------------------------------
 
-INSERT INTO [dbo].[ManagementLevelByUser]([TokenValidator],[CatManagementLevelId],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (N'',1,1,GETDATE(), N'SYS-TGARCIA', NULL, NULL)
+INSERT INTO [dbo].[ManagementLevelByUser]([RegisterUserId],[CatManagementLevelId],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (123,1,1,GETDATE(), N'SYS-TGARCIA', NULL, NULL)
