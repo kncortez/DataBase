@@ -8,11 +8,12 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
-    [CountryId]          VARCHAR (2)   DEFAULT 'GT' NOT NULL, 
+    [CountryId]          VARCHAR (2)    DEFAULT ('GT') NOT NULL,
     PRIMARY KEY CLUSTERED ([IdContentTitle] ASC),
-    CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent]),
-    CONSTRAINT [FK_ContentTitle_CatCountry] FOREIGN KEY ([CountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent])
 );
+
+
 
 
 GO

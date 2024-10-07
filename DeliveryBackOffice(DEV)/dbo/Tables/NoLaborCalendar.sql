@@ -6,11 +6,12 @@
     [TokenCreated]      NVARCHAR (50) NOT NULL,
     [DateUpdated]       DATETIME      NULL,
     [TokenUpdated]      NVARCHAR (50) NULL,
-    [IdCountry]         VARCHAR  (2)  NOT NULL,
+    [IdCountry]         VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdNoLaborCalendar] ASC),
-    FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
     CONSTRAINT [UQ_NoLaborCalendar_Composite] UNIQUE NONCLUSTERED ([NoLaborDate] ASC, [IdCountry] ASC)
 );
+
+
 
 
 

@@ -13,9 +13,10 @@
     [HubLatitude]     NVARCHAR (20)  NULL,
     [HubLongitude]    NVARCHAR (20)  NULL,
     [DescriptionCC]   NVARCHAR (100) NULL,
-    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC),
-    CONSTRAINT [FK_IdCountry_CatCountry] FOREIGN KEY (idCountry) REFERENCES [dbo].[CatCountry] (IdCountry)
+    CONSTRAINT [PK_HubLogistics] PRIMARY KEY CLUSTERED ([IdHubLogistic] ASC)
 );
+
+
 
 
 

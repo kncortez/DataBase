@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[MarketplaceCarouselImage] (
+﻿CREATE TABLE [dbo].[MarketplaceCarouselImage] (
     [IdCarouselImage] INT            IDENTITY (1, 1) NOT NULL,
     [XXLImageURL]     NVARCHAR (200) NOT NULL,
     [XLImageURL]      NVARCHAR (200) NOT NULL,
@@ -12,8 +12,12 @@ CREATE TABLE [dbo].[MarketplaceCarouselImage] (
     [DateUpdated]     DATETIME       NULL,
     [XXXLImageURL]    NVARCHAR (200) NULL,
     [HyperlinkURL]    NVARCHAR (200) NULL,
-    CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
+    [IdCountry]       VARCHAR (2)    NULL,
+    CONSTRAINT [PK_MarketplaceCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC),
+    CONSTRAINT [FK_MCSenderIdCountry_CatCountry] FOREIGN KEY ([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
+
+
 
 
 GO
@@ -57,4 +61,8 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Imagen extra grande de marketplace' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCarouselImage', @level2type=N'COLUMN',@level2name=N'XXXLImageURL'
 GO
 EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'URL de hipervínculo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'HyperlinkURL';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'País asignado', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MarketplaceCarouselImage', @level2type = N'COLUMN', @level2name = N'IdCountry';
 

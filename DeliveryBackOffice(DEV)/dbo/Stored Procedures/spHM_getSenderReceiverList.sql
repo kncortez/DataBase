@@ -4,7 +4,7 @@
 -- Description:	<Get complete information list of sender receiver>
 -- =============================================
 CREATE PROCEDURE [dbo].[spHM_getSenderReceiverList] 
-	@IdCountry VARCHAR  (2)
+	@IdCountry VARCHAR  (2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -23,6 +23,7 @@ BEGIN
 				ISNULL([SR].[IdCountry],'GT') IdCountry
 	FROM		[dbo].[SenderReceiver] SR
 	WHERE		[SR].[Estatus] = 1
-	AND ISNULL([SR].IdCountry,'GT') =  @IdCountry
+	AND ISNULL([SR].IdCountry,'GT') = 'GT'
+	--AND ISNULL([SR].IdCountry,'GT') =  @IdCountry
 	ORDER BY	[SR].[Last_Name];
 END

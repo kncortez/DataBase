@@ -21,12 +21,12 @@ BEGIN
 
     SET NOCOUNT ON;
 	
-	DECLARE @CountryFind TABLE (
-		IdCountry varchar(2)
-	);
-	INSERT INTO @CountryFind
-	exec GetCountryOfPickupService @IdPickup,@Token
-	DECLARE @IDCOUNTRYSERVICE varchar(2) =(SELECT IdCountry FROM @CountryFind)
+	--DECLARE @CountryFind TABLE (
+	--	IdCountry varchar(2)
+	--);
+	--INSERT INTO @CountryFind
+	--exec GetCountryOfPickupService @IdPickup,@Token
+	--DECLARE @IDCOUNTRYSERVICE varchar(2) =(SELECT IdCountry FROM @CountryFind)
 	
 	
 
@@ -123,7 +123,8 @@ BEGIN
                IIF(ISNULL(pyt.IdHeaderRecolection, 0) = @IdPickup, 1, IIF(ISNULL(pyt.IdHeaderRecolection, 0) = 0, 1, 0)) pik,
                IIF(dr.StatusOrderId IN ( 16, 15, 1,21,20, 10 ), 1, 0) status,
                st.OrderDescription,
-			   IIF(DR.SenderCountryId=@IDCOUNTRYSERVICE,1,0) samecountry,
+			   --IIF(DR.SenderCountryId=@IDCOUNTRYSERVICE,1,0) samecountry,
+               1 samecountry,
 			   DR.SenderCountryId guidecountry
 			   
         --, pyt.IdHeaderRecolection
@@ -145,7 +146,7 @@ BEGIN
 								WHERE
 									[CatCheckpointTypeId] = 3 And SO.RowStatus =1
 							) 
-							or DR.SenderCountryId <>@IDCOUNTRYSERVICE;
+							--or DR.SenderCountryId <>@IDCOUNTRYSERVICE;
 
 		CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist
             ON #ErrorGuides (exist);
@@ -160,8 +161,8 @@ BEGIN
 			CASE 
 				WHEN er.exist = 0 THEN
 					'Servicio no existe'
-				WHEN er.samecountry = 0 THEN
-					'El servicio de recolección pertenece al pais '+@IDCOUNTRYSERVICE+', no coincide con el país de origen de la guía ('+er.guidecountry+').'
+				--WHEN er.samecountry = 0 THEN
+					--'El servicio de recolección pertenece al pais '+@IDCOUNTRYSERVICE+', no coincide con el país de origen de la guía ('+er.guidecountry+').'
 				ELSE
 					er.OrderDescription
 				END

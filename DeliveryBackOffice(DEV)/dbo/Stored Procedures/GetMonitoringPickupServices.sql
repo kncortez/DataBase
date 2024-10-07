@@ -3,6 +3,10 @@
 -- Create date: <2022-04-07>
 -- Description:	<Obtiene información para Form Monitoreo de Servicios de Recolección>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-08-27>
+-- Description:	<Se Agregan campos a la consulta y el nuevo filtro por Hub>
+-- =============================================
 -- Author:      <Daniel Ramirez>
 -- Create date: <2024-06-06>
 -- Description: <Se agrego filtro por pais, por defecto GT>

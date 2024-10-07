@@ -12,11 +12,11 @@
 
 
 CREATE PROCEDURE [dbo].[ExpressCenterConfiguration]
-    @USR_IdEmployee AS BIGINT = 0,
-    @USR_IdUser AS NVARCHAR(50) = '0',
-    @UserName AS VARCHAR(100),
-    @IdVisitPoint AS INT,
-    @Token AS NVARCHAR(100)
+    @USR_IdEmployee AS BIGINT = 0
+  , @USR_IdUser AS NVARCHAR(50) = '0'
+  , @UserName AS VARCHAR(100)
+  , @IdVisitPoint AS INT
+  , @Token AS NVARCHAR(100)
 AS
 BEGIN
 
@@ -39,25 +39,39 @@ BEGIN
            )
         BEGIN
             PRINT 'SELECT 1';
+
+            PRINT @USR_IdEmployee;
+            PRINT @USR_IdUser;
+
             SELECT TOP 1
-                   @IdUser = USR_IdUser,
-                   @USR_Username = USR_Username,
-                   @IdEmployee = USR_IdEmployee
+                   @IdUser       = USR_IdUser
+                 , @USR_Username = USR_Username
+                 , @IdEmployee   = USR_IdEmployee
             FROM DenariusUser_Dev.dbo.LGN_User WITH (NOLOCK)
             WHERE USR_IdUser = @USR_IdEmployee
                   AND USR_Username = @USR_IdUser;
+
+
+            PRINT @IdUser;
+            PRINT @USR_Username;
+            PRINT @IdEmployee;
         END;
         ELSE
         BEGIN
             PRINT 'ERROR 1';
             SET @ERROR = 'TRUE'; --SE ASIGNA VALOR TRUE DEBIDO A QUE NO SE PUEDE CONTINUAR CON EL PROCESO
         END;
-
+        PRINT '@ERROR';
+        PRINT @ERROR;
+        PRINT @IdUser;
+        PRINT @USR_Username;
         IF @ERROR = 'FALSE'
            AND @IdUser != 0
            AND @USR_Username != '0' --AND @IdEmployee != 0
         BEGIN
-
+            PRINT @ERROR;
+            PRINT @IdUser;
+            PRINT @USR_Username;
             -- SE OBTIENE EL IDUSER DEL PORTAL 
             SET @IdUser_Portal =
             (
@@ -68,27 +82,47 @@ BEGIN
                       AND ru.UsrRowStatus = 1
             );
 
+            PRINT '@IdUser_Portal';
+            PRINT @IdUser_Portal;
+
             --INSERTAR EN TABLA INTERMEDIA PARA ASOCIAR EL CÓDIGO EMPLEADO CON LA CUENTA DE PORTAL WEB
             IF NOT EXISTS
             (
                 SELECT *
                 FROM DeliveryBackOffice.dbo.InternalUser iu
-                WHERE iu.RegisterUserID = @IdUser_Portal
+                WHERE iu.IdUser = @IdUser_Portal
             )
             BEGIN
-                INSERT INTO DeliveryBackOffice.dbo.InternalUser
-                SELECT @IdUser,
-                       @USR_Username,
-                       @IdEmployee,
-                       ru.UsrIdUser,
-                       1,
-                       @Token,
-                       GETDATE(),
-                       NULL,
-                       NULL
+
+                PRINT 'No existe el empleado ';
+                PRINT @USR_IdEmployee;
+                INSERT INTO dbo.InternalUser
+                (
+                    IdUser
+                  , Username
+                  , IdEmployee
+                  , RegisterUserID
+                  , RowStatus
+                  , TokenCreated
+                  , DateCreated
+                  , TokenUpdated
+                  , DateUpdated
+                )
+                SELECT @IdUser
+                     , @USR_Username
+                     , @IdEmployee
+                     , ru.UsrIdUser
+                     , 1
+                     , @Token
+                     , GETDATE()
+                     , NULL
+                     , NULL
                 FROM DeliveryBackOffice.dbo.RegisterUser ru
                 WHERE ru.UsrEmail = @UserName;
+
+
             END;
+
 
             --SE ASIGNA EL ROL DE EXPRESS CENTER
             UPDATE DeliveryBackOffice.dbo.RolByUserByAccount
@@ -117,26 +151,26 @@ BEGIN
 
                 --SE CONFIGURA EL NOMBRE Y DESCRIPCION DE EXRESS CENTER 
                 UPDATE Customer
-                SET Name = 'FD EXPRESS CENTER',
-                    Description = 'FD EXPRESS CENTER',
-                    Abbreviation = 'FD EXPRESS CENTER',
-                    IdCustomerType = 2
+                SET Name = 'FD EXPRESS CENTER'
+                  , Description = 'FD EXPRESS CENTER'
+                  , Abbreviation = 'FD EXPRESS CENTER'
+                  , IdCustomerType = 2
                 WHERE IdCustomer =
                 (
                     SELECT ac.IdCustomer
-                    FROM RegisterUser us
-                        INNER JOIN [dbo].Person pe
+                    FROM RegisterUser                         us
+                        INNER JOIN [dbo].Person               pe
                             ON pe.PerIdPerson = us.UsrIdPerson
                                AND pe.PerRowStatus = 1
                         INNER JOIN [dbo].[RolByUserByAccount] rua
                             ON rua.RuaIdUser = us.UsrIdUser
                                AND rua.RuaRowStatus = 1
-                        INNER JOIN [dbo].CatRol ro
+                        INNER JOIN [dbo].CatRol               ro
                             ON ro.RolIdRol = rua.RuaIdRol
-                        INNER JOIN [dbo].Account ac
+                        INNER JOIN [dbo].Account              ac
                             ON ac.AccIdAccount = rua.RuaIdAccount
                                AND ac.AccRowStatus = 1
-                        INNER JOIN [dbo].CatTypeAccount ta
+                        INNER JOIN [dbo].CatTypeAccount       ta
                             ON ta.TacIdTypeAccount = ac.AccIdTypeAccount
                     WHERE us.UsrIdUser = @IdUser_Portal
                           AND us.UsrRowStatus = 1
@@ -145,18 +179,18 @@ BEGIN
 
             UPDATE ac
             SET ac.AccConfirm = 'C'
-				, ac.AccTokenUpdated =@Token
-				, ac.AccDateUpdated = GETDATE()
-            FROM RegisterUser ru
+              , ac.AccTokenUpdated = @Token
+              , ac.AccDateUpdated = GETDATE()
+            FROM RegisterUser                 ru
                 INNER JOIN RolByUserByAccount rbuba
                     ON rbuba.RuaIdUser = ru.UsrIdUser
-                INNER JOIN Account ac
+                INNER JOIN Account            ac
                     ON ac.AccIdAccount = rbuba.RuaIdAccount
             WHERE ru.UsrIdUser = @IdUser_Portal;
 
             COMMIT TRANSACTION;
-            SELECT 200 AS ResultCode,
-                   'Cuenta asociada correctamente' AS [Description];
+            SELECT 200                             AS ResultCode
+                 , 'Cuenta asociada correctamente' AS [Description];
         END;
 
 
@@ -171,10 +205,10 @@ BEGIN
     END TRY
     BEGIN CATCH
 
-        SELECT ERROR_MESSAGE(),
-               ERROR_LINE(),
-               ERROR_NUMBER(),
-               ERROR_STATE();
+        SELECT ERROR_MESSAGE()
+             , ERROR_LINE()
+             , ERROR_NUMBER()
+             , ERROR_STATE();
         ROLLBACK TRANSACTION;
 
     END CATCH;

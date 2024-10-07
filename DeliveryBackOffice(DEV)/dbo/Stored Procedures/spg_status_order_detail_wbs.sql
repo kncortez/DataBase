@@ -107,9 +107,9 @@ BEGIN
 								   (SELECT '[ ' + 
 											DeliveryBackOffice.dbo.[CapitalizeFirstLetter](LOWER(courier.First_Name) + ' '+LOWER(courier.Last_Name)) +
 											' ]'
-								   FROM dbo.SenderReceiver courier WHERE courier.ID = da.ID_Courier ) + ' ' + 
+								   FROM dbo.SenderReceiver courier WITH (NOLOCK)   WHERE courier.ID = da.ID_Courier ) + ' ' + 
 								   I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
-							FROM DeliveryBackOffice.dbo.CatTypeIncidence I 
+							FROM DeliveryBackOffice.dbo.CatTypeIncidence I WITH (NOLOCK) 
 								inner JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
 									ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie

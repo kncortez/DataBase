@@ -32,8 +32,8 @@ BEGIN
               -- 3 CUANDO YA ESTÁ ENVIADA A SAP
               -- -1 ES ANULADA
               AND ihd.inv_type IN ( 1, 2 )			 
-              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-09-01' AS DATE)
-			 --AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2024-08-31' AS DATE)
+              AND CAST(ihd.inv_dateRegister AS DATE) >= CAST('2024-10-01' AS DATE)
+			 --AND CAST(ihd.inv_dateRegister AS DATE)  <= CAST('2024-09-30' AS DATE)
 
 			  --AND CAST(ihd.inv_dateRegister AS DATE) <= CAST('2023-09-27' AS DATE)
              -- AND cast(ihd.inv_dateRegister as date) <= CAST('2023-10-31' as date)
@@ -54,6 +54,8 @@ BEGIN
 			  --AND ihd.inv_pk_id IN (3963185,3972448,4006354,4006355)
 			  --AND ihd.inv_pk_id IN (4006356,4006357,4006358,4006360,4006361)
 			  --and 1= 0 --VARIABLE A UTILIZAR CADA VEZ QUE SE SUBA NUEVA VERSIÓN DEL SERVICIO
+			  --AND ihd.inv_pk_id = 4401864
+
 			  ORDER BY ihd.inv_pk_id ASC;
 
     END  
