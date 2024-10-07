@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[CatBillingTime] (
+﻿CREATE TABLE [dbo].[CatBillingTime] (
     [IdCatBillingTime]       INT            IDENTITY (1, 1) NOT NULL,
     [DescriptionBillingTime] NVARCHAR (200) NOT NULL,
     [RowStatus]              BIT            CONSTRAINT [DF_CatBillingTime_RowStatus] DEFAULT ((1)) NOT NULL,
@@ -10,8 +10,12 @@ CREATE TABLE [dbo].[CatBillingTime] (
 );
 
 
+
+
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de actualización', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingTime', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'fecha de actualziación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingTime', @level2type = N'COLUMN', @level2name = N'DateUpdated';
+
+
 
 
 GO
@@ -19,7 +23,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Token de us
 
 
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingTime', @level2type = N'COLUMN', @level2name = N'DateCreated';
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'cha de creación', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingTime', @level2type = N'COLUMN', @level2name = N'DateCreated';
+
+
 
 
 GO

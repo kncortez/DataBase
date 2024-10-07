@@ -100,8 +100,8 @@
     [IsLastMileReturn]                     BIT             DEFAULT ((0)) NULL,
     [DeliveryETA]                          DATETIME        NULL,
     [SenderCountryId]                      VARCHAR (2)     NULL,
-    [ReceiverCountryId]                   VARCHAR (2)     NULL, 
-    [GuideType]                             NVARCHAR(3)    NULL,
+    [ReceiverCountryId]                    VARCHAR (2)     NULL,
+    [GuideType]                            NVARCHAR (3)    NULL,
     CONSTRAINT [pk_primary_key_delivery_order] PRIMARY KEY CLUSTERED ([Guide_Serie] ASC, [Guide_Number] ASC),
     FOREIGN KEY ([IdDeliveryOption]) REFERENCES [dbo].[CatDeliveryOptions] ([IdDeliveryOption]),
     FOREIGN KEY ([ReceiverIdSettlement]) REFERENCES [dbo].[Settlement] ([IdSettlement]),
@@ -116,10 +116,10 @@
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient] FOREIGN KEY ([Sender_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [FK_DeliveryOrder_VisitPointClient1] FOREIGN KEY ([Receiver_ID]) REFERENCES [dbo].[VisitPointClient] ([CodeOfReference]),
     CONSTRAINT [fk_order_customer] FOREIGN KEY ([IdCustomer]) REFERENCES [dbo].[Customer] ([IdCustomer]),
-    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type]),
-    CONSTRAINT [fk_Sender_Country_Id] FOREIGN KEY ([SenderCountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry]),
-    CONSTRAINT [fk_Receiver_Country_Id] FOREIGN KEY ([ReceiverCountryId]) REFERENCES [dbo].[CatCountry] ([IdCountry])
+    CONSTRAINT [FK_PackageType] FOREIGN KEY ([Package_Type]) REFERENCES [dbo].[Package] ([Package_Type])
 );
+
+
 
 
 
@@ -279,9 +279,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Latitud de 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Longitud de la dirección del destinatario', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'Receiver_Lng';
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'País de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'SenderCountryId';
+
 GO
-EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'País de destino', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'DeliveryOrder', @level2type = N'COLUMN', @level2name = N'ReceiverCountryId';
+
 
 GO
 CREATE NONCLUSTERED INDEX [IX_Guide_Number]
@@ -991,4 +991,14 @@ GO
 CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated]
     ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
     INCLUDE([Pieces_Dry], [Pieces_Cold], [StatusOrderId]);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_SenderCountryId]
+    ON [dbo].[DeliveryOrder]([Guide_Serie] ASC, [Guide_Number] ASC, [SenderCountryId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_generate_batch_SenderCountryId_IsLastMileReturn_SenderCountryId]
+    ON [dbo].[DeliveryOrder]([SenderCountryId] ASC, [IsLastMileReturn] ASC, [StatusOrderId] ASC);
 

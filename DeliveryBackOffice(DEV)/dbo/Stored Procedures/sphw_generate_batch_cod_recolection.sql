@@ -182,7 +182,7 @@ BEGIN
                              --AND ( cus.IdCustomerType IN(2,3)
                              --OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))						
 
-                             AND pg.Date > '2022-03-14 22:00:00.000'
+                             AND pg.Date > '2024-09-30 0:00:00.000'
                              --AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
 							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender

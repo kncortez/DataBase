@@ -180,7 +180,7 @@ BEGIN
 									   ) 'Peso total',--SI
 
 		   								   (
-										SELECT TOP 1 ISNULL(TBL.AdditionalWeightRate, 0) from
+										SELECT TOP 1 ISNULL(TBL.AdditionalWeightRate, 0) FROM
 										 (
 										 SELECT rah.AdditionalWeightRate,RbcCodeOfReference,RbcIdCustomer FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 										 LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
@@ -192,12 +192,12 @@ BEGIN
 										  )
 											AND rac.RbcRowStatus = 1
 										 )TBL
-											ORDER BY TBL.RbcCodeOfReference desc
+											ORDER BY TBL.RbcCodeOfReference DESC
 				
 									   ) 'Tarifa del excedente por libra',--SI
            
 									   (
-										SELECT TOP 1 ISNULL(TBL.WeightLimit, 0) from
+										SELECT TOP 1 ISNULL(TBL.WeightLimit, 0) FROM
 										 (
 										 SELECT rah.WeightLimit,RbcCodeOfReference,RbcIdCustomer FROM DeliveryBackOffice.dbo.RatebyCustomer rac WITH (NOLOCK)            
 										 LEFT JOIN DeliveryBackOffice.dbo.RateHeader rah WITH (NOLOCK)
@@ -209,7 +209,7 @@ BEGIN
 										  )
 											AND rac.RbcRowStatus = 1
 										 )TBL
-											ORDER BY TBL.RbcCodeOfReference desc
+											ORDER BY TBL.RbcCodeOfReference DESC
 				
 									   ) 'Peso Base',
 									   0 'Peso a Facturar',
@@ -336,7 +336,8 @@ BEGIN
 											   BDT.Commission,
 											   BDT.Amount
 										FROM DeliveryBackOffice.dbo.BatchDetailCOD BDT WITH (NOLOCK)
-										WHERE BDT.CatConceptCODId = 2
+										WHERE BDT.CatConceptCODId = 2 
+										AND BDT.RowStatus = 1 -- 03OctCRAS
 									) BDC
 										ON BDC.GuideSerie = DOR.Guide_Serie
 										   AND BDC.GuideNumber = DOR.Guide_Number
@@ -356,6 +357,7 @@ BEGIN
 										ON TONW.IdTownship = DOR.ReceiverIdTownship
 									LEFT JOIN dbo.Township TWN WITH (NOLOCK)
 										ON TWN.TownshipName = DOR.Receiver_Town ----26TEBNHL
+										INNER JOIN dbo.Province prd ON prd.IdProvince = TWN.IdProvince  AND prd.IdCountry  = DOR.ReceiverCountryId --03OctCRAS
 									LEFT JOIN
 									(
 										SELECT CV.HeaderCode,

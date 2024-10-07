@@ -12,7 +12,7 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[sp_get_customerParser]
-@Email AS VARCHAR(50)
+@Email AS VARCHAR(50)='jordy.lemus@forzadelivery.com'
 AS
 
 BEGIN
@@ -36,7 +36,7 @@ SET @Cantidad = (SELECT count(IdCustomer) FROM Customer WHERE RegexEmail Like '%
 
 			SET @expresion2 = ('^([\w\.\-]+)@'+@expresion+'$')
 
-			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename FROM Customer
+			SELECT IdCustomer, Name, RegexSubject, RegexEmail, RegexFilename,ISNULL(CountryID,'GT') AS CountryID  FROM Customer
 					WHERE RegexEmail = @expresion2
 		END
 END

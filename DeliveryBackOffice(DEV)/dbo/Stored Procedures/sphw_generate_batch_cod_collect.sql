@@ -178,10 +178,11 @@ BEGIN
                              --AND ( cus.IdCustomerType IN(2,3)
                              --OR( ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 370, 826, 57, 5688, 7937, 1038, 6900, 3267, 527, 7025, 4851 )))						
 
-                             AND pg.Date > '2022-03-14 22:00:00.000'
+                             AND pg.Date > '2024-09-30 00:00:00.000'
                              -- AND ISNULL(cus.CatBatchFrequencyCODId, @FrecuencyCOD) = @FrecuencyCOD
                              AND do.StatusOrderId != 7
-							 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+							 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+							 AND do.SenderCountryId = @IdCountrySender
                        FOR XML PATH('')
                    ),
                    1,
@@ -298,7 +299,8 @@ BEGIN
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL
-				  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
+				  --AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
+				  AND ord.SenderCountryId = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -500,7 +502,8 @@ BEGIN
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ISNULL(ord.Collect_OnDelivery, 0) = 0
-					 AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
+					 --AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
+					 AND ord.SenderCountryId = @IdCountrySender
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -627,7 +630,8 @@ BEGIN
                       OR do.IsCollect = 'true'
                   )
                   AND ISNULL(tact.CODtoPay, 0) = 0
-				  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+				  --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+				  AND do.SenderCountryId = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 

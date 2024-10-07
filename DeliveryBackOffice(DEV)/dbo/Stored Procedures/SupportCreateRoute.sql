@@ -49,7 +49,7 @@ BEGIN
 				SELECT * FROM dbo.CatRoute WHERE CodeRoute = @RouteCode
         COMMIT TRANSACTION;
 
-		SELECT 'La ruta ya exite'
+		SELECT 'Ruta creada exitosamente'
     END TRY
     BEGIN CATCH
 
@@ -64,6 +64,6 @@ BEGIN
 	END
 	ELSE
 	BEGIN
-	    SELECT 'Usuario no existe o no esta de baja consulta el estado de este usuario con el sp [SupportGetStatusCorporateUser] '
+	    SELECT 'La ruta ya existe '
 	END
 END;

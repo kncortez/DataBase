@@ -17,7 +17,7 @@
 -- Update date: <2024-07-16 >
 -- Description: <Se obtiene la nacionalidad del usuario para filtrar por pais >
 -- =============================================
-ALTER PROCEDURE [dbo].[spws_GetCorporateLogIn]
+CREATE  PROCEDURE [dbo].[spws_GetCorporateLogIn]
     -- Add the parameters for the stored procedure here
     @UserCode BIGINT = 0
   , @UserName VARCHAR(200)
@@ -528,7 +528,8 @@ BEGIN
 
                     IF (@VERIFYUSER > 0)
                     BEGIN
-
+					PRINT '@CountryByNacionality'
+					PRINT @CountryByNacionality
                         SET @JsonProfileEXP =
                         (
                             SELECT STUFF(
@@ -619,6 +620,7 @@ BEGIN
                                                         ON ac.AccIdAccount = rua.RuaIdAccount
                                                     INNER JOIN DeliveryBackOffice.dbo.VisitPointClient             vpc
                                                         ON vpc.CustomerID = ac.IdCustomer
+													INNER JOIN DeliveryBackOffice.dbo.VisitPointByUser vup WITH(NOLOCK) ON vup.IdVisitPointClient = vpc.IdVisitPointClient AND vup.RegisterUserID = ru.UsrIdUser
                                                     LEFT JOIN DeliveryBackOffice.dbo.RatebyCustomer    RC WITH(NOLOCK)
                                                         ON vpc.CustomerID = RC.RbcIdCustomer
                                                         AND rc.RbcRowStatus = 1
@@ -823,4 +825,5 @@ BEGIN
 
     -- retornar resultado en formato json
 
-    SELECT ('[{' + @jsonResult + ']') jsonRe
+    SELECT ('[{' + @jsonResult + ']') jsonResult;
+END;

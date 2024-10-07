@@ -1098,11 +1098,11 @@ BEGIN
                                      , @TokenP
                                      , GETDATE()
                                      , @Responsible
-                                FROM Cost                                             ct
-                                    INNER JOIN #TblInclude                            ti
+                                FROM Cost                                             ct WITH(NOLOCK)
+                                    INNER JOIN #TblInclude                            ti 
                                         ON ct.GuideSerie = ti.Guide_Serie
                                            AND ti.Guide_Number = ti.Guide_Number
-                                    LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
+                                    LEFT JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
                                         ON ct.IdCost = CD.IdCost
                                 WHERE CD.IdCostDetail IS NULL
                                       AND ISNULL(ct.TotalAmountPaid, 0) <> 0;
@@ -1113,11 +1113,11 @@ BEGIN
                                   , CD.Voucher = IIF(@IdTypeOfMoney = 6, @Voucher, '')
                                   , CD.TokenUpdated = @TokenP
                                   , CD.DateUpdated = GETDATE()
-                                FROM Cost                                              ct
+                                FROM Cost                                              ct WITH(NOLOCK)
                                     INNER JOIN #TblInclude                             ti
                                         ON ct.GuideSerie = ti.Guide_Serie
                                            AND ct.GuideNumber = ti.Guide_Number
-                                    INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD
+                                    INNER JOIN [DeliveryBackOffice].[dbo].[CostDetail] CD WITH(NOLOCK)
                                         ON ct.IdCost = CD.IdCost
                                 WHERE ISNULL(ct.TotalAmountPaid, 0) <> 0;
                             END;

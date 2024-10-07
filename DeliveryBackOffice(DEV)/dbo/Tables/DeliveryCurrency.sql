@@ -12,9 +12,10 @@
     [Currency_DateUpdate]   DATETIME       NULL,
     [IdCurrencyCOD]         INT            NULL,
     [DefaultPerCountry]     INT            NULL,
-    CONSTRAINT [PK_CMS_PRM_TYPE_OF_CURRENCY] PRIMARY KEY CLUSTERED ([Currency_Id] ASC),
-    CONSTRAINT [FK_CatCurrencyCOD_DeliveryCurrency] FOREIGN KEY (IdCurrencyCOD) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
+    CONSTRAINT [PK_CMS_PRM_TYPE_OF_CURRENCY] PRIMARY KEY CLUSTERED ([Currency_Id] ASC)
 );
+
+
 
 
 GO

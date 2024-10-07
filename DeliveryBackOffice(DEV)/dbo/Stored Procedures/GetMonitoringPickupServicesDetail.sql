@@ -3,6 +3,10 @@
 -- Create date: <2022-04-08>
 -- Description:	<Obtiene información para el detalle del Form Monitoreo de Servicios de Recolección>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-08-27>
+-- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
+-- =============================================
 -- Author:      <Daniel Ramirez>
 -- Create date: <2024-06-06>
 -- Description: <Se agrego filtro por pais, por defecto GT>

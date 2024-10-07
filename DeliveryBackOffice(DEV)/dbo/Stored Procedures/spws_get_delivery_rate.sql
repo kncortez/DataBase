@@ -55,6 +55,7 @@ CREATE PROCEDURE [dbo].[spws_get_delivery_rate]
   , @CategoryProductId INT = 0
   , @ProductId INT = 0
   , @FetchActivePRoduct BIT = 1
+ -- , @FetchActivePRoduct BIT = 1
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -115,13 +116,11 @@ BEGIN
         EXEC ClientSubscriptionFetcher_Data @IdAccount = @IdAcount;
 
 
-        SELECT TOP 1
-               @TechnicalDescription = TechnicalDescription
-        FROM CatProductCategory
-        WHERE IdCatProductCategory = @CategoryProductId
-              AND RowStatus = 1;
+		SELECT Top 1 @TechnicalDescription=TechnicalDescription FROM CatProductCategory
+		WHERE IdCatProductCategory= @CategoryProductId
+		and rowstatus=1
 
-        DECLARE @NewProductId INT = NULL;
+		declare @NewProductId INT=NULL;
 
 		SELECT Top 1 @NewProductId=ProductId FROM @ActiveProducts 
 		WHERE CatProductCategoryId=(SELECT IDCatProductCategory FROM CatProductCategory WHERE TechnicalDescription=@TechnicalDescription and rowstatus=1 and (IdCountry = @Country OR (IdCountry IS NULL AND @Country = 'GT')))
@@ -279,7 +278,7 @@ BEGIN
                    AND rh.RheRowStatus = 'true'
             LEFT JOIN dbo.CatCurrencyCOD dc WITH (NOLOCK)
                 ON dc.IdCatCurrencyCOD = rh.IdCurrency
-        WHERE rc.RbcIdCustomer = @IdCustomer 
+        WHERE rc.RbcIdCustomer = @IdCustomer
               AND rc.RbcRowStatus = 'true'
               AND rc.RbcCodeOfReference = @CodeOfReferenceSource;
     END;

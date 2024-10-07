@@ -116,9 +116,9 @@ BEGIN
                                LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
                                    ON dcba.DCBA_Id = do.DCBA_ID
                                       AND dcba.DCBA_Id_estado = 1
-                               LEFT JOIN dbo.VisitPointClient vpc
+                               LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                                    ON vpc.CodeOfReference = do.Sender_ID
-                               LEFT JOIN dbo.Customer cus
+                               LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
                                LEFT JOIN dbo.VisitPointConfiguration VPO
                                    ON VPO.VisitPointID = vpc.CodeOfReference
@@ -128,12 +128,13 @@ BEGIN
                                  AND COALESCE(VPO.CODAccountBankID, cus.CODAccountBankID, dcba.DCBA_Bank_Id) = @IdBankParam
                                  --AND ISNULL(do.IdCustomer, vpc.CustomerID) IN ( 2548, 370, 826, 57, 5688,7937 )
                                  --AND cus.IdCustomer IN (7937)
-                                 AND pg.Date > '2021-10-25 00:00:00.000'
+                                 AND pg.Date > '2024-09-30 00:00:00.000'
                                  AND cus.CatBatchFrequencyCODId = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
 								 AND ISNULL(do.IsLastMileReturn,0) =0
-								 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+								 AND do.SenderCountryId = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -154,12 +155,12 @@ BEGIN
                                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder do WITH (NOLOCK)
                                    ON do.Guide_Serie = pg.GuideSerie
                                       AND do.Guide_Number = pg.GuideNumber
-                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba
+                               LEFT JOIN DeliveryBackOffice.dbo.DeliveryCustomerBankAccount dcba 
                                    ON dcba.DCBA_Id = do.DCBA_ID
                                       AND dcba.DCBA_Id_estado = 1
-                               LEFT JOIN dbo.VisitPointClient vpc
+                               LEFT JOIN dbo.VisitPointClient vpc WITH (NOLOCK)
                                    ON vpc.CodeOfReference = do.Sender_ID
-                               LEFT JOIN dbo.Customer cus
+                               LEFT JOIN dbo.Customer cus WITH (NOLOCK)
                                    ON cus.IdCustomer = ISNULL(do.IdCustomer, vpc.CustomerID)
                                LEFT JOIN dbo.VisitPointConfiguration VPO
                                    ON VPO.VisitPointID = vpc.CodeOfReference
@@ -181,11 +182,12 @@ BEGIN
                                  )
                                  --   AND cus.IdCustomer IN ( 2548, 370, 826, 57, 5688,7937 )
                                  --AND ISNULL(do.IdCustomer, vpc.CustomerID) IN (7937)
-                                 AND pg.Date > '2021-10-25 00:00:00.000'
+                                 AND pg.Date > '2024-09-30 00:00:00.000'
                                  AND cus.CatBatchFrequencyCODId = @FrecuencyCOD
                                  AND do.StatusOrderId != 7
                                  AND do.StatusOrderId IN ( 5, 22, 24 )
-								 AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+								 --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+								 AND do.SenderCountryId = @IdCountrySender
                            FOR XML PATH('')
                        ),
                        1,
@@ -231,8 +233,8 @@ BEGIN
                 Guide_Serie NVARCHAR(2),
                 Guide_Number INT
             );
-            CREATE NONCLUSTERED INDEX tempSerie ON #listGuidesDaily (Guide_Serie);
-            CREATE NONCLUSTERED INDEX tempGuide ON #listGuidesDaily (Guide_Number);
+            CREATE NONCLUSTERED INDEX tempSerieNumber ON #listGuidesDaily (Guide_Serie,Guide_Number);
+            --CREATE NONCLUSTERED INDEX tempGuide ON #listGuidesDaily (Guide_Number);
             CREATE TABLE #RevalueGuidesDaily
             (
                 fila INT,
@@ -292,7 +294,7 @@ BEGIN
                    ord.Guide_Serie,
                    ord.Guide_Number
             FROM #listGuidesDaily lst
-                JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
+                INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder ord WITH (NOLOCK)
                     ON ord.Guide_Number = lst.Guide_Number
                        AND ord.Guide_Serie = lst.Guide_Serie
                 LEFT JOIN [DeliveryBackOffice].[dbo].[PromoCoupon] PC WITH (NOLOCK)
@@ -301,7 +303,8 @@ BEGIN
                        AND PC.RowStatus = 1
             WHERE ISNULL(ord.PriceShippment, 0) = 0
                   AND PC.IdPromoCoupon IS NULL
-				  AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
+				  --AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender;
+				  AND ord.SenderCountryId = @IdCountrySender;
 
 
             DECLARE @count INT = 1;
@@ -439,66 +442,67 @@ BEGIN
                    ) Price
             INTO #TableAmountCODDaily
             FROM #listGuidesDaily lst
-                JOIN dbo.DeliveryOrder ord
+                INNER JOIN dbo.DeliveryOrder ord WITH(NOLOCK)
                     ON ord.Guide_Serie = lst.Guide_Serie
                        AND ord.Guide_Number = lst.Guide_Number
-                LEFT JOIN dbo.VisitPointClient vpc
+                LEFT JOIN dbo.VisitPointClient vpc WITH(NOLOCK)
                     ON vpc.CodeOfReference = ord.Sender_ID
-                LEFT JOIN dbo.RatebyCustomer rc
+                LEFT JOIN dbo.RatebyCustomer rc WITH(NOLOCK)
                     ON rc.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                        AND rc.RbcRowStatus = 'true'
                        AND rc.RbcCodeOfReference is NULL
-                LEFT JOIN dbo.RatebyCustomer rcv
+                LEFT JOIN dbo.RatebyCustomer rcv WITH(NOLOCK)
                     ON rcv.RbcIdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
                        AND rcv.RbcRowStatus = 1
                        AND rcv.RbcCodeOfReference = ord.Sender_ID
-                LEFT JOIN dbo.Township twn
+                LEFT JOIN dbo.Township twn WITH(NOLOCK)
                     ON twn.IdTownship = ord.ReceiverIdTownship
-                LEFT JOIN dbo.Township twnm
+                LEFT JOIN dbo.Township twnm WITH(NOLOCK)
                     ON twnm.TownshipName = ord.Receiver_Town
                 LEFT JOIN
                 (
                     SELECT HeaderCode,
                            MAX(Hub) Hub
-                    FROM dbo.DumpServiceCoverage
+                    FROM dbo.DumpServiceCoverage WITH(NOLOCK)
                     WHERE RowStatus = 'true'
                     GROUP BY HeaderCode
                 ) hub
                     ON hub.HeaderCode = ISNULL(twn.HeaderCode, twnm.HeaderCode)
-                LEFT JOIN dbo.HubLogistics hbl
+                LEFT JOIN dbo.HubLogistics hbl WITH(NOLOCK)
                     ON hbl.HubAbbreviation = hub.Hub
-                LEFT JOIN dbo.VisitPointConfiguration VPO
+                LEFT JOIN dbo.VisitPointConfiguration VPO WITH(NOLOCK)
                     ON VPO.VisitPointID = vpc.CodeOfReference
-                LEFT JOIN dbo.CatTypeService csv
+                LEFT JOIN dbo.CatTypeService csv WITH(NOLOCK)
                     ON csv.CtsShortName = IIF(ord.TypeService = 'EXP', 'NDD', ISNULL(ord.TypeService, 'NDD'))
                        AND csv.CtsRowStatus = 'true'
-                LEFT JOIN dbo.VisitPointCoverage cv
+                LEFT JOIN dbo.VisitPointCoverage cv WITH(NOLOCK)
                     ON cv.VisitPointId = ord.Sender_ID
                        AND cv.HubLogisticId = hbl.IdHubLogistic
                        AND cv.RowStatus = 'true'
-                LEFT JOIN dbo.RateCOD rco
+                LEFT JOIN dbo.RateCOD rco WITH(NOLOCK)
                     ON rco.RateId = ISNULL(rcv.RbcIdRate, rc.RbcIdRate)
                        AND rco.TypeServiceId = csv.CtsId
                        AND rco.TypeSegmentId = ISNULL(cv.SegmentId, @IdSegmentDefault)
                        AND rco.RowStatus = 1
-                LEFT JOIN dbo.Customer cus
+                LEFT JOIN dbo.Customer cus WITH(NOLOCK)
                     ON cus.IdCustomer = ISNULL(ord.IdCustomer, vpc.CustomerID)
-                LEFT JOIN dbo.DeliveryOrderPaid op
+                LEFT JOIN dbo.DeliveryOrderPaid op WITH(NOLOCK)
                     ON op.Guide_Serie = ord.Guide_Serie
                        AND op.Guide_Number = ord.Guide_Number
                        AND op.IdStatus = 'true'
-                LEFT JOIN dbo.DeliveryCustomerBankAccount dc
+                LEFT JOIN dbo.DeliveryCustomerBankAccount dc WITH(NOLOCK)
                     ON dc.DCBA_Id = ord.DCBA_ID
                        AND dc.DCBA_Id_estado = 1
-                LEFT JOIN dbo.DeliveryBank bk
+                LEFT JOIN dbo.DeliveryBank bk WITH(NOLOCK)
                     ON bk.Id_bank = ISNULL(ISNULL(VPO.CODAccountBankID, cus.CODAccountBankID), dc.DCBA_Bank_Id)
-                LEFT JOIN dbo.CatBankAccountType btp
+                LEFT JOIN dbo.CatBankAccountType btp WITH(NOLOCK)
                     ON btp.IdBankAccountType = ISNULL(VPO.CODAccountBankTypeID, cus.CODAccountTypeID)
-                LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt
+                LEFT JOIN dbo.DeliveryOrderPaymentDetail pyt WITH(NOLOCK)
                     ON pyt.GuideSerie = ord.Guide_Serie
                        AND pyt.GuideNumber = ord.Guide_Number
             WHERE ord.Collect_OnDelivery > 0
-					 AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
+					 --AND IIF(ord.SenderCountryId is null, 'GT', ord.SenderCountryId) = @IdCountrySender
+					  AND ord.SenderCountryId = @IdCountrySender
             ORDER BY cus.IdCustomer,
                      ord.Guide_Serie,
                      ord.Guide_Number;
@@ -621,7 +625,8 @@ BEGIN
                        AND do.Guide_Number = tact.Guide_Number
             WHERE (tact.Commision + tact.Price) > 0
                   AND tact.CODtoPay > 0
-				  AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+				  --AND IIF(do.SenderCountryId is null, 'GT', do.SenderCountryId) = @IdCountrySender
+				  AND do.SenderCountryId = @IdCountrySender
             --AND tact.Id_bank IS NOT NULL
             ;
 

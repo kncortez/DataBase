@@ -112,7 +112,7 @@ BEGIN
 										[CM].[MembershipFixedValue],						-- MembershipFixedValue
 										[CM].[MembershipMaxServiceFixedValue],				-- MembershipMaxServiceFixedValue
 										0,													-- ActualServiceCount
-										DATEADD(MONTH,[CM].[MembershipValidity], GETDATE()),	-- ExpirationDate
+										DATEADD(DAY,[CM].[MembershipValidity], GETDATE()),	-- ExpirationDate
 										1,													-- RowStatus
 										@Token,												-- TokenCreated
 										SYSDATETIME(),										-- DateCreated
@@ -123,7 +123,7 @@ BEGIN
 										@CatTMSalesPersonId,								-- CatTMSalesPersonId
 										0,													-- AvailablePoints
 										0,													-- AccumulatedPoints
-										DATEADD(DAY, @AddedPointExpirationDate, DATEADD(MONTH,[CM].[MembershipValidity], GETDATE())) -- PointsExpirationDate
+										DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY,[CM].[MembershipValidity], GETDATE())) -- PointsExpirationDate
 		FROM							[dbo].[CatMembership] CM WITH (NOLOCK)
 		WHERE							[CM].[IdCatMembership] = @CatMembershipId;
 

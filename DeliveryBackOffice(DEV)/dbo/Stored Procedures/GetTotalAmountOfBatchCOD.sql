@@ -14,8 +14,8 @@ BEGIN
 
 	SELECT
 		ISNULL(SUM(bdc.Amount), 0) TotalAmount
-	FROM BatchDetailCOD bdc
-	INNER JOIN BatchCOD bc
+	FROM BatchDetailCOD bdc WITH(NOLOCK)
+	INNER JOIN BatchCOD bc WITH(NOLOCK)
 		ON bc.IdBatchCOD = bdc.BatchCODId
 	WHERE bc.BatchNumber = @BatchCODId
 	AND bdc.Excluded = 0
