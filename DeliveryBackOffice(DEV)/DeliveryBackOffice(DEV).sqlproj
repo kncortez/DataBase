@@ -165,6 +165,9 @@
     <Build Include="dbo\Tables\VisitPointConfiguration.sql" />
     <Build Include="dbo\Tables\VisitPointClient_Parser.sql" />
     <Build Include="dbo\Tables\VisitPointClientByHubLogistics.sql" />
+    <Build Include="dbo\Tables\CatManagementLevel.sql" />
+    <Build Include="dbo\Tables\ManagementLevelByUser.sql" />
+    <Build Include="dbo\Tables\ManifestSettlementIncidence.sql" />
     <Build Include="dbo\Tables\VisitPointClient.sql" />
     <Build Include="dbo\Tables\VisitPointByUser.sql" />
     <Build Include="dbo\Tables\VisitPointByClientPortfolio.sql" />
@@ -728,12 +731,17 @@
     <Build Include="dbo\Stored Procedures\sps_get_payment_amount.sql" />
     <Build Include="dbo\Stored Procedures\sps_get_linehauls_by_service.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintMultipleGuides.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestWithIncidenceByRoute.sql" />
+    <Build Include="dbo\Stored Procedures\GetBlockedRoutesHavingCourier.sql" />    
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie_BNHL.sql" />
     <Build Include="dbo\Stored Procedures\sps_getReprintGuie.sql" />
     <Build Include="dbo\Stored Procedures\sps_edit_guide.sql" />
     <Build Include="dbo\Stored Procedures\sps_dsms_sms_received.sql" />
     <Build Include="dbo\Stored Procedures\sps_dsms_UpdateBatchSent.sql" />
     <Build Include="dbo\Stored Procedures\sps_ddeli_updateOrdersToPrinted.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestWithStatusByRoute.sql" />
+    <Build Include="dbo\Stored Procedures\GetManifestWithIncidenceDetails.sql" />
+    <Build Include="dbo\Stored Procedures\CreateManifestIncidence.sql" />
     <Build Include="dbo\Stored Procedures\sps_creditNoteForza_Hd.sql" />
     <Build Include="dbo\Stored Procedures\sps_creditNoteForza.sql" />
     <Build Include="dbo\Stored Procedures\sps_contact_incident.sql" />
