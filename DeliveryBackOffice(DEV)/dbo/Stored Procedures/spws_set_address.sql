@@ -259,6 +259,7 @@ BEGIN
 						  ,VP.IsOriginVisitPoint = ISNULL(@IsOriginVisitPoint, 1)
 						  ,VP.ContactName = @ContactName
 						  ,VP.Email = ISNULL(@Email, VP.Email)
+						  ,VP.IdSettlement = @IdPopulated
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
@@ -371,7 +372,7 @@ BEGIN
 					   ,@ContactName
 					   ,@IdKindOfVPClient
 					   ,@IdKindOfVPBusiness
-					   ,NULL
+					   ,@IdPopulated
 					   ,@Email
 					   ,@IdTownship
 					   ,@Latitude
