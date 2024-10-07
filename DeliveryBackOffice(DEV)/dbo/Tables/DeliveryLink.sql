@@ -33,7 +33,8 @@
     [DateCreated] DATETIME NOT NULL, 
     [UserUpdated] NVARCHAR(50) NULL, 
     [DateUpdated] DATETIME NULL, 
-	PRIMARY KEY CLUSTERED ([IdDeliveryLink] ASC),
+	[IsUserWithoutLogin] BIT NULL DEFAULT 0, 
+    PRIMARY KEY CLUSTERED ([IdDeliveryLink] ASC),
     CONSTRAINT FK_DeliveryLink_AccountId FOREIGN KEY (AccountId) REFERENCES Account(AccIdAccount),
     CONSTRAINT FK_DeliveryLink_ReceiverCatCityPlaceId FOREIGN KEY (ReceiverCatCityPlaceId) REFERENCES CatCityPlace(IdCityPlace),
     CONSTRAINT FK_DeliveryLink_CatPaymentTypeId FOREIGN KEY (CatPaymentTypeId) REFERENCES CatPaymentType(PayTypeId),
@@ -342,3 +343,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryLink',
     @level2type = N'COLUMN',
     @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Indica si el usuario crea link sin logueo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryLink',
+    @level2type = N'COLUMN',
+    @level2name = N'IsUserWithoutLogin'
