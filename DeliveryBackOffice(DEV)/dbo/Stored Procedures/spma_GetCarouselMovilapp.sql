@@ -18,10 +18,9 @@ BEGIN
 				mai.MDImageURL		[MediumDimension],
 				mai.LDImageURL		[LargeDimension],
 				mai.ImageOrder		[Order],
-				mai.HyperlinkURL	[HyperLink],
 				mai.IdCountry		[Country]
 	FROM		DeliveryBackOffice.dbo.MovilAppCarouselImage mai WITH(NOLOCK)
-	WHERE		ISNULL(mai.IdCountry,'GT') = @IdCountry
+	WHERE		mai.IdCountry = @IdCountry
 	AND			mai.RowStatus = 1
 	ORDER BY	mai.ImageOrder asc;
 END;

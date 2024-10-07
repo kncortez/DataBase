@@ -5,7 +5,6 @@ CREATE TABLE [dbo].[MovilAppCarouselImage] (
     [LDImageURL]      NVARCHAR (200) NOT NULL,
     [ImageOrder]      INT            NOT NULL,
     [RowStatus]       BIT            NOT NULL,
-    [HyperlinkURL]    NVARCHAR (200) NULL,
     [IdCountry]		  NVARCHAR (2)	 NULL,
     [TokenCreated]    NVARCHAR (50)  NOT NULL,
     [DateCreated]     DATETIME       NOT NULL,
@@ -31,9 +30,6 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Order de apari
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'RowStatus'
-GO
-
-EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'URL de hipervínculo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'MovilAppCarouselImage', @level2type = N'COLUMN', @level2name = N'HyperlinkURL';
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'identificador del pais para la imagen' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'IdCountry'
