@@ -23,7 +23,7 @@ BEGIN
 		
 		-- TABLA 0 obtenemos el Monto total y el numero de piezas 
 		SELECT SUM(ISNULL(do.Pieces_Dry,0) + ISNULL(do.Pieces_Cold,0)) AS Pieces
-				, SUM(do.PriceShippment + IIF(do.Collect_OnDelivery > do.InsuranceAmount, do.Collect_OnDelivery,do.InsuranceAmount)) AS Amount
+				, SUM(do.PriceShippment + IIF(do.Collect_OnDelivery > IIF(do.IsInsuarance = 1, do.InsuranceAmount,0), do.Collect_OnDelivery,do.InsuranceAmount)) AS Amount
 		FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 		INNER JOIN @ListOfGuides t 
 			ON do.Guide_Serie = t.GuideSerie 

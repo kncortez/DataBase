@@ -6,7 +6,7 @@ GO
 INSERT INTO [dbo].[CatManagementLevel] ([ManagementLevelName],[MinAmount],[MaxAmount],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (N'Supervisor', 0.00, 300.00, 1, GETDATE(), N'SYS-TGARCIA',NULL,NULL)
 INSERT INTO [dbo].[CatManagementLevel] ([ManagementLevelName],[MinAmount],[MaxAmount],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (N'Jefe', 301.00, 800.00, 1, GETDATE(), N'SYS-TGARCIA',NULL,NULL)
 INSERT INTO [dbo].[CatManagementLevel] ([ManagementLevelName],[MinAmount],[MaxAmount],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (N'Subgerente', 801.00, 3000.00, 1, GETDATE(), N'SYS-TGARCIA',NULL,NULL)
-INSERT INTO [dbo].[CatManagementLevel] ([ManagementLevelName],[MinAmount],[MaxAmount],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (N'Subgerente', 3001.00, NULL, 1, GETDATE(), N'SYS-TGARCIA',NULL,NULL)
+INSERT INTO [dbo].[CatManagementLevel] ([ManagementLevelName],[MinAmount],[MaxAmount],[RowStatus],[DateCreated],[TokenCreated],[DateUpdated],[TokenUpdated]) VALUES (N'Gerente', 3001.00, 100000.00, 1, GETDATE(), N'SYS-TGARCIA',NULL,NULL)
 
 -- INSERT INTO [dbo].[CatTypeIncidence] Incidencias registradas en el proceso de liquidación
 

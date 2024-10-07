@@ -7,7 +7,8 @@ CREATE TABLE [dbo].[ManifestSettlementIncidence] (
     [GuidesQuantity]				SMALLINT		NULL,
     [TotalNumberOfPieces]			SMALLINT		NULL,
     [IncidenceApproved]				BIT             NULL,
-    [TokenValidator]				NVARCHAR (50)	NULL,
+    [IdValidator]				    NVARCHAR(50)    NULL,
+	[DateValidator]                 DATETIME        NULL,
     [CatManifestSettlementIncidenceTypeId]             INT            NULL,
     [IncidenceComment]				NVARCHAR (300)	NULL,
     [ResolutionComment]				NVARCHAR (300)	NULL,
@@ -17,6 +18,7 @@ CREATE TABLE [dbo].[ManifestSettlementIncidence] (
     [TokenCreated]					NVARCHAR (50)	NOT NULL,
     [DateUpdated]					DATETIME		NULL,
     [TokenUpdated]					NVARCHAR (50)	NULL,
+	[isCOD]                         BIT             NULL,
 	CONSTRAINT [PK_ManifestSettlementIncidence_IdManifestSettlementIncidence] PRIMARY KEY CLUSTERED ([IdManifestSettlementIncidence] ASC),
     CONSTRAINT [FK_ManifestSettlementIncidence_CatRoute] FOREIGN KEY ([CatRouteId]) REFERENCES [dbo].[CatRoute] ([IdRoute]),
     CONSTRAINT [FK_ManifestSettlementIncidence_SenderReceiver] FOREIGN KEY ([CourierId]) REFERENCES [dbo].[SenderReceiver] ([ID]),
@@ -58,4 +60,8 @@ GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Última fecha de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'DateUpdated';
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Último token de actualización del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'TokenUpdated';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Valida si es Incidencia COD', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'isCOD';
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha en que se valido la incidencia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ManifestSettlementIncidence', @level2type = N'COLUMN', @level2name = N'DateValidator';
 GO

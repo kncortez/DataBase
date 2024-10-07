@@ -10,7 +10,6 @@ CREATE PROCEDURE [dbo].[GetBlockedRoutesHavingCourier]
 AS
 BEGIN	
 	SET NOCOUNT ON;
-	DECLARE @Date DATETIME = '2024-09-25 00:00:00.000';
 	BEGIN TRY
 
 		SELECT DISTINCT cr.CodeRoute AS RouteWithIncidence
@@ -22,7 +21,6 @@ BEGIN
 			INNER JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
 				ON dobs.ID = msi.ManifestNumber
 		WHERE msi.IncidenceApproved = 0
-			AND dobs.Date_Dispatched > @Date
 			AND sr.CUI = @CUI
 			AND IIF(sr.IdCountry IS NULL, 'GT', sr.IdCountry) = @IdCountry
 
@@ -36,3 +34,4 @@ BEGIN
 	
 	SET NOCOUNT OFF;
 END;
+

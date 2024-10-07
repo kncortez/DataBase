@@ -36,7 +36,6 @@ BEGIN
 			   ,[GuidesQuantity]
 			   ,[TotalNumberOfPieces]
 			   ,[IncidenceApproved]
-			   ,[TokenValidator]
 			   ,[CatManifestSettlementIncidenceTypeId]
 			   ,[IncidenceComment]
 			   ,[ResolutionComment]
@@ -45,7 +44,8 @@ BEGIN
 			   ,[DateCreated]
 			   ,[TokenCreated]
 			   ,[DateUpdated]
-			   ,[TokenUpdated])
+			   ,[TokenUpdated]
+			   ,[isCOD])
 		 VALUES
 			   (@CatRouteId
 			   ,@CourierId
@@ -54,7 +54,6 @@ BEGIN
 			   ,@GuidesQuantity
 			   ,@TotalNumberOfPieces
 			   ,0
-			   ,NULL
 			   ,@CatManifestSettlementIncidenceTypeId
 			   ,@IncidenceComment
 			   ,NULL
@@ -63,7 +62,8 @@ BEGIN
 			   ,GETDATE()
 			   ,@TokenCreated
 			   ,NULL
-			   ,NULL)
+			   ,NULL
+			   ,0)
 
 			   SET @Saved = @@ROWCOUNT
 		END TRY

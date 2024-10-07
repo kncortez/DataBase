@@ -10,7 +10,7 @@ CREATE PROCEDURE [dbo].[GetManifestWithIncidenceByRoute]
 AS
 BEGIN	
 	SET NOCOUNT ON;
-	DECLARE @Date DATETIME = '2024-09-25 00:00:00.000';
+	DECLARE @Date DATE = '2024-10-02';
 	BEGIN TRY
 
 		-- TABLA 0 Ruta con manifiestos sin liquidar
@@ -19,11 +19,12 @@ BEGIN
 		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement  dobs  WITH(NOLOCK) 
 			INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK) 
 				ON dobs.CatRouteId = cr.IdRoute
-		WHERE dobs.User_received IS NOT NULL
-			AND dobs.Date_Received IS NOT NULL
-			AND dobs.Date_Dispatched > @Date
+		WHERE dobs.User_received IS NULL
+			AND dobs.Date_Received IS NULL
+			AND CAST(dobs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)
+			AND CAST(dobs.Date_Dispatched AS DATE) > @Date
 			AND dobs.CatRouteId = @IdRoute
-			AND ISNULL(cr.CountryId, 'GT') = @IdCountry
+			AND ISNULL(cr.CountryId, 'GT') = @IdCountry;
 			
 		-- TABLA 1 Ruta con manifiestos pendientes de aprobar la incidencia
 
@@ -37,13 +38,17 @@ BEGIN
 				ON msi.CatManifestSettlementIncidenceTypeId = ctp.IdIncidenceType
 		WHERE msi.IncidenceApproved = 0  
 			AND dobs.CatRouteId = @IdRoute
-			AND ISNULL(cr.CountryId, 'GT') = @IdCountry
+			AND ISNULL(cr.CountryId, 'GT') = @IdCountry;
+
+		-- TABLA 2
+		SELECT 1 AS 'StatusCode',
+			'Registros obtenidos' AS 'Description';
 
     END TRY 
 	BEGIN CATCH
 
         SELECT 0 AS 'StatusCode', 
-                ERROR_MESSAGE() AS 'Description' 
+                ERROR_MESSAGE() AS 'Description'; 
 	
 	END CATCH
 	
