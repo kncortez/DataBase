@@ -1,0 +1,44 @@
+﻿-- =============================================
+-- Author:		<Walter Orozco>
+-- Create date: <2024-10-03>
+-- Description:	<Link de entregas - Obtener la información necesaria para notificación de rastreo de guía.>
+-- =============================================
+
+CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
+@IdDeliveryLink INT
+AS
+BEGIN
+BEGIN TRY
+
+	SELECT
+		  RU.UsrNickName AS 'SenderName'
+		, DL.ReceiverName AS 'ReceiverName'
+		, ISNULL(DL.GuideSerie,'') AS 'GuideSerie'
+		, ISNULL(DL.GuideNumber,0) AS 'GuideNumber'
+		, DL.ReceiverPhone AS 'ReceiverPhone'
+		, DL.ReceiverEmail AS 'ReceiverEmail'
+		, CC.CountryNameES AS 'Pais'
+		, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
+			WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(S.IdCountry,'GT')) AS 'AreaCode'
+		, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK) 
+			WHERE [Name] = 'PBX' AND IdCountry = ISNULL(S.IdCountry,'GT')) AS 'PBX'
+	FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
+	LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
+		ON DL.ReceiverSettlementId = S.IdSettlement
+	LEFT JOIN DeliveryBackOffice.dbo.CatCountry CC WITH(NOLOCK)
+		ON (S.IdCountry = CC.IdCountry OR (S.IdCountry IS NULL AND CC.IdCountry  = 'GT'))
+	INNER JOIN DeliveryBackOffice.dbo.Account A WITH(NOLOCK)
+		ON DL.AccountId = A.AccIdAccount
+	INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
+		ON A.IdCustomer = RBUBA.RuaIdAccount
+	INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
+		ON RBUBA.RuaIdUser = RU.UsrIdUser
+	WHERE DL.IdDeliveryLink = @IdDeliveryLink
+
+END TRY
+BEGIN CATCH
+    DECLARE @ErrorMessage NVARCHAR(4000);
+    SELECT @ErrorMessage = ERROR_MESSAGE();
+    PRINT 'Error: ' + @ErrorMessage;
+END CATCH;
+END;

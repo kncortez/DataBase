@@ -37,7 +37,8 @@ CREATE PROCEDURE [dbo].[spws_set_address]
 	@PickupsProgram bit = NULL,
 	@IsOriginVisitPoint bit = 1,
 	@ContactName NVARCHAR(200) = NULL,
-	@IsFavorite bit = 0
+	@IsFavorite bit = 0,
+	@Email NVARCHAR(200) = NULL
 	
 	
 AS
@@ -257,6 +258,7 @@ BEGIN
 						  ,VP.Longitude=@Longitude
 						  ,VP.IsOriginVisitPoint = ISNULL(@IsOriginVisitPoint, 1)
 						  ,VP.ContactName = @ContactName
+						  ,VP.Email = ISNULL(@Email, VP.Email)
 					FROM [dbo].[UserAddress] UADD LEFT JOIN [dbo].[VisitPointClient] VP with(nolock)
 						ON UADD.CodeOfReference=VP.CodeOfReference
 					 WHERE [UadIdAddress] =  @IdAddress
@@ -370,7 +372,7 @@ BEGIN
 					   ,@IdKindOfVPClient
 					   ,@IdKindOfVPBusiness
 					   ,NULL
-					   ,NULL
+					   ,@Email
 					   ,@IdTownship
 					   ,@Latitude
 					   ,@Longitude
