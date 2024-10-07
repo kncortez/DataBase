@@ -1595,8 +1595,8 @@
     <Build Include="dbo\Stored Procedures\GetTypeCityPlace.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFullAddressList.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetInformationFromDeliveryLink.sql" />
-    <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" /> 
-	<Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" /> 
+    <Build Include="dbo\Stored Procedures\SPHW_UpdateDeliveryLink.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkCompleted.sql" />
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
@@ -1769,6 +1769,7 @@
     <Build Include="dbo\Stored Procedures\SPHW_RegisterLinkWhatsAppId.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTokenProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFinalLink.sql" />
+    <Build Include="SPHW_CreateDeliveryLinkWithoutLogin.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
