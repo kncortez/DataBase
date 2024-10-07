@@ -8,6 +8,11 @@
 -- Modified:	<29-08-2024>
 -- Description:	<Se envian parametros de pais de origen y destino a la funcion ETA>
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Modified:	<30-09-2024>
+-- Description:	<Se agrega la relación de una guía con un DeliveryLink.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -15,7 +20,8 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @UserAddressId BIGINT = 0,
 @SystemModule NVARCHAR(200) = NULL,
 @IdAccount BIGINT = NULL,
-@AddToServiceCart BIT = 0
+@AddToServiceCart BIT = 0,
+@IdDeliveryLink INT = 0
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL
@@ -637,6 +643,26 @@ BEGIN
 				FROM #GuideTable
 		END
 		--Termina proceso para añadir a carrito de compras
+
+		--Inicia proceso para DeliveryLink
+		IF(@IdDeliveryLink > 0)
+		BEGIN
+			--Cambiamos estado de Link
+			DECLARE @StatusDeliveryLink INT;
+			SELECT @StatusDeliveryLink = IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WITH(NOLOCK)
+			WHERE [Name] = 'Envío realizado';
+
+			DECLARE @GuideNumerDL INT;
+			SELECT TOP 1 @GuideNumerDL = Guide_Number FROM #GuideTable
+			
+			--Hacemos relación entre link y guía
+			UPDATE DeliveryBackOffice.dbo.DeliveryLink
+			SET GuideSerie = @GuideSerie , GuideNumber = @GuideNumerDL , DeliveryLinkStatusId = @StatusDeliveryLink , 
+				UserUpdated = 'SYSTEM' , DateUpdated = GETDATE()
+			WHERE IdDeliveryLink = @IdDeliveryLink AND RowStatus = 1
+
+		END;
+		--Termina proceso para DeliveryLink
 
 		DROP TABLE #GuideTable
 	END TRY
