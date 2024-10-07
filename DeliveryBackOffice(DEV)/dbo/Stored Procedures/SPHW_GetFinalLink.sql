@@ -5,7 +5,12 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
-@IdDeliveryLink INT
+@IdDeliveryLink INT,
+@IsInsurance BIT = 'FALSE',
+@InsuranceAmount DECIMAL(14,2) = 0.00,
+@CollectOnDelivery DECIMAL(14,2) = NULL,
+@Token NVARCHAR(50) = 'SYSTEM',
+@SubscriptionId INT = NULL
 AS
 BEGIN
 BEGIN TRY
@@ -35,8 +40,22 @@ BEGIN TRY
 		ON RBUBA.RuaIdUser = RU.UsrIdUser
 	WHERE DL.IdDeliveryLink = @IdDeliveryLink
 
+	BEGIN TRANSACTION;
+
+	UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
+	SET 
+       [IsInsurance] = @IsInsurance
+      ,[InsuranceAmount] = @InsuranceAmount
+      ,[CollectOnDelivery] = @CollectOnDelivery
+      ,[SubscriptionId] = @SubscriptionId
+      ,[UserUpdated] = @Token
+      ,[DateUpdated] = GETDATE()
+	WHERE [IdDeliveryLink] = @IdDeliveryLink
+
+	COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
+	ROLLBACK TRANSACTION;
     DECLARE @ErrorMessage NVARCHAR(4000);
     SELECT @ErrorMessage = ERROR_MESSAGE();
     PRINT 'Error: ' + @ErrorMessage;
