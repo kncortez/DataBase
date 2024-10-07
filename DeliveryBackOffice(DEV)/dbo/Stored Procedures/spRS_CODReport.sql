@@ -6,7 +6,8 @@
 
 CREATE PROCEDURE [dbo].[spRS_CODReport]
     @StartDate DATETIME = NULL,
-    @EndDate DATETIME = NULL
+    @EndDate DATETIME = NULL,
+	@IdCountrySender NVARCHAR(2) = 'GT'
 
 AS
 BEGIN
@@ -752,6 +753,7 @@ BEGIN
                AND DBA.Id_country = 'GT'
                AND DBA.Id_status = 1
 		LEFT JOIN DeliveryBackOffice.dbo.StatusOrder STO ON STO.StatusOrderId = DOR.StatusOrderId
+		WHERE ISNULL(DOR.SenderCountryId, 'GT') = @IdCountrySender
 
 	IF OBJECT_ID('tempdb.dbo.#TransactionFAC1', 'U') IS NOT NULL 
 		DROP TABLE #TransactionFAC1;

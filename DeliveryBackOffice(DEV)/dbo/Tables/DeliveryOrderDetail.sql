@@ -15,8 +15,11 @@
     CONSTRAINT [FK_DeliveryOrderDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliveryOrderDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId]),
     CONSTRAINT [FK_DeliveryOrderDetail_SystemOrigin] FOREIGN KEY ([SystemOrigin]) REFERENCES [dbo].[CatSystem] ([SysIdSystem])
-
 );
+
+
+
+
 
 
 
@@ -117,3 +120,9 @@ GO
 CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreated]
 	ON [dbo].[DeliveryOrderDetail] ([StatusOrderId],[DateCreated],[rowstatus])
 	INCLUDE ([Guide_Serie],[Guide_Number],DateCreatedInSystem,SystemOrigin,DeliveryAttemptId,UserCreated);
+
+GO
+CREATE NONCLUSTERED INDEX [idx_StatusOrderId_DateCreatedInSystem]
+    ON [dbo].[DeliveryOrderDetail]([StatusOrderId] ASC, [DateCreatedInSystem] ASC)
+    INCLUDE([RowStatus]);
+

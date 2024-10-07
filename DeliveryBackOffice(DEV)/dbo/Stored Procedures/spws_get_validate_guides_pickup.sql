@@ -20,6 +20,16 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
+	
+	--DECLARE @CountryFind TABLE (
+	--	IdCountry varchar(2)
+	--);
+	--INSERT INTO @CountryFind
+	--exec GetCountryOfPickupService @IdPickup,@Token
+	--DECLARE @IDCOUNTRYSERVICE varchar(2) =(SELECT IdCountry FROM @CountryFind)
+	
+	
+
 
     BEGIN TRY
 
@@ -112,7 +122,11 @@ BEGIN
                ISNULL(dr.Guide_Number, 0) exist,
                IIF(ISNULL(pyt.IdHeaderRecolection, 0) = @IdPickup, 1, IIF(ISNULL(pyt.IdHeaderRecolection, 0) = 0, 1, 0)) pik,
                IIF(dr.StatusOrderId IN ( 16, 15, 1,21,20, 10 ), 1, 0) status,
-               st.OrderDescription
+               st.OrderDescription,
+			   --IIF(DR.SenderCountryId=@IDCOUNTRYSERVICE,1,0) samecountry,
+               1 samecountry,
+			   DR.SenderCountryId guidecountry
+			   
         --, pyt.IdHeaderRecolection
         INTO #ErrorGuides
         FROM #listGuides lst
@@ -131,7 +145,8 @@ BEGIN
 									[dbo].[StatusOrder] SO  WITH(NOLOCK)
 								WHERE
 									[CatCheckpointTypeId] = 3 And SO.RowStatus =1
-							);
+							) 
+							--or DR.SenderCountryId <>@IDCOUNTRYSERVICE;
 
 		CREATE NONCLUSTERED INDEX IX_ErrorGuides_Exist
             ON #ErrorGuides (exist);
@@ -142,10 +157,20 @@ BEGIN
         --select * from #ErrorGuides
 
         SELECT CONCAT(er.ItemSerie, er.ItemNumber) Guide,
-               IIF(er.exist = 0, 'Servicio no existe', CONCAT('Servicio ', er.OrderDescription)) Mensaje
+			(
+			CASE 
+				WHEN er.exist = 0 THEN
+					'Servicio no existe'
+				--WHEN er.samecountry = 0 THEN
+					--'El servicio de recolección pertenece al pais '+@IDCOUNTRYSERVICE+', no coincide con el país de origen de la guía ('+er.guidecountry+').'
+				ELSE
+					er.OrderDescription
+				END
+			) Mensaje
+               --IIF(er.exist = 0, 'Servicio no existe', CONCAT('Servicio ', er.OrderDescription)) Mensaje
         FROM #ErrorGuides er
-        WHERE er.exist = 0
-              OR er.status = 0; --  or er.pik =0  Se elimina esta validacione por la reasignación
+        WHERE (er.exist = 0
+              OR er.status = 0 OR ER.samecountry=0); --  or er.pik =0  Se elimina esta validacione por la reasignación
 
     END TRY
     BEGIN CATCH

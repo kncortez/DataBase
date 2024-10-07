@@ -1,4 +1,4 @@
--- =============================================
+﻿-- =============================================
 -- Author:		<Alberto Ixchop>
 -- Create date: <2024-06-03>
 -- Description:	<Tipos de suscripciones para un cliente>

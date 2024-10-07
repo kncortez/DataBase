@@ -4,6 +4,12 @@ EXEC GetClosureList
 ,@StartDate = '20210627'
 ,@EndDate = '20210627'
 */
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-05>
+-- Description:	<Se agrega la moneda correspondiente al express center>
+-- =============================================
+
 CREATE PROCEDURE [dbo].[GetClosureList]
     @VisitPointId INT,
     @StartDate DATETIME,
@@ -31,12 +37,13 @@ BEGIN
            ACH.TotalAmountFacturaCash,
            ACH.TotalAmountFacturaCashDeclared,
            ACH.TotalAmountFacturaCard,
-           ACH.TotalAmountFacturaCardDeclared
+           ACH.TotalAmountFacturaCardDeclared,
+		   CASE WHEN ISNULL(VPC.CountryId,'GT') = 'GT' THEN 'Q.' ELSE 'L.' END AS CurrencySymbol
     -- FIN MODIFICACIÓN
     FROM DeliveryBackOffice.dbo.AccountingClosuresHeader ACH
-        JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
+        INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC
             ON ACH.VisitPoint = VPC.CodeOfReference
-        JOIN DeliveryBackOffice.dbo.RegisterUser REU
+        INNER JOIN DeliveryBackOffice.dbo.RegisterUser REU
             ON REU.UsrIdUser = ACH.UserId
     WHERE CAST(ACH.DateCreated AS DATE)
           BETWEEN CAST(@StartDate AS DATE) AND CAST(@EndDate AS DATE)

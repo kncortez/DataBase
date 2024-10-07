@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[CatBillingVolume] (
+CREATE TABLE [dbo].[CatBillingVolume] (
     [IdCatBillingVolume]       INT            IDENTITY (1, 1) NOT NULL,
     [NameBillingVolume]        NVARCHAR (50)  NOT NULL,
     [DescriptionBillingVolume] NVARCHAR (200) NOT NULL,
@@ -34,3 +34,23 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'nombre del 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'identificador de articulo', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatBillingVolume', @level2type = N'COLUMN', @level2name = N'IdCatBillingVolume';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Codigo de quien modifico el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatBillingVolume',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificacion',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatBillingVolume',
+    @level2type = N'COLUMN',
+    @level2name = N'DateUpdated'
+GO

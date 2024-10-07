@@ -3,12 +3,17 @@
 -- Update date: <2024-04-t01>
 -- Description:	<Obtiene la informacion sobre recolecciones a demanda y programadas, para integración con DispatchTrack>
 -- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-06-17>
+-- Description: <Se agrega filtro por multipais, por defecto GT>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_get_schedule_demand_pickup]
 	@CollectionProvince AS NVARCHAR(200),
 	@TypePickup AS INT, -- 1 es a demanda, 2 programado
 	@AssignDate AS DATE,
 	@StartDate AS TIME,
-	@EndDate AS TIME
+	@EndDate AS TIME,
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -63,6 +68,7 @@ IF @CollectionProvince = '-1' BEGIN
 				AND es.ServiceStatusId = 2
 				order by es.DateCreated desc)
 			AS TIME) BETWEEN @StartDate AND @EndDate
+    AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
@@ -99,6 +105,7 @@ IF @CollectionProvince = '-1' BEGIN
 	AND		sm.IdPuCourrier is not null 
 	AND		ra.IdVehicle is not null
 	AND		CAST(ra.DateOfRoute AS DATE) = @AssignDate
+    AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
@@ -164,6 +171,7 @@ ELSE BEGIN
 				AND es.ServiceStatusId = 2
 				order by es.DateCreated desc)
 			AS TIME) BETWEEN @StartDate AND @EndDate
+    AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END
@@ -201,6 +209,7 @@ ELSE BEGIN
 	AND		sm.IdPuCourrier is not null 
 	AND		ra.IdVehicle is not null
 	AND		CAST(ra.DateOfRoute AS DATE) = @AssignDate
+    AND IIF(pv.IdCountry IS NULL, 'GT', pv.IdCountry) = @IdCountry
 	ORDER BY [ORDEN DE RECOLECCION] DESC;
 
 	END

@@ -4,6 +4,18 @@
 -- Create date: <2021-06-14>
 -- Description:	<Insertar un nuevo tarifario>
 -- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-06-07>
+-- Description:	<Se agregan filtros por pais para evitar duplicidad en catalogos>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<Se toma en cuenta el parametro de pais y codigo de moneda>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-20>
+-- Description:	<Se elimina el filtro de pais para la tabla CatTypeRate>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @IdRate INT = -1,
     @RateName NVARCHAR(50),
@@ -11,7 +23,7 @@ CREATE PROCEDURE [dbo].[sphd_set_Rate_Data]
     @RateDescription NVARCHAR(200) = '',
     @IdTypeRate INT,
     @Token NVARCHAR(50),
-    @CountryId NVARCHAR(50) = 'GT',
+    @CountryId NVARCHAR(2) = 'GT',
     @CurrencyId INT = 1,
     @IsTemplate BIT = 1,
     @Status BIT = 1,
@@ -134,13 +146,14 @@ BEGIN
                 IsTemplate,
                 CutOffDate,
                 CatBusinessSegmentId,
-                PackagesRangeId
+                PackagesRangeId,
+				IdCurrency
             )
             VALUES
             (@RateName, @RateShortName, @RateDescription, 1, @Token, GETDATE(), @IdTypeRate, 0, @FragilRate,
              @InsuranceRate, @InsuranceExempt, @AdditionalWeightRate, @WeightLimit, @CreditCardRate, @Attempt,
              @ReturnRate, @CollectRate, @PiecesIncluded, @CountryId, @CurrencyId, @IsTemplate, @CutOffDate,
-             @CatBusinessSegmentId, @PackagesRangeId);
+             @CatBusinessSegmentId, @PackagesRangeId,@CurrencyId);
 
             SET @IdRate = SCOPE_IDENTITY();
             PRINT 'se inserto el tarifario';
@@ -168,7 +181,8 @@ BEGIN
                 CurrencyId = @CurrencyId,
                 CutOffDate = @CutOffDate,
                 CatBusinessSegmentId = @CatBusinessSegmentId,
-                PackagesRangeId = @PackagesRangeId
+                PackagesRangeId = @PackagesRangeId,
+				IdCurrency = @CurrencyId
             WHERE RheId = @IdRate;
         END;
 
@@ -1199,9 +1213,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                    AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @LOC
                   AND twr.State = 2;
 
@@ -1214,9 +1228,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @MET
                   AND twr.State = 2;
 
@@ -1229,9 +1243,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @FOR
                   AND twr.State = 2;
 
@@ -1244,9 +1258,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @ESP
                   AND twr.State = 2;
 
@@ -1259,9 +1273,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @LOC
                   AND twr.State = 2;
 
@@ -1274,9 +1288,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @MET
                   AND twr.State = 2;
 
@@ -1289,9 +1303,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @FOR
                   AND twr.State = 2;
 
@@ -1304,9 +1318,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblWeightRate twr
                     ON twr.WeightFrom = rd.WeightFrom
+                   AND rd.WeightFrom = twr.WeightFrom
             WHERE twr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.WeightFrom = twr.WeightFrom
                   AND rd.TypeSegmentId = @ESP
                   AND twr.State = 2;
 
@@ -1807,9 +1821,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @LOC
                   AND tpr.State = 2;
 
@@ -1822,9 +1836,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @MET
                   AND tpr.State = 2;
 
@@ -1837,9 +1851,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @FOR
                   AND tpr.State = 2;
 
@@ -1852,9 +1866,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 1
                   AND rd.TypeServiceId = @STD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @ESP
                   AND tpr.State = 2;
 
@@ -1867,9 +1881,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @LOC
                   AND tpr.State = 2;
 
@@ -1882,9 +1896,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @MET
                   AND tpr.State = 2;
 
@@ -1897,9 +1911,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @FOR
                   AND tpr.State = 2;
 
@@ -1912,9 +1926,9 @@ BEGIN
             FROM RateData rd
                 INNER JOIN @TblPackagesRate tpr
                     ON tpr.PackagesFrom = rd.PackagesFrom
+                   AND rd.PackagesFrom = tpr.PackagesFrom
             WHERE tpr.CatTypeService = 2
                   AND rd.TypeServiceId = @COD
-                  AND rd.PackagesFrom = tpr.PackagesFrom
                   AND rd.TypeSegmentId = @ESP
                   AND tpr.State = 2;
 

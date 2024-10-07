@@ -20,6 +20,8 @@
 );
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [NonClusteredIndex-Hub]
     ON [dbo].[DumpServiceCoverage]([Hub] ASC);
@@ -38,4 +40,10 @@ CREATE NONCLUSTERED INDEX [NonClusteredIndex-IdSettlement]
 GO
 CREATE NONCLUSTERED INDEX [IX_DumpServiceCoverage_SettlementStatusList]
     ON [dbo].[DumpServiceCoverage]([IdSettlement] ASC, [RowStatus] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_include]
+    ON [dbo].[DumpServiceCoverage]([RowStatus] ASC)
+    INCLUDE([HeaderCode], [Hub]);
 

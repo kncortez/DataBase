@@ -37,6 +37,8 @@
 
 
 
+
+
 GO
 CREATE NONCLUSTERED INDEX [idx_ServiceManagement_RowStatus]
     ON [dbo].[ServiceManagementDetail]([ServiceManagement] ASC, [RowStatus] ASC);
@@ -132,4 +134,19 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id del Serv
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Id de tabla ServiceManagementDetail', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagementDetail', @level2type = N'COLUMN', @level2name = N'IdServiceManagementDetail';
+
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tabla del detalle de servicios realizados.',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagementDetail',
+    @level2type = NULL,
+    @level2name = NULL
+GO
+CREATE NONCLUSTERED INDEX [idx_SubTypeServiceManagmentId_SubTypeServiceManagmentId_RowStatus_ServiceStartDate_include]
+    ON [dbo].[ServiceManagementDetail]([SubTypeServiceManagmentId] ASC, [RowStatus] ASC, [ServiceStartDate] ASC)
+    INCLUDE([ProvinceId], [TownshipId], [ServiceAddress], [ServicePhone]);
 

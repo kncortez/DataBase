@@ -5,6 +5,10 @@
 -- Create date: <2022-09-20>
 -- Description:	<Guarda/Modifica/Elimina un punto de visita para cliente referenciado y clientes existentes>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<2024-08-20>
+-- Description:	<Se toma en cuenta el filtro de pais para evitar duplicidad al obtener info de catalogos>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_SetVisitPointClient]
 	-- Add the parameters for the stored procedure here
 	
@@ -43,6 +47,7 @@ BEGIN
 	DECLARE @UpdatedAddress AS TABLE (
 		IdUpdated BIGINT
 	);
+	DECLARE @IdKindOfVPClient INT;
 
     -- Insert statements for procedure here
 	BEGIN TRANSACTION
@@ -51,8 +56,14 @@ BEGIN
 		SET @IdKindOfVPBusiness = (SELECT
 				IdKindOfVPBusiness
 			FROM KindOfVPBusiness WITH (NOLOCK)
-			WHERE Shorthand = 'HUB')
+			WHERE Shorthand = 'HUB'
+			AND ISNULL(IdCountry, 'GT')= @IdCountry)
 
+		SET @IdKindOfVPClient = (SELECT
+				IdKindOfVPClient
+			FROM KindOfVPClient WITH (NOLOCK)
+			WHERE KindOfVPName = 'HUB'
+			AND ISNULL(IdCountry, 'GT')= @IdCountry)
 
 		SELECT
 			@Department = ProvinceName
@@ -365,7 +376,7 @@ BEGIN
 				, [IdTownship]
 				, [Latitude]
 				, [Longitude])
-					VALUES (@CodeOfReference, @FullName, @Status, @IdCountry, NULL, @Token, GETDATE(), NULL, NULL, @IdCustomer, CAST((@Address1 + @Address2) AS NVARCHAR(600)), NULL, @TownshipName, @Department, @Phone, NULL, 6, @IdKindOfVPBusiness, NULL, NULL, @IdTownship, @Latitude, @Longitude)
+					VALUES (@CodeOfReference, @FullName, @Status, @IdCountry, NULL, @Token, GETDATE(), NULL, NULL, @IdCustomer, CAST((@Address1 + @Address2) AS NVARCHAR(600)), NULL, @TownshipName, @Department, @Phone, NULL, @IdKindOfVPClient, @IdKindOfVPBusiness, NULL, NULL, @IdTownship, @Latitude, @Longitude)
 				SET @IdVisitPointClient = SCOPE_IDENTITY()
 
 				--insertar nueva direccion

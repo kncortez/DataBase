@@ -15,9 +15,12 @@
     [CardAmount]              DECIMAL (14, 2) NULL,
     [IsSurcharge]             BIT             NULL,
     [SendAlmacenExp]          BIT             DEFAULT ('false') NULL,
+    [IdCountry]               VARCHAR (2)     NULL,
     PRIMARY KEY CLUSTERED ([IdCatArticleSAP] ASC),
     CONSTRAINT [FK_CatArticleSAP_CatCategoryArticleSAP] FOREIGN KEY ([CatCategoryArticleSAPId]) REFERENCES [dbo].[CatArticleCategorySAP] ([IdCatCategoryArticleSAP]) ON DELETE CASCADE
 );
+
+
 
 
 
@@ -98,6 +101,18 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Si es artí
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para almacenar valor que indica si se envía o no código de almacén de Express Center.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'CatArticleSAP', @level2type = N'COLUMN', @level2name = N'SendAlmacenExp';
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'País del articulo' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatArticleSAP', @level2type=N'COLUMN',@level2name=N'IdCountry'
+GO
 
 
-
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Catalogos de articulos SAP',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatArticleSAP',
+    @level2type = NULL,
+    @level2name = NULL

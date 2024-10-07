@@ -145,7 +145,7 @@ BEGIN
 
 	IF (@EXISTING_SR > 0)
 		BEGIN
-			SET @EXISTING_SR = (SELECT [SR].[ID]
+			SET @EXISTING_SR = (SELECT TOP 1 [SR].[ID]
 								FROM [dbo].[SenderReceiver] SR
 								WHERE [SR].[CUI] = @SenderReceiverCUI);
 		END
@@ -268,7 +268,6 @@ BEGIN
 											   AND [DOD].[Guide_Number] = [LRPCD].[GuideNumber]
 											    INNER JOIN [dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
                                             ON [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-                                               AND [LRPCD].[RowStatus] = 1
 											   OUTER APPLY
 											   (
 														SELECT COUNT(*) CONT FROM DELIVERYORDERDETAIL CD WITH (NOLOCK)
@@ -279,6 +278,7 @@ BEGIN
 													)TBLTMP
 													WHERE TBLTMP.CONT=0
 											        And  [LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation 
+													AND [LRPCD].[RowStatus] = 1
            BEGIN
 		-- UPDATE STATUS IN DELIVERY ORDER
 		UPDATE		[DO]
@@ -289,10 +289,10 @@ BEGIN
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		[LRPCD].[RowStatus] = 1
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
-		WHERE  [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate); 
+		WHERE  [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
+		AND	   [LRPCD].[RowStatus] = 1; 
 
 		-- UPDATE STATUS IN DELIVERY ORDER PIECE
 		UPDATE		[DOP]
@@ -306,11 +306,11 @@ BEGIN
 			AND		[DO].[Guide_Number] = [LRPCD].[GuideNumber]
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		[LRPCD].[RowStatus] = 1
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
 			ON		[LRPC].[LinehaulRoutePreparationId] = @IdLinehaulRoutePreparation
 			  WHERE 
-			       [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate);
+			       [DO].[Guide_Number] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
+			  AND  [LRPCD].[RowStatus] = 1;
 		
 		-- INSERT CHECKPOINT IN DELIVERY ORDER DETAIL
 		INSERT INTO [dbo].[DeliveryOrderDetail]
@@ -331,12 +331,12 @@ BEGIN
 		FROM		 [dbo].[LinehaulRoutePreparationContainerDetail] LRPCD WITH (NOLOCK)
 		INNER JOIN	 [dbo].[LinehaulRoutePreparationContainer] LRPC WITH (NOLOCK)
 			ON		 [LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
-			AND		 [LRPCD].[RowStatus] = 1
 		INNER JOIN	 [dbo].[LinehaulRoutePreparation] LRP WITH (NOLOCK)
 			ON		 [LRPC].[LinehaulRoutePreparationId] = [LRP].[IdLinehaulRoutePreparation]
 			AND		 [LRP].[IdLinehaulRoutePreparation] = @IdLinehaulRoutePreparation
 			 WHERE    
-			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate) );
+			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
+			AND   [LRPCD].[RowStatus] = 1 );
 
 		-- UPDATE LINEHAUL ROUTE PREPARATION CONTAINER DETAIL
 		UPDATE	[LRPCDP]
@@ -344,7 +344,6 @@ BEGIN
 		FROM	[dbo].[LinehaulRoutePreparationContainerDetailPiece] LRPCDP
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainerDetail] LRPCD
 			ON		[LRPCDP].[LinehaulRoutePreparationContainerDetailId] = [LRPCD].[IdLinehaulRoutePreparationContainerDetail]
-			AND		[LRPCD].[RowStatus] = 1
 		INNER JOIN	[dbo].[LinehaulRoutePreparationContainer] LRPC
 			ON		[LRPCD].[LinehaulRoutePreparationContainerId] = [LRPC].[IdLinehaulRoutePreparationContainer]
 		INNER JOIN	[dbo].[LinehaulRoutePreparation] LRP
@@ -352,7 +351,9 @@ BEGIN
 		     WHERE    
 			      [LRPCD].[GuideNumber] NOT IN (SELECT GuideNumber FROM @TblGuideUpdate)
 				  AND 
-		          [LRPCDP].[RowStatus] = 1;
+		          [LRPCDP].[RowStatus] = 1
+				  AND		
+				  [LRPCD].[RowStatus] = 1;
 	END
 		SELECT	[LRP].[IdLinehaulRoutePreparation],
 				[LRP].[StationDispatchedId],

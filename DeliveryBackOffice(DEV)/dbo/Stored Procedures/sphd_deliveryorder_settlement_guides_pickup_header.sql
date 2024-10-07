@@ -3,10 +3,15 @@
 -- Create date: <2022-03-24>
 -- Description:	<Obtiene los datos generales del manifiesto de recolecciones>
 -- ============================================= 
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-06-05>
+-- Description: < Adicion de filtro para mostrar moneda corecta por pais, por defect GT >
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_deliveryorder_settlement_guides_pickup_header]
 	-- Add the parameters for the stored procedure here
 		@idRoute AS int,
-		@dateRoute AS date = ''
+		@dateRoute AS date = '',
+        @IdCountry AS VARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -23,7 +28,13 @@ BEGIN
 		sum(smt.cold_count) cold_count,
 		--sum(ISNULL(dor.Pieces_Dry,0)) dry_count,
 		sum(smt.dry_count) dry_count,
-		sum(smt.Amount) total,
+		CONCAT(
+               CASE
+                   WHEN @IdCountry = 'GT' THEN 'Q.'
+                   WHEN @IdCountry = 'HN' THEN 'L.'
+               END,
+               sum(smt.Amount)
+              ) total,
 		COUNT(1) TotalServices
 		--,smt.IdServiceManagement
 		--,smt.IdPuRouteAssigment
@@ -31,14 +42,14 @@ BEGIN
 		 --,*
   from 
   [DeliveryBackOffice].[dbo].[RouteAssigment] as rat WITH(NOLOCK) 	
-	join 
+	INNER JOIN
 	(
 		select  IdServiceManagement,IdPuRouteAssigment,IdSchedulePickup, (ISNULL(sm.Amount,0)) Amount,  
 		count(IIF(dor.Guide_Number is not null and  dor.Guide_Serie is not  null,1,null)) guide_count,
 		sum(ISNULL(dor.Pieces_Cold,0)) cold_count,
 		sum(ISNULL(dor.Pieces_Dry,0)) dry_count
 		from [DeliveryBackOffice].[dbo].[ServiceManagement]sm
-		join [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = IdSchedulePickup 
+		INNER JOIN [DeliveryBackOffice].[dbo].[SchedulePickup] as spu WITH(NOLOCK) on spu.SchedulePickupId = IdSchedulePickup 
 		left join [DeliveryBackOffice].[dbo].[DeliveryOrderPaymentDetail] as dop WITH(NOLOCK) ON sm.IdSchedulePickup=dop.IdHeaderRecolection
 		left join[DeliveryBackOffice].[dbo].[DeliveryOrder] AS dor WITH(NOLOCK) ON dor.Guide_Number = dop.GuideNumber AND dor.Guide_Serie = dop.GuideSerie
 		group by sm.Amount,IdServiceManagement,IdSchedulePickup,IdPuRouteAssigment

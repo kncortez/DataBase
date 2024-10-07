@@ -126,3 +126,103 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Campo para 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'comentario del servicio al calificar servicio', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'SchedulePickup', @level2type = N'COLUMN', @level2name = N'ServiceComment';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de punto de visita asociado(Referencia tabla VisitPointClient)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'SenderId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Nombre del punto de visita',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'SenderName'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Numero de punto de visita',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'SenderPhone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del Hub asociado(Referencia tabla HubLogistics)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'IdHubLogistics'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Monto por recolección',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'AmountPickup'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del sistema (Referencia tabla CatSystem)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'IdSourcePlataform'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Direccion de recolección',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'AddressPickup'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de municipio',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'TownshipId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado de asignación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'AssigmentStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Información de recolecciones programadas',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = NULL,
+    @level2name = NULL
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Numero de transacción',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'SchedulePickup',
+    @level2type = N'COLUMN',
+    @level2name = N'TransaccionFAC'

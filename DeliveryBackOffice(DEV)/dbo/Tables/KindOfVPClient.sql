@@ -6,7 +6,9 @@
     [DateCreated]      DATETIME      NULL,
     [TokenUpdate]      NVARCHAR (50) NULL,
     [DateUpdated]      DATETIME      NULL,
-    CONSTRAINT [PK_KindOfVPClient] PRIMARY KEY CLUSTERED ([IdKindOfVPClient] ASC)
+    [IdCountry]        VARCHAR(2)    NULL, 
+    CONSTRAINT [PK_KindOfVPClient] PRIMARY KEY CLUSTERED ([IdKindOfVPClient] ASC),
+    CONSTRAINT [FK_KindOfVPClient_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 
 
@@ -35,3 +37,12 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion del tipo de punto de visita del cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'KindOfVPClient'
 GO
+
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de pais(Referencia a IdCountry de la tabla CatCountry)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'KindOfVPClient',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'

@@ -8,7 +8,17 @@
 -- Create date: <2022-10-10>
 -- Description:	<Validaciones de datos de guía antes de devolución>
 -- =============================================
-CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20)
+-- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-05-28>
+-- Description:	<Se agrega parametro para filtrar por pais de origen de la guia>
+-- =============================================
+-- Modified:	<Brandon Pedroza>
+-- Create date: <2024-06-24>
+-- Description:	<Se agrega validacion para saber si la guia es domestica o internacional>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHD_ValidateGuideStatus] @Guide AS NVARCHAR(20),
+	@IdCountry AS NVARCHAR(2)='GT'
 AS
 BEGIN
     DECLARE @STATUS AS INT;
@@ -17,9 +27,10 @@ BEGIN
     DECLARE @Sender_Town AS INT;
     DECLARE @Receiver_Town AS INT;
 	DECLARE @ClientConfirmsReturn AS bit = 0;
-
+    DECLARE @ExistRegister AS BIT = 0;
     DECLARE @GuideSerie VARCHAR(50);
 	DECLARE @GuideNumber VARCHAR(50);
+    DECLARE @ExistRegisterInAnotherCountry AS BIT = 0;
 
 	-- Extraer letras
 		SET @GuideSerie = '';
@@ -116,7 +127,24 @@ BEGIN
     SET NOCOUNT ON;
 
     BEGIN TRY
-
+        --Verifica que existan registros de la guia
+        SELECT @ExistRegister = 
+				CASE 
+					WHEN EXISTS (
+						SELECT 1
+						FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
+						INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
+							ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
+                            AND [DDO].[Guide_Serie] = [DOP].[GuideSerie]
+						WHERE 
+							[DDO].[Guide_Serie] = @GuideSerie 
+							AND [DDO].[Guide_Number] = @GuideNumber 
+							AND (ISNULL([DDO].GuideType,'DOM')='INT'
+								OR (ISNULL([DDO].SenderCountryId,'GT')=@IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM')
+								)
+					) THEN 1
+					ELSE 0
+				END;
 
 
         SELECT @STATUS = [DO].[StatusOrderId],
@@ -129,7 +157,7 @@ BEGIN
             INNER JOIN [dbo].[StatusOrder] [SO] WITH (NOLOCK)
                 ON [DO].[StatusOrderId] = [SO].[StatusOrderId]
         WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
-
+			--AND ([DO].[SenderCountryId] = @IdCountry OR ([DO].[SenderCountryId] IS NULL AND @IdCountry ='GT'))
         DECLARE @isreturnt BIT =
                 (
                     SELECT [IsLastMileReturn]
@@ -137,16 +165,7 @@ BEGIN
                     WHERE [DO].[Guide_Serie] = @GuideSerie AND [DO].[Guide_Number] = @GuideNumber 
                 );
 
-        IF (EXISTS
-        (
-            SELECT TOP 1
-                   1
-            FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
-                INNER JOIN [dbo].[DeliveryOrderPiece] [DOP] WITH (NOLOCK)
-                    ON [DDO].[Guide_Number] = [DOP].[GuideNumber]
-            WHERE [DDO].[Guide_Serie] = @GuideSerie AND [DDO].[Guide_Number] = @GuideNumber 
-        )
-           )
+        IF (@ExistRegister = 1)
         BEGIN
 
             IF (@STATUS IN ( @Entregado, @Anulado, @EntregadoEnExpressCenter, @Terminal ))
@@ -177,10 +196,31 @@ BEGIN
         END;
         ELSE
         BEGIN
-
+            --Verifica que existan registros de la guia en otro pais
+            SELECT @ExistRegisterInAnotherCountry = 
+				    CASE 
+					    WHEN EXISTS (
+						    SELECT 1
+						    FROM [dbo].[DeliveryOrder] [DDO] WITH (NOLOCK)
+						    WHERE 
+							    [DDO].[Guide_Serie] = @GuideSerie 
+							    AND [DDO].[Guide_Number] = @GuideNumber 
+							    AND ISNULL([DDO].SenderCountryId,'GT') <> @IdCountry AND ISNULL([DDO].GuideType,'DOM')='DOM'
+					    ) THEN 1
+					    ELSE 0
+				    END;
+            IF(@ExistRegisterInAnotherCountry = 1)
+			BEGIN
+				SELECT [Result] = 8,
+                   @StatusName 'Status',
+                   CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* La guia pertenece a otro pais*/
+			END
+            ELSE
+            BEGIN
             SELECT [Result] = 3,
                    @StatusName 'Status',
                    CONVERT(NVARCHAR, @DateStatus, 103) 'DateStatus'; /* Guía no existe*/
+            END
         END;
 
 

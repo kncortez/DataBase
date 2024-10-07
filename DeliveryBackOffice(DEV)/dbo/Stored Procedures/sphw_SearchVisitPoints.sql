@@ -4,10 +4,15 @@
 -- Create date: <20-09-2022>
 -- Description:	<Hace la busqueda de puntos de visita por teléfono, correo o nombre>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<20-08-2024>
+-- Description:	<Se agrega parametro para filtrar por pais y nirphone>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphw_SearchVisitPoints]
 	-- Add the parameters for the stored procedure here
 	@search NVARCHAR(80)=NULL,
-	@filter INT = -1
+	@filter INT = -1,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 		--0 TELEFONO,
 		--1 CORREO,
 		--2 NOMBRE
@@ -27,7 +32,8 @@ BEGIN
 		VP.DescriptionOfClient,
 		VP.ContactName,
 		VP.Address,
-		REPLACE(REPLACE(REPLACE(VP.Phone,'(502)',''),'-',''),' ','') 'Phone',
+		ISNULL(UA.UadNirPhone,IIF(VP.CountryId ='HN','504','502')) 'NirPhone',
+		REPLACE(REPLACE(REPLACE(REPLACE(VP.Phone,'(504)',''),'(502)',''),'-',''),' ','') 'Phone',
 		VP.Email,
 		VP.Town,
 		VP.Department,
@@ -40,9 +46,9 @@ BEGIN
 		AC.AccIdAccount 'IdAccount',
 		IIF((CU.[Name] = 'Cliente Referenciado' AND CU.Domain = '@forzadelivery'),1,0) 'IsReferredCustomer',
 		CU.Name 'CustomerName'
-		FROM DBO.VisitPointClient VP
-		LEFT JOIN DBO.UserAddress UA ON VP.CodeOfReference=UA.CodeOfReference
-		LEFT JOIN DBO.Customer CU ON CU.IdCustomer=VP.CustomerID
+		FROM DBO.VisitPointClient VP WITH(NOLOCK)
+		LEFT JOIN DBO.UserAddress UA WITH(NOLOCK) ON VP.CodeOfReference=UA.CodeOfReference
+		LEFT JOIN DBO.Customer CU WITH(NOLOCK) ON CU.IdCustomer=VP.CustomerID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Account] Ac WITH(NOLOCK)
 					ON Ac.IdCustomer = VP.CustomerID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[RolByUserByAccount] RBUBA WITH(NOLOCK)
@@ -51,7 +57,7 @@ BEGIN
 					ON RU.UsrIdUser = RBUBA.RuaIdUser
 		LEFT JOIN [DeliveryBackOffice].[dbo].[Person] PR WITH(NOLOCK)
 					ON PR.PerIdPerson = RU.UsrIdPerson
-		LEFT JOIN DBO.CatCityPlace CP ON UA.IdCityPlace=CP.IdCityPlace
+		LEFT JOIN DBO.CatCityPlace CP WITH(NOLOCK) ON UA.IdCityPlace=CP.IdCityPlace
 		WHERE 
 		(
 			@filter =-1
@@ -62,7 +68,8 @@ BEGIN
 			OR
 			(@filter = 2 AND CONCAT(PR.PerFirstName,' ',PR.PerLastName) like '%'+@search+'%' COLLATE Latin1_General_CI_AI)
 		)
-		AND VP.StatusClient = 1	;
+		AND VP.StatusClient = 1	
+		AND ISNULL(VP.CountryId, 'GT') = @IdCountry ;
 
 	
 END

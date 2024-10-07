@@ -3,8 +3,17 @@
 -- Create date: <24-01-2023>
 -- Description:	<Get list of associated customers for Telemarketing dashboard>
 -- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<14-08-2024>
+-- Description:	<Concat nirphone in Phone number>
+-- =============================================
+-- Author:		<Brandon Pedroza>
+-- Modified:	<16-08-2024>
+-- Description:	<Added idcontry parameter>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetTMAssociatedCustomersList]
-	@RegisterUserId INT
+	@RegisterUserId INT,
+	@IdCountry AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -20,7 +29,8 @@ BEGIN
     SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
 				[RU].[UsrEmail] [Email],
-				[RU].[Phone] [Phone],
+				ISNULL([RU].[PrefixCallingCode],'+502') [NirPhone],
+				[RU].[Phone] [Phone],				
 				[RU].[UsrDateCreated] [DateCreated],
 				[C].[CutOffDate] [CutOffDate],
 				[C].[CustomerGoalQuantity] [CustomerGoalQuantity],
@@ -31,7 +41,6 @@ BEGIN
 	FROM		[dbo].[Customer] C  WITH(NOLOCK) 
 	INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
 		ON		[C].[IdCustomer] = [A].[IdCustomer]
-		AND		[C].[CutOffDate] >= SYSDATETIME()
 	INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
 		ON		[A].[AccIdAccount] = [RUA].[RuaIdAccount]
 	INNER JOIN	[dbo].[RegisterUser] RU  WITH(NOLOCK) 
@@ -59,10 +68,13 @@ BEGIN
 			DO.IdCustomer
 	) GuideAmountBeforeCut
 	WHERE	[C].[CatTMSalesPersonId] = @CatTMSalesPersonId
+	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
+    AND [C].[CutOffDate] >= SYSDATETIME()
 	UNION
 	SELECT		[P].[PerFirstName] [FirstName],
 				[P].[PerLastName] [LastName],
 				[RU].[UsrEmail] [Email],
+				ISNULL([RU].[PrefixCallingCode], '+502') [NirPhone],
 				[RU].[Phone] [Phone],
 				[RU].[UsrDateCreated] [DateCreated],
 				[RU].[UsrDateCreated] [CutOffDate],
@@ -74,7 +86,6 @@ BEGIN
 	FROM		[dbo].[Customer] C  WITH(NOLOCK) 
 	INNER JOIN	[dbo].[Account] A  WITH(NOLOCK) 
 		ON		[C].[IdCustomer] = [A].[IdCustomer]
-		AND		[C].[CutOffDate] >= SYSDATETIME()
 	INNER JOIN	[dbo].[RolByUserByAccount] RUA  WITH(NOLOCK) 
 		ON		[A].[AccIdAccount] = [RUA].[RuaIdAccount]
 	INNER JOIN	[dbo].[RegisterUser] RU  WITH(NOLOCK) 
@@ -86,6 +97,8 @@ BEGIN
 		AND		[M].[ExpirationDate] >= SYSDATETIME()
 	LEFT JOIN	[dbo].[CatMembership] CM  WITH(NOLOCK) 
 		ON		[M].[CatMembershipId] = [CM].[IdCatMembership]
-	WHERE	[M].[CatTMSalesPersonId] = @CatTMSalesPersonId;
+	WHERE	[M].[CatTMSalesPersonId] = @CatTMSalesPersonId
+	AND ISNULL([P].[PerCountryOrigin], 'GT') = @IdCountry
+    AND [C].[CutOffDate] >= SYSDATETIME();
 
 END

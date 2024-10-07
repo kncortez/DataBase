@@ -7,9 +7,18 @@
 -- Update date: <2024-08-27>
 -- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
 -- =============================================
+-- Author:      <Daniel Ramirez>
+-- Create date: <2024-06-06>
+-- Description: <Se agrego filtro por pais, por defecto GT>
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-08-27>
+-- Description:	<Se cambia la dirección del servicio de recolección en la tabla 0>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetMonitoringPickupServicesDetail]
 	-- Add the parameters for the stored procedure here
-	@ServiceManagementId INT
+	@ServiceManagementId INT,
+    @IdCountry VARCHAR(2) = 'GT'
 AS
 BEGIN
 -- SET NOCOUNT ON added to prevent extra result sets from
@@ -19,7 +28,8 @@ SET NOCOUNT ON;
 	--Table 0 información del servicio
 	SELECT DISTINCT
 		sm.IdServiceManagement IdServiceManagement
-	   ,cu.Name Customer
+	   --,cu.Name Customer
+	   ,sp.SenderName Customer
 	   ,vpc.DescriptionOfClient VisitPoint
 	   ,p.ProvinceName Department
 	   ,ts.TownshipName Town
@@ -47,6 +57,7 @@ SET NOCOUNT ON;
 	LEFT JOIN Province p WITH(NOLOCK)
 		ON ts.IdProvince = p.IdProvince
 	WHERE sm.IdServiceManagement = @ServiceManagementId
+      AND IIF(vpc.CountryId IS NULL, 'GT',vpc.CountryId) = @IdCountry
 
 	--Table 1 Checkpoints Servicio
 	SELECT

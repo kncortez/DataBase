@@ -4,8 +4,14 @@
 -- Create date: <2022-11-30>
 -- Description:	< Carga de información para tutoriales y preguntas frecuentes >
 -- =============================================
+-- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-07-10>
+-- Description:	<Se Agrega filtro para mostrar el contenido (tutoriales y preguntas frecuentes)  segun el pais del cliente>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetContentDataByType]
-	@ContentTypeName NVARCHAR(100)
+	@ContentTypeName NVARCHAR(100),
+	@CountryId AS NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -42,16 +48,11 @@ BEGIN
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
 			(IdContentTitle)
-		SELECT
-			CT.IdContentTitle
-		FROM
-			[DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentType FCT
-				ON
-					CT.TypeContentId = FCT.IdContentType
-					AND
-					CT.RowStatus = 1
+		SELECT CT.IdContentTitle
+		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
+			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType					
+		WHERE CT.RowStatus = 1
+			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription
@@ -60,12 +61,9 @@ BEGIN
 			CD.IdContentDetail
 		FROM
 			[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentTitle FCT
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+			INNER JOIN @FilteredContentTitle FCT
+				ON CD.ContentTitleId = FCT.IdContentTitle
+		WHERE CD.RowStatus = 1
 
 		-- Tags a tomar para titulo
 		INSERT INTO @FilteredContentTags
@@ -77,16 +75,12 @@ BEGIN
 			@FilteredContentTitle FCT
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetailByTag] CDBT WITH(NOLOCK)
-				ON
-					CD.IdContentDetail = CDBT.ContentDetailId
-					AND
-					CDBT.RowStatus = 1
+				ON CD.IdContentDetail = CDBT.ContentDetailId
+         WHERE CD.RowStatus = 1
+           AND CDBT.RowStatus = 1
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @FilteredContentTitle) AND EXISTS (SELECT TOP 1 1 FROM @FilteredContentDescription))
 		BEGIN
@@ -189,16 +183,11 @@ BEGIN
 		-- Titulos de contenido valido
 		INSERT INTO @FilteredContentTitle
 			(IdContentTitle)
-		SELECT
-			CT.IdContentTitle
-		FROM
-			[DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
-			INNER JOIN
-				@FilteredContentType FCT
-				ON
-					CT.TypeContentId = FCT.IdContentType
-					AND
-					CT.RowStatus = 1
+		SELECT CT.IdContentTitle
+		FROM [DeliveryBackOffice].[dbo].[ContentTitle] CT WITH(NOLOCK)
+			INNER JOIN @FilteredContentType FCT ON CT.TypeContentId = FCT.IdContentType
+		WHERE CT.RowStatus = 1
+			AND	CT.CountryId = ISNULL(NULLIF(@CountryId,''), 'GT')
 				
 		-- Contenido de contenido valido
 		INSERT INTO @FilteredContentDescription
@@ -209,10 +198,8 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
 			INNER JOIN
 				@FilteredContentTitle FCT
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
+		WHERE CD.RowStatus = 1
 
 		-- Tags a tomar para titulo
 		INSERT INTO @FilteredContentTags
@@ -224,16 +211,12 @@ BEGIN
 			@FilteredContentTitle FCT
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetail] CD WITH(NOLOCK)
-				ON
-					CD.ContentTitleId = FCT.IdContentTitle
-					AND
-					CD.RowStatus = 1
+				ON CD.ContentTitleId = FCT.IdContentTitle
 			INNER JOIN
 				[DeliveryBackOffice].[dbo].[ContentDetailByTag] CDBT WITH(NOLOCK)
-				ON
-					CD.IdContentDetail = CDBT.ContentDetailId
-					AND
-					CDBT.RowStatus = 1
+				ON CD.IdContentDetail = CDBT.ContentDetailId
+        WHERE CD.RowStatus = 1
+          AND CDBT.RowStatus = 1
 
 		IF(EXISTS (SELECT TOP 1 1 FROM @FilteredContentTitle) AND EXISTS (SELECT TOP 1 1 FROM @FilteredContentDescription))
 		BEGIN

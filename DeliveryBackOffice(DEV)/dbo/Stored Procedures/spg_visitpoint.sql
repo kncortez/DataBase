@@ -32,12 +32,15 @@ BEGIN
 			,VisitPointId as ID_Visitpoint_Denarius,
 			IIF(vp.ExcludePriceShippingCOD IS NULL, IIF(c.ExcludePriceShippingCOD = 'TRUE', c.ExcludePriceShippingCOD, 'FALSE'), IIF(vp.ExcludePriceShippingCOD = 'TRUE', vp.ExcludePriceShippingCOD, 'FALSE')) CODExcludedPriceShipping,
 			IIF(vp.ExcludeCommissionCOD IS NULL, IIF(c.ExcludeCommissionCOD = 'TRUE', c.ExcludeCommissionCOD, 'FALSE'), IIF(vp.ExcludeCommissionCOD = 'TRUE', vp.ExcludeCommissionCOD, 'FALSE')) CODExcludedCommission
-		FROM DeliveryBackOffice.dbo.VisitPointClient vp
-		JOIN DeliveryBackOffice.dbo.Customer c ON c.IdCustomer = vp.CustomerID
+		FROM DeliveryBackOffice.dbo.VisitPointClient vp WITH(NOLOCK)
+		JOIN DeliveryBackOffice.dbo.Customer c WITH(NOLOCK) ON c.IdCustomer = vp.CustomerID
 		WHERE 
-			vp.CountryId = @IdCountry
-			AND StatusClient = 1 
-			AND StatusClient = @Active
+		vp.StatusClient = 1
+			AND c.RowSatus = 1
+			AND vp.CountryId = @IdCountry
+			--vp.CountryId = @IdCountry
+			--AND StatusClient = 1 
+			--AND StatusClient = @Active
 	) AS SUBQ
 	ORDER BY SUBQ.Visitpoint_Name ASC
 END

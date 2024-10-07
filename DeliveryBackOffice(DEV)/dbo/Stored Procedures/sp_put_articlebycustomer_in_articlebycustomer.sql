@@ -1,4 +1,8 @@
-﻿
+﻿-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-26>
+-- Description:	<Se agrega parametro que indica moneda>
+-- =============================================
 CREATE PROCEDURE [dbo].[sp_put_articlebycustomer_in_articlebycustomer]
 	@IdABC INT,
 	@TokenUpdated VARCHAR(50),
@@ -9,7 +13,8 @@ CREATE PROCEDURE [dbo].[sp_put_articlebycustomer_in_articlebycustomer]
 	@Length DECIMAL(18, 2),
 	@MassWeight DECIMAL(18, 2),
 	@VolumetricWeight DECIMAL(18, 2),
-	@ShowDefault BIT
+	@ShowDefault BIT,
+	@IdCurrency INT = 1--por defecto quetzal
 AS
 BEGIN
 
@@ -37,7 +42,8 @@ BEGIN TRY
 		Length = @Length,
 		MassWeight = @MassWeight,
 		VolumetricWeight = @VolumetricWeight,
-		ShowDefault = @ShowDefault
+		ShowDefault = @ShowDefault,
+		IdCurrency = @IdCurrency
 	WHERE AbcId = @IdABC;
 END TRY
 BEGIN CATCH

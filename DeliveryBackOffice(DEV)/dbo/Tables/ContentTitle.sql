@@ -8,9 +8,12 @@
     [TokenCreated]       NVARCHAR (50)  NOT NULL,
     [DateUpdated]        DATETIME       NULL,
     [TokenUpdated]       NVARCHAR (50)  NULL,
+    [CountryId]          VARCHAR (2)    DEFAULT ('GT') NOT NULL,
     PRIMARY KEY CLUSTERED ([IdContentTitle] ASC),
     CONSTRAINT [FK_ContentTitle_CatTypeContent] FOREIGN KEY ([TypeContentId]) REFERENCES [dbo].[CatTypeContent] ([IdCatTypeContent])
 );
+
+
 
 
 GO
@@ -47,6 +50,10 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificad
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ContentTitle', @level2type = N'COLUMN', @level2name = N'IdContentTitle';
+
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'País de origen', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ContentTitle', @level2type = N'COLUMN', @level2name = N'CountryId';
 
 
 GO

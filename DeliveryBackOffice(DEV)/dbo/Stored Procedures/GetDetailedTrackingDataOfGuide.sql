@@ -37,6 +37,8 @@ BEGIN
     DECLARE @GuideDeliveryCourierAttempt NVARCHAR(200) = N'';
     DECLARE @StatusIncident INT;
     DECLARE @StatusIncidentValidated INT;
+    DECLARE @CurrencyPrice NVARCHAR(5);
+	DECLARE @CurrencyCOD NVARCHAR(5);
 
     SET @StatusIncident =
     (
@@ -51,6 +53,15 @@ BEGIN
         WHERE OrderDescription = 'Incidencia Validada'
     );
 
+    SELECT 
+		 @CurrencyPrice = ISNULL(CPrice.Symbol,ISNULL(CCod.Symbol,'Q')),
+		 @CurrencyCOD = ISNULL(CCod.Symbol,ISNULL(CPrice.Symbol,'Q'))
+	FROM DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CPrice WITH(NOLOCK)
+		ON C.ShippingCurrency = CPrice.IdCatCurrencyCOD
+	LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCod WITH(NOLOCK)
+		ON C.CodCurrency = CCod.IdCatCurrencyCOD
+	WHERE GuideSerie = @Guide_Serie AND GuideNumber = @Guide_Number
 
     SELECT TOP 1
            @GuideDeliveryLatitude  = DA.Latitude
@@ -94,7 +105,7 @@ BEGIN
          , DO.Manifest_Number
          , DO.NameOfReceiver
          , DO.Delivery_Max_Date
-         , LTRIM(RTRIM(DO.Receiver_Phone))
+         , RIGHT(LTRIM(RTRIM(DO.Receiver_Phone)), 8)
     FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH (NOLOCK)
     WHERE DO.Guide_Serie = @Guide_Serie
           AND DO.Guide_Number = @Guide_Number;
@@ -337,9 +348,9 @@ BEGIN
                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
-                                   AND da.Delivered = 1
                         WHERE dp.Guide_Serie = 'FD'
                               AND dp.Guide_Number = @Guide_Number
+                              AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
                     )
                     ELSE
@@ -355,9 +366,9 @@ BEGIN
                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
                                 ON da.Guide_Serie = dp.Guide_Serie
                                    AND da.Guide_Number = dp.Guide_Number
-                                   AND da.Delivered = 1
                         WHERE dp.Guide_Serie = 'FD'
                               AND dp.Guide_Number = @Guide_Number
+                              AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
                     )
                     ELSE
@@ -451,6 +462,7 @@ BEGIN
                           INNER JOIN DeliveryAttempt dat WITH (NOLOCK)
                               ON srv.ID = dat.ID_Courier
                       WHERE dod.Guide_Number = @Guide_Number
+                            AND dod.Guide_Serie = @Guide_Serie 
                             AND dat.ID = dod.DeliveryAttemptId
                   )
                   ELSE
@@ -484,7 +496,6 @@ BEGIN
         FROM dbo.DeliveryOrderDetail                      dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
-                   AND so.CatStatusTypeId = 2
             INNER JOIN [dbo].[CatCheckpointType]          CCT
                 ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
             INNER JOIN @GuideOrderTemp                    GOT
@@ -496,6 +507,7 @@ BEGIN
                 ON da.ConfirmationOfIncidenceId = COI.IdConfirmationOfIncidence
         WHERE dod.Guide_Serie = @Guide_Serie
               AND dod.Guide_Number = @Guide_Number
+              AND so.CatStatusTypeId = 2
         GROUP BY CONVERT(DATE, dod.DateCreated)
                , dod.Guide_Serie
                , dod.Guide_Number
@@ -517,11 +529,7 @@ BEGIN
            , RES.[EventID];
 
     CREATE NONCLUSTERED INDEX ix_OrdChkpnt_Token_StageDate_EventID
-    ON #OrdChkpnt (
-                      [Token]
-                    , [StageDate]
-                    , [EventID]
-                  );
+    ON #OrdChkpnt ([Token])INCLUDE([StageDate], [EventID]);
 
     SELECT OrdChkPnt.[EventID]
          , OrdChkPnt.[OrderId]
@@ -566,7 +574,9 @@ BEGIN
          , OrdChkPnt.[ManifestNumber]
          , OrdChkPnt.[Latitude]
          , OrdChkPnt.[Longitude]
+         , @CurrencyPrice [CurrencyPrice]
          , ISNULL(OrdChkPnt.Price, 0) Price
+		 , @CurrencyCOD [CurrencyCOD]
          , ISNULL(OrdChkPnt.COD, 0)   COD
          , OrdChkPnt.[NextSteps]
          , OrdChkPnt.[UserIncident]
@@ -591,8 +601,11 @@ BEGIN
             ON ru.UsrIdUser = vpbu.RegisterUserID
         LEFT JOIN DeliveryBackOffice.dbo.VisitPointClient  vpc WITH (NOLOCK)
             ON vpbu.IdVisitPointClient = vpc.IdVisitPointClient
-               AND vpc.IdKindOfVPClient = 1
+               --AND vpc.IdKindOfVPClient = 1
                AND vpc.DescriptionOfClient LIKE 'FD%EXC%'
+        LEFT JOIN DeliveryBackOffice.dbo.KindOfVPClient kvpc WITH (NOLOCK)
+			ON vpc.IdKindOfVPClient = kvpc.IdKindOfVPClient 
+			   AND  kvpc.KindOfVPName = 'Express Center'
     ORDER BY OrdChkPnt.[StageDate] DESC
            , OrdChkPnt.[EventID];
 

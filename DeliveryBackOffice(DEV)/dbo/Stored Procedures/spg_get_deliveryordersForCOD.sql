@@ -4,7 +4,14 @@
 -- Create date: <2020-11-23>
 -- Description:	<Devuelve información para liquidación de COD>
 -- =============================================
-CREATE PROCEDURE [dbo].[spg_get_deliveryordersForCOD] @IdManifest INT
+-- =============================================
+-- Author:		<Oscar, Rodriguez>
+-- Create date: <2024-06-19>
+-- Description:	<Devuelve información para liquidación de COD filtrado por pais, y montos de moneda modificado para interpais, multimoneda y multipais>
+-- =============================================
+CREATE PROCEDURE [dbo].[spg_get_deliveryordersForCOD] 
+@IdManifest INT,
+@Country NVARCHAR(2) = 'GT'
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -32,7 +39,8 @@ BEGIN
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
         INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
             ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
-               AND dsd.RowStatus = 1
+        LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+            ON cs.IdStation = dbs.DispatchedStationId
     WHERE dbs.ID = @IdManifest
           AND dsd.Guide_Settlement = 1
           AND dsd.Guide_Returned = 0
@@ -40,19 +48,24 @@ BEGIN
           (
               dsd.Guide_Discharged = 0
               OR dsd.Guide_Discharged IS NULL
-          );
+          )
+		  AND cs.CountryId = @Country
+          AND dsd.RowStatus = 1;
 
     SELECT dbs.ID,
-           Date_Dispatched,
-           Pieces_Dry_Dispatched,
-           Pieces_Cold_Dispatched,
-           Guides_Dispatched,
+           dbs.Date_Dispatched,
+           dbs.Pieces_Dry_Dispatched,
+           dbs.Pieces_Cold_Dispatched,
+           dbs.Guides_Dispatched,
            dbs.ID_Courier,
            ISNULL(sr.First_Name, '') + ' ' + ISNULL(sr.Last_Name, '') AS Courier_Name
     FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs
-        JOIN DeliveryBackOffice.dbo.SenderReceiver sr
+        INNER JOIN DeliveryBackOffice.dbo.SenderReceiver sr
             ON sr.ID = dbs.ID_Courier
-    WHERE dbs.ID = @IdManifest;
+        LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+            ON cs.IdStation = dbs.DispatchedStationId
+    WHERE dbs.ID = @IdManifest
+		  AND cs.CountryId = @Country;
 
     DECLARE @GuidesDetail TABLE
     (
@@ -88,10 +101,10 @@ BEGIN
                   )
            ) AS Delivered,
            CAST(IIF(do.IsCollect = 'TRUE', IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment), 0) AS DECIMAL(18, 2)) AS Price,
-           CAST(ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) AS DECIMAL(18, 2)) AS COD,
+           CAST(ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) AS DECIMAL(18, 2)) AS COD,
            CAST(IIF(do.IsCollect = 'TRUE',
-                    (ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE do.PriceShippment END, 0), do.PriceShippment)),
-                    ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE do.Collect_OnDelivery END), 0)) AS DECIMAL(18, 2)) AS Total,
+                    (ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0) + IIF(do.IsLastMileReturn = 1, ISNULL(CASE WHEN ISNULL(cdp.IdConditionOfPayment, 1) > 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.PriceShippment / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.PriceShippment * c.codExchangeRate) * c.CODPaymentExchangeRate), do.PriceShippment) END, 0), do.PriceShippment)),
+                    ISNULL((CASE WHEN [do].[IsLastMileReturn] = 1 THEN 0 ELSE IIF(do.GuideType = 'INT', IIF(c.CodCurrency = 1, (do.Collect_OnDelivery / c.codExchangeRate) * c.CODPaymentExchangeRate, (do.Collect_OnDelivery * c.codExchangeRate) * c.CODPaymentExchangeRate), do.Collect_OnDelivery) END), 0)) AS DECIMAL(18, 2)) AS Total,
            CASE
                WHEN invh.inv_serieFEL IS NULL
                     OR invh.inv_serieFEL = '' THEN
@@ -129,6 +142,9 @@ BEGIN
 			ON vps.CodeOfReference = do.Sender_ID
 		LEFT JOIN [dbo].[Customer] cu WITH(NOLOCK)
 			ON ISNULL(do.[IdCustomer], vps.CustomerID) = cu.[IdCustomer]
+		LEFT JOIN [dbo].Cost c WITH(NOLOCK)
+			ON c.GuideSerie = do.Guide_Serie 
+			AND c.GuideNumber = do.Guide_Number
 		LEFT JOIN dbo.CatConditionOfPayment cdp WITH (NOLOCK)
             ON cdp.IdConditionOfPayment = cu.ConditionOfPaymentID
                AND cdp.IdConditionOfPayment > 1

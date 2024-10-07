@@ -6,9 +6,12 @@
     [TokenCreated]      NVARCHAR (50) NOT NULL,
     [DateUpdated]       DATETIME      NULL,
     [TokenUpdated]      NVARCHAR (50) NULL,
+    [IdCountry]         VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdNoLaborCalendar] ASC),
-    CONSTRAINT [UQ_NoLaborCalendar_NoRepeats] UNIQUE NONCLUSTERED ([NoLaborDate] ASC)
+    CONSTRAINT [UQ_NoLaborCalendar_Composite] UNIQUE NONCLUSTERED ([NoLaborDate] ASC, [IdCountry] ASC)
 );
+
+
 
 
 
@@ -41,6 +44,9 @@ EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Fecha la cu
 
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del registro.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'NoLaborCalendar', @level2type = N'COLUMN', @level2name = N'IdNoLaborCalendar';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Identificador del país al que pertenece la fecha no laboral.' , @level0type = N'SCHEMA', @level0name=N'dbo', @level1type = N'TABLE', @level1name = N'NoLaborCalendar', @level2type = N'COLUMN',@level2name = N'IdCountry'
 
 
 GO

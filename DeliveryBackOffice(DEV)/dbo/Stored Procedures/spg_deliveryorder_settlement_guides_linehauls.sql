@@ -4,6 +4,10 @@
 -- Update date: <2022-07-26>
 -- Description:	< Mejora de rendimiento del SP, adicionando WITH(NOLOCK) y especificando tipos de JOIN >
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Update date: <2024-06-10>
+-- Description:	<Se devuelve la moneda segun el pais de origen de la guia>
+-- =============================================
 CREATE PROCEDURE [dbo].[spg_deliveryorder_settlement_guides_linehauls] @IdManifest INT
 AS
 BEGIN
@@ -27,7 +31,8 @@ BEGIN
         Max_Date NVARCHAR(50),
         Receiver_Phone NVARCHAR(100),
         Rack_Position NVARCHAR(MAX),
-        Collect_on_Delivery DECIMAL(16, 2)
+        Collect_on_Delivery DECIMAL(16, 2),
+		Collect_on_DeliveryStr NVARCHAR(50)
     );
 
     INSERT INTO @temp
@@ -62,20 +67,31 @@ BEGIN
                 ELSE
                     '0.00'
             END
-           ) AS Collect_OnDelivery
+           ) AS Collect_OnDelivery,
+		   CONCAT(CASE
+					WHEN DO.SenderCountryId ='HN' THEN 'L'
+					ELSE 'Q'
+					END, CASE
+                WHEN ISNULL(DO.Collect_OnDelivery, 0) != 0 THEN --do.IsCollect = 'TRUE' then 
+                    --CAST(CAST((isnull(do.Collect_OnDelivery,0.00) + isnull(do.PriceShippment,0.00)) AS DECIMAL) as VARCHAR) 
+                    CAST((ISNULL(DO.Collect_OnDelivery, 0.00) + ISNULL(DO.PriceShippment, 0.00)) AS VARCHAR)
+                ELSE
+                    '0.00'
+            END
+           ) AS Collect_OnDeliveryStr
     FROM DeliveryBackOffice.dbo.ServiceManagement sm WITH (NOLOCK)
         INNER JOIN DeliveryBackOffice.dbo.PieceByService pbs WITH (NOLOCK)
             ON sm.IdServiceManagement = pbs.ServiceManagmentId
+            AND pbs.ServiceManagmentId = sm.IdServiceManagement
         INNER JOIN DeliveryBackOffice.dbo.SettlementByPickup sbp WITH (NOLOCK)
-            ON sbp.SequenceCode = @IdManifest
-               AND sbp.ServiceManagmentId = sm.IdServiceManagement
-               AND sbp.SubTypeServiceManagmentId = 4
+            ON sbp.ServiceManagmentId = sm.IdServiceManagement
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece PC WITH (NOLOCK)
             ON pbs.GuidePieceId = PC.GuidePiece
         INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder DO WITH (NOLOCK)
             ON DO.Guide_Serie = PC.GuideSerie
                AND DO.Guide_Number = PC.GuideNumber
-    WHERE pbs.ServiceManagmentId = sm.IdServiceManagement;
+    WHERE sbp.SubTypeServiceManagmentId = 4
+      AND sbp.SequenceCode = @IdManifest;
 
     SELECT Tmp.Guide_Code,
            Tmp.Pieces_Cold,
@@ -90,7 +106,8 @@ BEGIN
            Tmp.Max_Date,
            Tmp.Receiver_Phone,
            Tmp.Rack_Position,
-           Tmp.Collect_on_Delivery
+           Tmp.Collect_on_Delivery,
+		   Tmp.Collect_on_DeliveryStr
     FROM @temp Tmp
     ORDER BY Receiver_Departament ASC,
              Receiver_Town ASC,

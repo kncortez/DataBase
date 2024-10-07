@@ -4,11 +4,24 @@
 -- Create date: <2021-04-22>
 -- Description: <Devuelve un tarifa todo destino identificada por id>
 -- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-19>
+-- Description:	<Se define que la moneda sea tomada de la tabla CatCurrencyCOD>
+-- =============================================
+-- Modified:	<Brandon, Pedroza>
+-- Create date: <2024-06-26>
+-- Description:	<Se agrega validacion para obtener moneda de tarifario(RateHeader) y filtra las piezas irregulares(ArticleByCustomer) con la misma moneda del tarifario>
+-- =============================================
 CREATE PROCEDURE [dbo].[sphd_get_Rate_Data]
     @IdRate INT,
     @TypeRateId INT
 AS
 BEGIN
+	DECLARE @IdCurrency INT;
+
+	SELECT @IdCurrency = ISNULL(rd.IdCurrency,1)
+		FROM dbo.RateHeader rd
+		WHERE rd.RheId = @IdRate;
 
     SELECT rd.RheId [ID],
            rd.RheName [RateName],
@@ -22,16 +35,16 @@ BEGIN
            rd.RateTypeId [TypeRate],
            rd.FragilRate [FragilRate],
            rd.Attempt [Attempt],
-           rd.CurrencyId [CurrencyId],
+           rd.IdCurrency [CurrencyId],
            rd.CollectRate [CollectRate],
-           cr.Currency_Name [Currency],
+           cr.Name [Currency],
            rd.PiecesIncluded [PiecesIncluded],
 		   rd.CutOffDate [CutOffDate],
 		   ISNULL(rd.CatBusinessSegmentId, -1) [CatBusinessSegmentId],
 		   ISNULL(rd.PackagesRangeId, -1) [PackagesRangeId]
     FROM dbo.RateHeader rd
-        LEFT JOIN dbo.DeliveryCurrency cr
-            ON cr.Currency_Id = rd.CurrencyId
+        LEFT JOIN dbo.CatCurrencyCOD cr
+            ON cr.IdCatCurrencyCOD = rd.CurrencyId
     WHERE rd.RheId = @IdRate;
 
 
@@ -202,7 +215,8 @@ BEGIN
                 LEFT JOIN dbo.CatTypeArticle ta ON ta.TarId =ca.ArtIdTypeArticle
             WHERE rd.RateId = @IdRate
                   AND rd.ArticleId IS NOT NULL
-                  AND rd.RowStatus = 1
+                  AND rd.RowStatus = 1                  
+				  AND ISNULL(ac.IdCurrency, 1) = @IdCurrency
             GROUP BY rd.RateId,
                      rd.ArticleId,
                      sg.CrsShortName,

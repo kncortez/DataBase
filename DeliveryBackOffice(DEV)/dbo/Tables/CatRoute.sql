@@ -10,8 +10,51 @@
     [DateCreated]  DATETIME      NOT NULL,
     [TokenUpdated] VARCHAR (50)  NULL,
     [DateUpdated]  DATETIME      NULL,
+    [CountryId]    VARCHAR (2)   NULL,
     PRIMARY KEY CLUSTERED ([IdRoute] ASC),
     CONSTRAINT [FKRouteTownship] FOREIGN KEY ([IdTownship]) REFERENCES [dbo].[Township] ([IdTownship]),
     CONSTRAINT [FKRouteTypeR] FOREIGN KEY ([IdTypeRoute]) REFERENCES [dbo].[CatTypeRoute] ([IdTypeRoute])
 );
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
+
+
+GO
 

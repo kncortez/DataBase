@@ -1,37 +1,36 @@
 ﻿CREATE TABLE [dbo].[Cost] (
-    [IdCost]          INT             IDENTITY (1, 1) NOT NULL,
-    [IdProduct]       INT             NULL,
-    [ProductNumber]   VARCHAR (100)   NULL,
-    [IdTypeCharge]    INT             NULL,
-    [TotalAmount]     DECIMAL (18, 2) NULL,
-    [PaymentDate]     DATETIME        NULL,
-    [IdModule]        INT             NULL,
-    [RowStatus]       BIT             NULL,
-    [TokenCreated]    VARCHAR (50)    NOT NULL,
-    [DateCreated]     DATETIME        NOT NULL,
-    [TokenUpdated]    VARCHAR (50)    NULL,
-    [DateUpdated]     DATETIME        NULL,
-    [TotalAmountPaid] DECIMAL (12, 2) NULL,
-    [CODAmount]       DECIMAL (12, 2) NULL,
-    [ReturnAmount]    DECIMAL (12, 2) NULL,
-    [ReturnPaid]      DECIMAL (12, 2) NULL,
-    [GuideSerie]      NVARCHAR (2)    NULL,
-    [GuideNumber]     INT             NULL,
+    [IdCost]                      INT             IDENTITY (1, 1) NOT NULL,
+    [IdProduct]                   INT             NULL,
+    [ProductNumber]               VARCHAR (100)   NULL,
+    [IdTypeCharge]                INT             NULL,
+    [TotalAmount]                 DECIMAL (18, 2) NULL,
+    [PaymentDate]                 DATETIME        NULL,
+    [IdModule]                    INT             NULL,
+    [RowStatus]                   BIT             NULL,
+    [TokenCreated]                VARCHAR (50)    NOT NULL,
+    [DateCreated]                 DATETIME        NOT NULL,
+    [TokenUpdated]                VARCHAR (50)    NULL,
+    [DateUpdated]                 DATETIME        NULL,
+    [TotalAmountPaid]             DECIMAL (12, 2) NULL,
+    [CODAmount]                   DECIMAL (12, 2) NULL,
+    [ReturnAmount]                DECIMAL (12, 2) NULL,
+    [ReturnPaid]                  DECIMAL (12, 2) NULL,
+    [GuideSerie]                  NVARCHAR (2)    NULL,
+    [GuideNumber]                 INT             NULL,
+    [ShippingCurrency]            INT             NULL,
+    [ShippingExchangeRate]        DECIMAL (12, 4) NULL,
+    [CodCurrency]                 INT             NULL,
+    [CodExchangeRate]             DECIMAL (12, 4) NULL,
+    [DeliveryPaymentCurrency]     INT             NULL,
+    [DeliveryPaymentExchangeRate] DECIMAL (12, 4) NULL,
+    [CODPaymentCurrency]          INT             NULL,
+    [CODPaymentExchangeRate]      DECIMAL (12, 4) NULL,
     PRIMARY KEY CLUSTERED ([IdCost] ASC),
     CONSTRAINT [FK_Cost_Guide] FOREIGN KEY ([GuideSerie], [GuideNumber]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FKCostCharge] FOREIGN KEY ([IdTypeCharge]) REFERENCES [dbo].[CatTypeCharge] ([IdTypeCharge]),
     CONSTRAINT [FKCostModule] FOREIGN KEY ([IdModule]) REFERENCES [dbo].[CatModule] ([ModIdModule]),
     CONSTRAINT [FKCostProduct] FOREIGN KEY ([IdProduct]) REFERENCES [dbo].[CatTypeProduct] ([IdTypeProduct])
 );
-
-
-
-
-
-
-
-
-
 
 
 
@@ -96,3 +95,26 @@ CREATE NONCLUSTERED INDEX [idx_IdProduct_GuideSerie_GuideNumber]
     ON [dbo].[Cost]([IdProduct] ASC, [GuideSerie] ASC, [GuideNumber] ASC)
     INCLUDE([IdCost]);
 
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de envio para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'ShippingCurrency';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio de envio para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'ShippingExchangeRate';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de COD para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CodCurrency';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio de COD para la guia', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CodExchangeRate';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de pago de envio ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'DeliveryPaymentCurrency';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio del pago de envio ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'DeliveryPaymentExchangeRate';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tipo de moneda de pago para COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CODPaymentCurrency';
+
+GO
+EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Tasa de cambio del pago del COD ', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'Cost', @level2type = N'COLUMN', @level2name = N'CODPaymentExchangeRate';

@@ -3,18 +3,23 @@
 -- Create date: <2023-03-04>
 -- Description:	<Sp para el detalle del reporte de cierres en desktop>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-08>
+-- Description:	<Se agrega el simbolo de la moneda, segun pais de origen, para el detalle del reporte>
+-- =============================================
 CREATE PROCEDURE [dbo].[ReportClosureDesktop]
 @StartDate datetime = null,
 @EndDate datetime = null,
-@VisitPointId NVARCHAR(MAX) = null,
-@IdCierre NVARCHAR(MAX) = null,
-@IdAccount NVARCHAR(MAX) = null
+@VisitPointId NVARCHAR(3000) = null,
+@IdCierre NVARCHAR(3000) = null,
+@IdAccount NVARCHAR(3000) = null
 AS
 BEGIN
 
 	DECLARE @TEMPLATEDETAIL TABLE
 		(
-			guideserie NVARCHAR(MAX),
+			guideserie NVARCHAR(3000),
 			guidenumber BIGINT,
 			header BIGINT
 		);
@@ -80,6 +85,7 @@ BEGIN
 	   ,STO.OrderDescription 'Status'
 	   ,DOR.Guide_Serie + CONVERT(VARCHAR, DOR.Guide_Number) 'Guide'
 	   ,ISNULL(costd.Voucher, '') 'Voucher'
+	   ,CASE WHEN ISNULL(DOR.SenderCountryId,'GT') = 'GT' THEN 'GTQ' ELSE 'HNL' END AS CurrencySymbol
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
@@ -127,7 +133,6 @@ BEGIN
 		ON ACD.GuideSerie = DOR.Guide_Serie
 			AND ACD.GuideNumber = DOR.Guide_Number
 			AND ACD.DopId = DOPD.DopId
-			AND ACD.RowStatus = 1
 	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 	LEFT JOIN DeliveryBackOffice.dbo.RegisterUser REU WITH(NOLOCK)
@@ -151,7 +156,7 @@ BEGIN
 
 	WHERE CONVERT(DATE, DOPD.DateCreated) BETWEEN CONVERT(DATE, @StartDate) AND CONVERT(DATE, @EndDate)
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
-
+    AND ACD.RowStatus = 1
 	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	AND (DOPD.VisitPoint IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1' OR DOPD.VisitPoint IS NULL)
 	-- FIN MODIFICACIÓN
@@ -174,6 +179,7 @@ BEGIN
 	   ,Status = '----'
 	   ,Guide = '----'
 	   ,Voucher = ''
+	   ,'  ' AS CurrencySymbol
 	   ,ISNULL(DOPD.amount, 0) 'PriceShippment'
 	   ,ISNULL(DOPD.CODAmountProcess, 0) 'COD'
 	   ,CASE
@@ -210,7 +216,6 @@ BEGIN
 				WHERE id = 2)
 	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresDetail ACD WITH(NOLOCK)
 		ON INH.inv_numberFEL = ACD.Fel
-			AND ACD.RowStatus = 1
 	INNER JOIN DeliveryBackOffice.dbo.AccountingClosuresHeader ACH WITH(NOLOCK)
 		ON ACH.IdAccountingClosuresHeader = ACD.AccountingClosuresHeaderId
 
@@ -236,7 +241,7 @@ BEGIN
 	-- MODIFICACIÓN 23/05/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
 	AND (VPC.CodeOfReference IN (SELECT CodeOfReference FROM @tblVisitPointId) OR @VisitPointId = '-1' OR VPC.CodeOfReference IS NULL)
 	-- FIN MODIFICACIÓN
-
+    AND ACD.RowStatus = 1
 	AND (DOPD.AccountId IN (SELECT AccountId FROM @tblIdAccount) OR @IdAccount = '-1')
 	AND (ACD.AccountingClosuresHeaderId IN (SELECT CierreId FROM @tblIdCierre) OR @IdCierre = '-1')
 	AND (CTS.IdTypeService NOT IN (5, 23))

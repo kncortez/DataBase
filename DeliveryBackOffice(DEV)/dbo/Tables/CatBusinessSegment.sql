@@ -7,7 +7,9 @@
     [DateCreated]                DATETIME       NOT NULL,
     [TokenUpdated]               NVARCHAR (50)  NULL,
     [DateUpdated]                DATETIME       NULL,
-    CONSTRAINT [PK_CatBusinessSegment] PRIMARY KEY CLUSTERED ([IdBusinessSegment] ASC)
+    [IdCountry]                  VARCHAR(2)     NULL, 
+    CONSTRAINT [PK_CatBusinessSegment] PRIMARY KEY CLUSTERED ([IdBusinessSegment] ASC),
+    CONSTRAINT [FK_CatBusinessSegmentCatArticle_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry)
 );
 
 GO
@@ -38,3 +40,11 @@ GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que contiene la informacion del segmento de negocio al que pertenece el cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'CatBusinessSegment'
 GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Id de pais (Referencia a IdCountry de la tabla CatCountry)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'CatBusinessSegment',
+    @level2type = N'COLUMN',
+    @level2name = N'IdCountry'

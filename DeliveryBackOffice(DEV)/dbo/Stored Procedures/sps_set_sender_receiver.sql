@@ -1,14 +1,19 @@
 ﻿-- =============================================
--- Author:		<Cano, Carlos>
+-- Author:      <Cano, Carlos>
 -- Create date: <2020-07-22>
--- Description:	<Cambiar la ubicación en rack de una guía>
+-- Description: <Cambiar la ubicación en rack de una guía>
 -- =============================================
 -- =============================================
--- Author:		<López, Marcos>
+-- Author:      <López, Marcos>
 -- Create date: <2020-09-19>
--- Description:	<Control de insert y update>
+-- Description: <Control de insert y update>
 -- =============================================
-CREATE procedure [dbo].[sps_set_sender_receiver]
+-- =============================================
+-- Author:      <Daniel, Ramirez>
+-- Update date: <2024-05-19>
+-- Description: <Agregar filtro por pais, por defecto guardara GT>
+-- =============================================
+create procedure [dbo].[sps_set_sender_receiver]
 		@FirstName nvarchar(100),
 		@LastName nvarchar(100),
 		@Address nvarchar(200),
@@ -25,7 +30,8 @@ CREATE procedure [dbo].[sps_set_sender_receiver]
 		@UserCreated nvarchar(50),
 		@Estatus bit,
 		@TypeId int=NULL,
-		@HubId int=NULL
+		@HubId int=NULL,
+        @IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 	DECLARE @RInserted INT
@@ -33,9 +39,16 @@ BEGIN
 
 	--Contador de datos
 	DECLARE @Count INT
-	SELECT @Count=COUNT(ID), @UniqueCode = MAX(UniqueCode) FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WHERE CUI = @CUI
-	
-	DECLARE @EmailFound INT = (SELECT COUNT(1) FROM SenderReceiver WHERE CUI <> @CUI AND Email = @Email)
+
+    SELECT @Count=COUNT(ID), @UniqueCode = MAX(UniqueCode) 
+      FROM [DeliveryBackOffice].[dbo].[SenderReceiver] WITH(NOLOCK)
+     WHERE CUI = @CUI
+       AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
+
+    DECLARE @EmailFound INT = (SELECT COUNT(1) 
+                                 FROM SenderReceiver WITH(NOLOCK)
+                                WHERE CUI <> @CUI 
+                                  AND Email = @Email)
 
 	BEGIN TRANSACTION
 
@@ -53,13 +66,11 @@ BEGIN
 							1
 						FROM SenderReceiver WITH (NOLOCK)
 						WHERE UniqueCode = CAST(@UniqueCode AS NVARCHAR(50)))
-					SET @UniqueCode = (SELECT
-							ROUND(((9999999999 - 1111111111) * RAND() + 1111111111), 0))
+					SET @UniqueCode = (SELECT ROUND(((9999999999 - 1111111111) * RAND() + 1111111111), 0))
 
-					INSERT INTO [DeliveryBackOffice].[dbo].[SenderReceiver]
-					([First_Name],[Last_Name],[Address],[Zone],[Town],[Department],[Phone],[Social_Security_ID],[Email],[CUI],[Latitude],[Longitude],[Entity_Type],[User_Created],[Date_Created],[Estatus],[CatTypeSenderReceiverId],[HubLogisticId],[UniqueCode]) 
-					VALUES 
-					(@FirstName,@LastName,@Address,@Zone,@Town,@Department,@Phone,@SocialSecurityID,@Email,@CUI,@Latitude,@Longitude,@EntityType,@UserCreated,GETDATE(),@Estatus,@TypeId,@HubId, @UniqueCode)
+                    INSERT INTO [DeliveryBackOffice].[dbo].[SenderReceiver]
+                                ([First_Name],[Last_Name],[Address],[Zone],[Town],[Department],[Phone],[Social_Security_ID],[Email],[CUI],[Latitude],[Longitude],[Entity_Type],[User_Created],[Date_Created],[Estatus],[CatTypeSenderReceiverId],[HubLogisticId],[UniqueCode],IdCountry)
+                    VALUES (@FirstName,@LastName,@Address,@Zone,@Town,@Department,@Phone,@SocialSecurityID,@Email,@CUI,@Latitude,@Longitude,@EntityType,@UserCreated,GETDATE(),@Estatus,@TypeId,@HubId, @UniqueCode,@IdCountry)
 
 					SET @RInserted = @@ROWCOUNT
 				END
@@ -68,6 +79,7 @@ BEGIN
 					UPDATE [DeliveryBackOffice].[dbo].[SenderReceiver]
 					SET [First_Name]=@FirstName, [Last_Name]=@LastName, [Address]=@Address, [Phone]=@Phone, [Entity_Type]=@EntityType, [Estatus]=@Estatus, [CatTypeSenderReceiverId]=@TypeId,[HubLogisticId]=@HubId, Email=@Email
 					WHERE [CUI]=@CUI
+                      AND IIF(IdCountry IS NULL, 'GT', IdCountry) = @IdCountry
 					SET @RInserted = @@ROWCOUNT
 				END
 

@@ -75,3 +75,202 @@ CREATE NONCLUSTERED INDEX [idx_IdSchedulePickup]
 GO
 EXECUTE sp_addextendedproperty @name = N'MS_Description', @value = N'Indica si el servicio esta siendo realizado por el courier asignado actualmente.', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'ServiceManagement', @level2type = N'COLUMN', @level2name = N'IsActiveService';
 
+
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Identificador del registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdServiceManagement'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id courier entrante(Referencia a tabla SenderReceiver)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdPuCourrier'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id courier saliente(Referencia a tabla SenderReceiver)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdDlCourrier'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de llegada del courier entrante',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'CiPuDate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de salida del courier entrante',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'CoPuDate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de llegada de courier saliente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'CiDlDate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de salida de courier saliente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'CoDlDate'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de la ruta entrante asignada(Referencia tabla RouteAssigment)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdPuRouteAssigment'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de ruta asignada saliente asignada (Referencia tabla RouteAssigment)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdDlRouteAssigment'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id de la recogida programada(Referencia tabla SchedulePickup)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdSchedulePickup'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id del comprobante de entrega(Referencia tabla DeliveryProof)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdProofOnDelivery'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado(1 Activo, 0 Inactivo)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'RowStatus'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien creó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de Creación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'DateCreated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Código de quien modificó el registro',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'TokenUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Fecha de modificación',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'DateUpdated'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Estado del servicio(Referencia tabla CatServiceStatus)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'ServiceStatusId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Ruta de firma de courier entrante',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'PuSignaturePath'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Ruta de firma de courier saliente',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'DiSignaturePath'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Subtipo de servicio(Referencia a SubTypeServiceManagment)',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'SubTypeServiceManagmentId'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'id hub destino',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = N'COLUMN',
+    @level2name = N'IdHubDestination'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Tabla de informacion de servicios realizados',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'ServiceManagement',
+    @level2type = NULL,
+    @level2name = NULL

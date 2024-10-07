@@ -1,6 +1,4 @@
 ﻿
-
-
 -- =============================================
 -- Author:		<Aquino, César>
 -- Create date: <2021-03-23>
@@ -37,7 +35,8 @@ CREATE PROCEDURE [dbo].[sps_proof_ondelivery_fd]
     @ImageDry VARCHAR(300),
     @ImageCold VARCHAR(300),
     @CODPayment DECIMAL(12, 2) = 0,
-    @ExcludeCODPyament BIT = 'false'
+    @ExcludeCODPyament BIT = 'false',
+	@IdCountry NVARCHAR(8) = 'GT'
 AS
 BEGIN
     -- control de inserciones para transacción
@@ -124,10 +123,10 @@ BEGIN
                                                    ON G.IdGeofence = GP.IdGeofence
                                                INNER JOIN [DeliveryBackOffice].[dbo].[Point] P WITH (NOLOCK)
                                                    ON GP.IdPoint = P.IdPoint
-                                           WHERE G.RowStatus = 1
+                                           WHERE G.CountryId = @IdCountry -- Geocerca de GT
+												 AND G.RowStatus = 1
 												 AND GP.RowStatus = 1
 												 AND P.RowStatus = 1
-                                                 AND G.IdGeofence = 1 -- Geocerca de GT
                                            ORDER BY GP.GeofencePointOrder ASC
                                            FOR XML PATH(''), TYPE
                                        ).value('.', 'varchar(max)'),
@@ -161,10 +160,12 @@ BEGIN
 
     END TRY
     BEGIN CATCH
+
         PRINT 'ERROR IN GEOLOCATION';
 
         SET @FixedLatitude = NULL;
         SET @FixedLongitude = NULL;
+
     END CATCH;
 
     BEGIN TRANSACTION;
@@ -340,12 +341,13 @@ BEGIN
 				  
 					;WITH LatestID AS (
 									SELECT TOP 1
+										A.Guide_Serie,
 										A.Guide_Number,
 										MAX(ID) AS LastID
 									FROM 
 										[dbo].[DeliverySettlementDetail] A WITH (NOLOCK)
 									WHERE Guide_Serie = @GuideSerie AND  Guide_Number = @GuideNumber
-								GROUP BY Guide_Number
+								GROUP BY Guide_Number, Guide_Serie
 								)
 								UPDATE ds
 								SET 
@@ -357,6 +359,7 @@ BEGIN
 								INNER JOIN 
 									[LatestID] li 
 								ON ds.Guide_Number = li.Guide_Number AND ds.ID = li.LastID
+									AND ds.Guide_Serie = li.Guide_Serie
 					
 				---------------------------------------------------------------------------------------------
 
@@ -516,6 +519,7 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
+										AND do.Guide_Serie = @GuideSerie
 										AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
 
@@ -550,6 +554,7 @@ BEGIN
 									INNER JOIN WebhookEndpoint WHE WITH(NOLOCK)
 								    ON do.IdCustomer = WHE.CustomerId
 									WHERE do.Guide_Number = @GuideNumber
+									AND do.Guide_Serie = @GuideSerie
 									AND dop.ExternalPieceId IS NOT NULL
 									AND WHE.TypeConnectionId = 2
 									GROUP BY dop.GuideSerie,dop.GuideNumber
@@ -999,7 +1004,7 @@ BEGIN
 					IF 
 						(RTRIM(LTRIM(ISNULL(@FixedLatitude, ''))) <> '' AND RTRIM(LTRIM(ISNULL(@FixedLongitude, ''))) <> '')
 					BEGIN
-						
+					
 						-- Si existe una ubicación para registrar
 						-- Distancia (en metros) entre recolección y el punto de visita
 						-- Se coloca en 10 metros para evitar actualizar puntos de visita con ubicación correcta
@@ -1007,6 +1012,7 @@ BEGIN
 						BEGIN
 							-- Si la distancia es menor a 10 metros
 							-- Guardar última ubicación
+							
 							UPDATE
 								[DeliveryBackOffice].[dbo].[VisitPointClient]
 							SET
@@ -1032,6 +1038,7 @@ BEGIN
 						END
 						ELSE
 						BEGIN
+							   
 								-- Guardar nueva ubicación de recolección en "bitácora" para revisión
 								UPDATE
 									[DeliveryBackOffice].[dbo].[VisitPointClient]
@@ -1128,6 +1135,3 @@ BEGIN
                CONVERT(BIGINT, 0) AS 'NumTransferID',
                @GuideSerie + CAST(@GuideNumber AS VARCHAR) AS 'Guide';
 END;
-
-
-

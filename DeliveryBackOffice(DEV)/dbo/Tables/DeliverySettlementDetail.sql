@@ -24,8 +24,11 @@
     CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrder] FOREIGN KEY ([Guide_Serie], [Guide_Number]) REFERENCES [dbo].[DeliveryOrder] ([Guide_Serie], [Guide_Number]),
     CONSTRAINT [FK_DeliverySettlementDetail_DeliveryOrderBySettlement] FOREIGN KEY ([ID_DeliveryOrderBySettlement]) REFERENCES [dbo].[DeliveryOrderBySettlement] ([ID]),
     CONSTRAINT [FK_DeliverySettlementDetail_StatusOrder] FOREIGN KEY ([StatusOrderId]) REFERENCES [dbo].[StatusOrder] ([StatusOrderId])
-
 );
+
+
+
+
 
 
 GO
@@ -134,15 +137,22 @@ CREATE NONCLUSTERED INDEX [IDX_Guide_Number]
 GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliveryOrderBySettlement_RowStatus_include]
     ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [RowStatus] ASC)
-    INCLUDE([Guide_Serie], [Guide_Number], [DateCreated]);
+    INCLUDE([Guide_Serie], [Guide_Number]);
+
+
 
 GO
 CREATE NONCLUSTERED INDEX [idx_ID_DeliverySettlementDetail_DateCreated]
     ON [dbo].[DeliverySettlementDetail]([DateCreated] ASC);
 
 GO
-CREATE NONCLUSTERED INDEX [idx_Guide_Settlement_RowStatus]
-	ON [dbo].[DeliverySettlementDetail] ([Guide_Serie],[Guide_Number],[Guide_Settlement],[RowStatus])
-	INCLUDE ([DateCreated],[ID_DeliveryORderBYSettlement]);
+CREATE NONCLUSTERED INDEX [IDX_RowStatus_include]
+    ON [dbo].[DeliverySettlementDetail]([RowStatus] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
 
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_ID_DeliveryOrderBySettlement_RowStatus_DateCreated]
+    ON [dbo].[DeliverySettlementDetail]([ID_DeliveryOrderBySettlement] ASC, [RowStatus] ASC, [DateCreated] ASC)
+    INCLUDE([Guide_Serie], [Guide_Number]);
 

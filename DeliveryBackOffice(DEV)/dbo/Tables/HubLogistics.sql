@@ -23,6 +23,8 @@
 
 
 
+
+
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [NonClusteredIndex-HubAbbreviation]
     ON [dbo].[HubLogistics]([HubAbbreviation] ASC);
@@ -88,3 +90,4 @@ GO
 CREATE UNIQUE NONCLUSTERED INDEX [IDX_HubLogistics_HubAbbreviation_RowStatus]
     ON [dbo].[HubLogistics]([HubAbbreviation] ASC, [HubStatus] ASC);
 
+GO

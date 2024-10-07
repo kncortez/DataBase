@@ -3,7 +3,11 @@
 -- Create date: <2020-08-25>
 -- Description:	<GET PhoneBook>
 -- =============================================
-
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-07-31>
+-- Description:	<Se agrega el pais a la respuesta de la consulta>
+-- =============================================
 --exec [dbo].[spg_dsms_PhoneBook] 
 --@MaxDeliveryDate = '2022-03-09 17:21:42.180',@ElementId = 1001
 
@@ -46,6 +50,7 @@ BEGIN
 		AND SS2.Sent_Guide_Series = do.Guide_Serie
 		AND ISNULL(SS2.SentTypeStatus,0) IN (0,1,2,3)
 	  )
+	  
 
 
 	declare @PhoneBook as table (
@@ -61,7 +66,8 @@ BEGIN
 	_Number int,
 	_OriginName nvarchar(100),
 	_Link nvarchar(100),
-	_LandingLink nvarchar(200)
+	_LandingLink nvarchar(200),
+	_IdCountry NVARCHAR(2)
 	)
 	insert into @PhoneBook
 	--SELECT TOP 1 --TMP BNHL
@@ -80,12 +86,14 @@ BEGIN
 		,' https://forzadelivery.com/rastreo/' + do.Guide_Serie 
 		  + convert(varchar,do.Guide_Number)
 		, IIF(SDFG.GuideToken IS NOT NULL, CONCAT( ' https://forzadelivery.io/' , SDFG.GuideToken ),'')
+		,ISNULL(do.SenderCountryId,'GT')
 	FROM DeliveryBackOffice.dbo.DeliveryOrder do WITH(NOLOCK)
 	left join @ToUpdate tu  on do.Guide_Serie=tu._Series and do.Guide_Number=tu._Number
 	left join DeliveryBackOffice.dbo.VisitPointClient VPC with(nolock) ON VPC.CodeOfReference = do.Sender_ID
 	left join DeliveryBackOffice.dbo.ServiceDataForGuide SDFG with(nolock) ON do.Guide_Serie = SDFG.GuideSerie and do.Guide_Number = SDFG.GuideNumber and SDFG.IsDelivery = 1
 	where not tu._Number is null
-	and not tu._Series is null
+	and not tu._Series is NULL
+   
 	--WHERE CONVERT(VARCHAR, do.Delivery_Max_Date, 23) = CONVERT(VARCHAR, @MaxDeliveryDate, 23)
 
 	declare @TopBatchId bigint=0
@@ -105,7 +113,8 @@ BEGIN
 	_Number int,
 	_OriginName nvarchar(100),
 	_Link nvarchar(100),
-	_LandingLink nvarchar(200)
+	_LandingLink nvarchar(200),
+	_IdCountry NVARCHAR(2)
 	)
 	insert into @CleanPhoneBook	
 	select 
@@ -125,6 +134,7 @@ BEGIN
 		,pb._OriginName
 		,pb._Link
 		,pb._LandingLink
+		,pb._IdCountry
 	from @PhoneBook pb 
 
 	--select TOP 1 --TEMP BNHL
@@ -146,6 +156,7 @@ BEGIN
 		,pb._OriginName
 		,pb._Link
 		,pb._LandingLink
+		,pb._IdCountry
 	from @CleanPhoneBook pb 
 
 	INSERT INTO [dbo].[SMS_Sent]

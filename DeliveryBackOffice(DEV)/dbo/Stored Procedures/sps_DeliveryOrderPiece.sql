@@ -32,6 +32,15 @@ BEGIN
 	DECLARE @ResponseIdentity NUMERIC(18,0) = 0;
 	DECLARE @EXCCustomerId INT = 0;
 	DECLARE @IsClientEXC BIT = 0;
+    DECLARE @IdCountry NVARCHAR(2) = 'GT';
+
+    SET @IdCountry = (
+                      SELECT TOP 1 
+                             SenderCountryId
+                        FROM [DeliveryBackOffice].[dbo].[DeliveryOrder] DO WITH(NOLOCK)
+                       WHERE DO.Guide_Serie = @GuideSerie
+                         AND DO.Guide_Number = @GuideNumber
+                     )
 
 	-- Buscar customer que representa Express Centers
 	SET @EXCCustomerId = (
@@ -42,6 +51,7 @@ BEGIN
 			[DeliveryBackOffice].[dbo].[KindOfVPClient] KoVPC  WITH(NOLOCK) 
 		WHERE
 			[KoVPC].[KindOfVPName] = 'Express Center'  COLLATE Latin1_General_CI_AI 
+          AND ISNULL(IdCountry,'GT') = @IdCountry
 	)
 
 	-- Si la guía se origino en Express Center

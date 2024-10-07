@@ -8,13 +8,19 @@
 -- Create date: <06/12/2022>
 -- Description:	<Modificar relación entre tabla HubLogicticsbyUser por SenderReseiverbyUser>
 -- =============================================
+-- =============================================
+-- Author:		<Brandon, Pedroza>
+-- Modified:	<06/12/2022>
+-- Description:	<Se agrega parametro para filtra por pais de courier>
+-- =============================================
 CREATE PROCEDURE [dbo].[spHW_GetPickupDashboardData]
 	@StartDate DATETIME = NULL,
 	@EndDate DATETIME = NULL,
 	@UserId BIGINT,
 	@CourierId INT = NULL,
 	@CourierLocations TblCourierLocation READONLY,
-	@UbicaCourierLocations TblCourierLocation READONLY
+	@UbicaCourierLocations TblCourierLocation READONLY,
+	@IdCountry NVARCHAR(2) = 'GT'
 AS
 BEGIN
 
@@ -129,10 +135,8 @@ BEGIN
 				THEN SM.IdServiceManagement END)) 'TotalPendingScheduled'
 			,COUNT(DISTINCT (CASE WHEN 
 				SM.IdServiceManagement IS NOT NULL AND SM.ServiceStatusId NOT IN (@PickedupServiceStatusId, @IncidenceServiceStatusId, @CanceledServiceStatusId) AND ISNULL(SP.IsScheduled,1) = 0
-				THEN SM.IdServiceManagement END)) 'TotalPendingOnDemand'
-			,COUNT(DISTINCT (CASE WHEN 
-				SM.IdServiceManagement IS NOT NULL AND SM.ServiceStatusId = @PickedupServiceStatusId AND ISNULL(SP.IsScheduled,1) = 1
-				THEN SM.IdServiceManagement END)) 'TotalPickedPieces'
+				THEN SM.IdServiceManagement END)) 'TotalPendingOnDemand'			
+			, ISNULL(Sum(DOP.TotalGuidePieces),0)	'TotalPickedPieces'
 		FROM
 			[DeliveryBackOffice].[dbo].[SenderReceiver] SR WITH(NOLOCK)
 			INNER JOIN
@@ -188,7 +192,8 @@ BEGIN
 						,DOP.GuideNumber
 				) DOP
 		WHERE
-			@CourierId IS NULL OR SR.ID = @CourierId
+			(@CourierId IS NULL OR SR.ID = @CourierId)
+			AND ISNULL(SR.IdCountry, 'GT') = @IdCountry
 		GROUP BY
 			SR.ID
 			,SR.First_Name

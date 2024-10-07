@@ -64,15 +64,18 @@ BEGIN
 		--declare @InGuides   NVARCHAR(400) = 'FD198907-3,FD198910-1,FD198910-2,FD198941-1'
 
 		SELECT
-			SUBSTRING(Item, 1, 2) ItemSerie
-		   ,SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) ItemNumber
-		   ,SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item)) ItemPiece
+			CAST(SUBSTRING(Item, 1, 2) AS NVARCHAR(5)) ItemSerie
+		   ,CAST(SUBSTRING(Item, 3, IIF(CHARINDEX('-', Item) = 0, (LEN(item)), (CHARINDEX('-', Item) - 3))) AS NVARCHAR(10)) ItemNumber
+		   ,CAST(SUBSTRING(Item, CHARINDEX('-', Item) + 1, LEN(item)) AS NVARCHAR(5)) ItemPiece
 		--, 
 		--SUBSTRING(Item,CHARINDEX('-',Item),len(Item)) ItemPiece, 
 		--CHARINDEX('-',Item) charinde,  
 		--len(Item) len
 		INTO #listGuides
 		FROM DeliveryBackOffice.dbo.SplitUnlimited(@InGuides, ',')
+
+        CREATE NONCLUSTERED INDEX listGuides ON #listGuides (ItemSerie, ItemNumber);
+        CREATE NONCLUSTERED INDEX listGuidesPs ON #listGuides (ItemSerie, ItemNumber,ItemPiece);
 
 		SET @IdRouteAssigment = (SELECT
 				ra.IdRouteAssigment
@@ -83,9 +86,9 @@ BEGIN
 
 
 		SELECT
-			dop.GuideSerie
-		   ,dop.GuideNumber
-		   ,dop.NoPiece
+			CAST(dop.GuideSerie AS NVARCHAR(5)) AS GuideSerie
+		   ,CAST(dop.GuideNumber AS NVARCHAR(10)) AS GuideNumber
+		   ,CAST(dop.NoPiece AS NVARCHAR(5)) AS NoPiece
 		INTO #listGuidesPieces_Dispatch
 		FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.DeliveryOrder serv WITH(NOLOCK)
@@ -97,10 +100,13 @@ BEGIN
 		WHERE dop.StatusOrderId = 18
 		ORDER BY dop.NoPiece ASC
 
+        CREATE NONCLUSTERED INDEX listGuidesPiecesDispatch ON #listGuidesPieces_Dispatch (GuideSerie, GuideNumber);
+
 		SELECT
-			dop.GuideSerie
-		   ,dop.GuideNumber
-		   ,dop.NoPiece INTO #listGuidesPieces_NO_Dispatch
+			CAST(dop.GuideSerie AS NVARCHAR(5)) AS GuideSerie
+		   ,CAST(dop.GuideNumber AS NVARCHAR(10)) AS GuideNumber
+		   ,CAST(dop.NoPiece AS NVARCHAR(5)) AS NoPiece
+        INTO #listGuidesPieces_NO_Dispatch
 		FROM DeliveryBackOffice.dbo.DeliveryOrderPiece dop WITH(NOLOCK)
 		INNER JOIN #listGuides ls
 			ON ls.ItemSerie = dop.GuideSerie
@@ -108,7 +114,7 @@ BEGIN
 		WHERE dop.StatusOrderId != 18
 		ORDER BY dop.NoPiece ASC
 
-
+        CREATE NONCLUSTERED INDEX listGuidesPiecesNODispatch ON #listGuidesPieces_NO_Dispatch (GuideSerie, GuideNumber);
 
 		IF (SELECT TOP 1
 					ISNULL(COUNT(1), 0)
@@ -286,6 +292,10 @@ BEGIN
 						HaveCredit			nvarchar (50) null,
 						CollectCOD			nvarchar (50) null,
 						ReturnRate			decimal (14,2) null,
+						CurrencyPrice_CODCodeISO NVARCHAR(8),
+	  	                CurrencyPrice_CODSymbol  NVARCHAR(8),
+	                    CurrencyPriceCodeISO     NVARCHAR(8),
+	                    CurrencyPriceSymbol      NVARCHAR(8),
 						AmountToPay			decimal (14,2) null,
 						CODAmount			decimal (14,2) null,
 						ReturnRates			decimal (14,2) null)

@@ -3,6 +3,11 @@
 -- Create date: <2023-03-31>
 -- Description:	<VALIDAR SI FACTURA TIENE NOTA DE CREDITO>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-08-23>
+-- Description:	<Se agrega el IdCountry de la factura en la respuesta>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHDValidate]
 @Guide     Nvarchar(25)=null,
 @DateOf    Datetime=null,
@@ -60,7 +65,8 @@ Begin
 				IH.inv_serieFEL,
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
-				IH.inv_cli_name
+				IH.inv_cli_name,
+				ISNULL(IH.IdCountry, 'GT') AS IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -84,7 +90,8 @@ Begin
 				IH.inv_serieFEL,
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
-				IH.inv_cli_name
+				IH.inv_cli_name,
+				ISNULL(IH.IdCountry, 'GT') AS IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -108,7 +115,8 @@ Begin
 				IH.inv_serieFEL,
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
-				IH.inv_cli_name
+				IH.inv_cli_name,
+				ISNULL(IH.IdCountry, 'GT') AS IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -132,7 +140,8 @@ Begin
 				IH.inv_serieFEL,
 				IH.inv_numberFEL,
 				IH.inv_certificationFEL,
-				IH.inv_cli_name
+				IH.inv_cli_name,
+				ISNULL(IH.IdCountry, 'GT') AS IdCountry
 						 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 							 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 							 ON IH.inv_pk_id = ID.dti_fk_header
@@ -161,7 +170,8 @@ Select  ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
         IH.inv_serieFEL,
 		IH.inv_numberFEL,
 		IH.inv_certificationFEL,
-		IH.inv_cli_name
+		IH.inv_cli_name,
+		ISNULL(IH.IdCountry, 'GT') AS IdCountry
 		         FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
                      INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 					 ON IH.inv_pk_id = ID.dti_fk_header
@@ -186,7 +196,8 @@ BEGIN
 			IH.inv_serieFEL,
 			IH.inv_numberFEL,
 			IH.inv_certificationFEL,
-			IH.inv_cli_name
+			IH.inv_cli_name,
+			ISNULL(IH.IdCountry, 'GT') AS IdCountry
 					 FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
 						 INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 						 ON IH.inv_pk_id = ID.dti_fk_header
@@ -210,7 +221,8 @@ Select ISNULL(IH.inv_creditNote,0) 'HaveaCreditNote',
         IH.inv_serieFEL,
 		IH.inv_numberFEL,
 		IH.inv_certificationFEL,
-		IH.inv_cli_name
+		IH.inv_cli_name,
+		ISNULL(IH.IdCountry, 'GT') AS IdCountry
 		         FROM [dbo].[invoiceHeader] IH WITH (NOLOCK)
                      INNER JOIN [dbo].[invoiceDetail] ID WITH (NOLOCK)
 					 ON IH.inv_pk_id = ID.dti_fk_header

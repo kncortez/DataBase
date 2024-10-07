@@ -1,0 +1,5 @@
+
+INSERT INTO MarketplaceCarouselImage (XXLImageURL, XLImageURL, MDImageURL, XSImageURL, ImageOrder, RowStatus, TokenCreated, DateCreated, IdCountry)
+VALUES ('https://forzadelivery.com/images/Tienda/sliderh01-1920-300.jpg', 'https://forzadelivery.com/images/Tienda/sliderh01-1200-250.jpg','https://forzadelivery.com/images/Tienda/sliderh01-992-200.jpg','https://forzadelivery.com/images/Tienda/sliderh01-575-200.jpg',1,1,'SYS-BHERRERA',GETDATE(),'HN'),
+	   ('https://forzadelivery.com/images/Tienda/sliderh02-1920-300.jpg', 'https://forzadelivery.com/images/Tienda/sliderh02-1200-250.jpg','https://forzadelivery.com/images/Tienda/sliderh02-992-200.jpg','https://forzadelivery.com/images/Tienda/sliderh02-575-200.jpg',2,1,'SYS-BHERRERA',GETDATE(),'HN'),
+	   ('https://forzadelivery.com/images/Tienda/sliderh03-1920-300.jpg', 'https://forzadelivery.com/images/Tienda/sliderh03-1200-250.jpg','https://forzadelivery.com/images/Tienda/sliderh03-992-200.jpg','https://forzadelivery.com/images/Tienda/sliderh03-575-200.jpg',3,1,'SYS-BHERRERA',GETDATE(),'HN');
