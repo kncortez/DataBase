@@ -1725,6 +1725,7 @@
     <Build Include="dbo\Stored Procedures\RDL_Info_DensityGMap.sql" />
     <Build Include="dbo\Stored Procedures\GetDynamicCatalog_new_1.sql" />
     <Build Include="dbo\Stored Procedures\CollectRouteReport.sql" />
+    <Build Include="dbo\Stored Procedures\GetCountryOfPickupService.sql" />    
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

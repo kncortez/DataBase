@@ -623,7 +623,7 @@ BEGIN
                          , DAY(GETDATE())
                          , 0
                          , 0
-                         , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(DAY, [CM].[MembershipValidity], GETDATE()))
+                         , DATEADD(DAY, @AddedPointExpirationDate, DATEADD(MONTH, [CM].[MembershipValidity], GETDATE()))
                          , CDR.ValueTypeId
                          , RTP.ProductGiftShippingEmail
                          , (
