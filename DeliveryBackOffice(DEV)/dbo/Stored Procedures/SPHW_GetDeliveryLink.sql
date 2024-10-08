@@ -36,13 +36,13 @@ BEGIN
 		   DL.DateCreated,
 		   DLS.Name AS Status
 	FROM DeliveryLink DL WITH (NOLOCK)
-		LEFT JOIN VisitPointClient VP WITH (NOLOCK)
-			ON DL.DestinyCodeOfReference = VP.CodeOfReference
+		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH (NOLOCK)
+			ON DL.ReceiverSettlementId = S.IdSettlement
 		LEFT JOIN DeliveryLinkProducts DLP WITH (NOLOCK)
 			ON DLP.DeliveryLinkId = DL.IdDeliveryLink
 		LEFT JOIN DeliveryLinkStatus DLS WITH (NOLOCK)
 			ON DLS.IdDeliveryLinkStatus = DL.DeliveryLinkStatusId
-	WHERE (VP.CountryId = @IdCountry OR (@IdCountry = 'GT' AND VP.CountryId IS NULL))
+	WHERE (S.IdCountry = @IdCountry OR (@IdCountry = 'GT' AND S.IdCountry IS NULL))
 		  AND DL.AccountId = @AccountId
 	GROUP BY DL.IdDeliveryLink, DL.ReceiverName, DL.Token, DL.ReceiverPhone, DL.ReceiverAddress, DL.DateCreated, DLS.Name
 	ORDER BY DL.IdDeliveryLink DESC
