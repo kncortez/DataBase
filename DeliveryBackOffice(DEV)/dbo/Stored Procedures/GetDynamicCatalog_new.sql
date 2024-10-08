@@ -176,6 +176,16 @@ BEGIN
 				AND ISNULL(CountryID, 'GT')= @IdCountry
 
     END;
+	ELSE IF (@TypeMethod = 'GetTypeIncidenceCOD')
+    BEGIN
+
+		SELECT  IdIncidenceType  [IncidenceId]
+			  , ISNULL(NameIncidence, 'N/A')  [IncidenceName]
+		FROM DeliveryBackOffice.dbo.CatTypeIncidence  WITH(NOLOCK)
+		WHERE ServiceType = 'COD SETTLEMENT'
+			AND ISNULL(CountryId, 'GT') = @IdCountry
+
+    END;
     ELSE IF (@TypeMethod = 'GetTypeVehicle')
     BEGIN
         SELECT IdTypeVehicle AS [Id],
