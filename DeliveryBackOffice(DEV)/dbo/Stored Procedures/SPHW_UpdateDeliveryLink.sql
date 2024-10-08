@@ -43,6 +43,29 @@ BEGIN
 												 ON RU.UsrIdUser = RUBA.RuaIdUser
 											WHERE VPC.CodeOfReference = @OriginCodeOfReference
 															)
+   DECLARE @CountryId NVARCHAR(2) = (SELECT TOP 1  ISNULL(Cu.CountryID,'GT')
+                                         FROM 
+											 [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+											INNER JOIN
+											 [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
+												ON VPC.CustomerId= Cu.IdCustomer
+											 INNER JOIN 
+											  [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
+												 ON Cu.IdCustomer = A.IdCustomer
+											INNER JOIN 
+											  [DeliveryBackOffice].[dbo].[RolByUserByAccount] RUBA WITH(NOLOCK)
+												ON  RUBA.RuaIdAccount = A.AccIdAccount
+											  INNER JOIN 
+											  [DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
+												 ON RU.UsrIdUser = RUBA.RuaIdUser
+											WHERE VPC.CodeOfReference = @OriginCodeOfReference
+															)
+                         
+					
+   
+
+   
+   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
 
   BEGIN TRANSACTION
 	BEGIN TRY
@@ -86,14 +109,26 @@ BEGIN
 
 	IF(@Result=1)
 	BEGIN
-	     SELECT 1 AS [StatusCode], 'Datos Actualizados exitosamente' AS[MessageResponse], @NickName [NickName] 
+	         SELECT 1 AS [StatusCode], 'Datos Actualizados exitosamente' AS[MessageResponse], @NickName [NickName],@PBX AS 'PBX',
+						CASE 
+						     WHEN @CountryId ='GT' THEN 'Guatemala'
+							 ELSE 'Honduras' END
+							 AS 'Country' 
 	   END
 	     ELSE IF (@Result=0)
 		 BEGIN
-		    SELECT 0 AS [StatusCode], 'Token no vigente' AS[MessageResponse], @NickName [NickName] 
+		    SELECT 0 AS [StatusCode], 'Token no vigente' AS[MessageResponse], @NickName [NickName],@PBX AS 'PBX',
+						CASE 
+						     WHEN @CountryId ='GT' THEN 'Guatemala'
+							 ELSE 'Honduras' END
+							 AS 'Country' 
 			END
 			  ELSE
-		          SELECT 3 AS [StatusCode], 'Token Anulado' AS[MessageResponse], @NickName [NickName] 
+		          SELECT 3 AS [StatusCode], 'Token Anulado' AS[MessageResponse], @NickName [NickName],@PBX AS 'PBX',
+						CASE 
+						     WHEN @CountryId ='GT' THEN 'Guatemala'
+							 ELSE 'Honduras' END
+							 AS 'Country' 
 
 	END TRY
 	
