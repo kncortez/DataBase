@@ -44,12 +44,30 @@ BEGIN
 								   WHERE IdProduct = @ProductId
                          
 						 ) 
+	DECLARE @SenderPhone NVARCHAR(8) = (SELECT   TOP 1  RIGHT(RU.Phone,8)
+	                                                 FROM 
+													   [DeliveryBackOffice].[dbo].[Product] P WITH(NOLOCK)
+														  INNER JOIN 
+													   [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
+														   ON P.AccountId = A.AccIdAccount
+														  INNER JOIN
+														[DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
+														  ON A.IdCustomer = C.IdCustomer
+														  LEFT JOIN 
+															[DeliveryBackOffice].[dbo].[RolByUserByAccount] RUBA WITH(NOLOCK)
+															ON  RUBA.RuaIdAccount = A.AccIdAccount
+														  INNER JOIN 
+															[DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
+															ON RU.UsrIdUser = RUBA.RuaIdUser
+								   WHERE IdProduct = @ProductId
+                                      )
+
    
 
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    
-   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
-	
+   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
+   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)	
 	BEGIN TRANSACTION
 	BEGIN TRY
 
@@ -164,8 +182,9 @@ BEGIN
 						CASE 
 						     WHEN @CountryId ='GT' THEN 'Guatemala'
 							 ELSE 'Honduras' END
-							 AS 'Country'
-
+							 AS 'Country',
+					    @SenderPhone  AS SenderPhone,
+                        @URL+@hashResultado AS [URL] 
 
 	END TRY
 	BEGIN CATCH

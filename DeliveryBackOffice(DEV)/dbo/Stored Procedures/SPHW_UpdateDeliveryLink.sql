@@ -66,7 +66,7 @@ BEGIN
 
    
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
-
+   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId )
   BEGIN TRANSACTION
 	BEGIN TRY
 	   
@@ -113,7 +113,8 @@ BEGIN
 						CASE 
 						     WHEN @CountryId ='GT' THEN 'Guatemala'
 							 ELSE 'Honduras' END
-							 AS 'Country' 
+							 AS 'Country',
+							 @URL + @Token AS [URL] 
 	   END
 	     ELSE IF (@Result=0)
 		 BEGIN
