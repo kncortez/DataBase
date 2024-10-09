@@ -10,6 +10,7 @@ CREATE TABLE [dbo].[MovilAppCarouselImage] (
     [DateCreated]     DATETIME       NOT NULL,
     [TokenUpdated]    NVARCHAR (50)  NULL,
     [DateUpdated]     DATETIME       NULL,
+    [IdTypeAccount]   INT            NULL,
     CONSTRAINT [PK_MovilAppCarouselImage] PRIMARY KEY CLUSTERED ([IdCarouselImage] ASC)
 );
 GO
@@ -45,6 +46,9 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Usuario de mod
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Fecha de modificación' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'DateUpdated'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador de tipo de cuenta de usuario (Individual o Corporativo)' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage', @level2type=N'COLUMN',@level2name=N'IdTypeAccount'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Lista de imágenes del carrousel' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MovilAppCarouselImage'

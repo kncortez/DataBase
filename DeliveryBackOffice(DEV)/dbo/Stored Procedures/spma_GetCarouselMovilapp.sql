@@ -5,7 +5,8 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[spma_GetCarouselMovilapp]
     -- Add the parameters for the stored procedure here
-    @IdCountry AS VARCHAR(2) = 'GT'
+    @IdCountry AS VARCHAR(2) = 'GT',
+    @TacName AS VARCHAR(100)
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -19,8 +20,10 @@ BEGIN
 				mai.LDImageURL		[LargeDimension],
 				mai.ImageOrder		[Order],
 				mai.IdCountry		[Country]
-	FROM		DeliveryBackOffice.dbo.MovilAppCarouselImage mai WITH(NOLOCK)
+	FROM		DeliveryBackOffice.dbo.MovilAppCarouselImage	mai WITH(NOLOCK)
+	LEFT JOIN	DeliveryBackOffice.dbo.CatTypeAccount			cta WITH(NOLOCK)	ON cta.TacIdTypeAccount = mai.IdTypeAccount
 	WHERE		mai.IdCountry = @IdCountry
+	AND			cta.TacName = @TacName
 	AND			mai.RowStatus = 1
 	ORDER BY	mai.ImageOrder asc;
 END;
