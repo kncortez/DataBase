@@ -34,7 +34,7 @@ BEGIN
 
 	SET @RouteAssignmentExists = (
 										SELECT 1
-										FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
+										FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)										
 										WHERE
 										RP.CatRouteId = @IdRoute
 										AND
@@ -168,6 +168,7 @@ BEGIN
 		, CAST(IIF(DOP.StatusOrderId = 3, 1 ,0) AS BIT) 'IsProgrammed'
 		, cu.Abbreviation 'CustomerAbbreviation' 
 		, RPD.ETAGuide 'GuideETA'
+		, cu.IsVoucherRequired
 	FROM RoutePreparation RP WITH(NOLOCK)
 	LEFT JOIN RoutePreparationDetail RPD WITH(NOLOCK)
 		ON
