@@ -27,7 +27,7 @@ BEGIN
 			[Token],
 			[Name],
 			[Description],
-			[AccountId]
+			[AccountId],
 			[IdOriginAddress],
 			[CatProductSubCategoryId],
 			[IsPublic],
