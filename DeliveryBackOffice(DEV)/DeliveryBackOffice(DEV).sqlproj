@@ -1592,6 +1592,7 @@
     <Build Include="dbo\Stored Procedures\spg_deliveryorders_by_number_delivery_returns.sql" />
     <Build Include="dbo\Stored Procedures\RemoveGuideFromDeliverySettlement.sql" />
     <Build Include="dbo\Stored Procedures\RptLastMileRoutesReportV3.sql" />
+	<Build Include="dbo\Stored Procedures\SPHWAM_CreateAccountMovilApp.sql" /> 
     <Build Include="dbo\Sequences\returns_IdManifiest.sql" />
     <Build Include="dbo\Sequences\linehauls_IdManifiest.sql" />
     <Build Include="dbo\Sequences\SettlementPickupStationSequence.sql" />
