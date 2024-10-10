@@ -66,8 +66,8 @@ BEGIN
 
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    
-   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
-	
+   DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
+   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)	
 	BEGIN TRANSACTION
 	BEGIN TRY
 
@@ -183,8 +183,8 @@ BEGIN
 						     WHEN @CountryId ='GT' THEN 'Guatemala'
 							 ELSE 'Honduras' END
 							 AS 'Country',
-					    @SenderPhone  AS SenderPhone
-
+					    @SenderPhone  AS SenderPhone,
+                        @URL+@hashResultado AS [URL] 
 
 	END TRY
 	BEGIN CATCH
