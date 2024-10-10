@@ -1733,6 +1733,8 @@
     <Build Include="dbo\Stored Procedures\GetCodeOfReferenceofInvoice.sql" />
     <Build Include="dbo\Stored Procedures\corregirmanifiesto.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_GetTrackingPublic.sql" />
+    <Build Include="dbo\Tables\CatStatusProcess.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
