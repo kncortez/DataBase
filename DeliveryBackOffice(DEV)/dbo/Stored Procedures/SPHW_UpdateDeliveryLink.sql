@@ -3,6 +3,10 @@
 -- Create date: <Create Date,2024-10-25>
 -- Description:	<Description,Actualizar estado Link de entrega >
 -- =============================================
+-- Author:			<Brandon Pedroza>
+-- Modified date:	<2024-10-10>
+-- Description:		<Se devuelve url si es un link creado con usuario logeado o no>
+-- =============================================
 CREATE PROCEDURE [dbo].[SPHW_UpdateDeliveryLink] 
 @Token         NVARCHAR(250),
 @ReceiverName  NVARCHAR(200),
@@ -102,7 +106,13 @@ BEGIN
 											WHERE A.AccIdAccount = @IdAccount)
    
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
-   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry= @CountryId)
+   DECLARE @URL NVARCHAR(200) = (SELECT 
+										CASE 
+											WHEN DL.IsUserWithoutLogin = 1 THEN (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLWithoutLogin')
+											ELSE (SELECT [Value] FROM dbo.ConfigParams WITH(NOLOCK) WHERE [Name]='URLLinkdeEntrega') 
+										END
+									FROM dbo.DeliveryLink DL WITH(NOLOCK)
+									WHERE DL.Token = @Token);
   BEGIN TRANSACTION
 	BEGIN TRY
 	   
