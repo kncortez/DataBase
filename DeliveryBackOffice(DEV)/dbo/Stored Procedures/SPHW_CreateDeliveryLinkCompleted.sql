@@ -62,7 +62,22 @@ BEGIN
 								   WHERE IdProduct = @ProductId
                                       )
 
-   
+    	DECLARE @SenderEmail NVARCHAR(250) = (SELECT   TOP 1  RU.UsrEmail
+	                                                 FROM 
+													   [DeliveryBackOffice].[dbo].[Product] P WITH(NOLOCK)
+														  INNER JOIN 
+													   [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
+														   ON P.AccountId = A.AccIdAccount
+														  INNER JOIN
+														[DeliveryBackOffice].[dbo].[Customer] C WITH(NOLOCK)
+														  ON A.IdCustomer = C.IdCustomer
+														  LEFT JOIN 
+															[DeliveryBackOffice].[dbo].[RolByUserByAccount] RUBA WITH(NOLOCK)
+															ON  RUBA.RuaIdAccount = A.AccIdAccount
+														  INNER JOIN 
+															[DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
+															ON RU.UsrIdUser = RUBA.RuaIdUser
+								   WHERE IdProduct = @ProductId)
 
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    
@@ -184,8 +199,8 @@ BEGIN
 							 ELSE 'Honduras' END
 							 AS 'Country',
 					    @SenderPhone  AS SenderPhone,
-                        @URL+@hashResultado AS [URL] 
-
+                        @URL+@hashResultado AS [URL], 
+                        @SenderEmail  AS [SenderEmail]
 	END TRY
 	BEGIN CATCH
 		ROLLBACK TRANSACTION
