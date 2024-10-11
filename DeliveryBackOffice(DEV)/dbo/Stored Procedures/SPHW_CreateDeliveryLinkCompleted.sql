@@ -62,7 +62,7 @@ BEGIN
 								   WHERE IdProduct = @ProductId
                                       )
 
-    	DECLARE @SenderEmail NVARCHAR(8) = (SELECT   TOP 1  RU.UsrEmail
+    	DECLARE @SenderEmail NVARCHAR(250) = (SELECT   TOP 1  RU.UsrEmail
 	                                                 FROM 
 													   [DeliveryBackOffice].[dbo].[Product] P WITH(NOLOCK)
 														  INNER JOIN 
