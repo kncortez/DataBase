@@ -82,7 +82,24 @@ BEGIN
 												 ON RU.UsrIdUser = RUBA.RuaIdUser
 											WHERE A.AccIdAccount = @IdAccount
 									)
-
+    
+     DECLARE @SenderEmail NVARCHAR(100) = (
+                                         SELECT TOP 1  Ru.UsrEmail
+                                         FROM 
+											 [DeliveryBackOffice].[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+											INNER JOIN
+											 [DeliveryBackOffice].[dbo].[Customer] Cu WITH(NOLOCK)
+												ON VPC.CustomerId= Cu.IdCustomer
+											 INNER JOIN 
+											  [DeliveryBackOffice].[dbo].[Account] A WITH(NOLOCK)
+												 ON Cu.IdCustomer = A.IdCustomer
+											INNER JOIN 
+											  [DeliveryBackOffice].[dbo].[RolByUserByAccount] RUBA WITH(NOLOCK)
+												ON  RUBA.RuaIdAccount = A.AccIdAccount
+											  INNER JOIN 
+											  [DeliveryBackOffice].[dbo].RegisterUser RU WITH(NOLOCK)
+												 ON RU.UsrIdUser = RUBA.RuaIdUser
+											WHERE A.AccIdAccount = @IdAccount)
    
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX')
    DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry= @CountryId)
@@ -134,7 +151,8 @@ BEGIN
 							 ELSE 'Honduras' END
 							 AS 'Country',
 							 @URL + @Token AS [URL],
-							 @SenderPhone AS  [SenderPhone] 
+							 @SenderPhone AS  [SenderPhone] ,
+							 @SenderEmail AS [SenderEmail]
 	   END
 	     ELSE IF (@Result=0)
 		 BEGIN
