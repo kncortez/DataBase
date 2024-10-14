@@ -176,14 +176,36 @@ BEGIN
 				AND ISNULL(CountryID, 'GT')= @IdCountry
 
     END;
-	ELSE IF (@TypeMethod = 'GetTypeIncidenceCOD')
+	ELSE IF (@TypeMethod = 'GetTypeIncidenceSettlementLastMile')
     BEGIN
 
 		SELECT  IdIncidenceType  [IncidenceId]
 			  , ISNULL(NameIncidence, 'N/A')  [IncidenceName]
 		FROM DeliveryBackOffice.dbo.CatTypeIncidence  WITH(NOLOCK)
-		WHERE ServiceType = 'COD SETTLEMENT'
-			AND ISNULL(CountryId, 'GT') = @IdCountry
+		WHERE ISNULL(CountryId, 'GT') = @IdCountry
+			AND ServiceType = 'LAST MILE SETTLEMENT'
+
+    END;
+	ELSE IF (@TypeMethod = 'GetTypeIncidenceSettlementCOD')
+    BEGIN
+
+		SELECT  IdIncidenceType  [IncidenceId]
+			  , ISNULL(NameIncidence, 'N/A')  [IncidenceName]
+		FROM DeliveryBackOffice.dbo.CatTypeIncidence  WITH(NOLOCK)
+		WHERE ISNULL(CountryId, 'GT') = @IdCountry
+			AND ServiceType = 'COD SETTLEMENT'
+
+    END;
+	ELSE IF (@TypeMethod = 'GetTypeIncidenceSettlementLastMileCOD')
+    BEGIN
+
+		SELECT  IdIncidenceType  [IncidenceId]
+				,ISNULL(NameIncidence, 'N/A')  [IncidenceName]
+			  --, IIF(ServiceType = 'COD SETTLEMENT', ISNULL(NameIncidence, 'N/A') + ' - COD',  ISNULL(NameIncidence, 'N/A'))  [IncidenceName]
+		FROM DeliveryBackOffice.dbo.CatTypeIncidence  WITH(NOLOCK)
+		WHERE ISNULL(CountryId, 'GT') = @IdCountry				
+			AND (ServiceType = 'COD SETTLEMENT' OR ServiceType = 'LAST MILE SETTLEMENT')
+		ORDER BY ServiceType desc
 
     END;
     ELSE IF (@TypeMethod = 'GetTypeVehicle')
