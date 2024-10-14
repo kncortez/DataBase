@@ -31,9 +31,7 @@ IF(EXISTS(SELECT TOP 1 1 FROM [dbo].[DeliveryLink] WHERE Token = @Token))
 		   ISNULL(DL.OriginCodeOfReference,0) OriginCodeOfReference,
 		   ISNULL(DL.DestinyCodeOfReference,0) DestinyCodeOfReference ,
 		   DL.ReceiverName,
-			  CASE  
-				   WHEN  ISNULL(C.CountryID,'GT') = 'GT' THEN  '+502'
-				   ELSE  '+504' END NirPhone,
+			 DL.NirPhone NirPhone,
 		   RIGHT(DL.ReceiverPhone,8) [ReceiverPhone],
 		   DL.ReceiverSettlementId,
 		   DL.ReceiverEmail,

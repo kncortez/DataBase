@@ -25,7 +25,15 @@ ALTER PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
   @CollectOnDelivery DECIMAL(14, 2) =NULL,
   @ProductId INT,
   @Quantity INT,
-  @Price  DECIMAL(14,2)
+  @Price  DECIMAL(14,2),
+  @NirPhone NVARCHAR(4),
+  @ReceiverCatCityPlaceId INT,
+  @ReceiverAddress NVARCHAR(600),
+  @ReceiverNeighborhood NVARCHAR(50),
+  @ReceiverZone  NVARCHAR(100),
+  @ReceiverAdditionalInstuctions NVARCHAR(250),
+  @ReceiverLatitude NVARCHAR(50),
+  @ReceiverLongitude NVARCHAR(50)
 AS 
 BEGIN 
 
@@ -94,7 +102,7 @@ BEGIN
 							IF(@Stock > = @Quantity)
 							  BEGIN
 
-								INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryLink] 
+								INSERT INTO  [DeliveryBackOffice].[dbo].[DeliveryLink] 
 								(Token,
 								 AccountId,
 								 OriginCodeOfReference,
@@ -102,6 +110,13 @@ BEGIN
 								 ReceiverPhone,
 								 ReceiverSettlementId,
 								 ReceiverEmail,
+								  ReceiverCatCityPlaceId,
+								  ReceiverNeighborhood,
+								  ReceiverAddress,
+								  ReceiverZone ,
+								  ReceiverAdditionalInstuctions,
+								  ReceiverLatitude,
+								  ReceiverLongitude ,
 								 CatPaymentTypeId,
 								 CatTypeServiceId,
 								 IsInsurance,
@@ -112,7 +127,8 @@ BEGIN
 								 ExpirationDate,
 								 RowStatus,
 								 UserCreated,
-								 DateCreated)
+								 DateCreated,
+								 NirPhone)
 								VALUES
 								('',
 								 @AccountId,
@@ -121,6 +137,13 @@ BEGIN
 								 @ReceiverPhone,
 								 @ReceiverSettlementId,
 								 @ReceiverEmail,
+								  @ReceiverCatCityPlaceId,
+								  @ReceiverNeighborhood ,
+								  @ReceiverAddress,
+								  @ReceiverZone ,
+								  @ReceiverAdditionalInstuctions ,
+								  @ReceiverLatitude ,
+								  @ReceiverLongitude,
 								 NULL,
 								 NULL,
 								 NULL,
@@ -131,7 +154,8 @@ BEGIN
 								 DATEADD(DAY, 1, GETDATE()),
 								 1,
 								 'SYSTEM-TOKEN-COMPLETED',
-								 GETDATE())
+								 GETDATE(),
+								 @NirPhone)
 
 								DECLARE @DeliveryLinkID INT;
 								DECLARE @hash VARBINARY(16); -- El tamaño del hash MD5 es de 16 bytes (128 bits)
