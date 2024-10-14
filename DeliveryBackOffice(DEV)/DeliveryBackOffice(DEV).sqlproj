@@ -1736,6 +1736,7 @@
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
     <Build Include="dbo\Stored Procedures\spma_GetCarouselMovilapp.sql" />
     <Build Include="dbo\Tables\MovilAppCarouselImage.sql" />
+    <Build Include="dbo\Stored Procedures\SPMA_SaveAccountImage.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
