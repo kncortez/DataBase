@@ -23,8 +23,8 @@ BEGIN TRY
 		, DL.ReceiverPhone AS 'ReceiverPhone'
 		, DL.ReceiverEmail AS 'ReceiverEmail'
 		, CC.CountryNameES AS 'Pais'
-		, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
-			WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(S.IdCountry,'GT')) AS 'AreaCode'
+		, ISNULL(DL.NirPhone, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
+			WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(S.IdCountry,'GT'))) AS 'AreaCode'
 		, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK) 
 			WHERE [Name] = 'PBX' AND IdCountry = ISNULL(S.IdCountry,'GT')) AS 'PBX'
 	FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
