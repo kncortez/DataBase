@@ -41,7 +41,7 @@ BEGIN TRY
 			, VPC.Email AS 'Correo remitente'
 			--PARA
 			, DL.ReceiverName AS 'Nombre destinatario'
-			, DL.NirPhone + DL.ReceiverPhone AS 'Telefono destinatario'
+			, ISNULL(DL.NirPhone,'') + DL.ReceiverPhone AS 'Telefono destinatario'
 			, T.TownshipName + ' , ' + P.ProvinceName AS 'Direccion destinatario'
 			, DL.ReceiverEmail AS 'Correo destinatario'
 			--DATOS PARA COTIZADOR
