@@ -34,6 +34,7 @@ CREATE TABLE [dbo].[VisitPointClient] (
     [DescriptionCC]           NVARCHAR (100) NULL,
     [CatBusinessSegmentId]    INT            NULL,
     [AllowScheduledPickups]   BIT            DEFAULT ((1)) NULL,
+    [AttentionSchedule]       NVARCHAR (500) NULL,
     CONSTRAINT [PK_VisitPointClient_1] PRIMARY KEY CLUSTERED ([CodeOfReference] ASC),
     CONSTRAINT [FK_VisitPointClient_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
     CONSTRAINT [FK_VisitPointClient_Customer] FOREIGN KEY ([CustomerID]) REFERENCES [dbo].[Customer] ([IdCustomer]),
@@ -165,6 +166,9 @@ EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Segmento de neg
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Indicativo si punto de visita permite registrar horarios de recolección programada.' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'VisitPointClient', @level2type=N'COLUMN',@level2name=N'AllowScheduledPickups'
+GO
+
+EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Indica el horario de atencion disponible para el punto de visita (aplica solo para Express Center).' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'VisitPointClient', @level2type=N'COLUMN',@level2name=N'AttentionSchedule'
 GO
 
 EXECUTE sp_addextendedproperty @name=N'MS_Description', @value=N'Tabla que obtiene los valores de puntos de visita de un cliente' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'VisitPointClient'
