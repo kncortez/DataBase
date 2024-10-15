@@ -1,16 +1,13 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SPHW_CreateDeliveryLinkCompleted]    Script Date: 3/10/2024 20:37:52 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2024-10-25>
 -- Description:	<Description,Crear  Link de  con estado completado>
 -- =============================================
-ALTER PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-10-15>
+-- Description:	<Se coloca CodeOfReference de origen basado en direcccion origen de Product>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
   @AccountId INT=NULL,
   @CodeOfReference INT=NULL,
   @ReceiverName NVARCHAR(200)=NULL,
@@ -25,7 +22,15 @@ ALTER PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
   @CollectOnDelivery DECIMAL(14, 2) =NULL,
   @ProductId INT,
   @Quantity INT,
-  @Price  DECIMAL(14,2)
+  @Price  DECIMAL(14,2),
+  @NirPhone NVARCHAR(4),
+  @ReceiverCatCityPlaceId INT,
+  @ReceiverAddress NVARCHAR(600),
+  @ReceiverNeighborhood NVARCHAR(50),
+  @ReceiverZone  NVARCHAR(100),
+  @ReceiverAdditionalInstuctions NVARCHAR(250),
+  @ReceiverLatitude NVARCHAR(50),
+  @ReceiverLongitude NVARCHAR(50)
 AS 
 BEGIN 
 
@@ -80,9 +85,19 @@ BEGIN
 								   WHERE IdProduct = @ProductId)
 
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
-   
+   SET @Price = (SELECT TOP 1  Price FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
-   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)	
+   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)
+
+   --CodeOfReference basado en la direccion de origen del producto
+   SET  @CodeOfReference = ( SELECT TOP 1 ISNULL(CodeOfReference,0)
+							FROM UserAddress WITH(NOLOCK)
+							WHERE UadIdAddress =(SELECT TOP 1 IdOriginAddress
+													FROM Product WITH(NOLOCK)
+													WHERE IdProduct = @ProductId
+												)
+							)
+
 	BEGIN TRANSACTION
 	BEGIN TRY
 
@@ -94,7 +109,7 @@ BEGIN
 							IF(@Stock > = @Quantity)
 							  BEGIN
 
-								INSERT INTO [DeliveryBackOffice].[dbo].[DeliveryLink] 
+								INSERT INTO  [DeliveryBackOffice].[dbo].[DeliveryLink] 
 								(Token,
 								 AccountId,
 								 OriginCodeOfReference,
@@ -102,6 +117,13 @@ BEGIN
 								 ReceiverPhone,
 								 ReceiverSettlementId,
 								 ReceiverEmail,
+								  ReceiverCatCityPlaceId,
+								  ReceiverNeighborhood,
+								  ReceiverAddress,
+								  ReceiverZone ,
+								  ReceiverAdditionalInstuctions,
+								  ReceiverLatitude,
+								  ReceiverLongitude ,
 								 CatPaymentTypeId,
 								 CatTypeServiceId,
 								 IsInsurance,
@@ -112,7 +134,8 @@ BEGIN
 								 ExpirationDate,
 								 RowStatus,
 								 UserCreated,
-								 DateCreated)
+								 DateCreated,
+								 NirPhone)
 								VALUES
 								('',
 								 @AccountId,
@@ -121,6 +144,13 @@ BEGIN
 								 @ReceiverPhone,
 								 @ReceiverSettlementId,
 								 @ReceiverEmail,
+								  @ReceiverCatCityPlaceId,
+								  @ReceiverNeighborhood ,
+								  @ReceiverAddress,
+								  @ReceiverZone ,
+								  @ReceiverAdditionalInstuctions ,
+								  @ReceiverLatitude ,
+								  @ReceiverLongitude,
 								 NULL,
 								 NULL,
 								 NULL,
@@ -131,7 +161,8 @@ BEGIN
 								 DATEADD(DAY, 1, GETDATE()),
 								 1,
 								 'SYSTEM-TOKEN-COMPLETED',
-								 GETDATE())
+								 GETDATE(),
+								 @NirPhone)
 
 								DECLARE @DeliveryLinkID INT;
 								DECLARE @hash VARBINARY(16); -- El tamaño del hash MD5 es de 16 bytes (128 bits)

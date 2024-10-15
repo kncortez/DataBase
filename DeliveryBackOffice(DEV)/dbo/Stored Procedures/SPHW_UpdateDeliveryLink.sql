@@ -20,7 +20,8 @@ CREATE PROCEDURE [dbo].[SPHW_UpdateDeliveryLink]
 @ReceiverLatitude  NVARCHAR(50),
 @ReceiverLongitude NVARCHAR(50),
 @IsDeliveryLink BIT = 1,
-@ReceiverSettlementId INT
+@ReceiverSettlementId INT,
+@NirPhone NVARCHAR(5)
 AS
 BEGIN
 
@@ -142,7 +143,8 @@ BEGIN
 													 ReceiverAddress = @ReceiverAddress,
 													 ReceiverAdditionalInstuctions = @ReceiverAdditionalInstuctions,
 													 ReceiverLatitude  = @ReceiverLatitude,
-													 ReceiverLongitude = @ReceiverLongitude
+													 ReceiverLongitude = @ReceiverLongitude,
+													 NirPhone = @NirPhone
 											  WHERE TOKEN = @Token
 
 											  SET @Result =1;
