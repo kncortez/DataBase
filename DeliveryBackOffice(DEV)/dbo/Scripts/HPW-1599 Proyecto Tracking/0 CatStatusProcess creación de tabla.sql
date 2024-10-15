@@ -82,7 +82,7 @@ BEGIN TRY
 	INSERT INTO CatStatusProcess (NameStatusProcess, DescriptionStatusProcess, RowStatus, UserCreated, DateCreated)
 	VALUES 
 	('Creado', 'Estado que se usa cuando una guía se encuentra generada o solicitada.', 1, 'SYS-WOROZCO', GETDATE()),
-	('En Proceso', 'Estado que indica que el proceso está en ejecución.', 1, 'SYS-WOROZCO', GETDATE()),
+	('En instalaciones', 'Estado que indica que el proceso está en ejecución.', 1, 'SYS-WOROZCO', GETDATE()),
 	('En Ruta', 'El proceso está en transporte hacia su destino.', 1, 'SYS-WOROZCO', GETDATE()),
 	('Entregado', 'El proceso ha llegado a su destino final.', 1, 'SYS-WOROZCO', GETDATE());
 
@@ -113,7 +113,7 @@ BEGIN TRY
 	WHERE OrderDescription IN ('Solicitado','Generado');
 
 	UPDATE DeliveryBackOffice.dbo.StatusOrder
-	SET CatStatusProcessId = (SELECT IdStatusProcess FROM DeliveryBackOffice.dbo.CatStatusProcess WHERE NameStatusProcess = 'En Proceso')
+	SET CatStatusProcessId = (SELECT IdStatusProcess FROM DeliveryBackOffice.dbo.CatStatusProcess WHERE NameStatusProcess = 'En instalaciones')
 	WHERE OrderDescription IN ('Recolectado', 'Programado para entrega', 'Retornado al origen', 
 		'Paquete Retornado para Reproceso', 'Entrega parcial', 'En Inventario', 'Arribó a las instalaciones', 
 		'Intento de entrega fallida', 'En Revisión', 'Programado para recolección', 'Programado para devolución', 
