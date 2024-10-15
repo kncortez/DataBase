@@ -1,16 +1,13 @@
-﻿USE [DeliveryBackOffice]
-GO
-/****** Object:  StoredProcedure [dbo].[SPHW_CreateDeliveryLinkCompleted]    Script Date: 3/10/2024 20:37:52 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
--- =============================================
+﻿-- =============================================
 -- Author:		<Author,Edelman>
 -- Create date: <Create Date,2024-10-25>
 -- Description:	<Description,Crear  Link de  con estado completado>
 -- =============================================
-ALTER PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
+-- Author:		<Brandon, Pedroza>
+-- Create date: <2024-10-15>
+-- Description:	<Se coloca CodeOfReference de origen basado en direcccion origen de Product>
+-- =============================================
+CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLinkCompleted]
   @AccountId INT=NULL,
   @CodeOfReference INT=NULL,
   @ReceiverName NVARCHAR(200)=NULL,
@@ -92,7 +89,14 @@ BEGIN
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
    DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)
 
-           SET  @CodeOfReference = (Select top 1 ISNULL(UA.CodeOfReference,0) From dbo.UserAddress UA WITH(NOLOCK) WHERE UA.UadIdAccount=@AccountId)
+   --CodeOfReference basado en la direccion de origen del producto
+   SET  @CodeOfReference = ( SELECT TOP 1 ISNULL(CodeOfReference,0)
+							FROM UserAddress WITH(NOLOCK)
+							WHERE UadIdAddress =(SELECT TOP 1 IdOriginAddress
+													FROM Product WITH(NOLOCK)
+													WHERE IdProduct = @ProductId
+												)
+							)
 
 	BEGIN TRANSACTION
 	BEGIN TRY
