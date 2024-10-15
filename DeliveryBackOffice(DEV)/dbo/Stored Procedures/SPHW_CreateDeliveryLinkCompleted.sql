@@ -90,7 +90,22 @@ BEGIN
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
-   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)	
+   DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)
+
+      SET  @CodeOfReference = (
+   
+										Select TOP 1 VPC.CodeOfReference 
+										From [dbo].[Account] A WITH(NOLOCK)
+										INNER JOIN
+										[dbo].[UserAddress] UA WITH(NOLOCK)
+										ON A.AccIdAccount = UA.UadIdAccount
+										INNER JOIN  
+										[dbo].[VisitPointClient] VPC WITH(NOLOCK)
+										ON UA.CodeOfReference = VPC.CodeOfReference
+										WHERE A.AccIdAccount = @AccountId  And VPC.StatusClient=1
+										ORDER BY 1 DESC
+   
+                                   )	
 	BEGIN TRANSACTION
 	BEGIN TRY
 
