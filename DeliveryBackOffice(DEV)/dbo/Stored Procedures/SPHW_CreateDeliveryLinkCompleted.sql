@@ -88,12 +88,12 @@ BEGIN
 								   WHERE IdProduct = @ProductId)
 
    SET @AccountId = (SELECT TOP 1  AccountId FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
-   
+   SET @Price = (SELECT TOP 1  Price FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
    DECLARE @PBX NVARCHAR(10)= (SELECT [Value] FROM  [dbo].[ConfigParams] WITH(NOLOCK) WHERE IdCountry = @CountryId AND [Name] = 'PBX' AND IdCountry='GT')
    DECLARE @URL NVARCHAR(200) =(Select [Value] From dbo.ConfigParams Where [Name]='URLLinkdeEntrega' AND IdCountry = @CountryId)
 
-        SET  @CodeOfReference = (SELECT TOP 1  ISNULL(IdOriginAddress,0) FROM [DeliveryBackOffice].[dbo].[Product] WITH(NOLOCK) WHERE IdProduct = @ProductId)
-		
+           SET  @CodeOfReference = (Select top 1 ISNULL(UA.CodeOfReference,0) From dbo.UserAddress UA WITH(NOLOCK) WHERE UA.UadIdAccount=@AccountId)
+
 	BEGIN TRANSACTION
 	BEGIN TRY
 
