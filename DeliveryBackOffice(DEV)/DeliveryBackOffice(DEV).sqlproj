@@ -168,6 +168,7 @@
     <Build Include="dbo\Tables\CatManagementLevel.sql" />
     <Build Include="dbo\Tables\ManagementLevelByUser.sql" />
     <Build Include="dbo\Tables\ManifestSettlementIncidence.sql" />
+    <Build Include="dbo\Tables\ManifestSettlementIncidenceDetail.sql" />
     <Build Include="dbo\Tables\VisitPointClient.sql" />
     <Build Include="dbo\Tables\VisitPointByUser.sql" />
     <Build Include="dbo\Tables\VisitPointByClientPortfolio.sql" />
