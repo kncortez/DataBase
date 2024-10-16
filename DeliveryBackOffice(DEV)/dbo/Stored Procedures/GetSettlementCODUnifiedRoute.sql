@@ -9,7 +9,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    --DECLARE @IdRoute AS INT = 32181;
+    DECLARE @DateProduction AS DATE = '2024-10-01'; -- Fecha de deploy a producción
+
     DECLARE @GuideSerie NVARCHAR(2);
     DECLARE @GuideNumber INT;
 
@@ -29,32 +30,54 @@ BEGIN
     );
 
     INSERT INTO @GuidesFound
-    SELECT DISTINCT
-		   dsd.ID_DeliveryOrderBySettlement id
-           ,dsd.Guide_Serie
-           ,dsd.Guide_Number
-		   ,msi.CatManifestSettlementIncidenceTypeId  [Status]
-		   ,CASE WHEN msi.CatManifestSettlementIncidenceTypeId IS NOT NULL AND msi.CatManifestSettlementIncidenceTypeId > 0 AND msi.isCOD = 1 THEN 'Liquidado con Incidencia'
-				 WHEN dbs.User_Received_COD IS NOT NULL AND dbs.Date_Received_COD IS NOT NULL THEN 'Liquidado'
-				 ELSE 'Pendiente'
-			END AS [StatusDescription]
-    FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
-        INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
-            ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
-		LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
-				ON dbs.ID = msi.ManifestNumber
-        LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
-            ON cs.IdStation = dbs.DispatchedStationId
-    WHERE CAST(dbs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
-	  AND dsd.RowStatus = 1   
-	  AND dbs.CATRouteId = @IdRoute
-    --AND dsd.Guide_Settlement = 1 
-	--AND dsd.Guide_Returned = 0        
-    /*AND
-    (
-        dsd.Guide_Discharged = 0
-        OR dsd.Guide_Discharged IS NULL
-    )*/
+	SELECT	s.[id], 
+			s.[Guide_Serie], 
+			s.[Guide_Number], 
+			s.[Status], 
+			s.[StatusDescription]
+	FROM
+	(
+		SELECT DISTINCT
+			   dsd.ID_DeliveryOrderBySettlement [id]
+			   ,dsd.Guide_Serie
+			   ,dsd.Guide_Number
+			   ,msi.CatManifestSettlementIncidenceTypeId  [Status]
+			   ,CASE WHEN msi.CatManifestSettlementIncidenceTypeId IS NOT NULL AND msi.CatManifestSettlementIncidenceTypeId > 0 AND msi.isCOD = 1 THEN 'Liquidado con Incidencia'
+					 WHEN dbs.User_Received_COD IS NOT NULL AND dbs.Date_Received_COD IS NOT NULL THEN 'Liquidado'
+					 ELSE 'Pendiente'
+				END AS [StatusDescription]
+		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
+			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
+				ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
+			LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
+					ON dbs.ID = msi.ManifestNumber
+			LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+				ON cs.IdStation = dbs.DispatchedStationId
+		WHERE CAST(dbs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
+		  AND dsd.RowStatus = 1   
+		  AND dbs.CATRouteId = @IdRoute
+		UNION
+		SELECT DISTINCT
+			   dsd.ID_DeliveryOrderBySettlement [id]
+			   ,dsd.Guide_Serie
+			   ,dsd.Guide_Number
+			   ,msi.CatManifestSettlementIncidenceTypeId  [Status]
+			   ,'Pendiente'  [StatusDescription]
+		FROM DeliveryBackOffice.dbo.DeliveryOrderBySettlement dbs  WITH(NOLOCK) 
+			INNER JOIN DeliveryBackOffice.dbo.DeliverySettlementDetail dsd  WITH(NOLOCK) 
+				ON dsd.ID_DeliveryOrderBySettlement = dbs.ID
+			LEFT JOIN DeliveryBackOffice.dbo.ManifestSettlementIncidence msi WITH(NOLOCK)
+					ON dbs.ID = msi.ManifestNumber
+			LEFT JOIN DeliveryBackOffice.dbo.CatStation cs
+				ON cs.IdStation = dbs.DispatchedStationId
+		WHERE CAST(dbs.Date_Dispatched AS DATE) > @DateProduction
+		  AND dsd.RowStatus = 1
+		  AND dbs.CATRouteId = @IdRoute
+		  AND dbs.Date_Received_COD IS NULL
+		  AND dbs.User_Received_COD IS NULL 
+		  AND CAST(dbs.Date_Dispatched AS DATE) < CAST(GETDATE() AS DATE)  
+	) AS s
+
 
     SELECT distinct
 		   dbs.ID,
