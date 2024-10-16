@@ -15,6 +15,12 @@ INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[Ro
      VALUES ( N'Paquete extraviado', N'Paquete extraviado',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'LAST MILE SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'GT')
 INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
            ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
+     VALUES ( N'Asalto o robo', N'Asalto o robo',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'LAST MILE SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'GT')
+INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
+           ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
+     VALUES ( N'Paquete decomisado por autoridad', N'Paquete decomisado por autoridad',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'LAST MILE SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'GT')
+INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
+           ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
      VALUES ( N'Asalto o robo', N'Asalto o robo',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'COD SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'GT')
 INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
            ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
@@ -25,6 +31,12 @@ INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[Ro
 INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
            ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
      VALUES ( N'Paquete extraviado', N'Paquete extraviado para honduras',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'LAST MILE SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'HN')
+INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
+           ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
+     VALUES ( N'Asalto o robo', N'Asalto o robo',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'LAST MILE SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'HN')
+INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
+           ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
+     VALUES ( N'Paquete decomisado por autoridad', N'Paquete decomisado por autoridad',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'LAST MILE SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'HN')
 INSERT INTO [dbo].[CatTypeIncidence] ([NameIncidence],[DescriptionIncidence],[RowStatus],[TokenCreated],[DateCreated],[TokenUpdated],[DateUpdated],[ServiceType],[OrderId],[Code],[IncidenceClasificationId],[IsForcedIncidence],[ValidatesLocation]
            ,[HasConfirmationProcess],[NotifiesOrigin],[NameIncidencePublic],[EvidenceRequirement],[CourierInstructions],[CountryId])
      VALUES ( N'Asalto o robo', N'Asalto o robo para honduras',1,N'SYS-TGARCIA',GETDATE(),NULL,NULl,N'COD SETTLEMENT',1,NULL,3,0,0,0,0,NULL,NULL,NULL,N'HN')
