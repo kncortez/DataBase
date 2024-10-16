@@ -30,13 +30,14 @@ BEGIN
 			,ISNULL(msi.DateValidator,'')              [DateValidator]
 			,IIF(msi.IncidenceApproved = 0 , 'Pendiente', 'Aprobada') [IncidenceApproved]
 			,msi.IncidenceComment
-			,IIF( msi.IncidenceApproved = 1, 0, IIF(msi.TotalAmount <= isNull(v.MaxAmount,100000), 1, 0)) [Enabled] 
+			,IIF( msi.IncidenceApproved = 1, 0, IIF(msi.TotalAmount <= isNull(U.MaxAmount,100000), 1, 0)) [Enabled] 
+			--,msi.isCOD
 	FROM ManifestSettlementIncidence								msi WITH (NOLOCK)
 		INNER JOIN [DeliveryBackOffice].[dbo].CatRoute				cr	WITH (NOLOCK)
 			on cr.IdRoute = msi.CatRouteId
 		INNER JOIN [DeliveryBackOffice].[dbo].SenderReceiver		sr	WITH (NOLOCK)
 			on sr.ID = msi.CourierId
-		INNER JOIN [DeliveryBackOffice].[dbo].CatTypeIncidence		cti	WITH (NOLOCK)
+		INNER JOIN [DeliveryBackOffice].[dbo].CatTypeIncidence		cti	WITH (NOLOCK) 
 			on cti.IdIncidenceType = msi.CatManifestSettlementIncidenceTypeId
 		LEFT JOIN [DeliveryBackOffice].[dbo].[DeliveryCurrency]     de	WITH (NOLOCK)
 			ON  de.Currency_IdCountry = ISNULL(cr.CountryId,'GT')
@@ -49,18 +50,12 @@ BEGIN
 		outer apply(
 			SELECT iu.IdUser                                   [IdUser]     
 				   ,CONCAT(p.PerFirstName, ' ', p.PerLastName) [Validator]
-				   ,cml.MaxAmount
-			FROM ManagementLevelByUser    mlbu  WITH(NOLOCK)
-			INNER JOIN RegisterUser        ru    WITH(NOLOCK)
-				ON ru.UsrIdUser = mlbu.RegisterUserId
-			INNER JOIN InternalUser        iu    WITH(NOLOCK)
+			FROM		RegisterUser        ru    WITH(NOLOCK)
+			INNER JOIN  InternalUser        iu    WITH(NOLOCK)
 				ON iu.RegisterUserID  = ru.UsrIdUser
 			INNER JOIN Person p				 WITH (NOLOCK)
 				ON P.PerIdPerson = ru.UsrIdPerson
-			INNER JOIN	CatManagementLevel cml	 WITH(NOLOCK)
-				ON mlbu.CatManagementLevelId = cml.IdCatManagementLevel
-			WHERE mlbu.RowStatus = 1
-			AND iu.IdUser = @UserId
+			WHERE  iu.IdUser = msi.IdValidator
 		) V
 		outer apply(
 			SELECT ManagementLevelName 
@@ -68,12 +63,24 @@ BEGIN
 			WHERE MinAmount <= msi.TotalAmount 
 			  AND msi.TotalAmount  <= isnull(MaxAmount,100000)
 		)v2
+		outer apply(
+			SELECT ISNULL(cml.MaxAmount,0)      [MaxAmount]
+			FROM		InternalUser			iu   WITH(NOLOCK)
+			INNER JOIN  RegisterUser            ru    WITH(NOLOCK)
+				ON iu.RegisterUserID  = ru.UsrIdUser
+			LEFT JOIN ManagementLevelByUser     mlbu  WITH(NOLOCK)
+				ON ru.UsrIdUser = mlbu.RegisterUserId
+				AND mlbu.RowStatus = 1
+			LEFT JOIN	CatManagementLevel		cml	 WITH(NOLOCK)
+				ON mlbu.CatManagementLevelId = cml.IdCatManagementLevel
+				AND cml.RowStatus = 1
+			WHERE iu.IdUser = @UserId
+		) U
 	WHERE msi.RowStatus = 1
 		AND ( @RouteId = 0 or cr.IdRoute = @RouteId )
 		AND ( @CourierId = 0 or sr.ID = @CourierId )
 		AND ( @IncidenceId = 0 or cti.IdIncidenceType = @IncidenceId )
-		--AND ( @HubId = 0 or cr.IdRoute = @HubId )
-		AND ( @UserId = 0 or v.IdUser = @UserId )
+		AND ( @HubId = 0 or cr.IdRoute = @HubId )
 	ORDER BY msi.DateCreated desc;
 
 END

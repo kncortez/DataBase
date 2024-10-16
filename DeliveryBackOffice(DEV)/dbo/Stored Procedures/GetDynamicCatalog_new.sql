@@ -200,8 +200,8 @@ BEGIN
     BEGIN
 
 		SELECT  IdIncidenceType  [IncidenceId]
-				,ISNULL(NameIncidence, 'N/A')  [IncidenceName]
-			  --, IIF(ServiceType = 'COD SETTLEMENT', ISNULL(NameIncidence, 'N/A') + ' - COD',  ISNULL(NameIncidence, 'N/A'))  [IncidenceName]
+			  --,ISNULL(NameIncidence, 'N/A')  [IncidenceName]
+			  , IIF(ServiceType = 'COD SETTLEMENT', ISNULL(NameIncidence, 'N/A') + ' - COD',  ISNULL(NameIncidence, 'N/A') + ' - Entrega')  [IncidenceName]
 		FROM DeliveryBackOffice.dbo.CatTypeIncidence  WITH(NOLOCK)
 		WHERE ISNULL(CountryId, 'GT') = @IdCountry				
 			AND (ServiceType = 'COD SETTLEMENT' OR ServiceType = 'LAST MILE SETTLEMENT')
