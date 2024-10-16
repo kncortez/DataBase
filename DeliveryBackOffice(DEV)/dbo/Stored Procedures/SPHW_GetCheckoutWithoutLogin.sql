@@ -37,7 +37,15 @@ BEGIN
         SELECT
             --DE
             RU.UsrNickName AS 'Nombre remitente',
-            VPC.Phone AS 'Telefono remitente',
+            ISNULL(   '+' +
+                          (
+                              SELECT [Value]
+                              FROM DeliveryBackOffice.dbo.ConfigParams
+                              WHERE [Name] = 'AreaCode'
+                                    AND IdCountry = ISNULL(VPC.CountryId, 'GT')
+                          ),
+                          '+502'
+                  ) + ISNULL(VPC.Phone, '') AS 'Telefono remitente',
             T2.TownshipName + ' , ' + P2.ProvinceName AS 'Direccion remitente',
             VPC.Email AS 'Correo remitente',
             --PARA

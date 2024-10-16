@@ -173,6 +173,7 @@ BEGIN
                                     FROM dbo.DeliveryLinkStatus
                                     WHERE Name = 'Enviado'
                                 )
+		DECLARE @cadena NVARCHAR(20) = CONVERT(NVARCHAR(20), @ReceiverPhone)
 
         INSERT INTO DeliveryBackOffice.dbo.DeliveryLink
         (
@@ -199,14 +200,15 @@ BEGIN
             RowStatus,
             UserCreated,
             DateCreated,
-			IsUserWithoutLogin
+			IsUserWithoutLogin,
+			NirPhone
         )
         VALUES
         ('',
          @AccountId,
          @CodeOfReference,
          @ReceiverName,
-         CONCAT('+', @ReceiverPhone),
+         SUBSTRING(@cadena, 4, LEN(@cadena) - 3),
          @ReceiverSettlementId,
          @ReceiverEmail,
 		 @ReceiverCatCityPlaceId,
@@ -225,7 +227,8 @@ BEGIN
          1  ,
          'SYSTEM',
          GETDATE(),
-		 1
+		 1,
+		 CONCAT('+',LEFT(@cadena, 3))
         )
 
         DECLARE @DeliveryLinkID INT;
