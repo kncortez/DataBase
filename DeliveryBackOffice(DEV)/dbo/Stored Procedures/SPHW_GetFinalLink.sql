@@ -8,17 +8,14 @@ CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
 @IdDeliveryLink INT,
 @IsInsurance BIT = 'FALSE',
 @InsuranceAmount DECIMAL(14,2) = 0.00,
-@CollectOnDelivery DECIMAL(14,2) = NULL,
+@CollectOnDelivery DECIMAL(14,2) = NULL, --Monto de COD
 @Token NVARCHAR(50) = 'SYSTEM',
 @SubscriptionId INT = NULL,
-@PaymentType INT = 0,
-@TypeService INT = 0
+@PaymentType INT = 1,
+@TypeService INT = 5
 AS
 BEGIN
 BEGIN TRY
-
-	DECLARE @PaymentTypeNow INT = 0;
-	DECLARE @TypeServiceNow INT = 0;
 
 	SELECT
 		  RU.UsrNickName AS 'SenderName'
@@ -43,37 +40,19 @@ BEGIN TRY
 		ON RBUBA.RuaIdUser = RU.UsrIdUser
 	WHERE DL.IdDeliveryLink = @IdDeliveryLink
 
-	SELECT 
-		@PaymentTypeNow = DL.CatPaymentTypeId,
-		@TypeServiceNow = DL.CatTypeServiceId
-	FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
-	WHERE DL.IdDeliveryLink = @IdDeliveryLink;
-
-
 	BEGIN TRANSACTION;
 
 	UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
 	SET 
        [IsInsurance] = @IsInsurance
+	  ,[CatPaymentTypeId] = @PaymentType
+	  ,[CatTypeServiceId] = @TypeService
       ,[InsuranceAmount] = @InsuranceAmount
       ,[CollectOnDelivery] = @CollectOnDelivery
       ,[SubscriptionId] = @SubscriptionId
       ,[UserUpdated] = @Token
       ,[DateUpdated] = GETDATE()
 	WHERE [IdDeliveryLink] = @IdDeliveryLink
-
-	IF((@PaymentTypeNow IS NULL OR @PaymentTypeNow < 1) AND
-	   (@TypeServiceNow IS NULL OR @TypeServiceNow < 1) AND
-	   (@PaymentType > 0 AND @TypeService > 0))
-	BEGIN
-		UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
-		SET 
-		   [CatPaymentTypeId] = @PaymentType
-		  ,[CatTypeServiceId] = @TypeService
-		  ,[UserUpdated] = @Token
-		  ,[DateUpdated] = GETDATE()
-		WHERE [IdDeliveryLink] = @IdDeliveryLink
-	END;
 
 	COMMIT TRANSACTION;
 END TRY
