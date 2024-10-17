@@ -668,11 +668,18 @@ BEGIN
 			ELSE
 			BEGIN
 			------Guia no valida----------
-					SELECT 0 AS StatusCode,
-						  Guide
-						  Message
+					SELECT 1 AS StatusCode,
+					  'Guias no validas' AS Message
+
+					SELECT Message,
+						   Guide
 					FROM #Temp
 			END
+		END
+		ELSE
+		BEGIN
+			SELECT 0 AS StatusCode,
+				  'El Token con es valido'
 		END
 	END TRY
 	BEGIN CATCH

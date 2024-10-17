@@ -54,12 +54,12 @@ BEGIN
         ELSE
         BEGIN
             SELECT 0 AS StatusCode,
-                   'Servicio no encontrado'
+                   'Servicio no encontrado o en estado recolectado' AS Message
         END
     END TRY
     BEGIN CATCH
         SELECT 0 AS StatusCode,
-               ERROR_MESSAGE() AS MessageError,
+               ERROR_MESSAGE() AS Message,
                ERROR_LINE() AS ErrorLine
     END CATCH
 END
