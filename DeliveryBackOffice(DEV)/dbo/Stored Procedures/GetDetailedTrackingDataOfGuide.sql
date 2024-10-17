@@ -8,6 +8,10 @@
 -- Update date: <21-02-2023>
 -- Description: <Management for checkpoint icons>
 -- =============================================
+-- Author:		<Tito García>
+-- Update date: <17-10-2024>
+-- Description: <Se modifica para que se tome en primer lugar el comprobante digitalizado y en segundo lugar la imagen tomada por el courier en POD ref.: FDD-1359>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetDetailedTrackingDataOfGuide]
     @Guide_Serie NVARCHAR(2)
   , @Guide_Number BIGINT
@@ -341,6 +345,8 @@ BEGIN
                )                                                                            AS [ImagePath]
              , (CASE
                     WHEN dod.StatusOrderId = 5 THEN
+                    ISNULL((Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR)) as VARCHAR(300))),
+					-- ISNULL('https://tracking.forzadelivery.com/DocImages/GT.DELIVERYZ12/Copia1/V291/17088433.jpg',  -- para pruebas
                     (
                         SELECT TOP 1
                                IIF([dp].[Path_Dry] = '', dp.Path_Dry, ISNULL([Path_Dry], [Path_Dry]))
@@ -352,7 +358,7 @@ BEGIN
                               AND dp.Guide_Number = @Guide_Number
                               AND da.Delivered = 1
                         ORDER BY dp.Date_Photo DESC
-                    )
+                    ))
                     ELSE
                         ''
                 END
