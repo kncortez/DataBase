@@ -31,7 +31,7 @@ BEGIN
                    )
      BEGIN
           SELECT @Code = 0,
-                 @Message = 'No existe un lote activo para el tipo de documento de facturación '
+                 @Message = 'No existe un lote activo para el tipo de documento de Guia de Remisión '
 
           SELECT @Code AS StatusCode,
                  @Message AS [Message];
@@ -81,7 +81,7 @@ BEGIN
                    )
      BEGIN
           SELECT @Code = 0,
-                 @Message = 'La fecha actual excede la fecha limite de facturación para el lote asignado'
+                 @Message = 'La fecha actual excede la fecha limite de Generacion para el lote asignado'
 
           SELECT @Code AS StatusCode,
                  @Message AS [Message];
