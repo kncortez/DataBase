@@ -22,7 +22,7 @@ BEGIN
 		(Token,AccountId,OriginCodeOfReference,ReceiverName,ReceiverPhone,ReceiverSettlementId,ReceiverEmail,CatPaymentTypeId,CatTypeServiceId,
 		IsInsurance,InsuranceAmount,DeliveryFacCODId,CollectOnDelivery,DeliveryLinkStatusId,ExpirationDate,RowStatus,UserCreated,DateCreated,NirPhone)
 		VALUES
-		('',@AccountId,@CodeOfReference,@ReceiverName,SUBSTRING(@cadena, 4, LEN(@cadena) - 3),@ReceiverSettlementId,@ReceiverEmail,@CatPaymentTypeId,@CatTypeServiceId,
+		('',@AccountId,@CodeOfReference,@ReceiverName,SUBSTRING(@cadena, 4, LEN(@cadena) - 3),@ReceiverSettlementId,@ReceiverEmail,NULL,@CatTypeServiceId,
 		@IsInsurance,@InsuranceAmount,@DeliveryFavCODId,@CollectOnDelivery,@StatusId,DATEADD(DAY, 1, GETDATE()),1,'SYSTEM',GETDATE(),CONCAT('+',LEFT(@cadena, 3)))
 
 		DECLARE @DeliveryLinkID INT;
