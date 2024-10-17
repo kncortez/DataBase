@@ -44,6 +44,7 @@ BEGIN
                   OR ihd.inv_SAPDocEntry = -1
               )
               AND ISNULL(ihd.inv_certificationFEL, '') != ''
+			  AND ISNULL(ihd.inv_numberFEL, '') != ''
               AND
               (
                   ir.invRetries IS NULL
