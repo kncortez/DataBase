@@ -28,13 +28,13 @@ BEGIN
 													   ON IBDL.IdBatch = IBH.Id_Lote
 												 Where LinehaulRoutePreparationId  = @IdLinehaulRoutePreparation);
    DECLARE @Numero NVARCHAR(250) =(
-      
-									Select TOP 1 CAST([IBH].Establishment AS nvarchar) + '-' + CAST([IBH].Emision_Point AS nvarchar) + '-' + CAST([IBH].TypeDocument AS nvarchar) + '-' + CAST([IBDL].ProcessedCorrelative AS nvarchar)
-									From [InvoiceBatchDetailLinehaul] IBDL WITH(NOLOCK)
-									INNER JOIN 
-									[InvoiceBatchHeader] IBH WITH(NOLOCK)
-									ON IBDL.IdBatch = IBH.Id_Lote
-									Where LinehaulRoutePreparationId = @IdLinehaulRoutePreparation);
+                                    Select TOP 1
+										CONCAT(     RIGHT('000' + CAST([IBH].Establishment  AS VARCHAR), 3), '-',
+										             RIGHT('000' + CAST(IBH.Emision_Point  AS VARCHAR), 3), '-',
+													  RIGHT('00' + CAST([IBH].TypeDocument AS VARCHAR), 2),'-',
+													  RIGHT('00000000' + CAST([IBDL].ProcessedCorrelative AS VARCHAR), 8))
+									
+									);
 
 	DECLARE @LimiteDate NVARCHAR(10) =(
 	                                    Select TOP 1 FORMAT(IBH.LimitDateEmision, 'dd-MM-yyyy')
