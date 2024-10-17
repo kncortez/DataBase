@@ -1733,6 +1733,10 @@
     <Build Include="dbo\Stored Procedures\GetCodeOfReferenceofInvoice.sql" />
     <Build Include="dbo\Stored Procedures\corregirmanifiesto.sql" />
     <Build Include="dbo\Stored Procedures\ClientSubscriptionFetcher_Data.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchGuideRemissionByCountry.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateSendManifestLinehaul.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateBatchGuideRemission.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateCertificationGuide.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
