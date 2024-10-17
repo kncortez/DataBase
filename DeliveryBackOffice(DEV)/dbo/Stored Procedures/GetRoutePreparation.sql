@@ -24,6 +24,10 @@
 -- Create date: <2022-08-05>
 -- Description:	< Cambio para uso de orden como decimal .>
 -- =============================================
+-- Author:		<Tito Garcia>
+-- Update date: <2024-10-01>
+-- Description:	<Se filtra para que tome en cuenta unicamente las guias que no han sido despachadas>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetRoutePreparation]
 	@IdRoute INT,
 	@Date DATE
@@ -33,14 +37,12 @@ BEGIN
 	DECLARE @RouteAssignmentExists BIT;
 
 	SET @RouteAssignmentExists = (
-										SELECT 1
+										SELECT TOP 1 1
 										FROM [DeliveryBackOffice].[dbo].[RoutePreparation] RP WITH(NOLOCK)
-										WHERE
-										RP.CatRouteId = @IdRoute
-										AND
-										RP.DateRoutePreparation = @Date
-										AND
-										RP.RowStatus = 1
+										WHERE RP.RowStatus = 1
+											AND RP.CatRouteId = @IdRoute
+											AND RP.DateRoutePreparation = @Date
+										ORDER BY rp.IdRoutePreparation DESC
 									)
 
 	IF (@RouteAssignmentExists IS NOT NULL)
@@ -148,8 +150,10 @@ BEGIN
 		ON rp.DeliveryOrderBySettlementId = dobs.ID
 	LEFT JOIN SenderReceiver sr WITH(NOLOCK)
 		ON dobs.ID_Courier = sr.ID
-	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
-		AND rp.RowStatus = 1
+	WHERE rp.RowStatus = 1
+		AND rp.DeliveryOrderBySettlementId IS NULL
+		AND rp.CatRouteId = @IdRoute 
+		AND rp.DateRoutePreparation = @Date
 
 	--TABLE 1 Información de las guías en preparación de la ruta
 		SELECT RPD.Guide_Serie 'Guide_Serie'
@@ -195,7 +199,9 @@ BEGIN
 		ON vpc.CodeOfReference = do.Sender_ID
 	LEFT JOIN Customer cu WITH(NOLOCK)
 		ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
-	WHERE rp.CatRouteId = @IdRoute AND rp.DateRoutePreparation = @Date
-		AND rp.RowStatus = 1
+	WHERE rp.RowStatus = 1
+		AND rp.DeliveryOrderBySettlementId IS NULL
+		AND rp.CatRouteId = @IdRoute 
+		AND rp.DateRoutePreparation = @Date
 	ORDER BY COALESCE(rpd.GuideOrder, 999999) ASC
 END
