@@ -12,7 +12,7 @@ AS
 BEGIN
 BEGIN TRY
 
-	DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT Receiver_Phone FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+	DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT RIGHT(LTRIM(RTRIM(Receiver_Phone)), 8) FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
 	--Validación del telefono
@@ -34,7 +34,7 @@ BEGIN TRY
 		LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH(NOLOCK)
 			ON DO.ReceiverIdTownship = T2.IdTownship
 		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
-			ON DO.Receiver_Department = P2.IdProvince
+			ON T2.IdProvince = P2.IdProvince
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	END
 	ELSE
