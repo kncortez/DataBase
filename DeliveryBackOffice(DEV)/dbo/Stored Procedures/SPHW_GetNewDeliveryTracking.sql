@@ -15,8 +15,14 @@ BEGIN TRY
 	DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT RIGHT(LTRIM(RTRIM(Receiver_Phone)), 8) FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
+    DECLARE @CountryId NVARCHAR(3) = (SELECT ISNULL(ReceiverCountryId,'GT') FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
+
+	DECLARE @CodeArea NVARCHAR(5) = (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
+											WHERE [Name] = 'AreaCode' AND IdCountry = @CountryId)
+
 	--Validación del telefono
-	IF((@Phone = @Receiver_Phone) OR (@Phone = '502' + @Receiver_Phone))
+	IF((@Phone = @Receiver_Phone) OR (@Phone = @CodeArea + @Receiver_Phone) OR (@Phone = '+' + @CodeArea + @Receiver_Phone))
 	BEGIN
 		SELECT 
 			  200						 AS 'IdResult'
