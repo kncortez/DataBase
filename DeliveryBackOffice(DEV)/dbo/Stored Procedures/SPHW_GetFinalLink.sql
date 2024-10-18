@@ -12,7 +12,8 @@ CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
 @Token NVARCHAR(50) = 'SYSTEM',
 @SubscriptionId INT = NULL,
 @PaymentType INT = 1,
-@TypeService INT = 5
+@TypeService INT = 5,
+@DeliveryFacCODId NVARCHAR(20) = ''
 AS
 BEGIN
 BEGIN TRY
@@ -50,6 +51,7 @@ BEGIN TRY
       ,[InsuranceAmount] = @InsuranceAmount
       ,[CollectOnDelivery] = @CollectOnDelivery
       ,[SubscriptionId] = @SubscriptionId
+	  ,[DeliveryFacCODId] = IIF(@DeliveryFacCODId = '', [DeliveryFacCODId],CAST(@DeliveryFacCODId AS INT))
       ,[UserUpdated] = @Token
       ,[DateUpdated] = GETDATE()
 	WHERE [IdDeliveryLink] = @IdDeliveryLink
