@@ -18,7 +18,6 @@ BEGIN TRY
 		, DLP.Quantity AS 'Cantidad'
 		, ISNULL(DLP.Price * DLP.Quantity,0) AS 'Precio'
 		, ISNULL(CCC.Symbol,'Q') AS 'Moneda'
-		, ISNULL(CCC.CodeISO,'GTQ') AS 'CurrencyISO'
 		, ISNULL(P2.Url,'') AS 'Imagen'
 		, ISNULL(SUM(DLP.Price * DLP.Quantity) OVER (PARTITION BY DLP.DeliveryLinkId),0) AS 'MontoTotal'
 	FROM  DeliveryBackOffice.dbo.DeliveryLinkProducts DLP WITH(NOLOCK)
@@ -37,12 +36,14 @@ BEGIN TRY
 		SELECT 
 			--DE
 			  RU.UsrNickName AS 'Nombre remitente'
-			, VPC.Phone AS 'Telefono remitente'
+			, ISNULL('+' + (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams
+					 WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(VPC.CountryId,'GT'))
+			, '+502') + ISNULL(VPC.Phone,'') AS 'Telefono remitente'
 			, T2.TownshipName + ' , ' + P2.ProvinceName  AS 'Direccion remitente'
 			, VPC.Email AS 'Correo remitente'
 			--PARA
 			, DL.ReceiverName AS 'Nombre destinatario'
-			, DL.ReceiverPhone AS 'Telefono destinatario'
+			, ISNULL(DL.NirPhone,'') + DL.ReceiverPhone AS 'Telefono destinatario'
 			, T.TownshipName + ' , ' + P.ProvinceName AS 'Direccion destinatario'
 			, DL.ReceiverEmail AS 'Correo destinatario'
 			--DATOS PARA COTIZADOR
@@ -71,6 +72,8 @@ BEGIN TRY
 			, ISNULL(DL.DeliveryFacCODId,0) AS 'IdNumberAcc'
 			, DB.[Name] AS 'NameBank'
 			, DFCOD.NameAccountFavCOD AS 'NameAcc'
+			, ISNULL(CCC.CodeISO,'GTQ') AS 'CurrencyISO'
+			, IIF(DL.GuideNumber IS NOT NULL AND DL.GuideNumber > 0, 'true', 'false') AS 'IsGuide'
 		FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DL.ReceiverSettlementId = S.IdSettlement
@@ -78,16 +81,18 @@ BEGIN TRY
 			ON S.IdProvince = P.IdProvince
 		LEFT JOIN DeliveryBackOffice.dbo.Township T WITH(NOLOCK)
 			ON S.IdTownship = T.IdTownship
+		LEFT JOIN DeliveryBackOffice.dbo.DeliveryCurrency DC WITH(NOLOCK)
+			ON S.IdCountry = DC.Currency_IdCountry AND DefaultPerCountry = 1
+		LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+			ON DC.IdCurrencyCOD = CCC.IdCatCurrencyCOD
 		INNER JOIN DeliveryBackOffice.dbo.VisitPointClient VPC WITH(NOLOCK)
 			ON DL.OriginCodeOfReference = VPC.CodeOfReference
 		LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH(NOLOCK)
 			ON VPC.IdTownship = T2.IdTownship
 		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
 			ON T2.IdProvince = P2.IdProvince
-		INNER JOIN DeliveryBackOffice.dbo.Account A WITH(NOLOCK)
-			ON DL.AccountId = A.AccIdAccount
 		INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
-			ON A.IdCustomer = RBUBA.RuaIdAccount
+			ON DL.AccountId = RBUBA.RuaIdAccount
 		INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
 			ON RBUBA.RuaIdUser = RU.UsrIdUser
 		LEFT JOIN DeliveryBackOffice.dbo.CatTypeService CTS WITH(NOLOCK)

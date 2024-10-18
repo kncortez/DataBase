@@ -5,7 +5,14 @@
 -- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
-@IdDeliveryLink INT
+@IdDeliveryLink INT,
+@IsInsurance BIT = 'FALSE',
+@InsuranceAmount DECIMAL(14,2) = 0.00,
+@CollectOnDelivery DECIMAL(14,2) = NULL, --Monto de COD
+@Token NVARCHAR(50) = 'SYSTEM',
+@SubscriptionId INT = NULL,
+@PaymentType INT = 1,
+@TypeService INT = 5
 AS
 BEGIN
 BEGIN TRY
@@ -18,8 +25,8 @@ BEGIN TRY
 		, DL.ReceiverPhone AS 'ReceiverPhone'
 		, DL.ReceiverEmail AS 'ReceiverEmail'
 		, CC.CountryNameES AS 'Pais'
-		, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
-			WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(S.IdCountry,'GT')) AS 'AreaCode'
+		, ISNULL(DL.NirPhone, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
+			WHERE [Name] = 'AreaCode' AND IdCountry = ISNULL(S.IdCountry,'GT'))) AS 'AreaCode'
 		, (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK) 
 			WHERE [Name] = 'PBX' AND IdCountry = ISNULL(S.IdCountry,'GT')) AS 'PBX'
 	FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
@@ -27,16 +34,30 @@ BEGIN TRY
 		ON DL.ReceiverSettlementId = S.IdSettlement
 	LEFT JOIN DeliveryBackOffice.dbo.CatCountry CC WITH(NOLOCK)
 		ON (S.IdCountry = CC.IdCountry OR (S.IdCountry IS NULL AND CC.IdCountry  = 'GT'))
-	INNER JOIN DeliveryBackOffice.dbo.Account A WITH(NOLOCK)
-		ON DL.AccountId = A.AccIdAccount
 	INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH(NOLOCK)
-		ON A.IdCustomer = RBUBA.RuaIdAccount
+		ON DL.AccountId  = RBUBA.RuaIdAccount
 	INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH(NOLOCK)
 		ON RBUBA.RuaIdUser = RU.UsrIdUser
 	WHERE DL.IdDeliveryLink = @IdDeliveryLink
 
+	BEGIN TRANSACTION;
+
+	UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
+	SET 
+       [IsInsurance] = @IsInsurance
+	  ,[CatPaymentTypeId] = @PaymentType
+	  ,[CatTypeServiceId] = @TypeService
+      ,[InsuranceAmount] = @InsuranceAmount
+      ,[CollectOnDelivery] = @CollectOnDelivery
+      ,[SubscriptionId] = @SubscriptionId
+      ,[UserUpdated] = @Token
+      ,[DateUpdated] = GETDATE()
+	WHERE [IdDeliveryLink] = @IdDeliveryLink
+
+	COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
+	ROLLBACK TRANSACTION;
     DECLARE @ErrorMessage NVARCHAR(4000);
     SELECT @ErrorMessage = ERROR_MESSAGE();
     PRINT 'Error: ' + @ErrorMessage;
