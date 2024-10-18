@@ -9,7 +9,8 @@ CREATE PROCEDURE [dbo].[SPHWAM_CreateAccountMovilApp]
 	@FirstName NVARCHAR(100),
 	@LastName  NVARCHAR(100) ,
 	@Email  VARCHAR(200),
-	@CountryId AS NVARCHAR(2) ='GT'
+	@CountryId AS NVARCHAR(2) ='GT',
+	@Password AS NVARCHAR(250) = NULL
 	
 AS
 BEGIN
@@ -24,7 +25,7 @@ BEGIN
 	DECLARE @NewMainRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario de servicio estandar' COLLATE Latin1_General_CI_AI AND CountryId= @CountryId);
 	DECLARE @NewAlternativeRates INT = (SELECT TOP 1 RH.RheId FROM [DeliveryBackOffice].[dbo].[RateHeader] RH WITH(NOLOCK) WHERE RH.RheName = 'Tarifario destinos express center' COLLATE Latin1_General_CI_AI AND CountryId = @CountryId);
 	DECLARE @IdCustomer as INT
-	DECLARE @IdSystem INT = (Select TOP 1  SysIdSystem From [dbo].[CatSystem] Where SysNameSystem ='App de clientes')
+	DECLARE @IdSystem INT = (Select TOP 1  SysIdSystem From [dbo].[CatSystem]) --Where SysNameSystem ='App de clientes')
 	DECLARE @TypeAccount AS NVARCHAR(10)  = 'IND'
 
 		-- insertar en tabla temporal posbibles mensajes de error
@@ -42,9 +43,10 @@ BEGIN
 					,'Cuenta creada correctamente' AS Message
 					,'Ok' as Id )  as errror
 
+
 		-- validar que el correo no exite
 
-	 IF NOT EXISTS(SELECT TOP 1 1 FROM RegisterUser usr WHERE usr.UsrEmail = @Email)  -- no existe usuario, por lo tanto lo crea
+	 IF NOT EXISTS(SELECT TOP 1 1 FROM RegisterUser usr WHERE usr.UsrEmail = @Email AND usr.UsrRowStatus=1)  -- no existe usuario, por lo tanto lo crea
 		BEGIN
 				
 				BEGIN TRANSACTION
@@ -87,7 +89,7 @@ BEGIN
 						,PrefixCallingCode 
 						,Phone
 						)
-					Values(@IdPerson, @FirstName,@Email,NULL,NULL,@ExpirationDate,NULL,NULL,NULL,NULL,NULL, 1,'SYS-ADMIN-MOVIL-APP',GETDATE(),NULL,NULL)
+					Values(@IdPerson, @FirstName,@Email,NULL,@Password,@ExpirationDate,NULL,NULL,NULL,NULL,NULL, 1,'SYS-ADMIN-MOVIL-APP',GETDATE(),NULL,NULL)
 					DECLARE @IdUser as bigint =  SCOPE_IDENTITY();
 
 					
@@ -102,7 +104,7 @@ BEGIN
 						,UstTokenCreated
 						,UstDateCreated
 						,UstOperationDate)
-					VALUES (@IdUser,@IdSystem,10,0,'ACTIVE', 1,'SYS-ADMIN',GETDATE(),GETDATE())
+					VALUES (@IdUser,@IdSystem,10,0,'ACTIVE', 1,'SYS-ADMIN-MOVIL-APP',GETDATE(),GETDATE())
 						print 'aqui 3'
 				-- CREAR CUSTOMER					
 					INSERT INTO [dbo].[Customer]
@@ -115,8 +117,6 @@ BEGIN
 					   ,[Abbreviation]
 					   ,[IdCustomerType]
 					   ,BusinessSegmentID 
-					   
-					--   ,[COD]
 					   , SaleAdvisorID
 					   ,TypeOfBusinessID
 					   ,BusinessActivityID
@@ -133,8 +133,6 @@ BEGIN
 						,'^envios_.*\.xls$'
 						,CAST((@FirstName + ' ' + @LastName) AS NVARCHAR(25))
 						,3
-						--,CAST(( select cty.IdCustomerType from dbo.CustomerType cty join dbo.CatTypeAccount city on(upper(city.TacName) = cty.Description) where city.TacShortName = @TypeAccount ) AS INT)
-						--,NULL
 						,10
 						,72
 						,16
@@ -159,7 +157,7 @@ BEGIN
 							@NewMainRates
 							, @IdCustomer
 							,1
-							,'SYS-ADMIN'
+							,'SYS-ADMIN-MOVIL-APP'
 							,GETDATE()
 						)
 							print 'aqui 5'
@@ -177,7 +175,7 @@ BEGIN
 							@NewAlternativeRates
 							, @IdCustomer
 							,1
-							,'SYS-ADMIN'
+							,'SYS-ADMIN-MOVIL-APP'
 							,GETDATE()
 						)
 						
@@ -197,11 +195,11 @@ BEGIN
 					   ,[IdCustomer]  
 					   ,[AccConfirm] -- P = Pendiente de Confirmar / C = Correo Confirmado
 					   )
-					 VALUES(CAST(concat('Envíos de ',@FirstName) AS VARCHAR(100)),@TypeAccounntId,1,'SYS-ADMIN',GETDATE(),NULL,NULL,@IdCustomer,'P')
+					 VALUES(CAST(concat('Envíos de ',@FirstName) AS VARCHAR(100)),@TypeAccounntId,1,'SYS-ADMIN-MOVIL-APP',GETDATE(),NULL,NULL,@IdCustomer,'P')
 					 	print 'aqui 7'
 					 DECLARE @IdAccount as bigint =  SCOPE_IDENTITY();
 
-					-- MODIFICACIÓN 01/03/2022 OSCAR ALEJANDRO RODRÍGUEZ CALDERÓN
+		
 					-- Insertar en la tabla de TermnsAndConditionsByUser
 					INSERT INTO [dbo].[TermsAndConditionsByUser]
 						(TACId
@@ -217,7 +215,7 @@ BEGIN
 							,@IdAccount
 							,1
 							,1
-							,'SYS-ADMIN'
+							,'SYS-ADMIN-MOVIL-APP'
 							,GETDATE()
 							,NULL
 							,NULL
@@ -226,7 +224,7 @@ BEGIN
 						print 'aqui 8'
 				---- Asignar rol por cuenta
 					-- rol estadar
-					DECLARE @IdRol as int =(select TOP 1 rol.RolIdRol from dbo.CatRol rol where rol.RolIdSystem =19 and rol.RolName = 'Estandar')
+					DECLARE @IdRol as int =(select TOP 1 rol.RolIdRol from dbo.CatRol rol where rol.RolIdSystem = @IdSystem and rol.RolName = 'Estandar')
 
 					insert into [DeliveryBackOffice].[dbo].[RolByUserByAccount]  
 						(RuaIdRol,
@@ -235,7 +233,7 @@ BEGIN
 						,RuaRowStatus
 						,RuaTokenCreated
 						,RuaDateCreated)
-					values (@NewMainUserRol,@IdUser,@IdAccount,1,'SYS-ADMIN',GETDATE())
+					values (@NewMainUserRol,@IdUser,@IdAccount,1,'SYS-ADMIN-MOVIL-APP',GETDATE())
 						print 'aqui 9'
 					--inserta los wizards por deafult
 					insert into DeliveryBackOffice.dbo.DeliveryWizardAccount
@@ -245,7 +243,7 @@ BEGIN
 					DateCreate,
 					TokenCreate 
 					)
-					values(CAST(@IdAccount AS INT),1,1,GETDATE(),'SYS-ADMIN')
+					values(CAST(@IdAccount AS INT),1,1,GETDATE(),'SYS-ADMIN-MOVIL-APP')
 					
 					insert into DeliveryBackOffice.dbo.DeliveryWizardAccount
 					(AccIdAccount,
@@ -254,21 +252,7 @@ BEGIN
 					DateCreate,
 					TokenCreate 
 					)
-					values(CAST(@IdAccount AS INT),2,1,GETDATE(),'SYS-ADMIN')
-
-					insert into DeliveryBackOffice.dbo.DeliveryWizardAccount
-					(AccIdAccount,
-					Idwiz,
-					StatusAccountWiz,
-					DateCreate,
-					TokenCreate 
-					)
-					values(CAST(@IdAccount AS INT),3,1,GETDATE(),'SYS-ADMIN')
-
-					-----
-
-
-
+					values(CAST(@IdAccount AS INT),2,1,GETDATE(),'SYS-ADMIN-MOVIL-APP')
 
 
 				---- Asignar rol por systema
@@ -279,11 +263,9 @@ BEGIN
 						,RusRowStatus
 						,RusTokenCreated
 						,RusDateCreated)
-					values (@NewMainUserRol,19,@IdUser,1,'SYS-CAQUINO',GETDATE())
+					values (@NewMainUserRol,@IdSystem,@IdUser,1,'SYS-ADMIN-MOVIL-APP',GETDATE())
 					
 
-					-- Author: Oscar Morales
-					-- Date: 2022-09-27
 					-- Agregar registros de los tutoriales
 					INSERT INTO [dbo].[TutorialByAccount] ([TutorialId]
 					, [AccountId]
@@ -297,7 +279,7 @@ BEGIN
 						   ,1
 						   ,1
 						   ,GETDATE()
-						   ,'SYS-ADMIN'
+						   ,'SYS-ADMIN-MOVIL-APP'
 						FROM Tutorial t
 						WHERE t.RowStatus = 1
 					-- Fin Agregar registros de los tutoriales			
@@ -319,7 +301,7 @@ BEGIN
 				END CATCH;
 				IF @@TRANCOUNT > 0 BEGIN
 					COMMIT TRANSACTION;
-					SELECT 1 AS [StatusCode], 'Ok' AS[MessageResponse]
+					SELECT 1 AS [StatusCode], 'Ok' AS[MessageResponse], @Password AS [Password],@IdAccount AS [IdAccount]
 
 				END
 
@@ -327,7 +309,7 @@ BEGIN
 			end
 			else -- el usuario ya esta registrado
 			BEGIN
-				SELECT 0 AS [StatusCode], 'La cuenta ya existe' AS[MessageResponse]
+				SELECT 0 AS [StatusCode], 'La cuenta ya existe' AS[MessageResponse], @Password AS [Password]
 
 			end
 
@@ -337,4 +319,3 @@ BEGIN
 
 
 END
-
