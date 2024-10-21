@@ -25,6 +25,7 @@ BEGIN
                      WHERE ibr.CodeOfReference = @CodeOfReference
                        AND ibh.[Status] = 1
                        AND ibh.[Enable] = 1
+                       AND ibh.[RowStatus] = 1
                        AND ibr.[RowStatus] = 1
                        AND TypeDocument = 1
                    )
@@ -45,6 +46,7 @@ BEGIN
                  WHERE ibr.CodeOfReference = @CodeOfReference
                    AND ibh.[Status] = 1
                    AND ibh.[Enable] = 1
+                   AND ibh.[RowStatus] = 1
                    AND ibr.[RowStatus] = 1
                    AND ibh.TypeDocument = 1
                    AND (
