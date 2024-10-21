@@ -35,7 +35,7 @@ BEGIN TRY
 	SELECT
 		  CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')) AS 'SenderName'
 		, CONCAT(ISNULL(DO.Receiver_FirstName,''), ' ',ISNULL(DO.Receiver_LastName,'')) AS 'ReceiverName'
-		, DO.ReceiverCountryId AS 'Country'
+		, ISNULL(DO.ReceiverCountryId,'GT') AS 'Country'
 		, SO.CatStatusProcessId AS 'StatusTracking'
 		, ISNULL(ER.Nombre,'') AS 'StatusTrackingTitle'
 		, ISNULL(ER.Descripcion,'') AS 'StatusTrackingDescription'
