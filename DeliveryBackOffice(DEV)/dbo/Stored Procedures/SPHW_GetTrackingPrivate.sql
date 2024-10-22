@@ -7,25 +7,29 @@
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPrivate]
 @GuideSerie NVARCHAR(4),
 @GuideNumber INT,
-@Phone INT
+@Phone NVARCHAR(200)
 AS
 BEGIN
 BEGIN TRY
 
-	DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT Receiver_Phone FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+	DECLARE @Receiver_Phone NVARCHAR(200) = (SELECT RIGHT(LTRIM(RTRIM(Receiver_Phone)), 8) FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
 											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
 
+    DECLARE @CountryId NVARCHAR(3) = (SELECT ISNULL(ReceiverCountryId,'GT') FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+											 WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber)
+
+	DECLARE @CodeArea NVARCHAR(5) = (SELECT [Value] FROM DeliveryBackOffice.dbo.ConfigParams WITH(NOLOCK)
+											WHERE [Name] = 'AreaCode' AND IdCountry = @CountryId)
+
 	--Validación del telefono
-	IF((@Phone = @Receiver_Phone) OR (@Phone = '502' + @Receiver_Phone))
+	IF((@Phone = @Receiver_Phone) OR (@Phone = @CodeArea + @Receiver_Phone) OR (@Phone = '+' + @CodeArea + @Receiver_Phone))
 	BEGIN
 		SELECT 
 			  200						 AS 'IdResult'
 			, 'Exitoso.'				 AS 'Message'
-			, ISNULL(DO.Receiver_Lat,'') AS 'Latitud'
-			, ISNULL(DO.Receiver_Lng,'') AS 'Longitud'
 			, ISNULL(S.Settlement,'')    AS 'Poblado'
-			, ISNULL(T.TownshipName,'')  AS 'Municipio'
-			, ISNULL(P.ProvinceName,'')  AS 'Departamento'
+			, IIF(T.TownshipName IS NOT NULL,T.TownshipName,ISNULL(T2.TownshipName,'')) AS 'Municipio'
+			, IIF(P.ProvinceName IS NOT NULL,P.ProvinceName,ISNULL(P2.ProvinceName,'')) AS 'Departamento'
 		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DO.ReceiverIdSettlement = S.IdSettlement
@@ -33,6 +37,10 @@ BEGIN TRY
 			ON S.IdTownship = T.IdTownship
 		LEFT JOIN DeliveryBackOffice.dbo.Province P WITH(NOLOCK)
 			ON S.IdProvince = P.IdProvince
+		LEFT JOIN DeliveryBackOffice.dbo.Township T2 WITH(NOLOCK)
+			ON DO.ReceiverIdTownship = T2.IdTownship
+		LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH(NOLOCK)
+			ON T2.IdProvince = P2.IdProvince
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	END
 	ELSE

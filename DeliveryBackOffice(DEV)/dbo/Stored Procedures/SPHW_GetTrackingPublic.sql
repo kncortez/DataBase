@@ -11,17 +11,34 @@ AS
 BEGIN
 BEGIN TRY
 
+	--Encabezados
+	DECLARE @EncabezadoRastreo TABLE (
+		Id INT IDENTITY(1,1) PRIMARY KEY,
+		Nombre NVARCHAR(50),
+		Descripcion NVARCHAR(255)
+	);
+
+	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
+	SELECT 'Creado por', '' UNION ALL --1
+	SELECT 'Arribó a las instalaciones', 'Tu paquete ya está en nuestras instalaciones.' UNION ALL --2
+	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --3
+	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --4
+
+	--Iconos
 	SELECT
 		   NameStatusProcess AS 'label'
 		 , Icon AS 'icon'
 	FROM
 	DeliveryBackOffice.dbo.CatStatusProcess WITH(NOLOCK)
 
+	--Informacion pública
 	SELECT
 		  CONCAT(ISNULL(DO.Sender_FirstName,''), ' ',ISNULL(DO.Sender_LastName,'')) AS 'SenderName'
 		, CONCAT(ISNULL(DO.Receiver_FirstName,''), ' ',ISNULL(DO.Receiver_LastName,'')) AS 'ReceiverName'
-		, DO.ReceiverCountryId AS 'Country'
+		, ISNULL(DO.ReceiverCountryId,'GT') AS 'Country'
 		, SO.CatStatusProcessId AS 'StatusTracking'
+		, ISNULL(ER.Nombre,'') AS 'StatusTrackingTitle'
+		, ISNULL(ER.Descripcion,'') AS 'StatusTrackingDescription'
 		, ISNULL(CP.[Value],'502') AS 'AreaCode'
 	FROM
 	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
@@ -29,6 +46,8 @@ BEGIN TRY
 		ON DO.StatusOrderId = SO.StatusOrderId
 	LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
 		ON CP.[Name] = 'AreaCode' AND DO.ReceiverCountryId = CP.IdCountry
+	LEFT JOIN @EncabezadoRastreo  ER
+		ON SO.CatStatusProcessId = ER.Id
 	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 
 	DECLARE @StatusIncVal INT  = (
@@ -109,13 +128,12 @@ BEGIN TRY
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	);	
 	
+	--Banderas
 	SELECT 
 		  ISNULL(@f1,'false') AS 'flagRescheduleDelivery'
 		, ISNULL(@f2,'false') AS 'flagChangeAdress'
 		, ISNULL(@f3,'false') AS 'flagPayDelivery'
 		, ISNULL(@f4,'false') AS 'flagNotifications'
-
-	--FALTA ENVIAR EL TRACKING AUNQUE ES SIMILAR AL SP spg_extern_order_detail_status
 
 END TRY
 BEGIN CATCH
