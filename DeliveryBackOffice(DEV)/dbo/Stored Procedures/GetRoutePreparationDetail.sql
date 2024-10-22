@@ -19,6 +19,11 @@
 -- Create date: <2022-02-02>
 -- Description:	< Cambio para uso de Ruta sobre Unidad .>
 -- =============================================
+-- =============================================
+-- Author:		<Aylinne,Recinos>
+-- Create date: <2024-10-21>
+-- Description:	< Cambio para manejo de reprogramacion de fecha de entrega .>
+-- =============================================
 CREATE PROCEDURE [dbo].[GetRoutePreparationDetail]
 	@IdRoute INT,
 	@Date DATE,
@@ -39,13 +44,13 @@ BEGIN
 		   ,rpd.DateCreated
 		   ,cr.CodeRoute 'CodeRoute'
 		   ,rp.IsSimpliRoute
-		   ,rp.CatRouteId 'IdRoute'
+		   ,ISNULL(rp.CatRouteId, 0) 'IdRoute'
 		   ,rp.DateRoutePreparation
 		   ,rpd.IsCustomerReschedule
 		FROM DeliveryBackOffice.dbo.RoutePreparationDetail rpd WITH(NOLOCK)
 		INNER JOIN DeliveryBackOffice.dbo.RoutePreparation rp WITH(NOLOCK)
 			ON rpd.RoutePreparationId = rp.IdRoutePreparation
-		INNER JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.CatRoute cr WITH(NOLOCK)
 			ON rp.CatRouteId = cr.IdRoute
 		WHERE rp.DateRoutePreparation >= @Date
 		AND rpd.RowStatus = 1
