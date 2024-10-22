@@ -30,6 +30,7 @@ BEGIN TRY
 			, ISNULL(S.Settlement,'')    AS 'Poblado'
 			, IIF(T.TownshipName IS NOT NULL,T.TownshipName,ISNULL(T2.TownshipName,'')) AS 'Municipio'
 			, IIF(P.ProvinceName IS NOT NULL,P.ProvinceName,ISNULL(P2.ProvinceName,'')) AS 'Departamento'
+			, ISNULL(DO.Receiver_Address,'')											AS 'AddressDestiny'
 		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DO.ReceiverIdSettlement = S.IdSettlement
