@@ -507,8 +507,10 @@ BEGIN
 							UPDATE ServiceManagement
 							SET CiPuDate = @StartDate,
 								CoPuDate = @EndDate,
+								Amount = 0,
 								TokenUpdated = @Token,
-								DateUpdated = GETDATE()
+								DateUpdated = GETDATE(),
+								CatPaymentTimeId = NULL -- En Dispatch Track no se ven pagos
 							WHERE IdSchedulePickup = @IdPickup;
 
 
