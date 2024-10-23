@@ -11,7 +11,8 @@ CREATE PROCEDURE [dbo].[SetWeebHook_Dispatch]
     @EndDate DATETIME = NULL,
     @PickupLatitude NVARCHAR(20) = NULL,
     @PickupLongitude NVARCHAR(20) = NULL,
-	@Status INT
+	@Status INT,
+	@Email NVARCHAR(200) = NULL
 AS
 BEGIN
     BEGIN TRY
@@ -136,14 +137,15 @@ BEGIN
             BEGIN TRANSACTION
 				UPDATE ServiceManagement
                 SET ServiceStatusId = CASE WHEN @Status = 1 THEN @StatusRoute
-										   WHEN @Status = 2 THEN @StatusDelivered
+										   WHEN @Status = 2 THEN @StatusRecolect
 										   --WHEN @Status = 4 THEN @StatusDelivered
 									END,
                     PuSignaturePath = @PuSignaturePath,
                     CiPuDate = @StartDate,
                     CoPuDate = @EndDate,
                     TokenUpdated = @Token,
-                    DateUpdated = GETDATE()
+                    DateUpdated = GETDATE(),
+					EmailDispatch = @Email
                 WHERE IdServiceManagement = @KeyLocal;
 			IF @@RowCount > 0
 			COMMIT TRANSACTION;
