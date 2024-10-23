@@ -202,6 +202,8 @@ BEGIN
 				SELECT @ValidCountry = MAX(   CASE
 												  WHEN DO.SenderCountryId = @IdCountry THEN
 													  1
+												  WHEN DO.SenderCountryId IS NULL THEN 
+												     -1
 												  ELSE
 													  0
 											  END
@@ -658,10 +660,15 @@ BEGIN
                             'Las piezas ya se encuentran procesadas' AS Message
                     END
 				END				
+				ELSE IF @ValidCountry = -1
+				BEGIN
+					SELECT 0 AS StatusCode, 
+						  'La guía no existe' AS Message
+				END
 				ELSE
 				BEGIN
 					SELECT 0 AS StatusCode, 
-						  'La guia pertenece a otro País' AS Message
+						  'La guÍa pertenece a otro País' AS Message
 				END
 			
 			END
@@ -669,7 +676,7 @@ BEGIN
 			BEGIN
 			------Guia no valida----------
 					SELECT 1 AS StatusCode,
-					  'Guias no validas' AS Message
+					  'Guías no válidas' AS Message
 
 					SELECT Message,
 						   Guide
@@ -679,7 +686,7 @@ BEGIN
 		ELSE
 		BEGIN
 			SELECT 0 AS StatusCode,
-				  'El Token con es valido'
+				  'El Token con es válido'
 		END
 	END TRY
 	BEGIN CATCH
