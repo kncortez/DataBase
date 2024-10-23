@@ -664,7 +664,7 @@ BEGIN
 				ELSE
 				BEGIN
 					SELECT 0 AS StatusCode, 
-						  'La guÍa pertenece a otro País' AS Message
+						  'La guía pertenece a otro País' AS Message
 				END
 			
 			END
