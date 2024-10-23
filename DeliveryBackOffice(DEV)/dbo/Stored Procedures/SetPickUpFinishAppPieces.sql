@@ -202,6 +202,8 @@ BEGIN
 				SELECT @ValidCountry = MAX(   CASE
 												  WHEN DO.SenderCountryId = @IdCountry THEN
 													  1
+												  WHEN DO.SenderCountryId IS NULL THEN 
+												     -1
 												  ELSE
 													  0
 											  END
@@ -505,8 +507,10 @@ BEGIN
 							UPDATE ServiceManagement
 							SET CiPuDate = @StartDate,
 								CoPuDate = @EndDate,
+								Amount = 0,
 								TokenUpdated = @Token,
-								DateUpdated = GETDATE()
+								DateUpdated = GETDATE(),
+								CatPaymentTimeId = NULL -- En Dispatch Track no se ven pagos
 							WHERE IdSchedulePickup = @IdPickup;
 
 
@@ -658,21 +662,33 @@ BEGIN
                             'Las piezas ya se encuentran procesadas' AS Message
                     END
 				END				
+				ELSE IF @ValidCountry = -1
+				BEGIN
+					SELECT 0 AS StatusCode, 
+						  'La guía no existe' AS Message
+				END
 				ELSE
 				BEGIN
 					SELECT 0 AS StatusCode, 
-						  'La guia pertenece a otro País' AS Message
+						  'La guÍa pertenece a otro País' AS Message
 				END
 			
 			END
 			ELSE
 			BEGIN
 			------Guia no valida----------
-					SELECT 0 AS StatusCode,
-						  Guide
-						  Message
+					SELECT 1 AS StatusCode,
+					  'Guías no válidas' AS Message
+
+					SELECT Message,
+						   Guide
 					FROM #Temp
 			END
+		END
+		ELSE
+		BEGIN
+			SELECT 0 AS StatusCode,
+				  'El Token con es válido'
 		END
 	END TRY
 	BEGIN CATCH
