@@ -7,7 +7,6 @@ CREATE PROCEDURE [dbo].[SetPickUpFinishAppPieces]
 		@InGuides NVARCHAR(MAX) = 'FD9559566-1,FD9559566-2',
 		@IdPickup INT = 2,
 		@TypeofInOutMoneyId INT = 1,
-		@Email NVARCHAR(200) = NULL,
 		@Token VARCHAR(200) = NULL,
 		@Observations VARCHAR(200) = NULL,
 		@StartDate DATETIME = NULL,
@@ -377,18 +376,13 @@ BEGIN
 									(
 										SELECT ItemSerie FROM #listGuides
 									)
-
-							SELECT TOP 1
-									@Sender_Email = ISNULL(REPLACE(REPLACE(cus.RegexEmail, '$', ''), '^', ''), ' ')
-							FROM #listGuides ls
-								INNER JOIN DeliveryOrder ord WITH (NOLOCK)
-									ON (
-											ord.Guide_Number = ls.ItemNumber
-											AND ord.Guide_Serie = ls.ItemSerie
-										)
-								LEFT JOIN dbo.Customer cus WITH (NOLOCK)
-									ON cus.IdCustomer = ord.IdCustomer
-
+			
+							SET @Sender_Email =
+							(
+								SELECT EmailDispatch
+								FROM ServiceManagement
+								WHERE IdSchedulePickup = @IdPickup
+							)
 
 							 SELECT TOP 1
 									@IdHublogistic = HBG.IdHubLogistic
@@ -599,7 +593,7 @@ BEGIN
 								   ISNULL(vpc.Town, '') AS 'Sender_Town',
 								   ISNULL(vpc.Department, '') AS 'Sender_Department',
 								   0 AS 'Consolidated_Number',
-								   ISNULL(vpc.Email, '') AS 'Sender_Email'
+								   @Sender_Email AS 'Sender_Email'
 							FROM DeliveryBackOffice.dbo.SchedulePickup slp WITH(NOLOCK)
 								RIGHT JOIN DeliveryBackOffice.dbo.VisitPointClient vpc WITH(NOLOCK)
 									ON vpc.CodeOfReference = slp.SenderId
