@@ -782,6 +782,7 @@
     <Build Include="dbo\Stored Procedures\sphw_GetCouriersByUserHubs.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisitsForInternal.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisits.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetSettlementGuidesToReprint.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCatHubs.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GenerateFileByConceptCOD.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetValidTokenPortal.sql" />
