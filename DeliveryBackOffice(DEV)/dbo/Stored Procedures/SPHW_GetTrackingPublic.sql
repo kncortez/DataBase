@@ -39,13 +39,24 @@ BEGIN TRY
 		, SO.CatStatusProcessId AS 'StatusTracking'
 		, ISNULL(ER.Nombre,'') AS 'StatusTrackingTitle'
 		, ISNULL(ER.Descripcion,'') AS 'StatusTrackingDescription'
-		, ISNULL(CP.[Value],'502') AS 'AreaCode'
+		,CASE 
+			-- Caso 1: El número comienza con '+' y tiene al menos 11 dígitos (ej. +50244444444)
+			WHEN LEFT(Receiver_Phone, 1) = '+' AND LEN(Receiver_Phone) >= 11 THEN 
+				SUBSTRING(Receiver_Phone, 2, 3)
+
+			-- Caso 2: El número comienza con un código de área sin '+' y tiene al menos 10 dígitos (ej. 50244444444)
+			WHEN LEN(Receiver_Phone) >= 10 AND ISNUMERIC(LEFT(Receiver_Phone, 3)) = 1 THEN 
+				LEFT(Receiver_Phone, 3)
+
+			-- Caso 3: Si no tiene código de área válido, devuelve NULL (ej. 2345-6789)
+			ELSE ISNULL(CP.[Value],'502')
+		END AS 'AreaCode'
 	FROM
 	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
 		ON DO.StatusOrderId = SO.StatusOrderId
 	LEFT JOIN DeliveryBackOffice.dbo.ConfigParams CP WITH(NOLOCK)
-		ON CP.[Name] = 'AreaCode' AND DO.ReceiverCountryId = CP.IdCountry
+		ON CP.[Name] = 'AreaCode' AND ISNULL(DO.ReceiverCountryId,'GT') = CP.IdCountry
 	LEFT JOIN @EncabezadoRastreo  ER
 		ON SO.CatStatusProcessId = ER.Id
 	WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
