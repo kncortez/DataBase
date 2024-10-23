@@ -814,7 +814,7 @@ BEGIN
 			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
 			IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT)) 'WeightLB',
 			RH.WeightLimit 'WeightOf',
-	    	ISNULL(DSC.RouteCode,'0000') AS 'RouteCode',
+	    	ISNULL(DSC.RouteCode,'') AS 'RouteCode',
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
