@@ -72,11 +72,16 @@ BEGIN TRY
 				+ 'cm o ' + CAST(FLOOR(DOP.PieceWeight) AS NVARCHAR(10)) + 'lbs'		AS 'Description'
 				, COUNT(DOP.ParcelCode)		 AS 'Quantity'
 				, DO.PriceShippment			 AS 'Amount'
+				, ISNULL(CCC.Symbol,'Q')	 AS 'CurrencySymbol'
 			FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryOrderPiece DOP WITH(NOLOCK)
 				ON DO.Guide_Serie = DOP.GuideSerie AND DO.Guide_Number = DOP.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+				ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
+			LEFT JOIN DeliveryBackOffice.dbo.CatCurrencyCOD CCC WITH(NOLOCK)
+				ON ISNULL(C.ShippingCurrency,C.CodCurrency) = CCC.IdCatCurrencyCOD
 			WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
-			GROUP BY DOP.ParcelCode, DOP.Detail, DOP.PieceHeight,  DOP.PieceWeight, DO.PriceShippment
+			GROUP BY DOP.ParcelCode, DOP.Detail, DOP.PieceHeight,  DOP.PieceWeight, DO.PriceShippment, CCC.Symbol
 
 		END;
 		ELSE
