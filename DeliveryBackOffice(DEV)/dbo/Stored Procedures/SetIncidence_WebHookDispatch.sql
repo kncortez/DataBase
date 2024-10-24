@@ -134,7 +134,8 @@ BEGIN
                 UPDATE ServiceManagement
                 SET ServiceStatusId = @StatusIncidence,
                     DateUpdated = GETDATE(),
-                    TokenUpdated = @Token
+                    TokenUpdated = @Token, 
+					CatPaymentTimeId = NULL
                 WHERE IdServiceManagement = @ServiceManagementId
 
                 ------------Inserta en EventService el comportamiento del Pickup------------------
