@@ -19,6 +19,7 @@ BEGIN
 		WHERE dobs.CatRouteId = @IdRoute
 			AND ISNULL(cr.CountryId, 'GT') = @IdCountry
 			AND CAST(dobs.Date_Dispatched AS DATE) = CAST(GETDATE() AS DATE)
+		ORDER BY dobs.ID DESC		
 
     END TRY 
 	BEGIN CATCH
