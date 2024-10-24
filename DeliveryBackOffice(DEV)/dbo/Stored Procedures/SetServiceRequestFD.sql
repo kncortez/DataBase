@@ -812,8 +812,13 @@ BEGIN
 			)'GuideOrigin',
 			D.ReceiverCountryId,
 			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
-			IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT)) 'WeightLB',
-			RH.WeightLimit 'WeightOf',
+			CASE
+									WHEN DOP.PiecePhysicalWeight > 0 THEN 
+								  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
+								ELSE 
+									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
+								'WeightLB',
+								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
 	    	ISNULL(DSC.RouteCode,'') AS 'RouteCode',
 			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
