@@ -70,6 +70,11 @@ BEGIN TRY
 		SELECT IdCatCheckpointType FROM DeliveryBackOffice.dbo.CatCheckpointType
 		WHERE CheckpointTypeDescription = 'Checkpoint final'
 	)
+
+	DECLARE @StatusProcessFinal INT = (
+		SELECT IdStatusProcess FROM DeliveryBackOffice.dbo.CatStatusProcess
+		WHERE NameStatusProcess = 'Entregado'
+	)
 	
 	DECLARE @f1 NVARCHAR(10) = (
 		SELECT
@@ -81,10 +86,13 @@ BEGIN TRY
 						ON DA.ConfirmationOfIncidenceId = CI.IdConfirmationOfIncidence
 					 WHERE DA.Guide_Serie = @GuideSerie AND DA.Guide_Number = @GuideNumber 
 						AND CI.StatusOrderId = @StatusIncVal AND CI.IsConfirmed = 1 AND CI.IsDenied = 0) > 1 --INTENTO DEVOLUCIONES
+					OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
 				THEN 'false'
 				ELSE 'true'
 			END AS 'flagRescheduleDelivery'
-		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
+			ON DO.StatusOrderId = SO.StatusOrderId
 		WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 	);
 	
@@ -98,10 +106,13 @@ BEGIN TRY
 						ON DA.ConfirmationOfIncidenceId = CI.IdConfirmationOfIncidence
 					 WHERE DA.Guide_Serie = @GuideSerie AND DA.Guide_Number = @GuideNumber 
 						AND CI.StatusOrderId = @StatusIncVal AND CI.IsConfirmed = 1 AND CI.IsDenied = 0) > 1 --INTENTO DEVOLUCIONES
+					 OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
 				THEN 'false'
 				ELSE 'true'
-			END AS 'flagRescheduleDelivery'
-		FROM DeliveryBackOffice.dbo.DeliveryOrder WITH(NOLOCK)
+			END AS 'flagChangeAdress'
+		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
+			ON DO.StatusOrderId = SO.StatusOrderId
 		WHERE Guide_Serie = @GuideSerie AND Guide_Number = @GuideNumber
 	);
 	
@@ -112,15 +123,19 @@ BEGIN TRY
 					(C.TotalAmountPaid IS NOT NULL OR C.TotalAmountPaid != 0) -- ESTA PAGADA LA GUIA
 					OR
 					IIF(ISNULL(CCP.ConditionOfPayment, 'Contado') = 'Contado',0,1) = 1 -- NO TIENE CREDITO
+					OR 
+					SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
 				THEN 'false'
 				ELSE 'true'
 			END AS 'flagPayDelivery'
 		FROM DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
+			ON DO.StatusOrderId = SO.StatusOrderId
 		INNER JOIN DeliveryBackOffice.dbo.Customer CU WITH(NOLOCK)
 			ON DO.IdCustomer = CU.IdCustomer
-		INNER JOIN DeliveryBackOffice.dbo.CatConditionOfPayment CCP WITH(NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.CatConditionOfPayment CCP WITH(NOLOCK)
 			ON CU.ConditionOfPaymentID = CCP.IdConditionOfPayment
-		INNER JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
+		LEFT JOIN DeliveryBackOffice.dbo.Cost C WITH(NOLOCK)
 			ON DO.Guide_Serie = C.GuideSerie AND DO.Guide_Number = C.GuideNumber
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	);
@@ -131,11 +146,14 @@ BEGIN TRY
 				WHEN
 					(SELECT CatCheckpointTypeId FROM DeliveryBackOffice.dbo.StatusOrder WITH(NOLOCK)
 					 WHERE StatusOrderId = DO.StatusOrderId) = @CheckpointType --NO ESTAR EN ESTADO FINAL
+					 OR SO.CatStatusProcessId = @StatusProcessFinal --LA GUÍA SE ENCUENTRA EN UN ESTADO ENTREGADO
 					THEN 'false'
 					ELSE 'true'
 			END AS 'flagNotifications'
 		FROM
 		DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
+		INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
+			ON DO.StatusOrderId = SO.StatusOrderId
 		WHERE DO.Guide_Serie = @GuideSerie AND DO.Guide_Number = @GuideNumber
 	);	
 	
