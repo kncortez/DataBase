@@ -8,9 +8,13 @@ CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
 @IdDeliveryLink INT,
 @IsInsurance BIT = 'FALSE',
 @InsuranceAmount DECIMAL(14,2) = 0.00,
-@CollectOnDelivery DECIMAL(14,2) = NULL,
+@CollectOnDelivery DECIMAL(14,2) = NULL, --Monto de COD
 @Token NVARCHAR(50) = 'SYSTEM',
-@SubscriptionId INT = NULL
+@SubscriptionId INT = NULL,
+@PaymentType INT = 1,
+@TypeService INT = 5,
+@DeliveryFacCODId NVARCHAR(20) = '',
+@OnlyInfo INT = 0
 AS
 BEGIN
 BEGIN TRY
@@ -38,19 +42,26 @@ BEGIN TRY
 		ON RBUBA.RuaIdUser = RU.UsrIdUser
 	WHERE DL.IdDeliveryLink = @IdDeliveryLink
 
-	BEGIN TRANSACTION;
+	IF(@OnlyInfo = 0)
+	BEGIN
+		BEGIN TRANSACTION;
 
-	UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
-	SET 
-       [IsInsurance] = @IsInsurance
-      ,[InsuranceAmount] = @InsuranceAmount
-      ,[CollectOnDelivery] = @CollectOnDelivery
-      ,[SubscriptionId] = @SubscriptionId
-      ,[UserUpdated] = @Token
-      ,[DateUpdated] = GETDATE()
-	WHERE [IdDeliveryLink] = @IdDeliveryLink
+		UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
+		SET 
+		   [IsInsurance] = @IsInsurance
+		  ,[CatPaymentTypeId] = @PaymentType
+		  ,[CatTypeServiceId] = @TypeService
+		  ,[InsuranceAmount] = @InsuranceAmount
+		  ,[CollectOnDelivery] = @CollectOnDelivery
+		  ,[SubscriptionId] = @SubscriptionId
+		  ,[DeliveryFacCODId] = IIF(@DeliveryFacCODId = '', [DeliveryFacCODId],CAST(@DeliveryFacCODId AS INT))
+		  ,[UserUpdated] = @Token
+		  ,[DateUpdated] = GETDATE()
+		WHERE [IdDeliveryLink] = @IdDeliveryLink
 
-	COMMIT TRANSACTION;
+		COMMIT TRANSACTION;
+	END;
+	
 END TRY
 BEGIN CATCH
 	ROLLBACK TRANSACTION;
