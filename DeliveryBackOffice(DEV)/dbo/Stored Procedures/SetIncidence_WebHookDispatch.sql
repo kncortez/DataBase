@@ -161,7 +161,8 @@ BEGIN
                     UPDATE ServiceManagement
                     SET ServiceStatusId = @CanceledStatusId,
                         DateUpdated = GETDATE(),
-                        TokenUpdated = @Token
+                        TokenUpdated = @Token,
+					    CatPaymentTimeId = NULL
                     WHERE IdServiceManagement = @ServiceManagementId
 
                     INSERT INTO EventService
