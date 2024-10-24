@@ -384,9 +384,15 @@ BEGIN
 								) [GuideOrigin],
 								dev.ReceiverCountryId,
 								IIF(dev.InsuranceAmount>800 AND dev.IsInsuarance=1,1,0) 'IsInsured',
-								IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT)) 'WeightLB',
-								RH.WeightLimit 'WeightOf',
-	    						ISNULL(DSC.RouteCode,'') AS 'RouteCode'
+								CASE
+									WHEN DOP.PiecePhysicalWeight > 0 THEN 
+								  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
+								ELSE 
+									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
+								'WeightLB',
+								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
+	    						ISNULL(DSC.RouteCode,'') AS 'RouteCode',
+								ISNULL(DPF.dpf_SAPcardCode,'') AS 'CardCode'
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
