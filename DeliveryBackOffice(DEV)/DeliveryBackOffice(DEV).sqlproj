@@ -798,6 +798,9 @@
     <Build Include="dbo\Stored Procedures\sphd_get_Rate_Data.sql" />
     <Build Include="dbo\Stored Procedures\sphd_get_Rate.sql" />
     <Build Include="dbo\Stored Procedures\sphd_get_ArticleList.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetVoucherTypeToReprintGuide.sql" />
+    <Build Include="dbo\Stored Procedures\GetSignaturePathByGuide.sql" />
+    <Build Include="dbo\Stored Procedures\GetScannedVoucherURL.sql" />
     <Build Include="dbo\Stored Procedures\sphd_getVPC.sql" />
     <Build Include="dbo\Stored Procedures\sphd_getUsersByIdCustomer.sql" />
     <Build Include="dbo\Stored Procedures\sphd_getUsers.sql" />
