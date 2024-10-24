@@ -1737,6 +1737,7 @@
     <Build Include="dbo\Stored Procedures\RouteDispatchTrackByRoute.sql" />
     <Build Include="dbo\Stored Procedures\resetRouteDispatchTracker.sql" />
     <Build Include="dbo\Stored Procedures\GetExistRouteAssigmentDT.sql" />
+    <Build Include="dbo\Stored Procedures\GetCourierInRoute.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">
