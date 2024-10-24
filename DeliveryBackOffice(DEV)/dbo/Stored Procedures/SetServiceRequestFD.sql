@@ -8,6 +8,11 @@
 -- Modified:	<29-08-2024>
 -- Description:	<Se envian parametros de pais de origen y destino a la funcion ETA>
 -- =============================================
+-- =============================================
+-- Author:		<Walter, Orozco>
+-- Modified:	<30-09-2024>
+-- Description:	<Se agrega la relación de una guía con un DeliveryLink.>
+-- =============================================
 CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @TblServiceRequestFD AS TblServiceRequest READONLY,	
 @TblDeliveryOrdersFD AS TblDeliveryOrdersFD READONLY,
@@ -15,7 +20,8 @@ CREATE PROCEDURE [dbo].[SetServiceRequestFD]
 @UserAddressId BIGINT = 0,
 @SystemModule NVARCHAR(200) = NULL,
 @IdAccount BIGINT = NULL,
-@AddToServiceCart BIT = 0
+@AddToServiceCart BIT = 0,
+@IdDeliveryLink INT = 0
 AS
 BEGIN
 	DECLARE @IdTransaction BIGINT = NULL
@@ -638,6 +644,26 @@ BEGIN
 		END
 		--Termina proceso para añadir a carrito de compras
 
+		--Inicia proceso para DeliveryLink
+		IF(@IdDeliveryLink > 0)
+		BEGIN
+			--Cambiamos estado de Link
+			DECLARE @StatusDeliveryLink INT;
+			SELECT @StatusDeliveryLink = IdDeliveryLinkStatus FROM DeliveryBackOffice.dbo.DeliveryLinkStatus WITH(NOLOCK)
+			WHERE [Name] = 'Envío realizado';
+
+			DECLARE @GuideNumerDL INT;
+			SELECT TOP 1 @GuideNumerDL = Guide_Number FROM #GuideTable
+			
+			--Hacemos relación entre link y guía
+			UPDATE DeliveryBackOffice.dbo.DeliveryLink
+			SET GuideSerie = @GuideSerie , GuideNumber = @GuideNumerDL , DeliveryLinkStatusId = @StatusDeliveryLink , 
+				UserUpdated = 'SYSTEM' , DateUpdated = GETDATE()
+			WHERE IdDeliveryLink = @IdDeliveryLink AND RowStatus = 1
+
+		END;
+		--Termina proceso para DeliveryLink
+
 		DROP TABLE #GuideTable
 	END TRY
 	BEGIN CATCH
@@ -809,7 +835,13 @@ BEGIN
 						WHEN [D].[CatSystemId] IS NULL THEN 'API'
 						ELSE 'API'
 					END
-			)'GuideOrigin'
+			)'GuideOrigin',
+			D.ReceiverCountryId,
+			IIF(D.InsuranceAmount>800 AND D.IsInsuarance=1,1,0) 'IsInsured',
+			IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT)) 'WeightLB',
+			RH.WeightLimit 'WeightOf',
+	    	ISNULL(DSC.RouteCode,'0000') AS 'RouteCode',
+			ISNULL(DPF.dpf_SAPcardCode,'0000') AS 'CardCode'
 		FROM DeliveryOrder D WITH(NOLOCK)
 		INNER JOIN @CorrelativeTable C ON C.Guide_Number = D.Guide_Number
 										AND D.Guide_Serie = @GuideSerie
@@ -821,12 +853,21 @@ BEGIN
 			    AND MMBSHP.ExpirationDate >= GETDATE()
 				AND MMBSHP.RowStatus = 1
 		LEFT JOIN DeliveryOrderPaymentDetail DOPD WITH (NOLOCK)
-			ON dopd.GuideSerie = d.Guide_Serie AND  DOPD.GuideNumber = D.Guide_Number
-			
+			ON dopd.GuideSerie = d.Guide_Serie AND  DOPD.GuideNumber = D.Guide_Number			
 		LEFT JOIN VisitPointClient vpct WITH (NOLOCK)
             ON vpct.CodeOfReference = D.Sender_ID
 		LEFT JOIN [DeliveryBackOffice].[dbo].[VisitPointClient] vpcti  WITH(NOLOCK) 
 		    ON [vpcti].[CodeOfReference] = [D].[OriginSenderId]
+		LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+			    ON   DOP.GuideSerie = D.Guide_Serie   AND  DOP.GuideNumber  = D.Guide_Number
+		LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
+			    ON  D.[OriginSenderId] = DPF.dpf_VpCodeOfReference
+		LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			    ON DSC.IdSettlement = D.ReceiverIdSettlement
+		LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
+			   ON D.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (D.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+        LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
+              ON RC.RbcIdRate= RH.RheId
 		WHERE D.Guide_Serie = @GuideSerie AND D.Guide_Number IN (SELECT CT.Guide_Number FROM @CorrelativeTable CT)
 	END
 END
