@@ -12,7 +12,9 @@ CREATE PROCEDURE [dbo].[SPHW_GetFinalLink]
 @Token NVARCHAR(50) = 'SYSTEM',
 @SubscriptionId INT = NULL,
 @PaymentType INT = 1,
-@TypeService INT = 5
+@TypeService INT = 5,
+@DeliveryFacCODId NVARCHAR(20) = '',
+@OnlyInfo INT = 0
 AS
 BEGIN
 BEGIN TRY
@@ -40,21 +42,60 @@ BEGIN TRY
 		ON RBUBA.RuaIdUser = RU.UsrIdUser
 	WHERE DL.IdDeliveryLink = @IdDeliveryLink
 
-	BEGIN TRANSACTION;
+	IF(@OnlyInfo = 0)
+	BEGIN
+		BEGIN TRANSACTION;
 
-	UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
-	SET 
-       [IsInsurance] = @IsInsurance
-	  ,[CatPaymentTypeId] = @PaymentType
-	  ,[CatTypeServiceId] = @TypeService
-      ,[InsuranceAmount] = @InsuranceAmount
-      ,[CollectOnDelivery] = @CollectOnDelivery
-      ,[SubscriptionId] = @SubscriptionId
-      ,[UserUpdated] = @Token
-      ,[DateUpdated] = GETDATE()
-	WHERE [IdDeliveryLink] = @IdDeliveryLink
+		--Actualizar delivery link
+		UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
+		SET 
+		   [IsInsurance] = @IsInsurance
+		  ,[CatPaymentTypeId] = @PaymentType
+		  ,[CatTypeServiceId] = @TypeService
+		  ,[InsuranceAmount] = @InsuranceAmount
+		  ,[CollectOnDelivery] = @CollectOnDelivery
+		  ,[SubscriptionId] = @SubscriptionId
+		  ,[DeliveryFacCODId] = IIF(@DeliveryFacCODId = '', [DeliveryFacCODId],CAST(@DeliveryFacCODId AS INT))
+		  ,[UserUpdated] = @Token
+		  ,[DateUpdated] = GETDATE()
+		WHERE [IdDeliveryLink] = @IdDeliveryLink
 
-	COMMIT TRANSACTION;
+		--Actualizar stock de productos
+		IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.Product P
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
+							ON P.IdProduct = DLP.ProductId
+						WHERE DLP.DeliveryLinkId = @IdDeliveryLink AND (P.Stock - DLP.Quantity) < 0)
+		BEGIN
+
+			UPDATE P
+			SET P.Stock = P.Stock - DLP.Quantity
+				, P.UserUpdated = @Token + '_' + @IdDeliveryLink
+				, p.DateUpdated = GETDATE()
+			FROM DeliveryBackOffice.dbo.Product P
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
+				ON P.IdProduct = DLP.ProductId
+			WHERE DLP.DeliveryLinkId = @IdDeliveryLink
+
+		END;
+		ELSE
+		BEGIN
+
+			SELECT
+				  P.IdProduct
+				, P.Stock
+				, DLP.Quantity
+				, DLP.DeliveryLinkId
+				, DLP.IdDeliveryLinkProducts
+			FROM DeliveryBackOffice.dbo.Product P
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
+				ON P.IdProduct = DLP.ProductId
+			WHERE DLP.DeliveryLinkId = @IdDeliveryLink AND (P.Stock - DLP.Quantity) < 0
+
+		END;
+
+		COMMIT TRANSACTION;
+	END;
+	
 END TRY
 BEGIN CATCH
 	ROLLBACK TRANSACTION;
