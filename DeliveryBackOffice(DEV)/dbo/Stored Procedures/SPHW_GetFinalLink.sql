@@ -46,6 +46,7 @@ BEGIN TRY
 	BEGIN
 		BEGIN TRANSACTION;
 
+		--Actualizar delivery link
 		UPDATE [DeliveryBackOffice].[dbo].[DeliveryLink]
 		SET 
 		   [IsInsurance] = @IsInsurance
@@ -58,6 +59,39 @@ BEGIN TRY
 		  ,[UserUpdated] = @Token
 		  ,[DateUpdated] = GETDATE()
 		WHERE [IdDeliveryLink] = @IdDeliveryLink
+
+		--Actualizar stock de productos
+		IF NOT EXISTS (SELECT 1 FROM DeliveryBackOffice.dbo.Product P
+						INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
+							ON P.IdProduct = DLP.ProductId
+						WHERE DLP.DeliveryLinkId = @IdDeliveryLink AND (P.Stock - DLP.Quantity) < 0)
+		BEGIN
+
+			UPDATE P
+			SET P.Stock = P.Stock - DLP.Quantity
+				, P.UserUpdated = @Token + '_' + @IdDeliveryLink
+				, p.DateUpdated = GETDATE()
+			FROM DeliveryBackOffice.dbo.Product P
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
+				ON P.IdProduct = DLP.ProductId
+			WHERE DLP.DeliveryLinkId = @IdDeliveryLink
+
+		END;
+		ELSE
+		BEGIN
+
+			SELECT
+				  P.IdProduct
+				, P.Stock
+				, DLP.Quantity
+				, DLP.DeliveryLinkId
+				, DLP.IdDeliveryLinkProducts
+			FROM DeliveryBackOffice.dbo.Product P
+			INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
+				ON P.IdProduct = DLP.ProductId
+			WHERE DLP.DeliveryLinkId = @IdDeliveryLink AND (P.Stock - DLP.Quantity) < 0
+
+		END;
 
 		COMMIT TRANSACTION;
 	END;
