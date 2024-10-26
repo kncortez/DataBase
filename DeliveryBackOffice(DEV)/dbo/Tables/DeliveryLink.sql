@@ -35,6 +35,7 @@
     [DateUpdated] DATETIME NULL, 
 	[IsUserWithoutLogin] BIT NULL DEFAULT 0, 
     [NirPhone] NVARCHAR(5) NULL, 
+    [Packages] VARCHAR(MAX) NULL, 
     PRIMARY KEY CLUSTERED ([IdDeliveryLink] ASC),
     CONSTRAINT FK_DeliveryLink_AccountId FOREIGN KEY (AccountId) REFERENCES Account(AccIdAccount),
     CONSTRAINT FK_DeliveryLink_ReceiverCatCityPlaceId FOREIGN KEY (ReceiverCatCityPlaceId) REFERENCES CatCityPlace(IdCityPlace),
@@ -363,3 +364,12 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level1name = N'DeliveryLink',
     @level2type = N'COLUMN',
     @level2name = N'NirPhone'
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description',
+    @value = N'Cadena que almacena paquetes relacionados con un link generado sin logueo',
+    @level0type = N'SCHEMA',
+    @level0name = N'dbo',
+    @level1type = N'TABLE',
+    @level1name = N'DeliveryLink',
+    @level2type = N'COLUMN',
+    @level2name = N'Packages'

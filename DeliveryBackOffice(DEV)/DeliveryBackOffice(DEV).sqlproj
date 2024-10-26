@@ -1771,6 +1771,9 @@
     <Build Include="dbo\Stored Procedures\SPHW_GetFinalLink.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_CreateDeliveryLinkWithoutLogin.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetCheckoutWithoutLogin.sql" />
+    <Build Include="dbo\User Defined Types\TblProductWithoutLogin.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_UpdateImagesProductPathWithoutLogin.sql" />
+    <Build Include="dbo\Stored Procedures\SPHW_CreateProductsWithoutLogin.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\master.dacpac">

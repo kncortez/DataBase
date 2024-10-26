@@ -31,7 +31,8 @@ CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLinkWithoutLogin]
 	@ReceiverNeighborhood   NVARCHAR(50),
 	@ReceiverAddress        NVARCHAR(600),
 	@ReceiverAdditionalInstuctions NVARCHAR(250),
-	@IsDeliveryLink BIT = 1
+	@IsDeliveryLink BIT = 1,
+	@Packages NVARCHAR(MAX)
 AS
 BEGIN
     BEGIN TRANSACTION spCreateLinkWL
@@ -44,8 +45,18 @@ BEGIN
 					@IdBussinessSegment INT,
 					@IdKindOfVPClient INT,
 					@IdKindOfVPBussiness INT,
-					@CodeOfReference NVARCHAR(50);
-		
+					@CodeOfReference NVARCHAR(50),
+					@StrPhone NVARCHAR(20),
+					@IdCityPlace INT,
+					@IdOriginAddress INT;
+
+		SET @StrPhone = CONVERT(NVARCHAR(20), @Phone);
+
+		SET @IdCityPlace = (SELECT IdCityPlace 
+							FROM CatCityPlace WITH(NOLOCK) 
+							WHERE CityPlace = 'Casa' 
+							AND ISNULL(IdCountry,'GT') = @IdCountry);
+
 		SELECT @IdTownship = TW.IdTownship,
 				   @TownshipName = TW.TownshipName,
 				   @ProvinceName = PR.ProvinceName
@@ -165,6 +176,53 @@ BEGIN
 			1
 		);	
 
+		--INSERTAR DATOS EN UserAddress
+		INSERT INTO [dbo].[UserAddress]
+           ([UadIdTownship]
+           ,[UadIdAccount]
+           ,[UadIdCountry]
+           ,[UadFullName]
+           ,[UadAddress1]
+           ,[UadAddress2]
+           ,[UadNirPhone]
+           ,[UadPhone]
+           ,[UadAdditionalInstructions]
+           ,[UadRowStatus]
+           ,[UadTokenCreated]
+           ,[UadDateCreated]
+           ,[UadTokenUpdated]
+           ,[UadDateUpdated]
+           ,[CodeOfReference]
+           ,[IdCityPlace]
+           ,[VisitPointByClientPortfolioId]
+           ,[UadIdSettlement]
+           ,[UadIdDeliveryOption]
+           ,[UadFavorite])
+     VALUES
+           (@IdTownship
+           ,@AccountId
+           ,@IdCountry
+           ,@SenderName
+           ,@SenderAddress
+           ,''
+           ,CONCAT('',LEFT(@StrPhone, 4))
+		   ,SUBSTRING(@StrPhone, 5, LEN(@StrPhone) - 4)           
+           ,@SenderAdditionalInstuctions
+           ,1
+           ,'SYSTEM'
+           ,GETDATE()
+           ,null
+           ,null
+           ,@CodeOfReference
+           ,@IdCityPlace
+           ,null
+           ,null
+           ,null
+           ,0)
+
+
+		SET @IdOriginAddress = SCOPE_IDENTITY();
+
 		--proceso para creacion de link
 
 		DECLARE @StatusId INT = (
@@ -201,7 +259,8 @@ BEGIN
             UserCreated,
             DateCreated,
 			IsUserWithoutLogin,
-			NirPhone
+			NirPhone,
+			Packages
         )
         VALUES
         ('',
@@ -228,7 +287,8 @@ BEGIN
          'SYSTEM',
          GETDATE(),
 		 1,
-		 CONCAT('+',LEFT(@cadena, 3))
+		 CONCAT('+',LEFT(@cadena, 3)),
+		 @Packages
         )
 
         DECLARE @DeliveryLinkID INT;
@@ -249,7 +309,8 @@ BEGIN
         SELECT @DeliveryLinkID AS 'IdDeliveryLink',
                @hashResultado AS 'Token',
                DATEADD(DAY, 1, GETDATE()) AS 'ExpirationDate',
-               2 AS 'DeliveryLinkStatusId'
+               2 AS 'DeliveryLinkStatusId',
+			   @IdOriginAddress AS IdOriginAddress
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION
