@@ -45,7 +45,7 @@ BEGIN
                                     AND IdCountry = ISNULL(VPC.CountryId, 'GT')
                           ),
                           '+502'
-                  ) + ISNULL(VPC.Phone, '') AS 'Telefono remitente',
+                  ) + ISNULL(RIGHT(VPC.Phone, 8), '') AS 'Telefono remitente',
             T2.TownshipName + ' , ' + P2.ProvinceName AS 'Direccion remitente',
             VPC.Email AS 'Correo remitente',
             --PARA
@@ -79,7 +79,9 @@ BEGIN
             ISNULL(DL.DeliveryFacCODId, 0) AS 'IdNumberAcc',
             DB.[Name] AS 'NameBank',
             DFCOD.NameAccountFavCOD AS 'NameAcc',
-            ISNULL(CCC.CodeISO, 'GTQ') AS 'CurrencyISO'
+            ISNULL(CCC.CodeISO, 'GTQ') AS 'CurrencyISO',
+			--PACKAGES
+			DL.Packages AS 'Packages'
         FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH (NOLOCK)
             LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH (NOLOCK)
                 ON DL.ReceiverSettlementId = S.IdSettlement
