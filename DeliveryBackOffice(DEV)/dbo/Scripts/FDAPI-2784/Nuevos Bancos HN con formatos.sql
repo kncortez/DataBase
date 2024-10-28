@@ -1,3 +1,5 @@
+
+--pendiente
 ---Correge el nombre del banco FICOHSA en Honduras.
 	UPDATE DeliveryBank
 	set Name = 'BANCO FICOHSA',	Description = 'FICOHSA'

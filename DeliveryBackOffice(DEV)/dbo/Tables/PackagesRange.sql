@@ -21,14 +21,14 @@
     [DateCreated]          DATETIME        NOT NULL,
     [TokenUpdated]         NVARCHAR (50)   NULL,
     [DateUpdated]          DATETIME        NULL,
-    [IdCountry]            VARCHAR (2)     NULL,
+    [IdCountry]            VARCHAR(2)      NULL,
     [IdCurrency]           INT             NULL,
     CONSTRAINT [PK_PackagesRange] PRIMARY KEY CLUSTERED ([IdPackagesRange] ASC),
     CONSTRAINT [FK_PackagesRange_CatBusinessSegment] FOREIGN KEY ([CatBusinessSegmentId]) REFERENCES [dbo].[CatBusinessSegment] ([IdBusinessSegment]),
-    CONSTRAINT [FK_PackagesRange_CatTypeRate] FOREIGN KEY ([CatTypeRateId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate])
+    CONSTRAINT [FK_PackagesRange_CatTypeRate] FOREIGN KEY ([CatTypeRateId]) REFERENCES [dbo].[CatTypeRate] ([IdTypeRate]),
+    CONSTRAINT [FK_IdCountryPR_CatCountry] FOREIGN KEY (IdCountry) REFERENCES [dbo].[CatCountry](IdCountry),
+    CONSTRAINT [FK_IdCurrency_CatCurrencyCOD] FOREIGN KEY (IdCurrency) REFERENCES [dbo].[CatCurrencyCOD](IdCatCurrencyCOD)
 );
-
-
 
 
 GO

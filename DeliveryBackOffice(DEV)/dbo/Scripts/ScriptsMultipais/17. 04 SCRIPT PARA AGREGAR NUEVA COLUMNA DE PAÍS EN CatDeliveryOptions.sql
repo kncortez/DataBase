@@ -1,6 +1,5 @@
 --screjecutado 8
 
-
 INSERT INTO [dbo].[CatDeliveryOptions]
            ([Name]
            ,[Description]

@@ -23,16 +23,15 @@
     [HubLogisticId]          INT             NULL,
     [LastLatitude]           NVARCHAR (20)   NULL,
     [LastLongitude]          NVARCHAR (20)   NULL,
-    [IdCountry]              VARCHAR (2)     NULL,
+    [IdCountry]              varchar(2)      NULL
     PRIMARY KEY CLUSTERED ([IdVehicle] ASC),
     FOREIGN KEY ([CatVehicleBrandId]) REFERENCES [dbo].[CatVehicleBrand] ([IdCatVehicleBrand]),
     FOREIGN KEY ([CatVehicleCategoriesId]) REFERENCES [dbo].[CatVehicleCategories] ([IdCatVehicleCategories]),
     CONSTRAINT [FD_CatVehicleHubLogistics] FOREIGN KEY ([HubLogisticId]) REFERENCES [dbo].[HubLogistics] ([IdHubLogistic]),
     CONSTRAINT [FKVehicleType] FOREIGN KEY ([IdTypeVehicle]) REFERENCES [dbo].[CatTypeVehicle] ([IdTypeVehicle]),
-    CONSTRAINT [UK] UNIQUE NONCLUSTERED ([UnitNumber] ASC)
+    CONSTRAINT [UK] UNIQUE NONCLUSTERED ([UnitNumber] ASC),
+    CONSTRAINT [FK_IdCountry] FOREIGN KEY([IdCountry]) REFERENCES [dbo].[CatCountry] ([IdCountry])
 );
-
-
 
 
 

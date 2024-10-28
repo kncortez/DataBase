@@ -1,19 +1,18 @@
-﻿
-CREATE TABLE [dbo].[MarketplaceCart] (
-    [IdMarketplaceCart] INT           IDENTITY (1, 1) NOT NULL,
-    [AccountId]         BIGINT        NULL,
-    [RowStatus]         BIT           NOT NULL,
-    [TokenCreated]      NVARCHAR (50) NOT NULL,
-    [DateCreated]       DATETIME      NOT NULL,
-    [TokenUpdated]      NVARCHAR (50) NULL,
-    [DateUpdated]       DATETIME      NULL,
-    [IdCountry]         NVARCHAR (3)  NULL,
-    [RegisterUserId]    BIGINT        NULL,
-    CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
-    CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY ([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount])
-);
 
-
+CREATE TABLE [dbo].[MarketplaceCart](
+	[IdMarketplaceCart] [int] IDENTITY(1,1) NOT NULL,
+	[AccountId] [bigint] NULL,
+	[RowStatus] [bit] NOT NULL,
+	[TokenCreated] [nvarchar](50) NOT NULL,
+	[DateCreated] [datetime] NOT NULL,
+	[TokenUpdated] [nvarchar](50) NULL,
+	[DateUpdated] [datetime] NULL,
+	[IdCountry]  [NVARCHAR](3) NULL,
+	[RegisterUserId] [bigint] NULL,
+	CONSTRAINT [PK_MarketplaceCart] PRIMARY KEY CLUSTERED ([IdMarketplaceCart] ASC),
+	CONSTRAINT [FK_MarketplaceCart_Account] FOREIGN KEY([AccountId]) REFERENCES [dbo].[Account] ([AccIdAccount]),
+	CONSTRAINT [FK_MarketplaceCart_RegisterUser] FOREIGN KEY([RegisterUserId]) REFERENCES [dbo].[RegisterUser] ([UsrIdUser])
+)
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Estado del registro' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'MarketplaceCart', @level2type=N'COLUMN',@level2name=N'RowStatus'

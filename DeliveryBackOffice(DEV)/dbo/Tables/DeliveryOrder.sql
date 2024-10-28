@@ -450,6 +450,16 @@ CREATE NONCLUSTERED INDEX [IDX_IsLastMileReturn]
 	INCLUDE (Sender_FirstName,Sender_LastName,Sender_Phone,Receiver_Phone,Receiver_Address,PriceShippment,Collect_OnDelivery,StatusOrderId);
 
 GO
+CREATE NONCLUSTERED INDEX [ix_IsLastMileReturn]
+    ON [dbo].[DeliveryOrder]([IsLastMileReturn] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated]
+    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
+    INCLUDE([Pieces_Dry], [Pieces_Cold], [StatusOrderId]);
+
+GO
 EXEC sp_addextendedproperty @name = N'MS_Description',
     @value = N'Número de ticket',
     @level0type = N'SCHEMA',
@@ -972,17 +982,6 @@ EXEC sp_addextendedproperty @name = N'MS_Description',
     @level2type = N'COLUMN',
     @level2name = N'Contact_Confirmed'
 GO
-
-GO
-CREATE NONCLUSTERED INDEX [ix_IsLastMileReturn]
-    ON [dbo].[DeliveryOrder]([IsLastMileReturn] ASC);
-
-
-GO
-CREATE NONCLUSTERED INDEX [IDX_IdCustomer_DateCreated]
-    ON [dbo].[DeliveryOrder]([IdCustomer] ASC, [DateCreated] ASC)
-    INCLUDE([Pieces_Dry], [Pieces_Cold], [StatusOrderId]);
-
 
 GO
 CREATE NONCLUSTERED INDEX [IDX_SenderCountryId]

@@ -8,6 +8,11 @@
 -- Create date: <2022-12-20>
 -- Description:	<Agregar Campos de Piezas Frías y piezas Secas>
 -- =============================================
+-- =============================================
+-- Author:		<Edelman Vásquez>
+-- Create date: <2024-10-23>
+-- Description:	<Integración nuevo formato 4X4>
+-- =============================================
 CREATE  PROCEDURE [dbo].[sps_getReprintMultipleGuides]
 	-- Add the parameters for the stored procedure here
 	@GUIDESLIST TblGUides READONLY,
@@ -376,7 +381,18 @@ BEGIN
 										END
 									)
 									, ''
-								) [GuideOrigin]
+								) [GuideOrigin],
+								dev.ReceiverCountryId,
+								IIF(dev.InsuranceAmount>800 AND dev.IsInsuarance=1,1,0) 'IsInsured',
+								CASE
+									WHEN DOP.PiecePhysicalWeight > 0 THEN 
+								  IIF(DOP.PiecePhysicalWeight >= DOP.PieceWeight, CAST(ROUND(DOP.PiecePhysicalWeight,0) AS INT),CAST(ROUND(DOP.PieceWeight,0) AS INT))
+								ELSE 
+									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
+								'WeightLB',
+								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
+	    						ISNULL(DSC.RouteCode,'') AS 'RouteCode',
+								ISNULL(DPF.dpf_SAPcardCode,'') AS 'CardCode'
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
                                       ON vp.CodeOfReference = dev.Sender_ID
@@ -406,6 +422,16 @@ BEGIN
                                       ON dcba.DCBA_Id = dev.DCBA_ID
                                   LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
                                       ON dev.IdDeliveryOption = cdo.IdDeliveryOption
+								   LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+			                          ON   DOP.GuideSerie = dev.Guide_Serie   AND  DOP.GuideNumber  = dev.Guide_Number
+								LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
+			                          ON  dev.[OriginSenderId] = DPF.dpf_VpCodeOfReference
+								LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
+								LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
+			                          ON dev.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (dev.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+                                LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
+                                      ON RC.RbcIdRate= RH.RheId
 								  OUTER APPLY (
 									SELECT 
 										TOP (1) 
