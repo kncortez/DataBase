@@ -1,8 +1,3 @@
--- ============================================
--- Author:		  <Brandon, Pedroza >
--- Modified	date: <2024-10-02>
--- Description:	  <Se agrega validacion para actualizar el stock del producto>
--- =============================================
 CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLinkProduct]
   @LinkId INT,
   @ProductId INT,
@@ -11,23 +6,7 @@ CREATE PROCEDURE [dbo].[SPHW_CreateDeliveryLinkProduct]
 AS 
 BEGIN 
 	BEGIN TRANSACTION
-	BEGIN TRY
-		--ACTUALIZAR STOCK DE PRODUCTO
-		IF EXISTS (
-			SELECT 1 
-			FROM Product 
-			WHERE IdProduct = @ProductId AND Stock >= @Quantity
-		)
-		BEGIN
-			UPDATE Product
-			SET Stock = Stock - @Quantity
-			WHERE IdProduct = @ProductId
-		END
-		ELSE
-		BEGIN
-			-- Coloca la cantidad que hay disponible en stock
-			SET @Quantity = (SELECT Stock FROM Product WITH(NOLOCK) WHERE IdProduct = @ProductId)
-		END
+	BEGIN TRY		
 		INSERT INTO DeliveryBackOffice.dbo.DeliveryLinkProducts 
 		(DeliveryLinkId,ProductId,Quantity,Price,RowStatus,UserCreated,DateCreated)
 		VALUES
