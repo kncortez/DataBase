@@ -39,8 +39,11 @@ BEGIN
 		IF OBJECT_ID('tempdb.dbo.#Temp', 'U') IS NOT NULL
 			DROP TABLE #Temp;
 	
-		IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL
+		IF OBJECT_ID('tempdb.dbo.#NowInsert', 'U') IS NOT NULL 
 			DROP TABLE #NowInsert;
+
+		IF OBJECT_ID('tempdb.dbo.#Piece', 'U') IS NOT NULL 
+			DROP TABLE #Piece;
 
 		SELECT TOP 1
 			   @TokenAct = RowStatus,
@@ -164,9 +167,9 @@ BEGIN
 
 				CREATE NONCLUSTERED INDEX templistGuides_Piece495
 				ON #listGuides (
-									ItemSerie,
-									ItemNumber
-								);
+								  ItemSerie,
+								  ItemNumber
+							   );
 
 				INSERT INTO #listGuides
 						(
@@ -217,12 +220,41 @@ BEGIN
 						INNER JOIN #listGuides LS
 							ON DO.Guide_Serie = LS.ItemSerie
 							   AND DO.Guide_Number = LS.ItemNumber
-				
-					SELECT @IspickupGuide =  MAX(CAST(ISNULL(DP.IsPickup,0) AS INT))
+					
+					CREATE TABLE #Piece 
+					(
+						IsPickup BIT,
+						GuideSerie NVARCHAR(10),
+						GuideNumber NVARCHAR(15),
+						ItemPiece INT
+					)
+
+					CREATE NONCLUSTERED INDEX tempPiece
+					ON #Piece (
+								GuideSerie,
+								GuideNumber
+								);
+
+					INSERT INTO #Piece
+					(
+						IsPickup,
+						GuideSerie,
+						GuideNumber,
+						ItemPiece
+					)
+					SELECT DISTINCT ISNULL(DP.IsPickup,0) AS IsPickup,
+						   DP.GuideSerie,
+						   DP.GuideNumber,
+						   LS.ItemPiece
 					FROM DeliveryOrderPiece DP WITH(NOLOCK)
 					INNER JOIN #listGuides LS
 						ON DP.GuideSerie = LS.ItemSerie
 						   AND DP.GuideNumber = LS.ItemNumber
+					WHERE ISNULL(DP.IsPickup,0) = 1
+
+					
+					SELECT @IspickupGuide = COUNT(*)
+					FROM #Piece
 
 					IF @ValidCountry = 1
 					BEGIN
@@ -658,8 +690,12 @@ BEGIN
 						END
 						ELSE
 						BEGIN
-							SELECT 0 AS StatusCode, 
+							SELECT 1 AS StatusCode, 
 								'Las piezas ya se encuentran procesadas' AS Message
+
+							SELECT CONCAT(GuideSerie, GuideNumber) AS Guide,
+								   'Las piezas de  esta guía ya fueron escaneadas' AS Message
+							FROM #Piece
 						END
 					END				
 					ELSE
