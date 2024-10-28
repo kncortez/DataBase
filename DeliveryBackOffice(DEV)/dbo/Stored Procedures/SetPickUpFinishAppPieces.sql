@@ -46,7 +46,7 @@ BEGIN
 			   @TokenAct = RowStatus,
 			   @hourtoken = DATEDIFF(HOUR, DateCreated, GETDATE()) 
 		FROM LogTokenPOD
-		WHERE LogTokenPOD LIKE '%' + @Token + '%'
+		WHERE LogTokenPOD = @Token 
 		ORDER BY DateCreated DESC
 
 
@@ -166,13 +166,6 @@ BEGIN
 				ON #listGuides (
 									ItemSerie,
 									ItemNumber
-								);
-
-				CREATE NONCLUSTERED INDEX templistGuides_4444
-				ON #listGuides (
-									ItemSerie,
-									ItemNumber,
-									ItemPiece
 								);
 
 				INSERT INTO #listGuides
