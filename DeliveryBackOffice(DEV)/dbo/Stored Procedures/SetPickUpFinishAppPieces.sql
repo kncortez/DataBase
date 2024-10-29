@@ -31,7 +31,8 @@ BEGIN
 				@IdHublogistic INT,
 				@Sender_Address NVARCHAR(200),
 				@Sender_Email NVARCHAR(200),
-				@ManifestSerie NVARCHAR(3) = 'FM'
+				@ManifestSerie NVARCHAR(3) = 'FM',
+				@ValidExis INT 
 
 		IF OBJECT_ID('tempdb.dbo.#listGuides', 'U') IS NOT NULL
 			DROP TABLE #listGuides;
@@ -44,6 +45,9 @@ BEGIN
 
 		IF OBJECT_ID('tempdb.dbo.#Piece', 'U') IS NOT NULL 
 			DROP TABLE #Piece;
+
+		IF OBJECT_ID('tempdb.dbo.#Delivery', 'U') IS NOT NULL 
+			DROP TABLE #Delivery;
 
 		SELECT TOP 1
 			   @TokenAct = RowStatus,
@@ -198,16 +202,31 @@ BEGIN
 					[ItemPiece] = 0;
 
 				-- VALIDAMOS SI HAY ALGUNA GUIA QUE NO EXISTA
-				IF 
-				(	SELECT MIN(CASE 
-								 WHEN DO.Guide_Number IS NULL THEN 0  
-								 ELSE 1                               
-							   END) AS ExistsFlag
-					FROM #listGuides LS
+
+				SELECT DISTINCT
+					LS.ItemSerie,
+					LS.ItemNumber,
+					CASE
+						WHEN DO.Guide_Number IS NOT NULL THEN
+							1
+						ELSE
+							0
+					END AS Exist
+				INTO #Delivery
+				FROM #listGuides LS
 					LEFT JOIN DeliveryOrder DO WITH (NOLOCK)
-					  ON DO.Guide_Serie = LS.ItemSerie
-						 AND DO.Guide_Number = LS.ItemNumber
-				) = 1
+						ON DO.Guide_Serie = LS.ItemSerie
+						   AND DO.Guide_Number = LS.ItemNumber
+
+				CREATE NONCLUSTERED INDEX tempDelivery
+					ON #Delivery (
+									ItemNumber,
+									Exist
+								 );
+
+				SET @ValidExis = (SELECT COUNT(*) FROM #Delivery WHERE Exist = 0)
+
+				IF @ValidExis > 1
 				BEGIN
 						SELECT @ValidCountry = MAX(   CASE
 													  WHEN DO.SenderCountryId = @IdCountry THEN
@@ -239,13 +258,11 @@ BEGIN
 					(
 						IsPickup,
 						GuideSerie,
-						GuideNumber,
-						ItemPiece
+						GuideNumber
 					)
 					SELECT DISTINCT ISNULL(DP.IsPickup,0) AS IsPickup,
 						   DP.GuideSerie,
-						   DP.GuideNumber,
-						   LS.ItemPiece
+						   DP.GuideNumber
 					FROM DeliveryOrderPiece DP WITH(NOLOCK)
 					INNER JOIN #listGuides LS
 						ON DP.GuideSerie = LS.ItemSerie
@@ -706,8 +723,13 @@ BEGIN
 				END
 				ELSE
 				BEGIN
-					SELECT 0 AS StatusCode,
+					SELECT 1 AS StatusCode,
 						   'La guia no existe' AS Message
+
+						   SELECT CONCAT(ItemSerie, ItemNumber) AS Guide, 
+								  'La guía no existe' AS Message
+						   FROM #Delivery
+						   WHERE Exist = 0
 				END
 			END
 			ELSE
