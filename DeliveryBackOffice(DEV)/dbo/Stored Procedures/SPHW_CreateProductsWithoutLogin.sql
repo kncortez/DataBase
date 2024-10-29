@@ -13,6 +13,8 @@ BEGIN
     BEGIN TRANSACTION;
     BEGIN TRY
         DECLARE @IdProduct INT;
+        DECLARE @IdTagOthers INT;
+		SET @IdTagOthers = (SELECT IdCatProductTag FROM CatProductTag WITH(NOLOCK) WHERE [Description]= 'Others');
 
         -- Variable de tabla para almacenar los Ids de los productos insertados
         DECLARE @InsertedProducts TABLE (Reference INT, IdProduct INT,Quantity INT, Price DECIMAL(14,2));
@@ -122,7 +124,27 @@ BEGIN
                 GETDATE()
             FROM @ProductImages
             WHERE ProductId = @ProductId; -- Asociar la imagen al producto actual
-
+            
+            INSERT INTO [dbo].[TagByProduct]
+			(
+			   [TagId]
+			   ,[ProductId]
+			   ,[RowStatus]
+			   ,[UserCreated]
+			   ,[DateCreated]
+			   ,[UserUpdated]
+			   ,[DateUpdated]
+			)
+			VALUES
+           (
+			   @IdTagOthers
+			   ,@IdProduct
+			   ,1
+			   ,'SYSTEM'
+			   ,GETDATE()
+			   ,NULL
+			   ,NULL
+		   );
             -- Avanzar al siguiente producto
             FETCH NEXT FROM product_cursor INTO @ProductId, @Name, @Description, @Quantity, @Price;
         END
