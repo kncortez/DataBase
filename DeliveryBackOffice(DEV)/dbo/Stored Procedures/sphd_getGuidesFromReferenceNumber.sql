@@ -15,7 +15,7 @@ BEGIN
 		SELECT TOP 10 CONCAT(Guide_Serie, Guide_Number) AS Guide
 		FROM [dbo].[DeliveryOrder] do WITH (NOLOCK)
 		WHERE do.Ticket_Number = @ReferenceNumber
-			AND ISNULL([do].SenderCountryId,'GT') = @IdCountry
+			AND [do].SenderCountryId = @IdCountry
 		ORDER BY DateCreated DESC
 
     END TRY 
