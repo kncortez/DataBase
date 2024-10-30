@@ -36,23 +36,29 @@ BEGIN
         --RESUMEN DE ENVIO
         SELECT
             --DE
-            RU.UsrNickName AS 'Nombre remitente',
+            CASE WHEN DL.IsUserWithoutLogin = 0 THEN RU.UsrNickName 
+				 ELSE VPC.DescriptionOfClient END AS 'Nombre remitente',
+            ISNULL(RIGHT(VPC.Phone, 8), '') AS 'Telefono remitente',
             ISNULL(   '+' +
-                          (
-                              SELECT [Value]
-                              FROM DeliveryBackOffice.dbo.ConfigParams
-                              WHERE [Name] = 'AreaCode'
-                                    AND IdCountry = ISNULL(VPC.CountryId, 'GT')
-                          ),
-                          '+502'
-                  ) + ISNULL(RIGHT(VPC.Phone, 8), '') AS 'Telefono remitente',
+                    (
+                        SELECT [Value]
+                        FROM DeliveryBackOffice.dbo.ConfigParams
+                        WHERE [Name] = 'AreaCode'
+                            AND IdCountry = ISNULL(VPC.CountryId, 'GT')
+                    ),
+                    '+502'
+            ) AS 'NirphoneOrigin',
             T2.TownshipName + ' , ' + P2.ProvinceName AS 'Direccion remitente',
             VPC.Email AS 'Correo remitente',
+            VPC.IdSettlement AS 'SenderSettlement',
+			S2.Settlement AS 'SenderSettlementName',
             --PARA
             DL.ReceiverName AS 'Nombre destinatario',
             DL.ReceiverPhone AS 'Telefono destinatario',
             T.TownshipName + ' , ' + P.ProvinceName AS 'Direccion destinatario',
             DL.ReceiverEmail AS 'Correo destinatario',
+            S.Settlement AS 'ReceiverSettlementName',
+			ISNULL(DL.NirPhone, '+502') AS 'NirphoneDestiny',
             --DATOS PARA COTIZADOR
             ISNULL(DL.OriginCodeOfReference, '0') AS 'CodeOfReferenceSource',
             ISNULL(DL.DestinyCodeOfReference, '0') AS 'CodeOfReferenceDestiny',
@@ -100,6 +106,8 @@ BEGIN
                 ON VPC.IdTownship = T2.IdTownship
             LEFT JOIN DeliveryBackOffice.dbo.Province P2 WITH (NOLOCK)
                 ON T2.IdProvince = P2.IdProvince
+            LEFT JOIN DeliveryBackOffice.dbo.Settlement S2 WITH (NOLOCK)
+				ON S2.IdSettlement = VPC.IdSettlement
             INNER JOIN DeliveryBackOffice.dbo.RolByUserByAccount RBUBA WITH (NOLOCK)
                 ON DL.AccountId = RBUBA.RuaIdAccount
             INNER JOIN DeliveryBackOffice.dbo.RegisterUser RU WITH (NOLOCK)
