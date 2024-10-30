@@ -69,7 +69,7 @@ BEGIN TRY
 
 			UPDATE P
 			SET P.Stock = P.Stock - DLP.Quantity
-				, P.UserUpdated = @Token + '_' + @IdDeliveryLink
+				, P.UserUpdated = @Token + '_' + CAST(@IdDeliveryLink AS NVARCHAR(10))
 				, p.DateUpdated = GETDATE()
 			FROM DeliveryBackOffice.dbo.Product P
 			INNER JOIN DeliveryBackOffice.dbo.DeliveryLinkProducts DLP
