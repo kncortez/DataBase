@@ -1,3 +1,10 @@
+/*
+En el campo Value ingresar el valor según el ambiente:
+Desarrollo:       develop.apicore.forzadelivery.io/images/comprobantes/
+QA:               sandbox.apicore.forzadelivery.io/images/comprobantes/
+Producción:       apicore.forzadelivery.io/images/comprobantes/
+*/
+
 INSERT INTO [dbo].[ConfigParams]
            ([Name]
            ,[Description]
