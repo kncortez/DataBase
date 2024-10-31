@@ -23,10 +23,9 @@ BEGIN
 				ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
 		WHERE vpc.CountryId = @CountryId
 			AND ID_DeliveryOrderBySettlement = @ManifestId
-			AND ISNULL(do.IsCollect, 0) = 0
-			AND do.Collect_OnDelivery <= 0
 			AND cu.Abbreviation IS NOT NULL
 			AND cu.Abbreviation IN ('IGSS','RENAP')
+			AND cu.IsVoucherRequired = 1
 
 		--TABLA 1, Guías para todos los clientes 
 		SELECT do.Guide_Serie, do.Guide_Number AS Guides
@@ -38,9 +37,8 @@ BEGIN
 			LEFT JOIN Customer cu WITH(NOLOCK)
 				ON cu.IdCustomer = COALESCE(do.IdCustomer, vpc.CustomerID)
 		WHERE vpc.CountryId = @CountryId
-			AND  ID_DeliveryOrderBySettlement = @ManifestId
-			AND ISNULL(do.IsCollect, 0) = 0
-			AND do.Collect_OnDelivery <= 0
+			AND ID_DeliveryOrderBySettlement = @ManifestId
+			AND cu.IsVoucherRequired = 1
 
     END TRY 
 	BEGIN CATCH
