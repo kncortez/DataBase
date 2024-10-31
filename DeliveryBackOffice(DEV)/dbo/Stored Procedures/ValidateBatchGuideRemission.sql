@@ -31,7 +31,7 @@ BEGIN
                    )
      BEGIN
           SELECT @Code = 0,
-                 @Message = 'No existe un lote activo para el tipo de documento de Guia de Remisión '
+                 @Message = 'No existe un lote activo para el tipo de documento de Guía de Remisión'
 
           SELECT @Code AS StatusCode,
                  @Message AS [Message];
@@ -59,7 +59,7 @@ BEGIN
                )
      BEGIN
           SELECT @Code = 0,
-                 @Message = 'El lote contiene valores vacios en campos obligatorios '
+                 @Message = 'El lote contiene valores vacíos en campos obligatorios'
 
           SELECT @Code AS StatusCode,
                  @Message AS [Message];
@@ -81,7 +81,7 @@ BEGIN
                    )
      BEGIN
           SELECT @Code = 0,
-                 @Message = 'La fecha actual excede la fecha limite de Generacion para el lote asignado'
+                 @Message = 'La fecha actual excede la fecha límite de Generación para el lote asignado'
 
           SELECT @Code AS StatusCode,
                  @Message AS [Message];
@@ -100,11 +100,11 @@ BEGIN
                    AND ibh.[Status] = 1
                    AND ibh.[RowStatus] = 1
                    AND ibh.[TypeDocument] = 8
-                   AND Last_Process = FinalRange
+                   AND Last_Process >= FinalRange
                )
      BEGIN
           SELECT @Code = 0,
-                 @Message = 'Ya ha sido generado el ultimo correlativo disponible del lote asignado actual';
+                 @Message = 'Ya ha sido generado el último correlativo disponible del lote asignado actual';
 
           SELECT @Code AS StatusCode,
                  @Message AS [Message];

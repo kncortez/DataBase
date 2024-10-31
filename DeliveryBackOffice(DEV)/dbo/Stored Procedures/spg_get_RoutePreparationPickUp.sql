@@ -83,7 +83,10 @@ BEGIN
         --Amount DECIMAL(12, 2) NULL,
         Timeid INT NULL,
         --StatusName NVARCHAR(100)
-        IdServiceManagement INT NULL
+        IdServiceManagement INT NULL,
+        Latitude  NVARCHAR(50),
+        Longitude NVARCHAR(50),
+        Email     NVARCHAR(400)
     );
 
     PRINT 'Insert tabla temp';
@@ -138,7 +141,11 @@ BEGIN
            --ISNULL(srv.Amount, 0),
            dop.TimePlaId,
            --,css.[Name] StatusName
-           srv.IdServiceManagement
+           srv.IdServiceManagement,
+           --Values for Dispatch Tracker
+           vpc.Latitude,
+           vpc.Longitude,
+           vpc.Email
     FROM DeliveryBackOffice.dbo.SchedulePickup AS shp WITH (NOLOCK)
         --LEFT JOIN [DeliveryBackOffice].[dbo].[HubLogistics] AS hub WITH (NOLOCK)
         --    ON shp.IdHubLogistics = hub.IdHubLogistic
@@ -221,7 +228,10 @@ BEGIN
            --SUM(ISNULL(tp.AmountToPay,0)) Amount,
            MIN(tb.ServiceVehicle) 'ServiceVehicle',
            --ISNULL(tb.StatusName,'') StatusName
-           tb.IdServiceManagement
+           tb.IdServiceManagement,
+           MAX(tb.Latitude) AS Latitude,
+           MAX(tb.Longitude) AS Longitude,
+           MAX(tb.Email) AS Email
     FROM @tbl tb
         LEFT JOIN @TempPrice tp
             ON tp.GuideSerie = tb.GuideSerie
