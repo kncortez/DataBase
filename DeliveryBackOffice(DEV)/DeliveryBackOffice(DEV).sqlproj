@@ -580,6 +580,8 @@
     <Build Include="dbo\Tables\Account.sql" />
     <Build Include="dbo\Tables\APIMobileLogs.sql" />
     <Build Include="dbo\Tables\CurrencyExchangeRates.sql" />
+    <Build Include="dbo\Tables\CatTypeDocument.sql" />
+    <Build Include="dbo\Tables\InvoiceBatchDetailLinehaul.sql" />
     <Build Include="dbo\Stored Procedures\support_setReversalStatus.sql" />
     <Build Include="dbo\Stored Procedures\support_assing_manifest.sql" />
     <Build Include="dbo\Stored Procedures\support_ReleaseContainer.sql" />
@@ -782,11 +784,13 @@
     <Build Include="dbo\Stored Procedures\sphw_GetCouriersByUserHubs.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisitsForInternal.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCourierFailedVisits.sql" />
+    <Build Include="dbo\Stored Procedures\sphd_GetSettlementGuidesToReprint.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GetCatHubs.sql" />
     <Build Include="dbo\Stored Procedures\sphw_GenerateFileByConceptCOD.sql" />
     <Build Include="dbo\Stored Procedures\sphwGetValidTokenPortal.sql" />
     <Build Include="dbo\Stored Procedures\sphd_set_Rate_Data.sql" />
     <Build Include="dbo\Stored Procedures\sphd_set_AssigmentRouteService.sql" />
+    <Build Include="dbo\Stored Procedures\GetSettlementToReprintByRoute.sql" />
     <Build Include="dbo\Stored Procedures\sphd_setReversal.sql" />
     <Build Include="dbo\Stored Procedures\sphd_saveVisitPoint.sql" />
     <Build Include="dbo\Stored Procedures\sphd_reportCODto0.sql" />
@@ -1778,6 +1782,10 @@
     <Build Include="dbo\Stored Procedures\SPHW_RegisterLinkWhatsAppId.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetTokenProduct.sql" />
     <Build Include="dbo\Stored Procedures\SPHW_GetFinalLink.sql" />
+    <Build Include="dbo\Stored Procedures\GetBatchGuideRemissionByCountry.sql" />
+    <Build Include="dbo\Stored Procedures\UpdateSendManifestLinehaul.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateBatchGuideRemission.sql" />
+    <Build Include="dbo\Stored Procedures\ValidateCertificationGuide.sql" />
     <Build Include="dbo\Stored Procedures\GetRouteDispatchTrack.sql" />
     <Build Include="dbo\Stored Procedures\RouteDispatchTrackByRoute.sql" />
     <Build Include="dbo\Stored Procedures\resetRouteDispatchTracker.sql" />
