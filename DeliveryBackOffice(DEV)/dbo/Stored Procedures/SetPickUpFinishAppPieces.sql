@@ -226,7 +226,7 @@ BEGIN
 
 				SET @ValidExis = (SELECT COUNT(*) FROM #Delivery WHERE Exist = 0)
 
-				IF @ValidExis > 1
+				IF @ValidExis = 0
 				BEGIN
 						SELECT @ValidCountry = MAX(   CASE
 													  WHEN DO.SenderCountryId = @IdCountry THEN
@@ -724,7 +724,7 @@ BEGIN
 				ELSE
 				BEGIN
 					SELECT 1 AS StatusCode,
-						   'La guia no existe' AS Message
+						   'La guía no existe' AS Message
 
 						   SELECT CONCAT(ItemSerie, ItemNumber) AS Guide, 
 								  'La guía no existe' AS Message
