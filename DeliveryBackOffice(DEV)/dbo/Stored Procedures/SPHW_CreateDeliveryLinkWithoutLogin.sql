@@ -216,7 +216,7 @@ BEGIN
            ,@CodeOfReference
            ,@IdCityPlace
            ,null
-           ,null
+           ,@IdSettlement
            ,null
            ,0)
 
