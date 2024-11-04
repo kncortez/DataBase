@@ -5,24 +5,35 @@
 -- =============================================
 CREATE PROCEDURE [dbo].[SetBatchInvoiceByCountryCreditNote]
     @idInvoiceCreditNote BIGINT,
-    @user      NVARCHAR(100) = 'ORODRIGUEZ-SYS'
+    @user      NVARCHAR(100) = 'ORODRIGUEZ-SYS',
+@CodeOfReference INT = 0
 AS
 BEGIN
-	BEGIN TRY
 		 DECLARE @Batch BIGINT,
 				 @InitialRange BIGINT,
 				 @FinalRange BIGINT,
 				 @CAI NVARCHAR(100),
 				 @LastProcessed BIGINT,
 				 @inv_certificationFEL NVARCHAR(75),
-				 @idInvoice BIGINT
+				 @idInvoice BIGINT,
+				 @Code INT = 0,
+				 @Message NVARCHAR(250)
 
 		 /*
 		   InvoiceBatchHeader
 		   status = 1 y enable = 1 es cuando el lote esta habilidado y activo
 		   status = 0 y enable = 1 es un error - no contemplado
-		   status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturación (Ya viene lote nuevo ejemplo)
+		   status = 1 y enable = 0 es cuando no se puede facturar, porque se detuvo facturaciÃ³n (Ya viene lote nuevo ejemplo)
 		 */
+
+		EXEC [ValidateBatchInvoice] @TypeDocument    = 6,
+									@CodeOfReference = @CodeOfReference,
+									@Code            = @Code OUTPUT,
+									@Message         = @Message OUTPUT
+
+    -- Si todas las validaciones fueron correctas
+    IF @Code = 1
+    BEGIN
 
 		SELECT  @inv_certificationFEL = CONCAT(RIGHT('000' + CAST(invHe.Establishment AS VARCHAR), 3), '-',
 											   RIGHT('000' + CAST(invHe.Emision_Point AS VARCHAR), 3),'-',
@@ -41,7 +52,7 @@ BEGIN
 		FROM DeliveryBackOffice.dbo.invoiceHeader ih
 		WHERE ih.inv_pk_id = @idInvoiceCreditNote
 
-		--Actualizamos el último procesado 
+		--Actualizamos el Ãºltimo procesado 
 		UPDATE InvoiceBatchHeader
 		SET Last_Process = @LastProcessed
 		WHERE Id_Lote = @Batch
@@ -78,13 +89,28 @@ BEGIN
 		--Actualizamos certificado FEL de nota de credito generada
 		UPDATE DeliveryBackOffice.dbo.invoiceHeader
 		SET inv_certificationFEL = CONCAT(@inv_certificationFEL, RIGHT('00000000' + CAST(@LastProcessed AS VARCHAR), 8)),
-			inv_serieFEL = @CAI
+			inv_serieFEL = @CAI,
+			inv_numberFEL = @LastProcessed,
+			inv_establecimientoFEL = 0,
+			systemOperation = 2,
+			inv_FechaHoraFel = GETDATE(),
+			inv_dateFel = GETDATE(),
+			inv_CountryFEL = 'HN',
+			inv_EntityFEL = 'HN',
+			inv_descriptionFEL = 'PROCESO REALIZADO',
+			inv_RequestorFEL = '',
+			inv_TransactionFEL = ''
 		WHERE inv_pk_id = @idInvoiceCreditNote
 
-		--Respondemos con certificacion FEL generada, CAI y ultimo procesado sobre nota de credito generada
-		SELECT 1 AS 'RESULT'
-	END TRY
-	BEGIN CATCH
-		SELECT 0 AS 'RESULT'
-	END CATCH
+    END
+
+    IF @Code <> 0
+    BEGIN
+         SELECT CONCAT(@inv_certificationFEL, RIGHT('00000000' + CAST(@LastProcessed AS VARCHAR), 8)) AS 'inv_certificationFEL',
+                @CAI AS 'inv_serieFEL',
+                @LastProcessed AS'inv_numberFEL',
+                @Code AS code,
+                @Message AS [message]
+    END
+
 END;
