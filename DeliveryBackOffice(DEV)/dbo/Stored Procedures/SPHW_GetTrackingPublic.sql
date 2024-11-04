@@ -3,6 +3,11 @@
 -- Create date: <2024-10-08>
 -- Description:	<Delivery Tracking - Método para obtener información pública para rastreo de parquete.>
 -- =============================================
+-- =============================================
+-- Author:		<Cristian Suazo>
+-- Create date: <2024-11-04>
+-- Description:	<Se agrega el DeliveryETA para el trackin>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[SPHW_GetTrackingPublic]
 @GuideSerie NVARCHAR(4),
@@ -20,9 +25,10 @@ BEGIN TRY
 
 	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
 	SELECT 'Creado por', '' UNION ALL --1
-	SELECT 'Arribó a las instalaciones', 'Tu paquete ya está en nuestras instalaciones.' UNION ALL --2
-	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --3
-	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --4
+	SELECT 'Recibido','Indica que la guía se recibio' UNION ALL --2
+	SELECT 'Arribó a las instalaciones', 'Tu paquete ya está en nuestras instalaciones.' UNION ALL --3
+	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --4
+	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --5
 
 	--Iconos
 	SELECT
@@ -50,7 +56,19 @@ BEGIN TRY
 
 			-- Caso 3: Si no tiene código de área válido, devuelve NULL (ej. 2345-6789)
 			ELSE ISNULL(CP.[Value],'502')
-		END AS 'AreaCode'
+		END AS 'AreaCode',
+		CASE
+           WHEN ER.Nombre = 'En ruta' THEN
+               CAST(GETDATE() AS DATE)
+           WHEN ER.Nombre != 'En ruta'
+                AND DO.DeliveryETA > GETDATE() THEN
+               CAST(DO.DeliveryETA AS DATE)
+           WHEN ER.Nombre = 'En ruta'
+                AND DO.DeliveryETA < GETDATE() THEN
+               CAST(DATEADD(DAY, 1, GETDATE()) AS DATE)
+           ELSE
+               CAST(DO.DeliveryETA AS DATE)
+       END AS DeliveryETA
 	FROM
 	DeliveryBackOffice.dbo.DeliveryOrder DO WITH(NOLOCK)
 	INNER JOIN DeliveryBackOffice.dbo.StatusOrder SO WITH(NOLOCK)
