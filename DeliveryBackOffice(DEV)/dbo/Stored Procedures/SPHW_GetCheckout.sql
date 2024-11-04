@@ -81,6 +81,7 @@ BEGIN TRY
 			, DFCOD.NameAccountFavCOD AS 'NameAcc'
 			, ISNULL(CCC.CodeISO,'GTQ') AS 'CurrencyISO'
 			, IIF(DL.GuideNumber IS NOT NULL AND DL.GuideNumber > 0, 'true', 'false') AS 'IsGuide'
+			, DL.IdDeliveryLink AS 'IdDeliveryLink'
 		FROM DeliveryBackOffice.dbo.DeliveryLink DL WITH(NOLOCK)
 		LEFT JOIN DeliveryBackOffice.dbo.Settlement S WITH(NOLOCK)
 			ON DL.ReceiverSettlementId = S.IdSettlement
