@@ -640,6 +640,7 @@ begin
 									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], IIF(MSL.SubscriptionId IS NOT NULL,MSL.SubscriptionId, 0))) + ','  
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
+                                     + '"Route_Code": "' + ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",' 
 									 + '"DeliveryETA": "' + COALESCE
 																(
 																	FORMAT([dev].[DeliveryETA], 'ddMM')
@@ -741,6 +742,8 @@ begin
 								  LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CSBT  WITH(NOLOCK) 
 								      ON SBT.CatSubscriptionId = CSBT.IdCatSubscription
 									  AND CSBT.RowStatus = 1
+                                LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
