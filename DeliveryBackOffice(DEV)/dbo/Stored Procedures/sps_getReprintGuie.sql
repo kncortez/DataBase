@@ -640,6 +640,7 @@ begin
 									 + '"ProductId": ' + CONVERT(VARCHAR, IIF([MSL].[MembershipId] IS NOT NULL,[MSL].[MembershipId], IIF(MSL.SubscriptionId IS NOT NULL,MSL.SubscriptionId, 0))) + ','  
 									 + '"Pieces_Dry":' +  COALESCE(CONVERT(VARCHAR,dev.Pieces_Dry),'') + ','
 									 + '"Pieces_Cold": ' + COALESCE(CONVERT(VARCHAR, [dev].[Pieces_Cold]), '') + ',' 
+                                     + '"Route_Code": "' + ISNULL(CAST(DSC.RouteCode AS varchar),'') + '",' 
 									 + '"DeliveryETA": "' + COALESCE
 																(
 																	FORMAT([dev].[DeliveryETA], 'ddMM')
