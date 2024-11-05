@@ -391,7 +391,7 @@ BEGIN
 									CAST(ROUND(RH.AdditionalWeightRate,0)AS INT) END 
 								'WeightLB',
 								CAST(ROUND(RH.WeightLimit,0) AS INT) AS 'WeightOf',
-	    						ISNULL(DSC.RouteCode,'') AS 'RouteCode',
+	    						ISNULL(DSC.RouteCode,'') AS 'Route_Code',
 								ISNULL(DPF.dpf_SAPcardCode,'') AS 'CardCode'
                               FROM DeliveryBackOffice.dbo.DeliveryOrder dev WITH (NOLOCK)
                                   INNER JOIN DeliveryBackOffice.dbo.VisitPointClient vp WITH (NOLOCK)
