@@ -742,6 +742,8 @@ begin
 								  LEFT JOIN [DeliveryBackOffice].[dbo].[CatSubscription] CSBT  WITH(NOLOCK) 
 								      ON SBT.CatSubscriptionId = CSBT.IdCatSubscription
 									  AND CSBT.RowStatus = 1
+                                LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
+			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
                               WHERE dev.Guide_Number = @Guide_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
