@@ -1,6 +1,4 @@
-﻿DROP PROCEDURE SPHWAM_CreateAccountMovilApp
-GO;
--- =============================================  
+﻿-- =============================================  
 -- Author:  <Edelman>  
 -- Create date: <2024-10-08>  
 -- Description: <Crear registro de cuenta nueva desde App Móvil>  
