@@ -25,7 +25,7 @@ BEGIN TRY
 
 	INSERT INTO @EncabezadoRastreo (Nombre, Descripcion)
 	SELECT 'Creado por', '' UNION ALL --1
-	SELECT 'Recibido','Indica que la guía se recibio' UNION ALL --2
+	SELECT 'Recibido por Forza','Indica que la guía se recibio' UNION ALL --2
 	SELECT 'Arribó a las instalaciones', 'Tu paquete ya está en nuestras instalaciones.' UNION ALL --3
 	SELECT 'En ruta', 'Tu paquete está por ser entregado.' UNION ALL --4
 	SELECT 'Entregado', 'Tu paquete ha sido entregado.'; --5
