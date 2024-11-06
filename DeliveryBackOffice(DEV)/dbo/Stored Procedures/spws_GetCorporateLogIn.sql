@@ -577,6 +577,7 @@ BEGIN
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.CodeISO), '') + '",'
                                                        + '"CurrencySymbolCorporate":"'
                                                        + ISNULL(CONVERT(NVARCHAR(20), CCC.Symbol), '') + '",'
+                                                     , +'"NameSettlement":"' + ISNULL(STL.Settlement, '') + '",' 
 
                                                        + '"ListCod":' + '[{' + '"IdBank":"'
                                                        + ISNULL(

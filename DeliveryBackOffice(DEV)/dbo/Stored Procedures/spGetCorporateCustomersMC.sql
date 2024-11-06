@@ -3,6 +3,11 @@
 -- Create date: <2024-06-26>
 -- Description:	<Crear Guías - Método que devuelva un listado de clientes corporativos filtrado por país.>
 -- =============================================
+-- =============================================
+-- Author:		<Oscar Rodriguez>
+-- Create date: <2024-10-23>
+-- Description:	<Regresar informacion de poblados>
+-- =============================================
 
 CREATE PROCEDURE [dbo].[spGetCorporateCustomersMC]
     -- Add the parameters for the stored procedure here
@@ -41,7 +46,9 @@ SELECT DISTINCT
     REPLACE(CONVERT(NVARCHAR, ISNULL(dbk.[Acronym], '')), '"', '') AS Acronym,
     REPLACE(ISNULL([CODAccountName], ''), '"', '') AS NameAccount,
     CONVERT(NVARCHAR, ISNULL(cba.[BankAccountType], '')) AS TypeAccount,
-    ISNULL([CODAccountNumber], '') AS NumberAcc
+    ISNULL([CODAccountNumber], '') AS NumberAcc,
+	ISNULL(STL.IdSettlement,0) AS IdSettlement,
+	ISNULL(STL.Settlement,'') AS SettlementName
 FROM DeliveryBackOffice.dbo.Customer cu WITH(NOLOCK)
 LEFT JOIN DeliveryBackOffice.dbo.DeliveryBank dbk WITH(NOLOCK)
     ON cu.CODAccountBankID = dbk.Id_bank
