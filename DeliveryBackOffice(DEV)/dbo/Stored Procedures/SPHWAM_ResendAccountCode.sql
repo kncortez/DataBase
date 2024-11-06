@@ -14,6 +14,7 @@ BEGIN
 	DECLARE @FirstName AS NVARCHAR(100); 
 	DECLARE @LastName AS NVARCHAR(100); 
     DECLARE @Email AS NVARCHAR(200); 
+	DECLARE @PBX NVARCHAR (5) = (SELECT [Value] FROM ConfigParams WHERE IdCountry = @CountryId AND Name = 'PBX');  
   	SELECT @IsConfirmed = AccConfirm 
           FROM Account 
           WHERE AccIdAccount = @IdAccount
@@ -37,7 +38,7 @@ BEGIN
         WHERE ac.AccIdAccount = @IdAccount
 
 	DECLARE @CountryName NVARCHAR (50) = (SELECT CountryNameES FROM CatCountry WHERE IdCountry = @CountryId);  
-	SELECT 1 AS [StatusCode], 'Consulta exitosa' AS[MessageResponse], @CodeTemporal AS [Code],@FirstName AS [FirstName], @LastName AS [LastName], @CountryName AS [CountryName], @Email AS [Email]
+	SELECT 1 AS [StatusCode], 'Se reenvío el correo exitosamente' AS[MessageResponse], @CodeTemporal AS [Code],@FirstName AS [FirstName], @LastName AS [LastName], @CountryName AS [CountryName], @Email AS [Email], @PBX AS [PBX] 
 	END
 	ELSE
 	BEGIN

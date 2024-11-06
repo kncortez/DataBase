@@ -27,6 +27,7 @@ BEGIN
  DECLARE @IdSystem INT = (Select TOP 1  SysIdSystem From [dbo].[CatSystem]) --Where SysNameSystem ='App de clientes')  
  DECLARE @TypeAccount AS NVARCHAR(10)  = 'IND'  
  DECLARE @CountryName NVARCHAR (50) = (SELECT CountryNameES FROM CatCountry WHERE IdCountry = @CountryId);  
+ DECLARE @PBX NVARCHAR (5) = (SELECT [Value] FROM ConfigParams WHERE IdCountry = @CountryId AND Name = 'PBX');  
   
   -- insertar en tabla temporal posbibles mensajes de error  
   
@@ -301,7 +302,7 @@ BEGIN
     END CATCH;  
     IF @@TRANCOUNT > 0 BEGIN  
      COMMIT TRANSACTION;  
-     SELECT 1 AS [StatusCode], 'Ok' AS[MessageResponse], @Password AS [Password],@IdAccount AS [IdAccount], @CountryName AS [CountryName]  
+     SELECT 1 AS [StatusCode], 'Ok' AS[MessageResponse], @Password AS [Password],@IdAccount AS [IdAccount], @CountryName AS [CountryName], @PBX AS [PBX] 
   
     END  
   
