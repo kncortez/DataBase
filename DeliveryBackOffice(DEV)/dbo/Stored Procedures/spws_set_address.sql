@@ -221,7 +221,6 @@ BEGIN
 							ON prv.IdProvince = twn.IdProvince
 						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
 							ON ua.IdCityPlace = ctp.IdCityPlace
-							   AND ctp.CityPlaceRowStatus = 'true'
 						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 							ON vp.CodeOfReference = ua.CodeOfReference
 						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
@@ -234,6 +233,7 @@ BEGIN
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
 							  AND conf.TownshipId = vp.IdTownship
 							  AND conf.[Address] = vp.[Address]
+							  AND ctp.CityPlaceRowStatus = 'true'
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN
@@ -322,7 +322,6 @@ BEGIN
 							ON prv.IdProvince = twn.IdProvince
 						INNER JOIN dbo.CatCityPlace ctp WITH (NOLOCK)
 							ON ua.IdCityPlace = ctp.IdCityPlace
-							   AND ctp.CityPlaceRowStatus = 'true'
 						LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 							ON vp.CodeOfReference = ua.CodeOfReference
 						LEFT JOIN dbo.ConfirmedAddress conf WITH (NOLOCK)
@@ -335,6 +334,7 @@ BEGIN
 							  AND ISNULL(vp.IsOriginVisitPoint, 1) = 1 --Debe ser Origen
 							  AND conf.TownshipId = vp.IdTownship
 							  AND conf.[Address] = vp.[Address]
+							  AND ctp.CityPlaceRowStatus = 'true'
 
 						IF (@IdAddressFavorite IS NOT NULL AND @IdAddressFavorite > 0)
 						BEGIN

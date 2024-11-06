@@ -182,7 +182,6 @@ BEGIN
                                                                      ON prv.IdProvince = twn.IdProvince
                                                                  INNER JOIN dbo.CatCityPlace ctp
                                                                      ON ua.IdCityPlace = ctp.IdCityPlace
-                                                                        AND ctp.CityPlaceRowStatus = 'true'
 																	LEFT JOIN dbo.VisitPointClient vp WITH (NOLOCK)
 																		ON vp.CodeOfReference = ua.CodeOfReference
 																	LEFT JOIN dbo.Settlement st WITH (NOLOCK)
@@ -190,6 +189,7 @@ BEGIN
                                                              WHERE rua.RuaIdAccount = @IdAccount
                                                                    AND rua.RuaIdUser = @IdUser
                                                                    AND ua.UadRowStatus = 1
+                                                                   AND ctp.CityPlaceRowStatus = 'true'
                                                              FOR XML PATH(''), TYPE
                                                          ).value('.', 'varchar(max)')
                                                        , 1
@@ -206,11 +206,11 @@ BEGIN
                                     ON ru.UsrIdUser = @IdUser
                                 LEFT JOIN DeliveryBackOffice.dbo.Membership    mmbrshp WITH (NOLOCK)
                                     ON cu.IdCustomer = mmbrshp.CustomerId
-                                       AND mmbrshp.RowStatus = 1
-                                       AND mmbrshp.ExpirationDate >= GETDATE()
-                                       AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
                             WHERE ac.AccIdAccount = @IdAccount
                             AND (cu.CountryID = @IdCountry OR (@IdCountry = 'GT' AND cu.CountryID IS NULL))
+                            AND mmbrshp.RowStatus = 1
+                            AND mmbrshp.ExpirationDate >= GETDATE()
+                            AND mmbrshp.CatMembershipStatusId IN ( @ActiveSalesPackageId )
                             FOR XML PATH(''), TYPE
                         ).value('.', 'varchar(max)')
                       , 1

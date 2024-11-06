@@ -165,7 +165,8 @@ BEGIN
         LEFT JOIN DeliveryBackOffice.dbo.BreakdownOfPayment bdp WITH (NOLOCK)
             ON bdp.IdCost = ct.IdCost
 		INNER JOIN @GUIDESLIST GL
-		ON ProductNumber=CONCAT(GL.Guide_Serie, GL.Guide_Number)
+		--ON ProductNumber=CONCAT(GL.Guide_Serie, GL.Guide_Number)
+		ON GuideSerie = GL.Guide_Serie AND GuideNumber = GL.Guide_Number
 		
 	
 
@@ -422,14 +423,14 @@ BEGIN
                                       ON dcba.DCBA_Id = dev.DCBA_ID
                                   LEFT JOIN DeliveryBackOffice.dbo.CatDeliveryOptions cdo WITH (NOLOCK)
                                       ON dev.IdDeliveryOption = cdo.IdDeliveryOption
-								   LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
+								 LEFT JOIN [dbo].[DeliveryOrderPiece] DOP WITH(NOLOCK)
 			                          ON   DOP.GuideSerie = dev.Guide_Serie   AND  DOP.GuideNumber  = dev.Guide_Number
 								LEFT JOIN [dbo].[del_ParametrosFactura] DPF WITH(NOLOCK)
 			                          ON  dev.[OriginSenderId] = DPF.dpf_VpCodeOfReference
 								LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
 			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
 								LEFT JOIN  dbo.RatebyCustomer RC WITH(NOLOCK)
-			                          ON dev.IdCustomer = RC.RbcIdCustomer  AND RbcRowStatus = 1 AND (dev.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
+			                          ON dev.IdCustomer = RC.RbcIdCustomer AND (dev.Sender_ID = RC.RbcCodeOfReference OR RC.RbcCodeOfReference IS NULL)
                                 LEFT JOIN    dbo.RateHeader RH WITH(NOLOCK)
                                       ON RC.RbcIdRate= RH.RheId
 								  OUTER APPLY (
@@ -658,8 +659,6 @@ BEGIN
 											[DeliveryBackOffice].[dbo].[TSERoutePreparationHeader] TSERPH  WITH(NOLOCK) 
 											ON
 												[TSERPD].[TSERoutePreparationHeaderID] = [TSERPH].[IDTSERoutePreparationHeader]
-												AND
-												[TSERPH].[RowStatus] = 1
 										INNER JOIN
 											[DeliveryBackOffice].[dbo].[CatRouteCluster] CRC  WITH(NOLOCK) 
 											ON
@@ -674,7 +673,10 @@ BEGIN
 										[TSERPD].[GuideNumber] = [dev].[Guide_Number]
 										AND
 										[TSERPD].[RowStatus] = 1
+										AND
+										[TSERPH].[RowStatus] = 1
 								) [TSEGuide]
+								WHERE RbcRowStatus = 1
 							  -- FIN ADICIONES
 								  
                               --WHERE dev.Guide_Number = @Guide_Number

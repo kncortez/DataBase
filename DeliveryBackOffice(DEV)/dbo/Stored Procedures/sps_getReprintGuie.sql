@@ -745,6 +745,7 @@ begin
                                 LEFT JOIN DumpServiceCoverage DSC WITH(NOLOCK)
 			                          ON DSC.IdSettlement = dev.ReceiverIdSettlement
                               WHERE dev.Guide_Number = @Guide_Number
+							  AND dev.Guide_Serie = @Serie_Number
                               FOR XML PATH(''), TYPE
                           ).value('.', 'varchar(max)'),
                           1,
