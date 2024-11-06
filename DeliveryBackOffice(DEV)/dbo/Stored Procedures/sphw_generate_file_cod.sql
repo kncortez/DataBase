@@ -1964,4 +1964,92 @@ BEGIN
 				,btd.AccountNumber
 				,cda.AccountNumber
 	END;
+
+    -- FORMATO BANCO DAVIVIENDA HONDURAS S.A.
+	IF @IdBank = ( SELECT
+						Id_bank
+					FROM DeliveryBank
+					WHERE Id_bank = 27
+					AND Id_country = 'HN'
+					AND Id_status = 1)
+    BEGIN
+		--------DETALLADO
+		SELECT
+		   	CASE WHEN btd.TypeAccountName = 'AHORRO' THEN 'A'
+			ELSE 'C' END  AS 'TIPO' ,
+		   RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''),
+							CHAR(2),''),
+						CHAR(3),''),
+					CHAR(9),''),
+				CHAR(10),''),
+			CHAR(13),''))) 'CUENTA'
+		   ,btd.Amount 'MONTO'
+		FROM BatchDetailCOD btd WITH (NOLOCK)
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.GuideSerie = do.Guide_Serie
+				AND btd.GuideNumber = do.Guide_Number
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu  WITH (NOLOCK)
+			ON ISNULL(do.IdCustomer, vp.CustomerID) = cu.IdCustomer
+		WHERE
+		btd.CatConceptCODId IN (2)
+		AND bt.RowStatus = @EnabledRow
+		AND BTD.RowStatus = @EnabledRow
+		AND btd.BatchCODId = @BatchCODId
+		AND btd.Excluded = @Excluded
+		AND ISNULL(cu.CatBatchTypeCODId, @BatchTypeCOD_DET) = @BatchTypeCOD_DET
+		AND ISNULL(do.SenderCountryID, 'GT') = @IdCountrySender
+
+		UNION
+		----------ACUMULADO
+		SELECT
+			MAX(CASE WHEN btd.TypeAccountName = 'AHORRO' THEN 'A'
+			ELSE 'C' END ) AS 'TIPO' ,
+		   RTRIM(LTRIM(REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									RTRIM(LTRIM(btd.AccountNumber)),
+								CHAR(1),''),
+							CHAR(2),''),
+						CHAR(3),''),
+					CHAR(9),''),
+				CHAR(10),''),
+			CHAR(13),''))) 'CUENTA'
+		   ,SUM(btd.Amount) 'MONTO'
+		FROM BatchDetailCOD btd WITH (NOLOCK)
+		INNER JOIN BatchCOD bt  WITH (NOLOCK)
+			ON bt.IdBatchCOD = btd.BatchCODId
+		LEFT JOIN DeliveryOrder do WITH (NOLOCK)
+			ON btd.[GuideSerie] = do.[Guide_Serie]
+				AND btd.[GuideNumber] = do.[Guide_Number]
+		LEFT JOIN VisitPointClient vp  WITH (NOLOCK)
+			ON vp.CodeOfReference = do.Sender_ID
+		LEFT JOIN Customer cu
+			ON ISNULL(do.[IdCustomer], vp.CustomerID) = cu.[IdCustomer]		
+		WHERE btd.CatConceptCODId IN (2)
+		AND bt.RowStatus = @EnabledRow
+		AND BTD.RowStatus = @EnabledRow
+		AND BTD.BatchCODId = @BatchCODId
+		AND btd.Excluded = @Excluded
+		AND cu.CatBatchTypeCODId = @BatchTypeCOD_AC
+		AND ISNULL(do.SenderCountryID ,'GT') = @IdCountrySender
+
+
+		GROUP BY cu.IdCustomer
+				,btd.CatAccountTypeCODId
+				,btd.AccountNumber
+	END;
 END;
