@@ -16,7 +16,11 @@ BEGIN TRY
   SELECT @IsConfirmed = AccConfirm 
           FROM Account 
           WHERE AccIdAccount = @IdAccount
-  IF(@IsConfirmed != 'C')
+  IF(@IsConfirmed = 'V')
+  BEGIN 
+    SELECT 0 AS [StatusCode], 'El codigo ya fue verificado' AS[MessageResponse]
+  END
+  ELSE IF(@IsConfirmed = 'P')
   BEGIN
     SELECT  @CodeTemporal = UsrLastPassword
         FROM RegisterUser   us WITH (NOLOCK)  
