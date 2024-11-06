@@ -18,7 +18,11 @@ BEGIN
   	SELECT @IsConfirmed = AccConfirm 
           FROM Account 
           WHERE AccIdAccount = @IdAccount
-  	IF(@IsConfirmed != 'C')
+	IF(@IsConfirmed = 'V')
+  	BEGIN 
+    	SELECT 0 AS [StatusCode], 'La cuenta ya fue verificada' AS[MessageResponse]
+ 	END
+  	ELSE IF(@IsConfirmed = 'P')
   	BEGIN
     SELECT  @CodeTemporal = UsrLastPassword,
 			@FirstName = pe.PerFirstName,
