@@ -10,10 +10,12 @@ AS
 BEGIN  
 DECLARE @IdTypeOfAccount INT;
 DECLARE @UserEmail VARCHAR(100);
+DECLARE @ProfileImage VARCHAR(300);
 DECLARE @ValTAC INT;
 DECLARE @TAC VARCHAR(5);
 
-SELECT  @UserEmail = us.UsrEmail
+SELECT  @UserEmail = us.UsrEmail,
+        @ProfileImage = ISNULL(ac.ImageProfile, '')
         FROM RegisterUser   us WITH (NOLOCK)  
 			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
 				ON pe.PerIdPerson = us.UsrIdPerson  
@@ -49,7 +51,8 @@ SELECT  @UserEmail = us.UsrEmail
         ISNULL(us.PrefixCallingCode, '') AS PrefixCallingCode,
         COALESCE(us.Phone, ' ') AS Phone,
         ISNULL(us.VerifiedPhone, 'false') AS VerifiedPhone,
-        @TAC AS TAC
+        @TAC AS TAC,
+        @ProfileImage AS ProfileImage
         FROM RegisterUser           us WITH (NOLOCK)  
             INNER JOIN [dbo].Person pe WITH (NOLOCK)  
                 ON pe.PerIdPerson = us.UsrIdPerson  
