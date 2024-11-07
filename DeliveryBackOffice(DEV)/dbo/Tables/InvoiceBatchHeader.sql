@@ -24,6 +24,7 @@ CREATE TABLE [dbo].[InvoiceBatchHeader] (
     [TokenUpdated]                   NVARCHAR (50) NULL,
     [DateUpdated]                    DATETIME      NULL,
     [AmountRequested]                BIGINT        NULL,
+    [companyName]                    NVARCHAR(300) NULL,
     CONSTRAINT [PK_InvoiceLoteHeader] PRIMARY KEY CLUSTERED ([Id_Lote] ASC)
 );
 
