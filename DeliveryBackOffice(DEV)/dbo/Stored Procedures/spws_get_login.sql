@@ -30,6 +30,7 @@ BEGIN
     DECLARE @PasswordExpired BIT;
     DECLARE @VisitPointValid BIT = 0;
     DECLARE @CODPercentage NVARCHAR(10);
+    DECLARE @IdAccount INT;
 
     
      DECLARE @CountryIdOrigin NVARCHAR(3)=(SELECT TOP 1  
@@ -793,7 +794,8 @@ BEGIN
                    AND res.UstIdSystem = @IdSystem
         WHERE usr.UsrEmail = @Username;
         
-        SELECT  @StatusAccount = ISNULL(ac.AccConfirm, '')
+        SELECT  @StatusAccount = ISNULL(ac.AccConfirm, ''),
+                @IdAccount = ac.AccIdAccount
         FROM RegisterUser   us WITH (NOLOCK)  
 			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
 				ON pe.PerIdPerson = us.UsrIdPerson  
@@ -810,7 +812,7 @@ BEGIN
         SET @jsonResult =
         (
             SELECT STUFF((
-                             SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '",' + '"Status":"' + @StatusAccount + '"}'
+                             SELECT '{"IdResult":' + CONVERT(VARCHAR, IdResult) + ',' + '"Message":"' + Message + '",' + '"Status":"' + @StatusAccount + '",' + '"IdAccount":"' + CONVERT(VARCHAR, @IdAccount) + '"}'
                              FROM #errormessage
                              WHERE Id = 'Invalid'
                              FOR XML PATH(''), TYPE
