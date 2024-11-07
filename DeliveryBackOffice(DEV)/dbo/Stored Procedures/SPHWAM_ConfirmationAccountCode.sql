@@ -22,7 +22,7 @@ BEGIN TRY
   END
   ELSE IF(@IsConfirmed = 'P')
   BEGIN
-    SELECT  @CodeTemporal = UsrLastPassword
+    SELECT  @CodeTemporal = UsrCodeVerif
         FROM RegisterUser   us WITH (NOLOCK)  
 			INNER JOIN [dbo].Person               pe WITH (NOLOCK)  
 				ON pe.PerIdPerson = us.UsrIdPerson  

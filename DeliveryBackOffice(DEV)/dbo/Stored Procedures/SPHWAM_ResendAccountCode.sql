@@ -24,7 +24,7 @@ BEGIN
  	END
   	ELSE IF(@IsConfirmed = 'P')
   	BEGIN
-    SELECT  @CodeTemporal = UsrLastPassword,
+    SELECT  @CodeTemporal = UsrCodeVerif,
 			@FirstName = pe.PerFirstName,
 			@LastName = pe.PerLastName,
             @Email = us.UsrEmail

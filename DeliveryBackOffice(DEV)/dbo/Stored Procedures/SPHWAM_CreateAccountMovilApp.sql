@@ -78,6 +78,7 @@ BEGIN
       ,UsrEmail  
       ,UsrAvatar  
       ,UsrLastPassword  
+      ,UsrCodeVerif 
       ,UsrPasswordExpiration  
       ,UsrLang  
       ,UsrDeviceType  
@@ -90,7 +91,7 @@ BEGIN
       ,PrefixCallingCode   
       ,Phone  
       )  
-     Values(@IdPerson, @FirstName,@Email,NULL,@Password,@ExpirationDate,NULL,NULL,NULL,NULL,NULL, 1,'SYS-ADMIN-MOVIL-APP',GETDATE(),NULL,NULL)  
+     Values(@IdPerson, @FirstName,@Email,NULL,@Password,@Password,@ExpirationDate,NULL,NULL,NULL,NULL,NULL, 1,'SYS-ADMIN-MOVIL-APP',GETDATE(),NULL,NULL)  
      DECLARE @IdUser as bigint =  SCOPE_IDENTITY();  
   
        
