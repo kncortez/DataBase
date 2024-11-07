@@ -51,8 +51,8 @@ BEGIN
 	ORDER BY
 		DA.Date_Created DESC;
 
-	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription =  'Incidencia en ruta')
-	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WITH(NOLOCK) WHERE OrderDescription =  'Incidencia Validada')
+	SET @StatusIncident = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia en ruta')
+	SET @StatusIncidentValidated = (SELECT StatusOrderId FROM StatusOrder WHERE OrderDescription =  'Incidencia Validada')
 
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
@@ -195,15 +195,15 @@ BEGIN
                                                               ELSE
                                                                   ''
                                                           END
-                                    FROM dbo.SenderReceiver courier WITH(NOLOCK)
-                                        LEFT JOIN [dbo].[HubLogistics] HL WITH(NOLOCK)
+                                    FROM dbo.SenderReceiver courier
+                                        LEFT JOIN [dbo].[HubLogistics] HL
                                             ON [courier].[HubLogisticId] = [HL].[IdHubLogistic]
                                     WHERE courier.ID = da.ID_Courier
                                 ) + ' ' +
                              --I.DescriptionIncidence  + ' ' + ISNULL(dod.Observations,'')
                              ISNULL(dod.Observations, '')
-                         FROM DeliveryBackOffice.dbo.CatTypeIncidence I WITH(NOLOCK)
-                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH(NOLOCK)
+                         FROM DeliveryBackOffice.dbo.CatTypeIncidence I
+                             INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da
                                  ON da.ID_Incident = I.IdIncidenceType
                          WHERE dod.Guide_Serie = da.Guide_Serie
                                AND dod.Guide_Number = da.Guide_Number
@@ -212,8 +212,8 @@ BEGIN
                      ''
                            )
 				WHEN dod.StatusOrderId = @StatusIncident THEN
-						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla   WITH(NOLOCK)
-						INNER JOIN CatTypeIncidence cti WITH(NOLOCK)
+						(SELECT TOP 1 cti.NameIncidence FROM DeliveryAttempt dla  
+						INNER JOIN CatTypeIncidence cti 
 						ON dla.ID_Incident = cti.IdIncidenceType WHERE dod.Guide_Serie = @Guide_Serie AND dod.Guide_Number = @Guide_Number AND dod.DeliveryAttemptId = dla.ID)
 
                  WHEN dod.StatusOrderId IN ( 15 ) THEN
@@ -225,15 +225,15 @@ BEGIN
                                (
                                    SELECT TOP 1 '[ ' + [P].[PerFirstName] + ' ' + [P].[PerLastName] + ' ]' + ' ' + '[ '
                                           + [CS].[StationName] + ' ]'
-                                   FROM [dbo].[TokenLog] TL WITH(NOLOCK)
-                                       INNER JOIN [RegisterUser] RU WITH(NOLOCK)
+                                   FROM [dbo].[TokenLog] TL
+                                       INNER JOIN [RegisterUser] RU
                                            ON [TL].[TknIdUser] = [RU].[UsrIdUser]
-                                       INNER JOIN [dbo].[Person] P WITH(NOLOCK)
+                                       INNER JOIN [dbo].[Person] P
                                            ON [RU].[UsrIdPerson] = [PerIdPerson]
-                                       INNER JOIN [dbo].[RolByUserBySystem] RUS WITH(NOLOCK)
+                                       INNER JOIN [dbo].[RolByUserBySystem] RUS
                                            ON [TL].[TknIdSystem] = [RUS].[RusIdSystem]
                                               AND [RU].[UsrIdUser] = [RUS].[RusIdUser]
-                                       INNER JOIN [dbo].[CatStation] CS WITH(NOLOCK)
+                                       INNER JOIN [dbo].[CatStation] CS
                                            ON [RUS].[StationId] = [CS].[IdStation]
                                    WHERE [TL].[TknIdToken] = [dod].[UserCreated]
                                ),
@@ -289,8 +289,8 @@ BEGIN
 				WHEN dod.StatusOrderId =@StatusIncidentValidated THEN 
 						(SELECT TOP 1
                             dlp.Path_Incident
-							FROM dbo.DeliveryAttempt datt WITH(NOLOCK)
-                         INNER JOIN dbo.DeliveryProof dlp WITH(NOLOCK)
+							FROM dbo.DeliveryAttempt datt
+                         INNER JOIN dbo.DeliveryProof dlp
                              ON datt.ID_Proof = dlp.ID
 							WHERE dod.Guide_Serie = @Guide_Serie
                           AND dod.Guide_Number = @Guide_Number
@@ -299,17 +299,23 @@ BEGIN
                      ''
              END
             ) AS [ImagePath],
-             (CASE WHEN dod.StatusOrderId = 5 THEN 
-				(SELECT TOP 1
-					IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
-						FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
-							INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
-								ON da.Guide_Serie = dp.Guide_Serie
-									AND da.Guide_Number = dp.Guide_Number
-						WHERE da.Guide_Serie = @Guide_Serie 
-								AND da.Guide_Number = @Guide_Number
-                                AND da.Delivered = 1 order By dp.Date_Photo desc)
-			ELSE '' END) AS [Dry],
+            CASE WHEN dod.StatusOrderId = 5 THEN 
+			    ISNULL(
+						(Cast(DeliveryBackOffice.dbo.fn_get_document_image_url(@Guide_Serie + CAST(@Guide_Number AS VARCHAR)) as VARCHAR(300))),
+						--ISNULL('https://tracking.forzadelivery.com/DocImages/GT.DELIVERYZ12/Copia1/V291/17088433.jpg',
+						(
+							SELECT TOP 1
+							IIF([dp].[Path_Dry] = '', dp.Path_Dry,ISNULL([Path_Dry], [Path_Dry]))
+								FROM [DeliveryBackOffice].[dbo].[DeliveryProof] dp WITH (NOLOCK)
+									INNER JOIN DeliveryBackOffice.dbo.DeliveryAttempt da WITH (NOLOCK)
+										ON da.Guide_Serie = dp.Guide_Serie
+											AND da.Guide_Number = dp.Guide_Number
+								WHERE da.Guide_Serie = @Guide_Serie 
+										AND da.Guide_Number = @Guide_Number
+										AND da.Delivered = 1 order By dp.Date_Photo desc)
+						)
+			ELSE '' 
+			END AS [Dry],
             (
                 SELECT TOP 1
                        IIF([dp].[Path_Cold] = '', dp.Path_Cold, ISNULL([Path_Cold], [Path_Cold]))
@@ -359,10 +365,10 @@ BEGIN
 			(CASE
                     WHEN dod.StatusOrderId = @StatusIncidentValidated THEN
 							(  SELECT TOP 1
-								(prs.PerFirstName+' '+prs.PerLastName) FROM Person prs WITH(NOLOCK)
-									INNER JOIN RegisterUser usr WITH(NOLOCK)
+								(prs.PerFirstName+' '+prs.PerLastName) FROM Person prs
+									INNER JOIN RegisterUser usr
 										ON prs.PerIdPerson = usr.UsrIdPerson
-									INNER JOIN TokenLog tkl WITH(NOLOCK)
+									INNER JOIN TokenLog tkl
 										ON usr.UsrIdUser = tkl.TknIdUser
 									WHERE dod.Guide_Serie = @Guide_Serie
 										  AND dod.Guide_Number = @Guide_Number
@@ -403,7 +409,7 @@ BEGIN
         FROM dbo.DeliveryOrderDetail dod WITH (NOLOCK)
             INNER JOIN DeliveryBackOffice.dbo.StatusOrder so WITH (NOLOCK)
                 ON so.StatusOrderId = dod.StatusOrderId
-            INNER JOIN [dbo].[CatCheckpointType] CCT WITH(NOLOCK)
+            INNER JOIN [dbo].[CatCheckpointType] CCT
                 ON [so].[CatCheckpointTypeId] = [CCT].[IdCatCheckpointType]
             LEFT  JOIN [dbo].[DeliveryAttempt] da WITH(NOLOCK)
 			    ON   da.ID=dod.DeliveryAttemptId
